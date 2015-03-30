@@ -52,7 +52,7 @@ fi
 
 jar=""
 
-for j in "$DIR/../jar/mixcr.jar" "$DIR/mixcr.jar" "$DIR/target/mixcr-1.2-distribution.jar"
+for j in "$DIR/../jar/mixcr.jar" "$DIR/mixcr.jar" "$DIR/target/mixcr-1.1-distribution.jar"
 do
     if [[ -e "$j" ]];
     then
