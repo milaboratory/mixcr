@@ -1,0 +1,70 @@
+#!/bin/bash
+
+java="java"
+
+sedString="s/.*1\.\(.*\)\..*/\1/"
+jVersion=$($java -version 2>&1 | grep version | awk '{ print $3 }' | sed $sedString)
+if [[ $jVersion -lt 7 ]];
+then
+    echo "Wrong version of java. Please use Java 7 or higher."
+    exit 1
+fi
+
+os=`uname`
+delta=100
+
+DIR=""
+
+case $os in
+    Darwin)
+        freeBlocks=$(vm_stat | grep free | awk '{ print $3 }' | sed 's/\.//')
+        inactiveBlocks=$(vm_stat | grep inactive | awk '{ print $3 }' | sed 's/\.//')
+        speculativeBlocks=$(vm_stat | grep speculative | awk '{ print $3 }' | sed 's/\.//')
+        freeMb=$((($freeBlocks+$speculativeBlocks)*4096/1048576))
+        inactiveMb=$(($inactiveBlocks*4096/1048576))
+        maxMb=$((($freeMb+$inactiveMb-$delta)))
+        DIR=$(cd "$(dirname "$0")"; pwd)
+    ;;
+    Linux)
+        rFreeMb=$(free -m | head -n 3 | tail -n 1 | awk '{ print $4 }')
+        maxMb=$(($rFreeMb-$delta))
+        DIR="$(dirname "$(readlink -f "$0")")"
+    ;;
+    *)
+       echo "Unknown OS."
+       exit 1
+    ;;
+esac
+
+targetXmx=12000
+
+if [[ $targetXmx -gt $maxMb ]];
+then
+    targetXmx=$maxMb
+fi
+
+targetXms=$((${targetXmx}*2/3))
+
+if [[ $targetXms -lt 2000 ]];
+then
+    targetXms=$targetXmx
+fi
+
+jar=""
+
+for j in "$DIR/../jar/mixcr.jar" "$DIR/mixcr.jar" "$DIR/target/mixcr-1.2-distribution.jar"
+do
+    if [[ -e "$j" ]];
+    then
+        jar=$j
+        break
+    fi
+done
+
+if [[ "$jar" == "" ]];
+then
+    echo "No jar."
+    exit 1
+fi
+
+$java -Dmixcr.command=mixcr -Xmx${targetXmx}m -Xms${targetXms}m -XX:+AggressiveOpts -jar $jar "${@:1}"
