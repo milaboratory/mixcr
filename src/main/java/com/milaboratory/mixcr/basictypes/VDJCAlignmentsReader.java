@@ -40,8 +40,7 @@ import java.io.*;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.MAGIC_BYTES;
-import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.MAGIC_LENGTH;
+import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.*;
 
 public class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>, CanReportProgress {
     VDJCAlignerParameters parameters;
@@ -80,7 +79,7 @@ public class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>
         byte[] magic = new byte[MAGIC_LENGTH];
         input.readFully(magic);
         if (!Arrays.equals(magic, MAGIC_BYTES))
-            throw new RuntimeException("Wrong file format.");
+            throw new RuntimeException("Conflicting file format; .vdjca file of version " + new String(magic) + " while you are running MiXCR " + MAGIC);
 
         parameters = input.readObject(VDJCAlignerParameters.class);
 

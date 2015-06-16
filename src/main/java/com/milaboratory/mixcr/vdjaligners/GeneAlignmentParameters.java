@@ -31,7 +31,8 @@ package com.milaboratory.mixcr.vdjaligners;
 import com.milaboratory.mixcr.reference.GeneFeature;
 import com.milaboratory.mixcr.reference.GeneType;
 
-public abstract class GeneAlignmentParameters<T extends GeneAlignmentParameters<T>> {
+public abstract class GeneAlignmentParameters<T extends GeneAlignmentParameters<T>>
+        implements java.io.Serializable {
     protected GeneFeature geneFeatureToAlign;
 
     protected GeneAlignmentParameters(GeneFeature geneFeatureToAlign) {

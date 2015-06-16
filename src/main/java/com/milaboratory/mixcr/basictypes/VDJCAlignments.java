@@ -36,6 +36,7 @@ import java.util.EnumMap;
 
 @Serializable(by = IO.VDJCAlignmentsSerializer.class)
 public final class VDJCAlignments extends VDJCObject {
+    String[] descriptions;
     final long readId;
     private volatile long alignmentsIndex = -1;
 
@@ -65,6 +66,14 @@ public final class VDJCAlignments extends VDJCObject {
 
     public void setAlignmentsIndex(long alignmentsIndex) {
         this.alignmentsIndex = alignmentsIndex;
+    }
+
+    public void setDescriptions(String[] description) {
+        this.descriptions = description;
+    }
+
+    public String[] getDescriptions() {
+        return descriptions;
     }
 
     @Override

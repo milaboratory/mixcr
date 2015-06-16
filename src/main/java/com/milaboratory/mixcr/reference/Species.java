@@ -29,6 +29,9 @@
 package com.milaboratory.mixcr.reference;
 
 public final class Species {
+    private Species() {
+    }
+
     public static final int HomoSapiens = 9606;
     public static final int MusMusculus = 10090;
 

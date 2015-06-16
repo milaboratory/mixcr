@@ -30,7 +30,8 @@ package com.milaboratory.mixcr.assembler;
 
 import com.milaboratory.mixcr.reference.GeneFeature;
 
-public abstract class AbstractClonalAlignerParameters<T extends AbstractClonalAlignerParameters<T>> {
+public abstract class AbstractClonalAlignerParameters<T extends AbstractClonalAlignerParameters<T>>
+        implements java.io.Serializable {
     protected float relativeMinScore;
     protected GeneFeature featureToAlign;
 

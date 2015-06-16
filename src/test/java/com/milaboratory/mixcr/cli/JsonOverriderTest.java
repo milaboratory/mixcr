@@ -93,4 +93,34 @@ public class JsonOverriderTest {
 
         Assert.assertEquals(expected, override);
     }
+
+    @Test
+    public void testCloneFactoryParameters2() throws Exception {
+        CloneFactoryParameters factoryParameters = new CloneFactoryParameters(
+                new VJCClonalAlignerParameters(GeneFeature.VRegion, 0.3f,
+                        new BandedAlignerParameters(LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3, -50)),
+                new VJCClonalAlignerParameters(GeneFeature.JRegion, 0.4f,
+                        new BandedAlignerParameters(LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 5, -40)),
+                null, new DAlignerParameters(GeneFeature.DRegion, 30.0f, 0.85f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
+        );
+
+        CloneAssemblerParameters params = new CloneAssemblerParameters(new GeneFeature[]{GeneFeature.FR1, GeneFeature.CDR3},
+                new CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
+                factoryParameters, true, (byte) 20, .8, "2of6");
+
+        CloneAssemblerParameters override = JsonOverrider.override(
+                params,
+                CloneAssemblerParameters.class,
+                "dParameters.absoluteMinScore=101");
+
+        CloneFactoryParameters expectedFactoryParameters = new CloneFactoryParameters(
+                new VJCClonalAlignerParameters(GeneFeature.VRegion, 0.3f,
+                        new BandedAlignerParameters(LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3, -50)),
+                new VJCClonalAlignerParameters(GeneFeature.JRegion, 0.4f,
+                        new BandedAlignerParameters(LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 5, -40)),
+                null, new DAlignerParameters(GeneFeature.DRegion, 101f, 0.85f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
+        );
+
+        Assert.assertEquals(expectedFactoryParameters, override.getCloneFactoryParameters());
+    }
 }

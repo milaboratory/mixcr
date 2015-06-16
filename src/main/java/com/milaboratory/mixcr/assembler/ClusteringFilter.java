@@ -39,7 +39,7 @@ import com.milaboratory.mixcr.basictypes.ClonalSequence;
         getterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({@JsonSubTypes.Type(value = RelativeConcentrationFilter.class, name = "relativeConcentration")})
-public interface ClusteringFilter {
+public interface ClusteringFilter extends java.io.Serializable {
     boolean allow(Mutations<NucleotideSequence> mutations,
                   long majorClusterCount, long minorClusterCount,
                   ClonalSequence majorSequence);

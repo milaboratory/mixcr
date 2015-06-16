@@ -37,7 +37,7 @@ import static com.milaboratory.mixcr.reference.Locus.*;
  * @author Bolotin Dmitriy (bolotin.dmitriy@gmail.com)
  * @author Shugay Mikhail (mikhail.shugay@gmail.com)
  */
-public enum GeneGroup {
+public enum GeneGroup implements java.io.Serializable {
     //TRA
     TRAC("TRAC", GeneType.Constant, TRA), TRAJ("TRAJ", GeneType.Joining, TRA),
     TRAV("TRAV", GeneType.Variable, TRA),

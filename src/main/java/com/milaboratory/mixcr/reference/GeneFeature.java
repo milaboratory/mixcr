@@ -58,7 +58,8 @@ import static com.milaboratory.mixcr.reference.ReferencePoint.*;
 @JsonDeserialize(using = GeneFeature.Deserializer.class)
 @JsonSerialize(using = GeneFeature.Serializer.class)
 @Serializable(by = IO.GeneFeatureSerializer.class)
-public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, Comparable<GeneFeature> {
+public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, Comparable<GeneFeature>,
+        java.io.Serializable {
     /* V, D, J, Regions */
 
     /**
@@ -461,7 +462,7 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
     }
 
     @Serializable(by = IO.GeneFeatureReferenceRangeSerializer.class)
-    public static final class ReferenceRange {
+    public static final class ReferenceRange implements java.io.Serializable {
         //sorting using only begin index
         private static final Comparator<ReferenceRange> BEGIN_COMPARATOR = new Comparator<ReferenceRange>() {
             @Override

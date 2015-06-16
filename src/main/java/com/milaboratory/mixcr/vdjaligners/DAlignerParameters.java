@@ -37,7 +37,8 @@ import com.milaboratory.mixcr.reference.GeneFeature;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
-public final class DAlignerParameters extends GeneAlignmentParameters<DAlignerParameters> {
+public final class DAlignerParameters extends GeneAlignmentParameters<DAlignerParameters>
+        implements java.io.Serializable {
     private float absoluteMinScore, relativeMinScore;
     private int maxHits;
     private AlignmentScoring<NucleotideSequence> scoring;

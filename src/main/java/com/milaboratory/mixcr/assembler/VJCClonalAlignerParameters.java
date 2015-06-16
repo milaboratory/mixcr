@@ -36,7 +36,8 @@ import com.milaboratory.mixcr.reference.GeneFeature;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
-public final class VJCClonalAlignerParameters extends AbstractClonalAlignerParameters<VJCClonalAlignerParameters> {
+public final class VJCClonalAlignerParameters extends AbstractClonalAlignerParameters<VJCClonalAlignerParameters>
+        implements java.io.Serializable {
     BandedAlignerParameters alignmentParameters;
 
     @JsonCreator

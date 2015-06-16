@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
-public final class CloneAssemblerParameters {
+public final class CloneAssemblerParameters implements java.io.Serializable {
     private static final int MAX_MAPPING_REGION = 1000;
     GeneFeature[] assemblingFeatures;
     CloneClusteringParameters cloneClusteringParameters;

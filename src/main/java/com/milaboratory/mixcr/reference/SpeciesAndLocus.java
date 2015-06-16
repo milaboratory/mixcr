@@ -31,7 +31,7 @@ package com.milaboratory.mixcr.reference;
 import com.milaboratory.primitivio.annotations.Serializable;
 
 @Serializable(by = IO.SpeciesAndLocusSerializer.class)
-public final class SpeciesAndLocus implements Comparable<SpeciesAndLocus> {
+public final class SpeciesAndLocus implements Comparable<SpeciesAndLocus>, java.io.Serializable {
     //static final long serialVersionUID = 1L;
     public final int taxonId;
     public final Locus locus;

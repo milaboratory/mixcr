@@ -39,7 +39,7 @@ import com.milaboratory.mixcr.vdjaligners.DAlignerParameters;
 import java.util.EnumMap;
 import java.util.Map;
 
-public final class CloneFactoryParameters {
+public final class CloneFactoryParameters implements java.io.Serializable {
     EnumMap<GeneType, VJCClonalAlignerParameters> vdcParameters = new EnumMap<>(GeneType.class);
     DAlignerParameters dParameters;
 

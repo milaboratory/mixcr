@@ -36,7 +36,7 @@ import java.util.ArrayList;
  * @author Bolotin Dmitriy (bolotin.dmitriy@gmail.com)
  * @author Shugay Mikhail (mikhail.shugay@gmail.com)
  */
-public enum Locus {
+public enum Locus implements java.io.Serializable {
     TRA("TRA", "alpha", false), TRB("TRB", "beta", true),
     TRG("TRG", "gamma", false), TRD("TRD", "delta", true),
     IGL("IGL", "lambda", false), IGK("IGK", "kappa", false),
@@ -46,7 +46,7 @@ public enum Locus {
     final boolean ig;
     final boolean hasDGene;
 
-    private Locus(String id, String greekLetter, boolean hasDGene) {
+    Locus(String id, String greekLetter, boolean hasDGene) {
         this.id = id;
         this.hasDGene = hasDGene;
         this.greekLetter = greekLetter;

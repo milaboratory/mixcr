@@ -49,7 +49,7 @@ public interface AlignmentsProvider {
      */
     long getTotalNumberOfReads();
 
-    public final static class Util {
+    final class Util {
         static AlignmentsProvider createProvider(final byte[] rawData, final AlleleResolver alleleResolver) {
             return new VDJCAlignmentsReaderWrapper(new Factory<VDJCAlignmentsReader>() {
                 @Override

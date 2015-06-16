@@ -34,7 +34,7 @@ package com.milaboratory.mixcr.reference;
  * @author Bolotin Dmitriy (bolotin.dmitriy@gmail.com)
  * @author Shugay Mikhail (mikhail.shugay@gmail.com)
  */
-public enum GeneType {
+public enum GeneType implements java.io.Serializable {
     Variable((byte) 0, 'V', +1, 11),
     Diversity((byte) 2, 'D', 0, 2),
     Joining((byte) 1, 'J', -1, 3),
@@ -44,7 +44,7 @@ public enum GeneType {
     private final int cdr3Side;
     private final int completeNumberOfReferencePoints;
 
-    private GeneType(byte id, char letter, int cdr3Side, int completeNumberOfReferencePoints) {
+    GeneType(byte id, char letter, int cdr3Side, int completeNumberOfReferencePoints) {
         this.id = id;
         this.letter = letter;
         this.cdr3Side = cdr3Side;

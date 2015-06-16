@@ -45,12 +45,18 @@ import java.util.Map;
 
 @Parameters(commandDescription = "Export binary data",
         optionPrefixes = "^")
-public final class ActionExportParameters extends ActionParameters {
+public class ActionExportParameters extends ActionParameters {
     final Class clazz;
     final String helpString;
     final String fieldsHelpString;
+    final String defaultPreset;
 
-    protected ActionExportParameters(Class clazz) {
+    public ActionExportParameters(Class clazz) {
+        this(clazz, "full");
+    }
+
+    public ActionExportParameters(Class clazz, String defaultPreset) {
+        this.defaultPreset = defaultPreset;
         this.clazz = clazz;
         ArrayList<String>[] description = new ArrayList[]{new ArrayList(), new ArrayList()};
         description[0].add("-h, --help");
@@ -103,7 +109,7 @@ public final class ActionExportParameters extends ActionParameters {
             throw new ParameterException("No output file specified.");
 
         if (args.length == 2)
-            exporters = getPresetParameters(clazz, "full");
+            exporters = getPresetParameters(clazz, defaultPreset);
         else
             exporters = parseParametersString(clazz, args, 0, args.length - 2);
 

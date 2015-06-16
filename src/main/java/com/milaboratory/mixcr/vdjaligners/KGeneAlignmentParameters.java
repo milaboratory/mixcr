@@ -36,7 +36,8 @@ import com.milaboratory.mixcr.reference.GeneFeature;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
-public final class KGeneAlignmentParameters extends GeneAlignmentParameters<KGeneAlignmentParameters> {
+public final class KGeneAlignmentParameters extends GeneAlignmentParameters<KGeneAlignmentParameters>
+        implements java.io.Serializable{
     private KAlignerParameters parameters;
 
     @JsonCreator

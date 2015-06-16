@@ -29,6 +29,7 @@
 package com.milaboratory.mixcr.vdjaligners;
 
 import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
+import com.milaboratory.core.io.util.TestUtil;
 import com.milaboratory.mixcr.reference.GeneFeature;
 import com.milaboratory.util.GlobalObjectMappers;
 import org.junit.Test;
@@ -45,5 +46,12 @@ public class DAlignerParametersTest {
         assertEquals(paramentrs, deser);
         DAlignerParameters clone = deser.clone();
         assertEquals(paramentrs, clone);
+    }
+
+    @Test
+    public void test2() throws Exception {
+        DAlignerParameters se = new DAlignerParameters(GeneFeature.DRegion,
+                30.0f, 0.85f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring());
+        TestUtil.assertJavaSerialization(se);
     }
 }

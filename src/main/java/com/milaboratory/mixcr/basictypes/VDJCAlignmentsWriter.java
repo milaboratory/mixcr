@@ -38,7 +38,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public final class VDJCAlignmentsWriter implements AutoCloseable {
-    static final String MAGIC = "MiXCR.VDJC.V02";
+    static final String MAGIC = "MiXCR.VDJC.V03";
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
     final PrimitivO output;

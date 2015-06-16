@@ -80,6 +80,7 @@ class IO {
         @Override
         public void write(PrimitivO output, VDJCAlignments object) {
             output.writeObject(object.targets);
+            output.writeObject(object.descriptions);
             output.writeByte(object.hits.size());
             for (Map.Entry<GeneType, VDJCHit[]> entry : object.hits.entrySet()) {
                 output.writeObject(entry.getKey());
@@ -91,13 +92,16 @@ class IO {
         @Override
         public VDJCAlignments read(PrimitivI input) {
             NSequenceWithQuality[] targets = input.readObject(NSequenceWithQuality[].class);
+            String[] descriptions = input.readObject(String[].class);
             int size = input.readByte();
             EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
             for (int i = 0; i < size; i++) {
                 GeneType key = input.readObject(GeneType.class);
                 hits.put(key, input.readObject(VDJCHit[].class));
             }
-            return new VDJCAlignments(input.readLong(), hits, targets);
+            VDJCAlignments vdjcAlignments = new VDJCAlignments(input.readLong(), hits, targets);
+            vdjcAlignments.setDescriptions(descriptions);
+            return vdjcAlignments;
         }
 
         @Override

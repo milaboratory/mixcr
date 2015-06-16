@@ -46,7 +46,7 @@ import java.util.Map;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
 @Serializable(asJson = true)
-public final class VDJCAlignerParameters implements HasFeatureToAlign {
+public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.Serializable {
     @JsonIgnore
     protected final EnumMap<GeneType, GeneAlignmentParameters> alignmentParameters;
     protected float minSumScore;

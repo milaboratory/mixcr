@@ -35,7 +35,7 @@ import com.milaboratory.core.tree.TreeSearchParameters;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
-public final class CloneClusteringParameters {
+public final class CloneClusteringParameters implements java.io.Serializable {
     private int searchDepth;
     private int allowedMutationsInNRegions;
     private TreeSearchParameters searchParameters;

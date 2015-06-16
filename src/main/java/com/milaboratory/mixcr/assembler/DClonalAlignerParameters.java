@@ -37,7 +37,8 @@ import com.milaboratory.mixcr.reference.GeneFeature;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
-public final class DClonalAlignerParameters extends AbstractClonalAlignerParameters<DClonalAlignerParameters> {
+public final class DClonalAlignerParameters extends AbstractClonalAlignerParameters<DClonalAlignerParameters>
+        implements java.io.Serializable {
     AlignmentScoring<NucleotideSequence> scoring;
 
     @JsonCreator

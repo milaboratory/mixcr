@@ -57,6 +57,9 @@ public final class ReferenceAllele extends Allele {
         return referencePoints;
     }
 
+    public String getAccession() {
+        return accession;
+    }
 
     @Override
     public boolean equals(Object o) {

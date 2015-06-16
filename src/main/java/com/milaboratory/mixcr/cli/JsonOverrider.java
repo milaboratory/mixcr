@@ -81,10 +81,12 @@ public class JsonOverrider {
         boolean b = false;
         if (override0(node, path, value))
             b = true;
-        Iterator<JsonNode> iterator = node.iterator();
-        while (iterator.hasNext())
-            if (override1(iterator.next(), path, value, b || v))
-                b = true;
+        else {
+            Iterator<JsonNode> iterator = node.iterator();
+            while (iterator.hasNext())
+                if (override1(iterator.next(), path, value, b || v))
+                    b = true;
+        }
         if (v && b)
             throw new IllegalArgumentException("Multiple matches of parameter " + path);
         return b;

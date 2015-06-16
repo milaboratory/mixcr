@@ -31,7 +31,7 @@ package com.milaboratory.mixcr.reference;
 
 import static com.milaboratory.mixcr.reference.GeneType.*;
 
-enum BasicReferencePoint {
+enum BasicReferencePoint implements java.io.Serializable {
     // Points in V
     UTR5Begin(0, GeneType.Variable, 0),
     UTR5EndL1Begin(1, Variable, 1),
@@ -67,7 +67,7 @@ enum BasicReferencePoint {
     final GeneType geneType;
     BasicReferencePoint trimmedVersion;
 
-    private BasicReferencePoint(int index, GeneType geneType, int orderingIndex) {
+    BasicReferencePoint(int index, GeneType geneType, int orderingIndex) {
         this.index = index;
         this.geneType = geneType;
         this.orderingIndex = orderingIndex;

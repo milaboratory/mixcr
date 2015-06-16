@@ -28,6 +28,7 @@
  */
 package com.milaboratory.mixcr.assembler;
 
+import com.milaboratory.core.io.util.TestUtil;
 import com.milaboratory.mixcr.reference.GeneFeature;
 import org.junit.Assert;
 import org.junit.Test;
@@ -37,5 +38,10 @@ public class CloneAssemblerParametersPresetsTest {
     public void test1() throws Exception {
         Assert.assertEquals(GeneFeature.CDR3,
                 CloneAssemblerParametersPresets.getByName("default").getAssemblingFeatures()[0]);
+    }
+
+    @Test
+    public void test2() throws Exception {
+        TestUtil.assertJavaSerialization(CloneAssemblerParametersPresets.getByName("default"));
     }
 }

@@ -43,7 +43,7 @@ import java.util.Map;
  * @see GeneFeature
  */
 @Serializable(by = IO.ReferencePointSerializer.class)
-public final class ReferencePoint implements Comparable<ReferencePoint> {
+public final class ReferencePoint implements Comparable<ReferencePoint>, java.io.Serializable {
 
     /* V */
 

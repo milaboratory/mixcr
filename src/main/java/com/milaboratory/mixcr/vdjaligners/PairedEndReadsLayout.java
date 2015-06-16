@@ -30,7 +30,7 @@ package com.milaboratory.mixcr.vdjaligners;
 
 import com.milaboratory.core.io.sequence.PairedRead;
 
-public enum PairedEndReadsLayout {
+public enum PairedEndReadsLayout implements java.io.Serializable {
     Opposite(true,
             new PairedTargetProvider() {
                 @Override

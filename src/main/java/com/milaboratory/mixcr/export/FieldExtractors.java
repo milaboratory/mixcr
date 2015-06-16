@@ -222,7 +222,7 @@ public final class FieldExtractors {
                         "Export aligned sequence (initial read), or 2 sequences in case of paired-end reads",
                         "Read(s) sequence"));
 
-                desctiptorsList.add(new ExtractSequenceQaulity(VDJCAlignments.class, "-quality",
+                desctiptorsList.add(new ExtractSequenceQuality(VDJCAlignments.class, "-quality",
                         "Export initial read quality, or 2 qualities in case of paired-end reads",
                         "Read(s) sequence qualities"));
 
@@ -244,10 +244,35 @@ public final class FieldExtractors {
                         "Export aligned sequence (initial read), or 2 sequences in case of paired-end reads",
                         "Clonal sequence(s)"));
 
-                desctiptorsList.add(new ExtractSequenceQaulity(Clone.class, "-quality",
+                desctiptorsList.add(new ExtractSequenceQuality(Clone.class, "-quality",
                         "Export initial read quality, or 2 qualities in case of paired-end reads",
                         "Clonal sequence quality(s)"));
 
+                desctiptorsList.add(new PL_A("-descrR1", "Export description line from initial .fasta or .fastq file " +
+                        "of the first read (only available if --save-description was used in align command)", "Description R1") {
+                    @Override
+                    protected String extract(VDJCAlignments object) {
+                        String[] ds = object.getDescriptions();
+                        if (ds == null || ds.length == 0)
+                            throw new IllegalArgumentException("Error for option \'-descrR1\':\n" +
+                                    "No description available for read: either re-run align action with --save-description option " +
+                                    "or don't use \'-descrR1\' in exportAlignments");
+                        return ds[0];
+                    }
+                });
+
+                desctiptorsList.add(new PL_A("-descrR2", "Export description line from initial .fasta or .fastq file " +
+                        "of the second read (only available if --save-description was used in align command)", "Description R2") {
+                    @Override
+                    protected String extract(VDJCAlignments object) {
+                        String[] ds = object.getDescriptions();
+                        if (ds == null || ds.length < 2)
+                            throw new IllegalArgumentException("Error for option \'-descrR2\':\n" +
+                                    "No description available for second read: either re-run align action with --save-description option " +
+                                    "or don't use \'-descrR2\' in exportAlignments");
+                        return ds[0];
+                    }
+                });
             }
 
             descriptors = desctiptorsList.toArray(new Field[desctiptorsList.size()]);
@@ -348,8 +373,8 @@ public final class FieldExtractors {
         }
     }
 
-    private static class ExtractSequenceQaulity extends FieldParameterless<VDJCObject> {
-        private ExtractSequenceQaulity(Class targetType, String command, String description, String header) {
+    private static class ExtractSequenceQuality extends FieldParameterless<VDJCObject> {
+        private ExtractSequenceQuality(Class targetType, String command, String description, String header) {
             super(targetType, command, description, header);
         }
 

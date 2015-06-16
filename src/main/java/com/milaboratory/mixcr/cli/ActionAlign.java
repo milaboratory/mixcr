@@ -111,8 +111,11 @@ public class ActionAlign implements Action {
                             }))) {
                 if (result.alignment == null)
                     continue;
-                if (writer != null)
+                if (writer != null) {
+                    if (actionParameters.saveReadDescription)
+                        result.alignment.setDescriptions(extractDescription(result.read));
                     writer.write(result.alignment);
+                }
             }
             if (writer != null)
                 writer.setNumberOfProcessedReads(reader.getNumberOfReads());
@@ -121,6 +124,13 @@ public class ActionAlign implements Action {
         if (report != null)
             Util.writeReport(actionParameters.getInputForReport(), actionParameters.getOutputName(),
                     helper.getCommandLineArguments(), actionParameters.report, report);
+    }
+
+    private static String[] extractDescription(SequenceRead r) {
+        String[] descrs = new String[r.numberOfReads()];
+        for (int i = 0; i < r.numberOfReads(); i++)
+            descrs[i] = r.getRead(i).getDescription();
+        return descrs;
     }
 
     @Override
@@ -173,6 +183,11 @@ public class ActionAlign implements Action {
         @Parameter(description = "Do not merge paired reads.",
                 names = {"-d", "--noMerge"})
         public Boolean noMerge = false;
+
+        @Parameter(description = "Copy read(s) description line from .fastq or .fasta to .vdjca file (can be then " +
+                "exported with -descrR1 and -descrR2 options in exportAlignments action).",
+                names = {"-a", "--save-description"})
+        public Boolean saveReadDescription = false;
 
         public int getTaxonID() {
             return Species.fromStringStrict(species);

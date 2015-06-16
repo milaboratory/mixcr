@@ -39,7 +39,7 @@ import java.util.Arrays;
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public final class ReferencePoints extends SequencePartitioning {
+public final class ReferencePoints extends SequencePartitioning implements java.io.Serializable {
     final int[] points;
 
     public ReferencePoints(int[] points) {

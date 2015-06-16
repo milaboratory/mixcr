@@ -26,43 +26,25 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.cli;
+package com.milaboratory.mixcr.reference;
 
-import com.milaboratory.mitools.cli.Action;
-import com.milaboratory.mitools.cli.ActionHelpProvider;
-import com.milaboratory.mitools.cli.ActionHelper;
-import com.milaboratory.mitools.cli.ActionParametersParser;
+public class ReferenceUtil {
+    /**
+     * For advanced use.
+     */
+    public static final int TOTAL_NUMBER_OF_REFERENCE_POINTS = BasicReferencePoint.TOTAL_NUMBER_OF_REFERENCE_POINTS;
 
-public abstract class ActionExport implements Action, ActionHelpProvider, ActionParametersParser {
-    public ActionExportParameters parameters;
-
-    protected ActionExport(ActionExportParameters parameters) {
-        this.parameters = parameters;
+    private ReferenceUtil() {
     }
 
-    @Override
-    public void go(ActionHelper helper) throws Exception {
-        if (parameters.fields) {
-            helper.getDefaultPrintStream().print(parameters.printFieldsHelp());
-            return;
-        }
-        go0();
-    }
-
-    @Override
-    public void printHelp(StringBuilder builder) {
-        builder.append(params().printHelp());
-    }
-
-    @Override
-    public void parseParameters(String[] args) {
-        params().parseParameters(args);
-    }
-
-    protected abstract void go0() throws Exception;
-
-    @Override
-    public ActionExportParameters params() {
-        return parameters;
+    /**
+     * Returns underlying reference point id.
+     *
+     * For advanced use.
+     *
+     * @return underlying reference point id
+     */
+    public static int getReferencePointIndex(ReferencePoint referencePoint) {
+        return referencePoint.getIndex();
     }
 }

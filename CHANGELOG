@@ -1,0 +1,29 @@
+
+MiXCR v1.2 (16 Jun 2015)
+========================
+
+-- new feature: added ability to export keep read descrptions in .vdjca file
+   (option '--save-description' for align command and options '-descrR1' and
+   '-descrR2' for exportAlignments command)
+-- fixed crash caused by '-OcloneClusteringParameters=null'
+-- bug with clonatype ordering in exportClones fixed 
+   (occurred with '-OcloneClusteringParameters=null')
+
+
+
+MiXCR v1.1 (29 Apr 2015)
+========================
+
+-- new feature: `exportAlignmentsPretty` action for exporting BLAST-style
+   alignments
+-- adjust D-gene aligner parameters
+-- various performance improvements
+-- bash script support for OS X and Linux
+-- migration to MiLib 1.0
+
+
+
+MiXCR v1.0 (1 Jan 2015)
+=======================
+
+-- first release

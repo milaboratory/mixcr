@@ -495,8 +495,19 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             Collection<CloneAccumulator> source;
             if (clusteredClonesAccumulators != null)
                 source = clusteredClonesAccumulators;
-            else
-                source = clones.values();
+            else {
+                //sort clones by count (if not yet sorted by clustering)
+                CloneAccumulator[] sourceArray = clones.values().toArray(new CloneAccumulator[clones.size()]);
+                Arrays.sort(sourceArray, new Comparator<CloneAccumulator>() {
+                    @Override
+                    public int compare(CloneAccumulator o1, CloneAccumulator o2) {
+                        return Long.compare(o2.count, o1.count);
+                    }
+                });
+                for (int i = 0; i < sourceArray.length; i++)
+                    sourceArray[i].setCloneIndex(i);
+                source = Arrays.asList(sourceArray);
+            }
             realClones = new Clone[source.size()];
             int i = 0;
             Iterator<CloneAccumulator> iterator = source.iterator();
