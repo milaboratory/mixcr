@@ -26,27 +26,20 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.basictypes;
+package com.milaboratory.mixcr.info;
 
-import com.milaboratory.core.sequence.Seq;
-import com.milaboratory.mixcr.reference.GeneFeature;
+import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 
-import java.util.concurrent.ConcurrentHashMap;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 
 /**
- * Created by dbolotin on 26/06/14.
+ * Created by dbolotin on 04/08/15.
  */
-public abstract class PartitionedSequenceCached<S extends Seq<S>> extends PartitionedSequence<S> {
-    private static final Object NULL_SEQUENCE = new Object();
-    final ConcurrentHashMap<GeneFeature, Object> cache = new ConcurrentHashMap<>();
+public interface AlignmentInfoCollector {
+    void writeResult(PrintStream writer);
 
-    @Override
-    public synchronized S getFeature(GeneFeature feature) {
-        Object seq;
-        // (IMPORTANT) Exactly the same reference must be returned for the same input for correct serialization/deserialization
-        if ((seq = cache.get(feature)) == null && !cache.containsKey(feature))
-            cache.put(feature, (seq = super.getFeature(feature)) == null ? NULL_SEQUENCE : seq);
-        return seq == NULL_SEQUENCE ? null : (S) seq;
-    }
+    void put(VDJCAlignments alignments);
+
+    void end();
 }
-

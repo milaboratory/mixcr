@@ -32,7 +32,7 @@
 
     <groupId>com.milaboratory</groupId>
     <artifactId>mixcr</artifactId>
-    <version>1.2</version>
+    <version>1.2-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>MiXCR</name>
 
@@ -42,23 +42,22 @@
         <version>7</version>
     </parent>
 
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <milib.version>1.0.2</milib.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.milaboratory</groupId>
-            <artifactId>milib</artifactId>
-            <version>1.0.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.milaboratory</groupId>
             <artifactId>mitools</artifactId>
-            <version>1.0.1</version>
+            <version>${milib.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.milaboratory</groupId>
             <artifactId>milib</artifactId>
-            <version>1.0.1</version>
+            <version>${milib.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
@@ -95,10 +94,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
 
     <build>
         <plugins>

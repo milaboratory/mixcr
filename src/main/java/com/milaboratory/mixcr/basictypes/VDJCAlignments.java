@@ -76,6 +76,24 @@ public final class VDJCAlignments extends VDJCObject {
         return descriptions;
     }
 
+    /**
+     * Returns {@code true} if at least ont V and one J hit among first {@code top} hits have same locus and false
+     * otherwise (first {@code top} V hits have different locus from those have first {@code top} J hits).
+     *
+     * @param top numer of top hits to test
+     * @return {@code true} if at least ont V and one J hit among first {@code top} hits have same locus and false
+     * otherwise (first {@code top} V hits have different locus from those have first {@code top} J hits)
+     */
+    public final boolean hasSameVJLoci(final int top) {
+        VDJCHit[] vHits = hits.get(GeneType.Variable),
+                jHits = hits.get(GeneType.Joining);
+        for (int v = 0; v < top && v < vHits.length; ++v)
+            for (int j = 0; j < top && j < jHits.length; ++j)
+                if (vHits[v].getAllele().getLocus() == jHits[j].getAllele().getLocus())
+                    return true;
+        return false;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

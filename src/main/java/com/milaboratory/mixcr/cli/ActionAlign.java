@@ -89,8 +89,10 @@ public class ActionAlign implements Action {
 //                    System.err.println("WARNING: Functional allele excluded " + allele.getName());
 
         AlignerReport report = actionParameters.report == null ? null : new AlignerReport();
-        if (report != null)
+        if (report != null) {
             aligner.setEventsListener(report);
+            report.setAllowDifferentVJLoci(actionParameters.allowDifferentVJLoci);
+        }
 
         try (SequenceReaderCloseable<? extends SequenceRead> reader = actionParameters.createReader();
              VDJCAlignmentsWriter writer = actionParameters.getOutputName().equals(".") ? null : new VDJCAlignmentsWriter(actionParameters.getOutputName())) {
@@ -111,6 +113,12 @@ public class ActionAlign implements Action {
                             }))) {
                 if (result.alignment == null)
                     continue;
+                if (!result.alignment.hasSameVJLoci(1)) {
+                    if (report != null)
+                        report.onAlignmentWithDifferentVJLoci();
+                    if (!actionParameters.allowDifferentVJLoci)
+                        continue;
+                }
                 if (writer != null) {
                     if (actionParameters.saveReadDescription)
                         result.alignment.setDescriptions(extractDescription(result.read));
@@ -150,7 +158,7 @@ public class ActionAlign implements Action {
         public List<String> parameters = new ArrayList<>();
 
         @DynamicParameter(names = "-O", description = "Overrides base values of parameters.")
-        private Map<String, String> overrides = new HashMap<>();
+        public Map<String, String> overrides = new HashMap<>();
 
         @Parameter(description = "Parameters",
                 names = {"-p", "--parameters"})
@@ -188,6 +196,10 @@ public class ActionAlign implements Action {
                 "exported with -descrR1 and -descrR2 options in exportAlignments action).",
                 names = {"-a", "--save-description"})
         public Boolean saveReadDescription = false;
+
+        @Parameter(description = "Allow alignments with different loci of V and J hits.",
+                names = {"-i", "--diff-loci"})
+        public Boolean allowDifferentVJLoci = false;
 
         public int getTaxonID() {
             return Species.fromStringStrict(species);

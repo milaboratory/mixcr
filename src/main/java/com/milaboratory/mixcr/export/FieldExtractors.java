@@ -270,7 +270,7 @@ public final class FieldExtractors {
                             throw new IllegalArgumentException("Error for option \'-descrR2\':\n" +
                                     "No description available for second read: either re-run align action with --save-description option " +
                                     "or don't use \'-descrR2\' in exportAlignments");
-                        return ds[0];
+                        return ds[1];
                     }
                 });
             }

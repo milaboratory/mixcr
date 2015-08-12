@@ -7,7 +7,7 @@
             "searchParameters": "oneMismatch",
             "clusteringFilter": {
                 "type": "relativeConcentration",
-                "specificMutationProbability": 1E-4
+                "specificMutationProbability": 1E-3
             }
         },
         "cloneFactoryParameters": {
