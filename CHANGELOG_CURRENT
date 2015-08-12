@@ -1,5 +1,6 @@
 new feature: alignments with V and J genes from different loci are dropped (this behaviour can be turned off by adding '--diff-loci' command line option)
-default parameter value changed: for specificMutationProbability value changed from 1E-4 to 1E-3
+default parameter value changed: for cloneClusteringParameters.specificMutationProbability value changed from 1E-4 to 1E-3
+default parameter value changed: for cloneClusteringParameters.searchParameters value changed from `oneMismatch` to `twoMismatchesOrIndels`
 bug-fix: overlapping of reads now preserves read description
 bug-fix: `-descrR2` now outputs information from R2 (was from R1)
 minor bug-fixed: NPE in VDJCAlignerAbstract

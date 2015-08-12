@@ -4,7 +4,7 @@
         "cloneClusteringParameters": {
             "searchDepth": 2,
             "allowedMutationsInNRegions": 1,
-            "searchParameters": "oneMismatch",
+            "searchParameters": "twoMismatchesOrIndels",
             "clusteringFilter": {
                 "type": "relativeConcentration",
                 "specificMutationProbability": 1E-3
