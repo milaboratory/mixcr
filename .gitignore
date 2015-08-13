@@ -1,2 +1,4 @@
 mixcr.iml
 target
+*.iml
+.idea

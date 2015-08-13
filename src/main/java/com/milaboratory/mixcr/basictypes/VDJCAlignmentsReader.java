@@ -86,12 +86,12 @@ public class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>
         this.usedAlleles = IOUtil.readAlleleReferences(input, alleleResolver, parameters);
     }
 
-    public VDJCAlignerParameters getParameters() {
+    public synchronized VDJCAlignerParameters getParameters() {
         init();
         return parameters;
     }
 
-    public List<Allele> getUsedAlleles() {
+    public synchronized List<Allele> getUsedAlleles() {
         init();
         return usedAlleles;
     }
@@ -113,7 +113,7 @@ public class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
         close(false);
     }
 
@@ -134,7 +134,7 @@ public class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>
     }
 
     @Override
-    public VDJCAlignments take() {
+    public synchronized VDJCAlignments take() {
         if (closed)
             return null;
 

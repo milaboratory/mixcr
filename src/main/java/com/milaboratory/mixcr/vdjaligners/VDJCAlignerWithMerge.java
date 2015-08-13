@@ -78,6 +78,8 @@ public final class VDJCAlignerWithMerge extends VDJCAligner<PairedRead> {
                     new SingleReadImpl(read.getId(), merged.getOverlappedSequence(), "")).alignment;
             if (listener != null)
                 listener.onSuccessfulOverlap(read, alignment);
+            if (alignment != null)
+                alignment.setDescriptions(new String[]{read.getR1().getDescription(), read.getR2().getDescription()});
             return new VDJCAlignmentResult<>(read, alignment);
         } else
             return pairedAligner.process(read);

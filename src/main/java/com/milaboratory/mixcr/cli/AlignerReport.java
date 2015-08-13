@@ -39,8 +39,10 @@ import java.util.concurrent.atomic.AtomicLongArray;
 public final class AlignerReport implements VDJCAlignerEventListener, ReportWriter {
     private final AtomicLongArray fails = new AtomicLongArray(VDJCAlignmentFailCause.values().length);
     private final AtomicLong successes = new AtomicLong(0);
+    private final AtomicLong hasDifferentVJLoci = new AtomicLong(0);
     private final AtomicLong alignedOverlap = new AtomicLong(0);
     private final AtomicLong nonAlignedOverlap = new AtomicLong(0);
+    private volatile boolean allowDifferentVJLoci = false;
 
     public long getFails(VDJCAlignmentFailCause cause) {
         return fails.get(cause.ordinal());
@@ -70,6 +72,10 @@ public final class AlignerReport implements VDJCAlignerEventListener, ReportWrit
         return nonAlignedOverlap.get();
     }
 
+    public void setAllowDifferentVJLoci(boolean allowDifferentVJLoci) {
+        this.allowDifferentVJLoci = allowDifferentVJLoci;
+    }
+
     @Override
     public void onFailedAlignment(SequenceRead read, VDJCAlignmentFailCause cause) {
         fails.incrementAndGet(cause.ordinal());
@@ -88,12 +94,21 @@ public final class AlignerReport implements VDJCAlignerEventListener, ReportWrit
             alignedOverlap.incrementAndGet();
     }
 
+    public void onAlignmentWithDifferentVJLoci() {
+        hasDifferentVJLoci.incrementAndGet();
+    }
+
     @Override
     public void writeReport(ReportHelper helper) {
         long total = getTotal();
+        long success = allowDifferentVJLoci ? successes.get() : successes.get() - hasDifferentVJLoci.get();
         helper.writeField("Total sequencing reads", total);
-        helper.writeField("Successfully aligned reads", successes.get());
-        helper.writePercentField("Successfully aligned, percent", successes.get(), total);
+        helper.writeField("Successfully aligned reads", success);
+        helper.writePercentField("Successfully aligned, percent", success, total);
+        helper.writePercentField(allowDifferentVJLoci ?
+                        "Alignment with different V and J loci" :
+                        "Alignment filtered because of different V and J loci",
+                hasDifferentVJLoci.get(), total);
         for (VDJCAlignmentFailCause cause : VDJCAlignmentFailCause.values())
             helper.writePercentField("Alignment failed because of " + cause.name,
                     fails.get(cause.ordinal()), total);
