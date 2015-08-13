@@ -88,11 +88,7 @@ sequenced cDNA library of IGH gene prepared using 5'RACE-based protocol
 
     > mixcr assemble --report assembleReport.log alignments.vdjca clones.clns
 
-  This will build clonotypes and additionally correct PCR and
-  sequencing errors. By default, clonotypes will be assembled by CDR3
-  sequences; one can specify another gene region by passing additional
-  command line arguments (see `assemble <#assemble>`__ documentation).
-  The optional report ``assembleReport.log`` will look like:
+  This will build clonotypes and additionally correct PCR and sequencing errors. By default, clonotypes will be assembled by CDR3 sequences; one can specify another gene region by passing additional command line arguments (see `assemble <#assemble>`__ documentation). The optional report ``assembleReport.log`` will look like:
 
   ::
 
@@ -123,97 +119,46 @@ sequenced cDNA library of IGH gene prepared using 5'RACE-based protocol
 
   where dots denote rows not shown here (for compactness). For the full list of available export options see `export <#export>`__ documentation.
 
-Each of the above steps can be customized in order to adapt the analysis
-pipeline for a specific research task (see below).
+Each of the above steps can be customized in order to adapt the analysis pipeline for a specific research task (see below).
 
- E3. Full length IGH analysis
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Full length IGH analysis
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-1. To build clonotypes based on the full-length sequence of variable
-   part of IGH gene (not V gene only, but V-D-J junction with whole V
-   Region and J Region) one need to obtain alignments fully covering V
-   Region (like in E2). For example:
+1. To build clonotypes based on the full-length sequence of variable part of IGH gene (not V gene only, but V-D-J junction with whole V Region and J Region) one need to obtain alignments fully covering V Region (like in E2). For example:
 
-   ::
+  .. code-block:: console
 
-       > mixcr align --loci IGH -OvParameters.geneFeatureToAlign=VTranscript input_R1.fastq input_R2.fastq alignments.vdjca
+    > mixcr align --loci IGH -OvParameters.geneFeatureToAlign=VTranscript input_R1.fastq input_R2.fastq alignments.vdjca
 
--  Then assemble clones with corresponding option
-   (``-OassemblingFeatures=VDJRegion``):
+2. Then assemble clones with corresponding option (``-OassemblingFeatures=VDJRegion``):
 
-   ::
+  .. code-block:: console
 
-       > mixcr assemble -OassemblingFeatures=VDJRegion alignments.vdjca clones.clns
+    > mixcr assemble -OassemblingFeatures=VDJRegion alignments.vdjca clones.clns
 
--  And export clones to a tab-delimited file:
+3. And export clones to a tab-delimited file:
 
-   ::
+  .. code-block:: console
 
-       > mixcr exportClones clones.clns clones.txt
+    > mixcr exportClones clones.clns clones.txt
 
 Resulting file will contain assembled clonotypes with sequences of all
 regions (``CDR1``, ``CDR2``, ``CDR3``, ``FR1``, ``FR2``, ``FR3``,
 ``FR4``) for each clone.
 
- E4. Assembling of CDR3-based clonotypes for mouse TRB sample
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Assembling of CDR3-based clonotypes for mouse TRB sample
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This example shows how to perform routine assembly of clonotypes (based
-on CDR3 sequence) for mouse TRB library (analysis for other genes can be
-performed by setting different value for the ``--loci`` parameter, or
-even omitting it to search for all possible genes - TRA/B/D/G and
-IGH/L/K).
+This example shows how to perform routine assembly of clonotypes (based on CDR3 sequence) for mouse TRB library (analysis for other genes can be performed by setting different value for the ``--loci`` parameter, or even omitting it to search for all possible genes - TRA/B/D/G and IGH/L/K).
 
-::
+.. code-block:: console
 
-    > mixcr align --loci TRB --species mmu input_R1.fastq input_R2.fastq alignments.vdjca
+  > mixcr align --loci TRB --species mmu input_R1.fastq input_R2.fastq alignments.vdjca
 
 Other analysis stages can be executed without any additional parameters:
 
-::
+.. code-block:: console
 
-    > mixcr assemble alignments.vdjca clones.clns
+  > mixcr assemble alignments.vdjca clones.clns
 
-    > mixcr exportClones clones.clns clones.txt
-
-.. raw:: html
-
-   <!--
-
-   ## 2.1 Other workflow examples
-
-   ### 2.1.1 Full length analysis of IGH cDNA library prepared usin 5'RACE-based protocol
-
-   __Sample__: bla-bla about full sequence of V and unbiased nature... (ref to protocol)
-
-   __Data__: paired-end 350+350bp MiSeq run (bla-bla about overlapping)
-
-   __cDNA library and data structure__: {image.svg}
-
-   ##### Demultiplexing (?)
-
-   ##### Alignment
-
-   ##### Clone assembly
-
-   ##### Export1
-
-   default export
-
-   ##### Export2
-
-   full sequence as whole, count, hypermutations (?)
-
-   ### 2.1.2 Building clonotypes for multiplex-PCR selected IGH fragment
-
-   ##### Alignment
-
-   ##### Clone assembly
-
-   ##### Export
-
-   ### 2.1.3 Extraction of CDR3 and other gene features from raw data
-
-   __Motivation__: sometimes it is nececety to analyse dataset ...
-
-   -->
+  > mixcr exportClones clones.clns clones.txt
