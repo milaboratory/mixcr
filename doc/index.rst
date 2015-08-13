@@ -7,4 +7,5 @@ MIXCR User Guide
    :maxdepth: 2
 
    install
+   quickstart
    manual
