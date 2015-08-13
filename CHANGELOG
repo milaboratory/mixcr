@@ -1,4 +1,18 @@
 
+MiXCR 1.3 (13 Aug 2015)
+========================
+
+-- new feature: alignments with V and J genes from different loci are dropped (this behaviour can 
+be turned off by adding '--diff-loci' command line option)
+-- default parameter value changed: for cloneClusteringParameters.specificMutationProbability value 
+   nged from 1E-4 to 1E-3
+-- default parameter value changed: for cloneClusteringParameters.searchParameters value changed 
+   m `oneMismatch` to `twoMismatchesOrIndels`
+-- bug-fix: overlapping of reads now preserves read description
+-- bug-fix: `-descrR2` now outputs information from R2 (was from R1)
+-- minor bug-fixed: NPE in VDJCAlignerAbstract
+
+
 MiXCR v1.2 (16 Jun 2015)
 ========================
 
