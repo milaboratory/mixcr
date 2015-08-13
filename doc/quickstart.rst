@@ -50,8 +50,8 @@ The value of only one parameter is changed from its default in this snippet (``-
 
 The file produced (``clone.txt``) will contain a tab-delimited table with information about all clonotypes assembled by CDR3 sequence (clone abundance, CDR3 sequence, V, D, J genes, etc.). For full length analysis and other useful features see examples below.
 
- E2. Analysis of data obtained using 5'RACE-based amplification protocols
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Analysis of data obtained using 5'RACE-based amplification protocols
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Consider MiXCR workflow in more detail on analysis of paired-end
 sequenced cDNA library of IGH gene prepared using 5'RACE-based protocol
@@ -61,87 +61,67 @@ sequenced cDNA library of IGH gene prepared using 5'RACE-based protocol
 1. `Align <#align>`__ raw sequences to reference sequences of segments
    (V, D, J) of IGH gene:
 
-   ::
+  .. code-block:: console
 
-       > mixcr align --loci IGH -OvParameters.geneFeatureToAlign=VTranscript --report alignmentReport.log input_R1.fastq input_R2.fastq alignments.vdjca
+    > mixcr align --loci IGH -OvParameters.geneFeatureToAlign=VTranscript --report alignmentReport.log input_R1.fastq input_R2.fastq alignments.vdjca
 
-   Here we specified non-default value for gene feature used to align V
-   genes (``-OvParameters.geneFeatureToAlign=VTranscript``) in order to
-   utilize information from both reads, more specifically to let MiXCR
-   align V gene's 5'UTRS and parts of coding sequence on 5'-end with
-   sequence from read opposite to CDR3. MiXCR can also produce report
-   file (specified by optional parameter ``--report``) containing run
-   statistics which looks like this:
+  Here we specified non-default value for gene feature used to align V genes (``-OvParameters.geneFeatureToAlign=VTranscript``) in order to utilize information from both reads, more specifically to let MiXCR align V gene's 5'UTRS and parts of coding sequence on 5'-end with sequence from read opposite to CDR3. MiXCR can also produce report file (specified by optional parameter ``--report``) containing run statistics which looks like this:
 
-   ::
+  ::
 
-       Analysis Date: Mon Aug 25 15:22:39 MSK 2014
-       Input file(s): input_r1.fastq,input_r2.fastq
-       Output file: alignments.vdjca
-       Command line arguments: align --loci IGH --report alignmentReport.log input_r1.fastq input_r2.fastq alignments.vdjca
-       Total sequencing reads: 323248
-       Successfully aligned reads: 210360
-       Successfully aligned, percent: 65.08%
-       Alignment failed because of absence of V hits: 4.26%
-       Alignment failed because of absence of J hits: 30.19%
-       Alignment failed because of low total score: 0.48%
+    Analysis Date: Mon Aug 25 15:22:39 MSK 2014
+    Input file(s): input_r1.fastq,input_r2.fastq
+    Output file: alignments.vdjca
+    Command line arguments: align --loci IGH --report alignmentReport.log input_r1.fastq input_r2.fastq alignments.vdjca
+    Total sequencing reads: 323248
+    Successfully aligned reads: 210360
+    Successfully aligned, percent: 65.08%
+    Alignment failed because of absence of V hits: 4.26%
+    Alignment failed because of absence of J hits: 30.19%
+    Alignment failed because of low total score: 0.48%
 
-   One can convert binary output produced by ``align``
-   (``output.vdjca``) to a human-readable text file using
-   `exportAlignments <#export>`__ command.
+  One can convert binary output produced by ``align`` (``output.vdjca``) to a human-readable text file using `exportAlignments <#export>`__ command.
 
--  `Assemble <#assemble>`__ clonotypes:
+2. `Assemble <#assemble>`__ clonotypes:
 
-   ::
+  .. code-block:: console
 
-       > mixcr assemble --report assembleReport.log alignments.vdjca clones.clns
+    > mixcr assemble --report assembleReport.log alignments.vdjca clones.clns
 
-   This will build clonotypes and additionally correct PCR and
-   sequencing errors. By default, clonotypes will be assembled by CDR3
-   sequences; one can specify another gene region by passing additional
-   command line arguments (see `assemble <#assemble>`__ documentation).
-   The optional report ``assembleReport.log`` will look like:
+  This will build clonotypes and additionally correct PCR and
+  sequencing errors. By default, clonotypes will be assembled by CDR3
+  sequences; one can specify another gene region by passing additional
+  command line arguments (see `assemble <#assemble>`__ documentation).
+  The optional report ``assembleReport.log`` will look like:
 
-   ::
+  ::
 
-       Analysis Date: Mon Aug 25 15:29:51 MSK 2014
-       Input file(s): alignments.vdjca
-       Output file: clones.clns
-       Command line arguments: assemble --report assembleReport.log alignments.vdjca clones.clns
-       Final clonotype count: 11195
-       Total reads used in clonotypes: 171029
-       Reads used, percent of total: 52.89%
-       Reads used as core, percent of used: 92.04%
-       Mapped low quality reads, percent of used: 7.96%
-       Reads clustered in PCR error correction, percent of used: 0.04%
-       Clonotypes eliminated by PCR error correction: 72
-       Percent of reads dropped due to the lack of clonal sequence: 2.34%
-       Percent of reads dropped due to low quality: 3.96%
-       Percent of reads dropped due to failed mapping: 5.87%
+    Analysis Date: Mon Aug 25 15:29:51 MSK 2014
+    Input file(s): alignments.vdjca
+    Output file: clones.clns
+    Command line arguments: assemble --report assembleReport.log alignments.vdjca clones.clns
+    Final clonotype count: 11195
+    Total reads used in clonotypes: 171029
+    Reads used, percent of total: 52.89%
+    Reads used as core, percent of used: 92.04%
+    Mapped low quality reads, percent of used: 7.96%
+    Reads clustered in PCR error correction, percent of used: 0.04%
+    Clonotypes eliminated by PCR error correction: 72
+    Percent of reads dropped due to the lack of clonal sequence: 2.34%
+    Percent of reads dropped due to low quality: 3.96%
+    Percent of reads dropped due to failed mapping: 5.87%
 
--  `Export <#export>`__ binary file with a list of clones
-   (``clones.clns``) to a human-readable text file:
+3. `Export <#export>`__ binary file with a list of clones (``clones.clns``) to a human-readable text file:
 
-   ::
+  .. code-block:: console
 
-       > mixcr exportClones clones.clns clones.txt
+    > mixcr exportClones clones.clns clones.txt
 
-   This will export information about clones with default set of fields,
-   e.g.:
+  This will export information about clones with default set of fields, e.g.:
 
-   +---------------+------------------+-------+------------------------------------------+----------+--------------------------+-------------------+-----------------+-------+
-   | Clone count   | Clone fraction   | ...   | V hits                                   | J hits   | ...                      | N. seq. CDR3      | AA. seq. CDR3   | ...   |
-   +===============+==================+=======+==========================================+==========+==========================+===================+=================+=======+
-   | 4369          | 2.9E-3           | ...   | IGHV4-39\ *00(1388) \| IGHJ6*\ 00(131)   | ...      | TGTGTGAG...GACGTCTGG     | CVRHKPMVQGGVDVW   | ...             |
-   +---------------+------------------+-------+------------------------------------------+----------+--------------------------+-------------------+-----------------+-------+
-   | 3477          | 2.3E-3           | ...   | IGHV4-34\ *00(1944) \| IGHJ4*\ 00(153)   | ...      | TGTGCGAT...ATGACTTCTGG   | CAIWDVGLRHDFW     | ...             |
-   +---------------+------------------+-------+------------------------------------------+----------+--------------------------+-------------------+-----------------+-------+
-   | ...           | ...              | ...   | ...                                      | ...      | ...                      | ...               | ...             | ...   |
-   +---------------+------------------+-------+------------------------------------------+----------+--------------------------+-------------------+-----------------+-------+
+  .. include:: example_output.rst
 
-   where dots denote rows not shown here (for compactness). For the full
-   list of available export options see `export <#export>`__
-   documentation.
+  where dots denote rows not shown here (for compactness). For the full list of available export options see `export <#export>`__ documentation.
 
 Each of the above steps can be customized in order to adapt the analysis
 pipeline for a specific research task (see below).
