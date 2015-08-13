@@ -2,3 +2,4 @@ mixcr.iml
 target
 *.iml
 .idea
+doc/_build
