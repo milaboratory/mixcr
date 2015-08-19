@@ -34,6 +34,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -105,6 +106,18 @@ public class LociLibraryIOTest {
         Assert.assertTrue(library.allAlleles.size() > 100);
         Allele allele = library.allAlleles.iterator().next();
         Assert.assertTrue(allele.getPartitioning() != null);
+    }
+
+    @Test
+    public void test3ReadLL1() throws Exception {
+        InputStream sample = LociLibraryReader.class.getClassLoader().getResourceAsStream("reference/mi.ll");
+        LociLibrary library = LociLibraryReader.read(sample);
+        for (Allele allele : library.getAllAlleles(Species.HomoSapiens)) {
+            if (allele.getName().contains("4-61")) {
+                System.out.println(allele.isFunctional());
+                System.out.println(Arrays.toString(allele.getPartitioning().points));
+            }
+        }
     }
 
     @Ignore

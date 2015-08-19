@@ -28,7 +28,7 @@
  */
 package com.milaboratory.mixcr.assembler;
 
-import com.milaboratory.core.io.util.TestUtil;
+import com.milaboratory.core.io.util.IOTestUtil;
 import com.milaboratory.mixcr.reference.GeneFeature;
 import org.junit.Assert;
 import org.junit.Test;
@@ -42,6 +42,6 @@ public class CloneAssemblerParametersPresetsTest {
 
     @Test
     public void test2() throws Exception {
-        TestUtil.assertJavaSerialization(CloneAssemblerParametersPresets.getByName("default"));
+        IOTestUtil.assertJavaSerialization(CloneAssemblerParametersPresets.getByName("default"));
     }
 }

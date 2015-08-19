@@ -55,7 +55,7 @@ public class VDJCAlignerSJFirstTest {
         try (SingleFastqReader reader =
                      new SingleFastqReader(
                              VDJCAlignerSJFirstTest.class.getClassLoader()
-                                     .getResourceAsStream("sequences/sample_IGH_R1.fastq"))) {
+                                     .getResourceAsStream("sequences/sample_IGH_R1.fastq"), true)) {
             VDJCAlignerSJFirst aligner = new VDJCAlignerSJFirst(parameters);
             for (Allele allele : ll.getLocus(Species.HomoSapiens, Locus.IGH).getAllAlleles())
                 if (parameters.containsRequiredFeature(allele))
@@ -80,7 +80,7 @@ public class VDJCAlignerSJFirstTest {
                 Assert.assertEquals(alignemntsList.get(i++), alignments);
         }
     }
-    
+
 //    @Test
 //    public void testSerializationAndFilter() throws Exception {
 //        Assume.assumeTrue(TestUtil.lt());

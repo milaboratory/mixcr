@@ -47,7 +47,7 @@ final class KVJResultsForSingle {
         this.isRC = isRC;
     }
 
-    private static KAlignmentHit[] extractHits(float minScore, KAlignmentResult result, int maxHits) {
+    private static KAlignmentHit<?>[] extractHits(float minScore, KAlignmentResult<?> result, int maxHits) {
         int count = 0;
         for (KAlignmentHit hit : result.getHits())
             if (hit.getAlignment().getScore() > minScore) {

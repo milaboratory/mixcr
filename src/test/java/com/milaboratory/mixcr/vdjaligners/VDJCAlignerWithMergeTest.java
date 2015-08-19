@@ -67,7 +67,7 @@ public class VDJCAlignerWithMergeTest {
                              VDJCAlignerSJFirstTest.class.getClassLoader()
                                      .getResourceAsStream("sequences/sample_IGH_R1.fastq"),
                              VDJCAlignerSJFirstTest.class.getClassLoader()
-                                     .getResourceAsStream("sequences/sample_IGH_R2.fastq"))) {
+                                     .getResourceAsStream("sequences/sample_IGH_R2.fastq"), true)) {
 
             VDJCAlignerWithMerge aligner = new VDJCAlignerWithMerge(parameters);
 

@@ -30,6 +30,7 @@ package com.milaboratory.mixcr.reference;
 
 
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.core.sequence.SequencesUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -82,13 +83,13 @@ public class LociLibraryWriter {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             final Deflater def = new Deflater(9, true);
             DeflaterOutputStream dos = new DeflaterOutputStream(bos, def);
-            sequence.getInnerData().writeTo(new DataOutputStream(dos));
+            SequencesUtils.convertNSequenceToBit2Array(sequence).writeTo(new DataOutputStream(dos));
             dos.close();
             def.end();
             stream.writeInt(bos.size());
             stream.write(bos.toByteArray());
         } else
-            sequence.getInnerData().writeTo(stream);
+            SequencesUtils.convertNSequenceToBit2Array(sequence).writeTo(stream);
     }
 
     /**

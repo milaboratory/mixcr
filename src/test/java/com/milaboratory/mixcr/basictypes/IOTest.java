@@ -64,7 +64,7 @@ public class IOTest {
         try (SingleFastqReader reader =
                      new SingleFastqReader(
                              IOTest.class.getClassLoader()
-                                     .getResourceAsStream("sequences/sample_IGH_R1.fastq"))) {
+                                     .getResourceAsStream("sequences/sample_IGH_R1.fastq"), true)) {
 
             VDJCAlignerSJFirst aligner = new VDJCAlignerSJFirst(parameters);
 
