@@ -87,10 +87,11 @@ public class CloneAssemblerRunnerTest {
 
         SequenceReader reader;
         if (fastqFiles.length == 1)
-            reader = new SingleFastqReader(CloneAssemblerRunnerTest.class.getClassLoader().getResourceAsStream(fastqFiles[0]));
+            reader = new SingleFastqReader(CloneAssemblerRunnerTest.class.getClassLoader().getResourceAsStream(fastqFiles[0]),
+                    true);
         else
             reader = new PairedFastqReader(CloneAssemblerRunnerTest.class.getClassLoader().getResourceAsStream(fastqFiles[0]),
-                    CloneAssemblerRunnerTest.class.getClassLoader().getResourceAsStream(fastqFiles[1]));
+                    CloneAssemblerRunnerTest.class.getClassLoader().getResourceAsStream(fastqFiles[1]), true);
 
         //write alignments to byte array
         ByteArrayOutputStream alignmentsSerialized = new ByteArrayOutputStream();

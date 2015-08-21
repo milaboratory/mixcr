@@ -30,6 +30,7 @@ package com.milaboratory.mixcr.reference;
 
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.core.sequence.SequencesUtils;
 import com.milaboratory.util.Bit2Array;
 
 import java.io.*;
@@ -252,7 +253,7 @@ public class LociLibraryReader {
             inflater.end();
         } else
             seqContent = Bit2Array.readFrom(stream);
-        library.base.put(accession, from, new NucleotideSequence(seqContent));
+        library.base.put(accession, from, SequencesUtils.convertBit2ArrayToNSequence(seqContent));
     }
 
     private void readMeta() throws IOException {

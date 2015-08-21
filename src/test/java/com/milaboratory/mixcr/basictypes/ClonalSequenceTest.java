@@ -87,7 +87,7 @@ public class ClonalSequenceTest {
             assert rp <= td.c1.getConcatenated().size();
             Mutations<NucleotideSequence> incompatible =
                     td.mutations.combineWith(Mutations.decode(
-                            "I" + rp + "" + NucleotideSequence.ALPHABET.symbolFromCode(rl)
+                            "I" + rp + "" + NucleotideSequence.ALPHABET.codeToSymbol(rl)
                             , NucleotideSequence.ALPHABET));
             Assert.assertFalse(td.c1.isCompatible(td.c2, incompatible));
         }

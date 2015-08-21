@@ -64,7 +64,7 @@ public class VDJCAlignerPVFirstTest {
                              VDJCAlignerSJFirstTest.class.getClassLoader()
                                      .getResourceAsStream("sequences/sample_IGH_R1.fastq"),
                              VDJCAlignerSJFirstTest.class.getClassLoader()
-                                     .getResourceAsStream("sequences/sample_IGH_R2.fastq"))) {
+                                     .getResourceAsStream("sequences/sample_IGH_R2.fastq"), true)) {
 
             VDJCAlignerPVFirst aligner = new VDJCAlignerPVFirst(parameters);
 

@@ -43,8 +43,10 @@ import com.beust.jcommander.validators.PositiveInteger;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SequenceReaderCloseable;
 import com.milaboratory.core.io.sequence.fasta.FastaReader;
+import com.milaboratory.core.io.sequence.fasta.FastaSequenceReaderWrapper;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
+import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mitools.cli.Action;
 import com.milaboratory.mitools.cli.ActionHelper;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
@@ -241,13 +243,16 @@ public class ActionAlign implements Action {
 
         public SequenceReaderCloseable<? extends SequenceRead> createReader() throws IOException {
             if (isInputPaired())
-                return new PairedFastqReader(parameters.get(0), parameters.get(1));
+                return new PairedFastqReader(parameters.get(0), parameters.get(1), true);
             else {
                 String[] s = parameters.get(0).split("\\.");
                 if (s[s.length - 1].equals("fasta"))
-                    return new FastaReader(parameters.get(0), true);
+                    return new FastaSequenceReaderWrapper(
+                            new FastaReader<>(parameters.get(0), NucleotideSequence.ALPHABET),
+                            true
+                    );
                 else
-                    return new SingleFastqReader(parameters.get(0));
+                    return new SingleFastqReader(parameters.get(0), true);
             }
         }
 

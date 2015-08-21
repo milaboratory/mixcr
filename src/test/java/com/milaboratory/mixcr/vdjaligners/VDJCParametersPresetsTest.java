@@ -1,6 +1,6 @@
 package com.milaboratory.mixcr.vdjaligners;
 
-import com.milaboratory.core.io.util.TestUtil;
+import com.milaboratory.core.io.util.IOTestUtil;
 import org.junit.Test;
 
 /**
@@ -9,6 +9,6 @@ import org.junit.Test;
 public class VDJCParametersPresetsTest {
     @Test
     public void test1() throws Exception {
-        TestUtil.assertJavaSerialization(VDJCParametersPresets.getByName("default"));
+        IOTestUtil.assertJavaSerialization(VDJCParametersPresets.getByName("default"));
     }
 }

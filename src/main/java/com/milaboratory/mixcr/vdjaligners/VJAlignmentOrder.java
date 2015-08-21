@@ -26,22 +26,8 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.assembler;
+package com.milaboratory.mixcr.vdjaligners;
 
-import com.milaboratory.core.io.util.IOTestUtil;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import org.junit.Assert;
-import org.junit.Test;
-
-public class CloneAssemblerParametersPresetsTest {
-    @Test
-    public void test1() throws Exception {
-        Assert.assertEquals(GeneFeature.CDR3,
-                CloneAssemblerParametersPresets.getByName("default").getAssemblingFeatures()[0]);
-    }
-
-    @Test
-    public void test2() throws Exception {
-        IOTestUtil.assertJavaSerialization(CloneAssemblerParametersPresets.getByName("default"));
-    }
+public enum VJAlignmentOrder {
+    VThenJ, JThenV
 }

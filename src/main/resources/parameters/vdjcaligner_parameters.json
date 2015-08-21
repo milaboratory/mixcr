@@ -89,6 +89,7 @@
                 }
             }
         },
+        "vjAlignmentOrder": "VThenJ",
         "mergerParameters": {
             "minimalOverlap": 17,
             "minimalIdentity": 0.9

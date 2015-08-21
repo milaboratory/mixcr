@@ -141,12 +141,12 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     }
 
     static final PreVDJCHit[] zeroArray = new PreVDJCHit[0];
-    static final KAlignmentHit[] zeroKArray = new KAlignmentHit[0];
+    static final KAlignmentHit<?>[] zeroKArray = new KAlignmentHit[0];
 
     final class PAlignmentHelper {
         final PairedTarget target;
-        final KAlignmentResult[] vResults;
-        KAlignmentResult[] jResults;
+        final KAlignmentResult<?>[] vResults;
+        KAlignmentResult<?>[] jResults;
         PairedHit[] vHits, jHits;
         PairedHit bestVHits;
 
@@ -219,7 +219,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         /**
          * Converts two KAlignmentResults to an array of paired hits (each paired hit for a particular V of J gene)
          */
-        PairedHit[] extractDoubleHits(KAlignmentResult... results) {
+        PairedHit[] extractDoubleHits(KAlignmentResult<?>... results) {
             TIntObjectHashMap<PairedHit> hits = new TIntObjectHashMap<>();
             addHits(hits, results[0], 0);
             addHits(hits, results[1], 1);
@@ -235,7 +235,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                     (jHits != null && jHits.length > 0 ? jHits[0].sumScore : 0.0f);
         }
 
-        void addHits(TIntObjectHashMap<PairedHit> hits, KAlignmentResult result, int index) {
+        void addHits(TIntObjectHashMap<PairedHit> hits, KAlignmentResult<?> result, int index) {
             if (result == null)
                 return;
 
@@ -395,7 +395,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
      * read.
      */
     static final class PairedHit {
-        KAlignmentHit hit0, hit1;
+        KAlignmentHit<?> hit0, hit1;
         float sumScore = -1, vEndScore = -1;
 
         PairedHit() {
@@ -488,7 +488,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     /**
      * Calculates alignment score only for FR3 and CDR3 part of V gene.
      */
-    float calculateVEndScore(KAlignmentHit hit) {
+    float calculateVEndScore(KAlignmentHit<?> hit) {
         final Allele allele = getVAllelesToAlign().get(hit.getId());
         final int boundary = allele.getPartitioning().getRelativePosition(
                 parameters.getFeatureToAlign(GeneType.Variable),
@@ -523,7 +523,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         }
     };
 
-    static VDJCHit[] combine(final List<Allele> alleles, final GeneFeature feature, final KAlignmentHit[][] hits) {
+    static VDJCHit[] combine(final List<Allele> alleles, final GeneFeature feature, final KAlignmentHit<?>[][] hits) {
         for (int i = 0; i < hits.length; i++)
             Arrays.sort(hits[i], ALLELE_ID_COMPARATOR);
         ArrayList<VDJCHit> result = new ArrayList<>();
