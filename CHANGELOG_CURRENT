@@ -1,0 +1,2 @@
+migration to MiLib 1.1
+new parameter: `vjAlignmentOrder` (possible values `VThenJ` and `JThenV`). Usage `mixcr align -OvjAlignmentOrder=JThenV ...` . Previous behaviour of MiXCR was equivalent to JThenV, while now default value for the parameter is VThenJ. Parameter affects only Single-Read alignments and alignment of overlapped paired-end reads. Non-overlaping paired-end reads are always porcessed in VThenJ mode. JThenV can be used for short reads (~100bp) with full (or nearly full) J gene coverage.

@@ -129,20 +129,39 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
     private KVJResultsForSingle align(NucleotideSequence read, boolean isRC) {
         ensureInitialized();
 
-        KAlignmentResult jResult;
+        KAlignmentResult vResult, jResult;
 
-        jResult = jAligner.align(read);
+        switch (parameters.getVJAlignmentOrder()) {
+            case VThenJ:
+                vResult = vAligner.align(read);
 
-        //If there is no results for J return
-        if (!jResult.hasHits())
-            return new KVJResultsForSingle(null, jResult, isRC);
+                //If there is no results for V return
+                if (!vResult.hasHits())
+                    return new KVJResultsForSingle(vResult, null, isRC);
 
-        //Searching for V gene
-        KAlignmentResult vResult = vAligner.align(read, 0,
-                jResult.getBestHit().getAlignment().getSequence2Range().getFrom());
+                //Searching for J gene
+                jResult = jAligner.align(read,
+                        vResult.getBestHit().getAlignment().getSequence2Range().getTo(),
+                        read.size());
 
-        //Returning result
-        return new KVJResultsForSingle(vResult, jResult, isRC);
+                //Returning result
+                return new KVJResultsForSingle(vResult, jResult, isRC);
+            case JThenV:
+                jResult = jAligner.align(read);
+
+                //If there is no results for J return
+                if (!jResult.hasHits())
+                    return new KVJResultsForSingle(null, jResult, isRC);
+
+                //Searching for V gene
+                vResult = vAligner.align(read, 0,
+                        jResult.getBestHit().getAlignment().getSequence2Range().getFrom());
+
+                //Returning result
+                return new KVJResultsForSingle(vResult, jResult, isRC);
+        }
+
+        throw new IllegalArgumentException("vjAlignmentOrder not set.");
     }
 }
 

@@ -49,6 +49,7 @@ import java.util.Map;
 public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.Serializable {
     @JsonIgnore
     protected final EnumMap<GeneType, GeneAlignmentParameters> alignmentParameters;
+    protected VJAlignmentOrder vjAlignmentOrder;
     protected float minSumScore;
     protected int maxHits;
     protected float relativeMinVFR3CDR3Score;
@@ -74,6 +75,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
                                  @JsonProperty("dParameters") DAlignerParameters dParameters,
                                  @JsonProperty("jParameters") KGeneAlignmentParameters jParameters,
                                  @JsonProperty("cParameters") KGeneAlignmentParameters cParameters,
+                                 @JsonProperty("vjAlignmentOrder") VJAlignmentOrder vjAlignmentOrder,
                                  @JsonProperty("minSumScore") float minSumScore,
                                  @JsonProperty("maxHits") int maxHits,
                                  @JsonProperty("relativeMinVScore") float relativeMinVScore,
@@ -85,6 +87,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         setGeneAlignerParameters(GeneType.Diversity, dParameters);
         setGeneAlignerParameters(GeneType.Joining, jParameters);
         setGeneAlignerParameters(GeneType.Constant, cParameters);
+        this.vjAlignmentOrder = vjAlignmentOrder;
         this.minSumScore = minSumScore;
         this.maxHits = maxHits;
         this.relativeMinVScore = relativeMinVScore;
@@ -163,6 +166,15 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
     @JsonProperty("minSumScore")
     public float getMinSumScore() {
         return minSumScore;
+    }
+
+    @JsonProperty("vjAlignmentOrder")
+    public VJAlignmentOrder getVJAlignmentOrder() {
+        return vjAlignmentOrder;
+    }
+
+    public void setVjAlignmentOrder(VJAlignmentOrder vjAlignmentOrder) {
+        this.vjAlignmentOrder = vjAlignmentOrder;
     }
 
     public VDJCAlignerParameters setMinSumScore(float minSumScore) {
@@ -275,6 +287,6 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
     @Override
     public VDJCAlignerParameters clone() {
         return new VDJCAlignerParameters(getVAlignerParameters(), getDAlignerParameters(), getJAlignerParameters(), getCAlignerParameters(),
-                minSumScore, maxHits, relativeMinVFR3CDR3Score, relativeMinVScore, readsLayout, mergerParameters);
+                vjAlignmentOrder, minSumScore, maxHits, relativeMinVFR3CDR3Score, relativeMinVScore, readsLayout, mergerParameters);
     }
 }
