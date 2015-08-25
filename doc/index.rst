@@ -1,4 +1,4 @@
-MIXCR: a universal tool for fast and accurate analysis of T- and B- cell receptor repertoire sequencing data
+MiXCR: a universal tool for fast and accurate analysis of T- and B- cell receptor repertoire sequencing data
 ============================================================================================================
 
 MiXCR is a universal framework that processes big immunome data from
@@ -9,12 +9,13 @@ supports both partial- and full-length profiling and employs all
 available RNA or DNA information, including sequences upstream of V
 and downstream of J gene segments.
 
-.. image:: _static/mixcr.png
+.. figure:: _static/mixcr.png
    :width: 80%
 
+   *MiXCR pipeline. The workflow from IG or T-cell receptor data sets to final clonotypes is shown*
 
 Table of contents:
------------------
+------------------
 
 .. toctree::
    :maxdepth: 2
