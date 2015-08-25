@@ -159,7 +159,7 @@ Each of the above steps can be customized in order to adapt the analysis pipelin
 Full length IGH analysis
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-1. To build clonotypes based on the full-length sequence of variable part of IGH gene (not V gene only, but V-D-J junction with whole V Region and J Region) one need to obtain alignments fully covering V Region (like in E2). For example:
+1. To build clonotypes based on the full-length sequence of variable part of IGH gene (not V gene only, but V-D-J junction with whole V Region and J Region) one need to obtain alignments fully covering V Region (like in the previous example). For example:
 
   .. code-block:: console
 
