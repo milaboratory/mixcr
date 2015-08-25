@@ -8,4 +8,8 @@ MIXCR User Guide
 
    install
    quickstart
-   manual
+   align
+   assemble
+   export
+   geneFeatures
+   appendix
