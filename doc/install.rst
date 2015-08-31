@@ -15,7 +15,7 @@ Installation on Mac OS X / Linux
 
   .. code-block:: console
 
-    > java -version"working_dir": "${project_path:${folder}}",
+    > java -version
     java version "1.7.0_65"
     Java(TM) SE Runtime Environment (build 1.7.0_65-b17)
     Java HotSpot(TM) 64-Bit Server VM (build 24.65-b04, mixed mode)
