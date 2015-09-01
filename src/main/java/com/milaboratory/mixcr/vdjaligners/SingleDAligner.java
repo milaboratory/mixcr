@@ -38,17 +38,19 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.reference.GeneFeature;
+import com.milaboratory.mixcr.reference.Locus;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 public final class SingleDAligner {
     private final AlignmentScoring<NucleotideSequence> scoring;
     private final float absoluteMinScore, relativeMinScore;
     private final int maxHits;
-    private final List<NucleotideSequence> sequences = new ArrayList<>();
+    private final List<SequenceWithLocus> sequences = new ArrayList<>();
     private final List<Allele> alleles;
     private final GeneFeature featureToAlign;
 
@@ -72,11 +74,11 @@ public final class SingleDAligner {
         this.maxHits = parameters.getMaxHits();
         this.featureToAlign = parameters.getGeneFeatureToAlign();
         for (Allele allele : alleles)
-            sequences.add(allele.getFeature(featureToAlign));
+            sequences.add(new SequenceWithLocus(allele, featureToAlign));
         this.alleles = new ArrayList<>(alleles);
     }
 
-    List<PreVDJCHit> align0(NucleotideSequence sequence, int from, int to) {
+    List<PreVDJCHit> align0(NucleotideSequence sequence, Set<Locus> loci, int from, int to) {
         if (from > to)
             throw new IllegalArgumentException();
 
@@ -88,31 +90,31 @@ public final class SingleDAligner {
 
             PreVDJCHit h;
             for (PreVDJCHit hit : cachedResult) {
+                //filter non-possible loci
+                if (!loci.contains(sequences.get(hit.id).locus))
+                    continue;
+
                 result.add(h = convert(hit, from));
 
                 assert sequence.getRange(h.alignment.getSequence2Range()).equals(
                         h.alignment
                                 .getRelativeMutations()
-                                .mutate(sequences.get(h.id)
-                                        .getRange(h.alignment.getSequence1Range()))
-                );
+                                .mutate(sequences.get(h.id).sequence
+                                        .getRange(h.alignment.getSequence1Range())));
             }
 
+            cutToScore(result);
             return result;
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public VDJCHit[] align(NucleotideSequence sequence, int from, int to,
+    public VDJCHit[] align(NucleotideSequence sequence, Set<Locus> loci, int from, int to,
                            int targetIndex, int numberOfTargets) {
-        List<PreVDJCHit> preHits = align0(sequence, from, to);
+        List<PreVDJCHit> preHits = align0(sequence, loci, from, to);
         return PreVDJCHit.convert(alleles, featureToAlign, preHits,
                 targetIndex, numberOfTargets);
-    }
-
-    public VDJCHit[] align(NucleotideSequence sequence, int from, int to) {
-        return align(sequence, from, to, 0, 1);
     }
 
     private PreVDJCHit convert(PreVDJCHit hit, int from) {
@@ -131,7 +133,7 @@ public final class SingleDAligner {
         List<PreVDJCHit> result = new ArrayList<>();
         Alignment<NucleotideSequence> alignment;
         for (int i = 0; i < sequences.size(); ++i) {
-            alignment = Aligner.alignLocal(scoring, sequences.get(i), sequence);
+            alignment = Aligner.alignLocal(scoring, sequences.get(i).sequence, sequence);
 
             if (alignment == null || alignment.getScore() < absoluteMinScore)
                 continue;
@@ -139,18 +141,27 @@ public final class SingleDAligner {
             result.add(new PreVDJCHit(i, alignment));
         }
 
-        if (result.isEmpty())
-            return result;
-
         Collections.sort(result, PreVDJCHit.SCORE_COMPARATOR);
+        return result;
+    }
 
+    private void cutToScore(List<PreVDJCHit> result) {
+        if (result.isEmpty())
+            return;
         float threshold = Math.max(absoluteMinScore, result.get(0).alignment.getScore() * relativeMinScore);
-
         for (int i = result.size() - 1; i >= 0; --i)
             if (result.get(i).alignment.getScore() < threshold
                     || i >= maxHits)
                 result.remove(i);
+    }
 
-        return result;
+    private static final class SequenceWithLocus {
+        private final NucleotideSequence sequence;
+        private final Locus locus;
+
+        public SequenceWithLocus(Allele allele, GeneFeature featureToAlign) {
+            this.sequence = allele.getFeature(featureToAlign);
+            this.locus = allele.getLocus();
+        }
     }
 }

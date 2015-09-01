@@ -37,6 +37,7 @@ import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.reference.*;
 import com.milaboratory.mixcr.vdjaligners.SingleDAligner;
+import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.list.array.TFloatArrayList;
 import gnu.trove.map.hash.TObjectFloatHashMap;
@@ -220,7 +221,9 @@ class CloneFactory {
 
         if (from < to)
             hits.put(GeneType.Diversity,
-                    dAligner.align(sequenceToAlign, from, to, indexOfAssemblingFeatureWithD,
+                    dAligner.align(sequenceToAlign,
+                            VDJCAligner.getPossibleDLoci(hits.get(GeneType.Variable), hits.get(GeneType.Joining)),
+                            from, to, indexOfAssemblingFeatureWithD,
                             assemblingFeatures.length));
         else
             hits.put(GeneType.Diversity, new VDJCHit[0]);
