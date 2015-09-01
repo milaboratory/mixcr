@@ -28,12 +28,16 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
+import com.milaboratory.core.io.CompressionType;
 import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivO;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -45,12 +49,12 @@ public final class VDJCAlignmentsWriter implements AutoCloseable {
     long numberOfProcessedReads = -1;
     boolean header = false, closed = false;
 
-    public VDJCAlignmentsWriter(String fileName) throws FileNotFoundException {
-        this(new BufferedOutputStream(new FileOutputStream(fileName), 65536));
+    public VDJCAlignmentsWriter(String fileName) throws IOException {
+        this(new File(fileName));
     }
 
-    public VDJCAlignmentsWriter(File file) throws FileNotFoundException {
-        this(new BufferedOutputStream(new FileOutputStream(file), 65536));
+    public VDJCAlignmentsWriter(File file) throws IOException {
+        this(IOUtil.createOS(file));
     }
 
     public VDJCAlignmentsWriter(OutputStream output) {

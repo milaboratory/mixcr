@@ -1,1 +1,3 @@
 Added export options -vHitsWithoutScores (same for J and D genes)
+
+Added compression for .vdjca and .clns files (when specifying additional ".gz" extension: e.g. "mixcr align inut.fastq output.vdjca.gz" etc.)

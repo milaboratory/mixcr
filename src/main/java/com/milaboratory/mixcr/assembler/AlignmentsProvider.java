@@ -34,10 +34,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.reference.AlleleResolver;
 import com.milaboratory.util.Factory;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
+import java.io.*;
 
 public interface AlignmentsProvider {
     OutputPortCloseable<VDJCAlignments> create();
@@ -65,7 +62,7 @@ public interface AlignmentsProvider {
                 public VDJCAlignmentsReader create() {
                     try {
                         return new VDJCAlignmentsReader(file, alleleResolver);
-                    } catch (FileNotFoundException e) {
+                    } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
                 }
@@ -78,7 +75,7 @@ public interface AlignmentsProvider {
                 public VDJCAlignmentsReader create() {
                     try {
                         return new VDJCAlignmentsReader(file, alleleResolver);
-                    } catch (FileNotFoundException e) {
+                    } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
                 }

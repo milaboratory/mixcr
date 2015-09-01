@@ -48,12 +48,20 @@ public final class CloneSetIO {
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
 
-    public static class CloneSetWriter implements CanReportProgressAndStage {
+    public static class CloneSetWriter implements CanReportProgressAndStage, Closeable {
         final String stage = "Writing clones";
         final PrimitivO output;
         final CloneSet cloneSet;
         final int size;
         volatile int current;
+
+        public CloneSetWriter(CloneSet cloneSet, String fileName) throws IOException {
+            this(cloneSet, new File(fileName));
+        }
+
+        public CloneSetWriter(CloneSet cloneSet, File file) throws IOException {
+            this(cloneSet, IOUtil.createOS(file));
+        }
 
         public CloneSetWriter(CloneSet cloneSet, OutputStream outputStream) {
             this.output = new PrimitivO(outputStream);
@@ -89,6 +97,11 @@ public final class CloneSetIO {
                 ++current;
             }
         }
+
+        @Override
+        public void close() {
+            output.close();
+        }
     }
 
     public static void read(CloneSet cloneSet, File file) throws IOException {
@@ -119,13 +132,11 @@ public final class CloneSetIO {
     }
 
     public static CloneSet read(String fileName, AlleleResolver alleleResolver) throws IOException {
-        try (InputStream inputStream = new BufferedInputStream(new FileInputStream(fileName), 32768)) {
-            return read(inputStream, alleleResolver);
-        }
+        return read(new File(fileName), alleleResolver);
     }
 
     public static CloneSet read(File file, AlleleResolver alleleResolver) throws IOException {
-        try (InputStream inputStream = new BufferedInputStream(new FileInputStream(file), 32768)) {
+        try (InputStream inputStream = IOUtil.createIS(file)) {
             return read(inputStream, alleleResolver);
         }
     }

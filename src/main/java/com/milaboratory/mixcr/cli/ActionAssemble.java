@@ -44,9 +44,6 @@ import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.primitivio.PipeWriter;
 import com.milaboratory.util.SmartProgressReporter;
 
-import java.io.BufferedOutputStream;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -86,8 +83,7 @@ public class ActionAssemble implements Action {
                     assembler, actionParameters.threads);
             SmartProgressReporter.startProgressReport(assemblerRunner);
             assemblerRunner.run();
-            try (OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(actionParameters.getOutputFileName()), 65536)) {
-                CloneSetIO.CloneSetWriter writer = new CloneSetIO.CloneSetWriter(assemblerRunner.getCloneSet(), outputStream);
+            try (CloneSetIO.CloneSetWriter writer = new CloneSetIO.CloneSetWriter(assemblerRunner.getCloneSet(), actionParameters.getOutputFileName())) {
                 SmartProgressReporter.startProgressReport(writer);
                 writer.write();
             }
