@@ -34,7 +34,10 @@ import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivO;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -47,17 +50,11 @@ public final class VDJCAlignmentsWriter implements AutoCloseable {
     boolean header = false, closed = false;
 
     public VDJCAlignmentsWriter(String fileName) throws IOException {
-        this(createOS(CompressionType.detectCompressionType(fileName), new FileOutputStream(fileName)));
+        this(new File(fileName));
     }
 
     public VDJCAlignmentsWriter(File file) throws IOException {
-        this(createOS(CompressionType.detectCompressionType(file), new FileOutputStream(file)));
-    }
-
-    private static OutputStream createOS(CompressionType ct, OutputStream os) throws IOException {
-        if (ct == CompressionType.None)
-            return new BufferedOutputStream(os, 65536);
-        else return ct.createOutputStream(os, 65536);
+        this(IOUtil.createOS(file));
     }
 
     public VDJCAlignmentsWriter(OutputStream output) {

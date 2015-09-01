@@ -31,6 +31,7 @@ package com.milaboratory.mixcr.cli;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
+import com.milaboratory.mixcr.basictypes.IOUtil;
 import com.milaboratory.mixcr.export.InfoWriter;
 import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.util.CanReportProgressAndStage;
@@ -48,7 +49,7 @@ public class ActionExportClones extends ActionExport {
 
     @Override
     public void go0() throws Exception {
-        try (InputStream inputStream = new BufferedInputStream(new FileInputStream(parameters.inputFile), 65536);
+        try (InputStream inputStream = IOUtil.createIS(parameters.inputFile);
              InfoWriter<Clone> writer = new InfoWriter<>(parameters.outputFile)) {
             CloneSet set = CloneSetIO.read(inputStream, LociLibraryManager.getDefault());
             writer.attachInfoProviders((List) parameters.exporters);
