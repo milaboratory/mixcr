@@ -28,6 +28,7 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
+import com.milaboratory.core.io.CompressionType;
 import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
@@ -45,12 +46,18 @@ public final class VDJCAlignmentsWriter implements AutoCloseable {
     long numberOfProcessedReads = -1;
     boolean header = false, closed = false;
 
-    public VDJCAlignmentsWriter(String fileName) throws FileNotFoundException {
-        this(new BufferedOutputStream(new FileOutputStream(fileName), 65536));
+    public VDJCAlignmentsWriter(String fileName) throws IOException {
+        this(createOS(CompressionType.detectCompressionType(fileName), new FileOutputStream(fileName)));
     }
 
-    public VDJCAlignmentsWriter(File file) throws FileNotFoundException {
-        this(new BufferedOutputStream(new FileOutputStream(file), 65536));
+    public VDJCAlignmentsWriter(File file) throws IOException {
+        this(createOS(CompressionType.detectCompressionType(file), new FileOutputStream(file)));
+    }
+
+    private static OutputStream createOS(CompressionType ct, OutputStream os) throws IOException {
+        if (ct == CompressionType.None)
+            return new BufferedOutputStream(os, 65536);
+        else return ct.createOutputStream(os, 65536);
     }
 
     public VDJCAlignmentsWriter(OutputStream output) {

@@ -29,6 +29,7 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPortCloseable;
+import com.milaboratory.core.io.CompressionType;
 import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.reference.AlleleResolver;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
@@ -53,12 +54,18 @@ public class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>
     final long size;
     final CountingInputStream countingInputStream;
 
-    public VDJCAlignmentsReader(String fileName, AlleleResolver alleleResolver) throws FileNotFoundException {
+    public VDJCAlignmentsReader(String fileName, AlleleResolver alleleResolver) throws IOException {
         this(new File(fileName), alleleResolver);
     }
 
-    public VDJCAlignmentsReader(File file, AlleleResolver alleleResolver) throws FileNotFoundException {
-        this(new BufferedInputStream(new FileInputStream(file), 65536), alleleResolver, file.length());
+    public VDJCAlignmentsReader(File file, AlleleResolver alleleResolver) throws IOException {
+        this(createIS(CompressionType.detectCompressionType(file), new FileInputStream(file)), alleleResolver, file.length());
+    }
+
+    private static InputStream createIS(CompressionType ct, InputStream is) throws IOException {
+        if (ct == CompressionType.None)
+            return new BufferedInputStream(is, 65536);
+        else return ct.createInputStream(is, 65536);
     }
 
     public VDJCAlignmentsReader(InputStream input, AlleleResolver alleleResolver) {
