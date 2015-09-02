@@ -288,7 +288,8 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                             to = jAlignment.getSequence2Range().getFrom();
                     if (from > to)
                         continue;
-                    List<PreVDJCHit> temp = singleDAligner.align0(target.targets[i].getSequence(), from, to);
+                    List<PreVDJCHit> temp = singleDAligner.align0(target.targets[i].getSequence(),
+                            getPossibleDLoci(vHits,jHits), from, to);
                     preDHits[i] = temp.toArray(new PreVDJCHit[temp.size()]);
                 }
 

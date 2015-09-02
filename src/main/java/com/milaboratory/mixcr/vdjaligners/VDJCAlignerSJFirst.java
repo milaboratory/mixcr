@@ -89,19 +89,21 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
         if (topResult.hasVJHits()) {
             EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
 
-            if (singleDAligner != null) {
-                //Alignment of D gene
-                int from = topResult.vHits[0].getAlignment().getSequence2Range().getTo(),
-                        to = topResult.jHits[0].getAlignment().getSequence2Range().getFrom();
-                List<PreVDJCHit> dResult = singleDAligner.align0(topResult.isRC ? targetRC : target, from, to);
-                hits.put(GeneType.Diversity, PreVDJCHit.convert(getDAllelesToAlign(),
-                        parameters.getFeatureToAlign(GeneType.Diversity), dResult));
-            }
-
             hits.put(GeneType.Variable, topResult.getVHits(getVAllelesToAlign(),
                     parameters.getFeatureToAlign(GeneType.Variable)));
             hits.put(GeneType.Joining, topResult.getJHits(getJAllelesToAlign(),
                     parameters.getFeatureToAlign(GeneType.Joining)));
+
+            if (singleDAligner != null) {
+                //Alignment of D gene
+                int from = topResult.vHits[0].getAlignment().getSequence2Range().getTo(),
+                        to = topResult.jHits[0].getAlignment().getSequence2Range().getFrom();
+                List<PreVDJCHit> dResult = singleDAligner.align0(topResult.isRC ? targetRC : target,
+                        getPossibleDLoci(hits.get(GeneType.Variable), hits.get(GeneType.Joining)),
+                        from, to);
+                hits.put(GeneType.Diversity, PreVDJCHit.convert(getDAllelesToAlign(),
+                        parameters.getFeatureToAlign(GeneType.Diversity), dResult));
+            }
 
             if (cAligner != null) {
                 int from = topResult.jHits[0].getAlignment().getSequence2Range().getTo();

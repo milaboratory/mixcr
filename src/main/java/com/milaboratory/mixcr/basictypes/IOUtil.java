@@ -28,6 +28,7 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
+import com.milaboratory.core.io.CompressionType;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.reference.AlleleId;
@@ -36,6 +37,7 @@ import com.milaboratory.mixcr.reference.GeneFeature;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -92,5 +94,33 @@ public class IOUtil {
         }
 
         return alleles;
+    }
+
+    public static InputStream createIS(String file) throws IOException {
+        return createIS(CompressionType.detectCompressionType(file), new FileInputStream(file));
+    }
+
+    public static InputStream createIS(File file) throws IOException {
+        return createIS(CompressionType.detectCompressionType(file), new FileInputStream(file));
+    }
+
+    public static InputStream createIS(CompressionType ct, InputStream is) throws IOException {
+        if (ct == CompressionType.None)
+            return new BufferedInputStream(is, 65536);
+        else return ct.createInputStream(is, 65536);
+    }
+
+    public static OutputStream createOS(String file) throws IOException {
+        return createOS(CompressionType.detectCompressionType(file), new FileOutputStream(file));
+    }
+
+    public static OutputStream createOS(File file) throws IOException {
+        return createOS(CompressionType.detectCompressionType(file), new FileOutputStream(file));
+    }
+
+    public static OutputStream createOS(CompressionType ct, OutputStream os) throws IOException {
+        if (ct == CompressionType.None)
+            return new BufferedOutputStream(os, 65536);
+        else return ct.createOutputStream(os, 65536);
     }
 }
