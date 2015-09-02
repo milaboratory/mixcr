@@ -99,10 +99,13 @@ public class ActionAlign implements Action {
         try (SequenceReaderCloseable<? extends SequenceRead> reader = actionParameters.createReader();
              VDJCAlignmentsWriter writer = actionParameters.getOutputName().equals(".") ? null : new VDJCAlignmentsWriter(actionParameters.getOutputName())) {
             if (writer != null) writer.header(aligner);
-            SmartProgressReporter.startProgressReport("Alignment", (CanReportProgress) reader);
             OutputPort<? extends SequenceRead> sReads = reader;
-            if (actionParameters.limit != 0)
+            CanReportProgress progress = (CanReportProgress) reader;
+            if (actionParameters.limit != 0) {
                 sReads = new CountLimitingOutputPort<>(sReads, actionParameters.limit);
+                progress = SmartProgressReporter.extractProgress((CountLimitingOutputPort<?>) sReads);
+            }
+            SmartProgressReporter.startProgressReport("Alignment", progress);
             OutputPort<Chunk<? extends SequenceRead>> mainInputReads = CUtils.buffered((OutputPort) chunked(sReads, 64), 16);
             OutputPort<VDJCAlignmentResult> alignments = unchunked(new ParallelProcessor(mainInputReads, chunked(aligner), actionParameters.threads));
             for (VDJCAlignmentResult result : CUtils.it(

@@ -1,0 +1,2 @@
+Correct progress reporting with `-n` option in align action.
+Additional micro filtration step for paired-end read aligner (work in very rear cases)

@@ -78,7 +78,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
             helper.performJAlignment();
         }
 
-        // Calculates which PTarget was aligned with the biggest score
+        // Calculates which PTarget was aligned with the highest score
         PAlignmentHelper bestHelper = helpers[0];
         if (bestHelper.score() < helpers[1].score())
             bestHelper = helpers[1];
@@ -110,7 +110,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         //}
 
         // If hits for V or J are missing after filtration
-        if (!bestHelper.hasHits()) {
+        if (!bestHelper.isGood()) {
             onFailedAlignment(input, VDJCAlignmentFailCause.LowTotalScore);
             return new VDJCAlignmentResult<>(input);
         }
@@ -214,6 +214,17 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         boolean hasHits() {
             return vHits != null && jHits != null &&
                     vHits.length > 0 && jHits.length > 0;
+        }
+
+        boolean isGood() {
+            return hasHits() && hasVJOnTheSameTarget();
+        }
+
+        private boolean hasVJOnTheSameTarget() {
+            for (int i = 0; i < 2; i++)
+                if (vHits[0].get(i) != null && jHits[0].get(i) != null)
+                    return true;
+            return false;
         }
 
         /**
