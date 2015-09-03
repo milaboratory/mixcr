@@ -113,7 +113,8 @@ public class LociLibraryIOTest {
         InputStream sample = LociLibraryReader.class.getClassLoader().getResourceAsStream("reference/mi.ll");
         LociLibrary library = LociLibraryReader.read(sample);
         for (Allele allele : library.getAllAlleles(Species.HomoSapiens)) {
-            if (allele.getName().contains("4-61")) {
+            if (allele.getName().contains("3-11")) {
+                System.out.println(allele.getName());
                 System.out.println(allele.isFunctional());
                 System.out.println(Arrays.toString(allele.getPartitioning().points));
             }
