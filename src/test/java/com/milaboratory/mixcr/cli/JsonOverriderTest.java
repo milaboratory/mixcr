@@ -55,6 +55,19 @@ public class JsonOverriderTest {
     }
 
     @Test
+    public void test1a() throws Exception {
+        KAlignerParameters parameters = KAlignerParameters.getByName("default");
+        KAlignerParameters override = JsonOverrider.override(
+                parameters,
+                KAlignerParameters.class,
+                "floatingLeftBound=true",
+                "scoring.subsMatrix='simple(match=4,mismatch=-9)'");
+        KAlignerParameters expected = parameters.clone().setFloatingLeftBound(true)
+                .setScoring(new LinearGapAlignmentScoring(NucleotideSequence.ALPHABET, 4, -9, parameters.getScoring().getGapPenalty()));
+        Assert.assertEquals(expected, override);
+    }
+
+    @Test
     public void test2() throws Exception {
         KAlignerParameters parameters = KAlignerParameters.getByName("default");
         KAlignerParameters override = JsonOverrider.override(

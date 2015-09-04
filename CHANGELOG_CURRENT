@@ -5,3 +5,4 @@ Added support for optional compression of .vdjca and .clns files (when specifyin
 Possible set of D genes is limited by loci of V and J genes in current rearrengement
 Default output format for `exportAlignmentsPretty` changed for the new one which is more compact and vivid
 Two new filtering options in `exportAlignmentsPretty`: `--cdr3-contains` and `--read-contains`
+Correct handling of quotes in paramters overriding
