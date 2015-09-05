@@ -127,10 +127,10 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     }
 
     PAlignmentHelper[] createInitialHelpers(PairedTarget[] target) {
-        return new PAlignmentHelper[]{
-                createInitialHelper(target[0]),
-                createInitialHelper(target[1])
-        };
+        PAlignmentHelper[] result = new PAlignmentHelper[target.length];
+        for (int i = 0; i < target.length; i++)
+            result[i] = createInitialHelper(target[i]);
+        return result;
     }
 
     PAlignmentHelper createInitialHelper(PairedTarget target) {
@@ -289,7 +289,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                     if (from > to)
                         continue;
                     List<PreVDJCHit> temp = singleDAligner.align0(target.targets[i].getSequence(),
-                            getPossibleDLoci(vHits,jHits), from, to);
+                            getPossibleDLoci(vHits, jHits), from, to);
                     preDHits[i] = temp.toArray(new PreVDJCHit[temp.size()]);
                 }
 

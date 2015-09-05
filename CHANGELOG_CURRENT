@@ -1,8 +1,9 @@
-Correct progress reporting with `-n` option in align action.
-Additional micro filtration step for paired-end read aligner (work in very rear cases)
-Added export options -vHitsWithoutScores (same for J and D genes)
-Added support for optional compression of .vdjca and .clns files (when specifying additional `.gz` extension: e.g. `mixcr align inut.fastq output.vdjca.gz` etc.)
-Possible set of D genes is limited by loci of V and J genes in current rearrengement
+Possible set of D genes is limited by loci of V and J genes in current rearrangement
 Default output format for `exportAlignmentsPretty` changed for the new one which is more compact and vivid
 Two new filtering options in `exportAlignmentsPretty`: `--cdr3-contains` and `--read-contains`
-Correct handling of quotes in paramters overriding
+m: Additional micro filtration step for paired-end read aligner (work in very rear cases)
+m: Fixed bug leading to incorrect behaviour if `readsLayout=Unknown`
+m: Correct progress reporting with `-n` option in align action.
+m: Added export options -vHitsWithoutScores (same for J and D genes)
+m: Added support for optional compression of .vdjca and .clns files (when specifying additional `.gz` extension: e.g. `mixcr align inut.fastq output.vdjca.gz` etc.)
+m: Correct handling of quotes in parameters overriding
