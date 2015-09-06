@@ -28,8 +28,8 @@ regions is not limited by this list:
 -  gene features can be concatenated (e.g. VTranscript =
    {V5UTRBegin:L1End}+{L2Begin:VEnd}).
 -  offsets can be added or subtracted from original positions of
-   **anchor points** to define even more custom gene regions (*for more
-   detailed description see :ref:`gene feature syntax <ref-featureSyntax>`)*
+   **anchor points** to define even more custom gene regions (for more
+   detailed description see :ref:`gene feature syntax <ref-featureSyntax>`)
 
 Naming of gene features is based on IMGT convention described in
 *Lefranc et al. (2003), Developmental & Comparative Immunology 27.1 (2003): 55-77*.

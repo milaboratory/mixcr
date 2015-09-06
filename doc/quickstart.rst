@@ -87,9 +87,9 @@ sequenced cDNA library of IGH gene prepared using 5'RACE-based protocol
 1. :ref:`Align <ref-align>` raw sequences to reference sequences of segments
    (V, D, J) of IGH gene:
 
-  .. code-block:: console
+  ::
 
-    > mixcr align --loci IGH -OvParameters.geneFeatureToAlign=VTranscript\
+    > mixcr align --loci IGH -OvParameters.geneFeatureToAlign=VTranscript \
       --report alignmentReport.log input_R1.fastq input_R2.fastq alignments.vdjca
 
   Here we specified non-default value for gene feature used to align V genes (``-OvParameters.geneFeatureToAlign=VTranscript``) in order to utilize information from both reads, more specifically to let MiXCR align V gene's 5'UTRS and parts of coding sequence on 5'-end with sequence from read opposite to CDR3. MiXCR can also produce report file (specified by optional parameter ``--report``) containing run statistics which looks like this:
@@ -142,17 +142,19 @@ sequenced cDNA library of IGH gene prepared using 5'RACE-based protocol
 
   This will export information about clones with default set of fields, e.g.:
 
-  +-------------+----------------+-----+---------------------+-----------------+-----+------------------------+-----------------+-----+
-  | Clone count | Clone fraction | ... | V hits              | J hits          | ... | N. seq. CDR3           | AA. seq. CDR3   | ... |
-  +=============+================+=====+=====================+=================+=====+========================+=================+=====+
-  | 4369        | 2.9E-3         | ... | IGHV4-39\*\00(1388) | IGHJ6\*\00(131) | ... | TGTGTGAG...GACGTCTGG   | CVRHKPMVQGGVDVW | ... |
-  +-------------+----------------+-----+---------------------+-----------------+-----+------------------------+-----------------+-----+
-  | 3477        | 2.5E-3         | ... | IGHV4-34\*\00(1944) | IGHJ4\*\00(153) | ... | TGTGCGAT...ATGACTTCTGG | CAIWDVGLRHDFW   | ... |
-  +-------------+----------------+-----+---------------------+-----------------+-----+------------------------+-----------------+-----+
-  |      ...    |       ...      | ... |         ...         |       ...       | ... |           ...          |       ...       | ... |
-  +-------------+----------------+-----+---------------------+-----------------+-----+------------------------+-----------------+-----+
+  +-------------+----------------+-----+---------------------+--------------+-----------------+-----------------+-----+
+  | Clone count | Clone fraction | ... | V hits              | J hits       | N. seq. CDR3    | AA. seq. CDR3   | ... |
+  +=============+================+=====+=====================+==============+=================+=================+=====+
+  | 4369        | 2.9E-3         | ... | IGHV4-39\*\00(1388) | IGHJ6        | TGTGTGAG...     | CVRHKPM...      | ... |
+  |             |                |     |                     | \*\00(131)   |                 |                 |     |
+  +-------------+----------------+-----+---------------------+--------------+-----------------+-----------------+-----+
+  | 3477        | 2.5E-3         | ... | IGHV4-34\*\00(1944) | IGHJ4        | TGTGCGAT...     | CAIWDVGL...     | ... |
+  |             |                |     |                     | \*\00(153)   |                 |                 |     |
+  +-------------+----------------+-----+---------------------+--------------+-----------------+-----------------+-----+
+  |      ...    |       ...      | ... |         ...         |      ...     |       ...       |       ...       | ... |
+  +-------------+----------------+-----+---------------------+--------------+-----------------+-----------------+-----+
 
-  where dots denote rows not shown here (for compactness). For the full list of available export options see :ref:`export <ref-export>` documentation.
+  where dots denote text not shown here (for compactness). For the full list of available export options see :ref:`export <ref-export>` documentation.
 
 Each of the above steps can be customized in order to adapt the analysis pipeline for a specific research task (see below).
 
@@ -161,9 +163,11 @@ Full length IGH analysis
 
 1. To build clonotypes based on the full-length sequence of variable part of IGH gene (not V gene only, but V-D-J junction with whole V Region and J Region) one need to obtain alignments fully covering V Region (like in the previous example). For example:
 
-  .. code-block:: console
+  ::
 
-    > mixcr align --loci IGH -OvParameters.geneFeatureToAlign=VTranscript input_R1.fastq input_R2.fastq alignments.vdjca
+    > mixcr align --loci IGH \
+      -OvParameters.geneFeatureToAlign=VTranscript \
+      input_R1.fastq input_R2.fastq alignments.vdjca
 
 2. Then assemble clones with corresponding option (``-OassemblingFeatures=VDJRegion``):
 

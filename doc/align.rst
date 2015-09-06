@@ -98,9 +98,9 @@ Other global aligner parameters are:
 +------------------------------------+---------------+---------------------------------------------------------------------------------------+
 | Parameter                          | Default value | Description                                                                           |
 +====================================+===============+=======================================================================================+
-| ``minSumScore``                    | ``120.0``     |  Minimal total alignment score value of V and J genes.                                |
+|         ``minSumScore``            | ``120.0``     | Minimal total alignment score value of V and J genes.                                 |
 +------------------------------------+---------------+---------------------------------------------------------------------------------------+
-| ``maxHits``                        | ``5``         | Maximal number of hits for each gene type: if input sequence align to more than       |
+|         ``maxHits``                | ``5``         | Maximal number of hits for each gene type: if input sequence align to more than       |
 |                                    |               | ``maxHits`` targets, then only  top ``maxHits`` hits will be kept.                    |
 +------------------------------------+---------------+---------------------------------------------------------------------------------------+
 | | ``relativeMinVFR3CDR3Score``     | ``0.7``       | Relative minimal alignment score of ``FR3+VCDR3Part`` region for V gene. V hit will   | 
@@ -178,6 +178,7 @@ parameters. It contains the following parameters:
 | Parameter        | Default value                          | Description                                                                 |
 +==================+========================================+=============================================================================+
 | ``subsMatrix``   | ``simple(match = 5, mismatch = -9)``   | Substitution matrix. Available types:                                       |
+|                  |                                        |                                                                             |
 |                  |                                        |  - ``simple`` --- a matrix with diagonal elements equal to ``match`` and    |
 |                  |                                        |    other elements equal to ``mismatch``                                     |
 |                  |                                        |  - ``raw`` --- a complete set of 16 matrix elements should be specified;    | 
@@ -234,7 +235,8 @@ Scoring parameters for D aligner are the following:
 +=========================+========================================+====================================================================+
 | ``type``                | ``affine``                             | Type of scoring. Possible values: ``affine``, ``linear``.          |
 +-------------------------+----------------------------------------+--------------------------------------------------------------------+
-| ``subMatrix``           | ``simple(match = 5, mismatch = -9)``   | Substitution matrix. Available types:                              |
+| ``subsMatrix``          | ``simple(match = 5,``                  | Substitution matrix. Available types:                              |
+|                         |  ``mismatch = -9)``                    |                                                                    |
 |                         |                                        |  - ``simple`` --- a matrix with diagonal elements equal to         |
 |                         |                                        |    ``match`` and other elements equal to ``mismatch``              |
 |                         |                                        |  - ``raw`` --- a complete set of 16 matrix elements should be      |

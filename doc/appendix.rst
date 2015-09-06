@@ -114,22 +114,20 @@ Consider the following BLAST-like alignments encoded in MiXCR notation:
 
 -  Alignment without mutation
 
-.. raw:: html
+   .. raw:: html
 
-   <pre style="font-size: 11px"><code>
-   target = TTGTGCTGACAGATACCCC
-   query  = CGAGTGCTGACAGATACCGTCGATGCT
-   
-   BLAST like alignment:
-   
-   2 GTGCTGACAGATACC 16
-     |||||||||||||||
-   3 GTGCTGACAGATACC 17
-   
-   MiXCR alignment:
-   
-   0|15|17|3|18||75.0
-   </code></pre>
+      <pre style="font-size: 11px">
+      target = TTGTGCTGACAGATACCCC
+      query  = CGAGTGCTGACAGATACCGTCGATGCT
+      
+      BLAST like alignment:
+      2 GTGCTGACAGATACC 16
+        |||||||||||||||
+      3 GTGCTGACAGATACC 17
+      
+      MiXCR alignment:
+      0|15|17|3|18||75.0
+      </pre>
 
 subsequence from ``target`` (from nucleotide 0 to nucleotide 15) was
 found to be identical to susequence from ``query`` (from nucleotide 3 to
@@ -137,22 +135,20 @@ nucleotide 18).
 
 -  Alignment with mutation
 
-.. raw:: html
+   .. raw:: html
 
-   <pre style="font-size: 11px"><code>
-   target = TTGTGCTGACAGATACCCC
-   query  = CGAGTGCTATAGACTACCGTCGATGCT
-   
-   BLAST like alignment:
-   
-   2 GTGCTGACAGA-TACC 16
-     ||||| | ||| ||||
-   3 GTGCT-ATAGACTACC 17
-   
-   MiXCR alignment:
-   
-   0|15|17|3|18|DG7SC9TI13C|41.0
-   </code></pre>
+      <pre style="font-size: 11px">
+      target = TTGTGCTGACAGATACCCC
+      query  = CGAGTGCTATAGACTACCGTCGATGCT
+      
+      BLAST like alignment:
+      2 GTGCTGACAGA-TACC 16
+        ||||| | ||| ||||
+      3 GTGCT-ATAGACTACC 17
+      
+      MiXCR alignment:
+      0|15|17|3|18|DG7SC9TI13C|41.0
+      </pre>
 
 so, to obtain subseqeunce from **query sequence** from 3 to 18 we need
 to apply the following mutations to subsequence of **target sequence**

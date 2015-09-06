@@ -152,37 +152,37 @@ Clustering strategy
 Parameters that control clustering procedure are placed in
 ``cloneClusteringParameters`` parameters group:
 
-+--------------------------------------------------+---------------------------+------------------------------------------------------------+
-| Parameter                                        | Default value             | Description                                                |
-+==================================================+===========================+============================================================+
-| ``searchDepth``                                  | ``2``                     | Maximum number of cluster layers (not including head).     |
-+--------------------------------------------------+---------------------------+------------------------------------------------------------+
-| ``allowedMutationsInNRegions``                   | ``1``                     | Maximum allowed number of mutations in N regions           |
-|                                                  |                           | (non-template nucleotides in VD, DJ or VJ junctions): if   |
-|                                                  |                           | two fuzzy matched clonal sequences will contain more than  |
-|                                                  |                           | ``allowedMutationsInNRegions`` mismatches in N-regions,    |
-|                                                  |                           | they will not be clustered together (one cannot be a       |
-|                                                  |                           | direct child of another).                                  |
-+--------------------------------------------------+---------------------------+------------------------------------------------------------+
-| ``searchParameters``                             | ``twoMismatchesOrIndels`` | Parameters that control fuzzy match criteria between       |
-|                                                  |                           | clones in adjacent layers. Available predefined values:    |
-|                                                  |                           | ``oneMismatch``, ``oneIndel``, ``oneMismatchOrIndel``,     |
-|                                                  |                           | ``twoMismatches``, ``twoIndels``,                          |
-|                                                  |                           | ``twoMismatchesOrIndels``, ... ,                           |
-|                                                  |                           | ``fourMismatchesOrIndels``. By default,                    |
-|                                                  |                           | ``twoMismatchesOrIndels`` allows two mismatches or indels  |
-|                                                  |                           | (not more than two errors of both types) between two       |
-|                                                  |                           | adjacent clones (parent and direct child).                 |
-+--------------------------------------------------+---------------------------+------------------------------------------------------------+
-| ``clusteringFilter.specificMutationProbability`` | ``1E-3``                  | Probability of a single nucleotide mutation in clonal      |
-|                                                  |                           | sequence which has non-hypermutation origin (i.e. PCR or   |
-|                                                  |                           | sequencing error). This parameter controls relative counts |
-|                                                  |                           | between two clones in adjacent layers: a smaller clone can |
-|                                                  |                           | be attached to a larger one if its count smaller than      |
-|                                                  |                           | count of parent multiplied by                              |
-|                                                  |                           | ``(clonalSequenceLength * specificMutationProbability)``   |
-|                                                  |                           | ``^ numberOfMutations``.                                   |
-+--------------------------------------------------+---------------------------+------------------------------------------------------------+
++---------------------------------------+---------------------------+------------------------------------------------------------+
+| Parameter                             | Default value             | Description                                                |
++=======================================+===========================+============================================================+
+| ``searchDepth``                       | ``2``                     | Maximum number of cluster layers (not including head).     |
++---------------------------------------+---------------------------+------------------------------------------------------------+
+| ``allowedMutationsInNRegions``        | ``1``                     | Maximum allowed number of mutations in N regions           |
+|                                       |                           | (non-template nucleotides in VD, DJ or VJ junctions): if   |
+|                                       |                           | two fuzzy matched clonal sequences will contain more than  |
+|                                       |                           | ``allowedMutationsInNRegions`` mismatches in N-regions,    |
+|                                       |                           | they will not be clustered together (one cannot be a       |
+|                                       |                           | direct child of another).                                  |
++---------------------------------------+---------------------------+------------------------------------------------------------+
+| ``searchParameters``                  | ``twoMismatchesOrIndels`` | Parameters that control fuzzy match criteria between       |
+|                                       |                           | clones in adjacent layers. Available predefined values:    |
+|                                       |                           | ``oneMismatch``, ``oneIndel``, ``oneMismatchOrIndel``,     |
+|                                       |                           | ``twoMismatches``, ``twoIndels``,                          |
+|                                       |                           | ``twoMismatchesOrIndels``, ... ,                           |
+|                                       |                           | ``fourMismatchesOrIndels``. By default,                    |
+|                                       |                           | ``twoMismatchesOrIndels`` allows two mismatches or indels  |
+|                                       |                           | (not more than two errors of both types) between two       |
+|                                       |                           | adjacent clones (parent and direct child).                 |
++---------------------------------------+---------------------------+------------------------------------------------------------+
+| ``clusteringFilter``                  | ``1E-3``                  | Probability of a single nucleotide mutation in clonal      |
+| ``.specificMutationProbability``      |                           | sequence which has non-hypermutation origin (i.e. PCR or   |
+|                                       |                           | sequencing error). This parameter controls relative counts |
+|                                       |                           | between two clones in adjacent layers: a smaller clone can |
+|                                       |                           | be attached to a larger one if its count smaller than      |
+|                                       |                           | count of parent multiplied by                              |
+|                                       |                           | ``(clonalSequenceLength * specificMutationProbability)``   |
+|                                       |                           | ``^ numberOfMutations``.                                   |
++---------------------------------------+---------------------------+------------------------------------------------------------+
 
 One can override these parameters in the following way:
 
@@ -244,19 +244,20 @@ One can override these parameters in the following way
 The scoring parameters are placed in group
 ``alignmentParameters.scoring``:
 
-+------------------+--------------------------------------+--------------------------------------------------------------------------------+
-| Parameter        | | Default value                      | Description                                                                    |
-|                  | | (same for V, J, C)                 |                                                                                |
-+==================+======================================+================================================================================+
-| ``subsMatrix``   | ``simple(match = 5, mismatch = -9)`` | Substitution matrix. Available types:                                          |
-|                  |                                      |  - ``simple`` --- a matrix with diagonal elements equal to ``match`` and other |
-|                  |                                      |     elements equal to ``mismatch``                                             |
-|                  |                                      |  - ``raw`` --- a complete set of 16 matrix elements should be specified; for   |
-|                  |                                      |     example: ``raw(5,-9,-9,-9,-9,5,-9,-9,-9,-9,5,-9,-9,-9,-9,5)``              |
-|                  |                                      |     (*equivalent to the default value*)                                        |
-+------------------+--------------------------------------+--------------------------------------------------------------------------------+
-| ``gapPenalty``   | ``-12``                              | Penalty for gap.                                                               |
-+------------------+--------------------------------------+--------------------------------------------------------------------------------+
++-------------------------+----------------------------------------+--------------------------------------------------------------------+
+| Parameter               | Default value (same for V, J, C)       | Description                                                        |
++=========================+========================================+====================================================================+
+| ``subsMatrix``          | ``simple(match = 5,``                  | Substitution matrix. Available types:                              |
+|                         |  ``mismatch = -9)``                    |                                                                    |
+|                         |                                        |  - ``simple`` --- a matrix with diagonal elements equal to         |
+|                         |                                        |    ``match`` and other elements equal to ``mismatch``              |
+|                         |                                        |  - ``raw`` --- a complete set of 16 matrix elements should be      |
+|                         |                                        |    specified; for  example:                                        |
+|                         |                                        |    ``raw(5,-9,-9,-9,-9,5,-9,-9,-9,-9,5,-9,-9,-9,-9,5)``            |
+|                         |                                        |     (*equivalent to the default value*)                            |
++-------------------------+----------------------------------------+--------------------------------------------------------------------+
+| ``gapPenalty``          | ``-12``                                | Penalty for gap.                                                   |
++-------------------------+----------------------------------------+--------------------------------------------------------------------+
 
 One can override these parameters in the following way
 
