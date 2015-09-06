@@ -177,8 +177,8 @@ parameters. It contains the following parameters:
 +------------------+----------------------------------------+-----------------------------------------------------------------------------+
 | Parameter        | Default value                          | Description                                                                 |
 +==================+========================================+=============================================================================+
-| ``subsMatrix``   | ``simple(match = 5, mismatch = -9)``   | Substitution matrix. Available types:                                       |
-|                  |                                        |                                                                             |
+| ``subsMatrix``   | ``simple(match = 5,``                  | Substitution matrix. Available types:                                       |
+|                  |  ``mismatch = -9)``                    |                                                                             |
 |                  |                                        |  - ``simple`` --- a matrix with diagonal elements equal to ``match`` and    |
 |                  |                                        |    other elements equal to ``mismatch``                                     |
 |                  |                                        |  - ``raw`` --- a complete set of 16 matrix elements should be specified;    | 
