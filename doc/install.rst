@@ -11,7 +11,7 @@ System requirements
 Installation on Mac OS X / Linux
 ------------------------------------
 
-- Check that you have Java 1.7+ installed on your system by typing ``java -version``. Here is the example output of this command:
+- Check that you have Java **1.7+** installed on your system by typing ``java -version``. Here is the example output of this command:
 
   .. code-block:: console
 
@@ -28,7 +28,7 @@ Installation on Windows
 
 Currently there is no execution script or installer for Windows. Still MiXCR can easily be used by direct execution from the jar file.
 
-- check that you have Java 1.7+ installed on your system by typing ``java -version``
+- check that you have Java **1.7+** installed on your system by typing ``java -version``
 - unzip the archive with MiXCR
 - use ``mixcr.jar`` from the archive in the following way:
 

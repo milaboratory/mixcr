@@ -3,17 +3,6 @@
 Export
 ======
 
-
-.. raw:: html
-
-   <pre style="font-size: 11px"><code>
-   code 
-   code
-   code
-   </code>
-   </pre>
-
-
 In order to export result of alignment or clones from binary file
 (``.vdjca`` or ``.clns``) to a human-readable text file one can use
 ``exportAlignments`` and ``exportClones`` commands respectively. The
@@ -249,7 +238,7 @@ Results produced by this command has the following structure:
 
 .. raw:: html
 
-   <pre style="font-size: 11px"><code>&gt;&gt;&gt; Read id: 12343    <span style="color:red;"><--- Index of analysed read in input file</span>
+   <pre style="font-size: 10px">&gt;&gt;&gt; Read id: 12343    <span style="color:red;"><--- Index of analysed read in input file</span>
 
    &gt;&gt;&gt; Target sequences (input sequences):
 
@@ -393,6 +382,6 @@ Results produced by this command has the following structure:
    &gt;&gt;&gt; Alignments with C gene:
 
    No hits.
-   </code></pre>
+   </pre>
    
    
