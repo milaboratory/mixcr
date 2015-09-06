@@ -150,11 +150,16 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
 html_static_path = ['_static']
 
 
-html_context = {
+try:
+	html_context
+except Exception, e:
+	html_context = {
     'css_files': [
         '_static/style.css',  # overrides for wide tables in RTD theme
         ],
     }
+else:
+	html_context['css_files'].append('_static/style.css')
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
