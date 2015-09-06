@@ -3,6 +3,17 @@
 Export
 ======
 
+
+.. raw:: html
+
+   <pre style="font-size: 11px"><code>
+   code 
+   code
+   code
+   </code>
+   </pre>
+
+
 In order to export result of alignment or clones from binary file
 (``.vdjca`` or ``.clns``) to a human-readable text file one can use
 ``exportAlignments`` and ``exportClones`` commands respectively. The
