@@ -402,7 +402,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         for (PairedHit vHit : vHits)
             loci.add(getAllele(GeneType.Variable, vHit.getId()).getLocus());
         for (PairedHit jHit : jHits)
-            loci.add(getAllele(GeneType.Variable, jHit.getId()).getLocus());
+            loci.add(getAllele(GeneType.Joining, jHit.getId()).getLocus());
         return loci;
     }
 
@@ -436,7 +436,6 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
 
         PairedHit() {
         }
-
 
         PairedHit(KAlignmentHit<NucleotideSequence> hit0, KAlignmentHit<NucleotideSequence> hit1, boolean unsafe) {
             this.hit0 = hit0;
