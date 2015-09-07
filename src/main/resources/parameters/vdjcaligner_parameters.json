@@ -90,6 +90,8 @@
             }
         },
         "vjAlignmentOrder": "VThenJ",
+        "includeDScore": false,
+        "includeCScore": false,
         "mergerParameters": {
             "minimalOverlap": 17,
             "minimalIdentity": 0.9
