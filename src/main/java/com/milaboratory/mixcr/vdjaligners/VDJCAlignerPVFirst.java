@@ -195,7 +195,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
             }
 
             // Setting best hits for current array of hits (after filtration)
-            bestVHits = new PairedHit(hit0, hit1);
+            bestVHits = new PairedHit(hit0, hit1, true);
         }
 
         boolean hasVHits() {
@@ -304,8 +304,8 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                 Arrays.fill(preDHits, zeroArray);
 
                 for (int i = 0; i < 2; ++i) {
-                    Alignment<NucleotideSequence> vAlignment = bestVHit.get(i).getAlignment();
-                    Alignment<NucleotideSequence> jAlignment = bestJHit.get(i).getAlignment();
+                    Alignment<NucleotideSequence> vAlignment = bestVHit.get(i) == null ? null : bestVHit.get(i).getAlignment();
+                    Alignment<NucleotideSequence> jAlignment = bestJHit.get(i) == null ? null : bestJHit.get(i).getAlignment();
                     if (vAlignment == null || jAlignment == null)
                         continue;
                     int from = vAlignment.getSequence2Range().getTo(),
@@ -326,7 +326,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                 KAlignmentHit[][] results = new KAlignmentHit[2][];
                 Arrays.fill(results, zeroKArray);
                 for (int i = 0; i < 2; ++i) {
-                    Alignment<NucleotideSequence> jAlignment = bestJHit.get(i).getAlignment();
+                    Alignment<NucleotideSequence> jAlignment = bestJHit.get(i) == null ? null : bestJHit.get(i).getAlignment();
                     if (jAlignment == null)
                         continue;
                     int from = jAlignment.getSequence2Range().getTo();
@@ -437,8 +437,8 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         PairedHit() {
         }
 
-        PairedHit(KAlignmentHit<NucleotideSequence> hit0, KAlignmentHit<NucleotideSequence> hit1) {
-            assert hit0 == null || hit1 == null || hit0.getId() == hit1.getId();
+
+        PairedHit(KAlignmentHit<NucleotideSequence> hit0, KAlignmentHit<NucleotideSequence> hit1, boolean unsafe) {
             this.hit0 = hit0;
             this.hit1 = hit1;
         }

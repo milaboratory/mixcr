@@ -272,9 +272,9 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         VDJCAlignerParameters that = (VDJCAlignerParameters) o;
 
         if (maxHits != that.maxHits) return false;
-        if (that.vjAlignmentOrder == vjAlignmentOrder) return false;
-        if (that.includeDScore == includeDScore) return false;
-        if (that.includeCScore == includeCScore) return false;
+        if (that.vjAlignmentOrder != vjAlignmentOrder) return false;
+        if (that.includeDScore != includeDScore) return false;
+        if (that.includeCScore != includeCScore) return false;
         if (Float.compare(that.minSumScore, minSumScore) != 0) return false;
         if (Float.compare(that.relativeMinVFR3CDR3Score, relativeMinVFR3CDR3Score) != 0) return false;
         if (Float.compare(that.relativeMinVScore, relativeMinVScore) != 0) return false;
