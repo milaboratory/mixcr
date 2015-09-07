@@ -103,15 +103,21 @@ Other global aligner parameters are:
 |         ``maxHits``                | ``5``         | Maximal number of hits for each gene type: if input sequence align to more than       |
 |                                    |               | ``maxHits`` targets, then only  top ``maxHits`` hits will be kept.                    |
 +------------------------------------+---------------+---------------------------------------------------------------------------------------+
-| | ``relativeMinVFR3CDR3Score``     | ``0.7``       | Relative minimal alignment score of ``FR3+VCDR3Part`` region for V gene. V hit will   | 
-| | (*only for paired-end*           |               | be kept only if its ``FR3+VCDR3Part`` part aligns with score greater than             |
-| | *analysis*)                      |               | ``relativeMinVFR3CDR3Score * maxFR3CDR3Score``, where ``maxFR3CDR3Score`` is the      |
+|  ``vjAlignmentOrder``              | ``JThenV``    | Order in which V and J genes aligned in target (possible values ``JThenV`` and        |
+|  (*only for single-end*            |               | ``VThenJ``). Parameter affects only *single-read* alignments and alignments of        |
+|  *analysis*)                       |               | overlapped paired-end reads. Non-overlaping paired-end reads are always porcessed in  |
+|                                    |               | ``VThenJ`` mode. ``JThenV`` can be used for short reads (~100bp) with full (or nearly |
+|                                    |               | full) J gene coverage.                                                                |
++------------------------------------+---------------+---------------------------------------------------------------------------------------+
+| ``relativeMinVFR3CDR3Score``       | ``0.7``       | Relative minimal alignment score of ``FR3+VCDR3Part`` region for V gene. V hit will   | 
+| (*only for paired-end*             |               | be kept only if its ``FR3+VCDR3Part`` part aligns with score greater than             |
+| *analysis*)                        |               | ``relativeMinVFR3CDR3Score * maxFR3CDR3Score``, where ``maxFR3CDR3Score`` is the      |
 |                                    |               | maximal alignment score for ``FR3+VCDR3Part`` region among all of V hits for current  |
 |                                    |               | input reads pair.                                                                     | 
 +------------------------------------+---------------+---------------------------------------------------------------------------------------+
-| | ``readsLayout``                  | ``Opposite``  | Relative orientation of paired reads. Available values: ``Opposite``, ``Collinear``,  |
-| | (*only for paired-end*           |               | ``Unknown``.                                                                          |
-| | *analysis*)                      |               |                                                                                       |
+| ``readsLayout``                    | ``Opposite``  | Relative orientation of paired reads. Available values: ``Opposite``, ``Collinear``,  |
+| (*only for paired-end*             |               | ``Unknown``.                                                                          |
+| *analysis*)                        |               |                                                                                       |
 +------------------------------------+---------------+---------------------------------------------------------------------------------------+
 
 .. raw:: html
