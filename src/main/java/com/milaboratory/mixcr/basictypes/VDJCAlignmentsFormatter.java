@@ -50,7 +50,8 @@ public class VDJCAlignmentsFormatter {
         SequencePartitioning partitioning = vdjcaAlignments.getPartitionedTarget(targetId).getPartitioning();
 
         List<Alignment<NucleotideSequence>> alignments = new ArrayList<>();
-        List<String> alignmentComments = new ArrayList<>();
+        List<String> alignmentLeftComments = new ArrayList<>();
+        List<String> alignmentRightComments = new ArrayList<>();
         for (GeneType gt : GeneType.values())
             for (VDJCHit hit : vdjcaAlignments.getHits(gt)) {
                 Alignment<NucleotideSequence> alignment = hit.getAlignment(targetId);
@@ -58,7 +59,8 @@ public class VDJCAlignmentsFormatter {
                     continue;
                 alignment = alignment.invert(targetSeq);
                 alignments.add(alignment);
-                alignmentComments.add(hit.getAllele().getName());
+                alignmentLeftComments.add(hit.getAllele().getName());
+                alignmentRightComments.add(" " + hit.getAlignment(targetId).getScore());
             }
 
         if (alignments.isEmpty())
@@ -74,10 +76,12 @@ public class VDJCAlignmentsFormatter {
 
         helper.addAnnotationString("", new String(markers));
         helper.addSubjectQuality("Quality", target.getQuality());
-        helper.setSubjectTitle("Target" + targetId);
-        int i = 0;
-        for (String alignmentComment : alignmentComments)
-            helper.setQueryTitle(i++, alignmentComment);
+        helper.setSubjectLeftTitle("Target" + targetId);
+        helper.setSubjectRightTitle(" Score");
+        for (int i = 0; i < alignmentLeftComments.size(); i++) {
+            helper.setQueryLeftTitle(i, alignmentLeftComments.get(i));
+            helper.setQueryRightTitle(i, alignmentRightComments.get(i));
+        }
         return helper;
     }
 

@@ -29,9 +29,11 @@
 package com.milaboratory.mixcr.vdjaligners;
 
 import cc.redberry.pipe.CUtils;
+import com.milaboratory.core.alignment.MultiAlignmentHelper;
 import com.milaboratory.core.io.sequence.PairedRead;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.reference.*;
 import org.junit.Assert;
@@ -89,6 +91,23 @@ public class VDJCAlignerPVFirstTest {
         System.out.println(total);
         System.out.println(leftHit);
         Assert.assertTrue(alignemntsList.size() > 10);
+
+        int k = 10;
+
+        for (VDJCAlignments alignments : alignemntsList) {
+            for (int target = 0; target < alignments.numberOfTargets(); target++) {
+                MultiAlignmentHelper helperBig = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, target);
+                if(helperBig == null)
+                    continue;
+                for (MultiAlignmentHelper helper : helperBig.split(80)) {
+                    System.out.println(helper);
+                    System.out.println();
+                    if(--k < 0)
+                        return;
+                }
+            }
+
+        }
 
         //System.out.println("Bytes per alignment: " + (bos.size() - header) / alignemntsList.size());
         //
