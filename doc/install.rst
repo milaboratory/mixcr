@@ -11,7 +11,7 @@ System requirements
 Installation on Mac OS X / Linux
 ------------------------------------
 
-- Check that you have Java 1.7+ installed on your system by typing ``java -version``. Here is the example output of this command:
+- Check that you have Java **1.7+** installed on your system by typing ``java -version``. Here is the example output of this command:
 
   .. code-block:: console
 
@@ -21,22 +21,14 @@ Installation on Mac OS X / Linux
     Java HotSpot(TM) 64-Bit Server VM (build 24.65-b04, mixed mode)
 
 - unzip the archive with MiXCR
-- add extracted folder of MiXCR distribution to your ``PATH`` variable or add symbolic link for ``mixcr`` script to your ``bin/`` folder (*e.g.* ``~/bin/`` in Ubuntu and many other popular linux distributions)
+- add extracted folder of MiXCR distribution to your ``PATH`` variable or add symbolic link for ``mixcr`` script to your ``bin/`` folder (e.g. ``~/bin/`` in Ubuntu and many other popular linux distributions)
 
 Installation on Windows
 ---------------------------
 
 Currently there is no execution script or installer for Windows. Still MiXCR can easily be used by direct execution from the jar file.
 
-- check that you have Java 1.7+ installed on your system by typing ``java -version``. Here is the example output of this command:
-
-  .. code-block:: console
-
-    > java -version
-    java version "1.7.0_65"
-    Java(TM) SE Runtime Environment (build 1.7.0_65-b17)
-    Java HotSpot(TM) 64-Bit Server VM (build 24.65-b04, mixed mode)
-
+- check that you have Java **1.7+** installed on your system by typing ``java -version``
 - unzip the archive with MiXCR
 - use ``mixcr.jar`` from the archive in the following way:
 
