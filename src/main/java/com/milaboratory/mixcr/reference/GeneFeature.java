@@ -61,7 +61,6 @@ import static com.milaboratory.mixcr.reference.ReferencePoint.*;
 public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, Comparable<GeneFeature>,
         java.io.Serializable {
     /* V, D, J, Regions */
-    private static ReferencePoint FR4EndCut = new ReferencePoint(FR4End, -6);
 
     /**
      * Full V Region
@@ -82,11 +81,11 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
     /**
      * Full J Region
      */
-    JRegion = new GeneFeature(JBegin, FR4EndCut),
+    JRegion = new GeneFeature(JBegin, FR4End),
     /**
      * Full J Region trimmed
      */
-    JRegionTrimmed = new GeneFeature(JBeginTrimmed, FR4EndCut),
+    JRegionTrimmed = new GeneFeature(JBeginTrimmed, FR4End),
 
     /* Major gene parts */
 
@@ -144,7 +143,7 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
     /**
      * Framework 4 (J region after CDR3)
      */
-    FR4 = new GeneFeature(FR4Begin, FR4EndCut),
+    FR4 = new GeneFeature(FR4Begin, FR4End),
 
     /* Subregions of CDR3 */
 
@@ -189,7 +188,7 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
     /**
      * Full second exon of IG/TCR gene.
      */
-    Exon2 = new GeneFeature(L2Begin, FR4EndCut),
+    Exon2 = new GeneFeature(L2Begin, FR4End),
 
     /* Region Exons */
 
@@ -248,7 +247,7 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
     /**
      * Full V, D, J assembly without 5'UTR and leader sequence.
      */
-    VDJRegion = new GeneFeature(FR1Begin, FR4EndCut);
+    VDJRegion = new GeneFeature(FR1Begin, FR4End);
 
 
     //regions are sorted in natural ordering using indexes

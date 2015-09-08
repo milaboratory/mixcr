@@ -309,8 +309,7 @@ public class LociLibraryWriter {
     static {
         gtis.put(GeneType.Variable, new GeneralGeneTypeInfo(11, 0));
         gtis.put(GeneType.Diversity, new GeneralGeneTypeInfo(2, 11));
-//        gtis.put(GeneType.Joining, new JGeneTypeInfo());
-        gtis.put(GeneType.Joining, new GeneralGeneTypeInfo(3, 13));
+        gtis.put(GeneType.Joining, new JGeneTypeInfo());
         gtis.put(GeneType.Constant, new GeneralGeneTypeInfo(3, 16));
     }
 }
