@@ -101,5 +101,108 @@
         "relativeMinVFR3CDR3Score": 0.7,
         "relativeMinVScore": 0.7,
         "readsLayout": "Opposite"
+    },
+    "rna-seq": {
+        "vParameters": {
+            "geneFeatureToAlign": "VTranscriptWithout5UTR",
+            "parameters": {
+                "mapperKValue": 5,
+                "floatingLeftBound": false,
+                "floatingRightBound": true,
+                "mapperAbsoluteMinScore": 1.5,
+                "mapperRelativeMinScore": 0.7,
+                "mapperMatchScore": 1.0,
+                "mapperMismatchPenalty": -0.1,
+                "mapperOffsetShiftPenalty": -0.3,
+                "mapperMinSeedsDistance": 4,
+                "mapperMaxSeedsDistance": 10,
+                "minAlignmentLength": 15,
+                "maxAdjacentIndels": 2,
+                "alignmentStopPenalty": -1000,
+                "absoluteMinScore": 80.0,
+                "relativeMinScore": 0.87,
+                "maxHits": 7,
+                "scoring": {
+                    "type": "linear",
+                    "subsMatrix": "simple(match = 5, mismatch = -12)",
+                    "gapPenalty": -21
+                }
+            }
+        },
+        "dParameters": {
+            "geneFeatureToAlign": "DRegion",
+            "absoluteMinScore": 25.0,
+            "relativeMinScore": 0.85,
+            "maxHits": 3,
+            "scoring": {
+                "type": "linear",
+                "subsMatrix": "simple(match = 5, mismatch = -12)",
+                "gapPenalty": -21
+            }
+        },
+        "jParameters": {
+            "geneFeatureToAlign": "JRegion",
+            "parameters": {
+                "mapperKValue": 5,
+                "floatingLeftBound": true,
+                "floatingRightBound": true,
+                "mapperAbsoluteMinScore": 1.5,
+                "mapperRelativeMinScore": 0.75,
+                "mapperMatchScore": 1.0,
+                "mapperMismatchPenalty": -0.1,
+                "mapperOffsetShiftPenalty": -0.3,
+                "mapperMinSeedsDistance": 4,
+                "mapperMaxSeedsDistance": 10,
+                "minAlignmentLength": 15,
+                "maxAdjacentIndels": 2,
+                "alignmentStopPenalty": -1000,
+                "absoluteMinScore": 70.0,
+                "relativeMinScore": 0.87,
+                "maxHits": 7,
+                "scoring": {
+                    "type": "linear",
+                    "subsMatrix": "simple(match = 5, mismatch = -12)",
+                    "gapPenalty": -21
+                }
+            }
+        },
+        "cParameters": {
+            "geneFeatureToAlign": "CExon1",
+            "parameters": {
+                "mapperKValue": 5,
+                "floatingLeftBound": false,
+                "floatingRightBound": false,
+                "mapperAbsoluteMinScore": 1.5,
+                "mapperRelativeMinScore": 0.75,
+                "mapperMatchScore": 1.0,
+                "mapperMismatchPenalty": -0.1,
+                "mapperOffsetShiftPenalty": -0.3,
+                "mapperMinSeedsDistance": 4,
+                "mapperMaxSeedsDistance": 10,
+                "minAlignmentLength": 15,
+                "maxAdjacentIndels": 2,
+                "alignmentStopPenalty": -1000,
+                "absoluteMinScore": 40.0,
+                "relativeMinScore": 0.87,
+                "maxHits": 7,
+                "scoring": {
+                    "type": "linear",
+                    "subsMatrix": "simple(match = 5, mismatch = -12)",
+                    "gapPenalty": -21
+                }
+            }
+        },
+        "vjAlignmentOrder": "VThenJ",
+        "includeDScore": true,
+        "includeCScore": true,
+        "mergerParameters": {
+            "minimalOverlap": 17,
+            "minimalIdentity": 0.9
+        },
+        "minSumScore": 200.0,
+        "maxHits": 5,
+        "relativeMinVFR3CDR3Score": 0.7,
+        "relativeMinVScore": 0.7,
+        "readsLayout": "Opposite"
     }
 }
