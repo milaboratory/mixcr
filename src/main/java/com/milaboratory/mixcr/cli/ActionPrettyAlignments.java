@@ -104,6 +104,8 @@ public class ActionPrettyAlignments implements Action {
         output.println();
         for (int i = 0; i < alignments.numberOfTargets(); i++) {
             MultiAlignmentHelper targetAsMultiAlignment = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, i);
+            if (targetAsMultiAlignment == null)
+                continue;
             MultiAlignmentHelper[] split = targetAsMultiAlignment.split(80);
             for (MultiAlignmentHelper spl : split) {
                 output.println(spl);
