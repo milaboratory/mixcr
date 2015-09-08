@@ -143,7 +143,7 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
     /**
      * Framework 4 (J region after CDR3)
      */
-    FR4 = new GeneFeature(FR4Begin, FR4End),
+    FR4 = new GeneFeature(FR4Begin, new ReferencePoint(FR4End, -6)),
 
     /* Subregions of CDR3 */
 
