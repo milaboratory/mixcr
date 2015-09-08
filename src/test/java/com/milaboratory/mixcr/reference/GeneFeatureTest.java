@@ -344,6 +344,13 @@ public class GeneFeatureTest {
         assertFalse(CDR3.contains(V5UTR));
     }
 
+    @Test
+    public void testEncode1() throws Exception {
+        Collection<GeneFeature> features = GeneFeature.getFeaturesByName().values();
+        for (GeneFeature feature : features)
+            assertEquals(feature, parse(encode(feature)));
+    }
+
     private static void assertEncode(String str) {
         Assert.assertEquals(str.replace(" ", ""), encode(parse(str)).replace(" ", ""));
     }

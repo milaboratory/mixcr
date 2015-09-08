@@ -61,6 +61,7 @@ import static com.milaboratory.mixcr.reference.ReferencePoint.*;
 public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, Comparable<GeneFeature>,
         java.io.Serializable {
     /* V, D, J, Regions */
+    private static ReferencePoint FR4EndCut = new ReferencePoint(FR4End, -6);
 
     /**
      * Full V Region
@@ -81,11 +82,11 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
     /**
      * Full J Region
      */
-    JRegion = new GeneFeature(JBegin, FR4End),
+    JRegion = new GeneFeature(JBegin, FR4EndCut),
     /**
      * Full J Region trimmed
      */
-    JRegionTrimmed = new GeneFeature(JBeginTrimmed, FR4End),
+    JRegionTrimmed = new GeneFeature(JBeginTrimmed, FR4EndCut),
 
     /* Major gene parts */
 
@@ -143,7 +144,7 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
     /**
      * Framework 4 (J region after CDR3)
      */
-    FR4 = new GeneFeature(FR4Begin, new ReferencePoint(FR4End, -6)),
+    FR4 = new GeneFeature(FR4Begin, FR4EndCut),
 
     /* Subregions of CDR3 */
 
@@ -188,7 +189,7 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
     /**
      * Full second exon of IG/TCR gene.
      */
-    Exon2 = new GeneFeature(L2Begin, FR4End),
+    Exon2 = new GeneFeature(L2Begin, FR4EndCut),
 
     /* Region Exons */
 
@@ -247,7 +248,7 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
     /**
      * Full V, D, J assembly without 5'UTR and leader sequence.
      */
-    VDJRegion = new GeneFeature(FR1Begin, FR4End);
+    VDJRegion = new GeneFeature(FR1Begin, FR4EndCut);
 
 
     //regions are sorted in natural ordering using indexes
@@ -639,6 +640,11 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
 
     static String encode(GeneFeature feature, boolean shortNameForKnownFeatures) {
         ensureInitialized();
+        if (shortNameForKnownFeatures) {
+            String s = nameByFeature.get(feature);
+            if (s != null)
+                return s;
+        }
         Collection<GeneFeature> available = featuresByName.values();
         final String[] encodes = new String[feature.regions.length];
         out:

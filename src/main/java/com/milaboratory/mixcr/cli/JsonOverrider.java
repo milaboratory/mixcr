@@ -76,9 +76,9 @@ public class JsonOverrider {
     }
 
     private static boolean override1(JsonNode node, String path, String value, boolean v) {
-        value = value.replaceAll("^[\'\"]", "").replaceAll("[\'\"]$", "");
         if (node == null)
             return false;
+        value = value.replaceAll("^[\'\"]", "").replaceAll("[\'\"]$", "");
         boolean b = false;
         if (override0(node, path, value))
             b = true;
