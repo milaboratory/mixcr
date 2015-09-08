@@ -639,6 +639,11 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
 
     static String encode(GeneFeature feature, boolean shortNameForKnownFeatures) {
         ensureInitialized();
+        if (shortNameForKnownFeatures) {
+            String s = nameByFeature.get(feature);
+            if (s != null)
+                return s;
+        }
         Collection<GeneFeature> available = featuresByName.values();
         final String[] encodes = new String[feature.regions.length];
         out:

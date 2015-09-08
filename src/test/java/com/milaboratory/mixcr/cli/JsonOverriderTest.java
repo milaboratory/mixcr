@@ -37,8 +37,17 @@ import com.milaboratory.core.tree.TreeSearchParameters;
 import com.milaboratory.mixcr.assembler.*;
 import com.milaboratory.mixcr.reference.GeneFeature;
 import com.milaboratory.mixcr.vdjaligners.DAlignerParameters;
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
+import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.milaboratory.mixcr.reference.GeneFeature.Exon1;
+import static com.milaboratory.mixcr.reference.GeneFeature.V5UTR;
+import static com.milaboratory.mixcr.reference.GeneFeature.VExon2;
 
 public class JsonOverriderTest {
     @Test
@@ -135,5 +144,19 @@ public class JsonOverriderTest {
         );
 
         Assert.assertEquals(expectedFactoryParameters, override.getCloneFactoryParameters());
+    }
+
+    @Test
+    public void test3() throws Exception {
+        GeneFeature jRegion = GeneFeature.parse("JRegion");
+        System.out.println(jRegion);
+        System.out.println(GeneFeature.encode(jRegion));
+
+        VDJCAlignerParameters params = VDJCParametersPresets.getByName("default");
+        Map<String, String> overrides = new HashMap<String, String>() {{
+            put("vParameters.geneFeatureToAlign", "VTranscript");
+        }};
+
+        Assert.assertNotNull(JsonOverrider.override(params, VDJCAlignerParameters.class, overrides));
     }
 }
