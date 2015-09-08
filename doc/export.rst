@@ -230,19 +230,86 @@ to standard output stream (to console), like this:
 
 Here is a summary of command line options:
 
-+---------------+-----------------------------------------------------------------------------------------+
-| Option        | Description                                                                             |
-+===============+=========================================================================================+
-| -h, --help    | print help message                                                                      |
-+---------------+-----------------------------------------------------------------------------------------+
-| -n, --limit   | limit number of alignments; no more than provided number of results will be outputted   |
-+---------------+-----------------------------------------------------------------------------------------+
-| -s, --skip    | number of results to skip                                                               |
-+---------------+-----------------------------------------------------------------------------------------+
-| -t, --top     | output only top hits for V, D, J nad C genes                                            |
-+---------------+-----------------------------------------------------------------------------------------+
++---------------------+-----------------------------------------------------------------------------------------+
+| Option              | Description                                                                             |
++=====================+=========================================================================================+
+| ``-h``, ``--help``  | print help message                                                                      |
++---------------------+-----------------------------------------------------------------------------------------+
+| ``-n``, ``--limit`` | limit number of alignments; no more than provided number of results will be outputted   |
++---------------------+-----------------------------------------------------------------------------------------+
+| ``-s``, ``--skip``  | number of results to skip                                                               |
++---------------------+-----------------------------------------------------------------------------------------+
+| ``-t``, ``--top``   | output only top hits for V, D, J nad C genes                                            |
++---------------------+-----------------------------------------------------------------------------------------+
+| ``--cdr3-contains`` | output only those alignemnts which CDR3 contains specified nucleotides (e.g.            |
+|                     | ``--cdr3-contains TTCAGAGGAGC``)                                                        |
++---------------------+-----------------------------------------------------------------------------------------+
+| ``--read-contains`` | output only those alignemnts for which corresonding reads contain specified nucleotides |
+|                     | e.g. ``--read-contains ATGCTTGCGCGCT``)                                                 |
++---------------------+-----------------------------------------------------------------------------------------+
+| ``--verbose``       | use more verbose format for alignments (see below for example)                          |
++---------------------+-----------------------------------------------------------------------------------------+
+
 
 Results produced by this command has the following structure:
+
+.. raw:: html
+
+    <pre style="font-size: 10px">
+
+      &gt;&gt;&gt; Read id: 1
+
+                                                          5'UTR&gt;&lt;L1                               
+       Quality    88888888888888888888888887888888888888888888888888888888888888888888888887888878
+       Target0  0 AAGGCCTTTCCACTTGGTGATCAGCACTGAGCACAGAGGACTCACCATGGAGTTGGGGCTGAGCTGGGTTTTCCTTGTTG 79
+    IGHV3-7*00 54 aaggcctttccacttggtgatcagcactgagcacagaggactcaccatggaAttggggctgagctgggttttccttgttg 133
+
+                            L1&gt;&lt;L2     L2&gt;&lt;FR1                                                     
+       Quality     88888888887888888888888888888889989989989889999997999999989999999999999999999899
+       Target0  80 CTATTTTAGAAGGTGTCCAGTGTGAGGTGAAGTTGGTGGAGTCTGGGGGAGGCCTGGTCCAGCCTGGGGGGTCCCTGAGA 159
+    IGHV3-7*00 134 ctattttagaaggtgtccagtgtgaggtgCagCtggtggagtctgggggaggcTtggtccagcctggggggtccctgaga 213
+
+                                 FR1&gt;&lt;CDR1              CDR1&gt;&lt;FR2                                  
+       Quality     999999999999999999999999999999999999999999999 9999999999999999999999999999999999
+       Target0 160 CTCTCCTGTGAAGCCTCCGGATTCACCTTTAGTAGTTATTGGATG-GCATGGGTCCGCCAGGGTCCAGGGCAGGGGCTGG 238
+    IGHV3-7*00 214 ctctcctgtgCagcctcTggattcacctttagtagCtattggatgAgc-tgggtccgccaggCtccagggAaggggctgg 292
+
+                             FR2&gt;&lt;CDR2              CDR2&gt;&lt;FR3                                      
+       Quality     99999999999999999999999999999999999799999999999999999999999999998999899898999999
+       Target0 239 AATGGGTGGGCAACATAAGGCCGGATGGAAGTGAGAGTTGGTACTTGGAGTCTGTGATGGGGCGATTCATGATATCTAGA 318
+    IGHV3-7*00 293 aGtgggtggCcaacataaAgcAAgatggaagtgagaAAtACtaTGtggaCtctgtgaAgggCcgattcaCCatCtcCaga 372
+
+                                                                                     FR3&gt;&lt;CDR3      
+        Quality     99899899999999988989999889979988888888878878788888888878888888778788888888878888
+        Target0 319 GACAACGCCAAGAAGTCACTTTATCTGCAAATGGACAGCCTGAGAGTCGAGGACACGGCCGTCTATTATTGTGCGACTTC 398
+     IGHV3-7*00 373 gacaacgccaagaaCtcactGtatctgcaaatgAacagcctgagagCcgaggacacggcTgtGtattaCtgtgcga     448
+    IGHD3-10*00  12                                                                              ttc 14
+
+                                     CDR3&gt;&lt;FR4                                                      
+        Quality     88888788888888888888888787788777887787777877777877787787877878788788777767778788
+        Target0 399 GGAGGAGCCGGAGGACTACTGGGGCCAGGGAGCCCTGGTCACCGTCTCCTCGGCTTCCACCAAGGGCCCATCGGTCTTCC 478
+    IGHD3-10*00  15 gg-ggag                                                                          20
+       IGHJ4*00   8              gactactggggccagggaAccctggtcaccgtctcctc                              45
+       IGHG4*00   0                                                      cttccaccaagggcccatcggtcttcc 26
+       IGHG3*00   0                                                      cttccaccaagggcccatcggtcttcc 26
+       IGHG2*00   0                                                      cCtccaccaagggcccatcggtcttcc 26
+       IGHG1*00   0                                                      cCtccaccaagggcccatcggtcttcc 26
+       IGHGP*00 194                                                    AgcCtccaccaagggcccatcggtcttcc 222
+
+                      
+     Quality     87370
+     Target0 479 CCTTG 483
+    IGHG4*00  27 ccCtg 31
+    IGHG3*00  27 ccCtg 31
+    IGHG2*00  27 ccCtg 31
+    IGHG1*00  27 ccCtg 31
+    IGHGP*00 223 ccCtg 227
+
+    </pre>
+   
+
+Using of ``--verbose`` option will produce alignments in s slightly different format: 
+
 
 .. raw:: html
 
