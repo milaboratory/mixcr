@@ -45,6 +45,11 @@ The following table contains description of command line options for ``align``:
 | ``-s``, ``--species``            | ``HomoSapiens``            | Species (organism). Possible values: ``hsa`` (or           |
 |                                  |                            | ``HomoSapiens``) and ``mmu`` (or ``MusMusculus``).         |
 +----------------------------------+----------------------------+------------------------------------------------------------+
+| ``-p``, ``--parameters``         | ``default``                | Preset of parameters. Possible values: ``default`` and     |
+|                                  |                            | ``rna-seq``. The ``rna-seq`` preset are specifically       |
+|                                  |                            | optimized for analysis of Rna-Seq data                     |
+|                                  |                            | :ref:`(see below) <ref-alignRNASeq>`                       |
++----------------------------------+----------------------------+------------------------------------------------------------+
 | ``-i``, ``--diff-loci``          |                            | Accept alignments with different loci of V and J genes     |
 |                                  |                            | (by default such alignments are dropped).                  |
 +----------------------------------+----------------------------+------------------------------------------------------------+
@@ -260,3 +265,28 @@ These parameters can be overridden in the following way:
 ::
 
     mixcr align -OdParameters.scoring.gapExtensionPenalty=-5 input_file1 [input_file2] output_file.vdjca
+
+
+
+.. _ref-alignRNASeq:
+
+Analysis of RNA-Seq data
+------------------------
+
+Analysis of RNA-Seq data performed with ``-p rna-seq`` option is almost equivalent to the following set of aligners parameters:
+
+ - (**most important**) turned off floating bounds of V and J alignments:
+   
+   - ``-OvParameters.parameters.floatingLeftBound=false``
+   - ``-OjParameters.parameters.floatingRightBound=false``
+ 
+ - higher thresholds:
+
+   - ``-OvParameters.parameters.absoluteMinScore=80`` (was 40)
+   - ``-OjParameters.parameters.absoluteMinScore=70`` (was 40)
+   - ``-OminSumScore=200`` (was 120; see below)
+
+ - more strict scoring for all alignments (V, J, C):
+
+   - ``-OxParameters.parameters.scoring.gapPenalty=-21``
+   - ``-OxParameters.parameters.scoring.subsMatrix='simple(match=5,mismatch=-12)'``

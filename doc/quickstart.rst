@@ -185,7 +185,30 @@ Resulting file will contain assembled clonotypes with sequences of all
 regions (``CDR1``, ``CDR2``, ``CDR3``, ``FR1``, ``FR2``, ``FR3``,
 ``FR4``) for each clone.
 
+
+.. _ref-exampleRnaSeq:
+
+Analysis of RNA-Seq data
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+MiXCR allows to extract immunological sequences from a large RNA-Seq datasamples. This can be done in the following way:
+
+
+.. code-block:: console
+
+  > mixcr align --parameters rna-seq input_R1.fastq input_R2.fastq alignments.vdjca
+
+Other analysis stages can be executed without any additional parameters:
+
+.. code-block:: console
+
+  > mixcr assemble alignments.vdjca clones.clns
+
+  > mixcr exportClones clones.clns clones.txt
+
+
 .. _ref-exampleMouse:
+
 
 Assembling of CDR3-based clonotypes for mouse TRB sample
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
