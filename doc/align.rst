@@ -108,9 +108,9 @@ Other global aligner parameters are:
 |         ``maxHits``                | ``5``         | Maximal number of hits for each gene type: if input sequence align to more than       |
 |                                    |               | ``maxHits`` targets, then only  top ``maxHits`` hits will be kept.                    |
 +------------------------------------+---------------+---------------------------------------------------------------------------------------+
-|  ``vjAlignmentOrder``              | ``JThenV``    | Order in which V and J genes aligned in target (possible values ``JThenV`` and        |
+|  ``vjAlignmentOrder``              | ``VThenJ``    | Order in which V and J genes aligned in target (possible values ``JThenV`` and        |
 |  (*only for single-end*            |               | ``VThenJ``). Parameter affects only *single-read* alignments and alignments of        |
-|  *analysis*)                       |               | overlapped paired-end reads. Non-overlaping paired-end reads are always porcessed in  |
+|  *analysis*)                       |               | overlapped paired-end reads. Non-overlaping paired-end reads are always processed in  |
 |                                    |               | ``VThenJ`` mode. ``JThenV`` can be used for short reads (~100bp) with full (or nearly |
 |                                    |               | full) J gene coverage.                                                                |
 +------------------------------------+---------------+---------------------------------------------------------------------------------------+
