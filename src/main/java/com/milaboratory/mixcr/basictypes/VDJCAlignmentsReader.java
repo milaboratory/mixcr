@@ -59,7 +59,14 @@ public class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>
     }
 
     public VDJCAlignmentsReader(File file, AlleleResolver alleleResolver) throws IOException {
-        this(IOUtil.createIS(file), alleleResolver, file.length());
+        CompressionType ct = CompressionType.detectCompressionType(file);
+        this.countingInputStream = new CountingInputStream(new FileInputStream(file));
+        if (ct == CompressionType.None)
+            this.input = new PrimitivI(new BufferedInputStream(countingInputStream, 65536));
+        else
+            this.input = new PrimitivI(ct.createInputStream(countingInputStream, 65536));
+        this.alleleResolver = alleleResolver;
+        this.size = file.length();
     }
 
     public VDJCAlignmentsReader(InputStream input, AlleleResolver alleleResolver) {
