@@ -124,7 +124,7 @@
                 "maxHits": 7,
                 "scoring": {
                     "type": "linear",
-                    "subsMatrix": "simple(match = 5, mismatch = -12)",
+                    "subsMatrix": "simple(match = 5, mismatch = -11)",
                     "gapPenalty": -21
                 }
             }
@@ -136,7 +136,7 @@
             "maxHits": 3,
             "scoring": {
                 "type": "linear",
-                "subsMatrix": "simple(match = 5, mismatch = -12)",
+                "subsMatrix": "simple(match = 5, mismatch = -11)",
                 "gapPenalty": -21
             }
         },
@@ -152,16 +152,16 @@
                 "mapperMismatchPenalty": -0.1,
                 "mapperOffsetShiftPenalty": -0.3,
                 "mapperMinSeedsDistance": 4,
-                "mapperMaxSeedsDistance": 10,
+                "mapperMaxSeedsDistance": 8,
                 "minAlignmentLength": 15,
                 "maxAdjacentIndels": 2,
                 "alignmentStopPenalty": -1000,
-                "absoluteMinScore": 70.0,
+                "absoluteMinScore": 60.0,
                 "relativeMinScore": 0.87,
                 "maxHits": 7,
                 "scoring": {
                     "type": "linear",
-                    "subsMatrix": "simple(match = 5, mismatch = -12)",
+                    "subsMatrix": "simple(match = 5, mismatch = -11)",
                     "gapPenalty": -21
                 }
             }
@@ -187,7 +187,7 @@
                 "maxHits": 7,
                 "scoring": {
                     "type": "linear",
-                    "subsMatrix": "simple(match = 5, mismatch = -12)",
+                    "subsMatrix": "simple(match = 5, mismatch = -11)",
                     "gapPenalty": -21
                 }
             }
