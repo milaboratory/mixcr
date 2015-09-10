@@ -5,9 +5,9 @@ Two new filtering options in `exportAlignmentsPretty`: `--cdr3-contains` and `--
 Default value for `-OjParameters.parameters.floatingRightBound` changed to `false`
 New parameters: `-OincludeDScore` and `-OincludeCScore` for `align` action. If set to `true` score of `D` or `C` gene will be added to total alignment score
 New action: `mergeAlignments` to merge several *.vdjca files into one
-m: Additional micro filtration step for paired-end read aligner (work in very rear cases)
-m: Fixed bug leading to incorrect behaviour if `readsLayout=Unknown`
-m: Correct progress reporting with `-n` option in align action.
-m: Added export options -vHitsWithoutScores (same for J and D genes)
-m: Added support for optional compression of .vdjca and .clns files (when specifying additional `.gz` extension: e.g. `mixcr align inut.fastq output.vdjca.gz` etc.)
-m: Correct handling of quotes in parameters overriding
+minor: Additional micro filtration step for paired-end read aligner (work in very rear cases)
+minor: Fixed bug leading to incorrect behaviour if `readsLayout=Unknown`
+minor: Correct progress reporting with `-n` option in align action.
+minor: Added export options -vHitsWithoutScores (same for J and D genes)
+minor: Added support for optional compression of .vdjca and .clns files (when specifying additional `.gz` extension: e.g. `mixcr align inut.fastq output.vdjca.gz` etc.)
+minor: Correct handling of quotes in parameters overriding
