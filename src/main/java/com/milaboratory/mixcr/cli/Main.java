@@ -42,7 +42,8 @@ public class Main {
                 new ActionAssemble(),
                 new ActionExportClones(),
                 new ActionPrettyAlignments(),
-                new ActionAlignmentsStat());
+                new ActionAlignmentsStat(),
+                new ActionMergeAlignments());
 
         // Executing main method
         main.main(args);
