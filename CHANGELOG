@@ -1,4 +1,25 @@
 
+MiXCR 1.5 (11 Sep 2015)
+========================
+
+-- Analysis mode for RNA-Seq data. Use `-p rna-seq` in `align` action.
+-- Possible set of D genes is limited by loci of V and J genes in current rearrangement
+-- Default output format for `exportAlignmentsPretty` changed for the new one which is more compact 
+   and vivid
+-- Two new filtering options in `exportAlignmentsPretty`: `--cdr3-contains` and `--read-contains`
+-- Default value for `-OjParameters.parameters.floatingRightBound` changed to `false`
+-- New parameters: `-OincludeDScore` and `-OincludeCScore` for `align` action. If set to `true` 
+   score of `D` or `C` gene will be added to total alignment score
+-- New action: `mergeAlignments` to merge several *.vdjca files into one
+-- Minor: Additional micro filtration step for paired-end read aligner (work in very rear cases)
+-- Minor: Fixed bug leading to incorrect behaviour if `readsLayout=Unknown`
+-- Minor: Correct progress reporting with `-n` option in align action.
+-- Minor: Added export options -vHitsWithoutScores (same for J and D genes)
+-- Minor: Added support for optional compression of .vdjca and .clns files (when specifying 
+   additional `.gz` extension: e.g. `mixcr align inut.fastq output.vdjca.gz` etc.)
+-- Minor: Correct handling of quotes in parameters overriding
+
+
 MiXCR 1.4 (21 Aug 2015)
 ========================
 
