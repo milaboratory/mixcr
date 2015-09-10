@@ -4,6 +4,7 @@ Default output format for `exportAlignmentsPretty` changed for the new one which
 Two new filtering options in `exportAlignmentsPretty`: `--cdr3-contains` and `--read-contains`
 Default value for `-OjParameters.parameters.floatingRightBound` changed to `false`
 New parameters: `-OincludeDScore` and `-OincludeCScore` for `align` action. If set to `true` score of `D` or `C` gene will be added to total alignment score
+New action: `mergeAlignments` to merge several *.vdjca files into one
 m: Additional micro filtration step for paired-end read aligner (work in very rear cases)
 m: Fixed bug leading to incorrect behaviour if `readsLayout=Unknown`
 m: Correct progress reporting with `-n` option in align action.
