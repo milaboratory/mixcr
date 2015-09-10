@@ -88,6 +88,12 @@ public class VDJCAlignerWithMergeTest {
             }
         }
 
+        //for (VDJCAlignments alignments : alignemntsList) {
+        //    for (int i = 0; i < alignments.numberOfTargets(); i++) {
+        //        System.out.println(VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, i));
+        //    }
+        //}
+
         System.out.println(alignemntsList.size());
         System.out.println(total);
         System.out.println(leftHit);

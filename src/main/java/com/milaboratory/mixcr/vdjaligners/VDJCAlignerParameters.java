@@ -50,6 +50,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
     @JsonIgnore
     protected final EnumMap<GeneType, GeneAlignmentParameters> alignmentParameters;
     protected VJAlignmentOrder vjAlignmentOrder;
+    protected boolean includeDScore, includeCScore;
     protected float minSumScore;
     protected int maxHits;
     protected float relativeMinVFR3CDR3Score;
@@ -57,25 +58,14 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
     protected PairedEndReadsLayout readsLayout;
     protected MergerParameters mergerParameters;
 
-    protected VDJCAlignerParameters(EnumMap<GeneType, GeneAlignmentParameters> alignmentParameters, float minSumScore,
-                                    int maxHits, float relativeMinVScore, float relativeMinVFR3CDR3Score,
-                                    PairedEndReadsLayout readsLayout,
-                                    MergerParameters mergerParameters) {
-        this.alignmentParameters = alignmentParameters;
-        this.minSumScore = minSumScore;
-        this.maxHits = maxHits;
-        this.relativeMinVScore = relativeMinVScore;
-        this.relativeMinVFR3CDR3Score = relativeMinVFR3CDR3Score;
-        this.readsLayout = readsLayout;
-        this.mergerParameters = mergerParameters;
-    }
-
     @JsonCreator
     public VDJCAlignerParameters(@JsonProperty("vParameters") KGeneAlignmentParameters vParameters,
                                  @JsonProperty("dParameters") DAlignerParameters dParameters,
                                  @JsonProperty("jParameters") KGeneAlignmentParameters jParameters,
                                  @JsonProperty("cParameters") KGeneAlignmentParameters cParameters,
                                  @JsonProperty("vjAlignmentOrder") VJAlignmentOrder vjAlignmentOrder,
+                                 @JsonProperty("includeDScore") boolean includeDScore,
+                                 @JsonProperty("includeCScore") boolean includeCScore,
                                  @JsonProperty("minSumScore") float minSumScore,
                                  @JsonProperty("maxHits") int maxHits,
                                  @JsonProperty("relativeMinVScore") float relativeMinVScore,
@@ -88,6 +78,8 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         setGeneAlignerParameters(GeneType.Joining, jParameters);
         setGeneAlignerParameters(GeneType.Constant, cParameters);
         this.vjAlignmentOrder = vjAlignmentOrder;
+        this.includeDScore = includeDScore;
+        this.includeCScore = includeCScore;
         this.minSumScore = minSumScore;
         this.maxHits = maxHits;
         this.relativeMinVScore = relativeMinVScore;
@@ -177,6 +169,22 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         this.vjAlignmentOrder = vjAlignmentOrder;
     }
 
+    public boolean doIncludeDScore() {
+        return includeDScore;
+    }
+
+    public void setIncludeDScore(boolean includeDScore) {
+        this.includeDScore = includeDScore;
+    }
+
+    public boolean doIncludeCScore() {
+        return includeCScore;
+    }
+
+    public void setIncludeCScore(boolean includeCScore) {
+        this.includeCScore = includeCScore;
+    }
+
     public VDJCAlignerParameters setMinSumScore(float minSumScore) {
         this.minSumScore = minSumScore;
         return this;
@@ -244,6 +252,9 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
     public String toString() {
         return "VDJCAlignerParameters{" +
                 "alignmentParameters=" + alignmentParameters +
+                ", vjAlignmentOrder=" + vjAlignmentOrder +
+                ", includeDScore=" + includeDScore +
+                ", includeCScore=" + includeCScore +
                 ", minSumScore=" + minSumScore +
                 ", maxHits=" + maxHits +
                 ", relativeMinVFR3CDR3Score=" + relativeMinVFR3CDR3Score +
@@ -261,6 +272,9 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         VDJCAlignerParameters that = (VDJCAlignerParameters) o;
 
         if (maxHits != that.maxHits) return false;
+        if (that.vjAlignmentOrder != vjAlignmentOrder) return false;
+        if (that.includeDScore != includeDScore) return false;
+        if (that.includeCScore != includeCScore) return false;
         if (Float.compare(that.minSumScore, minSumScore) != 0) return false;
         if (Float.compare(that.relativeMinVFR3CDR3Score, relativeMinVFR3CDR3Score) != 0) return false;
         if (Float.compare(that.relativeMinVScore, relativeMinVScore) != 0) return false;
@@ -277,6 +291,10 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         int result = alignmentParameters.hashCode();
         result = 31 * result + (minSumScore != +0.0f ? Float.floatToIntBits(minSumScore) : 0);
         result = 31 * result + maxHits;
+        result = 31 * result + vjAlignmentOrder.hashCode();
+        result = 31 * result + (includeDScore ? 17 : 0);
+        result = 31 * result + (includeCScore ? 17 : 0);
+        result = 31 * result + maxHits;
         result = 31 * result + (relativeMinVFR3CDR3Score != +0.0f ? Float.floatToIntBits(relativeMinVFR3CDR3Score) : 0);
         result = 31 * result + (relativeMinVScore != +0.0f ? Float.floatToIntBits(relativeMinVScore) : 0);
         result = 31 * result + (readsLayout != null ? readsLayout.hashCode() : 0);
@@ -286,7 +304,8 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
 
     @Override
     public VDJCAlignerParameters clone() {
-        return new VDJCAlignerParameters(getVAlignerParameters(), getDAlignerParameters(), getJAlignerParameters(), getCAlignerParameters(),
-                vjAlignmentOrder, minSumScore, maxHits, relativeMinVFR3CDR3Score, relativeMinVScore, readsLayout, mergerParameters);
+        return new VDJCAlignerParameters(getVAlignerParameters(), getDAlignerParameters(), getJAlignerParameters(),
+                getCAlignerParameters(), vjAlignmentOrder, includeDScore, includeCScore, minSumScore, maxHits,
+                relativeMinVFR3CDR3Score, relativeMinVScore, readsLayout, mergerParameters);
     }
 }

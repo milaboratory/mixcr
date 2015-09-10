@@ -38,16 +38,10 @@ import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.reference.Allele;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
-import com.milaboratory.mixcr.reference.ReferencePoint;
+import com.milaboratory.mixcr.reference.*;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     public VDJCAlignerPVFirst(VDJCAlignerParameters parameters) {
@@ -78,7 +72,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
             helper.performJAlignment();
         }
 
-        // Calculates which PTarget was aligned with the biggest score
+        // Calculates which PTarget was aligned with the highest score
         PAlignmentHelper bestHelper = helpers[0];
         if (bestHelper.score() < helpers[1].score())
             bestHelper = helpers[1];
@@ -92,25 +86,21 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
             return new VDJCAlignmentResult<>(input);
         }
 
+        // Performing alignment of C and D genes if corresponding parameters are set to include their scores to
+        // the total score value
+        bestHelper.performCDAlignment();
+
         // Calculates if this score is bigger then the threshold
         if (bestHelper.score() < parameters.getMinSumScore()) {
             onFailedAlignment(input, VDJCAlignmentFailCause.LowTotalScore);
             return new VDJCAlignmentResult<>(input);
         }
 
-        //if (bestHelper.hasHits())
-
         // Finally filtering hits inside this helper to meet minSumScore and maxHits limits
         bestHelper.filterHits(parameters.getMinSumScore(), parameters.getMaxHits());
 
-        //else {
-        //    onFailedAlignment(input, VDJCAlignmentFailCause.LowTotalScore);
-        //    // If hits for V or J are missing
-        //    return new VDJCAlignmentResult<>(input);
-        //}
-
         // If hits for V or J are missing after filtration
-        if (!bestHelper.hasHits()) {
+        if (!bestHelper.isGood()) {
             onFailedAlignment(input, VDJCAlignmentFailCause.LowTotalScore);
             return new VDJCAlignmentResult<>(input);
         }
@@ -127,10 +117,10 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     }
 
     PAlignmentHelper[] createInitialHelpers(PairedTarget[] target) {
-        return new PAlignmentHelper[]{
-                createInitialHelper(target[0]),
-                createInitialHelper(target[1])
-        };
+        PAlignmentHelper[] result = new PAlignmentHelper[target.length];
+        for (int i = 0; i < target.length; i++)
+            result[i] = createInitialHelper(target[i]);
+        return result;
     }
 
     PAlignmentHelper createInitialHelper(PairedTarget target) {
@@ -148,6 +138,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         final KAlignmentResult<?>[] vResults;
         KAlignmentResult<?>[] jResults;
         PairedHit[] vHits, jHits;
+        VDJCHit[] dHits = null, cHits = null;
         PairedHit bestVHits;
 
         PAlignmentHelper(PairedTarget target, KAlignmentResult... vResults) {
@@ -204,7 +195,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
             }
 
             // Setting best hits for current array of hits (after filtration)
-            bestVHits = new PairedHit(hit0, hit1);
+            bestVHits = new PairedHit(hit0, hit1, true);
         }
 
         boolean hasVHits() {
@@ -214,6 +205,17 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         boolean hasHits() {
             return vHits != null && jHits != null &&
                     vHits.length > 0 && jHits.length > 0;
+        }
+
+        boolean isGood() {
+            return hasHits() && hasVJOnTheSameTarget();
+        }
+
+        private boolean hasVJOnTheSameTarget() {
+            for (int i = 0; i < 2; i++)
+                if (vHits[0].get(i) != null && jHits[0].get(i) != null)
+                    return true;
+            return false;
         }
 
         /**
@@ -231,8 +233,22 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
          * Returns sum score for this targets.
          */
         float score() {
-            return (vHits.length > 0 ? vHits[0].sumScore : 0.0f) +
-                    (jHits != null && jHits.length > 0 ? jHits[0].sumScore : 0.0f);
+            // Adding V score
+            float score = vHits.length > 0 ? vHits[0].sumScore : 0.0f;
+
+            // Adding J score
+            if (jHits != null && jHits.length > 0)
+                score += jHits[0].sumScore;
+
+            // Adding C score
+            if (parameters.doIncludeCScore() && cHits != null && cHits.length > 0)
+                score += cHits[0].getScore();
+
+            // Adding D score
+            if (parameters.doIncludeDScore() && dHits != null && dHits.length > 0)
+                score += dHits[0].getScore();
+
+            return score;
         }
 
         void addHits(TIntObjectHashMap<PairedHit> hits, KAlignmentResult<?> result, int index) {
@@ -259,48 +275,6 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         VDJCAlignments createResult(long readId, VDJCAlignerPVFirst aligner) {
             VDJCHit[] vHits = convert(this.vHits, GeneType.Variable, aligner);
             VDJCHit[] jHits = convert(this.jHits, GeneType.Joining, aligner);
-            VDJCHit[] dHits = null, cHits = null;
-
-
-            //Alignment of D gene
-            if (singleDAligner != null) {
-                PreVDJCHit[][] preDHits = new PreVDJCHit[2][];
-                Arrays.fill(preDHits, zeroArray);
-
-                for (int i = 0; i < 2; ++i) {
-                    //for target0
-                    Alignment<NucleotideSequence> vAlignment = vHits[0].getAlignment(i);
-                    Alignment<NucleotideSequence> jAlignment = jHits[0].getAlignment(i);
-                    if (vAlignment == null || jAlignment == null)
-                        continue;
-                    int from = vAlignment.getSequence2Range().getTo(),
-                            to = jAlignment.getSequence2Range().getFrom();
-                    if (from > to)
-                        continue;
-                    List<PreVDJCHit> temp = singleDAligner.align0(target.targets[i].getSequence(), from, to);
-                    preDHits[i] = temp.toArray(new PreVDJCHit[temp.size()]);
-                }
-
-                dHits = PreVDJCHit.combine(getDAllelesToAlign(),
-                        parameters.getFeatureToAlign(GeneType.Diversity), preDHits);
-            }
-
-            //Alignment of C gene
-            if (cAligner != null) {
-                KAlignmentHit[][] results = new KAlignmentHit[2][];
-                Arrays.fill(results, zeroKArray);
-                for (int i = 0; i < 2; ++i) {
-                    //for target0
-                    Alignment<NucleotideSequence> jAlignment = jHits[0].getAlignment(i);
-                    if (jAlignment == null)
-                        continue;
-                    int from = jAlignment.getSequence2Range().getTo();
-                    List<KAlignmentHit> temp = cAligner.align(target.targets[i].getSequence(), from, target.targets[i].size()).getHits();
-                    results[i] = temp.toArray(new KAlignmentHit[temp.size()]);
-                }
-                cHits = combine(getCAllelesToAlign(),
-                        parameters.getFeatureToAlign(GeneType.Constant), results);
-            }
 
             return new VDJCAlignments(readId, vHits, dHits, jHits, cHits, target.targets);
         }
@@ -315,6 +289,54 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
             });
 
             calculateScoreAndSort(jHits);
+        }
+
+        /**
+         * Perform final alignment of D and C genes on fully marked-up reads (with by V and J alignments).
+         */
+        void performCDAlignment() {
+            PairedHit bestVHit = vHits[0];
+            PairedHit bestJHit = jHits[0];
+
+            //Alignment of D gene
+            if (singleDAligner != null) {
+                PreVDJCHit[][] preDHits = new PreVDJCHit[2][];
+                Arrays.fill(preDHits, zeroArray);
+
+                for (int i = 0; i < 2; ++i) {
+                    Alignment<NucleotideSequence> vAlignment = bestVHit.get(i) == null ? null : bestVHit.get(i).getAlignment();
+                    Alignment<NucleotideSequence> jAlignment = bestJHit.get(i) == null ? null : bestJHit.get(i).getAlignment();
+                    if (vAlignment == null || jAlignment == null)
+                        continue;
+                    int from = vAlignment.getSequence2Range().getTo(),
+                            to = jAlignment.getSequence2Range().getFrom();
+                    if (from >= to)
+                        continue;
+                    List<PreVDJCHit> temp = singleDAligner.align0(target.targets[i].getSequence(),
+                            getPossibleDLoci(vHits, jHits), from, to);
+                    preDHits[i] = temp.toArray(new PreVDJCHit[temp.size()]);
+                }
+
+                dHits = PreVDJCHit.combine(getDAllelesToAlign(),
+                        parameters.getFeatureToAlign(GeneType.Diversity), preDHits);
+            }
+
+            //Alignment of C gene
+            if (cAligner != null) {
+                KAlignmentHit[][] results = new KAlignmentHit[2][];
+                Arrays.fill(results, zeroKArray);
+                for (int i = 0; i < 2; ++i) {
+                    Alignment<NucleotideSequence> jAlignment = bestJHit.get(i) == null ? null : bestJHit.get(i).getAlignment();
+                    if (jAlignment == null)
+                        continue;
+                    int from = jAlignment.getSequence2Range().getTo();
+                    List<KAlignmentHit> temp = cAligner.align(target.targets[i].getSequence(), from,
+                            target.targets[i].size()).getHits();
+                    results[i] = temp.toArray(new KAlignmentHit[temp.size()]);
+                }
+                cHits = combine(getCAllelesToAlign(),
+                        parameters.getFeatureToAlign(GeneType.Constant), results);
+            }
         }
 
         /**
@@ -346,12 +368,17 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
          * Filters hit to finally meet maxHit and minScore limits.
          */
         public void filterHits(float minTotalScore, int maxHits) {
-            final float minVScore = Math.max(parameters.getRelativeMinVScore() * vHits[0].sumScore,
-                    minTotalScore - jHits[0].sumScore);
-            this.vHits = extractHits(minVScore, vHits, maxHits);
+            // Calculate this value once to use twice in the code below
+            float totalMScore = minTotalScore - score();
 
-            if (vHits.length > 0)
-                this.jHits = extractHits(minTotalScore - vHits[0].sumScore, jHits, maxHits);
+            float minScore = Math.max(
+                    parameters.getRelativeMinVScore() * vHits[0].sumScore,
+                    totalMScore + vHits[0].sumScore
+            );
+            this.vHits = extractHits(minScore, vHits, maxHits);
+
+            if (vHits.length > 0 && jHits.length > 0)
+                this.jHits = extractHits(totalMScore + jHits[0].sumScore, jHits, maxHits);
         }
 
         /**
@@ -368,6 +395,15 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
 
             return Arrays.copyOfRange(result, 0, count);
         }
+    }
+
+    public Set<Locus> getPossibleDLoci(PairedHit[] vHits, PairedHit[] jHits) {
+        EnumSet<Locus> loci = EnumSet.noneOf(Locus.class);
+        for (PairedHit vHit : vHits)
+            loci.add(getAllele(GeneType.Variable, vHit.getId()).getLocus());
+        for (PairedHit jHit : jHits)
+            loci.add(getAllele(GeneType.Joining, jHit.getId()).getLocus());
+        return loci;
     }
 
     /**
@@ -395,13 +431,13 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
      * read.
      */
     static final class PairedHit {
-        KAlignmentHit<?> hit0, hit1;
+        KAlignmentHit<NucleotideSequence> hit0, hit1;
         float sumScore = -1, vEndScore = -1;
 
         PairedHit() {
         }
 
-        PairedHit(KAlignmentHit hit0, KAlignmentHit hit1) {
+        PairedHit(KAlignmentHit<NucleotideSequence> hit0, KAlignmentHit<NucleotideSequence> hit1, boolean unsafe) {
             this.hit0 = hit0;
             this.hit1 = hit1;
         }
@@ -438,18 +474,26 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                 this.hit0 = hit;
             else
                 this.hit1 = hit;
+            assert hit0 == null || hit1 == null || hit0.getId() == hit1.getId();
         }
 
         /**
          * To use this hit as an array of two single hits.
          */
-        KAlignmentHit get(int i) {
+        KAlignmentHit<NucleotideSequence> get(int i) {
             assert i == 0 || i == 1;
 
             if (i == 0)
                 return hit0;
             else
                 return hit1;
+        }
+
+        /**
+         * Returns id of reference sequence
+         */
+        int getId() {
+            return hit0 == null ? hit1.getId() : hit0.getId();
         }
 
         /**

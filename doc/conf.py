@@ -16,6 +16,7 @@ import sys
 import os
 import shlex
 
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -112,6 +113,13 @@ todo_include_todos = False
 # a list of builtin themes.
 html_theme = 'default'
 
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+
+if not on_rtd:  # only import and set the theme if we're building docs locally
+    import sphinx_rtd_theme
+    html_theme = 'sphinx_rtd_theme'
+    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
@@ -140,6 +148,20 @@ html_theme = 'default'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+# try:
+# 	html_context
+# except Exception, e:
+# 	html_context = {
+#     'css_files': [
+#         '_static/style.css',  # overrides for wide tables in RTD theme
+#         ],
+#     }
+# else:
+# 	html_context['css_files'].append('_static/style.css')
+# finally:
+# 	pass
+
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -284,3 +306,6 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+def setup(app):
+   app.add_stylesheet("style.css")

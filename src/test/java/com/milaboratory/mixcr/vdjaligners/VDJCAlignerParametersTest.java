@@ -58,7 +58,9 @@ public class VDJCAlignerParametersTest {
                 new KGeneAlignmentParameters(GeneFeature.CExon1,
                         new KAlignerParameters(5, false, false,
                                 1.5f, 0.75f, 1.0f, -0.1f, -0.3f, 4, 10, 15, 2, -10, 40.0f, 0.87f, 7,
-                                LinearGapAlignmentScoring.getNucleotideBLASTScoring())), VJAlignmentOrder.JThenV,
+                                LinearGapAlignmentScoring.getNucleotideBLASTScoring())),
+                VJAlignmentOrder.JThenV,
+                false, false,
                 120.0f, 5, 0.7f, 0.7f, PairedEndReadsLayout.Opposite, new MergerParameters(12, 0.12));
         String str = GlobalObjectMappers.PRETTY.writeValueAsString(paramentrs);
         VDJCAlignerParameters deser = GlobalObjectMappers.PRETTY.readValue(str, VDJCAlignerParameters.class);

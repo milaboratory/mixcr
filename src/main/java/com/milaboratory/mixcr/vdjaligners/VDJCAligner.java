@@ -31,13 +31,12 @@ package com.milaboratory.mixcr.vdjaligners;
 import cc.redberry.pipe.Processor;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.reference.GeneType;
+import com.milaboratory.mixcr.reference.Locus;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.List;
+import java.util.*;
 
 public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R, VDJCAlignmentResult<R>> {
     protected volatile boolean initialized = false;
@@ -123,5 +122,14 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
                 merge ? new VDJCAlignerWithMerge(alignerParameters)
                         : new VDJCAlignerPVFirst(alignerParameters)
                 : new VDJCAlignerSJFirst(alignerParameters);
+    }
+
+    public static Set<Locus> getPossibleDLoci(VDJCHit[] vHits, VDJCHit[] jHits) {
+        EnumSet loci = EnumSet.noneOf(Locus.class);
+        for (VDJCHit h : vHits)
+            loci.add(h.getAllele().getLocus());
+        for (VDJCHit h : jHits)
+            loci.add(h.getAllele().getLocus());
+        return loci;
     }
 }

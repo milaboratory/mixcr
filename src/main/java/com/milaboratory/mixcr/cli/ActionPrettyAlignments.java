@@ -35,14 +35,13 @@ import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.AlignmentHelper;
+import com.milaboratory.core.alignment.MultiAlignmentHelper;
+import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mitools.cli.Action;
 import com.milaboratory.mitools.cli.ActionHelper;
 import com.milaboratory.mitools.cli.ActionParameters;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
-import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence;
+import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.cli.afiltering.AFilter;
 import com.milaboratory.mixcr.reference.GeneFeature;
 import com.milaboratory.mixcr.reference.GeneType;
@@ -57,6 +56,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static cc.redberry.primitives.FilterUtil.ACCEPT_ALL;
+import static cc.redberry.primitives.FilterUtil.and;
 
 public class ActionPrettyAlignments implements Action {
     public static final int LINE_LENGTH = 80;
@@ -89,86 +89,108 @@ public class ActionPrettyAlignments implements Action {
                     if (--countAfter < 0)
                         break;
 
-                    output.println(">>> Read id: " + alignments.getReadId());
-                    output.println();
-                    output.println(">>> Target sequences (input sequences):");
-                    output.println();
-                    for (int i = 0; i < alignments.numberOfTargets(); i++) {
-                        output.println("Sequence" + i + ":");
-
-                        final VDJCPartitionedSequence partitionedTarget = alignments.getPartitionedTarget(i);
-
-                        printGeneFeatures(new Filter<GeneFeature>() {
-                            @Override
-                            public boolean accept(GeneFeature object) {
-                                return partitionedTarget.getPartitioning().isAvailable(object);
-                            }
-                        }, output, "Contains features: ");
-
-                        output.println();
-
-                        output.print(new NSequenceWithQualityPrintHelper(alignments.getTarget(i), LINE_OFFSET, LINE_LENGTH));
-                    }
-
-                    if (alignments.numberOfTargets() > 1) {
-
-                        // Printing a set of available gene features for a full read
-
-                        output.println(">>> Gene features that can be extracted from this paired-read: ");
-
-                        printGeneFeatures(new Filter<GeneFeature>() {
-                            @Override
-                            public boolean accept(GeneFeature object) {
-                                return alignments.getFeature(object) != null;
-                            }
-                        }, output, "");
-                    }
-
-                    output.println();
-                    for (GeneType geneType : GeneType.values()) {
-                        output.println(">>> Alignments with " + geneType.getLetter() + " gene:");
-                        output.println();
-                        boolean exists = false;
-                        VDJCHit[] hits = alignments.getHits(geneType);
-                        if (hits != null && hits.length > 0) {
-                            hits = actionParameters.isOnlyTop() ? new VDJCHit[]{hits[0]} : hits;
-                            for (VDJCHit hit : hits) {
-                                exists = true;
-                                output.println(hit.getAllele().getName() + " (total score = " + hit.getScore() + ")");
-                                for (int i = 0; i < alignments.numberOfTargets(); i++) {
-                                    Alignment<NucleotideSequence> alignment = hit.getAlignment(i);
-
-                                    if (alignment == null)
-                                        continue;
-
-                                    output.println("Alignment of Sequence" + i + " (score = " + (alignment == null ? "NaN" : alignment.getScore()) + "):");
-                                    if (alignment != null) {
-                                        for (AlignmentHelper subHelper : alignment.getAlignmentHelper().split(LINE_LENGTH, LINE_OFFSET)) {
-                                            output.println(subHelper.toStringWithSeq2Quality(alignments.getTarget(i).getQuality()));
-                                            output.println();
-                                        }
-                                        if (actionParameters.isAlleleSequence()) {
-                                            output.println("Allele sequence:");
-                                            output.println(alignment.getSequence1());
-                                            output.println();
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        if (!exists) {
-                            output.println("No hits.");
-                            output.println();
-                        }
-                    }
-                    char[] ll = new char[94];
-                    Arrays.fill(ll, '=');
-                    output.println(ll);
-                    output.println();
+                    if (actionParameters.isVerbose())
+                        outputVerbose(output, alignments);
+                    else
+                        outputCompact(output, alignments);
                 }
             }
             output.println("Filtered: " + filtered + " / " + total + " = " + (100.0 * filtered / total) + "%");
         }
+    }
+
+    public void outputCompact(PrintStream output, final VDJCAlignments alignments) {
+        output.println(">>> Read id: " + alignments.getReadId());
+        output.println();
+        for (int i = 0; i < alignments.numberOfTargets(); i++) {
+            MultiAlignmentHelper targetAsMultiAlignment = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, i);
+            if (targetAsMultiAlignment == null)
+                continue;
+            MultiAlignmentHelper[] split = targetAsMultiAlignment.split(80);
+            for (MultiAlignmentHelper spl : split) {
+                output.println(spl);
+                output.println();
+            }
+        }
+    }
+
+    public void outputVerbose(PrintStream output, final VDJCAlignments alignments) {
+        output.println(">>> Read id: " + alignments.getReadId());
+        output.println();
+        output.println(">>> Target sequences (input sequences):");
+        output.println();
+        for (int i = 0; i < alignments.numberOfTargets(); i++) {
+            output.println("Sequence" + i + ":");
+
+            final VDJCPartitionedSequence partitionedTarget = alignments.getPartitionedTarget(i);
+
+            printGeneFeatures(new Filter<GeneFeature>() {
+                @Override
+                public boolean accept(GeneFeature object) {
+                    return partitionedTarget.getPartitioning().isAvailable(object);
+                }
+            }, output, "Contains features: ");
+
+            output.println();
+
+            output.print(new NSequenceWithQualityPrintHelper(alignments.getTarget(i), LINE_OFFSET, LINE_LENGTH));
+        }
+
+        if (alignments.numberOfTargets() > 1) {
+
+            // Printing a set of available gene features for a full read
+
+            output.println(">>> Gene features that can be extracted from this paired-read: ");
+
+            printGeneFeatures(new Filter<GeneFeature>() {
+                @Override
+                public boolean accept(GeneFeature object) {
+                    return alignments.getFeature(object) != null;
+                }
+            }, output, "");
+        }
+
+        output.println();
+        for (GeneType geneType : GeneType.values()) {
+            output.println(">>> Alignments with " + geneType.getLetter() + " gene:");
+            output.println();
+            boolean exists = false;
+            VDJCHit[] hits = alignments.getHits(geneType);
+            if (hits != null && hits.length > 0) {
+                hits = actionParameters.isOnlyTop() ? new VDJCHit[]{hits[0]} : hits;
+                for (VDJCHit hit : hits) {
+                    exists = true;
+                    output.println(hit.getAllele().getName() + " (total score = " + hit.getScore() + ")");
+                    for (int i = 0; i < alignments.numberOfTargets(); i++) {
+                        Alignment<NucleotideSequence> alignment = hit.getAlignment(i);
+
+                        if (alignment == null)
+                            continue;
+
+                        output.println("Alignment of Sequence" + i + " (score = " + (alignment == null ? "NaN" : alignment.getScore()) + "):");
+                        if (alignment != null) {
+                            for (AlignmentHelper subHelper : alignment.getAlignmentHelper().split(LINE_LENGTH, LINE_OFFSET)) {
+                                output.println(subHelper.toStringWithSeq2Quality(alignments.getTarget(i).getQuality()));
+                                output.println();
+                            }
+                            if (actionParameters.isAlleleSequence()) {
+                                output.println("Allele sequence:");
+                                output.println(alignment.getSequence1());
+                                output.println();
+                            }
+                        }
+                    }
+                }
+            }
+            if (!exists) {
+                output.println("No hits.");
+                output.println();
+            }
+        }
+        char[] ll = new char[94];
+        Arrays.fill(ll, '=');
+        output.println(ll);
+        output.println();
     }
 
     public void printGeneFeatures(Filter<GeneFeature> containsFilter, PrintStream output, String prefix) {
@@ -227,14 +249,55 @@ public class ActionPrettyAlignments implements Action {
                 names = {"-s", "--skip"})
         public Integer skipAfter = null;
 
-        @Parameter(description = "Filter",
+        @Parameter(description = "Only output alignments where CDR3 contains given substring",
+                names = {"-c", "--cdr3-contains"})
+        public String cdr3Contains = null;
+
+        @Parameter(description = "Only output alignments where target read contains given substring",
+                names = {"-r", "--read-contains"})
+        public String readContains = null;
+
+        @Parameter(description = "Custom filter",
                 names = {"-f", "--filter"})
         public String filter = null;
 
+        @Parameter(description = "Verbose output (old)",
+                names = {"-v", "--verbose"})
+        public Boolean verbose = null;
+
         public Filter<VDJCAlignments> getFilter() {
-            if (filter == null)
+            List<Filter<VDJCAlignments>> filters = new ArrayList<>();
+            if (filter != null)
+                filters.add(AFilter.build(filter));
+
+            if (cdr3Contains != null)
+                filters.add(new Filter<VDJCAlignments>() {
+                    @Override
+                    public boolean accept(VDJCAlignments object) {
+                        NSequenceWithQuality feature = object.getFeature(GeneFeature.CDR3);
+                        return feature != null && feature.getSequence().toString().contains(cdr3Contains);
+                    }
+                });
+
+            if (readContains != null)
+                filters.add(new Filter<VDJCAlignments>() {
+                    @Override
+                    public boolean accept(VDJCAlignments object) {
+                        for (int i = 0; i < object.numberOfTargets(); i++)
+                            if (object.getTarget(i).getSequence().toString().contains(readContains))
+                                return true;
+                        return false;
+                    }
+                });
+
+            if (filters.isEmpty())
                 return ACCEPT_ALL;
-            return AFilter.build(filter);
+
+            return and(filters.toArray(new Filter[filters.size()]));
+        }
+
+        public boolean isVerbose() {
+            return verbose != null && verbose;
         }
 
         public boolean isOnlyTop() {

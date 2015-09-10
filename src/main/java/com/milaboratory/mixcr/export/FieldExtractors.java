@@ -118,6 +118,30 @@ public final class FieldExtractors {
                 });
             }
 
+            // All hits without score
+            for (final GeneType type : GeneType.values()) {
+                char l = type.getLetter();
+                desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "HitsWithoutScores",
+                        "Export all " + l + " hits without scores", "All " + l + " hits without scores") {
+                    @Override
+                    protected String extract(VDJCObject object) {
+                        VDJCHit[] hits = object.getHits(type);
+                        if (hits == null)
+                            return NULL;
+                        if (hits.length == 0)
+                            return "";
+                        StringBuilder sb = new StringBuilder();
+                        for (int i = 0; ; i++) {
+                            sb.append(hits[i].getAllele().getName());
+                            if (i == hits.length - 1)
+                                break;
+                            sb.append(",");
+                        }
+                        return sb.toString();
+                    }
+                });
+            }
+
             // Best alignment
             for (final GeneType type : GeneType.values()) {
                 char l = type.getLetter();

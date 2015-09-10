@@ -36,9 +36,16 @@ import java.util.EnumMap;
 
 @Serializable(by = IO.VDJCAlignmentsSerializer.class)
 public final class VDJCAlignments extends VDJCObject {
-    String[] descriptions;
+    volatile String[] descriptions;
     final long readId;
     private volatile long alignmentsIndex = -1;
+
+    public VDJCAlignments(long readId, long alignmentsIndex, VDJCAlignments alignments) {
+        super(alignments.hits, alignments.targets);
+        this.readId = readId;
+        this.alignmentsIndex = alignmentsIndex;
+        this.descriptions = alignments.descriptions;
+    }
 
     public VDJCAlignments(long readId, EnumMap<GeneType, VDJCHit[]> hits, NSequenceWithQuality target) {
         super(hits, new NSequenceWithQuality[]{target});
