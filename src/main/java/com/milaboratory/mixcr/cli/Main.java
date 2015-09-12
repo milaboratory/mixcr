@@ -43,7 +43,8 @@ public class Main {
                 new ActionExportClones(),
                 new ActionPrettyAlignments(),
                 new ActionAlignmentsStat(),
-                new ActionMergeAlignments());
+                new ActionMergeAlignments(),
+                new ActionInfo());
 
         // Executing main method
         main.main(args);
