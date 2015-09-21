@@ -211,7 +211,7 @@ MiXCR allows to export resulting alignments after :ref:`align <ref-align>`
 step as a pretty formatted text for manual analysis of produced
 alignments and structure of library to facilitate optimization of
 analysis parameters and libraray preparation protocol. To export pretty
-formatted alignments use ``exportAlignmebtsPretty`` command:
+formatted alignments use ``exportAlignmentsPretty`` command:
 
 ::
 
