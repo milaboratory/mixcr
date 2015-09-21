@@ -100,8 +100,6 @@ public final class FieldExtractors {
                     @Override
                     protected String extract(VDJCObject object) {
                         VDJCHit[] hits = object.getHits(type);
-                        if (hits == null)
-                            return NULL;
                         if (hits.length == 0)
                             return "";
                         StringBuilder sb = new StringBuilder();
@@ -126,8 +124,6 @@ public final class FieldExtractors {
                     @Override
                     protected String extract(VDJCObject object) {
                         VDJCHit[] hits = object.getHits(type);
-                        if (hits == null)
-                            return NULL;
                         if (hits.length == 0)
                             return "";
                         StringBuilder sb = new StringBuilder();
@@ -176,8 +172,6 @@ public final class FieldExtractors {
                     @Override
                     protected String extract(VDJCObject object) {
                         VDJCHit[] hits = object.getHits(type);
-                        if (hits == null)
-                            return NULL;
                         if (hits.length == 0)
                             return "";
                         StringBuilder sb = new StringBuilder();

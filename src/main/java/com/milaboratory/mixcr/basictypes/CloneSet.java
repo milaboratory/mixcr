@@ -72,11 +72,8 @@ public final class CloneSet implements Iterable<Clone> {
                 assemblingFeatures = clone.getAssemblingFeatures();
             else if (!Arrays.equals(assemblingFeatures, clone.getAssemblingFeatures()))
                 throw new IllegalArgumentException("Different assembling features.");
-            for (GeneType geneType : GeneType.values()) {
-                VDJCHit[] hits = clone.getHits(geneType);
-                if (hits == null)
-                    continue;
-                for (VDJCHit hit : hits) {
+            for (GeneType geneType : GeneType.values())
+                for (VDJCHit hit : clone.getHits(geneType)) {
                     Allele allele = hit.getAllele();
                     alleles.put(allele.getId(), allele);
                     GeneFeature alignedFeature = hit.getAlignedFeature();
@@ -84,7 +81,6 @@ public final class CloneSet implements Iterable<Clone> {
                     if (f != null && !f.equals(alignedFeature))
                         throw new IllegalArgumentException("Different aligned feature for clones.");
                 }
-            }
         }
         this.assemblingFeatures = assemblingFeatures;
         this.alignedFeatures = alignedFeatures;
