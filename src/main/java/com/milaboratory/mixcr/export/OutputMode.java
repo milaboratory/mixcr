@@ -28,37 +28,6 @@
  */
 package com.milaboratory.mixcr.export;
 
-public abstract class FieldParameterless<T> extends AbstractField<T> {
-    final String hHeader, sHeader;
-
-    protected FieldParameterless(Class targetType, String command,
-                                 String description,
-                                 String hHeader, String sHeader) {
-        super(targetType, command, description);
-        this.hHeader = hHeader;
-        this.sHeader = sHeader;
-    }
-
-    protected abstract String extract(T object);
-
-    public String getHeader(OutputMode outputMode) {
-        switch (outputMode) {
-            case HumanFriendly:
-                return hHeader;
-            case ScriptingFriendly:
-                return sHeader;
-            default:
-                throw new NullPointerException();
-        }
-    }
-
-    @Override
-    public FieldExtractor<T> create(OutputMode outputMode, String[] args) {
-        return new AbstractFieldExtractor<T>(getHeader(outputMode), this) {
-            @Override
-            public String extractValue(T object) {
-                return extract(object);
-            }
-        };
-    }
+public enum OutputMode {
+    HumanFriendly, ScriptingFriendly
 }

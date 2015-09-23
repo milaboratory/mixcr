@@ -84,6 +84,9 @@ The list of command line parameters for both ``exportAlignments`` and
 +---------------------+-------------------------------------------------------------------+
 | -pf, --presetFile   | load file with a list of fields to export                         |
 +---------------------+-------------------------------------------------------------------+
+| -s, --no-spaces     | output short versions of column headers which facilitates analysis|
+|                     | with Pandas, R/DataFrames or other data tables processing library |
++---------------------+-------------------------------------------------------------------+
 
 Available fields
 ----------------

@@ -35,14 +35,14 @@ public abstract class FieldWithParameters<T, P> extends AbstractField<T> {
 
     protected abstract P getParameters(String[] string);
 
-    protected abstract String getHeader(P parameters);
+    protected abstract String getHeader(OutputMode outputMode, P parameters);
 
     protected abstract String extractValue(T object, P parameters);
 
     @Override
-    public FieldExtractor<T> create(String[] args) {
+    public FieldExtractor<T> create(OutputMode outputMode, String[] args) {
         final P params = getParameters(args);
-        String header = getHeader(params);
+        String header = getHeader(outputMode, params);
         return new AbstractFieldExtractor<T>(header, this) {
             @Override
             public String extractValue(T object) {

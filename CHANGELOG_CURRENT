@@ -1,0 +1,3 @@
+New feature: optional short column names in `export...` action to simplify further data analysis using data table processing libraries like Pandas or R/DataFrames. (`-s` / `--no-spaces` in `exportAlignments` and `exportClones`)
+minor: some column names in output tab-delimited files slightly changed
+minor: NPE in exportAlignmentsPretty fixed
