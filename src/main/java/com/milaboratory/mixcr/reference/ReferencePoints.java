@@ -57,7 +57,7 @@ public final class ReferencePoints extends SequencePartitioning implements java.
         this.points = array;
     }
 
-    public int numberOfDefinedPoins() {
+    public int numberOfDefinedPoints() {
         int ret = 0;
         for (int point : points) {
             if (point >= 0)

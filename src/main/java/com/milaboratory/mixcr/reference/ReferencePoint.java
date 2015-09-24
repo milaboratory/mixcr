@@ -52,9 +52,13 @@ public final class ReferencePoint implements Comparable<ReferencePoint>, java.io
      */
     public static final ReferencePoint UTR5Begin = new ReferencePoint(BasicReferencePoint.UTR5Begin),
     /**
-     * End of 5'UTR, beginning of IG/TCR CDS
+     * End of 5'UTR, beginning of IG/TCR CDS as listed in database
      */
     UTR5End = new ReferencePoint(BasicReferencePoint.UTR5EndL1Begin),
+    /**
+     * End of 5'UTR, beginning of IG/TCR CDS as observed in the data
+     */
+    UTR5BeginTrimmed = new ReferencePoint(BasicReferencePoint.UTR5BeginTrimmed),
     /**
      * End of 5'UTR, beginning of IG/TCR CDS
      */
@@ -181,13 +185,18 @@ public final class ReferencePoint implements Comparable<ReferencePoint>, java.io
      */
     CBegin = new ReferencePoint(BasicReferencePoint.CBegin),
     /**
-     * End of C Region first exon (Exon 3)
+     * End of C Region first exon (Exon 3 of assembled TCR/IG gene)
      */
     CExon1End = new ReferencePoint(BasicReferencePoint.CExon1End),
     /**
      * End of C Region
      */
     CEnd = new ReferencePoint(BasicReferencePoint.CEnd);
+
+    /**
+     * Default set of reference points.
+     */
+    public static final ReferencePoint[] DefaultReferencePoints = {};
 
     static final long serialVersionUID = 1L;
     final BasicReferencePoint basicPoint;
@@ -286,6 +295,10 @@ public final class ReferencePoint implements Comparable<ReferencePoint>, java.io
         if (offset == 0)
             return this;
         return new ReferencePoint(basicPoint);
+    }
+
+    public ReferencePoint getActivationPoint() {
+        return basicPoint.getActivationPoint();
     }
 
     @Override

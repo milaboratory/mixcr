@@ -34,40 +34,56 @@ import static com.milaboratory.mixcr.reference.GeneType.*;
 enum BasicReferencePoint implements java.io.Serializable {
     // Points in V
     UTR5Begin(0, GeneType.Variable, 0),
-    UTR5EndL1Begin(1, Variable, 1),
-    L1EndVIntronBegin(2, Variable, 2),
-    VIntronEndL2Begin(3, Variable, 3),
-    L2EndFR1Begin(4, Variable, 4),
-    FR1EndCDR1Begin(5, Variable, 5),
-    CDR1EndFR2Begin(6, Variable, 6),
-    FR2EndCDR2Begin(7, Variable, 7),
-    CDR2EndFR3Begin(8, Variable, 8),
-    FR3EndCDR3Begin(9, Variable, 9),
-    VEndTrimmed(-2, Variable, 10),
-    VEnd(10, Variable, 11),
+    UTR5BeginTrimmed(-1, GeneType.Variable, 1, "UTR5End"),
+    UTR5EndL1Begin(1, Variable, 2),
+    L1EndVIntronBegin(2, Variable, 3),
+    VIntronEndL2Begin(3, Variable, 4),
+    L2EndFR1Begin(4, Variable, 5),
+    FR1EndCDR1Begin(5, Variable, 6),
+    CDR1EndFR2Begin(6, Variable, 7),
+    FR2EndCDR2Begin(7, Variable, 8),
+    CDR2EndFR3Begin(8, Variable, 9),
+    FR3EndCDR3Begin(9, Variable, 10),
+    VEndTrimmed(-2, Variable, 11, "CDR3Begin(-3)"),
+    VEnd(10, Variable, 12),
 
     // Points in D
-    DBegin(11, Diversity, 12),
-    DBeginTrimmed(-1, Diversity, 13),
-    DEndTrimmed(-2, Diversity, 14),
-    DEnd(12, Diversity, 15),
+    DBegin(11, Diversity, 13),
+    DBeginTrimmed(-1, Diversity, 14, null),
+    DEndTrimmed(-2, Diversity, 15, null),
+    DEnd(12, Diversity, 16),
 
     // Points in J
-    JBegin(13, Joining, 16),
-    JBeginTrimmed(-1, Joining, 17),
-    CDR3EndFR4Begin(14, Joining, 18),
-    FR4End(15, Joining, 19),
+    JBegin(13, Joining, 17),
+    JBeginTrimmed(-1, Joining, 18, "CDR3End(+3)"),
+    CDR3EndFR4Begin(14, Joining, 19),
+    FR4End(15, Joining, 20),
 
     // Points in C
-    CBegin(16, Constant, 20),
-    CExon1End(17, Constant, 21),
-    CEnd(18, Constant, 22);
+    CBegin(16, Constant, 21),
+    CExon1End(17, Constant, 22),
+    CEnd(18, Constant, 23);
+
     final int orderingIndex;
     final int index;
     final GeneType geneType;
     BasicReferencePoint trimmedVersion;
 
+    /* Only for trimmed (attached to alignment boundary) points */
+
+    // Defined for alignment boundary attached reference points
+    // E.g. UTR5BeginTrimmed is a left boundary of an alignment but only if it is on the left side of UTR5End/L1Begin
+    // Not an object to solve cyclic dependence on ReferencePoint
+    final String activationPointString;
+    volatile ReferencePoint activationPoint;
+
+
     BasicReferencePoint(int index, GeneType geneType, int orderingIndex) {
+        this(index, geneType, orderingIndex, null);
+    }
+
+    BasicReferencePoint(int index, GeneType geneType, int orderingIndex, String activationPoint) {
+        this.activationPointString = activationPoint;
         this.index = index;
         this.geneType = geneType;
         this.orderingIndex = orderingIndex;
@@ -90,6 +106,20 @@ enum BasicReferencePoint implements java.io.Serializable {
         return trimmedVersion != null;
     }
 
+    public ReferencePoint getActivationPoint() {
+        if (activationPointString == null)
+            return null;
+
+        if (activationPoint == null) {
+            synchronized (this) {
+                if (activationPoint == null)
+                    return activationPoint = ReferencePoint.parse(activationPointString);
+            }
+        }
+
+        return activationPoint;
+    }
+
     private final static BasicReferencePoint[] allReferencePoints;
     public static final int TOTAL_NUMBER_OF_REFERENCE_POINTS = 19;
 
@@ -106,6 +136,7 @@ enum BasicReferencePoint implements java.io.Serializable {
         for (BasicReferencePoint rp : allReferencePoints)
             assert rp != null;
 
+        UTR5Begin.trimmedVersion = UTR5BeginTrimmed;
         VEnd.trimmedVersion = VEndTrimmed;
         DBegin.trimmedVersion = DBeginTrimmed;
         DEnd.trimmedVersion = DEndTrimmed;

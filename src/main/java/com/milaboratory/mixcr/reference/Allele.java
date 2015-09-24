@@ -53,7 +53,7 @@ public abstract class Allele
     }
 
     public final boolean isComplete() {
-        return gene.getGroup().getType().getCompleteNumberOfReferencePoints() == getPartitioning().numberOfDefinedPoins();
+        return gene.getGroup().getType().getCompleteNumberOfReferencePoints() == getPartitioning().numberOfDefinedPoints();
     }
 
     public final LocusContainer getLocusContainer() {

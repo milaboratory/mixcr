@@ -64,7 +64,7 @@ public class VDJCAlignerParametersTest {
                 VJAlignmentOrder.JThenV,
                 false, false,
                 120.0f, 5, 0.7f, 0.7f, PairedEndReadsLayout.Opposite, new MergerParameters(
-                QualityMergingAlgorithm.SumSubtraction, null, 12, 0.12));
+                QualityMergingAlgorithm.SumSubtraction, null, 12, null, 0.12));
         String str = GlobalObjectMappers.PRETTY.writeValueAsString(paramentrs);
         VDJCAlignerParameters deser = GlobalObjectMappers.PRETTY.readValue(str, VDJCAlignerParameters.class);
         assertEquals(paramentrs, deser);

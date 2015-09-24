@@ -28,21 +28,19 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
-import com.milaboratory.core.io.CompressionType;
 import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivO;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public final class VDJCAlignmentsWriter implements AutoCloseable {
-    static final String MAGIC = "MiXCR.VDJC.V03";
+    static final String MAGIC = "MiXCR.VDJC.V04";
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
     final PrimitivO output;

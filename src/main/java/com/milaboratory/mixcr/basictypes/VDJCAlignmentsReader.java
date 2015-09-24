@@ -87,7 +87,7 @@ public class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>
         byte[] magic = new byte[MAGIC_LENGTH];
         input.readFully(magic);
         if (!Arrays.equals(magic, MAGIC_BYTES))
-            throw new RuntimeException("Conflicting file format; .vdjca file of version " + new String(magic) + " while you are running MiXCR " + MAGIC);
+            throw new RuntimeException("Unsupported file format; .vdjca file of version " + new String(magic) + " while you are running MiXCR " + MAGIC);
 
         parameters = input.readObject(VDJCAlignerParameters.class);
 
