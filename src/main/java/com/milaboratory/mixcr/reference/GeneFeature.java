@@ -615,25 +615,42 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
             return new GeneFeature(ReferencePoint.parse(fromTo[0]), ReferencePoint.parse(fromTo[1]));
         } else { // feature by name CDR2(-2,3)
             int br = string.indexOf('(');
-            GeneFeature base;
-            if (br == -1)
+
+            if (br == -1) {
+                GeneFeature base;
                 base = getFeatureByName(string);
-            else
-                base = getFeatureByName(string.substring(0, br));
-            if (base == null)
-                throw new IllegalArgumentException("Unknown feature: " + string);
+                if (base == null)
+                    throw new IllegalArgumentException("Unknown feature: " + string);
+                return base;
+            } else {
+                if (string.charAt(string.length() - 1) != ')')
+                    throw new IllegalArgumentException("Wrong syntax: " + string);
 
-            if (br == -1) return base;
+                Object base;
 
-            int offset1, offset2;
-            String[] offsets = string.substring(br + 1, string.length() - 1).split(",");
-            try {
-                offset1 = Integer.parseInt(offsets[0].trim());
-                offset2 = Integer.parseInt(offsets[1].trim());
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Incorrect input: " + string);
+                String baseName = string.substring(0, br);
+
+                base = getFeatureByName(baseName);
+
+                if (base == null)
+                    base = ReferencePoint.getPointByName(baseName);
+
+                if (base == null)
+                    throw new IllegalArgumentException("Unknown feature / anchor point: " + baseName);
+
+                int offset1, offset2;
+                String[] offsets = string.substring(br + 1, string.length() - 1).split(",");
+                try {
+                    offset1 = Integer.parseInt(offsets[0].trim());
+                    offset2 = Integer.parseInt(offsets[1].trim());
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Incorrect input: " + string);
+                }
+                if (base instanceof GeneFeature)
+                    return new GeneFeature((GeneFeature) base, offset1, offset2);
+                else
+                    return new GeneFeature((ReferencePoint) base, offset1, offset2);
             }
-            return new GeneFeature(base, offset1, offset2);
         }
     }
 
@@ -641,9 +658,9 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         return encode(feature, true);
     }
 
-    static String encode(GeneFeature feature, boolean shortNameForKnownFeatures) {
+    static String encode(GeneFeature feature, boolean copact) {
         ensureInitialized();
-        if (shortNameForKnownFeatures) {
+        if (copact) {
             String s = nameByFeature.get(feature);
             if (s != null)
                 return s;
@@ -653,16 +670,24 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         out:
         for (int i = 0; i < encodes.length; ++i) {
             ReferenceRange region = feature.regions[i];
-            if (shortNameForKnownFeatures)
+            if (copact) {
+                String base = null;
                 for (GeneFeature a : available)
                     if (match(region, a)) {
                         GeneFeature known = new GeneFeature(region.getWithoutOffset());
-                        String base = getNameByFeature(known);
-                        if (region.hasOffsets())
-                            base += "(" + region.begin.offset + ", " + region.end.offset + ")";
-                        encodes[i] = base;
-                        continue out;
+                        base = getNameByFeature(known);
                     }
+
+                if (region.begin.basicPoint == region.end.basicPoint)
+                    base = ReferencePoint.encode(region.begin.getWithoutOffset(), true);
+                
+                if (base != null) {
+                    if (region.hasOffsets())
+                        base += "(" + region.begin.offset + ", " + region.end.offset + ")";
+                    encodes[i] = base;
+                    continue out;
+                }
+            }
             encodes[i] = "{" + ReferencePoint.encode(region.begin, true) + ":" + ReferencePoint.encode(region.end, false) + "}";
         }
 

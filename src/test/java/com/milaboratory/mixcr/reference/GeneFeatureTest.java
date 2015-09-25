@@ -334,6 +334,17 @@ public class GeneFeatureTest {
     }
 
     @Test
+    public void testParse3() throws Exception {
+        assertEncode("CDR3Begin(0, 10)");
+        assertEncode("V5UTRBeginTrimmed(0, 10)");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testParse4() throws Exception {
+        GeneFeature.parse("CDR3Begin");
+    }
+
+    @Test
     public void testContains1() throws Exception {
         assertTrue(CDR3.contains(VJJunction));
         assertTrue(CDR3.contains(VDJunction));
