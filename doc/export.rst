@@ -146,6 +146,16 @@ The following fields can be exported both for alignments and clones:
 +-----------------------------------+----------------------------------------------------------+
 | ``-minFeatureQuality [feature]``  | Minimal quality of sequence of specified gene feature.   |
 +-----------------------------------+----------------------------------------------------------+
+| ``-defaultAnchorPoints``          | Outputs a list of default anchor points (see table       |
+|                                   | below for the list of anchor points and format).         |
++-----------------------------------+----------------------------------------------------------+
+| ``-lengthOf [feature]``           | Outputs length of specified gene feature.                |
++-----------------------------------+----------------------------------------------------------+
+| ``-positionOf [anchorPoint]``     | Outputs position of specified anchor point in the        |
+|                                   | clonal sequence or aligned read.                         |
++-----------------------------------+----------------------------------------------------------+
+
+
 
 The following fields are specific for alignments:
 
@@ -182,6 +192,73 @@ The following fields are specific for clones:
 +---------------+----------------------------------------------------------------------------------------+
 | ``-targets``  | Number of targets, i.e. number of gene regions used to assemble clones.                |
 +---------------+----------------------------------------------------------------------------------------+
+
+Default anchor point positions
+------------------------------
+
+Positions of anchor poins produced by ``-defaultAnchorPoints`` option are outputted as a colon separated list.
+If anchor point is not covered by target sequence nothing is printed for it, but flanking colon symbols are
+preserved to maintain positions in array. See example:
+
+::
+
+    :::::::::108:117:125:152:186:213:243:244:
+
+If there are several target sequences (e.g. paired-end reads or multi-part clonal sequnce), the array is outputted for
+each target sequence. In this case arrays are sepparated by comma:
+
+::
+
+    2:61:107:107:118:::::::::::::,:::::::::103:112:120:147:181:208:238:239:
+
+Even if there are no anchor points in either of parts:
+
+::
+
+    :::::::::::::::::,:::::::::108:117:125:152:186:213:243:244:
+
+
+The following table shows the correspondance between anchor point and positions in default anchor point array:
+
++--------------------------+---------------------+--------------------+
+| Anchors point            | Zero-based position | One-based position |
++==========================+=====================+====================+
+| V5UTRBeginTrimmed        | 0                   | 1                  |
++--------------------------+---------------------+--------------------+
+| V5UTREnd / L1Begin       | 1                   | 2                  |
++--------------------------+---------------------+--------------------+
+| L1End / VIntronBegin     | 2                   | 3                  |
++--------------------------+---------------------+--------------------+
+| VIntronEnd / L2Begin     | 3                   | 4                  |
++--------------------------+---------------------+--------------------+
+| L2End / FR1Begin         | 4                   | 5                  |
++--------------------------+---------------------+--------------------+
+| FR1End / CDR1Begin       | 5                   | 6                  |
++--------------------------+---------------------+--------------------+
+| CDR1End / FR2Begin       | 6                   | 7                  |
++--------------------------+---------------------+--------------------+
+| FR2End / CDR2Begin       | 7                   | 8                  |
++--------------------------+---------------------+--------------------+
+| CDR2End / FR3Begin       | 8                   | 9                  |
++--------------------------+---------------------+--------------------+
+| FR3End / CDR3Begin       | 9                   | 10                 |
++--------------------------+---------------------+--------------------+
+| VEndTrimmed              | 10                  | 11                 |
++--------------------------+---------------------+--------------------+
+| DBeginTrimmed            | 11                  | 12                 |
++--------------------------+---------------------+--------------------+
+| DEndTrimmed              | 12                  | 13                 |
++--------------------------+---------------------+--------------------+
+| JBeginTrimmed            | 13                  | 14                 |
++--------------------------+---------------------+--------------------+
+| CDR3End / FR4Begin       | 14                  | 15                 |
++--------------------------+---------------------+--------------------+
+| FR4End                   | 15                  | 16                 |
++--------------------------+---------------------+--------------------+
+| CBegin                   | 16                  | 17                 |
++--------------------------+---------------------+--------------------+
+| CExon1End                | 17                  | 18                 |
++--------------------------+---------------------+--------------------+
 
 Examples
 --------

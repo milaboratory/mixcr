@@ -90,9 +90,13 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
     /* Major gene parts */
 
     /**
-     * 5'UTR
+     * 5'UTR not trimmed
      */
-    V5UTR = new GeneFeature(UTR5Begin, UTR5End),
+    V5UTRGermline = new GeneFeature(UTR5Begin, V5UTREnd),
+    /**
+     * 5'UTR trimmed
+     */
+    V5UTR = new GeneFeature(V5UTRBeginTrimmed, V5UTREnd),
     /**
      * Part of lider sequence in first exon. The same as {@code Exon1}.
      */
@@ -229,9 +233,9 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
      * {@code V5UTR} + {@code Exon1} + {@code VExon2}. Common reference feature used in alignments for cDNA data
      * obtained using 5'RACE (that may contain UTRs).
      */
-    VTranscript = new GeneFeature(V5UTR, Exon1, VExon2),
+    VTranscript = new GeneFeature(V5UTRGermline, Exon1, VExon2),
     /**
-     * {@code {UTR5Begin:VEnd}}. Common reference feature used in alignments for genomic DNA data.
+     * {@code {V5UTRBegin:VEnd}}. Common reference feature used in alignments for genomic DNA data.
      */
     VGene = new GeneFeature(UTR5Begin, VEnd),
     /**
@@ -241,7 +245,7 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
     /**
      * First two exons with 5'UTR of IG/TCR gene.
      */
-    VDJTranscript = new GeneFeature(V5UTR, Exon1, Exon2),
+    VDJTranscript = new GeneFeature(V5UTRGermline, Exon1, Exon2),
 
     /* Full length assembling features */
     /**
@@ -677,10 +681,6 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
             return false;
         return a.begin.basicPoint == b.regions[0].begin.basicPoint
                 && a.end.basicPoint == b.regions[0].end.basicPoint;
-    }
-
-    public static GeneFeature parse(String[] args) {
-        return parse(args[0]);
     }
 
     public static class Deserializer extends JsonDeserializer<GeneFeature> {

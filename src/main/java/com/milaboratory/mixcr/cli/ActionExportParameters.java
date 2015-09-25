@@ -122,7 +122,7 @@ public class ActionExportParameters extends ActionParameters {
         OutputMode outputMode = OutputMode.HumanFriendly;
 
         for (String arg : args)
-            if (isParsingFriendly(arg)) {
+            if (isParsingFriendlyFlag(arg)) {
                 outputMode = OutputMode.ScriptingFriendly;
                 break;
             }
@@ -141,6 +141,8 @@ public class ActionExportParameters extends ActionParameters {
         ArrayList<String> exporter = new ArrayList<>();
         for (int i = from; i < to; ++i) {
             String arg = args[i];
+            if (isParsingFriendlyFlag(arg))
+                continue;
             if (arg.charAt(0) == '-') {
                 if (!exporter.isEmpty()) {
                     FieldExtractor exp = FieldExtractors.parse(outputMode,
@@ -225,7 +227,7 @@ public class ActionExportParameters extends ActionParameters {
                 "-nFeature FR3 -minFeatureQuality FR3 -nFeature CDR3 -minFeatureQuality CDR3 " +
                 "-nFeature FR4 -minFeatureQuality FR4 " +
                 "-aaFeature FR1 -aaFeature CDR1 -aaFeature FR2 -aaFeature CDR2 " +
-                "-aaFeature FR3 -aaFeature CDR3 -aaFeature FR4 ");
+                "-aaFeature FR3 -aaFeature CDR3 -aaFeature FR4 -defaultReferencePoints");
         preset.put(Clone.class, clones);
 
         Map<String, String> alignments = new HashMap<>();
@@ -238,7 +240,7 @@ public class ActionExportParameters extends ActionParameters {
                 "-nFeature FR3 -minFeatureQuality FR3 -nFeature CDR3 -minFeatureQuality CDR3 " +
                 "-nFeature FR4 -minFeatureQuality FR4 " +
                 "-aaFeature FR1 -aaFeature CDR1 -aaFeature FR2 -aaFeature CDR2 " +
-                "-aaFeature FR3 -aaFeature CDR3 -aaFeature FR4 ")
+                "-aaFeature FR3 -aaFeature CDR3 -aaFeature FR4 -defaultReferencePoints")
         ;
         preset.put(VDJCAlignments.class, alignments);
     }
@@ -265,7 +267,7 @@ public class ActionExportParameters extends ActionParameters {
         return string.equals(PRESET_SHORT) || string.equals(PRESET_LONG);
     }
 
-    public static boolean isParsingFriendly(String string) {
+    public static boolean isParsingFriendlyFlag(String string) {
         return string.equals(PARSING_SHORT) || string.equals(PARSING_LONG);
     }
 

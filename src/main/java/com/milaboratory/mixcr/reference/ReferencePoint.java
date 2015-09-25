@@ -50,19 +50,19 @@ public final class ReferencePoint implements Comparable<ReferencePoint>, java.io
     /**
      * Beginning of IG/TCR transcript
      */
-    public static final ReferencePoint UTR5Begin = new ReferencePoint(BasicReferencePoint.UTR5Begin),
+    public static final ReferencePoint UTR5Begin = new ReferencePoint(BasicReferencePoint.V5UTRBegin),
     /**
      * End of 5'UTR, beginning of IG/TCR CDS as listed in database
      */
-    UTR5End = new ReferencePoint(BasicReferencePoint.UTR5EndL1Begin),
+    V5UTREnd = new ReferencePoint(BasicReferencePoint.V5UTREndL1Begin),
     /**
      * End of 5'UTR, beginning of IG/TCR CDS as observed in the data
      */
-    UTR5BeginTrimmed = new ReferencePoint(BasicReferencePoint.UTR5BeginTrimmed),
+    V5UTRBeginTrimmed = new ReferencePoint(BasicReferencePoint.V5UTRBeginTrimmed),
     /**
      * End of 5'UTR, beginning of IG/TCR CDS
      */
-    L1Begin = new ReferencePoint(BasicReferencePoint.UTR5EndL1Begin),
+    L1Begin = new ReferencePoint(BasicReferencePoint.V5UTREndL1Begin),
     /**
      * End of first exon, beginning of V intron
      */
@@ -196,7 +196,9 @@ public final class ReferencePoint implements Comparable<ReferencePoint>, java.io
     /**
      * Default set of reference points.
      */
-    public static final ReferencePoint[] DefaultReferencePoints = {};
+    public static final ReferencePoint[] DefaultReferencePoints = {V5UTRBeginTrimmed, L1Begin, L1End, L2Begin,
+            FR1Begin, CDR1Begin, FR2Begin, CDR2Begin, FR3Begin, CDR3Begin, VEndTrimmed, DBeginTrimmed, DEndTrimmed,
+            JBeginTrimmed, FR4Begin, FR4End, CBegin, CExon1End};
 
     static final long serialVersionUID = 1L;
     final BasicReferencePoint basicPoint;

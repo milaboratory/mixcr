@@ -34,7 +34,7 @@ import org.junit.Test;
 public class ReferencePointTest {
     @Test
     public void test1() throws Exception {
-        ReferencePoint[] pointsToTest = new ReferencePoint[]{ReferencePoint.UTR5BeginTrimmed,
+        ReferencePoint[] pointsToTest = new ReferencePoint[]{ReferencePoint.V5UTRBeginTrimmed,
                 ReferencePoint.VEndTrimmed, ReferencePoint.JBeginTrimmed};
         for (ReferencePoint referencePoint : pointsToTest)
             Assert.assertNotNull(referencePoint.getActivationPoint());

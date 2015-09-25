@@ -33,9 +33,9 @@ import static com.milaboratory.mixcr.reference.GeneType.*;
 
 enum BasicReferencePoint implements java.io.Serializable {
     // Points in V
-    UTR5Begin(0, GeneType.Variable, 0),
-    UTR5BeginTrimmed(-1, GeneType.Variable, 1, "UTR5End"),
-    UTR5EndL1Begin(1, Variable, 2),
+    V5UTRBegin(0, GeneType.Variable, 0),
+    V5UTRBeginTrimmed(-1, GeneType.Variable, 1, "V5UTREnd"),
+    V5UTREndL1Begin(1, Variable, 2),
     L1EndVIntronBegin(2, Variable, 3),
     VIntronEndL2Begin(3, Variable, 4),
     L2EndFR1Begin(4, Variable, 5),
@@ -72,7 +72,7 @@ enum BasicReferencePoint implements java.io.Serializable {
     /* Only for trimmed (attached to alignment boundary) points */
 
     // Defined for alignment boundary attached reference points
-    // E.g. UTR5BeginTrimmed is a left boundary of an alignment but only if it is on the left side of UTR5End/L1Begin
+    // E.g. V5UTRBeginTrimmed is a left boundary of an alignment but only if it is on the left side of V5UTREnd/L1Begin
     // Not an object to solve cyclic dependence on ReferencePoint
     final String activationPointString;
     volatile ReferencePoint activationPoint;
@@ -136,7 +136,7 @@ enum BasicReferencePoint implements java.io.Serializable {
         for (BasicReferencePoint rp : allReferencePoints)
             assert rp != null;
 
-        UTR5Begin.trimmedVersion = UTR5BeginTrimmed;
+        V5UTRBegin.trimmedVersion = V5UTRBeginTrimmed;
         VEnd.trimmedVersion = VEndTrimmed;
         DBegin.trimmedVersion = DBeginTrimmed;
         DEnd.trimmedVersion = DEndTrimmed;

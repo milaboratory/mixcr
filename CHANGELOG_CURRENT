@@ -1,5 +1,6 @@
 New feature: optional short column names in `export...` action to simplify further data analysis using data table processing libraries like Pandas or R/DataFrames. (`-s` / `--no-spaces` in `exportAlignments` and `exportClones`)
-Added `UTR5BeginTrimmed` reference point
+New export fields: `-defaultAnchorPoints` outputs positions of default anchor point in aligned reads or clonal sequence (this column is added to default output format), `-positionOf` outputs position of specified anchor point, `-lengthOf` outputs lengt of specified gene feature
+Added `V5UTRBeginTrimmed` anchor point, `V5UTR` gene feature renamed to `V5UTRGermline`, trimmed `V5UTR` gene feature added
 minor: some column names in output tab-delimited files slightly changed
 minor: NPE in exportAlignmentsPretty fixed
-minor: New reference poins added to exportAlignmentsPretty output
+minor: New anchor poins added to exportAlignmentsPretty output

@@ -32,12 +32,10 @@ import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.basictypes.VDJCObject;
+import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.reference.GeneFeature;
 import com.milaboratory.mixcr.reference.GeneType;
+import com.milaboratory.mixcr.reference.ReferencePoint;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -229,6 +227,17 @@ public final class FieldExtractors {
                     }
                 });
 
+                desctiptorsList.add(new FeatureExtractorDescriptor("-lengthOf", "Exports length of specified gene feature.", "Length of ", "lengthOf") {
+                    @Override
+                    public String convert(NSequenceWithQuality seq) {
+                        return "" + seq.size();
+                    }
+                });
+
+                desctiptorsList.add(new ExtractReferencePointPosition());
+
+                desctiptorsList.add(new ExtractDefaultReferencePointsPositions());
+
                 desctiptorsList.add(new PL_A("-readId", "Export number of read corresponding to alignment", "Read id", "readId") {
                     @Override
                     protected String extract(VDJCAlignments object) {
@@ -355,7 +364,7 @@ public final class FieldExtractors {
         protected GeneFeature getParameters(String[] string) {
             if (string.length != 1)
                 throw new RuntimeException("Wrong number of parameters for " + getCommand());
-            return GeneFeature.parse(string);
+            return GeneFeature.parse(string[0]);
         }
 
         @Override
@@ -402,6 +411,66 @@ public final class FieldExtractors {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; ; i++) {
                 sb.append(object.getTarget(i).getQuality());
+                if (i == object.numberOfTargets() - 1)
+                    break;
+                sb.append(",");
+            }
+            return sb.toString();
+        }
+    }
+
+    private static class ExtractReferencePointPosition extends WP_O<ReferencePoint> {
+        protected ExtractReferencePointPosition() {
+            super("-positionOf",
+                    "Exports position of specified reference point inside target sequences " +
+                            "(clonal sequence / read sequence).");
+        }
+
+        @Override
+        protected ReferencePoint getParameters(String[] string) {
+            if (string.length != 1)
+                throw new RuntimeException("Wrong number of parameters for " + getCommand());
+            return ReferencePoint.parse(string[0]);
+        }
+
+        @Override
+        protected String getHeader(OutputMode outputMode, ReferencePoint parameters) {
+            return choose(outputMode, "Position of ", "positionOf") +
+                    ReferencePoint.encode(parameters, true);
+        }
+
+        @Override
+        protected String extractValue(VDJCObject object, ReferencePoint parameters) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; ; i++) {
+                sb.append(object.getPartitionedTarget(i).getPartitioning().getPosition(parameters));
+                if (i == object.numberOfTargets() - 1)
+                    break;
+                sb.append(",");
+            }
+            return sb.toString();
+        }
+    }
+
+    private static class ExtractDefaultReferencePointsPositions extends PL_O {
+        public ExtractDefaultReferencePointsPositions() {
+            super("-defaultAnchorPoints", "Outputs a list of default reference points (like CDR2Begin, FR4End, etc. " +
+                    "see documentation for the full list and formatting)", "Ref. points", "refPoints");
+        }
+
+        @Override
+        protected String extract(VDJCObject object) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; ; i++) {
+                SequencePartitioning partitioning = object.getPartitionedTarget(i).getPartitioning();
+                for (int j = 0; ; j++) {
+                    int referencePointPosition = partitioning.getPosition(ReferencePoint.DefaultReferencePoints[j]);
+                    if (referencePointPosition >= 0)
+                        sb.append(referencePointPosition);
+                    if (j == ReferencePoint.DefaultReferencePoints.length - 1)
+                        break;
+                    sb.append(":");
+                }
                 if (i == object.numberOfTargets() - 1)
                     break;
                 sb.append(",");
