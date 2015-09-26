@@ -211,7 +211,7 @@ each target sequence. In this case arrays are sepparated by comma:
 
     2:61:107:107:118:::::::::::::,:::::::::103:112:120:147:181:208:238:239:
 
-Even if there are no anchor points in either of parts:
+Even if there are no anchor points in one of the parts:
 
 ::
 

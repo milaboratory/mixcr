@@ -41,20 +41,23 @@ import java.util.Arrays;
  */
 public final class ReferencePoints extends SequencePartitioning implements java.io.Serializable {
     final int[] points;
+    final boolean reversed;
 
     public ReferencePoints(int[] points) {
         if (points.length != BasicReferencePoint.TOTAL_NUMBER_OF_REFERENCE_POINTS)
             throw new IllegalArgumentException("Illegal length of array.");
-        checkReferencePoints(points);
+        Boolean rev = checkReferencePoints(points);
+        this.reversed = rev == null ? false : rev;
         this.points = points;
     }
 
     public ReferencePoints(int start, int[] points) {
-        checkReferencePoints(points);
+        Boolean rev = checkReferencePoints(points);
         int[] array = new int[BasicReferencePoint.TOTAL_NUMBER_OF_REFERENCE_POINTS];
         Arrays.fill(array, -1);
         System.arraycopy(points, 0, array, start, points.length);
         this.points = array;
+        this.reversed = rev == null ? false : rev;
     }
 
     public int numberOfDefinedPoints() {
@@ -66,7 +69,7 @@ public final class ReferencePoints extends SequencePartitioning implements java.
         return ret;
     }
 
-    private static void checkReferencePoints(int[] points) {
+    private static Boolean checkReferencePoints(int[] points) {
         Boolean reversed = null;
 
         int first = -1;
@@ -83,7 +86,7 @@ public final class ReferencePoints extends SequencePartitioning implements java.
                 }
 
         if (reversed == null)
-            return;
+            return null;
 
         int previousPoint = -1;
         for (int point : points) {
@@ -101,6 +104,8 @@ public final class ReferencePoints extends SequencePartitioning implements java.
 
             previousPoint = point;
         }
+
+        return reversed;
     }
 
     private int getPosition(int referencePointIndex) {
@@ -129,7 +134,7 @@ public final class ReferencePoints extends SequencePartitioning implements java.
         int point = getPosition(referencePoint.getIndex());
         if (point < 0)
             return -1;
-        return point + referencePoint.getOffset();
+        return point + (reversed ? -referencePoint.getOffset() : referencePoint.getOffset());
     }
 
     ReferencePoints getRelativeReferencePoints(GeneFeature geneFeature) {
