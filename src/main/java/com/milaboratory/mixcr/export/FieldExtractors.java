@@ -191,116 +191,117 @@ public final class FieldExtractors {
                         return sb.toString();
                     }
                 });
-
-                desctiptorsList.add(new FeatureExtractorDescriptor("-nFeature", "Export nucleotide sequence of specified gene feature", "N. Seq.", "nSeq") {
-                    @Override
-                    public String convert(NSequenceWithQuality seq) {
-                        return seq.getSequence().toString();
-                    }
-                });
-
-                desctiptorsList.add(new FeatureExtractorDescriptor("-qFeature", "Export quality string of specified gene feature", "Qual.", "qual") {
-                    @Override
-                    public String convert(NSequenceWithQuality seq) {
-                        return seq.getQuality().toString();
-                    }
-                });
-
-                desctiptorsList.add(new FeatureExtractorDescriptor("-aaFeature", "Export amino acid sequence of specified gene feature", "AA. Seq.", "aaSeq") {
-                    @Override
-                    public String convert(NSequenceWithQuality seq) {
-                        return AminoAcidSequence.translate(null, true, seq.getSequence()).toString();
-                    }
-                });
-
-                desctiptorsList.add(new FeatureExtractorDescriptor("-minFeatureQuality", "Export minimal quality of specified gene feature", "Min. qual.", "minQual") {
-                    @Override
-                    public String convert(NSequenceWithQuality seq) {
-                        return "" + seq.getQuality().minValue();
-                    }
-                });
-
-                desctiptorsList.add(new FeatureExtractorDescriptor("-avrgFeatureQuality", "Export average quality of specified gene feature", "Mean. qual.", "meanQual") {
-                    @Override
-                    public String convert(NSequenceWithQuality seq) {
-                        return "" + seq.getQuality().meanValue();
-                    }
-                });
-
-                desctiptorsList.add(new FeatureExtractorDescriptor("-lengthOf", "Exports length of specified gene feature.", "Length of ", "lengthOf") {
-                    @Override
-                    public String convert(NSequenceWithQuality seq) {
-                        return "" + seq.size();
-                    }
-                });
-
-                desctiptorsList.add(new ExtractReferencePointPosition());
-
-                desctiptorsList.add(new ExtractDefaultReferencePointsPositions());
-
-                desctiptorsList.add(new PL_A("-readId", "Export number of read corresponding to alignment", "Read id", "readId") {
-                    @Override
-                    protected String extract(VDJCAlignments object) {
-                        return "" + object.getReadId();
-                    }
-                });
-
-                desctiptorsList.add(new ExtractSequence(VDJCAlignments.class, "-sequence",
-                        "Export aligned sequence (initial read), or 2 sequences in case of paired-end reads",
-                        "Read(s) sequence", "readSequence"));
-
-                desctiptorsList.add(new ExtractSequenceQuality(VDJCAlignments.class, "-quality",
-                        "Export initial read quality, or 2 qualities in case of paired-end reads",
-                        "Read(s) sequence qualities", "readQuality"));
-
-                desctiptorsList.add(new PL_C("-count", "Export clone count", "Clone count", "cloneCount") {
-                    @Override
-                    protected String extract(Clone object) {
-                        return "" + object.getCount();
-                    }
-                });
-
-                desctiptorsList.add(new PL_C("-fraction", "Export clone fraction", "Clone fraction", "cloneFraction") {
-                    @Override
-                    protected String extract(Clone object) {
-                        return "" + object.getFraction();
-                    }
-                });
-
-                desctiptorsList.add(new ExtractSequence(Clone.class, "-sequence",
-                        "Export aligned sequence (initial read), or 2 sequences in case of paired-end reads",
-                        "Clonal sequence(s)", "clonalSequence"));
-
-                desctiptorsList.add(new ExtractSequenceQuality(Clone.class, "-quality",
-                        "Export initial read quality, or 2 qualities in case of paired-end reads",
-                        "Clonal sequence quality(s)", "clonalSequenceQuality"));
-
-                desctiptorsList.add(new PL_A("-descrR1", "Export description line from initial .fasta or .fastq file " +
-                        "of the first read (only available if --save-description was used in align command)", "Description R1", "descrR1") {
-                    @Override
-                    protected String extract(VDJCAlignments object) {
-                        String[] ds = object.getDescriptions();
-                        if (ds == null || ds.length == 0)
-                            throw new IllegalArgumentException("Error for option \'-descrR1\':\n" +
-                                    "No description available for read: either re-run align action with --save-description option " +
-                                    "or don't use \'-descrR1\' in exportAlignments");
-                        return ds[0];
-                    }
-                });
-
-                desctiptorsList.add(new PL_A("-descrR2", "Export description line from initial .fasta or .fastq file " +
-                        "of the second read (only available if --save-description was used in align command)", "Description R2", "descrR2") {
-                    @Override
-                    protected String extract(VDJCAlignments object) {
-                        String[] ds = object.getDescriptions();
-                        if (ds == null || ds.length < 2)
-                            throw new IllegalArgumentException("Error for option \'-descrR2\':\n" +
-                                    "No description available for second read: either re-run align action with --save-description option " +
-                                    "or don't use \'-descrR2\' in exportAlignments");
-                        return ds[1];
-                    }
-                });
             }
+
+            desctiptorsList.add(new FeatureExtractorDescriptor("-nFeature", "Export nucleotide sequence of specified gene feature", "N. Seq.", "nSeq") {
+                @Override
+                public String convert(NSequenceWithQuality seq) {
+                    return seq.getSequence().toString();
+                }
+            });
+
+            desctiptorsList.add(new FeatureExtractorDescriptor("-qFeature", "Export quality string of specified gene feature", "Qual.", "qual") {
+                @Override
+                public String convert(NSequenceWithQuality seq) {
+                    return seq.getQuality().toString();
+                }
+            });
+
+            desctiptorsList.add(new FeatureExtractorDescriptor("-aaFeature", "Export amino acid sequence of specified gene feature", "AA. Seq.", "aaSeq") {
+                @Override
+                public String convert(NSequenceWithQuality seq) {
+                    return AminoAcidSequence.translate(null, true, seq.getSequence()).toString();
+                }
+            });
+
+            desctiptorsList.add(new FeatureExtractorDescriptor("-minFeatureQuality", "Export minimal quality of specified gene feature", "Min. qual.", "minQual") {
+                @Override
+                public String convert(NSequenceWithQuality seq) {
+                    return "" + seq.getQuality().minValue();
+                }
+            });
+
+            desctiptorsList.add(new FeatureExtractorDescriptor("-avrgFeatureQuality", "Export average quality of specified gene feature", "Mean. qual.", "meanQual") {
+                @Override
+                public String convert(NSequenceWithQuality seq) {
+                    return "" + seq.getQuality().meanValue();
+                }
+            });
+
+            desctiptorsList.add(new FeatureExtractorDescriptor("-lengthOf", "Exports length of specified gene feature.", "Length of ", "lengthOf") {
+                @Override
+                public String convert(NSequenceWithQuality seq) {
+                    return "" + seq.size();
+                }
+            });
+
+            desctiptorsList.add(new ExtractReferencePointPosition());
+
+            desctiptorsList.add(new ExtractDefaultReferencePointsPositions());
+
+            desctiptorsList.add(new PL_A("-readId", "Export number of read corresponding to alignment", "Read id", "readId") {
+                @Override
+                protected String extract(VDJCAlignments object) {
+                    return "" + object.getReadId();
+                }
+            });
+
+            desctiptorsList.add(new ExtractSequence(VDJCAlignments.class, "-sequence",
+                    "Export aligned sequence (initial read), or 2 sequences in case of paired-end reads",
+                    "Read(s) sequence", "readSequence"));
+
+            desctiptorsList.add(new ExtractSequenceQuality(VDJCAlignments.class, "-quality",
+                    "Export initial read quality, or 2 qualities in case of paired-end reads",
+                    "Read(s) sequence qualities", "readQuality"));
+
+            desctiptorsList.add(new PL_C("-count", "Export clone count", "Clone count", "cloneCount") {
+                @Override
+                protected String extract(Clone object) {
+                    return "" + object.getCount();
+                }
+            });
+
+            desctiptorsList.add(new PL_C("-fraction", "Export clone fraction", "Clone fraction", "cloneFraction") {
+                @Override
+                protected String extract(Clone object) {
+                    return "" + object.getFraction();
+                }
+            });
+
+            desctiptorsList.add(new ExtractSequence(Clone.class, "-sequence",
+                    "Export aligned sequence (initial read), or 2 sequences in case of paired-end reads",
+                    "Clonal sequence(s)", "clonalSequence"));
+
+            desctiptorsList.add(new ExtractSequenceQuality(Clone.class, "-quality",
+                    "Export initial read quality, or 2 qualities in case of paired-end reads",
+                    "Clonal sequence quality(s)", "clonalSequenceQuality"));
+
+            desctiptorsList.add(new PL_A("-descrR1", "Export description line from initial .fasta or .fastq file " +
+                    "of the first read (only available if --save-description was used in align command)", "Description R1", "descrR1") {
+                @Override
+                protected String extract(VDJCAlignments object) {
+                    String[] ds = object.getDescriptions();
+                    if (ds == null || ds.length == 0)
+                        throw new IllegalArgumentException("Error for option \'-descrR1\':\n" +
+                                "No description available for read: either re-run align action with --save-description option " +
+                                "or don't use \'-descrR1\' in exportAlignments");
+                    return ds[0];
+                }
+            });
+
+            desctiptorsList.add(new PL_A("-descrR2", "Export description line from initial .fasta or .fastq file " +
+                    "of the second read (only available if --save-description was used in align command)", "Description R2", "descrR2") {
+                @Override
+                protected String extract(VDJCAlignments object) {
+                    String[] ds = object.getDescriptions();
+                    if (ds == null || ds.length < 2)
+                        throw new IllegalArgumentException("Error for option \'-descrR2\':\n" +
+                                "No description available for second read: either re-run align action with --save-description option " +
+                                "or don't use \'-descrR2\' in exportAlignments");
+                    return ds[1];
+                }
+            });
+
 
             descriptors = desctiptorsList.toArray(new Field[desctiptorsList.size()]);
         }
@@ -477,6 +478,7 @@ public final class FieldExtractors {
             }
             return sb.toString();
         }
+
     }
 
     public static String choose(OutputMode outputMode, String hString, String sString) {

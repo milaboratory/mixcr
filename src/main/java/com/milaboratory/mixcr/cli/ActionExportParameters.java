@@ -64,7 +64,7 @@ public class ActionExportParameters extends ActionParameters {
         description[0].add("-h, --help");
         description[1].add("print this help message");
 
-        description[0].add(FIELDS_SHORT + ", " + FIELDS_LONG);
+        description[0].add(LIST_FIELDS_SHORT + ", " + LIST_FIELDS_LONG);
         description[1].add("print available fields to export");
 
         description[0].add(PRESET_SHORT + ", " + PRESET_LONG);
@@ -77,20 +77,28 @@ public class ActionExportParameters extends ActionParameters {
         description[1].add("output short versions of column headers which facilitates analysis with Pandas, " +
                 "R/DataFrames or other data tables processing library.");
 
+        if (clazz.equals(Clone.class)) {
+            description[0].add(FILTER_OUT_OF_FRAMES);
+            description[1].add("exclude out of frames (fractions will be recalculated)");
+
+            description[0].add(FILTER_STOP_CODONS);
+            description[1].add("exclude sequences containing stop codons (fractions will be recalculated)");
+        }
+
         this.helpString =
                 "Usage: export(Type) [options] input_file output_file\n" +
                         "Options:\n" +
-                        Util.printTwoColumns(4, description[0], description[1], 20, 50, 5, "\n") + "\n" +
+                        Util.printTwoColumns(4, description[0], description[1], 23, 50, 5, "\n") + "\n" +
                         "Examples:\n" +
                         "    exportClones -p all -nFeature CDR1 input.clns output.txt\n" +
                         "    exportAlignments -pf params.txt -nFeature CDR1 -dAlignments input.clns output.txt\n";
         description = FieldExtractors.getDescription(clazz);
         this.fieldsHelpString = "Available export fields:\n" + Util.printTwoColumns(
-                description[0], description[1], 20, 50, 5, "\n");
-
+                description[0], description[1], 23, 50, 5, "\n");
     }
 
-    public Boolean fields = false;
+    public Boolean listFields = false;
+    public boolean filterOutOfFrames = false, filterStopCodons = false;
     public String inputFile;
     public String outputFile;
     public ArrayList<FieldExtractor> exporters;
@@ -105,16 +113,23 @@ public class ActionExportParameters extends ActionParameters {
 
     public final void parseParameters(String[] args) throws ParameterException {
         trim(args);
-        for (String arg : args) {
-            if (arg.equals(FIELDS_SHORT) || arg.equals(FIELDS_LONG)) {
-                fields = true;
-                return;
+        for (String arg : args)
+            switch (arg) {
+                case LIST_FIELDS_SHORT:
+                case LIST_FIELDS_LONG:
+                    listFields = true;
+                    return;
+                case "-h":
+                case "--help":
+                    help = true;
+                    return;
+                case FILTER_OUT_OF_FRAMES:
+                    filterOutOfFrames = true;
+                    break;
+                case FILTER_STOP_CODONS:
+                    filterStopCodons = true;
+                    break;
             }
-            if (arg.equals("-h") || arg.equals("--help")) {
-                help = true;
-                return;
-            }
-        }
 
         if (args.length < 2)
             throw new ParameterException("No output file specified.");
@@ -127,7 +142,10 @@ public class ActionExportParameters extends ActionParameters {
                 break;
             }
 
-        if (args.length == 2 || (outputMode == OutputMode.ScriptingFriendly && args.length == 3))
+        int i = ((outputMode == OutputMode.ScriptingFriendly) ? 1 : 0)
+                + (filterOutOfFrames ? 1 : 0)
+                + (filterStopCodons ? 1 : 0);
+        if (args.length - i == 2)
             exporters = getPresetParameters(outputMode, clazz, defaultPreset);
         else
             exporters = parseParametersString(outputMode, clazz, args, 0, args.length - 2);
@@ -142,6 +160,9 @@ public class ActionExportParameters extends ActionParameters {
         for (int i = from; i < to; ++i) {
             String arg = args[i];
             if (isParsingFriendlyFlag(arg))
+                continue;
+            //skip options
+            if (arg.equals(FILTER_OUT_OF_FRAMES) || arg.equals(FILTER_STOP_CODONS))
                 continue;
             if (arg.charAt(0) == '-') {
                 if (!exporter.isEmpty()) {
@@ -258,10 +279,12 @@ public class ActionExportParameters extends ActionParameters {
             PRESET_LONG = "--preset",
             PRESET_FILE_SHORT = "-pf",
             PRESET_FILE_LONG = "--presetFile",
-            FIELDS_SHORT = "-l",
-            FIELDS_LONG = "--listFields",
+            LIST_FIELDS_SHORT = "-l",
+            LIST_FIELDS_LONG = "--listFields",
             PARSING_LONG = "--no-spaces",
-            PARSING_SHORT = "-s";
+            PARSING_SHORT = "-s",
+            FILTER_OUT_OF_FRAMES = "--filter-out-of-frames",
+            FILTER_STOP_CODONS = "--filter-stops";
 
     public static boolean isPresetParameter(String string) {
         return string.equals(PRESET_SHORT) || string.equals(PRESET_LONG);

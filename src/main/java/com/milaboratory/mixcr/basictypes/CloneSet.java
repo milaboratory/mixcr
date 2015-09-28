@@ -28,6 +28,7 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
+import cc.redberry.primitives.Filter;
 import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.reference.AlleleId;
 import com.milaboratory.mixcr.reference.GeneFeature;
@@ -119,5 +120,20 @@ public final class CloneSet implements Iterable<Clone> {
     @Override
     public Iterator<Clone> iterator() {
         return clones.iterator();
+    }
+
+    /**
+     * WARNING: in will be destroyed
+     */
+    public static CloneSet transform(CloneSet in, Filter<Clone> filter) {
+        List<Clone> newClones = new ArrayList<>(in.size());
+        for (int i = 0; i < in.size(); ++i) {
+            Clone c = in.get(i);
+            if (filter.accept(c)) {
+                c.parent = null;
+                newClones.add(c);
+            }
+        }
+        return new CloneSet(newClones, in.usedAlleles, in.alignedFeatures, in.assemblingFeatures);
     }
 }

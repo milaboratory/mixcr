@@ -42,7 +42,7 @@ public abstract class ActionExport implements Action, ActionHelpProvider, Action
 
     @Override
     public void go(ActionHelper helper) throws Exception {
-        if (parameters.fields) {
+        if (parameters.listFields) {
             helper.getDefaultPrintStream().print(parameters.printFieldsHelp());
             return;
         }

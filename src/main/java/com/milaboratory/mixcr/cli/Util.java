@@ -29,6 +29,7 @@
 package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.mixcr.reference.Locus;
+import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -156,11 +157,17 @@ public final class Util {
         return sb.toString();
     }
 
-    public static String spacer(int sep) {
-        StringBuilder sb = new StringBuilder(sep);
-        for (int i = 0; i < sep; ++i)
-            sb.append(" ");
-        return sb.toString();
+    private static TIntObjectHashMap<String> spacesCache = new TIntObjectHashMap<>();
+
+    public static synchronized String spacer(int sep) {
+        String s = spacesCache.get(sep);
+        if (s == null) {
+            StringBuilder sb = new StringBuilder(sep);
+            for (int i = 0; i < sep; ++i)
+                sb.append(" ");
+            spacesCache.put(sep, s = sb.toString());
+        }
+        return s;
     }
 
     private static int lineBreakPos(String str, int width) {
