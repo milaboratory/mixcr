@@ -496,6 +496,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             if (clusteredClonesAccumulators != null)
                 source = clusteredClonesAccumulators;
             else {
+                idMapping = new TIntIntHashMap();
                 //sort clones by count (if not yet sorted by clustering)
                 CloneAccumulator[] sourceArray = clones.values().toArray(new CloneAccumulator[clones.size()]);
                 Arrays.sort(sourceArray, new Comparator<CloneAccumulator>() {
@@ -504,8 +505,10 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                         return Long.compare(o2.count, o1.count);
                     }
                 });
-                for (int i = 0; i < sourceArray.length; i++)
+                for (int i = 0; i < sourceArray.length; i++) {
+                    idMapping.put(sourceArray[i].getCloneIndex(), i);
                     sourceArray[i].setCloneIndex(i);
+                }
                 source = Arrays.asList(sourceArray);
             }
             realClones = new Clone[source.size()];

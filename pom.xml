@@ -49,6 +49,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.mapdb</groupId>
+            <artifactId>mapdb</artifactId>
+            <version>1.0.8</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.milaboratory</groupId>
             <artifactId>mitools</artifactId>
             <version>${milib.version}</version>

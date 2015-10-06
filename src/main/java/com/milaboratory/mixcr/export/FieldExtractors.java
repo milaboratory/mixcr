@@ -254,6 +254,13 @@ public final class FieldExtractors {
                     "Export initial read quality, or 2 qualities in case of paired-end reads",
                     "Read(s) sequence qualities", "readQuality"));
 
+            desctiptorsList.add(new PL_C("-cloneId", "Unique clone identifier", "Clone ID", "cloneId") {
+                @Override
+                protected String extract(Clone object) {
+                    return "" + object.getId();
+                }
+            });
+
             desctiptorsList.add(new PL_C("-count", "Export clone count", "Clone count", "cloneCount") {
                 @Override
                 protected String extract(Clone object) {

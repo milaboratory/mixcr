@@ -81,6 +81,10 @@ public final class Clone extends VDJCObject {
         return super.getFeature(geneFeature);
     }
 
+    public int getId() {
+        return id;
+    }
+
     @Override
     public String toString() {
         return "id: " + id + " " + "count: " + count;

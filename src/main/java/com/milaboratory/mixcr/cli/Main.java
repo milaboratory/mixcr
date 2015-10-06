@@ -44,7 +44,8 @@ public class Main {
                 new ActionPrettyAlignments(),
                 new ActionAlignmentsStat(),
                 new ActionMergeAlignments(),
-                new ActionInfo());
+                new ActionInfo(),
+                new ActionExtractCloneReads());
 
         // Executing main method
         main.main(args);
