@@ -334,6 +334,17 @@ public class GeneFeatureTest {
     }
 
     @Test
+    public void testParse3() throws Exception {
+        assertEncode("CDR3Begin(0, 10)");
+        assertEncode("V5UTRBeginTrimmed(0, 10)");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testParse4() throws Exception {
+        GeneFeature.parse("CDR3Begin");
+    }
+
+    @Test
     public void testContains1() throws Exception {
         assertTrue(CDR3.contains(VJJunction));
         assertTrue(CDR3.contains(VDJunction));
@@ -341,7 +352,7 @@ public class GeneFeatureTest {
         assertTrue(CDR3.contains(CDR3));
         assertFalse(CDR3.contains(FR2));
         assertFalse(CDR3.contains(CDR1));
-        assertFalse(CDR3.contains(V5UTR));
+        assertFalse(CDR3.contains(V5UTRGermline));
     }
 
     @Test
@@ -359,20 +370,34 @@ public class GeneFeatureTest {
     @Test
     public void testListForDocumentation() throws Exception {
         getFeatureByName("sd");
-        String o = "<span style='color:#853385'>", c = "</span>";
         List<GFT> gfts = new ArrayList<>();
-        for (Map.Entry<GeneFeature, String> entry : nameByFeature.entrySet())
+        int withh1 = 25, withh2 = 35;
+        String sep = "+" + chars(withh1 + 2, '-') + "+" + chars(withh2 + 2, '-') + "+";
+        for (Map.Entry<GeneFeature, String> entry : nameByFeature.entrySet()) {
+            String name = entry.getValue();
+            String value = encode(entry.getKey(), false);
             gfts.add(new GFT(entry.getKey(),
-                    "| " + o + entry.getValue() + c + " | " +
-                            encode(entry.getKey(), false)
-                                    .replace(":", c + ":" + o)
-                                    .replace("{", "{" + o)
-                                    .replace("}", c + "}")
-                            + " |"));
+                    "| " + fixed(name, withh1) + " | " + fixed(value, withh2) + " |"));
+        }
         Collections.sort(gfts);
+        System.out.println(sep);
+        System.out.println("| " + fixed("Gene Feature Name", withh1) + " | " + fixed("Gene feature decomposition", withh2) + " |");
+        String sep1 = "+" + chars(withh1 + 2, '=') + "+" + chars(withh2 + 2, '=') + "+";
+        System.out.println(sep1);
         for (GFT gft : gfts) {
             System.out.println(gft.text);
+            System.out.println(sep);
         }
+    }
+
+    private static String fixed(String str, int length) {
+        return str + chars(length - str.length(), ' ');
+    }
+
+    private static String chars(int n, char cc) {
+        char[] c = new char[n];
+        Arrays.fill(c, cc);
+        return String.valueOf(c);
     }
 
     private static final class GFT implements Comparable<GFT> {

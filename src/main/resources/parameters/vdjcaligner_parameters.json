@@ -93,6 +93,7 @@
         "includeDScore": false,
         "includeCScore": false,
         "mergerParameters": {
+            "qualityMergingAlgorithm" : "SumSubtraction",
             "minimalOverlap": 17,
             "minimalIdentity": 0.9
         },
@@ -196,6 +197,7 @@
         "includeDScore": true,
         "includeCScore": true,
         "mergerParameters": {
+            "qualityMergingAlgorithm" : "SumSubtraction",
             "minimalOverlap": 17,
             "minimalIdentity": 0.9
         },

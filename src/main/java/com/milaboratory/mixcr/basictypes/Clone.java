@@ -58,7 +58,11 @@ public final class Clone extends VDJCObject {
     public double getFraction() {
         if (parent == null)
             throw new NullPointerException("Parent not set yet.");
-        return 1.0 * count / parent.getTotalCount();
+        return getFraction(parent.getTotalCount());
+    }
+
+    public double getFraction(long totalCount) {
+        return 1.0 * count / totalCount;
     }
 
     public GeneFeature[] getAssemblingFeatures() {

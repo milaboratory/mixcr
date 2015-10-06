@@ -26,39 +26,30 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.export;
+package com.milaboratory.mixcr.reference;
 
-public abstract class FieldParameterless<T> extends AbstractField<T> {
-    final String hHeader, sHeader;
+import com.milaboratory.primitivio.DefaultSerializersProviderImpl;
+import com.milaboratory.primitivio.SerializersManager;
 
-    protected FieldParameterless(Class targetType, String command,
-                                 String description,
-                                 String hHeader, String sHeader) {
-        super(targetType, command, description);
-        this.hHeader = hHeader;
-        this.sHeader = sHeader;
+import static com.milaboratory.mixcr.reference.BasicReferencePoint.*;
+import static com.milaboratory.mixcr.reference.BasicReferencePoint.CEnd;
+
+/**
+ * Created by dbolotin on 30/09/15.
+ */
+public final class CompatibilityIO {
+    private CompatibilityIO() {
     }
 
-    protected abstract String extract(T object);
-
-    public String getHeader(OutputMode outputMode) {
-        switch (outputMode) {
-            case HumanFriendly:
-                return hHeader;
-            case ScriptingFriendly:
-                return sHeader;
-            default:
-                throw new NullPointerException();
-        }
-    }
-
-    @Override
-    public FieldExtractor<T> create(OutputMode outputMode, String[] args) {
-        return new AbstractFieldExtractor<T>(getHeader(outputMode), this) {
-            @Override
-            public String extractValue(T object) {
-                return extract(object);
-            }
-        };
+    public static void registerV3Serializers(SerializersManager manager) {
+        manager.registerCustomSerializer(BasicReferencePoint.class,
+                new DefaultSerializersProviderImpl.CustomEnumSerializer<>(
+                        BasicReferencePoint.class,
+                        V5UTRBegin, V5UTREndL1Begin, L1EndVIntronBegin, VIntronEndL2Begin,
+                        L2EndFR1Begin, FR1EndCDR1Begin, CDR1EndFR2Begin, FR2EndCDR2Begin,
+                        CDR2EndFR3Begin, FR3EndCDR3Begin, VEndTrimmed, VEnd, DBegin,
+                        DBeginTrimmed, DEndTrimmed, DEnd, JBegin, JBeginTrimmed,
+                        CDR3EndFR4Begin, FR4End, CBegin, CExon1End, CEnd
+                ));
     }
 }

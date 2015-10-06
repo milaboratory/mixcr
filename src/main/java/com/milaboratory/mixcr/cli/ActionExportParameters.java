@@ -35,6 +35,7 @@ import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.export.FieldExtractor;
 import com.milaboratory.mixcr.export.FieldExtractors;
+import com.milaboratory.mixcr.export.OutputMode;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -59,28 +60,45 @@ public class ActionExportParameters extends ActionParameters {
         this.defaultPreset = defaultPreset;
         this.clazz = clazz;
         ArrayList<String>[] description = new ArrayList[]{new ArrayList(), new ArrayList()};
+
         description[0].add("-h, --help");
-        description[0].add(FIELDS_SHORT + ", " + FIELDS_LONG);
-        description[0].add(PRESET_SHORT + ", " + PRESET_LONG);
-        description[0].add(PRESET_FILE_SHORT + ", " + PRESET_FILE_LONG);
         description[1].add("print this help message");
+
+        description[0].add(LIST_FIELDS_SHORT + ", " + LIST_FIELDS_LONG);
         description[1].add("print available fields to export");
+
+        description[0].add(PRESET_SHORT + ", " + PRESET_LONG);
         description[1].add("preset parameters (full, min)");
+
+        description[0].add(PRESET_FILE_SHORT + ", " + PRESET_FILE_LONG);
         description[1].add("file with preset parameters");
+
+        description[0].add(PARSING_SHORT + ", " + PARSING_LONG);
+        description[1].add("output short versions of column headers which facilitates analysis with Pandas, " +
+                "R/DataFrames or other data tables processing library.");
+
+        if (clazz.equals(Clone.class)) {
+            description[0].add(FILTER_OUT_OF_FRAMES);
+            description[1].add("exclude out of frames (fractions will be recalculated)");
+
+            description[0].add(FILTER_STOP_CODONS);
+            description[1].add("exclude sequences containing stop codons (fractions will be recalculated)");
+        }
+
         this.helpString =
                 "Usage: export(Type) [options] input_file output_file\n" +
                         "Options:\n" +
-                        Util.printTwoColumns(4, description[0], description[1], 20, 50, 5, "\n") + "\n" +
+                        Util.printTwoColumns(4, description[0], description[1], 23, 50, 5, "\n") + "\n" +
                         "Examples:\n" +
                         "    exportClones -p all -nFeature CDR1 input.clns output.txt\n" +
                         "    exportAlignments -pf params.txt -nFeature CDR1 -dAlignments input.clns output.txt\n";
         description = FieldExtractors.getDescription(clazz);
         this.fieldsHelpString = "Available export fields:\n" + Util.printTwoColumns(
-                description[0], description[1], 20, 50, 5, "\n");
-
+                description[0], description[1], 23, 50, 5, "\n");
     }
 
-    public Boolean fields = false;
+    public Boolean listFields = false;
+    public boolean filterOutOfFrames = false, filterStopCodons = false;
     public String inputFile;
     public String outputFile;
     public ArrayList<FieldExtractor> exporters;
@@ -95,37 +113,61 @@ public class ActionExportParameters extends ActionParameters {
 
     public final void parseParameters(String[] args) throws ParameterException {
         trim(args);
-        for (String arg : args) {
-            if (arg.equals(FIELDS_SHORT) || arg.equals(FIELDS_LONG)) {
-                fields = true;
-                return;
+        for (String arg : args)
+            switch (arg) {
+                case LIST_FIELDS_SHORT:
+                case LIST_FIELDS_LONG:
+                    listFields = true;
+                    return;
+                case "-h":
+                case "--help":
+                    help = true;
+                    return;
+                case FILTER_OUT_OF_FRAMES:
+                    filterOutOfFrames = true;
+                    break;
+                case FILTER_STOP_CODONS:
+                    filterStopCodons = true;
+                    break;
             }
-            if (arg.equals("-h") || arg.equals("--help")) {
-                help = true;
-                return;
-            }
-        }
+
         if (args.length < 2)
             throw new ParameterException("No output file specified.");
 
-        if (args.length == 2)
-            exporters = getPresetParameters(clazz, defaultPreset);
+        OutputMode outputMode = OutputMode.HumanFriendly;
+
+        for (String arg : args)
+            if (isParsingFriendlyFlag(arg)) {
+                outputMode = OutputMode.ScriptingFriendly;
+                break;
+            }
+
+        int i = ((outputMode == OutputMode.ScriptingFriendly) ? 1 : 0)
+                + (filterOutOfFrames ? 1 : 0)
+                + (filterStopCodons ? 1 : 0);
+        if (args.length - i == 2)
+            exporters = getPresetParameters(outputMode, clazz, defaultPreset);
         else
-            exporters = parseParametersString(clazz, args, 0, args.length - 2);
+            exporters = parseParametersString(outputMode, clazz, args, 0, args.length - 2);
 
         inputFile = args[args.length - 2];
         outputFile = args[args.length - 1];
     }
 
-
-    public static ArrayList<FieldExtractor> parseParametersString(Class clazz, String[] args, int from, int to) {
+    public static ArrayList<FieldExtractor> parseParametersString(OutputMode outputMode, Class clazz, String[] args, int from, int to) {
         ArrayList<FieldExtractor> exporters = new ArrayList<>();
         ArrayList<String> exporter = new ArrayList<>();
         for (int i = from; i < to; ++i) {
             String arg = args[i];
+            if (isParsingFriendlyFlag(arg))
+                continue;
+            //skip options
+            if (arg.equals(FILTER_OUT_OF_FRAMES) || arg.equals(FILTER_STOP_CODONS))
+                continue;
             if (arg.charAt(0) == '-') {
                 if (!exporter.isEmpty()) {
-                    FieldExtractor exp = FieldExtractors.parse(clazz, exporter.toArray(new String[exporter.size()]));
+                    FieldExtractor exp = FieldExtractors.parse(outputMode,
+                            clazz, exporter.toArray(new String[exporter.size()]));
                     if (exp == null)
                         throw new ParameterException("Unknown export field: " + exporter);
                     exporters.add(exp);
@@ -134,12 +176,12 @@ public class ActionExportParameters extends ActionParameters {
                 if (isPresetParameter(arg)) {
                     if (i == to - 1 || args[i + 1].charAt(0) == '-')
                         throw new ParameterException("Preset value not specified.");
-                    exporters.addAll(getPresetParameters(clazz, args[++i]));
+                    exporters.addAll(getPresetParameters(outputMode, clazz, args[++i]));
                 } else if (isPresetFileParameter(arg)) {
                     if (i == to - 1 || args[i + 1].charAt(0) == '-')
                         throw new ParameterException("Preset file name not specified.");
                     try {
-                        exporters.addAll(readFromFile(clazz, args[++i]));
+                        exporters.addAll(readFromFile(outputMode, clazz, args[++i]));
                     } catch (IOException e) {
                         throw new ParameterException(e.getMessage());
                     }
@@ -149,7 +191,8 @@ public class ActionExportParameters extends ActionParameters {
                 exporter.add(arg);
         }
         if (!exporter.isEmpty()) {
-            FieldExtractor exp = FieldExtractors.parse(clazz, exporter.toArray(new String[exporter.size()]));
+            FieldExtractor exp = FieldExtractors.parse(outputMode,
+                    clazz, exporter.toArray(new String[exporter.size()]));
             if (exp == null)
                 throw new ParameterException("Unknown export field: " + exporter);
             exporters.add(exp);
@@ -157,7 +200,7 @@ public class ActionExportParameters extends ActionParameters {
         return exporters;
     }
 
-    static List<FieldExtractor> readFromFile(Class clazz, String fileName) throws IOException {
+    static List<FieldExtractor> readFromFile(OutputMode outputMode, Class clazz, String fileName) throws IOException {
         File file = new File(fileName);
         BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
         List<FieldExtractor> exporters = new ArrayList<>();
@@ -174,12 +217,12 @@ public class ActionExportParameters extends ActionParameters {
                 s = line.replace("  ", " ");
             } while (s.length() != line.length());
             String[] exporter = line.split(" ");
-            exporters.add(FieldExtractors.parse(clazz, exporter));
+            exporters.add(FieldExtractors.parse(outputMode, clazz, exporter));
         }
         return exporters;
     }
 
-    static ArrayList<FieldExtractor> parsePresetString(Class clazz, String string) {
+    static ArrayList<FieldExtractor> parsePresetString(OutputMode outputMode, Class clazz, String string) {
         string = string.replace("\n", " ").trim();
         String s = string;
         do {
@@ -187,44 +230,44 @@ public class ActionExportParameters extends ActionParameters {
             s = string.replace("  ", " ");
         } while (s.length() != string.length());
         String[] args = string.split(" ");
-        return parseParametersString(clazz, args, 0, args.length);
+        return parseParametersString(outputMode, clazz, args, 0, args.length);
     }
 
-    private static final Map<Class, Map<String, ArrayList<FieldExtractor>>> preset;
+    private static final Map<Class, Map<String, String>> preset;
 
     static {
         preset = new HashMap<>();
-        Map<String, ArrayList<FieldExtractor>> clones = new HashMap<>();
-        clones.put("min", parsePresetString(Clone.class,
-                "-count -vHit -dHit -jHit -cHit -nfeature CDR3"));
-        clones.put("full", parsePresetString(Clone.class,
-                "-count -fraction -sequence -quality " +
-                        "-vHits -dHits -jHits -cHits " +
-                        "-vAlignments -dAlignments -jAlignments -cAlignments " +
-                        "-nFeature FR1 -minFeatureQuality FR1 -nFeature CDR1 -minFeatureQuality CDR1 " +
-                        "-nFeature FR2 -minFeatureQuality FR2 -nFeature CDR2 -minFeatureQuality CDR2 " +
-                        "-nFeature FR3 -minFeatureQuality FR3 -nFeature CDR3 -minFeatureQuality CDR3 " +
-                        "-nFeature FR4 -minFeatureQuality FR4 " +
-                        "-aaFeature FR1 -aaFeature CDR1 -aaFeature FR2 -aaFeature CDR2 -aaFeature FR3 -aaFeature CDR3 -aaFeature FR4 "));
+
+        Map<String, String> clones = new HashMap<>();
+        clones.put("min", "-count -vHit -dHit -jHit -cHit -nFeature CDR3");
+        clones.put("full", "-count -fraction -sequence -quality " +
+                "-vHitsWithScore -dHitsWithScore -jHitsWithScore -cHitsWithScore " +
+                "-vAlignments -dAlignments -jAlignments -cAlignments " +
+                "-nFeature FR1 -minFeatureQuality FR1 -nFeature CDR1 -minFeatureQuality CDR1 " +
+                "-nFeature FR2 -minFeatureQuality FR2 -nFeature CDR2 -minFeatureQuality CDR2 " +
+                "-nFeature FR3 -minFeatureQuality FR3 -nFeature CDR3 -minFeatureQuality CDR3 " +
+                "-nFeature FR4 -minFeatureQuality FR4 " +
+                "-aaFeature FR1 -aaFeature CDR1 -aaFeature FR2 -aaFeature CDR2 " +
+                "-aaFeature FR3 -aaFeature CDR3 -aaFeature FR4 -defaultAnchorPoints");
         preset.put(Clone.class, clones);
 
-        Map<String, ArrayList<FieldExtractor>> alignments = new HashMap<>();
-        alignments.put("min", parsePresetString(VDJCAlignments.class,
-                "-vHit -dHit -jHit -cHit -nfeature CDR3"));
-        alignments.put("full", parsePresetString(VDJCAlignments.class,
-                "-sequence -quality " +
-                        "-vHits -dHits -jHits -cHits " +
-                        "-vAlignments -dAlignments -jAlignments -cAlignments " +
-                        "-nFeature FR1 -minFeatureQuality FR1 -nFeature CDR1 -minFeatureQuality CDR1 " +
-                        "-nFeature FR2 -minFeatureQuality FR2 -nFeature CDR2 -minFeatureQuality CDR2 " +
-                        "-nFeature FR3 -minFeatureQuality FR3 -nFeature CDR3 -minFeatureQuality CDR3 " +
-                        "-nFeature FR4 -minFeatureQuality FR4 " +
-                        "-aaFeature FR1 -aaFeature CDR1 -aaFeature FR2 -aaFeature CDR2 -aaFeature FR3 -aaFeature CDR3 -aaFeature FR4 "));
+        Map<String, String> alignments = new HashMap<>();
+        alignments.put("min", "-vHit -dHit -jHit -cHit -nFeature CDR3");
+        alignments.put("full", "-sequence -quality " +
+                "-vHitsWithScore -dHitsWithScore -jHitsWithScore -cHitsWithScore " +
+                "-vAlignments -dAlignments -jAlignments -cAlignments " +
+                "-nFeature FR1 -minFeatureQuality FR1 -nFeature CDR1 -minFeatureQuality CDR1 " +
+                "-nFeature FR2 -minFeatureQuality FR2 -nFeature CDR2 -minFeatureQuality CDR2 " +
+                "-nFeature FR3 -minFeatureQuality FR3 -nFeature CDR3 -minFeatureQuality CDR3 " +
+                "-nFeature FR4 -minFeatureQuality FR4 " +
+                "-aaFeature FR1 -aaFeature CDR1 -aaFeature FR2 -aaFeature CDR2 " +
+                "-aaFeature FR3 -aaFeature CDR3 -aaFeature FR4 -defaultAnchorPoints")
+        ;
         preset.put(VDJCAlignments.class, alignments);
     }
 
-    public static ArrayList<FieldExtractor> getPresetParameters(Class clazz, String string) {
-        return preset.get(clazz).get(string);
+    public static ArrayList<FieldExtractor> getPresetParameters(OutputMode mode, Class clazz, String string) {
+        return parsePresetString(mode, clazz, preset.get(clazz).get(string));
     }
 
     private static void trim(String[] args) {
@@ -236,11 +279,19 @@ public class ActionExportParameters extends ActionParameters {
             PRESET_LONG = "--preset",
             PRESET_FILE_SHORT = "-pf",
             PRESET_FILE_LONG = "--presetFile",
-            FIELDS_SHORT = "-l",
-            FIELDS_LONG = "--listFields";
+            LIST_FIELDS_SHORT = "-l",
+            LIST_FIELDS_LONG = "--listFields",
+            PARSING_LONG = "--no-spaces",
+            PARSING_SHORT = "-s",
+            FILTER_OUT_OF_FRAMES = "--filter-out-of-frames",
+            FILTER_STOP_CODONS = "--filter-stops";
 
     public static boolean isPresetParameter(String string) {
         return string.equals(PRESET_SHORT) || string.equals(PRESET_LONG);
+    }
+
+    public static boolean isParsingFriendlyFlag(String string) {
+        return string.equals(PARSING_SHORT) || string.equals(PARSING_LONG);
     }
 
     public static boolean isPresetFileParameter(String string) {

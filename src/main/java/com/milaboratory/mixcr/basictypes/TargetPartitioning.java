@@ -61,10 +61,21 @@ public final class TargetPartitioning extends SequencePartitioning {
             Alignment<NucleotideSequence> alignment = hit.getAlignment(targetIndex);
             if (alignment == null)
                 return -1;
-            if (referencePoint.isAttachedToLeftAlignmentBound())
+
+            int positionOfActivationPoint = -2;
+            if (referencePoint.getActivationPoint() != null)
+                positionOfActivationPoint = hit.getAllele().getPartitioning()
+                        .getRelativePosition(hit.getAlignedFeature(), referencePoint.getActivationPoint());
+
+            if (referencePoint.isAttachedToLeftAlignmentBound()) {
                 positionInSeq1 = alignment.getSequence1Range().getFrom();
-            else
+                if (positionOfActivationPoint != -2 && (positionOfActivationPoint == -1 || positionInSeq1 > positionOfActivationPoint))
+                    return -1;
+            } else {
                 positionInSeq1 = alignment.getSequence1Range().getTo();
+                if (positionOfActivationPoint != -2 && (positionOfActivationPoint == -1 || positionInSeq1 < positionOfActivationPoint))
+                    return -1;
+            }
             positionInSeq1 += referencePoint.getOffset();
             position = alignment.convertPosition(positionInSeq1);
         } else

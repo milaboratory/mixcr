@@ -86,7 +86,8 @@ public class VDJCAlignmentsFormatter {
     }
 
     public static final PointToDraw[] points = new PointToDraw[]{
-            pd(ReferencePoint.UTR5End, "5'UTR><L1"),
+            pd(ReferencePoint.V5UTRBeginTrimmed, "<5'UTR"),
+            pd(ReferencePoint.V5UTREnd, "5'UTR><L1"),
             pd(ReferencePoint.L1End, "L1>"),
             pd(ReferencePoint.L2Begin, "<L2"),
             pd(ReferencePoint.FR1Begin, "L2><FR1"),
@@ -95,6 +96,10 @@ public class VDJCAlignmentsFormatter {
             pd(ReferencePoint.CDR2Begin, "FR2><CDR2"),
             pd(ReferencePoint.FR3Begin, "CDR2><FR3"),
             pd(ReferencePoint.CDR3Begin, "FR3><CDR3"),
+            pd(ReferencePoint.VEndTrimmed, "V>"),
+            pd(ReferencePoint.DBeginTrimmed, "<D"),
+            pd(ReferencePoint.DEndTrimmed, "D>"),
+            pd(ReferencePoint.JBeginTrimmed, "<J"),
             pd(ReferencePoint.CDR3End, "CDR3><FR4"),
             pd(ReferencePoint.FR4End, "FR4>")
     };

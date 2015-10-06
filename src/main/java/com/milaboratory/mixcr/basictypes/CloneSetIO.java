@@ -44,7 +44,7 @@ import java.util.EnumMap;
 import java.util.List;
 
 public final class CloneSetIO {
-    static final String MAGIC = "MiXCR.CLNS.V01";
+    static final String MAGIC = "MiXCR.CLNS.V02";
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
 
@@ -148,7 +148,7 @@ public final class CloneSetIO {
         input.readFully(magicBytes);
 
         if (!Arrays.equals(magicBytes, MAGIC_BYTES))
-            throw new RuntimeException("Wrong file format.");
+            throw new RuntimeException("Unsupported file format; .clns file of version " + new String(magicBytes) + " while you are running MiXCR " + MAGIC);
 
         GeneFeature[] assemblingFeatures = input.readObject(GeneFeature[].class);
         EnumMap<GeneType, GeneFeature> alignedFeatures = IO.readGF2GTMap(input);

@@ -32,13 +32,13 @@ import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.core.io.CompressionType;
 import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.reference.AlleleResolver;
+import com.milaboratory.mixcr.reference.CompatibilityIO;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.CountingInputStream;
 
 import java.io.*;
-import java.util.Arrays;
 import java.util.List;
 
 import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.*;
@@ -86,8 +86,16 @@ public class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>
         assert MAGIC_BYTES.length == MAGIC_LENGTH;
         byte[] magic = new byte[MAGIC_LENGTH];
         input.readFully(magic);
-        if (!Arrays.equals(magic, MAGIC_BYTES))
-            throw new RuntimeException("Conflicting file format; .vdjca file of version " + new String(magic) + " while you are running MiXCR " + MAGIC);
+        String magicString = new String(magic);
+        switch (magicString) {
+            case MAGIC_V3:
+                CompatibilityIO.registerV3Serializers(input.getSerializersManager());
+                break;
+            case MAGIC:
+                break;
+            default:
+                throw new RuntimeException("Unsupported file format; .vdjca file of version " + new String(magic) + " while you are running MiXCR " + MAGIC);
+        }
 
         parameters = input.readObject(VDJCAlignerParameters.class);
 

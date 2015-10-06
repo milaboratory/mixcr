@@ -26,39 +26,17 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.export;
+package com.milaboratory.mixcr.reference;
 
-public abstract class FieldParameterless<T> extends AbstractField<T> {
-    final String hHeader, sHeader;
+import org.junit.Assert;
+import org.junit.Test;
 
-    protected FieldParameterless(Class targetType, String command,
-                                 String description,
-                                 String hHeader, String sHeader) {
-        super(targetType, command, description);
-        this.hHeader = hHeader;
-        this.sHeader = sHeader;
-    }
-
-    protected abstract String extract(T object);
-
-    public String getHeader(OutputMode outputMode) {
-        switch (outputMode) {
-            case HumanFriendly:
-                return hHeader;
-            case ScriptingFriendly:
-                return sHeader;
-            default:
-                throw new NullPointerException();
-        }
-    }
-
-    @Override
-    public FieldExtractor<T> create(OutputMode outputMode, String[] args) {
-        return new AbstractFieldExtractor<T>(getHeader(outputMode), this) {
-            @Override
-            public String extractValue(T object) {
-                return extract(object);
-            }
-        };
+public class ReferencePointTest {
+    @Test
+    public void test1() throws Exception {
+        ReferencePoint[] pointsToTest = new ReferencePoint[]{ReferencePoint.V5UTRBeginTrimmed,
+                ReferencePoint.VEndTrimmed, ReferencePoint.JBeginTrimmed};
+        for (ReferencePoint referencePoint : pointsToTest)
+            Assert.assertNotNull(referencePoint.getActivationPoint());
     }
 }

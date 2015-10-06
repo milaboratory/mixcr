@@ -28,6 +28,7 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
+import cc.redberry.primitives.Filter;
 import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.reference.AlleleId;
 import com.milaboratory.mixcr.reference.GeneFeature;
@@ -72,11 +73,8 @@ public final class CloneSet implements Iterable<Clone> {
                 assemblingFeatures = clone.getAssemblingFeatures();
             else if (!Arrays.equals(assemblingFeatures, clone.getAssemblingFeatures()))
                 throw new IllegalArgumentException("Different assembling features.");
-            for (GeneType geneType : GeneType.values()) {
-                VDJCHit[] hits = clone.getHits(geneType);
-                if (hits == null)
-                    continue;
-                for (VDJCHit hit : hits) {
+            for (GeneType geneType : GeneType.values())
+                for (VDJCHit hit : clone.getHits(geneType)) {
                     Allele allele = hit.getAllele();
                     alleles.put(allele.getId(), allele);
                     GeneFeature alignedFeature = hit.getAlignedFeature();
@@ -84,7 +82,6 @@ public final class CloneSet implements Iterable<Clone> {
                     if (f != null && !f.equals(alignedFeature))
                         throw new IllegalArgumentException("Different aligned feature for clones.");
                 }
-            }
         }
         this.assemblingFeatures = assemblingFeatures;
         this.alignedFeatures = alignedFeatures;
@@ -123,5 +120,20 @@ public final class CloneSet implements Iterable<Clone> {
     @Override
     public Iterator<Clone> iterator() {
         return clones.iterator();
+    }
+
+    /**
+     * WARNING: in will be destroyed
+     */
+    public static CloneSet transform(CloneSet in, Filter<Clone> filter) {
+        List<Clone> newClones = new ArrayList<>(in.size());
+        for (int i = 0; i < in.size(); ++i) {
+            Clone c = in.get(i);
+            if (filter.accept(c)) {
+                c.parent = null;
+                newClones.add(c);
+            }
+        }
+        return new CloneSet(newClones, in.usedAlleles, in.alignedFeatures, in.assemblingFeatures);
     }
 }

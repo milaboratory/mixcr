@@ -28,6 +28,7 @@
  */
 package com.milaboratory.mixcr.vdjaligners;
 
+import com.milaboratory.core.PairedTarget;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.AlignmentUtils;

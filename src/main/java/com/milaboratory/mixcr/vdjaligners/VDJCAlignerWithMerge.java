@@ -48,8 +48,9 @@ public final class VDJCAlignerWithMerge extends VDJCAligner<PairedRead> {
         super(parameters);
         singleAligner = new VDJCAlignerSJFirst(parameters);
         pairedAligner = new VDJCAlignerPVFirst(parameters);
-        merger = new MismatchOnlyPairedReadMerger(parameters.getMergerParameters(),
-                parameters.getReadsLayout().isOpposite());
+        merger = new MismatchOnlyPairedReadMerger(
+                parameters.getMergerParameters().overrideReadsLayout(
+                        parameters.getReadsLayout()));
     }
 
     @Override

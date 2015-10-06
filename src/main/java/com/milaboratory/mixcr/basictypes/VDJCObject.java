@@ -72,7 +72,8 @@ public class VDJCObject {
     }
 
     public final VDJCHit[] getHits(GeneType type) {
-        return hits.get(type);
+        VDJCHit[] hits = this.hits.get(type);
+        return hits == null ? new VDJCHit[0] : hits;
     }
 
     public final int numberOfTargets() {

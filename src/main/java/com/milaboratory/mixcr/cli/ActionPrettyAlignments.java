@@ -156,7 +156,7 @@ public class ActionPrettyAlignments implements Action {
             output.println();
             boolean exists = false;
             VDJCHit[] hits = alignments.getHits(geneType);
-            if (hits != null && hits.length > 0) {
+            if (hits.length > 0) {
                 hits = actionParameters.isOnlyTop() ? new VDJCHit[]{hits[0]} : hits;
                 for (VDJCHit hit : hits) {
                     exists = true;

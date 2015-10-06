@@ -28,17 +28,19 @@
  */
 package com.milaboratory.mixcr.cli;
 
+import cc.redberry.primitives.Filter;
+import com.milaboratory.core.sequence.AminoAcidSequence;
+import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.basictypes.IOUtil;
 import com.milaboratory.mixcr.export.InfoWriter;
+import com.milaboratory.mixcr.reference.GeneFeature;
 import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.util.CanReportProgressAndStage;
 import com.milaboratory.util.SmartProgressReporter;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.List;
 
@@ -52,6 +54,8 @@ public class ActionExportClones extends ActionExport {
         try (InputStream inputStream = IOUtil.createIS(parameters.inputFile);
              InfoWriter<Clone> writer = new InfoWriter<>(parameters.outputFile)) {
             CloneSet set = CloneSetIO.read(inputStream, LociLibraryManager.getDefault());
+            if (parameters.filterOutOfFrames || parameters.filterStopCodons)
+                set = CloneSet.transform(set, new CFilter(parameters.filterOutOfFrames, parameters.filterStopCodons));
             writer.attachInfoProviders((List) parameters.exporters);
             ExportClones exportClones = new ExportClones(set, writer);
             SmartProgressReporter.startProgressReport(exportClones);
@@ -63,6 +67,29 @@ public class ActionExportClones extends ActionExport {
     @Override
     public String command() {
         return "exportClones";
+    }
+
+    private static final class CFilter implements Filter<Clone> {
+        final boolean filterOutOfFrames, filterStopCodons;
+
+        public CFilter(boolean filterOutOfFrames, boolean filterStopCodons) {
+            this.filterOutOfFrames = filterOutOfFrames;
+            this.filterStopCodons = filterStopCodons;
+        }
+
+        @Override
+        public boolean accept(Clone clone) {
+            if (filterOutOfFrames) {
+                NSequenceWithQuality cdr3 = clone.getFeature(GeneFeature.CDR3);
+                if (cdr3 == null || cdr3.size() % 3 != 0)
+                    return false;
+            }
+            if (filterStopCodons)
+                for (int i = 0; i < clone.numberOfTargets(); i++)
+                    if (AminoAcidSequence.translateFromCenter(clone.getTarget(i).getSequence()).containStops())
+                        return false;
+            return true;
+        }
     }
 
     private static final class ExportClones implements CanReportProgressAndStage {

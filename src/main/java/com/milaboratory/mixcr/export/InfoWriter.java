@@ -29,6 +29,7 @@
 package com.milaboratory.mixcr.export;
 
 import cc.redberry.pipe.InputPort;
+import org.apache.commons.io.output.CloseShieldOutputStream;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -40,7 +41,8 @@ public final class InfoWriter<T> implements InputPort<T>, AutoCloseable {
     boolean initialized;
 
     public InfoWriter(String file) throws FileNotFoundException {
-        this(new BufferedOutputStream(new FileOutputStream(new File(file)), 65536));
+        this(".".equals(file) ? new CloseShieldOutputStream(System.out) :
+                new BufferedOutputStream(new FileOutputStream(new File(file)), 65536));
     }
 
     public void attachInfoProvider(AbstractFieldExtractor<? super T> provider) {

@@ -90,7 +90,7 @@ public final class CloneAccumulator {
             for (GeneType geneType : GeneType.values()) {
                 TObjectFloatHashMap<AlleleId> alleleScores = geneScores.get(geneType);
                 VDJCHit[] hits = alignment.getHits(geneType);
-                if (hits == null || hits.length == 0)
+                if (hits.length == 0)
                     continue;
                 if (alleleScores == null)
                     geneScores.put(geneType, alleleScores = new TObjectFloatHashMap<>());

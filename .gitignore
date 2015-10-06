@@ -3,3 +3,5 @@ target
 *.iml
 .idea
 doc/_build
+.floo
+.flooignore

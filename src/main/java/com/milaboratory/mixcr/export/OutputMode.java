@@ -26,17 +26,8 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.vdjaligners;
+package com.milaboratory.mixcr.export;
 
-import com.milaboratory.core.sequence.NSequenceWithQuality;
-
-/**
-* Created by dbolotin on 24/07/14.
-*/
-final class PairedTarget {
-    final NSequenceWithQuality[] targets;
-
-    PairedTarget(NSequenceWithQuality... targets) {
-        this.targets = targets;
-    }
+public enum OutputMode {
+    HumanFriendly, ScriptingFriendly
 }

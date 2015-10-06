@@ -36,23 +36,56 @@ case $os in
     ;;
 esac
 
-targetXmx=12000
+mixcrArgs=()
+javaArgs=()
 
-if [[ $targetXmx -gt $maxMb ]];
+needXmxXms=true
+
+while [[ $# > 0 ]]
+do
+    key="$1"
+    shift
+    case $key in
+        -D*|-X*)
+            javaArgs+=(${key})
+
+            case $key in
+                -Xmx*|-Xms*)
+                    needXmxXms=false
+                    ;;
+            esac
+
+            ;;
+        *)
+            mixcrArgs+=(${key})
+            ;;
+    esac
+done
+
+if [[ ${needXmxXms} == true ]]
 then
-    targetXmx=$maxMb
-fi
+    targetXmx=12000
 
-targetXms=$((${targetXmx}*2/3))
+    if [[ $targetXmx -gt $maxMb ]];
+    then
+        targetXmx=$maxMb
+    fi
 
-if [[ $targetXms -lt 2000 ]];
-then
-    targetXms=$targetXmx
+    javaArgs+=("-Xmx${targetXmx}m")
+
+    targetXms=$((${targetXmx}*2/3))
+
+    if [[ $targetXms -lt 2000 ]];
+    then
+        targetXms=$targetXmx
+    fi
+
+    javaArgs+=("-Xms${targetXms}m")
 fi
 
 jar=""
 
-for j in "$DIR/../jar/mixcr.jar" "$DIR/mixcr.jar" "$DIR/target/mixcr-1.2-distribution.jar"
+for j in "$DIR/../jar/mixcr.jar" "$DIR/mixcr.jar" $(ls -d -1 $DIR/target/* 2> /dev/null | grep distribution.jar)
 do
     if [[ -e "$j" ]];
     then
@@ -67,4 +100,4 @@ then
     exit 1
 fi
 
-$java -Dmixcr.command=mixcr -Xmx${targetXmx}m -Xms${targetXms}m -XX:+AggressiveOpts -jar $jar "${@:1}"
+$java -Dmixcr.command=mixcr -XX:+AggressiveOpts "${javaArgs[@]}" -jar $jar "${mixcrArgs[@]}"
