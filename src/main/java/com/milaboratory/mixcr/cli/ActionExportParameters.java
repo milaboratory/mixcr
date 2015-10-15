@@ -96,6 +96,7 @@ public class ActionExportParameters extends ActionParametersWithOutput {
                 parameters.exporters.addAll(parseFile(outputMode, clazz, parameters.presetFile));
 
             parameters.exporters.addAll(parseFields(outputMode, clazz, jc.getUnknownOptions()));
+
             if (parameters.exporters.isEmpty())
                 parameters.exporters.addAll(getPresetParameters(outputMode, clazz, parameters.preset));
         }
@@ -137,7 +138,6 @@ public class ActionExportParameters extends ActionParametersWithOutput {
         ArrayList<String>[] description = FieldExtractors.getDescription(clazz);
         return "Available export fields:\n" + Util.printTwoColumns(description[0], description[1], 23, 50, 5, "\n");
     }
-
 
     private static final Map<Class, Map<String, String>> presets;
 

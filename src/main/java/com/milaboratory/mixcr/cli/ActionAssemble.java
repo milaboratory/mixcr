@@ -29,6 +29,9 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
+import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.blocks.FilteringPort;
+import cc.redberry.primitives.Filter;
 import com.beust.jcommander.DynamicParameter;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
@@ -121,7 +124,7 @@ public class ActionAssemble implements Action {
                 //byClones
                 db.createTreeSet(MAPDB_SORTED_BY_CLONE)
                         .pumpSource(Pump.sort(
-                                new CUtils.OPIterator<>(assembler.getAssembledReadsPort()),
+                                source(assembler.getAssembledReadsPort()),
                                 true, MAPDB_BUFFER,
                                 Collections.reverseOrder(CLONE_COMPARATOR),
                                 IO.MAPDB_SERIALIZER))
@@ -132,7 +135,7 @@ public class ActionAssemble implements Action {
                 //byAlignments
                 db.createTreeSet(MAPDB_SORTED_BY_ALIGNMENT)
                         .pumpSource(Pump.sort(
-                                new CUtils.OPIterator<>(assembler.getAssembledReadsPort()),
+                                source(assembler.getAssembledReadsPort()),
                                 true, MAPDB_BUFFER,
                                 Collections.reverseOrder(ALIGNMENTS_COMPARATOR),
                                 IO.MAPDB_SERIALIZER))
@@ -144,6 +147,16 @@ public class ActionAssemble implements Action {
                 db.close();
             }
         }
+    }
+
+    private static Iterator<ReadToCloneMapping> source(OutputPortCloseable<ReadToCloneMapping> assemblerReadsPort) {
+        return new CUtils.OPIterator<>(new FilteringPort<>(assemblerReadsPort,
+                new Filter<ReadToCloneMapping>() {
+                    @Override
+                    public boolean accept(ReadToCloneMapping object) {
+                        return !object.isDropped();
+                    }
+                }));
     }
 
     @Override

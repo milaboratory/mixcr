@@ -141,6 +141,7 @@ public class ActionExportClones extends ActionExport {
         @Parameter(description = "Exclude out of frames (fractions will be recalculated)",
                 names = {"-o", "--filter-out-of-frames"})
         public Boolean filterOutOfFrames = false;
+
         @Parameter(description = "Exclude sequences containing stop codons (fractions will be recalculated)",
                 names = {"-t", "--filter-stops"})
         public Boolean filterStops = false;

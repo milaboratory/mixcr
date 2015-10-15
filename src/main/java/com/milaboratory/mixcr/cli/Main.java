@@ -45,7 +45,7 @@ public class Main {
                 new ActionAlignmentsStat(),
                 new ActionMergeAlignments(),
                 new ActionInfo(),
-                new ActionExtractCloneReads());
+                new ActionExportCloneReads());
 
         // Executing main method
         main.main(args);

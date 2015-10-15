@@ -79,9 +79,28 @@ public final class ReadToCloneMapping {
         return cloneIndex < 0;
     }
 
+    public MappingType getMappingType() {
+        if (isDropped())
+            return MappingType.Dropped;
+        else if (isMapped())
+            return MappingType.Mapped;
+        else if (isClustered())
+            return MappingType.Clustered;
+        else return MappingType.Core;
+    }
+
     @Override
     public String toString() {
         return "" + alignmentsId + " -> " + cloneIndex + " " + (isClustered() ? "c" : "") + (isMapped() ? "m" : "");
+    }
+
+    public enum MappingType {
+        Core, Clustered, Mapped, Dropped;
+
+        @Override
+        public String toString() {
+            return super.toString().toLowerCase();
+        }
     }
 
     public static final Comparator<ReadToCloneMapping>
@@ -110,7 +129,7 @@ public final class ReadToCloneMapping {
     private static final class AlignmentsComparator implements Comparator<ReadToCloneMapping>,
             java.io.Serializable {
         private static final long serialVersionUID = 1L;
-        
+
         private AlignmentsComparator() {
         }
 

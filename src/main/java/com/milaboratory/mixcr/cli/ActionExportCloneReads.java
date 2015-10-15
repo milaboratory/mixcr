@@ -31,7 +31,7 @@ import java.util.NavigableSet;
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public final class ActionExtractCloneReads implements Action {
+public final class ActionExportCloneReads implements Action {
     private final ExtractCloneParameters parameters = new ExtractCloneParameters();
 
     @Override
