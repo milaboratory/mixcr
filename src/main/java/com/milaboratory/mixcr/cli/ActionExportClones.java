@@ -29,6 +29,8 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.primitives.Filter;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.mixcr.basictypes.Clone;
@@ -46,19 +48,21 @@ import java.util.List;
 
 public class ActionExportClones extends ActionExport {
     public ActionExportClones() {
-        super(new ActionExportParameters(Clone.class));
+        super(new CloneExportParameters(), Clone.class);
     }
 
     @Override
     public void go0() throws Exception {
-        try (InputStream inputStream = IOUtil.createIS(parameters.inputFile);
-             InfoWriter<Clone> writer = new InfoWriter<>(parameters.outputFile)) {
+        CloneExportParameters parameters = (CloneExportParameters) this.parameters;
+        try (InputStream inputStream = IOUtil.createIS(parameters.getInputFile());
+             InfoWriter<Clone> writer = new InfoWriter<>(parameters.getOutputFile())) {
             CloneSet set = CloneSetIO.read(inputStream, LociLibraryManager.getDefault());
-            if (parameters.filterOutOfFrames || parameters.filterStopCodons)
-                set = CloneSet.transform(set, new CFilter(parameters.filterOutOfFrames, parameters.filterStopCodons));
+            if (parameters.filterOutOfFrames || parameters.filterStops)
+                set = CloneSet.transform(set, new CFilter(parameters.filterOutOfFrames, parameters.filterStops));
             writer.attachInfoProviders((List) parameters.exporters);
-            ExportClones exportClones = new ExportClones(set, writer);
-            SmartProgressReporter.startProgressReport(exportClones);
+            ExportClones exportClones = new ExportClones(set, writer, parameters.limit);
+            if (!parameters.printToStdout())
+                SmartProgressReporter.startProgressReport(exportClones);
             exportClones.run();
             writer.close();
         }
@@ -92,17 +96,20 @@ public class ActionExportClones extends ActionExport {
         }
     }
 
-    private static final class ExportClones implements CanReportProgressAndStage {
+    @Parameters(commandDescription = "Export clones to tab-delimited text file", optionPrefixes = "-")
+    public static final class ExportClones implements CanReportProgressAndStage {
         final CloneSet clones;
         final InfoWriter<Clone> writer;
-        final int size;
-        volatile int current = 0;
+        final long size;
+        volatile long current = 0;
         final static String stage = "Exporting clones";
+        final long limit;
 
-        private ExportClones(CloneSet clones, InfoWriter<Clone> writer) {
+        private ExportClones(CloneSet clones, InfoWriter<Clone> writer, long limit) {
             this.clones = clones;
             this.writer = writer;
             this.size = clones.size();
+            this.limit = limit;
         }
 
         @Override
@@ -122,9 +129,20 @@ public class ActionExportClones extends ActionExport {
 
         void run() {
             for (Clone clone : clones.getClones()) {
+                if (current == limit)
+                    break;
                 writer.put(clone);
                 ++current;
             }
         }
+    }
+
+    public static class CloneExportParameters extends ActionExportParameters {
+        @Parameter(description = "Exclude out of frames (fractions will be recalculated)",
+                names = {"-o", "--filter-out-of-frames"})
+        public Boolean filterOutOfFrames = false;
+        @Parameter(description = "Exclude sequences containing stop codons (fractions will be recalculated)",
+                names = {"-t", "--filter-stops"})
+        public Boolean filterStops = false;
     }
 }

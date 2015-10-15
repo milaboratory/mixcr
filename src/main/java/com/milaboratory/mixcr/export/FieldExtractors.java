@@ -320,7 +320,7 @@ public final class FieldExtractors {
         for (Field field : getFields())
             if (field.canExtractFrom(clazz) && args[0].equalsIgnoreCase(field.getCommand()))
                 return field.create(outputMode, Arrays.copyOfRange(args, 1, args.length));
-        return null;
+        throw new IllegalArgumentException("Not a valid options: " + Arrays.toString(args));
     }
 
     public static ArrayList<String>[] getDescription(Class clazz) {

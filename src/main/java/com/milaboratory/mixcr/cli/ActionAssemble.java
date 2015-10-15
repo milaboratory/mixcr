@@ -182,7 +182,7 @@ public class ActionAssemble implements Action {
                 names = {"-i", "--index"}, hidden = true)
         public String readsToClonesMapping;
 
-        @DynamicParameter(names = "-O", description = "Overrides base values of paramentrs.")
+        @DynamicParameter(names = "-O", description = "Overrides base values of parameters.")
         private Map<String, String> overrides = new HashMap<>();
 
         public String getInputFileName() {

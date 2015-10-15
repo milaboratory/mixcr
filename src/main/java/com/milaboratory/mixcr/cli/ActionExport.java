@@ -29,34 +29,30 @@
 package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.mitools.cli.Action;
-import com.milaboratory.mitools.cli.ActionHelpProvider;
 import com.milaboratory.mitools.cli.ActionHelper;
 import com.milaboratory.mitools.cli.ActionParametersParser;
 
-public abstract class ActionExport implements Action, ActionHelpProvider, ActionParametersParser {
-    public ActionExportParameters parameters;
+public abstract class ActionExport implements Action, ActionParametersParser {
+    public final ActionExportParameters parameters;
+    private final Class clazz;
 
-    protected ActionExport(ActionExportParameters parameters) {
+    protected ActionExport(ActionExportParameters parameters, Class clazz) {
         this.parameters = parameters;
+        this.clazz = clazz;
     }
 
     @Override
     public void go(ActionHelper helper) throws Exception {
         if (parameters.listFields) {
-            helper.getDefaultPrintStream().print(parameters.printFieldsHelp());
+            helper.getDefaultPrintStream().print(ActionExportParameters.listOfFields(clazz));
             return;
         }
         go0();
     }
 
     @Override
-    public void printHelp(StringBuilder builder) {
-        builder.append(params().printHelp());
-    }
-
-    @Override
     public void parseParameters(String[] args) {
-        params().parseParameters(args);
+        ActionExportParameters.parse(clazz, args, parameters);
     }
 
     protected abstract void go0() throws Exception;

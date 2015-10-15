@@ -35,6 +35,16 @@ public final class ActionExtractCloneReads implements Action {
     private final ExtractCloneParameters parameters = new ExtractCloneParameters();
 
     @Override
+    public String command() {
+        return "exportReads";
+    }
+
+    @Override
+    public ActionParameters params() {
+        return parameters;
+    }
+
+    @Override
     public void go(ActionHelper helper) throws Exception {
         DB db = DBMaker.newFileDB(new File(parameters.getMapDBFile()))
                 .transactionDisable()
@@ -164,16 +174,6 @@ public final class ActionExtractCloneReads implements Action {
         if (paired)
             return new PairedFastqWriter(fileName + "_R1.fastq.gz", fileName + "_R2.fastq.gz");
         else return new SingleFastqWriter(fileName + ".fastq.gz");
-    }
-
-    @Override
-    public String command() {
-        return "extractReads";
-    }
-
-    @Override
-    public ActionParameters params() {
-        return parameters;
     }
 
     public static final class ExtractCloneParameters extends ActionParameters {

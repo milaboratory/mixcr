@@ -38,18 +38,22 @@ import java.util.List;
 
 public class ActionExportAlignments extends ActionExport {
     public ActionExportAlignments() {
-        super(new ActionExportParameters(VDJCAlignments.class));
+        super(new ActionExportParameters(), VDJCAlignments.class);
     }
 
     @Override
     public void go0() throws Exception {
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.inputFile, LociLibraryManager.getDefault());
-             InfoWriter<VDJCAlignments> writer = new InfoWriter<>(parameters.outputFile)) {
-            SmartProgressReporter.startProgressReport("Exporting alignments", reader);
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getInputFile(), LociLibraryManager.getDefault());
+             InfoWriter<VDJCAlignments> writer = new InfoWriter<>(parameters.getOutputFile())) {
+            if (!parameters.printToStdout())
+                SmartProgressReporter.startProgressReport("Exporting alignments", reader);
             writer.attachInfoProviders((List) parameters.exporters);
             VDJCAlignments alignments;
-            while ((alignments = reader.take()) != null)
+            long count = 0;
+            while ((alignments = reader.take()) != null && count < parameters.limit) {
                 writer.put(alignments);
+                ++count;
+            }
         }
     }
 
