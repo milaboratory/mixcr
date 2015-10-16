@@ -599,15 +599,18 @@ public final class FieldExtractors {
 
             long count = 0;
             StringBuilder sb = new StringBuilder();
-            while (currentMapping.getCloneIndex() == object.getId() && mappingIterator.hasNext()) {
+            while (currentMapping.getCloneIndex() == object.getId()) {
+                ++count;
                 assert currentMapping.getCloneIndex() == currentMapping.getCloneIndex();
                 sb.append(currentMapping.getReadId()).append(",");
+                if (!mappingIterator.hasNext())
+                    break;
                 currentMapping = mappingIterator.next();
-                ++count;
             }
             //count == object.getCount() only if addReadsCountOnClustering: true
             assert count >= object.getCount() : "Actual count: " + object.getCount() + ", in mapping: " + count;
-            sb.deleteCharAt(sb.length() - 1);
+            if (sb.length() != 0)
+                sb.deleteCharAt(sb.length() - 1);
             return sb.toString();
         }
 
