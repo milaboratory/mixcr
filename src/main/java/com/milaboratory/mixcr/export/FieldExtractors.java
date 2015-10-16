@@ -317,8 +317,13 @@ public final class FieldExtractors {
             });
 
             desctiptorsList.add(alignmentsToClone("-cloneId", "To which clone alignment was attached.", false));
-            desctiptorsList.add(alignmentsToClone("-cloneMapping", "To which clone alignment was attached.", true));
-
+            desctiptorsList.add(alignmentsToClone("-mapping", "To which clone alignment was attached with additional info on mapping type.", true));
+            desctiptorsList.add(new AbstractField<Clone>(Clone.class, "-mapping", "Read IDs aggregated by clone.") {
+                @Override
+                public FieldExtractor<Clone> create(OutputMode outputMode, String[] args) {
+                    return new CloneToReadsExtractor(outputMode, args[0]);
+                }
+            });
             descriptors = desctiptorsList.toArray(new Field[desctiptorsList.size()]);
         }
 
@@ -515,7 +520,7 @@ public final class FieldExtractors {
         private final NavigableSet<ReadToCloneMapping> byAls;
         private final boolean printMapping;
         private final Iterator<ReadToCloneMapping> mappingIterator;
-        private ReadToCloneMapping currentMapping;
+        private ReadToCloneMapping currentMapping = null;
 
         public AlignmentToCloneExtractor(OutputMode outputMode, String file, boolean printMapping) {
             this.outputMode = outputMode;
@@ -525,7 +530,6 @@ public final class FieldExtractors {
                     .make();
             this.byAls = db.getTreeSet(ActionAssemble.MAPDB_SORTED_BY_ALIGNMENT);
             this.mappingIterator = byAls.iterator();
-            currentMapping = mappingIterator.next();
         }
 
         @Override
@@ -538,10 +542,16 @@ public final class FieldExtractors {
 
         @Override
         public String extractValue(VDJCAlignments object) {
+            if (currentMapping == null && mappingIterator.hasNext())
+                currentMapping = mappingIterator.next();
+            if (currentMapping == null)
+                return NULL;
+
             while (currentMapping.getAlignmentsId() < object.getAlignmentsIndex() && mappingIterator.hasNext())
                 currentMapping = mappingIterator.next();
             if (currentMapping.getAlignmentsId() != object.getAlignmentsIndex())
                 return printMapping ? Dropped.toString().toLowerCase() : NULL;
+
             int cloneIndex = currentMapping.getCloneIndex();
             ReadToCloneMapping.MappingType mt = currentMapping.getMappingType();
             if (mt == Dropped)
@@ -555,6 +565,57 @@ public final class FieldExtractors {
         }
     }
 
+    private static final class CloneToReadsExtractor
+            implements FieldExtractor<Clone>, Closeable {
+        private final OutputMode outputMode;
+        private final DB db;
+        private final NavigableSet<ReadToCloneMapping> byClones;
+        private final Iterator<ReadToCloneMapping> mappingIterator;
+        private ReadToCloneMapping currentMapping;
+
+        public CloneToReadsExtractor(OutputMode outputMode, String file) {
+            this.outputMode = outputMode;
+            this.db = DBMaker.newFileDB(new File(file))
+                    .transactionDisable()
+                    .make();
+            this.byClones = db.getTreeSet(ActionAssemble.MAPDB_SORTED_BY_CLONE);
+            this.mappingIterator = byClones.iterator();
+        }
+
+        @Override
+        public String getHeader() {
+            return choose(outputMode, "Reads", "reads");
+        }
+
+        @Override
+        public String extractValue(Clone object) {
+            if (currentMapping == null && mappingIterator.hasNext())
+                currentMapping = mappingIterator.next();
+            if (currentMapping == null)
+                return NULL;
+
+            while (currentMapping.getCloneIndex() < object.getId() && mappingIterator.hasNext())
+                currentMapping = mappingIterator.next();
+
+            long count = 0;
+            StringBuilder sb = new StringBuilder();
+            while (currentMapping.getCloneIndex() == object.getId() && mappingIterator.hasNext()) {
+                assert currentMapping.getCloneIndex() == currentMapping.getCloneIndex();
+                sb.append(currentMapping.getReadId()).append(",");
+                currentMapping = mappingIterator.next();
+                ++count;
+            }
+            //count == object.getCount() only if addReadsCountOnClustering: true
+            assert count >= object.getCount() : "Actual count: " + object.getCount() + ", in mapping: " + count;
+            sb.deleteCharAt(sb.length() - 1);
+            return sb.toString();
+        }
+
+        @Override
+        public void close() throws IOException {
+            db.close();
+        }
+    }
 
     public static String choose(OutputMode outputMode, String hString, String sString) {
         switch (outputMode) {

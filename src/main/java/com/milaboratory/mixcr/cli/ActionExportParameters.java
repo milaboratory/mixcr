@@ -76,16 +76,15 @@ public class ActionExportParameters extends ActionParametersWithOutput {
     }
 
     public static void parse(Class clazz, final String[] args, ActionExportParameters parameters) {
-        if (args.length < 2)
-            throw new RuntimeException();
-        parameters.files = new ArrayList<String>() {{
-            add(args[args.length - 2]);
-            add(args[args.length - 1]);
-        }};
         JCommander jc = new JCommander(parameters);
         jc.setAcceptUnknownOptions(true);
-        jc.parse(Arrays.copyOf(args, args.length - 2));
+        jc.parse(cutArgs(args));
+
         if (!parameters.help && !parameters.listFields) {
+            parameters.files = new ArrayList<String>() {{
+                add(args[args.length - 2]);
+                add(args[args.length - 1]);
+            }};
             OutputMode outputMode = parameters.noSpaces ? OutputMode.ScriptingFriendly : OutputMode.HumanFriendly;
             parameters.exporters = new ArrayList<>();
             //if preset was explicitly specified
@@ -99,7 +98,18 @@ public class ActionExportParameters extends ActionParametersWithOutput {
 
             if (parameters.exporters.isEmpty())
                 parameters.exporters.addAll(getPresetParameters(outputMode, clazz, parameters.preset));
+
+            parameters.validate();
         }
+    }
+
+    private static String[] cutArgs(String[] args) {
+        int i = 0;
+        if (args.length > 0 && !args[args.length - 1].startsWith("-"))
+            ++i;
+        if (args.length > 1 && !args[args.length - 2].startsWith("-"))
+            ++i;
+        return Arrays.copyOf(args, args.length - i);
     }
 
     public static ArrayList<FieldExtractor> parseFields(OutputMode outputMode, Class clazz, List<String> options) {

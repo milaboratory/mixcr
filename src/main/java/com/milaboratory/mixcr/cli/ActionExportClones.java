@@ -64,7 +64,6 @@ public class ActionExportClones extends ActionExport {
             if (!parameters.printToStdout())
                 SmartProgressReporter.startProgressReport(exportClones);
             exportClones.run();
-            writer.close();
         }
     }
 
