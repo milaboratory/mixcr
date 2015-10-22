@@ -65,6 +65,10 @@ The following table contains description of command line options for ``align``:
 |                                  |                            | ``-descrR1`` and ``-descrR2`` options in                   |
 |                                  |                            | :ref:`exportAlignments <ref-export>` action).              |
 +----------------------------------+----------------------------+------------------------------------------------------------+
+| ``-g``, ``--save-reads``         |                            | Copy read(s) from ``.fastq`` or ``.fasta`` to ``.vdjca``   |
+|                                  |                            | file (this is required for exporting reads aggregated by   |
+|                                  |                            | clones; see :ref:`this section <ref-exporting-reads>`).    |
++----------------------------------+----------------------------+------------------------------------------------------------+
 | ``-Oparameter=value``            |                            | Overrides default value of aligner ``parameter``           |
 |                                  |                            | (see next subsection).                                     |
 +----------------------------------+----------------------------+------------------------------------------------------------+
@@ -194,8 +198,8 @@ parameters. It contains the following parameters:
 |                  |                                        |    other elements equal to ``mismatch``                                     |
 |                  |                                        |  - ``raw`` --- a complete set of 16 matrix elements should be specified;    | 
 |                  |                                        |    for  example:                                                            |
-|                  |                                        |   ``raw(5,-9,-9,-9,-9,5,-9,-9,-9,-9,5,-9,-9,-9,-9,5)``                      |
-|                  |                                        |   (*equivalent to the  default value*)                                      |
+|                  |                                        |    ``raw(5,-9,-9,-9,-9,5,-9,-9,-9,-9,5,-9,-9,-9,-9,5)``                     |
+|                  |                                        |    (*equivalent to the  default value*)                                     |
 +------------------+----------------------------------------+-----------------------------------------------------------------------------+
 | ``gapPenalty``   | ``-12``                                | Penalty for gap.                                                            |
 +------------------+----------------------------------------+-----------------------------------------------------------------------------+

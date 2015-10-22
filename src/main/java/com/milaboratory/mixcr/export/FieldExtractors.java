@@ -317,8 +317,8 @@ public final class FieldExtractors {
             });
 
             desctiptorsList.add(alignmentsToClone("-cloneId", "To which clone alignment was attached.", false));
-            desctiptorsList.add(alignmentsToClone("-mapping", "To which clone alignment was attached with additional info on mapping type.", true));
-            desctiptorsList.add(new AbstractField<Clone>(Clone.class, "-mapping", "Read IDs aggregated by clone.") {
+            desctiptorsList.add(alignmentsToClone("-cloneIdWithMappingType", "To which clone alignment was attached with additional info on mapping type.", true));
+            desctiptorsList.add(new AbstractField<Clone>(Clone.class, "-readIds", "Read IDs aggregated by clone.") {
                 @Override
                 public FieldExtractor<Clone> create(OutputMode outputMode, String[] args) {
                     return new CloneToReadsExtractor(outputMode, args[0]);
@@ -588,18 +588,18 @@ public final class FieldExtractors {
         }
 
         @Override
-        public String extractValue(Clone object) {
+        public String extractValue(Clone clone) {
             if (currentMapping == null && mappingIterator.hasNext())
                 currentMapping = mappingIterator.next();
             if (currentMapping == null)
                 return NULL;
 
-            while (currentMapping.getCloneIndex() < object.getId() && mappingIterator.hasNext())
+            while (currentMapping.getCloneIndex() < clone.getId() && mappingIterator.hasNext())
                 currentMapping = mappingIterator.next();
 
             long count = 0;
             StringBuilder sb = new StringBuilder();
-            while (currentMapping.getCloneIndex() == object.getId()) {
+            while (currentMapping.getCloneIndex() == clone.getId()) {
                 ++count;
                 assert currentMapping.getCloneIndex() == currentMapping.getCloneIndex();
                 sb.append(currentMapping.getReadId()).append(",");
@@ -607,8 +607,8 @@ public final class FieldExtractors {
                     break;
                 currentMapping = mappingIterator.next();
             }
-            //count == object.getCount() only if addReadsCountOnClustering: true
-            assert count >= object.getCount() : "Actual count: " + object.getCount() + ", in mapping: " + count;
+            //count == object.getCount() only if addReadsCountOnClustering=true
+            assert count >= clone.getCount() : "Actual count: " + clone.getCount() + ", in mapping: " + count;
             if (sb.length() != 0)
                 sb.deleteCharAt(sb.length() - 1);
             return sb.toString();
