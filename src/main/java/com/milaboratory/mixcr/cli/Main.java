@@ -29,7 +29,7 @@
 package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.mitools.cli.JCommanderBasedMain;
-import com.milaboratory.util.VersionInfo;
+import com.milaboratory.mixcr.util.VersionInfoProvider;
 
 public class Main {
     public static void main(String... args) throws Exception {
@@ -45,23 +45,16 @@ public class Main {
                 new ActionPrettyAlignments(),
                 new ActionAlignmentsStat(),
                 new ActionMergeAlignments(),
-                new ActionInfo());
+                new ActionInfo(),
+                new VersionInfoAction());
 
         // Adding version info callback
         main.setVersionInfoCallback(new Runnable() {
             @Override
             public void run() {
-                VersionInfo milib = VersionInfo.getVersionInfoForArtifact("milib");
-                VersionInfo mitools = VersionInfo.getVersionInfoForArtifact("mitools");
-                VersionInfo mixcr = VersionInfo.getVersionInfoForArtifact("mixcr");
-                System.err.println("MiXCR v" + mixcr.getVersion() +
-                        " (built " + mixcr.getTimestamp() + "; rev=" + mixcr.getRevision() +
-                        "; branch=" + mixcr.getBranch() + ")");
-                System.err.println("Libraries: ");
-                System.err.println("MiLib v" + milib.getVersion() + " (rev=" + milib.getRevision() +
-                        "; branch=" + milib.getBranch() + ")");
-                System.err.println("MiTools v" + mitools.getVersion() + " (rev=" + mitools.getRevision() +
-                        "; branch=" + mitools.getBranch() + ")");
+                System.err.println(
+                        VersionInfoProvider.getVersionString(
+                                VersionInfoProvider.OutputType.ToConsole));
             }
         });
 
