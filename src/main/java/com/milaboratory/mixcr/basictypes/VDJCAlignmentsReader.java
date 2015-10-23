@@ -48,6 +48,7 @@ public class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>
     List<Allele> usedAlleles;
     final PrimitivI input;
     final AlleleResolver alleleResolver;
+    String versionInfo;
     long numberOfReads = -1;
     boolean closed = false;
     long counter = 0;
@@ -91,11 +92,15 @@ public class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>
             case MAGIC_V3:
                 CompatibilityIO.registerV3Serializers(input.getSerializersManager());
                 break;
+            case MAGIC_V4:
             case MAGIC:
                 break;
             default:
                 throw new RuntimeException("Unsupported file format; .vdjca file of version " + new String(magic) + " while you are running MiXCR " + MAGIC);
         }
+
+        if (magicString.compareTo(MAGIC_V5) >= 0)
+            versionInfo = input.readUTF();
 
         parameters = input.readObject(VDJCAlignerParameters.class);
 
@@ -110,6 +115,15 @@ public class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>
     public synchronized List<Allele> getUsedAlleles() {
         init();
         return usedAlleles;
+    }
+
+    /**
+     * Returns information about version of MiXCR which produced this file.
+     *
+     * @return information about version of MiXCR which produced this file
+     */
+    public String getVersionInfo() {
+        return versionInfo;
     }
 
     public long getNumberOfReads() {

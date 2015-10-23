@@ -29,6 +29,7 @@
 package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.mitools.cli.JCommanderBasedMain;
+import com.milaboratory.mixcr.util.VersionInfoProvider;
 
 public class Main {
     public static void main(String... args) throws Exception {
@@ -45,7 +46,18 @@ public class Main {
                 new ActionAlignmentsStat(),
                 new ActionMergeAlignments(),
                 new ActionInfo(),
-                new ActionExportCloneReads());
+                new ActionExportCloneReads(),
+                new VersionInfoAction());
+
+        // Adding version info callback
+        main.setVersionInfoCallback(new Runnable() {
+            @Override
+            public void run() {
+                System.err.println(
+                        VersionInfoProvider.getVersionString(
+                                VersionInfoProvider.OutputType.ToConsole));
+            }
+        });
 
         // Executing main method
         main.main(args);

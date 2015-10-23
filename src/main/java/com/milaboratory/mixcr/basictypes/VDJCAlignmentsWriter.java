@@ -29,6 +29,7 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.mixcr.reference.Allele;
+import com.milaboratory.mixcr.util.VersionInfoProvider;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivO;
@@ -41,7 +42,9 @@ import java.util.List;
 
 public final class VDJCAlignmentsWriter implements AutoCloseable {
     static final String MAGIC_V3 = "MiXCR.VDJC.V03";
-    static final String MAGIC = "MiXCR.VDJC.V04";
+    static final String MAGIC_V4 = "MiXCR.VDJC.V04";
+    static final String MAGIC_V5 = "MiXCR.VDJC.V05";
+    static final String MAGIC = MAGIC_V5;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
     final PrimitivO output;
@@ -78,6 +81,11 @@ public final class VDJCAlignmentsWriter implements AutoCloseable {
         // Writing magic bytes
         assert MAGIC_BYTES.length == MAGIC_LENGTH;
         output.write(MAGIC_BYTES);
+
+        // Writing version information
+        output.writeUTF(
+                VersionInfoProvider.getVersionString(
+                        VersionInfoProvider.OutputType.ToFile));
 
         // Writing parameters
         output.writeObject(parameters);
