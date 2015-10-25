@@ -33,7 +33,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 
 public final class LociLibraryManager implements AlleleResolver {
-    private static LociLibraryManager defualt;
+    private static volatile LociLibraryManager defualt;
 
     private final HashMap<AlleleId, Allele> allAlleles = new HashMap<>();
     private final HashMap<String, LociLibrary> libraries = new HashMap<>();
@@ -43,7 +43,6 @@ public final class LociLibraryManager implements AlleleResolver {
             allAlleles.put(allele.getId(), allele);
         libraries.put(name, library);
     }
-
 
     public Allele getAllele(AlleleId id) {
         return allAlleles.get(id);
@@ -59,7 +58,8 @@ public final class LociLibraryManager implements AlleleResolver {
                 if (defualt == null) {
                     try {
                         defualt = new LociLibraryManager();
-                        InputStream sample = LociLibraryManager.class.getClassLoader().getResourceAsStream("reference/mi.ll");
+                        InputStream sample = LociLibraryManager.class.getClassLoader()
+                                .getResourceAsStream("reference/mi.ll");
                         defualt.register("mi", LociLibraryReader.read(sample));
                     } catch (IOException e) {
                         throw new RuntimeException();
