@@ -26,39 +26,23 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.reference;
+package com.milaboratory.mixcr.reference.builder;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import com.milaboratory.mixcr.reference.ReferencePoint;
+import gnu.trove.impl.Constants;
+import gnu.trove.map.hash.TObjectIntHashMap;
 
-public class ReferenceUtil {
-    /**
-     * For advanced use.
-     */
-    public static final int TOTAL_NUMBER_OF_REFERENCE_POINTS = BasicReferencePoint.TOTAL_NUMBER_OF_REFERENCE_POINTS;
+public class ReferencePointsPositions {
+    final TObjectIntHashMap<ReferencePoint> mapping =
+            new TObjectIntHashMap<>(Constants.DEFAULT_CAPACITY,
+                    Constants.DEFAULT_LOAD_FACTOR, -1);
 
-    private static final Map<GeneType, ReferencePoint[]> allBasicPointsByTypes;
-
-    private ReferenceUtil() {
+    public ReferencePointsPositions() {
     }
 
-    static {
-        allBasicPointsByTypes = new HashMap<>();
-        ArrayList<ReferencePoint> pointsBuffer = new ArrayList<>();
-
-    }
-
-    /**
-     * Returns underlying reference point id.
-     *
-     * For advanced use.
-     *
-     * @return underlying reference point id
-     */
-    public static int getReferencePointIndex(ReferencePoint referencePoint) {
-        if (!referencePoint.isBasicPoint())
-            throw new IllegalArgumentException("Index is defined only for pure basic reference points.");
-        return referencePoint.getIndex();
+    public void addMapping(ReferencePoint point, int position){
+        if(!point.isBasicPoint())
+            throw new IllegalArgumentException("Supports only basic anchor points.");
+        mapping.put(point, position);
     }
 }

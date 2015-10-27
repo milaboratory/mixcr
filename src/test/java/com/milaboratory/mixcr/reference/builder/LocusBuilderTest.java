@@ -26,39 +26,22 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.reference;
+package com.milaboratory.mixcr.reference.builder;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import com.milaboratory.core.io.sequence.fasta.FastaReader;
+import org.junit.Test;
 
-public class ReferenceUtil {
-    /**
-     * For advanced use.
-     */
-    public static final int TOTAL_NUMBER_OF_REFERENCE_POINTS = BasicReferencePoint.TOTAL_NUMBER_OF_REFERENCE_POINTS;
-
-    private static final Map<GeneType, ReferencePoint[]> allBasicPointsByTypes;
-
-    private ReferenceUtil() {
-    }
-
-    static {
-        allBasicPointsByTypes = new HashMap<>();
-        ArrayList<ReferencePoint> pointsBuffer = new ArrayList<>();
-
-    }
-
-    /**
-     * Returns underlying reference point id.
-     *
-     * For advanced use.
-     *
-     * @return underlying reference point id
-     */
-    public static int getReferencePointIndex(ReferencePoint referencePoint) {
-        if (!referencePoint.isBasicPoint())
-            throw new IllegalArgumentException("Index is defined only for pure basic reference points.");
-        return referencePoint.getIndex();
+/**
+ * Created by dbolotin on 25/10/15.
+ */
+public class LocusBuilderTest {
+    @Test
+    public void test1() throws Exception {
+        FastaReader reader = new FastaReader("/Volumes/Data/Projects/MiLaboratory/tmp/result/human_IGHV.fasta", null);
+        FastaReader.RawFastaRecord rec;
+        while ((rec = reader.takeRawRecord()) != null) {
+            System.out.println(rec.sequence);
+            StringWithMapping stringWithMapping = StringWithMapping.removeSymbol(rec.sequence, '.');
+        }
     }
 }

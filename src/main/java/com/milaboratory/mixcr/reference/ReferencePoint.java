@@ -303,6 +303,10 @@ public final class ReferencePoint implements Comparable<ReferencePoint>, java.io
         return basicPoint.getActivationPoint();
     }
 
+    public boolean isBasicPoint() {
+        return basicPoint.isPure() && offset == 0;
+    }
+
     @Override
     public int compareTo(ReferencePoint o) {
         int c = basicPoint.compareTo(o.basicPoint);

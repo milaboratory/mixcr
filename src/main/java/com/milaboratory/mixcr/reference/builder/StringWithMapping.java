@@ -26,39 +26,35 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.reference;
+package com.milaboratory.mixcr.reference.builder;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+/**
+ * Created by dbolotin on 25/10/15.
+ */
+public final class StringWithMapping {
+    public final int[] originalToModifiedMapping;
+    public final String modifiedString;
 
-public class ReferenceUtil {
-    /**
-     * For advanced use.
-     */
-    public static final int TOTAL_NUMBER_OF_REFERENCE_POINTS = BasicReferencePoint.TOTAL_NUMBER_OF_REFERENCE_POINTS;
-
-    private static final Map<GeneType, ReferencePoint[]> allBasicPointsByTypes;
-
-    private ReferenceUtil() {
+    private StringWithMapping(int[] originalToModifiedMapping, String modifiedString) {
+        this.originalToModifiedMapping = originalToModifiedMapping;
+        this.modifiedString = modifiedString;
     }
 
-    static {
-        allBasicPointsByTypes = new HashMap<>();
-        ArrayList<ReferencePoint> pointsBuffer = new ArrayList<>();
-
-    }
-
-    /**
-     * Returns underlying reference point id.
-     *
-     * For advanced use.
-     *
-     * @return underlying reference point id
-     */
-    public static int getReferencePointIndex(ReferencePoint referencePoint) {
-        if (!referencePoint.isBasicPoint())
-            throw new IllegalArgumentException("Index is defined only for pure basic reference points.");
-        return referencePoint.getIndex();
+    public static StringWithMapping removeSymbol(String originalString, char charToRemove) {
+        int modifiedStringLength = 0;
+        for (int i = 0; i < originalString.length(); i++)
+            if (originalString.charAt(i) != charToRemove)
+                ++modifiedStringLength;
+        char[] modifiedString = new char[modifiedStringLength];
+        int[] mapping = new int[originalString.length()];
+        int j = 0;
+        for (int i = 0; i < originalString.length(); i++)
+            if (originalString.charAt(i) != charToRemove) {
+                mapping[i] = j;
+                modifiedString[j++] = originalString.charAt(i);
+            } else {
+                mapping[i] = -1;
+            }
+        return new StringWithMapping(mapping, new String(modifiedString));
     }
 }
