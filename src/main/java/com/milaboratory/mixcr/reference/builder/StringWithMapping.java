@@ -32,12 +32,22 @@ package com.milaboratory.mixcr.reference.builder;
  * Created by dbolotin on 25/10/15.
  */
 public final class StringWithMapping {
-    public final int[] originalToModifiedMapping;
-    public final String modifiedString;
+    private final int[] originalToModifiedMapping;
+    private final String modifiedString;
 
     private StringWithMapping(int[] originalToModifiedMapping, String modifiedString) {
         this.originalToModifiedMapping = originalToModifiedMapping;
         this.modifiedString = modifiedString;
+    }
+
+    public int convertPosition(int originalPosition) {
+        if (originalPosition < 0 || originalPosition >= originalToModifiedMapping.length)
+            return -1;
+        return originalToModifiedMapping[originalPosition];
+    }
+
+    public String getModifiedString() {
+        return modifiedString;
     }
 
     public static StringWithMapping removeSymbol(String originalString, char charToRemove) {

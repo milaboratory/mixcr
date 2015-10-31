@@ -29,6 +29,8 @@
 package com.milaboratory.mixcr.reference.builder;
 
 import com.milaboratory.core.io.sequence.fasta.FastaReader;
+import com.milaboratory.core.sequence.AminoAcidSequence;
+import com.milaboratory.core.sequence.NucleotideSequence;
 import org.junit.Test;
 
 /**
@@ -40,8 +42,19 @@ public class LocusBuilderTest {
         FastaReader reader = new FastaReader("/Volumes/Data/Projects/MiLaboratory/tmp/result/human_IGHV.fasta", null);
         FastaReader.RawFastaRecord rec;
         while ((rec = reader.takeRawRecord()) != null) {
-            System.out.println(rec.sequence);
-            StringWithMapping stringWithMapping = StringWithMapping.removeSymbol(rec.sequence, '.');
+            //System.out.println(rec.sequence);
+            StringWithMapping swm = StringWithMapping.removeSymbol(rec.sequence, '.');
+            NucleotideSequence seq = new NucleotideSequence(swm.getModifiedString());
+            if (seq.containsWildcards()) {
+                System.out.println("Skipped: " + rec.description);
+                continue;
+            }
+            StringBuilder coordString = new StringBuilder();
+            int next = 0;
+            //for (int i = 0; i < seq.size(); i++) {
+            //    int projection = swm.
+            //}
+            System.out.println(AminoAcidSequence.translate(seq, 0));
         }
     }
 }
