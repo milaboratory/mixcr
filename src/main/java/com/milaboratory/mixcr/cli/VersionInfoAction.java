@@ -51,6 +51,7 @@ public class VersionInfoAction implements Action {
         if (i.endsWith(".vdjca.gz") || i.endsWith(".vdjca")) {
             try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(inputFile, LociLibraryManager.getDefault())) {
                 reader.init();
+                System.out.println("MagicBytes = " + reader.getMagic());
                 System.out.println(reader.getVersionInfo());
             }
         } else if (i.endsWith(".clns.gz") || i.endsWith(".clns")) {

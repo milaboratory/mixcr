@@ -37,11 +37,11 @@ import static com.milaboratory.mixcr.reference.BasicReferencePoint.CEnd;
 /**
  * Created by dbolotin on 30/09/15.
  */
-public final class CompatibilityIO {
-    private CompatibilityIO() {
+public final class ReferenceCompatibilityIO {
+    private ReferenceCompatibilityIO() {
     }
 
-    public static void registerV3Serializers(SerializersManager manager) {
+    public static void registerV3BasicReferencePointSerializers(SerializersManager manager) {
         manager.registerCustomSerializer(BasicReferencePoint.class,
                 new DefaultSerializersProviderImpl.CustomEnumSerializer<>(
                         BasicReferencePoint.class,
