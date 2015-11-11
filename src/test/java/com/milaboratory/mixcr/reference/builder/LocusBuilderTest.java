@@ -31,7 +31,11 @@ package com.milaboratory.mixcr.reference.builder;
 import com.milaboratory.core.io.sequence.fasta.FastaReader;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.util.StringUtil;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by dbolotin on 25/10/15.
@@ -41,20 +45,51 @@ public class LocusBuilderTest {
     public void test1() throws Exception {
         FastaReader reader = new FastaReader("/Volumes/Data/Projects/MiLaboratory/tmp/result/human_IGHV.fasta", null);
         FastaReader.RawFastaRecord rec;
+        int[] refpoints = {0, 78, 114, 165, 195, 309, -1};
+        List<AminoAcidSequence[]> seqs = new ArrayList<>();
+        int[] lens = new int[refpoints.length];
         while ((rec = reader.takeRawRecord()) != null) {
             //System.out.println(rec.sequence);
             StringWithMapping swm = StringWithMapping.removeSymbol(rec.sequence, '.');
             NucleotideSequence seq = new NucleotideSequence(swm.getModifiedString());
             if (seq.containsWildcards()) {
-                System.out.println("Skipped: " + rec.description);
+                //System.out.println("Skipped: " + rec.description);
                 continue;
             }
             StringBuilder coordString = new StringBuilder();
             int next = 0;
-            //for (int i = 0; i < seq.size(); i++) {
-            //    int projection = swm.
-            //}
-            System.out.println(AminoAcidSequence.translate(seq, 0));
+            //System.out.println(AminoAcidSequence.translate(seq, 0));
+
+            AminoAcidSequence[] parts = new AminoAcidSequence[refpoints.length];
+            for (int i = 0; i < refpoints.length - 1; ++i) {
+                parts[i] = tr(swm, refpoints[i], refpoints[i + 1]);
+                if (parts[i] != null)
+                    lens[i] = Math.max(lens[i], parts[i].size());
+            }
+            seqs.add(parts);
         }
+
+        for (AminoAcidSequence[] seq : seqs) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < refpoints.length; i++) {
+                int len = 0;
+                if (seq[i] != null) {
+                    sb.append(seq[i]);
+                    len = seq[i].size();
+                }
+                sb.append(StringUtil.spaces(lens[i] - len + 2));
+            }
+            System.out.println(sb);
+        }
+    }
+
+    private static AminoAcidSequence tr(StringWithMapping sm, int from, int to) {
+        String str = sm.getModifiedString();
+        int sFrom = sm.convertPosition(from);
+        int sTo = to == -1 ? str.length() : sm.convertPosition(to);
+        if (sTo == -1 || sFrom == -1)
+            return null;
+        return AminoAcidSequence.translateFromLeft(new NucleotideSequence(
+                str.substring(sFrom, sTo)));
     }
 }
