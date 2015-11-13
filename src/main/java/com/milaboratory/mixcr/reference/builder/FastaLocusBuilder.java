@@ -29,8 +29,10 @@
 package com.milaboratory.mixcr.reference.builder;
 
 import cc.redberry.pipe.CUtils;
+import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Aligner;
 import com.milaboratory.core.alignment.Alignment;
+import com.milaboratory.core.alignment.MultiAlignmentHelper;
 import com.milaboratory.core.io.sequence.fasta.FastaReader;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.mutations.MutationsBuilder;
@@ -46,6 +48,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.milaboratory.mixcr.reference.builder.BuilderUtils.*;
+import static com.milaboratory.mixcr.reference.builder.FastaLocusBuilderParameters.AnchorPointPosition.*;
 
 /**
  * Builds MiXCR format LociLibrary file from
@@ -202,7 +205,14 @@ public class FastaLocusBuilder {
             // Calculating reference points
             int[] referencePoints = new int[referencePointPositions.length];
             for (int i = 0; i < referencePointPositions.length; i++)
-                referencePoints[i] = seqWithPositionMapping.convertPosition(referencePointPositions[i]);
+                // Convert references to the beginning or to the end of the sequence
+                if (referencePointPositions[i] == BEGINNING_OF_SEQUENCE)
+                    referencePoints[i] = 0;
+                else if (referencePointPositions[i] == END_OF_SEQUENCE)
+                    referencePoints[i] = seq.size();
+                else
+                    // Normal position conversion
+                    referencePoints[i] = seqWithPositionMapping.convertPosition(referencePointPositions[i]);
 
             boolean isFirst = false, isReference;
 
@@ -219,7 +229,7 @@ public class FastaLocusBuilder {
             if (referenceAllelePattern == null)
                 isReference = isFirst;
             else
-                isReference = referenceAllelePattern.matcher(rec.description).matches();
+                isReference = referenceAllelePattern.matcher(rec.description).find();
 
             // Creating allele info
             AlleleInfo alleleInfo = new AlleleInfo(geneName, alleleName, seq, isFunctional,
@@ -245,32 +255,39 @@ public class FastaLocusBuilder {
         }
     }
 
-    public Mutations<NucleotideSequence> alignAlleles(AlleleInfo a1, AlleleInfo a2) {
-        NucleotideSequence seq1 = a1.baseSequence;
-        NucleotideSequence seq2 = a2.baseSequence;
-        int[] ref1 = a1.referencePoints;
-        int[] ref2 = a2.referencePoints;
-        MutationsBuilder<NucleotideSequence> mutations = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
-        int prev1 = 0, prev2 = 0, curr1, curr2;
-        for (int i = 0; i <= ref1.length; i++) {
-            curr1 = i == ref1.length ? seq1.size() : ref1[i];
-            curr2 = i == ref2.length ? seq2.size() : ref2[i];
-            if (curr1 == -1 || curr2 == -1)
-                continue;
-            if (curr1 - prev1 == 0 && curr2 - prev2 == 0)
-                continue;
-            Alignment<NucleotideSequence> alignment = Aligner.alignGlobal(parameters.getScoring(),
-                    seq1.getRange(prev1, curr1), seq2.getRange(prev2, curr2));
-            mutations.append(alignment.getAbsoluteMutations().move(prev1));
-            prev1 = curr1;
-            prev2 = curr2;
+    public void compile() {
+        // Compiling all genes one by one
+        List<String> toRemove = new ArrayList<>();
+        for (GeneInfo gene : genes.values())
+            if (!gene.compile())
+                toRemove.add(gene.geneName);
+
+        // Removing genes that failed to compile
+        for (String r : toRemove) {
+            warning(r + " removed.");
+            genes.remove(r);
         }
-        return mutations.createAndDestroy();
     }
 
-    public void compile() {
-        for (GeneInfo gene : genes.values()) {
-            gene.compile();
+    public void printReport() {
+        if (parameters.doAlignAlleles()) {
+            for (GeneInfo gene : genes.values()) {
+                AlleleInfo ref = gene.finalList.get(0);
+                NucleotideSequence seq = ref.baseSequence;
+                List<Alignment<NucleotideSequence>> alignments = new ArrayList<>();
+                for (int i = 1; i < gene.finalList.size(); i++) {
+                    AlleleInfo a = gene.finalList.get(i);
+                    Range refRange = new Range(ref.referencePoints[a.firstRefRefPoint], ref.referencePoints[a.lastRefRefPoint]);
+                    alignments.add(new Alignment<>(seq, a.mutations, refRange,
+                            new Range(0, refRange.length() + a.mutations.getLengthDelta()), parameters.getScoring()));
+                }
+                MultiAlignmentHelper multiAlignmentHelper =
+                        MultiAlignmentHelper.build(MultiAlignmentHelper.DOT_MATCH_SETTINGS,
+                                new Range(ref.getFirstReferencePointPosition(), ref.getLastReferencePointPosition()),
+                                ref.baseSequence, alignments.toArray(new Alignment[alignments.size()]));
+                finalReportStream.println(multiAlignmentHelper.toString());
+                finalReportStream.println();
+            }
         }
     }
 
@@ -285,27 +302,74 @@ public class FastaLocusBuilder {
             this.geneName = geneName;
         }
 
-        public void compile() {
+        public boolean compile() {
             if (parameters.doAlignAlleles()) {
                 // Find reference allele
                 AlleleInfo reference = this.reference;
-                if (!reference.isReference)
-                    errorOrException("No reference allele for gene " + geneName);
-                if (severalReferenceAlleles)
-                    errorOrException("Several reference alleles for " + geneName);
+                if (!reference.isReference) {
+                    errorOrException("No reference allele for gene " + geneName + ". Sipping.");
+                    return false;
+                }
+                if (severalReferenceAlleles) {
+                    errorOrException("Several reference alleles for " + geneName + ". Sipping.");
+                    return false;
+                }
+
+                // Compiling final alleles list
                 finalList.add(reference);
                 for (AlleleInfo allele : alleles.values())
                     if (allele != reference) {
                         allele.reference = reference;
-                        allele.mutations = alignAlleles(reference, allele);
+                        NucleotideSequence seq1 = reference.baseSequence;
+                        NucleotideSequence seq2 = allele.baseSequence;
+                        int[] ref1 = reference.referencePoints;
+                        int[] ref2 = allele.referencePoints;
+                        MutationsBuilder<NucleotideSequence> mutations = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
+                        int prev1 = -1, prev2 = -1, curr1, curr2;
+                        int firstRefRefPoint = -1, lastRefRefPoint = -1;
+
+                        for (int i = 0; i < ref1.length; i++) {
+                            curr1 = ref1[i];
+                            curr2 = ref2[i];
+
+                            if (curr1 == -1 || curr2 == -1)
+                                continue;
+
+                            if (firstRefRefPoint == -1)
+                                firstRefRefPoint = i;
+                            lastRefRefPoint = i;
+
+                            if (prev1 == -1) {
+                                prev1 = curr1;
+                                prev2 = curr2;
+                                continue;
+                            }
+
+                            if (curr1 - prev1 == 0 && curr2 - prev2 == 0)
+                                continue;
+
+                            Alignment<NucleotideSequence> alignment = Aligner.alignGlobal(parameters.getScoring(),
+                                    seq1.getRange(prev1, curr1), seq2.getRange(prev2, curr2));
+                            mutations.append(alignment.getAbsoluteMutations().move(prev1));
+                            prev1 = curr1;
+                            prev2 = curr2;
+                        }
+
+                        allele.firstRefRefPoint = firstRefRefPoint;
+                        allele.lastRefRefPoint = lastRefRefPoint;
+                        allele.mutations = mutations.createAndDestroy();
                         finalList.add(allele);
                     }
+
+                // Success
+                return true;
             } else {
                 // Just creates final list
                 finalList.add(reference);
                 for (AlleleInfo allele : alleles.values())
                     if (allele != reference)
                         finalList.add(allele);
+                return true;
             }
         }
     }
@@ -315,6 +379,7 @@ public class FastaLocusBuilder {
         final NucleotideSequence baseSequence;
         final boolean isFunctional, isReference;
         final int[] referencePoints;
+        int firstRefRefPoint, lastRefRefPoint;
         AlleleInfo reference;
         Mutations<NucleotideSequence> mutations;
 
@@ -326,6 +391,21 @@ public class FastaLocusBuilder {
             this.isFunctional = isFunctional;
             this.isReference = isReference;
             this.referencePoints = referencePoints;
+        }
+
+        public int getFirstReferencePointPosition() {
+            for (int referencePoint : referencePoints)
+                if (referencePoint != -1)
+                    return referencePoint;
+            return -1;
+        }
+
+        public int getLastReferencePointPosition() {
+            int result = -1;
+            for (int referencePoint : referencePoints)
+                if (referencePoint != -1)
+                    result = referencePoint;
+            return result;
         }
     }
 }

@@ -121,13 +121,15 @@ public class FastaLocusBuilderTest {
                         new AnchorPointPosition(ReferencePoint.FR2Begin, 114),
                         new AnchorPointPosition(ReferencePoint.CDR2Begin, 165),
                         new AnchorPointPosition(ReferencePoint.FR3Begin, 195),
-                        new AnchorPointPosition(ReferencePoint.CDR3Begin, 309));
+                        new AnchorPointPosition(ReferencePoint.CDR3Begin, 309),
+                        new AnchorPointPosition(ReferencePoint.VEnd, AnchorPointPosition.END_OF_SEQUENCE));
 
         //{0, 78, 114, 165, 195, 309, -1};
         FastaLocusBuilder builder = new FastaLocusBuilder(Locus.IGH, parameters).noExceptionOnError();
         builder.importAllelesFromFile("/Volumes/Data/Projects/MiLaboratory/tmp/result/human_IGHV.fasta");
         builder.compile();
-        int i =0;
+        builder.printReport();
+        int i = 0;
     }
 
     private static AminoAcidSequence tr(StringWithMapping sm, int from, int to) {

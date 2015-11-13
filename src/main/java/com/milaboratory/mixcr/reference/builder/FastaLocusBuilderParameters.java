@@ -144,6 +144,16 @@ public final class FastaLocusBuilderParameters {
      * Represents information about reference point position in target FASTA file.
      */
     public static final class AnchorPointPosition {
+        /**
+         * Special value for position field telling builder to assign this anchor point to the beginning of the input
+         * sequence
+         */
+        public static final int BEGINNING_OF_SEQUENCE = -2;
+        /**
+         * Special value for position field telling builder to assign this anchor point to the end of the input
+         * sequence
+         */
+        public static final int END_OF_SEQUENCE = -3;
         final ReferencePoint point;
         final int position;
 
