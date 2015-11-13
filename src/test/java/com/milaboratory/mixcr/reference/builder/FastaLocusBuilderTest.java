@@ -28,9 +28,14 @@
  */
 package com.milaboratory.mixcr.reference.builder;
 
+import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.io.sequence.fasta.FastaReader;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.reference.GeneType;
+import com.milaboratory.mixcr.reference.Locus;
+import com.milaboratory.mixcr.reference.ReferencePoint;
+import com.milaboratory.mixcr.reference.builder.FastaLocusBuilderParameters.AnchorPointPosition;
 import com.milaboratory.util.StringUtil;
 import org.junit.Test;
 
@@ -102,6 +107,27 @@ public class FastaLocusBuilderTest {
             }
             System.out.println(sb);
         }
+    }
+
+    @Test
+    public void test2() throws Exception {
+        FastaLocusBuilderParameters parameters =
+                new FastaLocusBuilderParameters(GeneType.Variable, "^[^\\|]+\\|([^\\|]+)",
+                        "^[^\\|]+\\|[^\\|]+\\|[^\\|]+\\|[\\(\\[]?F",
+                        "^[^\\|]+\\|[^\\|]+\\*01", '.',
+                        new AffineGapAlignmentScoring<>(NucleotideSequence.ALPHABET, 1, -4, -5, -2),
+                        new AnchorPointPosition(ReferencePoint.FR1Begin, 0),
+                        new AnchorPointPosition(ReferencePoint.CDR1Begin, 78),
+                        new AnchorPointPosition(ReferencePoint.FR2Begin, 114),
+                        new AnchorPointPosition(ReferencePoint.CDR2Begin, 165),
+                        new AnchorPointPosition(ReferencePoint.FR3Begin, 195),
+                        new AnchorPointPosition(ReferencePoint.CDR3Begin, 309));
+
+        //{0, 78, 114, 165, 195, 309, -1};
+        FastaLocusBuilder builder = new FastaLocusBuilder(Locus.IGH, parameters).noExceptionOnError();
+        builder.importAllelesFromFile("/Volumes/Data/Projects/MiLaboratory/tmp/result/human_IGHV.fasta");
+        builder.compile();
+        int i =0;
     }
 
     private static AminoAcidSequence tr(StringWithMapping sm, int from, int to) {

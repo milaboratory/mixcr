@@ -29,13 +29,18 @@
 package com.milaboratory.mixcr.reference.builder;
 
 import cc.redberry.pipe.CUtils;
+import com.milaboratory.core.alignment.Aligner;
+import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.io.sequence.fasta.FastaReader;
+import com.milaboratory.core.mutations.Mutations;
+import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.reference.Locus;
 
-import java.io.InputStream;
-import java.io.PrintStream;
+import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -125,10 +130,17 @@ public class FastaLocusBuilder {
             finalReportStream.println(line);
     }
 
+    public void importAllelesFromFile(String fileName) throws IOException {
+        try (InputStream stream = new BufferedInputStream(new FileInputStream(fileName))) {
+            importAllelesFromStream(stream);
+        }
+    }
+
     public void importAllelesFromStream(InputStream stream) {
         // Saving in local variables for compactness of extraction code
         Pattern alleleNameExtractionPattern = parameters.getAlleleNameExtractionPattern();
         Pattern functionalGenePattern = parameters.getFunctionalAllelePattern();
+        Pattern referenceAllelePattern = parameters.getReferenceAllelePattern();
         int[] referencePointPositions = parameters.getReferencePointPositions();
 
         for (FastaReader.RawFastaRecord rec :
@@ -192,14 +204,26 @@ public class FastaLocusBuilder {
             for (int i = 0; i < referencePointPositions.length; i++)
                 referencePoints[i] = seqWithPositionMapping.convertPosition(referencePointPositions[i]);
 
-            // Creating allele info
-            AlleleInfo alleleInfo = new AlleleInfo(geneName, seq, isFunctional, referencePoints);
+            boolean isFirst = false, isReference;
 
             // Adding allele to corresponding gene
             GeneInfo gene;
-            if ((gene = genes.get(geneName)) == null)
+            if ((gene = genes.get(geneName)) == null) {
                 // If gene doesn't exist - create it
                 genes.put(geneName, gene = new GeneInfo(geneName));
+                // This allele is first for this gene
+                isFirst = true;
+            }
+
+            // Calculating isReference flag
+            if (referenceAllelePattern == null)
+                isReference = isFirst;
+            else
+                isReference = referenceAllelePattern.matcher(rec.description).matches();
+
+            // Creating allele info
+            AlleleInfo alleleInfo = new AlleleInfo(geneName, alleleName, seq, isFunctional,
+                    isReference, referencePoints);
 
             // Checking if this allele is unique
             if (gene.alleles.containsKey(alleleName)) {
@@ -209,28 +233,98 @@ public class FastaLocusBuilder {
 
             // Adding allele to gene
             gene.alleles.put(alleleName, alleleInfo);
+
+            // Calculating severalReferenceAlleles flag
+            if (alleleInfo.isReference && gene.reference != null && gene.reference.isReference)
+                gene.severalReferenceAlleles = true;
+
+            // If allele is first for tis gene, also add it to reference slot
+            // Also reset this slot for first "reference" allele occurred
+            if (isFirst || (!gene.reference.isReference && alleleInfo.isReference))
+                gene.reference = alleleInfo;
         }
     }
 
-    public static final class GeneInfo {
+    public Mutations<NucleotideSequence> alignAlleles(AlleleInfo a1, AlleleInfo a2) {
+        NucleotideSequence seq1 = a1.baseSequence;
+        NucleotideSequence seq2 = a2.baseSequence;
+        int[] ref1 = a1.referencePoints;
+        int[] ref2 = a2.referencePoints;
+        MutationsBuilder<NucleotideSequence> mutations = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
+        int prev1 = 0, prev2 = 0, curr1, curr2;
+        for (int i = 0; i <= ref1.length; i++) {
+            curr1 = i == ref1.length ? seq1.size() : ref1[i];
+            curr2 = i == ref2.length ? seq2.size() : ref2[i];
+            if (curr1 == -1 || curr2 == -1)
+                continue;
+            if (curr1 - prev1 == 0 && curr2 - prev2 == 0)
+                continue;
+            Alignment<NucleotideSequence> alignment = Aligner.alignGlobal(parameters.getScoring(),
+                    seq1.getRange(prev1, curr1), seq2.getRange(prev2, curr2));
+            mutations.append(alignment.getAbsoluteMutations().move(prev1));
+            prev1 = curr1;
+            prev2 = curr2;
+        }
+        return mutations.createAndDestroy();
+    }
+
+    public void compile() {
+        for (GeneInfo gene : genes.values()) {
+            gene.compile();
+        }
+    }
+
+    private final class GeneInfo {
         final String geneName;
         final Map<String, AlleleInfo> alleles = new HashMap<>();
+        final List<AlleleInfo> finalList = new ArrayList<>();
+        AlleleInfo reference;
+        boolean severalReferenceAlleles = false;
 
         public GeneInfo(String geneName) {
             this.geneName = geneName;
         }
+
+        public void compile() {
+            if (parameters.doAlignAlleles()) {
+                // Find reference allele
+                AlleleInfo reference = this.reference;
+                if (!reference.isReference)
+                    errorOrException("No reference allele for gene " + geneName);
+                if (severalReferenceAlleles)
+                    errorOrException("Several reference alleles for " + geneName);
+                finalList.add(reference);
+                for (AlleleInfo allele : alleles.values())
+                    if (allele != reference) {
+                        allele.reference = reference;
+                        allele.mutations = alignAlleles(reference, allele);
+                        finalList.add(allele);
+                    }
+            } else {
+                // Just creates final list
+                finalList.add(reference);
+                for (AlleleInfo allele : alleles.values())
+                    if (allele != reference)
+                        finalList.add(allele);
+            }
+        }
     }
 
-    public static final class AlleleInfo {
-        final String geneName;
+    private final class AlleleInfo {
+        final String geneName, alleleName;
         final NucleotideSequence baseSequence;
-        final boolean isFunctional;
+        final boolean isFunctional, isReference;
         final int[] referencePoints;
+        AlleleInfo reference;
+        Mutations<NucleotideSequence> mutations;
 
-        public AlleleInfo(String geneName, NucleotideSequence baseSequence, boolean isFunctional, int[] referencePoints) {
+        public AlleleInfo(String geneName, String alleleName, NucleotideSequence baseSequence,
+                          boolean isFunctional, boolean isReference, int[] referencePoints) {
             this.geneName = geneName;
+            this.alleleName = alleleName;
             this.baseSequence = baseSequence;
             this.isFunctional = isFunctional;
+            this.isReference = isReference;
             this.referencePoints = referencePoints;
         }
     }

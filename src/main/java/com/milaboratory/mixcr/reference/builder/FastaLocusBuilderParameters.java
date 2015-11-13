@@ -29,6 +29,8 @@
 package com.milaboratory.mixcr.reference.builder;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.milaboratory.core.alignment.AlignmentScoring;
+import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.reference.*;
 
 import java.util.Arrays;
@@ -41,7 +43,7 @@ public final class FastaLocusBuilderParameters {
     private final GeneType geneType;
     private final String alleleNameExtractionPattern, functionalAllelePattern, referenceAllelePattern;
     private final char paddingChar;
-    private final boolean alignAlleles;
+    private final AlignmentScoring<NucleotideSequence> scoring;
     private final AnchorPointPosition[] anchorPointPositions;
 
     // Util fields
@@ -60,14 +62,14 @@ public final class FastaLocusBuilderParameters {
                                        String functionalAllelePattern,
                                        String referenceAllelePattern,
                                        char paddingChar,
-                                       boolean alignAlleles,
+                                       AlignmentScoring<NucleotideSequence> scoring,
                                        AnchorPointPosition... anchorPointPositions) {
         this.geneType = geneType;
         this.alleleNameExtractionPattern = alleleNameExtractionPattern;
         this.functionalAllelePattern = functionalAllelePattern;
         this.referenceAllelePattern = referenceAllelePattern;
         this.paddingChar = paddingChar;
-        this.alignAlleles = alignAlleles;
+        this.scoring = scoring;
         this.anchorPointPositions = anchorPointPositions;
         for (AnchorPointPosition ap : anchorPointPositions)
             if (ap.point.getGeneType() != geneType) {
@@ -78,7 +80,7 @@ public final class FastaLocusBuilderParameters {
         // Calculating output fields
         this.alleleNameExtractionPatternP = Pattern.compile(alleleNameExtractionPattern);
         this.functionalGenePatternP = Pattern.compile(functionalAllelePattern);
-        this.referenceAllelePatternP = Pattern.compile(referenceAllelePattern);
+        this.referenceAllelePatternP = referenceAllelePattern == null ? null : Pattern.compile(referenceAllelePattern);
         this.referencePointPositions = calculateReferencePointPositions(geneType, anchorPointPositions);
     }
 
@@ -103,7 +105,11 @@ public final class FastaLocusBuilderParameters {
     }
 
     public boolean doAlignAlleles() {
-        return alignAlleles;
+        return scoring != null;
+    }
+
+    public AlignmentScoring<NucleotideSequence> getScoring() {
+        return scoring;
     }
 
     /**
