@@ -28,12 +28,13 @@
  */
 package com.milaboratory.mixcr.reference.builder;
 
-import com.milaboratory.mixcr.reference.LociLibraryWriter;
+import java.util.regex.Pattern;
 
-public class LocusBuilder {
-    final LociLibraryWriter writer;
-
-    public LocusBuilder(LociLibraryWriter writer) {
-        this.writer = writer;
-    }
+public class BuilderUtils {
+    // ex. TRBV12-2*01
+    public static final Pattern ALLELE_NAME_PATTERN = Pattern.compile("^((...)(.).*)\\*(\\d\\d)$");
+    public static final int GENE_NAME_GROUP = 1;
+    public static final int LOCUS_GROUP = 2;
+    public static final int GENE_TYPE_LETTER_GROUP = 3;
+    public static final int ALLELE_ID_GROUP = 4;
 }

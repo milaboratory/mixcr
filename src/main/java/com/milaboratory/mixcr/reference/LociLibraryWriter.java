@@ -219,7 +219,7 @@ public class LociLibraryWriter {
                 (reference != null ? 8 : 0));
 
         if (accession != null) {
-            if (gtis.get(type).size != referencePoints.length)
+            if (GENE_TYPE_INFOS.get(type).size != referencePoints.length)
                 throw new IllegalArgumentException("Wrong number of reference points.");
 
             stream.writeUTF(accession);
@@ -240,9 +240,11 @@ public class LociLibraryWriter {
      */
     public static abstract class GeneTypeInfo {
         public final int size;
+        public final int indexOfFirstPoint;
 
-        protected GeneTypeInfo(int size) {
+        public GeneTypeInfo(int indexOfFirstPoint, int size) {
             this.size = size;
+            this.indexOfFirstPoint = indexOfFirstPoint;
         }
 
         /**
@@ -255,11 +257,8 @@ public class LociLibraryWriter {
     }
 
     public static class GeneralGeneTypeInfo extends GeneTypeInfo {
-        final int indexOfFirstPoint;
-
-        protected GeneralGeneTypeInfo(int size, int indexOfFirstPoint) {
-            super(size);
-            this.indexOfFirstPoint = indexOfFirstPoint;
+        protected GeneralGeneTypeInfo(int indexOfFirstPoint, int size) {
+            super(indexOfFirstPoint, size);
         }
 
         @Override
@@ -275,7 +274,7 @@ public class LociLibraryWriter {
     // Class to fix for FR4End issue in J genes.
     public static class JGeneTypeInfo extends GeneTypeInfo {
         public JGeneTypeInfo() {
-            super(3);
+            super(13, 3);
         }
 
         @Override
@@ -304,12 +303,16 @@ public class LociLibraryWriter {
         }
     }
 
-    public static final EnumMap<GeneType, GeneTypeInfo> gtis = new EnumMap<>(GeneType.class);
+    public static GeneTypeInfo getGeneTypeInfo(GeneType geneType) {
+        return GENE_TYPE_INFOS.get(geneType);
+    }
+
+    public static final EnumMap<GeneType, GeneTypeInfo> GENE_TYPE_INFOS = new EnumMap<>(GeneType.class);
 
     static {
-        gtis.put(GeneType.Variable, new GeneralGeneTypeInfo(11, 0));
-        gtis.put(GeneType.Diversity, new GeneralGeneTypeInfo(2, 11));
-        gtis.put(GeneType.Joining, new JGeneTypeInfo());
-        gtis.put(GeneType.Constant, new GeneralGeneTypeInfo(3, 16));
+        GENE_TYPE_INFOS.put(GeneType.Variable, new GeneralGeneTypeInfo(0, 11));
+        GENE_TYPE_INFOS.put(GeneType.Diversity, new GeneralGeneTypeInfo(11, 2));
+        GENE_TYPE_INFOS.put(GeneType.Joining, new JGeneTypeInfo());
+        GENE_TYPE_INFOS.put(GeneType.Constant, new GeneralGeneTypeInfo(16, 3));
     }
 }

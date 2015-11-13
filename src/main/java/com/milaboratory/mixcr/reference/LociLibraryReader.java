@@ -159,7 +159,7 @@ public class LociLibraryReader {
         int[] referencePoints = null;
         if ((flags & 4) != 0) {
             accession = stream.readUTF();
-            referencePoints = new int[gtis.get(type).size];
+            referencePoints = new int[GENE_TYPE_INFOS.get(type).size];
             for (int i = 0; i < referencePoints.length; ++i)
                 referencePoints[i] = stream.readInt();
         }
@@ -197,7 +197,7 @@ public class LociLibraryReader {
         if ((flags & 1) != 0) {
             //reference allele
             allele = new ReferenceAllele(gene, alleleName, (flags & 2) != 0, accession,
-                    gtis.get(type).create(referencePoints));
+                    GENE_TYPE_INFOS.get(type).create(referencePoints));
         } else {
             //allelic variant
             allele = new AllelicVariant(alleleName,

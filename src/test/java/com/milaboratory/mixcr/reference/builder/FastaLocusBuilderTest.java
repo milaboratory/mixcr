@@ -36,18 +36,22 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by dbolotin on 25/10/15.
  */
-public class LocusBuilderTest {
+public class FastaLocusBuilderTest {
     @Test
     public void test1() throws Exception {
+        Pattern nameExtractionPattern = Pattern.compile("^[^\\|]+\\|([^\\|]+)");
+        Pattern funcExtractionPattern = Pattern.compile("^[^\\|]+\\|[^\\|]+\\|[^\\|]+\\|[\\(\\[]?F");
         FastaReader reader = new FastaReader("/Volumes/Data/Projects/MiLaboratory/tmp/result/human_IGHV.fasta", null);
         FastaReader.RawFastaRecord rec;
-        int[] refpoints = {0, 78, 114, 165, 195, 309, -1};
-        List<AminoAcidSequence[]> seqs = new ArrayList<>();
-        int[] lens = new int[refpoints.length];
+        int[] refPoints = {0, 78, 114, 165, 195, 309, -1};
+        List<String[]> seqs = new ArrayList<>();
+        int[] lens = new int[refPoints.length + 1];
         while ((rec = reader.takeRawRecord()) != null) {
             //System.out.println(rec.sequence);
             StringWithMapping swm = StringWithMapping.removeSymbol(rec.sequence, '.');
@@ -56,26 +60,43 @@ public class LocusBuilderTest {
                 //System.out.println("Skipped: " + rec.description);
                 continue;
             }
+
+            String[] parts = new String[refPoints.length + 1];
+
             StringBuilder coordString = new StringBuilder();
             int next = 0;
-            //System.out.println(AminoAcidSequence.translate(seq, 0));
 
-            AminoAcidSequence[] parts = new AminoAcidSequence[refpoints.length];
-            for (int i = 0; i < refpoints.length - 1; ++i) {
-                parts[i] = tr(swm, refpoints[i], refpoints[i + 1]);
-                if (parts[i] != null)
-                    lens[i] = Math.max(lens[i], parts[i].size());
+            //System.out.println(rec.description);
+
+            //System.out.println(AminoAcidSequence.translate(seq, 0));
+            Matcher matcher = nameExtractionPattern.matcher(rec.description);
+
+            if (matcher.find())
+                parts[0] = matcher.group(1);
+            else
+                System.out.println("Error.");
+
+            matcher = funcExtractionPattern.matcher(rec.description);
+
+            parts[0] += matcher.find() ? " F" : " P";
+
+            for (int i = 0; i < refPoints.length - 1; ++i) {
+                AminoAcidSequence tr = tr(swm, refPoints[i], refPoints[i + 1]);
+                parts[i + 1] = tr == null ? null : tr.toString();
             }
+            for (int i = 0; i < parts.length; i++)
+                if (parts[i] != null)
+                    lens[i] = Math.max(lens[i], parts[i].length());
             seqs.add(parts);
         }
 
-        for (AminoAcidSequence[] seq : seqs) {
+        for (String[] seq : seqs) {
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < refpoints.length; i++) {
+            for (int i = 0; i < seq.length; i++) {
                 int len = 0;
                 if (seq[i] != null) {
                     sb.append(seq[i]);
-                    len = seq[i].size();
+                    len = seq[i].length();
                 }
                 sb.append(StringUtil.spaces(lens[i] - len + 2));
             }
