@@ -115,7 +115,7 @@ public class FastaLocusBuilderTest {
                 new FastaLocusBuilderParameters(GeneType.Variable, "^[^\\|]+\\|([^\\|]+)",
                         "^[^\\|]+\\|[^\\|]+\\|[^\\|]+\\|[\\(\\[]?F",
                         "^[^\\|]+\\|[^\\|]+\\*01", '.',
-                        new AffineGapAlignmentScoring<>(NucleotideSequence.ALPHABET, 1, -4, -5, -2),
+                        new AffineGapAlignmentScoring<>(NucleotideSequence.ALPHABET, 1, -4, -11, -2),
                         new AnchorPointPosition(ReferencePoint.FR1Begin, 0),
                         new AnchorPointPosition(ReferencePoint.CDR1Begin, 78),
                         new AnchorPointPosition(ReferencePoint.FR2Begin, 114),

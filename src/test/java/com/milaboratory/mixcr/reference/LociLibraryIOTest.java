@@ -133,7 +133,7 @@ public class LociLibraryIOTest {
             LocusContainer container = library.getLocus(Species.HomoSapiens, locus);
             export(locus.name().toLowerCase() + "v.txt", container.getReferenceAlleles(GeneType.Variable),
                     VGene,
-                    V5UTR, L1, Intron, L2,
+                    V5UTR, L1, VIntron, L2,
                     FR1, CDR1, FR2, CDR2,
                     FR3, GermlineVCDR3Part);
             export(locus.name().toLowerCase() + "j.txt", container.getReferenceAlleles(GeneType.Joining),

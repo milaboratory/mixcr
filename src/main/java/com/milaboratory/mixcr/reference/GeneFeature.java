@@ -104,13 +104,13 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
     /**
      * Intron in V region.
      */
-    Intron = new GeneFeature(VIntronBegin, VIntronEnd),
+    VIntron = new GeneFeature(VIntronBegin, VIntronEnd),
     /**
      * Part of lider sequence in second exon.
      */
     L2 = new GeneFeature(L2Begin, L2End),
     /**
-     * {@code L1} + {@code Intron} + {@code L2}
+     * {@code L1} + {@code VIntron} + {@code L2}
      */
     VLIntronL = new GeneFeature(L1Begin, L2End),
 
@@ -680,7 +680,7 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
 
                 if (region.begin.basicPoint == region.end.basicPoint)
                     base = ReferencePoint.encode(region.begin.getWithoutOffset(), true);
-                
+
                 if (base != null) {
                     if (region.hasOffsets())
                         base += "(" + region.begin.offset + ", " + region.end.offset + ")";
@@ -707,6 +707,11 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         return a.begin.basicPoint == b.regions[0].begin.basicPoint
                 && a.end.basicPoint == b.regions[0].end.basicPoint;
     }
+
+    public static final GeneFeature[] NONCODING_FEATURES = {
+            VIntron,
+            new GeneFeature(CExon1End, CEnd) // Gene structure for C region is not fully specified
+    };
 
     public static class Deserializer extends JsonDeserializer<GeneFeature> {
         @Override
