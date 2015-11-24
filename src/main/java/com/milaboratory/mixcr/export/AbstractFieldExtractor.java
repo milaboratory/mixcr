@@ -41,9 +41,4 @@ public abstract class AbstractFieldExtractor<T> implements FieldExtractor<T> {
     public final String getHeader() {
         return header;
     }
-
-    @Override
-    public final Field<T> getDescriptor() {
-        return descriptor;
-    }
 }

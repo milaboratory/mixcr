@@ -88,6 +88,9 @@ The command line options of ``assemble`` are the following:
 +-------------------------+-------------------------------+--------------------------------------------------------------------------------+
 | ``-t``, ``--threads``   | number of available CPU cores | Number of processing threads.                                                  |
 +-------------------------+-------------------------------+--------------------------------------------------------------------------------+
+| ``-i``, ``--index``     |                               | Specify file which will store information about particular reads aggreagated   |
+|                         |                               | by each clone (mapping readId -> cloneId).                                     |
++-------------------------+-------------------------------+--------------------------------------------------------------------------------+
 | ``-Oparameter=value``   |                               | Overrides default value of assembler ``parameter`` (see next subsection).      |
 +-------------------------+-------------------------------+--------------------------------------------------------------------------------+
 

@@ -73,20 +73,33 @@ Command line parameters
 The list of command line parameters for both ``exportAlignments`` and
 ``exportClones`` is the following:
 
-+---------------------+-------------------------------------------------------------------+
-| Option              | Description                                                       |
-+=====================+===================================================================+
-| -h, --help          | print help message                                                |
-+---------------------+-------------------------------------------------------------------+
-| -f, --fields        | list available fields that can be exported                        |
-+---------------------+-------------------------------------------------------------------+
-| -p, --preset        | select predefined set of fields to export (``full`` or ``min``)   |
-+---------------------+-------------------------------------------------------------------+
-| -pf, --presetFile   | load file with a list of fields to export                         |
-+---------------------+-------------------------------------------------------------------+
-| -s, --no-spaces     | output short versions of column headers which facilitates analysis|
-|                     | with Pandas, R/DataFrames or other data tables processing library |
-+---------------------+-------------------------------------------------------------------+
++-----------------------------+-------------------------------------------------------------------+
+| Option                      | Description                                                       |
++=============================+===================================================================+
+| ``-h``, ``--help``          | print help message                                                |
++-----------------------------+-------------------------------------------------------------------+
+| ``-f``, ``--fields``        | list available fields that can be exported                        |
++-----------------------------+-------------------------------------------------------------------+
+| ``-p``, ``--preset``        | select predefined set of fields to export (``full`` or ``min``)   |
++-----------------------------+-------------------------------------------------------------------+
+| ``-pf``, ``--preset-file``  | load file with a list of fields to export                         |
++-----------------------------+-------------------------------------------------------------------+
+| ``-l``, ``--list-fields``   | list availabel fields that can be exported                        |
++-----------------------------+-------------------------------------------------------------------+
+| ``-s``, ``--no-spaces``     | output short versions of column headers which facilitates analysis|
+|                             | with Pandas, R/DataFrames or other data tables processing library |
++-----------------------------+-------------------------------------------------------------------+
+
+The line parameters are only for ``exportClones``:
+
++------------------------------------+-------------------------------------------------------------------+
+| ``-o``, ``--filter-out-of-frames`` | Exclude out of frames (fractions will be recalculated)            |
++------------------------------------+-------------------------------------------------------------------+
+| ``-t``, ``--filter-stops``         | Exclude sequences containing stop codons (fractions will be       |
+|                                    | recalculated)                                                     |
++------------------------------------+-------------------------------------------------------------------+
+
+
 
 Available fields
 ----------------
@@ -159,39 +172,52 @@ The following fields can be exported both for alignments and clones:
 
 The following fields are specific for alignments:
 
-+---------------+-----------------------------------------------------------------------------------------------------------------------------+
-| Field         | Description                                                                                                                 |
-+===============+=============================================================================================================================+
-| ``-sequence`` | Aligned sequence (initial read), or 2 sequences in case of paired-end reads.                                                |
-+---------------+-----------------------------------------------------------------------------------------------------------------------------+
-| ``-quality``  | Initial read quality, or 2 qualities in case of paired-end reads.                                                           |
-+---------------+-----------------------------------------------------------------------------------------------------------------------------+
-| ``-readId``   | Index of source read (in e.g. ``.fastq`` file) for alignment.                                                               |
-+---------------+-----------------------------------------------------------------------------------------------------------------------------+
-| ``-targets``  | Number of targets, i.e. 1 in case of single reads and 2 in case of paired-end reads.                                        |
-+---------------+-----------------------------------------------------------------------------------------------------------------------------+
-| ``-descrR1``  | Description line from initial ``.fasta`` or ``.fastq`` file of the first read (only available if ``--save-description`` was | 
-|               | used in :ref:`align <ref-align>` command).                                                                                  |
-+---------------+-----------------------------------------------------------------------------------------------------------------------------+
-| ``-descrR2``  | Description line from initial ``.fastq`` file of the second read (only available if ``--save-description`` was used in      |
-|               | :ref:`align <ref-align>` command).                                                                                          |
-+---------------+-----------------------------------------------------------------------------------------------------------------------------+
++-----------------------------+------------------------------------------------------------------------------------------------------------+
+| Field                       | Description                                                                                                |
++=============================+============================================================================================================+
+| ``-sequence``               | Aligned sequence (initial read), or 2 sequences in case of paired-end reads.                               |
++-----------------------------+------------------------------------------------------------------------------------------------------------+
+| ``-quality``                | Initial read quality, or 2 qualities in case of paired-end reads.                                          |
++-----------------------------+------------------------------------------------------------------------------------------------------------+
+| ``-readId``                 | Index of source read (in e.g. ``.fastq`` file) for alignment.                                              |
++-----------------------------+------------------------------------------------------------------------------------------------------------+
+| ``-targets``                | Number of targets, i.e. 1 in case of single reads and 2 in case of paired-end reads.                       |
++-----------------------------+------------------------------------------------------------------------------------------------------------+
+| ``-descrR1``                | Description line from initial ``.fasta`` or ``.fastq`` file of the first read (only available if           | 
+|                             | ``--save-description`` was used in :ref:`align <ref-align>` command).                                      |
++-----------------------------+------------------------------------------------------------------------------------------------------------+
+| ``-descrR2``                | Description line from initial ``.fastq`` file of the second read (only available if ``--save-description`` |
+|                             | was used in :ref:`align <ref-align>` command).                                                             |
++-----------------------------+------------------------------------------------------------------------------------------------------------+
+| ``-cloneId [file]``         | Id of clone that aggregated this alignment. The index file must be specified (this file can be built with  |
+|                             | ``--index [file]`` option for :ref:`align <ref-assemble>` command). For examples see                       |
+|                             | :ref:`this paragraph <ref-exporting-reads>`.                                                               |
++-----------------------------+------------------------------------------------------------------------------------------------------------+
+| ``-cloneIdWithMappinfType`` | Id of clone that aggregated this alignment with additional information about mapping type. The index       |
+| ``[file]``                  | file must be specified (this file can be built with ``--index [file]`` option for                          |
+|                             | :ref:`align <ref-assemble>` command). For examples see :ref:`this paragraph <ref-exporting-reads>`.        |
++-----------------------------+------------------------------------------------------------------------------------------------------------+
 
 The following fields are specific for clones:
 
-+---------------+----------------------------------------------------------------------------------------+
-| Field         | Description                                                                            |
-+===============+========================================================================================+
-| ``-count``    | Clone count.                                                                           |
-+---------------+----------------------------------------------------------------------------------------+
-| ``-fraction`` | Clone fraction.                                                                        |
-+---------------+----------------------------------------------------------------------------------------+
-| ``-sequence`` | Clonal sequence (or several sequences in case of multi-featured assembling).           |
-+---------------+----------------------------------------------------------------------------------------+
-| ``-quality``  | Clonal sequence quality (or several qualities in case of multi-featured assembling).   |
-+---------------+----------------------------------------------------------------------------------------+
-| ``-targets``  | Number of targets, i.e. number of gene regions used to assemble clones.                |
-+---------------+----------------------------------------------------------------------------------------+
++---------------------+----------------------------------------------------------------------------------------+
+| Field               | Description                                                                            |
++=====================+========================================================================================+
+| ``-count``          | Clone count.                                                                           |
++---------------------+----------------------------------------------------------------------------------------+
+| ``-fraction``       | Clone fraction.                                                                        |
++---------------------+----------------------------------------------------------------------------------------+
+| ``-sequence``       | Clonal sequence (or several sequences in case of multi-featured assembling).           |
++---------------------+----------------------------------------------------------------------------------------+
+| ``-quality``        | Clonal sequence quality (or several qualities in case of multi-featured assembling).   |
++---------------------+----------------------------------------------------------------------------------------+
+| ``-targets``        | Number of targets, i.e. number of gene regions used to assemble clones.                |
++---------------------+----------------------------------------------------------------------------------------+
+| ``-readIds [file]`` | IDs of reads that were aggregated by clone. The index file must be specified (this     |
+|                     | file can be built with ``--index [file]`` option for :ref:`align <ref-assemble>`       |
+|                     | command). For examples see :ref:`this paragraph <ref-exporting-reads>`.                |
++---------------------+----------------------------------------------------------------------------------------+
+
 
 Default anchor point positions
 ------------------------------
@@ -540,3 +566,116 @@ Using of ``--verbose`` option will produce alignments in s slightly different fo
    </pre>
    
    
+
+
+.. _ref-exporting-reads:
+
+Exporting reads aggregated by clones
+------------------------------------
+
+MiXCR allows to preserve mapping between initial reads and final clonotypes. There are several options how to access this information. 
+
+In any way, first one need to specify additonal option ``--index`` for the :ref:`assemble <ref-assemble>` command:
+
+::
+
+    mixcr assemble --index index_file alignments.vdjca output.clns
+
+This will tell MiXCR to store mapping in the file ``index_file``. Now one can use ``index_file`` in order to access this information. For example using ``-cloneId`` option for ``exportAlignments`` command:
+
+::
+
+    mixcr exportAlignments -p min -cloneId index_file alignments.vdjca alignments.txt
+
+will print additional column with id of the clone which contains corresponding alignment:
+
+
++----------------+----------------+-------+----------+
+| Best V hit     | Best D hit     |  ...  | CloneId  |
++================+================+=======+==========+
+| IGHV4-34\*\00  |                |  ...  | 321      |
++----------------+----------------+-------+----------+
+| IGHV2-23\*\00  | IGHD2\*\21     |  ...  |          |
++----------------+----------------+-------+----------+
+| IGHV4-34\*\00  | IGHD2\*\21     |  ...  | 22143    |
++----------------+----------------+-------+----------+
+| ...            | ...            |  ...  | ...      |
++----------------+----------------+-------+----------+
+
+For more information one can export mapping type as well:
+
+::
+
+    mixcr exportAlignments -p min -cloneIdWithMappingType index_file alignments.vdjca alignments.txt
+
+which will give something like:
+
++----------------+----------------+-------+----------------------+
+| Best V hit     | Best D hit     |  ...  | Clone mapping        |
++================+================+=======+======================+
+| IGHV4-34\*\00  |                |  ...  | 321:core             |
++----------------+----------------+-------+----------------------+
+| IGHV2-23\*\00  | IGHD2\*\21     |  ...  | dropped              |
++----------------+----------------+-------+----------------------+
+| IGHV4-34\*\00  | IGHD2\*\21     |  ...  | 22143:clustered      |
++----------------+----------------+-------+----------------------+
+| IGHV4-34\*\00  | IGHD2\*\21     |  ...  | 23:mapped            |
++----------------+----------------+-------+----------------------+
+| ...            | ...            |  ...  | ...                  |
++----------------+----------------+-------+----------------------+
+
+
+One can also export all read IDs that were aggregated by eah clone. For this one can use ``-readIds`` export options for ``exportClones`` action:
+
+::
+
+    mixcr exportAlignments -p min -readIds index_file clones.clns clones.txt
+
+This will add a column with full enumeration of all reads that were absorbed by particular clone:
+
+
++----------+-------------+----------------+-----+--------------------------------+
+| Clone ID | Clone count | Best V hit     | ... | Reads                          |
++==========+=============+================+=====+================================+
+|    0     |    7213     | IGHV4-34\*\00  | ... | 56,74,92,96,101,119,169,183... |
++----------+-------------+----------------+-----+--------------------------------+
+|    1     |    2951     | IGHV2-23\*\00  | ... | 46,145,194,226,382,451,464...  |
++----------+-------------+----------------+-----+--------------------------------+
+|    2     |    2269     | IGHV4-34\*\00  | ... | 58,85,90,103,113,116,122,123...|
++----------+-------------+----------------+-----+--------------------------------+
+|    3     |     124     | IGHV4-34\*\00  | ... | 240,376,496,617,715,783,813... |
++----------+-------------+----------------+-----+--------------------------------+
+|   ...    |             | ...            | ... | ...                            |
++----------+-------------+----------------+-----+--------------------------------+
+
+Note, that resulting txt file may be very huge since all read numbers that were successfully assembled will be printed.
+
+
+Finally, one can export reads aggregated by each clone into separate ``.fastq`` file. For that one need first to specify additional ``-g`` option for :ref:`align <ref-align>` command:
+
+::
+
+    mixcr align -g -l IGH input.fastq alignments.vdjca.gz
+
+With this option MiXCR will store original reads in the ``.vdjca`` file. Then one can export reads corresponding for particular clone with ``exportReads`` command. For example, export all reads that were assembled into the first clone (clone with cloneId = 1):
+
+::
+
+    mixcr exportReads index_file alignments.vdjca.gz 0 reads.fastq.gz
+
+This will create file ``reads_clns0.fastq.gz`` (or two files ``reads_clns0_R1.fastq.gz`` and ``reads_clns0_R2.fastq.gz`` if the original data were paired) with all reads that were aggregated by the first clone. One can export reads for several clones at a time:
+
+::
+
+    mixcr exportReads index_file alignments.vdjca.gz 0 1 2 33 54 reads.fastq.gz
+
+This will create several files (``reads_clns0.fastq.gz``, ``reads_clns1.fastq.gz`` etc.) for each clone with cloneId equal to 0, 1, 2, 33 and 54 respectively.
+
+
+
+
+
+
+
+
+

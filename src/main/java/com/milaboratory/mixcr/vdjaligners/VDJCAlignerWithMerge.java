@@ -72,7 +72,7 @@ public final class VDJCAlignerWithMerge extends VDJCAligner<PairedRead> {
     }
 
     @Override
-    public VDJCAlignmentResult<PairedRead> process(PairedRead read) {
+    public VDJCAlignmentResult<PairedRead> process(final PairedRead read) {
         PairedReadMergingResult merged = merger.process(read);
         if (merged.isSuccessful()) {
             VDJCAlignments alignment = singleAligner.process(

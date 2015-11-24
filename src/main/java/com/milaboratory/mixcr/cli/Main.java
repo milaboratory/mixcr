@@ -46,6 +46,7 @@ public class Main {
                 new ActionAlignmentsStat(),
                 new ActionMergeAlignments(),
                 new ActionInfo(),
+                new ActionExportCloneReads(),
                 new VersionInfoAction());
 
         // Adding version info callback

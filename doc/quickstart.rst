@@ -226,3 +226,45 @@ Other analysis stages can be executed without any additional parameters:
   > mixcr assemble alignments.vdjca clones.clns
 
   > mixcr exportClones clones.clns clones.txt
+
+
+.. _ref-exampleBackwardLinks:
+
+
+Saving links between initial reads and clones
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In this example we demonstrate how to extract initial read headers for assembled clonotypes. On the ``align`` step additional ``--save-description`` option should be specified in order to store headers from reads in the resulting ``.vdjca`` file: 
+
+.. code-block:: console
+
+  > mixcr align --save-description input_R1.fastq input_R2.fastq alignments.vdjca
+
+On the ``assemble`` stage it is necessary to specify file for the index (which stores mapping from reads to clonotypes):
+
+.. code-block:: console
+
+  > mixcr assemble --index indexFile alignments.vdjca clones.clns
+
+Having this, it is possible to export original read headers with corresponding clone IDs:
+
+.. code-block:: console
+
+  > mixcr exportAlignments -cloneId indexFile -descrR1 -descrR2 alignments.vdjca alignments.txt
+
+The resulting file ``alignments.txt`` will looks like:
+
+
++-----------+-----------------+-----------------+
+| Clone ID  | Description R1  | Description R2  |
++===========+=================+=================+
+|     10    | header_1_R1     | header_1_R2     |
++-----------+-----------------+-----------------+
+|           | header_2_R1     | header_2_R2     |
++-----------+-----------------+-----------------+
+|    2313   | header_3_R1     | header_3_R2     |
++-----------+-----------------+-----------------+
+|   88142   | header_5_R1     | header_5_R2     |
++-----------+-----------------+-----------------+
+|    ...    |     ...         |     ...         |
++-----------+-----------------+-----------------+

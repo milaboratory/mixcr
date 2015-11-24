@@ -31,7 +31,9 @@ package com.milaboratory.mixcr.assembler;
 
 import com.milaboratory.primitivio.annotations.Serializable;
 
-@Serializable(by = IO.AlignedReadInfoSerializer.class)
+import java.util.Comparator;
+
+@Serializable(by = IO.ReadToCloneMappingSerializer.class)
 public final class ReadToCloneMapping {
     final long alignmentsId;
     final long readId;
@@ -77,8 +79,69 @@ public final class ReadToCloneMapping {
         return cloneIndex < 0;
     }
 
+    public MappingType getMappingType() {
+        if (isDropped())
+            return MappingType.Dropped;
+        else if (isMapped())
+            return MappingType.Mapped;
+        else if (isClustered())
+            return MappingType.Clustered;
+        else return MappingType.Core;
+    }
+
     @Override
     public String toString() {
         return "" + alignmentsId + " -> " + cloneIndex + " " + (isClustered() ? "c" : "") + (isMapped() ? "m" : "");
+    }
+
+    public enum MappingType {
+        Core, Clustered, Mapped, Dropped;
+
+        @Override
+        public String toString() {
+            return super.toString().toLowerCase();
+        }
+    }
+
+    public static final Comparator<ReadToCloneMapping>
+            CLONE_COMPARATOR = new CloneComparator(),
+            ALIGNMENTS_COMPARATOR = new AlignmentsComparator();
+
+    private static final class CloneComparator implements Comparator<ReadToCloneMapping>,
+            java.io.Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private CloneComparator() {
+        }
+
+        @Override
+        public int compare(ReadToCloneMapping o1, ReadToCloneMapping o2) {
+            int c = Integer.compare(o1.cloneIndex, o2.cloneIndex);
+            return c == 0 ? Long.compare(o1.alignmentsId, o2.alignmentsId) : c;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return obj instanceof CloneComparator;
+        }
+    }
+
+    private static final class AlignmentsComparator implements Comparator<ReadToCloneMapping>,
+            java.io.Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private AlignmentsComparator() {
+        }
+
+        @Override
+        public int compare(ReadToCloneMapping o1, ReadToCloneMapping o2) {
+            int c = Long.compare(o1.alignmentsId, o2.alignmentsId);
+            return c == 0 ? Integer.compare(o1.cloneIndex, o2.cloneIndex) : c;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return obj instanceof AlignmentsComparator;
+        }
     }
 }

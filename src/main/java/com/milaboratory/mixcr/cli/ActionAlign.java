@@ -46,6 +46,7 @@ import com.milaboratory.core.io.sequence.fasta.FastaReader;
 import com.milaboratory.core.io.sequence.fasta.FastaSequenceReaderWrapper;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
+import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mitools.cli.Action;
 import com.milaboratory.mitools.cli.ActionHelper;
@@ -125,8 +126,10 @@ public class ActionAlign implements Action {
                         continue;
                 }
                 if (writer != null) {
-                    if (actionParameters.saveReadDescription)
+                    if (actionParameters.saveReadDescription || actionParameters.saveOriginalReads)
                         result.alignment.setDescriptions(extractDescription(result.read));
+                    if (actionParameters.saveOriginalReads)
+                        result.alignment.setOriginalSequences(extractNSeqs(result.read));
                     writer.write(result.alignment);
                 }
             }
@@ -139,11 +142,18 @@ public class ActionAlign implements Action {
                     helper.getCommandLineArguments(), actionParameters.report, report);
     }
 
-    private static String[] extractDescription(SequenceRead r) {
+    public static String[] extractDescription(SequenceRead r) {
         String[] descrs = new String[r.numberOfReads()];
         for (int i = 0; i < r.numberOfReads(); i++)
             descrs[i] = r.getRead(i).getDescription();
         return descrs;
+    }
+
+    public static NSequenceWithQuality[] extractNSeqs(SequenceRead r) {
+        NSequenceWithQuality[] seqs = new NSequenceWithQuality[r.numberOfReads()];
+        for (int i = 0; i < r.numberOfReads(); i++)
+            seqs[i] = r.getRead(i).getData();
+        return seqs;
     }
 
     @Override
@@ -201,6 +211,10 @@ public class ActionAlign implements Action {
                 "exported with -descrR1 and -descrR2 options in exportAlignments action).",
                 names = {"-a", "--save-description"})
         public Boolean saveReadDescription = false;
+
+        @Parameter(description = "Copy original reads (sequences + qualities + descriptions) to .vdjca file.",
+                names = {"-g", "--save-reads"})
+        public Boolean saveOriginalReads = false;
 
         @Parameter(description = "Allow alignments with different loci of V and J hits.",
                 names = {"-i", "--diff-loci"})
