@@ -28,7 +28,7 @@
  */
 package com.milaboratory.mixcr.vdjaligners;
 
-import com.milaboratory.core.alignment.KAlignerParameters;
+import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
 import com.milaboratory.mixcr.reference.GeneFeature;
 import com.milaboratory.util.GlobalObjectMappers;

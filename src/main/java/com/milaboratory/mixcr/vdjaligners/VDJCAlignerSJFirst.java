@@ -28,8 +28,8 @@
  */
 package com.milaboratory.mixcr.vdjaligners;
 
-import com.milaboratory.core.alignment.KAlignmentHit;
-import com.milaboratory.core.alignment.KAlignmentResult;
+import com.milaboratory.core.alignment.kaligner1.KAlignmentHit;
+import com.milaboratory.core.alignment.kaligner1.KAlignmentResult;
 import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;

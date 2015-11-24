@@ -30,7 +30,7 @@ package com.milaboratory.mixcr.vdjaligners;
 
 import com.milaboratory.core.PairedEndReadsLayout;
 import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
-import com.milaboratory.core.alignment.KAlignerParameters;
+import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
 import com.milaboratory.mitools.merger.MergerParameters;
 import com.milaboratory.mitools.merger.QualityMergingAlgorithm;
