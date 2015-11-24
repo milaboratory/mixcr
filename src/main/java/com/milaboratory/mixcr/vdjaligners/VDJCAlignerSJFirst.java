@@ -28,6 +28,9 @@
  */
 package com.milaboratory.mixcr.vdjaligners;
 
+import com.milaboratory.core.alignment.batch.AlignmentHit;
+import com.milaboratory.core.alignment.batch.AlignmentResult;
+import com.milaboratory.core.alignment.batch.BatchAligner;
 import com.milaboratory.core.alignment.kaligner1.KAlignmentHit;
 import com.milaboratory.core.alignment.kaligner1.KAlignmentResult;
 import com.milaboratory.core.io.sequence.SingleRead;
@@ -118,7 +121,7 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
 
         ensureInitialized();
 
-        KAlignmentResult vResult, jResult;
+        AlignmentResult<AlignmentHit<NucleotideSequence, Allele>> vResult, jResult;
 
         switch (parameters.getVJAlignmentOrder()) {
             case VThenJ:
@@ -155,12 +158,14 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
 
     final class KVJResultsForSingle {
         final NSequenceWithQuality target;
-        final KAlignmentResult<?> vResult, jResult;
+        final AlignmentResult<AlignmentHit<NucleotideSequence, Allele>> vResult, jResult;
         final boolean isRC;
-        KAlignmentHit[] vHits, jHits;
+        AlignmentHit<NucleotideSequence, Allele>[] vHits, jHits;
         VDJCHit[] dHits = null, cHits = null;
 
-        public KVJResultsForSingle(NSequenceWithQuality target, KAlignmentResult<?> vResult, KAlignmentResult<?> jResult, boolean isRC) {
+        public KVJResultsForSingle(NSequenceWithQuality target,
+                                   AlignmentResult<AlignmentHit<NucleotideSequence, Allele>> vResult,
+                                   AlignmentResult<AlignmentHit<NucleotideSequence, Allele>> jResult, boolean isRC) {
             this.target = target;
             this.vResult = vResult;
             this.jResult = jResult;
@@ -188,9 +193,9 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
 
             if (cAligner != null) {
                 int from = jResult.getBestHit().getAlignment().getSequence2Range().getTo();
-                KAlignmentResult res = cAligner.align(sequence, from, target.size());
+                AlignmentResult<AlignmentHit<NucleotideSequence, Allele>> res = cAligner.align(sequence, from, target.size());
 
-                cHits = createHits(res.getHits(), getCAllelesToAlign(), parameters.getFeatureToAlign(GeneType.Constant));
+                cHits = createHits(res.getHits(), parameters.getFeatureToAlign(GeneType.Constant));
             }
         }
 
@@ -217,12 +222,12 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
                     jHits != null && jHits.length > 0;
         }
 
-        public VDJCHit[] getVHits(List<Allele> alleles, GeneFeature feature) {
-            return createHits(vHits, alleles, feature);
+        public VDJCHit[] getVHits(GeneFeature feature) {
+            return createHits(vHits, feature);
         }
 
-        public VDJCHit[] getJHits(List<Allele> alleles, GeneFeature feature) {
-            return createHits(jHits, alleles, feature);
+        public VDJCHit[] getJHits(GeneFeature feature) {
+            return createHits(jHits, feature);
         }
 
         public float sumScore() {
@@ -240,20 +245,18 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
 
         public Set<Locus> getPossibleDLoci() {
             EnumSet<Locus> loci = EnumSet.noneOf(Locus.class);
-            for (KAlignmentHit vHit : vResult.getHits())
-                loci.add(getAllele(GeneType.Variable, vHit.getId()).getLocus());
-            for (KAlignmentHit jHit : jResult.getHits())
-                loci.add(getAllele(GeneType.Joining, jHit.getId()).getLocus());
+            for (AlignmentHit<NucleotideSequence, Allele> vHit : vResult.getHits())
+                loci.add(vHit.getRecordPayload().getLocus());
+            for (AlignmentHit<NucleotideSequence, Allele> jHit : jResult.getHits())
+                loci.add(jHit.getRecordPayload().getLocus());
             return loci;
         }
 
         public VDJCAlignments toVDJCAlignments(long inputId) {
             EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
 
-            hits.put(GeneType.Variable, getVHits(getVAllelesToAlign(),
-                    parameters.getFeatureToAlign(GeneType.Variable)));
-            hits.put(GeneType.Joining, getJHits(getJAllelesToAlign(),
-                    parameters.getFeatureToAlign(GeneType.Joining)));
+            hits.put(GeneType.Variable, getVHits(parameters.getFeatureToAlign(GeneType.Variable)));
+            hits.put(GeneType.Joining, getJHits(parameters.getFeatureToAlign(GeneType.Joining)));
 
             if (dHits != null)
                 hits.put(GeneType.Diversity, dHits);
@@ -265,30 +268,30 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
         }
     }
 
-    public static VDJCHit[] createHits(KAlignmentHit[] kHits, List<Allele> alleles, GeneFeature feature) {
+    public static VDJCHit[] createHits(AlignmentHit<NucleotideSequence, Allele>[] kHits, GeneFeature feature) {
         VDJCHit[] hits = new VDJCHit[kHits.length];
         for (int i = 0; i < kHits.length; i++)
-            hits[i] = new VDJCHit(alleles.get(kHits[i].getId()), kHits[i].getAlignment(), feature);
+            hits[i] = new VDJCHit(kHits[i].getRecordPayload(), kHits[i].getAlignment(), feature);
         return hits;
     }
 
-    public static VDJCHit[] createHits(List<KAlignmentHit> kHits, List<Allele> alleles, GeneFeature feature) {
+    public static VDJCHit[] createHits(List<AlignmentHit<NucleotideSequence, Allele>> kHits, GeneFeature feature) {
         VDJCHit[] hits = new VDJCHit[kHits.size()];
         for (int i = 0; i < kHits.size(); i++)
-            hits[i] = new VDJCHit(alleles.get(kHits.get(i).getId()), kHits.get(i).getAlignment(), feature);
+            hits[i] = new VDJCHit(kHits.get(i).getRecordPayload(), kHits.get(i).getAlignment(), feature);
         return hits;
     }
 
-    private static KAlignmentHit<?>[] extractHits(float minScore, KAlignmentResult<?> result, int maxHits) {
+    private static AlignmentHit<NucleotideSequence, Allele>[] extractHits(float minScore, AlignmentResult<AlignmentHit<NucleotideSequence, Allele>> result, int maxHits) {
         int count = 0;
-        for (KAlignmentHit hit : result.getHits())
+        for (AlignmentHit<NucleotideSequence, Allele> hit : result.getHits())
             if (hit.getAlignment().getScore() > minScore) {
                 if (++count >= maxHits)
                     break;
             } else
                 break;
 
-        KAlignmentHit[] res = new KAlignmentHit[count];
+        AlignmentHit<NucleotideSequence, Allele>[] res = new AlignmentHit[count];
         for (int i = 0; i < count; ++i)
             res[i] = result.getHits().get(i);
 
