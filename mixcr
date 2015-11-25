@@ -46,7 +46,7 @@ do
     key="$1"
     shift
     case $key in
-        -D*|-X*)
+        -D*|-X*|-ea)
             javaArgs+=(${key})
 
             case $key in

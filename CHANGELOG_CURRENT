@@ -1,0 +1,6 @@
+New feature (#8 and #36) that allows to extract actual reads that were used in each clone (for more details see updated documentation)
+Added new action `exportReads` which export initial reads aggregated by each clones to separate .fastq files
+Added new export options for `exportAlignments`: `-cloneId` (prints clone ID that aggregated corresponding alignment) and `-mapping` (same, with additional info on mapping type)
+Added new export option for `exportClones`: `-mapping` will pring all alignment IDs that were aggreafated by clone
+Added option `-n` (print only first n rows) to all `export` commands
+minor: minor improvements and bug fixes

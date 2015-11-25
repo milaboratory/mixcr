@@ -17,6 +17,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.assembler.*;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.cli.ActionAlign;
 import com.milaboratory.mixcr.cli.AlignerReport;
 import com.milaboratory.mixcr.cli.CloneAssemblerReport;
 import com.milaboratory.mixcr.reference.*;
@@ -113,10 +114,12 @@ public final class RunMiXCR {
             }))) {
                 if (t.alignment != null) {
                     t.alignment.setAlignmentsIndex(ind++);
+                    t.alignment.setDescriptions(ActionAlign.extractDescription(t.read));
+                    t.alignment.setOriginalSequences(ActionAlign.extractNSeqs(t.read));
                     als.add(t.alignment);
                 }
             }
-            return new AlignResult(parameters, reader.getNumberOfReads(), report, als, alleles);
+            return new AlignResult(parameters, reader.getNumberOfReads(), report, als, alleles, aligner);
         }
     }
 
@@ -136,14 +139,16 @@ public final class RunMiXCR {
         final AlignerReport report;
         final List<VDJCAlignments> alignments;
         final List<Allele> usedAlleles;
+        final VDJCAligner aligner;
 
         public AlignResult(RunMiXCRAnalysis parameters, long totalNumberOfReads, AlignerReport report,
-                           List<VDJCAlignments> alignments, List<Allele> usedAlleles) {
+                           List<VDJCAlignments> alignments, List<Allele> usedAlleles, VDJCAligner aligner) {
             this.parameters = parameters;
             this.totalNumberOfReads = totalNumberOfReads;
             this.report = report;
             this.alignments = alignments;
             this.usedAlleles = usedAlleles;
+            this.aligner = aligner;
         }
     }
 

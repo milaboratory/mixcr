@@ -31,7 +31,7 @@ package com.milaboratory.mixcr.vdjaligners;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.core.alignment.KAlignerParameters;
+import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.mixcr.reference.GeneFeature;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,

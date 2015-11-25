@@ -30,7 +30,7 @@ package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.alignment.BandedAlignerParameters;
-import com.milaboratory.core.alignment.KAlignerParameters;
+import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.tree.TreeSearchParameters;
@@ -44,10 +44,6 @@ import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import static com.milaboratory.mixcr.reference.GeneFeature.Exon1;
-import static com.milaboratory.mixcr.reference.GeneFeature.V5UTR;
-import static com.milaboratory.mixcr.reference.GeneFeature.VExon2;
 
 public class JsonOverriderTest {
     @Test

@@ -30,8 +30,8 @@ package com.milaboratory.mixcr.assembler;
 
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
-import com.milaboratory.core.alignment.BandedAligner;
 import com.milaboratory.core.alignment.BandedAlignerParameters;
+import com.milaboratory.core.alignment.BandedLinearAligner;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
@@ -159,14 +159,14 @@ class CloneFactory {
                     int referenceLength = rangeInReference.length();
                     NucleotideSequence target = accumulator.getSequence().get(i).getSequence();
                     if (leftSide == null) {
-                        alignments[i] = BandedAligner.align(alignmentParameters.getScoring(),
+                        alignments[i] = BandedLinearAligner.align(alignmentParameters.getScoring(),
                                 referenceSequence, target,
                                 rangeInReference.getFrom(), referenceLength,
                                 0, target.size(),
                                 alignmentParameters.getWidth());
                     } else if (leftSide) {
                         assert rangeInReference.getFrom() + referenceLength == referenceSequence.size();
-                        alignments[i] = BandedAligner.alignSemiLocalLeft(
+                        alignments[i] = BandedLinearAligner.alignSemiLocalLeft(
                                 alignmentParameters.getScoring(),
                                 referenceSequence, target,
                                 rangeInReference.getFrom(), referenceLength,
@@ -176,7 +176,7 @@ class CloneFactory {
                     } else {
                         assert rangeInReference.getFrom() == 0;
                         //int offset2 = Math.max(0, target.size() - referenceLength);
-                        alignments[i] = BandedAligner.alignSemiLocalRight(
+                        alignments[i] = BandedLinearAligner.alignSemiLocalRight(
                                 alignmentParameters.getScoring(),
                                 referenceSequence, target,
                                 rangeInReference.getFrom(), referenceLength,

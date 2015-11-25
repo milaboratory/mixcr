@@ -28,7 +28,7 @@
  */
 package com.milaboratory.mixcr.vdjaligners;
 
-import com.milaboratory.core.alignment.KAligner;
+import com.milaboratory.core.alignment.kaligner1.KAligner;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.reference.GeneType;

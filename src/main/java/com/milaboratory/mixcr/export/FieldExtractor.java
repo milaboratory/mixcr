@@ -29,8 +29,6 @@
 package com.milaboratory.mixcr.export;
 
 public interface FieldExtractor<T> {
-    Field<T> getDescriptor();
-
     String getHeader();
 
     String extractValue(T object);

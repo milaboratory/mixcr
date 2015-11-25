@@ -36,7 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class InfoWriter<T> implements InputPort<T>, AutoCloseable {
-    final ArrayList<AbstractFieldExtractor<? super T>> fieldExtractors = new ArrayList<>();
+    final ArrayList<FieldExtractor<? super T>> fieldExtractors = new ArrayList<>();
     final OutputStream outputStream;
     boolean initialized;
 
@@ -45,11 +45,11 @@ public final class InfoWriter<T> implements InputPort<T>, AutoCloseable {
                 new BufferedOutputStream(new FileOutputStream(new File(file)), 65536));
     }
 
-    public void attachInfoProvider(AbstractFieldExtractor<? super T> provider) {
+    public void attachInfoProvider(FieldExtractor<? super T> provider) {
         fieldExtractors.add(provider);
     }
 
-    public void attachInfoProviders(List<AbstractFieldExtractor<? super T>> providers) {
+    public void attachInfoProviders(List<FieldExtractor<? super T>> providers) {
         fieldExtractors.addAll(providers);
     }
 
@@ -60,13 +60,13 @@ public final class InfoWriter<T> implements InputPort<T>, AutoCloseable {
     private void ensureInitialized() {
         if (!initialized) {
             try {
-                if (!fieldExtractors.isEmpty())
-                    for (int i = 0; ; ++i) {
-                        outputStream.write(fieldExtractors.get(i).header.getBytes());
-                        if (i == fieldExtractors.size() - 1)
-                            break;
-                        outputStream.write('\t');
-                    }
+                for (int i = 0; i < fieldExtractors.size(); ++i) {
+                    outputStream.write(fieldExtractors.get(i).getHeader().getBytes());
+                    if (i == fieldExtractors.size() - 1)
+                        break;
+                    outputStream.write('\t');
+                }
+                outputStream.write('\n');
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -77,16 +77,14 @@ public final class InfoWriter<T> implements InputPort<T>, AutoCloseable {
     @Override
     public void put(T t) {
         ensureInitialized();
-        if (fieldExtractors.isEmpty())
-            return;
         try {
-            outputStream.write('\n');
-            for (int i = 0; ; ++i) {
+            for (int i = 0; i < fieldExtractors.size(); ++i) {
                 outputStream.write(fieldExtractors.get(i).extractValue(t).getBytes());
                 if (i == fieldExtractors.size() - 1)
                     break;
                 outputStream.write('\t');
             }
+            outputStream.write('\n');
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -95,5 +93,8 @@ public final class InfoWriter<T> implements InputPort<T>, AutoCloseable {
     @Override
     public void close() throws IOException {
         outputStream.close();
+        for (FieldExtractor<? super T> fe : fieldExtractors)
+            if (fe instanceof Closeable)
+                ((Closeable) fe).close();
     }
 }

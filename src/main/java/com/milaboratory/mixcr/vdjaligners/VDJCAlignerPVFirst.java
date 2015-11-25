@@ -32,8 +32,8 @@ import com.milaboratory.core.PairedTarget;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.AlignmentUtils;
-import com.milaboratory.core.alignment.KAlignmentHit;
-import com.milaboratory.core.alignment.KAlignmentResult;
+import com.milaboratory.core.alignment.kaligner1.KAlignmentHit;
+import com.milaboratory.core.alignment.kaligner1.KAlignmentResult;
 import com.milaboratory.core.io.sequence.PairedRead;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
@@ -50,7 +50,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     }
 
     @Override
-    public VDJCAlignmentResult<PairedRead> process(PairedRead input) {
+    public VDJCAlignmentResult<PairedRead> process(final PairedRead input) {
         ensureInitialized();
 
         PairedTarget[] targets = getTargets(input);

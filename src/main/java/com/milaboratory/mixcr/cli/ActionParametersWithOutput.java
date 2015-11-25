@@ -47,6 +47,8 @@ public abstract class ActionParametersWithOutput extends ActionParameters {
 
     @Override
     public void validate() {
+        if (help)
+            return;
         if (!isForceOverwrite())
             for (String fileName : getOutputFiles()) {
                 if (fileName.equals("."))
