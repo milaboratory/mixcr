@@ -112,9 +112,11 @@ public class FastaLocusBuilderTest {
     @Test
     public void test2() throws Exception {
         FastaLocusBuilderParameters parameters =
-                new FastaLocusBuilderParameters(GeneType.Variable, "^[^\\|]+\\|([^\\|]+)",
+                new FastaLocusBuilderParameters(GeneType.Variable,
+                        "^[^\\|]+\\|([^\\|]+)",
                         "^[^\\|]+\\|[^\\|]+\\|[^\\|]+\\|[\\(\\[]?F",
                         "^[^\\|]+\\|[^\\|]+\\*01", '.',
+                        true,
                         new AffineGapAlignmentScoring<>(NucleotideSequence.ALPHABET, 1, -4, -11, -2),
                         new AnchorPointPosition(ReferencePoint.FR1Begin, 0),
                         new AnchorPointPosition(ReferencePoint.CDR1Begin, 78),

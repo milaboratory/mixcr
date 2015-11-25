@@ -31,7 +31,13 @@ package com.milaboratory.mixcr.reference.builder;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.reference.*;
+import com.milaboratory.mixcr.reference.GeneType;
+import com.milaboratory.mixcr.reference.LociLibraryWriter;
+import com.milaboratory.mixcr.reference.ReferencePoint;
+import com.milaboratory.mixcr.reference.ReferenceUtil;
+import gnu.trove.impl.Constants;
+import gnu.trove.map.TObjectIntMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
 
 import java.util.Arrays;
 import java.util.regex.Pattern;
@@ -43,6 +49,7 @@ public final class FastaLocusBuilderParameters {
     private final GeneType geneType;
     private final String alleleNameExtractionPattern, functionalAllelePattern, referenceAllelePattern;
     private final char paddingChar;
+    private final boolean firstOccurredAlleleIsReference;
     private final AlignmentScoring<NucleotideSequence> scoring;
     private final AnchorPointPosition[] anchorPointPositions;
 
@@ -55,6 +62,8 @@ public final class FastaLocusBuilderParameters {
     private final Pattern referenceAllelePatternP;
     @JsonIgnore
     private final int[] referencePointPositions;
+    @JsonIgnore
+    private final TObjectIntMap<ReferencePoint> referencePointIndexMapping;
 
 
     public FastaLocusBuilderParameters(GeneType geneType,
@@ -62,6 +71,7 @@ public final class FastaLocusBuilderParameters {
                                        String functionalAllelePattern,
                                        String referenceAllelePattern,
                                        char paddingChar,
+                                       boolean firstOccurredAlleleIsReference,
                                        AlignmentScoring<NucleotideSequence> scoring,
                                        AnchorPointPosition... anchorPointPositions) {
         this.geneType = geneType;
@@ -69,6 +79,7 @@ public final class FastaLocusBuilderParameters {
         this.functionalAllelePattern = functionalAllelePattern;
         this.referenceAllelePattern = referenceAllelePattern;
         this.paddingChar = paddingChar;
+        this.firstOccurredAlleleIsReference = firstOccurredAlleleIsReference;
         this.scoring = scoring;
         this.anchorPointPositions = anchorPointPositions;
         for (AnchorPointPosition ap : anchorPointPositions)
@@ -81,7 +92,29 @@ public final class FastaLocusBuilderParameters {
         this.alleleNameExtractionPatternP = Pattern.compile(alleleNameExtractionPattern);
         this.functionalGenePatternP = Pattern.compile(functionalAllelePattern);
         this.referenceAllelePatternP = referenceAllelePattern == null ? null : Pattern.compile(referenceAllelePattern);
-        this.referencePointPositions = calculateReferencePointPositions(geneType, anchorPointPositions);
+
+        // Calculating reference points positions
+
+        // Getting information about basic anchor points count and offset by gene type
+        LociLibraryWriter.GeneTypeInfo info = LociLibraryWriter.getGeneTypeInfo(geneType);
+        int indexOfFirstPoint = info.indexOfFirstPoint;
+
+        // Init
+        this.referencePointPositions = new int[info.size];
+        this.referencePointIndexMapping = new TObjectIntHashMap<>(Constants.DEFAULT_CAPACITY, Constants.DEFAULT_LOAD_FACTOR, -1);
+
+        // -1 == NA
+        Arrays.fill(this.referencePointPositions, -1);
+
+        // Filling array
+        for (AnchorPointPosition ap : anchorPointPositions) {
+            // Reference points in allele-specific RP array are stored starting from first
+            // reference point that applies to allele's gene type, so index in allele specific
+            // array is calculated as globalRPIndex - indexOfFirstPointOfTHeGeneType
+            int index = ReferenceUtil.getReferencePointIndex(ap.point) - indexOfFirstPoint;
+            this.referencePointPositions[index] = ap.position;
+            this.referencePointIndexMapping.put(ap.point, index);
+        }
     }
 
     public GeneType getGeneType() {
@@ -104,6 +137,10 @@ public final class FastaLocusBuilderParameters {
         return paddingChar;
     }
 
+    public boolean firstOccurredAlleleIsReference() {
+        return firstOccurredAlleleIsReference;
+    }
+
     public boolean doAlignAlleles() {
         return scoring != null;
     }
@@ -114,30 +151,15 @@ public final class FastaLocusBuilderParameters {
 
     /**
      * Returns positions of reference points formatted as final array that will be serialized to LociLibrary file. See
-     * implementation of {@link #calculateReferencePointPositions(GeneType, AnchorPointPosition[])} for details.
+     * implementation of{@link #FastaLocusBuilderParameters(GeneType, String, String, String, char, boolean,
+     * AlignmentScoring, AnchorPointPosition...)} for details.
      */
     public int[] getReferencePointPositions() {
         return referencePointPositions;
     }
 
-    public static int[] calculateReferencePointPositions(GeneType geneType, AnchorPointPosition[] anchorPointPositions) {
-        // Getting information about basic anchor points count and offset by gene type
-        LociLibraryWriter.GeneTypeInfo info = LociLibraryWriter.getGeneTypeInfo(geneType);
-        int indexOfFirstPoint = info.indexOfFirstPoint;
-
-        int[] result = new int[info.size];
-
-        // -1 == NA
-        Arrays.fill(result, -1);
-
-        // Filling array
-        for (AnchorPointPosition ap : anchorPointPositions)
-            // Reference points in allele-specific RP array are stored starting from first
-            // reference point that applies to allele's gene type, so index in allele specific
-            // array is calculated as globalRPIndex - indexOfFirstPointOfTHeGeneType
-            result[ReferenceUtil.getReferencePointIndex(ap.point) - indexOfFirstPoint] = ap.position;
-
-        return result;
+    public TObjectIntMap<ReferencePoint> getReferencePointIndexMapping() {
+        return referencePointIndexMapping;
     }
 
     /**

@@ -36,19 +36,22 @@ import com.milaboratory.core.alignment.MultiAlignmentHelper;
 import com.milaboratory.core.io.sequence.fasta.FastaReader;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.mutations.MutationsBuilder;
+import com.milaboratory.core.mutations.MutationsUtil;
+import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.reference.GeneFeature;
 import com.milaboratory.mixcr.reference.Locus;
+import com.milaboratory.mixcr.reference.ReferencePoint;
+import gnu.trove.map.TObjectIntMap;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.milaboratory.mixcr.reference.builder.BuilderUtils.*;
-import static com.milaboratory.mixcr.reference.builder.FastaLocusBuilderParameters.AnchorPointPosition.*;
+import static com.milaboratory.mixcr.reference.builder.FastaLocusBuilderParameters.AnchorPointPosition.BEGINNING_OF_SEQUENCE;
+import static com.milaboratory.mixcr.reference.builder.FastaLocusBuilderParameters.AnchorPointPosition.END_OF_SEQUENCE;
 
 /**
  * Builds MiXCR format LociLibrary file from
@@ -248,7 +251,7 @@ public class FastaLocusBuilder {
             if (alleleInfo.isReference && gene.reference != null && gene.reference.isReference)
                 gene.severalReferenceAlleles = true;
 
-            // If allele is first for tis gene, also add it to reference slot
+            // If allele is first for tis gene, add it to reference slot
             // Also reset this slot for first "reference" allele occurred
             if (isFirst || (!gene.reference.isReference && alleleInfo.isReference))
                 gene.reference = alleleInfo;
@@ -273,18 +276,71 @@ public class FastaLocusBuilder {
         if (parameters.doAlignAlleles()) {
             for (GeneInfo gene : genes.values()) {
                 AlleleInfo ref = gene.finalList.get(0);
-                NucleotideSequence seq = ref.baseSequence;
-                List<Alignment<NucleotideSequence>> alignments = new ArrayList<>();
+                NucleotideSequence refSeqNt = ref.baseSequence;
+
+                // Collecting noncoding ranges information
+                List<Range> noncodingRegionsL = new ArrayList<>();
+                int[] orfRefPoints = ref.referencePoints.clone();
+                TObjectIntMap<ReferencePoint> refMapping = parameters.getReferencePointIndexMapping();
+                for (GeneFeature noncodingFeature : GeneFeature.NONCODING_FEATURES) {
+                    int from = refMapping.get(noncodingFeature.getFirstPoint());
+                    int to = refMapping.get(noncodingFeature.getLastPoint());
+                    if (from == -1 || to == -1 || ref.referencePoints[from] == -1 || ref.referencePoints[to] == -1)
+                        continue;
+
+                    orfRefPoints[from] = -1;
+                    orfRefPoints[to] = -1;
+
+                    noncodingRegionsL.add(new Range(ref.referencePoints[from], ref.referencePoints[to]));
+                }
+                Range[] noncodingRegions = noncodingRegionsL.toArray(new Range[noncodingRegionsL.size()]);
+                Arrays.sort(noncodingRegions, Range.COMPARATOR_BY_FROM);
+                for (int i = 0; i < orfRefPoints.length; i++) {
+                    int offset = 0;
+                    for (Range noncodingRegion : noncodingRegions)
+                        if (noncodingRegion.getTo() < orfRefPoints[i])
+                            offset += noncodingRegion.length();
+                    orfRefPoints[i] = Math.max(-1, orfRefPoints[i] - offset);
+                }
+                NucleotideSequence refSeqNtORF = refSeqNt;
+                for (int i = noncodingRegions.length - 1; i >= 0; --i) {
+                    Range range = noncodingRegions[i];
+                    refSeqNtORF = refSeqNtORF.getRange(0, range.getFrom()).concatenate(refSeqNtORF.getRange(range.getTo(), refSeqNtORF.size()));
+                }
+
+                AminoAcidSequence refSeqAA = AminoAcidSequence.translateFromLeft(refSeqNtORF);
+
+                List<Alignment<NucleotideSequence>> alignmentsNt = new ArrayList<>();
+                List<Alignment<AminoAcidSequence>> alignmentsAA = new ArrayList<>();
                 for (int i = 1; i < gene.finalList.size(); i++) {
                     AlleleInfo a = gene.finalList.get(i);
+
                     Range refRange = new Range(ref.referencePoints[a.firstRefRefPoint], ref.referencePoints[a.lastRefRefPoint]);
-                    alignments.add(new Alignment<>(seq, a.mutations, refRange,
+                    alignmentsNt.add(new Alignment<>(refSeqNt, a.mutations, refRange,
                             new Range(0, refRange.length() + a.mutations.getLengthDelta()), parameters.getScoring()));
+
+                    if (orfRefPoints[a.firstRefRefPoint] == -1 || orfRefPoints[a.lastRefRefPoint] == -1)
+                        continue;
+                    //Range refRangeORF = new Range(orfRefPoints[a.firstRefRefPoint], orfRefPoints[a.lastRefRefPoint]);
+                    Mutations<AminoAcidSequence> aaMuts = MutationsUtil.nt2aa(refSeqNtORF,
+                            a.mutations.removeMutationsInRanges(noncodingRegions), 10);
+                    if (aaMuts == null)
+                        continue;
+                    Range refRangeAA = new Range(orfRefPoints[a.firstRefRefPoint] / 3, (orfRefPoints[a.lastRefRefPoint] + 2) / 3);
+                    alignmentsAA.add(new Alignment<>(refSeqAA, aaMuts, refRangeAA,
+                            new Range(0, refRangeAA.length() + aaMuts.getLengthDelta()), 0));
                 }
                 MultiAlignmentHelper multiAlignmentHelper =
                         MultiAlignmentHelper.build(MultiAlignmentHelper.DOT_MATCH_SETTINGS,
                                 new Range(ref.getFirstReferencePointPosition(), ref.getLastReferencePointPosition()),
-                                ref.baseSequence, alignments.toArray(new Alignment[alignments.size()]));
+                                ref.baseSequence, alignmentsNt.toArray(new Alignment[alignmentsNt.size()]));
+                finalReportStream.println(multiAlignmentHelper.toString());
+                finalReportStream.println();
+
+                multiAlignmentHelper =
+                        MultiAlignmentHelper.build(MultiAlignmentHelper.DOT_MATCH_SETTINGS,
+                                new Range(0, refSeqAA.size()),
+                                refSeqAA, alignmentsAA.toArray(new Alignment[alignmentsAA.size()]));
                 finalReportStream.println(multiAlignmentHelper.toString());
                 finalReportStream.println();
             }
@@ -306,7 +362,9 @@ public class FastaLocusBuilder {
             if (parameters.doAlignAlleles()) {
                 // Find reference allele
                 AlleleInfo reference = this.reference;
-                if (!reference.isReference) {
+
+                // Checks
+                if (!reference.isReference && !parameters.firstOccurredAlleleIsReference()) {
                     errorOrException("No reference allele for gene " + geneName + ". Sipping.");
                     return false;
                 }
