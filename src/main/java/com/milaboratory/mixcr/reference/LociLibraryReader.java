@@ -142,9 +142,11 @@ public class LociLibraryReader {
             alleles.put(gt, new ArrayList<Allele>());
 
         container = new LocusContainer(uuid, new SpeciesAndLocus(taxonId, locus), genes, alleles,
-                Collections.unmodifiableMap(nameToGenes = new HashMap<String, Gene>()),
-                Collections.unmodifiableMap(nameToAlleles = new HashMap<String, Allele>()),
+                Collections.unmodifiableMap(nameToGenes = new HashMap<>()),
+                Collections.unmodifiableMap(nameToAlleles = new HashMap<>()),
                 Collections.unmodifiableList(allGenes = new ArrayList<>()));
+
+        container.setLibrary(library);
     }
 
     private void readAllele() throws IOException {
@@ -203,7 +205,7 @@ public class LociLibraryReader {
             allele = new AllelicVariant(alleleName,
                     (flags & 2) != 0, parent.getPartitioning().getWrappingGeneFeature(),
                     (ReferenceAllele) parent,
-                    new Mutations<NucleotideSequence>(NucleotideSequence.ALPHABET, mutations));
+                    new Mutations<>(NucleotideSequence.ALPHABET, mutations));
         }
 
         gene.alleles.add(allele);

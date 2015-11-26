@@ -42,6 +42,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.SequencePartitioning;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter;
 import com.milaboratory.mixcr.reference.GeneFeature;
+import com.milaboratory.mixcr.reference.LociLibraryWriter;
 import com.milaboratory.mixcr.reference.Locus;
 import com.milaboratory.mixcr.reference.ReferencePoint;
 import com.milaboratory.util.StringUtil;
@@ -67,6 +68,10 @@ public class FastaLocusBuilder {
      */
     private final Locus locus;
     /**
+     * Species Taxon ID
+     */
+    private final int taxonId;
+    /**
      * Parameters
      */
     private final FastaLocusBuilderParameters parameters;
@@ -91,7 +96,8 @@ public class FastaLocusBuilder {
      */
     private boolean allowNonStandardAlleleNames = false;
 
-    public FastaLocusBuilder(Locus locus, FastaLocusBuilderParameters parameters) {
+    public FastaLocusBuilder(int taxonId, Locus locus, FastaLocusBuilderParameters parameters) {
+        this.taxonId = taxonId;
         this.locus = locus;
         this.parameters = parameters;
     }
@@ -325,7 +331,8 @@ public class FastaLocusBuilder {
                     AlleleInfo a = gene.finalList.get(i);
 
                     Range refRange = new Range(ref.referencePoints[a.firstRefRefPoint], ref.referencePoints[a.lastRefRefPoint]);
-                    alignmentsNt.add(new Alignment<>(refSeqNt, a.mutations, refRange,
+                    Mutations<NucleotideSequence> absoluteMutations = a.mutations.move(refRange.getFrom());
+                    alignmentsNt.add(new Alignment<>(refSeqNt, absoluteMutations, refRange,
                             new Range(0, refRange.length() + a.mutations.getLengthDelta()), parameters.getScoring()));
                     alleleNamesNt.add(a.alleleName);
 
@@ -333,7 +340,7 @@ public class FastaLocusBuilder {
                         continue;
                     //Range refRangeORF = new Range(orfRefPoints[a.firstRefRefPoint], orfRefPoints[a.lastRefRefPoint]);
                     Mutations<AminoAcidSequence> aaMuts = MutationsUtil.nt2aa(refSeqNtORF,
-                            a.mutations.removeMutationsInRanges(noncodingRegions), 10);
+                            absoluteMutations.removeMutationsInRanges(noncodingRegions), 10);
                     if (aaMuts == null)
                         continue;
                     Range refRangeAA = new Range(orfRefPoints[a.firstRefRefPoint] / 3, (orfRefPoints[a.lastRefRefPoint] + 2) / 3);
@@ -372,6 +379,24 @@ public class FastaLocusBuilder {
                 }
             }
         }
+    }
+
+    public void writeLocus(LociLibraryWriter writer) throws IOException {
+        writer.writeBeginOfLocus(taxonId, locus);
+        for (GeneInfo gene : genes.values()) {
+            for (AlleleInfo alleleInfo : gene.finalList) {
+                if (alleleInfo.isReference) {
+                    String accession = UUID.randomUUID().toString() + "-" + alleleInfo.alleleName;
+                    writer.writeSequencePart(accession, 0, alleleInfo.baseSequence);
+                    writer.writeAllele(parameters.getGeneType(), alleleInfo.alleleName, true,
+                            alleleInfo.isFunctional, accession, alleleInfo.referencePoints, null, null);
+                } else
+                    writer.writeAllele(parameters.getGeneType(), alleleInfo.alleleName, false,
+                            alleleInfo.isFunctional, null, null, alleleInfo.reference.alleleName,
+                            alleleInfo.mutations.getRAWMutations());
+            }
+        }
+        writer.writeEndOfLocus();
     }
 
     private static final class SeqPartitioning extends SequencePartitioning {
@@ -423,6 +448,8 @@ public class FastaLocusBuilder {
                     return false;
                 }
 
+                reference.isReference = true;
+
                 // Compiling final alleles list
                 finalList.add(reference);
                 for (AlleleInfo allele : alleles.values())
@@ -465,13 +492,17 @@ public class FastaLocusBuilder {
 
                         allele.firstRefRefPoint = firstRefRefPoint;
                         allele.lastRefRefPoint = lastRefRefPoint;
-                        allele.mutations = mutations.createAndDestroy();
+                        allele.mutations = mutations.createAndDestroy().move(-ref1[firstRefRefPoint]);
                         finalList.add(allele);
                     }
 
                 Collections.sort(finalList, new Comparator<AlleleInfo>() {
                     @Override
                     public int compare(AlleleInfo o1, AlleleInfo o2) {
+                        if (o1.isReference)
+                            return -1;
+                        if (o2.isReference)
+                            return 1;
                         return o1.alleleName.compareTo(o2.alleleName);
                     }
                 });
@@ -492,7 +523,7 @@ public class FastaLocusBuilder {
     private final class AlleleInfo {
         final String geneName, alleleName;
         final NucleotideSequence baseSequence;
-        final boolean isFunctional, isReference;
+        boolean isFunctional, isReference;
         final int[] referencePoints;
         int firstRefRefPoint, lastRefRefPoint;
         AlleleInfo reference;

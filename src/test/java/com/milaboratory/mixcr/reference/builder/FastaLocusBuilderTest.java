@@ -32,13 +32,13 @@ import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.io.sequence.fasta.FastaReader;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.reference.GeneType;
-import com.milaboratory.mixcr.reference.Locus;
-import com.milaboratory.mixcr.reference.ReferencePoint;
+import com.milaboratory.mixcr.reference.*;
 import com.milaboratory.mixcr.reference.builder.FastaLocusBuilderParameters.AnchorPointPosition;
 import com.milaboratory.util.StringUtil;
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -127,11 +127,17 @@ public class FastaLocusBuilderTest {
                         new AnchorPointPosition(ReferencePoint.VEnd, AnchorPointPosition.END_OF_SEQUENCE));
 
         //{0, 78, 114, 165, 195, 309, -1};
-        FastaLocusBuilder builder = new FastaLocusBuilder(Locus.IGH, parameters).noExceptionOnError();
+        FastaLocusBuilder builder = new FastaLocusBuilder(Species.HomoSapiens, Locus.IGH, parameters).noExceptionOnError();
         builder.importAllelesFromFile("/Volumes/Data/Projects/MiLaboratory/tmp/result/human_IGHV.fasta");
         builder.compile();
         builder.printReport();
-        int i = 0;
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        LociLibraryWriter writer = new LociLibraryWriter(bos);
+        writer.writeMagic();
+        builder.writeLocus(writer);
+        ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+        LociLibrary ll = LociLibraryReader.read(bis);
     }
 
     private static AminoAcidSequence tr(StringWithMapping sm, int from, int to) {
