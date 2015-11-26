@@ -71,7 +71,7 @@ public class VDJCAlignmentsFormatter {
 
         char[] markers = new char[helper.size()];
         Arrays.fill(markers, ' ');
-        for (PointToDraw point : points)
+        for (PointToDraw point : POINTS_FOR_REARRANGED)
             point.draw(partitioning, helper, markers);
 
         helper.addAnnotationString("", new String(markers));
@@ -85,7 +85,15 @@ public class VDJCAlignmentsFormatter {
         return helper;
     }
 
-    public static final PointToDraw[] points = new PointToDraw[]{
+    public static void drawPoints(MultiAlignmentHelper helper, SequencePartitioning partitioning, PointToDraw... pointsToDraw) {
+        char[] markers = new char[helper.size()];
+        Arrays.fill(markers, ' ');
+        for (PointToDraw point : pointsToDraw)
+            point.draw(partitioning, helper, markers);
+        helper.addAnnotationString("", new String(markers));
+    }
+
+    public static final PointToDraw[] POINTS_FOR_REARRANGED = new PointToDraw[]{
             pd(ReferencePoint.V5UTRBeginTrimmed, "<5'UTR"),
             pd(ReferencePoint.V5UTREnd, "5'UTR><L1"),
             pd(ReferencePoint.L1End, "L1>"),
@@ -104,6 +112,25 @@ public class VDJCAlignmentsFormatter {
             pd(ReferencePoint.FR4End, "FR4>")
     };
 
+    public static final PointToDraw[] POINTS_FOR_GERMLINE = new PointToDraw[]{
+            pd(ReferencePoint.V5UTRBeginTrimmed, "<5'UTR"),
+            pd(ReferencePoint.V5UTREnd, "5'UTR><L1"),
+            pd(ReferencePoint.L1End, "L1>"),
+            pd(ReferencePoint.L2Begin, "<L2"),
+            pd(ReferencePoint.FR1Begin, "L2><FR1"),
+            pd(ReferencePoint.CDR1Begin, "FR1><CDR1"),
+            pd(ReferencePoint.FR2Begin, "CDR1><FR2"),
+            pd(ReferencePoint.CDR2Begin, "FR2><CDR2"),
+            pd(ReferencePoint.FR3Begin, "CDR2><FR3"),
+            pd(ReferencePoint.CDR3Begin, "FR3><CDR3"),
+            pd(ReferencePoint.VEnd, "V>"),
+            pd(ReferencePoint.DBegin, "<D"),
+            pd(ReferencePoint.DEnd, "D>"),
+            pd(ReferencePoint.JBegin, "<J"),
+            pd(ReferencePoint.CDR3End, "CDR3><FR4"),
+            pd(ReferencePoint.FR4End, "FR4>")
+    };
+
     private static PointToDraw pd(ReferencePoint rp, String marker) {
         int offset = marker.indexOf('>');
         if (offset >= 0)
@@ -114,7 +141,7 @@ public class VDJCAlignmentsFormatter {
         return new PointToDraw(rp, marker, 0);
     }
 
-    private static class PointToDraw {
+    public static final class PointToDraw {
         final ReferencePoint rp;
         final String marker;
         final int markerOffset;

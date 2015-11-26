@@ -39,9 +39,12 @@ import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.mutations.MutationsUtil;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.basictypes.SequencePartitioning;
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter;
 import com.milaboratory.mixcr.reference.GeneFeature;
 import com.milaboratory.mixcr.reference.Locus;
 import com.milaboratory.mixcr.reference.ReferencePoint;
+import com.milaboratory.util.StringUtil;
 import gnu.trove.map.TObjectIntMap;
 
 import java.io.*;
@@ -57,6 +60,8 @@ import static com.milaboratory.mixcr.reference.builder.FastaLocusBuilderParamete
  * Builds MiXCR format LociLibrary file from
  */
 public class FastaLocusBuilder {
+    public static final int LINE_WIDTH = 80;
+
     /**
      * Target locus
      */
@@ -274,7 +279,10 @@ public class FastaLocusBuilder {
 
     public void printReport() {
         if (parameters.doAlignAlleles()) {
+            finalReportStream.println();
             for (GeneInfo gene : genes.values()) {
+                finalReportStream.println(gene.geneName);
+                finalReportStream.println(StringUtil.chars('=', gene.geneName.length()));
                 AlleleInfo ref = gene.finalList.get(0);
                 NucleotideSequence refSeqNt = ref.baseSequence;
 
@@ -312,12 +320,14 @@ public class FastaLocusBuilder {
 
                 List<Alignment<NucleotideSequence>> alignmentsNt = new ArrayList<>();
                 List<Alignment<AminoAcidSequence>> alignmentsAA = new ArrayList<>();
+                List<String> alleleNamesNt = new ArrayList<>(), alleleNamesAA = new ArrayList<>();
                 for (int i = 1; i < gene.finalList.size(); i++) {
                     AlleleInfo a = gene.finalList.get(i);
 
                     Range refRange = new Range(ref.referencePoints[a.firstRefRefPoint], ref.referencePoints[a.lastRefRefPoint]);
                     alignmentsNt.add(new Alignment<>(refSeqNt, a.mutations, refRange,
                             new Range(0, refRange.length() + a.mutations.getLengthDelta()), parameters.getScoring()));
+                    alleleNamesNt.add(a.alleleName);
 
                     if (orfRefPoints[a.firstRefRefPoint] == -1 || orfRefPoints[a.lastRefRefPoint] == -1)
                         continue;
@@ -329,21 +339,61 @@ public class FastaLocusBuilder {
                     Range refRangeAA = new Range(orfRefPoints[a.firstRefRefPoint] / 3, (orfRefPoints[a.lastRefRefPoint] + 2) / 3);
                     alignmentsAA.add(new Alignment<>(refSeqAA, aaMuts, refRangeAA,
                             new Range(0, refRangeAA.length() + aaMuts.getLengthDelta()), 0));
+                    alleleNamesAA.add(a.alleleName);
                 }
+
                 MultiAlignmentHelper multiAlignmentHelper =
                         MultiAlignmentHelper.build(MultiAlignmentHelper.DOT_MATCH_SETTINGS,
                                 new Range(ref.getFirstReferencePointPosition(), ref.getLastReferencePointPosition()),
                                 ref.baseSequence, alignmentsNt.toArray(new Alignment[alignmentsNt.size()]));
-                finalReportStream.println(multiAlignmentHelper.toString());
+                multiAlignmentHelper.setSubjectLeftTitle(" " + ref.alleleName);
+
+                for (int i = 0; i < alignmentsNt.size(); i++)
+                    multiAlignmentHelper.setQueryLeftTitle(i, " " + alleleNamesNt.get(i));
+                VDJCAlignmentsFormatter.drawPoints(multiAlignmentHelper, new SeqPartitioning(refMapping, ref.referencePoints, false), VDJCAlignmentsFormatter.POINTS_FOR_GERMLINE);
+                for (MultiAlignmentHelper ah : multiAlignmentHelper.split(LINE_WIDTH)) {
+                    finalReportStream.println(ah);
+                    finalReportStream.println();
+                }
+
                 finalReportStream.println();
 
                 multiAlignmentHelper =
                         MultiAlignmentHelper.build(MultiAlignmentHelper.DOT_MATCH_SETTINGS,
                                 new Range(0, refSeqAA.size()),
                                 refSeqAA, alignmentsAA.toArray(new Alignment[alignmentsAA.size()]));
-                finalReportStream.println(multiAlignmentHelper.toString());
-                finalReportStream.println();
+                multiAlignmentHelper.setSubjectLeftTitle(" " + ref.alleleName);
+                for (int i = 0; i < alignmentsAA.size(); i++)
+                    multiAlignmentHelper.setQueryLeftTitle(i, " " + alleleNamesAA.get(i));
+                VDJCAlignmentsFormatter.drawPoints(multiAlignmentHelper, new SeqPartitioning(refMapping, orfRefPoints, true), VDJCAlignmentsFormatter.POINTS_FOR_GERMLINE);
+                for (MultiAlignmentHelper ah : multiAlignmentHelper.split(LINE_WIDTH)) {
+                    finalReportStream.println(ah);
+                    finalReportStream.println();
+                }
             }
+        }
+    }
+
+    private static final class SeqPartitioning extends SequencePartitioning {
+        final TObjectIntMap<ReferencePoint> refMapping;
+        final int[] referencePoints;
+        final boolean aa;
+
+        public SeqPartitioning(TObjectIntMap<ReferencePoint> refMapping, int[] referencePoints, boolean aa) {
+            this.refMapping = refMapping;
+            this.referencePoints = referencePoints;
+            this.aa = aa;
+        }
+
+        @Override
+        public int getPosition(ReferencePoint referencePoint) {
+            int rp = refMapping.get(referencePoint);
+            if (rp == -1)
+                return -1;
+            rp = referencePoints[rp];
+            if (rp < 0)
+                return -1;
+            return aa ? (rp + 2) / 3 : rp;
         }
     }
 
@@ -418,6 +468,13 @@ public class FastaLocusBuilder {
                         allele.mutations = mutations.createAndDestroy();
                         finalList.add(allele);
                     }
+
+                Collections.sort(finalList, new Comparator<AlleleInfo>() {
+                    @Override
+                    public int compare(AlleleInfo o1, AlleleInfo o2) {
+                        return o1.alleleName.compareTo(o2.alleleName);
+                    }
+                });
 
                 // Success
                 return true;
