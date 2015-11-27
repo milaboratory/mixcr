@@ -64,6 +64,8 @@ public final class FastaLocusBuilderParameters {
     private final int[] referencePointPositions;
     @JsonIgnore
     private final TObjectIntMap<ReferencePoint> referencePointIndexMapping;
+    @JsonIgnore
+    private final ReferencePoint[] indexReferencePointMapping;
 
 
     public FastaLocusBuilderParameters(GeneType geneType,
@@ -101,6 +103,7 @@ public final class FastaLocusBuilderParameters {
 
         // Init
         this.referencePointPositions = new int[info.size];
+        this.indexReferencePointMapping = new ReferencePoint[info.size];
         this.referencePointIndexMapping = new TObjectIntHashMap<>(Constants.DEFAULT_CAPACITY, Constants.DEFAULT_LOAD_FACTOR, -1);
 
         // -1 == NA
@@ -114,6 +117,7 @@ public final class FastaLocusBuilderParameters {
             int index = ReferenceUtil.getReferencePointIndex(ap.point) - indexOfFirstPoint;
             this.referencePointPositions[index] = ap.position;
             this.referencePointIndexMapping.put(ap.point, index);
+            this.indexReferencePointMapping[index] = ap.point;
         }
     }
 
@@ -160,6 +164,10 @@ public final class FastaLocusBuilderParameters {
 
     public TObjectIntMap<ReferencePoint> getReferencePointIndexMapping() {
         return referencePointIndexMapping;
+    }
+
+    public ReferencePoint[] getIndexReferencePointMapping() {
+        return indexReferencePointMapping;
     }
 
     /**

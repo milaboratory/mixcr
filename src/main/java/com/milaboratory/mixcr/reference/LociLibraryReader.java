@@ -167,8 +167,10 @@ public class LociLibraryReader {
         }
         String referenceAllele = null;
         int[] mutations = null;
+        GeneFeature referenceGeneFeature = null;
         if ((flags & 8) != 0) {
             referenceAllele = stream.readUTF();
+            referenceGeneFeature = LociLibraryIOUtils.readReferenceGeneFeature(stream);
             int size = stream.readInt();
             mutations = new int[size];
             for (int i = 0; i < size; ++i)
@@ -203,7 +205,7 @@ public class LociLibraryReader {
         } else {
             //allelic variant
             allele = new AllelicVariant(alleleName,
-                    (flags & 2) != 0, parent.getPartitioning().getWrappingGeneFeature(),
+                    (flags & 2) != 0, referenceGeneFeature,
                     (ReferenceAllele) parent,
                     new Mutations<>(NucleotideSequence.ALPHABET, mutations));
         }

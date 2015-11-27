@@ -389,11 +389,11 @@ public class FastaLocusBuilder {
                     String accession = UUID.randomUUID().toString() + "-" + alleleInfo.alleleName;
                     writer.writeSequencePart(accession, 0, alleleInfo.baseSequence);
                     writer.writeAllele(parameters.getGeneType(), alleleInfo.alleleName, true,
-                            alleleInfo.isFunctional, accession, alleleInfo.referencePoints, null, null);
+                            alleleInfo.isFunctional, accession, alleleInfo.referencePoints, null, null, null);
                 } else
                     writer.writeAllele(parameters.getGeneType(), alleleInfo.alleleName, false,
                             alleleInfo.isFunctional, null, null, alleleInfo.reference.alleleName,
-                            alleleInfo.mutations.getRAWMutations());
+                            alleleInfo.mutations.getRAWMutations(), alleleInfo.getReferenceGeneFeature());
             }
         }
         writer.writeEndOfLocus();
@@ -552,6 +552,11 @@ public class FastaLocusBuilder {
                 if (referencePoint != -1)
                     result = referencePoint;
             return result;
+        }
+
+        public GeneFeature getReferenceGeneFeature() {
+            ReferencePoint[] mapping = parameters.getIndexReferencePointMapping();
+            return new GeneFeature(mapping[firstRefRefPoint], mapping[lastRefRefPoint]);
         }
     }
 }

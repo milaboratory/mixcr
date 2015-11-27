@@ -28,6 +28,7 @@
  */
 package com.milaboratory.mixcr.reference;
 
+import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import org.junit.Assert;
@@ -62,7 +63,9 @@ public class LociLibraryIOTest {
         writer.writeCommonSpeciesName(Species.HomoSapiens, "hsa");
         writer.writeSequencePart("A1", 0, new NucleotideSequence("ATTAGACAATTAGACA"), compressed);
         writer.writeBeginOfLocus(Species.HomoSapiens, Locus.TRB, uuid);
-        writer.writeAllele(GeneType.Joining, "TRBJ2-4*01", true, true, "A1", new int[]{1, 5, 8}, null, null);
+        writer.writeAllele(GeneType.Joining, "TRBJ2-4*01", true, true, "A1", new int[]{1, 5, 8}, null, null, null);
+        writer.writeAllele(GeneType.Joining, "TRBJ2-4*02", false, true, null, null, "TRBJ2-4*01",
+                Mutations.decodeNuc("ST1G").getRAWMutations(), GermlineJCDR3Part);
         writer.writeMetaInfo("C", "D");
         writer.writeEndOfLocus();
 
@@ -95,6 +98,13 @@ public class LociLibraryIOTest {
         assertTrue(allele.isReference());
 
         assertEquals(new NucleotideSequence("TTAG"), allele.getFeature(GermlineJCDR3Part));
+
+        allele = container.getAllele("TRBJ2-4*02");
+        assertNotNull(allele);
+        assertTrue(allele.isFunctional());
+        assertFalse(allele.isReference());
+        assertEquals(new NucleotideSequence("TGAG"), allele.getFeature(GermlineJCDR3Part));
+
         //TODO: uncomment after fix for FR4
         //assertEquals(new NucleotideSequence("ACA"), allele.getFeature(GeneFeature.FR4));
         //assertEquals(new NucleotideSequence("TTAGACA"), allele.getFeature(GeneFeature.JRegion));

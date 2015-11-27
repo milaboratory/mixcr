@@ -188,22 +188,24 @@ public class LociLibraryWriter {
      * <p>Mutation positions in the mutation list ( {@code mutations} option ) must be converted to positions relative
      * to the first defined reference point of the reference allele.</p>
      *
-     * @param type            type of the segment (V, D, J or C)
-     * @param alleleName      full name of allele (e.g. TRBV12-2*01)
-     * @param isReference     is it a reference allele
-     * @param isFunctional    {@code true} if this gene is functional; {@code false} if this gene is pseudogene
-     * @param accession       accession number of original (source) sequence
-     * @param referencePoints array of reference points
-     * @param reference       allele name of the reference allele
-     * @param mutations       array of mutations
+     * @param type                 type of the segment (V, D, J or C)
+     * @param alleleName           full name of allele (e.g. TRBV12-2*01)
+     * @param isReference          is it a reference allele
+     * @param isFunctional         {@code true} if this gene is functional; {@code false} if this gene is pseudogene
+     * @param accession            accession number of original (source) sequence
+     * @param referencePoints      array of reference points
+     * @param reference            allele name of the reference allele
+     * @param mutations            array of mutations
+     * @param referenceGeneFeature reference gene feature
      * @throws java.io.IOException if an I/O error occurs.
      */
     public void writeAllele(GeneType type, String alleleName, boolean isReference, boolean isFunctional,
                             String accession, int[] referencePoints,
-                            String reference, int[] mutations) throws IOException {
+                            String reference, int[] mutations, GeneFeature referenceGeneFeature) throws IOException {
         //Validation
         if ((accession == null) != (referencePoints == null)
-                || (reference == null) != (mutations == null))
+                || (reference == null) != (mutations == null)
+                || (reference == null) != (referenceGeneFeature == null))
             throw new IllegalArgumentException();
         if (isReference && (mutations != null || accession == null))
             throw new IllegalArgumentException();
@@ -227,8 +229,9 @@ public class LociLibraryWriter {
                 stream.writeInt(referencePoints[i]);
         }
 
-        if (mutations != null) {
+        if (reference != null) {
             stream.writeUTF(reference);
+            LociLibraryIOUtils.writeReferenceGeneFeature(stream, referenceGeneFeature);
             stream.writeInt(mutations.length);
             for (int i = 0; i < mutations.length; ++i)
                 stream.writeInt(mutations[i]);
