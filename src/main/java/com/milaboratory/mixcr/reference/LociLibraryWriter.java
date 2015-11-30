@@ -221,7 +221,7 @@ public class LociLibraryWriter {
                 (reference != null ? 8 : 0));
 
         if (accession != null) {
-            if (GENE_TYPE_INFOS.get(type).size != referencePoints.length)
+            if (GENE_TYPE_INFOS_WC.get(type).size != referencePoints.length)
                 throw new IllegalArgumentException("Wrong number of reference points.");
 
             stream.writeUTF(accession);
@@ -307,15 +307,25 @@ public class LociLibraryWriter {
     }
 
     public static GeneTypeInfo getGeneTypeInfo(GeneType geneType) {
-        return GENE_TYPE_INFOS.get(geneType);
+        return getGeneTypeInfo(geneType, false);
     }
 
-    public static final EnumMap<GeneType, GeneTypeInfo> GENE_TYPE_INFOS = new EnumMap<>(GeneType.class);
+    public static GeneTypeInfo getGeneTypeInfo(GeneType geneType, boolean withFR4Correction) {
+        return withFR4Correction ? GENE_TYPE_INFOS_WC.get(geneType) : GENE_TYPE_INFOS.get(geneType);
+    }
+
+    private static final EnumMap<GeneType, GeneTypeInfo> GENE_TYPE_INFOS_WC = new EnumMap<>(GeneType.class),
+            GENE_TYPE_INFOS = new EnumMap<>(GeneType.class);
 
     static {
+        GENE_TYPE_INFOS_WC.put(GeneType.Variable, new GeneralGeneTypeInfo(0, 11));
+        GENE_TYPE_INFOS_WC.put(GeneType.Diversity, new GeneralGeneTypeInfo(11, 2));
+        GENE_TYPE_INFOS_WC.put(GeneType.Joining, new JGeneTypeInfo());
+        GENE_TYPE_INFOS_WC.put(GeneType.Constant, new GeneralGeneTypeInfo(16, 3));
+
         GENE_TYPE_INFOS.put(GeneType.Variable, new GeneralGeneTypeInfo(0, 11));
         GENE_TYPE_INFOS.put(GeneType.Diversity, new GeneralGeneTypeInfo(11, 2));
-        GENE_TYPE_INFOS.put(GeneType.Joining, new JGeneTypeInfo());
+        GENE_TYPE_INFOS.put(GeneType.Joining, new GeneralGeneTypeInfo(13, 3));
         GENE_TYPE_INFOS.put(GeneType.Constant, new GeneralGeneTypeInfo(16, 3));
     }
 }

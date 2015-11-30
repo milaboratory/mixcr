@@ -311,8 +311,9 @@ public class FastaLocusBuilder {
         if (parameters.doAlignAlleles()) {
             finalReportStream.println();
             for (GeneInfo gene : genes.values()) {
-                finalReportStream.println(gene.geneName);
-                finalReportStream.println(StringUtil.chars('=', gene.geneName.length()));
+                String geneName = gene.geneName;
+                finalReportStream.println(geneName);
+                finalReportStream.println(StringUtil.chars('=', geneName.length()));
                 AlleleInfo ref = gene.finalList.get(0);
                 NucleotideSequence refSeqNt = ref.baseSequence;
 
@@ -346,8 +347,14 @@ public class FastaLocusBuilder {
                     refSeqNtORF = refSeqNtORF.getRange(0, range.getFrom()).concatenate(refSeqNtORF.getRange(range.getTo(), refSeqNtORF.size()));
                 }
 
-                TranslationParameters translationParameters = withIncompleteCodon(orfRefPoints[parameters.getTranslationReferencePointIndex()]);
-                AminoAcidSequence refSeqAA = AminoAcidSequence.translate(refSeqNtORF, translationParameters);
+                boolean translate = parameters.getTranslationReferencePointIndex() != -1 &&
+                        orfRefPoints[parameters.getTranslationReferencePointIndex()] != -1;
+                TranslationParameters translationParameters = null;
+                AminoAcidSequence refSeqAA = null;
+                if (translate) {
+                    translationParameters = withIncompleteCodon(orfRefPoints[parameters.getTranslationReferencePointIndex()]);
+                    refSeqAA = AminoAcidSequence.translate(refSeqNtORF, translationParameters);
+                }
 
                 List<Alignment<NucleotideSequence>> alignmentsNt = new ArrayList<>();
                 List<Alignment<AminoAcidSequence>> alignmentsAA = new ArrayList<>();
@@ -359,11 +366,9 @@ public class FastaLocusBuilder {
                     Mutations<NucleotideSequence> absoluteMutations = a.mutations.move(refRange.getFrom());
                     alignmentsNt.add(new Alignment<>(refSeqNt, absoluteMutations, refRange,
                             new Range(0, refRange.length() + a.mutations.getLengthDelta()), parameters.getScoring()));
-                    alleleNamesNt.add(a.alleleName);
+                    alleleNamesNt.add(a.getFullName());
 
-                    if (parameters.getTranslationReferencePointIndex() == -1 ||
-                            orfRefPoints[a.firstRefRefPoint] == -1 || orfRefPoints[a.lastRefRefPoint] == -1 ||
-                            orfRefPoints[parameters.getTranslationReferencePointIndex()] == -1)
+                    if (!translate || orfRefPoints[a.firstRefRefPoint] == -1 || orfRefPoints[a.lastRefRefPoint] == -1)
                         continue;
 
                     //Range refRangeORF = new Range(orfRefPoints[a.firstRefRefPoint], orfRefPoints[a.lastRefRefPoint]);
@@ -377,14 +382,15 @@ public class FastaLocusBuilder {
                             convertNtPositionToAA(orfRefPoints[a.lastRefRefPoint] - 1, refSeqNt.size(), translationParameters).aminoAcidPosition + 1);
                     alignmentsAA.add(new Alignment<>(refSeqAA, aaMuts, refRangeAA,
                             new Range(0, refRangeAA.length() + aaMuts.getLengthDelta()), 0));
-                    alleleNamesAA.add(a.alleleName);
+                    alleleNamesAA.add(a.getFullName());
                 }
 
+                // Nucleotide Alignment
                 MultiAlignmentHelper multiAlignmentHelper =
                         MultiAlignmentHelper.build(MultiAlignmentHelper.DOT_MATCH_SETTINGS,
                                 new Range(ref.getFirstReferencePointPosition(), ref.getLastReferencePointPosition()),
                                 ref.baseSequence, alignmentsNt.toArray(new Alignment[alignmentsNt.size()]));
-                multiAlignmentHelper.setSubjectLeftTitle(" " + ref.alleleName);
+                multiAlignmentHelper.setSubjectLeftTitle(" " + ref.getFullName());
 
                 for (int i = 0; i < alignmentsNt.size(); i++)
                     multiAlignmentHelper.setQueryLeftTitle(i, " " + alleleNamesNt.get(i));
@@ -394,13 +400,18 @@ public class FastaLocusBuilder {
                     finalReportStream.println();
                 }
 
+                // Don't print additional blank line and AA alignments if this information is not available for this gene
+                if (!translate)
+                    continue;
+
                 finalReportStream.println();
 
+                // AminoAcid Alignment
                 multiAlignmentHelper =
                         MultiAlignmentHelper.build(MultiAlignmentHelper.DOT_MATCH_SETTINGS,
                                 new Range(0, refSeqAA.size()),
                                 refSeqAA, alignmentsAA.toArray(new Alignment[alignmentsAA.size()]));
-                multiAlignmentHelper.setSubjectLeftTitle(" " + ref.alleleName);
+                multiAlignmentHelper.setSubjectLeftTitle(" " + ref.getFullName());
                 for (int i = 0; i < alignmentsAA.size(); i++)
                     multiAlignmentHelper.setQueryLeftTitle(i, " " + alleleNamesAA.get(i));
                 VDJCAlignmentsFormatter.drawPoints(multiAlignmentHelper, new SeqPartitioning(refMapping, orfRefPoints, true), VDJCAlignmentsFormatter.POINTS_FOR_GERMLINE);
@@ -443,10 +454,10 @@ public class FastaLocusBuilder {
 
         @Override
         public int getPosition(ReferencePoint referencePoint) {
-            int rp = refMapping.get(referencePoint);
+            int rp = refMapping.get(referencePoint.getWithoutOffset());
             if (rp == -1)
                 return -1;
-            rp = referencePoints[rp];
+            rp = referencePoints[rp] + referencePoint.getOffset();
             if (rp < 0)
                 return -1;
             return aa ? (rp + 2) / 3 : rp;
@@ -568,6 +579,10 @@ public class FastaLocusBuilder {
             this.isFunctional = isFunctional;
             this.isReference = isReference;
             this.referencePoints = referencePoints;
+        }
+
+        public String getFullName() {
+            return alleleName + " [" + (isFunctional ? "F" : "P") + "]";
         }
 
         public int getFirstReferencePointPosition() {

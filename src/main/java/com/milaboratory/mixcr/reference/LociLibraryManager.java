@@ -60,7 +60,7 @@ public final class LociLibraryManager implements AlleleResolver {
                         defualt = new LociLibraryManager();
                         InputStream sample = LociLibraryManager.class.getClassLoader()
                                 .getResourceAsStream("reference/mi.ll");
-                        defualt.register("mi", LociLibraryReader.read(sample));
+                        defualt.register("mi", LociLibraryReader.read(sample, true));
                     } catch (IOException e) {
                         throw new RuntimeException();
                     }

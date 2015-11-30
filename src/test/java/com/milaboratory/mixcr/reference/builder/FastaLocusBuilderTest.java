@@ -52,16 +52,6 @@ import static com.milaboratory.mixcr.reference.ReferencePoint.*;
  */
 public class FastaLocusBuilderTest {
     @Test
-    public void testasd() throws Exception {
-        Pattern p = Pattern.compile("AT(?<ugu>)GC");
-        String s = "ATATGCAT";
-        Matcher matcher = p.matcher(s);
-        System.out.println(matcher.find());
-        System.out.println(matcher.start("ugu"));
-        System.out.println(matcher.end("ugu"));
-    }
-
-    @Test
     public void test1() throws Exception {
         Pattern nameExtractionPattern = Pattern.compile("^[^\\|]+\\|([^\\|]+)");
         Pattern funcExtractionPattern = Pattern.compile("^[^\\|]+\\|[^\\|]+\\|[^\\|]+\\|[\\(\\[]?F");
@@ -123,7 +113,7 @@ public class FastaLocusBuilderTest {
     }
 
     @Test
-    public void test2() throws Exception {
+    public void test1V() throws Exception {
         FastaLocusBuilderParameters parameters =
                 new FastaLocusBuilderParameters(GeneType.Variable,
                         "^[^\\|]+\\|([^\\|]+)",
@@ -149,7 +139,7 @@ public class FastaLocusBuilderTest {
         writer.writeMagic();
         builder.writeLocus(writer);
         ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
-        LociLibrary ll = LociLibraryReader.read(bis);
+        LociLibrary ll = LociLibraryReader.read(bis, false);
         NucleotideSequence expected = new NucleotideSequence("ATCAACTGGGTGCGACAGGCCACTGGACAAGGGCTTGAGTGGATGGGATGG");
         Allele allele = ll.getAllele(Species.HomoSapiens, "IGHV1-8*01");
         Assert.assertEquals(expected, allele.getFeature(GeneFeature.FR2));
@@ -159,7 +149,7 @@ public class FastaLocusBuilderTest {
     }
 
     @Test
-    public void test3() throws Exception {
+    public void test1J() throws Exception {
         FastaLocusBuilderParameters parameters =
                 new FastaLocusBuilderParameters(GeneType.Joining,
                         "^[^\\|]+\\|([^\\|]+)",
@@ -176,18 +166,50 @@ public class FastaLocusBuilderTest {
         builder.compile();
         builder.printReport();
 
-        //ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        //LociLibraryWriter writer = new LociLibraryWriter(bos);
-        //writer.writeMagic();
-        //builder.writeLocus(writer);
-        //ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
-        //LociLibrary ll = LociLibraryReader.read(bis);
-        //NucleotideSequence expected = new NucleotideSequence("ATCAACTGGGTGCGACAGGCCACTGGACAAGGGCTTGAGTGGATGGGATGG");
-        //Allele allele = ll.getAllele(Species.HomoSapiens, "IGHV1-8*01");
-        //Assert.assertEquals(expected, allele.getFeature(GeneFeature.FR2));
-        //expected = new NucleotideSequence("GGATACACCTTCACCAGCTATGAT");
-        //allele = ll.getAllele(Species.HomoSapiens, "IGHV1-8*02");
-        //Assert.assertEquals(expected, allele.getFeature(GeneFeature.CDR1));
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        LociLibraryWriter writer = new LociLibraryWriter(bos);
+        writer.writeMagic();
+        builder.writeLocus(writer);
+        ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+        LociLibrary ll = LociLibraryReader.read(bis, false);
+        NucleotideSequence expected = new NucleotideSequence("GGGCAAGGGACCACGGTCACCGTCTCCTCAG");
+        Allele allele = ll.getAllele(Species.HomoSapiens, "IGHJ6*01");
+        Assert.assertEquals(expected, allele.getFeature(GeneFeature.FR4));
+        expected = new NucleotideSequence("GGCAAAGGGACCACGGTCACCGTCTCCTCA");
+        allele = ll.getAllele(Species.HomoSapiens, "IGHJ6*03");
+        Assert.assertEquals(expected, allele.getFeature(GeneFeature.FR4));
+    }
+
+    @Test
+    public void test1D() throws Exception {
+        FastaLocusBuilderParameters parameters =
+                new FastaLocusBuilderParameters(GeneType.Diversity,
+                        "^[^\\|]+\\|([^\\|]+)",
+                        "^[^\\|]+\\|[^\\|]+\\|[^\\|]+\\|[\\(\\[]?F",
+                        "^[^\\|]+\\|[^\\|]+\\*01", '.',
+                        null, true,
+                        new AffineGapAlignmentScoring<>(NucleotideSequence.ALPHABET, 1, -4, -21, -2),
+                        new AnchorPointPositionInfo(DBegin, 0),
+                        new AnchorPointPositionInfo(DEnd, AnchorPointPositionInfo.END_OF_SEQUENCE));
+
+        FastaLocusBuilder builder = new FastaLocusBuilder(Species.HomoSapiens, Locus.IGH, parameters).noExceptionOnError();
+        builder.importAllelesFromFile("/Volumes/Data/Projects/MiLaboratory/tmp/result/human_IGHD.fasta");
+        builder.compile();
+        builder.printReport();
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        LociLibraryWriter writer = new LociLibraryWriter(bos);
+        writer.writeMagic();
+        builder.writeLocus(writer);
+        ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+        LociLibrary ll = LociLibraryReader.read(bis, false);
+        int i = 0;
+        NucleotideSequence expected = new NucleotideSequence("GTATTACTATGGTTCGGGGAGTTATTATAAC");
+        Allele allele = ll.getAllele(Species.HomoSapiens, "IGHD3-10*01");
+        Assert.assertEquals(expected, allele.getFeature(GeneFeature.DRegion));
+        expected = new NucleotideSequence("GTATTACTATGTTCGGGGAGTTATTATAAC");
+        allele = ll.getAllele(Species.HomoSapiens, "IGHD3-10*02");
+        Assert.assertEquals(expected, allele.getFeature(GeneFeature.DRegion));
     }
 
     private static AminoAcidSequence tr(StringWithMapping sm, int from, int to) {

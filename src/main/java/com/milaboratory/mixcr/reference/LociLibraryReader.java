@@ -42,6 +42,7 @@ import static com.milaboratory.mixcr.reference.LociLibraryWriter.*;
 
 
 public class LociLibraryReader {
+    final boolean withFR4Correction;
     final DataInputStream stream;
     final LociLibrary library = new LociLibrary();
     LocusContainer container;
@@ -51,24 +52,25 @@ public class LociLibraryReader {
     Map<String, Gene> nameToGenes;
     Map<String, Allele> nameToAlleles;
 
-    private LociLibraryReader(InputStream stream) {
+    private LociLibraryReader(InputStream stream, boolean withFR4Correction) {
         this.stream = new DataInputStream(stream);
+        this.withFR4Correction = withFR4Correction;
     }
 
-    public static LociLibrary read(File file) throws IOException {
+    public static LociLibrary read(File file, boolean withFR4Correction) throws IOException {
         try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file))) {
-            return read(bis);
+            return read(bis, withFR4Correction);
         }
     }
 
-    public static LociLibrary read(String fileName) throws IOException {
+    public static LociLibrary read(String fileName, boolean withFR4Correction) throws IOException {
         try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(fileName))) {
-            return read(bis);
+            return read(bis, withFR4Correction);
         }
     }
 
-    public static LociLibrary read(InputStream stream) throws IOException {
-        LociLibraryReader reader = new LociLibraryReader(stream);
+    public static LociLibrary read(InputStream stream, boolean withFR4Correction) throws IOException {
+        LociLibraryReader reader = new LociLibraryReader(stream, withFR4Correction);
         reader.checkMagic();
         reader.readToEnd();
         return reader.library;
@@ -161,7 +163,7 @@ public class LociLibraryReader {
         int[] referencePoints = null;
         if ((flags & 4) != 0) {
             accession = stream.readUTF();
-            referencePoints = new int[GENE_TYPE_INFOS.get(type).size];
+            referencePoints = new int[getGeneTypeInfo(type, false).size];
             for (int i = 0; i < referencePoints.length; ++i)
                 referencePoints[i] = stream.readInt();
         }
@@ -201,7 +203,7 @@ public class LociLibraryReader {
         if ((flags & 1) != 0) {
             //reference allele
             allele = new ReferenceAllele(gene, alleleName, (flags & 2) != 0, accession,
-                    GENE_TYPE_INFOS.get(type).create(referencePoints));
+                    getGeneTypeInfo(type, false).create(referencePoints));
         } else {
             //allelic variant
             allele = new AllelicVariant(alleleName,

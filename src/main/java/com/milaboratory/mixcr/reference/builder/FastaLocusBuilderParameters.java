@@ -103,7 +103,7 @@ public final class FastaLocusBuilderParameters {
         // Calculating reference points positions
 
         // Getting information about basic anchor points count and offset by gene type
-        LociLibraryWriter.GeneTypeInfo info = LociLibraryWriter.getGeneTypeInfo(geneType);
+        LociLibraryWriter.GeneTypeInfo info = LociLibraryWriter.getGeneTypeInfo(geneType, false);
         int indexOfFirstPoint = info.indexOfFirstPoint;
 
         // Extracting frame bounded anchor point id

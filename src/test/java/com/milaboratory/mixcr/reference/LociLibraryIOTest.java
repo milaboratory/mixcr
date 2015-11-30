@@ -72,7 +72,7 @@ public class LociLibraryIOTest {
         ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
 
         //Testing library
-        LociLibrary library = LociLibraryReader.read(bis);
+        LociLibrary library = LociLibraryReader.read(bis, false);
         assertEquals("B", library.getProperty("G"));
 
         //Testing container
@@ -113,7 +113,7 @@ public class LociLibraryIOTest {
     @Test
     public void test3ReadLL() throws Exception {
         InputStream sample = LociLibraryReader.class.getClassLoader().getResourceAsStream("reference/mi.ll");
-        LociLibrary library = LociLibraryReader.read(sample);
+        LociLibrary library = LociLibraryReader.read(sample, false);
         Assert.assertTrue(library.allAlleles.size() > 100);
         Allele allele = library.allAlleles.iterator().next();
         Assert.assertTrue(allele.getPartitioning() != null);
@@ -122,7 +122,7 @@ public class LociLibraryIOTest {
     @Test
     public void test3ReadLL1() throws Exception {
         InputStream sample = LociLibraryReader.class.getClassLoader().getResourceAsStream("reference/mi.ll");
-        LociLibrary library = LociLibraryReader.read(sample);
+        LociLibrary library = LociLibraryReader.read(sample, true);
         for (Allele allele : library.getAllAlleles(Species.MusMusculus)) {
             if (allele.getName().contains("1-33")) {
                 System.out.println(allele.getName());
@@ -138,7 +138,7 @@ public class LociLibraryIOTest {
     @Test
     public void testExportLL() throws Exception {
         InputStream sample = LociLibraryReader.class.getClassLoader().getResourceAsStream("reference/mi.ll");
-        LociLibrary library = LociLibraryReader.read(sample);
+        LociLibrary library = LociLibraryReader.read(sample, true);
         for (Locus locus : Locus.values()) {
             LocusContainer container = library.getLocus(Species.HomoSapiens, locus);
             export(locus.name().toLowerCase() + "v.txt", container.getReferenceAlleles(GeneType.Variable),

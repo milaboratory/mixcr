@@ -104,12 +104,12 @@ public class VDJCAlignmentsFormatter {
             pd(ReferencePoint.CDR2Begin, "FR2><CDR2"),
             pd(ReferencePoint.FR3Begin, "CDR2><FR3"),
             pd(ReferencePoint.CDR3Begin, "FR3><CDR3"),
-            pd(ReferencePoint.VEndTrimmed, "V>"),
+            pd(ReferencePoint.VEndTrimmed, "V>", -1),
             pd(ReferencePoint.DBeginTrimmed, "<D"),
-            pd(ReferencePoint.DEndTrimmed, "D>"),
+            pd(ReferencePoint.DEndTrimmed, "D>", -1),
             pd(ReferencePoint.JBeginTrimmed, "<J"),
             pd(ReferencePoint.CDR3End, "CDR3><FR4"),
-            pd(ReferencePoint.FR4End, "FR4>")
+            pd(ReferencePoint.FR4End, "FR4>", -1)
     };
 
     public static final PointToDraw[] POINTS_FOR_GERMLINE = new PointToDraw[]{
@@ -123,21 +123,25 @@ public class VDJCAlignmentsFormatter {
             pd(ReferencePoint.CDR2Begin, "FR2><CDR2"),
             pd(ReferencePoint.FR3Begin, "CDR2><FR3"),
             pd(ReferencePoint.CDR3Begin, "FR3><CDR3"),
-            pd(ReferencePoint.VEnd, "V>"),
+            pd(ReferencePoint.VEnd, "V>", -1),
             pd(ReferencePoint.DBegin, "<D"),
-            pd(ReferencePoint.DEnd, "D>"),
+            pd(ReferencePoint.DEnd, "D>", -1),
             pd(ReferencePoint.JBegin, "<J"),
             pd(ReferencePoint.CDR3End, "CDR3><FR4"),
-            pd(ReferencePoint.FR4End, "FR4>")
+            pd(ReferencePoint.FR4End, "FR4>", -1)
     };
 
     private static PointToDraw pd(ReferencePoint rp, String marker) {
+        return pd(rp, marker, 0);
+    }
+
+    private static PointToDraw pd(ReferencePoint rp, String marker, int additionalOffset) {
         int offset = marker.indexOf('>');
         if (offset >= 0)
-            return new PointToDraw(rp, marker, -1 - offset);
+            return new PointToDraw(rp.move(additionalOffset), marker, -1 - offset - additionalOffset);
         offset = marker.indexOf('<');
         if (offset >= 0)
-            return new PointToDraw(rp, marker, -offset);
+            return new PointToDraw(rp.move(additionalOffset), marker, -offset - additionalOffset);
         return new PointToDraw(rp, marker, 0);
     }
 
