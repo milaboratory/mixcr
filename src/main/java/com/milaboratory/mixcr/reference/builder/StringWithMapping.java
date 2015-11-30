@@ -41,8 +41,10 @@ public final class StringWithMapping {
     }
 
     public int convertPosition(int originalPosition) {
-        if (originalPosition < 0 || originalPosition >= originalToModifiedMapping.length)
+        if (originalPosition >= originalToModifiedMapping.length)
             return -1;
+        if (originalPosition < 0)
+            return convertPosition(originalToModifiedMapping.length + originalPosition);
         return originalToModifiedMapping[originalPosition];
     }
 

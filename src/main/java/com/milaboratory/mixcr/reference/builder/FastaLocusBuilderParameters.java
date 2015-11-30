@@ -49,9 +49,10 @@ public final class FastaLocusBuilderParameters {
     private final GeneType geneType;
     private final String alleleNameExtractionPattern, functionalAllelePattern, referenceAllelePattern;
     private final char paddingChar;
+    private final ReferencePoint frameBoundedAnchorPoint;
     private final boolean firstOccurredAlleleIsReference;
     private final AlignmentScoring<NucleotideSequence> scoring;
-    private final AnchorPointPosition[] anchorPointPositions;
+    private final AnchorPointPositionInfo[] anchorPointPositions;
 
     // Util fields
     @JsonIgnore
@@ -66,6 +67,8 @@ public final class FastaLocusBuilderParameters {
     private final TObjectIntMap<ReferencePoint> referencePointIndexMapping;
     @JsonIgnore
     private final ReferencePoint[] indexReferencePointMapping;
+    @JsonIgnore
+    private final int translationReferencePointIndex;
 
 
     public FastaLocusBuilderParameters(GeneType geneType,
@@ -73,18 +76,20 @@ public final class FastaLocusBuilderParameters {
                                        String functionalAllelePattern,
                                        String referenceAllelePattern,
                                        char paddingChar,
+                                       ReferencePoint frameBoundedAnchorPoint,
                                        boolean firstOccurredAlleleIsReference,
                                        AlignmentScoring<NucleotideSequence> scoring,
-                                       AnchorPointPosition... anchorPointPositions) {
+                                       AnchorPointPositionInfo... anchorPointPositions) {
         this.geneType = geneType;
         this.alleleNameExtractionPattern = alleleNameExtractionPattern;
         this.functionalAllelePattern = functionalAllelePattern;
         this.referenceAllelePattern = referenceAllelePattern;
         this.paddingChar = paddingChar;
+        this.frameBoundedAnchorPoint = frameBoundedAnchorPoint;
         this.firstOccurredAlleleIsReference = firstOccurredAlleleIsReference;
         this.scoring = scoring;
         this.anchorPointPositions = anchorPointPositions;
-        for (AnchorPointPosition ap : anchorPointPositions)
+        for (AnchorPointPositionInfo ap : anchorPointPositions)
             if (ap.point.getGeneType() != geneType) {
                 throw new IllegalArgumentException("Anchor point " + ap.point +
                         " doesn't apply to " + geneType + " gene type.");
@@ -101,6 +106,10 @@ public final class FastaLocusBuilderParameters {
         LociLibraryWriter.GeneTypeInfo info = LociLibraryWriter.getGeneTypeInfo(geneType);
         int indexOfFirstPoint = info.indexOfFirstPoint;
 
+        // Extracting frame bounded anchor point id
+        this.translationReferencePointIndex = frameBoundedAnchorPoint == null ? -1 :
+                ReferenceUtil.getReferencePointIndex(frameBoundedAnchorPoint) - indexOfFirstPoint;
+
         // Init
         this.referencePointPositions = new int[info.size];
         this.indexReferencePointMapping = new ReferencePoint[info.size];
@@ -108,17 +117,22 @@ public final class FastaLocusBuilderParameters {
 
         // -1 == NA
         Arrays.fill(this.referencePointPositions, -1);
-
         // Filling array
-        for (AnchorPointPosition ap : anchorPointPositions) {
+        for (int i = 0; i < anchorPointPositions.length; i++) {
+            AnchorPointPositionInfo ap = anchorPointPositions[i];
             // Reference points in allele-specific RP array are stored starting from first
             // reference point that applies to allele's gene type, so index in allele specific
             // array is calculated as globalRPIndex - indexOfFirstPointOfTHeGeneType
             int index = ReferenceUtil.getReferencePointIndex(ap.point) - indexOfFirstPoint;
-            this.referencePointPositions[index] = ap.position;
+            this.referencePointPositions[index] = ap.nucleotidePattern != null ?
+                    -i + AnchorPointPositionInfo.PATTERN_LINK_OFFSET : ap.position;
             this.referencePointIndexMapping.put(ap.point, index);
             this.indexReferencePointMapping[index] = ap.point;
         }
+    }
+
+    public AnchorPointPositionInfo getAnchorPointPositionInfo(int id) {
+        return anchorPointPositions[id];
     }
 
     public GeneType getGeneType() {
@@ -141,6 +155,10 @@ public final class FastaLocusBuilderParameters {
         return paddingChar;
     }
 
+    public int getTranslationReferencePointIndex() {
+        return translationReferencePointIndex;
+    }
+
     public boolean firstOccurredAlleleIsReference() {
         return firstOccurredAlleleIsReference;
     }
@@ -155,8 +173,8 @@ public final class FastaLocusBuilderParameters {
 
     /**
      * Returns positions of reference points formatted as final array that will be serialized to LociLibrary file. See
-     * implementation of{@link #FastaLocusBuilderParameters(GeneType, String, String, String, char, boolean,
-     * AlignmentScoring, AnchorPointPosition...)} for details.
+     * implementation of {@link #FastaLocusBuilderParameters(GeneType, String, String, String, char, ReferencePoint,
+     * boolean, AlignmentScoring, AnchorPointPositionInfo...)} for details.
      */
     public int[] getReferencePointPositions() {
         return referencePointPositions;
@@ -173,25 +191,45 @@ public final class FastaLocusBuilderParameters {
     /**
      * Represents information about reference point position in target FASTA file.
      */
-    public static final class AnchorPointPosition {
+    public static final class AnchorPointPositionInfo {
         /**
          * Special value for position field telling builder to assign this anchor point to the beginning of the input
          * sequence
          */
-        public static final int BEGINNING_OF_SEQUENCE = -2;
+        public static final int BEGINNING_OF_SEQUENCE = Integer.MIN_VALUE;
         /**
          * Special value for position field telling builder to assign this anchor point to the end of the input
          * sequence
          */
-        public static final int END_OF_SEQUENCE = -3;
+        public static final int END_OF_SEQUENCE = Integer.MAX_VALUE;
+        /**
+         * Used to switch off position guided anchor point search
+         */
+        public static final int USE_ONLY_PATTERN = Integer.MIN_VALUE + 1;
+        /**
+         * Used internally
+         */
+        public static final int PATTERN_LINK_OFFSET = Integer.MIN_VALUE + 1024;
+        /**
+         * Name of anchor group in regex pattern
+         */
+        public static final String ANCHOR_GROUP_NAME = "anchor";
         final ReferencePoint point;
         final int position;
+        final String nucleotidePattern;
+        final Pattern nucleotidePatternP;
 
-        public AnchorPointPosition(ReferencePoint point, int position) {
+        public AnchorPointPositionInfo(ReferencePoint point, int position) {
+            this(point, position, null);
+        }
+
+        public AnchorPointPositionInfo(ReferencePoint point, int position, String nucleotidePattern) {
             if (!point.isBasicPoint())
                 throw new IllegalArgumentException("Only basic reference points are supported.");
             this.point = point;
             this.position = position;
+            this.nucleotidePattern = nucleotidePattern;
+            this.nucleotidePatternP = nucleotidePattern == null ? null : Pattern.compile(nucleotidePattern, Pattern.CASE_INSENSITIVE);
         }
     }
 }

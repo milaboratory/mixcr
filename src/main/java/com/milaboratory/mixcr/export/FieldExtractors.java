@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.*;
 
+import static com.milaboratory.core.sequence.TranslationParameters.FromCenter;
 import static com.milaboratory.mixcr.assembler.ReadToCloneMapping.MappingType.Dropped;
 
 public final class FieldExtractors {
@@ -217,7 +218,7 @@ public final class FieldExtractors {
             desctiptorsList.add(new FeatureExtractorDescriptor("-aaFeature", "Export amino acid sequence of specified gene feature", "AA. Seq.", "aaSeq") {
                 @Override
                 public String convert(NSequenceWithQuality seq) {
-                    return AminoAcidSequence.translate(null, true, seq.getSequence()).toString();
+                    return AminoAcidSequence.translate(seq.getSequence(), FromCenter).toString();
                 }
             });
 

@@ -39,6 +39,7 @@ import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.mutations.MutationsUtil;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.core.sequence.TranslationParameters;
 import com.milaboratory.mixcr.basictypes.SequencePartitioning;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter;
 import com.milaboratory.mixcr.reference.GeneFeature;
@@ -53,9 +54,10 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.milaboratory.core.sequence.AminoAcidSequence.convertNtPositionToAA;
+import static com.milaboratory.core.sequence.TranslationParameters.withIncompleteCodon;
 import static com.milaboratory.mixcr.reference.builder.BuilderUtils.*;
-import static com.milaboratory.mixcr.reference.builder.FastaLocusBuilderParameters.AnchorPointPosition.BEGINNING_OF_SEQUENCE;
-import static com.milaboratory.mixcr.reference.builder.FastaLocusBuilderParameters.AnchorPointPosition.END_OF_SEQUENCE;
+import static com.milaboratory.mixcr.reference.builder.FastaLocusBuilderParameters.AnchorPointPositionInfo.*;
 
 /**
  * Builds MiXCR format LociLibrary file from
@@ -219,14 +221,7 @@ public class FastaLocusBuilder {
             // Calculating reference points
             int[] referencePoints = new int[referencePointPositions.length];
             for (int i = 0; i < referencePointPositions.length; i++)
-                // Convert references to the beginning or to the end of the sequence
-                if (referencePointPositions[i] == BEGINNING_OF_SEQUENCE)
-                    referencePoints[i] = 0;
-                else if (referencePointPositions[i] == END_OF_SEQUENCE)
-                    referencePoints[i] = seq.size();
-                else
-                    // Normal position conversion
-                    referencePoints[i] = seqWithPositionMapping.convertPosition(referencePointPositions[i]);
+                referencePoints[i] = getPosition(seqWithPositionMapping, i);
 
             boolean isFirst = false, isReference;
 
@@ -267,6 +262,35 @@ public class FastaLocusBuilder {
             if (isFirst || (!gene.reference.isReference && alleleInfo.isReference))
                 gene.reference = alleleInfo;
         }
+    }
+
+    private int getPosition(StringWithMapping seqWithPositionMapping, int refPointIndex) {
+        int referencePointPosition = parameters.getReferencePointPositions()[refPointIndex];
+
+        // Convert references to the beginning or to the end of the sequence
+        if (referencePointPosition == BEGINNING_OF_SEQUENCE)
+            return 0;
+        if (referencePointPosition == END_OF_SEQUENCE)
+            return seqWithPositionMapping.getModifiedString().length();
+
+        if (referencePointPosition <= PATTERN_LINK_OFFSET) {
+            FastaLocusBuilderParameters.AnchorPointPositionInfo pointInfo = parameters.getAnchorPointPositionInfo(-referencePointPosition + PATTERN_LINK_OFFSET);
+
+            // Unpacking information from object
+            referencePointPosition = pointInfo.position;
+
+            // Matching pattern
+            Matcher matcher = pointInfo.nucleotidePatternP.matcher(seqWithPositionMapping.getModifiedString());
+            if (matcher.find())
+                return matcher.start(ANCHOR_GROUP_NAME);
+
+            if (referencePointPosition == USE_ONLY_PATTERN)
+                // Don't try position guided search
+                return -1;
+        }
+
+        // Normal position conversion
+        return seqWithPositionMapping.convertPosition(referencePointPosition);
     }
 
     public void compile() {
@@ -322,7 +346,8 @@ public class FastaLocusBuilder {
                     refSeqNtORF = refSeqNtORF.getRange(0, range.getFrom()).concatenate(refSeqNtORF.getRange(range.getTo(), refSeqNtORF.size()));
                 }
 
-                AminoAcidSequence refSeqAA = AminoAcidSequence.translateFromLeft(refSeqNtORF);
+                TranslationParameters translationParameters = withIncompleteCodon(orfRefPoints[parameters.getTranslationReferencePointIndex()]);
+                AminoAcidSequence refSeqAA = AminoAcidSequence.translate(refSeqNtORF, translationParameters);
 
                 List<Alignment<NucleotideSequence>> alignmentsNt = new ArrayList<>();
                 List<Alignment<AminoAcidSequence>> alignmentsAA = new ArrayList<>();
@@ -336,14 +361,20 @@ public class FastaLocusBuilder {
                             new Range(0, refRange.length() + a.mutations.getLengthDelta()), parameters.getScoring()));
                     alleleNamesNt.add(a.alleleName);
 
-                    if (orfRefPoints[a.firstRefRefPoint] == -1 || orfRefPoints[a.lastRefRefPoint] == -1)
+                    if (parameters.getTranslationReferencePointIndex() == -1 ||
+                            orfRefPoints[a.firstRefRefPoint] == -1 || orfRefPoints[a.lastRefRefPoint] == -1 ||
+                            orfRefPoints[parameters.getTranslationReferencePointIndex()] == -1)
                         continue;
+
                     //Range refRangeORF = new Range(orfRefPoints[a.firstRefRefPoint], orfRefPoints[a.lastRefRefPoint]);
                     Mutations<AminoAcidSequence> aaMuts = MutationsUtil.nt2aa(refSeqNtORF,
-                            absoluteMutations.removeMutationsInRanges(noncodingRegions), 10);
+                            absoluteMutations.removeMutationsInRanges(noncodingRegions),
+                            translationParameters, 10);
                     if (aaMuts == null)
                         continue;
-                    Range refRangeAA = new Range(orfRefPoints[a.firstRefRefPoint] / 3, (orfRefPoints[a.lastRefRefPoint] + 2) / 3);
+                    Range refRangeAA = new Range(
+                            convertNtPositionToAA(orfRefPoints[a.firstRefRefPoint], refSeqNt.size(), translationParameters).aminoAcidPosition,
+                            convertNtPositionToAA(orfRefPoints[a.lastRefRefPoint] - 1, refSeqNt.size(), translationParameters).aminoAcidPosition + 1);
                     alignmentsAA.add(new Alignment<>(refSeqAA, aaMuts, refRangeAA,
                             new Range(0, refRangeAA.length() + aaMuts.getLengthDelta()), 0));
                     alleleNamesAA.add(a.alleleName);

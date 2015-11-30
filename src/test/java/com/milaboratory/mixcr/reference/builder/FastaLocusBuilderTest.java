@@ -33,8 +33,9 @@ import com.milaboratory.core.io.sequence.fasta.FastaReader;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.reference.*;
-import com.milaboratory.mixcr.reference.builder.FastaLocusBuilderParameters.AnchorPointPosition;
+import com.milaboratory.mixcr.reference.builder.FastaLocusBuilderParameters.AnchorPointPositionInfo;
 import com.milaboratory.util.StringUtil;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -44,10 +45,22 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.milaboratory.mixcr.reference.ReferencePoint.*;
+
 /**
  * Created by dbolotin on 25/10/15.
  */
 public class FastaLocusBuilderTest {
+    @Test
+    public void testasd() throws Exception {
+        Pattern p = Pattern.compile("AT(?<ugu>)GC");
+        String s = "ATATGCAT";
+        Matcher matcher = p.matcher(s);
+        System.out.println(matcher.find());
+        System.out.println(matcher.start("ugu"));
+        System.out.println(matcher.end("ugu"));
+    }
+
     @Test
     public void test1() throws Exception {
         Pattern nameExtractionPattern = Pattern.compile("^[^\\|]+\\|([^\\|]+)");
@@ -116,17 +129,16 @@ public class FastaLocusBuilderTest {
                         "^[^\\|]+\\|([^\\|]+)",
                         "^[^\\|]+\\|[^\\|]+\\|[^\\|]+\\|[\\(\\[]?F",
                         "^[^\\|]+\\|[^\\|]+\\*01", '.',
-                        true,
+                        FR1Begin, true,
                         new AffineGapAlignmentScoring<>(NucleotideSequence.ALPHABET, 1, -4, -11, -2),
-                        new AnchorPointPosition(ReferencePoint.FR1Begin, 0),
-                        new AnchorPointPosition(ReferencePoint.CDR1Begin, 78),
-                        new AnchorPointPosition(ReferencePoint.FR2Begin, 114),
-                        new AnchorPointPosition(ReferencePoint.CDR2Begin, 165),
-                        new AnchorPointPosition(ReferencePoint.FR3Begin, 195),
-                        new AnchorPointPosition(ReferencePoint.CDR3Begin, 309),
-                        new AnchorPointPosition(ReferencePoint.VEnd, AnchorPointPosition.END_OF_SEQUENCE));
+                        new AnchorPointPositionInfo(FR1Begin, 0),
+                        new AnchorPointPositionInfo(CDR1Begin, 78),
+                        new AnchorPointPositionInfo(FR2Begin, 114),
+                        new AnchorPointPositionInfo(CDR2Begin, 165),
+                        new AnchorPointPositionInfo(FR3Begin, 195),
+                        new AnchorPointPositionInfo(CDR3Begin, 309),
+                        new AnchorPointPositionInfo(VEnd, AnchorPointPositionInfo.END_OF_SEQUENCE));
 
-        //{0, 78, 114, 165, 195, 309, -1};
         FastaLocusBuilder builder = new FastaLocusBuilder(Species.HomoSapiens, Locus.IGH, parameters).noExceptionOnError();
         builder.importAllelesFromFile("/Volumes/Data/Projects/MiLaboratory/tmp/result/human_IGHV.fasta");
         builder.compile();
@@ -138,6 +150,44 @@ public class FastaLocusBuilderTest {
         builder.writeLocus(writer);
         ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
         LociLibrary ll = LociLibraryReader.read(bis);
+        NucleotideSequence expected = new NucleotideSequence("ATCAACTGGGTGCGACAGGCCACTGGACAAGGGCTTGAGTGGATGGGATGG");
+        Allele allele = ll.getAllele(Species.HomoSapiens, "IGHV1-8*01");
+        Assert.assertEquals(expected, allele.getFeature(GeneFeature.FR2));
+        expected = new NucleotideSequence("GGATACACCTTCACCAGCTATGAT");
+        allele = ll.getAllele(Species.HomoSapiens, "IGHV1-8*02");
+        Assert.assertEquals(expected, allele.getFeature(GeneFeature.CDR1));
+    }
+
+    @Test
+    public void test3() throws Exception {
+        FastaLocusBuilderParameters parameters =
+                new FastaLocusBuilderParameters(GeneType.Joining,
+                        "^[^\\|]+\\|([^\\|]+)",
+                        "^[^\\|]+\\|[^\\|]+\\|[^\\|]+\\|[\\(\\[]?F",
+                        "^[^\\|]+\\|[^\\|]+\\*01", '.',
+                        FR4Begin, true,
+                        new AffineGapAlignmentScoring<>(NucleotideSequence.ALPHABET, 1, -4, -21, -2),
+                        new AnchorPointPositionInfo(JBegin, 0),
+                        new AnchorPointPositionInfo(FR4Begin, -31, "(?:TGG|TT[TC])(?<anchor>)GG[ATGC]{4}GG[ATGC]"),
+                        new AnchorPointPositionInfo(FR4End, AnchorPointPositionInfo.END_OF_SEQUENCE));
+
+        FastaLocusBuilder builder = new FastaLocusBuilder(Species.HomoSapiens, Locus.IGH, parameters).noExceptionOnError();
+        builder.importAllelesFromFile("/Volumes/Data/Projects/MiLaboratory/tmp/result/human_IGHJ.fasta");
+        builder.compile();
+        builder.printReport();
+
+        //ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        //LociLibraryWriter writer = new LociLibraryWriter(bos);
+        //writer.writeMagic();
+        //builder.writeLocus(writer);
+        //ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+        //LociLibrary ll = LociLibraryReader.read(bis);
+        //NucleotideSequence expected = new NucleotideSequence("ATCAACTGGGTGCGACAGGCCACTGGACAAGGGCTTGAGTGGATGGGATGG");
+        //Allele allele = ll.getAllele(Species.HomoSapiens, "IGHV1-8*01");
+        //Assert.assertEquals(expected, allele.getFeature(GeneFeature.FR2));
+        //expected = new NucleotideSequence("GGATACACCTTCACCAGCTATGAT");
+        //allele = ll.getAllele(Species.HomoSapiens, "IGHV1-8*02");
+        //Assert.assertEquals(expected, allele.getFeature(GeneFeature.CDR1));
     }
 
     private static AminoAcidSequence tr(StringWithMapping sm, int from, int to) {
