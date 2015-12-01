@@ -267,6 +267,10 @@ public class FastaLocusBuilder {
     private int getPosition(StringWithMapping seqWithPositionMapping, int refPointIndex) {
         int referencePointPosition = parameters.getReferencePointPositions()[refPointIndex];
 
+        // Return -1 if information about this reference point is absent
+        if (referencePointPosition == -1)
+            return -1;
+
         // Convert references to the beginning or to the end of the sequence
         if (referencePointPosition == BEGINNING_OF_SEQUENCE)
             return 0;
@@ -395,15 +399,18 @@ public class FastaLocusBuilder {
                 for (int i = 0; i < alignmentsNt.size(); i++)
                     multiAlignmentHelper.setQueryLeftTitle(i, " " + alleleNamesNt.get(i));
                 VDJCAlignmentsFormatter.drawPoints(multiAlignmentHelper, new SeqPartitioning(refMapping, ref.referencePoints, false), VDJCAlignmentsFormatter.POINTS_FOR_GERMLINE);
-                for (MultiAlignmentHelper ah : multiAlignmentHelper.split(LINE_WIDTH)) {
+                for (MultiAlignmentHelper ah : multiAlignmentHelper.split(LINE_WIDTH, true)) {
                     finalReportStream.println(ah);
                     finalReportStream.println();
                 }
+
+                finalReportStream.println();
 
                 // Don't print additional blank line and AA alignments if this information is not available for this gene
                 if (!translate)
                     continue;
 
+                finalReportStream.println(" **********");
                 finalReportStream.println();
 
                 // AminoAcid Alignment
@@ -415,10 +422,12 @@ public class FastaLocusBuilder {
                 for (int i = 0; i < alignmentsAA.size(); i++)
                     multiAlignmentHelper.setQueryLeftTitle(i, " " + alleleNamesAA.get(i));
                 VDJCAlignmentsFormatter.drawPoints(multiAlignmentHelper, new SeqPartitioning(refMapping, orfRefPoints, true), VDJCAlignmentsFormatter.POINTS_FOR_GERMLINE);
-                for (MultiAlignmentHelper ah : multiAlignmentHelper.split(LINE_WIDTH)) {
+                for (MultiAlignmentHelper ah : multiAlignmentHelper.split(LINE_WIDTH, true)) {
                     finalReportStream.println(ah);
                     finalReportStream.println();
                 }
+
+                finalReportStream.println();
             }
         }
     }
