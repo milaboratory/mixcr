@@ -112,6 +112,13 @@ public class LociLibrary implements AlleleResolver {
         return genes.get(species).get(name);
     }
 
+    public int getSpeciesTaxonId(String commonName) {
+        Integer id = knownSpecies.get(commonName);
+        if (id == null)
+            return -1;
+        return id;
+    }
+
     public Collection<Allele> getAllAlleles(int species) {
         return Collections.unmodifiableCollection(alleles.get(species).values());
     }

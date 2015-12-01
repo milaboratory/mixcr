@@ -247,7 +247,7 @@ public final class FieldExtractors {
 
             desctiptorsList.add(new ExtractDefaultReferencePointsPositions());
 
-            desctiptorsList.add(new PL_A("-readId", "Export number of read corresponding to alignment", "Read id", "readId") {
+            desctiptorsList.add(new PL_A("-readId", "Export id of read corresponding to alignment", "Read id", "readId") {
                 @Override
                 protected String extract(VDJCAlignments object) {
                     return "" + object.getReadId();

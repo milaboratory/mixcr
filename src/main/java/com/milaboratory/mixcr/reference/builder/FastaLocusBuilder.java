@@ -70,10 +70,6 @@ public class FastaLocusBuilder {
      */
     private final Locus locus;
     /**
-     * Species Taxon ID
-     */
-    private final int taxonId;
-    /**
      * Parameters
      */
     private final FastaLocusBuilderParameters parameters;
@@ -98,8 +94,7 @@ public class FastaLocusBuilder {
      */
     private boolean allowNonStandardAlleleNames = false;
 
-    public FastaLocusBuilder(int taxonId, Locus locus, FastaLocusBuilderParameters parameters) {
-        this.taxonId = taxonId;
+    public FastaLocusBuilder(Locus locus, FastaLocusBuilderParameters parameters) {
         this.locus = locus;
         this.parameters = parameters;
     }
@@ -432,8 +427,7 @@ public class FastaLocusBuilder {
         }
     }
 
-    public void writeLocus(LociLibraryWriter writer) throws IOException {
-        writer.writeBeginOfLocus(taxonId, locus);
+    public void writeAlleles(LociLibraryWriter writer) throws IOException {
         for (GeneInfo gene : genes.values()) {
             for (AlleleInfo alleleInfo : gene.finalList) {
                 if (alleleInfo.isReference) {
@@ -447,7 +441,6 @@ public class FastaLocusBuilder {
                             alleleInfo.mutations.getRAWMutations(), alleleInfo.getReferenceGeneFeature());
             }
         }
-        writer.writeEndOfLocus();
     }
 
     private static final class SeqPartitioning extends SequencePartitioning {

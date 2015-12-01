@@ -28,7 +28,19 @@
  */
 package com.milaboratory.mixcr.reference.builder;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.reference.GeneType;
@@ -39,12 +51,15 @@ import gnu.trove.impl.Constants;
 import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 
 /**
  * Parameters for {@link FastaLocusBuilder}.
  */
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE)
 public final class FastaLocusBuilderParameters {
     private final GeneType geneType;
     private final String alleleNameExtractionPattern, functionalAllelePattern, referenceAllelePattern;
@@ -70,16 +85,16 @@ public final class FastaLocusBuilderParameters {
     @JsonIgnore
     private final int translationReferencePointIndex;
 
-
-    public FastaLocusBuilderParameters(GeneType geneType,
-                                       String alleleNameExtractionPattern,
-                                       String functionalAllelePattern,
-                                       String referenceAllelePattern,
-                                       char paddingChar,
-                                       ReferencePoint frameBoundedAnchorPoint,
-                                       boolean firstOccurredAlleleIsReference,
-                                       AlignmentScoring<NucleotideSequence> scoring,
-                                       AnchorPointPositionInfo... anchorPointPositions) {
+    @JsonCreator
+    public FastaLocusBuilderParameters(@JsonProperty("geneType") GeneType geneType,
+                                       @JsonProperty("alleleNameExtractionPattern") String alleleNameExtractionPattern,
+                                       @JsonProperty("functionalAllelePattern") String functionalAllelePattern,
+                                       @JsonProperty("referenceAllelePattern") String referenceAllelePattern,
+                                       @JsonProperty("paddingChar") char paddingChar,
+                                       @JsonProperty("frameBoundedAnchorPoint") ReferencePoint frameBoundedAnchorPoint,
+                                       @JsonProperty("firstOccurredAlleleIsReference") boolean firstOccurredAlleleIsReference,
+                                       @JsonProperty("scoring") AlignmentScoring<NucleotideSequence> scoring,
+                                       @JsonProperty("anchorPointPositions") AnchorPointPositionInfo... anchorPointPositions) {
         this.geneType = geneType;
         this.alleleNameExtractionPattern = alleleNameExtractionPattern;
         this.functionalAllelePattern = functionalAllelePattern;
@@ -188,9 +203,49 @@ public final class FastaLocusBuilderParameters {
         return indexReferencePointMapping;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        FastaLocusBuilderParameters that = (FastaLocusBuilderParameters) o;
+
+        if (paddingChar != that.paddingChar) return false;
+        if (firstOccurredAlleleIsReference != that.firstOccurredAlleleIsReference) return false;
+        if (geneType != that.geneType) return false;
+        if (alleleNameExtractionPattern != null ? !alleleNameExtractionPattern.equals(that.alleleNameExtractionPattern) : that.alleleNameExtractionPattern != null)
+            return false;
+        if (functionalAllelePattern != null ? !functionalAllelePattern.equals(that.functionalAllelePattern) : that.functionalAllelePattern != null)
+            return false;
+        if (referenceAllelePattern != null ? !referenceAllelePattern.equals(that.referenceAllelePattern) : that.referenceAllelePattern != null)
+            return false;
+        if (frameBoundedAnchorPoint != null ? !frameBoundedAnchorPoint.equals(that.frameBoundedAnchorPoint) : that.frameBoundedAnchorPoint != null)
+            return false;
+        if (scoring != null ? !scoring.equals(that.scoring) : that.scoring != null) return false;
+        // Probably incorrect - comparing Object[] arrays with Arrays.equals
+        return Arrays.equals(anchorPointPositions, that.anchorPointPositions);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = geneType != null ? geneType.hashCode() : 0;
+        result = 31 * result + (alleleNameExtractionPattern != null ? alleleNameExtractionPattern.hashCode() : 0);
+        result = 31 * result + (functionalAllelePattern != null ? functionalAllelePattern.hashCode() : 0);
+        result = 31 * result + (referenceAllelePattern != null ? referenceAllelePattern.hashCode() : 0);
+        result = 31 * result + (int) paddingChar;
+        result = 31 * result + (frameBoundedAnchorPoint != null ? frameBoundedAnchorPoint.hashCode() : 0);
+        result = 31 * result + (firstOccurredAlleleIsReference ? 1 : 0);
+        result = 31 * result + (scoring != null ? scoring.hashCode() : 0);
+        result = 31 * result + Arrays.hashCode(anchorPointPositions);
+        return result;
+    }
+
     /**
      * Represents information about reference point position in target FASTA file.
      */
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+            getterVisibility = JsonAutoDetect.Visibility.NONE)
     public static final class AnchorPointPositionInfo {
         /**
          * Special value for position field telling builder to assign this anchor point to the beginning of the input
@@ -215,21 +270,86 @@ public final class FastaLocusBuilderParameters {
          */
         public static final String ANCHOR_GROUP_NAME = "anchor";
         final ReferencePoint point;
+        @JsonSerialize(using = PositionSerializer.class)
+        @JsonDeserialize(using = PositionDeserializer.class)
         final int position;
+
+        @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
         final String nucleotidePattern;
+
+        @JsonIgnore
         final Pattern nucleotidePatternP;
 
         public AnchorPointPositionInfo(ReferencePoint point, int position) {
             this(point, position, null);
         }
 
-        public AnchorPointPositionInfo(ReferencePoint point, int position, String nucleotidePattern) {
+        @JsonCreator
+        public AnchorPointPositionInfo(@JsonProperty("point") ReferencePoint point,
+                                       @JsonProperty("position") int position,
+                                       @JsonProperty("nucleotidePattern") String nucleotidePattern) {
             if (!point.isBasicPoint())
                 throw new IllegalArgumentException("Only basic reference points are supported.");
             this.point = point;
             this.position = position;
             this.nucleotidePattern = nucleotidePattern;
             this.nucleotidePatternP = nucleotidePattern == null ? null : Pattern.compile(nucleotidePattern, Pattern.CASE_INSENSITIVE);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            AnchorPointPositionInfo that = (AnchorPointPositionInfo) o;
+
+            if (position != that.position) return false;
+            if (!point.equals(that.point)) return false;
+            return !(nucleotidePattern != null ? !nucleotidePattern.equals(that.nucleotidePattern) : that.nucleotidePattern != null);
+
+        }
+
+        @Override
+        public int hashCode() {
+            int result = point.hashCode();
+            result = 31 * result + position;
+            result = 31 * result + (nucleotidePattern != null ? nucleotidePattern.hashCode() : 0);
+            return result;
+        }
+    }
+
+    public static final class PositionSerializer extends JsonSerializer<Integer> {
+        @Override
+        public void serialize(Integer value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
+            if (value == AnchorPointPositionInfo.BEGINNING_OF_SEQUENCE)
+                jgen.writeString("begin");
+            else if (value == AnchorPointPositionInfo.END_OF_SEQUENCE)
+                jgen.writeString("end");
+            else if (value == AnchorPointPositionInfo.USE_ONLY_PATTERN)
+                jgen.writeString("no");
+            else
+                jgen.writeNumber(value);
+        }
+    }
+
+    public static final class PositionDeserializer extends JsonDeserializer<Integer> {
+        @Override
+        public Integer deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+            switch (jp.getCurrentToken()) {
+                case VALUE_NUMBER_INT:
+                    return jp.getIntValue();
+                case VALUE_STRING:
+                    String str = jp.getValueAsString();
+                    switch (str){
+                        case "begin":
+                            return AnchorPointPositionInfo.BEGINNING_OF_SEQUENCE;
+                        case "end":
+                            return AnchorPointPositionInfo.END_OF_SEQUENCE;
+                        case "no":
+                            return AnchorPointPositionInfo.USE_ONLY_PATTERN;
+                    }
+            }
+            throw new IllegalArgumentException("Wrong position.");
         }
     }
 }

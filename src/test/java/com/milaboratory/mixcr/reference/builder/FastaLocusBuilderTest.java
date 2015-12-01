@@ -29,21 +29,15 @@
 package com.milaboratory.mixcr.reference.builder;
 
 import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
-import com.milaboratory.core.io.sequence.fasta.FastaReader;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.reference.*;
 import com.milaboratory.mixcr.reference.builder.FastaLocusBuilderParameters.AnchorPointPositionInfo;
-import com.milaboratory.util.StringUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static com.milaboratory.mixcr.reference.ReferencePoint.*;
 
@@ -51,67 +45,6 @@ import static com.milaboratory.mixcr.reference.ReferencePoint.*;
  * Created by dbolotin on 25/10/15.
  */
 public class FastaLocusBuilderTest {
-    @Test
-    public void test1() throws Exception {
-        Pattern nameExtractionPattern = Pattern.compile("^[^\\|]+\\|([^\\|]+)");
-        Pattern funcExtractionPattern = Pattern.compile("^[^\\|]+\\|[^\\|]+\\|[^\\|]+\\|[\\(\\[]?F");
-        FastaReader reader = new FastaReader("/Volumes/Data/Projects/MiLaboratory/tmp/result/human_IGHV.fasta", null);
-        FastaReader.RawFastaRecord rec;
-        int[] refPoints = {0, 78, 114, 165, 195, 309, -1};
-        List<String[]> seqs = new ArrayList<>();
-        int[] lens = new int[refPoints.length + 1];
-        while ((rec = reader.takeRawRecord()) != null) {
-            //System.out.println(rec.sequence);
-            StringWithMapping swm = StringWithMapping.removeSymbol(rec.sequence, '.');
-            NucleotideSequence seq = new NucleotideSequence(swm.getModifiedString());
-            if (seq.containsWildcards()) {
-                //System.out.println("Skipped: " + rec.description);
-                continue;
-            }
-
-            String[] parts = new String[refPoints.length + 1];
-
-            StringBuilder coordString = new StringBuilder();
-            int next = 0;
-
-            //System.out.println(rec.description);
-
-            //System.out.println(AminoAcidSequence.translate(seq, 0));
-            Matcher matcher = nameExtractionPattern.matcher(rec.description);
-
-            if (matcher.find())
-                parts[0] = matcher.group(1);
-            else
-                System.out.println("Error.");
-
-            matcher = funcExtractionPattern.matcher(rec.description);
-
-            parts[0] += matcher.find() ? " F" : " P";
-
-            for (int i = 0; i < refPoints.length - 1; ++i) {
-                AminoAcidSequence tr = tr(swm, refPoints[i], refPoints[i + 1]);
-                parts[i + 1] = tr == null ? null : tr.toString();
-            }
-            for (int i = 0; i < parts.length; i++)
-                if (parts[i] != null)
-                    lens[i] = Math.max(lens[i], parts[i].length());
-            seqs.add(parts);
-        }
-
-        for (String[] seq : seqs) {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < seq.length; i++) {
-                int len = 0;
-                if (seq[i] != null) {
-                    sb.append(seq[i]);
-                    len = seq[i].length();
-                }
-                sb.append(StringUtil.spaces(lens[i] - len + 2));
-            }
-            System.out.println(sb);
-        }
-    }
-
     @Test
     public void test1V() throws Exception {
         FastaLocusBuilderParameters parameters =
@@ -129,7 +62,7 @@ public class FastaLocusBuilderTest {
                         new AnchorPointPositionInfo(CDR3Begin, 309),
                         new AnchorPointPositionInfo(VEnd, AnchorPointPositionInfo.END_OF_SEQUENCE));
 
-        FastaLocusBuilder builder = new FastaLocusBuilder(Species.HomoSapiens, Locus.IGH, parameters).noExceptionOnError();
+        FastaLocusBuilder builder = new FastaLocusBuilder(Locus.IGH, parameters).noExceptionOnError();
         builder.importAllelesFromFile("/Volumes/Data/Projects/MiLaboratory/tmp/result/human_IGHV.fasta");
         builder.compile();
         builder.printReport();
@@ -137,7 +70,9 @@ public class FastaLocusBuilderTest {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         LociLibraryWriter writer = new LociLibraryWriter(bos);
         writer.writeMagic();
-        builder.writeLocus(writer);
+        writer.writeBeginOfLocus(Species.HomoSapiens, Locus.IGH);
+        builder.writeAlleles(writer);
+        writer.writeEndOfLocus();
         ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
         LociLibrary ll = LociLibraryReader.read(bis, false);
         NucleotideSequence expected = new NucleotideSequence("ATCAACTGGGTGCGACAGGCCACTGGACAAGGGCTTGAGTGGATGGGATGG");
@@ -161,7 +96,7 @@ public class FastaLocusBuilderTest {
                         new AnchorPointPositionInfo(FR4Begin, -31, "(?:TGG|TT[TC])(?<anchor>)GG[ATGC]{4}GG[ATGC]"),
                         new AnchorPointPositionInfo(FR4End, AnchorPointPositionInfo.END_OF_SEQUENCE));
 
-        FastaLocusBuilder builder = new FastaLocusBuilder(Species.HomoSapiens, Locus.IGH, parameters).noExceptionOnError();
+        FastaLocusBuilder builder = new FastaLocusBuilder(Locus.IGH, parameters).noExceptionOnError();
         builder.importAllelesFromFile("/Volumes/Data/Projects/MiLaboratory/tmp/result/human_IGHJ.fasta");
         builder.compile();
         builder.printReport();
@@ -169,7 +104,9 @@ public class FastaLocusBuilderTest {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         LociLibraryWriter writer = new LociLibraryWriter(bos);
         writer.writeMagic();
-        builder.writeLocus(writer);
+        writer.writeBeginOfLocus(Species.HomoSapiens, Locus.IGH);
+        builder.writeAlleles(writer);
+        writer.writeEndOfLocus();
         ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
         LociLibrary ll = LociLibraryReader.read(bis, false);
         NucleotideSequence expected = new NucleotideSequence("GGGCAAGGGACCACGGTCACCGTCTCCTCAG");
@@ -192,7 +129,7 @@ public class FastaLocusBuilderTest {
                         new AnchorPointPositionInfo(DBegin, 0),
                         new AnchorPointPositionInfo(DEnd, AnchorPointPositionInfo.END_OF_SEQUENCE));
 
-        FastaLocusBuilder builder = new FastaLocusBuilder(Species.HomoSapiens, Locus.IGH, parameters).noExceptionOnError();
+        FastaLocusBuilder builder = new FastaLocusBuilder(Locus.IGH, parameters).noExceptionOnError();
         builder.importAllelesFromFile("/Volumes/Data/Projects/MiLaboratory/tmp/result/human_IGHD.fasta");
         builder.compile();
         builder.printReport();
@@ -200,7 +137,9 @@ public class FastaLocusBuilderTest {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         LociLibraryWriter writer = new LociLibraryWriter(bos);
         writer.writeMagic();
-        builder.writeLocus(writer);
+        writer.writeBeginOfLocus(Species.HomoSapiens, Locus.IGH);
+        builder.writeAlleles(writer);
+        writer.writeEndOfLocus();
         ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
         LociLibrary ll = LociLibraryReader.read(bis, false);
         int i = 0;
