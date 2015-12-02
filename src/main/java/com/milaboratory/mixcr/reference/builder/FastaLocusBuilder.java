@@ -95,6 +95,8 @@ public class FastaLocusBuilder {
     private boolean allowNonStandardAlleleNames = false;
 
     public FastaLocusBuilder(Locus locus, FastaLocusBuilderParameters parameters) {
+        if (locus == null || parameters == null)
+            throw new NullPointerException();
         this.locus = locus;
         this.parameters = parameters;
     }

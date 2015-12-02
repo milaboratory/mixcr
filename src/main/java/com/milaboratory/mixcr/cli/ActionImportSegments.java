@@ -34,11 +34,13 @@ import com.beust.jcommander.Parameters;
 import com.milaboratory.mitools.cli.Action;
 import com.milaboratory.mitools.cli.ActionHelper;
 import com.milaboratory.mitools.cli.ActionParameters;
-import com.milaboratory.mixcr.reference.LociLibrary;
-import com.milaboratory.mixcr.reference.LociLibraryReader;
-import com.milaboratory.mixcr.reference.Locus;
-import com.milaboratory.mixcr.reference.SpeciesAndLocus;
+import com.milaboratory.mixcr.reference.*;
+import com.milaboratory.mixcr.reference.builder.FastaLocusBuilder;
+import com.milaboratory.mixcr.reference.builder.FastaLocusBuilderParametersBundle;
 
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -50,7 +52,9 @@ public class ActionImportSegments implements Action {
     @Override
     public void go(ActionHelper helper) throws Exception {
         Path outputFile = params.getOutputFile();
-        Files.createDirectories(outputFile.getParent());
+        Path parent = outputFile.getParent();
+        if (parent != null)
+            Files.createDirectories(parent);
         boolean outputExists = Files.exists(outputFile);
         int taxonID = params.getTaxonID();
         Locus locus = params.getLocus();
@@ -71,9 +75,66 @@ public class ActionImportSegments implements Action {
             }
         }
 
+        FastaLocusBuilderParametersBundle bundle = getBuilderParameters();
 
+        try (PrintStream ps = (params.report == null ? System.out : new PrintStream(params.report))) {
+            FastaLocusBuilder vBuilder, dBuilder = null, jBuilder;
 
-        //FastaLocusBuilder vBuilder = new FastaLocusBuilder(locus, )
+            vBuilder = new FastaLocusBuilder(locus, bundle.getV())
+                    .setLoggingStream(ps).setLoggingStream(ps);
+            vBuilder.importAllelesFromFile(params.getV());
+
+            jBuilder = new FastaLocusBuilder(locus, bundle.getJ())
+                    .setLoggingStream(ps).setLoggingStream(ps);
+            jBuilder.importAllelesFromFile(params.getJ());
+
+            if (params.getD() != null) {
+                dBuilder = new FastaLocusBuilder(locus, bundle.getD())
+                        .setLoggingStream(ps).setLoggingStream(ps);
+                dBuilder.importAllelesFromFile(params.getD());
+            }
+
+            System.out.println("Processing...");
+
+            vBuilder.compile();
+            jBuilder.compile();
+            if (dBuilder != null)
+                dBuilder.compile();
+
+            System.out.println("Writing report.");
+
+            vBuilder.printReport();
+            jBuilder.printReport();
+            if (dBuilder != null)
+                dBuilder.printReport();
+
+            System.out.println("Writing library file.");
+
+            try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(outputFile.toFile(), true))) {
+                LociLibraryWriter writer = new LociLibraryWriter(bos);
+
+                // Write magic bytes if we create file from scratch
+                if (!outputExists)
+                    writer.writeMagic();
+
+                writer.writeBeginOfLocus(taxonID, locus);
+                vBuilder.writeAlleles(writer);
+                jBuilder.writeAlleles(writer);
+                if (dBuilder != null)
+                    dBuilder.writeAlleles(writer);
+                writer.writeEndOfLocus();
+            }
+
+            System.out.println("Segments successfully imported.");
+        }
+    }
+
+    public FastaLocusBuilderParametersBundle getBuilderParameters() {
+        FastaLocusBuilderParametersBundle bundle =
+                FastaLocusBuilderParametersBundle.getBuiltInBundleByName(params.getBuilderParametersName());
+        if (bundle == null)
+            throw new ParameterException("Can't find parameters with name: " + params.getBuilderParametersName());
+        return bundle;
     }
 
     @Override
@@ -93,9 +154,9 @@ public class ActionImportSegments implements Action {
         //@Parameter(description = "input_file_V.fasta input_file_J.fasta [input_file_D.fasta]")
         //public List<String> parameters;
 
-        @Parameter(description = "Import parameters (name of builtin parameter set of name of JSON file with custom " +
-                "import parameters).", names = {"-p", "--parameters"})
-        public String assemblerParametersName = "imgt";
+        @Parameter(description = "Import parameters (name of built-in parameter set of a name of JSON file with " +
+                "custom import parameters).", names = {"-p", "--parameters"})
+        public String builderParametersName = "imgt";
 
         @Parameter(description = "Input *.fasta file with V genes.",
                 names = {"-v"})
@@ -128,6 +189,10 @@ public class ActionImportSegments implements Action {
         //@Parameter(description = "Add to system-wide loci library ($MIXCR_PATH/system.ll).",
         //        names = {"-s", "--system"}, hidden = true)
         //public Boolean global;
+
+        public String getBuilderParametersName() {
+            return builderParametersName;
+        }
 
         public Locus getLocus() {
             return Locus.fromId(locus);

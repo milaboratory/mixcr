@@ -31,8 +31,15 @@ package com.milaboratory.mixcr.reference.builder;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.milaboratory.mixcr.reference.GeneType;
+import com.milaboratory.util.GlobalObjectMappers;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
@@ -45,6 +52,14 @@ public final class FastaLocusBuilderParametersBundle {
                                              @JsonProperty("d") FastaLocusBuilderParameters d,
                                              @JsonProperty("j") FastaLocusBuilderParameters j,
                                              @JsonProperty("c") FastaLocusBuilderParameters c) {
+        if (v != null && v.getGeneType() != GeneType.Variable)
+            throw new IllegalArgumentException();
+        if (d != null && d.getGeneType() != GeneType.Diversity)
+            throw new IllegalArgumentException();
+        if (j != null && j.getGeneType() != GeneType.Joining)
+            throw new IllegalArgumentException();
+        if (c != null && c.getGeneType() != GeneType.Constant)
+            throw new IllegalArgumentException();
         this.v = v;
         this.d = d;
         this.j = j;
@@ -102,5 +117,31 @@ public final class FastaLocusBuilderParametersBundle {
         result = 31 * result + (j != null ? j.hashCode() : 0);
         result = 31 * result + (c != null ? c.hashCode() : 0);
         return result;
+    }
+
+    public static FastaLocusBuilderParametersBundle getBuiltInBundleByName(String name) {
+        return builtIn.get(name);
+    }
+
+    /**
+     * List of known parameters presets
+     */
+    private static final Map<String, FastaLocusBuilderParametersBundle> builtIn;
+
+    static {
+        Map<String, FastaLocusBuilderParametersBundle> map = null;
+        try {
+            InputStream is = FastaLocusBuilderParametersBundle.class.getClassLoader().getResourceAsStream("parameters/segment_importer_parameters.json");
+            TypeReference<HashMap<String, FastaLocusBuilderParametersBundle>> typeRef
+                    = new TypeReference<
+                    HashMap<String, FastaLocusBuilderParametersBundle>
+                    >() {
+            };
+            map = GlobalObjectMappers.ONE_LINE.readValue(is, typeRef);
+        } catch (IOException ioe) {
+            System.out.println("ERROR!");
+            ioe.printStackTrace();
+        }
+        builtIn = map;
     }
 }

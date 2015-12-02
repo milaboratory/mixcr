@@ -79,4 +79,9 @@ public class FastaLocusBuilderParametersTest {
         FastaLocusBuilderParametersBundle bundle = new FastaLocusBuilderParametersBundle(v, d, j, null);
         TestUtil.assertJson(bundle, true);
     }
+
+    @Test
+    public void testBuiltIn() throws Exception {
+        TestUtil.assertJson(FastaLocusBuilderParametersBundle.getBuiltInBundleByName("imgt"));
+    }
 }
