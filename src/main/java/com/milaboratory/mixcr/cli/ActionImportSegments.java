@@ -56,21 +56,56 @@ public class ActionImportSegments implements Action {
         if (parent != null)
             Files.createDirectories(parent);
         boolean outputExists = Files.exists(outputFile);
-        int taxonID = params.getTaxonID();
+        final int taxonID = params.getTaxonID();
         Locus locus = params.getLocus();
-        String[] commonNames = params.getCommonNames();
+        final String[] commonNames = params.getCommonNames();
         if (outputExists) {
             LociLibrary ll = LociLibraryReader.read(outputFile.toFile(), false);
-            SpeciesAndLocus sl = new SpeciesAndLocus(taxonID, locus);
-            if (ll.getLocus(sl) != null) {
-                System.err.println("Specified file already contain record for: " + sl);
-                return;
-            }
-            for (String commonName : commonNames) {
-                int id = ll.getSpeciesTaxonId(commonName);
-                if (id != -1 && id != taxonID) {
-                    System.err.println("Specified file contains other mapping for common species name: " + commonName + " -> " + id);
+            final SpeciesAndLocus sl = new SpeciesAndLocus(taxonID, locus);
+            if (params.getForce()) {
+                LociLibraryIOUtils.LociLibraryFilter filter = new LociLibraryIOUtils.LociLibraryFilter() {
+                    boolean remove = false;
+
+                    @Override
+                    public boolean speciesName(int taxonId1, String name1) {
+                        if (taxonID == taxonId1)
+                            for (String cn : commonNames)
+                                if (name1.equals(cn))
+                                    return false;
+                        return true;
+                    }
+
+                    @Override
+                    public boolean beginLocus(LocusContainer container) {
+                        return !(remove = container.getSpeciesAndLocus().equals(sl));
+                    }
+
+                    @Override
+                    public boolean endLocus(LocusContainer container) {
+                        if (remove) {
+                            remove = false;
+                            return false;
+                        }
+                        return true;
+                    }
+
+                    @Override
+                    public boolean allele(Allele allele) {
+                        return !remove;
+                    }
+                };
+                LociLibraryIOUtils.filterLociLibrary(outputFile.toFile(), filter);
+            } else {
+                if (ll.getLocus(sl) != null) {
+                    System.err.println("Specified file already contain record for: " + sl + "; use -f to overwrite.");
                     return;
+                }
+                for (String commonName : commonNames) {
+                    int id = ll.getSpeciesTaxonId(commonName);
+                    if (id != -1 && id != taxonID) {
+                        System.err.println("Specified file contains other mapping for common species name: " + commonName + " -> " + id + "; use -f to overwrite.");
+                        return;
+                    }
                 }
             }
         }
@@ -125,7 +160,16 @@ public class ActionImportSegments implements Action {
                 writer.writeEndOfLocus();
             }
 
+            System.out.println("Checking.");
+
+            LociLibrary ll = LociLibraryReader.read(outputFile.toFile(), false);
+
             System.out.println("Segments successfully imported.");
+
+            System.out.println("Resulting file contains following records:");
+            for (LocusContainer locusContainer : ll.getLoci()) {
+                System.out.println(locusContainer.getSpeciesAndLocus() + ": " + locusContainer.getAllAlleles().size() + " records");
+            }
         }
     }
 
@@ -157,6 +201,10 @@ public class ActionImportSegments implements Action {
         @Parameter(description = "Import parameters (name of built-in parameter set of a name of JSON file with " +
                 "custom import parameters).", names = {"-p", "--parameters"})
         public String builderParametersName = "imgt";
+
+        @Parameter(description = "Force overwrite data.",
+                names = {"-f"})
+        public Boolean force;
 
         @Parameter(description = "Input *.fasta file with V genes.",
                 names = {"-v"})
@@ -224,6 +272,10 @@ public class ActionImportSegments implements Action {
 
         public String getD() {
             return d;
+        }
+
+        public boolean getForce() {
+            return force != null && force;
         }
 
         @Override

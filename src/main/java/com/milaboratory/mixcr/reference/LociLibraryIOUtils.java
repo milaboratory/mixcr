@@ -28,9 +28,14 @@
  */
 package com.milaboratory.mixcr.reference;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import com.milaboratory.core.sequence.NucleotideSequence;
+
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
 
 public class LociLibraryIOUtils {
     private LociLibraryIOUtils() {
@@ -65,5 +70,158 @@ public class LociLibraryIOUtils {
                     new ReferencePoint(BasicReferencePoint.getByIndex(end)));
         }
         return new GeneFeature(rr, true);
+    }
+
+    public static void filterLociLibrary(final File file, final LociLibraryFilter filter) throws IOException {
+        final List<RangeToRemove> ranges = new ArrayList<>();
+        class Listener extends LociLibraryReaderListener {
+            RangeToRemove currentRange = null;
+
+            @Override
+            public void magic(long from, long to) {
+                r(from, to, filter.magic());
+            }
+
+            @Override
+            public void meta(long from, long to, String key, String value) {
+                r(from, to, filter.meta(key, value));
+            }
+
+            @Override
+            public void speciesName(long from, long to, int taxonId, String name) {
+                r(from, to, filter.speciesName(taxonId, name));
+            }
+
+            @Override
+            public void sequencePart(long from, long to, int seqFrom, NucleotideSequence seq) {
+                r(from, to, filter.sequencePart(seqFrom, seq));
+            }
+
+            @Override
+            public void beginLocus(long from, long to, LocusContainer container) {
+                r(from, to, filter.beginLocus(container));
+            }
+
+            @Override
+            public void endLocus(long from, long to, LocusContainer container) {
+                r(from, to, filter.endLocus(container));
+            }
+
+            @Override
+            public void allele(long from, long to, Allele allele) {
+                r(from, to, filter.allele(allele));
+            }
+
+            void finish() {
+                r(0, 0, true);
+            }
+
+            void r(long from, long to, boolean result) {
+                if (!result) {
+                    if (currentRange == null)
+                        currentRange = new RangeToRemove(from, to);
+                    else
+                        currentRange.to = to;
+                } else if (currentRange != null) {
+                    ranges.add(currentRange);
+                    currentRange = null;
+                }
+            }
+        }
+
+        // Collecting ranges to remove
+        try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file))) {
+            Listener listener = new Listener();
+            LociLibraryReader reader = new LociLibraryReader(bis, false).setListener(listener);
+            reader.checkMagic();
+            reader.readToEnd();
+            listener.finish();
+        }
+
+        Path path = file.toPath();
+        Path old = path.resolveSibling(path.getFileName() + ".old");
+        Files.move(path, old, StandardCopyOption.REPLACE_EXISTING);
+
+        try (InputStream is = new FileInputStream(old.toFile());
+             OutputStream os = new FileOutputStream(path.toFile())) {
+            byte[] buffer = new byte[1024];
+            long streamPointer = 0;
+            int rangePointer = 0;
+            boolean skip = false;
+            while (true) {
+                int toRead = buffer.length;
+                if (rangePointer < ranges.size()) {
+                    toRead = Math.min((int) (ranges.get(rangePointer).boundary(skip) - streamPointer),
+                            toRead);
+                }
+                if (toRead == 0) {
+                    if (!skip)
+                        skip = true;
+                    else {
+                        ++rangePointer;
+                        skip = false;
+                    }
+                    continue;
+                }
+                int read = is.read(buffer, 0, toRead);
+
+                if (read > 0 && !skip)
+                    os.write(buffer, 0, read);
+
+                if (read < toRead)
+                    break;
+
+                streamPointer += read;
+            }
+        }
+
+        // Check
+        LociLibraryReader.read(path.toFile(), false);
+
+        // Remove old file
+        Files.delete(old);
+    }
+
+    private static final class RangeToRemove {
+        long from, to;
+
+        public RangeToRemove(long from, long to) {
+            this.from = from;
+            this.to = to;
+        }
+
+        public long boundary(boolean isSkip) {
+            return isSkip ? to : from;
+        }
+    }
+
+    public abstract static class LociLibraryFilter {
+        public boolean magic() {
+            return true;
+        }
+
+        public boolean meta(String key, String value) {
+            return true;
+        }
+
+        public boolean speciesName(int taxonId, String name) {
+            return true;
+        }
+
+        public boolean sequencePart(int seqFrom, NucleotideSequence seq) {
+            return true;
+        }
+
+        public boolean beginLocus(LocusContainer container) {
+            return true;
+        }
+
+        public boolean endLocus(LocusContainer container) {
+            return true;
+        }
+
+        public boolean allele(Allele allele) {
+            return true;
+        }
     }
 }
