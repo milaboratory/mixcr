@@ -81,15 +81,26 @@ public class ActionAlign implements Action {
         VDJCAligner aligner = VDJCAligner.createAligner(alignerParameters,
                 actionParameters.isInputPaired(), !actionParameters.noMerge);
 
-        LociLibrary ll = LociLibraryManager.getDefault().getLibrary("mi");
+        LociLibrary ll = LociLibraryManager.getDefault().getLibrary(actionParameters.ll);
+        if (ll == null) {
+            System.err.println("Segment library (" + actionParameters.ll + ") not found.");
+            return;
+        }
 
-        for (Locus locus : actionParameters.getLoci())
-            for (Allele allele : ll.getLocus(actionParameters.getTaxonID(), locus).getAllAlleles())
+        for (Locus locus : actionParameters.getLoci()) {
+            LocusContainer lc = ll.getLocus(actionParameters.getTaxonID(), locus);
+            if (lc == null) {
+                if (params().printWarnings())
+                    System.err.println("WARNING: No records for " + locus);
+                continue;
+            }
+            for (Allele allele : lc.getAllAlleles())
                 if (alignerParameters.containsRequiredFeature(allele) &&
                         (allele.isFunctional() || !actionParameters.isFunctionalOnly()))
                     aligner.addAllele(allele);
-//                else if (allele.isFunctional())
-//                    System.err.println("WARNING: Functional allele excluded " + allele.getName());
+                else if (params().printWarnings() && allele.isFunctional())
+                    System.err.println("WARNING: Functional allele excluded " + allele.getName());
+        }
 
         AlignerReport report = actionParameters.report == null ? null : new AlignerReport();
         if (report != null) {
@@ -175,6 +186,14 @@ public class ActionAlign implements Action {
         @DynamicParameter(names = "-O", description = "Overrides base values of parameters.")
         public Map<String, String> overrides = new HashMap<>();
 
+        @Parameter(description = "Segment library to use",
+                names = {"-b", "--library"})
+        public String ll = "mi";
+
+        @Parameter(description = "Print warnings",
+                names = {"-w", "--warnings"})
+        public Boolean warnings = null;
+
         @Parameter(description = "Parameters",
                 names = {"-p", "--parameters"})
         public String alignerParametersName = "default";
@@ -244,6 +263,10 @@ public class ActionAlign implements Action {
                 builder.append(',');
             }
             return builder.toString();
+        }
+
+        public boolean printWarnings() {
+            return warnings != null && warnings;
         }
 
         public Set<Locus> getLoci() {

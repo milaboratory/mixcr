@@ -93,7 +93,7 @@ public class FastaLocusBuilderTest {
                         FR4Begin, true,
                         new AffineGapAlignmentScoring<>(NucleotideSequence.ALPHABET, 1, -4, -21, -2),
                         new AnchorPointPositionInfo(JBegin, 0),
-                        new AnchorPointPositionInfo(FR4Begin, -31, "(?:TGG|TT[TC])(?<anchor>)GG[ATGC]{4}GG[ATGC]"),
+                        new AnchorPointPositionInfo(FR4Begin, -31, "(?:TGG|TT[TC])()GG[ATGC]{4}GG[ATGC]"),
                         new AnchorPointPositionInfo(FR4End, AnchorPointPositionInfo.END_OF_SEQUENCE));
 
         FastaLocusBuilder builder = new FastaLocusBuilder(Locus.IGH, parameters).noExceptionOnError();

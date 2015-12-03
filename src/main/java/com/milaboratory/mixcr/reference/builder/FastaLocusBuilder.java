@@ -283,7 +283,7 @@ public class FastaLocusBuilder {
             // Matching pattern
             Matcher matcher = pointInfo.nucleotidePatternP.matcher(seqWithPositionMapping.getModifiedString());
             if (matcher.find())
-                return matcher.start(ANCHOR_GROUP_NAME);
+                return matcher.start(1);
 
             if (referencePointPosition == USE_ONLY_PATTERN)
                 // Don't try position guided search

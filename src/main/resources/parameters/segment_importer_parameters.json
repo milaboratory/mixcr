@@ -92,7 +92,7 @@
         {
           "point": "FR4Begin",
           "position": -31,
-          "nucleotidePattern": "(?:TGG|TT[TC])(?<anchor>)GG[ATGC]{4}GG[ATGC]"
+          "nucleotidePattern": "(?:TGG|TT[TC])()GG[ATGC]{4}GG[ATGC]"
         },
         {
           "point": "FR4End",

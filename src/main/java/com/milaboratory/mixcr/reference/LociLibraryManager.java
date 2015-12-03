@@ -28,6 +28,9 @@
  */
 package com.milaboratory.mixcr.reference;
 
+import com.milaboratory.mixcr.cli.Util;
+
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -58,9 +61,18 @@ public final class LociLibraryManager implements AlleleResolver {
                 if (defualt == null) {
                     try {
                         defualt = new LociLibraryManager();
-                        InputStream sample = LociLibraryManager.class.getClassLoader()
-                                .getResourceAsStream("reference/mi.ll");
-                        defualt.register("mi", LociLibraryReader.read(sample, true));
+                        try (InputStream sample = LociLibraryManager.class.getClassLoader()
+                                .getResourceAsStream("reference/mi.ll")) {
+                            defualt.register("mi", LociLibraryReader.read(sample, true));
+                        }
+                        File settings = Util.getLocalSettingsDir().toFile();
+                        if (settings.exists())
+                            for (File file : settings.listFiles()) {
+                                if (file.isFile() && file.getName().endsWith(".ll")) {
+                                    defualt.register(file.getName().substring(0, file.getName().length() - 3),
+                                            LociLibraryReader.read(file, false));
+                                }
+                            }
                     } catch (IOException e) {
                         throw new RuntimeException();
                     }

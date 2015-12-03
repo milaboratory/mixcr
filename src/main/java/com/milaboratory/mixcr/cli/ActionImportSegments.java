@@ -97,13 +97,13 @@ public class ActionImportSegments implements Action {
                 LociLibraryIOUtils.filterLociLibrary(outputFile.toFile(), filter);
             } else {
                 if (ll.getLocus(sl) != null) {
-                    System.err.println("Specified file already contain record for: " + sl + "; use -f to overwrite.");
+                    System.err.println("Specified file (" + outputFile + ") already contain record for: " + sl + "; use -f to overwrite.");
                     return;
                 }
                 for (String commonName : commonNames) {
                     int id = ll.getSpeciesTaxonId(commonName);
                     if (id != -1 && id != taxonID) {
-                        System.err.println("Specified file contains other mapping for common species name: " + commonName + " -> " + id + "; use -f to overwrite.");
+                        System.err.println("Specified file (" + outputFile + ") contains other mapping for common species name: " + commonName + " -> " + id + "; use -f to overwrite.");
                         return;
                     }
                 }
@@ -112,20 +112,21 @@ public class ActionImportSegments implements Action {
 
         FastaLocusBuilderParametersBundle bundle = getBuilderParameters();
 
-        try (PrintStream ps = (params.report == null ? System.out : new PrintStream(params.report))) {
+        try (PrintStream ps = (params.report == null ? System.out : new PrintStream(new FileOutputStream(params.report,
+                true)))) {
             FastaLocusBuilder vBuilder, dBuilder = null, jBuilder;
 
             vBuilder = new FastaLocusBuilder(locus, bundle.getV())
-                    .setLoggingStream(ps).setLoggingStream(ps);
+                    .setLoggingStream(ps).setFinalReportStream(ps);
             vBuilder.importAllelesFromFile(params.getV());
 
             jBuilder = new FastaLocusBuilder(locus, bundle.getJ())
-                    .setLoggingStream(ps).setLoggingStream(ps);
+                    .setLoggingStream(ps).setFinalReportStream(ps);
             jBuilder.importAllelesFromFile(params.getJ());
 
             if (params.getD() != null) {
                 dBuilder = new FastaLocusBuilder(locus, bundle.getD())
-                        .setLoggingStream(ps).setLoggingStream(ps);
+                        .setLoggingStream(ps).setFinalReportStream(ps);
                 dBuilder.importAllelesFromFile(params.getD());
             }
 

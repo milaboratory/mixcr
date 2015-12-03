@@ -268,7 +268,7 @@ public final class FastaLocusBuilderParameters {
         /**
          * Name of anchor group in regex pattern
          */
-        public static final String ANCHOR_GROUP_NAME = "anchor";
+        //public static final String ANCHOR_GROUP_NAME = "anchor";
         final ReferencePoint point;
         @JsonSerialize(using = PositionSerializer.class)
         @JsonDeserialize(using = PositionDeserializer.class)
@@ -340,7 +340,7 @@ public final class FastaLocusBuilderParameters {
                     return jp.getIntValue();
                 case VALUE_STRING:
                     String str = jp.getValueAsString();
-                    switch (str){
+                    switch (str) {
                         case "begin":
                             return AnchorPointPositionInfo.BEGINNING_OF_SEQUENCE;
                         case "end":
