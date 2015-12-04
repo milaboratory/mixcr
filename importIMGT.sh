@@ -17,7 +17,7 @@ speciesA=()
 while read sp;
 do
   speciesA+=("$sp")
-done < <($wg 'http://imgt.org/genedb/' | pup '#Species option attr{value}')
+done < <($wg 'http://imgt.org/genedb/' | pup '#Species option attr{value}' | grep -v any )
 
 speciesCount="${#speciesA[@]}"
 
@@ -27,7 +27,7 @@ do
   echo "($i) ${speciesA[$i]}"
 done
 
-read -p "Please select species (e.g. '6' for ${speciesA[6]}): " speciesId
+read -p "Please select species (e.g. '5' for ${speciesA[5]}): " speciesId
 species=${speciesA[$speciesId]}
 echo "You selected: ${species}."
 read -p "Please enter a list of common species names for ${species} delimited by ':' to be used in -s option in 'mixcr align ...' (e.g. 'hsa:hs:homosapiens:human'): " commonNames
