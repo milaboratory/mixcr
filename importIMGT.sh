@@ -28,19 +28,17 @@ do
 done
 
 read -p "Please select species (e.g. '6' for ${speciesA[6]}): " speciesId
-# speciesId=21
-
 species=${speciesA[$speciesId]}
 echo "You selected: ${species}."
-echo -n "Getting taxonId from NCBI... "
+read -p "Please enter a list of common species names for ${species} delimited by ':' to be used in -s option in 'mixcr align ...' (e.g. 'hsa:hs:homosapiens:human'): " commonNames
+
+echo -n "Getting taxonId for ${species} from NCBI... "
 
 prefix='http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=taxonomy&term='
 url=$(echo ${species} | sed 's/ /%20/g')
 url="${prefix}${url}"
 taxonId=$(wget -qO- "$url" | xmllint --xpath '/eSearchResult/IdList/Id/text()' -)
-echo "TaxonId=${taxonId}"
-
-read -p "Please enter a list of short species names delimited by ':' to be used in -s option in 'mixcr align ...' (e.g. 'hsa:hs:homosapiens:human'): " commonNames
+echo "OK. TaxonId=${taxonId}"
 
 echo "Creating directory for downloaded files (./imgt_downloads/)"
 mkdir -p ./imgt_downloads/
