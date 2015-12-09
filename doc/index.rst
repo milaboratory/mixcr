@@ -25,5 +25,6 @@ Table of contents:
    align
    assemble
    export
+   importSegments
    geneFeatures
    appendix
