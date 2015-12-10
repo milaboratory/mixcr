@@ -60,7 +60,7 @@ public class LocusContainer {
     }
 
     void setLibrary(LociLibrary library) {
-        if (this.library != null)
+        if (this.library != null && this.library != library)
             throw new RuntimeException();
 
         this.library = library;

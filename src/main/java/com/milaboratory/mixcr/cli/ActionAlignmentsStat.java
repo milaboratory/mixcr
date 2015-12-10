@@ -95,7 +95,7 @@ public class ActionAlignmentsStat implements Action {
     private static final GeneFeature[] targetFeatures = {
             V5UTR,
             new GeneFeature(L1Begin, -20, 0),
-            L1, Intron, L2, FR1, CDR1, FR2, CDR2, FR3, CDR3, FR4,
+            L1, VIntron, L2, FR1, CDR1, FR2, CDR2, FR3, CDR3, FR4,
             new GeneFeature(FR4, 0, -3)
     };
 

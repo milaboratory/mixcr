@@ -28,48 +28,27 @@
  */
 package com.milaboratory.mixcr.reference;
 
-import com.milaboratory.primitivio.annotations.Serializable;
+import com.milaboratory.core.sequence.NucleotideSequence;
 
-@Serializable(by = IO.SpeciesAndLocusSerializer.class)
-public final class SpeciesAndLocus implements Comparable<SpeciesAndLocus>, java.io.Serializable {
-    //static final long serialVersionUID = 1L;
-    public final int taxonId;
-    public final Locus locus;
-
-    public SpeciesAndLocus(int taxonId, Locus locus) {
-        this.taxonId = taxonId;
-        this.locus = locus;
+public class LociLibraryReaderListener {
+    public void magic(long from, long to) {
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        SpeciesAndLocus that = (SpeciesAndLocus) o;
-
-        if (locus != that.locus) return false;
-
-        return taxonId == that.taxonId;
+    public void meta(long from, long to, String key, String value) {
     }
 
-    @Override
-    public int hashCode() {
-        int result = taxonId;
-        result = 31 * result + locus.hashCode();
-        return result;
+    public void speciesName(long from, long to, int taxonId, String name) {
     }
 
-    @Override
-    public String toString() {
-        return "" + taxonId + ":" + locus;
+    public void sequencePart(long from, long to, int seqFrom, NucleotideSequence seq) {
     }
 
-    @Override
-    public int compareTo(SpeciesAndLocus o) {
-        int r;
-        if ((r = locus.compareTo(o.locus)) != 0)
-            return r;
-        return Integer.compare(taxonId, o.taxonId);
+    public void beginLocus(long from, long to, LocusContainer container) {
+    }
+
+    public void endLocus(long from, long to, LocusContainer container) {
+    }
+
+    public void allele(long from, long to, Allele allele) {
     }
 }

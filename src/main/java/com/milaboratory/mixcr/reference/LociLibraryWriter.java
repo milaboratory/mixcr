@@ -188,22 +188,24 @@ public class LociLibraryWriter {
      * <p>Mutation positions in the mutation list ( {@code mutations} option ) must be converted to positions relative
      * to the first defined reference point of the reference allele.</p>
      *
-     * @param type            type of the segment (V, D, J or C)
-     * @param alleleName      full name of allele (e.g. TRBV12-2*01)
-     * @param isReference     is it a reference allele
-     * @param isFunctional    {@code true} if this gene is functional; {@code false} if this gene is pseudogene
-     * @param accession       accession number of original (source) sequence
-     * @param referencePoints array of reference points
-     * @param reference       allele name of the reference allele
-     * @param mutations       array of mutations
+     * @param type                 type of the segment (V, D, J or C)
+     * @param alleleName           full name of allele (e.g. TRBV12-2*01)
+     * @param isReference          is it a reference allele
+     * @param isFunctional         {@code true} if this gene is functional; {@code false} if this gene is pseudogene
+     * @param accession            accession number of original (source) sequence
+     * @param referencePoints      array of reference points
+     * @param reference            allele name of the reference allele
+     * @param mutations            array of mutations
+     * @param referenceGeneFeature reference gene feature
      * @throws java.io.IOException if an I/O error occurs.
      */
     public void writeAllele(GeneType type, String alleleName, boolean isReference, boolean isFunctional,
                             String accession, int[] referencePoints,
-                            String reference, int[] mutations) throws IOException {
+                            String reference, int[] mutations, GeneFeature referenceGeneFeature) throws IOException {
         //Validation
         if ((accession == null) != (referencePoints == null)
-                || (reference == null) != (mutations == null))
+                || (reference == null) != (mutations == null)
+                || (reference == null) != (referenceGeneFeature == null))
             throw new IllegalArgumentException();
         if (isReference && (mutations != null || accession == null))
             throw new IllegalArgumentException();
@@ -219,7 +221,7 @@ public class LociLibraryWriter {
                 (reference != null ? 8 : 0));
 
         if (accession != null) {
-            if (gtis.get(type).size != referencePoints.length)
+            if (GENE_TYPE_INFOS_WC.get(type).size != referencePoints.length)
                 throw new IllegalArgumentException("Wrong number of reference points.");
 
             stream.writeUTF(accession);
@@ -227,8 +229,9 @@ public class LociLibraryWriter {
                 stream.writeInt(referencePoints[i]);
         }
 
-        if (mutations != null) {
+        if (reference != null) {
             stream.writeUTF(reference);
+            LociLibraryIOUtils.writeReferenceGeneFeature(stream, referenceGeneFeature);
             stream.writeInt(mutations.length);
             for (int i = 0; i < mutations.length; ++i)
                 stream.writeInt(mutations[i]);
@@ -240,9 +243,11 @@ public class LociLibraryWriter {
      */
     public static abstract class GeneTypeInfo {
         public final int size;
+        public final int indexOfFirstPoint;
 
-        protected GeneTypeInfo(int size) {
+        public GeneTypeInfo(int indexOfFirstPoint, int size) {
             this.size = size;
+            this.indexOfFirstPoint = indexOfFirstPoint;
         }
 
         /**
@@ -255,11 +260,8 @@ public class LociLibraryWriter {
     }
 
     public static class GeneralGeneTypeInfo extends GeneTypeInfo {
-        final int indexOfFirstPoint;
-
-        protected GeneralGeneTypeInfo(int size, int indexOfFirstPoint) {
-            super(size);
-            this.indexOfFirstPoint = indexOfFirstPoint;
+        protected GeneralGeneTypeInfo(int indexOfFirstPoint, int size) {
+            super(indexOfFirstPoint, size);
         }
 
         @Override
@@ -275,7 +277,7 @@ public class LociLibraryWriter {
     // Class to fix for FR4End issue in J genes.
     public static class JGeneTypeInfo extends GeneTypeInfo {
         public JGeneTypeInfo() {
-            super(3);
+            super(13, 3);
         }
 
         @Override
@@ -304,12 +306,26 @@ public class LociLibraryWriter {
         }
     }
 
-    public static final EnumMap<GeneType, GeneTypeInfo> gtis = new EnumMap<>(GeneType.class);
+    public static GeneTypeInfo getGeneTypeInfo(GeneType geneType) {
+        return getGeneTypeInfo(geneType, false);
+    }
+
+    public static GeneTypeInfo getGeneTypeInfo(GeneType geneType, boolean withFR4Correction) {
+        return withFR4Correction ? GENE_TYPE_INFOS_WC.get(geneType) : GENE_TYPE_INFOS.get(geneType);
+    }
+
+    private static final EnumMap<GeneType, GeneTypeInfo> GENE_TYPE_INFOS_WC = new EnumMap<>(GeneType.class),
+            GENE_TYPE_INFOS = new EnumMap<>(GeneType.class);
 
     static {
-        gtis.put(GeneType.Variable, new GeneralGeneTypeInfo(11, 0));
-        gtis.put(GeneType.Diversity, new GeneralGeneTypeInfo(2, 11));
-        gtis.put(GeneType.Joining, new JGeneTypeInfo());
-        gtis.put(GeneType.Constant, new GeneralGeneTypeInfo(3, 16));
+        GENE_TYPE_INFOS_WC.put(GeneType.Variable, new GeneralGeneTypeInfo(0, 11));
+        GENE_TYPE_INFOS_WC.put(GeneType.Diversity, new GeneralGeneTypeInfo(11, 2));
+        GENE_TYPE_INFOS_WC.put(GeneType.Joining, new JGeneTypeInfo());
+        GENE_TYPE_INFOS_WC.put(GeneType.Constant, new GeneralGeneTypeInfo(16, 3));
+
+        GENE_TYPE_INFOS.put(GeneType.Variable, new GeneralGeneTypeInfo(0, 11));
+        GENE_TYPE_INFOS.put(GeneType.Diversity, new GeneralGeneTypeInfo(11, 2));
+        GENE_TYPE_INFOS.put(GeneType.Joining, new GeneralGeneTypeInfo(13, 3));
+        GENE_TYPE_INFOS.put(GeneType.Constant, new GeneralGeneTypeInfo(16, 3));
     }
 }
