@@ -1,4 +1,6 @@
-### Installation
+MiXCR is a universal software for fast and accurate analysis of raw T- or B- cell receptor repertoire sequencing data.
+
+## Installation
 
 #### Using Homebrew on Mac OS X or Linux (linuxbrew)
 
@@ -16,12 +18,24 @@
 
 * Any OS with Java support (Linux, Windows, Mac OS X, etc..)
 * Java 1.7 or higher
+ 
+## Usage
 
-### Documentation
+Here is a very simple example of analysis of raw RepSeq data:
+
+    mixcr align -r log.txt input_R1.fastq.gz input_R2.fastq.gz alignments.vdjca
+    mixcr assemble -r log.txt alignments.vdjca clones.clns
+    mixcr exportClones clones.clns clones.txt
+  
+this sequence of commands will produce a tab-delimited list of clones (`clones.txt`) assembled by their CDR3 sequences with extensive information on their abondancies, V, D and J genes etc.
+
+For more details see documentation.
+
+## Documentation
 
 Detailed documentation can be found at https://mixcr.readthedocs.org/
 
-### License
+## License
 
 Copyright (c) 2014-2015, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
 (here and after addressed as Inventors)
@@ -50,6 +64,6 @@ LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
 PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
 PATENT, TRADEMARK OR OTHER RIGHTS.
 
-### Cite
+## Cite
 
 Bolotin, Dmitriy A., Stanislav Poslavsky, Igor Mitrophanov, Mikhail Shugay, Ilgar Z. Mamedov, Ekaterina V. Putintseva, and Dmitriy M. Chudakov. "MiXCR: software for comprehensive adaptive immunity profiling." *Nature methods* 12, no. 5 (**2015**): 380-381.
