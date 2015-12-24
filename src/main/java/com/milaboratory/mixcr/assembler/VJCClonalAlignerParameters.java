@@ -32,28 +32,29 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.core.alignment.BandedAlignerParameters;
+import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.reference.GeneFeature;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
 public final class VJCClonalAlignerParameters extends AbstractClonalAlignerParameters<VJCClonalAlignerParameters>
         implements java.io.Serializable {
-    BandedAlignerParameters alignmentParameters;
+    BandedAlignerParameters<NucleotideSequence> alignmentParameters;
 
     @JsonCreator
     public VJCClonalAlignerParameters(
             @JsonProperty("featureToAlign") GeneFeature featureToAlign,
             @JsonProperty("relativeMinScore") float relativeMinScore,
-            @JsonProperty("alignmentParameters") BandedAlignerParameters alignmentParameters) {
+            @JsonProperty("alignmentParameters") BandedAlignerParameters<NucleotideSequence> alignmentParameters) {
         super(featureToAlign, relativeMinScore);
         this.alignmentParameters = alignmentParameters;
     }
 
-    public BandedAlignerParameters getAlignmentParameters() {
+    public BandedAlignerParameters<NucleotideSequence> getAlignmentParameters() {
         return alignmentParameters;
     }
 
-    public VJCClonalAlignerParameters setAlignmentParameters(BandedAlignerParameters alignmentParameters) {
+    public VJCClonalAlignerParameters setAlignmentParameters(BandedAlignerParameters<NucleotideSequence> alignmentParameters) {
         this.alignmentParameters = alignmentParameters;
         return this;
     }
