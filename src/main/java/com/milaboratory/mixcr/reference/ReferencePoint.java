@@ -28,8 +28,18 @@
  */
 package com.milaboratory.mixcr.reference;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.milaboratory.primitivio.annotations.Serializable;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -42,6 +52,8 @@ import java.util.Map;
  *
  * @see GeneFeature
  */
+@JsonSerialize(using = ReferencePoint.Serializer.class)
+@JsonDeserialize(using = ReferencePoint.Deserializer.class)
 @Serializable(by = IO.ReferencePointSerializer.class)
 public final class ReferencePoint implements Comparable<ReferencePoint>, java.io.Serializable {
 
@@ -303,6 +315,10 @@ public final class ReferencePoint implements Comparable<ReferencePoint>, java.io
         return basicPoint.getActivationPoint();
     }
 
+    public boolean isBasicPoint() {
+        return basicPoint.isPure() && offset == 0;
+    }
+
     @Override
     public int compareTo(ReferencePoint o) {
         int c = basicPoint.compareTo(o.basicPoint);
@@ -422,5 +438,19 @@ public final class ReferencePoint implements Comparable<ReferencePoint>, java.io
         if (point.offset == 0)
             return name;
         return name + "(" + point.offset + ")";
+    }
+
+    public static final class Serializer extends JsonSerializer<ReferencePoint> {
+        @Override
+        public void serialize(ReferencePoint value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
+            jgen.writeString(ReferencePoint.encode(value, true));
+        }
+    }
+
+    public static final class Deserializer extends JsonDeserializer<ReferencePoint> {
+        @Override
+        public ReferencePoint deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+            return ReferencePoint.parse(jp.readValueAs(String.class));
+        }
     }
 }

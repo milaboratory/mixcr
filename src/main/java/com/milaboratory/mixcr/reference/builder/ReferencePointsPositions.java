@@ -26,50 +26,23 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.reference;
+package com.milaboratory.mixcr.reference.builder;
 
-import com.milaboratory.primitivio.annotations.Serializable;
+import com.milaboratory.mixcr.reference.ReferencePoint;
+import gnu.trove.impl.Constants;
+import gnu.trove.map.hash.TObjectIntHashMap;
 
-@Serializable(by = IO.SpeciesAndLocusSerializer.class)
-public final class SpeciesAndLocus implements Comparable<SpeciesAndLocus>, java.io.Serializable {
-    //static final long serialVersionUID = 1L;
-    public final int taxonId;
-    public final Locus locus;
+public class ReferencePointsPositions {
+    final TObjectIntHashMap<ReferencePoint> mapping =
+            new TObjectIntHashMap<>(Constants.DEFAULT_CAPACITY,
+                    Constants.DEFAULT_LOAD_FACTOR, -1);
 
-    public SpeciesAndLocus(int taxonId, Locus locus) {
-        this.taxonId = taxonId;
-        this.locus = locus;
+    public ReferencePointsPositions() {
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        SpeciesAndLocus that = (SpeciesAndLocus) o;
-
-        if (locus != that.locus) return false;
-
-        return taxonId == that.taxonId;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = taxonId;
-        result = 31 * result + locus.hashCode();
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return "" + taxonId + ":" + locus;
-    }
-
-    @Override
-    public int compareTo(SpeciesAndLocus o) {
-        int r;
-        if ((r = locus.compareTo(o.locus)) != 0)
-            return r;
-        return Integer.compare(taxonId, o.taxonId);
+    public void addMapping(ReferencePoint point, int position){
+        if(!point.isBasicPoint())
+            throw new IllegalArgumentException("Supports only basic anchor points.");
+        mapping.put(point, position);
     }
 }

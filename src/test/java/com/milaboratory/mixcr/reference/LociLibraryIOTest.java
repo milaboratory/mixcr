@@ -28,6 +28,7 @@
  */
 package com.milaboratory.mixcr.reference;
 
+import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import org.junit.Assert;
@@ -62,14 +63,16 @@ public class LociLibraryIOTest {
         writer.writeCommonSpeciesName(Species.HomoSapiens, "hsa");
         writer.writeSequencePart("A1", 0, new NucleotideSequence("ATTAGACAATTAGACA"), compressed);
         writer.writeBeginOfLocus(Species.HomoSapiens, Locus.TRB, uuid);
-        writer.writeAllele(GeneType.Joining, "TRBJ2-4*01", true, true, "A1", new int[]{1, 5, 8}, null, null);
+        writer.writeAllele(GeneType.Joining, "TRBJ2-4*01", true, true, "A1", new int[]{1, 5, 8}, null, null, null);
+        writer.writeAllele(GeneType.Joining, "TRBJ2-4*02", false, true, null, null, "TRBJ2-4*01",
+                Mutations.decodeNuc("ST1G").getRAWMutations(), GermlineJCDR3Part);
         writer.writeMetaInfo("C", "D");
         writer.writeEndOfLocus();
 
         ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
 
         //Testing library
-        LociLibrary library = LociLibraryReader.read(bis);
+        LociLibrary library = LociLibraryReader.read(bis, false);
         assertEquals("B", library.getProperty("G"));
 
         //Testing container
@@ -95,6 +98,13 @@ public class LociLibraryIOTest {
         assertTrue(allele.isReference());
 
         assertEquals(new NucleotideSequence("TTAG"), allele.getFeature(GermlineJCDR3Part));
+
+        allele = container.getAllele("TRBJ2-4*02");
+        assertNotNull(allele);
+        assertTrue(allele.isFunctional());
+        assertFalse(allele.isReference());
+        assertEquals(new NucleotideSequence("TGAG"), allele.getFeature(GermlineJCDR3Part));
+
         //TODO: uncomment after fix for FR4
         //assertEquals(new NucleotideSequence("ACA"), allele.getFeature(GeneFeature.FR4));
         //assertEquals(new NucleotideSequence("TTAGACA"), allele.getFeature(GeneFeature.JRegion));
@@ -103,7 +113,7 @@ public class LociLibraryIOTest {
     @Test
     public void test3ReadLL() throws Exception {
         InputStream sample = LociLibraryReader.class.getClassLoader().getResourceAsStream("reference/mi.ll");
-        LociLibrary library = LociLibraryReader.read(sample);
+        LociLibrary library = LociLibraryReader.read(sample, false);
         Assert.assertTrue(library.allAlleles.size() > 100);
         Allele allele = library.allAlleles.iterator().next();
         Assert.assertTrue(allele.getPartitioning() != null);
@@ -112,7 +122,7 @@ public class LociLibraryIOTest {
     @Test
     public void test3ReadLL1() throws Exception {
         InputStream sample = LociLibraryReader.class.getClassLoader().getResourceAsStream("reference/mi.ll");
-        LociLibrary library = LociLibraryReader.read(sample);
+        LociLibrary library = LociLibraryReader.read(sample, true);
         for (Allele allele : library.getAllAlleles(Species.MusMusculus)) {
             if (allele.getName().contains("1-33")) {
                 System.out.println(allele.getName());
@@ -128,12 +138,12 @@ public class LociLibraryIOTest {
     @Test
     public void testExportLL() throws Exception {
         InputStream sample = LociLibraryReader.class.getClassLoader().getResourceAsStream("reference/mi.ll");
-        LociLibrary library = LociLibraryReader.read(sample);
+        LociLibrary library = LociLibraryReader.read(sample, true);
         for (Locus locus : Locus.values()) {
             LocusContainer container = library.getLocus(Species.HomoSapiens, locus);
             export(locus.name().toLowerCase() + "v.txt", container.getReferenceAlleles(GeneType.Variable),
                     VGene,
-                    V5UTR, L1, Intron, L2,
+                    V5UTR, L1, VIntron, L2,
                     FR1, CDR1, FR2, CDR2,
                     FR3, GermlineVCDR3Part);
             export(locus.name().toLowerCase() + "j.txt", container.getReferenceAlleles(GeneType.Joining),

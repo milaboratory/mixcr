@@ -28,48 +28,29 @@
  */
 package com.milaboratory.mixcr.reference;
 
-import com.milaboratory.primitivio.annotations.Serializable;
+import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.junit.Assert;
+import org.junit.Test;
 
-@Serializable(by = IO.SpeciesAndLocusSerializer.class)
-public final class SpeciesAndLocus implements Comparable<SpeciesAndLocus>, java.io.Serializable {
-    //static final long serialVersionUID = 1L;
-    public final int taxonId;
-    public final Locus locus;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 
-    public SpeciesAndLocus(int taxonId, Locus locus) {
-        this.taxonId = taxonId;
-        this.locus = locus;
+/**
+ * Created by dbolotin on 27/11/15.
+ */
+public class LociLibraryIOUtilsTest {
+    @Test
+    public void test1() throws Exception {
+        testGF(GeneFeature.VDJTranscript);
+        testGF(GeneFeature.CDR3);
+        testGF(GeneFeature.GermlineVCDR3Part);
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        SpeciesAndLocus that = (SpeciesAndLocus) o;
-
-        if (locus != that.locus) return false;
-
-        return taxonId == that.taxonId;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = taxonId;
-        result = 31 * result + locus.hashCode();
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return "" + taxonId + ":" + locus;
-    }
-
-    @Override
-    public int compareTo(SpeciesAndLocus o) {
-        int r;
-        if ((r = locus.compareTo(o.locus)) != 0)
-            return r;
-        return Integer.compare(taxonId, o.taxonId);
+    public void testGF(GeneFeature gf) throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        LociLibraryIOUtils.writeReferenceGeneFeature(bos, gf);
+        ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+        GeneFeature deser = LociLibraryIOUtils.readReferenceGeneFeature(bis);
+        Assert.assertEquals(gf, deser);
     }
 }

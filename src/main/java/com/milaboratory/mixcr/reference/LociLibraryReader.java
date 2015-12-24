@@ -32,6 +32,7 @@ import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequencesUtils;
 import com.milaboratory.util.Bit2Array;
+import com.milaboratory.util.CountingInputStream;
 
 import java.io.*;
 import java.util.*;
@@ -42,8 +43,12 @@ import static com.milaboratory.mixcr.reference.LociLibraryWriter.*;
 
 
 public class LociLibraryReader {
+    final boolean withFR4Correction;
+    final CountingInputStream countingInputStream;
     final DataInputStream stream;
     final LociLibrary library = new LociLibrary();
+    long beginOfCurrentBlock = 0;
+    LociLibraryReaderListener listener = new LociLibraryReaderListener();
     LocusContainer container;
     EnumMap<GeneType, List<Gene>> genes;
     List<Gene> allGenes = null;
@@ -51,41 +56,54 @@ public class LociLibraryReader {
     Map<String, Gene> nameToGenes;
     Map<String, Allele> nameToAlleles;
 
-    private LociLibraryReader(InputStream stream) {
-        this.stream = new DataInputStream(stream);
+    LociLibraryReader(InputStream stream, boolean withFR4Correction) {
+        this.countingInputStream = new CountingInputStream(stream);
+        this.stream = new DataInputStream(countingInputStream);
+        this.withFR4Correction = withFR4Correction;
     }
 
-    public static LociLibrary read(File file) throws IOException {
+    public static LociLibrary read(File file, boolean withFR4Correction) throws IOException {
         try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file))) {
-            return read(bis);
+            return read(bis, withFR4Correction);
         }
     }
 
-    public static LociLibrary read(String fileName) throws IOException {
+    public static LociLibrary read(String fileName, boolean withFR4Correction) throws IOException {
         try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(fileName))) {
-            return read(bis);
+            return read(bis, withFR4Correction);
         }
     }
 
-    public static LociLibrary read(InputStream stream) throws IOException {
-        LociLibraryReader reader = new LociLibraryReader(stream);
+    public static LociLibrary read(InputStream stream, boolean withFR4Correction) throws IOException {
+        LociLibraryReader reader = new LociLibraryReader(stream, withFR4Correction);
         reader.checkMagic();
         reader.readToEnd();
         return reader.library;
     }
 
-    private void checkMagic() throws IOException {
-        if (stream.readInt() != LociLibraryWriter.MAGIC)
-            throw new IOException("Wrong magic bytes.");
+    public LociLibraryReader setListener(LociLibraryReaderListener listener) {
+        this.listener = listener;
+        return this;
     }
 
-    private void readToEnd() throws IOException {
+    void checkMagic() throws IOException {
+        if (stream.readInt() != LociLibraryWriter.MAGIC)
+            throw new IOException("Wrong magic bytes.");
+        listener.magic(beginOfCurrentBlock, countingInputStream.getBytesRead());
+    }
+
+    void readToEnd() throws IOException {
         int b;
 
         while ((b = stream.read()) != -1) {
+            // Saving current block position in stream
+            // -1 for b
+            beginOfCurrentBlock = countingInputStream.getBytesRead() - 1;
+
+            // Selecting proper method for reading certain block type
             switch ((byte) b) {
                 case MAGIC_TYPE:
-                    readMagic();
+                    skipMagic();
                     break;
                 case META_TYPE:
                     readMeta();
@@ -117,10 +135,11 @@ public class LociLibraryReader {
             throw new IOException("Premature end of stream.");
     }
 
-    private void readMagic() throws IOException {
+    private void skipMagic() throws IOException {
         stream.readByte();
         stream.readByte();
         stream.readByte();
+        listener.magic(beginOfCurrentBlock, countingInputStream.getBytesRead());
     }
 
     private void beginLocus() throws IOException {
@@ -142,9 +161,13 @@ public class LociLibraryReader {
             alleles.put(gt, new ArrayList<Allele>());
 
         container = new LocusContainer(uuid, new SpeciesAndLocus(taxonId, locus), genes, alleles,
-                Collections.unmodifiableMap(nameToGenes = new HashMap<String, Gene>()),
-                Collections.unmodifiableMap(nameToAlleles = new HashMap<String, Allele>()),
+                Collections.unmodifiableMap(nameToGenes = new HashMap<>()),
+                Collections.unmodifiableMap(nameToAlleles = new HashMap<>()),
                 Collections.unmodifiableList(allGenes = new ArrayList<>()));
+
+        container.setLibrary(library);
+
+        listener.beginLocus(beginOfCurrentBlock, countingInputStream.getBytesRead(), container);
     }
 
     private void readAllele() throws IOException {
@@ -159,14 +182,16 @@ public class LociLibraryReader {
         int[] referencePoints = null;
         if ((flags & 4) != 0) {
             accession = stream.readUTF();
-            referencePoints = new int[gtis.get(type).size];
+            referencePoints = new int[getGeneTypeInfo(type, false).size];
             for (int i = 0; i < referencePoints.length; ++i)
                 referencePoints[i] = stream.readInt();
         }
         String referenceAllele = null;
         int[] mutations = null;
+        GeneFeature referenceGeneFeature = null;
         if ((flags & 8) != 0) {
             referenceAllele = stream.readUTF();
+            referenceGeneFeature = LociLibraryIOUtils.readReferenceGeneFeature(stream);
             int size = stream.readInt();
             mutations = new int[size];
             for (int i = 0; i < size; ++i)
@@ -197,13 +222,13 @@ public class LociLibraryReader {
         if ((flags & 1) != 0) {
             //reference allele
             allele = new ReferenceAllele(gene, alleleName, (flags & 2) != 0, accession,
-                    gtis.get(type).create(referencePoints));
+                    getGeneTypeInfo(type, false).create(referencePoints));
         } else {
             //allelic variant
             allele = new AllelicVariant(alleleName,
-                    (flags & 2) != 0, parent.getPartitioning().getWrappingGeneFeature(),
+                    (flags & 2) != 0, referenceGeneFeature,
                     (ReferenceAllele) parent,
-                    new Mutations<NucleotideSequence>(NucleotideSequence.ALPHABET, mutations));
+                    new Mutations<>(NucleotideSequence.ALPHABET, mutations));
         }
 
         gene.alleles.add(allele);
@@ -212,6 +237,8 @@ public class LociLibraryReader {
 
         //No alleles with the same name
         assert parent == null;
+
+        listener.allele(beginOfCurrentBlock, countingInputStream.getBytesRead(), allele);
     }
 
     private void endLocus() {
@@ -234,6 +261,7 @@ public class LociLibraryReader {
         nameToAlleles = null;
         nameToGenes = null;
         allGenes = null;
+        listener.endLocus(beginOfCurrentBlock, countingInputStream.getBytesRead(), container);
     }
 
     private void readSequencePart(boolean compressed) throws IOException {
@@ -253,7 +281,9 @@ public class LociLibraryReader {
             inflater.end();
         } else
             seqContent = Bit2Array.readFrom(stream);
-        library.base.put(accession, from, SequencesUtils.convertBit2ArrayToNSequence(seqContent));
+        NucleotideSequence seq = SequencesUtils.convertBit2ArrayToNSequence(seqContent);
+        library.base.put(accession, from, seq);
+        listener.sequencePart(beginOfCurrentBlock, countingInputStream.getBytesRead(), from, seq);
     }
 
     private void readMeta() throws IOException {
@@ -263,6 +293,7 @@ public class LociLibraryReader {
             library.properties.put(key, value);
         else
             container.properties.put(key, value);
+        listener.meta(beginOfCurrentBlock, countingInputStream.getBytesRead(), key, value);
     }
 
     private void readSpeciesName() throws IOException {
@@ -271,5 +302,6 @@ public class LociLibraryReader {
         int taxonId = stream.readInt();
         String name = stream.readUTF();
         library.knownSpecies.put(name, taxonId);
+        listener.speciesName(beginOfCurrentBlock, countingInputStream.getBytesRead(), taxonId, name);
     }
 }

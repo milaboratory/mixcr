@@ -8,6 +8,18 @@ System requirements
 - Java version 7 or higher (download from `Oracle web site <http://www.oracle.com/technetwork/java/javase/downloads/index.html>`_)
 - 1--16 Gb RAM (depending on number of clones in the sample)
 
+Installation on Mac OS X / Linux using Homebrew
+-----------------------------------------------
+
+`Homebrew <http://brew.sh/>`_ is a simple package manager developed for Mac OS X and also `ported <https://github.com/Homebrew/linuxbrew>`_ to Linux.
+To install MiXCR using Homebrew just type the following commands:
+
+::
+
+    brew tap milaboratory/all
+    brew install mixcr
+
+
 Installation on Mac OS X / Linux
 ------------------------------------
 
