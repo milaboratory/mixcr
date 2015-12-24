@@ -30,9 +30,6 @@ package com.milaboratory.mixcr.vdjaligners;
 
 import com.milaboratory.core.alignment.batch.AlignmentHit;
 import com.milaboratory.core.alignment.batch.AlignmentResult;
-import com.milaboratory.core.alignment.batch.BatchAligner;
-import com.milaboratory.core.alignment.kaligner1.KAlignmentHit;
-import com.milaboratory.core.alignment.kaligner1.KAlignmentResult;
 import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
@@ -49,7 +46,6 @@ import java.util.List;
 import java.util.Set;
 
 public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
-
     public VDJCAlignerSJFirst(VDJCAlignerParameters parameters) {
         super(parameters);
     }
@@ -282,7 +278,9 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
         return hits;
     }
 
-    private static AlignmentHit<NucleotideSequence, Allele>[] extractHits(float minScore, AlignmentResult<AlignmentHit<NucleotideSequence, Allele>> result, int maxHits) {
+    private static AlignmentHit<NucleotideSequence, Allele>[] extractHits(float minScore,
+                                                                          AlignmentResult<AlignmentHit<NucleotideSequence, Allele>> result,
+                                                                          int maxHits) {
         int count = 0;
         for (AlignmentHit<NucleotideSequence, Allele> hit : result.getHits())
             if (hit.getAlignment().getScore() > minScore) {

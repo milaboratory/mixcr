@@ -217,7 +217,7 @@ public final class FieldExtractors {
             desctiptorsList.add(new FeatureExtractorDescriptor("-aaFeature", "Export amino acid sequence of specified gene feature", "AA. Seq.", "aaSeq") {
                 @Override
                 public String convert(NSequenceWithQuality seq) {
-                    return AminoAcidSequence.translate(null, true, seq.getSequence()).toString();
+                    return AminoAcidSequence.translateFromCenter(seq.getSequence()).toString();
                 }
             });
 
