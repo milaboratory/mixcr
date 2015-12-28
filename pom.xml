@@ -168,6 +168,7 @@
                 <configuration>
                     <source>1.7</source>
                     <target>1.7</target>
+                    <verbose>true</verbose>
                 </configuration>
             </plugin>
 

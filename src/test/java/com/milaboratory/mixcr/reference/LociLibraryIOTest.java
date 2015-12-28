@@ -29,7 +29,6 @@
 package com.milaboratory.mixcr.reference;
 
 import com.milaboratory.core.mutations.Mutations;
-import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -123,10 +122,11 @@ public class LociLibraryIOTest {
     public void test3ReadLL1() throws Exception {
         InputStream sample = LociLibraryReader.class.getClassLoader().getResourceAsStream("reference/mi.ll");
         LociLibrary library = LociLibraryReader.read(sample, true);
-        for (Allele allele : library.getAllAlleles(Species.MusMusculus)) {
-            if (allele.getName().contains("1-33")) {
+        for (Allele allele : library.getAllAlleles(Species.HomoSapiens)) {
+            if (allele.getName().contains("IGHV3-21*00")) {
                 System.out.println(allele.getName());
-                System.out.println(AminoAcidSequence.translate(allele.getFeature(FR3), 0));
+                //System.out.println(AminoAcidSequence.translate(allele.getFeature(VRegion), 0));
+                System.out.println(allele.getFeature(VRegion));
                 System.out.println(allele.getFeature(FR3));
                 System.out.println(allele.isFunctional());
                 System.out.println(Arrays.toString(allele.getPartitioning().points));

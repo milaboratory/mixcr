@@ -31,6 +31,7 @@ package com.milaboratory.mixcr.vdjaligners;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.milaboratory.core.alignment.batch.BatchAlignerWithBaseParameters;
 import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.mixcr.reference.GeneFeature;
 
@@ -38,17 +39,17 @@ import com.milaboratory.mixcr.reference.GeneFeature;
         getterVisibility = JsonAutoDetect.Visibility.NONE)
 public final class KGeneAlignmentParameters extends GeneAlignmentParameters<KGeneAlignmentParameters>
         implements java.io.Serializable{
-    private KAlignerParameters parameters;
+    private BatchAlignerWithBaseParameters parameters;
 
     @JsonCreator
     public KGeneAlignmentParameters(
             @JsonProperty("geneFeatureToAlign") GeneFeature geneFeatureToAlign,
-            @JsonProperty("parameters") KAlignerParameters parameters) {
+            @JsonProperty("parameters") BatchAlignerWithBaseParameters parameters) {
         super(geneFeatureToAlign);
         this.parameters = parameters;
     }
 
-    public KAlignerParameters getParameters() {
+    public BatchAlignerWithBaseParameters getParameters() {
         return parameters;
     }
 

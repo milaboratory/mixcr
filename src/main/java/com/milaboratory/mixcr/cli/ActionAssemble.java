@@ -176,7 +176,7 @@ public class ActionAssemble implements Action {
         public List<String> parameters;
 
         @Parameter(description = "Clone assembling parameters",
-                names = {"-p", "--parameters"}, validateWith = PositiveInteger.class)
+                names = {"-p", "--parameters"})
         public String assemblerParametersName = "default";
 
         @Parameter(description = "Processing threads",

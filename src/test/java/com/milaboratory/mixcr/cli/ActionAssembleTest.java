@@ -169,8 +169,6 @@ public class ActionAssembleTest implements Serializable {
         db.commit();
         db.close();
 
-        System.out.println(" Чтение ");
-
         db = DBMaker.newFileDB(f)
                 .transactionDisable()
                 .make();
