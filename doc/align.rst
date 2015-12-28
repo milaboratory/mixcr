@@ -113,10 +113,13 @@ Other global aligner parameters are:
 +------------------------------------+---------------+---------------------------------------------------------------------------------------+
 | Parameter                          | Default value | Description                                                                           |
 +====================================+===============+=======================================================================================+
-|         ``minSumScore``            | ``120.0``     | Minimal total alignment score value of V and J genes.                                 |
+|  ``minSumScore``                   | ``120.0``     | Minimal total alignment score value of V and J genes.                                 |
 +------------------------------------+---------------+---------------------------------------------------------------------------------------+
-|         ``maxHits``                | ``5``         | Maximal number of hits for each gene type: if input sequence align to more than       |
+|  ``maxHits``                       | ``5``         | Maximal number of hits for each gene type: if input sequence align to more than       |
 |                                    |               | ``maxHits`` targets, then only  top ``maxHits`` hits will be kept.                    |
++------------------------------------+---------------+---------------------------------------------------------------------------------------+
+|  ``minimalClonalSequenceLength``   | ``12``        | Minimal clonal sequence length (e.g. minimal sequence of CDR3 to be used for clone    |
+|                                    |               | assembly)                                                                             |
 +------------------------------------+---------------+---------------------------------------------------------------------------------------+
 |  ``vjAlignmentOrder``              | ``VThenJ``    | Order in which V and J genes aligned in target (possible values ``JThenV`` and        |
 |  (*only for single-end*            |               | ``VThenJ``). Parameter affects only *single-read* alignments and alignments of        |

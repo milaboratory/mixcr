@@ -67,7 +67,7 @@ public class CloneAssemblerParametersTest {
         clone.setMappingThreshold("2of2");
         assertEquals(clone, params);
     }
-    
+
     @Test
     public void test2() throws Exception {
         CloneFactoryParameters factoryParameters = new CloneFactoryParameters(

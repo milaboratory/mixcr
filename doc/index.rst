@@ -32,6 +32,7 @@ Table of contents:
    align
    assemble
    export
+   newAligner
    importSegments
    geneFeatures
    appendix
