@@ -82,3 +82,12 @@ do
   done
   $comm
 done
+
+sParam=$(echo ${commonNames} | sed 's/:.*$//')
+if [ -z "$sParam" ] ; then
+  sParam="$taxonId"
+fi
+
+echo ""
+echo "To use imported segments invoke mixcr with the following parameters:"
+echo "mixcr align --library local -s ${sParam} ..."

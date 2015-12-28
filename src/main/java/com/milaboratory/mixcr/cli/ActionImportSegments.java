@@ -45,6 +45,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ActionImportSegments implements Action {
     private final AParameters params = new AParameters();
@@ -59,6 +61,9 @@ public class ActionImportSegments implements Action {
         final int taxonID = params.getTaxonID();
         Locus locus = params.getLocus();
         final String[] commonNames = params.getCommonNames();
+        final Set<String> commonNamesSet = new HashSet<>();
+        for (String cn : commonNames)
+            commonNamesSet.add(cn);
         if (outputExists) {
             LociLibrary ll = LociLibraryReader.read(outputFile.toFile(), false);
             final SpeciesAndLocus sl = new SpeciesAndLocus(taxonID, locus);
@@ -68,10 +73,16 @@ public class ActionImportSegments implements Action {
 
                     @Override
                     public boolean speciesName(int taxonId1, String name1) {
-                        if (taxonID == taxonId1)
-                            for (String cn : commonNames)
-                                if (name1.equals(cn))
-                                    return false;
+                        //if (taxonID == taxonId1)
+                        //    for (String cn : commonNames)
+                        //        if (name1.equals(cn))
+                        //            return false;
+                        if (commonNamesSet.contains(name1)) {
+                            if (taxonId1 != taxonID)
+                                return false;
+                            else
+                                commonNamesSet.remove(name1);
+                        }
                         return true;
                     }
 
@@ -102,10 +113,12 @@ public class ActionImportSegments implements Action {
                 }
                 for (String commonName : commonNames) {
                     int id = ll.getSpeciesTaxonId(commonName);
-                    if (id != -1 && id != taxonID) {
-                        System.err.println("Specified file (" + outputFile + ") contains other mapping for common species name: " + commonName + " -> " + id + "; use -f to overwrite.");
-                        return;
-                    }
+                    if (id != -1)
+                        if (id != taxonID) {
+                            System.err.println("Specified file (" + outputFile + ") contains other mapping for common species name: " + commonName + " -> " + id + "; use -f to overwrite.");
+                            return;
+                        } else
+                            commonNamesSet.remove(commonName);
                 }
             }
         }
@@ -159,6 +172,8 @@ public class ActionImportSegments implements Action {
                 if (dBuilder != null)
                     dBuilder.writeAlleles(writer);
                 writer.writeEndOfLocus();
+                for (String cn : commonNamesSet)
+                    writer.writeCommonSpeciesName(taxonID, cn);
             }
 
             System.out.println("Checking.");
