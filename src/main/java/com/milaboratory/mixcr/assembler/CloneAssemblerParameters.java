@@ -43,6 +43,7 @@ import java.util.regex.Pattern;
 public final class CloneAssemblerParameters implements java.io.Serializable {
     private static final int MAX_MAPPING_REGION = 1000;
     GeneFeature[] assemblingFeatures;
+    int minimalClonalSequenceLength;
     CloneClusteringParameters cloneClusteringParameters;
     CloneFactoryParameters cloneFactoryParameters;
     boolean addReadsCountOnClustering;
@@ -54,6 +55,7 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
 
     @JsonCreator
     public CloneAssemblerParameters(@JsonProperty("assemblingFeatures") GeneFeature[] assemblingFeatures,
+                                    @JsonProperty("minimalClonalSequenceLength") int minimalClonalSequenceLength,
                                     @JsonProperty("cloneClusteringParameters") CloneClusteringParameters cloneClusteringParameters,
                                     @JsonProperty("cloneFactoryParameters") CloneFactoryParameters cloneFactoryParameters,
                                     @JsonProperty("addReadsCountOnClustering") boolean addReadsCountOnClustering,
@@ -61,6 +63,7 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
                                     @JsonProperty("maxBadPointsPercent") double maxBadPointsPercent,
                                     @JsonProperty("mappingThreshold") String mappingThreshold) {
         this.assemblingFeatures = assemblingFeatures;
+        this.minimalClonalSequenceLength = minimalClonalSequenceLength;
         this.cloneClusteringParameters = cloneClusteringParameters;
         this.cloneFactoryParameters = cloneFactoryParameters;
         this.addReadsCountOnClustering = addReadsCountOnClustering;
@@ -104,6 +107,10 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
         return assemblingFeatures;
     }
 
+    public int getMinimalClonalSequenceLength() {
+        return minimalClonalSequenceLength;
+    }
+
     public CloneFactoryParameters getCloneFactoryParameters() {
         return cloneFactoryParameters;
     }
@@ -131,6 +138,11 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
     public void setMappingThreshold(String mappingThreshold) {
         this.mappingThreshold = mappingThreshold;
         updateVariants();
+    }
+
+    public CloneAssemblerParameters setMinimalClonalSequenceLength(int minimalClonalSequenceLength) {
+        this.minimalClonalSequenceLength = minimalClonalSequenceLength;
+        return this;
     }
 
     public CloneClusteringParameters getCloneClusteringParameters() {
@@ -172,7 +184,7 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
 
     @Override
     public CloneAssemblerParameters clone() {
-        return new CloneAssemblerParameters(assemblingFeatures.clone(),
+        return new CloneAssemblerParameters(assemblingFeatures.clone(), minimalClonalSequenceLength,
                 cloneClusteringParameters == null ? null : cloneClusteringParameters.clone(),
                 cloneFactoryParameters.clone(), addReadsCountOnClustering, badQualityThreshold, maxBadPointsPercent,
                 mappingThreshold);
@@ -181,29 +193,29 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof CloneAssemblerParameters)) return false;
 
         CloneAssemblerParameters that = (CloneAssemblerParameters) o;
 
+        if (minimalClonalSequenceLength != that.minimalClonalSequenceLength) return false;
         if (addReadsCountOnClustering != that.addReadsCountOnClustering) return false;
         if (badQualityThreshold != that.badQualityThreshold) return false;
-        if (maxBadPointsPercent != that.maxBadPointsPercent) return false;
+        if (Double.compare(that.maxBadPointsPercent, maxBadPointsPercent) != 0) return false;
         if (variants != that.variants) return false;
+        // Probably incorrect - comparing Object[] arrays with Arrays.equals
         if (!Arrays.equals(assemblingFeatures, that.assemblingFeatures)) return false;
-        if (!cloneFactoryParameters.equals(that.cloneFactoryParameters)) return false;
-        if (cloneClusteringParameters != null ?
-                !cloneClusteringParameters.equals(that.cloneClusteringParameters) :
-                that.cloneClusteringParameters != null)
+        if (cloneClusteringParameters != null ? !cloneClusteringParameters.equals(that.cloneClusteringParameters) : that.cloneClusteringParameters != null)
             return false;
+        return cloneFactoryParameters != null ? cloneFactoryParameters.equals(that.cloneFactoryParameters) : that.cloneFactoryParameters == null;
 
-        return true;
     }
 
     @Override
     public int hashCode() {
         int result;
         long temp;
-        result = assemblingFeatures != null ? Arrays.hashCode(assemblingFeatures) : 0;
+        result = Arrays.hashCode(assemblingFeatures);
+        result = 31 * result + minimalClonalSequenceLength;
         result = 31 * result + (cloneClusteringParameters != null ? cloneClusteringParameters.hashCode() : 0);
         result = 31 * result + (cloneFactoryParameters != null ? cloneFactoryParameters.hashCode() : 0);
         result = 31 * result + (addReadsCountOnClustering ? 1 : 0);
