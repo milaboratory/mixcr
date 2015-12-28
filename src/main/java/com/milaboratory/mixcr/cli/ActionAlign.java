@@ -88,7 +88,7 @@ public class ActionAlign implements Action {
         }
 
         for (Locus locus : actionParameters.getLoci()) {
-            LocusContainer lc = ll.getLocus(actionParameters.getTaxonID(), locus);
+            LocusContainer lc = ll.getLocus(actionParameters.species, locus);
             if (lc == null) {
                 if (params().printWarnings())
                     System.err.println("WARNING: No records for " + locus);
@@ -239,9 +239,13 @@ public class ActionAlign implements Action {
                 names = {"-i", "--diff-loci"})
         public Boolean allowDifferentVJLoci = false;
 
-        public int getTaxonID() {
-            return Species.fromStringStrict(species);
+        public String getSpecies() {
+            return species;
         }
+
+        //public int getTaxonID() {
+        //    return Species.fromStringStrict(species);
+        //}
 
         public VDJCAlignerParameters getAlignerParameters() {
             VDJCAlignerParameters params = VDJCParametersPresets.getByName(alignerParametersName);
