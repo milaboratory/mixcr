@@ -84,12 +84,12 @@
                 "alignmentParameters": {
                     "scoring" : {
                         "type" : "affine",
-                        "subsMatrix" : "simple(match = 10, mismatch = -30)",
+                        "subsMatrix" : "simple(match = 10, mismatch = -19)",
                         "gapOpenPenalty" : -40,
-                        "gapExtensionPenalty" : -10
+                        "gapExtensionPenalty" : -11
                     },
                     "width": 500,
-                    "stopPenalty": -1500
+                    "stopPenalty": 0
                 }
             },
             "jParameters": {
@@ -98,12 +98,12 @@
                 "alignmentParameters": {
                     "scoring" : {
                         "type" : "affine",
-                        "subsMatrix" : "simple(match = 10, mismatch = -30)",
+                        "subsMatrix" : "simple(match = 10, mismatch = -19)",
                         "gapOpenPenalty" : -40,
-                        "gapExtensionPenalty" : -10
+                        "gapExtensionPenalty" : -11
                     },
                     "width": 500,
-                    "stopPenalty": -1500
+                    "stopPenalty": 0
                 }
             },
             "dParameters": {

@@ -194,7 +194,7 @@ class CloneFactory {
                                     alignmentParameters.getWidth());
                         } else if (leftSide) {
                             assert rangeInReference.getFrom() + referenceLength == referenceSequence.size();
-                            alignments[i] = BandedAffineAligner.semiLocalLeft(
+                            alignments[i] = BandedAffineAligner.semiLocalRight(
                                     (AffineGapAlignmentScoring<NucleotideSequence>) alignmentParameters.getScoring(),
                                     referenceSequence, target,
                                     rangeInReference.getFrom(), referenceLength,
@@ -203,7 +203,7 @@ class CloneFactory {
                         } else {
                             assert rangeInReference.getFrom() == 0;
                             //int offset2 = Math.max(0, target.size() - referenceLength);
-                            alignments[i] = BandedAffineAligner.semiLocalRight(
+                            alignments[i] = BandedAffineAligner.semiLocalLeft(
                                     (AffineGapAlignmentScoring<NucleotideSequence>) alignmentParameters.getScoring(),
                                     referenceSequence, target,
                                     rangeInReference.getFrom(), referenceLength,
