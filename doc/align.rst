@@ -1,3 +1,7 @@
+.. |br| raw:: html
+
+   <br />
+
 .. _ref-align:
 
 Alignment
@@ -28,50 +32,52 @@ Command line parameters
 
 The following table contains description of command line options for ``align``:
 
-+----------------------------------+----------------------------+------------------------------------------------------------+
-| Option                           | Default value              | Description                                                |
-+==================================+============================+============================================================+
-| ``-h``, ``--help``               |                            | Print help message.                                        |
-+----------------------------------+----------------------------+------------------------------------------------------------+
-| ``-r``, ``--report``             |                            | Report file name. If this option is not                    |
-|                                  |                            | specified, no report file be produced.                     |
-+----------------------------------+----------------------------+------------------------------------------------------------+
-| ``-l``, ``--loci``               | ``ALL``                    | Target immunological loci list separated by "``,``".       |
-|                                  |                            | Available values: ``IGH``, ``IGL``, ``IGK``, ``TRA``,      |
-|                                  |                            | ``TRB``, ``TRG``, ``TRD``, ``IG`` (for all immunoglobulin  |
-|                                  |                            | loci), ``TCR`` (for all T-cell receptor loci), ``ALL``     |
-|                                  |                            | (for all loci) .                                           |
-+----------------------------------+----------------------------+------------------------------------------------------------+
-| ``-s``, ``--species``            | ``HomoSapiens``            | Species (organism). Possible values: ``hsa`` (or           |
-|                                  |                            | ``HomoSapiens``) and ``mmu`` (or ``MusMusculus``).         |
-+----------------------------------+----------------------------+------------------------------------------------------------+
-| ``-p``, ``--parameters``         | ``default``                | Preset of parameters. Possible values: ``default`` and     |
-|                                  |                            | ``rna-seq``. The ``rna-seq`` preset are specifically       |
-|                                  |                            | optimized for analysis of Rna-Seq data                     |
-|                                  |                            | :ref:`(see below) <ref-alignRNASeq>`                       |
-+----------------------------------+----------------------------+------------------------------------------------------------+
-| ``-i``, ``--diff-loci``          |                            | Accept alignments with different loci of V and J genes     |
-|                                  |                            | (by default such alignments are dropped).                  |
-+----------------------------------+----------------------------+------------------------------------------------------------+
-| ``-t``, ``--threads``            | number of                  | Number of processing threads.                              |
-|                                  | available CPU cores        |                                                            |
-+----------------------------------+----------------------------+------------------------------------------------------------+
-| ``-n``, ``--limit``              |                            | Limit number of sequences that will be analysed (only      | 
-|                                  |                            | first ``-n`` sequences will be processed from input        |
-|                                  |                            | file(s)).                                                  |
-+----------------------------------+----------------------------+------------------------------------------------------------+
-| ``-a``, ``--save-description``   |                            | Copy read(s) description line from ``.fastq`` or           |
-|                                  |                            | ``.fasta`` to ``.vdjca`` file (can be then exported with   |
-|                                  |                            | ``-descrR1`` and ``-descrR2`` options in                   |
-|                                  |                            | :ref:`exportAlignments <ref-export>` action).              |
-+----------------------------------+----------------------------+------------------------------------------------------------+
-| ``-g``, ``--save-reads``         |                            | Copy read(s) from ``.fastq`` or ``.fasta`` to ``.vdjca``   |
-|                                  |                            | file (this is required for exporting reads aggregated by   |
-|                                  |                            | clones; see :ref:`this section <ref-exporting-reads>`).    |
-+----------------------------------+----------------------------+------------------------------------------------------------+
-| ``-Oparameter=value``            |                            | Overrides default value of aligner ``parameter``           |
-|                                  |                            | (see next subsection).                                     |
-+----------------------------------+----------------------------+------------------------------------------------------------+
++-------------------------------------+----------------------------+------------------------------------------------------------+
+| Option                              | Default value              | Description                                                |
++=====================================+============================+============================================================+
+| ``-h``, ``--help``                  |                            | Print help message.                                        |
++-------------------------------------+----------------------------+------------------------------------------------------------+
+| ``-r {file}`` |br|                  |                            | Report file name. If this option is not                    |
+| ``--report ...``                    |                            | specified, no report file be produced.                     |
++-------------------------------------+----------------------------+------------------------------------------------------------+
+| ``-l {loci}`` |br|                  | ``ALL``                    | Target immunological loci list separated by "``,``".       |
+| ``--loci ...``                      |                            | Available values: ``IGH``, ``IGL``, ``IGK``, ``TRA``,      |
+|                                     |                            | ``TRB``, ``TRG``, ``TRD``, ``IG`` (for all immunoglobulin  |
+|                                     |                            | loci), ``TCR`` (for all T-cell receptor loci), ``ALL``     |
+|                                     |                            | (for all loci) .                                           |
++-------------------------------------+----------------------------+------------------------------------------------------------+
+| ``-s {speciesName}`` |br|           | ``HomoSapiens``            | Species (organism). Possible values: ``hsa`` (or           |
+| ``--species ...``                   |                            | ``HomoSapiens``) and ``mmu`` (or ``MusMusculus``), or any  |
+|                                     |                            | that was provided during import of segments (see           |
+|                                     |                            | :ref:`import segments <ref-importSegments>`)               |
++-------------------------------------+----------------------------+------------------------------------------------------------+
+| ``-p {parameterName}`` |br|         | ``default``                | Preset of parameters. Possible values: ``default`` and     |
+| ``--parameters ...``                |                            | ``rna-seq``. The ``rna-seq`` preset are specifically       |
+|                                     |                            | optimized for analysis of Rna-Seq data                     |
+|                                     |                            | :ref:`(see below) <ref-alignRNASeq>`                       |
++-------------------------------------+----------------------------+------------------------------------------------------------+
+| ``-i``, ``--diff-loci``             |                            | Accept alignments with different loci of V and J genes     |
+|                                     |                            | (by default such alignments are dropped).                  |
++-------------------------------------+----------------------------+------------------------------------------------------------+
+| ``-t {numberOfThreads}`` |br|       | number of                  | Number of processing threads.                              |
+| ``--threads ...``                   | available CPU cores        |                                                            |
++-------------------------------------+----------------------------+------------------------------------------------------------+
+| ``-n {numberOfReads}`` |br|         |                            | Limit number of sequences that will be analysed (only      | 
+| ``--limit ...``                     |                            | first ``-n`` sequences will be processed from input        |
+|                                     |                            | file(s)).                                                  |
++-------------------------------------+----------------------------+------------------------------------------------------------+
+| ``-a``, ``--save-description``      |                            | Copy read(s) description line from ``.fastq`` or           |
+|                                     |                            | ``.fasta`` to ``.vdjca`` file (can be then exported with   |
+|                                     |                            | ``-descrR1`` and ``-descrR2`` options in                   |
+|                                     |                            | :ref:`exportAlignments <ref-export>` action).              |
++-------------------------------------+----------------------------+------------------------------------------------------------+
+| ``-g``, ``--save-reads``            |                            | Copy read(s) from ``.fastq`` or ``.fasta`` to ``.vdjca``   |
+|                                     |                            | file (this is required for exporting reads aggregated by   |
+|                                     |                            | clones; see :ref:`this section <ref-exporting-reads>`).    |
++-------------------------------------+----------------------------+------------------------------------------------------------+
+| ``-Oparameter=value``               |                            | Overrides default value of aligner ``parameter``           |
+|                                     |                            | (see next subsection).                                     |
++-------------------------------------+----------------------------+------------------------------------------------------------+
 
 All parameters are optional.
 

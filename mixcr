@@ -63,9 +63,9 @@ mixcr=${dir}/mixcr
 mixcrArgs=()
 javaArgs=()
 
-if [[ $# -eq 1 ]] && [[ $(echo $1 | tr '[:upper:]' '[:lower:]') == "importimgt" ]]; then
-    echo "Starting importIMGT.sh script"
-    ${dir}/importIMGT.sh -mixcr ${mixcr} || exit 1
+if [[ $# -eq 1 ]] && [[ $(echo $1 | tr '[:upper:]' '[:lower:]') == "importfromimgt" ]]; then
+    echo "Starting importFromIMGT.sh script"
+    ${dir}/importFromIMGT.sh -mixcr ${mixcr} || exit 1
     exit 0
 fi
 

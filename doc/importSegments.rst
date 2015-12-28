@@ -4,12 +4,54 @@
 
    <br />
 
+Importing gene segment sequences
+================================
+
 .. tip::
 
-  If you want to impoert reference V, D and J sequences from IMGT, see :ref:`importIMGT.sh <ref-auto-imgt>` script documentation.
+  The ``mixcr importFromIMGT`` command is the simplest way to import reference segment sequences from IMGT. (*see documnetation below*)
+
+.. _ref-auto-imgt:
+
+Automated import of reference sequences from IMGT
+-------------------------------------------------
+
+To simplify import of IMGT reference sequences we developed an interactive bash script that will automatically download and import all possible reference sequences for a selected species.
+
+The sctipt can be invoked using ``mixcr importFromIMGT`` command, or can be found in the root folder of MiXCR distribution zip file (``importFromIMGT.sh``).
+
+Script has the following dependacies:
+
+- wget
+- pup (see installation instractions here_)
+
+.. _here: https://github.com/EricChiang/pup#install
+
+To use the script, just execute it from any folder to where you have a write access:
+
+::
+  
+    mixcr importFromIMGT
+
+or execute it directly
+
+::
+    
+    /path/to/unzipped/mixcr/importIMGT.sh
+
+It will ask you to accept the copyright rules of IMGT website, to select a species and to provide it's common names. After doing this, script will automatically download all required files from IMGT website and import them to a local loci library.
+
+During execution script will create log files for each type of imported segment. See below for example log file.
+
+After import reference sequences can be used as follows:
+
+::
+    
+    mixcr align --library local -s macaca ....
+
 
 Import of V, D and J gene sequences from a file
-===============================================
+-----------------------------------------------
 
 If you need to analyse data from species that are not covered by MiXCR built-it reference V, D, J genes library, or you just want to use alternative reference library, you can convert specially formatted fasta files to MiXCR loci-library format by using ``importSegments`` action.
 
@@ -25,7 +67,7 @@ This command will import IMGT formatted fasta files (like those that can be down
 .. _this: http://www.imgt.org/vquest/refseqh.html
 
 Command line parameters
------------------------
+^^^^^^^^^^^^^^^^^^^^^^^
 
 Here is the list of command line parameters for ``importSegments`` action:
 
@@ -104,28 +146,3 @@ Here is the example report file record:
      TRBV4-1*02 [F] 54 ................ 69
 
     </pre>
-
-.. _ref-auto-imgt:
-
-Automated import of reference sequences from IMGT
--------------------------------------------------
-
-To simplify import of IMGT reference sequences we developed an interactive bash script that will automatically download and import all possible reference sequences for a selected species.
-
-The sctipt named ``importIMGT.sh`` can be found in the root folder of MiXCR distribution zip file.
-
-Script has the following dependacies:
-
-- wget
-- pup (see installation instractions here_)
-
-.. _here: https://github.com/EricChiang/pup#install
-
-To use the script, just execute it from any folder to where you have a write access:
-
-::
-    
-    /path/to/unzipped/mixcr/importIMGT.sh
-
-It will ask you to accept the copyright rules of IMGT website, to select a species and to provide it's common names. After doing this, script will automatically download all required files from IMGT website and import them to a local loci library.
-
