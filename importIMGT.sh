@@ -1,5 +1,23 @@
 #/bin/bash
 
+mixcr="mixcr"
+
+while [[ $# > 0 ]]
+do
+    key="$1"
+    shift
+    case $key in
+        -mixcr)
+            mixcr="$1"
+            shift
+            ;;
+        *)
+            echo "Unknown option: ${key}" >2
+            exit 1
+            ;;
+    esac
+done
+
 echo "By using this script you agree to the terms of use of IMGT website. (see http://www.imgt.org/ for details)."
 echo -n "Press ENTER to continue or other key to exit..."
 read -n 1 c
@@ -73,7 +91,7 @@ echo "Importing loci:"
 for locus in ${loci[@]}
 do
   echo ${locus}
-  comm="mixcr importSegments -f -s ${taxonId}:${commonNames} -l ${locus} -r report_${speciesNoSpaces}_${locus}.txt"
+  comm="${mixcr} importSegments -f -s ${taxonId}:${commonNames} -l ${locus} -r report_${speciesNoSpaces}_${locus}.txt"
   for gene in $(echo ${genes[@]} | tr ' ' '\n' | grep $locus)
   do
     geneLower=$(echo $gene | tr '[:upper:]' '[:lower:]')
