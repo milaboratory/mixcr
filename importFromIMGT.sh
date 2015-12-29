@@ -28,6 +28,7 @@ fi
 
 type wget >/dev/null 2>&1 || { echo >&2 "This script requires \"wget\". Try \"brew install wget\" or \"apt-get install wget\"." ; exit 1; }
 type pup >/dev/null 2>&1 || { echo >&2 "This script requires \"pup\". Try \"brew install https://raw.githubusercontent.com/EricChiang/pup/master/pup.rb\" or \"go get github.com/ericchiang/pup\"." ; exit 1; }
+type xmllint >/dev/null 2>&1 || { echo >&2 "This script requires \"xmllint\". Try \"sudo apt-get install libxml2-utils\"." ; exit 1; }
 
 wg="wget --load-cookies imgt-cookies.txt --save-cookies imgt-cookies.txt -qO-"
 
