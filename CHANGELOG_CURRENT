@@ -8,3 +8,4 @@ Added new export option for `exportClones`: `-mapping` will pring all alignment 
 Added option `-n` (print only first n rows) to all `export` commands
 Added new assembler option: minimal clonal sequence length (`-OminimalClonalSequenceLength=...`)
 minor: minor improvements and bug fixes
+minor: version information embedded into jar file (try `mixcr -v`)
