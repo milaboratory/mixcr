@@ -32,15 +32,17 @@ import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.core.io.CompressionType;
 import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.reference.AlleleResolver;
-import com.milaboratory.mixcr.reference.CompatibilityIO;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
+import com.milaboratory.primitivio.SerializersManager;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.CountingInputStream;
 
 import java.io.*;
 import java.util.List;
 
+import static com.milaboratory.mixcr.basictypes.CompatibilityIO.registerV3Serializers;
+import static com.milaboratory.mixcr.basictypes.CompatibilityIO.registerV5Serializers;
 import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.*;
 
 public class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>, CanReportProgress {
@@ -48,6 +50,8 @@ public class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>
     List<Allele> usedAlleles;
     final PrimitivI input;
     final AlleleResolver alleleResolver;
+    String versionInfo;
+    String magic;
     long numberOfReads = -1;
     boolean closed = false;
     long counter = 0;
@@ -87,15 +91,25 @@ public class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>
         byte[] magic = new byte[MAGIC_LENGTH];
         input.readFully(magic);
         String magicString = new String(magic);
+        this.magic = magicString;
+
+        SerializersManager serializersManager = input.getSerializersManager();
         switch (magicString) {
             case MAGIC_V3:
-                CompatibilityIO.registerV3Serializers(input.getSerializersManager());
+                registerV3Serializers(serializersManager);
+                break;
+            case MAGIC_V4:
+            case MAGIC_V5:
+                registerV5Serializers(serializersManager);
                 break;
             case MAGIC:
                 break;
             default:
                 throw new RuntimeException("Unsupported file format; .vdjca file of version " + new String(magic) + " while you are running MiXCR " + MAGIC);
         }
+
+        if (magicString.compareTo(MAGIC_V5) >= 0)
+            versionInfo = input.readUTF();
 
         parameters = input.readObject(VDJCAlignerParameters.class);
 
@@ -110,6 +124,24 @@ public class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>
     public synchronized List<Allele> getUsedAlleles() {
         init();
         return usedAlleles;
+    }
+
+    /**
+     * Returns information about version of MiXCR which produced this file.
+     *
+     * @return information about version of MiXCR which produced this file
+     */
+    public String getVersionInfo() {
+        return versionInfo;
+    }
+
+    /**
+     * Returns magic bytes of this file.
+     *
+     * @return magic bytes of this file
+     */
+    public String getMagic() {
+        return magic;
     }
 
     public long getNumberOfReads() {

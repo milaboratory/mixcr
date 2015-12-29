@@ -1,6 +1,7 @@
 {
     "default": {
         "assemblingFeatures": ["CDR3"],
+        "minimalClonalSequenceLength": 12,
         "cloneClusteringParameters": {
             "searchDepth": 2,
             "allowedMutationsInNRegions": 1,
@@ -46,6 +47,77 @@
                     "type": "linear",
                     "subsMatrix": "simple(match = 5, mismatch = -9)",
                     "gapPenalty": -12
+                }
+            },
+            "cParameters": {
+                "featureToAlign": "CExon1",
+                "relativeMinScore": 0.8,
+                "alignmentParameters": {
+                    "scoring": {
+                        "type": "linear",
+                        "subsMatrix": "simple(match = 5, mismatch = -9)",
+                        "gapPenalty": -12
+                    },
+                    "width": 5
+                }
+            }
+        },
+        "addReadsCountOnClustering": false,
+        "badQualityThreshold": 20,
+        "maxBadPointsPercent": 0.7,
+        "mappingThreshold": "2of5"
+    },
+    "default_affine": {
+        "assemblingFeatures": ["CDR3"],
+        "minimalClonalSequenceLength": 12,
+        "cloneClusteringParameters": {
+            "searchDepth": 2,
+            "allowedMutationsInNRegions": 1,
+            "searchParameters": "twoMismatchesOrIndels",
+            "clusteringFilter": {
+                "type": "relativeConcentration",
+                "specificMutationProbability": 1E-3
+            }
+        },
+        "cloneFactoryParameters": {
+            "vParameters": {
+                "featureToAlign": "VTranscript",
+                "relativeMinScore": 0.8,
+                "alignmentParameters": {
+                    "scoring" : {
+                        "type" : "affine",
+                        "subsMatrix" : "simple(match = 10, mismatch = -19)",
+                        "gapOpenPenalty" : -40,
+                        "gapExtensionPenalty" : -11
+                    },
+                    "width": 500,
+                    "stopPenalty": 0
+                }
+            },
+            "jParameters": {
+                "featureToAlign": "JRegion",
+                "relativeMinScore": 0.8,
+                "alignmentParameters": {
+                    "scoring" : {
+                        "type" : "affine",
+                        "subsMatrix" : "simple(match = 10, mismatch = -19)",
+                        "gapOpenPenalty" : -40,
+                        "gapExtensionPenalty" : -11
+                    },
+                    "width": 500,
+                    "stopPenalty": 0
+                }
+            },
+            "dParameters": {
+                "geneFeatureToAlign": "DRegion",
+                "absoluteMinScore": 25.0,
+                "relativeMinScore": 0.85,
+                "maxHits": 3,
+                "scoring" : {
+                    "type" : "affine",
+                    "subsMatrix" : "simple(match = 10, mismatch = -30)",
+                    "gapOpenPenalty" : -40,
+                    "gapExtensionPenalty" : -10
                 }
             },
             "cParameters": {

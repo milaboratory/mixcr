@@ -29,9 +29,7 @@
 package com.milaboratory.mixcr.assembler;
 
 import com.milaboratory.core.Range;
-import com.milaboratory.core.alignment.Alignment;
-import com.milaboratory.core.alignment.BandedAligner;
-import com.milaboratory.core.alignment.BandedAlignerParameters;
+import com.milaboratory.core.alignment.*;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
@@ -155,37 +153,67 @@ class CloneFactory {
                             throw new RuntimeException();
                     }
 
-                    BandedAlignerParameters alignmentParameters = vjcParameters.getAlignmentParameters();
+                    BandedAlignerParameters<NucleotideSequence> alignmentParameters = vjcParameters.getAlignmentParameters();
                     int referenceLength = rangeInReference.length();
                     NucleotideSequence target = accumulator.getSequence().get(i).getSequence();
-                    if (leftSide == null) {
-                        alignments[i] = BandedAligner.align(alignmentParameters.getScoring(),
-                                referenceSequence, target,
-                                rangeInReference.getFrom(), referenceLength,
-                                0, target.size(),
-                                alignmentParameters.getWidth());
-                    } else if (leftSide) {
-                        assert rangeInReference.getFrom() + referenceLength == referenceSequence.size();
-                        alignments[i] = BandedAligner.alignSemiLocalLeft(
-                                alignmentParameters.getScoring(),
-                                referenceSequence, target,
-                                rangeInReference.getFrom(), referenceLength,
-                                0, target.size(),
-                                alignmentParameters.getWidth(),
-                                alignmentParameters.getStopPenalty());
+                    if (alignmentParameters.getScoring() instanceof LinearGapAlignmentScoring) {
+                        if (leftSide == null) {
+                            alignments[i] = BandedLinearAligner.align(
+                                    (LinearGapAlignmentScoring<NucleotideSequence>) alignmentParameters.getScoring(),
+                                    referenceSequence, target,
+                                    rangeInReference.getFrom(), referenceLength,
+                                    0, target.size(),
+                                    alignmentParameters.getWidth());
+                        } else if (leftSide) {
+                            assert rangeInReference.getFrom() + referenceLength == referenceSequence.size();
+                            alignments[i] = BandedLinearAligner.alignSemiLocalLeft(
+                                    (LinearGapAlignmentScoring<NucleotideSequence>) alignmentParameters.getScoring(),
+                                    referenceSequence, target,
+                                    rangeInReference.getFrom(), referenceLength,
+                                    0, target.size(),
+                                    alignmentParameters.getWidth(),
+                                    alignmentParameters.getStopPenalty());
+                        } else {
+                            assert rangeInReference.getFrom() == 0;
+                            //int offset2 = Math.max(0, target.size() - referenceLength);
+                            alignments[i] = BandedLinearAligner.alignSemiLocalRight(
+                                    (LinearGapAlignmentScoring<NucleotideSequence>) alignmentParameters.getScoring(),
+                                    referenceSequence, target,
+                                    rangeInReference.getFrom(), referenceLength,
+                                    0, target.size(),
+                                    alignmentParameters.getWidth(),
+                                    alignmentParameters.getStopPenalty());
+                        }
                     } else {
-                        assert rangeInReference.getFrom() == 0;
-                        //int offset2 = Math.max(0, target.size() - referenceLength);
-                        alignments[i] = BandedAligner.alignSemiLocalRight(
-                                alignmentParameters.getScoring(),
-                                referenceSequence, target,
-                                rangeInReference.getFrom(), referenceLength,
-                                0, target.size(),
-                                alignmentParameters.getWidth(),
-                                alignmentParameters.getStopPenalty());
+                        if (leftSide == null) {
+                            alignments[i] = BandedAffineAligner.align(
+                                    (AffineGapAlignmentScoring<NucleotideSequence>) alignmentParameters.getScoring(),
+                                    referenceSequence, target,
+                                    rangeInReference.getFrom(), referenceLength,
+                                    0, target.size(),
+                                    alignmentParameters.getWidth());
+                        } else if (leftSide) {
+                            assert rangeInReference.getFrom() + referenceLength == referenceSequence.size();
+                            alignments[i] = BandedAffineAligner.semiLocalRight(
+                                    (AffineGapAlignmentScoring<NucleotideSequence>) alignmentParameters.getScoring(),
+                                    referenceSequence, target,
+                                    rangeInReference.getFrom(), referenceLength,
+                                    0, target.size(),
+                                    alignmentParameters.getWidth());
+                        } else {
+                            assert rangeInReference.getFrom() == 0;
+                            //int offset2 = Math.max(0, target.size() - referenceLength);
+                            alignments[i] = BandedAffineAligner.semiLocalLeft(
+                                    (AffineGapAlignmentScoring<NucleotideSequence>) alignmentParameters.getScoring(),
+                                    referenceSequence, target,
+                                    rangeInReference.getFrom(), referenceLength,
+                                    0, target.size(),
+                                    alignmentParameters.getWidth());
+                        }
                     }
                 }
-                result[pointer++] = new VDJCHit(allele, alignments, featureToAlign, scores.get(alleleIndex) / accumulator.count);
+                result[pointer++] = new VDJCHit(allele, alignments, featureToAlign, scores.get(alleleIndex) /
+                        accumulator.count);
             }
             Arrays.sort(result, 0, pointer);
             hits.put(geneType, pointer < result.length ? Arrays.copyOf(result, pointer) : result);

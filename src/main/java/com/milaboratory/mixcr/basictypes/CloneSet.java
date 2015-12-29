@@ -40,6 +40,7 @@ import java.util.*;
  * Created by poslavsky on 10/07/14.
  */
 public final class CloneSet implements Iterable<Clone> {
+    String versionInfo;
     final GeneFeature[] assemblingFeatures;
     final EnumMap<GeneType, GeneFeature> alignedFeatures;
     final List<Allele> usedAlleles;
@@ -115,6 +116,10 @@ public final class CloneSet implements Iterable<Clone> {
 
     public long getTotalCount() {
         return totalCount;
+    }
+
+    public String getVersionInfo() {
+        return versionInfo;
     }
 
     @Override

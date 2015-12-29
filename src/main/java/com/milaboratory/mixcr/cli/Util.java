@@ -34,6 +34,8 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -178,5 +180,13 @@ public final class Util {
         if (i <= 3)
             return width - 1;
         return i + 1;
+    }
+
+    public static Path getGlobalSettingsDir() {
+        return null;
+    }
+
+    public static Path getLocalSettingsDir() {
+        return Paths.get(System.getProperty("user.home"), ".mixcr");
     }
 }

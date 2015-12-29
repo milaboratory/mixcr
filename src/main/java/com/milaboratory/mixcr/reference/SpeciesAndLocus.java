@@ -50,7 +50,7 @@ public final class SpeciesAndLocus implements Comparable<SpeciesAndLocus>, java.
 
         if (locus != that.locus) return false;
 
-        return taxonId == taxonId;
+        return taxonId == that.taxonId;
     }
 
     @Override

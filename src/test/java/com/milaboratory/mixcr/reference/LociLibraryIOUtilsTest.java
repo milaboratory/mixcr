@@ -28,28 +28,29 @@
  */
 package com.milaboratory.mixcr.reference;
 
-import com.milaboratory.primitivio.DefaultSerializersProviderImpl;
-import com.milaboratory.primitivio.SerializersManager;
+import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.junit.Assert;
+import org.junit.Test;
 
-import static com.milaboratory.mixcr.reference.BasicReferencePoint.*;
-import static com.milaboratory.mixcr.reference.BasicReferencePoint.CEnd;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 
 /**
- * Created by dbolotin on 30/09/15.
+ * Created by dbolotin on 27/11/15.
  */
-public final class CompatibilityIO {
-    private CompatibilityIO() {
+public class LociLibraryIOUtilsTest {
+    @Test
+    public void test1() throws Exception {
+        testGF(GeneFeature.VDJTranscript);
+        testGF(GeneFeature.CDR3);
+        testGF(GeneFeature.GermlineVCDR3Part);
     }
 
-    public static void registerV3Serializers(SerializersManager manager) {
-        manager.registerCustomSerializer(BasicReferencePoint.class,
-                new DefaultSerializersProviderImpl.CustomEnumSerializer<>(
-                        BasicReferencePoint.class,
-                        V5UTRBegin, V5UTREndL1Begin, L1EndVIntronBegin, VIntronEndL2Begin,
-                        L2EndFR1Begin, FR1EndCDR1Begin, CDR1EndFR2Begin, FR2EndCDR2Begin,
-                        CDR2EndFR3Begin, FR3EndCDR3Begin, VEndTrimmed, VEnd, DBegin,
-                        DBeginTrimmed, DEndTrimmed, DEnd, JBegin, JBeginTrimmed,
-                        CDR3EndFR4Begin, FR4End, CBegin, CExon1End, CEnd
-                ));
+    public void testGF(GeneFeature gf) throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        LociLibraryIOUtils.writeReferenceGeneFeature(bos, gf);
+        ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+        GeneFeature deser = LociLibraryIOUtils.readReferenceGeneFeature(bis);
+        Assert.assertEquals(gf, deser);
     }
 }

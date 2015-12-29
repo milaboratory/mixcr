@@ -10,10 +10,32 @@ then
     exit 1
 fi
 
+# Linux readlink -f alternative for Mac OS X
+function readlinkUniversal() {
+    targetFile=$1
+
+    cd `dirname $targetFile`
+    targetFile=`basename $targetFile`
+
+    # iterate down a (possible) chain of symlinks
+    while [ -L "$targetFile" ]
+    do
+        targetFile=`readlink $targetFile`
+        cd `dirname $targetFile`
+        targetFile=`basename $targetFile`
+    done
+
+    # compute the canonicalized name by finding the physical path 
+    # for the directory we're in and appending the target file.
+    phys_dir=`pwd -P`
+    result=$phys_dir/$targetFile
+    echo $result
+}
+
 os=`uname`
 delta=100
 
-DIR=""
+dir=""
 
 case $os in
     Darwin)
@@ -23,12 +45,12 @@ case $os in
         freeMb=$((($freeBlocks+$speculativeBlocks)*4096/1048576))
         inactiveMb=$(($inactiveBlocks*4096/1048576))
         maxMb=$((($freeMb+$inactiveMb-$delta)))
-        DIR=$(cd "$(dirname "$0")"; pwd)
+        dir=$(dirname "$(readlinkUniversal "$0")")
     ;;
     Linux)
         rFreeMb=$(free -m | head -n 3 | tail -n 1 | awk '{ print $4 }')
         maxMb=$(($rFreeMb-$delta))
-        DIR="$(dirname "$(readlink -f "$0")")"
+        dir="$(dirname "$(readlink -f "$0")")"
     ;;
     *)
        echo "Unknown OS."
@@ -36,8 +58,16 @@ case $os in
     ;;
 esac
 
+mixcr=${dir}/mixcr
+
 mixcrArgs=()
 javaArgs=()
+
+if [[ $# -eq 1 ]] && [[ $(echo $1 | tr '[:upper:]' '[:lower:]') == "importfromimgt" ]]; then
+    echo "Starting importFromIMGT.sh script"
+    ${dir}/importFromIMGT.sh -mixcr ${mixcr} || exit 1
+    exit 0
+fi
 
 needXmxXms=true
 
@@ -46,7 +76,7 @@ do
     key="$1"
     shift
     case $key in
-        -D*|-X*)
+        -D*|-X*|-ea|-agentlib*)
             javaArgs+=(${key})
 
             case $key in
@@ -85,7 +115,7 @@ fi
 
 jar=""
 
-for j in "$DIR/../jar/mixcr.jar" "$DIR/mixcr.jar" $(ls -d -1 $DIR/target/* 2> /dev/null | grep distribution.jar)
+for j in "$dir/../jar/mixcr.jar" "$dir/mixcr.jar" $(ls -d -1 $dir/target/* 2> /dev/null | grep distribution.jar)
 do
     if [[ -e "$j" ]];
     then
@@ -100,4 +130,4 @@ then
     exit 1
 fi
 
-$java -Dmixcr.command=mixcr -XX:+AggressiveOpts "${javaArgs[@]}" -jar $jar "${mixcrArgs[@]}"
+$java -Dmixcr.path=$dir -Dmixcr.command=mixcr -XX:+AggressiveOpts "${javaArgs[@]}" -jar $jar "${mixcrArgs[@]}"

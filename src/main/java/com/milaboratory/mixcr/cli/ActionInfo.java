@@ -165,4 +165,14 @@ public class ActionInfo implements Action {
             throw new ParameterException("Unknown file type: " + fileName);
         }
     }
+
+    public interface AlignmentInfoProvider {
+        String header();
+
+        String result();
+
+        void onInit(VDJCAlignmentsReader reader);
+
+        void onScan(VDJCAlignments alignment);
+    }
 }

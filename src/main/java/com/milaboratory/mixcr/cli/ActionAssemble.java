@@ -29,6 +29,9 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
+import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.blocks.FilteringPort;
+import cc.redberry.primitives.Filter;
 import com.beust.jcommander.DynamicParameter;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
@@ -43,13 +46,21 @@ import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.primitivio.PipeWriter;
 import com.milaboratory.util.SmartProgressReporter;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
+import org.mapdb.Pump;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.File;
+import java.util.*;
+
+import static com.milaboratory.mixcr.assembler.ReadToCloneMapping.ALIGNMENTS_COMPARATOR;
+import static com.milaboratory.mixcr.assembler.ReadToCloneMapping.CLONE_COMPARATOR;
 
 public class ActionAssemble implements Action {
+    public static final String MAPDB_SORTED_BY_CLONE = "sortedByClone";
+    public static final String MAPDB_SORTED_BY_ALIGNMENT = "sortedByAlignment";
+    public static final int MAPDB_BUFFER = 50000;
+
     private final AssembleParameters actionParameters = new AssembleParameters();
 
     @Override
@@ -98,7 +109,54 @@ public class ActionAssemble implements Action {
                 try (PipeWriter<ReadToCloneMapping> writer = new PipeWriter<>(actionParameters.events)) {
                     CUtils.drain(assembler.getAssembledReadsPort(), writer);
                 }
+
+            if (actionParameters.readsToClonesMapping != null) {
+                File dbFile = new File(actionParameters.readsToClonesMapping);
+                if (dbFile.exists()) {
+                    dbFile.delete();
+                    dbFile = new File(actionParameters.readsToClonesMapping);
+                }
+
+                DB db = DBMaker.newFileDB(dbFile)
+                        .transactionDisable()
+                        .make();
+
+                //byClones
+                db.createTreeSet(MAPDB_SORTED_BY_CLONE)
+                        .pumpSource(Pump.sort(
+                                source(assembler.getAssembledReadsPort()),
+                                true, MAPDB_BUFFER,
+                                Collections.reverseOrder(CLONE_COMPARATOR),
+                                IO.MAPDB_SERIALIZER))
+                        .serializer(new IO.ReadToCloneMappingBtreeSerializer(CLONE_COMPARATOR))
+                        .comparator(CLONE_COMPARATOR)
+                        .make();
+
+                //byAlignments
+                db.createTreeSet(MAPDB_SORTED_BY_ALIGNMENT)
+                        .pumpSource(Pump.sort(
+                                source(assembler.getAssembledReadsPort()),
+                                true, MAPDB_BUFFER,
+                                Collections.reverseOrder(ALIGNMENTS_COMPARATOR),
+                                IO.MAPDB_SERIALIZER))
+                        .serializer(new IO.ReadToCloneMappingBtreeSerializer(ALIGNMENTS_COMPARATOR))
+                        .comparator(ALIGNMENTS_COMPARATOR)
+                        .make();
+
+                db.commit();
+                db.close();
+            }
         }
+    }
+
+    private static Iterator<ReadToCloneMapping> source(OutputPortCloseable<ReadToCloneMapping> assemblerReadsPort) {
+        return new CUtils.OPIterator<>(new FilteringPort<>(assemblerReadsPort,
+                new Filter<ReadToCloneMapping>() {
+                    @Override
+                    public boolean accept(ReadToCloneMapping object) {
+                        return !object.isDropped();
+                    }
+                }));
     }
 
     @Override
@@ -118,7 +176,7 @@ public class ActionAssemble implements Action {
         public List<String> parameters;
 
         @Parameter(description = "Clone assembling parameters",
-                names = {"-p", "--parameters"}, validateWith = PositiveInteger.class)
+                names = {"-p", "--parameters"})
         public String assemblerParametersName = "default";
 
         @Parameter(description = "Processing threads",
@@ -133,7 +191,11 @@ public class ActionAssemble implements Action {
                 names = {"-e", "--events"}, hidden = true)
         public String events;
 
-        @DynamicParameter(names = "-O", description = "Overrides base values of paramentrs.")
+        @Parameter(description = ".",
+                names = {"-i", "--index"}, hidden = true)
+        public String readsToClonesMapping;
+
+        @DynamicParameter(names = "-O", description = "Overrides base values of parameters.")
         private Map<String, String> overrides = new HashMap<>();
 
         public String getInputFileName() {
@@ -161,6 +223,9 @@ public class ActionAssemble implements Action {
         public void validate() {
             if (parameters.size() != 2)
                 throw new ParameterException("Wrong number of parameters.");
+            if (readsToClonesMapping != null)
+                if (new File(readsToClonesMapping).exists() && !isForceOverwrite())
+                    throw new ParameterException("File " + readsToClonesMapping + " already exists. Use -f option to overwrite it.");
             super.validate();
         }
     }

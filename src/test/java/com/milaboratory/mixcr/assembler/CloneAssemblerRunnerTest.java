@@ -80,7 +80,7 @@ public class CloneAssemblerRunnerTest {
         VDJCAligner aligner = fastqFiles.length == 1 ? new VDJCAlignerSJFirst(alignerParameters) : new VDJCAlignerWithMerge(alignerParameters);
 
         InputStream sample = LociLibraryReader.class.getClassLoader().getResourceAsStream("reference/mi.ll");
-        LociLibrary library = LociLibraryReader.read(sample);
+        LociLibrary library = LociLibraryReader.read(sample, true);
         for (Allele allele : library.getLocus(Species.HomoSapiens, Locus.IGH).getAllAlleles())
             if (alignerParameters.containsRequiredFeature(allele))
                 aligner.addAllele(allele);
@@ -119,7 +119,7 @@ public class CloneAssemblerRunnerTest {
         );
 
         CloneAssemblerParameters assemblerParameters = new CloneAssemblerParameters(
-                new GeneFeature[]{GeneFeature.CDR3},
+                new GeneFeature[]{GeneFeature.CDR3}, 12,
                 new CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
                 factoryParameters, true, (byte) 20, .8, "2 of 6");
 

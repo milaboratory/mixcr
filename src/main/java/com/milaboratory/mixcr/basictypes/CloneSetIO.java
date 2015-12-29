@@ -32,6 +32,7 @@ import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.reference.AlleleResolver;
 import com.milaboratory.mixcr.reference.GeneFeature;
 import com.milaboratory.mixcr.reference.GeneType;
+import com.milaboratory.mixcr.util.VersionInfoProvider;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.util.CanReportProgressAndStage;
@@ -39,12 +40,13 @@ import com.milaboratory.util.CanReportProgressAndStage;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 
 public final class CloneSetIO {
-    static final String MAGIC = "MiXCR.CLNS.V02";
+    static final String MAGIC_V2 = "MiXCR.CLNS.V02";
+    static final String MAGIC_V3 = "MiXCR.CLNS.V03";
+    static final String MAGIC = MAGIC_V3;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
 
@@ -85,7 +87,14 @@ public final class CloneSetIO {
         }
 
         public void write() {
+            // Writing magic bytes
             output.write(MAGIC_BYTES);
+
+            // Writing version information
+            output.writeUTF(
+                    VersionInfoProvider.getVersionString(
+                            VersionInfoProvider.OutputType.ToFile));
+
             output.writeObject(cloneSet.getAssemblingFeatures());
             IO.writeGT2GFMap(output, cloneSet.alignedFeatures);
             IOUtil.writeAlleleReferences(output, cloneSet.getUsedAlleles(), new GT2GFAdapter(cloneSet.alignedFeatures));
@@ -104,31 +113,22 @@ public final class CloneSetIO {
         }
     }
 
-    public static void read(CloneSet cloneSet, File file) throws IOException {
+    public static void write(CloneSet cloneSet, File file) throws IOException {
         try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file), 32768)) {
             write(cloneSet, os);
         }
     }
 
-    public static void read(CloneSet cloneSet, String fileName) throws IOException {
+    public static void write(CloneSet cloneSet, String fileName) throws IOException {
         try (OutputStream os = new BufferedOutputStream(new FileOutputStream(fileName), 32768)) {
             write(cloneSet, os);
         }
     }
 
     public static void write(CloneSet cloneSet, OutputStream outputStream) {
-        PrimitivO output = new PrimitivO(outputStream);
-
-        // Writing magic bytes
-        output.write(MAGIC_BYTES);
-        output.writeObject(cloneSet.getAssemblingFeatures());
-        IO.writeGT2GFMap(output, cloneSet.alignedFeatures);
-        IOUtil.writeAlleleReferences(output, cloneSet.getUsedAlleles(), new GT2GFAdapter(cloneSet.alignedFeatures));
-
-        output.writeInt(cloneSet.getClones().size());
-
-        for (Clone clone : cloneSet)
-            output.writeObject(clone);
+        try(CloneSetWriter writer = new CloneSetWriter(cloneSet, outputStream)){
+            writer.write();
+        }
     }
 
     public static CloneSet read(String fileName, AlleleResolver alleleResolver) throws IOException {
@@ -147,8 +147,19 @@ public final class CloneSetIO {
         byte[] magicBytes = new byte[MAGIC_LENGTH];
         input.readFully(magicBytes);
 
-        if (!Arrays.equals(magicBytes, MAGIC_BYTES))
-            throw new RuntimeException("Unsupported file format; .clns file of version " + new String(magicBytes) + " while you are running MiXCR " + MAGIC);
+        String magicString = new String(magicBytes);
+
+        switch (magicString) {
+            case MAGIC_V2:
+            case MAGIC:
+                break;
+            default:
+                throw new RuntimeException("Unsupported file format; .clns file of version " + magicString + " while you are running MiXCR " + MAGIC);
+        }
+
+        String versionInfo = null;
+        if (magicString.compareTo(MAGIC_V3) >= 0)
+            versionInfo = input.readUTF();
 
         GeneFeature[] assemblingFeatures = input.readObject(GeneFeature[].class);
         EnumMap<GeneType, GeneFeature> alignedFeatures = IO.readGF2GTMap(input);
@@ -158,7 +169,10 @@ public final class CloneSetIO {
         for (int i = 0; i < count; i++)
             clones.add(input.readObject(Clone.class));
 
-        return new CloneSet(clones, alleles, alignedFeatures, assemblingFeatures);
+        CloneSet cloneSet = new CloneSet(clones, alleles, alignedFeatures, assemblingFeatures);
+        cloneSet.versionInfo = versionInfo;
+
+        return cloneSet;
     }
 
     private static class GT2GFAdapter implements HasFeatureToAlign {

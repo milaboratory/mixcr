@@ -46,6 +46,7 @@ import com.milaboratory.core.io.sequence.fasta.FastaReader;
 import com.milaboratory.core.io.sequence.fasta.FastaSequenceReaderWrapper;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
+import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mitools.cli.Action;
 import com.milaboratory.mitools.cli.ActionHelper;
@@ -80,15 +81,26 @@ public class ActionAlign implements Action {
         VDJCAligner aligner = VDJCAligner.createAligner(alignerParameters,
                 actionParameters.isInputPaired(), !actionParameters.noMerge);
 
-        LociLibrary ll = LociLibraryManager.getDefault().getLibrary("mi");
+        LociLibrary ll = LociLibraryManager.getDefault().getLibrary(actionParameters.ll);
+        if (ll == null) {
+            System.err.println("Segment library (" + actionParameters.ll + ") not found.");
+            return;
+        }
 
-        for (Locus locus : actionParameters.getLoci())
-            for (Allele allele : ll.getLocus(actionParameters.getTaxonID(), locus).getAllAlleles())
+        for (Locus locus : actionParameters.getLoci()) {
+            LocusContainer lc = ll.getLocus(actionParameters.species, locus);
+            if (lc == null) {
+                if (params().printWarnings())
+                    System.err.println("WARNING: No records for " + locus);
+                continue;
+            }
+            for (Allele allele : lc.getAllAlleles())
                 if (alignerParameters.containsRequiredFeature(allele) &&
                         (allele.isFunctional() || !actionParameters.isFunctionalOnly()))
                     aligner.addAllele(allele);
-//                else if (allele.isFunctional())
-//                    System.err.println("WARNING: Functional allele excluded " + allele.getName());
+                else if (params().printWarnings() && allele.isFunctional())
+                    System.err.println("WARNING: Functional allele excluded " + allele.getName());
+        }
 
         AlignerReport report = actionParameters.report == null ? null : new AlignerReport();
         if (report != null) {
@@ -125,8 +137,10 @@ public class ActionAlign implements Action {
                         continue;
                 }
                 if (writer != null) {
-                    if (actionParameters.saveReadDescription)
+                    if (actionParameters.saveReadDescription || actionParameters.saveOriginalReads)
                         result.alignment.setDescriptions(extractDescription(result.read));
+                    if (actionParameters.saveOriginalReads)
+                        result.alignment.setOriginalSequences(extractNSeqs(result.read));
                     writer.write(result.alignment);
                 }
             }
@@ -139,11 +153,18 @@ public class ActionAlign implements Action {
                     helper.getCommandLineArguments(), actionParameters.report, report);
     }
 
-    private static String[] extractDescription(SequenceRead r) {
+    public static String[] extractDescription(SequenceRead r) {
         String[] descrs = new String[r.numberOfReads()];
         for (int i = 0; i < r.numberOfReads(); i++)
             descrs[i] = r.getRead(i).getDescription();
         return descrs;
+    }
+
+    public static NSequenceWithQuality[] extractNSeqs(SequenceRead r) {
+        NSequenceWithQuality[] seqs = new NSequenceWithQuality[r.numberOfReads()];
+        for (int i = 0; i < r.numberOfReads(); i++)
+            seqs[i] = r.getRead(i).getData();
+        return seqs;
     }
 
     @Override
@@ -164,6 +185,14 @@ public class ActionAlign implements Action {
 
         @DynamicParameter(names = "-O", description = "Overrides base values of parameters.")
         public Map<String, String> overrides = new HashMap<>();
+
+        @Parameter(description = "Segment library to use",
+                names = {"-b", "--library"})
+        public String ll = "mi";
+
+        @Parameter(description = "Print warnings",
+                names = {"-w", "--warnings"})
+        public Boolean warnings = null;
 
         @Parameter(description = "Parameters",
                 names = {"-p", "--parameters"})
@@ -202,13 +231,21 @@ public class ActionAlign implements Action {
                 names = {"-a", "--save-description"})
         public Boolean saveReadDescription = false;
 
+        @Parameter(description = "Copy original reads (sequences + qualities + descriptions) to .vdjca file.",
+                names = {"-g", "--save-reads"})
+        public Boolean saveOriginalReads = false;
+
         @Parameter(description = "Allow alignments with different loci of V and J hits.",
                 names = {"-i", "--diff-loci"})
         public Boolean allowDifferentVJLoci = false;
 
-        public int getTaxonID() {
-            return Species.fromStringStrict(species);
+        public String getSpecies() {
+            return species;
         }
+
+        //public int getTaxonID() {
+        //    return Species.fromStringStrict(species);
+        //}
 
         public VDJCAlignerParameters getAlignerParameters() {
             VDJCAlignerParameters params = VDJCParametersPresets.getByName(alignerParametersName);
@@ -230,6 +267,10 @@ public class ActionAlign implements Action {
                 builder.append(',');
             }
             return builder.toString();
+        }
+
+        public boolean printWarnings() {
+            return warnings != null && warnings;
         }
 
         public Set<Locus> getLoci() {

@@ -37,6 +37,7 @@ import java.util.EnumMap;
 @Serializable(by = IO.VDJCAlignmentsSerializer.class)
 public final class VDJCAlignments extends VDJCObject {
     volatile String[] descriptions;
+    volatile NSequenceWithQuality[] originalSequences;
     final long readId;
     private volatile long alignmentsIndex = -1;
 
@@ -81,6 +82,14 @@ public final class VDJCAlignments extends VDJCObject {
 
     public String[] getDescriptions() {
         return descriptions;
+    }
+
+    public void setOriginalSequences(NSequenceWithQuality[] originalSequences) {
+        this.originalSequences = originalSequences;
+    }
+
+    public NSequenceWithQuality[] getOriginalSequences() {
+        return originalSequences;
     }
 
     /**

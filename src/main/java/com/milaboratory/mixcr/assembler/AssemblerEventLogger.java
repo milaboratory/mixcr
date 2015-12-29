@@ -42,7 +42,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static com.milaboratory.core.io.util.IOUtil.*;
 
 public final class AssemblerEventLogger {
-    static final int MAX_BUFFER_SIZE = 10_000;
+    static final int MAX_BUFFER_SIZE = 30_000;
     final AtomicBoolean closed = new AtomicBoolean(false);
     final File file;
     final OutputStream os;

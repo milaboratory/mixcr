@@ -28,8 +28,10 @@
  */
 package com.milaboratory.mixcr.vdjaligners;
 
-import com.milaboratory.core.alignment.KAligner;
+import com.milaboratory.core.alignment.batch.AlignmentHit;
+import com.milaboratory.core.alignment.batch.BatchAlignerWithBase;
 import com.milaboratory.core.io.sequence.SequenceRead;
+import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.reference.GeneType;
 
@@ -37,20 +39,22 @@ import java.util.List;
 
 public abstract class VDJCAlignerAbstract<R extends SequenceRead> extends VDJCAligner<R> {
     protected volatile SingleDAligner singleDAligner = null;
-    protected volatile KAligner vAligner = null;
-    protected volatile KAligner jAligner = null;
-    protected volatile KAligner cAligner = null;
+    protected volatile BatchAlignerWithBase<NucleotideSequence, Allele, AlignmentHit<NucleotideSequence, Allele>> vAligner = null;
+    protected volatile BatchAlignerWithBase<NucleotideSequence, Allele, AlignmentHit<NucleotideSequence, Allele>> jAligner = null;
+    protected volatile BatchAlignerWithBase<NucleotideSequence, Allele, AlignmentHit<NucleotideSequence, Allele>> cAligner = null;
 
     public VDJCAlignerAbstract(VDJCAlignerParameters parameters) {
         super(parameters);
     }
 
-    private KAligner createKAligner(GeneType geneType) {
+    @SuppressWarnings("unchecked")
+    private BatchAlignerWithBase<NucleotideSequence, Allele, AlignmentHit<NucleotideSequence, Allele>> createKAligner(GeneType geneType) {
         if (parameters.getVJCGeneAlignerParameters(geneType) != null &&
                 !allelesToAlign.get(geneType).isEmpty()) {
-            KAligner aligner = new KAligner(parameters.getVJCGeneAlignerParameters(geneType).getParameters());
+            BatchAlignerWithBase<NucleotideSequence, Allele, AlignmentHit<NucleotideSequence, Allele>> aligner =
+                    (BatchAlignerWithBase) parameters.getVJCGeneAlignerParameters(geneType).getParameters().createAligner();
             for (Allele a : allelesToAlign.get(geneType))
-                aligner.addReference(a.getFeature(parameters.getVJCGeneAlignerParameters(geneType).getGeneFeatureToAlign()));
+                aligner.addReference(a.getFeature(parameters.getVJCGeneAlignerParameters(geneType).getGeneFeatureToAlign()), a);
             return aligner;
         }
         return null;

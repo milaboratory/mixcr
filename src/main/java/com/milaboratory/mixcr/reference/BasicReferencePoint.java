@@ -97,6 +97,17 @@ enum BasicReferencePoint implements java.io.Serializable {
         return index < 0;
     }
 
+    /**
+     * Returns true if this point is nor attached to any alignments bound.
+     *
+     * <p>Information about this point is taken from reference sequence's reference points.</p>
+     *
+     * @return true if this point is nor attached to any alignments bound
+     */
+    public boolean isPure() {
+        return index >= 0;
+    }
+
     public boolean isAttachedToLeftAlignmentBound() {
         assert index < 0;
         return index == -1;
