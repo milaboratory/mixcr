@@ -534,6 +534,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 for (int j = i + 1; j < accs.length; j++)
                     if (accs[j] != null && mathchHits(vjcSignature, accs[j])) {
                         accs[i].count += accs[j].count;
+                        accs[i].countMapped += accs[j].countMapped;
                         onPreClustered(accs[i], accs[j]);
                         accs[j] = null;
                         ++deleted;

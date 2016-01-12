@@ -28,6 +28,7 @@
  */
 package com.milaboratory.mixcr.cli;
 
+import com.milaboratory.core.alignment.AlignmentUtils;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.export.InfoWriter;

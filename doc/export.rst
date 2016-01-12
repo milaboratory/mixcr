@@ -167,6 +167,25 @@ The following fields can be exported both for alignments and clones:
 | ``-positionOf [anchorPoint]``     | Outputs position of specified anchor point in the        |
 |                                   | clonal sequence or aligned read.                         |
 +-----------------------------------+----------------------------------------------------------+
+| ``-vBestIdentityPercent``         | Alignment identity percent of the best V hit.            |
+|                                   | Percent Identity = (Matches x 100)/Length of aligned     |
+|                                   | region (with gaps)                                       |
++-----------------------------------+----------------------------------------------------------+
+| ``-dBestIdentityPercent``         | Alignment identity percent of the best D hit.            |
++-----------------------------------+----------------------------------------------------------+
+| ``-jBestIdentityPercent``         | Alignment identity percent of the best J hit.            |
++-----------------------------------+----------------------------------------------------------+
+| ``-cBestIdentityPercent``         | Alignment identity percent of the best C hit.            |
++-----------------------------------+----------------------------------------------------------+
+| ``-vIdentityPercents``            | Alignment identity percents for all V hits.              |
++-----------------------------------+----------------------------------------------------------+
+| ``-dIdentityPercents``            | Alignment identity percents for all D hits.              |
++-----------------------------------+----------------------------------------------------------+
+| ``-jIdentityPercents``            | Alignment identity percents for all J hits.              |
++-----------------------------------+----------------------------------------------------------+
+| ``-cIdentityPercents``            | Alignment identity percents for all C hits.              |
++-----------------------------------+----------------------------------------------------------+
+
 
 
 

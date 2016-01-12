@@ -325,6 +325,40 @@ public final class FieldExtractors {
                     return new CloneToReadsExtractor(outputMode, args[0]);
                 }
             });
+
+            for (final GeneType type : GeneType.values()) {
+                String c = Character.toLowerCase(type.getLetter()) + "IdentityPercents";
+                desctiptorsList.add(new PL_O("-" + c, type.getLetter() + " alignment identity percents",
+                        type.getLetter() + " alignment identity percents", c) {
+                    @Override
+                    protected String extract(VDJCObject object) {
+                        VDJCHit[] hits = object.getHits(type);
+                        if (hits == null)
+                            return NULL;
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("");
+                        for (int i = 0; ; i++) {
+                            sb.append(hits[i].getIdentity());
+                            if (i == hits.length - 1)
+                                return sb.toString();
+                            sb.append(",");
+                        }
+                    }
+                });
+            }
+            for (final GeneType type : GeneType.values()) {
+                String c = Character.toLowerCase(type.getLetter()) + "BestIdentityPercent";
+                desctiptorsList.add(new PL_O("-" + c, type.getLetter() + "best alignment identity percent",
+                        type.getLetter() + "best alignment identity percent", c) {
+                    @Override
+                    protected String extract(VDJCObject object) {
+                        VDJCHit hit = object.getBestHit(type);
+                        if (hit == null)
+                            return NULL;
+                        return Float.toString(hit.getIdentity());
+                    }
+                });
+            }
             descriptors = desctiptorsList.toArray(new Field[desctiptorsList.size()]);
         }
 
