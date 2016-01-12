@@ -116,7 +116,10 @@ public final class VDJCHit implements Comparable<VDJCHit> {
 
     @Override
     public int compareTo(VDJCHit o) {
-        return Float.compare(o.score, score);
+        int compare = Float.compare(o.score, score);
+        if (compare == 0)
+            compare = allele.getId().compareTo(o.allele.getId());
+        return compare;
     }
 
     @Override

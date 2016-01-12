@@ -34,6 +34,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.reference.*;
 import com.milaboratory.mixcr.reference.builder.FastaLocusBuilderParameters.AnchorPointPositionInfo;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -45,6 +46,7 @@ import static com.milaboratory.mixcr.reference.ReferencePoint.*;
  * Created by dbolotin on 25/10/15.
  */
 public class FastaLocusBuilderTest {
+    @Ignore
     @Test
     public void test1V() throws Exception {
         FastaLocusBuilderParameters parameters =
@@ -83,6 +85,7 @@ public class FastaLocusBuilderTest {
         Assert.assertEquals(expected, allele.getFeature(GeneFeature.CDR1));
     }
 
+    @Ignore
     @Test
     public void test1J() throws Exception {
         FastaLocusBuilderParameters parameters =
@@ -117,6 +120,7 @@ public class FastaLocusBuilderTest {
         Assert.assertEquals(expected, allele.getFeature(GeneFeature.FR4));
     }
 
+    @Ignore
     @Test
     public void test1D() throws Exception {
         FastaLocusBuilderParameters parameters =

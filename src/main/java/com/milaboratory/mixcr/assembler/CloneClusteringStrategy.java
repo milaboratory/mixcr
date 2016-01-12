@@ -60,8 +60,9 @@ public class CloneClusteringStrategy implements ClusteringStrategy<CloneAccumula
                     if (--nMismatches < 0)
                         return false;
                     else continue out;
-        return parameters.getClusteringFilter().allow(
-                currentMutations, cluster.getHead().count, minorObject.count, cluster.getHead().getSequence());
+        return parameters.getClusteringFilter().allow(currentMutations, cluster.getHead().count,
+                minorObject.count, cluster.getHead().getSequence())
+                && CloneAssembler.mathchHits(new CloneAssembler.VJCSignature(cluster.getHead()), minorObject);
     }
 
     @Override

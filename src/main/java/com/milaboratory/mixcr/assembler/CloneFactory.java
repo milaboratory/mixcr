@@ -37,7 +37,6 @@ import com.milaboratory.mixcr.reference.*;
 import com.milaboratory.mixcr.vdjaligners.SingleDAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import gnu.trove.iterator.TObjectFloatIterator;
-import gnu.trove.list.array.TFloatArrayList;
 import gnu.trove.map.hash.TObjectFloatHashMap;
 
 import java.util.*;
@@ -72,40 +71,16 @@ class CloneFactory {
 
     Clone create(int id, CloneAccumulator accumulator) {
         EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
-        for (GeneType geneType : GeneType.values()) {
-            if (geneType == GeneType.Diversity)
-                continue;
-
+        for (GeneType geneType : GeneType.VJC_REFERENCE) {
             VJCClonalAlignerParameters vjcParameters = parameters.getVJCParameters(geneType);
             if (vjcParameters == null)
                 continue;
 
             GeneFeature featureToAlign = vjcParameters.getFeatureToAlign();
 
-            TObjectFloatHashMap<AlleleId> accumulatorAlleleIds = accumulator.geneScores.get(geneType);
-            if (accumulatorAlleleIds == null)
+            TObjectFloatHashMap<AlleleId> alleleScores = accumulator.geneScores.get(geneType);
+            if (alleleScores == null)
                 continue;
-
-            TObjectFloatIterator<AlleleId> iterator = accumulatorAlleleIds.iterator();
-            float maxScore = 0;
-            while (iterator.hasNext()) {
-                iterator.advance();
-                float value = iterator.value();
-                if (value > maxScore)
-                    maxScore = value;
-            }
-
-            maxScore = maxScore * vjcParameters.getRelativeMinScore();
-            List<Allele> alleles = new ArrayList<>();
-            iterator = accumulatorAlleleIds.iterator();
-            TFloatArrayList scores = new TFloatArrayList();
-            while (iterator.hasNext()) {
-                iterator.advance();
-                if (maxScore <= iterator.value()) {
-                    alleles.add(usedAlleles.get(iterator.key()));
-                    scores.add(iterator.value());
-                }
-            }
 
             GeneFeature[] intersectingFeatures = new GeneFeature[assemblingFeatures.length];
             for (int i = 0; i < assemblingFeatures.length; ++i) {
@@ -124,10 +99,12 @@ class CloneFactory {
                     }
             }
 
-            VDJCHit[] result = new VDJCHit[alleles.size()];
+            VDJCHit[] result = new VDJCHit[alleleScores.size()];
             int pointer = 0;
-            for (int alleleIndex = 0; alleleIndex < alleles.size(); alleleIndex++) {
-                Allele allele = alleles.get(alleleIndex);
+            TObjectFloatIterator<AlleleId> iterator = alleleScores.iterator();
+            while (iterator.hasNext()) {
+                iterator.advance();
+                Allele allele = usedAlleles.get(iterator.key());
                 Alignment<NucleotideSequence>[] alignments = new Alignment[assemblingFeatures.length];
                 for (int i = 0; i < assemblingFeatures.length; ++i) {
                     if (intersectingFeatures[i] == null)
@@ -212,8 +189,7 @@ class CloneFactory {
                         }
                     }
                 }
-                result[pointer++] = new VDJCHit(allele, alignments, featureToAlign, scores.get(alleleIndex) /
-                        accumulator.count);
+                result[pointer++] = new VDJCHit(allele, alignments, featureToAlign, iterator.value());
             }
             Arrays.sort(result, 0, pointer);
             hits.put(geneType, pointer < result.length ? Arrays.copyOf(result, pointer) : result);

@@ -52,4 +52,6 @@ public interface CloneAssemblerListener {
     /* Clustering */
 
     void onClustered(CloneAccumulator majorClone, CloneAccumulator minorClone);
+
+    void onPreClustered(CloneAccumulator majorClone, CloneAccumulator minorClone);
 }

@@ -39,6 +39,8 @@ public enum GeneType implements java.io.Serializable {
     Diversity((byte) 2, 'D', 0, 2),
     Joining((byte) 1, 'J', -1, 3),
     Constant((byte) 3, 'C', -2, 3);
+    public static final GeneType[] VJC_REFERENCE = {Variable, Joining, Constant};
+
     private final byte id;
     private final char letter;
     private final int cdr3Side;

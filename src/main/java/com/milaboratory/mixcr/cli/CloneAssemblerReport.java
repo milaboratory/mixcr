@@ -45,6 +45,8 @@ public final class CloneAssemblerReport implements CloneAssemblerListener, Repor
     final AtomicLong deferredAlignmentsDropped = new AtomicLong();
     final AtomicLong deferredAlignmentsMapped = new AtomicLong();
     final AtomicInteger clonesClustered = new AtomicInteger();
+    final AtomicInteger clonesPreClustered = new AtomicInteger();
+    final AtomicLong readsPreClustered = new AtomicLong();
     final AtomicLong readsClustered = new AtomicLong();
 
     public long getTotalReads() {
@@ -136,6 +138,12 @@ public final class CloneAssemblerReport implements CloneAssemblerListener, Repor
         clonesClustered.incrementAndGet();
     }
 
+    @Override
+    public void onPreClustered(CloneAccumulator majorClone, CloneAccumulator minorClone) {
+        clonesPreClustered.incrementAndGet();
+        readsPreClustered.addAndGet(minorClone.getCount());
+    }
+
     public void setTotalReads(long totalReads) {
         this.totalReads = totalReads;
     }
@@ -160,6 +168,7 @@ public final class CloneAssemblerReport implements CloneAssemblerListener, Repor
                 .writePercentField("Reads used as core, percent of used", coreAlignments.get(), alignmentsInClones)
                 .writePercentField("Mapped low quality reads, percent of used", deferredAlignmentsMapped.get(), alignmentsInClones)
                 .writePercentField("Reads clustered in PCR error correction, percent of used", readsClustered.get(), alignmentsInClones)
+                .writePercentField("Reads pre-clustered due to the similar VJC-lists", readsPreClustered.get(), alignmentsInClones)
                 .writeField("Clonotypes eliminated by PCR error correction", clonesClustered.get())
                 .writePercentField("Percent of reads dropped due to the lack of clonal sequence",
                         failedToExtractTarget.get(), totalReads)

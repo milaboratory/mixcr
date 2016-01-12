@@ -106,6 +106,7 @@ public class CloneAssemblerRunner implements CanReportProgressAndStage {
                 assembler.endMapping();
             }
         }
+        assembler.preClustering();
         //run clustering
         if (assembler.parameters.isClusteringEnabled()) {
             synchronized (this) {

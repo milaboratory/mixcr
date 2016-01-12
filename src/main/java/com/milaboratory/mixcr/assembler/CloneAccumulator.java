@@ -37,6 +37,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.reference.AlleleId;
 import com.milaboratory.mixcr.reference.GeneType;
+import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.map.hash.TObjectFloatHashMap;
 
 import java.util.EnumMap;
@@ -45,7 +46,7 @@ public final class CloneAccumulator {
     final EnumMap<GeneType, TObjectFloatHashMap<AlleleId>> geneScores = new EnumMap<>(GeneType.class);
     final ClonalSequence sequence;
     final byte[] quality;
-    long count = 0;
+    long count = 0, countMapped = 0;
     volatile int cloneIndex = -1;
     final Range[] nRegions;
 
@@ -77,6 +78,37 @@ public final class CloneAccumulator {
         return count;
     }
 
+    public void calculateScores(CloneFactoryParameters parameters) {
+        for (GeneType geneType : GeneType.VJC_REFERENCE) {
+            VJCClonalAlignerParameters vjcParameters = parameters.getVJCParameters(geneType);
+            if (vjcParameters == null)
+                continue;
+
+            TObjectFloatHashMap<AlleleId> accumulatorAlleleIds = geneScores.get(geneType);
+            if (accumulatorAlleleIds == null)
+                continue;
+
+            TObjectFloatIterator<AlleleId> iterator = accumulatorAlleleIds.iterator();
+            float maxScore = 0;
+            while (iterator.hasNext()) {
+                iterator.advance();
+                float value = iterator.value();
+                if (value > maxScore)
+                    maxScore = value;
+            }
+
+            maxScore = maxScore * vjcParameters.getRelativeMinScore();
+            iterator = accumulatorAlleleIds.iterator();
+            while (iterator.hasNext()) {
+                iterator.advance();
+                if (maxScore > iterator.value())
+                    iterator.remove();
+                else
+                    iterator.setValue(iterator.value() / (count - countMapped));
+            }
+        }
+    }
+
     public synchronized void accumulate(ClonalSequence data, VDJCAlignments alignment, boolean mapped) {
         //Increment count
         ++count;
@@ -87,7 +119,7 @@ public final class CloneAccumulator {
             float score;
 
             // Accumulate information about all genes
-            for (GeneType geneType : GeneType.values()) {
+            for (GeneType geneType : GeneType.VJC_REFERENCE) {
                 TObjectFloatHashMap<AlleleId> alleleScores = geneScores.get(geneType);
                 VDJCHit[] hits = alignment.getHits(geneType);
                 if (hits.length == 0)
@@ -110,6 +142,6 @@ public final class CloneAccumulator {
                     ++pointer;
                 }
             }
-        }
+        } else ++countMapped;
     }
 }
