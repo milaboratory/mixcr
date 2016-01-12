@@ -65,7 +65,7 @@ and pass this file to export command:
 
 ::
 
-    mixcr exportClones --presetFile myFields.txt clones.clns clones.txt
+    mixcr exportClones --preset-file myFields.txt clones.clns clones.txt
 
 Command line parameters
 -----------------------
@@ -125,13 +125,13 @@ The following fields can be exported both for alignments and clones:
 +-----------------------------------+----------------------------------------------------------+
 | ``-cHits``                        | All C hits.                                              |
 +-----------------------------------+----------------------------------------------------------+
-| ``--vHitsWithoutScore``           | All V hits without scores.                               |
+| ``-vHitsWithoutScore``            | All V hits without scores.                               |
 +-----------------------------------+----------------------------------------------------------+
-| ``--dHitsWithoutScore``           | All D hits without scores.                               |
+| ``-dHitsWithoutScore``            | All D hits without scores.                               |
 +-----------------------------------+----------------------------------------------------------+
-| ``--jHitsWithoutScore``           | All J hits without scores.                               |
+| ``-jHitsWithoutScore``            | All J hits without scores.                               |
 +-----------------------------------+----------------------------------------------------------+
-| ``--cHitsWithoutScore``           | All C hits without scores.                               |
+| ``-cHitsWithoutScore``            | All C hits without scores.                               |
 +-----------------------------------+----------------------------------------------------------+
 | ``-vAlignment``                   | Best V alignment.                                        |
 +-----------------------------------+----------------------------------------------------------+
