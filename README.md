@@ -9,6 +9,11 @@ MiXCR is a universal software for fast and accurate analysis of raw T- or B- cel
     brew tap milaboratory/all
     brew install mixcr
 
+to upgrade already installed MiXCR to the newest version:
+
+    brew update
+    brew upgrade mixcr
+
 #### Manual install (any OS)
 
 * unzip the archive with MiXCR (see [release page](https://github.com/milaboratory/mixcr/releases))
