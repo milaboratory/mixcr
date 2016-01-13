@@ -18,6 +18,10 @@ do
     esac
 done
 
+type wget >/dev/null 2>&1 || { echo >&2 "This script requires \"wget\". Try \"brew install wget\" or \"apt-get install wget\"." ; exit 1; }
+type pup >/dev/null 2>&1 || { echo >&2 "This script requires \"pup\". Try \"brew install https://raw.githubusercontent.com/EricChiang/pup/master/pup.rb\" or \"go get github.com/ericchiang/pup\"." ; exit 1; }
+type xmllint >/dev/null 2>&1 || { echo >&2 "This script requires \"xmllint\". Try \"sudo apt-get install libxml2-utils\"." ; exit 1; }
+
 echo "By using this script you agree to the terms of use of IMGT website. (see http://www.imgt.org/ for details)."
 echo -n "Press ENTER to continue or other key to exit..."
 read -n 1 c
@@ -25,10 +29,6 @@ if [[ "$c" != "" ]]; then
   echo ""
   exit 1;
 fi
-
-type wget >/dev/null 2>&1 || { echo >&2 "This script requires \"wget\". Try \"brew install wget\" or \"apt-get install wget\"." ; exit 1; }
-type pup >/dev/null 2>&1 || { echo >&2 "This script requires \"pup\". Try \"brew install https://raw.githubusercontent.com/EricChiang/pup/master/pup.rb\" or \"go get github.com/ericchiang/pup\"." ; exit 1; }
-type xmllint >/dev/null 2>&1 || { echo >&2 "This script requires \"xmllint\". Try \"sudo apt-get install libxml2-utils\"." ; exit 1; }
 
 wg="wget --load-cookies imgt-cookies.txt --save-cookies imgt-cookies.txt -qO-"
 
@@ -110,3 +110,4 @@ fi
 echo ""
 echo "To use imported segments invoke mixcr with the following parameters:"
 echo "mixcr align --library local -s ${sParam} ..."
+echo ""
