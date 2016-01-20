@@ -95,18 +95,18 @@ public class JsonOverriderTest {
                 null, new DAlignerParameters(GeneFeature.DRegion, 30.0f, 0.85f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
         );
 
-        CloneAssemblerParameters params = new CloneAssemblerParameters(new GeneFeature[]{GeneFeature.FR1, GeneFeature.CDR3},12,
+        CloneAssemblerParameters params = new CloneAssemblerParameters(new GeneFeature[]{GeneFeature.FR1, GeneFeature.CDR3}, 12,
                 new CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
-                factoryParameters, true, (byte) 20, .8, "2of6");
+                factoryParameters, 0.4, true, (byte) 20, .8, "2of6");
 
         CloneAssemblerParameters override = JsonOverrider.override(
                 params,
                 CloneAssemblerParameters.class,
                 "assemblingFeatures=[CDR1(-5,+6),CDR2]");
 
-        CloneAssemblerParameters expected = new CloneAssemblerParameters(new GeneFeature[]{new GeneFeature(GeneFeature.CDR1, -5, +6), GeneFeature.CDR2},12,
+        CloneAssemblerParameters expected = new CloneAssemblerParameters(new GeneFeature[]{new GeneFeature(GeneFeature.CDR1, -5, +6), GeneFeature.CDR2}, 12,
                 new CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
-                factoryParameters, true, (byte) 20, .8, "2of6");
+                factoryParameters, 0.4, true, (byte) 20, .8, "2of6");
 
 
         Assert.assertEquals(expected, override);
@@ -122,9 +122,9 @@ public class JsonOverriderTest {
                 null, new DAlignerParameters(GeneFeature.DRegion, 30.0f, 0.85f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
         );
 
-        CloneAssemblerParameters params = new CloneAssemblerParameters(new GeneFeature[]{GeneFeature.FR1, GeneFeature.CDR3},12,
+        CloneAssemblerParameters params = new CloneAssemblerParameters(new GeneFeature[]{GeneFeature.FR1, GeneFeature.CDR3}, 12,
                 new CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
-                factoryParameters, true, (byte) 20, .8, "2of6");
+                factoryParameters, 0.4, true, (byte) 20, .8, "2of6");
 
         CloneAssemblerParameters override = JsonOverrider.override(
                 params,

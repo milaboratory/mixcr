@@ -2,6 +2,7 @@
     "default": {
         "assemblingFeatures": ["CDR3"],
         "minimalClonalSequenceLength": 12,
+        "maximalPreClusteringRatio": 1.0,
         "cloneClusteringParameters": {
             "searchDepth": 2,
             "allowedMutationsInNRegions": 1,
@@ -70,6 +71,7 @@
     "default_affine": {
         "assemblingFeatures": ["CDR3"],
         "minimalClonalSequenceLength": 12,
+        "maximalPreClusteringRatio": 1.0,
         "cloneClusteringParameters": {
             "searchDepth": 2,
             "allowedMutationsInNRegions": 1,

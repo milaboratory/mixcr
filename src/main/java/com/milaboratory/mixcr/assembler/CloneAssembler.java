@@ -505,6 +505,9 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         }
     }
 
+    /**
+     * Container for Clone Accumulators with the same clonal sequence but different V/J/C genes.
+     */
     public final class CloneAccumulatorContainer {
         final HashMap<VJCSignature, CloneAccumulator> accumulators = new HashMap<>();
 
@@ -521,6 +524,9 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             return acc;
         }
 
+        /**
+         * Preforms pre-clustering and returns final list of clonotypes.
+         */
         public List<CloneAccumulator> build() {
             CloneAccumulator[] accs = accumulators.values().toArray(new CloneAccumulator[accumulators.size()]);
             for (CloneAccumulator acc : accs)
@@ -530,9 +536,12 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             for (int i = 0; i < accs.length - 1; i++) {
                 if (accs[i] == null)
                     continue;
+                // Top V, J and C genes of the major clonotype
                 VJCSignature vjcSignature = new VJCSignature(accs[i]);
+                long countThreshold = (long) (accs[i].count * parameters.maximalPreClusteringRatio);
                 for (int j = i + 1; j < accs.length; j++)
-                    if (accs[j] != null && mathchHits(vjcSignature, accs[j])) {
+                    if (accs[j] != null && accs[j].count <= countThreshold &&
+                            mathchHits(vjcSignature, accs[j])) {
                         accs[i].count += accs[j].count;
                         accs[i].countMapped += accs[j].countMapped;
                         onPreClustered(accs[i], accs[j]);
