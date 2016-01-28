@@ -209,8 +209,8 @@ public final class ReferencePoint implements Comparable<ReferencePoint>, java.io
      * Default set of reference points.
      */
     public static final ReferencePoint[] DefaultReferencePoints = {V5UTRBeginTrimmed, L1Begin, L1End, L2Begin,
-            FR1Begin, CDR1Begin, FR2Begin, CDR2Begin, FR3Begin, CDR3Begin, VEndTrimmed, DBeginTrimmed, DEndTrimmed,
-            JBeginTrimmed, FR4Begin, FR4End, CBegin, CExon1End};
+            FR1Begin, CDR1Begin, FR2Begin, CDR2Begin, FR3Begin, CDR3Begin, VEnd, VEndTrimmed, DBeginTrimmed, DBegin,
+            DEnd, DEndTrimmed, JBeginTrimmed, JBegin, FR4Begin, FR4End, CBegin, CExon1End};
 
     static final long serialVersionUID = 1L;
     final BasicReferencePoint basicPoint;

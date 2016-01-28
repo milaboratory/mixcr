@@ -371,7 +371,7 @@ public class GeneFeatureTest {
     public void testListForDocumentation() throws Exception {
         getFeatureByName("sd");
         List<GFT> gfts = new ArrayList<>();
-        int withh1 = 25, withh2 = 35;
+        int withh1 = 0, withh2 = 0, withh3 = 0;
         String sep = "+" + chars(withh1 + 2, '-') + "+" + chars(withh2 + 2, '-') + "+";
         for (Map.Entry<GeneFeature, String> entry : nameByFeature.entrySet()) {
             String name = entry.getValue();
@@ -403,10 +403,12 @@ public class GeneFeatureTest {
     private static final class GFT implements Comparable<GFT> {
         final GeneFeature feature;
         final String text;
+        final String doc;
 
-        private GFT(GeneFeature feature, String text) {
+        public GFT(GeneFeature feature, String text, String doc) {
             this.feature = feature;
             this.text = text;
+            this.doc = doc;
         }
 
         @Override

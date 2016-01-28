@@ -253,6 +253,10 @@ public class ActionPrettyAlignments implements Action {
                 names = {"-c", "--cdr3-contains"})
         public String cdr3Contains = null;
 
+        @Parameter(description = "Only output alignments which contains corresponding gene feature",
+                names = {"-g", "--feature"})
+        public String feature = null;
+
         @Parameter(description = "Only output alignments where target read contains given substring",
                 names = {"-r", "--read-contains"})
         public String readContains = null;
@@ -278,6 +282,17 @@ public class ActionPrettyAlignments implements Action {
                         return feature != null && feature.getSequence().toString().contains(cdr3Contains);
                     }
                 });
+
+            if (feature != null) {
+                final GeneFeature feature = GeneFeature.parse(this.feature);
+                filters.add(new Filter<VDJCAlignments>() {
+                    @Override
+                    public boolean accept(VDJCAlignments object) {
+                        NSequenceWithQuality f = object.getFeature(feature);
+                        return f != null && f.size() > 0;
+                    }
+                });
+            }
 
             if (readContains != null)
                 filters.add(new Filter<VDJCAlignments>() {

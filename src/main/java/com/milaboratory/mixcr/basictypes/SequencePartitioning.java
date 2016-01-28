@@ -50,13 +50,7 @@ public abstract class SequencePartitioning {
         if (feature.isComposite())
             throw new IllegalArgumentException();
 
-        int begin = getPosition(feature.getReferenceRange(0).begin);
-        if (begin < 0)
-            return null;
-        int end = getPosition(feature.getReferenceRange(0).end);
-        if (end < 0)
-            return null;
-        return new Range(begin, end);
+        return getRange(feature.getReferenceRange(0));
     }
 
     public Range[] getRanges(GeneFeature feature) {
@@ -64,7 +58,8 @@ public abstract class SequencePartitioning {
         for (int i = 0; i < feature.size(); ++i) {
             if ((result[i] = getRange(feature.getReferenceRange(i))) == null)
                 return null;
-            if (i != 0 && result[i - 1].intersectsWith(result[i]))
+            if (i != 0 && result[i - 1].intersectsWith(result[i]) &&
+                    result[i].isReverse() == result[i - 1].isReverse())
                 throw new IllegalArgumentException("Inconsistent feature partition.");
         }
         return result;
