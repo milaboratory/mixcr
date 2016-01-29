@@ -34,6 +34,8 @@ import org.apache.commons.math3.random.Well44497a;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.*;
 
 import static com.milaboratory.mixcr.reference.GeneFeature.*;
@@ -371,21 +373,35 @@ public class GeneFeatureTest {
     public void testListForDocumentation() throws Exception {
         getFeatureByName("sd");
         List<GFT> gfts = new ArrayList<>();
-        int withh1 = 0, withh2 = 0, withh3 = 0;
-        String sep = "+" + chars(withh1 + 2, '-') + "+" + chars(withh2 + 2, '-') + "+";
-        for (Map.Entry<GeneFeature, String> entry : nameByFeature.entrySet()) {
-            String name = entry.getValue();
-            String value = encode(entry.getKey(), false);
-            gfts.add(new GFT(entry.getKey(),
-                    "| " + fixed(name, withh1) + " | " + fixed(value, withh2) + " |"));
-        }
+        Field[] declaredFields = GeneFeature.class.getDeclaredFields();
+        for (Field field : declaredFields)
+            if (Modifier.isStatic(field.getModifiers()) &&
+                    field.getType() == GeneFeature.class) {
+                GeneFeature value = (GeneFeature) field.get(null);
+                String name = field.getName();
+                gfts.add(new GFT(value, name, field.getAnnotation(Doc.class).value()));
+            }
+
         Collections.sort(gfts);
-        System.out.println(sep);
-        System.out.println("| " + fixed("Gene Feature Name", withh1) + " | " + fixed("Gene feature decomposition", withh2) + " |");
-        String sep1 = "+" + chars(withh1 + 2, '=') + "+" + chars(withh2 + 2, '=') + "+";
-        System.out.println(sep1);
+        int widthName = 0, widthValue = 0, widthDoc = 0;
         for (GFT gft : gfts) {
-            System.out.println(gft.text);
+            widthName = Math.max(widthName, gft.name.length());
+            widthValue = Math.max(widthValue, gft.value.length());
+            widthDoc = Math.max(widthDoc, gft.doc.length());
+        }
+
+        String sepHeader = "+" + chars(widthName + 2, '=') + "+" + chars(widthValue + 2, '=') +
+                "+" + chars(widthDoc + 2, '=') + "+";
+        String sep = "+" + chars(widthName + 2, '-') + "+" + chars(widthValue + 2, '-') +
+                "+" + chars(widthDoc + 2, '-') + "+";
+
+        System.out.println(sep);
+        System.out.println("| " + fixed("Gene Feature Name", widthName) + " | " +
+                fixed("Gene feature decomposition", widthValue) + " | " + fixed("Documentation", widthDoc) + " |");
+        System.out.println(sepHeader);
+        for (GFT gft : gfts) {
+            System.out.println("| " + fixed(gft.name, widthName) + " | " +
+                    fixed(gft.value, widthValue) + " | " + fixed(gft.doc, widthDoc) + " |");
             System.out.println(sep);
         }
     }
@@ -402,12 +418,14 @@ public class GeneFeatureTest {
 
     private static final class GFT implements Comparable<GFT> {
         final GeneFeature feature;
-        final String text;
+        final String name;
+        final String value;
         final String doc;
 
-        public GFT(GeneFeature feature, String text, String doc) {
+        public GFT(GeneFeature feature, String name, String doc) {
             this.feature = feature;
-            this.text = text;
+            this.name = "``" + name + "``";
+            this.value = "``" + encode(feature, false).replace("+", "`` + ``") + "``";
             this.doc = doc;
         }
 
