@@ -70,6 +70,7 @@ if [[ $# -eq 1 ]] && [[ $(echo $1 | tr '[:upper:]' '[:lower:]') == "importfromim
 fi
 
 needXmxXms=true
+otherJar=""
 
 while [[ $# > 0 ]]
 do
@@ -85,6 +86,10 @@ do
                     ;;
             esac
 
+            ;;
+        -jar|-V)
+            otherJar="$1"
+            shift
             ;;
         *)
             mixcrArgs+=(${key})
@@ -115,14 +120,26 @@ fi
 
 jar=""
 
-for j in "$dir/../jar/mixcr.jar" "$dir/mixcr.jar" $(ls -d -1 $dir/target/* 2> /dev/null | grep distribution.jar)
-do
-    if [[ -e "$j" ]];
-    then
-        jar=$j
-        break
-    fi
-done
+if [[ -z "$otherJar" ]];
+then
+    for j in "$dir/../jar/mixcr.jar" "$dir/mixcr.jar" $(ls -d -1 $dir/target/* 2> /dev/null | grep distribution.jar)
+    do
+        if [[ -e "$j" ]];
+        then
+            jar=$j
+            break
+        fi
+    done
+else
+    for j in $(ls -1 ${dir}/* | grep "mixcr" | grep ".jar" | grep ${otherJar});
+    do
+        if [[ -e "$j" ]];
+        then
+            jar=$j
+            break
+        fi
+    done
+fi
 
 if [[ "$jar" == "" ]];
 then

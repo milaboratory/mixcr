@@ -40,7 +40,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-public final class VDJCAlignmentsWriter implements AutoCloseable {
+public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     static final String MAGIC_V3 = "MiXCR.VDJC.V03";
     static final String MAGIC_V4 = "MiXCR.VDJC.V04";
     static final String MAGIC_V5 = "MiXCR.VDJC.V05";
@@ -64,6 +64,7 @@ public final class VDJCAlignmentsWriter implements AutoCloseable {
         this.output = new PrimitivO(output);
     }
 
+    @Override
     public void setNumberOfProcessedReads(long numberOfProcessedReads) {
         this.numberOfProcessedReads = numberOfProcessedReads;
     }
@@ -72,6 +73,7 @@ public final class VDJCAlignmentsWriter implements AutoCloseable {
         header(aligner.getParameters(), aligner.getUsedAlleles());
     }
 
+    @Override
     public void header(VDJCAlignerParameters parameters, List<Allele> alleles) {
         if (parameters == null || alleles == null)
             throw new IllegalArgumentException();
@@ -96,6 +98,7 @@ public final class VDJCAlignmentsWriter implements AutoCloseable {
         header = true;
     }
 
+    @Override
     public void write(VDJCAlignments alignment) {
         if (!header)
             throw new IllegalStateException();
