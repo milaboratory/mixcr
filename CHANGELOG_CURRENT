@@ -1,2 +1,3 @@
 Clone assembler now separates clones with different V/J/C genes
+Added new action `alignmentsDiff`: run as `mixcr alignmentsDiff file1.vdjca file2.vdjca report.txt` to find difference between to .vdjca files
 minor: Added new export field: -vBestIdentityPercent and -vIdentityPercents (-j..., -c... in the same way)
