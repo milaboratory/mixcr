@@ -81,11 +81,13 @@ public final class ActionAlignmentsDiff implements Action {
             diff1.setNumberOfProcessedReads(justDiff);
             diff2.setNumberOfProcessedReads(justDiff);
 
+            report.println("First  file: " + parameters.get1());
+            report.println("Second file: " + parameters.get2());
             report.println("Completely same reads: " + same);
-            report.println("Aligned reads present only in the FIRST  file: " + onlyIn1);
-            report.println("Aligned reads present only in the SECOND file: " + onlyIn2);
+            report.println("Aligned reads present only in the FIRST  file: " + onlyIn1 + " (" + Util.PERCENT_FORMAT.format(100. * onlyIn1 / reader1.getNumberOfReads()) + ")%");
+            report.println("Aligned reads present only in the SECOND file: " + onlyIn2 + " (" + Util.PERCENT_FORMAT.format(100. * onlyIn2 / reader2.getNumberOfReads()) + ")%");
             report.println("Total number of different reads: " + justDiff);
-            report.println("Reads with not same CDR3: " + diffFeature);
+            report.println("Reads with not same " + parameters.geneFeatureToMatch + ": " + diffFeature);
             for (GeneType geneType : GeneType.VDJC_REFERENCE)
                 report.println("Reads with not same " + geneType.name() + " hits: " + diffHits[geneType.ordinal()]);
         }
@@ -100,7 +102,7 @@ public final class ActionAlignmentsDiff implements Action {
     public ActionParameters params() {
         return parameters;
     }
-    
+
     @Parameters(commandDescription = "Calculates the difference between two .vdjca files",
             optionPrefixes = "-")
     public static class DiffParameters extends ActionParametersWithOutput {
