@@ -1,3 +1,4 @@
 Clone assembler now separates clones with different V/J/C genes
 Added new action `alignmentsDiff`: run as `mixcr alignmentsDiff file1.vdjca file2.vdjca report.txt` to find difference between to .vdjca files
+Added support for P-segments; new gene features `VPSegment`, `DLeftPSegment`, `DRightPSegment`, `JPSegment` are now available both in `exportAlignments` and `exportClones` 
 minor: Added new export field: -vBestIdentityPercent and -vIdentityPercents (-j..., -c... in the same way)
