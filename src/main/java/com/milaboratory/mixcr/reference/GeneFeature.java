@@ -305,7 +305,66 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         return Arrays.hashCode(regions);
     }
 
+    private ReferenceRange firstRegion() {
+        return regions[0];
+    }
+
+    private ReferenceRange lastRegion() {
+        return regions[regions.length - 1];
+    }
+
+    GeneFeature first() {
+        return new GeneFeature(firstRegion());
+    }
+
+    GeneFeature last() {
+        return new GeneFeature(lastRegion());
+    }
+
+    GeneFeature withoutFirst() {
+        return new GeneFeature(Arrays.copyOfRange(regions, 1, regions.length), true);
+    }
+
+    GeneFeature withoutLast() {
+        return new GeneFeature(Arrays.copyOf(regions, regions.length - 1), true);
+    }
+
     public static GeneFeature intersection(GeneFeature gf1, GeneFeature gf2) {
+        //tnj t,exbq rjcnskm
+        GeneFeature gf1left = null, gf1right = null;
+        if (gf1.firstRegion().isReversed()) {
+            gf1left = gf1.first();
+            gf1 = gf1.withoutFirst();
+        }
+        if (gf1.lastRegion().isReversed()) {
+            gf1right = gf1.last();
+            gf1 = gf1.withoutLast();
+        }
+        GeneFeature gf2left = null, gf2right = null;
+        if (gf2.firstRegion().isReversed()) {
+            gf2left = gf2.first();
+            gf2 = gf2.withoutFirst();
+        }
+        if (gf2.lastRegion().isReversed()) {
+            gf2right = gf2.last();
+            gf2 = gf2.withoutLast();
+        }
+
+        GeneFeature r = intersection0(gf1, gf2);
+
+        if (gf1left != null)
+            r = new GeneFeature(gf1left, r);
+        if (gf1right != null)
+            r = new GeneFeature(r, gf1right);
+        if (gf2left != null)
+            r = new GeneFeature(gf2left, r);
+        if (gf2right != null)
+            r = new GeneFeature(r, gf2right);
+
+        return r;
+    }
+
+    private static GeneFeature intersection0(GeneFeature gf1, GeneFeature gf2) {
         ReferencePoint firstReferencePoint1 = gf1.regions[0].begin;
         ReferencePoint firstReferencePoint2 = gf2.regions[0].begin;
         if (firstReferencePoint1.compareTo(firstReferencePoint2) > 0)
