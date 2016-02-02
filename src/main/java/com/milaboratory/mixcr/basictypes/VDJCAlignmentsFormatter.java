@@ -28,6 +28,8 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
+import cc.redberry.primitives.Filter;
+import cc.redberry.primitives.FilterUtil;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.MultiAlignmentHelper;
@@ -93,6 +95,15 @@ public class VDJCAlignmentsFormatter {
         helper.addAnnotationString("", new String(markers));
     }
 
+    public static final Filter<SequencePartitioning> IsVP = new Filter<SequencePartitioning>() {
+        @Override
+        public boolean accept(SequencePartitioning object) {
+            return object.isAvailable(ReferencePoint.VEnd) && object.getPosition(ReferencePoint.VEnd) != object.getPosition(ReferencePoint.VEndTrimmed);
+        }
+    };
+    public static final Filter<SequencePartitioning> NotVP = FilterUtil.not(IsVP);
+
+
     public static final PointToDraw[] POINTS_FOR_REARRANGED = new PointToDraw[]{
             pd(ReferencePoint.V5UTRBeginTrimmed, "<5'UTR"),
             pd(ReferencePoint.V5UTREnd, "5'UTR><L1"),
@@ -104,7 +115,9 @@ public class VDJCAlignmentsFormatter {
             pd(ReferencePoint.CDR2Begin, "FR2><CDR2"),
             pd(ReferencePoint.FR3Begin, "CDR2><FR3"),
             pd(ReferencePoint.CDR3Begin, "FR3><CDR3"),
-            pd(ReferencePoint.VEndTrimmed, "V>", -1),
+            pd(ReferencePoint.VEndTrimmed, "V>", -1, NotVP),
+            pd(ReferencePoint.VEnd, "V><VP", IsVP),
+            pd(ReferencePoint.VEndTrimmed, "VP>", -1, IsVP),
             pd(ReferencePoint.DBeginTrimmed, "<D"),
             pd(ReferencePoint.DEndTrimmed, "D>", -1),
             pd(ReferencePoint.JBeginTrimmed, "<J"),
@@ -131,32 +144,44 @@ public class VDJCAlignmentsFormatter {
             pd(ReferencePoint.FR4End, "FR4>", -1)
     };
 
+    private static PointToDraw pd(ReferencePoint rp, String marker, Filter<SequencePartitioning> activator) {
+        return pd(rp, marker, 0, activator);
+    }
+
     private static PointToDraw pd(ReferencePoint rp, String marker) {
-        return pd(rp, marker, 0);
+        return pd(rp, marker, 0, null);
     }
 
     private static PointToDraw pd(ReferencePoint rp, String marker, int additionalOffset) {
+        return pd(rp, marker, additionalOffset, null);
+    }
+
+    private static PointToDraw pd(ReferencePoint rp, String marker, int additionalOffset, Filter<SequencePartitioning> activator) {
         int offset = marker.indexOf('>');
         if (offset >= 0)
-            return new PointToDraw(rp.move(additionalOffset), marker, -1 - offset - additionalOffset);
+            return new PointToDraw(rp.move(additionalOffset), marker, -1 - offset - additionalOffset, activator);
         offset = marker.indexOf('<');
         if (offset >= 0)
-            return new PointToDraw(rp.move(additionalOffset), marker, -offset - additionalOffset);
-        return new PointToDraw(rp, marker, 0);
+            return new PointToDraw(rp.move(additionalOffset), marker, -offset - additionalOffset, activator);
+        return new PointToDraw(rp, marker, 0, activator);
     }
 
     public static final class PointToDraw {
         final ReferencePoint rp;
         final String marker;
         final int markerOffset;
+        final Filter<SequencePartitioning> activator;
 
-        public PointToDraw(ReferencePoint rp, String marker, int markerOffset) {
+        public PointToDraw(ReferencePoint rp, String marker, int markerOffset, Filter<SequencePartitioning> activator) {
             this.rp = rp;
             this.marker = marker;
             this.markerOffset = markerOffset;
+            this.activator = activator;
         }
 
         public void draw(SequencePartitioning partitioning, MultiAlignmentHelper helper, char[] line) {
+            if (activator != null && !activator.accept(partitioning))
+                return;
             int positionInTarget = partitioning.getPosition(rp);
             if (positionInTarget < 0)
                 return;

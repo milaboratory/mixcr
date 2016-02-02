@@ -14,7 +14,7 @@
         },
         "cloneFactoryParameters": {
             "vParameters": {
-                "featureToAlign": "VTranscript",
+                "featureToAlign": "VTranscriptWithP",
                 "relativeMinScore": 0.8,
                 "alignmentParameters": {
                     "scoring": {
@@ -27,7 +27,7 @@
                 }
             },
             "jParameters": {
-                "featureToAlign": "JRegion",
+                "featureToAlign": "JRegionWithP",
                 "relativeMinScore": 0.8,
                 "alignmentParameters": {
                     "scoring": {
@@ -40,7 +40,7 @@
                 }
             },
             "dParameters": {
-                "geneFeatureToAlign": "DRegion",
+                "geneFeatureToAlign": "DRegionWithP",
                 "absoluteMinScore": 25.0,
                 "relativeMinScore": 0.85,
                 "maxHits": 3,
@@ -83,7 +83,7 @@
         },
         "cloneFactoryParameters": {
             "vParameters": {
-                "featureToAlign": "VTranscript",
+                "featureToAlign": "VTranscriptWithP",
                 "relativeMinScore": 0.8,
                 "alignmentParameters": {
                     "scoring" : {
@@ -97,7 +97,7 @@
                 }
             },
             "jParameters": {
-                "featureToAlign": "JRegion",
+                "featureToAlign": "JRegionWithP",
                 "relativeMinScore": 0.8,
                 "alignmentParameters": {
                     "scoring" : {
@@ -111,7 +111,7 @@
                 }
             },
             "dParameters": {
-                "geneFeatureToAlign": "DRegion",
+                "geneFeatureToAlign": "DRegionWithP",
                 "absoluteMinScore": 25.0,
                 "relativeMinScore": 0.85,
                 "maxHits": 3,
