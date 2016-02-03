@@ -22,7 +22,7 @@ to upgrade already installed MiXCR to the newest version:
   * or add symbolic link for ``mixcr`` script to your ``bin`` folder
   * or use MiXCR directly by specifying full path to the executable script
 
-#### Requiraments
+#### Requirements
 
 * Any OS with Java support (Linux, Windows, Mac OS X, etc..)
 * Java 1.7 or higher
