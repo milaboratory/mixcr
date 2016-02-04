@@ -102,7 +102,7 @@ public class GeneFeatureTest {
 
         f1 = createWithOffsets(1, 3, -2, 0);
         f2 = createWithOffsets(3, 5, 1, -1);
-        f3 = createWithOffsets(5, 7, -2, 5);
+        f3 = createWithOffsets(5, 7, -1, 5);
         expected = create(new int[]{1, 3, 3, 7}, new int[]{-2, 0, 1, 5});
         actual = new GeneFeature(f2, f1, f3);
         assertEquals(expected, actual);

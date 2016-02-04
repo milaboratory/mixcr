@@ -452,17 +452,15 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
     private static ReferenceRange[] merge(final ReferenceRange[] ranges) {
         if (ranges.length == 1)
             return ranges;
-        //Arrays.sort(ranges, ReferenceRange.BEGIN_COMPARATOR);
+        Arrays.sort(ranges, ReferenceRange.BEGIN_COMPARATOR);
         ArrayList<ReferenceRange> result = new ArrayList<>(ranges.length);
 
         ReferenceRange prev = ranges[0], cur;
         for (int i = 1; i < ranges.length; ++i) {
             cur = ranges[i];
-            if (cur.begin.getIndex() < prev.end.getIndex())
+            if (cur.begin.compareTo(prev.end) < 0)
                 throw new IllegalArgumentException("Intersecting ranges.");
-            if (cur.begin.getIndex() == prev.end.getIndex()
-                    && prev.end.getOffset() == cur.begin.getOffset() &&
-                    cur.isReversed() == prev.isReversed()) {
+            if (cur.begin.equals(prev.end) && cur.isReversed() == prev.isReversed()) {
                 //merge
                 prev = new ReferenceRange(prev.begin, cur.end);
             } else {
@@ -492,7 +490,7 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         private static final Comparator<ReferenceRange> BEGIN_COMPARATOR = new Comparator<ReferenceRange>() {
             @Override
             public int compare(ReferenceRange o1, ReferenceRange o2) {
-                return o1.begin.basicPoint.compareTo(o2.begin.basicPoint);
+                return o1.getLeftBoundary().compareTo(o2.getLeftBoundary());
             }
         };
 
@@ -528,6 +526,20 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
 
         public boolean contains(ReferenceRange range) {
             return range.begin.compareTo(begin) >= 0 && range.end.compareTo(end) <= 0;
+        }
+
+        public ReferencePoint getLeftBoundary() {
+            if (isReversed())
+                return end;
+            else
+                return begin;
+        }
+
+        public ReferencePoint getRightBoundary() {
+            if (isReversed())
+                return begin;
+            else
+                return end;
         }
 
         @Override
