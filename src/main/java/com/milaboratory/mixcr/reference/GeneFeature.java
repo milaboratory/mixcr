@@ -79,7 +79,7 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
     /* PSegments in germline */
 
     @Doc("P-segment of V gene to be used as alignment reference")
-    public static final GeneFeature GermlineVPSegment = new GeneFeature(VEnd, VEnd.move(GermlinePRegionSize));
+    public static final GeneFeature GermlineVPSegment = new GeneFeature(VEnd, VEnd.move(-GermlinePRegionSize));
     @Doc("P-segment of J gene to be used as alignment reference")
     public static final GeneFeature GermlineJPSegment = new GeneFeature(JBegin.move(GermlinePRegionSize), JBegin);
     @Doc("P-segment of D gene to be used as alignment reference")

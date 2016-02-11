@@ -138,6 +138,17 @@ public class GeneFeatureTest {
         assertEquals(f2, new GeneFeature(f1, -4, -2));
     }
 
+
+    @Test
+    public void testReversed() throws Exception {
+        GeneFeature gf = parse("{FR1Begin:VEnd}+{VEnd:VEnd(-20)}");
+        assertEquals(2, gf.size());
+        gf = parse("{FR1Begin:VEnd}").append(parse("{VEnd:VEnd(-20)}"));
+        assertEquals(2, gf.size());
+        gf = GeneFeature.VGeneWithP;
+        assertEquals(2, gf.size());
+    }
+
     @Test
     public void testIntersection1() throws Exception {
         GeneFeature f1, f2;
