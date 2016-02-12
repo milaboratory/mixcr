@@ -155,7 +155,7 @@
                 "mapperNValue" : 8,
                 "mapperKValue" : 1,
                 "floatingLeftBound" : true,
-                "floatingRightBound" : true,
+                "floatingRightBound" : false,
                 "mapperAbsoluteMinClusterScore" : 102,
                 "mapperExtraClusterScore" : -38,
                 "mapperMatchScore" : 95,
