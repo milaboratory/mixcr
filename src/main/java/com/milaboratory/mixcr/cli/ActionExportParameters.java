@@ -172,11 +172,6 @@ public class ActionExportParameters extends ActionParametersWithOutput {
                 "-aaFeature FR1 -aaFeature CDR1 -aaFeature FR2 -aaFeature CDR2 " +
                 "-aaFeature FR3 -aaFeature CDR3 " +
 
-                "-aaFeature VPSegment " +
-                "-aaFeature DLeftPSegment " +
-                "-aaFeature DRightPSegment " +
-                "-aaFeature JPSegment " +
-
                 "-aaFeature FR4 " +
                 "-defaultAnchorPoints ");
         clones.put("full", "-cloneId -count -fraction -sequence -quality " +
@@ -194,11 +189,6 @@ public class ActionExportParameters extends ActionParametersWithOutput {
                 "-nFeature FR4 -minFeatureQuality FR4 " +
                 "-aaFeature FR1 -aaFeature CDR1 -aaFeature FR2 -aaFeature CDR2 " +
                 "-aaFeature FR3 -aaFeature CDR3 " +
-
-                "-aaFeature VPSegment " +
-                "-aaFeature DLeftPSegment " +
-                "-aaFeature DRightPSegment " +
-                "-aaFeature JPSegment " +
 
                 "-aaFeature FR4 -defaultAnchorPoints");
         presets.put(Clone.class, clones);
@@ -220,11 +210,6 @@ public class ActionExportParameters extends ActionParametersWithOutput {
                 "-nFeature FR4 -minFeatureQuality FR4 " +
                 "-aaFeature FR1 -aaFeature CDR1 -aaFeature FR2 -aaFeature CDR2 " +
                 "-aaFeature FR3 -aaFeature CDR3 " +
-
-                "-aaFeature VPSegment " +
-                "-aaFeature DLeftPSegment " +
-                "-aaFeature DRightPSegment " +
-                "-aaFeature JPSegment " +
 
                 "-aaFeature FR4 -defaultAnchorPoints")
         ;
