@@ -155,6 +155,12 @@ The following fields can be exported both for alignments and clones:
 +-----------------------------------+----------------------------------------------------------+
 | ``-aaFeature [feature]``          | Amino acid sequence of specified gene feature.           |
 +-----------------------------------+----------------------------------------------------------+
+| ``-aaFeatureFromLeft [feature]``  | Amino acid sequence of specified gene feature            |
+|                                   | (translated from leftmost nucleotide).                   |
++-----------------------------------+----------------------------------------------------------+
+| ``-aaFeatureFromRight [feature]`` | Amino acid sequence of specified gene feature.           |
+|                                   | (translated from rightmost nucleotide).                  |
++-----------------------------------+----------------------------------------------------------+
 | ``-avrgFeatureQuality [feature]`` | Average quality of sequence of specified gene feature.   |
 +-----------------------------------+----------------------------------------------------------+
 | ``-minFeatureQuality [feature]``  | Minimal quality of sequence of specified gene feature.   |
