@@ -93,11 +93,11 @@ public final class VDJCAlignments extends VDJCObject {
     }
 
     /**
-     * Returns {@code true} if at least ont V and one J hit among first {@code top} hits have same locus and false
+     * Returns {@code true} if at least one V and one J hit among first {@code top} hits have same locus and false
      * otherwise (first {@code top} V hits have different locus from those have first {@code top} J hits).
      *
      * @param top numer of top hits to test
-     * @return {@code true} if at least ont V and one J hit among first {@code top} hits have same locus and false
+     * @return {@code true} if at least one V and one J hit among first {@code top} hits have same locus and false
      * otherwise (first {@code top} V hits have different locus from those have first {@code top} J hits)
      */
     public final boolean hasSameVJLoci(final int top) {
