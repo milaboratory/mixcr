@@ -130,16 +130,19 @@ public class ActionImportSegments implements Action {
             FastaLocusBuilder vBuilder, dBuilder = null, jBuilder;
 
             vBuilder = new FastaLocusBuilder(locus, bundle.getV())
-                    .setLoggingStream(ps).setFinalReportStream(ps);
+                    .setLoggingStream(ps).setFinalReportStream(ps)
+                    .printErrorsAndWarningsToSTDOUT().noExceptionOnError();
             vBuilder.importAllelesFromFile(params.getV());
 
             jBuilder = new FastaLocusBuilder(locus, bundle.getJ())
-                    .setLoggingStream(ps).setFinalReportStream(ps);
+                    .setLoggingStream(ps).setFinalReportStream(ps)
+                    .printErrorsAndWarningsToSTDOUT().noExceptionOnError();
             jBuilder.importAllelesFromFile(params.getJ());
 
             if (params.getD() != null) {
                 dBuilder = new FastaLocusBuilder(locus, bundle.getD())
-                        .setLoggingStream(ps).setFinalReportStream(ps);
+                        .setLoggingStream(ps).setFinalReportStream(ps)
+                        .printErrorsAndWarningsToSTDOUT().noExceptionOnError();
                 dBuilder.importAllelesFromFile(params.getD());
             }
 
@@ -182,9 +185,11 @@ public class ActionImportSegments implements Action {
 
             System.out.println("Segments successfully imported.");
 
-            System.out.println("Resulting file contains following records:");
-            for (LocusContainer locusContainer : ll.getLoci()) {
-                System.out.println(locusContainer.getSpeciesAndLocus() + ": " + locusContainer.getAllAlleles().size() + " records");
+            if (params.doPrintInfo()) {
+                System.out.println("Resulting file contains following records:");
+                for (LocusContainer locusContainer : ll.getLoci())
+                    System.out.println(locusContainer.getSpeciesAndLocus() + ": " +
+                            locusContainer.getAllAlleles().size() + " records");
             }
         }
     }
@@ -221,6 +226,10 @@ public class ActionImportSegments implements Action {
         @Parameter(description = "Force overwrite data.",
                 names = {"-f"})
         public Boolean force;
+
+        @Parameter(description = "Print resulting file information.",
+                names = {"-i"})
+        public Boolean printInfo;
 
         @Parameter(description = "Input *.fasta file with V genes.",
                 names = {"-v"})
@@ -260,6 +269,10 @@ public class ActionImportSegments implements Action {
 
         public Locus getLocus() {
             return Locus.fromId(locus);
+        }
+
+        public boolean doPrintInfo() {
+            return printInfo != null && printInfo;
         }
 
         public int getTaxonID() {
