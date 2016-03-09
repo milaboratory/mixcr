@@ -1,4 +1,13 @@
 
+MiXCR 1.7.1 ( 9 Mar 2016)
+========================
+
+-- Added two new export fields: `-aaFeatureFromLeft` and `-aaFeatureFromRight`
+-- Fixed: bug with incorrect translation fo FR4 gene feature in export
+-- Fixed: wrong boundaries of FR3 and CDR3 in Mouse TRA/TRD references imported from IMGT
+-- Fixed: duplicate-records exception while importing mouse IGLV from IMGT (exception suppressed)
+
+
 MiXCR 1.7 (29 Dec 2015)
 ========================
 
