@@ -162,35 +162,18 @@ public class ActionExportParameters extends ActionParametersWithOutput {
                 "-nFeature FR1 -minFeatureQuality FR1 -nFeature CDR1 -minFeatureQuality CDR1 " +
                 "-nFeature FR2 -minFeatureQuality FR2 -nFeature CDR2 -minFeatureQuality CDR2 " +
                 "-nFeature FR3 -minFeatureQuality FR3 -nFeature CDR3 -minFeatureQuality CDR3 " +
-
-                "-nFeature VPSegment " +
-                "-nFeature DLeftPSegment " +
-                "-nFeature DRightPSegment " +
-                "-nFeature JPSegment " +
-
                 "-nFeature FR4 -minFeatureQuality FR4 " +
                 "-aaFeature FR1 -aaFeature CDR1 -aaFeature FR2 -aaFeature CDR2 " +
-                "-aaFeature FR3 -aaFeature CDR3 " +
-
-                "-aaFeature FR4 " +
-                "-defaultAnchorPoints ");
+                "-aaFeature FR3 -aaFeature CDR3 -aaFeatureFromLeft FR4 -defaultAnchorPoints");
         clones.put("full", "-cloneId -count -fraction -sequence -quality " +
                 "-vHitsWithScore -dHitsWithScore -jHitsWithScore -cHitsWithScore " +
                 "-vAlignments -dAlignments -jAlignments -cAlignments " +
                 "-nFeature FR1 -minFeatureQuality FR1 -nFeature CDR1 -minFeatureQuality CDR1 " +
                 "-nFeature FR2 -minFeatureQuality FR2 -nFeature CDR2 -minFeatureQuality CDR2 " +
                 "-nFeature FR3 -minFeatureQuality FR3 -nFeature CDR3 -minFeatureQuality CDR3 " +
-
-                "-nFeature VPSegment " +
-                "-nFeature DLeftPSegment " +
-                "-nFeature DRightPSegment " +
-                "-nFeature JPSegment " +
-
                 "-nFeature FR4 -minFeatureQuality FR4 " +
                 "-aaFeature FR1 -aaFeature CDR1 -aaFeature FR2 -aaFeature CDR2 " +
-                "-aaFeature FR3 -aaFeature CDR3 " +
-
-                "-aaFeature FR4 -defaultAnchorPoints");
+                "-aaFeature FR3 -aaFeature CDR3 -aaFeatureFromLeft FR4 -defaultAnchorPoints");
         presets.put(Clone.class, clones);
 
         Map<String, String> alignments = new HashMap<>();
@@ -201,17 +184,9 @@ public class ActionExportParameters extends ActionParametersWithOutput {
                 "-nFeature FR1 -minFeatureQuality FR1 -nFeature CDR1 -minFeatureQuality CDR1 " +
                 "-nFeature FR2 -minFeatureQuality FR2 -nFeature CDR2 -minFeatureQuality CDR2 " +
                 "-nFeature FR3 -minFeatureQuality FR3 -nFeature CDR3 -minFeatureQuality CDR3 " +
-
-                "-nFeature VPSegment " +
-                "-nFeature DLeftPSegment " +
-                "-nFeature DRightPSegment " +
-                "-nFeature JPSegment " +
-
                 "-nFeature FR4 -minFeatureQuality FR4 " +
                 "-aaFeature FR1 -aaFeature CDR1 -aaFeature FR2 -aaFeature CDR2 " +
-                "-aaFeature FR3 -aaFeature CDR3 " +
-
-                "-aaFeature FR4 -defaultAnchorPoints")
+                "-aaFeature FR3 -aaFeature CDR3 -aaFeatureFromLeft FR4 -defaultAnchorPoints")
         ;
         presets.put(VDJCAlignments.class, alignments);
     }

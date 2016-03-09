@@ -48,6 +48,7 @@ import java.text.DecimalFormat;
 import java.util.*;
 
 import static com.milaboratory.core.sequence.TranslationParameters.FromCenter;
+import static com.milaboratory.core.sequence.TranslationParameters.FromLeftWithoutIncompleteCodon;
 import static com.milaboratory.mixcr.assembler.ReadToCloneMapping.MappingType.Dropped;
 
 public final class FieldExtractors {
@@ -219,6 +220,24 @@ public final class FieldExtractors {
                 @Override
                 public String convert(NSequenceWithQuality seq) {
                     return AminoAcidSequence.translate(seq.getSequence(), FromCenter).toString();
+                }
+            });
+
+            desctiptorsList.add(new FeatureExtractorDescriptor("-aaFeatureFromLeft", "Export amino acid sequence of " +
+                    "specified gene feature starting from the leftmost nucleotide (differs from -aaFeature only for " +
+                    "sequences which length are not multiple of 3)", "AA. Seq.", "aaSeq") {
+                @Override
+                public String convert(NSequenceWithQuality seq) {
+                    return AminoAcidSequence.translate(seq.getSequence(), FromLeftWithoutIncompleteCodon).toString();
+                }
+            });
+
+            desctiptorsList.add(new FeatureExtractorDescriptor("-aaFeatureFromRight", "Export amino acid sequence of " +
+                    "specified gene feature starting from the rightmost nucleotide (differs from -aaFeature only for " +
+                    "sequences which length are not multiple of 3)", "AA. Seq.", "aaSeq") {
+                @Override
+                public String convert(NSequenceWithQuality seq) {
+                    return AminoAcidSequence.translate(seq.getSequence(), FromLeftWithoutIncompleteCodon).toString();
                 }
             });
 
