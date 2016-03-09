@@ -37,15 +37,10 @@ import com.milaboratory.core.io.sequence.fasta.FastaReader;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.mutations.MutationsUtil;
-import com.milaboratory.core.sequence.AminoAcidSequence;
-import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.core.sequence.TranslationParameters;
+import com.milaboratory.core.sequence.*;
 import com.milaboratory.mixcr.basictypes.SequencePartitioning;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.LociLibraryWriter;
-import com.milaboratory.mixcr.reference.Locus;
-import com.milaboratory.mixcr.reference.ReferencePoint;
+import com.milaboratory.mixcr.reference.*;
 import com.milaboratory.util.StringUtil;
 import gnu.trove.map.TObjectIntMap;
 
@@ -55,6 +50,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.milaboratory.core.sequence.AminoAcidSequence.convertNtPositionToAA;
+import static com.milaboratory.core.sequence.AminoAcidSequence.getTriplet;
 import static com.milaboratory.core.sequence.TranslationParameters.withIncompleteCodon;
 import static com.milaboratory.mixcr.reference.builder.BuilderUtils.*;
 import static com.milaboratory.mixcr.reference.builder.FastaLocusBuilderParameters.AnchorPointPositionInfo.*;
@@ -88,6 +84,10 @@ public class FastaLocusBuilder {
     /**
      * Determines whether builder should terminate on error
      */
+    private boolean errorsAndWarningsToSTDOUT = false;
+    /**
+     * Determines whether builder should terminate on error
+     */
     private boolean exceptionOnError = true;
     /**
      * Determines whether builder should process alleles with non-standard names
@@ -116,6 +116,11 @@ public class FastaLocusBuilder {
         return this;
     }
 
+    public FastaLocusBuilder printErrorsAndWarningsToSTDOUT() {
+        this.errorsAndWarningsToSTDOUT = true;
+        return this;
+    }
+
     public FastaLocusBuilder allowNonStandardAlleleNames() {
         this.allowNonStandardAlleleNames = true;
         return this;
@@ -129,11 +134,17 @@ public class FastaLocusBuilder {
     }
 
     private void error(String line) {
-        log("Error: " + line);
+        String msg = "Error: " + line;
+        if (errorsAndWarningsToSTDOUT && loggingStream != System.out)
+            System.out.println(msg);
+        log(msg);
     }
 
     private void warning(String line) {
-        log("Warning: " + line);
+        String msg = "Warning: " + line;
+        if (errorsAndWarningsToSTDOUT && loggingStream != System.out)
+            System.out.println(msg);
+        log(msg);
     }
 
     private void log(String line) {
@@ -183,7 +194,7 @@ public class FastaLocusBuilder {
                 geneName = matcher.group(GENE_NAME_GROUP);
 
                 // Checking locus decoded from allele name
-                if (!matcher.group(LOCUS_GROUP).equalsIgnoreCase(locus.toString()))
+                if (!checkLocus(matcher.group(LOCUS_GROUP)))
                     warning("Allele from different locus(?): " + alleleName);
 
                 // Checking gene type decoded from allele name
@@ -240,6 +251,9 @@ public class FastaLocusBuilder {
             // Creating allele info
             AlleleInfo alleleInfo = new AlleleInfo(geneName, alleleName, seq, isFunctional,
                     isReference, referencePoints);
+
+            // Checking conserved amino-acids:
+            checkAllele(alleleInfo);
 
             // Checking if this allele is unique
             if (gene.alleles.containsKey(alleleName)) {
@@ -427,6 +441,35 @@ public class FastaLocusBuilder {
                 finalReportStream.println();
             }
         }
+    }
+
+    public boolean checkLocus(String locusName) {
+        if (locus == Locus.TRA || locus == Locus.TRD)
+            return "TRA".equalsIgnoreCase(locusName) || "TRD".equalsIgnoreCase(locusName);
+        return locus.toString().equalsIgnoreCase(locusName);
+    }
+
+    public boolean checkAllele(AlleleInfo alleleInfo) {
+        if (!alleleInfo.isFunctional)
+            return true;
+
+        if (parameters.getGeneType() == GeneType.Variable) {
+            int index = parameters.getReferencePointIndexMapping().get(ReferencePoint.CDR3Begin);
+            if (index == -1)
+                throw new RuntimeException();
+            int position = alleleInfo.referencePoints[index];
+            if (position < 0 || alleleInfo.baseSequence.size() < position + 3) {
+                warning("absent conserved Cys in functional allele " + alleleInfo.alleleName);
+                return false;
+            }
+            byte aa = GeneticCode.getAminoAcid(getTriplet(alleleInfo.baseSequence, position));
+            if (aa != AminoAcidAlphabet.C) {
+                warning(AminoAcidSequence.ALPHABET.codeToSymbol(aa) + " instead of conserved Cys" +
+                        " in functional allele " + alleleInfo.alleleName);
+                return false;
+            }
+        }
+        return true;
     }
 
     public void writeAlleles(LociLibraryWriter writer) throws IOException {

@@ -57,7 +57,7 @@ echo -n "Getting taxonId for ${species} from NCBI... "
 prefix='http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=taxonomy&term='
 url=$(echo ${species} | sed 's/ /%20/g')
 url="${prefix}${url}"
-taxonId=$(wget -qO- "$url" | xmllint --xpath '/eSearchResult/IdList/Id/text()' -)
+taxonId=$(wget -qO- "$url" | xmllint --xpath '/eSearchResult/IdList/Id[1]/text()' -)
 echo "OK. TaxonId=${taxonId}"
 
 echo "Creating directory for downloaded files (./imgt_downloads/)"
@@ -93,12 +93,26 @@ for locus in ${loci[@]}
 do
   echo ${locus}
   comm="${mixcr} importSegments -f -s ${taxonId}:${commonNames} -l ${locus} -r report_${speciesNoSpaces}_${locus}.txt"
+  
+  # Workaround for *** IMGT malformed files
+  if [[ "$(echo ${species} | tr [:upper:] [:lower:])" == mus* ]] && [[ "$locus" == TR[AD] ]]; then
+    comm="$comm -p imgt_a1"
+  fi
+
+  # Output file info on the last iteration
+  if [[ "${locus}" == "${loci[${#loci[@]}-1]}" ]]; then
+    comm="$comm -i"
+  fi
+
   for gene in $(echo ${genes[@]} | tr ' ' '\n' | grep $locus)
   do
     geneLower=$(echo $gene | tr '[:upper:]' '[:lower:]')
     file="${filePrefix}${gene}.fasta"
     comm="${comm} -${geneLower:3:4} ${file}"
   done
+
+  echo ${comm}
+
   $comm
 done
 
@@ -106,6 +120,10 @@ sParam=$(echo ${commonNames} | sed 's/:.*$//')
 if [ -z "$sParam" ] ; then
   sParam="$taxonId"
 fi
+
+echo ""
+echo "Operation executed successfully."
+echo "See report*.txt files created in current folder for details."
 
 echo ""
 echo "To use imported segments invoke mixcr with the following parameters:"

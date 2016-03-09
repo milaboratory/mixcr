@@ -100,5 +100,107 @@
         }
       ]
     }
+  },
+  "imgt_a1": {
+    "v": {
+      "geneType": "Variable",
+      "alleleNameExtractionPattern": "^[^\\|]+\\|([^\\|]+)",
+      "functionalAllelePattern": "^[^\\|]+\\|[^\\|]+\\|[^\\|]+\\|[\\(\\[]?F",
+      "referenceAllelePattern": "^[^\\|]+\\|[^\\|]+\\*01",
+      "paddingChar": ".",
+      "frameBoundedAnchorPoint": "FR1Begin",
+      "firstOccurredAlleleIsReference": true,
+      "scoring": {
+        "type": "affine",
+        "subsMatrix": "simple(match = 1, mismatch = -4)",
+        "gapOpenPenalty": -11,
+        "gapExtensionPenalty": -2
+      },
+      "anchorPointPositions": [
+        {
+          "point": "FR1Begin",
+          "position": 0
+        },
+        {
+          "point": "CDR1Begin",
+          "position": 78
+        },
+        {
+          "point": "FR2Begin",
+          "position": 114
+        },
+        {
+          "point": "CDR2Begin",
+          "position": 165
+        },
+        {
+          "point": "FR3Begin",
+          "position": 198
+        },
+        {
+          "point": "CDR3Begin",
+          "position": 315
+        },
+        {
+          "point": "VEnd",
+          "position": "end"
+        }
+      ]
+    },
+    "d": {
+      "geneType": "Diversity",
+      "alleleNameExtractionPattern": "^[^\\|]+\\|([^\\|]+)",
+      "functionalAllelePattern": "^[^\\|]+\\|[^\\|]+\\|[^\\|]+\\|[\\(\\[]?F",
+      "referenceAllelePattern": "^[^\\|]+\\|[^\\|]+\\*01",
+      "paddingChar": ".",
+      "frameBoundedAnchorPoint": null,
+      "firstOccurredAlleleIsReference": true,
+      "scoring": {
+        "type": "affine",
+        "subsMatrix": "simple(match = 1, mismatch = -4)",
+        "gapOpenPenalty": -21,
+        "gapExtensionPenalty": -2
+      },
+      "anchorPointPositions": [
+        {
+          "point": "DBegin",
+          "position": 0
+        },
+        {
+          "point": "DEnd",
+          "position": "end"
+        }
+      ]
+    },
+    "j": {
+      "geneType": "Joining",
+      "alleleNameExtractionPattern": "^[^\\|]+\\|([^\\|]+)",
+      "functionalAllelePattern": "^[^\\|]+\\|[^\\|]+\\|[^\\|]+\\|[\\(\\[]?F",
+      "referenceAllelePattern": "^[^\\|]+\\|[^\\|]+\\*01",
+      "paddingChar": ".",
+      "frameBoundedAnchorPoint": "FR4Begin",
+      "firstOccurredAlleleIsReference": true,
+      "scoring": {
+        "type": "affine",
+        "subsMatrix": "simple(match = 1, mismatch = -4)",
+        "gapOpenPenalty": -21,
+        "gapExtensionPenalty": -2
+      },
+      "anchorPointPositions": [
+        {
+          "point": "JBegin",
+          "position": 0
+        },
+        {
+          "point": "FR4Begin",
+          "position": -31,
+          "nucleotidePattern": "(?:TGG|TT[TC])()GG[ATGC]{4}GG[ATGC]"
+        },
+        {
+          "point": "FR4End",
+          "position": "end"
+        }
+      ]
+    }
   }
 }
