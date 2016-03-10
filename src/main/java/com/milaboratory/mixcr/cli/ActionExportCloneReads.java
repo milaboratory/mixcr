@@ -3,6 +3,7 @@ package com.milaboratory.mixcr.cli;
 import cc.redberry.pipe.CUtils;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
+import com.beust.jcommander.Parameters;
 import com.milaboratory.core.io.sequence.PairedRead;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SequenceWriter;
@@ -176,6 +177,7 @@ public final class ActionExportCloneReads implements Action {
         else return new SingleFastqWriter(fileName + ".fastq.gz");
     }
 
+    @Parameters(commandDescription = "Export reads for particular clones.")
     public static final class ExtractCloneParameters extends ActionParameters {
         @Parameter(description = "mappingFile vdjcaFile clone1 [clone2] [clone3] ... output")
         public List<String> parameters;
