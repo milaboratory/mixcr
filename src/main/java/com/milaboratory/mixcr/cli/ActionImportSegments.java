@@ -219,7 +219,7 @@ public class ActionImportSegments implements Action {
         //@Parameter(description = "input_file_V.fasta input_file_J.fasta [input_file_D.fasta]")
         //public List<String> parameters;
 
-        @Parameter(description = "Import parameters (name of built-in parameter set of a name of JSON file with " +
+        @Parameter(description = "Import parameters (name of built-in parameter set or a name of JSON file with " +
                 "custom import parameters).", names = {"-p", "--parameters"})
         public String builderParametersName = "imgt";
 
