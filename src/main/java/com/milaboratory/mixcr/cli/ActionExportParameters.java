@@ -36,7 +36,7 @@ public class ActionExportParameters extends ActionParametersWithOutput {
     public String presetFile;
 
     @Parameter(description = "List available export fields",
-            names = {"-l", "--list-fields"})
+            names = {"-lf", "--list-fields"})
     public Boolean listFields = false;
 
     @Parameter(description = "Output short versions of column headers which facilitates analysis with Pandas, R/DataFrames or other data tables processing library.",

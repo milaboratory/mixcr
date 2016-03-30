@@ -33,18 +33,18 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
-import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.basictypes.CloneSet;
-import com.milaboratory.mixcr.basictypes.CloneSetIO;
-import com.milaboratory.mixcr.basictypes.IOUtil;
+import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.export.InfoWriter;
 import com.milaboratory.mixcr.reference.GeneFeature;
+import com.milaboratory.mixcr.reference.GeneType;
 import com.milaboratory.mixcr.reference.LociLibraryManager;
+import com.milaboratory.mixcr.reference.Locus;
 import com.milaboratory.util.CanReportProgressAndStage;
 import com.milaboratory.util.SmartProgressReporter;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.Set;
 
 public class ActionExportClones extends ActionExport {
     public ActionExportClones() {
@@ -57,8 +57,11 @@ public class ActionExportClones extends ActionExport {
         try (InputStream inputStream = IOUtil.createIS(parameters.getInputFile());
              InfoWriter<Clone> writer = new InfoWriter<>(parameters.getOutputFile())) {
             CloneSet set = CloneSetIO.read(inputStream, LociLibraryManager.getDefault());
-            if (parameters.filterOutOfFrames || parameters.filterStops)
-                set = CloneSet.transform(set, new CFilter(parameters.filterOutOfFrames, parameters.filterStops));
+
+            if (parameters.filterOutOfFrames || parameters.filterStops || !"all".equals(parameters.loci))
+                set = CloneSet.transform(set, new CFilter(parameters.filterOutOfFrames, parameters.filterStops,
+                        parameters.getLoci()));
+
             writer.attachInfoProviders((List) parameters.exporters);
             ExportClones exportClones = new ExportClones(set, writer, parameters.limit);
             if (!parameters.printToStdout())
@@ -74,10 +77,13 @@ public class ActionExportClones extends ActionExport {
 
     private static final class CFilter implements Filter<Clone> {
         final boolean filterOutOfFrames, filterStopCodons;
+        final Set<Locus> loci;
 
-        public CFilter(boolean filterOutOfFrames, boolean filterStopCodons) {
+        public CFilter(boolean filterOutOfFrames, boolean filterStopCodons,
+                       Set<Locus> loci) {
             this.filterOutOfFrames = filterOutOfFrames;
             this.filterStopCodons = filterStopCodons;
+            this.loci = loci;
         }
 
         @Override
@@ -91,6 +97,21 @@ public class ActionExportClones extends ActionExport {
                 for (int i = 0; i < clone.numberOfTargets(); i++)
                     if (AminoAcidSequence.translateFromCenter(clone.getTarget(i).getSequence()).containStops())
                         return false;
+
+            if (loci != null) {
+                boolean ok = false;
+                VDJCHit h = clone.getBestHit(GeneType.Variable);
+                if (h != null && loci.contains(h.getAllele().getLocus()))
+                    ok = true;
+
+                h = clone.getBestHit(GeneType.Joining);
+                if (h != null && loci.contains(h.getAllele().getLocus()))
+                    ok = true;
+
+                if (!ok)
+                    return false;
+            }
+
             return true;
         }
     }
@@ -144,5 +165,13 @@ public class ActionExportClones extends ActionExport {
         @Parameter(description = "Exclude sequences containing stop codons (fractions will be recalculated)",
                 names = {"-t", "--filter-stops"})
         public Boolean filterStops = false;
+
+        @Parameter(description = "Filter export to specific loci (e.g. TRA or IGH).",
+                names = {"-l", "--filter-locus"})
+        public String loci = "ALL";
+
+        public Set<Locus> getLoci() {
+            return Util.parseLoci(loci);
+        }
     }
 }

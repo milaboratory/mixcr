@@ -39,6 +39,9 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 
 import static com.milaboratory.mixcr.reference.GeneFeature.*;
+import static com.milaboratory.mixcr.reference.ReferencePoint.DBegin;
+import static com.milaboratory.mixcr.reference.ReferencePoint.DEnd;
+import static com.milaboratory.mixcr.reference.ReferencePoint.VEnd;
 import static org.junit.Assert.*;
 
 /**
@@ -366,6 +369,28 @@ public class GeneFeatureTest {
         assertFalse(CDR3.contains(FR2));
         assertFalse(CDR3.contains(CDR1));
         assertFalse(CDR3.contains(V5UTRGermline));
+    }
+
+    @Test
+    public void testReverse1() throws Exception {
+        assertEquals(new GeneFeature(ReferencePoint.DEnd, ReferencePoint.DBegin), DRegion.reverse());
+    }
+
+    @Test
+    public void testIntersection13() throws Exception {
+        assertEquals(VRegionWithP, intersection(VRegionWithP, VRegionWithP));
+        assertEquals(DRegionWithP, intersection(DRegionWithP, DRegionWithP));
+    }
+
+    @Test
+    public void testIntersection14() throws Exception {
+        GeneFeature aa1 = VRegion.append(new GeneFeature(VEnd, VEnd.move(-20)));
+        GeneFeature aa2 = VRegion.append(new GeneFeature(VEnd, VEnd.move(-15)));
+        assertEquals(aa2, intersection(aa1, aa2));
+        GeneFeature dd1 = new GeneFeature(DEnd.move(-3), DBegin).append(DRegion).append(GermlineDPSegment);
+        GeneFeature dd2 = GermlineDPSegment.append(DRegion).append(new GeneFeature(DEnd, DBegin.move(3)));
+        GeneFeature dd3 = new GeneFeature(DEnd.move(-3), DBegin).append(DRegion).append(new GeneFeature(DEnd, DBegin.move(3)));
+        assertEquals(dd3, intersection(dd1, dd2));
     }
 
     @Test

@@ -268,6 +268,13 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         return regions.length;
     }
 
+    public GeneFeature reverse() {
+        ReferenceRange[] res = new ReferenceRange[regions.length];
+        for (int i = 0; i < res.length; i++)
+            res[i] = regions[regions.length - 1 - i].reverse();
+        return new GeneFeature(res, true);
+    }
+
     public GeneType getGeneType() {
         GeneType gt = regions[0].getGeneType(), tmp;
 
@@ -350,18 +357,31 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
             gf2 = gf2.withoutLast();
         }
 
+        GeneFeature gfLeft = intersection1R(gf1left, gf2left),
+                gfRight = intersection1R(gf1right, gf2right);
+
         GeneFeature r = intersection0(gf1, gf2);
 
-        if (gf1left != null)
-            r = new GeneFeature(gf1left, r);
-        if (gf1right != null)
-            r = new GeneFeature(r, gf1right);
-        if (gf2left != null)
-            r = new GeneFeature(gf2left, r);
-        if (gf2right != null)
-            r = new GeneFeature(r, gf2right);
+        if (gfLeft != null)
+            r = new GeneFeature(gfLeft, r);
+        if (gfRight != null)
+            r = new GeneFeature(r, gfRight);
 
         return r;
+    }
+
+    private static GeneFeature intersection1R(GeneFeature gf1, GeneFeature gf2) {
+        if (gf1 == null && gf2 == null)
+            return null;
+
+        if (gf1 == null)
+            return gf2;
+
+        if (gf2 == null)
+            return gf1;
+
+        GeneFeature i = intersection0(gf1.reverse(), gf2.reverse());
+        return i == null ? null : i.reverse();
     }
 
     private static GeneFeature intersection0(GeneFeature gf1, GeneFeature gf2) {
@@ -503,6 +523,10 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
 
         public boolean isReversed() {
             return begin.compareTo(end) > 0;
+        }
+
+        public ReferenceRange reverse() {
+            return new ReferenceRange(end, begin);
         }
 
         public GeneType getGeneType() {
