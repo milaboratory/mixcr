@@ -85,8 +85,10 @@ public class ActionAssemble implements Action {
         if (!actionParameters.overrides.isEmpty()) {
             assemblerParameters = JsonOverrider.override(assemblerParameters, CloneAssemblerParameters.class,
                     actionParameters.overrides);
-            if (assemblerParameters == null)
+            if (assemblerParameters == null){
                 System.err.println("Failed to override some parameter.");
+                return;
+            }
         }
 
         // Adjusting features to align for correct processing

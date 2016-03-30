@@ -74,8 +74,10 @@ public class ActionAlign implements Action {
 
         if (!actionParameters.overrides.isEmpty()) {
             alignerParameters = JsonOverrider.override(alignerParameters, VDJCAlignerParameters.class, actionParameters.overrides);
-            if (alignerParameters == null)
+            if (alignerParameters == null) {
                 System.err.println("Failed to override some parameter.");
+                return;
+            }
         }
 
         VDJCAligner aligner = VDJCAligner.createAligner(alignerParameters,
@@ -87,8 +89,15 @@ public class ActionAlign implements Action {
             return;
         }
 
+        // Checking species
+        int speciesId = ll.getSpeciesTaxonId(actionParameters.species);
+        if (speciesId == -1) {
+            System.err.println("Can't find species with id: " + actionParameters.species);
+            return;
+        }
+
         for (Locus locus : actionParameters.getLoci()) {
-            LocusContainer lc = ll.getLocus(actionParameters.species, locus);
+            LocusContainer lc = ll.getLocus(speciesId, locus);
             if (lc == null) {
                 if (params().printWarnings())
                     System.err.println("WARNING: No records for " + locus);
