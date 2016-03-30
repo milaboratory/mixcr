@@ -91,25 +91,40 @@ public class ActionAlign implements Action {
 
         // Checking species
         int speciesId = ll.getSpeciesTaxonId(actionParameters.species);
+
+        if (speciesId == -1)
+            speciesId = Species.fromString(actionParameters.species);
+
         if (speciesId == -1) {
             System.err.println("Can't find species with id: " + actionParameters.species);
             return;
         }
 
+        boolean warnings = false;
+
         for (Locus locus : actionParameters.getLoci()) {
             LocusContainer lc = ll.getLocus(speciesId, locus);
             if (lc == null) {
-                if (params().printWarnings())
+                if (params().printWarnings()) {
                     System.err.println("WARNING: No records for " + locus);
+                    warnings = true;
+                }
                 continue;
             }
             for (Allele allele : lc.getAllAlleles())
                 if (alignerParameters.containsRequiredFeature(allele) &&
                         (allele.isFunctional() || !actionParameters.isFunctionalOnly()))
                     aligner.addAllele(allele);
-                else if (params().printWarnings() && allele.isFunctional())
-                    System.err.println("WARNING: Functional allele excluded " + allele.getName());
+                else if (params().printWarnings() && allele.isFunctional()) {
+                    System.err.println("WARNING: Functional allele excluded " + allele.getName() +
+                            " as it doesn't contain full " + GeneFeature.encode(alignerParameters
+                            .getFeatureToAlign(allele.getGeneType())));
+                    warnings = true;
+                }
         }
+
+        if (warnings)
+            System.err.println("To turn off warnings use '-nw' option.");
 
         AlignerReport report = actionParameters.report == null ? null : new AlignerReport();
         if (report != null) {
@@ -203,6 +218,10 @@ public class ActionAlign implements Action {
                 names = {"-w", "--warnings"})
         public Boolean warnings = null;
 
+        @Parameter(description = "Don't print warnings",
+                names = {"-nw", "--no-warnings"})
+        public Boolean noWarnings = null;
+
         @Parameter(description = "Parameters",
                 names = {"-p", "--parameters"})
         public String alignerParametersName = "default";
@@ -279,7 +298,12 @@ public class ActionAlign implements Action {
         }
 
         public boolean printWarnings() {
-            return warnings != null && warnings;
+            if (warnings != null && noWarnings != null)
+                throw new ParameterException("Simultaneous use of -w and -nw.");
+            if (warnings == null)
+                return !"mi".equals(ll) && noWarnings == null;
+            else
+                return warnings;
         }
 
         public Set<Locus> getLoci() {

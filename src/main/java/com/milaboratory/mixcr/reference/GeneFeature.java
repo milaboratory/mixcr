@@ -695,9 +695,9 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         return encode(feature, true);
     }
 
-    static String encode(GeneFeature feature, boolean copact) {
+    static String encode(GeneFeature feature, boolean compact) {
         ensureInitialized();
-        if (copact) {
+        if (compact) {
             String s = nameByFeature.get(feature);
             if (s != null)
                 return s;
@@ -707,7 +707,7 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         out:
         for (int i = 0; i < encodes.length; ++i) {
             ReferenceRange region = feature.regions[i];
-            if (copact) {
+            if (compact) {
                 String base = null;
                 for (GeneFeature a : available)
                     if (match(region, a)) {
