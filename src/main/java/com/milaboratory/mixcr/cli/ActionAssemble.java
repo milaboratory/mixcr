@@ -43,7 +43,10 @@ import com.milaboratory.mixcr.assembler.*;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.reference.Allele;
+import com.milaboratory.mixcr.reference.GeneFeature;
+import com.milaboratory.mixcr.reference.GeneType;
 import com.milaboratory.mixcr.reference.LociLibraryManager;
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PipeWriter;
 import com.milaboratory.util.SmartProgressReporter;
 import org.mapdb.DB;
@@ -65,9 +68,12 @@ public class ActionAssemble implements Action {
 
     @Override
     public void go(ActionHelper helper) throws Exception {
-        List<Allele> alleles;
+        final List<Allele> alleles;
+        final VDJCAlignerParameters alignerParameters;
         try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(actionParameters.getInputFileName(), LociLibraryManager.getDefault())) {
             alleles = reader.getUsedAlleles();
+            // Saving aligner parameters to correct assembler parameters
+            alignerParameters = reader.getParameters();
         }
 
         AlignmentsProvider alignmentsProvider = AlignmentsProvider.Util.createProvider(
@@ -81,6 +87,16 @@ public class ActionAssemble implements Action {
                     actionParameters.overrides);
             if (assemblerParameters == null)
                 System.err.println("Failed to override some parameter.");
+        }
+
+        // Adjusting features to align for correct processing
+        for (GeneType geneType : GeneType.values()) {
+            GeneFeature featureAssemble = assemblerParameters.getCloneFactoryParameters().getFeatureToAlign(geneType);
+            GeneFeature featureAlignment = alignerParameters.getFeatureToAlign(geneType);
+            if (featureAssemble == null || featureAlignment == null)
+                continue;
+            GeneFeature intersection = GeneFeature.intersection(featureAlignment, featureAssemble);
+            assemblerParameters.getCloneFactoryParameters().setFeatureToAlign(geneType, intersection);
         }
 
         try (CloneAssembler assembler = new CloneAssembler(assemblerParameters, false, alleles)) {

@@ -103,6 +103,22 @@ public final class CloneFactoryParameters implements java.io.Serializable {
             return params.getFeatureToAlign();
     }
 
+    public CloneFactoryParameters setFeatureToAlign(GeneType geneType, GeneFeature feature) {
+        if (geneType == GeneType.Diversity)
+            if (dParameters == null)
+                throw new IllegalArgumentException("No D parameters.");
+            else
+                dParameters.setGeneFeatureToAlign(feature);
+        else {
+            VJCClonalAlignerParameters params = getVJCParameters(geneType);
+            if (params == null)
+                throw new IllegalArgumentException("No parameters for " + geneType + ".");
+            else
+                params.setFeatureToAlign(feature);
+        }
+        return this;
+    }
+
     public CloneFactoryParameters setVJCParameters(GeneType geneType, VJCClonalAlignerParameters parameters) {
         if (parameters == null)
             vdcParameters.remove(geneType);
