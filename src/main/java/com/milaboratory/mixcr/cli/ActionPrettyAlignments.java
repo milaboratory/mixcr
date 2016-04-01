@@ -253,6 +253,10 @@ public class ActionPrettyAlignments implements Action {
                 names = {"-c", "--cdr3-contains"})
         public String cdr3Contains = null;
 
+        @Parameter(description = "Only output alignments where CDR3 exactly equals to given sequence",
+                names = {"-e", "--cdr3-equals"})
+        public String cdr3Equals = null;
+
         @Parameter(description = "Only output alignments which contains corresponding gene feature",
                 names = {"-g", "--feature"})
         public String feature = null;
@@ -304,6 +308,17 @@ public class ActionPrettyAlignments implements Action {
                         return false;
                     }
                 });
+
+            if (cdr3Equals != null) {
+                final NucleotideSequence seq = new NucleotideSequence(cdr3Equals);
+                filters.add(new Filter<VDJCAlignments>() {
+                    @Override
+                    public boolean accept(VDJCAlignments object) {
+                        NSequenceWithQuality feature = object.getFeature(GeneFeature.CDR3);
+                        return feature != null && feature.getSequence().equals(seq);
+                    }
+                });
+            }
 
             if (filters.isEmpty())
                 return ACCEPT_ALL;
