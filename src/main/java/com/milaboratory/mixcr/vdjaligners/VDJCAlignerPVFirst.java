@@ -28,7 +28,7 @@
  */
 package com.milaboratory.mixcr.vdjaligners;
 
-import com.milaboratory.core.PairedTarget;
+import com.milaboratory.core.Target;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.AlignmentUtils;
@@ -52,7 +52,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     public VDJCAlignmentResult<PairedRead> process(final PairedRead input) {
         ensureInitialized();
 
-        PairedTarget[] targets = getTargets(input);
+        Target[] targets = getTargets(input);
 
         // Creates helper classes for each PTarget
         PAlignmentHelper[] helpers = createInitialHelpers(targets);
@@ -112,18 +112,18 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         return new VDJCAlignmentResult<>(input, alignments);
     }
 
-    PairedTarget[] getTargets(PairedRead read) {
+    Target[] getTargets(PairedRead read) {
         return parameters.getReadsLayout().createTargets(read);
     }
 
-    PAlignmentHelper[] createInitialHelpers(PairedTarget[] target) {
+    PAlignmentHelper[] createInitialHelpers(Target[] target) {
         PAlignmentHelper[] result = new PAlignmentHelper[target.length];
         for (int i = 0; i < target.length; i++)
             result[i] = createInitialHelper(target[i]);
         return result;
     }
 
-    PAlignmentHelper createInitialHelper(PairedTarget target) {
+    PAlignmentHelper createInitialHelper(Target target) {
         return new PAlignmentHelper(target,
                 vAligner.align(target.targets[0].getSequence()),
                 vAligner.align(target.targets[1].getSequence())
@@ -134,14 +134,14 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     static final AlignmentHit<NucleotideSequence, Allele>[] zeroKArray = new AlignmentHit[0];
 
     final class PAlignmentHelper {
-        final PairedTarget target;
+        final Target target;
         final AlignmentResult<AlignmentHit<NucleotideSequence, Allele>>[] vResults;
         AlignmentResult<AlignmentHit<NucleotideSequence, Allele>>[] jResults;
         PairedHit[] vHits, jHits;
         VDJCHit[] dHits = null, cHits = null;
         PairedHit bestVHits;
 
-        PAlignmentHelper(PairedTarget target, AlignmentResult<AlignmentHit<NucleotideSequence, Allele>>... vResults) {
+        PAlignmentHelper(Target target, AlignmentResult<AlignmentHit<NucleotideSequence, Allele>>... vResults) {
             this.target = target;
             this.vResults = vResults;
             this.vHits = extractDoubleHits(vResults);
