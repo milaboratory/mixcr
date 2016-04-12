@@ -110,8 +110,9 @@ public final class AlignerReport implements VDJCAlignerEventListener, ReportWrit
                         "Alignment filtered because of different V and J loci",
                 hasDifferentVJLoci.get(), total);
         for (VDJCAlignmentFailCause cause : VDJCAlignmentFailCause.values())
-            helper.writePercentField("Alignment failed because of " + cause.name,
-                    fails.get(cause.ordinal()), total);
+            if (fails.get(cause.ordinal()) != 0)
+                helper.writePercentField("Alignment failed because of " + cause.name,
+                        fails.get(cause.ordinal()), total);
         helper.writePercentField("Overlapped, percent", alignedOverlap.get() + nonAlignedOverlap.get(), total);
         helper.writePercentField("Overlapped and aligned, percent", alignedOverlap.get(), total);
         helper.writePercentField("Overlapped and not aligned, percent", nonAlignedOverlap.get(), total);
