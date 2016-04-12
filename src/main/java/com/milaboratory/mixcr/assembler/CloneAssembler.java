@@ -35,6 +35,9 @@ import com.milaboratory.core.Range;
 import com.milaboratory.core.clustering.Cluster;
 import com.milaboratory.core.clustering.Clustering;
 import com.milaboratory.core.clustering.SequenceExtractor;
+import com.milaboratory.core.mutations.AggregatedMutations;
+import com.milaboratory.core.mutations.AssignedVariants;
+import com.milaboratory.core.mutations.VariantsAssembler;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceQuality;
@@ -81,6 +84,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     private final HashMap<AlleleId, Allele> usedAlleles = new HashMap<>();
     volatile CanReportProgress progressReporter;
     private CloneAssemblerListener listener;
+    private List<CloneAccumulator> preparedClonesSource;
     volatile boolean deferredExists = false;
     volatile boolean preClusteringDone = false;
 
@@ -261,6 +265,82 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             clusteredClonesAccumulators.add(head);
         }
         this.progressReporter = null;
+    }
+
+    public void prepareCloneAccsForBuilder() {
+        if (clusteredClonesAccumulators != null)
+            preparedClonesSource = clusteredClonesAccumulators;
+        else {
+            idMapping = new TIntIntHashMap();
+            //sort clones by count (if not yet sorted by clustering)
+            CloneAccumulator[] sourceArray = cloneList.toArray(new CloneAccumulator[cloneList.size()]);
+            Arrays.sort(sourceArray, CLONE_ACCUMULATOR_COMPARATOR);
+            for (int i = 0; i < sourceArray.length; i++) {
+                idMapping.put(sourceArray[i].getCloneIndex(), i);
+                sourceArray[i].setCloneIndex(i);
+            }
+            preparedClonesSource = Arrays.asList(sourceArray);
+        }
+    }
+
+    public void buildConsensusAggregatedMutations(OutputPortCloseable<VDJCAlignments> alignmentsPort,
+                                                  Map<GeneType, GeneFeature> featuresToAlign) {
+        for (CloneAccumulator acc : preparedClonesSource)
+            acc.initializeCoverageAggregator(featuresToAlign);
+
+        final OutputPortCloseable<ReadToCloneMapping> assembledReadsPort = getAssembledReadsPort();
+        ReadToCloneMapping mapping;
+        VDJCAlignments alignments;
+        while ((alignments = alignmentsPort.take()) != null) {
+            mapping = assembledReadsPort.take();
+            assert mapping.getAlignmentsId() == alignments.getAlignmentsIndex();
+            if (mapping.isDropped())
+                continue;
+            preparedClonesSource.get(mapping.getCloneIndex()).accumulateCoverage(alignments);
+        }
+    }
+
+    public Map<AlleleId, Integer> allelicVariants;
+
+
+    public void searchAllelicVariants() {
+        Map<AlleleId, List<PrivateHolder>> existingAlleles = new HashMap<>();
+        for (int i = 0; i < preparedClonesSource.size(); i++) {
+            CloneAccumulator aPreparedClonesSource = preparedClonesSource.get(i);
+            for (GeneType gt : GeneType.VJC_REFERENCE) {
+                AlleleId id = aPreparedClonesSource.topAlleles.get(gt);
+                List<PrivateHolder> list = existingAlleles.get(id);
+                if (list == null)
+                    existingAlleles.put(id, list = new ArrayList<>());
+                list.add(new PrivateHolder(i, gt));
+            }
+        }
+
+        allelicVariants = new HashMap<>();
+        for (Map.Entry<AlleleId, List<PrivateHolder>> e : existingAlleles.entrySet()) {
+            List<PrivateHolder> list = e.getValue();
+            AggregatedMutations<NucleotideSequence>[] aggrs = new AggregatedMutations[list.size()];
+            for (int i = 0; i < list.size(); i++)
+                aggrs[i] = preparedClonesSource.get(list.get(i).i).getAggregatedMutations(list.get(i).geneType);
+
+            VariantsAssembler<NucleotideSequence> vAsm = new VariantsAssembler<>(
+                    NucleotideSequence.ALPHABET, aggrs, null);
+
+            AssignedVariants<NucleotideSequence> variants = vAsm.findVariants();
+
+        }
+
+
+    }
+
+    static final class PrivateHolder {
+        final int i;
+        final GeneType geneType;
+
+        public PrivateHolder(int i, GeneType geneType) {
+            this.i = i;
+            this.geneType = geneType;
+        }
     }
 
     public void buildClones() {
@@ -478,25 +558,9 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             CloneFactory cloneFactory =
                     new CloneFactory(parameters.getCloneFactoryParameters(),
                             parameters.getAssemblingFeatures(), usedAlleles);
-            Collection<CloneAccumulator> source;
-            if (clusteredClonesAccumulators != null)
-                source = clusteredClonesAccumulators;
-            else {
-                idMapping = new TIntIntHashMap();
-                //sort clones by count (if not yet sorted by clustering)
-                CloneAccumulator[] sourceArray = cloneList.toArray(new CloneAccumulator[cloneList.size()]);
-                Arrays.sort(sourceArray, CLONE_ACCUMULATOR_COMPARATOR);
-                for (int i = 0; i < sourceArray.length; i++) {
-                    idMapping.put(sourceArray[i].getCloneIndex(), i);
-                    sourceArray[i].setCloneIndex(i);
-                }
-                source = Arrays.asList(sourceArray);
-            }
-            realClones = new Clone[source.size()];
+            realClones = new Clone[preparedClonesSource.size()];
             int i = 0;
-            Iterator<CloneAccumulator> iterator = source.iterator();
-            while (iterator.hasNext()) {
-                CloneAccumulator accumulator = iterator.next();
+            for (CloneAccumulator accumulator : preparedClonesSource) {
                 int cloneIndex = accumulator.getCloneIndex();
                 assert realClones[cloneIndex] == null;
                 realClones[cloneIndex] = cloneFactory.create(cloneIndex, accumulator);
@@ -541,7 +605,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 long countThreshold = (long) (accs[i].count * parameters.maximalPreClusteringRatio);
                 for (int j = i + 1; j < accs.length; j++)
                     if (accs[j] != null && accs[j].count <= countThreshold &&
-                            mathchHits(vjcSignature, accs[j])) {
+                            matchHits(vjcSignature, accs[j])) {
                         accs[i].count += accs[j].count;
                         accs[i].countMapped += accs[j].countMapped;
                         onPreClustered(accs[i], accs[j]);
@@ -633,7 +697,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         }
     }
 
-    static boolean mathchHits(VJCSignature vjcSignature, CloneAccumulator acc) {
+    static boolean matchHits(VJCSignature vjcSignature, CloneAccumulator acc) {
         TObjectFloatHashMap<AlleleId> minor;
         minor = acc.geneScores.get(GeneType.Variable);
         if (vjcSignature.vAllele == null && (minor != null && !minor.isEmpty()))

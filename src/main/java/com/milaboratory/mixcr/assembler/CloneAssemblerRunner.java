@@ -115,6 +115,19 @@ public class CloneAssemblerRunner implements CanReportProgressAndStage {
             }
             assembler.runClustering();
         }
+        //build clones (prepare)
+        synchronized (this) {
+            stage = "Preparing for build of final clones";
+            innerProgress = null;
+        }
+        assembler.prepareCloneAccsForBuilder();
+        //run aggregators
+        if (true) {
+            assembler.buildConsensusAggregatedMutations(alignmentsProvider.create(),
+                    alignmentsProvider.getAlignerParameters().getFeaturesToAlign());
+
+        }
+
         //build clones
         synchronized (this) {
             stage = "Building clones";

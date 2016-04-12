@@ -32,9 +32,13 @@ import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.reference.AlleleResolver;
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.Factory;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 
 public interface AlignmentsProvider {
     OutputPortCloseable<VDJCAlignments> create();
@@ -45,6 +49,13 @@ public interface AlignmentsProvider {
      * @return total number of reads
      */
     long getTotalNumberOfReads();
+
+    /**
+     * Returns parameters of the aligner
+     *
+     * @return parameters of the aligner
+     */
+    VDJCAlignerParameters getAlignerParameters();
 
     final class Util {
         static AlignmentsProvider createProvider(final byte[] rawData, final AlleleResolver alleleResolver) {

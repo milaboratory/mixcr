@@ -58,6 +58,11 @@ public final class RunMiXCR {
                 }
 
                 @Override
+                public VDJCAlignerParameters getAlignerParameters() {
+                    return align.parameters.alignerParameters;
+                }
+
+                @Override
                 public long getTotalNumberOfReads() {
                     return align.alignments.size();
                 }
@@ -69,7 +74,7 @@ public final class RunMiXCR {
             assemblerRunner.run();
 
             CloneSet cloneSet = assemblerRunner.getCloneSet();
-            return new AssembleResult(cloneSet, report);
+            return new AssembleResult(cloneSet, report, assembler.getAssembledReadsPort());
         }
     }
 
@@ -126,10 +131,12 @@ public final class RunMiXCR {
     public static final class AssembleResult {
         final CloneSet cloneSet;
         final CloneAssemblerReport report;
+        final OutputPortCloseable<ReadToCloneMapping> assembledReadsPort;
 
-        public AssembleResult(CloneSet cloneSet, CloneAssemblerReport report) {
+        public AssembleResult(CloneSet cloneSet, CloneAssemblerReport report, OutputPortCloseable<ReadToCloneMapping> assembledReadsPort) {
             this.cloneSet = cloneSet;
             this.report = report;
+            this.assembledReadsPort = assembledReadsPort;
         }
     }
 

@@ -207,6 +207,13 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         return params == null ? null : params.getGeneFeatureToAlign();
     }
 
+    public Map<GeneType, GeneFeature> getFeaturesToAlign() {
+        Map<GeneType, GeneFeature> r = new EnumMap<>(GeneType.class);
+        for (GeneType gt : GeneType.VDJC_REFERENCE)
+            r.put(gt, getFeatureToAlign(gt));
+        return r;
+    }
+
     protected EnumMap<GeneType, GeneAlignmentParameters> getCloneOfAlignmentParameters() {
         EnumMap<GeneType, GeneAlignmentParameters> map = new EnumMap<GeneType, GeneAlignmentParameters>(GeneType.class);
         for (Map.Entry<GeneType, GeneAlignmentParameters> entry : alignmentParameters.entrySet())

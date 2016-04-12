@@ -31,14 +31,17 @@ package com.milaboratory.mixcr.assembler;
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.Factory;
 
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 class VDJCAlignmentsReaderWrapper implements AlignmentsProvider {
     final Factory<VDJCAlignmentsReader> factory;
     final AtomicLong totalNumberOfReads = new AtomicLong(-1);
+    final AtomicReference<VDJCAlignerParameters> alignerParameters = new AtomicReference<>();
 
     VDJCAlignmentsReaderWrapper(Factory<VDJCAlignmentsReader> factory) {
         this.factory = factory;
@@ -54,11 +57,17 @@ class VDJCAlignmentsReaderWrapper implements AlignmentsProvider {
         return totalNumberOfReads.get();
     }
 
+    @Override
+    public VDJCAlignerParameters getAlignerParameters() {
+        return alignerParameters.get();
+    }
+
     private class OP implements OutputPortCloseable<VDJCAlignments>, CanReportProgress {
         final VDJCAlignmentsReader reader;
 
         private OP(VDJCAlignmentsReader reader) {
             this.reader = reader;
+            VDJCAlignmentsReaderWrapper.this.alignerParameters.compareAndSet(null, reader.getParameters());
         }
 
         @Override
