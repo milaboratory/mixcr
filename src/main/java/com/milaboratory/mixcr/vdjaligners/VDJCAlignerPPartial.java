@@ -40,7 +40,7 @@ public class VDJCAlignerPPartial extends VDJCAlignerAbstract<SequenceRead> {
     public VDJCAlignmentResult<SequenceRead> process(SequenceRead input) {
         Target[] targets = parameters.getReadsLayout().createTargets(input);
         for (int i = 0; i < input.numberOfReads(); i++) {
-            in.
+//            in.
         }
         return null;
     }

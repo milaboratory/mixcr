@@ -28,8 +28,8 @@
  */
 package com.milaboratory.mixcr.vdjaligners;
 
-import com.milaboratory.core.Target;
 import com.milaboratory.core.Range;
+import com.milaboratory.core.Target;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.AlignmentUtils;
 import com.milaboratory.core.alignment.batch.AlignmentHit;
@@ -74,8 +74,9 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
 
         // Calculates which PTarget was aligned with the highest score
         PAlignmentHelper bestHelper = helpers[0];
-        if (bestHelper.score() < helpers[1].score())
-            bestHelper = helpers[1];
+        for (int i = 1; i < helpers.length; ++i)
+            if (bestHelper.score() < helpers[i].score())
+                bestHelper = helpers[i];
 
         // If V or J hits are absent
         if (!bestHelper.hasHits()) {
@@ -339,8 +340,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                             target.targets[i].size()).getHits();
                     results[i] = temp.toArray(new AlignmentHit[temp.size()]);
                 }
-                cHits = combine(getCAllelesToAlign(),
-                        parameters.getFeatureToAlign(GeneType.Constant), results);
+                cHits = combine(parameters.getFeatureToAlign(GeneType.Constant), results);
             }
         }
 
@@ -575,7 +575,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     };
 
     @SuppressWarnings("unchecked")
-    static VDJCHit[] combine(final List<Allele> alleles, final GeneFeature feature, final AlignmentHit<NucleotideSequence, Allele>[][] hits) {
+    static VDJCHit[] combine(final GeneFeature feature, final AlignmentHit<NucleotideSequence, Allele>[][] hits) {
         for (int i = 0; i < hits.length; i++)
             Arrays.sort(hits[i], ALLELE_ID_COMPARATOR);
         ArrayList<VDJCHit> result = new ArrayList<>();
