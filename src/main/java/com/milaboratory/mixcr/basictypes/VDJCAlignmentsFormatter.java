@@ -122,7 +122,8 @@ public class VDJCAlignmentsFormatter {
             pd(ReferencePoint.DEndTrimmed, "D>", -1),
             pd(ReferencePoint.JBeginTrimmed, "<J"),
             pd(ReferencePoint.CDR3End, "CDR3><FR4"),
-            pd(ReferencePoint.FR4End, "FR4>", -1)
+            pd(ReferencePoint.FR4End, "FR4>", -1),
+            pd(ReferencePoint.CBegin, "<C")
     };
 
     public static final PointToDraw[] POINTS_FOR_GERMLINE = new PointToDraw[]{

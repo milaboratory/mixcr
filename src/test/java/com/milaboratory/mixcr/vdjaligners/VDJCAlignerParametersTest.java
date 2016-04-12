@@ -63,7 +63,7 @@ public class VDJCAlignerParametersTest {
                                 LinearGapAlignmentScoring.getNucleotideBLASTScoring())),
                 VJAlignmentOrder.JThenV,
                 false, false,
-                120.0f, 5, 0.7f, 0.7f, PairedEndReadsLayout.Opposite, new MergerParameters(
+                120.0f, 5, 0.7f, 0.7f, false, PairedEndReadsLayout.Opposite, new MergerParameters(
                 QualityMergingAlgorithm.SumSubtraction, null, 12, null, 0.12));
         String str = GlobalObjectMappers.PRETTY.writeValueAsString(paramentrs);
         VDJCAlignerParameters deser = GlobalObjectMappers.PRETTY.readValue(str, VDJCAlignerParameters.class);

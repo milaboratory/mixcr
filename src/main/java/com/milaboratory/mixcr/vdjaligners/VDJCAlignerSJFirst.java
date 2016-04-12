@@ -28,10 +28,10 @@
  */
 package com.milaboratory.mixcr.vdjaligners;
 
+import com.milaboratory.core.Target;
 import com.milaboratory.core.alignment.batch.AlignmentHit;
 import com.milaboratory.core.alignment.batch.AlignmentResult;
 import com.milaboratory.core.io.sequence.SingleRead;
-import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
@@ -54,14 +54,61 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
     public VDJCAlignmentResult<SingleRead> process(SingleRead input) {
         ensureInitialized();
 
-        NSequenceWithQuality target = input.getData();
-        NSequenceWithQuality targetRC = target.getReverseComplement();
+        return parameters.getAllowPartialAlignments() ?
+                processPartial(input) :
+                processStrict(input);
+    }
 
-        KVJResultsForSingle vjResultForward = align(target, false);
-        KVJResultsForSingle vjResultReverse = align(targetRC, true);
 
-        if (!vjResultForward.isFull() && !vjResultReverse.isFull()) {
-            if (!vjResultForward.hasKJHits() && !vjResultReverse.hasKJHits())
+    private VDJCAlignmentResult<SingleRead> processPartial(SingleRead input) {
+        Target[] targets = parameters.getReadsLayout().createTargets(input);
+
+        KVJResultsForSingle[] results = new KVJResultsForSingle[targets.length];
+        for (int i = 0; i < results.length; i++)
+            results[i] = align(targets[i]);
+
+        KVJResultsForSingle topResult = null;
+
+        for (KVJResultsForSingle result : results) {
+            if (!result.isEmpty())
+                result.alignDC();
+            if (topResult == null || topResult.sumScore() < result.sumScore())
+                topResult = result;
+        }
+
+        if (topResult.isEmpty()) {
+            onFailedAlignment(input, VDJCAlignmentFailCause.NoHits);
+            return new VDJCAlignmentResult<>(input);
+        }
+
+        // Checking minimal sum score
+        if (topResult.sumScore() < parameters.getMinSumScore()) {
+            onFailedAlignment(input, VDJCAlignmentFailCause.LowTotalScore);
+            return new VDJCAlignmentResult<>(input);
+        }
+
+        topResult.calculateHits(parameters.getMinSumScore(), parameters.getMaxHits());
+
+        VDJCAlignments alignment = topResult.toVDJCAlignments(input.getId());
+        onSuccessfulAlignment(input, alignment);
+        return new VDJCAlignmentResult<>(input, alignment);
+    }
+
+    private VDJCAlignmentResult<SingleRead> processStrict(SingleRead input) {
+        Target[] targets = parameters.getReadsLayout().createTargets(input);
+
+        boolean anyIsFull = false;
+        boolean anyHasJ = false;
+
+        KVJResultsForSingle[] results = new KVJResultsForSingle[targets.length];
+        for (int i = 0; i < results.length; i++) {
+            results[i] = align(targets[i]);
+            anyIsFull |= results[i].isFull();
+            anyHasJ |= results[i].hasKJHits();
+        }
+
+        if (!anyIsFull) {
+            if (!anyHasJ)
                 onFailedAlignment(input, VDJCAlignmentFailCause.NoJHits);
             else
                 onFailedAlignment(input, VDJCAlignmentFailCause.NoVHits);
@@ -71,24 +118,18 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
         KVJResultsForSingle topResult = null;
 
         // Calculating best result
-
-        if (!vjResultForward.isFull())
-            topResult = vjResultReverse;
-
-        if (!vjResultReverse.isFull())
-            topResult = vjResultForward;
+        for (KVJResultsForSingle result : results)
+            if (result.isFull())
+                topResult = topResult != null ? null : result;
 
         // Both results are full
         if (topResult == null) {
             // Finalizing alignment for both results to determine who is the best
-            vjResultReverse.alignDC();
-            vjResultForward.alignDC();
-
-            // Choosing best result based on total score
-            if (vjResultReverse.sumScore() >= vjResultForward.sumScore())
-                topResult = vjResultReverse;
-            else
-                topResult = vjResultForward;
+            for (KVJResultsForSingle result : results) {
+                result.alignDC();
+                if (topResult == null || topResult.sumScore() < result.sumScore())
+                    topResult = result;
+            }
         } else
             // Align C and D genes only for best result
             topResult.alignDC();
@@ -112,8 +153,8 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
         }
     }
 
-    private KVJResultsForSingle align(NSequenceWithQuality input, boolean isRC) {
-        NucleotideSequence sequence = input.getSequence();
+    private KVJResultsForSingle align(Target target) {
+        NucleotideSequence sequence = target.targets[0].getSequence();
 
         ensureInitialized();
 
@@ -125,59 +166,60 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
 
                 //If there is no results for V return
                 if (!vResult.hasHits())
-                    return new KVJResultsForSingle(input, vResult, null, isRC);
-
-                //Searching for J gene
-                jResult = jAligner.align(sequence,
-                        vResult.getBestHit().getAlignment().getSequence2Range().getTo(),
-                        sequence.size());
+                    return new KVJResultsForSingle(target, vResult,
+                            parameters.getAllowPartialAlignments() ?
+                                    jAligner.align(sequence) : null);
 
                 //Returning result
-                return new KVJResultsForSingle(input, vResult, jResult, isRC);
+                return new KVJResultsForSingle(target, vResult,
+                        jAligner.align(sequence,
+                                vResult.getBestHit().getAlignment().getSequence2Range().getTo(),
+                                sequence.size()));
             case JThenV:
                 jResult = jAligner.align(sequence);
 
                 //If there is no results for J return
                 if (!jResult.hasHits())
-                    return new KVJResultsForSingle(input, null, jResult, isRC);
-
-                //Searching for V gene
-                vResult = vAligner.align(sequence, 0,
-                        jResult.getBestHit().getAlignment().getSequence2Range().getFrom());
+                    return new KVJResultsForSingle(target, parameters.getAllowPartialAlignments() ?
+                            vAligner.align(sequence) : null,
+                            jResult);
 
                 //Returning result
-                return new KVJResultsForSingle(input, vResult, jResult, isRC);
+                return new KVJResultsForSingle(target, vAligner.align(sequence, 0,
+                        jResult.getBestHit().getAlignment().getSequence2Range().getFrom()),
+                        jResult);
         }
 
         throw new IllegalArgumentException("vjAlignmentOrder not set.");
     }
 
     final class KVJResultsForSingle {
-        final NSequenceWithQuality target;
+        final Target target;
         final AlignmentResult<AlignmentHit<NucleotideSequence, Allele>> vResult, jResult;
-        final boolean isRC;
         AlignmentHit<NucleotideSequence, Allele>[] vHits, jHits;
         VDJCHit[] dHits = null, cHits = null;
 
-        public KVJResultsForSingle(NSequenceWithQuality target,
+        public KVJResultsForSingle(Target target,
                                    AlignmentResult<AlignmentHit<NucleotideSequence, Allele>> vResult,
-                                   AlignmentResult<AlignmentHit<NucleotideSequence, Allele>> jResult, boolean isRC) {
+                                   AlignmentResult<AlignmentHit<NucleotideSequence, Allele>> jResult) {
             this.target = target;
             this.vResult = vResult;
             this.jResult = jResult;
-            this.isRC = isRC;
         }
 
+        @SuppressWarnings("unchecked")
         public void calculateHits(float minTotalScore, int maxHits) {
             float preThreshold = minTotalScore - sumScore();
-            this.vHits = extractHits(preThreshold + vResult.getBestHit().getAlignment().getScore(), vResult, maxHits);
-            this.jHits = extractHits(preThreshold + jResult.getBestHit().getAlignment().getScore(), jResult, maxHits);
+            this.vHits = hasKVHits() ? extractHits(preThreshold + vResult.getBestHit().getAlignment().getScore(),
+                    vResult, maxHits) : new AlignmentHit[0];
+            this.jHits = hasKJHits() ? extractHits(preThreshold + jResult.getBestHit().getAlignment().getScore(),
+                    jResult, maxHits) : new AlignmentHit[0];
         }
 
         public void alignDC() {
-            NucleotideSequence sequence = target.getSequence();
+            NucleotideSequence sequence = target.targets[0].getSequence();
 
-            if (singleDAligner != null) {
+            if (singleDAligner != null && isFull()) {
                 //Alignment of D gene
                 int from = vResult.getBestHit().getAlignment().getSequence2Range().getTo(),
                         to = jResult.getBestHit().getAlignment().getSequence2Range().getFrom();
@@ -188,8 +230,10 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
             }
 
             if (cAligner != null) {
-                int from = jResult.getBestHit().getAlignment().getSequence2Range().getTo();
-                AlignmentResult<AlignmentHit<NucleotideSequence, Allele>> res = cAligner.align(sequence, from, target.size());
+                int from = hasKJHits() ?
+                        jResult.getBestHit().getAlignment().getSequence2Range().getTo()
+                        : 0;
+                AlignmentResult<AlignmentHit<NucleotideSequence, Allele>> res = cAligner.align(sequence, from, sequence.size());
 
                 cHits = createHits(res.getHits(), parameters.getFeatureToAlign(GeneType.Constant));
             }
@@ -260,7 +304,7 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
             if (cHits != null)
                 hits.put(GeneType.Constant, cHits);
 
-            return new VDJCAlignments(inputId, hits, target);
+            return new VDJCAlignments(inputId, hits, target.targets[0]);
         }
     }
 
