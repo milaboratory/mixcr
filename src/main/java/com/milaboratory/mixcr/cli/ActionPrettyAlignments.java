@@ -46,6 +46,7 @@ import com.milaboratory.mixcr.cli.afiltering.AFilter;
 import com.milaboratory.mixcr.reference.GeneFeature;
 import com.milaboratory.mixcr.reference.GeneType;
 import com.milaboratory.mixcr.reference.LociLibraryManager;
+import com.milaboratory.mixcr.reference.Locus;
 import com.milaboratory.util.NSequenceWithQualityPrintHelper;
 
 import java.io.BufferedOutputStream;
@@ -54,6 +55,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import static cc.redberry.primitives.FilterUtil.ACCEPT_ALL;
 import static cc.redberry.primitives.FilterUtil.and;
@@ -237,13 +239,17 @@ public class ActionPrettyAlignments implements Action {
         public Boolean alleleSequence = null;
 
         @Parameter(description = "Limit number of alignments before filtering",
-                names = {"-l", "--limitBefore"})
+                names = {"-b", "--limitBefore"})
         public Integer limitBefore = null;
 
         @Parameter(description = "Limit number of filtered alignments; no more " +
                 "than N alignments will be outputted",
                 names = {"-n", "--limit"})
         public Integer limitAfter = null;
+
+        @Parameter(description = "Filter export to specific loci (e.g. TRA or IGH).",
+                names = {"-l", "--filter-locus"})
+        public String loci = "ALL";
 
         @Parameter(description = "Number of output alignments to skip",
                 names = {"-s", "--skip"})
@@ -269,10 +275,28 @@ public class ActionPrettyAlignments implements Action {
                 names = {"-v", "--verbose"})
         public Boolean verbose = null;
 
+        public Set<Locus> getLoci() {
+            return Util.parseLoci(loci);
+        }
+
         public Filter<VDJCAlignments> getFilter() {
+            final Set<Locus> loci = getLoci();
+
             List<Filter<VDJCAlignments>> filters = new ArrayList<>();
             if (filter != null)
                 filters.add(AFilter.build(filter));
+
+            filters.add(new Filter<VDJCAlignments>() {
+                @Override
+                public boolean accept(VDJCAlignments object) {
+                    for (GeneType gt : GeneType.VJC_REFERENCE) {
+                        VDJCHit bestHit = object.getBestHit(gt);
+                        if (bestHit != null && loci.contains(bestHit.getAllele().getLocus()))
+                            return true;
+                    }
+                    return false;
+                }
+            });
 
             if (cdr3Contains != null)
                 filters.add(new Filter<VDJCAlignments>() {
