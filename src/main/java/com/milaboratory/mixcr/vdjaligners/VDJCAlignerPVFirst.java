@@ -82,6 +82,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     private VDJCAlignmentResult<PairedRead> processPartial(PairedRead input, PAlignmentHelper[] helpers) {
         // Calculates which PTarget was aligned with the highest score
         PAlignmentHelper bestHelper = helpers[0];
+        helpers[0].performCDAlignment();
         for (int i = 1; i < helpers.length; ++i) {
             helpers[i].performCDAlignment();
             if (bestHelper.score() < helpers[i].score())

@@ -29,6 +29,8 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.mixcr.reference.Allele;
+import com.milaboratory.mixcr.reference.GeneFeature;
+import com.milaboratory.mixcr.reference.GeneType;
 import com.milaboratory.mixcr.util.VersionInfoProvider;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
@@ -45,7 +47,8 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     static final String MAGIC_V4 = "MiXCR.VDJC.V04";
     static final String MAGIC_V5 = "MiXCR.VDJC.V05";
     static final String MAGIC_V6 = "MiXCR.VDJC.V06";
-    static final String MAGIC = MAGIC_V6;
+    static final String MAGIC_V7 = "MiXCR.VDJC.V07";
+    static final String MAGIC = MAGIC_V7;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
     final PrimitivO output;
@@ -94,6 +97,14 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
         output.writeObject(parameters);
 
         IOUtil.writeAlleleReferences(output, alleles, parameters);
+
+        // Registering links to features to align
+        for (GeneType gt : GeneType.VDJC_REFERENCE) {
+            GeneFeature feature = parameters.getFeatureToAlign(gt);
+            output.writeObject(feature);
+            if (feature != null)
+                output.putKnownReference(feature);
+        }
 
         header = true;
     }

@@ -134,12 +134,12 @@ public final class RunMiXCR {
     }
 
     public static final class AlignResult {
-        final RunMiXCRAnalysis parameters;
-        final long totalNumberOfReads;
-        final AlignerReport report;
-        final List<VDJCAlignments> alignments;
-        final List<Allele> usedAlleles;
-        final VDJCAligner aligner;
+        public final RunMiXCRAnalysis parameters;
+        public final long totalNumberOfReads;
+        public final AlignerReport report;
+        public final List<VDJCAlignments> alignments;
+        public final List<Allele> usedAlleles;
+        public final VDJCAligner aligner;
 
         public AlignResult(RunMiXCRAnalysis parameters, long totalNumberOfReads, AlignerReport report,
                            List<VDJCAlignments> alignments, List<Allele> usedAlleles, VDJCAligner aligner) {
