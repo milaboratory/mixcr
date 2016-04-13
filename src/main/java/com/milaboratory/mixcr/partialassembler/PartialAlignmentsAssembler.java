@@ -28,6 +28,78 @@
  */
 package com.milaboratory.mixcr.partialassembler;
 
-public class PartialAlignmentsAssembler {
+import cc.redberry.pipe.CUtils;
+import com.milaboratory.core.sequence.NSequenceWithQuality;
+import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
+import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence;
+import com.milaboratory.mixcr.reference.ReferencePoint;
+import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.map.hash.TLongIntHashMap;
 
+import java.util.concurrent.atomic.AtomicLong;
+
+public class PartialAlignmentsAssembler {
+    volatile long[] index;
+    final TLongIntHashMap kToIndexLeft = new TLongIntHashMap();
+    final int kValue;
+    final int kOffset;
+    final AtomicLong leftParts = new AtomicLong(),
+            noKMer = new AtomicLong(),
+            total = new AtomicLong();
+
+    public PartialAlignmentsAssembler(PartialAlignmentsAssemblerParameters params) {
+        this.kValue = params.getKValue();
+        this.kOffset = params.getKOffset();
+    }
+
+    public void buildLeftPartsIndex(VDJCAlignmentsReader reader) {
+        TLongArrayList index = new TLongArrayList();
+        reader.setIndexer(index);
+        for (VDJCAlignments alignment : CUtils.it(reader))
+            addLeftToIndex(alignment);
+        this.index = index.toArray();
+    }
+
+    private void addLeftToIndex(VDJCAlignments alignment) {
+        VDJCPartitionedSequence partitionedSequence = null;
+        for (int i = 0; i < alignment.numberOfTargets(); i++) {
+            VDJCPartitionedSequence ps = alignment.getPartitionedTarget(i);
+            if (ps.getPartitioning().isAvailable(ReferencePoint.VEndTrimmed)) {
+                partitionedSequence = ps;
+                break;
+            }
+        }
+
+        if (partitionedSequence == null)
+            return;
+
+        NSequenceWithQuality seq = partitionedSequence.getSequence();
+
+        int kFrom = partitionedSequence.getPartitioning().getPosition(ReferencePoint.VEndTrimmed) + kOffset;
+        int kTo = kFrom + kValue;
+
+        if (kFrom < 0 || kTo >= seq.size()) {
+            noKMer.incrementAndGet();
+            return;
+        }
+
+        leftParts.incrementAndGet();
+
+        long kmer = kMer(seq.getSequence(), kFrom, kTo);
+
+        if(kmer == -1)
+    }
+
+    private static long kMer(NucleotideSequence seq, int from, int to) {
+        long kmer = 0;
+        for (int j = from; j < to; ++j) {
+            byte c = seq.codeAt(j);
+            if (NucleotideSequence.ALPHABET.isWildcard(c))
+                return -1;
+            kmer = (kmer << 2 | c);
+        }
+        return kmer;
+    }
 }
