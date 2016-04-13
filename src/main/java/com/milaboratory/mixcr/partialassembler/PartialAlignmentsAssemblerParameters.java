@@ -29,7 +29,13 @@
 package com.milaboratory.mixcr.partialassembler;
 
 public class PartialAlignmentsAssemblerParameters {
-    private int kValue, kOffset;
+    private int kValue, kOffset, minimalOverlap;
+
+    public PartialAlignmentsAssemblerParameters(int kValue, int kOffset, int minimalOverlap) {
+        this.kValue = kValue;
+        this.kOffset = kOffset;
+        this.minimalOverlap = minimalOverlap;
+    }
 
     public int getKValue() {
         return kValue;
@@ -45,5 +51,13 @@ public class PartialAlignmentsAssemblerParameters {
 
     public void setKOffset(int kOffset) {
         this.kOffset = kOffset;
+    }
+
+    public int getMinimalOverlap() {
+        return minimalOverlap;
+    }
+
+    public void setMinimalOverlap(int minimalOverlap) {
+        this.minimalOverlap = minimalOverlap;
     }
 }

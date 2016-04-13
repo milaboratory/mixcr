@@ -31,53 +31,162 @@ package com.milaboratory.mixcr.partialassembler;
 import cc.redberry.pipe.CUtils;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
-import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence;
+import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.reference.GeneType;
+import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.mixcr.reference.ReferencePoint;
+import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.list.array.TLongArrayList;
-import gnu.trove.map.hash.TLongIntHashMap;
+import gnu.trove.map.hash.TLongObjectHashMap;
 
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class PartialAlignmentsAssembler {
+public class PartialAlignmentsAssembler implements AutoCloseable {
     volatile long[] index;
-    final TLongIntHashMap kToIndexLeft = new TLongIntHashMap();
+    final TLongObjectHashMap<TIntArrayList> kToIndexLeft = new TLongObjectHashMap<>();
+    final VDJCAlignmentsWriter writer;
     final int kValue;
     final int kOffset;
-    final AtomicLong leftParts = new AtomicLong(),
+    final int minimalOverlap;
+    public final AtomicLong leftParts = new AtomicLong(),
             noKMer = new AtomicLong(),
-            total = new AtomicLong();
+            wildCardsInKMer = new AtomicLong(),
+            total = new AtomicLong(),
+            overlapped = new AtomicLong(),
+            containsVJJunction = new AtomicLong();
 
-    public PartialAlignmentsAssembler(PartialAlignmentsAssemblerParameters params) {
+    public PartialAlignmentsAssembler(PartialAlignmentsAssemblerParameters params, String output) {
         this.kValue = params.getKValue();
         this.kOffset = params.getKOffset();
+        this.minimalOverlap = params.getMinimalOverlap();
+        try {
+            this.writer = new VDJCAlignmentsWriter(output);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void buildLeftPartsIndex(VDJCAlignmentsReader reader) {
+        writer.header(reader.getParameters(), reader.getUsedAlleles());
         TLongArrayList index = new TLongArrayList();
         reader.setIndexer(index);
-        for (VDJCAlignments alignment : CUtils.it(reader))
+        out:
+        for (VDJCAlignments alignment : CUtils.it(reader)) {
+            for (int i = 0; i < alignment.numberOfTargets(); i++) {
+                final VDJCHit vHit = alignment.getBestHit(GeneType.Variable),
+                        jHit = alignment.getBestHit(GeneType.Joining);
+                if (vHit != null && jHit != null && vHit.getAlignment(i) != null && jHit.getAlignment(i) != null) {
+                    containsVJJunction.incrementAndGet();
+                    writer.write(alignment);
+                    continue out;
+                }
+            }
             addLeftToIndex(alignment);
+        }
         this.index = index.toArray();
     }
 
-    private void addLeftToIndex(VDJCAlignments alignment) {
-        VDJCPartitionedSequence partitionedSequence = null;
-        for (int i = 0; i < alignment.numberOfTargets(); i++) {
-            VDJCPartitionedSequence ps = alignment.getPartitionedTarget(i);
-            if (ps.getPartitioning().isAvailable(ReferencePoint.VEndTrimmed)) {
-                partitionedSequence = ps;
-                break;
+    public void searchOverlaps(String file, VDJCAlignmentsReader reader) {
+        RandomAccessVDJCAReader rReader = new RandomAccessVDJCAReader(file, index, LociLibraryManager.getDefault());
+        for (VDJCAlignments alignment : CUtils.it(reader)) {
+            searchOverlaps(alignment, rReader);
+        }
+    }
+
+    public VDJCAlignments searchOverlaps(VDJCAlignments alignment, RandomAccessVDJCAReader rReader) {
+        RightInfo right = getRightPartitionedSequence(alignment);
+        if (right == null)
+            return null;
+
+        NSequenceWithQuality rightNSeq = right.ps.getSequence();
+        NucleotideSequence rightSeq = rightNSeq.getSequence();
+
+        int stop = alignment.getBestHit(GeneType.Joining).getAlignment(right.al).getSequence2Range().getFrom();
+
+
+        VDJCAlignments bestLeft;
+        int maxOverlap = -1;
+        int maxOverlapIndex = -1;
+        TIntArrayList maxOverlapList = null;
+        for (int kFrom = 0; kFrom < stop; kFrom++) {
+            int kTo = kFrom + kValue;
+            long kMer = kMer(rightNSeq.getSequence(), kFrom, kTo);
+            TIntArrayList match = kToIndexLeft.get(kMer);
+            if (match == null)
+                continue;
+
+            for (int i = 0; i < match.size(); i++) {
+                final VDJCAlignments al = rReader.get(match.get(i));
+                final VDJCPartitionedSequence leftNSeq = getLeftPartitionedSequence(al);
+                final NucleotideSequence leftSeq = leftNSeq.getSequence().getSequence();
+
+                int overlap = 0;
+                for (; ; overlap++)
+                    if (rightSeq.codeAt(rightSeq.size() - overlap) != leftSeq.codeAt(overlap))
+                        break;
+
+                if (maxOverlap < overlap) {
+                    maxOverlap = overlap;
+                    bestLeft = al;
+                    maxOverlapList = match;
+                    maxOverlapIndex = i;
+                }
             }
         }
 
-        if (partitionedSequence == null)
+        if (maxOverlap < minimalOverlap)
+            return null;
+
+        if (maxOverlapList != null)
+            maxOverlapList.removeAt(maxOverlapIndex);
+
+
+        overlapped.incrementAndGet();
+        return null;
+    }
+
+
+    private VDJCPartitionedSequence getLeftPartitionedSequence(VDJCAlignments alignment) {
+        for (int i = 0; i < alignment.numberOfTargets(); i++) {
+            if (alignment.getBestHit(GeneType.Joining) != null && alignment.getBestHit(GeneType.Joining).getAlignment(i) != null)
+                continue;
+            VDJCPartitionedSequence ps = alignment.getPartitionedTarget(i);
+            if (ps.getPartitioning().isAvailable(ReferencePoint.VEndTrimmed))
+                return ps;
+        }
+        return null;
+    }
+
+    private RightInfo getRightPartitionedSequence(VDJCAlignments alignment) {
+        for (int i = 0; i < alignment.numberOfTargets(); i++) {
+            if (alignment.getBestHit(GeneType.Variable) != null && alignment.getBestHit(GeneType.Variable).getAlignment(i) != null)
+                continue;
+            VDJCPartitionedSequence ps = alignment.getPartitionedTarget(i);
+            if (ps.getPartitioning().isAvailable(ReferencePoint.JBeginTrimmed))
+                return new RightInfo(i, ps);
+        }
+        return null;
+    }
+
+    private static final class RightInfo {
+        final int al;
+        final VDJCPartitionedSequence ps;
+
+        public RightInfo(int al, VDJCPartitionedSequence ps) {
+            this.al = al;
+            this.ps = ps;
+        }
+    }
+
+    private void addLeftToIndex(VDJCAlignments alignment) {
+        VDJCPartitionedSequence left = getLeftPartitionedSequence(alignment);
+        if (left == null)
             return;
 
-        NSequenceWithQuality seq = partitionedSequence.getSequence();
+        NSequenceWithQuality seq = left.getSequence();
 
-        int kFrom = partitionedSequence.getPartitioning().getPosition(ReferencePoint.VEndTrimmed) + kOffset;
+        int kFrom = left.getPartitioning().getPosition(ReferencePoint.VEndTrimmed) + kOffset;
         int kTo = kFrom + kValue;
 
         if (kFrom < 0 || kTo >= seq.size()) {
@@ -85,11 +194,19 @@ public class PartialAlignmentsAssembler {
             return;
         }
 
-        leftParts.incrementAndGet();
-
         long kmer = kMer(seq.getSequence(), kFrom, kTo);
-
-        if(kmer == -1)
+        if (kmer == -1) {
+            wildCardsInKMer.incrementAndGet();
+            return;
+        }
+        TIntArrayList ids = kToIndexLeft.get(kmer);
+        if (ids == null)
+            kToIndexLeft.put(kmer, ids = new TIntArrayList());
+        final long alIndex = alignment.getAlignmentsIndex();
+        if (alIndex >= (long) Integer.MAX_VALUE)
+            throw new RuntimeException("Too much alignments");
+        ids.add((int) alIndex);
+        leftParts.incrementAndGet();
     }
 
     private static long kMer(NucleotideSequence seq, int from, int to) {
@@ -101,5 +218,10 @@ public class PartialAlignmentsAssembler {
             kmer = (kmer << 2 | c);
         }
         return kmer;
+    }
+
+    @Override
+    public void close() throws IOException {
+        writer.close();
     }
 }

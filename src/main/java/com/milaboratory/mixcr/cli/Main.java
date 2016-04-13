@@ -49,7 +49,8 @@ public class Main {
                 new ActionExportCloneReads(),
                 new VersionInfoAction(),
                 new ActionImportSegments(),
-                new ActionAlignmentsDiff());
+                new ActionAlignmentsDiff(),
+                new ActionAssemblePartialAlignments());
 
         // Adding version info callback
         main.setVersionInfoCallback(new Runnable() {
