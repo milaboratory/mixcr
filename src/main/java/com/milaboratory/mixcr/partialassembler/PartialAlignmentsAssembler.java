@@ -117,29 +117,33 @@ public class PartialAlignmentsAssembler implements AutoCloseable {
                 continue;
 
             for (int i = 0; i < match.size(); i++) {
-                final VDJCAlignments al = rReader.get(match.get(i));
-                final VDJCPartitionedSequence leftNSeq = getLeftPartitionedSequence(al);
-                final NucleotideSequence leftSeq = leftNSeq.getSequence().getSequence();
+                //final VDJCAlignments al = rReader.get(match.get(i));
+                //final VDJCPartitionedSequence leftNSeq = getLeftPartitionedSequence(al);
+                //final NucleotideSequence leftSeq = leftNSeq.getSequence().getSequence();
 
-                int overlap = 0;
-                for (; ; overlap++)
-                    if (rightSeq.codeAt(rightSeq.size() - overlap) != leftSeq.codeAt(overlap))
-                        break;
+                //int overlap = 0;
+                //for (; overlap < leftSeq.size() && overlap < rightSeq.size(); overlap++)
+                //    if (rightSeq.codeAt(rightSeq.size() - overlap - 1) != leftSeq.codeAt(overlap))
+                //        break;
 
-                if (maxOverlap < overlap) {
-                    maxOverlap = overlap;
-                    bestLeft = al;
+                //if (maxOverlap < overlap) {
+                //    maxOverlap = overlap;
+                //maxOverlap = ominimalOverlap;
+                //    bestLeft = al;
                     maxOverlapList = match;
                     maxOverlapIndex = i;
-                }
+                //}
             }
         }
 
-        if (maxOverlap < minimalOverlap)
+        if (maxOverlapList == null)
             return null;
 
-        if (maxOverlapList != null)
-            maxOverlapList.removeAt(maxOverlapIndex);
+        //if (maxOverlap < minimalOverlap)
+        //    return null;
+        //
+        //if (maxOverlapList != null)
+        //    maxOverlapList.removeAt(maxOverlapIndex);
 
 
         overlapped.incrementAndGet();
