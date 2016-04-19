@@ -28,13 +28,32 @@
  */
 package com.milaboratory.mixcr.partialassembler;
 
+import com.milaboratory.mitools.merger.QualityMergingAlgorithm;
+
 public class PartialAlignmentsAssemblerParameters {
-    private int kValue, kOffset, minimalOverlap;
+    private int kValue, kOffset, minimalOverlap, maxScoreValue;
+    QualityMergingAlgorithm qualityMergingAlgorithm;
 
     public PartialAlignmentsAssemblerParameters(int kValue, int kOffset, int minimalOverlap) {
         this.kValue = kValue;
         this.kOffset = kOffset;
         this.minimalOverlap = minimalOverlap;
+    }
+
+    public void setQualityMergingAlgorithm(QualityMergingAlgorithm qualityMergingAlgorithm) {
+        this.qualityMergingAlgorithm = qualityMergingAlgorithm;
+    }
+
+    public QualityMergingAlgorithm getQualityMergingAlgorithm() {
+        return qualityMergingAlgorithm;
+    }
+
+    public void setMaxScoreValue(int maxScoreValue) {
+        this.maxScoreValue = maxScoreValue;
+    }
+
+    public int getMaxScoreValue() {
+        return maxScoreValue;
     }
 
     public int getKValue() {

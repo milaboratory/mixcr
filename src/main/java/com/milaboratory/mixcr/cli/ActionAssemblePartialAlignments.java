@@ -37,12 +37,17 @@ public final class ActionAssemblePartialAlignments implements Action {
                 assembler.searchOverlaps(parameters.getInputFileName(), reader);
             }
 
-            System.out.println("noKMer     = " + assembler.noKMer.get());
-            System.out.println("wildCards  = " + assembler.wildCardsInKMer.get());
-            System.out.println("total      = " + assembler.total.get());
-            System.out.println("leftParts  = " + assembler.leftParts.get());
-            System.out.println("containsVJ = " + assembler.containsVJJunction.get());
-            System.out.println("overlapped = " + assembler.overlapped.get());
+            System.out.println("\033[1m\033[36m");
+
+            System.out.println("noKMer        = " + assembler.noKMer.get());
+            System.out.println("wildCards     = " + assembler.wildCardsInKMer.get());
+            System.out.println("total         = " + assembler.total.get());
+            System.out.println("leftParts     = " + assembler.leftParts.get());
+            System.out.println("containsVJ    = " + assembler.containsVJJunction.get());
+            System.out.println("overlapped    = " + assembler.overlapped.get());
+            System.out.println("cOverlapped   = " + assembler.overlapped.get());
+
+            System.out.println("\033[0m");
         }
     }
 

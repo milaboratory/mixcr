@@ -29,37 +29,49 @@
 package com.milaboratory.mixcr.partialassembler;
 
 import cc.redberry.pipe.CUtils;
+import com.milaboratory.core.io.sequence.SingleRead;
+import com.milaboratory.core.io.sequence.SingleReadImpl;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mitools.merger.MismatchOnlyPairedReadMerger;
+import com.milaboratory.mitools.merger.QualityMergingAlgorithm;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.reference.GeneType;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.mixcr.reference.ReferencePoint;
-import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongObjectHashMap;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class PartialAlignmentsAssembler implements AutoCloseable {
     volatile long[] index;
-    final TLongObjectHashMap<TIntArrayList> kToIndexLeft = new TLongObjectHashMap<>();
+    final TLongObjectHashMap<List<KMerInfo>> kToIndexLeft = new TLongObjectHashMap<>();
     final VDJCAlignmentsWriter writer;
     final int kValue;
     final int kOffset;
     final int minimalOverlap;
+    final int maxScoreValue;
+    final QualityMergingAlgorithm qualityMergingAlgorithm;
     public final AtomicLong leftParts = new AtomicLong(),
             noKMer = new AtomicLong(),
             wildCardsInKMer = new AtomicLong(),
             total = new AtomicLong(),
             overlapped = new AtomicLong(),
+            complexOverlapped = new AtomicLong(),
             containsVJJunction = new AtomicLong();
 
     public PartialAlignmentsAssembler(PartialAlignmentsAssemblerParameters params, String output) {
         this.kValue = params.getKValue();
         this.kOffset = params.getKOffset();
         this.minimalOverlap = params.getMinimalOverlap();
+        this.maxScoreValue = params.getMaxScoreValue();
+        this.qualityMergingAlgorithm = params.getQualityMergingAlgorithm();
+
         try {
             this.writer = new VDJCAlignmentsWriter(output);
         } catch (IOException e) {
@@ -88,103 +100,235 @@ public class PartialAlignmentsAssembler implements AutoCloseable {
     }
 
     public void searchOverlaps(String file, VDJCAlignmentsReader reader) {
-        RandomAccessVDJCAReader rReader = new RandomAccessVDJCAReader(file, index, LociLibraryManager.getDefault());
+        PartialAlignmentsAssemblerAligner aligner = new PartialAlignmentsAssemblerAligner(reader.getParameters());
+        for (Allele allele : reader.getUsedAlleles())
+            aligner.addAllele(allele);
+
         for (VDJCAlignments alignment : CUtils.it(reader)) {
-            searchOverlaps(alignment, rReader);
+            VDJCAlignments r = searchOverlaps(alignment, aligner);
+            if (r != null)
+                writer.write(r);
         }
     }
 
-    public VDJCAlignments searchOverlaps(VDJCAlignments alignment, RandomAccessVDJCAReader rReader) {
-        RightInfo right = getRightPartitionedSequence(alignment);
+    public VDJCAlignments searchOverlaps(VDJCAlignments rightAl, PartialAlignmentsAssemblerAligner aligner) {
+        LeftRightInfo right = getRightPartitionedSequence(rightAl);
         if (right == null)
             return null;
 
         NSequenceWithQuality rightNSeq = right.ps.getSequence();
         NucleotideSequence rightSeq = rightNSeq.getSequence();
 
-        int stop = alignment.getBestHit(GeneType.Joining).getAlignment(right.al).getSequence2Range().getFrom();
+        int stop = rightAl.getBestHit(GeneType.Joining).getAlignment(right.targetId).getSequence2Range().getFrom();
 
-
-        VDJCAlignments bestLeft;
         int maxOverlap = -1;
         int maxOverlapIndex = -1;
-        TIntArrayList maxOverlapList = null;
-        for (int kFrom = 0; kFrom < stop; kFrom++) {
-            int kTo = kFrom + kValue;
-            long kMer = kMer(rightNSeq.getSequence(), kFrom, kTo);
-            TIntArrayList match = kToIndexLeft.get(kMer);
+        List<KMerInfo> maxOverlapList = null;
+        for (int rFrom = 0; rFrom < stop; rFrom++) {
+            int kTo = rFrom + kValue;
+            long kMer = kMer(rightNSeq.getSequence(), rFrom, kTo);
+            List<KMerInfo> match = kToIndexLeft.get(kMer);
             if (match == null)
                 continue;
 
+            out:
             for (int i = 0; i < match.size(); i++) {
-                //final VDJCAlignments al = rReader.get(match.get(i));
-                //final VDJCPartitionedSequence leftNSeq = getLeftPartitionedSequence(al);
-                //final NucleotideSequence leftSeq = leftNSeq.getSequence().getSequence();
+                final VDJCAlignments al = match.get(i).getAlignments();
+                final VDJCPartitionedSequence leftNSeq = getLeftPartitionedSequence(al).ps;
+                final NucleotideSequence leftSeq = leftNSeq.getSequence().getSequence();
+                int lFrom = match.get(i).kMerPositionFrom;
 
-                //int overlap = 0;
-                //for (; overlap < leftSeq.size() && overlap < rightSeq.size(); overlap++)
-                //    if (rightSeq.codeAt(rightSeq.size() - overlap - 1) != leftSeq.codeAt(overlap))
-                //        break;
+                int overlap = rFrom + leftSeq.size() - lFrom;
+                for (int j = 0; j < rightSeq.size() && lFrom - rFrom + j < leftSeq.size(); j++)
+                    if (rightSeq.codeAt(j) != leftSeq.codeAt(lFrom - rFrom + j))
+                        continue out;
 
-                //if (maxOverlap < overlap) {
-                //    maxOverlap = overlap;
-                //maxOverlap = ominimalOverlap;
-                //    bestLeft = al;
+                if (maxOverlap < overlap) {
+                    maxOverlap = overlap;
                     maxOverlapList = match;
                     maxOverlapIndex = i;
-                //}
+                }
             }
         }
 
         if (maxOverlapList == null)
             return null;
 
-        //if (maxOverlap < minimalOverlap)
-        //    return null;
-        //
-        //if (maxOverlapList != null)
-        //    maxOverlapList.removeAt(maxOverlapIndex);
+        if (maxOverlap < minimalOverlap)
+            return null;
 
-
+        final KMerInfo left = maxOverlapList.remove(maxOverlapIndex);
         overlapped.incrementAndGet();
-        return null;
+
+        final VDJCAlignments leftAl = left.alignments;
+        SingleRead[] rData;
+        EnumSet<GeneType>[] expectedGenes;
+
+        int switchcase = (leftAl.numberOfTargets() << 4) & rightAl.numberOfTargets();
+        switch (switchcase) {
+            case 0x22:
+                if (left.targetId == 1 && right.targetId == 0) {
+                    rData = new SingleRead[3];
+                    expectedGenes = new EnumSet[3];
+                    rData[0] = new SingleReadImpl(leftAl.getReadId(), leftAl.getTarget(0), "");
+                    rData[1] = new SingleReadImpl(leftAl.getReadId(), mergeOverlapped(leftAl.getTarget(1), rightAl.getTarget(0), maxOverlap), "");
+                    rData[2] = new SingleReadImpl(leftAl.getReadId(), rightAl.getTarget(1), "");
+
+                    expectedGenes[0] = extractExpectedGenes(0, leftAl);
+                    expectedGenes[1] = extractExpectedGenes(1, leftAl);
+                    expectedGenes[1].addAll(extractExpectedGenes(0, rightAl));
+                    expectedGenes[1].add(GeneType.Diversity);
+                    expectedGenes[2] = extractExpectedGenes(1, rightAl);
+                } else if (left.targetId == 0 && right.targetId == 1) {
+                    rData = new SingleRead[1];
+                    expectedGenes = new EnumSet[1];
+
+                    rData[0] = new SingleReadImpl(leftAl.getReadId(), mergeOverlapped(leftAl.getTarget(0), rightAl.getTarget(1), maxOverlap), "");
+
+                    expectedGenes[0] = extractExpectedGenes(0, leftAl);
+                    expectedGenes[0].addAll(extractExpectedGenes(1, rightAl));
+                    expectedGenes[0].add(GeneType.Diversity);
+
+                    complexOverlapped.incrementAndGet();
+                } else {
+                    assert left.targetId == right.targetId;
+                    int targetId = left.targetId;
+                    rData = new SingleRead[1];
+                    expectedGenes = new EnumSet[1];
+
+                    rData[0] = new SingleReadImpl(leftAl.getReadId(), mergeOverlapped(leftAl.getTarget(targetId), rightAl.getTarget(targetId), maxOverlap), "");
+
+                    expectedGenes[0] = extractExpectedGenes(targetId, leftAl);
+                    expectedGenes[0].addAll(extractExpectedGenes(targetId, rightAl));
+                    expectedGenes[0].add(GeneType.Diversity);
+
+                    complexOverlapped.incrementAndGet();
+                }
+                break;
+            case 0x12:
+                if (right.targetId == 0) {
+                    rData = new SingleRead[2];
+                    expectedGenes = new EnumSet[2];
+                    rData[0] = new SingleReadImpl(leftAl.getReadId(), mergeOverlapped(leftAl.getTarget(0), rightAl.getTarget(0), maxOverlap), "");
+                    rData[1] = new SingleReadImpl(leftAl.getReadId(), rightAl.getTarget(1), "");
+
+                    expectedGenes[0] = extractExpectedGenes(0, leftAl);
+                    expectedGenes[0].addAll(extractExpectedGenes(0, rightAl));
+                    expectedGenes[0].add(GeneType.Diversity);
+                    expectedGenes[1] = extractExpectedGenes(1, rightAl);
+                } else {
+                    rData = new SingleRead[1];
+                    expectedGenes = new EnumSet[1];
+
+                    rData[0] = new SingleReadImpl(leftAl.getReadId(), mergeOverlapped(leftAl.getTarget(0), rightAl.getTarget(1), maxOverlap), "");
+
+                    expectedGenes[0] = extractExpectedGenes(0, leftAl);
+                    expectedGenes[0].addAll(extractExpectedGenes(1, rightAl));
+                    expectedGenes[0].add(GeneType.Diversity);
+
+                    complexOverlapped.incrementAndGet();
+                }
+                break;
+            case 0x21:
+                if (left.targetId == 1) {
+                    rData = new SingleRead[2];
+                    expectedGenes = new EnumSet[2];
+                    rData[0] = new SingleReadImpl(leftAl.getReadId(), leftAl.getTarget(0), "");
+                    rData[1] = new SingleReadImpl(leftAl.getReadId(), mergeOverlapped(leftAl.getTarget(1), rightAl.getTarget(0), maxOverlap), "");
+
+                    expectedGenes[0] = extractExpectedGenes(0, leftAl);
+                    expectedGenes[1] = extractExpectedGenes(1, leftAl);
+                    expectedGenes[1].addAll(extractExpectedGenes(0, rightAl));
+                    expectedGenes[1].add(GeneType.Diversity);
+                } else {
+                    rData = new SingleRead[1];
+                    expectedGenes = new EnumSet[1];
+
+                    rData[0] = new SingleReadImpl(leftAl.getReadId(), mergeOverlapped(leftAl.getTarget(0), rightAl.getTarget(0), maxOverlap), "");
+
+                    expectedGenes[0] = extractExpectedGenes(0, leftAl);
+                    expectedGenes[0].addAll(extractExpectedGenes(0, rightAl));
+                    expectedGenes[0].add(GeneType.Diversity);
+
+                    complexOverlapped.incrementAndGet();
+                }
+                break;
+            case 0x11:
+                rData = new SingleRead[1];
+                expectedGenes = new EnumSet[1];
+
+                rData[0] = new SingleReadImpl(leftAl.getReadId(), mergeOverlapped(leftAl.getTarget(0), rightAl.getTarget(0), maxOverlap), "");
+
+                expectedGenes[0] = extractExpectedGenes(0, leftAl);
+                expectedGenes[0].addAll(extractExpectedGenes(0, rightAl));
+                expectedGenes[0].add(GeneType.Diversity);
+                break;
+            default:
+                throw new RuntimeException();
+        }
+
+        VDJCMultiRead mRead = new VDJCMultiRead(rData, expectedGenes);
+        return aligner.process(mRead).alignment;
+    }
+
+    private EnumSet<GeneType> extractExpectedGenes(int targetId, VDJCAlignments alignments) {
+        EnumSet<GeneType> gts = EnumSet.noneOf(GeneType.class);
+        for (GeneType geneType : GeneType.VDJC_REFERENCE) {
+            boolean present = false;
+            for (VDJCHit vdjcHit : alignments.getHits(geneType)) {
+                if (vdjcHit.getAlignment(targetId) != null) {
+                    present = true;
+                    break;
+                }
+            }
+            if (present)
+                gts.add(geneType);
+        }
+        if (gts.contains(GeneType.Variable) && gts.contains(GeneType.Joining))
+            gts.add(GeneType.Diversity);
+        return gts;
+    }
+
+    private NSequenceWithQuality mergeOverlapped(NSequenceWithQuality left, NSequenceWithQuality right, int overlap) {
+        return MismatchOnlyPairedReadMerger.overlap(left, right, left.size() - overlap, maxScoreValue, qualityMergingAlgorithm);
     }
 
 
-    private VDJCPartitionedSequence getLeftPartitionedSequence(VDJCAlignments alignment) {
+    private LeftRightInfo getLeftPartitionedSequence(VDJCAlignments alignment) {
         for (int i = 0; i < alignment.numberOfTargets(); i++) {
             if (alignment.getBestHit(GeneType.Joining) != null && alignment.getBestHit(GeneType.Joining).getAlignment(i) != null)
                 continue;
             VDJCPartitionedSequence ps = alignment.getPartitionedTarget(i);
             if (ps.getPartitioning().isAvailable(ReferencePoint.VEndTrimmed))
-                return ps;
+                return new LeftRightInfo(i, ps);
         }
         return null;
     }
 
-    private RightInfo getRightPartitionedSequence(VDJCAlignments alignment) {
+    private LeftRightInfo getRightPartitionedSequence(VDJCAlignments alignment) {
         for (int i = 0; i < alignment.numberOfTargets(); i++) {
             if (alignment.getBestHit(GeneType.Variable) != null && alignment.getBestHit(GeneType.Variable).getAlignment(i) != null)
                 continue;
             VDJCPartitionedSequence ps = alignment.getPartitionedTarget(i);
             if (ps.getPartitioning().isAvailable(ReferencePoint.JBeginTrimmed))
-                return new RightInfo(i, ps);
+                return new LeftRightInfo(i, ps);
         }
         return null;
     }
 
-    private static final class RightInfo {
-        final int al;
+    private static final class LeftRightInfo {
+        final int targetId;
         final VDJCPartitionedSequence ps;
 
-        public RightInfo(int al, VDJCPartitionedSequence ps) {
-            this.al = al;
+        public LeftRightInfo(int targetId, VDJCPartitionedSequence ps) {
+            this.targetId = targetId;
             this.ps = ps;
         }
     }
 
     private void addLeftToIndex(VDJCAlignments alignment) {
-        VDJCPartitionedSequence left = getLeftPartitionedSequence(alignment);
+        final LeftRightInfo lrInfo = getLeftPartitionedSequence(alignment);
+        VDJCPartitionedSequence left = lrInfo.ps;
         if (left == null)
             return;
 
@@ -198,30 +342,47 @@ public class PartialAlignmentsAssembler implements AutoCloseable {
             return;
         }
 
-        long kmer = kMer(seq.getSequence(), kFrom, kTo);
+        long kmer = kMer(seq.getSequence(), kFrom, kValue);
         if (kmer == -1) {
             wildCardsInKMer.incrementAndGet();
             return;
         }
-        TIntArrayList ids = kToIndexLeft.get(kmer);
+
+        List<KMerInfo> ids = kToIndexLeft.get(kmer);
         if (ids == null)
-            kToIndexLeft.put(kmer, ids = new TIntArrayList());
+            kToIndexLeft.put(kmer, ids = new ArrayList<>());
         final long alIndex = alignment.getAlignmentsIndex();
         if (alIndex >= (long) Integer.MAX_VALUE)
             throw new RuntimeException("Too much alignments");
-        ids.add((int) alIndex);
+        ids.add(new KMerInfo(alignment, kFrom, lrInfo.targetId));
         leftParts.incrementAndGet();
     }
 
-    private static long kMer(NucleotideSequence seq, int from, int to) {
+    private static long kMer(NucleotideSequence seq, int from, int length) {
         long kmer = 0;
-        for (int j = from; j < to; ++j) {
+        for (int j = from; j < from + length; ++j) {
             byte c = seq.codeAt(j);
             if (NucleotideSequence.ALPHABET.isWildcard(c))
                 return -1;
             kmer = (kmer << 2 | c);
         }
         return kmer;
+    }
+
+    private static final class KMerInfo {
+        final VDJCAlignments alignments;
+        final int kMerPositionFrom;
+        final int targetId;
+
+        public KMerInfo(VDJCAlignments alignments, int kMerPositionFrom, int targetId) {
+            this.alignments = alignments;
+            this.kMerPositionFrom = kMerPositionFrom;
+            this.targetId = targetId;
+        }
+
+        public VDJCAlignments getAlignments() {
+            return alignments;
+        }
     }
 
     @Override

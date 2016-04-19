@@ -661,7 +661,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     };
 
     @SuppressWarnings("unchecked")
-    static VDJCHit[] combine(final GeneFeature feature, final AlignmentHit<NucleotideSequence, Allele>[][] hits) {
+    public static VDJCHit[] combine(final GeneFeature feature, final AlignmentHit<NucleotideSequence, Allele>[][] hits) {
         for (int i = 0; i < hits.length; i++)
             Arrays.sort(hits[i], ALLELE_ID_COMPARATOR);
         ArrayList<VDJCHit> result = new ArrayList<>();
