@@ -39,17 +39,16 @@ import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.reference.GeneType;
 import com.milaboratory.mixcr.reference.ReferencePoint;
-import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongObjectHashMap;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class PartialAlignmentsAssembler implements AutoCloseable {
-    volatile long[] index;
     final TLongObjectHashMap<List<KMerInfo>> kToIndexLeft = new TLongObjectHashMap<>();
     final VDJCAlignmentsWriter writer;
     final int kValue;
@@ -81,10 +80,27 @@ public class PartialAlignmentsAssembler implements AutoCloseable {
 
     public void buildLeftPartsIndex(VDJCAlignmentsReader reader) {
         writer.header(reader.getParameters(), reader.getUsedAlleles());
-        TLongArrayList index = new TLongArrayList();
-        reader.setIndexer(index);
         out:
         for (VDJCAlignments alignment : CUtils.it(reader)) {
+            for (int i = 0; i < alignment.numberOfTargets(); i++) {
+                final VDJCHit vHit = alignment.getBestHit(GeneType.Variable),
+                        jHit = alignment.getBestHit(GeneType.Joining);
+                if (vHit != null && jHit != null && vHit.getAlignment(i) != null && jHit.getAlignment(i) != null)
+                    continue out;
+            }
+            addLeftToIndex(alignment);
+        }
+    }
+
+    public void searchOverlaps(VDJCAlignmentsReader reader) {
+        PartialAlignmentsAssemblerAligner aligner = new PartialAlignmentsAssemblerAligner(reader.getParameters());
+        for (Allele allele : reader.getUsedAlleles())
+            aligner.addAllele(allele);
+
+        out:
+        for (VDJCAlignments alignment : CUtils.it(reader)) {
+            total.incrementAndGet();
+
             for (int i = 0; i < alignment.numberOfTargets(); i++) {
                 final VDJCHit vHit = alignment.getBestHit(GeneType.Variable),
                         jHit = alignment.getBestHit(GeneType.Joining);
@@ -94,59 +110,67 @@ public class PartialAlignmentsAssembler implements AutoCloseable {
                     continue out;
                 }
             }
-            addLeftToIndex(alignment);
-        }
-        this.index = index.toArray();
-    }
 
-    public void searchOverlaps(String file, VDJCAlignmentsReader reader) {
-        PartialAlignmentsAssemblerAligner aligner = new PartialAlignmentsAssemblerAligner(reader.getParameters());
-        for (Allele allele : reader.getUsedAlleles())
-            aligner.addAllele(allele);
+            VDJCMultiRead mRead = searchOverlaps(alignment);
+            if (mRead == null)
+                continue;
 
-        for (VDJCAlignments alignment : CUtils.it(reader)) {
-            VDJCAlignments r = searchOverlaps(alignment, aligner);
-            if (r != null)
-                writer.write(r);
+            overlapped.incrementAndGet();
+            final VDJCAlignments al = aligner.process(mRead).alignment;
+            String[] descriptions = new String[mRead.numberOfReads()];
+            for (int i = 0; i < mRead.numberOfReads(); i++)
+                descriptions[i] = mRead.getRead(i).getDescription();
+            al.setDescriptions(descriptions);
+            writer.write(al);
         }
     }
 
-    public VDJCAlignments searchOverlaps(VDJCAlignments rightAl, PartialAlignmentsAssemblerAligner aligner) {
-        LeftRightInfo right = getRightPartitionedSequence(rightAl);
-        if (right == null)
+    @SuppressWarnings("unchecked")
+    public VDJCMultiRead searchOverlaps(VDJCAlignments rightAl) {
+        int rightTargetId = getRightPartitionedSequence(rightAl);
+        if (rightTargetId == -1)
             return null;
 
-        NSequenceWithQuality rightNSeq = right.ps.getSequence();
-        NucleotideSequence rightSeq = rightNSeq.getSequence();
+        final VDJCPartitionedSequence rightTarget = rightAl.getPartitionedTarget(rightTargetId);
+        NSequenceWithQuality rightSeqQ = rightTarget.getSequence();
+        NucleotideSequence rightSeq = rightSeqQ.getSequence();
 
-        int stop = rightAl.getBestHit(GeneType.Joining).getAlignment(right.targetId).getSequence2Range().getFrom();
+        int stop = rightTarget.getPartitioning().getPosition(ReferencePoint.JBeginTrimmed) - kOffset;
+        assert stop != -1;
 
         int maxOverlap = -1;
-        int maxOverlapIndex = -1;
+        int maxDelta = -1;
+        int maxOverlapIndexInList = -1;
         List<KMerInfo> maxOverlapList = null;
-        for (int rFrom = 0; rFrom < stop; rFrom++) {
-            int kTo = rFrom + kValue;
-            long kMer = kMer(rightNSeq.getSequence(), rFrom, kTo);
+        for (int rFrom = 0; rFrom < stop && rFrom + kValue < rightSeqQ.size(); rFrom++) {
+            long kMer = kMer(rightSeqQ.getSequence(), rFrom, kValue);
             List<KMerInfo> match = kToIndexLeft.get(kMer);
             if (match == null)
                 continue;
 
             out:
             for (int i = 0; i < match.size(); i++) {
-                final VDJCAlignments al = match.get(i).getAlignments();
-                final VDJCPartitionedSequence leftNSeq = getLeftPartitionedSequence(al).ps;
-                final NucleotideSequence leftSeq = leftNSeq.getSequence().getSequence();
+                final VDJCAlignments leftAl = match.get(i).getAlignments();
+                final NucleotideSequence leftSeq = leftAl.getPartitionedTarget(getLeftPartitionedSequence(leftAl)).getSequence().getSequence();
                 int lFrom = match.get(i).kMerPositionFrom;
 
-                int overlap = rFrom + leftSeq.size() - lFrom;
-                for (int j = 0; j < rightSeq.size() && lFrom - rFrom + j < leftSeq.size(); j++)
-                    if (rightSeq.codeAt(j) != leftSeq.codeAt(lFrom - rFrom + j))
+                int delta, begin = delta = lFrom - rFrom;
+                if (begin < 0)
+                    begin = 0;
+                int end = leftSeq.size();
+                if (end - delta >= rightSeq.size())
+                    end = rightSeq.size() + delta;
+
+                for (int j = begin; j < end; j++)
+                    if (leftSeq.codeAt(j) != rightSeq.codeAt(j - delta))
                         continue out;
 
+                int overlap = end - begin;
                 if (maxOverlap < overlap) {
                     maxOverlap = overlap;
                     maxOverlapList = match;
-                    maxOverlapIndex = i;
+                    maxOverlapIndexInList = i;
+                    maxDelta = delta;
                 }
             }
         }
@@ -157,33 +181,31 @@ public class PartialAlignmentsAssembler implements AutoCloseable {
         if (maxOverlap < minimalOverlap)
             return null;
 
-        final KMerInfo left = maxOverlapList.remove(maxOverlapIndex);
-        overlapped.incrementAndGet();
-
-        final VDJCAlignments leftAl = left.alignments;
+        KMerInfo left = maxOverlapList.remove(maxOverlapIndexInList);
+        VDJCAlignments leftAl = left.alignments;
         SingleRead[] rData;
         EnumSet<GeneType>[] expectedGenes;
 
-        int switchcase = (leftAl.numberOfTargets() << 4) & rightAl.numberOfTargets();
-        switch (switchcase) {
+        final long readId = rightAl.getReadId();
+        switch ((leftAl.numberOfTargets() << 4) | rightAl.numberOfTargets()) {
             case 0x22:
-                if (left.targetId == 1 && right.targetId == 0) {
+                if (left.targetId == 1 && rightTargetId == 0) {
                     rData = new SingleRead[3];
                     expectedGenes = new EnumSet[3];
-                    rData[0] = new SingleReadImpl(leftAl.getReadId(), leftAl.getTarget(0), "");
-                    rData[1] = new SingleReadImpl(leftAl.getReadId(), mergeOverlapped(leftAl.getTarget(1), rightAl.getTarget(0), maxOverlap), "");
-                    rData[2] = new SingleReadImpl(leftAl.getReadId(), rightAl.getTarget(1), "");
+                    rData[0] = makeLeft(readId, leftAl, 0);
+                    rData[1] = makeOverlapped(readId, leftAl, rightAl, 1, 0, maxDelta, maxOverlap);
+                    rData[2] = makeRight(readId, rightAl, 1);
 
                     expectedGenes[0] = extractExpectedGenes(0, leftAl);
                     expectedGenes[1] = extractExpectedGenes(1, leftAl);
                     expectedGenes[1].addAll(extractExpectedGenes(0, rightAl));
                     expectedGenes[1].add(GeneType.Diversity);
                     expectedGenes[2] = extractExpectedGenes(1, rightAl);
-                } else if (left.targetId == 0 && right.targetId == 1) {
+                } else if (left.targetId == 0 && rightTargetId == 1) {
                     rData = new SingleRead[1];
                     expectedGenes = new EnumSet[1];
 
-                    rData[0] = new SingleReadImpl(leftAl.getReadId(), mergeOverlapped(leftAl.getTarget(0), rightAl.getTarget(1), maxOverlap), "");
+                    rData[0] = makeOverlapped(readId, leftAl, rightAl, 0, 1, maxDelta, maxOverlap);
 
                     expectedGenes[0] = extractExpectedGenes(0, leftAl);
                     expectedGenes[0].addAll(extractExpectedGenes(1, rightAl));
@@ -191,12 +213,12 @@ public class PartialAlignmentsAssembler implements AutoCloseable {
 
                     complexOverlapped.incrementAndGet();
                 } else {
-                    assert left.targetId == right.targetId;
+                    assert left.targetId == rightTargetId;
                     int targetId = left.targetId;
                     rData = new SingleRead[1];
                     expectedGenes = new EnumSet[1];
 
-                    rData[0] = new SingleReadImpl(leftAl.getReadId(), mergeOverlapped(leftAl.getTarget(targetId), rightAl.getTarget(targetId), maxOverlap), "");
+                    rData[0] = makeOverlapped(readId, leftAl, rightAl, targetId, targetId, maxDelta, maxOverlap);
 
                     expectedGenes[0] = extractExpectedGenes(targetId, leftAl);
                     expectedGenes[0].addAll(extractExpectedGenes(targetId, rightAl));
@@ -206,11 +228,11 @@ public class PartialAlignmentsAssembler implements AutoCloseable {
                 }
                 break;
             case 0x12:
-                if (right.targetId == 0) {
+                if (rightTargetId == 0) {
                     rData = new SingleRead[2];
                     expectedGenes = new EnumSet[2];
-                    rData[0] = new SingleReadImpl(leftAl.getReadId(), mergeOverlapped(leftAl.getTarget(0), rightAl.getTarget(0), maxOverlap), "");
-                    rData[1] = new SingleReadImpl(leftAl.getReadId(), rightAl.getTarget(1), "");
+                    rData[0] = makeOverlapped(readId, leftAl, rightAl, 0, 0, maxDelta, maxOverlap);
+                    rData[1] = makeRight(readId, rightAl, 1);
 
                     expectedGenes[0] = extractExpectedGenes(0, leftAl);
                     expectedGenes[0].addAll(extractExpectedGenes(0, rightAl));
@@ -220,7 +242,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable {
                     rData = new SingleRead[1];
                     expectedGenes = new EnumSet[1];
 
-                    rData[0] = new SingleReadImpl(leftAl.getReadId(), mergeOverlapped(leftAl.getTarget(0), rightAl.getTarget(1), maxOverlap), "");
+                    rData[0] = makeOverlapped(readId, leftAl, rightAl, 0, 1, maxDelta, maxOverlap);
 
                     expectedGenes[0] = extractExpectedGenes(0, leftAl);
                     expectedGenes[0].addAll(extractExpectedGenes(1, rightAl));
@@ -233,8 +255,8 @@ public class PartialAlignmentsAssembler implements AutoCloseable {
                 if (left.targetId == 1) {
                     rData = new SingleRead[2];
                     expectedGenes = new EnumSet[2];
-                    rData[0] = new SingleReadImpl(leftAl.getReadId(), leftAl.getTarget(0), "");
-                    rData[1] = new SingleReadImpl(leftAl.getReadId(), mergeOverlapped(leftAl.getTarget(1), rightAl.getTarget(0), maxOverlap), "");
+                    rData[0] = makeLeft(readId, leftAl, 0);
+                    rData[1] = makeOverlapped(readId, leftAl, rightAl, 1, 0, maxDelta, maxOverlap);
 
                     expectedGenes[0] = extractExpectedGenes(0, leftAl);
                     expectedGenes[1] = extractExpectedGenes(1, leftAl);
@@ -244,7 +266,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable {
                     rData = new SingleRead[1];
                     expectedGenes = new EnumSet[1];
 
-                    rData[0] = new SingleReadImpl(leftAl.getReadId(), mergeOverlapped(leftAl.getTarget(0), rightAl.getTarget(0), maxOverlap), "");
+                    rData[0] = makeOverlapped(readId, leftAl, rightAl, 0, 0, maxDelta, maxOverlap);
 
                     expectedGenes[0] = extractExpectedGenes(0, leftAl);
                     expectedGenes[0].addAll(extractExpectedGenes(0, rightAl));
@@ -257,7 +279,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable {
                 rData = new SingleRead[1];
                 expectedGenes = new EnumSet[1];
 
-                rData[0] = new SingleReadImpl(leftAl.getReadId(), mergeOverlapped(leftAl.getTarget(0), rightAl.getTarget(0), maxOverlap), "");
+                rData[0] = makeOverlapped(readId, leftAl, rightAl, 0, 0, maxDelta, maxOverlap);
 
                 expectedGenes[0] = extractExpectedGenes(0, leftAl);
                 expectedGenes[0].addAll(extractExpectedGenes(0, rightAl));
@@ -267,8 +289,22 @@ public class PartialAlignmentsAssembler implements AutoCloseable {
                 throw new RuntimeException();
         }
 
-        VDJCMultiRead mRead = new VDJCMultiRead(rData, expectedGenes);
-        return aligner.process(mRead).alignment;
+        return new VDJCMultiRead(rData, expectedGenes);
+    }
+
+    private static SingleRead makeLeft(long readId, VDJCAlignments leftAl, int targetId) {
+        return new SingleReadImpl(readId, leftAl.getTarget(targetId), "L" + leftAl.getReadId() + "." + targetId);
+    }
+
+    private static SingleRead makeRight(long readId, VDJCAlignments rightAl, int targetId) {
+        return new SingleReadImpl(readId, rightAl.getTarget(targetId), "R" + rightAl.getReadId() + "." + targetId);
+    }
+
+    private SingleRead makeOverlapped(long readId, VDJCAlignments leftAl, VDJCAlignments rightAl,
+                                      int leftTargetId, int rightTargetId, int maxDelta, int maxOverlap) {
+        return new SingleReadImpl(readId,
+                mergeOverlapped(leftAl.getTarget(leftTargetId), rightAl.getTarget(rightTargetId), maxDelta),
+                "L" + leftAl.getReadId() + "." + leftTargetId + " x R" + rightAl.getReadId() + "." + rightTargetId + " overlap = " + maxOverlap);
     }
 
     private EnumSet<GeneType> extractExpectedGenes(int targetId, VDJCAlignments alignments) {
@@ -289,55 +325,43 @@ public class PartialAlignmentsAssembler implements AutoCloseable {
         return gts;
     }
 
-    private NSequenceWithQuality mergeOverlapped(NSequenceWithQuality left, NSequenceWithQuality right, int overlap) {
-        return MismatchOnlyPairedReadMerger.overlap(left, right, left.size() - overlap, maxScoreValue, qualityMergingAlgorithm);
+    private NSequenceWithQuality mergeOverlapped(NSequenceWithQuality left, NSequenceWithQuality right, int delta) {
+        return MismatchOnlyPairedReadMerger.overlap(left, right, delta, maxScoreValue, qualityMergingAlgorithm);
     }
 
 
-    private LeftRightInfo getLeftPartitionedSequence(VDJCAlignments alignment) {
+    private int getLeftPartitionedSequence(VDJCAlignments alignment) {
         for (int i = 0; i < alignment.numberOfTargets(); i++) {
             if (alignment.getBestHit(GeneType.Joining) != null && alignment.getBestHit(GeneType.Joining).getAlignment(i) != null)
                 continue;
             VDJCPartitionedSequence ps = alignment.getPartitionedTarget(i);
             if (ps.getPartitioning().isAvailable(ReferencePoint.VEndTrimmed))
-                return new LeftRightInfo(i, ps);
+                return i;
         }
-        return null;
+        return -1;
     }
 
-    private LeftRightInfo getRightPartitionedSequence(VDJCAlignments alignment) {
+    private int getRightPartitionedSequence(VDJCAlignments alignment) {
         for (int i = 0; i < alignment.numberOfTargets(); i++) {
             if (alignment.getBestHit(GeneType.Variable) != null && alignment.getBestHit(GeneType.Variable).getAlignment(i) != null)
                 continue;
             VDJCPartitionedSequence ps = alignment.getPartitionedTarget(i);
             if (ps.getPartitioning().isAvailable(ReferencePoint.JBeginTrimmed))
-                return new LeftRightInfo(i, ps);
+                return i;
         }
-        return null;
-    }
-
-    private static final class LeftRightInfo {
-        final int targetId;
-        final VDJCPartitionedSequence ps;
-
-        public LeftRightInfo(int targetId, VDJCPartitionedSequence ps) {
-            this.targetId = targetId;
-            this.ps = ps;
-        }
+        return -1;
     }
 
     private void addLeftToIndex(VDJCAlignments alignment) {
-        final LeftRightInfo lrInfo = getLeftPartitionedSequence(alignment);
-        VDJCPartitionedSequence left = lrInfo.ps;
-        if (left == null)
+        int leftTargetId = getLeftPartitionedSequence(alignment);
+        if (leftTargetId == -1)
             return;
 
+        VDJCPartitionedSequence left = alignment.getPartitionedTarget(leftTargetId);
         NSequenceWithQuality seq = left.getSequence();
 
         int kFrom = left.getPartitioning().getPosition(ReferencePoint.VEndTrimmed) + kOffset;
-        int kTo = kFrom + kValue;
-
-        if (kFrom < 0 || kTo >= seq.size()) {
+        if (kFrom < 0 || kFrom + kValue >= seq.size()) {
             noKMer.incrementAndGet();
             return;
         }
@@ -350,11 +374,8 @@ public class PartialAlignmentsAssembler implements AutoCloseable {
 
         List<KMerInfo> ids = kToIndexLeft.get(kmer);
         if (ids == null)
-            kToIndexLeft.put(kmer, ids = new ArrayList<>());
-        final long alIndex = alignment.getAlignmentsIndex();
-        if (alIndex >= (long) Integer.MAX_VALUE)
-            throw new RuntimeException("Too much alignments");
-        ids.add(new KMerInfo(alignment, kFrom, lrInfo.targetId));
+            kToIndexLeft.put(kmer, ids = new ArrayList<>(1));
+        ids.add(new KMerInfo(alignment, kFrom, leftTargetId));
         leftParts.incrementAndGet();
     }
 

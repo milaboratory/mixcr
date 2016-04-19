@@ -104,7 +104,11 @@ public class ActionPrettyAlignments implements Action {
     public void outputCompact(PrintStream output, final VDJCAlignments alignments) {
         output.println(">>> Read id: " + alignments.getReadId());
         output.println();
+        final String[] descriptions = alignments.getDescriptions();
         for (int i = 0; i < alignments.numberOfTargets(); i++) {
+            if (actionParameters.printDescriptions() && descriptions != null)
+                output.println(">>> Description: " + descriptions[i] + "\n");
+
             MultiAlignmentHelper targetAsMultiAlignment = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, i);
             if (targetAsMultiAlignment == null)
                 continue;
@@ -275,6 +279,10 @@ public class ActionPrettyAlignments implements Action {
                 names = {"-v", "--verbose"})
         public Boolean verbose = null;
 
+        @Parameter(description = "Print descriptions",
+                names = {"-d", "--descriptions"})
+        public Boolean descr = null;
+
         public Set<Locus> getLoci() {
             return Util.parseLoci(loci);
         }
@@ -333,6 +341,10 @@ public class ActionPrettyAlignments implements Action {
                 return ACCEPT_ALL;
 
             return and(filters.toArray(new Filter[filters.size()]));
+        }
+
+        public boolean printDescriptions() {
+            return descr != null && descr;
         }
 
         public boolean isVerbose() {

@@ -34,10 +34,12 @@ public class PartialAlignmentsAssemblerParameters {
     private int kValue, kOffset, minimalOverlap, maxScoreValue;
     QualityMergingAlgorithm qualityMergingAlgorithm;
 
-    public PartialAlignmentsAssemblerParameters(int kValue, int kOffset, int minimalOverlap) {
+    public PartialAlignmentsAssemblerParameters(int kValue, int kOffset, int minimalOverlap, int maxScoreValue, QualityMergingAlgorithm qualityMergingAlgorithm) {
         this.kValue = kValue;
         this.kOffset = kOffset;
         this.minimalOverlap = minimalOverlap;
+        this.maxScoreValue = maxScoreValue;
+        this.qualityMergingAlgorithm = qualityMergingAlgorithm;
     }
 
     public void setQualityMergingAlgorithm(QualityMergingAlgorithm qualityMergingAlgorithm) {

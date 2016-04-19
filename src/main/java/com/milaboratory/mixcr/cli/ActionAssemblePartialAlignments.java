@@ -6,6 +6,7 @@ import com.beust.jcommander.Parameters;
 import com.milaboratory.mitools.cli.Action;
 import com.milaboratory.mitools.cli.ActionHelper;
 import com.milaboratory.mitools.cli.ActionParameters;
+import com.milaboratory.mitools.merger.QualityMergingAlgorithm;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssembler;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParameters;
@@ -24,7 +25,8 @@ public final class ActionAssemblePartialAlignments implements Action {
     @Override
     public void go(ActionHelper helper) throws Exception {
 
-        PartialAlignmentsAssemblerParameters assParameters = new PartialAlignmentsAssemblerParameters(12, 0, 18);
+        PartialAlignmentsAssemblerParameters assParameters = new PartialAlignmentsAssemblerParameters(12, 0, 18,
+                45, QualityMergingAlgorithm.SumSubtraction);
 
 
         try (PartialAlignmentsAssembler assembler = new PartialAlignmentsAssembler(assParameters, parameters.getOutputFileName())) {
@@ -34,7 +36,7 @@ public final class ActionAssemblePartialAlignments implements Action {
             }
             try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getInputFileName(), LociLibraryManager.getDefault())) {
                 SmartProgressReporter.startProgressReport("Searching for overlaps", reader);
-                assembler.searchOverlaps(parameters.getInputFileName(), reader);
+                assembler.searchOverlaps(reader);
             }
 
             System.out.println("\033[1m\033[36m");
@@ -45,7 +47,7 @@ public final class ActionAssemblePartialAlignments implements Action {
             System.out.println("leftParts     = " + assembler.leftParts.get());
             System.out.println("containsVJ    = " + assembler.containsVJJunction.get());
             System.out.println("overlapped    = " + assembler.overlapped.get());
-            System.out.println("cOverlapped   = " + assembler.overlapped.get());
+            System.out.println("cOverlapped   = " + assembler.complexOverlapped.get());
 
             System.out.println("\033[0m");
         }
