@@ -36,20 +36,24 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mitools.merger.MismatchOnlyPairedReadMerger;
 import com.milaboratory.mitools.merger.QualityMergingAlgorithm;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.cli.ReportHelper;
+import com.milaboratory.mixcr.cli.ReportWriter;
 import com.milaboratory.mixcr.reference.Allele;
+import com.milaboratory.mixcr.reference.GeneFeature;
 import com.milaboratory.mixcr.reference.GeneType;
 import com.milaboratory.mixcr.reference.ReferencePoint;
 import gnu.trove.map.hash.TLongObjectHashMap;
+import gnu.trove.set.hash.TLongHashSet;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class PartialAlignmentsAssembler implements AutoCloseable {
+public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
     final TLongObjectHashMap<List<KMerInfo>> kToIndexLeft = new TLongObjectHashMap<>();
+    final TLongHashSet leftPartsIds = new TLongHashSet();
     final VDJCAlignmentsWriter writer;
     final int kValue;
     final int kOffset;
@@ -61,8 +65,10 @@ public class PartialAlignmentsAssembler implements AutoCloseable {
             wildCardsInKMer = new AtomicLong(),
             total = new AtomicLong(),
             overlapped = new AtomicLong(),
+            totalWritten = new AtomicLong(),
+            partialAsIs = new AtomicLong(),
             complexOverlapped = new AtomicLong(),
-            containsVJJunction = new AtomicLong();
+            containsCDR3 = new AtomicLong();
 
     public PartialAlignmentsAssembler(PartialAlignmentsAssemblerParameters params, String output) {
         this.kValue = params.getKValue();
@@ -80,14 +86,9 @@ public class PartialAlignmentsAssembler implements AutoCloseable {
 
     public void buildLeftPartsIndex(VDJCAlignmentsReader reader) {
         writer.header(reader.getParameters(), reader.getUsedAlleles());
-        out:
         for (VDJCAlignments alignment : CUtils.it(reader)) {
-            for (int i = 0; i < alignment.numberOfTargets(); i++) {
-                final VDJCHit vHit = alignment.getBestHit(GeneType.Variable),
-                        jHit = alignment.getBestHit(GeneType.Joining);
-                if (vHit != null && jHit != null && vHit.getAlignment(i) != null && jHit.getAlignment(i) != null)
-                    continue out;
-            }
+            if (alignment.getFeature(GeneFeature.CDR3) != null)
+                continue;
             addLeftToIndex(alignment);
         }
     }
@@ -97,32 +98,44 @@ public class PartialAlignmentsAssembler implements AutoCloseable {
         for (Allele allele : reader.getUsedAlleles())
             aligner.addAllele(allele);
 
-        out:
         for (VDJCAlignments alignment : CUtils.it(reader)) {
             total.incrementAndGet();
 
-            for (int i = 0; i < alignment.numberOfTargets(); i++) {
-                final VDJCHit vHit = alignment.getBestHit(GeneType.Variable),
-                        jHit = alignment.getBestHit(GeneType.Joining);
-                if (vHit != null && jHit != null && vHit.getAlignment(i) != null && jHit.getAlignment(i) != null) {
-                    containsVJJunction.incrementAndGet();
-                    writer.write(alignment);
-                    continue out;
-                }
+            if (leftPartsIds.contains(alignment.getAlignmentsIndex()))
+                continue;
+
+            if (alignment.getFeature(GeneFeature.CDR3) != null) {
+                containsCDR3.incrementAndGet();
+                totalWritten.incrementAndGet();
+                writer.write(alignment);
+                continue;
             }
 
             VDJCMultiRead mRead = searchOverlaps(alignment);
-            if (mRead == null)
+            if (mRead == null) {
+                totalWritten.incrementAndGet();
+                partialAsIs.incrementAndGet();
+                writer.write(alignment);
                 continue;
+            }
+
+            final VDJCAlignments al = aligner.process(mRead).alignment;
 
             overlapped.incrementAndGet();
-            final VDJCAlignments al = aligner.process(mRead).alignment;
             String[] descriptions = new String[mRead.numberOfReads()];
             for (int i = 0; i < mRead.numberOfReads(); i++)
                 descriptions[i] = mRead.getRead(i).getDescription();
             al.setDescriptions(descriptions);
+            totalWritten.incrementAndGet();
             writer.write(al);
         }
+
+        for (List<KMerInfo> kMerInfos : kToIndexLeft.valueCollection())
+            for (KMerInfo kMerInfo : kMerInfos) {
+                totalWritten.incrementAndGet();
+                partialAsIs.incrementAndGet();
+                writer.write(kMerInfo.getAlignments());
+            }
     }
 
     @SuppressWarnings("unchecked")
@@ -151,7 +164,8 @@ public class PartialAlignmentsAssembler implements AutoCloseable {
             out:
             for (int i = 0; i < match.size(); i++) {
                 final VDJCAlignments leftAl = match.get(i).getAlignments();
-                final NucleotideSequence leftSeq = leftAl.getPartitionedTarget(getLeftPartitionedSequence(leftAl)).getSequence().getSequence();
+                final NucleotideSequence leftSeq = leftAl.getPartitionedTarget(getLeftPartitionedSequence(leftAl))
+                        .getSequence().getSequence();
                 int lFrom = match.get(i).kMerPositionFrom;
 
                 int delta, begin = delta = lFrom - rFrom;
@@ -292,6 +306,22 @@ public class PartialAlignmentsAssembler implements AutoCloseable {
         return new VDJCMultiRead(rData, expectedGenes);
     }
 
+    @Override
+    public void writeReport(ReportHelper helper) {
+        long total = this.total.get();
+        helper.writeField("total", total);
+        helper.writePercentAndAbsoluteField("totalWritten", totalWritten, total);
+        helper.writePercentAndAbsoluteField("noKMer", noKMer, total);
+        helper.writePercentAndAbsoluteField("wildCardsInKMer", wildCardsInKMer, total);
+        helper.writePercentAndAbsoluteField("leftParts", leftParts, total);
+        helper.writePercentAndAbsoluteField("containsCDR3", containsCDR3, total);
+        helper.writePercentAndAbsoluteField("overlapped", overlapped, total);
+        helper.writePercentAndAbsoluteField("complexOverlapped", complexOverlapped, total);
+        helper.writePercentAndAbsoluteField("partialAsIs", partialAsIs, total);
+        if (totalWritten.get() != overlapped.get() + partialAsIs.get() + containsCDR3.get())
+            throw new AssertionError();
+    }
+
     private static SingleRead makeLeft(long readId, VDJCAlignments leftAl, int targetId) {
         return new SingleReadImpl(readId, leftAl.getTarget(targetId), "L" + leftAl.getReadId() + "." + targetId);
     }
@@ -331,8 +361,12 @@ public class PartialAlignmentsAssembler implements AutoCloseable {
 
 
     private int getLeftPartitionedSequence(VDJCAlignments alignment) {
+        if (alignment.numberOfTargets() > 2)
+            return -1;
         for (int i = 0; i < alignment.numberOfTargets(); i++) {
-            if (alignment.getBestHit(GeneType.Joining) != null && alignment.getBestHit(GeneType.Joining).getAlignment(i) != null)
+            if (alignment.getBestHit(GeneType.Joining) != null &&
+                    alignment.getBestHit(GeneType.Joining)
+                            .getPartitioningForTarget(i).isAvailable(ReferencePoint.CDR3End))
                 continue;
             VDJCPartitionedSequence ps = alignment.getPartitionedTarget(i);
             if (ps.getPartitioning().isAvailable(ReferencePoint.VEndTrimmed))
@@ -342,8 +376,12 @@ public class PartialAlignmentsAssembler implements AutoCloseable {
     }
 
     private int getRightPartitionedSequence(VDJCAlignments alignment) {
+        if (alignment.numberOfTargets() > 2)
+            return -1;
         for (int i = 0; i < alignment.numberOfTargets(); i++) {
-            if (alignment.getBestHit(GeneType.Variable) != null && alignment.getBestHit(GeneType.Variable).getAlignment(i) != null)
+            if (alignment.getBestHit(GeneType.Variable) != null &&
+                    alignment.getBestHit(GeneType.Variable)
+                            .getPartitioningForTarget(i).isAvailable(ReferencePoint.CDR3Begin))
                 continue;
             VDJCPartitionedSequence ps = alignment.getPartitionedTarget(i);
             if (ps.getPartitioning().isAvailable(ReferencePoint.JBeginTrimmed))
@@ -376,6 +414,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable {
         if (ids == null)
             kToIndexLeft.put(kmer, ids = new ArrayList<>(1));
         ids.add(new KMerInfo(alignment, kFrom, leftTargetId));
+        leftPartsIds.add(alignment.getAlignmentsIndex());
         leftParts.incrementAndGet();
     }
 
@@ -411,3 +450,15 @@ public class PartialAlignmentsAssembler implements AutoCloseable {
         writer.close();
     }
 }
+
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv     jjjjjjjjjjjjjjjjjjjjjcccccccccccccccccccccccc
+//        ----------------->     <--------------------
+//                                   XXXXXX
+//                                    XXXXXX
+//                                     XXXXXX <- last in J
+//                                           XXXXXX
+//                                      VVVVVV
+//                        -------------------->                      <--------------------
+//
+//        ----------------->            <--------------------
+//  ------------------>   -------------------->            <--------------------

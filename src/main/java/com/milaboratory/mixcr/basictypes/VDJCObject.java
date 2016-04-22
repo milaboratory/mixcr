@@ -128,6 +128,9 @@ public class VDJCObject {
         }
         if (feature == null && targets.length == 2) {
             VDJCHit bestVHit = getBestHit(GeneType.Variable);
+            if (bestVHit == null)
+                return null;
+
             //TODO check for V feature compatibility
             Alignment<NucleotideSequence>
                     lAlignment = bestVHit.getAlignment(0),

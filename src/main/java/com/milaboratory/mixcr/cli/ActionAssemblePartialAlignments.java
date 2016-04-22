@@ -28,7 +28,7 @@ public final class ActionAssemblePartialAlignments implements Action {
         PartialAlignmentsAssemblerParameters assParameters = new PartialAlignmentsAssemblerParameters(12, 0, 18,
                 45, QualityMergingAlgorithm.SumSubtraction);
 
-
+        long start = System.currentTimeMillis();
         try (PartialAlignmentsAssembler assembler = new PartialAlignmentsAssembler(assParameters, parameters.getOutputFileName())) {
             try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getInputFileName(), LociLibraryManager.getDefault())) {
                 SmartProgressReporter.startProgressReport("Building index", reader);
@@ -39,17 +39,10 @@ public final class ActionAssemblePartialAlignments implements Action {
                 assembler.searchOverlaps(reader);
             }
 
-            System.out.println("\033[1m\033[36m");
-
-            System.out.println("noKMer        = " + assembler.noKMer.get());
-            System.out.println("wildCards     = " + assembler.wildCardsInKMer.get());
-            System.out.println("total         = " + assembler.total.get());
-            System.out.println("leftParts     = " + assembler.leftParts.get());
-            System.out.println("containsVJ    = " + assembler.containsVJJunction.get());
-            System.out.println("overlapped    = " + assembler.overlapped.get());
-            System.out.println("cOverlapped   = " + assembler.complexOverlapped.get());
-
-            System.out.println("\033[0m");
+            if (parameters.report != null)
+                Util.writeReport(parameters.getInputFileName(), parameters.getOutputFileName(),
+                        helper.getCommandLineArguments(), parameters.report, assembler,
+                        System.currentTimeMillis() - start);
         }
     }
 
@@ -69,6 +62,10 @@ public final class ActionAssemblePartialAlignments implements Action {
     private static class AssemblePartialAlignmentsParameters extends ActionParameters {
         @Parameter(description = "input_file output_file")
         public List<String> parameters;
+
+        @Parameter(description = "Report file.",
+                names = {"-r", "--report"})
+        public String report;
 
         public String getInputFileName() {
             return parameters.get(0);

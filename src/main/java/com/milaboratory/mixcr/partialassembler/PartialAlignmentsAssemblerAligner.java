@@ -11,11 +11,12 @@ import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.reference.GeneType;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerAbstract;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerPVFirst;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
 
 import java.util.EnumMap;
+
+import static com.milaboratory.mixcr.vdjaligners.VDJCAlignerPVFirst.combine;
 
 /**
  * @author Dmitry Bolotin
@@ -32,40 +33,50 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
         ensureInitialized();
 
         final int nReads = input.numberOfReads();
-        EnumMap<GeneType, AlignmentHit<NucleotideSequence, Allele>[][]> allHits = new EnumMap<>(GeneType.class);
-        for (GeneType gt : GeneType.VJC_REFERENCE)
-            allHits.put(gt, new AlignmentHit[nReads][]);
+        EnumMap<GeneType, VDJCHit[]> vdjcHits = new EnumMap<>(GeneType.class);
 
         NSequenceWithQuality[] targets = new NSequenceWithQuality[nReads];
-        int dGeneTarget = -1;
-        for (int i = 0; i < nReads; i++) {
-            targets[i] = input.getRead(i).getData();
-            EnumMap<GeneType, AlignmentResult<AlignmentHit<NucleotideSequence, Allele>>> alignments = new EnumMap<>(GeneType.class);
 
-            int pointer = 0;
-            final NucleotideSequence sequence = input.getRead(i).getData().getSequence();
-            for (GeneType gt : GeneType.VJC_REFERENCE) {
-                AlignmentResult<AlignmentHit<NucleotideSequence, Allele>> als = null;
+        for (int g = 0; g < GeneType.VJC_REFERENCE.length; g++) {
+            GeneType gt = GeneType.VJC_REFERENCE[g];
+            AlignmentHit[][] alignmentHits = new AlignmentHit[nReads][];
+            for (int i = 0; i < nReads; i++) {
+                alignmentHits[i] = new AlignmentHit[0];
+
+                targets[i] = input.getRead(i).getData();
+
+                final NucleotideSequence sequence = input.getRead(i).getData().getSequence();
+
+                AlignmentResult<AlignmentHit<NucleotideSequence, Allele>> als;
                 if (input.expectedGeneTypes[i].contains(gt)) {
                     final BatchAlignerWithBase<NucleotideSequence, Allele, AlignmentHit<NucleotideSequence, Allele>> aligner = getAligner(gt);
                     if (aligner != null) {
-                        als = aligner.align(sequence, pointer, sequence.size());
-                        if (als != null && als.hasHits()) {
-                            pointer = als.getBestHit().getAlignment().getSequence2Range().getTo();
-                            alignments.put(gt, als);
+                        int pointer = 0;
+                        if (g != 0) {
+                            VDJCHit[] vdjcHits1 = vdjcHits.get(GeneType.VJC_REFERENCE[g - 1]);
+                            Alignment<NucleotideSequence> alignment;
+                            if (vdjcHits1.length != 0 && (alignment = vdjcHits1[0].getAlignment(i)) != null)
+                                pointer = alignment.getSequence2Range().getTo();
                         }
+                        als = aligner.align(sequence, pointer, sequence.size());
+                        if (als != null && als.hasHits())
+                            alignmentHits[i] = als.getHits().toArray(new AlignmentHit[als.getHits().size()]);
                     }
                 }
-
-                allHits.get(gt)[i] = als == null ? new AlignmentHit[0] : als.getHits().toArray(new AlignmentHit[als.getHits().size()]);
             }
-
-            if (alignments.get(GeneType.Variable) != null && alignments.get(GeneType.Joining) != null)
-                dGeneTarget = i;
+            vdjcHits.put(gt, combine(parameters.getFeatureToAlign(gt), alignmentHits));
         }
 
-        VDJCHit[] vResult = VDJCAlignerPVFirst.combine(parameters.getFeatureToAlign(GeneType.Variable), allHits.get(GeneType.Variable));
-        VDJCHit[] jResult = VDJCAlignerPVFirst.combine(parameters.getFeatureToAlign(GeneType.Joining), allHits.get(GeneType.Joining));
+        int dGeneTarget = -1;
+        VDJCHit[] vResult = vdjcHits.get(GeneType.Variable);
+        VDJCHit[] jResult = vdjcHits.get(GeneType.Joining);
+        if (vResult.length != 0 && jResult.length != 0)
+            for (int i = 0; i < nReads; i++)
+                if (vResult[0].getAlignment(i) != null && jResult[0].getAlignment(i) != null) {
+                    dGeneTarget = i;
+                    break;
+                }
+
         VDJCHit[] dResult;
         if (dGeneTarget == -1)
             dResult = new VDJCHit[0];
@@ -85,7 +96,7 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
                 vResult,
                 dResult,
                 jResult,
-                VDJCAlignerPVFirst.combine(parameters.getFeatureToAlign(GeneType.Constant), allHits.get(GeneType.Constant)),
+                vdjcHits.get(GeneType.Constant),
                 targets
         );
         return new VDJCAlignmentResult<>(input, alignment);
