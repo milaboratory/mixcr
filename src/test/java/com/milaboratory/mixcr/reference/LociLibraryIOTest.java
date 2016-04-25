@@ -141,11 +141,11 @@ public class LociLibraryIOTest {
         InputStream sample = LociLibraryReader.class.getClassLoader().getResourceAsStream("reference/mi.ll");
         LociLibrary library = LociLibraryReader.read(sample, true);
         for (Allele allele : library.getAllAlleles(Species.HomoSapiens)) {
-            if (allele.getName().contains("TRDV3")) {
+            if (allele.getName().contains("IGHJ5")) {
                 System.out.println(allele.getName());
                 //System.out.println(AminoAcidSequence.translate(allele.getFeature(VRegion), 0));
-                System.out.println(allele.getFeature(VRegion));
-                System.out.println(allele.getFeature(FR3));
+                System.out.println(allele.getFeature(GermlineJCDR3Part));
+                //System.out.println(allele.getFeature(FR3));
                 System.out.println(allele.isFunctional());
                 System.out.println(Arrays.toString(allele.getPartitioning().points));
             }

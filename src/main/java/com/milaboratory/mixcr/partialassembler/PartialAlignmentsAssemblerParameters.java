@@ -28,34 +28,26 @@
  */
 package com.milaboratory.mixcr.partialassembler;
 
-import com.milaboratory.mitools.merger.QualityMergingAlgorithm;
+import com.milaboratory.mitools.merger.MergerParameters;
 
 public class PartialAlignmentsAssemblerParameters {
-    private int kValue, kOffset, minimalOverlap, maxScoreValue;
-    QualityMergingAlgorithm qualityMergingAlgorithm;
+    private int kValue, kOffset, minimalVJJunctionOverlap;
+    private MergerParameters mergerParameters;
 
-    public PartialAlignmentsAssemblerParameters(int kValue, int kOffset, int minimalOverlap, int maxScoreValue, QualityMergingAlgorithm qualityMergingAlgorithm) {
+    public PartialAlignmentsAssemblerParameters(int kValue, int kOffset, int minimalVJJunctionOverlap,
+                                                MergerParameters mergerParameters) {
         this.kValue = kValue;
         this.kOffset = kOffset;
-        this.minimalOverlap = minimalOverlap;
-        this.maxScoreValue = maxScoreValue;
-        this.qualityMergingAlgorithm = qualityMergingAlgorithm;
+        this.minimalVJJunctionOverlap = minimalVJJunctionOverlap;
+        this.mergerParameters = mergerParameters;
     }
 
-    public void setQualityMergingAlgorithm(QualityMergingAlgorithm qualityMergingAlgorithm) {
-        this.qualityMergingAlgorithm = qualityMergingAlgorithm;
+    public MergerParameters getMergerParameters() {
+        return mergerParameters;
     }
 
-    public QualityMergingAlgorithm getQualityMergingAlgorithm() {
-        return qualityMergingAlgorithm;
-    }
-
-    public void setMaxScoreValue(int maxScoreValue) {
-        this.maxScoreValue = maxScoreValue;
-    }
-
-    public int getMaxScoreValue() {
-        return maxScoreValue;
+    public void setMergerParameters(MergerParameters mergerParameters) {
+        this.mergerParameters = mergerParameters;
     }
 
     public int getKValue() {
@@ -74,11 +66,11 @@ public class PartialAlignmentsAssemblerParameters {
         this.kOffset = kOffset;
     }
 
-    public int getMinimalOverlap() {
-        return minimalOverlap;
+    public int getMinimalVJJunctionOverlap() {
+        return minimalVJJunctionOverlap;
     }
 
-    public void setMinimalOverlap(int minimalOverlap) {
-        this.minimalOverlap = minimalOverlap;
+    public void setMinimalVJJunctionOverlap(int minimalVJJunctionOverlap) {
+        this.minimalVJJunctionOverlap = minimalVJJunctionOverlap;
     }
 }
