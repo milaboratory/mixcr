@@ -111,20 +111,36 @@ public class ActionAlign implements Action {
                 }
                 continue;
             }
-            for (Allele allele : lc.getAllAlleles())
-                if (alignerParameters.containsRequiredFeature(allele) &&
-                        (allele.isFunctional() || !actionParameters.isFunctionalOnly()))
-                    aligner.addAllele(allele);
-                else if (params().printWarnings() && allele.isFunctional()) {
-                    System.err.println("WARNING: Functional allele excluded " + allele.getName() +
-                            " as it doesn't contain full " + GeneFeature.encode(alignerParameters
-                            .getFeatureToAlign(allele.getGeneType())));
-                    warnings = true;
+            for (Allele allele : lc.getAllAlleles()) {
+                if (actionParameters.isFunctionalOnly() && !allele.isFunctional())
+                    continue;
+                if (!alignerParameters.containsRequiredFeature(allele)) {
+                    if (params().printWarnings()) {
+                        System.err.println("WARNING: Allele " + allele.getName() +
+                                " doesn't contain full " + GeneFeature.encode(alignerParameters
+                                .getFeatureToAlign(allele.getGeneType())) + " (excluded)");
+                        warnings = true;
+                    }
+                    continue;
                 }
+                aligner.addAllele(allele);
+            }
         }
 
         if (warnings)
             System.err.println("To turn off warnings use '-nw' option.");
+
+        if(aligner.getVAllelesToAlign().isEmpty()){
+            System.err.println("No V alleles to align. Aborting execution. See warnings for more info " +
+                    "(turn warnings by adding -w option).");
+            return;
+        }
+
+        if(aligner.getVAllelesToAlign().isEmpty()){
+            System.err.println("No J alleles to align. Aborting execution. See warnings for more info " +
+                    "(turn warnings by adding -w option).");
+            return;
+        }
 
         AlignerReport report = actionParameters.report == null ? null : new AlignerReport();
         if (report != null) {
