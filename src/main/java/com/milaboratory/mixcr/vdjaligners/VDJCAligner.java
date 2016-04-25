@@ -100,19 +100,19 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
         return allelesToAlign.get(type).get(index);
     }
 
-    protected List<Allele> getVAllelesToAlign() {
+    public List<Allele> getVAllelesToAlign() {
         return allelesToAlign.get(GeneType.Variable);
     }
 
-    protected List<Allele> getDAllelesToAlign() {
+    public List<Allele> getDAllelesToAlign() {
         return allelesToAlign.get(GeneType.Diversity);
     }
 
-    protected List<Allele> getJAllelesToAlign() {
+    public List<Allele> getJAllelesToAlign() {
         return allelesToAlign.get(GeneType.Joining);
     }
 
-    protected List<Allele> getCAllelesToAlign() {
+    public List<Allele> getCAllelesToAlign() {
         return allelesToAlign.get(GeneType.Constant);
     }
 
