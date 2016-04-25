@@ -177,10 +177,12 @@ public abstract class SequencePartitioning {
             return -1;
 
         int relativePosition = 0;
-        for (Range range : ranges)
-            if (range.containsBoundary(absolutePosition))
+        for (int i = 0; i < ranges.length; i++) {
+            Range range = ranges[i];
+            if (!feature.getReferenceRange(i).isReversed() && range.containsBoundary(absolutePosition))
                 return relativePosition + range.convertBoundaryToRelativePosition(absolutePosition);
             else relativePosition += range.length();
+        }
         return -1;
     }
 }
