@@ -140,6 +140,8 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
                     partialAsIs.incrementAndGet();
                     writer.write(kMerInfo.getAlignments());
                 }
+
+        writer.setNumberOfProcessedReads(reader.getNumberOfReads() - overlapped.get());
     }
 
     @SuppressWarnings("unchecked")
