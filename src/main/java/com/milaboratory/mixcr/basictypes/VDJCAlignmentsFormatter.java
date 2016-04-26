@@ -42,9 +42,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Created by dbolotin on 03/09/15.
- */
 public class VDJCAlignmentsFormatter {
     public static MultiAlignmentHelper getTargetAsMultiAlignment(VDJCAlignments vdjcaAlignments, int targetId) {
         NSequenceWithQuality target = vdjcaAlignments.getTarget(targetId);
@@ -71,12 +68,8 @@ public class VDJCAlignmentsFormatter {
         MultiAlignmentHelper helper = MultiAlignmentHelper.build(MultiAlignmentHelper.DEFAULT_SETTINGS,
                 new Range(0, target.size()), alignments.toArray(new Alignment[alignments.size()]));
 
-        char[] markers = new char[helper.size()];
-        Arrays.fill(markers, ' ');
-        for (PointToDraw point : POINTS_FOR_REARRANGED)
-            point.draw(partitioning, helper, markers);
+        drawPoints(helper, partitioning, POINTS_FOR_REARRANGED);
 
-        helper.addAnnotationString("", new String(markers));
         helper.addSubjectQuality("Quality", target.getQuality());
         helper.setSubjectLeftTitle("Target" + targetId);
         helper.setSubjectRightTitle(" Score");
@@ -87,12 +80,28 @@ public class VDJCAlignmentsFormatter {
         return helper;
     }
 
-    public static void drawPoints(MultiAlignmentHelper helper, SequencePartitioning partitioning, PointToDraw... pointsToDraw) {
-        char[] markers = new char[helper.size()];
+    public static void drawPoints(MultiAlignmentHelper helper, SequencePartitioning partitioning,
+                                  PointToDraw... pointsToDraw) {
+        ArrayList<char[]> markers = new ArrayList<>();
+        markers.add(emptyLine(helper.size()));
+        boolean result;
+        int i;
+        for (PointToDraw point : pointsToDraw) {
+            i = 0;
+            do {
+                if (markers.size() == i)
+                    markers.add(emptyLine(helper.size()));
+                result = point.draw(partitioning, helper, markers.get(i++), false);
+            } while (!result);
+        }
+        for (i = markers.size() - 1; i >= 0; --i)
+            helper.addAnnotationString("", new String(markers.get(i)));
+    }
+
+    private static char[] emptyLine(int size) {
+        char[] markers = new char[size];
         Arrays.fill(markers, ' ');
-        for (PointToDraw point : pointsToDraw)
-            point.draw(partitioning, helper, markers);
-        helper.addAnnotationString("", new String(markers));
+        return markers;
     }
 
     public static final Filter<SequencePartitioning> IsVP = new Filter<SequencePartitioning>() {
@@ -180,12 +189,14 @@ public class VDJCAlignmentsFormatter {
             this.activator = activator;
         }
 
-        public void draw(SequencePartitioning partitioning, MultiAlignmentHelper helper, char[] line) {
+        public boolean draw(SequencePartitioning partitioning, MultiAlignmentHelper helper, char[] line, boolean overwrite) {
             if (activator != null && !activator.accept(partitioning))
-                return;
+                return true;
+
             int positionInTarget = partitioning.getPosition(rp);
             if (positionInTarget < 0)
-                return;
+                return true;
+
             int positionInHelper = -1;
             for (int i = 0; i < helper.size(); i++)
                 if (positionInTarget == helper.getAbsSubjectPositionAt(i)) {
@@ -193,7 +204,17 @@ public class VDJCAlignmentsFormatter {
                     break;
                 }
             if (positionInHelper == -1)
-                return;
+                return true;
+
+            // Checking
+            if (!overwrite)
+                for (int i = 0; i < marker.length(); i++) {
+                    int positionInLine = positionInHelper + markerOffset + i;
+                    if (positionInLine < 0 || positionInLine >= line.length)
+                        continue;
+                    if (line[positionInLine] != ' ')
+                        return false;
+                }
 
             for (int i = 0; i < marker.length(); i++) {
                 int positionInLine = positionInHelper + markerOffset + i;
@@ -201,6 +222,8 @@ public class VDJCAlignmentsFormatter {
                     continue;
                 line[positionInLine] = marker.charAt(i);
             }
+
+            return true;
         }
     }
 }

@@ -1,5 +1,6 @@
 Clone assembler now separates clones with different V/J/C genes but same clonal sequence (e.g. CDR3)
 Added support for P-segments; new gene features `VPSegment`, `DLeftPSegment`, `DRightPSegment`, `JPSegment` are now available both in `exportAlignments` and `exportClones`; feature enabled by default
+Added option -e/--cdr3-equals to exportAlignmentsPretty action
 Added new action `alignmentsDiff`: run as `mixcr alignmentsDiff file1.vdjca file2.vdjca report.txt` to find difference between to .vdjca files
 Fixed empty alignments in export clones
 minor: Added new export field: -vBestIdentityPercent and -vIdentityPercents (-j..., -c... in the same way)
