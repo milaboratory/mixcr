@@ -46,6 +46,7 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
     int minimalClonalSequenceLength;
     CloneClusteringParameters cloneClusteringParameters;
     CloneFactoryParameters cloneFactoryParameters;
+    boolean separateByV, separateByJ, separateByC;
     double maximalPreClusteringRatio;
     boolean addReadsCountOnClustering;
     byte badQualityThreshold;
@@ -59,6 +60,9 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
                                     @JsonProperty("minimalClonalSequenceLength") int minimalClonalSequenceLength,
                                     @JsonProperty("cloneClusteringParameters") CloneClusteringParameters cloneClusteringParameters,
                                     @JsonProperty("cloneFactoryParameters") CloneFactoryParameters cloneFactoryParameters,
+                                    @JsonProperty("separateByV") boolean separateByV,
+                                    @JsonProperty("separateByJ") boolean separateByJ,
+                                    @JsonProperty("separateByC") boolean separateByC,
                                     @JsonProperty("maximalPreClusteringRatio") double maximalPreClusteringRatio,
                                     @JsonProperty("addReadsCountOnClustering") boolean addReadsCountOnClustering,
                                     @JsonProperty("badQualityThreshold") byte badQualityThreshold,
@@ -68,6 +72,9 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
         this.minimalClonalSequenceLength = minimalClonalSequenceLength;
         this.cloneClusteringParameters = cloneClusteringParameters;
         this.cloneFactoryParameters = cloneFactoryParameters;
+        this.separateByV = separateByV;
+        this.separateByJ = separateByJ;
+        this.separateByC = separateByC;
         this.maximalPreClusteringRatio = maximalPreClusteringRatio;
         this.addReadsCountOnClustering = addReadsCountOnClustering;
         this.badQualityThreshold = badQualityThreshold;
@@ -116,6 +123,18 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
 
     public CloneFactoryParameters getCloneFactoryParameters() {
         return cloneFactoryParameters;
+    }
+
+    public boolean getSeparateByV() {
+        return separateByV;
+    }
+
+    public boolean getSeparateByJ() {
+        return separateByJ;
+    }
+
+    public boolean getSeparateByC() {
+        return separateByC;
     }
 
     public double getMaximalPreClusteringRatio() {
@@ -171,6 +190,21 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
         return this;
     }
 
+    public CloneAssemblerParameters setSeparateByV(boolean separateByV) {
+        this.separateByV = separateByV;
+        return this;
+    }
+
+    public CloneAssemblerParameters setSeparateByJ(boolean separateByJ) {
+        this.separateByJ = separateByJ;
+        return this;
+    }
+
+    public CloneAssemblerParameters setSeparateByC(boolean separateByC) {
+        this.separateByC = separateByC;
+        return this;
+    }
+
     public CloneAssemblerParameters setMaximalPreClusteringRatio(double maximalPreClusteringRatio) {
         this.maximalPreClusteringRatio = maximalPreClusteringRatio;
         return this;
@@ -198,8 +232,8 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
     public CloneAssemblerParameters clone() {
         return new CloneAssemblerParameters(assemblingFeatures.clone(), minimalClonalSequenceLength,
                 cloneClusteringParameters == null ? null : cloneClusteringParameters.clone(),
-                cloneFactoryParameters.clone(), maximalPreClusteringRatio,
-                addReadsCountOnClustering, badQualityThreshold, maxBadPointsPercent,
+                cloneFactoryParameters.clone(), separateByV, separateByJ, separateByC,
+                maximalPreClusteringRatio, addReadsCountOnClustering, badQualityThreshold, maxBadPointsPercent,
                 mappingThreshold);
     }
 
@@ -211,6 +245,9 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
         CloneAssemblerParameters that = (CloneAssemblerParameters) o;
 
         if (minimalClonalSequenceLength != that.minimalClonalSequenceLength) return false;
+        if (separateByV != that.separateByV) return false;
+        if (separateByJ != that.separateByJ) return false;
+        if (separateByC != that.separateByC) return false;
         if (Double.compare(that.maximalPreClusteringRatio, maximalPreClusteringRatio) != 0) return false;
         if (addReadsCountOnClustering != that.addReadsCountOnClustering) return false;
         if (badQualityThreshold != that.badQualityThreshold) return false;
@@ -231,7 +268,10 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
         result = Arrays.hashCode(assemblingFeatures);
         result = 31 * result + minimalClonalSequenceLength;
         result = 31 * result + (cloneClusteringParameters != null ? cloneClusteringParameters.hashCode() : 0);
-        result = 31 * result + cloneFactoryParameters.hashCode();
+        result = 31 * result + (cloneFactoryParameters != null ? cloneFactoryParameters.hashCode() : 0);
+        result = 31 * result + (separateByV ? 1 : 0);
+        result = 31 * result + (separateByJ ? 1 : 0);
+        result = 31 * result + (separateByC ? 1 : 0);
         temp = Double.doubleToLongBits(maximalPreClusteringRatio);
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         result = 31 * result + (addReadsCountOnClustering ? 1 : 0);
