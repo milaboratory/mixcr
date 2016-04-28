@@ -38,9 +38,11 @@ import com.milaboratory.core.tree.TreeSearchParameters;
 
 public class CloneClusteringStrategy implements ClusteringStrategy<CloneAccumulator, NucleotideSequence> {
     final CloneClusteringParameters parameters;
+    final CloneAssembler cloneAssembler;
 
-    public CloneClusteringStrategy(CloneClusteringParameters parameters) {
+    public CloneClusteringStrategy(CloneClusteringParameters parameters, CloneAssembler cloneAssembler) {
         this.parameters = parameters.clone();
+        this.cloneAssembler = cloneAssembler;
     }
 
     @Override
@@ -62,7 +64,8 @@ public class CloneClusteringStrategy implements ClusteringStrategy<CloneAccumula
                     else continue out;
         return parameters.getClusteringFilter().allow(currentMutations, cluster.getHead().count,
                 minorObject.count, cluster.getHead().getSequence())
-                && CloneAssembler.mathchHits(new CloneAssembler.VJCSignature(cluster.getHead()), minorObject);
+                && CloneAssembler.matchHits(cloneAssembler.extractSignature(cluster.getHead()),
+                minorObject);
     }
 
     @Override

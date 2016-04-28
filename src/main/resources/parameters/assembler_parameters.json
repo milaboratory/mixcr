@@ -2,6 +2,9 @@
     "default": {
         "assemblingFeatures": ["CDR3"],
         "minimalClonalSequenceLength": 12,
+        "separateByV": true,
+        "separateByJ": true,
+        "separateByC": false,
         "maximalPreClusteringRatio": 1.0,
         "cloneClusteringParameters": {
             "searchDepth": 2,
@@ -71,6 +74,9 @@
     "default_affine": {
         "assemblingFeatures": ["CDR3"],
         "minimalClonalSequenceLength": 12,
+        "separateByV": true,
+        "separateByJ": true,
+        "separateByC": false,
         "maximalPreClusteringRatio": 1.0,
         "cloneClusteringParameters": {
             "searchDepth": 2,

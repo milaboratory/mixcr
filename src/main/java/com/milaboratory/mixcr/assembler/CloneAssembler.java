@@ -237,7 +237,8 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                     public NucleotideSequence getSequence(CloneAccumulator object) {
                         return object.getSequence().getConcatenated().getSequence();
                     }
-                }, new CloneClusteringStrategy(parameters.getCloneClusteringParameters()));
+                }, new CloneClusteringStrategy(parameters.getCloneClusteringParameters(),
+                this));
         this.progressReporter = clustering;
         List<Cluster<CloneAccumulator>> clusters = clustering.performClustering();
         clusteredClonesAccumulators = new ArrayList<>(clusters.size());
@@ -404,7 +405,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 for (CloneAccumulatorContainer container : assembledClones) {
                     // Version of isCompatible without mutations is used here because
                     // ony substitutions possible in this place
-                    CloneAccumulator acc = container.accumulators.get(new VJCSignature(input));
+                    CloneAccumulator acc = container.accumulators.get(extractSignature(input));
                     if (acc != null && clonalSequence.isCompatible(acc.getSequence())) {
                         if (minMismatches == -1)
                             minMismatches = iterator.getMismatches();
@@ -512,7 +513,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         final HashMap<VJCSignature, CloneAccumulator> accumulators = new HashMap<>();
 
         synchronized CloneAccumulator accumulate(ClonalSequence sequence, VDJCAlignments alignments, boolean mapped) {
-            VJCSignature vjcSignature = new VJCSignature(alignments);
+            VJCSignature vjcSignature = extractSignature(alignments);
             CloneAccumulator acc = accumulators.get(vjcSignature);
             if (acc == null) {
                 acc = new CloneAccumulator(sequence, extractNRegions(sequence, alignments));
@@ -537,11 +538,11 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 if (accs[i] == null)
                     continue;
                 // Top V, J and C genes of the major clonotype
-                VJCSignature vjcSignature = new VJCSignature(accs[i]);
+                VJCSignature vjcSignature = extractSignature(accs[i]);
                 long countThreshold = (long) (accs[i].count * parameters.maximalPreClusteringRatio);
                 for (int j = i + 1; j < accs.length; j++)
                     if (accs[j] != null && accs[j].count <= countThreshold &&
-                            mathchHits(vjcSignature, accs[j])) {
+                            matchHits(vjcSignature, accs[j])) {
                         accs[i].count += accs[j].count;
                         accs[i].countMapped += accs[j].countMapped;
                         onPreClustered(accs[i], accs[j]);
@@ -596,19 +597,29 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         }
     }
 
+    VJCSignature extractSignature(VDJCAlignments alignments) {
+        return new VJCSignature(
+                parameters.getSeparateByV() ? getAlleleId(alignments, GeneType.Variable) : null,
+                parameters.getSeparateByJ() ? getAlleleId(alignments, GeneType.Joining) : null,
+                parameters.getSeparateByC() ? getAlleleId(alignments, GeneType.Constant) : null
+        );
+    }
+
+    VJCSignature extractSignature(CloneAccumulator alignments) {
+        return new VJCSignature(
+                parameters.getSeparateByV() ? getAlleleId(alignments, GeneType.Variable) : null,
+                parameters.getSeparateByJ() ? getAlleleId(alignments, GeneType.Joining) : null,
+                parameters.getSeparateByC() ? getAlleleId(alignments, GeneType.Constant) : null
+        );
+    }
+
     static final class VJCSignature {
         final AlleleId vAllele, jAllele, cAllele;
 
-        public VJCSignature(VDJCAlignments alignments) {
-            this.vAllele = getAlleleId(alignments, GeneType.Variable);
-            this.jAllele = getAlleleId(alignments, GeneType.Joining);
-            this.cAllele = getAlleleId(alignments, GeneType.Constant);
-        }
-
-        public VJCSignature(CloneAccumulator alignments) {
-            this.vAllele = getAlleleId(alignments, GeneType.Variable);
-            this.jAllele = getAlleleId(alignments, GeneType.Joining);
-            this.cAllele = getAlleleId(alignments, GeneType.Constant);
+        public VJCSignature(AlleleId vAllele, AlleleId jAllele, AlleleId cAllele) {
+            this.vAllele = vAllele;
+            this.jAllele = jAllele;
+            this.cAllele = cAllele;
         }
 
         @Override
@@ -633,7 +644,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         }
     }
 
-    static boolean mathchHits(VJCSignature vjcSignature, CloneAccumulator acc) {
+    static boolean matchHits(VJCSignature vjcSignature, CloneAccumulator acc) {
         TObjectFloatHashMap<AlleleId> minor;
         minor = acc.geneScores.get(GeneType.Variable);
         if (vjcSignature.vAllele == null && (minor != null && !minor.isEmpty()))
