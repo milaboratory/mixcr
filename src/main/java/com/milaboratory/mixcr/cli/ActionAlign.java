@@ -40,6 +40,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.validators.PositiveInteger;
+import com.milaboratory.core.PairedEndReadsLayout;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SequenceReaderCloseable;
 import com.milaboratory.core.io.sequence.fasta.FastaReader;
@@ -50,7 +51,9 @@ import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mitools.cli.Action;
 import com.milaboratory.mitools.cli.ActionHelper;
+import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
+import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.reference.*;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
@@ -130,13 +133,13 @@ public class ActionAlign implements Action {
         if (warnings)
             System.err.println("To turn off warnings use '-nw' option.");
 
-        if(aligner.getVAllelesToAlign().isEmpty()){
+        if (aligner.getVAllelesToAlign().isEmpty()) {
             System.err.println("No V alleles to align. Aborting execution. See warnings for more info " +
                     "(turn warnings by adding -w option).");
             return;
         }
 
-        if(aligner.getVAllelesToAlign().isEmpty()){
+        if (aligner.getVAllelesToAlign().isEmpty()) {
             System.err.println("No J alleles to align. Aborting execution. See warnings for more info " +
                     "(turn warnings by adding -w option).");
             return;
@@ -157,6 +160,14 @@ public class ActionAlign implements Action {
                 sReads = new CountLimitingOutputPort<>(sReads, actionParameters.limit);
                 progress = SmartProgressReporter.extractProgress((CountLimitingOutputPort<?>) sReads);
             }
+
+            final boolean writeAllResults = actionParameters.getWriteAllResults();
+            EnumMap<GeneType, VDJCHit[]> emptyHits = new EnumMap<>(GeneType.class);
+            for (GeneType gt : GeneType.values())
+                if (alignerParameters.getGeneAlignerParameters(gt) != null)
+                    emptyHits.put(gt, new VDJCHit[0]);
+            final PairedEndReadsLayout readsLayout = alignerParameters.getReadsLayout();
+
             SmartProgressReporter.startProgressReport("Alignment", progress);
             OutputPort<Chunk<? extends SequenceRead>> mainInputReads = CUtils.buffered((OutputPort) chunked(sReads, 64), 16);
             OutputPort<VDJCAlignmentResult> alignments = unchunked(new ParallelProcessor(mainInputReads, chunked(aligner), actionParameters.threads));
@@ -168,20 +179,28 @@ public class ActionAlign implements Action {
                                     return o.read.getId();
                                 }
                             }))) {
-                if (result.alignment == null)
-                    continue;
-                if (!result.alignment.hasSameVJLoci(1)) {
+                VDJCAlignments alignment = result.alignment;
+                SequenceRead read = result.read;
+                if (alignment == null) {
+                    if (writeAllResults)
+                        // Creating empty alignment object if alignment for current read failed
+                        alignment = new VDJCAlignments(read.getId(), emptyHits,
+                                readsLayout.createTargets(read)[0].targets);
+                    else
+                        continue;
+                }
+                if (!alignment.hasSameVJLoci(1)) {
                     if (report != null)
                         report.onAlignmentWithDifferentVJLoci();
-                    if (!actionParameters.allowDifferentVJLoci)
+                    if (!actionParameters.allowDifferentVJLoci && !writeAllResults)
                         continue;
                 }
                 if (writer != null) {
                     if (actionParameters.saveReadDescription || actionParameters.saveOriginalReads)
-                        result.alignment.setDescriptions(extractDescription(result.read));
+                        alignment.setDescriptions(extractDescription(read));
                     if (actionParameters.saveOriginalReads)
-                        result.alignment.setOriginalSequences(extractNSeqs(result.read));
-                    writer.write(result.alignment);
+                        alignment.setOriginalSequences(extractNSeqs(read));
+                    writer.write(alignment);
                 }
             }
             if (writer != null)
@@ -275,6 +294,10 @@ public class ActionAlign implements Action {
                 names = {"-a", "--save-description"})
         public Boolean saveReadDescription = false;
 
+        @Parameter(description = "Write alignment results for all input reads (even if alignment failed).",
+                names = {"-v", "--write-all"})
+        public Boolean writeAllResults = null;
+
         @Parameter(description = "Copy original reads (sequences + qualities + descriptions) to .vdjca file.",
                 names = {"-g", "--save-reads"})
         public Boolean saveOriginalReads = false;
@@ -324,6 +347,10 @@ public class ActionAlign implements Action {
 
         public Set<Locus> getLoci() {
             return Util.parseLoci(loci);
+        }
+
+        public boolean getWriteAllResults() {
+            return writeAllResults != null && writeAllResults;
         }
 
         public boolean isInputPaired() {
