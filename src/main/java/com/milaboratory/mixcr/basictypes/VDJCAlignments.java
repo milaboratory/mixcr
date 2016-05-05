@@ -103,11 +103,22 @@ public final class VDJCAlignments extends VDJCObject {
     public final boolean hasSameVJLoci(final int top) {
         VDJCHit[] vHits = hits.get(GeneType.Variable),
                 jHits = hits.get(GeneType.Joining);
-        for (int v = 0; v < top && v < vHits.length; ++v)
-            for (int j = 0; j < top && j < jHits.length; ++j)
+        for (int v = 0; v < actualTop(vHits, top); ++v)
+            for (int j = 0; j < actualTop(jHits, top); ++j)
                 if (vHits[v].getAllele().getLocus() == jHits[j].getAllele().getLocus())
                     return true;
         return false;
+    }
+
+    private static int actualTop(VDJCHit[] hits, int top) {
+        if (hits.length <= top)
+            return hits.length;
+        float score = hits[top].getScore() - Float.MIN_VALUE;
+        while (top < hits.length &&
+                hits[top].getScore() >= score) {
+            ++top;
+        }
+        return top;
     }
 
     @Override
