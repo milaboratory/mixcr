@@ -6,11 +6,11 @@ Bolotin, Dmitriy A., Stanislav Poslavsky, Igor Mitrophanov, Mikhail Shugay, Ilga
 
 ## Datasets used in the paper
 
-* Full-length Antybody data (1.9 Gb): [link][http://files.milaboratory.com/mixcr/paper/igh_data.zip]
-* Real TRB (1.5 Mb): [link][http://files.milaboratory.com/mixcr/paper/real_trb.zip]
-* Real IGH (34 Mb): [link][http://files.milaboratory.com/mixcr/paper/real_igh.zip]
-* Synthetic TRB (54 Mb): [link][http://files.milaboratory.com/mixcr/paper/synth_trb.zip]
-* Synthetic IGH (53 Mb): [link][http://files.milaboratory.com/mixcr/paper/synth_igh.zip]
+* Full-length Antybody data (1.9 Gb): [link](http://files.milaboratory.com/mixcr/paper/igh_data.zip)
+* Real TRB (1.5 Mb): [link](http://files.milaboratory.com/mixcr/paper/real_trb.zip)
+* Real IGH (34 Mb): [link](http://files.milaboratory.com/mixcr/paper/real_igh.zip)
+* Synthetic TRB (54 Mb): [link](http://files.milaboratory.com/mixcr/paper/synth_trb.zip)
+* Synthetic IGH (53 Mb): [link](http://files.milaboratory.com/mixcr/paper/synth_igh.zip)
 
 ## Code used in the paper
 
@@ -30,6 +30,6 @@ MiXCR-Test suite is a set of utilities for
 
 #### Links
 
-* [Executable][http://files.milaboratory.com/mixcr/paper/mixcr-test-1.1.zip]
-* [Documentation][http://files.milaboratory.com/mixcr/paper/mixcr-test_documentation_1.1.html]
-* [Source code][http://files.milaboratory.com/mixcr/paper/mixcr-test-1.1-src.zip]
+* [Executable](http://files.milaboratory.com/mixcr/paper/mixcr-test-1.1.zip)
+* [Documentation](http://files.milaboratory.com/mixcr/paper/mixcr-test_documentation_1.1.html)
+* [Source code](http://files.milaboratory.com/mixcr/paper/mixcr-test-1.1-src.zip)
