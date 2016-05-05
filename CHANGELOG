@@ -1,4 +1,11 @@
 
+MiXCR 1.7.2 ( 5 May 2016)
+========================
+
+-- Fixed bug leading to mis-filtering of certain combinations of Alpha-Delta-V genes with Alpha-J 
+   or Delta-J genes
+
+
 MiXCR 1.7.1 ( 9 Mar 2016)
 ========================
 
