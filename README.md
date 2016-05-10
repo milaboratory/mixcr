@@ -41,7 +41,7 @@ For more details see documentation.
 
 ## Documentation
 
-Detailed documentation can be found at https://mixcr.readthedocs.org/
+Detailed documentation can be found at https://mixcr.readthedocs.io/
 
 ## License
 
