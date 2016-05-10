@@ -92,7 +92,7 @@ do
             shift
             ;;
         *)
-            mixcrArgs+=(${key})
+            mixcrArgs+=("${key}")
             ;;
     esac
 done
