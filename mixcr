@@ -87,7 +87,7 @@ do
 
             ;;
         *)
-            mixcrArgs+=(${key})
+            mixcrArgs+=("${key}")
             ;;
     esac
 done
