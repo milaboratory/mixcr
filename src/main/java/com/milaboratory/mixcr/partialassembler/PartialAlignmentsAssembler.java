@@ -246,7 +246,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
                 bestI = -1;
                 for (int i = 0; i < descriptors.size(); i++) {
                     TargetMerger.TargetMergingResult result = targetMerger.merge(descriptors.get(i), central);
-                    if (result!= null && (bestResult == null || bestResult.score < result.score)) {
+                    if (result != null && (bestResult == null || bestResult.score < result.score)) {
                         bestResult = result;
                         bestI = i;
                     }
@@ -280,9 +280,21 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
                         continue outer;
                     }
                 }
-
-
         }
+
+        // Creating pre-list of resulting targets
+        List<AlignedTarget> result = new ArrayList<>();
+        result.addAll(allDescriptors[0]);
+        result.add(central);
+        result.addAll(allDescriptors[1]);
+
+        // Ordering and filtering final targets
+        result = AlignedTarget.orderTargets(result);
+
+
+        // TODO Creating final MultiRead......
+
+
 
         List<SingleRead> resultingReads = new ArrayList<>(3);
         List<EnumSet<GeneType>> resultingExpectedGenes = new ArrayList<>(3);

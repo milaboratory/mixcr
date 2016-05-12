@@ -39,10 +39,7 @@ import gnu.trove.iterator.TObjectLongIterator;
 import gnu.trove.map.TObjectLongMap;
 import gnu.trove.map.hash.TObjectLongHashMap;
 
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public final class AlignedTarget {
     private final VDJCAlignments alignments;
@@ -71,10 +68,6 @@ public final class AlignedTarget {
         return alignments.getTarget(targetId);
     }
 
-    public EnumSet<GeneType> alignedGenes() {
-        return extractExpectedGenes(targetId, alignments);
-    }
-
     public AlignedTarget overrideDescription(String newDescription) {
         return new AlignedTarget(alignments, targetId, newDescription);
     }
@@ -88,7 +81,7 @@ public final class AlignedTarget {
 
     public static List<AlignedTarget> orderTargets(List<AlignedTarget> targets) {
         // Selecting best alleles by total score
-        EnumMap<GeneType, Allele> bestAlleles = new EnumMap<>(GeneType.class);
+        final EnumMap<GeneType, Allele> bestAlleles = new EnumMap<>(GeneType.class);
         for (GeneType geneType : GeneType.VDJC_REFERENCE) {
             TObjectLongMap<Allele> scores = new TObjectLongHashMap<>();
             for (AlignedTarget target : targets) {
@@ -112,9 +105,59 @@ public final class AlignedTarget {
                 bestAlleles.put(geneType, bestAllele);
         }
 
-        class Wrapper{
+        // Class to facilitate comparison between targets
+        final class Wrapper implements Comparable<Wrapper> {
+            final AlignedTarget target;
+            final EnumMap<GeneType, Alignment<NucleotideSequence>> alignments = new EnumMap<>(GeneType.class);
 
+            Wrapper(AlignedTarget target) {
+                this.target = target;
+                for (Allele allele : bestAlleles.values())
+                    for (VDJCHit hit : target.getAlignments().getHits(allele.getGeneType()))
+                        if (hit.getAllele() == allele) {
+                            Alignment<NucleotideSequence> alignment = hit.getAlignment(target.targetId);
+                            if (alignment != null) {
+                                alignments.put(allele.getGeneType(), alignment);
+                                break;
+                            }
+                        }
+            }
+
+            GeneType firstAlignedGeneType() {
+                for (GeneType geneType : GeneType.VDJC_REFERENCE)
+                    if (alignments.containsKey(geneType))
+                        return geneType;
+                return null;
+            }
+
+            @Override
+            public int compareTo(Wrapper o) {
+                GeneType thisFirstGene = firstAlignedGeneType();
+                GeneType otherFirstGene = o.firstAlignedGeneType();
+                int cmp = Byte.compare(thisFirstGene.getOrder(), otherFirstGene.getOrder());
+                return cmp != 0 ? cmp :
+                        Integer.compare(
+                                alignments.get(thisFirstGene).getSequence1Range().getLower(),
+                                o.alignments.get(thisFirstGene).getSequence1Range().getLower());
+            }
         }
+
+        // Creating wrappers and sorting list
+        List<Wrapper> wrappers = new ArrayList<>(targets.size());
+        for (AlignedTarget target : targets) {
+            Wrapper wrapper = new Wrapper(target);
+            if (wrapper.firstAlignedGeneType() == null)
+                continue;
+            wrappers.add(wrapper);
+        }
+        Collections.sort(wrappers);
+
+        // Creating result
+        List<AlignedTarget> result = new ArrayList<>(wrappers.size());
+        for (Wrapper wrapper : wrappers)
+            result.add(wrapper.target);
+
+        return result;
     }
 
     public static EnumSet<GeneType> extractExpectedGenes(int targetId, VDJCAlignments alignments) {
