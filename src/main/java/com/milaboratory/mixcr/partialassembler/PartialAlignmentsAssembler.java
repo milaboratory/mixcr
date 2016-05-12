@@ -58,6 +58,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
     final int minimalVJJunctionOverlap;
     final boolean writePartial, overlappedOnly;
     final MismatchOnlyPairedReadMerger merger;
+    final TargetMerger targetMerger = null;
     public final AtomicLong leftParts = new AtomicLong(),
             noKMer = new AtomicLong(),
             wildCardsInKMer = new AtomicLong(),
@@ -208,85 +209,79 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
 
         EnumSet<GeneType> expectedCentralGenes = EnumSet.noneOf(GeneType.class);
 
-        TargetDescriptor leftCentral = new TargetDescriptor(leftAl, true, left.targetId);
-        TargetDescriptor rightCentral = new TargetDescriptor(rightAl, false, rightTargetId);
-        SingleReadImpl centralResult = new SingleReadImpl(readId,
-                mergeOverlapped(leftCentral.getTarget(), rightCentral.getTarget(), maxDelta),
-                "VJOverlap(" + maxOverlap + ") = " + leftCentral.getStringId() + " x " + rightCentral.getStringId());
-        expectedCentralGenes.addAll(extractExpectedGenes(left.targetId, leftAl));
-        expectedCentralGenes.addAll(extractExpectedGenes(rightTargetId, rightAl));
-        if (expectedCentralGenes.contains(GeneType.Variable) && expectedCentralGenes.contains(GeneType.Joining))
-            expectedCentralGenes.add(GeneType.Diversity);
+        ArrayList<AlignedTarget> leftTargets = extractAlignedTargets(leftAl, true);
+        ArrayList<AlignedTarget> rightTargets = extractAlignedTargets(rightAl, false);
 
-        final List<TargetDescriptor> leftDescriptors = new ArrayList<>(2),
+        AlignedTarget leftCentral = leftTargets.get(left.targetId);
+        AlignedTarget rightCentral = rightTargets.get(rightTargetId);
+
+        AlignedTarget central = targetMerger.merge(leftCentral, rightCentral, maxDelta)
+                .overrideDescription("VJOverlap(" + maxOverlap + ") = " + leftCentral.getDescription() +
+                        " x " + rightCentral.getDescription());
+
+        final List<AlignedTarget> leftDescriptors = new ArrayList<>(2),
                 rightDescriptors = new ArrayList<>(2);
 
         for (int i = 0; i < left.targetId; ++i)
-            leftDescriptors.add(new TargetDescriptor(leftAl, true, i));
+            leftDescriptors.add(leftTargets.get(i));
         for (int i = left.targetId + 1; i < leftAl.numberOfTargets(); ++i)
-            rightDescriptors.add(new TargetDescriptor(leftAl, true, i));
+            rightDescriptors.add(leftTargets.get(i));
         for (int i = 0; i < rightTargetId; ++i)
-            leftDescriptors.add(new TargetDescriptor(rightAl, false, i));
+            leftDescriptors.add(leftTargets.get(i));
         for (int i = rightTargetId + 1; i < rightAl.numberOfTargets(); ++i)
-            rightDescriptors.add(new TargetDescriptor(rightAl, false, i));
+            rightDescriptors.add(leftTargets.get(i));
 
-        PairedReadMergingResult bestMerge = null;
-        int bestI;
+
         // Merging to VJ junction
-        List<TargetDescriptor>[] allDescriptors = new List[]{leftDescriptors, rightDescriptors};
+        List<AlignedTarget>[] allDescriptors = new List[]{leftDescriptors, rightDescriptors};
         SingleReadImpl[] sideResults = new SingleReadImpl[2];
         EnumSet<GeneType>[] expectedSideGenes = new EnumSet[]{EnumSet.noneOf(GeneType.class),
                 EnumSet.noneOf(GeneType.class)};
+        TargetMerger.TargetMergingResult bestResult = null;
+        int bestI;
 
-        for (List<TargetDescriptor> descriptors : allDescriptors)
+        // Trying to merge left and right reads to central one
+        for (List<AlignedTarget> descriptors : allDescriptors)
             do {
                 bestI = -1;
                 for (int i = 0; i < descriptors.size(); i++) {
-                    PairedReadMergingResult merged = merger.merge(descriptors.get(i).getTarget(), centralResult.getData());
-                    if (merged.isSuccessful() && (bestMerge == null || bestMerge.score() < merged.score())) {
-                        bestMerge = merged;
+                    TargetMerger.TargetMergingResult result = targetMerger.merge(descriptors.get(i), central);
+                    if (result!= null && (bestResult == null || bestResult.score < result.score)) {
+                        bestResult = result;
                         bestI = i;
                     }
                 }
+
                 if (bestI != -1) {
-                    centralResult = new SingleReadImpl(centralResult.getId(), bestMerge.getOverlappedSequence(),
-                            centralResult.getDescription() + " / MergedFrom" +
+                    central = bestResult.result.overrideDescription(
+                            central.getDescription() + " / MergedFrom" +
                                     (descriptors == leftDescriptors ? "Left" : "Right") +
-                                    "(" + bestMerge.getOverlap() + ") = " +
-                                    descriptors.get(bestI).getStringId());
+                                    "(" + bestResult.score + ") = " +
+                                    descriptors.get(bestI).getDescription());
                     descriptors.remove(bestI);
                 }
             } while (bestI != -1);
 
 
-        // Merge left+left / right+right
+        // Merging left+left / right+right
         outer:
         for (int d = 0; d < allDescriptors.length; d++) {
-            List<TargetDescriptor> descriptors = allDescriptors[d];
+            List<AlignedTarget> descriptors = allDescriptors[d];
             for (int i = 0; i < descriptors.size(); i++)
                 for (int j = i + 1; j < descriptors.size(); j++) {
-                    PairedReadMergingResult merged = merger.merge(descriptors.get(i).getTarget(),
-                            descriptors.get(j).getTarget());
-                    if (merged.isSuccessful()) {
-                        sideResults[d] = new SingleReadImpl(readId, merged.getOverlappedSequence(),
-                                "Merged(" + merged.getOverlap() + ") = " + descriptors.get(i).getStringId() +
-                                        " + " + descriptors.get(j).getStringId());
-                        expectedSideGenes[d].addAll(descriptors.get(i).expectedSideGenes());
-                        expectedSideGenes[d].addAll(descriptors.get(j).expectedSideGenes());
+                    TargetMerger.TargetMergingResult result = targetMerger.merge(descriptors.get(i),
+                            descriptors.get(j));
+                    if (result != null) {
+                        descriptors.set(i, result.result.overrideDescription(
+                                "Merged(" + result.score + ") = " + descriptors.get(i).getDescription() +
+                                        " + " + descriptors.get(j).getDescription()));
+                        descriptors.remove(j);
+                        --d;
                         continue outer;
                     }
                 }
-            if (sideResults[d] == null && !descriptors.isEmpty()) {
-                String[] descriptions = descriptors.get(0)
-                        .alignments.getDescriptions();
-                sideResults[d] = new SingleReadImpl(readId, descriptors.get(0).getTarget(), descriptions == null ?
-                        descriptors.get(0).getStringId() :
-                        descriptions[descriptors.get(0).targetId]);
-                expectedSideGenes[d].addAll(descriptors.get(0).expectedSideGenes());
-            }
 
-            if (expectedSideGenes[d].contains(GeneType.Variable) && expectedSideGenes[d].contains(GeneType.Joining))
-                expectedSideGenes[d].add(GeneType.Diversity);
+
         }
 
         List<SingleRead> resultingReads = new ArrayList<>(3);
@@ -331,34 +326,16 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         return new SingleReadImpl(readId, rightAl.getTarget(targetId), "R" + rightAl.getReadId() + "." + targetId);
     }
 
-    private SingleRead makeOverlapped(long readId, VDJCAlignments leftAl, VDJCAlignments rightAl,
-                                      int leftTargetId, int rightTargetId, int maxDelta, int maxOverlap) {
-        return new SingleReadImpl(readId,
-                mergeOverlapped(leftAl.getTarget(leftTargetId), rightAl.getTarget(rightTargetId), maxDelta),
-                "L" + leftAl.getReadId() + "." + leftTargetId + " x R" + rightAl.getReadId() + "." + rightTargetId + " overlap = " + maxOverlap);
-    }
+    //private SingleRead makeOverlapped(long readId, VDJCAlignments leftAl, VDJCAlignments rightAl,
+    //                                  int leftTargetId, int rightTargetId, int maxDelta, int maxOverlap) {
+    //    return new SingleReadImpl(readId,
+    //            mergeOverlapped(leftAl.getTarget(leftTargetId), rightAl.getTarget(rightTargetId), maxDelta),
+    //            "L" + leftAl.getReadId() + "." + leftTargetId + " x R" + rightAl.getReadId() + "." + rightTargetId + " overlap = " + maxOverlap);
+    //}
 
-    private static EnumSet<GeneType> extractExpectedGenes(int targetId, VDJCAlignments alignments) {
-        EnumSet<GeneType> gts = EnumSet.noneOf(GeneType.class);
-        for (GeneType geneType : GeneType.VDJC_REFERENCE) {
-            boolean present = false;
-            for (VDJCHit vdjcHit : alignments.getHits(geneType)) {
-                if (vdjcHit.getAlignment(targetId) != null) {
-                    present = true;
-                    break;
-                }
-            }
-            if (present)
-                gts.add(geneType);
-        }
-        if (gts.contains(GeneType.Variable) && gts.contains(GeneType.Joining))
-            gts.add(GeneType.Diversity);
-        return gts;
-    }
-
-    private NSequenceWithQuality mergeOverlapped(NSequenceWithQuality left, NSequenceWithQuality right, int delta) {
-        return merger.overlap(left, right, delta);
-    }
+    //private NSequenceWithQuality mergeOverlapped(NSequenceWithQuality left, NSequenceWithQuality right, int delta) {
+    //    return merger.overlap(left, right, delta);
+    //}
 
 
     private int getLeftPartitionedSequence(VDJCAlignments alignment) {
@@ -490,33 +467,48 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         }
     }
 
-    private static final class TargetDescriptor {
-        final VDJCAlignments alignments;
-        final boolean isLeft;
-        final int targetId;
-
-        public TargetDescriptor(VDJCAlignments alignments, boolean isLeft, int targetId) {
-            this.alignments = alignments;
-            this.isLeft = isLeft;
-            this.targetId = targetId;
-        }
-
-        public NSequenceWithQuality getTarget() {
-            return alignments.getTarget(targetId);
-        }
-
-        public EnumSet<GeneType> expectedSideGenes() {
-            return extractExpectedGenes(targetId, alignments);
-        }
-
-        public String getStringId() {
-            String descr = (isLeft ? "L" : "R") + alignments.getReadId() + "." + targetId;
-            if (alignments.getDescriptions() != null && alignments.getDescriptions().length - 1 >= targetId &&
-                    alignments.getDescriptions()[targetId] != null)
-                descr += "[" + alignments.getDescriptions()[targetId] + "]";
-            return descr;
-        }
+    private static AlignedTarget overrideDescription(AlignedTarget target, boolean isLeft) {
+        String descr = (isLeft ? "L" : "R") + target.getAlignments().getReadId() + "." + target.getTargetId();
+        String oldDescr = target.getDescription();
+        if (oldDescr != null)
+            descr += "[" + oldDescr + "]";
+        return target.overrideDescription(descr);
     }
+
+    public static ArrayList<AlignedTarget> extractAlignedTargets(VDJCAlignments alignments, boolean isLeft) {
+        ArrayList<AlignedTarget> targets = new ArrayList<>(alignments.numberOfTargets());
+        for (int i = 0; i < alignments.numberOfTargets(); i++)
+            targets.add(overrideDescription(new AlignedTarget(alignments, i), isLeft));
+        return targets;
+    }
+
+    //private static final class TargetDescriptor {
+    //    final VDJCAlignments alignments;
+    //    final boolean isLeft;
+    //    final int targetId;
+    //
+    //    public TargetDescriptor(VDJCAlignments alignments, boolean isLeft, int targetId) {
+    //        this.alignments = alignments;
+    //        this.isLeft = isLeft;
+    //        this.targetId = targetId;
+    //    }
+    //
+    //    public NSequenceWithQuality getTarget() {
+    //        return alignments.getTarget(targetId);
+    //    }
+    //
+    //    public EnumSet<GeneType> expectedSideGenes() {
+    //        return AlignedTarget.extractExpectedGenes(targetId, alignments);
+    //    }
+    //
+    //    public String getStringId() {
+    //        String descr = (isLeft ? "L" : "R") + alignments.getReadId() + "." + targetId;
+    //        if (alignments.getDescriptions() != null && alignments.getDescriptions().length - 1 >= targetId &&
+    //                alignments.getDescriptions()[targetId] != null)
+    //            descr += "[" + alignments.getDescriptions()[targetId] + "]";
+    //        return descr;
+    //    }
+    //}
 
     @Override
     public void close() throws IOException {
@@ -565,8 +557,11 @@ IGHD1-26*00  36                                       ctacg                     
 // VJOverlap(40) = L7073486.0 x R201727.1 / MergedFromRight(28) = R201727.0
 
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv     jjjjjjjjjjjjjjjjjjjjjcccccccccccccccccccccccc
-//                        -------------------->
+//                        -------------------->             <--------------------
 //        ----------------->            <--------------------
+
+//   ------>            -------------------->                    <---------------
+//            -------->                  <--------------------
 
 
 //  ------------------>   -------------------->            <--------------------
