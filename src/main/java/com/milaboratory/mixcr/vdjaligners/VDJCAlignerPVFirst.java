@@ -420,7 +420,8 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                 }
 
                 cHits = combine(parameters.getFeatureToAlign(GeneType.Constant), results);
-            }
+            } else
+                cHits = new VDJCHit[0];
         }
 
         /**

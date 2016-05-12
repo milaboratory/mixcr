@@ -243,7 +243,8 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
                 AlignmentResult<AlignmentHit<NucleotideSequence, Allele>> res = cAligner.align(sequence, from, sequence.size());
 
                 cHits = createHits(res.getHits(), parameters.getFeatureToAlign(GeneType.Constant));
-            }
+            } else
+                cHits = new VDJCHit[0];
         }
 
         public boolean isEmpty() {
