@@ -295,23 +295,24 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         // TODO Creating final MultiRead......
 
 
+//
+//        List<SingleRead> resultingReads = new ArrayList<>(3);
+//        List<EnumSet<GeneType>> resultingExpectedGenes = new ArrayList<>(3);
+//
+//        if (sideResults[0] != null) {
+//            resultingReads.add(sideResults[0]);
+//            resultingExpectedGenes.add(expectedSideGenes[0]);
+//        }
+//        resultingReads.add(centralResult);
+//        resultingExpectedGenes.add(expectedCentralGenes);
+//        if (sideResults[1] != null) {
+//            resultingReads.add(sideResults[1]);
+//            resultingExpectedGenes.add(expectedSideGenes[1]);
+//        }
 
-        List<SingleRead> resultingReads = new ArrayList<>(3);
-        List<EnumSet<GeneType>> resultingExpectedGenes = new ArrayList<>(3);
-
-        if (sideResults[0] != null) {
-            resultingReads.add(sideResults[0]);
-            resultingExpectedGenes.add(expectedSideGenes[0]);
-        }
-        resultingReads.add(centralResult);
-        resultingExpectedGenes.add(expectedCentralGenes);
-        if (sideResults[1] != null) {
-            resultingReads.add(sideResults[1]);
-            resultingExpectedGenes.add(expectedSideGenes[1]);
-        }
-
-        return new VDJCMultiRead(resultingReads.toArray(new SingleRead[resultingReads.size()]),
-                resultingExpectedGenes.toArray(new EnumSet[resultingExpectedGenes.size()]));
+        return null;
+//        return new VDJCMultiRead(resultingReads.toArray(new SingleRead[resultingReads.size()]),
+//                resultingExpectedGenes.toArray(new EnumSet[resultingExpectedGenes.size()]));
     }
 
     @Override

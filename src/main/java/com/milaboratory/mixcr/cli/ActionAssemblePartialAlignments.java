@@ -1,21 +1,21 @@
 package com.milaboratory.mixcr.cli;
 
+import com.beust.jcommander.DynamicParameter;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
-import com.milaboratory.core.PairedEndReadsLayout;
 import com.milaboratory.mitools.cli.Action;
 import com.milaboratory.mitools.cli.ActionHelper;
 import com.milaboratory.mitools.cli.ActionParameters;
-import com.milaboratory.mitools.merger.MergerParameters;
-import com.milaboratory.mitools.merger.QualityMergingAlgorithm;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssembler;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParameters;
 import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.util.SmartProgressReporter;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Dmitry Bolotin
@@ -26,12 +26,18 @@ public final class ActionAssemblePartialAlignments implements Action {
 
     @Override
     public void go(ActionHelper helper) throws Exception {
+        PartialAlignmentsAssemblerParameters assemblerParameters = PartialAlignmentsAssemblerParameters.getDefault();
 
-        PartialAlignmentsAssemblerParameters assParameters = new PartialAlignmentsAssemblerParameters(12, 0, 18,
-                new MergerParameters(QualityMergingAlgorithm.SumSubtraction, PairedEndReadsLayout.CollinearDirect, 20, 45, 0.95));
+        if (!parameters.overrides.isEmpty()) {
+            assemblerParameters = JsonOverrider.override(assemblerParameters, PartialAlignmentsAssemblerParameters.class, parameters.overrides);
+            if (assemblerParameters == null) {
+                System.err.println("Failed to override some parameter.");
+                return;
+            }
+        }
 
         long start = System.currentTimeMillis();
-        try (PartialAlignmentsAssembler assembler = new PartialAlignmentsAssembler(assParameters, parameters.getOutputFileName(),
+        try (PartialAlignmentsAssembler assembler = new PartialAlignmentsAssembler(assemblerParameters, parameters.getOutputFileName(),
                 parameters.getWritePartial(), parameters.getOverlappedOnly())) {
             try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getInputFileName(), LociLibraryManager.getDefault())) {
                 SmartProgressReporter.startProgressReport("Building index", reader);
@@ -59,12 +65,14 @@ public final class ActionAssemblePartialAlignments implements Action {
         return parameters;
     }
 
-
     @Parameters(commandDescription = "Assemble clones",
             optionPrefixes = "-")
     private static class AssemblePartialAlignmentsParameters extends ActionParameters {
         @Parameter(description = "input_file output_file")
         public List<String> parameters;
+
+        @DynamicParameter(names = "-O", description = "Overrides base values of parameters.")
+        public Map<String, String> overrides = new HashMap<>();
 
         @Parameter(description = "Report file.",
                 names = {"-r", "--report"})

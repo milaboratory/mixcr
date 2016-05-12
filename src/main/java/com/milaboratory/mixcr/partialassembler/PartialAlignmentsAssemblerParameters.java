@@ -28,14 +28,27 @@
  */
 package com.milaboratory.mixcr.partialassembler;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.milaboratory.mitools.merger.MergerParameters;
+import com.milaboratory.util.GlobalObjectMappers;
 
+import java.io.IOException;
+
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE)
 public class PartialAlignmentsAssemblerParameters {
     private int kValue, kOffset, minimalVJJunctionOverlap;
     private MergerParameters mergerParameters;
 
-    public PartialAlignmentsAssemblerParameters(int kValue, int kOffset, int minimalVJJunctionOverlap,
-                                                MergerParameters mergerParameters) {
+    @JsonCreator
+    public PartialAlignmentsAssemblerParameters(
+            @JsonProperty("kValue") int kValue,
+            @JsonProperty("kOffset") int kOffset,
+            @JsonProperty("minimalVJJunctionOverlap") int minimalVJJunctionOverlap,
+            @JsonProperty("mergerParameters") MergerParameters mergerParameters) {
         this.kValue = kValue;
         this.kOffset = kOffset;
         this.minimalVJJunctionOverlap = minimalVJJunctionOverlap;
@@ -72,5 +85,24 @@ public class PartialAlignmentsAssemblerParameters {
 
     public void setMinimalVJJunctionOverlap(int minimalVJJunctionOverlap) {
         this.minimalVJJunctionOverlap = minimalVJJunctionOverlap;
+    }
+
+    @Override
+    public String toString() {
+        try {
+            return GlobalObjectMappers.PRETTY.writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException();
+        }
+    }
+
+    public static PartialAlignmentsAssemblerParameters getDefault() {
+        try {
+            return GlobalObjectMappers.ONE_LINE.readValue(
+                    PartialAlignmentsAssemblerParameters.class.getClassLoader().getResourceAsStream("parameters/partial_assembler_parameters.json")
+                    , PartialAlignmentsAssemblerParameters.class);
+        } catch (IOException e) {
+            throw new RuntimeException();
+        }
     }
 }
