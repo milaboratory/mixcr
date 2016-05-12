@@ -19,9 +19,8 @@ To install MiXCR using Homebrew just type the following commands:
     brew tap milaboratory/all
     brew install mixcr
 
-
-Installation on Mac OS X / Linux
-------------------------------------
+Installation on Mac OS X / Linux / FreeBSD from zip distribution
+----------------------------------------------------------------
 
 - Check that you have Java **1.7+** installed on your system by typing ``java -version``. Here is the example output of this command:
 
@@ -32,16 +31,18 @@ Installation on Mac OS X / Linux
     Java(TM) SE Runtime Environment (build 1.7.0_65-b17)
     Java HotSpot(TM) 64-Bit Server VM (build 24.65-b04, mixed mode)
 
-- unzip the archive with MiXCR
+- download latest binary distributaion of MiXCR from the `release page <https://github.com/milaboratory/mixcr/releases>`_ on GitHub
+- unzip the archive
 - add extracted folder of MiXCR distribution to your ``PATH`` variable or add symbolic link for ``mixcr`` script to your ``bin/`` folder (e.g. ``~/bin/`` in Ubuntu and many other popular linux distributions)
 
 Installation on Windows
----------------------------
+-----------------------
 
 Currently there is no execution script or installer for Windows. Still MiXCR can easily be used by direct execution from the jar file.
 
 - check that you have Java **1.7+** installed on your system by typing ``java -version``
-- unzip the archive with MiXCR
+- download latest binary distributaion of MiXCR from the `release page <https://github.com/milaboratory/mixcr/releases>`_ on GitHub
+- unzip the archive
 - use ``mixcr.jar`` from the archive in the following way:
 
   .. code-block:: powershell
