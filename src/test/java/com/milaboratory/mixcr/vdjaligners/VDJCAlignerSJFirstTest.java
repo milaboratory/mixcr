@@ -34,7 +34,8 @@ import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
-import com.milaboratory.mixcr.reference.*;
+import com.milaboratory.mixcr.reference.LociLibraryManager;
+import io.repseq.reference.*;
 import org.junit.Assert;
 import org.junit.Test;
 

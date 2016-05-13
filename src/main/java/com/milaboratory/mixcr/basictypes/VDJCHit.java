@@ -31,10 +31,10 @@ package com.milaboratory.mixcr.basictypes;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.AlignmentHelper;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.reference.Allele;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
-import com.milaboratory.mixcr.reference.ReferencePoint;
+import io.repseq.reference.Allele;
+import io.repseq.reference.GeneFeature;
+import io.repseq.reference.GeneType;
+import io.repseq.reference.ReferencePoint;
 import com.milaboratory.primitivio.annotations.Serializable;
 
 import java.util.Arrays;

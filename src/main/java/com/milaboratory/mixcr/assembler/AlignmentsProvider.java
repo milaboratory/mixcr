@@ -31,7 +31,7 @@ package com.milaboratory.mixcr.assembler;
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
-import com.milaboratory.mixcr.reference.AlleleResolver;
+import io.repseq.reference.AlleleResolver;
 import com.milaboratory.util.Factory;
 
 import java.io.*;

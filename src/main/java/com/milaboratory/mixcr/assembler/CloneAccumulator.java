@@ -35,8 +35,8 @@ import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.mixcr.basictypes.ClonalSequence;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.reference.AlleleId;
-import com.milaboratory.mixcr.reference.GeneType;
+import io.repseq.reference.AlleleId;
+import io.repseq.reference.GeneType;
 import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.map.hash.TObjectFloatHashMap;
 

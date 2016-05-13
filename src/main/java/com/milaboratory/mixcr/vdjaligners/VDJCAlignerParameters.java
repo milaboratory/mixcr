@@ -36,9 +36,9 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.milaboratory.core.PairedEndReadsLayout;
 import com.milaboratory.core.merger.MergerParameters;
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign;
-import com.milaboratory.mixcr.reference.Allele;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
+import io.repseq.reference.Allele;
+import io.repseq.reference.GeneFeature;
+import io.repseq.reference.GeneType;
 import com.milaboratory.primitivio.annotations.Serializable;
 
 import java.util.EnumMap;

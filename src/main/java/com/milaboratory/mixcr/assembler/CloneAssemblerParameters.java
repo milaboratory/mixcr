@@ -32,7 +32,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.mixcr.reference.GeneFeature;
+import io.repseq.reference.GeneFeature;
 
 import java.util.Arrays;
 import java.util.regex.Matcher;

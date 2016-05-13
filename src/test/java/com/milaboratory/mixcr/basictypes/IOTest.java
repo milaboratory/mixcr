@@ -31,11 +31,12 @@ package com.milaboratory.mixcr.basictypes;
 import cc.redberry.pipe.CUtils;
 import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
-import com.milaboratory.mixcr.reference.*;
+import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerSJFirst;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
+import io.repseq.reference.*;
 import org.junit.Assert;
 import org.junit.Test;
 

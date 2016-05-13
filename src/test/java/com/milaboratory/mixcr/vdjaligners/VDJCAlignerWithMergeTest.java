@@ -33,7 +33,8 @@ import com.milaboratory.core.io.sequence.PairedRead;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.reference.*;
+import com.milaboratory.mixcr.reference.LociLibraryManager;
+import io.repseq.reference.*;
 import org.junit.Assert;
 import org.junit.Test;
 

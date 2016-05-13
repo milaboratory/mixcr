@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * Copyright (c) 2014-2016, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
  * (here and after addressed as Inventors)
  * All Rights Reserved
  *
@@ -29,6 +29,7 @@
 package com.milaboratory.mixcr.reference;
 
 import com.milaboratory.mixcr.cli.Util;
+import io.repseq.reference.*;
 
 import java.io.File;
 import java.io.IOException;

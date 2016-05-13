@@ -29,7 +29,7 @@
 package com.milaboratory.mixcr.assembler;
 
 import com.milaboratory.core.io.util.IOTestUtil;
-import com.milaboratory.mixcr.reference.GeneFeature;
+import io.repseq.reference.GeneFeature;
 import org.junit.Assert;
 import org.junit.Test;
 

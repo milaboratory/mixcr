@@ -32,7 +32,7 @@ import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.alignment.BandedAlignerParameters;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
 import com.milaboratory.core.tree.TreeSearchParameters;
-import com.milaboratory.mixcr.reference.GeneFeature;
+import io.repseq.reference.GeneFeature;
 import com.milaboratory.mixcr.vdjaligners.DAlignerParameters;
 import com.milaboratory.util.GlobalObjectMappers;
 import org.junit.Test;

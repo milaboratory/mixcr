@@ -33,8 +33,8 @@ import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NSequenceWithQualityBuilder;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
+import io.repseq.reference.GeneFeature;
+import io.repseq.reference.GeneType;
 
 import java.util.Arrays;
 import java.util.EnumMap;

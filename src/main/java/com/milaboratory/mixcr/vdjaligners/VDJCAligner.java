@@ -32,9 +32,9 @@ import cc.redberry.pipe.Processor;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.reference.Allele;
-import com.milaboratory.mixcr.reference.GeneType;
-import com.milaboratory.mixcr.reference.Locus;
+import io.repseq.reference.Allele;
+import io.repseq.reference.GeneType;
+import io.repseq.reference.Locus;
 
 import java.util.*;
 

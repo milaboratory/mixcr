@@ -28,7 +28,7 @@
  */
 package com.milaboratory.mixcr.reference.builder;
 
-import com.milaboratory.mixcr.reference.ReferencePoint;
+import io.repseq.reference.ReferencePoint;
 import gnu.trove.impl.Constants;
 import gnu.trove.map.hash.TObjectIntHashMap;
 

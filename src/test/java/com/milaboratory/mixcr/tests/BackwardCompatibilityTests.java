@@ -32,7 +32,7 @@ import cc.redberry.pipe.CUtils;
 import com.milaboratory.core.sequence.AminoAcidAlphabet;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.reference.GeneFeature;
+import io.repseq.reference.GeneFeature;
 import com.milaboratory.mixcr.reference.LociLibraryManager;
 import org.junit.Assert;
 import org.junit.Test;

@@ -33,7 +33,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.milaboratory.mixcr.util.ParseUtil;
+import com.milaboratory.util.ParseUtil;
 import com.milaboratory.util.GlobalObjectMappers;
 
 import java.util.Iterator;

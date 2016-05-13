@@ -4,8 +4,8 @@ import cc.redberry.pipe.OutputPort;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
+import io.repseq.reference.GeneFeature;
+import io.repseq.reference.GeneType;
 import com.milaboratory.mixcr.reference.LociLibraryManager;
 
 import java.io.IOException;

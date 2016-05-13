@@ -28,7 +28,7 @@
  */
 package com.milaboratory.mixcr.cli;
 
-import com.milaboratory.mixcr.reference.Locus;
+import io.repseq.reference.Locus;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.io.File;

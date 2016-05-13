@@ -29,10 +29,10 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.primitives.Filter;
-import com.milaboratory.mixcr.reference.Allele;
-import com.milaboratory.mixcr.reference.AlleleId;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
+import io.repseq.reference.Allele;
+import io.repseq.reference.AlleleId;
+import io.repseq.reference.GeneFeature;
+import io.repseq.reference.GeneType;
 
 import java.util.*;
 

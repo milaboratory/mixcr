@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * Copyright (c) 2014-2016, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
  * (here and after addressed as Inventors)
  * All Rights Reserved
  *
@@ -28,93 +28,25 @@
  */
 package com.milaboratory.mixcr.reference;
 
-import com.milaboratory.core.mutations.Mutations;
-import com.milaboratory.core.sequence.NucleotideSequence;
+import io.repseq.reference.*;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.*;
-import java.util.Arrays;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.List;
-import java.util.UUID;
 
-import static com.milaboratory.mixcr.reference.GeneFeature.*;
-import static org.junit.Assert.*;
+import static io.repseq.reference.GeneFeature.*;
 
-public class LociLibraryIOTest {
-    @Test
-    public void test1() throws Exception {
-        test(false);
-    }
-
-    @Test
-    public void test2() throws Exception {
-        test(true);
-    }
-
-    public void test(boolean compressed) throws Exception {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        UUID uuid = UUID.randomUUID();
-        LociLibraryWriter writer = new LociLibraryWriter(bos);
-        writer.writeMagic();
-        writer.writeMetaInfo("G", "B");
-        writer.writeCommonSpeciesName(Species.HomoSapiens, "hsa");
-        writer.writeSequencePart("A1", 0, new NucleotideSequence("ATTAGACAATTAGACA"), compressed);
-        writer.writeBeginOfLocus(Species.HomoSapiens, Locus.TRB, uuid);
-        writer.writeAllele(GeneType.Joining, "TRBJ2-4*01", true, true, "A1", new int[]{1, 5, 8}, null, null, null);
-        writer.writeAllele(GeneType.Joining, "TRBJ2-4*02", false, true, null, null, "TRBJ2-4*01",
-                Mutations.decodeNuc("ST1G").getRAWMutations(), GermlineJCDR3Part);
-        writer.writeMetaInfo("C", "D");
-        writer.writeEndOfLocus();
-
-        ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
-
-        //Testing library
-        LociLibrary library = LociLibraryReader.read(bis, false);
-        assertEquals("B", library.getProperty("G"));
-
-        //Testing container
-        LocusContainer container = library.getLocus("hsa", Locus.TRB);
-        assertNotNull(container);
-        assertEquals("D", container.getProperty("C"));
-        assertEquals(uuid, container.getUUID());
-
-        Gene gene = container.getGenes(GeneType.Joining).get(0);
-        assertNotNull(gene);
-        gene = container.getGene("TRBJ2-4");
-        assertNotNull(gene);
-        assertEquals(GeneGroup.TRBJ, gene.getGroup());
-        assertEquals(0, gene.getIndex());
-
-        Allele allele = gene.getAlleles().get(0);
-        assertNotNull(allele);
-        allele = container.getAllele(GeneType.Joining, 0);
-        assertNotNull(allele);
-        allele = container.getAllele("TRBJ2-4*01");
-        assertNotNull(allele);
-        assertTrue(allele.isFunctional());
-        assertTrue(allele.isReference());
-
-        assertEquals(new NucleotideSequence("TTAG"), allele.getFeature(GermlineJCDR3Part));
-
-        allele = container.getAllele("TRBJ2-4*02");
-        assertNotNull(allele);
-        assertTrue(allele.isFunctional());
-        assertFalse(allele.isReference());
-        assertEquals(new NucleotideSequence("TGAG"), allele.getFeature(GermlineJCDR3Part));
-
-        //TODO: uncomment after fix for FR4
-        //assertEquals(new NucleotideSequence("ACA"), allele.getFeature(GeneFeature.FR4));
-        //assertEquals(new NucleotideSequence("TTAGACA"), allele.getFeature(GeneFeature.JRegion));
-    }
-
+public class LLIOTests {
     @Test
     public void test3ReadLL() throws Exception {
         InputStream sample = LociLibraryReader.class.getClassLoader().getResourceAsStream("reference/mi.ll");
         LociLibrary library = LociLibraryReader.read(sample, false);
-        Assert.assertTrue(library.allAlleles.size() > 100);
-        Allele allele = library.allAlleles.iterator().next();
+        Assert.assertTrue(library.getAllAlleles().size() > 100);
+        Allele allele = library.getAllAlleles().iterator().next();
         Assert.assertTrue(allele.getPartitioning() != null);
     }
 
@@ -130,7 +62,7 @@ public class LociLibraryIOTest {
                 System.out.println(allele.getFeature(VRegion));
                 System.out.println(allele.getFeature(FR3));
                 System.out.println(allele.isFunctional());
-                System.out.println(Arrays.toString(allele.getPartitioning().points));
+                //System.out.println(Arrays.toString(allele.getPartitioning().points));
             }
         }
     }
@@ -147,7 +79,7 @@ public class LociLibraryIOTest {
                 System.out.println(allele.getFeature(VRegion));
                 System.out.println(allele.getFeature(FR3));
                 System.out.println(allele.isFunctional());
-                System.out.println(Arrays.toString(allele.getPartitioning().points));
+                //System.out.println(Arrays.toString(allele.getPartitioning().points));
             }
         }
     }

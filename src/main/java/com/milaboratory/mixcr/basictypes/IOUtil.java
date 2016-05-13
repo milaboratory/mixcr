@@ -30,10 +30,10 @@ package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.io.CompressionType;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.reference.Allele;
-import com.milaboratory.mixcr.reference.AlleleId;
-import com.milaboratory.mixcr.reference.AlleleResolver;
-import com.milaboratory.mixcr.reference.GeneFeature;
+import io.repseq.reference.Allele;
+import io.repseq.reference.AlleleId;
+import io.repseq.reference.AlleleResolver;
+import io.repseq.reference.GeneFeature;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 

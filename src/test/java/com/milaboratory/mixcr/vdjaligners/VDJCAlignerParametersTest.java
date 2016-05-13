@@ -34,10 +34,10 @@ import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
 import com.milaboratory.core.merger.MergerParameters;
 import com.milaboratory.core.merger.QualityMergingAlgorithm;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.LociLibrary;
+import io.repseq.reference.GeneFeature;
+import io.repseq.reference.LociLibrary;
 import com.milaboratory.mixcr.reference.LociLibraryManager;
-import com.milaboratory.mixcr.reference.Species;
+import io.repseq.reference.Species;
 import com.milaboratory.util.GlobalObjectMappers;
 import org.junit.Test;
 

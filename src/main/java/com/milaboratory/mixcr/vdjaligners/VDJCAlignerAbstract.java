@@ -32,8 +32,8 @@ import com.milaboratory.core.alignment.batch.AlignmentHit;
 import com.milaboratory.core.alignment.batch.BatchAlignerWithBase;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.reference.Allele;
-import com.milaboratory.mixcr.reference.GeneType;
+import io.repseq.reference.Allele;
+import io.repseq.reference.GeneType;
 
 import java.util.List;
 

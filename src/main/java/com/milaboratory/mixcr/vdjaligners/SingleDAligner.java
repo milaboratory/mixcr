@@ -36,9 +36,9 @@ import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.reference.Allele;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.Locus;
+import io.repseq.reference.Allele;
+import io.repseq.reference.GeneFeature;
+import io.repseq.reference.Locus;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -35,9 +35,10 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.cli.ActionAssemble;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
-import com.milaboratory.mixcr.reference.ReferencePoint;
+import io.repseq.reference.GeneFeature;
+import io.repseq.reference.GeneType;
+import io.repseq.reference.ReferencePoint;
+import io.repseq.core.SequencePartitioning;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 

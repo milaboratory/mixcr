@@ -35,10 +35,10 @@ import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.export.InfoWriter;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
+import io.repseq.reference.GeneFeature;
+import io.repseq.reference.GeneType;
 import com.milaboratory.mixcr.reference.LociLibraryManager;
-import com.milaboratory.mixcr.reference.Locus;
+import io.repseq.reference.Locus;
 import com.milaboratory.util.CanReportProgressAndStage;
 import com.milaboratory.util.SmartProgressReporter;
 

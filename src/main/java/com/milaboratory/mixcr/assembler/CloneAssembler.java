@@ -42,10 +42,10 @@ import com.milaboratory.core.tree.MutationGuide;
 import com.milaboratory.core.tree.NeighborhoodIterator;
 import com.milaboratory.core.tree.SequenceTreeMap;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.reference.Allele;
-import com.milaboratory.mixcr.reference.AlleleId;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
+import io.repseq.reference.Allele;
+import io.repseq.reference.AlleleId;
+import io.repseq.reference.GeneFeature;
+import io.repseq.reference.GeneType;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.Factory;
 import com.milaboratory.util.RandomUtil;
@@ -59,7 +59,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.milaboratory.mixcr.reference.GeneFeature.*;
+import static io.repseq.reference.GeneFeature.*;
 
 public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     final CloneAssemblerParameters parameters;

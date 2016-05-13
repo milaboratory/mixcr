@@ -30,8 +30,8 @@ package com.milaboratory.mixcr.cli.afiltering;
 
 import cc.redberry.primitives.Filter;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
+import io.repseq.reference.GeneFeature;
+import io.repseq.reference.GeneType;
 
 import javax.script.Invocable;
 import javax.script.ScriptEngine;

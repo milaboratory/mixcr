@@ -31,9 +31,10 @@ package com.milaboratory.mixcr.basictypes;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
-import com.milaboratory.mixcr.reference.ReferencePoint;
+import io.repseq.reference.GeneFeature;
+import io.repseq.reference.GeneType;
+import io.repseq.reference.ReferencePoint;
+import io.repseq.core.SequencePartitioning;
 
 import java.util.EnumMap;
 

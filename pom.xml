@@ -56,8 +56,8 @@
 
         <dependency>
             <groupId>com.milaboratory</groupId>
-            <artifactId>milib</artifactId>
-            <version>${milib.version}</version>
+            <artifactId>repseq.io</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>

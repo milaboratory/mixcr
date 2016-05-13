@@ -34,9 +34,9 @@ import com.beust.jcommander.Parameters;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
-import com.milaboratory.mixcr.reference.*;
 import com.milaboratory.mixcr.reference.builder.FastaLocusBuilder;
 import com.milaboratory.mixcr.reference.builder.FastaLocusBuilderParametersBundle;
+import io.repseq.reference.*;
 
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;

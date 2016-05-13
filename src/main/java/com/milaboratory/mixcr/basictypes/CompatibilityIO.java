@@ -29,8 +29,8 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.sequence.NSequenceWithQuality;
-import com.milaboratory.mixcr.reference.GeneType;
-import com.milaboratory.mixcr.reference.ReferenceCompatibilityIO;
+import io.repseq.reference.GeneType;
+import io.repseq.reference.ReferenceCompatibilityIO;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.Serializer;

@@ -1,6 +1,6 @@
 package com.milaboratory.mixcr.basictypes;
 
-import com.milaboratory.mixcr.reference.Allele;
+import io.repseq.reference.Allele;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 
 import java.util.List;

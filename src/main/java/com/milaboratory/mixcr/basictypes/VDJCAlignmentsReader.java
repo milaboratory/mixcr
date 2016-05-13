@@ -30,8 +30,8 @@ package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.core.io.CompressionType;
-import com.milaboratory.mixcr.reference.Allele;
-import com.milaboratory.mixcr.reference.AlleleResolver;
+import io.repseq.reference.Allele;
+import io.repseq.reference.AlleleResolver;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.SerializersManager;

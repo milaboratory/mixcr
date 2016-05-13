@@ -28,7 +28,7 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
-import com.milaboratory.mixcr.reference.Allele;
+import io.repseq.reference.Allele;
 import com.milaboratory.mixcr.util.VersionInfoProvider;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
