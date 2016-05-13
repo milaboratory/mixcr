@@ -56,7 +56,7 @@
 
         <dependency>
             <groupId>com.milaboratory</groupId>
-            <artifactId>mitools</artifactId>
+            <artifactId>milib</artifactId>
             <version>${milib.version}</version>
         </dependency>
 
@@ -66,6 +66,13 @@
             <version>${milib.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.beust</groupId>
+            <artifactId>jcommander</artifactId>
+            <version>1.48</version>
+            <optional>true</optional>
         </dependency>
 
         <dependency>

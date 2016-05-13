@@ -28,7 +28,7 @@
  */
 package com.milaboratory.mixcr.cli;
 
-import com.milaboratory.mitools.cli.JCommanderBasedMain;
+import com.milaboratory.cli.JCommanderBasedMain;
 import com.milaboratory.mixcr.util.VersionInfoProvider;
 
 public class Main {

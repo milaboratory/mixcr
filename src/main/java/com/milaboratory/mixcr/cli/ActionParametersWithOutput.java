@@ -30,7 +30,7 @@ package com.milaboratory.mixcr.cli;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
-import com.milaboratory.mitools.cli.ActionParameters;
+import com.milaboratory.cli.ActionParameters;
 
 import java.io.File;
 import java.util.List;
