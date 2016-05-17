@@ -1,5 +1,7 @@
 Fixed: wrong boundaries of CDR1-CDR3 in Rat IGH/IGK references imported from IMGT
 Fixed: bug leading to incorrect parsing of input/output file paths with spaces
+Fixed: bug leading to incorrect parsing of input/output file paths with spaces
+Automatic adjustment of featureToAlign in assemble action; fixes `NPE` in some use-cases of RNA data analysis with IMGT reference
 Added support for FreeBSD in mixcr script
 minor: Human-readable error messages for illegal analysis options with IMGT reference
 minor: Added human-readable error message for unknown species
