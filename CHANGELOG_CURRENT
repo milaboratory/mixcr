@@ -1,3 +1,5 @@
 Fixed: wrong boundaries of CDR1-CDR3 in Rat IGH/IGK references imported from IMGT
 Fixed: bug leading to incorrect parsing of input/output file paths with spaces
 Added support for FreeBSD in mixcr script
+minor: Human-readable error messages for illegal analysis options with IMGT reference
+minor: Added human-readable error message for unknown species
