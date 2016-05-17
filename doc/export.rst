@@ -587,7 +587,7 @@ In any way, first one need to specify additonal option ``--index`` for the :ref:
 
     mixcr assemble --index index_file alignments.vdjca output.clns
 
-This will tell MiXCR to store mapping in the file ``index_file``. Now one can use ``index_file`` in order to access this information. For example using ``-cloneId`` option for ``exportAlignments`` command:
+This will tell MiXCR to store mapping in the file ``index_file`` (actually two files will be created: ``index_file`` and ``index_file.p`` both of which are used to store the index; in further options one should specify only ``index_file`` without ``.p`` extension and MiXCR will automatically read both required files). Now one can use ``index_file`` in order to access this information. For example using ``-cloneId`` option for ``exportAlignments`` command:
 
 ::
 
