@@ -587,7 +587,7 @@ In any way, first one need to specify additonal option ``--index`` for the :ref:
 
     mixcr assemble --index index_file alignments.vdjca output.clns
 
-This will tell MiXCR to store mapping in the file ``index_file``. Now one can use ``index_file`` in order to access this information. For example using ``-cloneId`` option for ``exportAlignments`` command:
+This will tell MiXCR to store mapping in the file ``index_file`` (actually two files will be created: ``index_file`` and ``index_file.p`` both of which are used to store the index; in further options one should specify only ``index_file`` without ``.p`` extension and MiXCR will automatically read both required files). Now one can use ``index_file`` in order to access this information. For example using ``-cloneId`` option for ``exportAlignments`` command:
 
 ::
 
@@ -663,7 +663,7 @@ Finally, one can export reads aggregated by each clone into separate ``.fastq`` 
 
     mixcr align -g -l IGH input.fastq alignments.vdjca.gz
 
-With this option MiXCR will store original reads in the ``.vdjca`` file. Then one can export reads corresponding for particular clone with ``exportReads`` command. For example, export all reads that were assembled into the first clone (clone with cloneId = 1):
+With this option MiXCR will store original reads in the ``.vdjca`` file. Then one can export reads corresponding for particular clone with ``exportReads`` command. For example, export all reads that were assembled into the first clone (clone with cloneId = 0):
 
 ::
 

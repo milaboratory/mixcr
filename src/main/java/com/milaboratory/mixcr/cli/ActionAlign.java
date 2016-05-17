@@ -74,8 +74,10 @@ public class ActionAlign implements Action {
 
         if (!actionParameters.overrides.isEmpty()) {
             alignerParameters = JsonOverrider.override(alignerParameters, VDJCAlignerParameters.class, actionParameters.overrides);
-            if (alignerParameters == null)
+            if (alignerParameters == null) {
                 System.err.println("Failed to override some parameter.");
+                return;
+            }
         }
 
         VDJCAligner aligner = VDJCAligner.createAligner(alignerParameters,
@@ -87,19 +89,57 @@ public class ActionAlign implements Action {
             return;
         }
 
+        // Checking species
+        int speciesId = ll.getSpeciesTaxonId(actionParameters.species);
+
+        if (speciesId == -1)
+            speciesId = Species.fromString(actionParameters.species);
+
+        if (speciesId == -1) {
+            System.err.println("Can't find species with id: " + actionParameters.species);
+            return;
+        }
+
+        boolean warnings = false;
+
         for (Locus locus : actionParameters.getLoci()) {
-            LocusContainer lc = ll.getLocus(actionParameters.species, locus);
+            LocusContainer lc = ll.getLocus(speciesId, locus);
             if (lc == null) {
-                if (params().printWarnings())
+                if (params().printWarnings()) {
                     System.err.println("WARNING: No records for " + locus);
+                    warnings = true;
+                }
                 continue;
             }
-            for (Allele allele : lc.getAllAlleles())
-                if (alignerParameters.containsRequiredFeature(allele) &&
-                        (allele.isFunctional() || !actionParameters.isFunctionalOnly()))
-                    aligner.addAllele(allele);
-                else if (params().printWarnings() && allele.isFunctional())
-                    System.err.println("WARNING: Functional allele excluded " + allele.getName());
+            for (Allele allele : lc.getAllAlleles()) {
+                if (actionParameters.isFunctionalOnly() && !allele.isFunctional())
+                    continue;
+                if (!alignerParameters.containsRequiredFeature(allele)) {
+                    if (params().printWarnings()) {
+                        System.err.println("WARNING: Allele " + allele.getName() +
+                                " doesn't contain full " + GeneFeature.encode(alignerParameters
+                                .getFeatureToAlign(allele.getGeneType())) + " (excluded)");
+                        warnings = true;
+                    }
+                    continue;
+                }
+                aligner.addAllele(allele);
+            }
+        }
+
+        if (warnings)
+            System.err.println("To turn off warnings use '-nw' option.");
+
+        if(aligner.getVAllelesToAlign().isEmpty()){
+            System.err.println("No V alleles to align. Aborting execution. See warnings for more info " +
+                    "(turn warnings by adding -w option).");
+            return;
+        }
+
+        if(aligner.getVAllelesToAlign().isEmpty()){
+            System.err.println("No J alleles to align. Aborting execution. See warnings for more info " +
+                    "(turn warnings by adding -w option).");
+            return;
         }
 
         AlignerReport report = actionParameters.report == null ? null : new AlignerReport();
@@ -194,6 +234,10 @@ public class ActionAlign implements Action {
                 names = {"-w", "--warnings"})
         public Boolean warnings = null;
 
+        @Parameter(description = "Don't print warnings",
+                names = {"-nw", "--no-warnings"})
+        public Boolean noWarnings = null;
+
         @Parameter(description = "Parameters",
                 names = {"-p", "--parameters"})
         public String alignerParametersName = "default";
@@ -270,7 +314,12 @@ public class ActionAlign implements Action {
         }
 
         public boolean printWarnings() {
-            return warnings != null && warnings;
+            if (warnings != null && noWarnings != null)
+                throw new ParameterException("Simultaneous use of -w and -nw.");
+            if (warnings == null)
+                return !"mi".equals(ll) && noWarnings == null;
+            else
+                return warnings;
         }
 
         public Set<Locus> getLoci() {

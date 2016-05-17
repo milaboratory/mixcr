@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 java="java"
 
@@ -52,6 +52,13 @@ case $os in
         maxMb=$(($rFreeMb-$delta))
         dir="$(dirname "$(readlink -f "$0")")"
     ;;
+    FreeBSD)
+        freeBlocks=$(vmstat -s | grep -E 'free$' | awk '{ print $1 }')
+        inactiveBlocks=$(vmstat -s | grep inactive | awk '{ print $1 }')
+        freeMb=$(( ($freeBlocks+$inactiveBlocks)*4096/1048576 ))
+        maxMb=$(($freeMb-$delta))
+        dir=$(dirname "$(readlinkUniversal "$0")")    
+    ;;
     *)
        echo "Unknown OS."
        exit 1
@@ -87,7 +94,7 @@ do
 
             ;;
         *)
-            mixcrArgs+=(${key})
+            mixcrArgs+=("${key}")
             ;;
     esac
 done
