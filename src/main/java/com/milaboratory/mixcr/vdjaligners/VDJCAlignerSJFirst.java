@@ -36,9 +36,9 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import io.repseq.reference.Allele;
+import io.repseq.reference.Chain;
 import io.repseq.reference.GeneFeature;
 import io.repseq.reference.GeneType;
-import io.repseq.reference.Locus;
 
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -239,8 +239,8 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
             return score;
         }
 
-        public Set<Locus> getPossibleDLoci() {
-            EnumSet<Locus> loci = EnumSet.noneOf(Locus.class);
+        public Set<Chain> getPossibleDLoci() {
+            EnumSet<Chain> loci = EnumSet.noneOf(Chain.class);
             for (AlignmentHit<NucleotideSequence, Allele> vHit : vResult.getHits())
                 loci.add(vHit.getRecordPayload().getLocus());
             for (AlignmentHit<NucleotideSequence, Allele> jHit : jResult.getHits())

@@ -69,6 +69,23 @@ public class LLIOTests {
 
     @Test
     @Ignore
+    public void test3ReadLL3() throws Exception {
+        InputStream sample = LociLibraryReader.class.getClassLoader().getResourceAsStream("reference/mi.ll");
+        LociLibrary library = LociLibraryReader.read(sample, true);
+        for (Allele allele : library.getAllAlleles(Species.HomoSapiens)) {
+            if (allele.getName().contains("TRBV6-3")) {
+                System.out.println(allele.getName());
+                //System.out.println(AminoAcidSequence.translate(allele.getFeature(VRegion), 0));
+                System.out.println(allele.getFeature(VTranscript).size());
+                System.out.println(allele.getFeature(FR3));
+                System.out.println(allele.isFunctional());
+                //System.out.println(Arrays.toString(allele.getPartitioning().points));
+            }
+        }
+    }
+
+    @Test
+    @Ignore
     public void test3ReadLL2() throws Exception {
         InputStream sample = LociLibraryReader.class.getClassLoader().getResourceAsStream("reference/mi.ll");
         LociLibrary library = LociLibraryReader.read(sample, true);
@@ -89,16 +106,16 @@ public class LLIOTests {
     public void testExportLL() throws Exception {
         InputStream sample = LociLibraryReader.class.getClassLoader().getResourceAsStream("reference/mi.ll");
         LociLibrary library = LociLibraryReader.read(sample, true);
-        for (Locus locus : Locus.values()) {
-            LocusContainer container = library.getLocus(Species.HomoSapiens, locus);
-            export(locus.name().toLowerCase() + "v.txt", container.getReferenceAlleles(GeneType.Variable),
+        for (Chain chain : Chain.values()) {
+            LocusContainer container = library.getLocus(Species.HomoSapiens, chain);
+            export(chain.name().toLowerCase() + "v.txt", container.getReferenceAlleles(GeneType.Variable),
                     VGene,
                     V5UTR, L1, VIntron, L2,
                     FR1, CDR1, FR2, CDR2,
                     FR3, GermlineVCDR3Part);
-            export(locus.name().toLowerCase() + "j.txt", container.getReferenceAlleles(GeneType.Joining),
+            export(chain.name().toLowerCase() + "j.txt", container.getReferenceAlleles(GeneType.Joining),
                     GermlineJCDR3Part, FR4);
-            export(locus.name().toLowerCase() + "d.txt", container.getReferenceAlleles(GeneType.Diversity),
+            export(chain.name().toLowerCase() + "d.txt", container.getReferenceAlleles(GeneType.Diversity),
                     DRegion);
         }
     }

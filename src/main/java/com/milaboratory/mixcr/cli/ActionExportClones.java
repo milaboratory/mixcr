@@ -35,10 +35,10 @@ import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.export.InfoWriter;
+import io.repseq.reference.Chain;
 import io.repseq.reference.GeneFeature;
 import io.repseq.reference.GeneType;
 import com.milaboratory.mixcr.reference.LociLibraryManager;
-import io.repseq.reference.Locus;
 import com.milaboratory.util.CanReportProgressAndStage;
 import com.milaboratory.util.SmartProgressReporter;
 
@@ -77,10 +77,10 @@ public class ActionExportClones extends ActionExport {
 
     private static final class CFilter implements Filter<Clone> {
         final boolean filterOutOfFrames, filterStopCodons;
-        final Set<Locus> loci;
+        final Set<Chain> loci;
 
         public CFilter(boolean filterOutOfFrames, boolean filterStopCodons,
-                       Set<Locus> loci) {
+                       Set<Chain> loci) {
             this.filterOutOfFrames = filterOutOfFrames;
             this.filterStopCodons = filterStopCodons;
             this.loci = loci;
@@ -167,10 +167,10 @@ public class ActionExportClones extends ActionExport {
         public Boolean filterStops = false;
 
         @Parameter(description = "Filter export to specific loci (e.g. TRA or IGH).",
-                names = {"-l", "--filter-locus"})
+                names = {"-l", "--filter-chain"})
         public String loci = "ALL";
 
-        public Set<Locus> getLoci() {
+        public Set<Chain> getLoci() {
             return Util.parseLoci(loci);
         }
     }

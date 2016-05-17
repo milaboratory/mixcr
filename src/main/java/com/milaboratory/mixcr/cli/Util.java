@@ -28,7 +28,7 @@
  */
 package com.milaboratory.mixcr.cli;
 
-import io.repseq.reference.Locus;
+import io.repseq.reference.Chain;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.io.File;
@@ -45,33 +45,33 @@ public final class Util {
 
     public static final DecimalFormat PERCENT_FORMAT = new DecimalFormat("#.##");
 
-    public static Set<Locus> parseLoci(String lociString) {
+    public static Set<Chain> parseLoci(String lociString) {
         String[] split = lociString.split(",");
-        EnumSet<Locus> loci = EnumSet.noneOf(Locus.class);
+        EnumSet<Chain> loci = EnumSet.noneOf(Chain.class);
         for (String s : split)
             parseLocus(loci, s);
         return loci;
     }
 
-    private static void parseLocus(Set<Locus> set, String value) {
+    private static void parseLocus(Set<Chain> set, String value) {
         switch (value.toLowerCase().trim()) {
             case "tcr":
-                set.add(Locus.TRA);
-                set.add(Locus.TRB);
-                set.add(Locus.TRG);
-                set.add(Locus.TRD);
+                set.add(Chain.TRA);
+                set.add(Chain.TRB);
+                set.add(Chain.TRG);
+                set.add(Chain.TRD);
                 return;
             case "ig":
-                set.add(Locus.IGH);
-                set.add(Locus.IGL);
-                set.add(Locus.IGK);
+                set.add(Chain.IGH);
+                set.add(Chain.IGL);
+                set.add(Chain.IGK);
                 return;
             case "all":
-                for (Locus locus : Locus.values())
-                    set.add(locus);
+                for (Chain chain : Chain.values())
+                    set.add(chain);
                 return;
         }
-        Locus l = Locus.fromIdSafe(value);
+        Chain l = Chain.fromIdSafe(value);
         set.add(l);
         return;
     }

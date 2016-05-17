@@ -33,8 +33,8 @@ import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import io.repseq.reference.Allele;
+import io.repseq.reference.Chain;
 import io.repseq.reference.GeneType;
-import io.repseq.reference.Locus;
 
 import java.util.*;
 
@@ -124,8 +124,8 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
                 : new VDJCAlignerSJFirst(alignerParameters);
     }
 
-    public static Set<Locus> getPossibleDLoci(VDJCHit[] vHits, VDJCHit[] jHits) {
-        EnumSet loci = EnumSet.noneOf(Locus.class);
+    public static Set<Chain> getPossibleDLoci(VDJCHit[] vHits, VDJCHit[] jHits) {
+        EnumSet loci = EnumSet.noneOf(Chain.class);
         for (VDJCHit h : vHits)
             loci.add(h.getAllele().getLocus());
         for (VDJCHit h : jHits)

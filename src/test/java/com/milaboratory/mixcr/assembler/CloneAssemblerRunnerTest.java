@@ -81,7 +81,7 @@ public class CloneAssemblerRunnerTest {
 
         InputStream sample = LociLibraryReader.class.getClassLoader().getResourceAsStream("reference/mi.ll");
         LociLibrary library = LociLibraryReader.read(sample, true);
-        for (Allele allele : library.getLocus(Species.HomoSapiens, Locus.IGH).getAllAlleles())
+        for (Allele allele : library.getLocus(Species.HomoSapiens, Chain.IGH).getAllAlleles())
             if (alignerParameters.containsRequiredFeature(allele))
                 aligner.addAllele(allele);
 

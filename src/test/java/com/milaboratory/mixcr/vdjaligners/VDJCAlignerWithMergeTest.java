@@ -72,7 +72,7 @@ public class VDJCAlignerWithMergeTest {
 
             VDJCAlignerWithMerge aligner = new VDJCAlignerWithMerge(parameters);
 
-            for (Allele allele : ll.getLocus(Species.HomoSapiens, Locus.IGH).getAllAlleles()) {
+            for (Allele allele : ll.getLocus(Species.HomoSapiens, Chain.IGH).getAllAlleles()) {
                 if (parameters.containsRequiredFeature(allele))
                     aligner.addAllele(allele);
             }

@@ -69,7 +69,7 @@ public class IOTest {
 
             VDJCAlignerSJFirst aligner = new VDJCAlignerSJFirst(parameters);
 
-            for (Allele allele : ll.getLocus(Species.HomoSapiens, Locus.IGH).getAllAlleles()) {
+            for (Allele allele : ll.getLocus(Species.HomoSapiens, Chain.IGH).getAllAlleles()) {
                 if (parameters.containsRequiredFeature(allele))
                     aligner.addAllele(allele);
             }

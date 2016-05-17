@@ -62,9 +62,9 @@ public class FastaLocusBuilder {
     public static final int LINE_WIDTH = 80;
 
     /**
-     * Target locus
+     * Target chain
      */
-    private final Locus locus;
+    private final Chain chain;
     /**
      * Parameters
      */
@@ -94,10 +94,10 @@ public class FastaLocusBuilder {
      */
     private boolean allowNonStandardAlleleNames = false;
 
-    public FastaLocusBuilder(Locus locus, FastaLocusBuilderParameters parameters) {
-        if (locus == null || parameters == null)
+    public FastaLocusBuilder(Chain chain, FastaLocusBuilderParameters parameters) {
+        if (chain == null || parameters == null)
             throw new NullPointerException();
-        this.locus = locus;
+        this.chain = chain;
         this.parameters = parameters;
     }
 
@@ -193,9 +193,9 @@ public class FastaLocusBuilder {
                 // Extracting gene name
                 geneName = matcher.group(GENE_NAME_GROUP);
 
-                // Checking locus decoded from allele name
+                // Checking chain decoded from allele name
                 if (!checkLocus(matcher.group(LOCUS_GROUP)))
-                    warning("Allele from different locus(?): " + alleleName);
+                    warning("Allele from different chain(?): " + alleleName);
 
                 // Checking gene type decoded from allele name
                 if (Character.toUpperCase(matcher.group(GENE_TYPE_LETTER_GROUP).charAt(0)) !=
@@ -444,9 +444,9 @@ public class FastaLocusBuilder {
     }
 
     public boolean checkLocus(String locusName) {
-        if (locus == Locus.TRA || locus == Locus.TRD)
+        if (chain == Chain.TRA || chain == Chain.TRD)
             return "TRA".equalsIgnoreCase(locusName) || "TRD".equalsIgnoreCase(locusName);
-        return locus.toString().equalsIgnoreCase(locusName);
+        return chain.toString().equalsIgnoreCase(locusName);
     }
 
     public boolean checkAllele(AlleleInfo alleleInfo) {

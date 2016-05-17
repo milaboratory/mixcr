@@ -400,8 +400,8 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         }
     }
 
-    public Set<Locus> getPossibleDLoci(PairedHit[] vHits, PairedHit[] jHits) {
-        EnumSet<Locus> loci = EnumSet.noneOf(Locus.class);
+    public Set<Chain> getPossibleDLoci(PairedHit[] vHits, PairedHit[] jHits) {
+        EnumSet<Chain> loci = EnumSet.noneOf(Chain.class);
         for (PairedHit vHit : vHits)
             loci.add(vHit.getAllele().getLocus());
         for (PairedHit jHit : jHits)

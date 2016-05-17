@@ -87,8 +87,8 @@ public final class RunMiXCR {
         LociLibrary ll = LociLibraryManager.getDefault().getLibrary("mi");
 
         List<Allele> alleles = new ArrayList<>();
-        for (Locus locus : parameters.loci)
-            for (Allele allele : ll.getLocus(parameters.taxonId, locus).getAllAlleles())
+        for (Chain chain : parameters.loci)
+            for (Allele allele : ll.getLocus(parameters.taxonId, chain).getAllAlleles())
                 if (alignerParameters.containsRequiredFeature(allele) &&
                         (allele.isFunctional() || !parameters.isFunctionalOnly)) {
                     alleles.add(allele);
@@ -156,7 +156,7 @@ public final class RunMiXCR {
     public static final class RunMiXCRAnalysis {
         public VDJCAlignerParameters alignerParameters = VDJCParametersPresets.getByName("default");
         public CloneAssemblerParameters cloneAssemblerParameters = CloneAssemblerParametersPresets.getByName("default");
-        public Set<Locus> loci = EnumSet.allOf(Locus.class);
+        public Set<Chain> loci = EnumSet.allOf(Chain.class);
         public int taxonId = Species.HomoSapiens;
         public boolean isFunctionalOnly = true;
         public int threads = Runtime.getRuntime().availableProcessors();

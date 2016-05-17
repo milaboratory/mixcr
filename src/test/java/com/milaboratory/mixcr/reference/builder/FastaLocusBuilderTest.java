@@ -64,7 +64,7 @@ public class FastaLocusBuilderTest {
                         new AnchorPointPositionInfo(CDR3Begin, 309),
                         new AnchorPointPositionInfo(VEnd, AnchorPointPositionInfo.END_OF_SEQUENCE));
 
-        FastaLocusBuilder builder = new FastaLocusBuilder(Locus.IGH, parameters).noExceptionOnError();
+        FastaLocusBuilder builder = new FastaLocusBuilder(Chain.IGH, parameters).noExceptionOnError();
         builder.importAllelesFromFile("/Volumes/Data/Projects/MiLaboratory/tmp/result/human_IGHV.fasta");
         builder.compile();
         builder.printReport();
@@ -72,7 +72,7 @@ public class FastaLocusBuilderTest {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         LociLibraryWriter writer = new LociLibraryWriter(bos);
         writer.writeMagic();
-        writer.writeBeginOfLocus(Species.HomoSapiens, Locus.IGH);
+        writer.writeBeginOfLocus(Species.HomoSapiens, Chain.IGH);
         builder.writeAlleles(writer);
         writer.writeEndOfLocus();
         ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
@@ -99,7 +99,7 @@ public class FastaLocusBuilderTest {
                         new AnchorPointPositionInfo(FR4Begin, -31, "(?:TGG|TT[TC])()GG[ATGC]{4}GG[ATGC]"),
                         new AnchorPointPositionInfo(FR4End, AnchorPointPositionInfo.END_OF_SEQUENCE));
 
-        FastaLocusBuilder builder = new FastaLocusBuilder(Locus.IGH, parameters).noExceptionOnError();
+        FastaLocusBuilder builder = new FastaLocusBuilder(Chain.IGH, parameters).noExceptionOnError();
         builder.importAllelesFromFile("/Volumes/Data/Projects/MiLaboratory/tmp/result/human_IGHJ.fasta");
         builder.compile();
         builder.printReport();
@@ -107,7 +107,7 @@ public class FastaLocusBuilderTest {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         LociLibraryWriter writer = new LociLibraryWriter(bos);
         writer.writeMagic();
-        writer.writeBeginOfLocus(Species.HomoSapiens, Locus.IGH);
+        writer.writeBeginOfLocus(Species.HomoSapiens, Chain.IGH);
         builder.writeAlleles(writer);
         writer.writeEndOfLocus();
         ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
@@ -133,7 +133,7 @@ public class FastaLocusBuilderTest {
                         new AnchorPointPositionInfo(DBegin, 0),
                         new AnchorPointPositionInfo(DEnd, AnchorPointPositionInfo.END_OF_SEQUENCE));
 
-        FastaLocusBuilder builder = new FastaLocusBuilder(Locus.IGH, parameters).noExceptionOnError();
+        FastaLocusBuilder builder = new FastaLocusBuilder(Chain.IGH, parameters).noExceptionOnError();
         builder.importAllelesFromFile("/Volumes/Data/Projects/MiLaboratory/tmp/result/human_IGHD.fasta");
         builder.compile();
         builder.printReport();
@@ -141,7 +141,7 @@ public class FastaLocusBuilderTest {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         LociLibraryWriter writer = new LociLibraryWriter(bos);
         writer.writeMagic();
-        writer.writeBeginOfLocus(Species.HomoSapiens, Locus.IGH);
+        writer.writeBeginOfLocus(Species.HomoSapiens, Chain.IGH);
         builder.writeAlleles(writer);
         writer.writeEndOfLocus();
         ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());

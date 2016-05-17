@@ -106,11 +106,11 @@ public class ActionAlign implements Action {
 
         boolean warnings = false;
 
-        for (Locus locus : actionParameters.getLoci()) {
-            LocusContainer lc = ll.getLocus(speciesId, locus);
+        for (Chain chain : actionParameters.getLoci()) {
+            LocusContainer lc = ll.getLocus(speciesId, chain);
             if (lc == null) {
                 if (params().printWarnings()) {
-                    System.err.println("WARNING: No records for " + locus);
+                    System.err.println("WARNING: No records for " + chain);
                     warnings = true;
                 }
                 continue;
@@ -346,7 +346,7 @@ public class ActionAlign implements Action {
                 return warnings;
         }
 
-        public Set<Locus> getLoci() {
+        public Set<Chain> getLoci() {
             return Util.parseLoci(loci);
         }
 

@@ -59,14 +59,14 @@ public class ActionImportSegments implements Action {
             Files.createDirectories(parent);
         boolean outputExists = Files.exists(outputFile);
         final int taxonID = params.getTaxonID();
-        Locus locus = params.getLocus();
+        Chain chain = params.getLocus();
         final String[] commonNames = params.getCommonNames();
         final Set<String> commonNamesSet = new HashSet<>();
         for (String cn : commonNames)
             commonNamesSet.add(cn);
         if (outputExists) {
             LociLibrary ll = LociLibraryReader.read(outputFile.toFile(), false);
-            final SpeciesAndLocus sl = new SpeciesAndLocus(taxonID, locus);
+            final SpeciesAndChain sl = new SpeciesAndChain(taxonID, chain);
             if (params.getForce()) {
                 LociLibraryIOUtils.LociLibraryFilter filter = new LociLibraryIOUtils.LociLibraryFilter() {
                     boolean remove = false;
@@ -88,7 +88,7 @@ public class ActionImportSegments implements Action {
 
                     @Override
                     public boolean beginLocus(LocusContainer container) {
-                        return !(remove = container.getSpeciesAndLocus().equals(sl));
+                        return !(remove = container.getSpeciesAndChain().equals(sl));
                     }
 
                     @Override
@@ -129,18 +129,18 @@ public class ActionImportSegments implements Action {
                 true)))) {
             FastaLocusBuilder vBuilder, dBuilder = null, jBuilder;
 
-            vBuilder = new FastaLocusBuilder(locus, bundle.getV())
+            vBuilder = new FastaLocusBuilder(chain, bundle.getV())
                     .setLoggingStream(ps).setFinalReportStream(ps)
                     .printErrorsAndWarningsToSTDOUT().noExceptionOnError();
             vBuilder.importAllelesFromFile(params.getV());
 
-            jBuilder = new FastaLocusBuilder(locus, bundle.getJ())
+            jBuilder = new FastaLocusBuilder(chain, bundle.getJ())
                     .setLoggingStream(ps).setFinalReportStream(ps)
                     .printErrorsAndWarningsToSTDOUT().noExceptionOnError();
             jBuilder.importAllelesFromFile(params.getJ());
 
             if (params.getD() != null) {
-                dBuilder = new FastaLocusBuilder(locus, bundle.getD())
+                dBuilder = new FastaLocusBuilder(chain, bundle.getD())
                         .setLoggingStream(ps).setFinalReportStream(ps)
                         .printErrorsAndWarningsToSTDOUT().noExceptionOnError();
                 dBuilder.importAllelesFromFile(params.getD());
@@ -169,7 +169,7 @@ public class ActionImportSegments implements Action {
                 if (!outputExists)
                     writer.writeMagic();
 
-                writer.writeBeginOfLocus(taxonID, locus);
+                writer.writeBeginOfLocus(taxonID, chain);
                 vBuilder.writeAlleles(writer);
                 jBuilder.writeAlleles(writer);
                 if (dBuilder != null)
@@ -188,7 +188,7 @@ public class ActionImportSegments implements Action {
             if (params.doPrintInfo()) {
                 System.out.println("Resulting file contains following records:");
                 for (LocusContainer locusContainer : ll.getLoci())
-                    System.out.println(locusContainer.getSpeciesAndLocus() + ": " +
+                    System.out.println(locusContainer.getSpeciesAndChain() + ": " +
                             locusContainer.getAllAlleles().size() + " records");
             }
         }
@@ -243,8 +243,8 @@ public class ActionImportSegments implements Action {
                 names = {"-d"})
         public String d;
 
-        @Parameter(description = "Locus (e.g. IGH, TRB etc...)",
-                names = {"-l", "--locus"})
+        @Parameter(description = "Chain (e.g. IGH, TRB etc...)",
+                names = {"-l", "--chain"})
         public String locus;
 
         @Parameter(description = "Species taxonID and it's common names (e.g. 9606:human:HomoSapiens:hsa)",
@@ -267,8 +267,8 @@ public class ActionImportSegments implements Action {
             return builderParametersName;
         }
 
-        public Locus getLocus() {
-            return Locus.fromId(locus);
+        public Chain getLocus() {
+            return Chain.fromId(locus);
         }
 
         public boolean doPrintInfo() {
@@ -316,9 +316,9 @@ public class ActionImportSegments implements Action {
                 throw new ParameterException("Please specify file for J gene.");
 
             if (locus == null)
-                throw new ParameterException("Please specify locus (e.g. \"-l TRB\").");
-            if (Locus.fromId(locus) == null)
-                throw new ParameterException("Unrecognized locus: " + locus);
+                throw new ParameterException("Please specify chain (e.g. \"-l TRB\").");
+            if (Chain.fromId(locus) == null)
+                throw new ParameterException("Unrecognized chain: " + locus);
 
             if (species == null)
                 throw new ParameterException("Please specify species.");

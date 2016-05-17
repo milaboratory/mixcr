@@ -58,7 +58,7 @@ public class VDJCAlignerSJFirstTest {
                              VDJCAlignerSJFirstTest.class.getClassLoader()
                                      .getResourceAsStream("sequences/sample_IGH_R1.fastq"), true)) {
             VDJCAlignerSJFirst aligner = new VDJCAlignerSJFirst(parameters);
-            for (Allele allele : ll.getLocus(Species.HomoSapiens, Locus.IGH).getAllAlleles())
+            for (Allele allele : ll.getLocus(Species.HomoSapiens, Chain.IGH).getAllAlleles())
                 if (parameters.containsRequiredFeature(allele))
                     aligner.addAllele(allele);
             try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(bos)) {
@@ -96,7 +96,7 @@ public class VDJCAlignerSJFirstTest {
 //                             VDJCAlignerSJFirstTest.class.getClassLoader()
 //                                     .getResourceAsStream("sequences/sample_IGH_R1.fastq"))) {
 //            VDJCAlignerSJFirst aligner = new VDJCAlignerSJFirst(parameters);
-//            for (Allele allele : ll.getLocus(Species.HomoSapiens, Locus.IGH).getAllAlleles())
+//            for (Allele allele : ll.getChain(Species.HomoSapiens, Chain.IGH).getAllAlleles())
 //                if (parameters.containsRequiredFeature(allele))
 //                    aligner.addAllele(allele);
 //            int accepted = 0;

@@ -37,8 +37,8 @@ import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import io.repseq.reference.Allele;
+import io.repseq.reference.Chain;
 import io.repseq.reference.GeneFeature;
-import io.repseq.reference.Locus;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -78,7 +78,7 @@ public final class SingleDAligner {
         this.alleles = new ArrayList<>(alleles);
     }
 
-    List<PreVDJCHit> align0(NucleotideSequence sequence, Set<Locus> loci, int from, int to) {
+    List<PreVDJCHit> align0(NucleotideSequence sequence, Set<Chain> loci, int from, int to) {
         if (from > to)
             throw new IllegalArgumentException();
 
@@ -91,7 +91,7 @@ public final class SingleDAligner {
             PreVDJCHit h;
             for (PreVDJCHit hit : cachedResult) {
                 //filter non-possible loci
-                if (!loci.contains(sequences.get(hit.id).locus))
+                if (!loci.contains(sequences.get(hit.id).chain))
                     continue;
 
                 result.add(h = convert(hit, from));
@@ -110,7 +110,7 @@ public final class SingleDAligner {
         }
     }
 
-    public VDJCHit[] align(NucleotideSequence sequence, Set<Locus> loci, int from, int to,
+    public VDJCHit[] align(NucleotideSequence sequence, Set<Chain> loci, int from, int to,
                            int targetIndex, int numberOfTargets) {
         List<PreVDJCHit> preHits = align0(sequence, loci, from, to);
         return PreVDJCHit.convert(alleles, featureToAlign, preHits,
@@ -157,11 +157,11 @@ public final class SingleDAligner {
 
     private static final class SequenceWithLocus {
         private final NucleotideSequence sequence;
-        private final Locus locus;
+        private final Chain chain;
 
         public SequenceWithLocus(Allele allele, GeneFeature featureToAlign) {
             this.sequence = allele.getFeature(featureToAlign);
-            this.locus = allele.getLocus();
+            this.chain = allele.getLocus();
         }
     }
 }
