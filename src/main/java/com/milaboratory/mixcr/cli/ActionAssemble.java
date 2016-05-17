@@ -101,6 +101,16 @@ public class ActionAssemble implements Action {
             assemblerParameters.getCloneFactoryParameters().setFeatureToAlign(geneType, intersection);
         }
 
+        // Adjusting features to align for correct processing
+        for (GeneType geneType : GeneType.values()) {
+            GeneFeature featureAssemble = assemblerParameters.getCloneFactoryParameters().getFeatureToAlign(geneType);
+            GeneFeature featureAlignment = alignerParameters.getFeatureToAlign(geneType);
+            if (featureAssemble == null || featureAlignment == null)
+                continue;
+            GeneFeature intersection = GeneFeature.intersection(featureAlignment, featureAssemble);
+            assemblerParameters.getCloneFactoryParameters().setFeatureToAlign(geneType, intersection);
+        }
+
         try (CloneAssembler assembler = new CloneAssembler(assemblerParameters, false, alleles)) {
 
             CloneAssemblerReport report = actionParameters.report == null ? null : new CloneAssemblerReport();
