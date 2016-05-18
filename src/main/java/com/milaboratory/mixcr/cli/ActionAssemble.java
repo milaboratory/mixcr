@@ -37,8 +37,8 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.validators.PositiveInteger;
-import com.milaboratory.mitools.cli.Action;
-import com.milaboratory.mitools.cli.ActionHelper;
+import com.milaboratory.cli.Action;
+import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.mixcr.assembler.*;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
@@ -89,6 +89,16 @@ public class ActionAssemble implements Action {
                 System.err.println("Failed to override some parameter.");
                 return;
             }
+        }
+
+        // Adjusting features to align for correct processing
+        for (GeneType geneType : GeneType.values()) {
+            GeneFeature featureAssemble = assemblerParameters.getCloneFactoryParameters().getFeatureToAlign(geneType);
+            GeneFeature featureAlignment = alignerParameters.getFeatureToAlign(geneType);
+            if (featureAssemble == null || featureAlignment == null)
+                continue;
+            GeneFeature intersection = GeneFeature.intersection(featureAlignment, featureAssemble);
+            assemblerParameters.getCloneFactoryParameters().setFeatureToAlign(geneType, intersection);
         }
 
         // Adjusting features to align for correct processing

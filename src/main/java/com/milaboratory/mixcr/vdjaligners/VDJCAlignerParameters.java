@@ -34,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.milaboratory.core.PairedEndReadsLayout;
-import com.milaboratory.mitools.merger.MergerParameters;
+import com.milaboratory.core.merger.MergerParameters;
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign;
 import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.reference.GeneFeature;

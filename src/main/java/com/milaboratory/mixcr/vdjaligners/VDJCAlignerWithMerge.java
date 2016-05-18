@@ -30,8 +30,8 @@ package com.milaboratory.mixcr.vdjaligners;
 
 import com.milaboratory.core.io.sequence.PairedRead;
 import com.milaboratory.core.io.sequence.SingleReadImpl;
-import com.milaboratory.mitools.merger.MismatchOnlyPairedReadMerger;
-import com.milaboratory.mitools.merger.PairedReadMergingResult;
+import com.milaboratory.core.merger.MismatchOnlyPairedReadMerger;
+import com.milaboratory.core.merger.PairedReadMergingResult;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.reference.Allele;
 

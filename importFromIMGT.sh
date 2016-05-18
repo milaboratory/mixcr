@@ -97,6 +97,11 @@ do
   # Workaround for *** IMGT malformed files
   if [[ "$(echo ${species} | tr [:upper:] [:lower:])" == mus* ]] && [[ "$locus" == TR[AD] ]]; then
     comm="$comm -p imgt_a1"
+    echo "Special paramenters for Mouse TRA/D genes activated."
+  fi
+  if [[ "$(echo ${species} | tr [:upper:] [:lower:])" == rat* ]] && [[ "$locus" == IG[HK] ]]; then
+    comm="$comm -p imgt_a2"
+    echo "Special paramenters for Rat IGH/K genes activated."
   fi
 
   # Output file info on the last iteration

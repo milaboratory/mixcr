@@ -36,7 +36,6 @@ public class VersionInfoProvider {
 
     public static String getVersionString(OutputType outputType) {
         VersionInfo milib = VersionInfo.getVersionInfoForArtifact("milib");
-        VersionInfo mitools = VersionInfo.getVersionInfoForArtifact("mitools");
         VersionInfo mixcr = VersionInfo.getVersionInfoForArtifact("mixcr");
 
         StringBuilder builder = new StringBuilder();
@@ -59,12 +58,6 @@ public class VersionInfoProvider {
                 .append(milib.getVersion())
                 .append(" (rev=").append(milib.getRevision())
                 .append("; branch=").append(milib.getBranch())
-                .append(")")
-                .append(outputType.delimiter)
-                .append("MiTools v")
-                .append(mitools.getVersion())
-                .append(" (rev=").append(mitools.getRevision())
-                .append("; branch=").append(mitools.getBranch())
                 .append(")");
 
         return builder.toString();
