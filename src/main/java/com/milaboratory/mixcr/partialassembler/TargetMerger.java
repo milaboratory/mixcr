@@ -207,6 +207,8 @@ public class TargetMerger {
         for (GeneType geneType : GeneType.VJC_REFERENCE) {
 
             Map<Allele, Alignment<NucleotideSequence>[]> map = extractHitsMapping(targetLeft, targetRight, geneType);
+            if (map.isEmpty())
+                continue;
             List<Alignment<NucleotideSequence>[]> als = new ArrayList<>(map.values());
 
             Collections.sort(als, new Comparator<Alignment<NucleotideSequence>[]>() {
