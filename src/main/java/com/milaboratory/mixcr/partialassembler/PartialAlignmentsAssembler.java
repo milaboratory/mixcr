@@ -250,7 +250,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
             do {
                 bestI = -1;
                 for (int i = 0; i < descriptors.size(); i++) {
-                    TargetMerger.TargetMergingResult result = targetMerger.merge(descriptors.get(i), central);
+                    TargetMerger.TargetMergingResult result = targetMerger.merge(readId, descriptors.get(i), central);
                     if (result != null && (bestResult == null || bestResult.score < result.score)) {
                         bestResult = result;
                         bestI = i;
@@ -274,7 +274,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
             List<AlignedTarget> descriptors = allDescriptors[d];
             for (int i = 0; i < descriptors.size(); i++)
                 for (int j = i + 1; j < descriptors.size(); j++) {
-                    TargetMerger.TargetMergingResult result = targetMerger.merge(descriptors.get(i), descriptors.get(j));
+                    TargetMerger.TargetMergingResult result = targetMerger.merge(readId, descriptors.get(i), descriptors.get(j));
                     if (result != null) {
                         descriptors.set(i, result.result.overrideDescription(
                                 "Merged(" + result.score + ") = " + descriptors.get(i).getDescription() +

@@ -36,8 +36,10 @@ import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.core.alignment.kaligner2.KAlignerParameters2;
 import com.milaboratory.core.merger.MergerParameters;
 import com.milaboratory.core.merger.MismatchOnlyPairedReadMerger;
+import com.milaboratory.core.merger.PairedReadMergingResult;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.core.sequence.SequencesUtils;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.reference.Allele;
@@ -51,9 +53,11 @@ import java.util.*;
 public class TargetMerger {
     final MismatchOnlyPairedReadMerger merger;
     private volatile VDJCAlignerParameters alignerParameters;
+    final double minimalIdentity;
 
     public TargetMerger(MergerParameters mergerParameters) {
         this.merger = new MismatchOnlyPairedReadMerger(mergerParameters);
+        this.minimalIdentity = mergerParameters.getMinimalIdentity();
     }
 
     public void setAlignerParameters(VDJCAlignerParameters alignerParameters) {
@@ -68,30 +72,18 @@ public class TargetMerger {
         final NSequenceWithQuality mergedTarget = merger.overlap(targetLeft.getTarget(), targetRight.getTarget(), offset);
 
         EnumMap<GeneType, VDJCHit[]> result = new EnumMap<>(GeneType.class);
+
         for (GeneType geneType : GeneType.VJC_REFERENCE) {
+            final BatchAlignerWithBaseParameters bp = ((KGeneAlignmentParameters) alignerParameters.getGeneAlignerParameters(geneType)).getParameters();
             final VDJCHit[] leftHits = targetLeft.getAlignments().getHits(geneType);
             final VDJCHit[] rightHits = targetRight.getAlignments().getHits(geneType);
             GeneFeature alignedFeature = leftHits.length == 0 ? rightHits.length == 0 ? null : rightHits[0].getAlignedFeature() : leftHits[0].getAlignedFeature();
 
-            Map<Allele, Alignment<NucleotideSequence>[]> map = new HashMap<>();
-            for (VDJCHit l : leftHits) {
-                final Allele allele = l.getAllele();
-                map.put(allele, new Alignment[]{l.getAlignment(targetLeft.getTargetId()), null});
-            }
-            for (VDJCHit r : rightHits) {
-                final Allele allele = r.getAllele();
-                final Alignment<NucleotideSequence> alignment = r.getAlignment(targetRight.getTargetId());
-                final Alignment<NucleotideSequence>[] als = map.get(allele);
-                if (als == null)
-                    map.put(allele, new Alignment[]{null, alignment});
-                else
-                    als[1] = alignment;
-            }
-
-            List<VDJCHit> resultingHits = new ArrayList<>();
+            Map<Allele, Alignment<NucleotideSequence>[]> map = extractHitsMapping(targetLeft, targetRight, geneType);
+            ArrayList<VDJCHit> resultingHits = new ArrayList<>();
             for (Map.Entry<Allele, Alignment<NucleotideSequence>[]> mE : map.entrySet()) {
                 final Allele allele = mE.getKey();
-                final BatchAlignerWithBaseParameters bp = ((KGeneAlignmentParameters) alignerParameters.getGeneAlignerParameters(geneType)).getParameters();
+
                 Alignment<NucleotideSequence> mergedAl = merge(
                         bp.getScoring(), extractBandedWidth(bp),
                         mergedTarget.getSequence(), offset,
@@ -100,11 +92,36 @@ public class TargetMerger {
             }
 
             Collections.sort(resultingHits);
+            final float relativeMinScore = extractRelativeMinScore(bp);
+
+            int threshold = (int) (resultingHits.size() > 0 ? resultingHits.get(0).getScore() * relativeMinScore : 0);
+            for (int i = resultingHits.size() - 1; i > 0; --i)
+                if (resultingHits.get(i).getScore() < threshold)
+                    resultingHits.remove(i);
 
             result.put(geneType, resultingHits.toArray(new VDJCHit[resultingHits.size()]));
         }
 
         return new AlignedTarget(new VDJCAlignments(readId, result, mergedTarget), 0);
+    }
+
+    static Map<Allele, Alignment<NucleotideSequence>[]> extractHitsMapping(AlignedTarget targetLeft, AlignedTarget targetRight, GeneType geneType) {
+        Map<Allele, Alignment<NucleotideSequence>[]> map = new HashMap<>();
+        for (VDJCHit l : targetLeft.getAlignments().getHits(geneType)) {
+            final Allele allele = l.getAllele();
+            map.put(allele, new Alignment[]{l.getAlignment(targetLeft.getTargetId()), null});
+        }
+        for (VDJCHit r : targetRight.getAlignments().getHits(geneType)) {
+            final Allele allele = r.getAllele();
+            final Alignment<NucleotideSequence> alignment = r.getAlignment(targetRight.getTargetId());
+            final Alignment<NucleotideSequence>[] als = map.get(allele);
+            if (als == null)
+                map.put(allele, new Alignment[]{null, alignment});
+            else
+                als[1] = alignment;
+        }
+
+        return map;
     }
 
 
@@ -113,6 +130,14 @@ public class TargetMerger {
             return ((KAlignerParameters) bp).getMaxAdjacentIndels();
         else if (bp instanceof KAlignerParameters2)
             return ((KAlignerParameters2) bp).getMapperMaxClusterIndels();
+        else throw new RuntimeException();
+    }
+
+    static float extractRelativeMinScore(BatchAlignerWithBaseParameters bp) {
+        if (bp instanceof KAlignerParameters)
+            return ((KAlignerParameters) bp).getRelativeMinScore();
+        else if (bp instanceof KAlignerParameters2)
+            return ((KAlignerParameters2) bp).getRelativeMinScore();
         else throw new RuntimeException();
     }
 
@@ -167,15 +192,77 @@ public class TargetMerger {
             seq2To = left.getSequence2Range().getTo();
         }
 
-
         final Alignment<NucleotideSequence> al = BandedAligner.alignGlobal(scoring, left == null ? right.getSequence1() : left.getSequence1(),
                 seq, seq1From, seq1To - seq1From, seq2From, seq2To - seq2From, bandedWidth);
 
         return al;
     }
 
-    public TargetMergingResult merge(AlignedTarget target1, AlignedTarget target2) {
-        return null;
+    public TargetMergingResult merge(long readId, AlignedTarget targetLeft, AlignedTarget targetRight) {
+        for (GeneType geneType : GeneType.VJC_REFERENCE) {
+            final VDJCHit[] leftHits = targetLeft.getAlignments().getHits(geneType);
+            final VDJCHit[] rightHits = targetRight.getAlignments().getHits(geneType);
+            GeneFeature alignedFeature = leftHits.length == 0 ? rightHits.length == 0 ? null : rightHits[0].getAlignedFeature() : leftHits[0].getAlignedFeature();
+
+            Map<Allele, Alignment<NucleotideSequence>[]> map = extractHitsMapping(targetLeft, targetRight, geneType);
+            List<Alignment<NucleotideSequence>[]> als = new ArrayList<>(map.values());
+
+            Collections.sort(als, new Comparator<Alignment<NucleotideSequence>[]>() {
+                @Override
+                public int compare(Alignment<NucleotideSequence>[] o1, Alignment<NucleotideSequence>[] o2) {
+                    return Integer.compare(sumScore(o2), sumScore(o1));
+                }
+            });
+
+            Alignment<NucleotideSequence>[] topHits = als.get(0);
+
+            if (topHits[0] != null && topHits[1] != null) {
+                final Alignment<NucleotideSequence> left = topHits[0];
+                final Alignment<NucleotideSequence> right = topHits[1];
+
+                final int from = Math.max(left.getSequence1Range().getFrom(), right.getSequence1Range().getFrom());
+                final int to = Math.min(left.getSequence1Range().getTo(), right.getSequence1Range().getTo());
+
+                if (to <= from)
+                    continue;
+
+                int delta = left.convertPosition(from) - right.convertPosition(from);
+                if (delta != left.convertPosition(to) - right.convertPosition(to))
+                    continue;
+
+
+                int seq1Offset = delta > 0 ? delta : 0;
+                int seq2Offset = delta > 0 ? 0 : -delta;
+                int overlap = Math.min(targetLeft.getTarget().size() - seq1Offset, targetRight.getTarget().size() - seq2Offset);
+
+                int mismatches = SequencesUtils.mismatchCount(
+                        targetLeft.getTarget().getSequence(), seq1Offset,
+                        targetRight.getTarget().getSequence(), seq2Offset,
+                        overlap);
+
+                if (1.0 - 1.0 * mismatches / overlap < minimalIdentity)
+                    continue;
+
+                final AlignedTarget merge = merge(readId, targetLeft, targetRight, delta);
+                return new TargetMergingResult(merge,
+                        PairedReadMergingResult.MATCH_SCORE * (overlap - mismatches) +
+                                PairedReadMergingResult.MISMATCH_SCORE * mismatches);
+            }
+        }
+
+        final PairedReadMergingResult merge = merger.merge(targetLeft.getTarget(), targetRight.getTarget());
+        if (!merge.isSuccessful())
+            return null;
+        return new TargetMergingResult(merge(readId, targetLeft, targetRight, merge.getOffset()), merge.score());
+    }
+
+    private static int sumScore(Alignment[] als) {
+        int r = 0;
+        for (Alignment al : als) {
+            if (al != null)
+                r += al.getScore();
+        }
+        return r;
     }
 
     public static class TargetMergingResult {
