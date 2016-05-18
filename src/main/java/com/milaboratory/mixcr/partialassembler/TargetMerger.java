@@ -105,15 +105,20 @@ public class TargetMerger {
         return new AlignedTarget(new VDJCAlignments(readId, result, mergedTarget), 0);
     }
 
+    @SuppressWarnings("unchecked")
     static Map<Allele, Alignment<NucleotideSequence>[]> extractHitsMapping(AlignedTarget targetLeft, AlignedTarget targetRight, GeneType geneType) {
         Map<Allele, Alignment<NucleotideSequence>[]> map = new HashMap<>();
         for (VDJCHit l : targetLeft.getAlignments().getHits(geneType)) {
             final Allele allele = l.getAllele();
-            map.put(allele, new Alignment[]{l.getAlignment(targetLeft.getTargetId()), null});
+            final Alignment<NucleotideSequence> al = l.getAlignment(targetLeft.getTargetId());
+            if (al != null)
+                map.put(allele, new Alignment[]{al, null});
         }
         for (VDJCHit r : targetRight.getAlignments().getHits(geneType)) {
             final Allele allele = r.getAllele();
             final Alignment<NucleotideSequence> alignment = r.getAlignment(targetRight.getTargetId());
+            if (alignment == null)
+                continue;
             final Alignment<NucleotideSequence>[] als = map.get(allele);
             if (als == null)
                 map.put(allele, new Alignment[]{null, alignment});
@@ -200,9 +205,6 @@ public class TargetMerger {
 
     public TargetMergingResult merge(long readId, AlignedTarget targetLeft, AlignedTarget targetRight) {
         for (GeneType geneType : GeneType.VJC_REFERENCE) {
-            final VDJCHit[] leftHits = targetLeft.getAlignments().getHits(geneType);
-            final VDJCHit[] rightHits = targetRight.getAlignments().getHits(geneType);
-            GeneFeature alignedFeature = leftHits.length == 0 ? rightHits.length == 0 ? null : rightHits[0].getAlignedFeature() : leftHits[0].getAlignedFeature();
 
             Map<Allele, Alignment<NucleotideSequence>[]> map = extractHitsMapping(targetLeft, targetRight, geneType);
             List<Alignment<NucleotideSequence>[]> als = new ArrayList<>(map.values());
