@@ -160,6 +160,10 @@ public final class AlignedTarget {
         return result;
     }
 
+    public EnumSet<GeneType> getExpectedGenes(){
+        return extractExpectedGenes(targetId, alignments);
+    }
+
     public static EnumSet<GeneType> extractExpectedGenes(int targetId, VDJCAlignments alignments) {
         EnumSet<GeneType> gts = EnumSet.noneOf(GeneType.class);
         for (GeneType geneType : GeneType.VDJC_REFERENCE) {

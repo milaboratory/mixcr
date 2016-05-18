@@ -2,9 +2,11 @@ package com.milaboratory.mixcr.partialassembler;
 
 import com.milaboratory.core.io.sequence.MultiRead;
 import com.milaboratory.core.io.sequence.SingleRead;
+import com.milaboratory.core.io.sequence.SingleReadImpl;
 import com.milaboratory.mixcr.reference.GeneType;
 
 import java.util.EnumSet;
+import java.util.List;
 
 /**
  * @author Dmitry Bolotin
@@ -12,6 +14,21 @@ import java.util.EnumSet;
  */
 public class VDJCMultiRead extends MultiRead {
     final EnumSet<GeneType>[] expectedGeneTypes;
+
+    @SuppressWarnings("unchecked")
+    public VDJCMultiRead(long readId, List<AlignedTarget> targets) {
+        super(extractReads(readId, targets));
+        this.expectedGeneTypes = new EnumSet[targets.size()];
+        for (int i = 0; i < expectedGeneTypes.length; i++)
+            expectedGeneTypes[i] = targets.get(i).getExpectedGenes();
+    }
+
+    public static SingleReadImpl[] extractReads(long readId, List<AlignedTarget> targets) {
+        final SingleReadImpl[] reads = new SingleReadImpl[targets.size()];
+        for (int i = 0; i < reads.length; i++)
+            reads[i] = new SingleReadImpl(readId, targets.get(i).getTarget(), targets.get(i).getDescription());
+        return reads;
+    }
 
     public VDJCMultiRead(SingleRead[] data, EnumSet<GeneType>[] expectedGeneTypes) {
         super(data);
