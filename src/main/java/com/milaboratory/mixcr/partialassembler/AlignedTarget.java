@@ -73,10 +73,12 @@ public final class AlignedTarget {
     }
 
     public String getDescription() {
+        if(descriptionOverride != null)
+            return descriptionOverride;
         if (alignments.getDescriptions() != null && alignments.getDescriptions().length - 1 >= targetId &&
                 alignments.getDescriptions()[targetId] != null)
             return alignments.getDescriptions()[targetId];
-        return null;
+        return "";
     }
 
     public static List<AlignedTarget> orderTargets(List<AlignedTarget> targets) {
