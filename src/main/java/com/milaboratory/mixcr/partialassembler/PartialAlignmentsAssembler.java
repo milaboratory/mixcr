@@ -32,10 +32,7 @@ import cc.redberry.pipe.CUtils;
 import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
-import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence;
+import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.cli.ReportHelper;
 import com.milaboratory.mixcr.cli.ReportWriter;
 import com.milaboratory.mixcr.reference.Allele;
@@ -72,7 +69,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
             complexOverlapped = new AtomicLong(),
             containsCDR3 = new AtomicLong();
 
-    public PartialAlignmentsAssembler(PartialAlignmentsAssemblerParameters params, String output,
+    public PartialAlignmentsAssembler(PartialAlignmentsAssemblerParameters params, VDJCAlignmentsWriter writer,
                                       boolean writePartial, boolean overlappedOnly) {
         this.kValue = params.getKValue();
         this.kOffset = params.getKOffset();
@@ -80,11 +77,12 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         this.targetMerger = new TargetMerger(params.getMergerParameters());
         this.writePartial = writePartial;
         this.overlappedOnly = overlappedOnly;
-        try {
-            this.writer = new VDJCAlignmentsWriter(output);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        this.writer = writer;
+    }
+
+    public PartialAlignmentsAssembler(PartialAlignmentsAssemblerParameters params, String output,
+                                      boolean writePartial, boolean overlappedOnly) throws IOException {
+        this(params, new VDJCAlignmentsWriter(output), writePartial, overlappedOnly);
     }
 
     public void buildLeftPartsIndex(VDJCAlignmentsReader reader) {

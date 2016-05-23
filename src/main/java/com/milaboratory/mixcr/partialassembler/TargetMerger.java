@@ -129,7 +129,6 @@ public class TargetMerger {
         return map;
     }
 
-
     static int extractBandedWidth(BatchAlignerWithBaseParameters bp) {
         if (bp instanceof KAlignerParameters)
             return ((KAlignerParameters) bp).getMaxAdjacentIndels();
@@ -172,7 +171,6 @@ public class TargetMerger {
                     seq2From = right.getSequence2Range().getFrom() + offset;
                 }
 
-
                 if (left.getSequence1Range().getTo() > right.getSequence1Range().getTo()) {
                     seq1To = left.getSequence1Range().getTo();
                     seq2To = left.getSequence2Range().getTo();
@@ -197,10 +195,8 @@ public class TargetMerger {
             seq2To = left.getSequence2Range().getTo();
         }
 
-        final Alignment<NucleotideSequence> al = BandedAligner.alignGlobal(scoring, left == null ? right.getSequence1() : left.getSequence1(),
+        return BandedAligner.alignGlobal(scoring, left == null ? right.getSequence1() : left.getSequence1(),
                 seq, seq1From, seq1To - seq1From, seq2From, seq2To - seq2From, bandedWidth);
-
-        return al;
     }
 
     public TargetMergingResult merge(long readId, AlignedTarget targetLeft, AlignedTarget targetRight) {
