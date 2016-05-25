@@ -40,6 +40,8 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.validators.PositiveInteger;
+import com.milaboratory.cli.Action;
+import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.core.PairedEndReadsLayout;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SequenceReaderCloseable;
@@ -49,8 +51,6 @@ import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.cli.Action;
-import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
@@ -196,8 +196,13 @@ public class ActionAlign implements Action {
                         continue;
                 }
                 if (writer != null) {
-                    if (actionParameters.saveReadDescription || actionParameters.saveOriginalReads)
-                        alignment.setDescriptions(extractDescription(read));
+                    if (actionParameters.saveReadDescription || actionParameters.saveOriginalReads) {
+                        if (result.read.numberOfReads() == 2 && alignment.numberOfTargets() == 1) {
+                            assert alignment.getDescriptions() != null && alignment.getDescriptions().length == 1;
+                            alignment.getDescriptions()[0] += " = " + read.getRead(0).getDescription() + " + " + read.getRead(1).getDescription();
+                        } else
+                            alignment.setDescriptions(extractDescription(read));
+                    }
                     if (actionParameters.saveOriginalReads)
                         alignment.setOriginalSequences(extractNSeqs(read));
                     writer.write(alignment);

@@ -79,10 +79,21 @@ public final class VDJCAlignerWithMerge extends VDJCAligner<PairedRead> {
                     new SingleReadImpl(read.getId(), merged.getOverlappedSequence(), "")).alignment;
             if (listener != null)
                 listener.onSuccessfulOverlap(read, alignment);
-//            if (alignment != null)
-//                alignment.setDescriptions(new String[]{read.getR1().getDescription(), read.getR2().getDescription()});
+            if (alignment != null)
+                alignment.setDescriptions(new String[]{"MOverlapped(" + getMMDescr(merged) + ")"});
             return new VDJCAlignmentResult<>(read, alignment);
         } else
             return pairedAligner.process(read);
+    }
+
+    public static String getMMDescr(PairedReadMergingResult merge) {
+        return getMMDescr(merge.getOverlap(), merge.getErrors());
+    }
+
+    public static String getMMDescr(int matches, int mismatches) {
+        String r = Integer.toString(matches);
+        if (mismatches != 0)
+            r += "-" + mismatches;
+        return r;
     }
 }

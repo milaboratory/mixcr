@@ -29,10 +29,12 @@
 package com.milaboratory.mixcr.partialassembler;
 
 import cc.redberry.pipe.CUtils;
-import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
+import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence;
 import com.milaboratory.mixcr.cli.ReportHelper;
 import com.milaboratory.mixcr.cli.ReportWriter;
 import com.milaboratory.mixcr.reference.Allele;
@@ -45,10 +47,10 @@ import gnu.trove.set.hash.TLongHashSet;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+
+import static com.milaboratory.mixcr.vdjaligners.VDJCAlignerWithMerge.getMMDescr;
 
 public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
     final TLongObjectHashMap<List<KMerInfo>> kToIndexLeft = new TLongObjectHashMap<>();
@@ -219,8 +221,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         AlignedTarget rightCentral = rightTargets.get(rightTargetId);
 
         AlignedTarget central = targetMerger.merge(readId, leftCentral, rightCentral, maxDelta)
-                .overrideDescription("VJOverlap(" + maxOverlap + ") = " + leftCentral.getDescription() +
-                        " x " + rightCentral.getDescription());
+                .overrideDescription("VJOverlap(" + maxOverlap + ") = " + leftCentral.getDescription() + " + " + rightCentral.getDescription());
 
         final List<AlignedTarget> leftDescriptors = new ArrayList<>(2),
                 rightDescriptors = new ArrayList<>(2);
@@ -237,9 +238,6 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
 
         // Merging to VJ junction
         List<AlignedTarget>[] allDescriptors = new List[]{leftDescriptors, rightDescriptors};
-//        SingleReadImpl[] sideResults = new SingleReadImpl[2];
-//        EnumSet<GeneType>[] expectedSideGenes = new EnumSet[]{EnumSet.noneOf(GeneType.class),
-//                EnumSet.noneOf(GeneType.class)};
         TargetMerger.TargetMergingResult bestResult = null;
         int bestI;
 
@@ -257,9 +255,9 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
 
                 if (bestI != -1) {
                     central = bestResult.result.overrideDescription(
-                            central.getDescription() + " / MergedFrom" +
+                            central.getDescription() + " / " + mergeTypePrefix(bestResult.usingAlignments) + "MergedFrom" +
                                     (descriptors == leftDescriptors ? "Left" : "Right") +
-                                    "(" + bestResult.score + ") = " +
+                                    "(" + getMMDescr(bestResult.matched, bestResult.mismatched) + ") = " +
                                     descriptors.get(bestI).getDescription());
                     descriptors.remove(bestI);
                 }
@@ -275,7 +273,8 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
                     TargetMerger.TargetMergingResult result = targetMerger.merge(readId, descriptors.get(i), descriptors.get(j));
                     if (result != null) {
                         descriptors.set(i, result.result.overrideDescription(
-                                "Merged(" + result.score + ") = " + descriptors.get(i).getDescription() +
+                                mergeTypePrefix(result.usingAlignments) +
+                                        "Merged(" + getMMDescr(result.matched, result.mismatched) + ") = " + descriptors.get(i).getDescription() +
                                         " + " + descriptors.get(j).getDescription()));
                         descriptors.remove(j);
                         --d;
@@ -292,25 +291,10 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
 
         // Ordering and filtering final targets
         return new VDJCMultiRead(readId, AlignedTarget.orderTargets(result));
+    }
 
-//
-//        List<SingleRead> resultingReads = new ArrayList<>(3);
-//        List<EnumSet<GeneType>> resultingExpectedGenes = new ArrayList<>(3);
-//
-//        if (sideResults[0] != null) {
-//            resultingReads.add(sideResults[0]);
-//            resultingExpectedGenes.add(expectedSideGenes[0]);
-//        }
-//        resultingReads.add(centralResult);
-//        resultingExpectedGenes.add(expectedCentralGenes);
-//        if (sideResults[1] != null) {
-//            resultingReads.add(sideResults[1]);
-//            resultingExpectedGenes.add(expectedSideGenes[1]);
-//        }
-
-//        return null;
-//        return new VDJCMultiRead(resultingReads.toArray(new SingleRead[resultingReads.size()]),
-//                resultingExpectedGenes.toArray(new EnumSet[resultingExpectedGenes.size()]));
+    private static String mergeTypePrefix(boolean usingAlignment) {
+        return usingAlignment ? "A" : "S";
     }
 
     @Override
@@ -328,26 +312,6 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         if (!writePartial && !overlappedOnly && totalWritten.get() != overlapped.get() + partialAsIs.get() + containsCDR3.get())
             throw new AssertionError();
     }
-
-//    private static SingleRead makeLeft(long readId, VDJCAlignments leftAl, int targetId) {
-//        return new SingleReadImpl(readId, leftAl.getTarget(targetId), "L" + leftAl.getReadId() + "." + targetId);
-//    }
-//
-//    private static SingleRead makeRight(long readId, VDJCAlignments rightAl, int targetId) {
-//        return new SingleReadImpl(readId, rightAl.getTarget(targetId), "R" + rightAl.getReadId() + "." + targetId);
-//    }
-
-    //private SingleRead makeOverlapped(long readId, VDJCAlignments leftAl, VDJCAlignments rightAl,
-    //                                  int leftTargetId, int rightTargetId, int maxDelta, int maxOverlap) {
-    //    return new SingleReadImpl(readId,
-    //            mergeOverlapped(leftAl.getTarget(leftTargetId), rightAl.getTarget(rightTargetId), maxDelta),
-    //            "L" + leftAl.getReadId() + "." + leftTargetId + " x R" + rightAl.getReadId() + "." + rightTargetId + " overlap = " + maxOverlap);
-    //}
-
-    //private NSequenceWithQuality mergeOverlapped(NSequenceWithQuality left, NSequenceWithQuality right, int delta) {
-    //    return merger.overlap(left, right, delta);
-    //}
-
 
     private int getLeftPartitionedSequence(VDJCAlignments alignment) {
         if (alignment.numberOfTargets() > 2)
@@ -434,50 +398,6 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         }
     }
 
-    private static final class MutableSingleRead implements SingleRead {
-        long id;
-        NSequenceWithQuality sequence;
-        String description;
-
-        public MutableSingleRead(long id, NSequenceWithQuality sequence, String description) {
-            this.id = id;
-            this.sequence = sequence;
-            this.description = description;
-        }
-
-        @Override
-        public String getDescription() {
-            return description;
-        }
-
-        @Override
-        public NSequenceWithQuality getData() {
-            return sequence;
-        }
-
-        @Override
-        public int numberOfReads() {
-            return 1;
-        }
-
-        @Override
-        public SingleRead getRead(int i) {
-            if (i != 0)
-                throw new IndexOutOfBoundsException();
-            return this;
-        }
-
-        @Override
-        public long getId() {
-            return id;
-        }
-
-        @Override
-        public Iterator<SingleRead> iterator() {
-            return (Iterator) Collections.singletonList(this).iterator();
-        }
-    }
-
     private static AlignedTarget overrideDescription(AlignedTarget target, boolean isLeft) {
         String descr = (isLeft ? "L" : "R") + target.getAlignments().getReadId() + "." + target.getTargetId();
         String oldDescr = target.getDescription();
@@ -493,79 +413,11 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         return targets;
     }
 
-    //private static final class TargetDescriptor {
-    //    final VDJCAlignments alignments;
-    //    final boolean isLeft;
-    //    final int targetId;
-    //
-    //    public TargetDescriptor(VDJCAlignments alignments, boolean isLeft, int targetId) {
-    //        this.alignments = alignments;
-    //        this.isLeft = isLeft;
-    //        this.targetId = targetId;
-    //    }
-    //
-    //    public NSequenceWithQuality getTarget() {
-    //        return alignments.getTarget(targetId);
-    //    }
-    //
-    //    public EnumSet<GeneType> expectedSideGenes() {
-    //        return AlignedTarget.extractExpectedGenes(targetId, alignments);
-    //    }
-    //
-    //    public String getStringId() {
-    //        String descr = (isLeft ? "L" : "R") + alignments.getReadId() + "." + targetId;
-    //        if (alignments.getDescriptions() != null && alignments.getDescriptions().length - 1 >= targetId &&
-    //                alignments.getDescriptions()[targetId] != null)
-    //            descr += "[" + alignments.getDescriptions()[targetId] + "]";
-    //        return descr;
-    //    }
-    //}
-
     @Override
     public void close() throws IOException {
         writer.close();
     }
 }
-
-/*
-
->>> Read id: 12519705
-
->>> Description: Merged(26) = L4130891.0[R4130891.0] + R12519705.0
-
-
-   Quality     777777777776569999999999999999999999999977777777777777
-   Target0   0 CAGTATCTGTGAAAAGTCGAATAAGTATCAGCCCAGACACATCCAAGAACCAGT 53   Score
-IGHV6-1*00 250 cagtatctgtgaaaagtcgaataaCCatcaAcccagacacatccaagaaccagt 303  222.0
-
->>> Description: VJOverlap(39) = L4130891.1[VJOverlap(35) = L51223384.0 x R4130891.1] x R12519705.1
-
-                              FR3><CDR3   V><D D>          <J
-    Quality     77777777777777777777779999999999999999999999999999999999999999999997
-    Target1   0 GACACGGCTGTATATTACTGTACAAGAGGTACTGAGACCTACGACAAGTGGTTCGACCCCTGGGGCCA 67   Score
- IGHV6-1*00 336 gacacggctgtGtattactgtGcaagag                                         363  108.0
-IGHV3-13*00 321 gacacggctgtGtattactgtGcaagag                                         348  108.0
-IGHV3-74*00 324 gacacggctgtGtattactgtGcaagag                                         351  108.0
-IGHV4-34*00 321 gacacggctgtGtattactgtGcGagagg                                        349  97.0
- IGHD2-8*00  39                             gtact                                    43   25.0
-IGHD4-23*00  22                                       ctacg                          26   25.0
-IGHD1-26*00  36                                       ctacg                          40   25.0
-   IGHJ5*00  20                                            acaaCtggttcgacccctggggcca 44   109.0
-
-
- CAGTATCTGTGAAAAGTCGAATAAGTATCAGCCCAGACACATCCAAGAACCAGT,GACACGGCTGTATATTACTGTACAAGAGGTACTGAGACCTACGACAAGTGGTTCGACCCCTGGGGCCA
- GGGGGGGGGGEC:@NNNNNNNNNNNNNNNNNNNNNNNNNNGGGGGGGGGEGGFF,GGGGGGGGFGGGFGGGGGGGGGSSSSSNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNG
- IGHV6-1*00(330),IGHV3-13*00(108),IGHV3-74*00(108),IGHV4-34*00(97)
- IGHD2-8*00(25),IGHD4-23*00(25),IGHD1-26*00(25)
- IGHJ5*00(109)
- 250|304|385|0|54|SC274GSC275TSA280G|222.0,336|364|385|0|28|SG347ASG357A|108.0;,321|349|370|0|28|SG332ASG342A|108.0;,324|352|373|0|28|SG335ASG345A|108.0;,321|350|370|0|29|SG332ASG342ASG344A|97.0
- ,39|44|93|28|33||25.0;,22|27|57|38|43||25.0;,36|41|60|38|43||25.0
- ,20|45|73|43|68|SC24G|109.0
- :::::::::::::::::::::,:::::::::18::28:28:::33:43:43::::
- 12519705
-
- */
-// VJOverlap(40) = L7073486.0 x R201727.1 / MergedFromRight(28) = R201727.0
 
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv     jjjjjjjjjjjjjjjjjjjjjcccccccccccccccccccccccc
 //                        -------------------->             <--------------------

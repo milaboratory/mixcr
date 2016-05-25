@@ -246,14 +246,14 @@ public class TargetMerger {
                 final AlignedTarget merge = merge(readId, targetLeft, targetRight, delta);
                 return new TargetMergingResult(merge,
                         PairedReadMergingResult.MATCH_SCORE * (overlap - mismatches) +
-                                PairedReadMergingResult.MISMATCH_SCORE * mismatches);
+                                PairedReadMergingResult.MISMATCH_SCORE * mismatches, true, overlap, mismatches);
             }
         }
 
         final PairedReadMergingResult merge = merger.merge(targetLeft.getTarget(), targetRight.getTarget());
         if (!merge.isSuccessful())
             return null;
-        return new TargetMergingResult(merge(readId, targetLeft, targetRight, merge.getOffset()), merge.score());
+        return new TargetMergingResult(merge(readId, targetLeft, targetRight, merge.getOffset()), merge.score(), false, merge.getOverlap(), merge.getErrors());
     }
 
     private static int sumScore(Alignment[] als) {
@@ -268,10 +268,15 @@ public class TargetMerger {
     public static class TargetMergingResult {
         public final AlignedTarget result;
         public final int score;
+        public final boolean usingAlignments;
+        public final int matched, mismatched;
 
-        public TargetMergingResult(AlignedTarget result, int score) {
+        public TargetMergingResult(AlignedTarget result, int score, boolean usingAlignments, int matched, int mismatched) {
             this.result = result;
             this.score = score;
+            this.usingAlignments = usingAlignments;
+            this.matched = matched;
+            this.mismatched = mismatched;
         }
     }
 }
