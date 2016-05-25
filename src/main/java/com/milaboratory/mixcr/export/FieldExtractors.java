@@ -35,6 +35,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.cli.ActionAssemble;
+import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.reference.GeneFeature;
 import com.milaboratory.mixcr.reference.GeneType;
 import com.milaboratory.mixcr.reference.ReferencePoint;
@@ -56,6 +57,10 @@ public final class FieldExtractors {
     private static final DecimalFormat SCORE_FORMAT = new DecimalFormat("#.#");
 
     static Field[] descriptors = null;
+
+    private static String alleleName(Allele allele, boolean familyOnly) {
+        return familyOnly ? allele.getFamilyName() : allele.getName();
+    }
 
     public synchronized static Field[] getFields() {
         if (descriptors == null) {
@@ -84,7 +89,22 @@ public final class FieldExtractors {
                 });
             }
 
-            // Best hits
+            // Best family
+            for (final GeneType type : GeneType.values()) {
+                char l = type.getLetter();
+                desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Family",
+                        "Export best " + l + " hit family name", "Best " + l + " hit family", "best" + l + "Family") {
+                    @Override
+                    protected String extract(VDJCObject object) {
+                        VDJCHit bestHit = object.getBestHit(type);
+                        if (bestHit == null)
+                            return NULL;
+                        return bestHit.getAllele().getFamilyName();
+                    }
+                });
+            }
+
+            // Best hit scores
             for (final GeneType type : GeneType.values()) {
                 char l = type.getLetter();
                 desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "HitScore",
@@ -100,49 +120,77 @@ public final class FieldExtractors {
             }
 
             // All hits
-            for (final GeneType type : GeneType.values()) {
-                char l = type.getLetter();
-                desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "HitsWithScore",
-                        "Export all " + l + " hits with score", "All " + l + " hits", "all" + l + "HitsWithScore") {
-                    @Override
-                    protected String extract(VDJCObject object) {
-                        VDJCHit[] hits = object.getHits(type);
-                        if (hits.length == 0)
-                            return "";
-                        StringBuilder sb = new StringBuilder();
-                        for (int i = 0; ; i++) {
-                            sb.append(hits[i].getAllele().getName())
-                                    .append("(").append(SCORE_FORMAT.format(hits[i].getScore()))
-                                    .append(")");
-                            if (i == hits.length - 1)
-                                break;
-                            sb.append(",");
-                        }
-                        return sb.toString();
+            for (boolean f : new boolean[]{true, false}) {
+                final boolean family = f;
+                for (final GeneType type : GeneType.values()) {
+                    char l = type.getLetter();
+                    String param, descr, col, shortCol;
+                    if (family) {
+                        param = "-" + Character.toLowerCase(l) + "FamiliesWithScore";
+                        descr = "Export all " + l + " hit families with score";
+                        col = "All " + l + " families";
+                        shortCol = "all" + l + "FamiliesWithScore";
+                    } else {
+                        param = "-" + Character.toLowerCase(l) + "HitsWithScore";
+                        descr = "Export all " + l + " hits with score";
+                        col = "All " + l + " hits";
+                        shortCol = "all" + l + "HitsWithScore";
                     }
-                });
+                    desctiptorsList.add(new PL_O(param, descr, col, shortCol) {
+                        @Override
+                        protected String extract(VDJCObject object) {
+                            VDJCHit[] hits = object.getHits(type);
+                            if (hits.length == 0)
+                                return "";
+                            StringBuilder sb = new StringBuilder();
+                            for (int i = 0; ; i++) {
+                                sb.append(alleleName(hits[i].getAllele(), family))
+                                        .append("(").append(SCORE_FORMAT.format(hits[i].getScore()))
+                                        .append(")");
+                                if (i == hits.length - 1)
+                                    break;
+                                sb.append(",");
+                            }
+                            return sb.toString();
+                        }
+                    });
+                }
             }
 
             // All hits without score
-            for (final GeneType type : GeneType.values()) {
-                char l = type.getLetter();
-                desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Hits",
-                        "Export all " + l + " hits", "All " + l + " Hits", "all" + l + "Hits") {
-                    @Override
-                    protected String extract(VDJCObject object) {
-                        VDJCHit[] hits = object.getHits(type);
-                        if (hits.length == 0)
-                            return "";
-                        StringBuilder sb = new StringBuilder();
-                        for (int i = 0; ; i++) {
-                            sb.append(hits[i].getAllele().getName());
-                            if (i == hits.length - 1)
-                                break;
-                            sb.append(",");
-                        }
-                        return sb.toString();
+            for (boolean f : new boolean[]{true, false}) {
+                final boolean family = f;
+                for (final GeneType type : GeneType.values()) {
+                    char l = type.getLetter();
+                    String param, descr, col, shortCol;
+                    if (family) {
+                        param = "-" + Character.toLowerCase(l) + "Families";
+                        descr = "Export all " + l + " hit families";
+                        col = "All " + l + " families";
+                        shortCol = "all" + l + "Families";
+                    } else {
+                        param = "-" + Character.toLowerCase(l) + "Hits";
+                        descr = "Export all " + l + " hits";
+                        col = "All " + l + " hits";
+                        shortCol = "all" + l + "Hits";
                     }
-                });
+                    desctiptorsList.add(new PL_O(param, descr, col, shortCol) {
+                        @Override
+                        protected String extract(VDJCObject object) {
+                            VDJCHit[] hits = object.getHits(type);
+                            if (hits.length == 0)
+                                return "";
+                            StringBuilder sb = new StringBuilder();
+                            for (int i = 0; ; i++) {
+                                sb.append(alleleName(hits[i].getAllele(), family));
+                                if (i == hits.length - 1)
+                                    break;
+                                sb.append(",");
+                            }
+                            return sb.toString();
+                        }
+                    });
+                }
             }
 
             // Best alignment
