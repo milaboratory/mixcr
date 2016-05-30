@@ -39,6 +39,8 @@ import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.reference.GeneFeature;
 import com.milaboratory.mixcr.reference.GeneType;
 import com.milaboratory.mixcr.reference.ReferencePoint;
+import gnu.trove.iterator.TObjectFloatIterator;
+import gnu.trove.map.hash.TObjectFloatHashMap;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
@@ -119,78 +121,87 @@ public final class FieldExtractors {
                 });
             }
 
+
             // All hits
-            for (boolean f : new boolean[]{true, false}) {
-                final boolean family = f;
-                for (final GeneType type : GeneType.values()) {
-                    char l = type.getLetter();
-                    String param, descr, col, shortCol;
-                    if (family) {
-                        param = "-" + Character.toLowerCase(l) + "FamiliesWithScore";
-                        descr = "Export all " + l + " hit families with score";
-                        col = "All " + l + " families";
-                        shortCol = "all" + l + "FamiliesWithScore";
-                    } else {
-                        param = "-" + Character.toLowerCase(l) + "HitsWithScore";
-                        descr = "Export all " + l + " hits with score";
-                        col = "All " + l + " hits";
-                        shortCol = "all" + l + "HitsWithScore";
-                    }
-                    desctiptorsList.add(new PL_O(param, descr, col, shortCol) {
-                        @Override
-                        protected String extract(VDJCObject object) {
-                            VDJCHit[] hits = object.getHits(type);
-                            if (hits.length == 0)
-                                return "";
-                            StringBuilder sb = new StringBuilder();
-                            for (int i = 0; ; i++) {
-                                sb.append(alleleName(hits[i].getAllele(), family))
-                                        .append("(").append(SCORE_FORMAT.format(hits[i].getScore()))
-                                        .append(")");
-                                if (i == hits.length - 1)
-                                    break;
-                                sb.append(",");
-                            }
-                            return sb.toString();
+            for (final GeneType type : GeneType.values()) {
+                char l = type.getLetter();
+                desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "HitsWithScore",
+                        "Export all " + l + " hits with score", "All " + l + " hits", "all" + l + "HitsWithScore") {
+                    @Override
+                    protected String extract(VDJCObject object) {
+                        VDJCHit[] hits = object.getHits(type);
+                        if (hits.length == 0)
+                            return "";
+                        StringBuilder sb = new StringBuilder();
+                        for (int i = 0; ; i++) {
+                            sb.append(hits[i].getAllele().getName())
+                                    .append("(").append(SCORE_FORMAT.format(hits[i].getScore()))
+                                    .append(")");
+                            if (i == hits.length - 1)
+                                break;
+                            sb.append(",");
                         }
-                    });
-                }
+                        return sb.toString();
+                    }
+                });
             }
 
             // All hits without score
-            for (boolean f : new boolean[]{true, false}) {
-                final boolean family = f;
-                for (final GeneType type : GeneType.values()) {
-                    char l = type.getLetter();
-                    String param, descr, col, shortCol;
-                    if (family) {
-                        param = "-" + Character.toLowerCase(l) + "Families";
-                        descr = "Export all " + l + " hit families";
-                        col = "All " + l + " families";
-                        shortCol = "all" + l + "Families";
-                    } else {
-                        param = "-" + Character.toLowerCase(l) + "Hits";
-                        descr = "Export all " + l + " hits";
-                        col = "All " + l + " hits";
-                        shortCol = "all" + l + "Hits";
-                    }
-                    desctiptorsList.add(new PL_O(param, descr, col, shortCol) {
-                        @Override
-                        protected String extract(VDJCObject object) {
-                            VDJCHit[] hits = object.getHits(type);
-                            if (hits.length == 0)
-                                return "";
-                            StringBuilder sb = new StringBuilder();
-                            for (int i = 0; ; i++) {
-                                sb.append(alleleName(hits[i].getAllele(), family));
-                                if (i == hits.length - 1)
-                                    break;
-                                sb.append(",");
-                            }
-                            return sb.toString();
+            for (final GeneType type : GeneType.values()) {
+                char l = type.getLetter();
+                desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Hits",
+                        "Export all " + l + " hits", "All " + l + " Hits", "all" + l + "Hits") {
+                    @Override
+                    protected String extract(VDJCObject object) {
+                        VDJCHit[] hits = object.getHits(type);
+                        if (hits.length == 0)
+                            return "";
+                        StringBuilder sb = new StringBuilder();
+                        for (int i = 0; ; i++) {
+                            sb.append(hits[i].getAllele().getName());
+                            if (i == hits.length - 1)
+                                break;
+                            sb.append(",");
                         }
-                    });
-                }
+                        return sb.toString();
+                    }
+                });
+            }
+
+            // All families
+            for (final GeneType type : GeneType.values()) {
+                char l = type.getLetter();
+                desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Families",
+                        "Export all " + l + " hit families", "All " + l + " families", "all" + l + "Families") {
+                    @Override
+                    protected String extract(VDJCObject object) {
+                        TObjectFloatHashMap<String> familyScores = new TObjectFloatHashMap<>();
+                        VDJCHit[] hits = object.getHits(type);
+                        if (hits.length == 0)
+                            return "";
+                        for (VDJCHit hit : hits)
+                            familyScores.adjustOrPutValue(hit.getAllele().getFamilyName(), hit.getScore(), hit.getScore());
+
+                        final Holder[] hs = new Holder[familyScores.size()];
+                        final TObjectFloatIterator<String> it = familyScores.iterator();
+                        int i = 0;
+                        while (it.hasNext()) {
+                            it.advance();
+                            hs[i++] = new Holder(it.key(), it.value());
+                        }
+
+                        Arrays.sort(hs);
+
+                        StringBuilder sb = new StringBuilder();
+                        for (i = 0; ; i++) {
+                            sb.append(hs[i].str);
+                            if (i == hs.length - 1)
+                                break;
+                            sb.append(",");
+                        }
+                        return sb.toString();
+                    }
+                });
             }
 
             // Best alignment
@@ -730,6 +741,21 @@ public final class FieldExtractors {
                 return sString;
             default:
                 throw new NullPointerException();
+        }
+    }
+
+    private static final class Holder implements Comparable<Holder> {
+        final String str;
+        final float score;
+
+        public Holder(String str, float score) {
+            this.str = str;
+            this.score = score;
+        }
+
+        @Override
+        public int compareTo(Holder o) {
+            return Float.compare(o.score, score);
         }
     }
 }

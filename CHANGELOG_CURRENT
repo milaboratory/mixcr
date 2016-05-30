@@ -5,7 +5,7 @@ Added option -e/--cdr3-equals to exportAlignmentsPretty action
 Added option -v/--write-all to align action
 Added new action `alignmentsDiff`: run as `mixcr alignmentsDiff file1.vdjca file2.vdjca report.txt` to find difference between to .vdjca files
 Fixed empty alignments in export clones when analysis performed with IMGT reference
-Added the following export fields: -vFamily, -vFamilies, -vFamiliesWithScore (same for D/J/C)
+Added the following export fields: -vFamily, -vFamilies (same for D/J/C)
 minor: Human-readable error messages for illegal analysis options with IMGT reference
 minor: Added new export field: -vBestIdentityPercent and -vIdentityPercents (-j..., -c... in the same way)
 minor: Now IMGT import script produces more useful information
