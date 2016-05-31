@@ -45,6 +45,8 @@ public final class CloneAssemblerReport implements CloneAssemblerListener, Repor
     final AtomicLong deferredAlignmentsDropped = new AtomicLong();
     final AtomicLong deferredAlignmentsMapped = new AtomicLong();
     final AtomicInteger clonesClustered = new AtomicInteger();
+    final AtomicInteger clonesDropped = new AtomicInteger();
+    final AtomicLong readsDroppedWithClones = new AtomicLong();
     final AtomicInteger clonesPreClustered = new AtomicInteger();
     final AtomicLong readsPreClustered = new AtomicLong();
     final AtomicLong readsClustered = new AtomicLong();
@@ -90,11 +92,19 @@ public final class CloneAssemblerReport implements CloneAssemblerListener, Repor
     }
 
     public int getCloneCount() {
-        return clonesCreated.get() - clonesClustered.get();
+        return clonesCreated.get() - clonesClustered.get() - clonesDropped.get() - clonesPreClustered.get();
+    }
+
+    public int getClonesDropped() {
+        return clonesDropped.get();
     }
 
     public long getAlignmentsInClones() {
-        return coreAlignments.get() + deferredAlignmentsMapped.get();
+        return coreAlignments.get() + deferredAlignmentsMapped.get() - readsDroppedWithClones.get();
+    }
+
+    public long getReadsDroppedWithClones() {
+        return readsDroppedWithClones.get();
     }
 
     @Override
@@ -144,6 +154,12 @@ public final class CloneAssemblerReport implements CloneAssemblerListener, Repor
         readsPreClustered.addAndGet(minorClone.getCount());
     }
 
+    @Override
+    public void onCloneDropped(CloneAccumulator clone) {
+        readsDroppedWithClones.addAndGet(clone.getCount());
+        clonesDropped.incrementAndGet();
+    }
+
     public void setTotalReads(long totalReads) {
         this.totalReads = totalReads;
     }
@@ -153,10 +169,8 @@ public final class CloneAssemblerReport implements CloneAssemblerListener, Repor
         if (totalReads == -1)
             throw new IllegalStateException("TotalReads count not set.");
 
-        int clonesCount = clonesCreated.get() - clonesClustered.get();
+        int clonesCount = getCloneCount();
 
-        long totalAlignmentsCount = coreAlignments.get() + failedToExtractTarget.get() +
-                droppedAsLowQuality.get() + deferred.get();
         long alignmentsInClones = coreAlignments.get() + deferredAlignmentsMapped.get();
 
         if (deferred.get() != deferredAlignmentsDropped.get() + deferredAlignmentsMapped.get())
@@ -166,6 +180,7 @@ public final class CloneAssemblerReport implements CloneAssemblerListener, Repor
                 .writeField("Total reads used in clonotypes", alignmentsInClones)
                 .writePercentField("Reads used, percent of total", alignmentsInClones, totalReads)
                 .writePercentField("Reads used as core, percent of used", coreAlignments.get(), alignmentsInClones)
+                .writePercentField("Reads dropped with low quality clones", readsDroppedWithClones.get(), alignmentsInClones)
                 .writePercentField("Mapped low quality reads, percent of used", deferredAlignmentsMapped.get(), alignmentsInClones)
                 .writePercentField("Reads clustered in PCR error correction, percent of used", readsClustered.get(), alignmentsInClones)
                 .writePercentField("Reads pre-clustered due to the similar VJC-lists", readsPreClustered.get(), alignmentsInClones)
