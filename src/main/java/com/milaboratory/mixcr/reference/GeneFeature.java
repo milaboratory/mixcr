@@ -779,16 +779,6 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         public GeneFeature deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
             return parse(jp.readValueAs(String.class));
         }
-
-        @Override
-        public GeneFeature getEmptyValue() {
-            return null;
-        }
-
-        @Override
-        public GeneFeature getNullValue() {
-            return null;
-        }
     }
 
     public static final class Serializer extends JsonSerializer<GeneFeature> {

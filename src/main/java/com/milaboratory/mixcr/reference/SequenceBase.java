@@ -151,7 +151,7 @@ public final class SequenceBase {
                 if (singleRange.contains(range))
                     return singleSequence.getRange(range.move(-singleRange.getLower()));
                 else return null;
-            Entry<Range, NucleotideSequence> entry = map.getEntryThatContains(range);
+            Entry<Range, NucleotideSequence> entry = map.findContaining(range);
             if (entry == null)
                 return null;
             return entry.getValue().getRange(range.move(-entry.getKey().getLower()));
@@ -162,7 +162,7 @@ public final class SequenceBase {
                 if (singleRange.contains(range))
                     return singleRange;
                 else return null;
-            Entry<Range, NucleotideSequence> entry = map.getEntryThatContains(range);
+            Entry<Range, NucleotideSequence> entry = map.findContaining(range);
             if (entry == null)
                 return null;
             return entry.getKey();

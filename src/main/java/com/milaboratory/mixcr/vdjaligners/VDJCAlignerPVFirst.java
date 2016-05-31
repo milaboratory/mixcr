@@ -49,7 +49,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     }
 
     @Override
-    public VDJCAlignmentResult<PairedRead> process(final PairedRead input) {
+    protected VDJCAlignmentResult<PairedRead> process0(final PairedRead input) {
         ensureInitialized();
 
         Target[] targets = getTargets(input);

@@ -51,7 +51,7 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
     }
 
     @Override
-    public VDJCAlignmentResult<SingleRead> process(SingleRead input) {
+    protected VDJCAlignmentResult<SingleRead> process0(SingleRead input) {
         ensureInitialized();
 
         NSequenceWithQuality target = input.getData();

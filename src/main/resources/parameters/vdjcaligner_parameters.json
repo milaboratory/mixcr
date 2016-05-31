@@ -1,5 +1,6 @@
 {
     "default": {
+        "fixSeed" : true,
         "vParameters": {
             "geneFeatureToAlign": "VRegionWithP",
             "parameters": {
@@ -104,6 +105,7 @@
         "readsLayout": "Opposite"
     },
     "kaligner2": {
+        "fixSeed" : true,
         "vParameters": {
             "geneFeatureToAlign": "VRegionWithP",
             "parameters":{
@@ -222,6 +224,7 @@
         "readsLayout": "Opposite"
     },
     "rna-seq": {
+        "fixSeed" : true,
         "vParameters": {
             "geneFeatureToAlign": "VTranscriptWithout5UTRWithP",
             "parameters": {
