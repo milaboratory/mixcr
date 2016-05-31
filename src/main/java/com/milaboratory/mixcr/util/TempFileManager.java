@@ -28,7 +28,8 @@
  */
 package com.milaboratory.mixcr.util;
 
-import com.milaboratory.util.RandomUtil;
+import org.apache.commons.math3.random.RandomDataGenerator;
+import org.apache.commons.math3.random.Well44497b;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,6 +39,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class TempFileManager {
     private static final AtomicBoolean initialized = new AtomicBoolean(false);
     static final ConcurrentHashMap<String, File> createdFiles = new ConcurrentHashMap<>();
+    static final RandomDataGenerator randomGenerator = new RandomDataGenerator(new Well44497b());
+
+    public static void seed(long seed) {
+        synchronized (randomGenerator) {
+            randomGenerator.reSeed(seed);
+        }
+    }
+
     //static final String tmpdir = getTmpDir();
     //private static String getTmpDir() {
     //    String tmpdir = AccessController.doPrivileged(new GetPropertyAction("java.io.tmpdir"));
@@ -56,7 +65,9 @@ public class TempFileManager {
             String name;
 
             do {
-                name = "mixcr_" + RandomUtil.getThreadLocalRandomData().nextHexString(40);
+                synchronized (randomGenerator) {
+                    name = "mixcr_" + randomGenerator.nextHexString(40);
+                }
                 file = File.createTempFile(name, null);
             } while (createdFiles.putIfAbsent(name, file) != null);
             if (file.length() != 0)
