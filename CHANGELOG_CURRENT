@@ -7,6 +7,9 @@ Added new action `alignmentsDiff`: run as `mixcr alignmentsDiff file1.vdjca file
 Fixed empty alignments in export clones when analysis performed with IMGT reference
 Added the following export fields: -vFamily, -vFamilies (same for D/J/C)
 Added options in `align`: `--not-aligned-R1` and `--not-aligned-R2` for exporting not aligned reads at alignment step  
+Quality aggregation algorithm in assembler changed
+Clone filtration criteria changed
+Alignment seed is now fixed in order to have completely equal results from run to run on the same dataset
 minor: Human-readable error messages for illegal analysis options with IMGT reference
 minor: Added new export field: -vBestIdentityPercent and -vIdentityPercents (-j..., -c... in the same way)
 minor: Now IMGT import script produces more useful information

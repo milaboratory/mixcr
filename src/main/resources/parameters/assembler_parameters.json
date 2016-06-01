@@ -1,6 +1,8 @@
 {
     "default": {
         "assemblingFeatures": ["CDR3"],
+        "minimalMeanQuality" : 15,
+        "minimalQuality" : 20,
         "minimalClonalSequenceLength": 12,
         "separateByV": true,
         "separateByJ": true,
@@ -73,6 +75,8 @@
     },
     "default_affine": {
         "assemblingFeatures": ["CDR3"],
+        "minimalMeanQuality" : 15,
+        "minimalQuality" : 20,
         "minimalClonalSequenceLength": 12,
         "separateByV": true,
         "separateByJ": true,

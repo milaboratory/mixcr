@@ -53,6 +53,7 @@ import java.util.*;
 import static com.milaboratory.core.sequence.TranslationParameters.FromCenter;
 import static com.milaboratory.core.sequence.TranslationParameters.FromLeftWithoutIncompleteCodon;
 import static com.milaboratory.mixcr.assembler.ReadToCloneMapping.MappingType.Dropped;
+import static com.milaboratory.mixcr.assembler.ReadToCloneMapping.MappingType.DroppedWithClone;
 
 public final class FieldExtractors {
     private static final String NULL = "";
@@ -667,7 +668,7 @@ public final class FieldExtractors {
 
             int cloneIndex = currentMapping.getCloneIndex();
             ReadToCloneMapping.MappingType mt = currentMapping.getMappingType();
-            if (mt == Dropped)
+            if (currentMapping.isDropped())
                 return printMapping ? mt.toString().toLowerCase() : NULL;
             return printMapping ? Integer.toString(cloneIndex) + ":" + mt.toString().toLowerCase() : Integer.toString(cloneIndex);
         }

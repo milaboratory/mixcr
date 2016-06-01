@@ -4,6 +4,9 @@ import cc.redberry.pipe.CUtils;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
+import com.milaboratory.cli.Action;
+import com.milaboratory.cli.ActionHelper;
+import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.core.io.sequence.PairedRead;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SequenceWriter;
@@ -12,9 +15,6 @@ import com.milaboratory.core.io.sequence.fasta.FastaSequenceWriterWrapper;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
-import com.milaboratory.cli.Action;
-import com.milaboratory.cli.ActionHelper;
-import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
@@ -105,8 +105,8 @@ public final class ActionExportCloneReads implements Action {
     public void writeSingle(NavigableSet<ReadToCloneMapping> byClones, int cloneId)
             throws Exception {
         NavigableSet<ReadToCloneMapping> selected = byClones.subSet(
-                new ReadToCloneMapping(0, 0, cloneId, false, false), true,
-                new ReadToCloneMapping(Long.MAX_VALUE, 0, cloneId, false, false), true);
+                new ReadToCloneMapping(0, 0, cloneId, false, false, false, false), true,
+                new ReadToCloneMapping(Long.MAX_VALUE, 0, cloneId, false, false, false, false), true);
 
         if (selected.isEmpty())
             return;//todo create empty file!!!!!!!!!!!!!!!!!!!!

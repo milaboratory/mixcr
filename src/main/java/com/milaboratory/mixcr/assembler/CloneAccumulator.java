@@ -30,7 +30,9 @@ package com.milaboratory.mixcr.assembler;
 
 
 import com.milaboratory.core.Range;
+import com.milaboratory.core.merger.MergerParameters;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
+import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.mixcr.basictypes.ClonalSequence;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
@@ -40,14 +42,15 @@ import com.milaboratory.mixcr.reference.GeneType;
 import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.map.hash.TObjectFloatHashMap;
 
+import java.util.Arrays;
 import java.util.EnumMap;
 
 public final class CloneAccumulator {
     final EnumMap<GeneType, TObjectFloatHashMap<AlleleId>> geneScores = new EnumMap<>(GeneType.class);
-    final ClonalSequence sequence;
+    private ClonalSequence sequence;
     final byte[] quality;
     long count = 0, countMapped = 0;
-    volatile int cloneIndex = -1;
+    private volatile int cloneIndex = -1;
     final Range[] nRegions;
 
     public CloneAccumulator(ClonalSequence sequence, Range[] nRegions) {
@@ -58,6 +61,18 @@ public final class CloneAccumulator {
 
     public ClonalSequence getSequence() {
         return sequence;
+    }
+
+    public void rebuildClonalSequence() {
+        final NSequenceWithQuality[] updated = new NSequenceWithQuality[sequence.size()];
+        int pointer = 0;
+        for (int i = 0; i < updated.length; i++) {
+            final NucleotideSequence s = this.sequence.get(i).getSequence();
+            updated[i] = new NSequenceWithQuality(s, new SequenceQuality(Arrays.copyOfRange(quality, pointer, pointer + s.size())));
+            pointer += s.size();
+        }
+        sequence = new ClonalSequence(updated);
+        return;
     }
 
     public Range[] getNRegions() {
@@ -137,8 +152,11 @@ public final class CloneAccumulator {
             for (NSequenceWithQuality p : data) {
                 for (int i = 0; i < p.size(); ++i) {
                     final SequenceQuality q = p.getQuality();
-                    if (quality[pointer] < q.value(i))
-                        quality[pointer] = q.value(i);
+                    if (quality[pointer] != MergerParameters.DEFAULT_MAX_QUALITY_VALUE)
+                        if (quality[pointer] + q.value(i) > MergerParameters.DEFAULT_MAX_QUALITY_VALUE)
+                            quality[pointer] = MergerParameters.DEFAULT_MAX_QUALITY_VALUE;
+                        else
+                            quality[pointer] += q.value(i);
                     ++pointer;
                 }
             }
