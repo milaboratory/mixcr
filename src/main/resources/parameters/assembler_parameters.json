@@ -4,8 +4,8 @@
         "minimalMeanQuality" : 15,
         "minimalQuality" : 20,
         "minimalClonalSequenceLength": 12,
-        "separateByV": true,
-        "separateByJ": true,
+        "separateByV": false,
+        "separateByJ": false,
         "separateByC": false,
         "maximalPreClusteringRatio": 1.0,
         "cloneClusteringParameters": {
@@ -78,8 +78,8 @@
         "minimalMeanQuality" : 15,
         "minimalQuality" : 20,
         "minimalClonalSequenceLength": 12,
-        "separateByV": true,
-        "separateByJ": true,
+        "separateByV": false,
+        "separateByJ": false,
         "separateByC": false,
         "maximalPreClusteringRatio": 1.0,
         "cloneClusteringParameters": {
