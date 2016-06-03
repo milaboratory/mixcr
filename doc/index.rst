@@ -32,3 +32,4 @@ MiXCR is free for academic and non-profit use (see :ref:`License <license>`).
    geneFeatures
    appendix
    license
+   utils

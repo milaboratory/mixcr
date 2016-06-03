@@ -29,7 +29,7 @@
 package com.milaboratory.mixcr.vdjaligners;
 
 public enum VDJCAlignmentFailCause {
-    NoVHits("absence of V hits"), NoJHits("absence of J hits"), LowTotalScore("low total score");
+    NoHits("absence of hits"), NoCDR3Parts("absence of CDR3 parts"), NoVHits("absence of V hits"), NoJHits("absence of J hits"), LowTotalScore("low total score");
     public final String name;
 
     VDJCAlignmentFailCause(String name) {

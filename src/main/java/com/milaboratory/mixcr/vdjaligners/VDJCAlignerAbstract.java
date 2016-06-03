@@ -60,6 +60,16 @@ public abstract class VDJCAlignerAbstract<R extends SequenceRead> extends VDJCAl
         return null;
     }
 
+    protected final BatchAlignerWithBase<NucleotideSequence, Allele, AlignmentHit<NucleotideSequence, Allele>>
+    getAligner(GeneType type) {
+        switch (type) {
+            case Variable: return vAligner;
+            case Joining: return jAligner;
+            case Constant: return cAligner;
+        }
+        return null;
+    }
+
     @Override
     protected void init() {
         DAlignerParameters dAlignerParameters = parameters.getDAlignerParameters();

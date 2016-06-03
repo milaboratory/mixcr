@@ -31,6 +31,7 @@ package com.milaboratory.mixcr.cli;
 import java.io.FileNotFoundException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.concurrent.atomic.AtomicLong;
 
 public final class ReportHelper {
     private final PrintStream printStream;
@@ -59,6 +60,22 @@ public final class ReportHelper {
     public ReportHelper writePercentField(String fieldName, long value, long total) {
         double percent = 100.0 * value / total;
         printStream.println(fieldName + ": " + Util.PERCENT_FORMAT.format(percent) + "%");
+        return this;
+    }
+
+    public ReportHelper writePercentAndAbsoluteField(String fieldName, long value, long total) {
+        double percent = 100.0 * value / total;
+        printStream.println(fieldName + ": " + value + " (" + Util.PERCENT_FORMAT.format(percent) + "%)");
+        return this;
+    }
+
+    public ReportHelper writePercentField(String fieldName, AtomicLong value, long total) {
+        writePercentField(fieldName, value.get(), total);
+        return this;
+    }
+
+    public ReportHelper writePercentAndAbsoluteField(String fieldName, AtomicLong value, long total) {
+        writePercentAndAbsoluteField(fieldName, value.get(), total);
         return this;
     }
 

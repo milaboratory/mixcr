@@ -3,6 +3,7 @@ package com.milaboratory.mixcr.basictypes;
 import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -40,5 +41,39 @@ public interface VDJCAlignmentsWriterI extends AutoCloseable {
         @Override
         public void close() {
         }
+    }
+
+    final class ArrayWriter implements VDJCAlignmentsWriterI {
+        public long numberOfProcessedReads;
+        public VDJCAlignerParameters parameters;
+        public List<Allele> alleles;
+        public final ArrayList<VDJCAlignments> data;
+
+        public ArrayWriter(int capacity) {
+            data = new ArrayList<>(capacity);
+        }
+
+        public ArrayWriter() {
+            this(10);
+        }
+
+        @Override
+        public void setNumberOfProcessedReads(long numberOfProcessedReads) {
+            this.numberOfProcessedReads = numberOfProcessedReads;
+        }
+
+        @Override
+        public void header(VDJCAlignerParameters parameters, List<Allele> alleles) {
+            this.parameters = parameters;
+            this.alleles = alleles;
+        }
+
+        @Override
+        public synchronized void write(VDJCAlignments alignment) {
+            data.add(alignment);
+        }
+
+        @Override
+        public void close() {}
     }
 }

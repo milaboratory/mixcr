@@ -103,4 +103,16 @@ public class IOTest {
             Assert.assertEquals(numberOfReads, reader.getNumberOfReads());
         }
     }
+
+    @Test
+    public void test111() throws Exception {
+        LociLibrary ll = LociLibraryManager.getDefault().getLibrary("mi");
+        try(VDJCAlignmentsReader reader = new VDJCAlignmentsReader("/Volumes/Data/Projects/MiLaboratory/tmp/SPX6730_40_1o.vdjca", ll)){
+            for (VDJCAlignments alignments : CUtils.it(reader)) {
+                if(alignments.getReadId() == 12519705L){
+                    System.out.println(alignments.getPartitionedTarget(1).getPartitioning().isAvailable(ReferencePoint.CDR3End));
+                }
+            }
+        }
+    }
 }

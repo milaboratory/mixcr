@@ -101,13 +101,45 @@ public final class VDJCAlignments extends VDJCObject {
      * otherwise (first {@code top} V hits have different locus from those have first {@code top} J hits)
      */
     public final boolean hasSameVJLoci(final int top) {
-        VDJCHit[] vHits = hits.get(GeneType.Variable),
-                jHits = hits.get(GeneType.Joining);
-        for (int v = 0; v < actualTop(vHits, top); ++v)
-            for (int j = 0; j < actualTop(jHits, top); ++j)
-                if (vHits[v].getAllele().getLocus() == jHits[j].getAllele().getLocus())
-                    return true;
-        return false;
+        final VDJCHit[] vHits = hits.get(GeneType.Variable),
+                jHits = hits.get(GeneType.Joining),
+                cHits = hits.get(GeneType.Constant);
+
+        if (vHits.length > 0 && jHits.length > 0 && cHits.length > 0) {
+            for (int v = 0; v < actualTop(vHits, top); ++v)
+                for (int j = 0; j < actualTop(jHits, top); ++j)
+                    for (int c = 0; c < actualTop(cHits, top); ++c)
+                        if (vHits[v].getAllele().getLocus() == jHits[j].getAllele().getLocus() &&
+                                vHits[v].getAllele().getLocus() == cHits[c].getAllele().getLocus())
+                            return true;
+            return false;
+        }
+
+        if (vHits.length > 0 && jHits.length > 0) {
+            for (int v = 0; v < actualTop(vHits, top); ++v)
+                for (int j = 0; j < actualTop(jHits, top); ++j)
+                    if (vHits[v].getAllele().getLocus() == jHits[j].getAllele().getLocus())
+                        return true;
+            return false;
+        }
+
+        if (vHits.length > 0 && cHits.length > 0) {
+            for (int v = 0; v < actualTop(vHits, top); ++v)
+                for (int c = 0; c < actualTop(cHits, top); ++c)
+                    if (vHits[v].getAllele().getLocus() == cHits[c].getAllele().getLocus())
+                        return true;
+            return false;
+        }
+
+        if (cHits.length > 0 && jHits.length > 0) {
+            for (int c = 0; c < actualTop(cHits, top); ++c)
+                for (int j = 0; j < actualTop(jHits, top); ++j)
+                    if (cHits[c].getAllele().getLocus() == jHits[j].getAllele().getLocus())
+                        return true;
+            return false;
+        }
+
+        return true;
     }
 
     private static int actualTop(VDJCHit[] hits, int top) {

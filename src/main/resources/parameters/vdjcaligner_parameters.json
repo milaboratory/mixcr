@@ -102,6 +102,7 @@
         "maxHits": 5,
         "relativeMinVFR3CDR3Score": 0.7,
         "relativeMinVScore": 0.7,
+        "allowPartialAlignments": false,
         "readsLayout": "Opposite"
     },
     "kaligner2": {
@@ -221,6 +222,7 @@
         "maxHits": 5,
         "relativeMinVFR3CDR3Score": 0.7,
         "relativeMinVScore": 0.7,
+        "allowPartialAlignments": false,
         "readsLayout": "Opposite"
     },
     "rna-seq": {
@@ -326,6 +328,7 @@
         "maxHits": 5,
         "relativeMinVFR3CDR3Score": 0.7,
         "relativeMinVScore": 0.7,
+        "allowPartialAlignments": false,
         "readsLayout": "Opposite"
     }
 }

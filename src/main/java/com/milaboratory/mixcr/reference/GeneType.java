@@ -35,10 +35,10 @@ package com.milaboratory.mixcr.reference;
  * @author Shugay Mikhail (mikhail.shugay@gmail.com)
  */
 public enum GeneType implements java.io.Serializable {
-    Variable((byte) 0, 'V', +1, 11),
-    Diversity((byte) 2, 'D', 0, 2),
-    Joining((byte) 1, 'J', -1, 3),
-    Constant((byte) 3, 'C', -2, 3);
+    Variable((byte) 0, 'V', +1, 11, (byte) 0),
+    Diversity((byte) 2, 'D', 0, 2, (byte) 1),
+    Joining((byte) 1, 'J', -1, 3, (byte) 2),
+    Constant((byte) 3, 'C', -2, 3, (byte) 3);
     public static final GeneType[] VJC_REFERENCE = {Variable, Joining, Constant};
     public static final GeneType[] VDJC_REFERENCE = {Variable, Diversity, Joining, Constant};
 
@@ -46,12 +46,18 @@ public enum GeneType implements java.io.Serializable {
     private final char letter;
     private final int cdr3Side;
     private final int completeNumberOfReferencePoints;
+    private final byte order;
 
-    GeneType(byte id, char letter, int cdr3Side, int completeNumberOfReferencePoints) {
+    GeneType(byte id, char letter, int cdr3Side, int completeNumberOfReferencePoints, byte order) {
         this.id = id;
         this.letter = letter;
         this.cdr3Side = cdr3Side;
         this.completeNumberOfReferencePoints = completeNumberOfReferencePoints;
+        this.order = order;
+    }
+
+    public byte getOrder() {
+        return order;
     }
 
     public static GeneType fromChar(char letter) {
