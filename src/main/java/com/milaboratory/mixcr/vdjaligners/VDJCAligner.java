@@ -30,11 +30,14 @@ package com.milaboratory.mixcr.vdjaligners;
 
 import cc.redberry.pipe.Processor;
 import com.milaboratory.core.io.sequence.SequenceRead;
+import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.reference.GeneType;
 import com.milaboratory.mixcr.reference.Locus;
+import com.milaboratory.util.HashFunctions;
+import com.milaboratory.util.RandomUtil;
 
 import java.util.*;
 
@@ -50,6 +53,28 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
         for (GeneType geneType : GeneType.values())
             allelesToAlign.put(geneType, new ArrayList<Allele>());
     }
+
+    private static <R extends SequenceRead> long hash(R input) {
+        long hash = 1;
+        for (int i = 0; i < input.numberOfReads(); i++) {
+            final SingleRead r = input.getRead(i);
+            hash = 31 * hash + r.getData().getSequence().hashCode();
+            if (r.getDescription() != null)
+                hash = 31 * hash + r.getDescription().hashCode();
+            else
+                hash = 31 * hash + HashFunctions.JenkinWang64shift(input.getId());
+        }
+        return hash;
+    }
+
+    @Override
+    public final VDJCAlignmentResult<R> process(R input) {
+        if (parameters.isFixSeed())
+            RandomUtil.reseedThreadLocal(hash(input));
+        return process0(input);
+    }
+
+    protected abstract VDJCAlignmentResult<R> process0(final R input);
 
     public void setEventsListener(VDJCAlignerEventListener listener) {
         this.listener = listener;

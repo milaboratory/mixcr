@@ -29,7 +29,7 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
 
     @Override
     @SuppressWarnings("unchecked")
-    public VDJCAlignmentResult<VDJCMultiRead> process(VDJCMultiRead input) {
+    protected VDJCAlignmentResult<VDJCMultiRead> process0(VDJCMultiRead input) {
         ensureInitialized();
 
         final int nReads = input.numberOfReads();

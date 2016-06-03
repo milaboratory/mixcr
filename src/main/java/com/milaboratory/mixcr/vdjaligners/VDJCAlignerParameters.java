@@ -59,6 +59,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
     protected boolean allowPartialAlignments;
     protected PairedEndReadsLayout readsLayout;
     protected MergerParameters mergerParameters;
+    protected boolean fixSeed;
 
     @JsonCreator
     public VDJCAlignerParameters(@JsonProperty("vParameters") KGeneAlignmentParameters vParameters,
@@ -74,7 +75,8 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
                                  @JsonProperty("relativeMinVFR3CDR3Score") float relativeMinVFR3CDR3Score,
                                  @JsonProperty("allowPartialAlignments") boolean allowPartialAlignments,
                                  @JsonProperty("readsLayout") PairedEndReadsLayout readsLayout,
-                                 @JsonProperty("mergerParameters") MergerParameters mergerParameters) {
+                                 @JsonProperty("mergerParameters") MergerParameters mergerParameters,
+                                 @JsonProperty("fixSeed") boolean fixSeed) {
         this.alignmentParameters = new EnumMap<>(GeneType.class);
         setGeneAlignerParameters(GeneType.Variable, vParameters);
         setGeneAlignerParameters(GeneType.Diversity, dParameters);
@@ -90,6 +92,16 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         this.allowPartialAlignments = allowPartialAlignments;
         this.readsLayout = readsLayout;
         this.mergerParameters = mergerParameters;
+        this.fixSeed = fixSeed;
+    }
+
+    public VDJCAlignerParameters setFixSeed(boolean fixSeed) {
+        this.fixSeed = fixSeed;
+        return this;
+    }
+
+    public boolean isFixSeed() {
+        return fixSeed;
     }
 
     public VDJCAlignerParameters setGeneAlignerParameters(GeneType gt, GeneAlignmentParameters parameters) {
@@ -275,6 +287,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
                 ", allowPartialAlignments=" + allowPartialAlignments +
                 ", readsLayout=" + readsLayout +
                 ", mergerParameters=" + mergerParameters +
+                ", fixSeed=" + fixSeed +
                 '}';
     }
 
@@ -296,8 +309,8 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
             return false;
         if (vjAlignmentOrder != that.vjAlignmentOrder) return false;
         if (readsLayout != that.readsLayout) return false;
+        if (fixSeed != that.fixSeed) return false;
         return mergerParameters != null ? mergerParameters.equals(that.mergerParameters) : that.mergerParameters == null;
-
     }
 
     @Override
@@ -313,6 +326,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         result = 31 * result + (allowPartialAlignments ? 1 : 0);
         result = 31 * result + (readsLayout != null ? readsLayout.hashCode() : 0);
         result = 31 * result + (mergerParameters != null ? mergerParameters.hashCode() : 0);
+        result = 31 * result + (fixSeed ? 133 : -11);
         return result;
     }
 
@@ -320,6 +334,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
     public VDJCAlignerParameters clone() {
         return new VDJCAlignerParameters(getVAlignerParameters(), getDAlignerParameters(), getJAlignerParameters(),
                 getCAlignerParameters(), vjAlignmentOrder, includeDScore, includeCScore, minSumScore, maxHits,
-                relativeMinVFR3CDR3Score, relativeMinVScore, allowPartialAlignments, readsLayout, mergerParameters);
+                relativeMinVFR3CDR3Score, relativeMinVScore, allowPartialAlignments, readsLayout, mergerParameters,
+                fixSeed);
     }
 }

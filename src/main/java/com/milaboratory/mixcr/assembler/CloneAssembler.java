@@ -83,6 +83,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     private CloneAssemblerListener listener;
     volatile boolean deferredExists = false;
     volatile boolean preClusteringDone = false;
+    final TIntIntHashMap preClustered = new TIntIntHashMap();
 
     public static final Factory<ArrayList<CloneAccumulatorContainer>> LIST_FACTORY = new Factory<ArrayList<CloneAccumulatorContainer>>() {
         @Override
@@ -151,6 +152,11 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     void onClustered(CloneAccumulator majorClone, CloneAccumulator minorClone) {
         if (listener != null)
             listener.onClustered(majorClone, minorClone);
+    }
+
+    void onCloneDropped(CloneAccumulator acc) {
+        if (listener != null)
+            listener.onCloneDropped(acc);
     }
 
     public void setListener(CloneAssemblerListener listener) {
@@ -292,7 +298,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     }
 
     public OutputPortCloseable<ReadToCloneMapping> getAssembledReadsPort() {
-        return new AssembledReadsPort(globalLogger.createEventsPort(), deferredAlignmentsLogger == null ? null : deferredAlignmentsLogger.createEventsPort(), idMapping);
+        return new AssembledReadsPort(globalLogger.createEventsPort(), deferredAlignmentsLogger == null ? null : deferredAlignmentsLogger.createEventsPort(), idMapping, preClustered);
     }
 
     private int numberOfBadPoints(ClonalSequence clonalSequence) {
@@ -331,7 +337,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 droppedAlignments.incrementAndGet();
                 onTooManyLowQualityPoints(input);
                 return;
-            } else if (badPoints > 0) {
+            } else if (target.getConcatenated().getQuality().meanValue() < parameters.getMinimalMeanQuality()) {
                 // Has some number of bad points but not greater then maxBadPointsToMap
                 log(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadId(), AssemblerEvent.DEFERRED));
                 onAlignmentDeferred(input);
@@ -353,7 +359,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             }
             CloneAccumulator acc = container.accumulate(target, input, false);
             //Logging assembler events for subsequent index creation and mapping filtering
-            log(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadId(), acc.cloneIndex));
+            log(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadId(), acc.getCloneIndex()));
             //Incrementing corresponding counter
             successfullyAssembledAlignments.incrementAndGet();
             onAlignmentAddedToClone(input, acc);
@@ -518,7 +524,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             if (acc == null) {
                 acc = new CloneAccumulator(sequence, extractNRegions(sequence, alignments));
                 accumulators.put(vjcSignature, acc);
-                acc.cloneIndex = cloneIndexGenerator.incrementAndGet();
+                acc.setCloneIndex(cloneIndexGenerator.incrementAndGet());
                 onNewCloneCreated(acc);
             }
             acc.accumulate(sequence, alignments, mapped);
@@ -546,14 +552,24 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                         accs[i].count += accs[j].count;
                         accs[i].countMapped += accs[j].countMapped;
                         onPreClustered(accs[i], accs[j]);
+                        preClustered.put(accs[j].getCloneIndex(), accs[i].getCloneIndex());
                         accs[j] = null;
                         ++deleted;
                     }
             }
             List<CloneAccumulator> result = new ArrayList<>(accs.length - deleted);
+            out:
             for (CloneAccumulator acc : accs)
-                if (acc != null)
+                if (acc != null) {
+                    for (byte b : acc.quality)
+                        if (b < parameters.minimalQuality) {
+                            onCloneDropped(acc);
+                            continue out;
+                        }
+
+                    acc.rebuildClonalSequence();
                     result.add(acc);
+                }
 
             return result;
         }
