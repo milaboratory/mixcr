@@ -122,8 +122,10 @@ public class TargetMerger {
             final Alignment<NucleotideSequence>[] als = map.get(allele);
             if (als == null)
                 map.put(allele, new Alignment[]{null, alignment});
-            else
+            else {
+                assert als[1] == null;
                 als[1] = alignment;
+            }
         }
 
         return map;
@@ -152,7 +154,7 @@ public class TargetMerger {
                                                Alignment<NucleotideSequence> right) {
         assert left != null || right != null;
         assert offset >= 0;
-        assert left == null || right == null || left.getSequence1() == right.getSequence1();
+        assert left == null || right == null || left.getSequence1().equals(right.getSequence1());
 
         int seq1From = -1, seq2From = -1, seq1To = -1, seq2To = -1;
 
