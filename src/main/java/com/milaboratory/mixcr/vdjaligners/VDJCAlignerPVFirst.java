@@ -428,8 +428,8 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
          * Preforms J alignment for a single read
          */
         AlignmentResult<AlignmentHit<NucleotideSequence, Allele>> performJAlignment(int index) {
-            if (index == 0 && bestVHits != null && bestVHits.get(1) != null)
-                return null;
+            //if (index == 0 && bestVHits != null && bestVHits.get(1) != null)
+            //    return null;
 
             AlignmentHit<NucleotideSequence, Allele> vHit = bestVHits == null ? null : bestVHits.get(index);
 
