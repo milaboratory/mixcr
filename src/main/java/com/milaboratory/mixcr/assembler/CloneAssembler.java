@@ -137,7 +137,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             listener.onNoCandidateFoundForDeferredAlignment(alignments);
     }
 
-    void onDefferedAlignmentMappedToClone(VDJCAlignments alignments, CloneAccumulator accumulator) {
+    void onDeferredAlignmentMappedToClone(VDJCAlignments alignments, CloneAccumulator accumulator) {
         if (listener != null)
             listener.onDeferredAlignmentMappedToClone(alignments, accumulator);
     }
@@ -153,6 +153,8 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         if (listener != null)
             listener.onClustered(majorClone, minorClone);
     }
+
+    /* Filtering events */
 
     void onCloneDropped(CloneAccumulator acc) {
         if (listener != null)
@@ -442,7 +444,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             deferredAlignmentsLogger.newEvent(new AssemblerEvent(input.getAlignmentsIndex(),
                     input.getReadId(), minMismatches == 0 ?
                     accumulator.getCloneIndex() : -4 - accumulator.getCloneIndex()));
-            onDefferedAlignmentMappedToClone(input, accumulator);
+            onDeferredAlignmentMappedToClone(input, accumulator);
             accumulator.accumulate(clonalSequence, input, minMismatches > 0);
         }
     }
@@ -541,12 +543,15 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             Arrays.sort(accs, CLONE_ACCUMULATOR_COMPARATOR);
             int deleted = 0;
             for (int i = 0; i < accs.length - 1; i++) {
+                // null marks clustered clonotypes
                 if (accs[i] == null)
                     continue;
+
                 // Top V, J and C genes of the major clonotype
                 VJCSignature vjcSignature = extractSignature(accs[i]);
                 long countThreshold = (long) (accs[i].count * parameters.maximalPreClusteringRatio);
                 for (int j = i + 1; j < accs.length; j++)
+                    // Clustering j'th clone to i'th
                     if (accs[j] != null && accs[j].count <= countThreshold &&
                             matchHits(vjcSignature, accs[j])) {
                         accs[i].count += accs[j].count;
@@ -557,19 +562,25 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                         ++deleted;
                     }
             }
-            List<CloneAccumulator> result = new ArrayList<>(accs.length - deleted);
-            out:
-            for (CloneAccumulator acc : accs)
-                if (acc != null) {
-                    for (byte b : acc.quality)
-                        if (b < parameters.minimalQuality) {
-                            onCloneDropped(acc);
-                            continue out;
-                        }
 
-                    acc.rebuildClonalSequence();
-                    result.add(acc);
-                }
+            // Filtering low quality clonotypes
+            List<CloneAccumulator> result = new ArrayList<>(accs.length - deleted);
+
+            out:
+            for (CloneAccumulator acc : accs) {
+                // null marks clustered clonotypes
+                if (acc == null)
+                    continue;
+
+                for (byte b : acc.quality)
+                    if (b < parameters.minimalQuality) {
+                        onCloneDropped(acc);
+                        continue out;
+                    }
+
+                acc.rebuildClonalSequence();
+                result.add(acc);
+            }
 
             return result;
         }

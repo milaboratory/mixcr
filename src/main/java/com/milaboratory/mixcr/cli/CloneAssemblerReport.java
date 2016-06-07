@@ -171,7 +171,7 @@ public final class CloneAssemblerReport implements CloneAssemblerListener, Repor
 
         int clonesCount = getCloneCount();
 
-        long alignmentsInClones = coreAlignments.get() + deferredAlignmentsMapped.get();
+        long alignmentsInClones = getAlignmentsInClones();
 
         if (deferred.get() != deferredAlignmentsDropped.get() + deferredAlignmentsMapped.get())
             throw new RuntimeException();
