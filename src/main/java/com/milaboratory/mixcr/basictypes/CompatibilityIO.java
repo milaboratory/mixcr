@@ -30,6 +30,7 @@ package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.mixcr.reference.GeneType;
+import com.milaboratory.mixcr.reference.CompatibilityIOReference;
 import com.milaboratory.mixcr.reference.ReferenceCompatibilityIO;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
@@ -49,7 +50,12 @@ public final class CompatibilityIO {
     }
 
     public static void registerV5Serializers(SerializersManager manager) {
+        registerV6Serializers(manager);
         manager.registerCustomSerializer(VDJCAlignments.class, new VDJCAlignmentsSerializerV5());
+    }
+
+    public static void registerV6Serializers(SerializersManager manager) {
+        CompatibilityIOReference.registerV6Serializers(manager);
     }
 
     public static class VDJCAlignmentsSerializerV5 implements Serializer<VDJCAlignments> {

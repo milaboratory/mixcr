@@ -42,12 +42,12 @@ import com.milaboratory.util.CountingInputStream;
 import gnu.trove.list.array.TLongArrayList;
 
 import java.io.*;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
 import static com.milaboratory.mixcr.basictypes.CompatibilityIO.registerV3Serializers;
 import static com.milaboratory.mixcr.basictypes.CompatibilityIO.registerV5Serializers;
+import static com.milaboratory.mixcr.basictypes.CompatibilityIO.registerV6Serializers;
 import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.*;
 
 public final class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>, CanReportProgress {
@@ -128,6 +128,8 @@ public final class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlign
                 registerV5Serializers(serializersManager);
                 break;
             case MAGIC_V6:
+                registerV6Serializers(serializersManager);
+                break;
             case MAGIC:
                 break;
             default:
