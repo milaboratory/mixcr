@@ -42,10 +42,7 @@ import com.milaboratory.core.tree.MutationGuide;
 import com.milaboratory.core.tree.NeighborhoodIterator;
 import com.milaboratory.core.tree.SequenceTreeMap;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.reference.Allele;
-import com.milaboratory.mixcr.reference.AlleleId;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
+import com.milaboratory.mixcr.reference.*;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.Factory;
 import com.milaboratory.util.RandomUtil;
@@ -151,7 +148,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
 
     void onClustered(CloneAccumulator majorClone, CloneAccumulator minorClone) {
         if (listener != null)
-            listener.onClustered(majorClone, minorClone);
+            listener.onClustered(majorClone, minorClone, parameters.isAddReadsCountOnClustering());
     }
 
     /* Filtering events */
@@ -423,6 +420,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                         count += acc.count;
                     }
                 }
+
             if (candidates.isEmpty()) {
                 deferredAlignmentsLogger.newEvent(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadId(),
                         AssemblerEvent.DROPPED));
@@ -444,8 +442,17 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             deferredAlignmentsLogger.newEvent(new AssemblerEvent(input.getAlignmentsIndex(),
                     input.getReadId(), minMismatches == 0 ?
                     accumulator.getCloneIndex() : -4 - accumulator.getCloneIndex()));
-            onDeferredAlignmentMappedToClone(input, accumulator);
-            accumulator.accumulate(clonalSequence, input, minMismatches > 0);
+
+            if (minMismatches > 0) {
+                // Mapped
+                onDeferredAlignmentMappedToClone(input, accumulator);
+                accumulator.accumulate(clonalSequence, input, true);
+            } else {
+                // Added to clone as normal alignment,
+                // because sequence exactly equals to clonal sequence
+                onAlignmentAddedToClone(input, accumulator);
+                accumulator.accumulate(clonalSequence, input, false);
+            }
         }
     }
 
@@ -553,7 +560,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 for (int j = i + 1; j < accs.length; j++)
                     // Clustering j'th clone to i'th
                     if (accs[j] != null && accs[j].count <= countThreshold &&
-                            matchHits(vjcSignature, accs[j])) {
+                            vjcSignature.matchHits(accs[j])) {
                         accs[i].count += accs[j].count;
                         accs[i].countMapped += accs[j].countMapped;
                         onPreClustered(accs[i], accs[j]);
@@ -626,27 +633,66 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
 
     VJCSignature extractSignature(VDJCAlignments alignments) {
         return new VJCSignature(
-                parameters.getSeparateByV() ? getAlleleId(alignments, GeneType.Variable) : null,
-                parameters.getSeparateByJ() ? getAlleleId(alignments, GeneType.Joining) : null,
-                parameters.getSeparateByC() ? getAlleleId(alignments, GeneType.Constant) : null
+                parameters.getSeparateByV() ? getAlleleId(alignments, GeneType.Variable) : DO_NOT_CHECK,
+                parameters.getSeparateByJ() ? getAlleleId(alignments, GeneType.Joining) : DO_NOT_CHECK,
+                parameters.getSeparateByC() ? getAlleleId(alignments, GeneType.Constant) : DO_NOT_CHECK
         );
     }
 
     VJCSignature extractSignature(CloneAccumulator alignments) {
         return new VJCSignature(
-                parameters.getSeparateByV() ? getAlleleId(alignments, GeneType.Variable) : null,
-                parameters.getSeparateByJ() ? getAlleleId(alignments, GeneType.Joining) : null,
-                parameters.getSeparateByC() ? getAlleleId(alignments, GeneType.Constant) : null
+                parameters.getSeparateByV() ? getAlleleId(alignments, GeneType.Variable) : DO_NOT_CHECK,
+                parameters.getSeparateByJ() ? getAlleleId(alignments, GeneType.Joining) : DO_NOT_CHECK,
+                parameters.getSeparateByC() ? getAlleleId(alignments, GeneType.Constant) : DO_NOT_CHECK
         );
     }
+
+    /**
+     * Special marker AlleleID used to make matchHits procedure to ignore V, J or C genes during matchHits procedure
+     */
+    private static final AlleleId DO_NOT_CHECK = new AlleleId(UUID.fromString("8dd1d48e-0f75-410c-bc9c-efb53b1037f2"),
+            new SpeciesAndLocus(0, Locus.IGL), "DO_NOT_CHECK");
 
     static final class VJCSignature {
         final AlleleId vAllele, jAllele, cAllele;
 
-        public VJCSignature(AlleleId vAllele, AlleleId jAllele, AlleleId cAllele) {
+        /**
+         * null for absent hits, DO_NOT_CHECK to ignore corresponding gene
+         */
+        VJCSignature(AlleleId vAllele, AlleleId jAllele, AlleleId cAllele) {
             this.vAllele = vAllele;
             this.jAllele = jAllele;
             this.cAllele = cAllele;
+        }
+
+        boolean matchHits(CloneAccumulator acc) {
+            TObjectFloatHashMap<AlleleId> minor;
+
+            if (vAllele != DO_NOT_CHECK) {
+                minor = acc.geneScores.get(GeneType.Variable);
+                if (vAllele == null && (minor != null && !minor.isEmpty()))
+                    return false;
+                if (vAllele != null && minor != null && !minor.containsKey(vAllele))
+                    return false;
+            }
+
+            if (jAllele != DO_NOT_CHECK) {
+                minor = acc.geneScores.get(GeneType.Joining);
+                if (jAllele == null && (minor != null && !minor.isEmpty()))
+                    return false;
+                if (jAllele != null && minor != null && !minor.containsKey(jAllele))
+                    return false;
+            }
+
+            if (cAllele != DO_NOT_CHECK) {
+                minor = acc.geneScores.get(GeneType.Constant);
+                if (cAllele == null && (minor != null && !minor.isEmpty()))
+                    return false;
+                if (cAllele != null && minor != null && !minor.containsKey(cAllele))
+                    return false;
+            }
+
+            return true;
         }
 
         @Override
@@ -669,26 +715,6 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             result = 31 * result + (cAllele != null ? cAllele.hashCode() : 0);
             return result;
         }
-    }
-
-    static boolean matchHits(VJCSignature vjcSignature, CloneAccumulator acc) {
-        TObjectFloatHashMap<AlleleId> minor;
-        minor = acc.geneScores.get(GeneType.Variable);
-        if (vjcSignature.vAllele == null && (minor != null && !minor.isEmpty()))
-            return false;
-        if (vjcSignature.vAllele != null && minor != null && !minor.containsKey(vjcSignature.vAllele))
-            return false;
-        minor = acc.geneScores.get(GeneType.Joining);
-        if (vjcSignature.jAllele == null && (minor != null && !minor.isEmpty()))
-            return false;
-        if (vjcSignature.jAllele != null && minor != null && !minor.containsKey(vjcSignature.jAllele))
-            return false;
-        minor = acc.geneScores.get(GeneType.Constant);
-        if (vjcSignature.cAllele == null && (minor != null && !minor.isEmpty()))
-            return false;
-        if (vjcSignature.cAllele != null && minor != null && !minor.containsKey(vjcSignature.cAllele))
-            return false;
-        return true;
     }
 
     static AlleleId getAlleleId(VDJCAlignments alignments, GeneType type) {

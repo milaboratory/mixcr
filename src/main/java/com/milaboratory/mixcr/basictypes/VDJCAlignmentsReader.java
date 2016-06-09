@@ -51,6 +51,7 @@ import static com.milaboratory.mixcr.basictypes.CompatibilityIO.registerV6Serial
 import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.*;
 
 public final class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>, CanReportProgress {
+    private static final int DEFAULT_BUFFER_SIZE = 1048576; // 1 MB
     VDJCAlignerParameters parameters;
     List<Allele> usedAlleles;
     final PrimitivI input;
@@ -74,9 +75,9 @@ public final class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlign
         this.countingInputStream = new CountingInputStream(new FileInputStream(file));
         if (ct == CompressionType.None)
             this.input = new PrimitivI(indexingStream = new CountingInputStream(
-                    new BufferedInputStream(countingInputStream, 65536)));
+                    new BufferedInputStream(countingInputStream, DEFAULT_BUFFER_SIZE)));
         else {
-            this.input = new PrimitivI(ct.createInputStream(countingInputStream, 65536));
+            this.input = new PrimitivI(ct.createInputStream(countingInputStream, DEFAULT_BUFFER_SIZE));
             indexingStream = null;
         }
         this.alleleResolver = alleleResolver;

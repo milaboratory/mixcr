@@ -37,7 +37,7 @@ public final class ActionExportCloneReads implements Action {
 
     @Override
     public String command() {
-        return "exportReads";
+        return "exportReadsForClones";
     }
 
     @Override
@@ -110,6 +110,7 @@ public final class ActionExportCloneReads implements Action {
 
         if (selected.isEmpty())
             return;//todo create empty file!!!!!!!!!!!!!!!!!!!!
+
         try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getVDJCAFile(),
                 LociLibraryManager.getDefault())) {
 

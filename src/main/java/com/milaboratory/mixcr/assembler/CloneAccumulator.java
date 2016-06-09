@@ -93,6 +93,14 @@ public final class CloneAccumulator {
         return count;
     }
 
+    public long getCoreCount() {
+        return count - countMapped;
+    }
+
+    public long getMappedCount() {
+        return countMapped;
+    }
+
     public void calculateScores(CloneFactoryParameters parameters) {
         for (GeneType geneType : GeneType.VJC_REFERENCE) {
             VJCClonalAlignerParameters vjcParameters = parameters.getVJCParameters(geneType);

@@ -64,7 +64,7 @@ public class CloneClusteringStrategy implements ClusteringStrategy<CloneAccumula
                     else continue out;
         return parameters.getClusteringFilter().allow(currentMutations, cluster.getHead().count,
                 minorObject.count, cluster.getHead().getSequence())
-                && CloneAssembler.matchHits(cloneAssembler.extractSignature(cluster.getHead()),
+                && cloneAssembler.extractSignature(cluster.getHead()).matchHits(
                 minorObject);
     }
 
