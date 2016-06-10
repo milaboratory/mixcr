@@ -23,6 +23,7 @@ import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NavigableSet;
@@ -46,6 +47,10 @@ public final class ActionExportCloneReads implements Action {
 
     @Override
     public void go(ActionHelper helper) throws Exception {
+        if(!originalReadsPresent()){
+            System.out.println("Error: original reads was not saved in the .vdjca file: re-run align with '-g' option.");
+            return;
+        }
         DB db = DBMaker.newFileDB(new File(parameters.getMapDBFile()))
                 .transactionDisable()
                 .make();
@@ -60,6 +65,14 @@ public final class ActionExportCloneReads implements Action {
         }
 
         db.close();
+    }
+
+    private boolean originalReadsPresent() throws IOException {
+        try (VDJCAlignmentsReader reader
+                     = new VDJCAlignmentsReader(parameters.getVDJCAFile(), LociLibraryManager.getDefault())) {
+            VDJCAlignments test = reader.take();
+            return test == null || test.getOriginalSequences() != null;
+        }
     }
 
     public void writeMany(NavigableSet<ReadToCloneMapping> byAlignments, int[] clonIds)
@@ -93,7 +106,6 @@ public final class ActionExportCloneReads implements Action {
                 writer.write(createRead(vdjca.getOriginalSequences(), vdjca.getDescriptions()));
             }
 
-            //todo create empty file!!!!!!!!!!!!!!!!!!!!
             for (SequenceWriter writer : writers.valueCollection())
                 if (writer != null)
                     writer.close();
@@ -108,7 +120,7 @@ public final class ActionExportCloneReads implements Action {
                 new ReadToCloneMapping(Long.MAX_VALUE, 0, cloneId, false, false), true);
 
         if (selected.isEmpty())
-            return;//todo create empty file!!!!!!!!!!!!!!!!!!!!
+            return;
         try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getVDJCAFile(),
                 LociLibraryManager.getDefault())) {
 
