@@ -707,17 +707,17 @@ Finally, one can export reads aggregated by each clone into separate ``.fastq`` 
 
     mixcr align -g -l IGH input.fastq alignments.vdjca.gz
 
-With this option MiXCR will store original reads in the ``.vdjca`` file. Then one can export reads corresponding for particular clone with ``exportReads`` command. For example, export all reads that were assembled into the first clone (clone with cloneId = 0):
+With this option MiXCR will store original reads in the ``.vdjca`` file. Then one can export reads corresponding for particular clone with ``exportReadsForClones`` command. For example, export all reads that were assembled into the first clone (clone with cloneId = 0):
 
 ::
 
-    mixcr exportReads index_file alignments.vdjca.gz 0 reads.fastq.gz
+    mixcr exportReadsForClones index_file alignments.vdjca.gz 0 reads.fastq.gz
 
 This will create file ``reads_clns0.fastq.gz`` (or two files ``reads_clns0_R1.fastq.gz`` and ``reads_clns0_R2.fastq.gz`` if the original data were paired) with all reads that were aggregated by the first clone. One can export reads for several clones at a time:
 
 ::
 
-    mixcr exportReads index_file alignments.vdjca.gz 0 1 2 33 54 reads.fastq.gz
+    mixcr exportReadsForClones index_file alignments.vdjca.gz 0 1 2 33 54 reads.fastq.gz
 
 This will create several files (``reads_clns0.fastq.gz``, ``reads_clns1.fastq.gz`` etc.) for each clone with cloneId equal to 0, 1, 2, 33 and 54 respectively.
 
