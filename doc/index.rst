@@ -29,6 +29,7 @@ MiXCR is free for academic and non-profit use (see :ref:`License <license>`).
    export
    newAligner
    importSegments
+   rnaseq
    geneFeatures
    appendix
    license
