@@ -215,7 +215,8 @@ public class ActionAlign implements Action {
                 }
                 if (writer != null) {
                     if (actionParameters.saveReadDescription || actionParameters.saveOriginalReads) {
-                        if (result.read.numberOfReads() == 2 && alignment.numberOfTargets() == 1) {
+                        if (result.read.numberOfReads() == 2 && alignment.numberOfTargets() == 1
+                                && !actionParameters.saveOriginalReads) {
                             assert alignment.getDescriptions() != null && alignment.getDescriptions().length == 1;
                             alignment.getDescriptions()[0] += " = " + read.getRead(0).getDescription() + " + " + read.getRead(1).getDescription();
                         } else

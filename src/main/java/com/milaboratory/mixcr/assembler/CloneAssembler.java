@@ -336,12 +336,15 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 droppedAlignments.incrementAndGet();
                 onTooManyLowQualityPoints(input);
                 return;
-            } else if (target.getConcatenated().getQuality().meanValue() < parameters.getMinimalMeanQuality()) {
+            }
+
+            if (target.getConcatenated().getQuality().meanValue() < parameters.getMinimalMeanQuality()) {
                 // Has some number of bad points but not greater then maxBadPointsToMap
                 log(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadId(), AssemblerEvent.DEFERRED));
                 onAlignmentDeferred(input);
                 return;
             }
+
             //Getting or creating accumulator from map
             CloneAccumulatorContainer container = clones.get(target);
             if (container == null) {
@@ -356,6 +359,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 }
                 //accumulator variable contains correct clone from map
             }
+
             CloneAccumulator acc = container.accumulate(target, input, false);
             //Logging assembler events for subsequent index creation and mapping filtering
             log(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadId(), acc.getCloneIndex()));

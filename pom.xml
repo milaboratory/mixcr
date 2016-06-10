@@ -197,7 +197,7 @@
                             <minimizeJar>true</minimizeJar>
                             <filters>
                                 <filter>
-                                    <artifact>com.milaboratory:micommons</artifact>
+                                    <artifact>com.milaboratory:milib</artifact>
                                     <includes>
                                         <include>**</include>
                                     </includes>
