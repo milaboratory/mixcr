@@ -47,13 +47,20 @@ public final class ActionExportCloneReads implements Action {
 
     @Override
     public void go(ActionHelper helper) throws Exception {
-        if(!originalReadsPresent()){
-            System.out.println("Error: original reads was not saved in the .vdjca file: re-run align with '-g' option.");
-            return;
+        if (!originalReadsPresent()) {
+            final String msg = "Error: original reads was not saved in the .vdjca file: re-run align with '-g' option.";
+            throw new IllegalArgumentException(msg);
         }
-        DB db = DBMaker.newFileDB(new File(parameters.getMapDBFile()))
-                .transactionDisable()
-                .make();
+
+        DB db;
+        try {
+            db = DBMaker.newFileDB(new File(parameters.getMapDBFile()))
+                    .transactionDisable()
+                    .make();
+        } catch (Exception | Error e) {
+            final String msg = "Error: corrupted or malformed index file.";
+            throw new IllegalArgumentException(msg, e);
+        }
 
         int[] cloneIds = parameters.getCloneIds();
         if (cloneIds.length == 1) {//byClones
