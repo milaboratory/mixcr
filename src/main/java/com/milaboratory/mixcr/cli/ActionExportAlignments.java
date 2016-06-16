@@ -28,7 +28,6 @@
  */
 package com.milaboratory.mixcr.cli;
 
-import com.milaboratory.core.alignment.AlignmentUtils;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.export.InfoWriter;
@@ -51,7 +50,8 @@ public class ActionExportAlignments extends ActionExport {
             writer.attachInfoProviders((List) parameters.exporters);
             VDJCAlignments alignments;
             long count = 0;
-            while ((alignments = reader.take()) != null && count < parameters.limit) {
+            long limit = parameters.getLimit();
+            while ((alignments = reader.take()) != null && count < limit) {
                 writer.put(alignments);
                 ++count;
             }

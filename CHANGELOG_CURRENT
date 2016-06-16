@@ -1,18 +1,20 @@
 Clone assembler now separates clones with different V/J/C genes but same clonal sequence (e.g. CDR3)
 Added support for P-segments; new gene features `VPSegment`, `DLeftPSegment`, `DRightPSegment`, `JPSegment` now available both in `exportAlignments` and `exportClones`; feature enabled by default
+Added new `-l`/`--filter-locus` option in `exportClones` action to limit the list of exported clones by specified locus
+Added new `-q`/`--minimal-clone-fraction` and `-c`/`--minimal-clone-count` options in `exportClones` action to filter the list of exported clones by their fraction of reads number
 Added new anchor points to encode information about P-segment positions
 Action `exportReads` renamed to `exportReadsForClones`
-Added option -e/--cdr3-equals to exportAlignmentsPretty action
-Added option -v/--write-all to align action
+Added option `-e`/`--cdr3-equals` to `exportAlignmentsPretty` action
+Added option `-v`/`--write-all` to align action
 Added new action `alignmentsDiff`: run as `mixcr alignmentsDiff file1.vdjca file2.vdjca report.txt` to find difference between to .vdjca files
 Fixed empty alignments in export clones when analysis performed with IMGT reference
-Added the following export fields: -vFamily, -vFamilies (same for D/J/C)
+Added the following export fields: `-vFamily`, `-vFamilies` (same for D/J/C)
 Added new options in `align`: `--not-aligned-R1` and `--not-aligned-R2` for exporting not aligned reads at alignment step
 Quality aggregation algorithm in assembler changed
 Added clone filtration step: filter clones with low quality clonal sequence
 Alignment seed is now fixed in order to have completely equal results from run to run on the same dataset
 minor: Human-readable error messages for illegal analysis options with IMGT reference
-minor: Added new export field: -vBestIdentityPercent and -vIdentityPercents (-j..., -c... in the same way)
+minor: Added new export field: `-vBestIdentityPercent` and `-vIdentityPercents` (-j..., -c... in the same way)
 minor: Now IMGT import script produces more useful information
 minor: Added human-readable error message for unknown species
 minor: Better layout of anchor point marks in `exportAlignmentsPretty`

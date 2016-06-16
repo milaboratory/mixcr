@@ -63,7 +63,15 @@ public class ActionExportClones extends ActionExport {
                         parameters.getLoci()));
 
             writer.attachInfoProviders((List) parameters.exporters);
-            ExportClones exportClones = new ExportClones(set, writer, parameters.limit);
+            long limit = parameters.getLimit();
+            for (int i = 0; i < set.size(); i++) {
+                if (set.get(i).getFraction() < parameters.minFraction ||
+                        set.get(i).getCount() < parameters.minCount) {
+                    limit = i;
+                    break;
+                }
+            }
+            ExportClones exportClones = new ExportClones(set, writer, limit);
             if (!parameters.printToStdout())
                 SmartProgressReporter.startProgressReport(exportClones);
             exportClones.run();
@@ -116,13 +124,13 @@ public class ActionExportClones extends ActionExport {
         }
     }
 
-    @Parameters(commandDescription = "Export clones to tab-delimited text file", optionPrefixes = "-")
+    @Parameters(commandDescription = "Export clones to tab-delimited text file")
     public static final class ExportClones implements CanReportProgressAndStage {
+        final static String stage = "Exporting clones";
         final CloneSet clones;
         final InfoWriter<Clone> writer;
         final long size;
         volatile long current = 0;
-        final static String stage = "Exporting clones";
         final long limit;
 
         private ExportClones(CloneSet clones, InfoWriter<Clone> writer, long limit) {
@@ -169,6 +177,14 @@ public class ActionExportClones extends ActionExport {
         @Parameter(description = "Filter export to specific loci (e.g. TRA or IGH).",
                 names = {"-l", "--filter-locus"})
         public String loci = "ALL";
+
+        @Parameter(description = "Filter clones by minimal clone fraction.",
+                names = {"-q", "--minimal-clone-fraction"})
+        public float minFraction = 0;
+
+        @Parameter(description = "Filter clones by minimal clone read count.",
+                names = {"-c", "--minimal-clone-count"})
+        public long minCount = 0;
 
         public Set<Locus> getLoci() {
             return Util.parseLoci(loci);
