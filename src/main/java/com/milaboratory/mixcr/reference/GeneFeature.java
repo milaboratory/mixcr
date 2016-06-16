@@ -378,21 +378,22 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
                 if (c > 0) {
                     result.add(new ReferenceRange(maxBegin,
                             gf2.regions[rangePointer2].end));
-                    if (rangePointer2 != gf2.regions.length - 1)
-                        throw new IllegalArgumentException();
-                    break;
+                    if (rangePointer2 == gf2.regions.length - 1)
+                        break;
+                    ++rangePointer2;
                 } else {
                     result.add(new ReferenceRange(maxBegin,
                             gf1.regions[rangePointer1].end));
-                    if (rangePointer1 != gf1.regions.length - 1)
-                        throw new IllegalArgumentException();
-                    break;
+                    if (rangePointer1 == gf1.regions.length - 1)
+                        break;
+                    ++rangePointer1;
                 }
-            } else
+            } else {
                 result.add(new ReferenceRange(maxBegin, gf1.regions[rangePointer1].end));
 
-            ++rangePointer1;
-            ++rangePointer2;
+                ++rangePointer1;
+                ++rangePointer2;
+            }
         }
 
         return new GeneFeature(result.toArray(new ReferenceRange[result.size()]), true);
