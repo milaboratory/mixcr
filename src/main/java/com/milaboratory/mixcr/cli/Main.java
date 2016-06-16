@@ -29,10 +29,15 @@
 package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.cli.JCommanderBasedMain;
+import com.milaboratory.mixcr.util.TempFileManager;
 import com.milaboratory.mixcr.util.VersionInfoProvider;
+
+import java.security.SecureRandom;
+import java.util.Arrays;
 
 public class Main {
     public static void main(String... args) throws Exception {
+        TempFileManager.seed(Arrays.hashCode(args) + 17 * (new SecureRandom()).nextLong());
         // Getting command string if executed from script
         String command = System.getProperty("mixcr.command", "java -jar mixcr.jar");
 

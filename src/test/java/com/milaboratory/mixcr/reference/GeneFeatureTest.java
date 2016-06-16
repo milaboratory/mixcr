@@ -38,6 +38,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
 
+import static com.milaboratory.mixcr.reference.ReferencePoint.*;
 import static com.milaboratory.mixcr.reference.GeneFeature.*;
 import static com.milaboratory.mixcr.reference.ReferencePoint.DBegin;
 import static com.milaboratory.mixcr.reference.ReferencePoint.DEnd;
@@ -301,7 +302,7 @@ public class GeneFeatureTest {
 
     @Test
     public void testStatic() throws Exception {
-        assertEquals(JRegion, parse("JRegion"));
+        assertEquals(JRegion, GeneFeature.parse("JRegion"));
     }
 
     static final GeneFeature create(int... indexes) {
@@ -397,11 +398,11 @@ public class GeneFeatureTest {
     public void testEncode1() throws Exception {
         Collection<GeneFeature> features = GeneFeature.getFeaturesByName().values();
         for (GeneFeature feature : features)
-            assertEquals(feature, parse(encode(feature)));
+            assertEquals(feature, GeneFeature.parse(encode(feature)));
     }
 
     private static void assertEncode(String str) {
-        Assert.assertEquals(str.replace(" ", ""), encode(parse(str)).replace(" ", ""));
+        Assert.assertEquals(str.replace(" ", ""), encode(GeneFeature.parse(str)).replace(" ", ""));
     }
 
     @Ignore
@@ -469,5 +470,24 @@ public class GeneFeatureTest {
         public int compareTo(GFT o) {
             return feature.getFirstPoint().compareTo(o.feature.getFirstPoint());
         }
+    }
+
+    @Test
+    public void testIntersection15() throws Exception {
+        assertEquals(intersection(VTranscript, VGene), VTranscript);
+    }
+
+    @Test
+    public void testIntersection16() throws Exception {
+        assertEquals(
+                intersection(VTranscript, new GeneFeature(UTR5Begin.move(1), VEnd)),
+                new GeneFeature(new GeneFeature(UTR5Begin.move(1), L1End), new GeneFeature(L2Begin, VEnd)));
+    }
+
+    @Test
+    public void testIntersection17() throws Exception {
+        assertEquals(
+                intersection(new GeneFeature(new GeneFeature(UTR5Begin, L1End.move(-1)), new GeneFeature(L2Begin.move(-5), VEnd.move(1))), new GeneFeature(UTR5Begin.move(1), VEnd)),
+                new GeneFeature(new GeneFeature(UTR5Begin.move(1), L1End.move(-1)), new GeneFeature(L2Begin.move(-5), VEnd)));
     }
 }
