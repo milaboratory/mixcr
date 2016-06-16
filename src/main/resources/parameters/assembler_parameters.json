@@ -1,7 +1,7 @@
 {
     "default": {
         "assemblingFeatures": ["CDR3"],
-        "minimalMeanQuality" : 15,
+        "minimalMeanQuality" : 32,
         "minimalQuality" : 20,
         "minimalClonalSequenceLength": 12,
         "separateByV": false,
@@ -69,13 +69,13 @@
             }
         },
         "addReadsCountOnClustering": false,
-        "badQualityThreshold": 20,
+        "badQualityThreshold": 18,
         "maxBadPointsPercent": 0.7,
         "mappingThreshold": "2of5"
     },
     "default_affine": {
         "assemblingFeatures": ["CDR3"],
-        "minimalMeanQuality" : 15,
+        "minimalMeanQuality" : 32,
         "minimalQuality" : 20,
         "minimalClonalSequenceLength": 12,
         "separateByV": false,
@@ -146,7 +146,7 @@
             }
         },
         "addReadsCountOnClustering": false,
-        "badQualityThreshold": 20,
+        "badQualityThreshold": 18,
         "maxBadPointsPercent": 0.7,
         "mappingThreshold": "2of5"
     }
