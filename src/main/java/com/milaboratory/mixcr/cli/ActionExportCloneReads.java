@@ -166,9 +166,21 @@ public final class ActionExportCloneReads implements Action {
     private static SequenceRead createRead(NSequenceWithQuality[] nseqs, String[] descr) {
         if (nseqs.length == 1)
             return new SingleReadImpl(-1, nseqs[0], descr[0]);
-        else return new PairedRead(
-                new SingleReadImpl(-1, nseqs[0], descr[0]),
-                new SingleReadImpl(-1, nseqs[1], descr[1]));
+        else {
+            String descr1, descr2;
+            if (descr == null)
+                descr1 = descr2 = "";
+            else if (descr.length == 1)
+                descr1 = descr2 = descr[0];
+            else {
+                descr1 = descr[0];
+                descr2 = descr[1];
+            }
+
+            return new PairedRead(
+                    new SingleReadImpl(-1, nseqs[0], descr1),
+                    new SingleReadImpl(-1, nseqs[1], descr2));
+        }
     }
 
     private static SequenceWriter createWriter(boolean paired, String fileName)
