@@ -99,7 +99,7 @@ public final class RunMiXCR {
                     aligner.addAllele(allele);
                 }
 
-        AlignerReport report = new AlignerReport();
+        AlignerReport report = new AlignerReport(alignerParameters.getVJAlignmentOrder());
         aligner.setEventsListener(report);
 
         try (SequenceReaderCloseable<? extends SequenceRead> reader = parameters.getReader()) {
@@ -209,7 +209,8 @@ public final class RunMiXCR {
                 int counter = 0;
 
                 @Override
-                public void close() { }
+                public void close() {
+                }
 
                 @Override
                 public long getNumberOfReads() {
