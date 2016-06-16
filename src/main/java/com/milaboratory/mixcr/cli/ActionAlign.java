@@ -149,7 +149,7 @@ public class ActionAlign implements Action {
             return;
         }
 
-        AlignerReport report = actionParameters.report == null ? null : new AlignerReport();
+        AlignerReport report = actionParameters.report == null ? null : new AlignerReport(alignerParameters.getVJAlignmentOrder());
         if (report != null) {
             aligner.setEventsListener(report);
             report.setAllowDifferentVJLoci(actionParameters.allowDifferentVJLoci);
