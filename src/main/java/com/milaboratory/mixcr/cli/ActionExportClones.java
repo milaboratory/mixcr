@@ -72,8 +72,7 @@ public class ActionExportClones extends ActionExport {
                 }
             }
             ExportClones exportClones = new ExportClones(set, writer, limit);
-            if (!parameters.printToStdout())
-                SmartProgressReporter.startProgressReport(exportClones);
+            SmartProgressReporter.startProgressReport(exportClones, System.err);
             exportClones.run();
         }
     }
