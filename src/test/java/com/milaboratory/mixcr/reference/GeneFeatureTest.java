@@ -145,9 +145,9 @@ public class GeneFeatureTest {
 
     @Test
     public void testReversed() throws Exception {
-        GeneFeature gf = parse("{FR1Begin:VEnd}+{VEnd:VEnd(-20)}");
+        GeneFeature gf = GeneFeature.parse("{FR1Begin:VEnd}+{VEnd:VEnd(-20)}");
         assertEquals(2, gf.size());
-        gf = parse("{FR1Begin:VEnd}").append(parse("{VEnd:VEnd(-20)}"));
+        gf = GeneFeature.parse("{FR1Begin:VEnd}").append(GeneFeature.parse("{VEnd:VEnd(-20)}"));
         assertEquals(2, gf.size());
         gf = GeneFeature.VGeneWithP;
         assertEquals(2, gf.size());
@@ -416,7 +416,7 @@ public class GeneFeatureTest {
                     field.getType() == GeneFeature.class) {
                 GeneFeature value = (GeneFeature) field.get(null);
                 String name = field.getName();
-                gfts.add(new GFT(value, name, field.getAnnotation(Doc.class).value()));
+                gfts.add(new GFT(value, name, field.getAnnotation(GeneFeature.Doc.class).value()));
             }
 
         Collections.sort(gfts);

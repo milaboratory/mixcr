@@ -40,6 +40,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.milaboratory.primitivio.annotations.Serializable;
 
 import java.io.IOException;
+import java.lang.annotation.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -59,151 +60,113 @@ public final class ReferencePoint implements Comparable<ReferencePoint>, java.io
 
     /* V */
 
-    /**
-     * Beginning of IG/TCR transcript
-     */
-    public static final ReferencePoint UTR5Begin = new ReferencePoint(BasicReferencePoint.V5UTRBegin),
-    /**
-     * End of 5'UTR, beginning of IG/TCR CDS as listed in database
-     */
-    V5UTREnd = new ReferencePoint(BasicReferencePoint.V5UTREndL1Begin),
-    /**
-     * End of 5'UTR, beginning of IG/TCR CDS as observed in the data
-     */
-    V5UTRBeginTrimmed = new ReferencePoint(BasicReferencePoint.V5UTRBeginTrimmed),
-    /**
-     * End of 5'UTR, beginning of IG/TCR CDS
-     */
-    L1Begin = new ReferencePoint(BasicReferencePoint.V5UTREndL1Begin),
-    /**
-     * End of first exon, beginning of V intron
-     */
-    L1End = new ReferencePoint(BasicReferencePoint.L1EndVIntronBegin),
-    /**
-     * End of first exon, beginning of V intron
-     */
-    VIntronBegin = new ReferencePoint(BasicReferencePoint.L1EndVIntronBegin),
-    /**
-     * End of V intron, beginning of second exon
-     */
-    VIntronEnd = new ReferencePoint(BasicReferencePoint.VIntronEndL2Begin),
-    /**
-     * End of V intron, beginning of second exon
-     */
-    L2Begin = new ReferencePoint(BasicReferencePoint.VIntronEndL2Begin),
-    /**
-     * End of lider sequence, beginning of sequence that codes IG/TCR protein, beginning of FR1.
-     */
-    L2End = new ReferencePoint(BasicReferencePoint.L2EndFR1Begin),
-    /**
-     * End of lider sequence, beginning of sequence that codes IG/TCR protein, beginning of FR1.
-     */
-    FR1Begin = new ReferencePoint(BasicReferencePoint.L2EndFR1Begin),
-    /**
-     * End of FR1, beginning of CDR1
-     */
-    FR1End = new ReferencePoint(BasicReferencePoint.FR1EndCDR1Begin),
-    /**
-     * End of FR1, beginning of CDR1
-     */
-    CDR1Begin = new ReferencePoint(BasicReferencePoint.FR1EndCDR1Begin),
-    /**
-     * End of CDR1, beginning of FR2
-     */
-    CDR1End = new ReferencePoint(BasicReferencePoint.CDR1EndFR2Begin),
-    /**
-     * End of CDR1, beginning of FR2
-     */
-    FR2Begin = new ReferencePoint(BasicReferencePoint.CDR1EndFR2Begin),
-    /**
-     * End of FR2, beginning of CDR2
-     */
-    FR2End = new ReferencePoint(BasicReferencePoint.FR2EndCDR2Begin),
-    /**
-     * End of FR2, beginning of CDR2
-     */
-    CDR2Begin = new ReferencePoint(BasicReferencePoint.FR2EndCDR2Begin),
-    /**
-     * End of CDR2, beginning of FR3
-     */
-    CDR2End = new ReferencePoint(BasicReferencePoint.CDR2EndFR3Begin),
-    /**
-     * End of CDR2, beginning of FR3
-     */
-    FR3Begin = new ReferencePoint(BasicReferencePoint.CDR2EndFR3Begin),
-    /**
-     * End of FR3, beginning of CDR3
-     */
-    FR3End = new ReferencePoint(BasicReferencePoint.FR3EndCDR3Begin),
-    /**
-     * End of FR3, beginning of CDR3
-     */
-    CDR3Begin = new ReferencePoint(BasicReferencePoint.FR3EndCDR3Begin),
-    /**
-     * End of V region after V(D)J rearrangement (commonly inside CDR3)
-     */
-    VEndTrimmed = new ReferencePoint(BasicReferencePoint.VEndTrimmed),
-    /**
-     * End of V region in genome
-     */
-    VEnd = new ReferencePoint(BasicReferencePoint.VEnd),
+    @Doc("Beginning of IG/TCR transcript")
+    public static final ReferencePoint UTR5Begin = new ReferencePoint(BasicReferencePoint.V5UTRBegin);
+
+    @Doc("End of 5'UTR, beginning of IG/TCR CDS as listed in database")
+    public static final ReferencePoint V5UTREnd = new ReferencePoint(BasicReferencePoint.V5UTREndL1Begin);
+
+    @Doc("End of 5'UTR, beginning of IG/TCR CDS as observed in the data")
+    public static final ReferencePoint V5UTRBeginTrimmed = new ReferencePoint(BasicReferencePoint.V5UTRBeginTrimmed);
+
+    @Doc("End of 5'UTR, beginning of IG/TCR CDS")
+    public static final ReferencePoint L1Begin = new ReferencePoint(BasicReferencePoint.V5UTREndL1Begin);
+
+    @Doc("End of first exon, beginning of V intron")
+    public static final ReferencePoint L1End = new ReferencePoint(BasicReferencePoint.L1EndVIntronBegin);
+
+    @Doc("End of first exon, beginning of V intron")
+    public static final ReferencePoint VIntronBegin = new ReferencePoint(BasicReferencePoint.L1EndVIntronBegin);
+
+    @Doc("End of V intron, beginning of second exon")
+    public static final ReferencePoint VIntronEnd = new ReferencePoint(BasicReferencePoint.VIntronEndL2Begin);
+
+    @Doc("End of V intron, beginning of second exon")
+    public static final ReferencePoint L2Begin = new ReferencePoint(BasicReferencePoint.VIntronEndL2Begin);
+
+    @Doc("End of lider sequence, beginning of sequence that codes IG/TCR protein, beginning of FR1.")
+    public static final ReferencePoint L2End = new ReferencePoint(BasicReferencePoint.L2EndFR1Begin);
+
+    @Doc("End of lider sequence, beginning of sequence that codes IG/TCR protein, beginning of FR1.")
+    public static final ReferencePoint FR1Begin = new ReferencePoint(BasicReferencePoint.L2EndFR1Begin);
+
+    @Doc("End of FR1, beginning of CDR1")
+    public static final ReferencePoint FR1End = new ReferencePoint(BasicReferencePoint.FR1EndCDR1Begin);
+
+    @Doc("End of FR1, beginning of CDR1")
+    public static final ReferencePoint CDR1Begin = new ReferencePoint(BasicReferencePoint.FR1EndCDR1Begin);
+
+    @Doc("End of CDR1, beginning of FR2")
+    public static final ReferencePoint CDR1End = new ReferencePoint(BasicReferencePoint.CDR1EndFR2Begin);
+
+    @Doc("End of CDR1, beginning of FR2")
+    public static final ReferencePoint FR2Begin = new ReferencePoint(BasicReferencePoint.CDR1EndFR2Begin);
+
+    @Doc("End of FR2, beginning of CDR2")
+    public static final ReferencePoint FR2End = new ReferencePoint(BasicReferencePoint.FR2EndCDR2Begin);
+
+    @Doc("End of FR2, beginning of CDR2")
+    public static final ReferencePoint CDR2Begin = new ReferencePoint(BasicReferencePoint.FR2EndCDR2Begin);
+
+    @Doc("End of CDR2, beginning of FR3")
+    public static final ReferencePoint CDR2End = new ReferencePoint(BasicReferencePoint.CDR2EndFR3Begin);
+
+    @Doc("End of CDR2, beginning of FR3")
+    public static final ReferencePoint FR3Begin = new ReferencePoint(BasicReferencePoint.CDR2EndFR3Begin);
+
+    @Doc("End of FR3, beginning of CDR3")
+    public static final ReferencePoint FR3End = new ReferencePoint(BasicReferencePoint.FR3EndCDR3Begin);
+
+    @Doc("End of FR3, beginning of CDR3")
+    public static final ReferencePoint CDR3Begin = new ReferencePoint(BasicReferencePoint.FR3EndCDR3Begin);
+
+    @Doc("End of V region after V(D)J rearrangement (commonly inside CDR3)")
+    public static final ReferencePoint VEndTrimmed = new ReferencePoint(BasicReferencePoint.VEndTrimmed);
+
+    @Doc("End of V region in genome")
+    public static final ReferencePoint VEnd = new ReferencePoint(BasicReferencePoint.VEnd);
 
     /* D */
 
-    /**
-     * Beginning of D region in genome
-     */
-    DBegin = new ReferencePoint(BasicReferencePoint.DBegin),
-    /**
-     * Beginning of D region after VDJ rearrangement
-     */
-    DBeginTrimmed = new ReferencePoint(BasicReferencePoint.DBeginTrimmed),
-    /**
-     * End of D region after VDJ rearrangement
-     */
-    DEndTrimmed = new ReferencePoint(BasicReferencePoint.DEndTrimmed),
-    /**
-     * End of D region in genome
-     */
-    DEnd = new ReferencePoint(BasicReferencePoint.DEnd),
+    @Doc("Beginning of D region in genome")
+    public static final ReferencePoint DBegin = new ReferencePoint(BasicReferencePoint.DBegin);
+
+    @Doc("Beginning of D region after VDJ rearrangement")
+    public static final ReferencePoint DBeginTrimmed = new ReferencePoint(BasicReferencePoint.DBeginTrimmed);
+
+    @Doc("End of D region after VDJ rearrangement")
+    public static final ReferencePoint DEndTrimmed = new ReferencePoint(BasicReferencePoint.DEndTrimmed);
+
+    @Doc("End of D region in genome")
+    public static final ReferencePoint DEnd = new ReferencePoint(BasicReferencePoint.DEnd);
 
     /* J */
 
-    /**
-     * Beginning of J region in genome
-     */
-    JBegin = new ReferencePoint(BasicReferencePoint.JBegin),
-    /**
-     * Beginning of J region after V(D)J rearrangement
-     */
-    JBeginTrimmed = new ReferencePoint(BasicReferencePoint.JBeginTrimmed),
-    /**
-     * End of CDR3, beginning of FR4
-     */
-    CDR3End = new ReferencePoint(BasicReferencePoint.CDR3EndFR4Begin),
-    /**
-     * End of CDR3, beginning of FR4
-     */
-    FR4Begin = new ReferencePoint(BasicReferencePoint.CDR3EndFR4Begin),
-    /**
-     * End of FR4
-     */
-    FR4End = new ReferencePoint(BasicReferencePoint.FR4End),
+    @Doc("Beginning of J region in genome")
+    public static final ReferencePoint JBegin = new ReferencePoint(BasicReferencePoint.JBegin);
+
+    @Doc("Beginning of J region after V(D)J rearrangement")
+    public static final ReferencePoint JBeginTrimmed = new ReferencePoint(BasicReferencePoint.JBeginTrimmed);
+
+    @Doc("End of CDR3, beginning of FR4")
+    public static final ReferencePoint CDR3End = new ReferencePoint(BasicReferencePoint.CDR3EndFR4Begin);
+
+    @Doc("End of CDR3, beginning of FR4")
+    public static final ReferencePoint FR4Begin = new ReferencePoint(BasicReferencePoint.CDR3EndFR4Begin);
+
+    @Doc("End of FR4")
+    public static final ReferencePoint FR4End = new ReferencePoint(BasicReferencePoint.FR4End);
 
     /* C */
 
-    /**
-     * Beginning of C Region
-     */
-    CBegin = new ReferencePoint(BasicReferencePoint.CBegin),
-    /**
-     * End of C Region first exon (Exon 3 of assembled TCR/IG gene)
-     */
-    CExon1End = new ReferencePoint(BasicReferencePoint.CExon1End),
-    /**
-     * End of C Region
-     */
-    CEnd = new ReferencePoint(BasicReferencePoint.CEnd);
+    @Doc("Beginning of C Region")
+    public static final ReferencePoint CBegin = new ReferencePoint(BasicReferencePoint.CBegin);
+
+    @Doc("End of C Region first exon (Exon 3 of assembled TCR/IG gene)")
+    public static final ReferencePoint CExon1End = new ReferencePoint(BasicReferencePoint.CExon1End);
+
+    @Doc("End of C Region")
+    public static final ReferencePoint CEnd = new ReferencePoint(BasicReferencePoint.CEnd);
 
     /**
      * Default set of reference points.
@@ -452,5 +415,13 @@ public final class ReferencePoint implements Comparable<ReferencePoint>, java.io
         public ReferencePoint deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
             return ReferencePoint.parse(jp.readValueAs(String.class));
         }
+    }
+
+
+    @Documented
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.FIELD)
+    public @interface Doc {
+        String value();
     }
 }
