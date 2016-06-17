@@ -28,8 +28,14 @@
  */
 package com.milaboratory.mixcr.reference;
 
+import com.milaboratory.mixcr.cli.Util;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
 
 public class ReferencePointTest {
     @Test
@@ -38,5 +44,49 @@ public class ReferencePointTest {
                 ReferencePoint.VEndTrimmed, ReferencePoint.JBeginTrimmed};
         for (ReferencePoint referencePoint : pointsToTest)
             Assert.assertNotNull(referencePoint.getActivationPoint());
+    }
+
+    @Test
+    public void printDocs() throws Exception {
+        List<String> names = new ArrayList<>(), docs = new ArrayList<>();
+        int maxName = 0, maxDoc = 0;
+        for (Field field : ReferencePoint.class.getFields()) {
+            if (!field.isAnnotationPresent(ReferencePoint.Doc.class))
+                continue;
+            String name = "| ``" + field.getName() + "``";
+            String doc = field.getAnnotation(ReferencePoint.Doc.class).value();
+            maxName = Math.max(maxName, name.length());
+            maxDoc = Math.max(maxDoc, doc.length());
+            names.add(name);
+            docs.add(doc);
+        }
+
+        final ListIterator<String> it = names.listIterator();
+        while (it.hasNext()) {
+            String name = it.next();
+            int l = (maxName + 3 - name.length());
+            for (int i = 0; i < l; i++)
+                name += " ";
+            name += "|";
+            it.set(name);
+        }
+
+        final String header = "+-------------------------+-------------------------------------------------------+";
+        String x = Util.printTwoColumns(names, docs, maxName + 5, 50, 4, header+"\n");
+        x = x.replace("                                ", "|                         |     ");
+
+        System.out.println(header);
+        for (String s : x.split("\n")) {
+            if (s.endsWith("+")) {
+                System.out.println(s);
+                continue;
+            }
+            int l = header.length() - s.length() - 1;
+            for (int i = 0; i < l; i++) {
+                s += " ";
+            }
+            s += "|";
+            System.out.println(s);
+        }
     }
 }

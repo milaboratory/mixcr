@@ -679,7 +679,7 @@ One can also export all read IDs that were aggregated by eah clone. For this one
 
 ::
 
-    mixcr exportAlignments -p min -readIds index_file clones.clns clones.txt
+    mixcr exportClones -p min -readIds index_file clones.clns clones.txt
 
 This will add a column with full enumeration of all reads that were absorbed by particular clone:
 
