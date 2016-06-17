@@ -45,6 +45,7 @@ import java.util.Set;
 public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
     private static final ReferencePoint reqPointR = ReferencePoint.CDR3End.move(3);
     private static final ReferencePoint reqPointL = ReferencePoint.CDR3Begin.move(-3);
+
     public VDJCAlignerSJFirst(VDJCAlignerParameters parameters) {
         super(parameters);
     }
@@ -90,11 +91,13 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
 
         VDJCAlignments alignment = topResult.toVDJCAlignments(input.getId());
 
-        // CDR3 Begin / End
-        if (!alignment.getPartitionedTarget(0).getPartitioning().isAvailable(reqPointL)
-                && !alignment.getPartitionedTarget(0).getPartitioning().isAvailable(reqPointR)) {
-            onFailedAlignment(input, VDJCAlignmentFailCause.NoCDR3Parts);
-            return new VDJCAlignmentResult<>(input);
+        if (!parameters.getAllowNoCDR3PartAlignments()) {
+            // CDR3 Begin / End
+            if (!alignment.getPartitionedTarget(0).getPartitioning().isAvailable(reqPointL)
+                    && !alignment.getPartitionedTarget(0).getPartitioning().isAvailable(reqPointR)) {
+                onFailedAlignment(input, VDJCAlignmentFailCause.NoCDR3Parts);
+                return new VDJCAlignmentResult<>(input);
+            }
         }
 
         onSuccessfulAlignment(input, alignment);

@@ -117,9 +117,9 @@ public class ActionExportReads implements Action {
             case 0:
                 return new SingleFastqWriter(System.out);
             case 1:
-                return new SingleFastqWriter(outputFiles[1]);
+                return new SingleFastqWriter(outputFiles[0]);
             case 2:
-                return new PairedFastqWriter(outputFiles[1], outputFiles[2]);
+                return new PairedFastqWriter(outputFiles[0], outputFiles[1]);
         }
         throw new RuntimeException();
     }

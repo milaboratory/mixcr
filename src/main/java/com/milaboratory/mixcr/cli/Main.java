@@ -50,7 +50,8 @@ public class Main {
                 new VersionInfoAction(),
                 new ActionImportSegments(),
                 new ActionAlignmentsDiff(),
-                new ActionAssemblePartialAlignments());
+                new ActionAssemblePartialAlignments(),
+                new ActionExportReads());
 
         // Adding version info callback
         main.setVersionInfoCallback(new Runnable() {

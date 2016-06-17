@@ -105,18 +105,20 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
 
         VDJCAlignments alignments = bestHelper.createResult(input.getId(), this);
 
-        // CDR3 Begin / End
-        boolean isGood = false;
-        for (int i = 0; i < 2; i++)
-            if (alignments.getPartitionedTarget(i).getPartitioning().isAvailable(reqPointL)
-                    || alignments.getPartitionedTarget(i).getPartitioning().isAvailable(reqPointR)) {
-                isGood = true;
-                break;
-            }
+        if (!parameters.getAllowNoCDR3PartAlignments()) {
+            // CDR3 Begin / End
+            boolean isGood = false;
+            for (int i = 0; i < 2; i++)
+                if (alignments.getPartitionedTarget(i).getPartitioning().isAvailable(reqPointL)
+                        || alignments.getPartitionedTarget(i).getPartitioning().isAvailable(reqPointR)) {
+                    isGood = true;
+                    break;
+                }
 
-        if (!isGood) {
-            onFailedAlignment(input, VDJCAlignmentFailCause.NoCDR3Parts);
-            return new VDJCAlignmentResult<>(input);
+            if (!isGood) {
+                onFailedAlignment(input, VDJCAlignmentFailCause.NoCDR3Parts);
+                return new VDJCAlignmentResult<>(input);
+            }
         }
 
         onSuccessfulAlignment(input, alignments);
