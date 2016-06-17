@@ -14,6 +14,7 @@ Action `exportReads` renamed to `exportReadsForClones`
 Added `exportReads` action to re-export raw reads from `*.vdjca` file; useful to filter TCR/IG containing reads
 Added new `-l`/`--filter-locus` option in `exportClones` action to limit the list of exported clones by specified locus
 Added new `-q`/`--minimal-clone-fraction` and `-c`/`--minimal-clone-count` options in `exportClones` action to filter the list of exported clones by their fraction of reads number
+minor: Refactoring of report in `assemble` action: better descriptions, fixes and new informative lines
 minor: Human-readable error messages for illegal analysis options with IMGT reference
 minor: Added new export field: `-vBestIdentityPercent` and `-vIdentityPercents` (-j..., -c... in the same way)
 minor: Now IMGT import script produces more useful information
