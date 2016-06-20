@@ -1,4 +1,0 @@
-Better compatibility with highly-paralelized execution of MiXCR on clusters: "more random" generation of random temp file names
-Human-readable messages for two wrong input cases
-NPE fixed in case of align with `VGene`, assemble `VTranscript`
-Minor fix for documentation
