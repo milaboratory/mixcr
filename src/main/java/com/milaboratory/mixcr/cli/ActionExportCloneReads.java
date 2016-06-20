@@ -23,6 +23,7 @@ import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NavigableSet;
@@ -46,9 +47,20 @@ public final class ActionExportCloneReads implements Action {
 
     @Override
     public void go(ActionHelper helper) throws Exception {
-        DB db = DBMaker.newFileDB(new File(parameters.getMapDBFile()))
-                .transactionDisable()
-                .make();
+        if (!originalReadsPresent()) {
+            final String msg = "Error: original reads was not saved in the .vdjca file: re-run align with '-g' option.";
+            throw new IllegalArgumentException(msg);
+        }
+
+        DB db;
+        try {
+            db = DBMaker.newFileDB(new File(parameters.getMapDBFile()))
+                    .transactionDisable()
+                    .make();
+        } catch (Exception | Error e) {
+            final String msg = "Error: corrupted or malformed index file.";
+            throw new IllegalArgumentException(msg, e);
+        }
 
         int[] cloneIds = parameters.getCloneIds();
         if (cloneIds.length == 1) {//byClones
@@ -60,6 +72,14 @@ public final class ActionExportCloneReads implements Action {
         }
 
         db.close();
+    }
+
+    private boolean originalReadsPresent() throws IOException {
+        try (VDJCAlignmentsReader reader
+                     = new VDJCAlignmentsReader(parameters.getVDJCAFile(), LociLibraryManager.getDefault())) {
+            VDJCAlignments test = reader.take();
+            return test == null || test.getOriginalSequences() != null;
+        }
     }
 
     public void writeMany(NavigableSet<ReadToCloneMapping> byAlignments, int[] clonIds)
@@ -93,7 +113,6 @@ public final class ActionExportCloneReads implements Action {
                 writer.write(createRead(vdjca.getOriginalSequences(), vdjca.getDescriptions()));
             }
 
-            //todo create empty file!!!!!!!!!!!!!!!!!!!!
             for (SequenceWriter writer : writers.valueCollection())
                 if (writer != null)
                     writer.close();
@@ -108,7 +127,7 @@ public final class ActionExportCloneReads implements Action {
                 new ReadToCloneMapping(Long.MAX_VALUE, 0, cloneId, false, false), true);
 
         if (selected.isEmpty())
-            return;//todo create empty file!!!!!!!!!!!!!!!!!!!!
+            return;
         try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getVDJCAFile(),
                 LociLibraryManager.getDefault())) {
 
@@ -147,9 +166,21 @@ public final class ActionExportCloneReads implements Action {
     private static SequenceRead createRead(NSequenceWithQuality[] nseqs, String[] descr) {
         if (nseqs.length == 1)
             return new SingleReadImpl(-1, nseqs[0], descr[0]);
-        else return new PairedRead(
-                new SingleReadImpl(-1, nseqs[0], descr[0]),
-                new SingleReadImpl(-1, nseqs[1], descr[1]));
+        else {
+            String descr1, descr2;
+            if (descr == null)
+                descr1 = descr2 = "";
+            else if (descr.length == 1)
+                descr1 = descr2 = descr[0];
+            else {
+                descr1 = descr[0];
+                descr2 = descr[1];
+            }
+
+            return new PairedRead(
+                    new SingleReadImpl(-1, nseqs[0], descr1),
+                    new SingleReadImpl(-1, nseqs[1], descr2));
+        }
     }
 
     private static SequenceWriter createWriter(boolean paired, String fileName)
