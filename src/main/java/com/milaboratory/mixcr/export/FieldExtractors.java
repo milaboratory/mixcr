@@ -35,9 +35,12 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.cli.ActionAssemble;
+import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.reference.GeneFeature;
 import com.milaboratory.mixcr.reference.GeneType;
 import com.milaboratory.mixcr.reference.ReferencePoint;
+import gnu.trove.iterator.TObjectFloatIterator;
+import gnu.trove.map.hash.TObjectFloatHashMap;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
@@ -50,12 +53,17 @@ import java.util.*;
 import static com.milaboratory.core.sequence.TranslationParameters.FromCenter;
 import static com.milaboratory.core.sequence.TranslationParameters.FromLeftWithoutIncompleteCodon;
 import static com.milaboratory.mixcr.assembler.ReadToCloneMapping.MappingType.Dropped;
+import static com.milaboratory.mixcr.assembler.ReadToCloneMapping.MappingType.DroppedWithClone;
 
 public final class FieldExtractors {
     private static final String NULL = "";
     private static final DecimalFormat SCORE_FORMAT = new DecimalFormat("#.#");
 
     static Field[] descriptors = null;
+
+    private static String alleleName(Allele allele, boolean familyOnly) {
+        return familyOnly ? allele.getFamilyName() : allele.getName();
+    }
 
     public synchronized static Field[] getFields() {
         if (descriptors == null) {
@@ -84,7 +92,22 @@ public final class FieldExtractors {
                 });
             }
 
-            // Best hits
+            // Best family
+            for (final GeneType type : GeneType.values()) {
+                char l = type.getLetter();
+                desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Family",
+                        "Export best " + l + " hit family name", "Best " + l + " hit family", "best" + l + "Family") {
+                    @Override
+                    protected String extract(VDJCObject object) {
+                        VDJCHit bestHit = object.getBestHit(type);
+                        if (bestHit == null)
+                            return NULL;
+                        return bestHit.getAllele().getFamilyName();
+                    }
+                });
+            }
+
+            // Best hit scores
             for (final GeneType type : GeneType.values()) {
                 char l = type.getLetter();
                 desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "HitScore",
@@ -98,6 +121,7 @@ public final class FieldExtractors {
                     }
                 });
             }
+
 
             // All hits
             for (final GeneType type : GeneType.values()) {
@@ -137,6 +161,42 @@ public final class FieldExtractors {
                         for (int i = 0; ; i++) {
                             sb.append(hits[i].getAllele().getName());
                             if (i == hits.length - 1)
+                                break;
+                            sb.append(",");
+                        }
+                        return sb.toString();
+                    }
+                });
+            }
+
+            // All families
+            for (final GeneType type : GeneType.values()) {
+                char l = type.getLetter();
+                desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Families",
+                        "Export all " + l + " hit families", "All " + l + " families", "all" + l + "Families") {
+                    @Override
+                    protected String extract(VDJCObject object) {
+                        TObjectFloatHashMap<String> familyScores = new TObjectFloatHashMap<>();
+                        VDJCHit[] hits = object.getHits(type);
+                        if (hits.length == 0)
+                            return "";
+                        for (VDJCHit hit : hits)
+                            familyScores.adjustOrPutValue(hit.getAllele().getFamilyName(), hit.getScore(), hit.getScore());
+
+                        final Holder[] hs = new Holder[familyScores.size()];
+                        final TObjectFloatIterator<String> it = familyScores.iterator();
+                        int i = 0;
+                        while (it.hasNext()) {
+                            it.advance();
+                            hs[i++] = new Holder(it.key(), it.value());
+                        }
+
+                        Arrays.sort(hs);
+
+                        StringBuilder sb = new StringBuilder();
+                        for (i = 0; ; i++) {
+                            sb.append(hs[i].str);
+                            if (i == hs.length - 1)
                                 break;
                             sb.append(",");
                         }
@@ -344,6 +404,40 @@ public final class FieldExtractors {
                     return new CloneToReadsExtractor(outputMode, args[0]);
                 }
             });
+
+            for (final GeneType type : GeneType.values()) {
+                String c = Character.toLowerCase(type.getLetter()) + "IdentityPercents";
+                desctiptorsList.add(new PL_O("-" + c, type.getLetter() + " alignment identity percents",
+                        type.getLetter() + " alignment identity percents", c) {
+                    @Override
+                    protected String extract(VDJCObject object) {
+                        VDJCHit[] hits = object.getHits(type);
+                        if (hits == null)
+                            return NULL;
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("");
+                        for (int i = 0; ; i++) {
+                            sb.append(hits[i].getIdentity());
+                            if (i == hits.length - 1)
+                                return sb.toString();
+                            sb.append(",");
+                        }
+                    }
+                });
+            }
+            for (final GeneType type : GeneType.values()) {
+                String c = Character.toLowerCase(type.getLetter()) + "BestIdentityPercent";
+                desctiptorsList.add(new PL_O("-" + c, type.getLetter() + "best alignment identity percent",
+                        type.getLetter() + "best alignment identity percent", c) {
+                    @Override
+                    protected String extract(VDJCObject object) {
+                        VDJCHit hit = object.getBestHit(type);
+                        if (hit == null)
+                            return NULL;
+                        return Float.toString(hit.getIdentity());
+                    }
+                });
+            }
             descriptors = desctiptorsList.toArray(new Field[desctiptorsList.size()]);
         }
 
@@ -574,7 +668,7 @@ public final class FieldExtractors {
 
             int cloneIndex = currentMapping.getCloneIndex();
             ReadToCloneMapping.MappingType mt = currentMapping.getMappingType();
-            if (mt == Dropped)
+            if (currentMapping.isDropped())
                 return printMapping ? mt.toString().toLowerCase() : NULL;
             return printMapping ? Integer.toString(cloneIndex) + ":" + mt.toString().toLowerCase() : Integer.toString(cloneIndex);
         }
@@ -648,6 +742,21 @@ public final class FieldExtractors {
                 return sString;
             default:
                 throw new NullPointerException();
+        }
+    }
+
+    private static final class Holder implements Comparable<Holder> {
+        final String str;
+        final float score;
+
+        public Holder(String str, float score) {
+            this.str = str;
+            this.score = score;
+        }
+
+        @Override
+        public int compareTo(Holder o) {
+            return Float.compare(o.score, score);
         }
     }
 }

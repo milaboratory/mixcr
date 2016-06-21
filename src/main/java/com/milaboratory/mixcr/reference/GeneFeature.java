@@ -42,6 +42,7 @@ import com.milaboratory.primitivio.annotations.Serializable;
 import com.milaboratory.util.ArrayIterator;
 
 import java.io.IOException;
+import java.lang.annotation.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
@@ -62,196 +63,152 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         java.io.Serializable {
     /* V, D, J, Regions */
 
-    /**
-     * Full V Region
-     */
-    public static final GeneFeature VRegion = new GeneFeature(FR1Begin, VEnd),
-    /**
-     * Full V Region trimmed
-     */
-    VRegionTrimmed = new GeneFeature(FR1Begin, VEndTrimmed),
-    /**
-     * Full D Region
-     */
-    DRegion = new GeneFeature(DBegin, DEnd),
-    /**
-     * Full D Region trimmed
-     */
-    DCDR3Part = new GeneFeature(DBeginTrimmed, DEndTrimmed),
-    /**
-     * Full J Region
-     */
-    JRegion = new GeneFeature(JBegin, FR4End),
-    /**
-     * Full J Region trimmed
-     */
-    JRegionTrimmed = new GeneFeature(JBeginTrimmed, FR4End),
+    public static final int GermlinePRegionSize = 20;
+
+    /* PSegments in rearrenged sequences */
+    @Doc("P-segment of V gene")
+    public static final GeneFeature VPSegment = new GeneFeature(VEnd, VEndTrimmed);
+    @Doc("P-segment of J gene")
+    public static final GeneFeature JPSegment = new GeneFeature(JBeginTrimmed, JBegin);
+    @Doc("Left P-segment of D gene")
+    public static final GeneFeature DLeftPSegment = new GeneFeature(DBeginTrimmed, DBegin);
+    @Doc("Right P-segment of D gene")
+    public static final GeneFeature DRightPSegment = new GeneFeature(DEnd, DEndTrimmed);
+
+
+    /* PSegments in germline */
+
+    @Doc("P-segment of V gene to be used as alignment reference")
+    public static final GeneFeature GermlineVPSegment = new GeneFeature(VEnd, VEnd.move(-GermlinePRegionSize));
+    @Doc("P-segment of J gene to be used as alignment reference")
+    public static final GeneFeature GermlineJPSegment = new GeneFeature(JBegin.move(GermlinePRegionSize), JBegin);
+    @Doc("P-segment of D gene to be used as alignment reference")
+    public static final GeneFeature GermlineDPSegment = new GeneFeature(DEnd, DBegin);
+
+
+    @Doc("Full V Region; germline")
+    public static final GeneFeature VRegion = new GeneFeature(FR1Begin, VEnd);
+    @Doc("Full V Region with P-segment; to be used as alignment reference")
+    public static final GeneFeature VRegionWithP = VRegion.append(GermlineVPSegment);
+    @Doc("Full V Region in rearranged sequence, e.g. after trimming")
+    public static final GeneFeature VRegionTrimmed = new GeneFeature(FR1Begin, VEndTrimmed);
+    @Doc("Full D Region; germline")
+    public static final GeneFeature DRegion = new GeneFeature(DBegin, DEnd);
+    @Doc("Full D Region with P-segment; to be used as alignment reference")
+    public static final GeneFeature DRegionWithP = GermlineDPSegment.append(DRegion).append(GermlineDPSegment);
+    @Doc("Full D Region in rearranged sequence, e.g. after trimming")
+    public static final GeneFeature DCDR3Part = new GeneFeature(DBeginTrimmed, DEndTrimmed);
+    @Doc("Full J Region; germline")
+    public static final GeneFeature JRegion = new GeneFeature(JBegin, FR4End);
+    @Doc("Full J Region with P-segment; to be used as alignment reference")
+    public static final GeneFeature JRegionWithP = GermlineJPSegment.append(JRegion);
+    @Doc("Full J Region in rearranged sequence, e.g. after trimming")
+    public static final GeneFeature JRegionTrimmed = new GeneFeature(JBeginTrimmed, FR4End);
+
 
     /* Major gene parts */
 
-    /**
-     * 5'UTR not trimmed
-     */
-    V5UTRGermline = new GeneFeature(UTR5Begin, V5UTREnd),
-    /**
-     * 5'UTR trimmed
-     */
-    V5UTR = new GeneFeature(V5UTRBeginTrimmed, V5UTREnd),
-    /**
-     * Part of lider sequence in first exon. The same as {@code Exon1}.
-     */
-    L1 = new GeneFeature(L1Begin, L1End),
-    /**
-     * Intron in V region.
-     */
-    VIntron = new GeneFeature(VIntronBegin, VIntronEnd),
-    /**
-     * Part of lider sequence in second exon.
-     */
-    L2 = new GeneFeature(L2Begin, L2End),
-    /**
-     * {@code L1} + {@code VIntron} + {@code L2}
-     */
-    VLIntronL = new GeneFeature(L1Begin, L2End),
+    @Doc("5'UTR; germline")
+    public static final GeneFeature V5UTRGermline = new GeneFeature(UTR5Begin, V5UTREnd);
+    @Doc("5'UTR in aligned sequence; trimmed")
+    public static final GeneFeature V5UTR = new GeneFeature(V5UTRBeginTrimmed, V5UTREnd);
+    @Doc("Part of lider sequence in first exon. The same as ``Exon1``.")
+    public static final GeneFeature L1 = new GeneFeature(L1Begin, L1End);
+    @Doc("Intron in V region.")
+    public static final GeneFeature VIntron = new GeneFeature(VIntronBegin, VIntronEnd);
+    @Doc("Part of lider sequence in second exon.")
+    public static final GeneFeature L2 = new GeneFeature(L2Begin, L2End);
+    @Doc("``L1`` + ``VIntron`` + ``L2``")
+    public static final GeneFeature VLIntronL = new GeneFeature(L1Begin, L2End);
 
     /* Frameworks and CDRs */
 
-    /**
-     * Framework 1
-     */
-    FR1 = new GeneFeature(FR1Begin, FR1End),
-    /**
-     * CDR1 (Complementarity determining region 1)
-     */
-    CDR1 = new GeneFeature(CDR1Begin, CDR1End),
-    /**
-     * Framework 2
-     */
-    FR2 = new GeneFeature(FR2Begin, FR2End),
-    /**
-     * CDR2 (Complementarity determining region 2)
-     */
-    CDR2 = new GeneFeature(CDR2Begin, CDR2End),
-    /**
-     * Framework 2
-     */
-    FR3 = new GeneFeature(FR3Begin, FR3End),
-    /**
-     * CDR3 (Complementarity determining region 3). Cys from V region and Phe/Trp from J region included.
-     */
-    CDR3 = new GeneFeature(CDR3Begin, CDR3End),
-    /**
-     * CDR3 (Complementarity determining region 3). Cys from V region and Phe/Trp from J region excluded.
-     */
-    ShortCDR3 = new GeneFeature(CDR3, +3, -3),
-    /**
-     * Framework 4 (J region after CDR3)
-     */
-    FR4 = new GeneFeature(FR4Begin, FR4End),
+    @Doc("Framework 1")
+    public static final GeneFeature FR1 = new GeneFeature(FR1Begin, FR1End);
+    @Doc("CDR1 (Complementarity determining region 1)")
+    public static final GeneFeature CDR1 = new GeneFeature(CDR1Begin, CDR1End);
+    @Doc("Framework 2")
+    public static final GeneFeature FR2 = new GeneFeature(FR2Begin, FR2End);
+    @Doc("CDR2 (Complementarity determining region 2)")
+    public static final GeneFeature CDR2 = new GeneFeature(CDR2Begin, CDR2End);
+    @Doc("Framework 2")
+    public static final GeneFeature FR3 = new GeneFeature(FR3Begin, FR3End);
+    @Doc("CDR3 (Complementarity determining region 3). Cys from V region and Phe/Trp from J region included.")
+    public static final GeneFeature CDR3 = new GeneFeature(CDR3Begin, CDR3End);
+    @Doc("CDR3 (Complementarity determining region 3). Cys from V region and Phe/Trp from J region excluded.")
+    public static final GeneFeature ShortCDR3 = new GeneFeature(CDR3, +3, -3);
+    @Doc("Framework 4 (J region after CDR3)")
+    public static final GeneFeature FR4 = new GeneFeature(FR4Begin, FR4End);
 
     /* Subregions of CDR3 */
 
-    /**
-     * Part of V region inside CDR3 (commonly starts from Cys)
-     */
-    VCDR3Part = new GeneFeature(CDR3Begin, VEndTrimmed),
-    /**
-     * Part of J region inside CDR3 (commonly ends with Phe/Trp)
-     */
-    JCDR3Part = new GeneFeature(JBeginTrimmed, CDR3End),
-    /**
-     * Part of V region inside CDR3 (commonly starts from Cys)
-     */
-    GermlineVCDR3Part = new GeneFeature(CDR3Begin, VEnd),
-    /**
-     * Part of J region inside CDR3 (commonly ends with Phe/Trp)
-     */
-    GermlineJCDR3Part = new GeneFeature(JBegin, CDR3End),
-    /**
-     * N region between V and D genes. Is not defined for loci without D genes and for V(D)J rearrangement with
-     * unidentified D region.
-     */
-    VDJunction = new GeneFeature(VEndTrimmed, DBeginTrimmed),
-    /**
-     * N region between V and D genes. Is not defined for loci without D genes and for V(D)J rearrangement with
-     * unidentified D region.
-     */
-    DJJunction = new GeneFeature(DEndTrimmed, JBeginTrimmed),
-    /**
-     * Region between V and J regions. For loci without D genes fully composed from non-template nucleotides. May
-     * contain D region.
-     */
-    VJJunction = new GeneFeature(VEndTrimmed, JBeginTrimmed),
+    @Doc("Part of V region inside CDR3 (commonly starts from Cys)")
+    public static final GeneFeature VCDR3Part = new GeneFeature(CDR3Begin, VEndTrimmed);
+    @Doc("Part of J region inside CDR3 (commonly ends with Phe/Trp)")
+    public static final GeneFeature JCDR3Part = new GeneFeature(JBeginTrimmed, CDR3End);
+    @Doc("Part of V region inside CDR3 (commonly starts from Cys)")
+    public static final GeneFeature GermlineVCDR3Part = new GeneFeature(CDR3Begin, VEnd);
+    @Doc("Part of J region inside CDR3 (commonly ends with Phe/Trp)")
+    public static final GeneFeature GermlineJCDR3Part = new GeneFeature(JBegin, CDR3End);
+    @Doc("N region between V and D genes; not defined for loci without D genes and for V(D)J rearrangement " +
+            "with unidentified D region.")
+    public static final GeneFeature VDJunction = new GeneFeature(VEndTrimmed, DBeginTrimmed);
+    @Doc("N region between V and D genes; not defined for loci without D genes and for V(D)J rearrangement " +
+            "with unidentified D region.")
+    public static final GeneFeature DJJunction = new GeneFeature(DEndTrimmed, JBeginTrimmed);
+    @Doc("Region between V and J regions. For loci without D genes - fully composed from non-template nucleotides. May contain D region.")
+    public static final GeneFeature VJJunction = new GeneFeature(VEndTrimmed, JBeginTrimmed);
 
     /* Exons. */
 
-    /**
-     * First exon. The same as {@code L1}.
-     */
-    Exon1 = new GeneFeature(L1Begin, L1End),
-    /**
-     * Full second exon of IG/TCR gene.
-     */
-    Exon2 = new GeneFeature(L2Begin, FR4End),
+    @Doc("First exon. The same as ``L1``.")
+    public static final GeneFeature Exon1 = new GeneFeature(L1Begin, L1End);
+    @Doc("Full second exon of IG/TCR gene.")
+    public static final GeneFeature Exon2 = new GeneFeature(L2Begin, FR4End);
 
     /* Region Exons */
 
-    /**
-     * Second exon of V gene. Ends within CDR3 in V(D)J rearrangement.
-     */
-    VExon2 = new GeneFeature(L2Begin, VEnd),
+    @Doc("Second exon of V gene.")
+    public static final GeneFeature VExon2 = new GeneFeature(L2Begin, VEnd);
 
-    /**
-     * Second exon of V gene trimmed. Ends within CDR3 in V(D)J rearrangement.
-     */
-    VExon2Trimmed = new GeneFeature(L2Begin, VEndTrimmed),
+    @Doc("Second exon of V gene trimmed. Ends within CDR3 in V(D)J rearrangement.")
+    public static final GeneFeature VExon2Trimmed = new GeneFeature(L2Begin, VEndTrimmed);
 
     /* C Region */
 
-    /**
-     * First exon of C Region
-     */
-    CExon1 = new GeneFeature(CBegin, CExon1End),
+    @Doc("First exon of C Region")
+    public static final GeneFeature CExon1 = new GeneFeature(CBegin, CExon1End);
 
-    /**
-     * Full C region
-     */
-    CRegion = new GeneFeature(CBegin, CEnd),
+    @Doc("Full C region")
+    public static final GeneFeature CRegion = new GeneFeature(CBegin, CEnd);
 
     /* Composite features */
 
-    /**
-     * Full leader sequence
-     */
-    L = new GeneFeature(L1, L2),
-    /**
-     * {@code Exon1} + {@code VExon2}. Common reference feature used in alignments for mRNA data obtained without
-     * 5'RACE.
-     */
-    VTranscriptWithout5UTR = new GeneFeature(Exon1, VExon2),
-    /**
-     * {@code V5UTR} + {@code Exon1} + {@code VExon2}. Common reference feature used in alignments for cDNA data
-     * obtained using 5'RACE (that may contain UTRs).
-     */
-    VTranscript = new GeneFeature(V5UTRGermline, Exon1, VExon2),
-    /**
-     * {@code {V5UTRBegin:VEnd}}. Common reference feature used in alignments for genomic DNA data.
-     */
-    VGene = new GeneFeature(UTR5Begin, VEnd),
-    /**
-     * First two exons of IG/TCR gene.
-     */
-    VDJTranscriptWithout5UTR = new GeneFeature(Exon1, Exon2),
-    /**
-     * First two exons with 5'UTR of IG/TCR gene.
-     */
-    VDJTranscript = new GeneFeature(V5UTRGermline, Exon1, Exon2),
+    @Doc("Full leader sequence")
+    public static final GeneFeature L = new GeneFeature(L1, L2);
+
+    @Doc("``Exon1`` + ``VExon2``. Common reference feature used in alignments for mRNA data obtained without 5'RACE.")
+    public static final GeneFeature VTranscriptWithout5UTR = new GeneFeature(Exon1, VExon2);
+    @Doc("``V5UTR`` + ``Exon1`` + ``VExon2``. Common reference feature used in alignments for cDNA data obtained using 5'RACE (that may contain UTRs).")
+    public static final GeneFeature VTranscript = new GeneFeature(V5UTRGermline, Exon1, VExon2);
+    @Doc("``{V5UTRBegin:VEnd}``. Common reference feature used in alignments for genomic DNA data.")
+    public static final GeneFeature VGene = new GeneFeature(UTR5Begin, VEnd);
+
+    @Doc("``Exon1`` + ``VExon2``. Common reference feature used in alignments for mRNA data obtained without 5'RACE. Contains reference for P region.")
+    public static final GeneFeature VTranscriptWithout5UTRWithP = new GeneFeature(Exon1, VExon2, GermlineVPSegment);
+    @Doc("``V5UTR`` + ``Exon1`` + ``VExon2``. Common reference feature used in alignments for cDNA data obtained using 5'RACE (that may contain UTRs). Contains reference for P region.")
+    public static final GeneFeature VTranscriptWithP = new GeneFeature(V5UTRGermline, Exon1, VExon2, GermlineVPSegment);
+    @Doc("``{V5UTRBegin:VEnd}``. Common reference feature used in alignments for genomic DNA data. Contains reference for P region.")
+    public static final GeneFeature VGeneWithP = new GeneFeature(UTR5Begin, VEnd).append(GermlineVPSegment);
+
+    @Doc("First two exons of IG/TCR gene.")
+    public static final GeneFeature VDJTranscriptWithout5UTR = new GeneFeature(Exon1, Exon2);
+    @Doc("First two exons with 5'UTR of IG/TCR gene.")
+    public static final GeneFeature VDJTranscript = new GeneFeature(V5UTRGermline, Exon1, Exon2);
 
     /* Full length assembling features */
-    /**
-     * Full V, D, J assembly without 5'UTR and leader sequence.
-     */
-    VDJRegion = new GeneFeature(FR1Begin, FR4End);
+    @Doc("Full V, D, J assembly without 5'UTR and leader sequence.")
+    public static final GeneFeature VDJRegion = new GeneFeature(FR1Begin, FR4End);
 
 
     //regions are sorted in natural ordering using indexes
@@ -303,8 +260,19 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         return regions[i];
     }
 
+    public GeneFeature append(GeneFeature gf) {
+        return new GeneFeature(this, gf);
+    }
+
     public int size() {
         return regions.length;
+    }
+
+    public GeneFeature reverse() {
+        ReferenceRange[] res = new ReferenceRange[regions.length];
+        for (int i = 0; i < res.length; i++)
+            res[i] = regions[regions.length - 1 - i].reverse();
+        return new GeneFeature(res, true);
     }
 
     public GeneType getGeneType() {
@@ -344,7 +312,79 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         return Arrays.hashCode(regions);
     }
 
+    private ReferenceRange firstRegion() {
+        return regions[0];
+    }
+
+    private ReferenceRange lastRegion() {
+        return regions[regions.length - 1];
+    }
+
+    GeneFeature first() {
+        return new GeneFeature(firstRegion());
+    }
+
+    GeneFeature last() {
+        return new GeneFeature(lastRegion());
+    }
+
+    GeneFeature withoutFirst() {
+        return new GeneFeature(Arrays.copyOfRange(regions, 1, regions.length), true);
+    }
+
+    GeneFeature withoutLast() {
+        return new GeneFeature(Arrays.copyOf(regions, regions.length - 1), true);
+    }
+
     public static GeneFeature intersection(GeneFeature gf1, GeneFeature gf2) {
+        //tnj t,exbq rjcnskm
+        GeneFeature gf1left = null, gf1right = null;
+        if (gf1.firstRegion().isReversed()) {
+            gf1left = gf1.first();
+            gf1 = gf1.withoutFirst();
+        }
+        if (gf1.lastRegion().isReversed()) {
+            gf1right = gf1.last();
+            gf1 = gf1.withoutLast();
+        }
+        GeneFeature gf2left = null, gf2right = null;
+        if (gf2.firstRegion().isReversed()) {
+            gf2left = gf2.first();
+            gf2 = gf2.withoutFirst();
+        }
+        if (gf2.lastRegion().isReversed()) {
+            gf2right = gf2.last();
+            gf2 = gf2.withoutLast();
+        }
+
+        GeneFeature gfLeft = intersection1R(gf1left, gf2left),
+                gfRight = intersection1R(gf1right, gf2right);
+
+        GeneFeature r = intersection0(gf1, gf2);
+
+        if (gfLeft != null)
+            r = new GeneFeature(gfLeft, r);
+        if (gfRight != null)
+            r = new GeneFeature(r, gfRight);
+
+        return r;
+    }
+
+    private static GeneFeature intersection1R(GeneFeature gf1, GeneFeature gf2) {
+        if (gf1 == null && gf2 == null)
+            return null;
+
+        if (gf1 == null)
+            return gf2;
+
+        if (gf2 == null)
+            return gf1;
+
+        GeneFeature i = intersection0(gf1.reverse(), gf2.reverse());
+        return i == null ? null : i.reverse();
+    }
+
+    private static GeneFeature intersection0(GeneFeature gf1, GeneFeature gf2) {
         ReferencePoint firstReferencePoint1 = gf1.regions[0].begin;
         ReferencePoint firstReferencePoint2 = gf2.regions[0].begin;
         if (firstReferencePoint1.compareTo(firstReferencePoint2) > 0)
@@ -439,10 +479,9 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         ReferenceRange prev = ranges[0], cur;
         for (int i = 1; i < ranges.length; ++i) {
             cur = ranges[i];
-            if (cur.begin.getIndex() < prev.end.getIndex())
+            if (cur.begin.compareTo(prev.end) < 0)
                 throw new IllegalArgumentException("Intersecting ranges.");
-            if (cur.begin.getIndex() == prev.end.getIndex()
-                    && prev.end.getOffset() - cur.begin.getOffset() >= 0) {
+            if (cur.begin.equals(prev.end) && cur.isReversed() == prev.isReversed()) {
                 //merge
                 prev = new ReferenceRange(prev.begin, cur.end);
             } else {
@@ -472,7 +511,7 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         private static final Comparator<ReferenceRange> BEGIN_COMPARATOR = new Comparator<ReferenceRange>() {
             @Override
             public int compare(ReferenceRange o1, ReferenceRange o2) {
-                return o1.begin.basicPoint.compareTo(o2.begin.basicPoint);
+                return o1.getLeftBoundary().compareTo(o2.getLeftBoundary());
             }
         };
 
@@ -481,6 +520,14 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         ReferenceRange(ReferencePoint begin, ReferencePoint end) {
             this.begin = begin;
             this.end = end;
+        }
+
+        public boolean isReversed() {
+            return begin.compareTo(end) > 0;
+        }
+
+        public ReferenceRange reverse() {
+            return new ReferenceRange(end, begin);
         }
 
         public GeneType getGeneType() {
@@ -504,6 +551,20 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
 
         public boolean contains(ReferenceRange range) {
             return range.begin.compareTo(begin) >= 0 && range.end.compareTo(end) <= 0;
+        }
+
+        public ReferencePoint getLeftBoundary() {
+            if (isReversed())
+                return end;
+            else
+                return begin;
+        }
+
+        public ReferencePoint getRightBoundary() {
+            if (isReversed())
+                return begin;
+            else
+                return end;
         }
 
         @Override
@@ -719,16 +780,6 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         public GeneFeature deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
             return parse(jp.readValueAs(String.class));
         }
-
-        @Override
-        public GeneFeature getEmptyValue() {
-            return null;
-        }
-
-        @Override
-        public GeneFeature getNullValue() {
-            return null;
-        }
     }
 
     public static final class Serializer extends JsonSerializer<GeneFeature> {
@@ -739,5 +790,12 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
                 throw new RuntimeException("Not yet supported.");
             jgen.writeString(name);
         }
+    }
+
+    @Documented
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.FIELD)
+    public @interface Doc {
+        String value();
     }
 }

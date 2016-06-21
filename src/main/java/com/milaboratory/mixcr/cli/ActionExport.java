@@ -28,9 +28,9 @@
  */
 package com.milaboratory.mixcr.cli;
 
-import com.milaboratory.mitools.cli.Action;
-import com.milaboratory.mitools.cli.ActionHelper;
-import com.milaboratory.mitools.cli.ActionParametersParser;
+import com.milaboratory.cli.Action;
+import com.milaboratory.cli.ActionHelper;
+import com.milaboratory.cli.ActionParametersParser;
 
 public abstract class ActionExport implements Action, ActionParametersParser {
     public final ActionExportParameters parameters;

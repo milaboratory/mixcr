@@ -30,8 +30,8 @@ package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.alignment.BandedAlignerParameters;
-import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
+import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.tree.TreeSearchParameters;
 import com.milaboratory.mixcr.assembler.*;
@@ -95,18 +95,18 @@ public class JsonOverriderTest {
                 null, new DAlignerParameters(GeneFeature.DRegion, 30.0f, 0.85f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
         );
 
-        CloneAssemblerParameters params = new CloneAssemblerParameters(new GeneFeature[]{GeneFeature.FR1, GeneFeature.CDR3},12,
+        CloneAssemblerParameters params = new CloneAssemblerParameters(new GeneFeature[]{GeneFeature.FR1, GeneFeature.CDR3}, 12,
                 new CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
-                factoryParameters, true, (byte) 20, .8, "2of6");
+                factoryParameters, true, true, false, 0.4, true, (byte) 20, .8, "2of6", (byte) 20, (byte) 15);
 
         CloneAssemblerParameters override = JsonOverrider.override(
                 params,
                 CloneAssemblerParameters.class,
                 "assemblingFeatures=[CDR1(-5,+6),CDR2]");
 
-        CloneAssemblerParameters expected = new CloneAssemblerParameters(new GeneFeature[]{new GeneFeature(GeneFeature.CDR1, -5, +6), GeneFeature.CDR2},12,
+        CloneAssemblerParameters expected = new CloneAssemblerParameters(new GeneFeature[]{new GeneFeature(GeneFeature.CDR1, -5, +6), GeneFeature.CDR2}, 12,
                 new CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
-                factoryParameters, true, (byte) 20, .8, "2of6");
+                factoryParameters, true, true, false, 0.4, true, (byte) 20, .8, "2of6", (byte) 20, (byte) 15);
 
 
         Assert.assertEquals(expected, override);
@@ -122,9 +122,9 @@ public class JsonOverriderTest {
                 null, new DAlignerParameters(GeneFeature.DRegion, 30.0f, 0.85f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
         );
 
-        CloneAssemblerParameters params = new CloneAssemblerParameters(new GeneFeature[]{GeneFeature.FR1, GeneFeature.CDR3},12,
+        CloneAssemblerParameters params = new CloneAssemblerParameters(new GeneFeature[]{GeneFeature.FR1, GeneFeature.CDR3}, 12,
                 new CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
-                factoryParameters, true, (byte) 20, .8, "2of6");
+                factoryParameters, true, true, false, 0.4, true, (byte) 20, .8, "2of6", (byte) 20, (byte) 15);
 
         CloneAssemblerParameters override = JsonOverrider.override(
                 params,

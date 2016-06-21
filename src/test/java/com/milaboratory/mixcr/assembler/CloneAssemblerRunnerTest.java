@@ -121,7 +121,7 @@ public class CloneAssemblerRunnerTest {
         CloneAssemblerParameters assemblerParameters = new CloneAssemblerParameters(
                 new GeneFeature[]{GeneFeature.CDR3}, 12,
                 new CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
-                factoryParameters, true, (byte) 20, .8, "2 of 6");
+                factoryParameters, true, true, false, 0.4, true, (byte) 20, .8, "2 of 6", (byte) 20, (byte) 15);
 
         System.out.println(GlobalObjectMappers.toOneLine(assemblerParameters));
 
@@ -137,7 +137,7 @@ public class CloneAssemblerRunnerTest {
 
         CloneSet cloneSetDeserialized = CloneSetIO.read(new ByteArrayInputStream(bos.toByteArray()), library);
 
-        assertCSEqualis(cloneSet, cloneSetDeserialized);
+        assertCSEquals(cloneSet, cloneSetDeserialized);
 
         OutputPortCloseable<ReadToCloneMapping> rrr = assemblerRunner.assembler.getAssembledReadsPort();
         ReadToCloneMapping take;
@@ -147,7 +147,7 @@ public class CloneAssemblerRunnerTest {
         return cloneSet;
     }
 
-    private static void assertCSEqualis(CloneSet expected, CloneSet actual) {
+    private static void assertCSEquals(CloneSet expected, CloneSet actual) {
         Assert.assertEquals(expected.getClones().size(), actual.getClones().size());
         Assert.assertEquals(expected.getTotalCount(), actual.getTotalCount());
         Assert.assertArrayEquals(expected.getAssemblingFeatures(), actual.getAssemblingFeatures());

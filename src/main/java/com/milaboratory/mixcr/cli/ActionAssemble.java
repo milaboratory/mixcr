@@ -37,9 +37,10 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.validators.PositiveInteger;
-import com.milaboratory.mitools.cli.Action;
-import com.milaboratory.mitools.cli.ActionHelper;
+import com.milaboratory.cli.Action;
+import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.mixcr.assembler.*;
+import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.reference.Allele;
@@ -85,8 +86,20 @@ public class ActionAssemble implements Action {
         if (!actionParameters.overrides.isEmpty()) {
             assemblerParameters = JsonOverrider.override(assemblerParameters, CloneAssemblerParameters.class,
                     actionParameters.overrides);
-            if (assemblerParameters == null)
+            if (assemblerParameters == null) {
                 System.err.println("Failed to override some parameter.");
+                return;
+            }
+        }
+
+        // Adjusting features to align for correct processing
+        for (GeneType geneType : GeneType.values()) {
+            GeneFeature featureAssemble = assemblerParameters.getCloneFactoryParameters().getFeatureToAlign(geneType);
+            GeneFeature featureAlignment = alignerParameters.getFeatureToAlign(geneType);
+            if (featureAssemble == null || featureAlignment == null)
+                continue;
+            GeneFeature intersection = GeneFeature.intersection(featureAlignment, featureAssemble);
+            assemblerParameters.getCloneFactoryParameters().setFeatureToAlign(geneType, intersection);
         }
 
         // Adjusting features to align for correct processing
@@ -110,12 +123,15 @@ public class ActionAssemble implements Action {
                     assembler, actionParameters.threads);
             SmartProgressReporter.startProgressReport(assemblerRunner);
             assemblerRunner.run();
-            try (CloneSetIO.CloneSetWriter writer = new CloneSetIO.CloneSetWriter(assemblerRunner.getCloneSet(), actionParameters.getOutputFileName())) {
+            final CloneSet cloneSet = assemblerRunner.getCloneSet();
+            try (CloneSetIO.CloneSetWriter writer = new CloneSetIO.CloneSetWriter(cloneSet, actionParameters.getOutputFileName())) {
                 SmartProgressReporter.startProgressReport(writer);
                 writer.write();
             }
 
             if (report != null) {
+                if (cloneSet.getClones().size() != report.getCloneCount())
+                    throw new RuntimeException("Ooops");
                 report.setTotalReads(alignmentsProvider.getTotalNumberOfReads());
                 Util.writeReport(actionParameters.getInputFileName(), actionParameters.getOutputFileName(),
                         helper.getCommandLineArguments(), actionParameters.report, report);

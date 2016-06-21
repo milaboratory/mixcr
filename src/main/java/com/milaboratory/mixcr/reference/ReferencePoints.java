@@ -129,6 +129,13 @@ public final class ReferencePoints extends SequencePartitioning implements java.
         throw new IllegalStateException();
     }
 
+    public int getLengthBetweenBoundaryPoints() {
+        if (reversed)
+            return getFirstAvailablePosition() - getLastAvailablePosition();
+        else
+            return getLastAvailablePosition() - getFirstAvailablePosition();
+    }
+
     @Override
     public int getPosition(ReferencePoint referencePoint) {
         int point = getPosition(referencePoint.getIndex());

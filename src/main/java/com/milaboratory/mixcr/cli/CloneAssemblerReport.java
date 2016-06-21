@@ -40,11 +40,16 @@ public final class CloneAssemblerReport implements CloneAssemblerListener, Repor
     final AtomicInteger clonesCreated = new AtomicInteger();
     final AtomicLong failedToExtractTarget = new AtomicLong();
     final AtomicLong droppedAsLowQuality = new AtomicLong();
-    final AtomicLong deferred = new AtomicLong();
+    final AtomicLong alignmentsInClones = new AtomicLong();
     final AtomicLong coreAlignments = new AtomicLong();
+    final AtomicLong deferred = new AtomicLong();
     final AtomicLong deferredAlignmentsDropped = new AtomicLong();
     final AtomicLong deferredAlignmentsMapped = new AtomicLong();
     final AtomicInteger clonesClustered = new AtomicInteger();
+    final AtomicInteger clonesDropped = new AtomicInteger();
+    final AtomicLong readsDroppedWithClones = new AtomicLong();
+    final AtomicInteger clonesPreClustered = new AtomicInteger();
+    final AtomicLong readsPreClustered = new AtomicLong();
     final AtomicLong readsClustered = new AtomicLong();
 
     public long getTotalReads() {
@@ -88,11 +93,19 @@ public final class CloneAssemblerReport implements CloneAssemblerListener, Repor
     }
 
     public int getCloneCount() {
-        return clonesCreated.get() - clonesClustered.get();
+        return clonesCreated.get() - clonesClustered.get() - clonesDropped.get() - clonesPreClustered.get();
+    }
+
+    public int getClonesDropped() {
+        return clonesDropped.get();
     }
 
     public long getAlignmentsInClones() {
-        return coreAlignments.get() + deferredAlignmentsMapped.get();
+        return alignmentsInClones.get(); //coreAlignments.get() + deferredAlignmentsMapped.get() - readsDroppedWithClones.get();
+    }
+
+    public long getReadsDroppedWithClones() {
+        return readsDroppedWithClones.get();
     }
 
     @Override
@@ -118,6 +131,7 @@ public final class CloneAssemblerReport implements CloneAssemblerListener, Repor
     @Override
     public void onAlignmentAddedToClone(VDJCAlignments alignments, CloneAccumulator accumulator) {
         coreAlignments.incrementAndGet();
+        alignmentsInClones.incrementAndGet();
     }
 
     @Override
@@ -128,12 +142,31 @@ public final class CloneAssemblerReport implements CloneAssemblerListener, Repor
     @Override
     public void onDeferredAlignmentMappedToClone(VDJCAlignments alignments, CloneAccumulator accumulator) {
         deferredAlignmentsMapped.incrementAndGet();
+        alignmentsInClones.incrementAndGet();
     }
 
     @Override
-    public void onClustered(CloneAccumulator majorClone, CloneAccumulator minorClone) {
+    public void onClustered(CloneAccumulator majorClone, CloneAccumulator minorClone, boolean countAdded) {
         readsClustered.addAndGet(minorClone.getCount());
         clonesClustered.incrementAndGet();
+        if (!countAdded)
+            alignmentsInClones.addAndGet(-minorClone.getCount());
+    }
+
+    @Override
+    public void onPreClustered(CloneAccumulator majorClone, CloneAccumulator minorClone) {
+        clonesPreClustered.incrementAndGet();
+        readsPreClustered.addAndGet(minorClone.getCount());
+    }
+
+    @Override
+    public void onCloneDropped(CloneAccumulator clone) {
+        readsDroppedWithClones.addAndGet(clone.getCount());
+        clonesDropped.incrementAndGet();
+        alignmentsInClones.addAndGet(-clone.getCount());
+        coreAlignments.addAndGet(-clone.getCoreCount());
+        deferredAlignmentsMapped.addAndGet(-clone.getMappedCount());
+        deferred.addAndGet(-clone.getMappedCount());
     }
 
     public void setTotalReads(long totalReads) {
@@ -145,27 +178,34 @@ public final class CloneAssemblerReport implements CloneAssemblerListener, Repor
         if (totalReads == -1)
             throw new IllegalStateException("TotalReads count not set.");
 
-        int clonesCount = clonesCreated.get() - clonesClustered.get();
+        int clonesCount = getCloneCount();
 
-        long totalAlignmentsCount = coreAlignments.get() + failedToExtractTarget.get() +
-                droppedAsLowQuality.get() + deferred.get();
-        long alignmentsInClones = coreAlignments.get() + deferredAlignmentsMapped.get();
+        long alignmentsInClones = getAlignmentsInClones();
 
-        if (deferred.get() != deferredAlignmentsDropped.get() + deferredAlignmentsMapped.get())
-            throw new RuntimeException();
+        //if (deferred.get() != deferredAlignmentsDropped.get() + deferredAlignmentsMapped.get())
+        //    throw new RuntimeException();
+
+        // Alignments in clones before clusterization
+        long clusterizationBase = deferredAlignmentsMapped.get() + coreAlignments.get();
 
         helper.writeField("Final clonotype count", clonesCount)
+                .writeField("Average reads per clonotype", Util.PERCENT_FORMAT.format(1.0 * alignmentsInClones / clonesCount))
                 .writeField("Total reads used in clonotypes", alignmentsInClones)
-                .writePercentField("Reads used, percent of total", alignmentsInClones, totalReads)
-                .writePercentField("Reads used as core, percent of used", coreAlignments.get(), alignmentsInClones)
-                .writePercentField("Mapped low quality reads, percent of used", deferredAlignmentsMapped.get(), alignmentsInClones)
-                .writePercentField("Reads clustered in PCR error correction, percent of used", readsClustered.get(), alignmentsInClones)
-                .writeField("Clonotypes eliminated by PCR error correction", clonesClustered.get())
+                .writePercentField("Reads used in clonotypes, percent of total", alignmentsInClones, totalReads)
+                .writePercentField("Clonal sequences analysed, percent of total", clusterizationBase, totalReads)
+                .writePercentField("Reads used as core, percent of used", coreAlignments.get(), clusterizationBase)
+                .writePercentField("Mapped low quality reads, percent of used", deferredAlignmentsMapped.get(), clusterizationBase)
+                .writePercentField("Reads clustered in PCR error correction, percent of used", readsClustered.get(), clusterizationBase)
+                .writePercentField("Reads pre-clustered due to the similar VJC-lists, percent of used", readsPreClustered.get(), alignmentsInClones)
                 .writePercentField("Percent of reads dropped due to the lack of clonal sequence",
                         failedToExtractTarget.get(), totalReads)
                 .writePercentField("Percent of reads dropped due to low quality",
                         droppedAsLowQuality.get(), totalReads)
                 .writePercentField("Percent of reads dropped due to failed mapping",
-                        deferredAlignmentsDropped.get(), totalReads);
+                        deferredAlignmentsDropped.get(), totalReads)
+                .writePercentField("Reads dropped with low quality clones", readsDroppedWithClones.get(), alignmentsInClones)
+                .writeField("Clonotypes eliminated by PCR error correction", clonesClustered.get())
+                .writeField("Clonotypes dropped as low quality", clonesDropped.get())
+                .writeField("Clonotypes pre-clustered due to the similar VJC-lists", clonesPreClustered.get());
     }
 }

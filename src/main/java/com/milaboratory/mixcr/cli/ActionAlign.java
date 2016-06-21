@@ -40,17 +40,23 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.validators.PositiveInteger;
+import com.milaboratory.cli.Action;
+import com.milaboratory.cli.ActionHelper;
+import com.milaboratory.core.PairedEndReadsLayout;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SequenceReaderCloseable;
+import com.milaboratory.core.io.sequence.SequenceWriter;
 import com.milaboratory.core.io.sequence.fasta.FastaReader;
 import com.milaboratory.core.io.sequence.fasta.FastaSequenceReaderWrapper;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
+import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
+import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mitools.cli.Action;
-import com.milaboratory.mitools.cli.ActionHelper;
+import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
+import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.reference.*;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
@@ -69,6 +75,7 @@ public class ActionAlign implements Action {
     private final AlignParameters actionParameters = new AlignParameters();
 
     @Override
+    @SuppressWarnings("unchecked")
     public void go(ActionHelper helper) throws Exception {
         VDJCAlignerParameters alignerParameters = actionParameters.getAlignerParameters();
 
@@ -130,26 +137,34 @@ public class ActionAlign implements Action {
         if (warnings)
             System.err.println("To turn off warnings use '-nw' option.");
 
-        if(aligner.getVAllelesToAlign().isEmpty()){
+        if (aligner.getVAllelesToAlign().isEmpty()) {
             System.err.println("No V alleles to align. Aborting execution. See warnings for more info " +
                     "(turn warnings by adding -w option).");
             return;
         }
 
-        if(aligner.getVAllelesToAlign().isEmpty()){
+        if (aligner.getVAllelesToAlign().isEmpty()) {
             System.err.println("No J alleles to align. Aborting execution. See warnings for more info " +
                     "(turn warnings by adding -w option).");
             return;
         }
 
-        AlignerReport report = actionParameters.report == null ? null : new AlignerReport();
+        AlignerReport report = actionParameters.report == null ? null : new AlignerReport(alignerParameters.getVJAlignmentOrder());
         if (report != null) {
             aligner.setEventsListener(report);
             report.setAllowDifferentVJLoci(actionParameters.allowDifferentVJLoci);
         }
 
         try (SequenceReaderCloseable<? extends SequenceRead> reader = actionParameters.createReader();
-             VDJCAlignmentsWriter writer = actionParameters.getOutputName().equals(".") ? null : new VDJCAlignmentsWriter(actionParameters.getOutputName())) {
+
+             VDJCAlignmentsWriter writer = actionParameters.getOutputName().equals(".") ? null : new VDJCAlignmentsWriter(actionParameters.getOutputName());
+
+             SequenceWriter notAlignedWriter = actionParameters.failedReadsR1 == null
+                     ? null
+                     : (actionParameters.isInputPaired()
+                     ? new PairedFastqWriter(actionParameters.failedReadsR1, actionParameters.failedReadsR2)
+                     : new SingleFastqWriter(actionParameters.failedReadsR1));
+        ) {
             if (writer != null) writer.header(aligner);
             OutputPort<? extends SequenceRead> sReads = reader;
             CanReportProgress progress = (CanReportProgress) reader;
@@ -157,6 +172,14 @@ public class ActionAlign implements Action {
                 sReads = new CountLimitingOutputPort<>(sReads, actionParameters.limit);
                 progress = SmartProgressReporter.extractProgress((CountLimitingOutputPort<?>) sReads);
             }
+
+            final boolean writeAllResults = actionParameters.getWriteAllResults();
+            EnumMap<GeneType, VDJCHit[]> emptyHits = new EnumMap<>(GeneType.class);
+            for (GeneType gt : GeneType.values())
+                if (alignerParameters.getGeneAlignerParameters(gt) != null)
+                    emptyHits.put(gt, new VDJCHit[0]);
+            final PairedEndReadsLayout readsLayout = alignerParameters.getReadsLayout();
+
             SmartProgressReporter.startProgressReport("Alignment", progress);
             OutputPort<Chunk<? extends SequenceRead>> mainInputReads = CUtils.buffered((OutputPort) chunked(sReads, 64), 16);
             OutputPort<VDJCAlignmentResult> alignments = unchunked(new ParallelProcessor(mainInputReads, chunked(aligner), actionParameters.threads));
@@ -168,20 +191,40 @@ public class ActionAlign implements Action {
                                     return o.read.getId();
                                 }
                             }))) {
-                if (result.alignment == null)
-                    continue;
-                if (!result.alignment.hasSameVJLoci(1)) {
+                VDJCAlignments alignment = result.alignment;
+                SequenceRead read = result.read;
+                if (alignment == null) {
+                    if (writeAllResults)
+                        // Creating empty alignment object if alignment for current read failed
+                        alignment = new VDJCAlignments(read.getId(), emptyHits,
+                                readsLayout.createTargets(read)[0].targets);
+                    else {
+                        if (notAlignedWriter != null)
+                            notAlignedWriter.write(result.read);
+                        continue;
+                    }
+                }
+                if (!alignment.hasSameVJLoci(1)) {
                     if (report != null)
                         report.onAlignmentWithDifferentVJLoci();
-                    if (!actionParameters.allowDifferentVJLoci)
+                    if (!actionParameters.allowDifferentVJLoci && !writeAllResults) {
+                        if (notAlignedWriter != null)
+                            notAlignedWriter.write(result.read);
                         continue;
+                    }
                 }
                 if (writer != null) {
-                    if (actionParameters.saveReadDescription || actionParameters.saveOriginalReads)
-                        result.alignment.setDescriptions(extractDescription(result.read));
+                    if (actionParameters.saveReadDescription || actionParameters.saveOriginalReads) {
+                        if (result.read.numberOfReads() == 2 && alignment.numberOfTargets() == 1
+                                && !actionParameters.saveOriginalReads) {
+                            assert alignment.getDescriptions() != null && alignment.getDescriptions().length == 1;
+                            alignment.getDescriptions()[0] += " = " + read.getRead(0).getDescription() + " + " + read.getRead(1).getDescription();
+                        } else
+                            alignment.setDescriptions(extractDescription(read));
+                    }
                     if (actionParameters.saveOriginalReads)
-                        result.alignment.setOriginalSequences(extractNSeqs(result.read));
-                    writer.write(result.alignment);
+                        alignment.setOriginalSequences(extractNSeqs(read));
+                    writer.write(alignment);
                 }
             }
             if (writer != null)
@@ -275,6 +318,10 @@ public class ActionAlign implements Action {
                 names = {"-a", "--save-description"})
         public Boolean saveReadDescription = false;
 
+        @Parameter(description = "Write alignment results for all input reads (even if alignment failed).",
+                names = {"-v", "--write-all"})
+        public Boolean writeAllResults = null;
+
         @Parameter(description = "Copy original reads (sequences + qualities + descriptions) to .vdjca file.",
                 names = {"-g", "--save-reads"})
         public Boolean saveOriginalReads = false;
@@ -282,6 +329,14 @@ public class ActionAlign implements Action {
         @Parameter(description = "Allow alignments with different loci of V and J hits.",
                 names = {"-i", "--diff-loci"})
         public Boolean allowDifferentVJLoci = false;
+
+        @Parameter(description = "Write not aligned reads (R1).",
+                names = {"--not-aligned-R1"})
+        public String failedReadsR1 = null;
+
+        @Parameter(description = "Write not aligned reads (R2).",
+                names = {"--not-aligned-R2"})
+        public String failedReadsR2 = null;
 
         public String getSpecies() {
             return species;
@@ -326,6 +381,10 @@ public class ActionAlign implements Action {
             return Util.parseLoci(loci);
         }
 
+        public boolean getWriteAllResults() {
+            return writeAllResults != null && writeAllResults;
+        }
+
         public boolean isInputPaired() {
             return parameters.size() == 3;
         }
@@ -360,6 +419,10 @@ public class ActionAlign implements Action {
                 throw new ParameterException("Too many input files.");
             if (parameters.size() < 2)
                 throw new ParameterException("No output file.");
+            if (failedReadsR2 != null && failedReadsR1 == null)
+                throw new ParameterException("Wrong input for --not-aligned-R1,2");
+            if (failedReadsR1 != null && (failedReadsR2 != null) != isInputPaired())
+                throw new ParameterException("Option --not-aligned-R2 is not set.");
             super.validate();
         }
     }

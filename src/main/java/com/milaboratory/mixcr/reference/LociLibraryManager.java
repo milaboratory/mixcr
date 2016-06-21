@@ -80,8 +80,4 @@ public final class LociLibraryManager implements AlleleResolver {
             }
         return defualt;
     }
-
-    static {
-
-    }
 }

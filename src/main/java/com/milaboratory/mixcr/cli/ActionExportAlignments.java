@@ -45,12 +45,12 @@ public class ActionExportAlignments extends ActionExport {
     public void go0() throws Exception {
         try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getInputFile(), LociLibraryManager.getDefault());
              InfoWriter<VDJCAlignments> writer = new InfoWriter<>(parameters.getOutputFile())) {
-            if (!parameters.printToStdout())
-                SmartProgressReporter.startProgressReport("Exporting alignments", reader);
+            SmartProgressReporter.startProgressReport("Exporting alignments", reader, System.err);
             writer.attachInfoProviders((List) parameters.exporters);
             VDJCAlignments alignments;
             long count = 0;
-            while ((alignments = reader.take()) != null && count < parameters.limit) {
+            long limit = parameters.getLimit();
+            while ((alignments = reader.take()) != null && count < limit) {
                 writer.put(alignments);
                 ++count;
             }

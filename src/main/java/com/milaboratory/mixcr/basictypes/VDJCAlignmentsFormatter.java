@@ -28,6 +28,8 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
+import cc.redberry.primitives.Filter;
+import cc.redberry.primitives.FilterUtil;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.MultiAlignmentHelper;
@@ -40,9 +42,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Created by dbolotin on 03/09/15.
- */
 public class VDJCAlignmentsFormatter {
     public static MultiAlignmentHelper getTargetAsMultiAlignment(VDJCAlignments vdjcaAlignments, int targetId) {
         NSequenceWithQuality target = vdjcaAlignments.getTarget(targetId);
@@ -69,12 +68,8 @@ public class VDJCAlignmentsFormatter {
         MultiAlignmentHelper helper = MultiAlignmentHelper.build(MultiAlignmentHelper.DEFAULT_SETTINGS,
                 new Range(0, target.size()), alignments.toArray(new Alignment[alignments.size()]));
 
-        char[] markers = new char[helper.size()];
-        Arrays.fill(markers, ' ');
-        for (PointToDraw point : POINTS_FOR_REARRANGED)
-            point.draw(partitioning, helper, markers);
+        drawPoints(helper, partitioning, POINTS_FOR_REARRANGED);
 
-        helper.addAnnotationString("", new String(markers));
         helper.addSubjectQuality("Quality", target.getQuality());
         helper.setSubjectLeftTitle("Target" + targetId);
         helper.setSubjectRightTitle(" Score");
@@ -85,13 +80,38 @@ public class VDJCAlignmentsFormatter {
         return helper;
     }
 
-    public static void drawPoints(MultiAlignmentHelper helper, SequencePartitioning partitioning, PointToDraw... pointsToDraw) {
-        char[] markers = new char[helper.size()];
-        Arrays.fill(markers, ' ');
-        for (PointToDraw point : pointsToDraw)
-            point.draw(partitioning, helper, markers);
-        helper.addAnnotationString("", new String(markers));
+    public static void drawPoints(MultiAlignmentHelper helper, SequencePartitioning partitioning,
+                                  PointToDraw... pointsToDraw) {
+        ArrayList<char[]> markers = new ArrayList<>();
+        markers.add(emptyLine(helper.size()));
+        boolean result;
+        int i;
+        for (PointToDraw point : pointsToDraw) {
+            i = 0;
+            do {
+                if (markers.size() == i)
+                    markers.add(emptyLine(helper.size()));
+                result = point.draw(partitioning, helper, markers.get(i++), false);
+            } while (!result);
+        }
+        for (i = markers.size() - 1; i >= 0; --i)
+            helper.addAnnotationString("", new String(markers.get(i)));
     }
+
+    private static char[] emptyLine(int size) {
+        char[] markers = new char[size];
+        Arrays.fill(markers, ' ');
+        return markers;
+    }
+
+    public static final Filter<SequencePartitioning> IsVP = new Filter<SequencePartitioning>() {
+        @Override
+        public boolean accept(SequencePartitioning object) {
+            return object.isAvailable(ReferencePoint.VEnd) && object.getPosition(ReferencePoint.VEnd) != object.getPosition(ReferencePoint.VEndTrimmed);
+        }
+    };
+    public static final Filter<SequencePartitioning> NotVP = FilterUtil.not(IsVP);
+
 
     public static final PointToDraw[] POINTS_FOR_REARRANGED = new PointToDraw[]{
             pd(ReferencePoint.V5UTRBeginTrimmed, "<5'UTR"),
@@ -104,12 +124,15 @@ public class VDJCAlignmentsFormatter {
             pd(ReferencePoint.CDR2Begin, "FR2><CDR2"),
             pd(ReferencePoint.FR3Begin, "CDR2><FR3"),
             pd(ReferencePoint.CDR3Begin, "FR3><CDR3"),
-            pd(ReferencePoint.VEndTrimmed, "V>", -1),
+            pd(ReferencePoint.VEndTrimmed, "V>", -1, NotVP),
+            pd(ReferencePoint.VEnd, "V><VP", IsVP),
+            pd(ReferencePoint.VEndTrimmed, "VP>", -1, IsVP),
             pd(ReferencePoint.DBeginTrimmed, "<D"),
             pd(ReferencePoint.DEndTrimmed, "D>", -1),
             pd(ReferencePoint.JBeginTrimmed, "<J"),
             pd(ReferencePoint.CDR3End, "CDR3><FR4"),
-            pd(ReferencePoint.FR4End, "FR4>", -1)
+            pd(ReferencePoint.FR4End, "FR4>", -1),
+            pd(ReferencePoint.CBegin, "<C")
     };
 
     public static final PointToDraw[] POINTS_FOR_GERMLINE = new PointToDraw[]{
@@ -131,35 +154,49 @@ public class VDJCAlignmentsFormatter {
             pd(ReferencePoint.FR4End, "FR4>", -1)
     };
 
+    private static PointToDraw pd(ReferencePoint rp, String marker, Filter<SequencePartitioning> activator) {
+        return pd(rp, marker, 0, activator);
+    }
+
     private static PointToDraw pd(ReferencePoint rp, String marker) {
-        return pd(rp, marker, 0);
+        return pd(rp, marker, 0, null);
     }
 
     private static PointToDraw pd(ReferencePoint rp, String marker, int additionalOffset) {
+        return pd(rp, marker, additionalOffset, null);
+    }
+
+    private static PointToDraw pd(ReferencePoint rp, String marker, int additionalOffset, Filter<SequencePartitioning> activator) {
         int offset = marker.indexOf('>');
         if (offset >= 0)
-            return new PointToDraw(rp.move(additionalOffset), marker, -1 - offset - additionalOffset);
+            return new PointToDraw(rp.move(additionalOffset), marker, -1 - offset - additionalOffset, activator);
         offset = marker.indexOf('<');
         if (offset >= 0)
-            return new PointToDraw(rp.move(additionalOffset), marker, -offset - additionalOffset);
-        return new PointToDraw(rp, marker, 0);
+            return new PointToDraw(rp.move(additionalOffset), marker, -offset - additionalOffset, activator);
+        return new PointToDraw(rp, marker, 0, activator);
     }
 
     public static final class PointToDraw {
         final ReferencePoint rp;
         final String marker;
         final int markerOffset;
+        final Filter<SequencePartitioning> activator;
 
-        public PointToDraw(ReferencePoint rp, String marker, int markerOffset) {
+        public PointToDraw(ReferencePoint rp, String marker, int markerOffset, Filter<SequencePartitioning> activator) {
             this.rp = rp;
             this.marker = marker;
             this.markerOffset = markerOffset;
+            this.activator = activator;
         }
 
-        public void draw(SequencePartitioning partitioning, MultiAlignmentHelper helper, char[] line) {
+        public boolean draw(SequencePartitioning partitioning, MultiAlignmentHelper helper, char[] line, boolean overwrite) {
+            if (activator != null && !activator.accept(partitioning))
+                return true;
+
             int positionInTarget = partitioning.getPosition(rp);
             if (positionInTarget < 0)
-                return;
+                return true;
+
             int positionInHelper = -1;
             for (int i = 0; i < helper.size(); i++)
                 if (positionInTarget == helper.getAbsSubjectPositionAt(i)) {
@@ -167,7 +204,17 @@ public class VDJCAlignmentsFormatter {
                     break;
                 }
             if (positionInHelper == -1)
-                return;
+                return true;
+
+            // Checking
+            if (!overwrite)
+                for (int i = 0; i < marker.length(); i++) {
+                    int positionInLine = positionInHelper + markerOffset + i;
+                    if (positionInLine < 0 || positionInLine >= line.length)
+                        continue;
+                    if (line[positionInLine] != ' ')
+                        return false;
+                }
 
             for (int i = 0; i < marker.length(); i++) {
                 int positionInLine = positionInHelper + markerOffset + i;
@@ -175,6 +222,8 @@ public class VDJCAlignmentsFormatter {
                     continue;
                 line[positionInLine] = marker.charAt(i);
             }
+
+            return true;
         }
     }
 }

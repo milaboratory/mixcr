@@ -65,7 +65,7 @@ and pass this file to export command:
 
 ::
 
-    mixcr exportClones --presetFile myFields.txt clones.clns clones.txt
+    mixcr exportClones --preset-file myFields.txt clones.clns clones.txt
 
 Command line parameters
 -----------------------
@@ -125,13 +125,13 @@ The following fields can be exported both for alignments and clones:
 +-----------------------------------+----------------------------------------------------------+
 | ``-cHits``                        | All C hits.                                              |
 +-----------------------------------+----------------------------------------------------------+
-| ``--vHitsWithoutScore``           | All V hits without scores.                               |
+| ``-vHitsWithScore``               | All V hits with scores.                                  |
 +-----------------------------------+----------------------------------------------------------+
-| ``--dHitsWithoutScore``           | All D hits without scores.                               |
+| ``-dHitsWithScore``               | All D hits with scores.                                  |
 +-----------------------------------+----------------------------------------------------------+
-| ``--jHitsWithoutScore``           | All J hits without scores.                               |
+| ``-jHitsWithScore``               | All J hits with scores.                                  |
 +-----------------------------------+----------------------------------------------------------+
-| ``--cHitsWithoutScore``           | All C hits without scores.                               |
+| ``-cHitsWithScore``               | All C hits with scores.                                  |
 +-----------------------------------+----------------------------------------------------------+
 | ``-vAlignment``                   | Best V alignment.                                        |
 +-----------------------------------+----------------------------------------------------------+
@@ -172,6 +172,40 @@ The following fields can be exported both for alignments and clones:
 +-----------------------------------+----------------------------------------------------------+
 | ``-positionOf [anchorPoint]``     | Outputs position of specified anchor point in the        |
 |                                   | clonal sequence or aligned read.                         |
++-----------------------------------+----------------------------------------------------------+
+| ``-vBestIdentityPercent``         | Alignment identity percent of the best V hit.            |
+|                                   | Percent Identity = (Matches x 100)/Length of aligned     |
+|                                   | region (with gaps)                                       |
++-----------------------------------+----------------------------------------------------------+
+| ``-dBestIdentityPercent``         | Alignment identity percent of the best D hit.            |
++-----------------------------------+----------------------------------------------------------+
+| ``-jBestIdentityPercent``         | Alignment identity percent of the best J hit.            |
++-----------------------------------+----------------------------------------------------------+
+| ``-cBestIdentityPercent``         | Alignment identity percent of the best C hit.            |
++-----------------------------------+----------------------------------------------------------+
+| ``-vIdentityPercents``            | Alignment identity percents for all V hits.              |
++-----------------------------------+----------------------------------------------------------+
+| ``-dIdentityPercents``            | Alignment identity percents for all D hits.              |
++-----------------------------------+----------------------------------------------------------+
+| ``-jIdentityPercents``            | Alignment identity percents for all J hits.              |
++-----------------------------------+----------------------------------------------------------+
+| ``-cIdentityPercents``            | Alignment identity percents for all C hits.              |
++-----------------------------------+----------------------------------------------------------+
+| ``-vFamily``                      | Best V hit family.                                       |
++-----------------------------------+----------------------------------------------------------+
+| ``-dFamily``                      | Best D hit family.                                       |
++-----------------------------------+----------------------------------------------------------+
+| ``-jFamily``                      | Best J hit family.                                       |
++-----------------------------------+----------------------------------------------------------+
+| ``-cFamily``                      | Best C hit family.                                       |
++-----------------------------------+----------------------------------------------------------+
+| ``-vFamilies``                    | All V hit families.                                      |
++-----------------------------------+----------------------------------------------------------+
+| ``-dFamilies``                    | All D hit families.                                      |
++-----------------------------------+----------------------------------------------------------+
+| ``-jFamilies``                    | All J hit families.                                      |
++-----------------------------------+----------------------------------------------------------+
+| ``-cFamilies``                    | All C hit families.                                      |
 +-----------------------------------+----------------------------------------------------------+
 
 
@@ -275,22 +309,32 @@ The following table shows the correspondance between anchor point and positions 
 +--------------------------+---------------------+--------------------+
 | FR3End / CDR3Begin       | 9                   | 10                 |
 +--------------------------+---------------------+--------------------+
-| VEndTrimmed              | 10                  | 11                 |
+| VEnd / *PSegmentBegin*   | 10                  | 11                 |
 +--------------------------+---------------------+--------------------+
-| DBeginTrimmed            | 11                  | 12                 |
+| VEndTrimmed              | 11                  | 12                 |
 +--------------------------+---------------------+--------------------+
-| DEndTrimmed              | 12                  | 13                 |
+| DBeginTrimmed            | 12                  | 13                 |
 +--------------------------+---------------------+--------------------+
-| JBeginTrimmed            | 13                  | 14                 |
+| DBegin / *PSegmentEnd*   | 13                  | 14                 |
 +--------------------------+---------------------+--------------------+
-| CDR3End / FR4Begin       | 14                  | 15                 |
+| DEnd / *PSegmentBegin*   | 14                  | 15                 |
 +--------------------------+---------------------+--------------------+
-| FR4End                   | 15                  | 16                 |
+| DEndTrimmed              | 15                  | 16                 |
 +--------------------------+---------------------+--------------------+
-| CBegin                   | 16                  | 17                 |
+| JBeginTrimmed            | 16                  | 17                 |
 +--------------------------+---------------------+--------------------+
-| CExon1End                | 17                  | 18                 |
+| JBegin / *PSegmentEnd*   | 17                  | 18                 |
 +--------------------------+---------------------+--------------------+
+| CDR3End / FR4Begin       | 18                  | 19                 |
++--------------------------+---------------------+--------------------+
+| FR4End                   | 19                  | 20                 |
++--------------------------+---------------------+--------------------+
+| CBegin                   | 20                  | 21                 |
++--------------------------+---------------------+--------------------+
+| CExon1End                | 21                  | 22                 |
++--------------------------+---------------------+--------------------+
+
+Positions of anchor points like ``VEnd`` are printed only if corresponding P-segment was detected in the sequence, in this case e.g. P-segment of V gene can be found between positions of ``VEnd`` and ``VEndTrimmed``.
 
 Examples
 --------
@@ -663,17 +707,17 @@ Finally, one can export reads aggregated by each clone into separate ``.fastq`` 
 
     mixcr align -g -l IGH input.fastq alignments.vdjca.gz
 
-With this option MiXCR will store original reads in the ``.vdjca`` file. Then one can export reads corresponding for particular clone with ``exportReads`` command. For example, export all reads that were assembled into the first clone (clone with cloneId = 0):
+With this option MiXCR will store original reads in the ``.vdjca`` file. Then one can export reads corresponding for particular clone with ``exportReadsForClones`` command. For example, export all reads that were assembled into the first clone (clone with cloneId = 0):
 
 ::
 
-    mixcr exportReads index_file alignments.vdjca.gz 0 reads.fastq.gz
+    mixcr exportReadsForClones index_file alignments.vdjca.gz 0 reads.fastq.gz
 
 This will create file ``reads_clns0.fastq.gz`` (or two files ``reads_clns0_R1.fastq.gz`` and ``reads_clns0_R2.fastq.gz`` if the original data were paired) with all reads that were aggregated by the first clone. One can export reads for several clones at a time:
 
 ::
 
-    mixcr exportReads index_file alignments.vdjca.gz 0 1 2 33 54 reads.fastq.gz
+    mixcr exportReadsForClones index_file alignments.vdjca.gz 0 1 2 33 54 reads.fastq.gz
 
 This will create several files (``reads_clns0.fastq.gz``, ``reads_clns1.fastq.gz`` etc.) for each clone with cloneId equal to 0, 1, 2, 33 and 54 respectively.
 

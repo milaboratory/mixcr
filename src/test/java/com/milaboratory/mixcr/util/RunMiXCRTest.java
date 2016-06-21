@@ -3,6 +3,7 @@ package com.milaboratory.mixcr.util;
 import cc.redberry.pipe.CUtils;
 import com.milaboratory.core.io.sequence.PairedRead;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
+import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.cli.ActionAlign;
 import com.milaboratory.mixcr.reference.GeneType;

@@ -34,10 +34,15 @@ import org.apache.commons.math3.random.Well44497a;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.*;
 
 import static com.milaboratory.mixcr.reference.ReferencePoint.*;
 import static com.milaboratory.mixcr.reference.GeneFeature.*;
+import static com.milaboratory.mixcr.reference.ReferencePoint.DBegin;
+import static com.milaboratory.mixcr.reference.ReferencePoint.DEnd;
+import static com.milaboratory.mixcr.reference.ReferencePoint.VEnd;
 import static org.junit.Assert.*;
 
 /**
@@ -101,7 +106,7 @@ public class GeneFeatureTest {
 
         f1 = createWithOffsets(1, 3, -2, 0);
         f2 = createWithOffsets(3, 5, 1, -1);
-        f3 = createWithOffsets(5, 7, -2, 5);
+        f3 = createWithOffsets(5, 7, -1, 5);
         expected = create(new int[]{1, 3, 3, 7}, new int[]{-2, 0, 1, 5});
         actual = new GeneFeature(f2, f1, f3);
         assertEquals(expected, actual);
@@ -135,6 +140,17 @@ public class GeneFeatureTest {
         );
 
         assertEquals(f2, new GeneFeature(f1, -4, -2));
+    }
+
+
+    @Test
+    public void testReversed() throws Exception {
+        GeneFeature gf = GeneFeature.parse("{FR1Begin:VEnd}+{VEnd:VEnd(-20)}");
+        assertEquals(2, gf.size());
+        gf = GeneFeature.parse("{FR1Begin:VEnd}").append(GeneFeature.parse("{VEnd:VEnd(-20)}"));
+        assertEquals(2, gf.size());
+        gf = GeneFeature.VGeneWithP;
+        assertEquals(2, gf.size());
     }
 
     @Test
@@ -357,6 +373,28 @@ public class GeneFeatureTest {
     }
 
     @Test
+    public void testReverse1() throws Exception {
+        assertEquals(new GeneFeature(ReferencePoint.DEnd, ReferencePoint.DBegin), DRegion.reverse());
+    }
+
+    @Test
+    public void testIntersection13() throws Exception {
+        assertEquals(VRegionWithP, intersection(VRegionWithP, VRegionWithP));
+        assertEquals(DRegionWithP, intersection(DRegionWithP, DRegionWithP));
+    }
+
+    @Test
+    public void testIntersection14() throws Exception {
+        GeneFeature aa1 = VRegion.append(new GeneFeature(VEnd, VEnd.move(-20)));
+        GeneFeature aa2 = VRegion.append(new GeneFeature(VEnd, VEnd.move(-15)));
+        assertEquals(aa2, intersection(aa1, aa2));
+        GeneFeature dd1 = new GeneFeature(DEnd.move(-3), DBegin).append(DRegion).append(GermlineDPSegment);
+        GeneFeature dd2 = GermlineDPSegment.append(DRegion).append(new GeneFeature(DEnd, DBegin.move(3)));
+        GeneFeature dd3 = new GeneFeature(DEnd.move(-3), DBegin).append(DRegion).append(new GeneFeature(DEnd, DBegin.move(3)));
+        assertEquals(dd3, intersection(dd1, dd2));
+    }
+
+    @Test
     public void testEncode1() throws Exception {
         Collection<GeneFeature> features = GeneFeature.getFeaturesByName().values();
         for (GeneFeature feature : features)
@@ -372,21 +410,35 @@ public class GeneFeatureTest {
     public void testListForDocumentation() throws Exception {
         getFeatureByName("sd");
         List<GFT> gfts = new ArrayList<>();
-        int withh1 = 25, withh2 = 35;
-        String sep = "+" + chars(withh1 + 2, '-') + "+" + chars(withh2 + 2, '-') + "+";
-        for (Map.Entry<GeneFeature, String> entry : nameByFeature.entrySet()) {
-            String name = entry.getValue();
-            String value = encode(entry.getKey(), false);
-            gfts.add(new GFT(entry.getKey(),
-                    "| " + fixed(name, withh1) + " | " + fixed(value, withh2) + " |"));
-        }
+        Field[] declaredFields = GeneFeature.class.getDeclaredFields();
+        for (Field field : declaredFields)
+            if (Modifier.isStatic(field.getModifiers()) &&
+                    field.getType() == GeneFeature.class) {
+                GeneFeature value = (GeneFeature) field.get(null);
+                String name = field.getName();
+                gfts.add(new GFT(value, name, field.getAnnotation(GeneFeature.Doc.class).value()));
+            }
+
         Collections.sort(gfts);
-        System.out.println(sep);
-        System.out.println("| " + fixed("Gene Feature Name", withh1) + " | " + fixed("Gene feature decomposition", withh2) + " |");
-        String sep1 = "+" + chars(withh1 + 2, '=') + "+" + chars(withh2 + 2, '=') + "+";
-        System.out.println(sep1);
+        int widthName = 0, widthValue = 0, widthDoc = 0;
         for (GFT gft : gfts) {
-            System.out.println(gft.text);
+            widthName = Math.max(widthName, gft.name.length());
+            widthValue = Math.max(widthValue, gft.value.length());
+            widthDoc = Math.max(widthDoc, gft.doc.length());
+        }
+
+        String sepHeader = "+" + chars(widthName + 2, '=') + "+" + chars(widthValue + 2, '=') +
+                "+" + chars(widthDoc + 2, '=') + "+";
+        String sep = "+" + chars(widthName + 2, '-') + "+" + chars(widthValue + 2, '-') +
+                "+" + chars(widthDoc + 2, '-') + "+";
+
+        System.out.println(sep);
+        System.out.println("| " + fixed("Gene Feature Name", widthName) + " | " +
+                fixed("Gene feature decomposition", widthValue) + " | " + fixed("Documentation", widthDoc) + " |");
+        System.out.println(sepHeader);
+        for (GFT gft : gfts) {
+            System.out.println("| " + fixed(gft.name, widthName) + " | " +
+                    fixed(gft.value, widthValue) + " | " + fixed(gft.doc, widthDoc) + " |");
             System.out.println(sep);
         }
     }
@@ -403,11 +455,15 @@ public class GeneFeatureTest {
 
     private static final class GFT implements Comparable<GFT> {
         final GeneFeature feature;
-        final String text;
+        final String name;
+        final String value;
+        final String doc;
 
-        private GFT(GeneFeature feature, String text) {
+        public GFT(GeneFeature feature, String name, String doc) {
             this.feature = feature;
-            this.text = text;
+            this.name = "``" + name + "``";
+            this.value = "``" + encode(feature, false).replace("+", "`` + ``") + "``";
+            this.doc = doc;
         }
 
         @Override

@@ -22,14 +22,14 @@ The following flowchart shows the pipeline of ``assemble``:
 
 This pipeline consists of the following steps:
 
-1. The assembler sequentially processes records (aligned reads) from
-   input ``.vdjca`` file produced by :ref:`align <ref-align>`. On the
-   first step, assembler tries to extract gene feature sequences from
-   aligned reads (called *clonal sequence*) specified by
-   ``assemblingFeatures`` parameter (``CDR3`` by default); the
-   clonotypes are assembled with respect to *clonal sequence*. If
-   aligned read does not contain clonal sequence (e.g. ``CDR3`` region),
-   it will be dropped.
+1.  The assembler sequentially processes records (aligned reads) from
+    input ``.vdjca`` file produced by :ref:`align <ref-align>`. On the
+    first step, assembler tries to extract gene feature sequences from
+    aligned reads (called *clonal sequence*) specified by
+    ``assemblingFeatures`` parameter (``CDR3`` by default); the
+    clonotypes are assembled with respect to *clonal sequence*. If
+    aligned read does not contain clonal sequence (e.g. ``CDR3`` region),
+    it will be dropped.
 
 2.  If clonal sequence contains at least one nucleotide with low quality
     (less than ``badQualityThreshold`` parameter value), then this record
@@ -38,9 +38,10 @@ This pipeline consists of the following steps:
     ``maxBadPointsPercent`` parameter value, then this record will be
     finally dropped. Records with clonal sequence containing only good
     quality nucleotides are used to build core clonotypes by grouping
-    records by equality of clonal sequences (e.g. CDR3). Each core
-    clonotype has two main properties: clonal sequence and ``count`` ---
-    a number of records aggregated by this clonotype.
+    records by equality of clonal sequences (e.g. CDR3). The sequence quality
+    of the resulting core clonotype will be equal to the total of qualities of the 
+    assembled reads. Each core clonotype has two main properties: clonal 
+    sequence and ``count`` --- a number of records aggregated by this clonotype.
 
 3.  After the core clonotypes are built, MiXCR runs *mapping procedure*
     that processes records deferred on the previous step. *Mapping* is
@@ -127,20 +128,31 @@ example:
 
 Other global parameters are:
 
-+-------------------------------+-----------------+-----------------------------------------------------------------------------------------+
-| Parameter                     | Default value   | Description                                                                             |
-+===============================+=================+=========================================================================================+
-| ``badQualityThreshold``       | ``20``          | Minimal value of sequencing quality score: nucleotides with lower quality are           |
-|                               |                 | considered as "bad". If sequence contains at least one "bad" nucleotide, it will be     |
-|                               |                 | deferred at initial assembling stage, for further processing by mapper.                 |
-+-------------------------------+-----------------+-----------------------------------------------------------------------------------------+
-| ``maxBadPointsPercent``       | ``0.7``         | Maximal allowed percent of "bad" points in sequence: if sequence contains more than     |
-|                               |                 | ``maxBadPointsPercent`` "bad" nucleotides, it will be dropped.                          |
-+-------------------------------+-----------------+-----------------------------------------------------------------------------------------+
-| ``addReadsCountOnClustering`` | ``false``       | Aggregate cluster counts when assembling final clones: if ``addReadsCountOnClustering`` |
-|                               |                 | is ``true``, then all children clone counts will be added to the head clone; thus head  | 
-|                               |                 | clone count will be a total of its initial count and counts of all its children.        |
-+-------------------------------+-----------------+-----------------------------------------------------------------------------------------+
++---------------------------------+-----------------+------------------------------------------------------------------------------------------+
+| Parameter                       | Default value   | Description                                                                              |
++=================================+=================+==========================================================================================+
+| ``minimalClonalSequenceLength`` |  ``12``         | Minimal length of clonal sequence                                                        |
++---------------------------------+-----------------+------------------------------------------------------------------------------------------+
+| ``minimalMeanQuality``          |  ``15``         | Minimal value of mean quality to consider sequence as a "good" one. If mean sequence     | 
+|                                 |                 | quality is lower than ``minimalMeanQuality``, then that sequence will be deferred for    |
+|                                 |                 | further processing by mapper.                                                            |
++---------------------------------+-----------------+------------------------------------------------------------------------------------------+
+| ``minimalQuality``              |  ``20``         | Minimal allowed quality of each nucleotide of aggregated clone. If at least one          | 
+|                                 |                 | nucleotide in the aggregated clone has quality lower than ``minimalQuality``, this clone |
+|                                 |                 | will be dropped (remember that qualities of reads are summed when assembling core        |
+|                                 |                 | clonotypes).                                                                             |
++---------------------------------+-----------------+------------------------------------------------------------------------------------------+
+| ``badQualityThreshold``         | ``20``          | Minimal value of sequencing quality score: nucleotides with lower quality are            |
+|                                 |                 | considered as "bad". If sequence contains at least one "bad" nucleotide, it will be      |
+|                                 |                 | deferred at initial assembling stage, for further processing by mapper.                  |
++---------------------------------+-----------------+------------------------------------------------------------------------------------------+
+| ``maxBadPointsPercent``         | ``0.7``         | Maximal allowed percent of "bad" points in sequence: if sequence contains more than      |
+|                                 |                 | ``maxBadPointsPercent`` "bad" nucleotides, it will be dropped.                           |
++---------------------------------+-----------------+------------------------------------------------------------------------------------------+
+| ``addReadsCountOnClustering``   | ``false``       | Aggregate cluster counts when assembling final clones: if ``addReadsCountOnClustering``  |
+|                                 |                 | is ``true``, then all children clone counts will be added to the head clone; thus head   | 
+|                                 |                 | clone count will be a total of its initial count and counts of all its children.         |
++---------------------------------+-----------------+------------------------------------------------------------------------------------------+
 
 One can override these parameters in the following way:
 
@@ -154,6 +166,46 @@ can set ``maxBadPointsPercent`` to zero:
 ::
 
     mixcr assemble -OmaxBadPointsPercent=0 alignments.vdjca output.clns
+
+Separation of clones with same CDR3 (clonal sequence) but different V/J/C genes
+-------------------------------------------------------------------------------
+
+Since v1.8 MiXCR by default separates clones with equal clonal sequence and different V and J genes
+and optionally can separate clones with different C genes (e.g. do distinguish clones with different
+IG isotype).
+
+To make analysis more robust to sequencing errors there is an additional clustering step to shrink
+artificial diversity generated by this separation mechanism.
+
+The following criteria are used on this pre-clusterization step: more abondant clone (``clone1``) absorbs
+smaller clone (``clone2``) if ``clone2.count < clone1.count * maximalPreClusteringRatio`` (``cloneX.count``
+denotes number of reads in corresponding clone)and ``clone2`` contain top V/J/C gene from ``clone1`` in
+it's corresponding gene list.
+
+The following paramenter control separation behaviour and pre-clusterization:
+
++---------------------------------------+---------------------------+------------------------------------------------------------+
+| Parameter                             | Default value             | Description                                                |
++=======================================+===========================+============================================================+
+| ``maximalPreClusteringRatio``         | ``1.0``                   | See conditions for clustering above for more inforamtion.  |
++---------------------------------------+---------------------------+------------------------------------------------------------+
+| ``separateByV``                       | ``true``                  | If ``false`` clones with equal clonal sequence but         |
+|                                       |                           | different V gene will be merged into single clone.         |
++---------------------------------------+---------------------------+------------------------------------------------------------+
+| ``separateByJ``                       | ``true``                  | If ``false`` clones with equal clonal sequence but         |
+|                                       |                           | different J gene will be merged into single clone.         |
++---------------------------------------+---------------------------+------------------------------------------------------------+
+| ``separateByC``                       | ``false``                 | If ``false`` clones with equal clonal sequence but         |
+|                                       |                           | different C gene will be merged into single clone.         |
++---------------------------------------+---------------------------+------------------------------------------------------------+
+
+Example, in order to separate IG clones by isotypes use the following options:
+
+::
+
+    mixcr assemble -OseparateByC=true alignments.vdjca output.clns
+
+
 
 Clustering strategy
 --------------------

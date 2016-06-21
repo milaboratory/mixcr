@@ -71,9 +71,18 @@ The following table contains description of command line options for ``align``:
 |                                     |                            | ``-descrR1`` and ``-descrR2`` options in                   |
 |                                     |                            | :ref:`exportAlignments <ref-export>` action).              |
 +-------------------------------------+----------------------------+------------------------------------------------------------+
+| ``-v``, ``--write-all``             |                            | Write alignment results for all input reads: including     |
+|                                     |                            | empty results for non-aligned reads. This option also turns|
+|                                     |                            | off "same locus filter", so ``--diff-loci`` has no effect  |
+|                                     |                            | if this option is specified.                               |
++-------------------------------------+----------------------------+------------------------------------------------------------+
 | ``-g``, ``--save-reads``            |                            | Copy read(s) from ``.fastq`` or ``.fasta`` to ``.vdjca``   |
 |                                     |                            | file (this is required for exporting reads aggregated by   |
 |                                     |                            | clones; see :ref:`this section <ref-exporting-reads>`).    |
++-------------------------------------+----------------------------+------------------------------------------------------------+
+| ``--not-aligned-R1``                |                            | Write all not aligned reads (R1) to the specified file.    |
++-------------------------------------+----------------------------+------------------------------------------------------------+
+| ``--not-aligned-R2``                |                            | Write all not aligned reads (R) to the specified file.     |
 +-------------------------------------+----------------------------+------------------------------------------------------------+
 | ``-Oparameter=value``               |                            | Overrides default value of aligner ``parameter``           |
 |                                     |                            | (see next subsection).                                     |

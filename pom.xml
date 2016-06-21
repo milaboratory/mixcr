@@ -32,7 +32,7 @@
 
     <groupId>com.milaboratory</groupId>
     <artifactId>mixcr</artifactId>
-    <version>1.7.4</version>
+    <version>1.8</version>
     <packaging>jar</packaging>
     <name>MiXCR</name>
 
@@ -44,7 +44,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <milib.version>1.4-SNAPSHOT</milib.version>
+        <milib.version>1.4</milib.version>
     </properties>
 
     <dependencies>
@@ -56,7 +56,7 @@
 
         <dependency>
             <groupId>com.milaboratory</groupId>
-            <artifactId>mitools</artifactId>
+            <artifactId>milib</artifactId>
             <version>${milib.version}</version>
         </dependency>
 
@@ -66,6 +66,13 @@
             <version>${milib.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.beust</groupId>
+            <artifactId>jcommander</artifactId>
+            <version>1.48</version>
+            <optional>true</optional>
         </dependency>
 
         <dependency>
@@ -79,12 +86,6 @@
             <groupId>net.sf.trove4j</groupId>
             <artifactId>trove4j</artifactId>
             <version>3.0.3</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.beust</groupId>
-            <artifactId>jcommander</artifactId>
-            <version>1.30</version>
         </dependency>
 
         <dependency>
@@ -196,7 +197,7 @@
                             <minimizeJar>true</minimizeJar>
                             <filters>
                                 <filter>
-                                    <artifact>com.milaboratory:micommons</artifact>
+                                    <artifact>com.milaboratory:milib</artifact>
                                     <includes>
                                         <include>**</include>
                                     </includes>

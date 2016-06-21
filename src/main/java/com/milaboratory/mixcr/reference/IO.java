@@ -164,14 +164,14 @@ class IO {
         public void write(PrimitivO output, GeneFeature object) {
             output.writeObject(object.regions);
             // Saving this gene feature for the all subsequent serialization
-            output.putKnownReference(object);
+            // output.putKnownReference(object); // Commented in V07 VDJCA
         }
 
         @Override
         public GeneFeature read(PrimitivI input) {
             GeneFeature object = new GeneFeature(input.readObject(GeneFeature.ReferenceRange[].class), true);
             // Saving this gene feature for the all subsequent deserialization
-            input.putKnownReference(object);
+            // input.putKnownReference(object); // Commented in V07 VDJCA
             return object;
         }
 

@@ -29,6 +29,7 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.alignment.Alignment;
+import com.milaboratory.core.alignment.AlignmentHelper;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.reference.GeneFeature;
@@ -109,6 +110,17 @@ public final class VDJCHit implements Comparable<VDJCHit> {
         return new TargetPartitioning(targetIndex, this);
     }
 
+    public float getIdentity() {
+        float identity = 0;
+        int tSize = 0;
+        for (Alignment<NucleotideSequence> alignment : alignments) {
+            AlignmentHelper h = alignment.getAlignmentHelper();
+            identity += h.identity() * h.size();
+            tSize += h.size();
+        }
+        return identity / tSize;
+    }
+
     @Override
     public String toString() {
         return allele.getName() + "[" + score + "]";
@@ -116,7 +128,10 @@ public final class VDJCHit implements Comparable<VDJCHit> {
 
     @Override
     public int compareTo(VDJCHit o) {
-        return Float.compare(o.score, score);
+        int compare = Float.compare(o.score, score);
+        if (compare == 0)
+            compare = allele.getId().compareTo(o.allele.getId());
+        return compare;
     }
 
     @Override

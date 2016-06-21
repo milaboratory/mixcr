@@ -31,9 +31,9 @@ package com.milaboratory.mixcr.cli;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
-import com.milaboratory.mitools.cli.Action;
-import com.milaboratory.mitools.cli.ActionHelper;
-import com.milaboratory.mitools.cli.ActionParameters;
+import com.milaboratory.cli.Action;
+import com.milaboratory.cli.ActionHelper;
+import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.mixcr.reference.*;
 import com.milaboratory.mixcr.reference.builder.FastaLocusBuilder;
 import com.milaboratory.mixcr.reference.builder.FastaLocusBuilderParametersBundle;
@@ -219,7 +219,7 @@ public class ActionImportSegments implements Action {
         //@Parameter(description = "input_file_V.fasta input_file_J.fasta [input_file_D.fasta]")
         //public List<String> parameters;
 
-        @Parameter(description = "Import parameters (name of built-in parameter set of a name of JSON file with " +
+        @Parameter(description = "Import parameters (name of built-in parameter set or a name of JSON file with " +
                 "custom import parameters).", names = {"-p", "--parameters"})
         public String builderParametersName = "imgt";
 

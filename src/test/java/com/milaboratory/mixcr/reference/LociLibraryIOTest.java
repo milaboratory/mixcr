@@ -119,6 +119,7 @@ public class LociLibraryIOTest {
     }
 
     @Test
+    @Ignore
     public void test3ReadLL1() throws Exception {
         InputStream sample = LociLibraryReader.class.getClassLoader().getResourceAsStream("reference/mi.ll");
         LociLibrary library = LociLibraryReader.read(sample, true);
@@ -128,6 +129,23 @@ public class LociLibraryIOTest {
                 //System.out.println(AminoAcidSequence.translate(allele.getFeature(VRegion), 0));
                 System.out.println(allele.getFeature(VRegion));
                 System.out.println(allele.getFeature(FR3));
+                System.out.println(allele.isFunctional());
+                System.out.println(Arrays.toString(allele.getPartitioning().points));
+            }
+        }
+    }
+
+    @Test
+    @Ignore
+    public void test3ReadLL2() throws Exception {
+        InputStream sample = LociLibraryReader.class.getClassLoader().getResourceAsStream("reference/mi.ll");
+        LociLibrary library = LociLibraryReader.read(sample, true);
+        for (Allele allele : library.getAllAlleles(Species.HomoSapiens)) {
+            if (allele.getName().contains("IGHJ5")) {
+                System.out.println(allele.getName());
+                //System.out.println(AminoAcidSequence.translate(allele.getFeature(VRegion), 0));
+                System.out.println(allele.getFeature(GermlineJCDR3Part));
+                //System.out.println(allele.getFeature(FR3));
                 System.out.println(allele.isFunctional());
                 System.out.println(Arrays.toString(allele.getPartitioning().points));
             }

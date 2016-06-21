@@ -28,7 +28,7 @@
  */
 package com.milaboratory.mixcr.cli;
 
-import com.milaboratory.mitools.cli.JCommanderBasedMain;
+import com.milaboratory.cli.JCommanderBasedMain;
 import com.milaboratory.mixcr.util.TempFileManager;
 import com.milaboratory.mixcr.util.VersionInfoProvider;
 
@@ -53,7 +53,10 @@ public class Main {
                 new ActionInfo(),
                 new ActionExportCloneReads(),
                 new VersionInfoAction(),
-                new ActionImportSegments());
+                new ActionImportSegments(),
+                new ActionAlignmentsDiff(),
+                new ActionAssemblePartialAlignments(),
+                new ActionExportReads());
 
         // Adding version info callback
         main.setVersionInfoCallback(new Runnable() {

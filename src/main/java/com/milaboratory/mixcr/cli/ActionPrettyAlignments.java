@@ -38,14 +38,15 @@ import com.milaboratory.core.alignment.AlignmentHelper;
 import com.milaboratory.core.alignment.MultiAlignmentHelper;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mitools.cli.Action;
-import com.milaboratory.mitools.cli.ActionHelper;
-import com.milaboratory.mitools.cli.ActionParameters;
+import com.milaboratory.cli.Action;
+import com.milaboratory.cli.ActionHelper;
+import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.cli.afiltering.AFilter;
 import com.milaboratory.mixcr.reference.GeneFeature;
 import com.milaboratory.mixcr.reference.GeneType;
 import com.milaboratory.mixcr.reference.LociLibraryManager;
+import com.milaboratory.mixcr.reference.Locus;
 import com.milaboratory.util.NSequenceWithQualityPrintHelper;
 
 import java.io.BufferedOutputStream;
@@ -54,6 +55,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import static cc.redberry.primitives.FilterUtil.ACCEPT_ALL;
 import static cc.redberry.primitives.FilterUtil.and;
@@ -102,7 +104,11 @@ public class ActionPrettyAlignments implements Action {
     public void outputCompact(PrintStream output, final VDJCAlignments alignments) {
         output.println(">>> Read id: " + alignments.getReadId());
         output.println();
+        final String[] descriptions = alignments.getDescriptions();
         for (int i = 0; i < alignments.numberOfTargets(); i++) {
+            if (actionParameters.printDescriptions() && descriptions != null)
+                output.println(">>> Description: " + descriptions[i] + "\n");
+
             MultiAlignmentHelper targetAsMultiAlignment = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, i);
             if (targetAsMultiAlignment == null)
                 continue;
@@ -237,13 +243,17 @@ public class ActionPrettyAlignments implements Action {
         public Boolean alleleSequence = null;
 
         @Parameter(description = "Limit number of alignments before filtering",
-                names = {"-l", "--limitBefore"})
+                names = {"-b", "--limitBefore"})
         public Integer limitBefore = null;
 
         @Parameter(description = "Limit number of filtered alignments; no more " +
                 "than N alignments will be outputted",
                 names = {"-n", "--limit"})
         public Integer limitAfter = null;
+
+        @Parameter(description = "Filter export to specific loci (e.g. TRA or IGH).",
+                names = {"-l", "--filter-locus"})
+        public String loci = "ALL";
 
         @Parameter(description = "Number of output alignments to skip",
                 names = {"-s", "--skip"})
@@ -252,6 +262,14 @@ public class ActionPrettyAlignments implements Action {
         @Parameter(description = "Only output alignments where CDR3 contains given substring",
                 names = {"-c", "--cdr3-contains"})
         public String cdr3Contains = null;
+
+        @Parameter(description = "Only output alignments where CDR3 exactly equals to given sequence",
+                names = {"-e", "--cdr3-equals"})
+        public String cdr3Equals = null;
+
+        @Parameter(description = "Only output alignments which contains corresponding gene feature",
+                names = {"-g", "--feature"})
+        public String feature = null;
 
         @Parameter(description = "Only output alignments where target read contains given substring",
                 names = {"-r", "--read-contains"})
@@ -265,10 +283,32 @@ public class ActionPrettyAlignments implements Action {
                 names = {"-v", "--verbose"})
         public Boolean verbose = null;
 
+        @Parameter(description = "Print descriptions",
+                names = {"-d", "--descriptions"})
+        public Boolean descr = null;
+
+        public Set<Locus> getLoci() {
+            return Util.parseLoci(loci);
+        }
+
         public Filter<VDJCAlignments> getFilter() {
+            final Set<Locus> loci = getLoci();
+
             List<Filter<VDJCAlignments>> filters = new ArrayList<>();
             if (filter != null)
                 filters.add(AFilter.build(filter));
+
+            filters.add(new Filter<VDJCAlignments>() {
+                @Override
+                public boolean accept(VDJCAlignments object) {
+                    for (GeneType gt : GeneType.VJC_REFERENCE) {
+                        VDJCHit bestHit = object.getBestHit(gt);
+                        if (bestHit != null && loci.contains(bestHit.getAllele().getLocus()))
+                            return true;
+                    }
+                    return false;
+                }
+            });
 
             if (cdr3Contains != null)
                 filters.add(new Filter<VDJCAlignments>() {
@@ -278,6 +318,17 @@ public class ActionPrettyAlignments implements Action {
                         return feature != null && feature.getSequence().toString().contains(cdr3Contains);
                     }
                 });
+
+            if (feature != null) {
+                final GeneFeature feature = GeneFeature.parse(this.feature);
+                filters.add(new Filter<VDJCAlignments>() {
+                    @Override
+                    public boolean accept(VDJCAlignments object) {
+                        NSequenceWithQuality f = object.getFeature(feature);
+                        return f != null && f.size() > 0;
+                    }
+                });
+            }
 
             if (readContains != null)
                 filters.add(new Filter<VDJCAlignments>() {
@@ -290,10 +341,25 @@ public class ActionPrettyAlignments implements Action {
                     }
                 });
 
+            if (cdr3Equals != null) {
+                final NucleotideSequence seq = new NucleotideSequence(cdr3Equals);
+                filters.add(new Filter<VDJCAlignments>() {
+                    @Override
+                    public boolean accept(VDJCAlignments object) {
+                        NSequenceWithQuality feature = object.getFeature(GeneFeature.CDR3);
+                        return feature != null && feature.getSequence().equals(seq);
+                    }
+                });
+            }
+
             if (filters.isEmpty())
                 return ACCEPT_ALL;
 
             return and(filters.toArray(new Filter[filters.size()]));
+        }
+
+        public boolean printDescriptions() {
+            return descr != null && descr;
         }
 
         public boolean isVerbose() {

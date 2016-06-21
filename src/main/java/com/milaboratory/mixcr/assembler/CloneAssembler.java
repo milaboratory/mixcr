@@ -41,18 +41,14 @@ import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.core.tree.MutationGuide;
 import com.milaboratory.core.tree.NeighborhoodIterator;
 import com.milaboratory.core.tree.SequenceTreeMap;
-import com.milaboratory.mixcr.basictypes.ClonalSequence;
-import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.basictypes.CloneSet;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.reference.Allele;
-import com.milaboratory.mixcr.reference.AlleleId;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
+import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.reference.*;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.Factory;
 import com.milaboratory.util.RandomUtil;
+import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.map.hash.TIntIntHashMap;
+import gnu.trove.map.hash.TObjectFloatHashMap;
 import gnu.trove.procedure.TObjectProcedure;
 
 import java.util.*;
@@ -71,21 +67,24 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             totalAlignments = new AtomicLong();
     final AtomicInteger cloneIndexGenerator = new AtomicInteger();
     // Storage
-    private final ConcurrentHashMap<ClonalSequence, CloneAccumulator> clones = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<ClonalSequence, CloneAccumulatorContainer> clones = new ConcurrentHashMap<>();
+    private final List<CloneAccumulator> cloneList = new ArrayList<>();
     final AssemblerEventLogger globalLogger;
     private AssemblerEventLogger deferredAlignmentsLogger;
     private TIntIntHashMap idMapping;
-    private volatile SequenceTreeMap<NucleotideSequence, ArrayList<CloneAccumulator>> mappingTree;
+    private volatile SequenceTreeMap<NucleotideSequence, ArrayList<CloneAccumulatorContainer>> mappingTree;
     private ArrayList<CloneAccumulator> clusteredClonesAccumulators;
     private volatile Clone[] realClones;
     private final HashMap<AlleleId, Allele> usedAlleles = new HashMap<>();
     volatile CanReportProgress progressReporter;
     private CloneAssemblerListener listener;
     volatile boolean deferredExists = false;
+    volatile boolean preClusteringDone = false;
+    final TIntIntHashMap preClustered = new TIntIntHashMap();
 
-    public static final Factory<ArrayList<CloneAccumulator>> LIST_FACTORY = new Factory<ArrayList<CloneAccumulator>>() {
+    public static final Factory<ArrayList<CloneAccumulatorContainer>> LIST_FACTORY = new Factory<ArrayList<CloneAccumulatorContainer>>() {
         @Override
-        public ArrayList<CloneAccumulator> create() {
+        public ArrayList<CloneAccumulatorContainer> create() {
             return new ArrayList<>(1);
         }
     };
@@ -135,16 +134,28 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             listener.onNoCandidateFoundForDeferredAlignment(alignments);
     }
 
-    void onDefferedAlignmentMappedToClone(VDJCAlignments alignments, CloneAccumulator accumulator) {
+    void onDeferredAlignmentMappedToClone(VDJCAlignments alignments, CloneAccumulator accumulator) {
         if (listener != null)
             listener.onDeferredAlignmentMappedToClone(alignments, accumulator);
     }
 
     /* Clustering Events */
 
+    void onPreClustered(CloneAccumulator majorClone, CloneAccumulator minorClone) {
+        if (listener != null)
+            listener.onPreClustered(majorClone, minorClone);
+    }
+
     void onClustered(CloneAccumulator majorClone, CloneAccumulator minorClone) {
         if (listener != null)
-            listener.onClustered(majorClone, minorClone);
+            listener.onClustered(majorClone, minorClone, parameters.isAddReadsCountOnClustering());
+    }
+
+    /* Filtering events */
+
+    void onCloneDropped(CloneAccumulator acc) {
+        if (listener != null)
+            listener.onCloneDropped(acc);
     }
 
     public void setListener(CloneAssemblerListener listener) {
@@ -164,41 +175,6 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         return new ClonalSequence(targets);
     }
 
-    private Range[] extractNRegions(ClonalSequence clonalSequence, VDJCAlignments alignments) {
-        int count = 0;
-        boolean dFound;
-        ArrayList<Range> result = new ArrayList<>();
-        Range range;
-        int offset = 0;
-        for (int i = 0; i < parameters.assemblingFeatures.length; ++i) {
-            GeneFeature assemblingFeature = parameters.assemblingFeatures[i];
-            if (!assemblingFeature.contains(VDJunction) && !assemblingFeature.contains(DJJunction))
-                continue;
-            dFound = false;
-
-            range = alignments.getRelativeRange(assemblingFeature, VDJunction);
-            if (range != null) {
-                result.add(range.move(offset));
-                dFound = true;
-            }
-
-            range = alignments.getRelativeRange(assemblingFeature, DJJunction);
-            if (range != null) {
-                result.add(range.move(offset));
-                dFound = true;
-            }
-
-            if (!dFound) {
-                range = alignments.getRelativeRange(assemblingFeature, VJJunction);
-                if (range != null)
-                    result.add(range.move(offset));
-            }
-
-            offset += clonalSequence.get(i).size();
-        }
-        return result.toArray(new Range[result.size()]);
-    }
-
     public VoidProcessor<VDJCAlignments> getInitialAssembler() {
         return new InitialAssembler();
     }
@@ -213,8 +189,8 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             return false;
         deferredAlignmentsLogger = new AssemblerEventLogger();
         mappingTree = new SequenceTreeMap<>(NucleotideSequence.ALPHABET);
-        for (CloneAccumulator accumulator : clones.values())
-            mappingTree.createIfAbsent(accumulator.getSequence().getConcatenated().getSequence(), LIST_FACTORY).add(accumulator);
+        for (CloneAccumulatorContainer container : clones.values())
+            mappingTree.createIfAbsent(container.getSequence().getConcatenated().getSequence(), LIST_FACTORY).add(container);
         return true;
     }
 
@@ -231,6 +207,12 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     public void endMapping() {
         this.mappingTree = null;
         this.deferredAlignmentsLogger.end();
+    }
+
+    public void preClustering() {
+        for (CloneAccumulatorContainer c : clones.values())
+            cloneList.addAll(c.build());
+        preClusteringDone = true;
     }
 
     @Override
@@ -250,18 +232,22 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     public void runClustering() {
         if (clusteredClonesAccumulators != null)
             throw new IllegalStateException("Already clustered.");
+        if (!preClusteringDone)
+            throw new IllegalStateException("No preclustering done.");
+
         @SuppressWarnings("unchecked")
-        Clustering clustering = new Clustering(clones.values(),
+        Clustering clustering = new Clustering(cloneList,
                 new SequenceExtractor<CloneAccumulator, NucleotideSequence>() {
                     @Override
                     public NucleotideSequence getSequence(CloneAccumulator object) {
                         return object.getSequence().getConcatenated().getSequence();
                     }
-                }, new CloneClusteringStrategy(parameters.getCloneClusteringParameters()));
+                }, new CloneClusteringStrategy(parameters.getCloneClusteringParameters(),
+                this));
         this.progressReporter = clustering;
         List<Cluster<CloneAccumulator>> clusters = clustering.performClustering();
         clusteredClonesAccumulators = new ArrayList<>(clusters.size());
-        idMapping = new TIntIntHashMap(clones.size());
+        idMapping = new TIntIntHashMap(cloneList.size());
         for (int i = 0; i < clusters.size(); ++i) {
             final Cluster<CloneAccumulator> cluster = clusters.get(i);
             final CloneAccumulator head = cluster.getHead();
@@ -284,6 +270,8 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     }
 
     public void buildClones() {
+        if (!preClusteringDone)
+            throw new IllegalStateException("No preclustering done.");
         ClonesBuilder builder = new ClonesBuilder();
         progressReporter = builder;
         builder.buildClones();
@@ -309,7 +297,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     }
 
     public OutputPortCloseable<ReadToCloneMapping> getAssembledReadsPort() {
-        return new AssembledReadsPort(globalLogger.createEventsPort(), deferredAlignmentsLogger == null ? null : deferredAlignmentsLogger.createEventsPort(), idMapping);
+        return new AssembledReadsPort(globalLogger.createEventsPort(), deferredAlignmentsLogger == null ? null : deferredAlignmentsLogger.createEventsPort(), idMapping, preClustered);
     }
 
     private int numberOfBadPoints(ClonalSequence clonalSequence) {
@@ -348,34 +336,36 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 droppedAlignments.incrementAndGet();
                 onTooManyLowQualityPoints(input);
                 return;
-            } else if (badPoints > 0) {
+            }
+
+            if (target.getConcatenated().getQuality().meanValue() < parameters.getMinimalMeanQuality()) {
                 // Has some number of bad points but not greater then maxBadPointsToMap
                 log(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadId(), AssemblerEvent.DEFERRED));
                 onAlignmentDeferred(input);
                 return;
             }
+
             //Getting or creating accumulator from map
-            CloneAccumulator accumulator = clones.get(target);
-            if (accumulator == null) {
+            CloneAccumulatorContainer container = clones.get(target);
+            if (container == null) {
                 //Creating accumulator
-                CloneAccumulator temp = new CloneAccumulator(target, extractNRegions(target, input));
+                CloneAccumulatorContainer temp = new CloneAccumulatorContainer();
                 //Trying to put this new clone to map
-                accumulator = clones.putIfAbsent(target, temp);
+                container = clones.putIfAbsent(target, temp);
                 //Assign cloneIndex for the newly created clone only if it was successfully put into map
-                if (accumulator == null) {
+                if (container == null) {
                     //Executed only once for newly created clone
-                    accumulator = temp;
-                    accumulator.setCloneIndex(cloneIndexGenerator.getAndIncrement());
-                    onNewCloneCreated(accumulator);
+                    container = temp;
                 }
                 //accumulator variable contains correct clone from map
             }
+
+            CloneAccumulator acc = container.accumulate(target, input, false);
             //Logging assembler events for subsequent index creation and mapping filtering
-            log(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadId(), accumulator.getCloneIndex()));
+            log(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadId(), acc.getCloneIndex()));
             //Incrementing corresponding counter
             successfullyAssembledAlignments.incrementAndGet();
-            onAlignmentAddedToClone(input, accumulator);
-            accumulator.accumulate(target, input, false);
+            onAlignmentAddedToClone(input, acc);
         }
     }
 
@@ -409,29 +399,31 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             int badPoints = numberOfBadPoints(clonalSequence);
             int threshold = thresholdCalculator.getThreshold(badPoints);
 
-            NeighborhoodIterator<NucleotideSequence, ArrayList<CloneAccumulator>> iterator =
+            NeighborhoodIterator<NucleotideSequence, ArrayList<CloneAccumulatorContainer>> iterator =
                     mappingTree.getNeighborhoodIterator(clonalSequence.getConcatenated().getSequence(),
                             threshold, 0, 0, threshold,
                             new DeferredAlignmentsMapperGuide(clonalSequence.getConcatenated().getQuality(),
                                     parameters.getBadQualityThreshold()));
 
             ArrayList<CloneAccumulator> candidates = new ArrayList<>();
-            ArrayList<CloneAccumulator> assembledClones;
+            ArrayList<CloneAccumulatorContainer> assembledClones;
 
             int minMismatches = -1;
             long count = 0;
             while ((assembledClones = iterator.next()) != null)
-                for (CloneAccumulator accumulator : assembledClones)
+                for (CloneAccumulatorContainer container : assembledClones) {
                     // Version of isCompatible without mutations is used here because
                     // ony substitutions possible in this place
-                    if (clonalSequence.isCompatible(accumulator.getSequence())) {
+                    CloneAccumulator acc = container.accumulators.get(extractSignature(input));
+                    if (acc != null && clonalSequence.isCompatible(acc.getSequence())) {
                         if (minMismatches == -1)
                             minMismatches = iterator.getMismatches();
                         else if (minMismatches < iterator.getMismatches())
                             break;
-                        candidates.add(accumulator);
-                        count += accumulator.count;
+                        candidates.add(acc);
+                        count += acc.count;
                     }
+                }
 
             if (candidates.isEmpty()) {
                 deferredAlignmentsLogger.newEvent(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadId(),
@@ -454,8 +446,17 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             deferredAlignmentsLogger.newEvent(new AssemblerEvent(input.getAlignmentsIndex(),
                     input.getReadId(), minMismatches == 0 ?
                     accumulator.getCloneIndex() : -4 - accumulator.getCloneIndex()));
-            onDefferedAlignmentMappedToClone(input, accumulator);
-            accumulator.accumulate(clonalSequence, input, minMismatches > 0);
+
+            if (minMismatches > 0) {
+                // Mapped
+                onDeferredAlignmentMappedToClone(input, accumulator);
+                accumulator.accumulate(clonalSequence, input, true);
+            } else {
+                // Added to clone as normal alignment,
+                // because sequence exactly equals to clonal sequence
+                onAlignmentAddedToClone(input, accumulator);
+                accumulator.accumulate(clonalSequence, input, false);
+            }
         }
     }
 
@@ -503,13 +504,8 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             else {
                 idMapping = new TIntIntHashMap();
                 //sort clones by count (if not yet sorted by clustering)
-                CloneAccumulator[] sourceArray = clones.values().toArray(new CloneAccumulator[clones.size()]);
-                Arrays.sort(sourceArray, new Comparator<CloneAccumulator>() {
-                    @Override
-                    public int compare(CloneAccumulator o1, CloneAccumulator o2) {
-                        return Long.compare(o2.count, o1.count);
-                    }
-                });
+                CloneAccumulator[] sourceArray = cloneList.toArray(new CloneAccumulator[cloneList.size()]);
+                Arrays.sort(sourceArray, CLONE_ACCUMULATOR_COMPARATOR);
                 for (int i = 0; i < sourceArray.length; i++) {
                     idMapping.put(sourceArray[i].getCloneIndex(), i);
                     sourceArray[i].setCloneIndex(i);
@@ -528,4 +524,229 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             }
         }
     }
+
+    /**
+     * Container for Clone Accumulators with the same clonal sequence but different V/J/C genes.
+     */
+    public final class CloneAccumulatorContainer {
+        final HashMap<VJCSignature, CloneAccumulator> accumulators = new HashMap<>();
+
+        synchronized CloneAccumulator accumulate(ClonalSequence sequence, VDJCAlignments alignments, boolean mapped) {
+            VJCSignature vjcSignature = extractSignature(alignments);
+            CloneAccumulator acc = accumulators.get(vjcSignature);
+            if (acc == null) {
+                acc = new CloneAccumulator(sequence, extractNRegions(sequence, alignments));
+                accumulators.put(vjcSignature, acc);
+                acc.setCloneIndex(cloneIndexGenerator.incrementAndGet());
+                onNewCloneCreated(acc);
+            }
+            acc.accumulate(sequence, alignments, mapped);
+            return acc;
+        }
+
+        /**
+         * Preforms pre-clustering and returns final list of clonotypes.
+         */
+        public List<CloneAccumulator> build() {
+            CloneAccumulator[] accs = accumulators.values().toArray(new CloneAccumulator[accumulators.size()]);
+            for (CloneAccumulator acc : accs)
+                acc.calculateScores(parameters.cloneFactoryParameters);
+            Arrays.sort(accs, CLONE_ACCUMULATOR_COMPARATOR);
+            int deleted = 0;
+            for (int i = 0; i < accs.length - 1; i++) {
+                // null marks clustered clonotypes
+                if (accs[i] == null)
+                    continue;
+
+                // Top V, J and C genes of the major clonotype
+                VJCSignature vjcSignature = extractSignature(accs[i]);
+                long countThreshold = (long) (accs[i].count * parameters.maximalPreClusteringRatio);
+                for (int j = i + 1; j < accs.length; j++)
+                    // Clustering j'th clone to i'th
+                    if (accs[j] != null && accs[j].count <= countThreshold &&
+                            vjcSignature.matchHits(accs[j])) {
+                        accs[i].count += accs[j].count;
+                        accs[i].countMapped += accs[j].countMapped;
+                        onPreClustered(accs[i], accs[j]);
+                        preClustered.put(accs[j].getCloneIndex(), accs[i].getCloneIndex());
+                        accs[j] = null;
+                        ++deleted;
+                    }
+            }
+
+            // Filtering low quality clonotypes
+            List<CloneAccumulator> result = new ArrayList<>(accs.length - deleted);
+
+            out:
+            for (CloneAccumulator acc : accs) {
+                // null marks clustered clonotypes
+                if (acc == null)
+                    continue;
+
+                for (byte b : acc.quality)
+                    if (b < parameters.minimalQuality) {
+                        onCloneDropped(acc);
+                        continue out;
+                    }
+
+                acc.rebuildClonalSequence();
+                result.add(acc);
+            }
+
+            return result;
+        }
+
+        public ClonalSequence getSequence() {
+            return accumulators.values().iterator().next().getSequence();
+        }
+
+        private Range[] extractNRegions(ClonalSequence clonalSequence, VDJCAlignments alignments) {
+            boolean dFound;
+            ArrayList<Range> result = new ArrayList<>();
+            Range range;
+            int offset = 0;
+            for (int i = 0; i < parameters.assemblingFeatures.length; ++i) {
+                GeneFeature assemblingFeature = parameters.assemblingFeatures[i];
+                if (!assemblingFeature.contains(VDJunction) && !assemblingFeature.contains(DJJunction))
+                    continue;
+                dFound = false;
+
+                range = alignments.getRelativeRange(assemblingFeature, VDJunction);
+                if (range != null) {
+                    result.add(range.move(offset));
+                    dFound = true;
+                }
+
+                range = alignments.getRelativeRange(assemblingFeature, DJJunction);
+                if (range != null) {
+                    result.add(range.move(offset));
+                    dFound = true;
+                }
+
+                if (!dFound) {
+                    range = alignments.getRelativeRange(assemblingFeature, VJJunction);
+                    if (range != null)
+                        result.add(range.move(offset));
+                }
+
+                offset += clonalSequence.get(i).size();
+            }
+            return result.toArray(new Range[result.size()]);
+        }
+    }
+
+    VJCSignature extractSignature(VDJCAlignments alignments) {
+        return new VJCSignature(
+                parameters.getSeparateByV() ? getAlleleId(alignments, GeneType.Variable) : DO_NOT_CHECK,
+                parameters.getSeparateByJ() ? getAlleleId(alignments, GeneType.Joining) : DO_NOT_CHECK,
+                parameters.getSeparateByC() ? getAlleleId(alignments, GeneType.Constant) : DO_NOT_CHECK
+        );
+    }
+
+    VJCSignature extractSignature(CloneAccumulator alignments) {
+        return new VJCSignature(
+                parameters.getSeparateByV() ? getAlleleId(alignments, GeneType.Variable) : DO_NOT_CHECK,
+                parameters.getSeparateByJ() ? getAlleleId(alignments, GeneType.Joining) : DO_NOT_CHECK,
+                parameters.getSeparateByC() ? getAlleleId(alignments, GeneType.Constant) : DO_NOT_CHECK
+        );
+    }
+
+    /**
+     * Special marker AlleleID used to make matchHits procedure to ignore V, J or C genes during matchHits procedure
+     */
+    private static final AlleleId DO_NOT_CHECK = new AlleleId(UUID.fromString("8dd1d48e-0f75-410c-bc9c-efb53b1037f2"),
+            new SpeciesAndLocus(0, Locus.IGL), "DO_NOT_CHECK");
+
+    static final class VJCSignature {
+        final AlleleId vAllele, jAllele, cAllele;
+
+        /**
+         * null for absent hits, DO_NOT_CHECK to ignore corresponding gene
+         */
+        VJCSignature(AlleleId vAllele, AlleleId jAllele, AlleleId cAllele) {
+            this.vAllele = vAllele;
+            this.jAllele = jAllele;
+            this.cAllele = cAllele;
+        }
+
+        boolean matchHits(CloneAccumulator acc) {
+            TObjectFloatHashMap<AlleleId> minor;
+
+            if (vAllele != DO_NOT_CHECK) {
+                minor = acc.geneScores.get(GeneType.Variable);
+                if (vAllele == null && (minor != null && !minor.isEmpty()))
+                    return false;
+                if (vAllele != null && minor != null && !minor.containsKey(vAllele))
+                    return false;
+            }
+
+            if (jAllele != DO_NOT_CHECK) {
+                minor = acc.geneScores.get(GeneType.Joining);
+                if (jAllele == null && (minor != null && !minor.isEmpty()))
+                    return false;
+                if (jAllele != null && minor != null && !minor.containsKey(jAllele))
+                    return false;
+            }
+
+            if (cAllele != DO_NOT_CHECK) {
+                minor = acc.geneScores.get(GeneType.Constant);
+                if (cAllele == null && (minor != null && !minor.isEmpty()))
+                    return false;
+                if (cAllele != null && minor != null && !minor.containsKey(cAllele))
+                    return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            VJCSignature that = (VJCSignature) o;
+
+            if (vAllele != null ? !vAllele.equals(that.vAllele) : that.vAllele != null) return false;
+            if (jAllele != null ? !jAllele.equals(that.jAllele) : that.jAllele != null) return false;
+            return !(cAllele != null ? !cAllele.equals(that.cAllele) : that.cAllele != null);
+
+        }
+
+        @Override
+        public int hashCode() {
+            int result = vAllele != null ? vAllele.hashCode() : 0;
+            result = 31 * result + (jAllele != null ? jAllele.hashCode() : 0);
+            result = 31 * result + (cAllele != null ? cAllele.hashCode() : 0);
+            return result;
+        }
+    }
+
+    static AlleleId getAlleleId(VDJCAlignments alignments, GeneType type) {
+        VDJCHit hit = alignments.getBestHit(type);
+        return hit == null ? null : hit.getAllele().getId();
+    }
+
+    static AlleleId getAlleleId(CloneAccumulator acc, GeneType type) {
+        TObjectFloatHashMap<AlleleId> aScores = acc.geneScores.get(type);
+        if (aScores == null || aScores.isEmpty())
+            return null;
+        AlleleId id = null;
+        float maxScore = Float.MIN_VALUE;
+        TObjectFloatIterator<AlleleId> it = aScores.iterator();
+        while (it.hasNext()) {
+            it.advance();
+            if (maxScore < it.value()) {
+                maxScore = it.value();
+                id = it.key();
+            }
+        }
+        return id;
+    }
+
+    static final Comparator<CloneAccumulator> CLONE_ACCUMULATOR_COMPARATOR = new Comparator<CloneAccumulator>() {
+        @Override
+        public int compare(CloneAccumulator o1, CloneAccumulator o2) {
+            return Long.compare(o2.count, o1.count);
+        }
+    };
 }

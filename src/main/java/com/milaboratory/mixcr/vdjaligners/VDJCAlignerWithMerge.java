@@ -30,8 +30,8 @@ package com.milaboratory.mixcr.vdjaligners;
 
 import com.milaboratory.core.io.sequence.PairedRead;
 import com.milaboratory.core.io.sequence.SingleReadImpl;
-import com.milaboratory.mitools.merger.MismatchOnlyPairedReadMerger;
-import com.milaboratory.mitools.merger.PairedReadMergingResult;
+import com.milaboratory.core.merger.MismatchOnlyPairedReadMerger;
+import com.milaboratory.core.merger.PairedReadMergingResult;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.reference.Allele;
 
@@ -72,7 +72,7 @@ public final class VDJCAlignerWithMerge extends VDJCAligner<PairedRead> {
     }
 
     @Override
-    public VDJCAlignmentResult<PairedRead> process(final PairedRead read) {
+    protected VDJCAlignmentResult<PairedRead> process0(final PairedRead read) {
         PairedReadMergingResult merged = merger.process(read);
         if (merged.isSuccessful()) {
             VDJCAlignments alignment = singleAligner.process(
@@ -80,9 +80,20 @@ public final class VDJCAlignerWithMerge extends VDJCAligner<PairedRead> {
             if (listener != null)
                 listener.onSuccessfulOverlap(read, alignment);
             if (alignment != null)
-                alignment.setDescriptions(new String[]{read.getR1().getDescription(), read.getR2().getDescription()});
+                alignment.setDescriptions(new String[]{"MOverlapped(" + getMMDescr(merged) + ")"});
             return new VDJCAlignmentResult<>(read, alignment);
         } else
             return pairedAligner.process(read);
+    }
+
+    public static String getMMDescr(PairedReadMergingResult merge) {
+        return getMMDescr(merge.getOverlap(), merge.getErrors());
+    }
+
+    public static String getMMDescr(int matches, int mismatches) {
+        String r = Integer.toString(matches);
+        if (mismatches != 0)
+            r += "-" + mismatches;
+        return r;
     }
 }

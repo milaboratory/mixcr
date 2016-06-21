@@ -31,38 +31,58 @@ package com.milaboratory.mixcr.tests;
 import cc.redberry.pipe.CUtils;
 import com.milaboratory.core.sequence.AminoAcidAlphabet;
 import com.milaboratory.core.sequence.AminoAcidSequence;
+import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.reference.GeneFeature;
 import com.milaboratory.mixcr.reference.LociLibraryManager;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.IOException;
+
 /**
  * Created by dbolotin on 29/12/15.
  */
 public class BackwardCompatibilityTests {
     @Test
-    public void testBC16Alignments() throws Exception {
+    public void testAlignments() throws Exception {
+        assertGoodVDJCA("/backward_compatibility/alignments_v1.6.vdjca.gz", 98);
+        assertGoodVDJCA("/backward_compatibility/test_16.vdjca.gz", 76);
+        assertGoodVDJCA("/backward_compatibility/test_17.vdjca.gz", 75);
+        assertGoodVDJCA("/backward_compatibility/test_18.vdjca.gz", 76);
+    }
+
+    public static void assertGoodVDJCA(String resource, int size) throws IOException {
         try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(BackwardCompatibilityTests.class
-                .getResource("/backward_compatibility/alignments_v1.6.vdjca.gz").getFile(),
+                .getResource(resource).getFile(),
                 LociLibraryManager.getDefault())) {
             int countGood = 0;
             for (VDJCAlignments vdjcAlignments : CUtils.it(reader)) {
-                AminoAcidSequence aaCDR3 = AminoAcidSequence.translateFromCenter(vdjcAlignments.getFeature(GeneFeature.CDR3).getSequence());
+                NSequenceWithQuality cdr3NQ = vdjcAlignments.getFeature(GeneFeature.CDR3);
+                if (cdr3NQ == null)
+                    continue;
+                AminoAcidSequence aaCDR3 = AminoAcidSequence.translateFromCenter(cdr3NQ.getSequence());
                 if (aaCDR3.codeAt(0) == AminoAcidAlphabet.C &&
                         aaCDR3.codeAt(aaCDR3.size() - 1) == AminoAcidAlphabet.F)
                     ++countGood;
             }
-            Assert.assertEquals(98, countGood);
+            Assert.assertEquals(size, countGood);
         }
     }
 
     @Test
     public void testBC16Cloneset() throws Exception {
+        assertGoodCLNS("/backward_compatibility/clones_v1.6.clns.gz", 24, 24);
+        assertGoodCLNS("/backward_compatibility/test_16.clns.gz", 22, 17);
+        assertGoodCLNS("/backward_compatibility/test_17.clns.gz", 21, 16);
+        assertGoodCLNS("/backward_compatibility/test_18.clns.gz", 81, 66);
+    }
+
+    public static void assertGoodCLNS(String resource, int size, int good) throws IOException {
         CloneSet cloneSet = CloneSetIO.read(BackwardCompatibilityTests.class
-                        .getResource("/backward_compatibility/clones_v1.6.clns.gz").getFile(),
+                        .getResource(resource).getFile(),
                 LociLibraryManager.getDefault());
-        Assert.assertEquals(24, cloneSet.size());
+        Assert.assertEquals(size, cloneSet.size());
         int countGood = 0;
         for (Clone clone : cloneSet.getClones()) {
             AminoAcidSequence aaCDR3 = AminoAcidSequence.translateFromCenter(clone.getFeature(GeneFeature.CDR3).getSequence());
@@ -71,6 +91,6 @@ public class BackwardCompatibilityTests {
                 ++countGood;
             }
         }
-        Assert.assertEquals(cloneSet.size(), countGood);
+        Assert.assertEquals(good, countGood);
     }
 }

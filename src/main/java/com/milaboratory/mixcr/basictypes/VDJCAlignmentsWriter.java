@@ -29,6 +29,8 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.mixcr.reference.Allele;
+import com.milaboratory.mixcr.reference.GeneFeature;
+import com.milaboratory.mixcr.reference.GeneType;
 import com.milaboratory.mixcr.util.VersionInfoProvider;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
@@ -40,12 +42,13 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-public final class VDJCAlignmentsWriter implements AutoCloseable {
+public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     static final String MAGIC_V3 = "MiXCR.VDJC.V03";
     static final String MAGIC_V4 = "MiXCR.VDJC.V04";
     static final String MAGIC_V5 = "MiXCR.VDJC.V05";
     static final String MAGIC_V6 = "MiXCR.VDJC.V06";
-    static final String MAGIC = MAGIC_V6;
+    static final String MAGIC_V7 = "MiXCR.VDJC.V07";
+    static final String MAGIC = MAGIC_V7;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
     final PrimitivO output;
@@ -64,6 +67,7 @@ public final class VDJCAlignmentsWriter implements AutoCloseable {
         this.output = new PrimitivO(output);
     }
 
+    @Override
     public void setNumberOfProcessedReads(long numberOfProcessedReads) {
         this.numberOfProcessedReads = numberOfProcessedReads;
     }
@@ -72,6 +76,7 @@ public final class VDJCAlignmentsWriter implements AutoCloseable {
         header(aligner.getParameters(), aligner.getUsedAlleles());
     }
 
+    @Override
     public void header(VDJCAlignerParameters parameters, List<Allele> alleles) {
         if (parameters == null || alleles == null)
             throw new IllegalArgumentException();
@@ -93,9 +98,18 @@ public final class VDJCAlignmentsWriter implements AutoCloseable {
 
         IOUtil.writeAlleleReferences(output, alleles, parameters);
 
+        // Registering links to features to align
+        for (GeneType gt : GeneType.VDJC_REFERENCE) {
+            GeneFeature feature = parameters.getFeatureToAlign(gt);
+            output.writeObject(feature);
+            if (feature != null)
+                output.putKnownReference(feature);
+        }
+
         header = true;
     }
 
+    @Override
     public void write(VDJCAlignments alignment) {
         if (!header)
             throw new IllegalStateException();

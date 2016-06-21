@@ -28,8 +28,10 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
+import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.reference.GeneFeature;
 import com.milaboratory.mixcr.reference.GeneType;
 import com.milaboratory.mixcr.reference.ReferencePoint;
 
@@ -48,6 +50,26 @@ public final class TargetPartitioning extends SequencePartitioning {
     public TargetPartitioning(int targetIndex, EnumMap<GeneType, VDJCHit> hits) {
         this.targetIndex = targetIndex;
         this.hits = hits;
+    }
+
+    @Override
+    protected Range getRange(GeneFeature.ReferenceRange refRange) {
+        Range range = super.getRange(refRange);
+        return range == null ? null :
+                range.isReverse() ?
+                        null : range;
+    }
+
+    @Override
+    protected int getLength(GeneFeature.ReferenceRange refRange) {
+        Range range = getRange(refRange);
+        return range == null ? -1 : range.length();
+    }
+
+    @Override
+    protected boolean isAvailable(GeneFeature.ReferenceRange refRange) {
+        Range range = getRange(refRange);
+        return range != null;
     }
 
     @Override
