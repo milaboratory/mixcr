@@ -92,12 +92,16 @@ The list of command line parameters for both ``exportAlignments`` and
 
 The line parameters are only for ``exportClones``:
 
-+------------------------------------+-------------------------------------------------------------------+
-| ``-o``, ``--filter-out-of-frames`` | Exclude out of frames (fractions will be recalculated)            |
-+------------------------------------+-------------------------------------------------------------------+
-| ``-t``, ``--filter-stops``         | Exclude sequences containing stop codons (fractions will be       |
-|                                    | recalculated)                                                     |
-+------------------------------------+-------------------------------------------------------------------+
++--------------------------------------+-------------------------------------------------------------------+
+| ``-o``, ``--filter-out-of-frames``   | Exclude out of frames (fractions will be recalculated)            |
++--------------------------------------+-------------------------------------------------------------------+
+| ``-t``, ``--filter-stops``           | Exclude sequences containing stop codons (fractions will be       |
+|                                      | recalculated)                                                     |
++--------------------------------------+-------------------------------------------------------------------+
+| ``-c``, ``--minimal-clone-count``    | Filter clones by minimal read count.                              |
++--------------------------------------+-------------------------------------------------------------------+
+| ``-q``, ``--minimal-clone-fraction`` | Filter clones by minimal clone fraction.                          |
++--------------------------------------+-------------------------------------------------------------------+
 
 
 
