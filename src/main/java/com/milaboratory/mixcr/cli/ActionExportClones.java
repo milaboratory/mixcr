@@ -165,7 +165,7 @@ public class ActionExportClones extends ActionExport {
     }
 
     public static class CloneExportParameters extends ActionExportParameters {
-        @Parameter(description = "Exclude out of frames (fractions will be recalculated)",
+        @Parameter(description = "Exclude clones with out-of-frame clonal sequences (fractions will be recalculated)",
                 names = {"-o", "--filter-out-of-frames"})
         public Boolean filterOutOfFrames = false;
 
@@ -173,15 +173,15 @@ public class ActionExportClones extends ActionExport {
                 names = {"-t", "--filter-stops"})
         public Boolean filterStops = false;
 
-        @Parameter(description = "Filter export to specific loci (e.g. TRA or IGH).",
+        @Parameter(description = "Limit export to specific locus (e.g. TRA or IGH) (fractions will be recalculated)",
                 names = {"-l", "--filter-locus"})
         public String loci = "ALL";
 
-        @Parameter(description = "Filter clones by minimal clone fraction.",
+        @Parameter(description = "Filter clones by minimal clone fraction",
                 names = {"-q", "--minimal-clone-fraction"})
         public float minFraction = 0;
 
-        @Parameter(description = "Filter clones by minimal clone read count.",
+        @Parameter(description = "Filter clones by minimal clone read count",
                 names = {"-c", "--minimal-clone-count"})
         public long minCount = 0;
 
