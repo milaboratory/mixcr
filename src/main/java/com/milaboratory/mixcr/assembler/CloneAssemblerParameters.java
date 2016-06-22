@@ -32,6 +32,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.milaboratory.core.sequence.quality.QualityAggregationType;
 import com.milaboratory.mixcr.reference.GeneFeature;
 
 import java.util.Arrays;
@@ -44,6 +45,7 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
     private static final int MAX_MAPPING_REGION = 1000;
     GeneFeature[] assemblingFeatures;
     int minimalClonalSequenceLength;
+    QualityAggregationType qualityAggregationType;
     CloneClusteringParameters cloneClusteringParameters;
     CloneFactoryParameters cloneFactoryParameters;
     boolean separateByV, separateByJ, separateByC;
@@ -60,6 +62,7 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
     @JsonCreator
     public CloneAssemblerParameters(@JsonProperty("assemblingFeatures") GeneFeature[] assemblingFeatures,
                                     @JsonProperty("minimalClonalSequenceLength") int minimalClonalSequenceLength,
+                                    @JsonProperty("qualityAggregationType") QualityAggregationType qualityAggregationType,
                                     @JsonProperty("cloneClusteringParameters") CloneClusteringParameters cloneClusteringParameters,
                                     @JsonProperty("cloneFactoryParameters") CloneFactoryParameters cloneFactoryParameters,
                                     @JsonProperty("separateByV") boolean separateByV,
@@ -74,6 +77,7 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
                                     @JsonProperty("minimalQuality") byte minimalQuality) {
         this.assemblingFeatures = assemblingFeatures;
         this.minimalClonalSequenceLength = minimalClonalSequenceLength;
+        this.qualityAggregationType = qualityAggregationType;
         this.cloneClusteringParameters = cloneClusteringParameters;
         this.cloneFactoryParameters = cloneFactoryParameters;
         this.separateByV = separateByV;
@@ -125,6 +129,15 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
 
     public int getMinimalClonalSequenceLength() {
         return minimalClonalSequenceLength;
+    }
+
+    public QualityAggregationType getQualityAggregationType() {
+        return qualityAggregationType;
+    }
+
+    public CloneAssemblerParameters setQualityAggregationType(QualityAggregationType qualityAggregationType) {
+        this.qualityAggregationType = qualityAggregationType;
+        return null;
     }
 
     public CloneFactoryParameters getCloneFactoryParameters() {
@@ -246,6 +259,7 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
     @Override
     public CloneAssemblerParameters clone() {
         return new CloneAssemblerParameters(assemblingFeatures.clone(), minimalClonalSequenceLength,
+                qualityAggregationType,
                 cloneClusteringParameters == null ? null : cloneClusteringParameters.clone(),
                 cloneFactoryParameters.clone(), separateByV, separateByJ, separateByC,
                 maximalPreClusteringRatio, addReadsCountOnClustering, badQualityThreshold, maxBadPointsPercent,
@@ -260,6 +274,7 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
         CloneAssemblerParameters that = (CloneAssemblerParameters) o;
 
         if (minimalClonalSequenceLength != that.minimalClonalSequenceLength) return false;
+        if (qualityAggregationType != that.qualityAggregationType) return false;
         if (separateByV != that.separateByV) return false;
         if (separateByJ != that.separateByJ) return false;
         if (separateByC != that.separateByC) return false;
@@ -287,6 +302,7 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
         long temp;
         result = Arrays.hashCode(assemblingFeatures);
         result = 31 * result + minimalClonalSequenceLength;
+        result = 31 * result + qualityAggregationType.hashCode();
         result = 31 * result + (cloneClusteringParameters != null ? cloneClusteringParameters.hashCode() : 0);
         result = 31 * result + (cloneFactoryParameters != null ? cloneFactoryParameters.hashCode() : 0);
         result = 31 * result + (separateByV ? 1 : 0);
