@@ -56,7 +56,6 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
     String mappingThreshold;
     @JsonIgnore
     long variants;
-    byte minimalMeanQuality;
     byte minimalQuality;
 
     @JsonCreator
@@ -73,7 +72,6 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
                                     @JsonProperty("badQualityThreshold") byte badQualityThreshold,
                                     @JsonProperty("maxBadPointsPercent") double maxBadPointsPercent,
                                     @JsonProperty("mappingThreshold") String mappingThreshold,
-                                    @JsonProperty("minimalMeanQuality") byte minimalMeanQuality,
                                     @JsonProperty("minimalQuality") byte minimalQuality) {
         this.assemblingFeatures = assemblingFeatures;
         this.minimalClonalSequenceLength = minimalClonalSequenceLength;
@@ -88,7 +86,6 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
         this.badQualityThreshold = badQualityThreshold;
         this.maxBadPointsPercent = maxBadPointsPercent;
         this.mappingThreshold = mappingThreshold;
-        this.minimalMeanQuality = minimalMeanQuality;
         this.minimalQuality = minimalQuality;
         updateVariants();
     }
@@ -180,15 +177,6 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
         return mappingThreshold;
     }
 
-    public byte getMinimalMeanQuality() {
-        return minimalMeanQuality;
-    }
-
-    public CloneAssemblerParameters setMinimalMeanQuality(byte minimalMeanQuality) {
-        this.minimalMeanQuality = minimalMeanQuality;
-        return this;
-    }
-
     public void setMappingThreshold(String mappingThreshold) {
         this.mappingThreshold = mappingThreshold;
         updateVariants();
@@ -263,7 +251,7 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
                 cloneClusteringParameters == null ? null : cloneClusteringParameters.clone(),
                 cloneFactoryParameters.clone(), separateByV, separateByJ, separateByC,
                 maximalPreClusteringRatio, addReadsCountOnClustering, badQualityThreshold, maxBadPointsPercent,
-                mappingThreshold, minimalMeanQuality, minimalQuality);
+                mappingThreshold, minimalQuality);
     }
 
     @Override
@@ -289,8 +277,6 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
             return false;
         if (!cloneFactoryParameters.equals(that.cloneFactoryParameters))
             return false;
-        if (minimalMeanQuality != that.minimalMeanQuality)
-            return false;
         if (minimalQuality != that.minimalQuality)
             return false;
         return true;
@@ -315,7 +301,6 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
         temp = Double.doubleToLongBits(maxBadPointsPercent);
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         result = 31 * result + (int) (variants ^ (variants >>> 32));
-        result = 31 * result + (int) (minimalMeanQuality ^ (minimalMeanQuality >>> 32));
         result = 31 * result + (int) (minimalQuality ^ (minimalQuality >>> 32));
         return result;
     }

@@ -338,7 +338,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 return;
             }
 
-            if (target.getConcatenated().getQuality().meanValue() < parameters.getMinimalMeanQuality()) {
+            if (badPoints > 0) {
                 // Has some number of bad points but not greater then maxBadPointsToMap
                 log(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadId(), AssemblerEvent.DEFERRED));
                 onAlignmentDeferred(input);

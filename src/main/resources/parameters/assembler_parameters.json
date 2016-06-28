@@ -1,10 +1,9 @@
 {
     "default": {
         "assemblingFeatures": ["CDR3"],
-        "minimalMeanQuality" : 32,
-        "minimalQuality" : 20,
+        "minimalQuality" : 0,
         "minimalClonalSequenceLength": 12,
-        "qualityAggregationType": "Average",
+        "qualityAggregationType": "Max",
         "separateByV": false,
         "separateByJ": false,
         "separateByC": false,
@@ -70,16 +69,15 @@
             }
         },
         "addReadsCountOnClustering": false,
-        "badQualityThreshold": 18,
+        "badQualityThreshold": 20,
         "maxBadPointsPercent": 0.7,
         "mappingThreshold": "2of5"
     },
     "default_affine": {
         "assemblingFeatures": ["CDR3"],
-        "minimalMeanQuality" : 32,
-        "minimalQuality" : 20,
+        "minimalQuality" : 0,
         "minimalClonalSequenceLength": 12,
-        "qualityAggregationType": "Average",
+        "qualityAggregationType": "Max",
         "separateByV": false,
         "separateByJ": false,
         "separateByC": false,
@@ -148,7 +146,7 @@
             }
         },
         "addReadsCountOnClustering": false,
-        "badQualityThreshold": 18,
+        "badQualityThreshold": 20,
         "maxBadPointsPercent": 0.7,
         "mappingThreshold": "2of5"
     }
