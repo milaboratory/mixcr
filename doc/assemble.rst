@@ -133,7 +133,7 @@ Other global parameters are:
 +=================================+=================+==========================================================================================+
 | ``minimalClonalSequenceLength`` |  ``12``         | Minimal length of clonal sequence                                                        |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
-| ``minimalMeanQuality``          |  ``15``         | Minimal value of mean quality to consider sequence as a "good" one. If mean sequence     | 
+| ``minimalMeanQuality``          |  ``32``         | Minimal value of mean quality to consider sequence as a "good" one. If mean sequence     | 
 |                                 |                 | quality is lower than ``minimalMeanQuality``, then that sequence will be deferred for    |
 |                                 |                 | further processing by mapper.                                                            |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
@@ -142,7 +142,7 @@ Other global parameters are:
 |                                 |                 | will be dropped (remember that qualities of reads are summed when assembling core        |
 |                                 |                 | clonotypes).                                                                             |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
-| ``badQualityThreshold``         | ``20``          | Minimal value of sequencing quality score: nucleotides with lower quality are            |
+| ``badQualityThreshold``         | ``18``          | Minimal value of sequencing quality score: nucleotides with lower quality are            |
 |                                 |                 | considered as "bad". If sequence contains at least one "bad" nucleotide, it will be      |
 |                                 |                 | deferred at initial assembling stage, for further processing by mapper.                  |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
