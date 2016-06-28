@@ -1,2 +1,3 @@
-Revert quality filtering/mapping to MiXCR 1.7.x
+Revert quality filtering/mapping algorithm to MiXCR 1.7.x
 Added different quality aggregation algorithms for assemble (Average, Min, Max, MiniMax) option `-OqualityAggregationType=Max`
+Added `clonesDiff` action to calculate descriptive statistics of differnece between two samples
