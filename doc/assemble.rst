@@ -133,6 +133,13 @@ Other global parameters are:
 +=================================+=================+==========================================================================================+
 | ``minimalClonalSequenceLength`` |  ``12``         | Minimal length of clonal sequence                                                        |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
+| ``qualityAggregationType``      |  ``Max``        | Algorithm used for aggregation of total clonal sequence quality. Possible values:        |
+|                                 |                 | ``Max`` (maximal quality across all reads for each position),                            |
+|                                 |                 | ``Min`` (minimal quality across all reads for each position),                            |
+|                                 |                 | ``Average`` (average quality across all reads for each position),                        |
+|                                 |                 | ``MiniMax`` (all letters has the same quality which is the maximum of minimal quality of |
+|                                 |                 | clonal sequence in each read).                                                           |
++---------------------------------+-----------------+------------------------------------------------------------------------------------------+
 | ``minimalQuality``              |  ``0``          | Minimal allowed quality of each nucleotide of aggregated clone. If at least one          | 
 |                                 |                 | nucleotide in the aggregated clone has quality lower than ``minimalQuality``, this clone |
 |                                 |                 | will be dropped (remember that qualities of reads are summed when assembling core        |

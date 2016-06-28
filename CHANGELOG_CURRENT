@@ -1,0 +1,2 @@
+Revert quality filtering/mapping to MiXCR 1.7.x
+Added different quality aggregation algorithms for assemble (Average, Min, Max, MiniMax) option `-OqualityAggregationType=Max`
