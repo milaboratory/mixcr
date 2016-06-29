@@ -84,7 +84,7 @@ The list of command line parameters for both ``exportAlignments`` and
 +-----------------------------+-------------------------------------------------------------------+
 | ``-pf``, ``--preset-file``  | load file with a list of fields to export                         |
 +-----------------------------+-------------------------------------------------------------------+
-| ``-l``, ``--list-fields``   | list availabel fields that can be exported                        |
+| ``-lf``, ``--list-fields``  | list availabel fields that can be exported                        |
 +-----------------------------+-------------------------------------------------------------------+
 | ``-s``, ``--no-spaces``     | output short versions of column headers which facilitates analysis|
 |                             | with Pandas, R/DataFrames or other data tables processing library |
@@ -92,12 +92,19 @@ The list of command line parameters for both ``exportAlignments`` and
 
 The line parameters are only for ``exportClones``:
 
-+------------------------------------+-------------------------------------------------------------------+
-| ``-o``, ``--filter-out-of-frames`` | Exclude out of frames (fractions will be recalculated)            |
-+------------------------------------+-------------------------------------------------------------------+
-| ``-t``, ``--filter-stops``         | Exclude sequences containing stop codons (fractions will be       |
-|                                    | recalculated)                                                     |
-+------------------------------------+-------------------------------------------------------------------+
++--------------------------------------+-------------------------------------------------------------------+
+| ``-l``, ``--filter-locus``           | Limit output to specific locus (e.g. TRA or IGH). Clone fractions |
+|                                      | will be recalculated accordingly.                                 |
++--------------------------------------+-------------------------------------------------------------------+
+| ``-o``, ``--filter-out-of-frames``   | Exclude out of frames (fractions will be recalculated)            |
++--------------------------------------+-------------------------------------------------------------------+
+| ``-t``, ``--filter-stops``           | Exclude sequences containing stop codons (fractions will be       |
+|                                      | recalculated)                                                     |
++--------------------------------------+-------------------------------------------------------------------+
+| ``-c``, ``--minimal-clone-count``    | Filter clones by minimal read count.                              |
++--------------------------------------+-------------------------------------------------------------------+
+| ``-q``, ``--minimal-clone-fraction`` | Filter clones by minimal clone fraction.                          |
++--------------------------------------+-------------------------------------------------------------------+
 
 
 

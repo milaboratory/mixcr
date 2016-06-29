@@ -31,6 +31,7 @@ package com.milaboratory.mixcr.assembler;
 import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.alignment.BandedAlignerParameters;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
+import com.milaboratory.core.sequence.quality.QualityAggregationType;
 import com.milaboratory.core.tree.TreeSearchParameters;
 import com.milaboratory.mixcr.reference.GeneFeature;
 import com.milaboratory.mixcr.vdjaligners.DAlignerParameters;
@@ -52,8 +53,9 @@ public class CloneAssemblerParametersTest {
         );
 
         CloneAssemblerParameters params = new CloneAssemblerParameters(new GeneFeature[]{GeneFeature.FR1, GeneFeature.CDR3}, 12,
+                QualityAggregationType.Average,
                 new CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
-                factoryParameters, true, true, false, 0.4, true, (byte) 20, .8, "2", (byte) 20, (byte) 15);
+                factoryParameters, true, true, false, 0.4, true, (byte) 20, .8, "2", (byte) 15);
 
         String str = GlobalObjectMappers.PRETTY.writeValueAsString(params);
         //System.out.println(str);
@@ -79,8 +81,9 @@ public class CloneAssemblerParametersTest {
         );
 
         CloneAssemblerParameters params = new CloneAssemblerParameters(new GeneFeature[]{GeneFeature.FR1, GeneFeature.CDR3}, 12,
+                QualityAggregationType.Average,
                 new CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
-                factoryParameters, true, true, false, 0.4, true, (byte) 20, .8, "2of6", (byte) 20, (byte) 15);
+                factoryParameters, true, true, false, 0.4, true, (byte) 20, .8, "2of6", (byte) 15);
 
         String str = GlobalObjectMappers.PRETTY.writeValueAsString(params);
         //System.out.println(str);

@@ -1,4 +1,17 @@
 
+MiXCR 1.8.1 (29 Jun 2016)
+========================
+
+-- Revert quality filtering/mapping algorithm to MiXCR 1.7.x
+-- Added different quality aggregation algorithms for assemble (Average, Min, Max, MiniMax) option 
+   `-OqualityAggregationType=Max`
+-- Added `clonesDiff` action to calculate descriptive statistics of differnece between two samples
+-- Fixed wrong anchor point positions in Macaca mulatta IGL reference imported from IMGT
+-- MiXCR returns exit code 1 if program terminated with error
+-- Automatic correction of -OvParameters.geneFeatureToAlign in align in some cases (e.g. IMGT 
+   reference and rna-seq paramenters)
+
+
 MiXCR 1.8 (21 Jun 2016)
 ========================
 
