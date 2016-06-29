@@ -70,6 +70,10 @@ public class Main {
         });
 
         // Executing main method
-        main.main(args);
+        JCommanderBasedMain.ProcessResult processResult = main.main(args);
+
+        // If something was wrong, exit with code 1
+        if (processResult == JCommanderBasedMain.ProcessResult.Error)
+            System.exit(1);
     }
 }

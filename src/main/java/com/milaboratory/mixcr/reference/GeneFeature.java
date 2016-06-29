@@ -268,6 +268,13 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         return regions.length;
     }
 
+    public boolean hasReversedRegions() {
+        for (ReferenceRange region : regions)
+            if (region.isReversed())
+                return true;
+        return false;
+    }
+
     public GeneFeature reverse() {
         ReferenceRange[] res = new ReferenceRange[regions.length];
         for (int i = 0; i < res.length; i++)

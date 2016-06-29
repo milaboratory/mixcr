@@ -88,7 +88,7 @@ public class ActionAssemble implements Action {
                     actionParameters.overrides);
             if (assemblerParameters == null) {
                 System.err.println("Failed to override some parameter.");
-                return;
+                System.exit(1);
             }
         }
 
