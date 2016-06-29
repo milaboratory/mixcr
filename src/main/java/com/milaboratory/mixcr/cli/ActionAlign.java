@@ -42,6 +42,7 @@ import com.beust.jcommander.Parameters;
 import com.beust.jcommander.validators.PositiveInteger;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
+import com.milaboratory.cli.ProcessException;
 import com.milaboratory.core.PairedEndReadsLayout;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SequenceReaderCloseable;
@@ -81,20 +82,16 @@ public class ActionAlign implements Action {
 
         if (!actionParameters.overrides.isEmpty()) {
             alignerParameters = JsonOverrider.override(alignerParameters, VDJCAlignerParameters.class, actionParameters.overrides);
-            if (alignerParameters == null) {
-                System.err.println("Failed to override some parameter.");
-                return;
-            }
+            if (alignerParameters == null)
+                throw new ProcessException("Failed to override some parameter.");
         }
 
         VDJCAligner aligner = VDJCAligner.createAligner(alignerParameters,
                 actionParameters.isInputPaired(), !actionParameters.noMerge);
 
         LociLibrary ll = LociLibraryManager.getDefault().getLibrary(actionParameters.ll);
-        if (ll == null) {
-            System.err.println("Segment library (" + actionParameters.ll + ") not found.");
-            return;
-        }
+        if (ll == null)
+            throw new ProcessException("Segment library (" + actionParameters.ll + ") not found.");
 
         // Checking species
         int speciesId = ll.getSpeciesTaxonId(actionParameters.species);
@@ -102,9 +99,37 @@ public class ActionAlign implements Action {
         if (speciesId == -1)
             speciesId = Species.fromString(actionParameters.species);
 
-        if (speciesId == -1) {
-            System.err.println("Can't find species with id: " + actionParameters.species);
-            return;
+        if (speciesId == -1)
+            throw new ProcessException("Can't find species with id: " + actionParameters.species);
+
+        // Detect if automatic featureToAlign correction is required
+        int totalV = 0, totalVErrors = 0, hasVRegion = 0;
+        GeneFeature correctingFeature = alignerParameters.getVAlignerParameters().getGeneFeatureToAlign().hasReversedRegions() ?
+                GeneFeature.VRegionWithP :
+                GeneFeature.VRegion;
+        for (Locus locus : actionParameters.getLoci()) {
+            LocusContainer lc = ll.getLocus(speciesId, locus);
+            if (lc == null)
+                continue;
+            for (Allele allele : lc.getAllAlleles()) {
+                if (actionParameters.isFunctionalOnly() && !allele.isFunctional())
+                    continue;
+                if (allele.getGeneType() == GeneType.Variable)
+                    totalV++;
+                if (!alignerParameters.containsRequiredFeature(allele)) {
+                    totalVErrors++;
+                    if (allele.getPartitioning().isAvailable(correctingFeature))
+                        hasVRegion++;
+                }
+            }
+        }
+
+        // Performing V featureToAlign correction if needed
+        if (totalVErrors > totalV * 0.9 && hasVRegion > totalVErrors * 0.8) {
+            System.err.println("WARNING: forcing -OvParameters.geneFeatureToAlign=" + GeneFeature.encode(correctingFeature) +
+                    " since current gene feature (" + GeneFeature.encode(alignerParameters.getVAlignerParameters().getGeneFeatureToAlign()) + ") is absent in " +
+                    Util.PERCENT_FORMAT.format(100.0 * totalVErrors / totalV) + "% of V genes.");
+            alignerParameters.getVAlignerParameters().setGeneFeatureToAlign(correctingFeature);
         }
 
         boolean warnings = false;
@@ -138,15 +163,13 @@ public class ActionAlign implements Action {
             System.err.println("To turn off warnings use '-nw' option.");
 
         if (aligner.getVAllelesToAlign().isEmpty()) {
-            System.err.println("No V alleles to align. Aborting execution. See warnings for more info " +
+            throw new ProcessException("No V alleles to align. Aborting execution. See warnings for more info " +
                     "(turn warnings by adding -w option).");
-            return;
         }
 
-        if (aligner.getVAllelesToAlign().isEmpty()) {
-            System.err.println("No J alleles to align. Aborting execution. See warnings for more info " +
+        if (aligner.getJAllelesToAlign().isEmpty()) {
+            throw new ProcessException("No J alleles to align. Aborting execution. See warnings for more info " +
                     "(turn warnings by adding -w option).");
-            return;
         }
 
         AlignerReport report = actionParameters.report == null ? null : new AlignerReport(alignerParameters.getVJAlignmentOrder());

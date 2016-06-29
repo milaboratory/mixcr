@@ -56,7 +56,8 @@ public class Main {
                 new ActionImportSegments(),
                 new ActionAlignmentsDiff(),
                 new ActionAssemblePartialAlignments(),
-                new ActionExportReads());
+                new ActionExportReads(),
+                new ActionClonesDiff());
 
         // Adding version info callback
         main.setVersionInfoCallback(new Runnable() {
@@ -69,6 +70,10 @@ public class Main {
         });
 
         // Executing main method
-        main.main(args);
+        JCommanderBasedMain.ProcessResult processResult = main.main(args);
+
+        // If something was wrong, exit with code 1
+        if (processResult == JCommanderBasedMain.ProcessResult.Error)
+            System.exit(1);
     }
 }

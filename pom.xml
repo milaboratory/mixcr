@@ -32,7 +32,7 @@
 
     <groupId>com.milaboratory</groupId>
     <artifactId>mixcr</artifactId>
-    <version>1.8</version>
+    <version>1.8.1</version>
     <packaging>jar</packaging>
     <name>MiXCR</name>
 
@@ -44,7 +44,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <milib.version>1.4</milib.version>
+        <milib.version>1.5-SNAPSHOT</milib.version>
     </properties>
 
     <dependencies>

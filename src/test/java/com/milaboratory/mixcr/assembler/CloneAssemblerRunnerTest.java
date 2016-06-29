@@ -36,6 +36,7 @@ import com.milaboratory.core.io.sequence.SequenceReader;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.core.sequence.quality.QualityAggregationType;
 import com.milaboratory.core.tree.TreeSearchParameters;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
@@ -120,8 +121,9 @@ public class CloneAssemblerRunnerTest {
 
         CloneAssemblerParameters assemblerParameters = new CloneAssemblerParameters(
                 new GeneFeature[]{GeneFeature.CDR3}, 12,
+                QualityAggregationType.Average,
                 new CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
-                factoryParameters, true, true, false, 0.4, true, (byte) 20, .8, "2 of 6", (byte) 20, (byte) 15);
+                factoryParameters, true, true, false, 0.4, true, (byte) 20, .8, "2 of 6", (byte) 15);
 
         System.out.println(GlobalObjectMappers.toOneLine(assemblerParameters));
 

@@ -338,7 +338,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 return;
             }
 
-            if (target.getConcatenated().getQuality().meanValue() < parameters.getMinimalMeanQuality()) {
+            if (badPoints > 0) {
                 // Has some number of bad points but not greater then maxBadPointsToMap
                 log(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadId(), AssemblerEvent.DEFERRED));
                 onAlignmentDeferred(input);
@@ -535,7 +535,8 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             VJCSignature vjcSignature = extractSignature(alignments);
             CloneAccumulator acc = accumulators.get(vjcSignature);
             if (acc == null) {
-                acc = new CloneAccumulator(sequence, extractNRegions(sequence, alignments));
+                acc = new CloneAccumulator(sequence, extractNRegions(sequence, alignments),
+                        parameters.getQualityAggregationType());
                 accumulators.put(vjcSignature, acc);
                 acc.setCloneIndex(cloneIndexGenerator.incrementAndGet());
                 onNewCloneCreated(acc);
@@ -583,13 +584,14 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 if (acc == null)
                     continue;
 
-                for (byte b : acc.quality)
-                    if (b < parameters.minimalQuality) {
-                        onCloneDropped(acc);
-                        continue out;
-                    }
-
                 acc.rebuildClonalSequence();
+
+                if (acc.getSequence().getConcatenated().getQuality().minValue() <
+                        parameters.minimalQuality) {
+                    onCloneDropped(acc);
+                    continue out;
+                }
+
                 result.add(acc);
             }
 
