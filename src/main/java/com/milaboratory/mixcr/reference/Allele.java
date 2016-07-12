@@ -77,7 +77,7 @@ public abstract class Allele
     }
 
     public final String getFamilyName() {
-        return name.split("-")[0];
+        return name.split("-")[0].split("\\*")[0];
     }
 
     public final GeneGroup getGeneGroup() {
