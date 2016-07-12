@@ -89,6 +89,11 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                 bestHelper = helpers[i];
         }
 
+        if (!bestHelper.hasAnyVJHits()) {
+            onFailedAlignment(input, VDJCAlignmentFailCause.NoHits);
+            return new VDJCAlignmentResult<>(input);
+        }
+
         // Calculates if this score is bigger then the threshold
         if (bestHelper.score() < parameters.getMinSumScore()) {
             onFailedAlignment(input, VDJCAlignmentFailCause.LowTotalScore);
