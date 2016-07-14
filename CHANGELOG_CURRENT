@@ -1,0 +1,3 @@
+Fix for J aligner in rna-seq mode (`floatingRightBound = false`)
+Fix for `-v/d/j/cFamily(s)` field in export
+Default `qualityMergingAlgorithm` used in paired-end reads overlap changed to `MaxSubtraction`
