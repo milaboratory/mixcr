@@ -291,7 +291,7 @@ public class PartialAlignmentsAssemblerTest {
         //begin, end positions in assembled sequence
         EnumMap<GeneType, int[]> refPositions = gtMap();
         //single assembled sequence
-        SequenceBuilder<NucleotideSequence> referenceBuilder = NucleotideSequence.ALPHABET.getBuilder();
+        SequenceBuilder<NucleotideSequence> referenceBuilder = NucleotideSequence.ALPHABET.createBuilder();
 
         NucleotideSequence VDJunction = TestUtil.randomSequence(NucleotideSequence.ALPHABET, 3, 10);
         NucleotideSequence DJJunction = TestUtil.randomSequence(NucleotideSequence.ALPHABET, 3, 10);
@@ -335,7 +335,7 @@ public class PartialAlignmentsAssemblerTest {
             refPositions.put(gt, positions);
         }
 
-        NucleotideSequence VJJunction = NucleotideSequence.ALPHABET.getBuilder()
+        NucleotideSequence VJJunction = NucleotideSequence.ALPHABET.createBuilder()
                 .append(VDJunction)
                 .append(germlineRegions.get(Diversity))
                 .append(DJJunction)
