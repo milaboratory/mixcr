@@ -142,8 +142,8 @@ Other global parameters are:
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
 | ``minimalQuality``              |  ``0``          | Minimal allowed quality of each nucleotide of aggregated clone. If at least one          | 
 |                                 |                 | nucleotide in the aggregated clone has quality lower than ``minimalQuality``, this clone |
-|                                 |                 | will be dropped (remember that qualities of reads are summed when assembling core        |
-|                                 |                 | clonotypes).                                                                             |
+|                                 |                 | will be dropped (remember that qualities of reads are aggregated according to selected   |
+|                                 |                 | aggregation strategy during core clonotypes assembly; see ``qualityAggregationType``).   |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
 | ``badQualityThreshold``         | ``20``          | Minimal value of sequencing quality score: nucleotides with lower quality are            |
 |                                 |                 | considered as "bad". If sequence contains at least one "bad" nucleotide, it will be      |
