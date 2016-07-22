@@ -37,6 +37,7 @@ public final class ActionFilterAlignments implements Action {
     public void go(ActionHelper helper) throws Exception {
         try (VDJCAlignmentsReader reader = parameters.getInput();
              VDJCAlignmentsWriter writer = parameters.getOutput()) {
+            writer.header(reader.getParameters(), reader.getUsedAlleles());
             SmartProgressReporter.startProgressReport("Filtering", reader);
             int total = 0, passed = 0;
             final AlignmentsFilter filter = parameters.getFilter();
@@ -47,6 +48,7 @@ public final class ActionFilterAlignments implements Action {
                     ++passed;
                 }
             }
+            writer.setNumberOfProcessedReads(reader.getNumberOfReads());
             System.out.printf("Written %s alignments (%s alignments considered in total)\n", passed, total);
         }
     }
@@ -119,7 +121,7 @@ public final class ActionFilterAlignments implements Action {
         public String loci = "all";
 
         @Parameter(description = "Include alignments that contain specified feature.",
-                names = {"-f", "--contains-feature"})
+                names = {"-g", "--contains-feature"})
         public String containsFeature = null;
 
         @Parameter(description = "Include alignments which CDR3 contains specified sequence.",

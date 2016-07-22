@@ -57,7 +57,8 @@ public class Main {
                 new ActionAlignmentsDiff(),
                 new ActionAssemblePartialAlignments(),
                 new ActionExportReads(),
-                new ActionClonesDiff());
+                new ActionClonesDiff(),
+                new ActionFilterAlignments());
 
         // Adding version info callback
         main.setVersionInfoCallback(new Runnable() {
