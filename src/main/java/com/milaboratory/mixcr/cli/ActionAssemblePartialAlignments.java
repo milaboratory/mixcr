@@ -13,6 +13,7 @@ import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParamet
 import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.util.SmartProgressReporter;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,9 +66,8 @@ public final class ActionAssemblePartialAlignments implements Action {
         return parameters;
     }
 
-    @Parameters(commandDescription = "Assemble clones",
-            optionPrefixes = "-")
-    private static class AssemblePartialAlignmentsParameters extends ActionParameters {
+    @Parameters(commandDescription = "Assemble clones")
+    private static class AssemblePartialAlignmentsParameters extends ActionParametersWithOutput {
         @Parameter(description = "input_file output_file")
         public List<String> parameters;
 
@@ -100,6 +100,11 @@ public final class ActionAssemblePartialAlignments implements Action {
 
         public Boolean getWritePartial() {
             return writePartial != null && writePartial;
+        }
+
+        @Override
+        protected List<String> getOutputFiles() {
+            return Collections.singletonList(getOutputFileName());
         }
 
         @Override
