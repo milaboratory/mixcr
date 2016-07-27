@@ -78,7 +78,7 @@ public class CloneAssemblerRunnerTest {
     private static CloneSet runFullPipeline(String... fastqFiles) throws IOException, InterruptedException {
         //building alignments
         VDJCAlignerParameters alignerParameters = VDJCParametersPresets.getByName("default");
-        VDJCAligner aligner = fastqFiles.length == 1 ? new VDJCAlignerSJFirst(alignerParameters) : new VDJCAlignerWithMerge(alignerParameters);
+        VDJCAligner aligner = fastqFiles.length == 1 ? new VDJCAlignerS(alignerParameters) : new VDJCAlignerWithMerge(alignerParameters);
 
         InputStream sample = LociLibraryReader.class.getClassLoader().getResourceAsStream("reference/mi.ll");
         LociLibrary library = LociLibraryReader.read(sample, true);

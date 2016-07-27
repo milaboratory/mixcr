@@ -40,13 +40,13 @@ import com.milaboratory.mixcr.reference.Allele;
  * @author Stanislav Poslavsky
  */
 public final class VDJCAlignerWithMerge extends VDJCAligner<PairedRead> {
-    final VDJCAlignerSJFirst singleAligner;
+    final VDJCAlignerS singleAligner;
     final VDJCAlignerPVFirst pairedAligner;
     final MismatchOnlyPairedReadMerger merger;
 
     public VDJCAlignerWithMerge(VDJCAlignerParameters parameters) {
         super(parameters);
-        singleAligner = new VDJCAlignerSJFirst(parameters);
+        singleAligner = new VDJCAlignerS(parameters);
         pairedAligner = new VDJCAlignerPVFirst(parameters);
         merger = new MismatchOnlyPairedReadMerger(
                 parameters.getMergerParameters().overrideReadsLayout(

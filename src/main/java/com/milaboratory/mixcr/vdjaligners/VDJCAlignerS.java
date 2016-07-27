@@ -42,11 +42,11 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
-public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
+public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
     private static final ReferencePoint reqPointR = ReferencePoint.CDR3End.move(3);
     private static final ReferencePoint reqPointL = ReferencePoint.CDR3Begin.move(-3);
 
-    public VDJCAlignerSJFirst(VDJCAlignerParameters parameters) {
+    public VDJCAlignerS(VDJCAlignerParameters parameters) {
         super(parameters);
     }
 
@@ -54,6 +54,8 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
     protected VDJCAlignmentResult<SingleRead> process0(SingleRead input) {
         ensureInitialized();
 
+        // Different algorithms for
+        // -OallowPartialAlignments=false and -OallowPartialAlignments=true
         return parameters.getAllowPartialAlignments() ?
                 processPartial(input) :
                 processStrict(input);
@@ -70,13 +72,13 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
         KVJResultsForSingle topResult = null;
 
         for (KVJResultsForSingle result : results) {
-            if (!result.isEmpty())
+            if (!result.hasNoKVNorKJHits())
                 result.alignDC();
             if (topResult == null || topResult.sumScore() < result.sumScore())
                 topResult = result;
         }
 
-        if (topResult.isEmpty()) {
+        if (topResult.hasNoKVNorKJHits()) {
             onFailedAlignment(input, VDJCAlignmentFailCause.NoHits);
             return new VDJCAlignmentResult<>(input);
         }
@@ -87,10 +89,12 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
             return new VDJCAlignmentResult<>(input);
         }
 
+        // Filtering hits basing on minSumScore
         topResult.calculateHits(parameters.getMinSumScore(), parameters.getMaxHits());
 
         VDJCAlignments alignment = topResult.toVDJCAlignments(input.getId());
 
+        // Final check
         if (!parameters.getAllowNoCDR3PartAlignments()) {
             // CDR3 Begin / End
             if (!alignment.getPartitionedTarget(0).getPartitioning().isAvailable(reqPointL)
@@ -100,6 +104,8 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
             }
         }
 
+        // Read successfully aligned
+
         onSuccessfulAlignment(input, alignment);
         return new VDJCAlignmentResult<>(input, alignment);
     }
@@ -107,18 +113,25 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
     private VDJCAlignmentResult<SingleRead> processStrict(SingleRead input) {
         Target[] targets = parameters.getReadsLayout().createTargets(input);
 
-        boolean anyIsFull = false;
-        boolean anyHasJ = false;
+        // Algorithm below relies on this fact
+        assert targets.length <= 2;
+
+        boolean anyIsFull = false,
+                anyHasJ = false,
+                anyHasV = false;
 
         KVJResultsForSingle[] results = new KVJResultsForSingle[targets.length];
         for (int i = 0; i < results.length; i++) {
             results[i] = align(targets[i]);
-            anyIsFull |= results[i].isFull();
+            anyIsFull |= results[i].hasKVAndJHits();
             anyHasJ |= results[i].hasKJHits();
+            anyHasV |= results[i].hasKVHits();
         }
 
         if (!anyIsFull) {
-            if (!anyHasJ)
+            if (!anyHasJ && !anyHasV)
+                onFailedAlignment(input, VDJCAlignmentFailCause.NoHits);
+            else if (!anyHasJ)
                 onFailedAlignment(input, VDJCAlignmentFailCause.NoJHits);
             else
                 onFailedAlignment(input, VDJCAlignmentFailCause.NoVHits);
@@ -129,11 +142,10 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
 
         // Calculating best result
         for (KVJResultsForSingle result : results)
-            if (result.isFull())
+            if (result.hasKVAndJHits())
                 topResult = topResult != null ? null : result;
 
-        // Both results are full
-        if (topResult == null) {
+        if (topResult == null) { // Both results are full
             // Finalizing alignment for both results to determine who is the best
             for (KVJResultsForSingle result : results) {
                 result.alignDC();
@@ -150,9 +162,10 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
             return new VDJCAlignmentResult<>(input);
         }
 
+        // Filtering hits basing on minSumScore
         topResult.calculateHits(parameters.getMinSumScore(), parameters.getMaxHits());
 
-        if (topResult.hasVJHits()) {
+        if (topResult.hasVAndJHits()) {
             VDJCAlignments alignment = topResult.toVDJCAlignments(input.getId());
 
             onSuccessfulAlignment(input, alignment);
@@ -163,6 +176,7 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
         }
     }
 
+    // TODO all this ifs can be simplified
     private KVJResultsForSingle align(Target target) {
         NucleotideSequence sequence = target.targets[0].getSequence();
 
@@ -174,13 +188,15 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
             case VThenJ:
                 vResult = vAligner.align(sequence);
 
-                //If there is no results for V return
+                // If there is no results for V return
                 if (!vResult.hasHits())
-                    return new KVJResultsForSingle(target, vResult,
+                    return new KVJResultsForSingle(target,
+                            vResult, // V result is empty
+                            // If -OallowPartialAlignments=true try align J gene
                             parameters.getAllowPartialAlignments() ?
                                     jAligner.align(sequence) : null);
 
-                //Returning result
+                // Returning result
                 return new KVJResultsForSingle(target, vResult,
                         jAligner.align(sequence,
                                 vResult.getBestHit().getAlignment().getSequence2Range().getTo(),
@@ -188,13 +204,15 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
             case JThenV:
                 jResult = jAligner.align(sequence);
 
-                //If there is no results for J return
+                // If there is no results for J return
                 if (!jResult.hasHits())
-                    return new KVJResultsForSingle(target, parameters.getAllowPartialAlignments() ?
-                            vAligner.align(sequence) : null,
-                            jResult);
+                    return new KVJResultsForSingle(target,
+                            // If -OallowPartialAlignments=true try align V gene
+                            parameters.getAllowPartialAlignments() ?
+                                    vAligner.align(sequence) : null,
+                            jResult); // J result is empty
 
-                //Returning result
+                // Returning result
                 return new KVJResultsForSingle(target, vAligner.align(sequence, 0,
                         jResult.getBestHit().getAlignment().getSequence2Range().getFrom()),
                         jResult);
@@ -229,7 +247,7 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
         public void alignDC() {
             NucleotideSequence sequence = target.targets[0].getSequence();
 
-            if (singleDAligner != null && isFull()) {
+            if (singleDAligner != null && hasKVAndJHits()) {
                 //Alignment of D gene
                 int from = vResult.getBestHit().getAlignment().getSequence2Range().getTo(),
                         to = jResult.getBestHit().getAlignment().getSequence2Range().getFrom();
@@ -250,12 +268,12 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
                 cHits = new VDJCHit[0];
         }
 
-        public boolean isEmpty() {
+        public boolean hasNoKVNorKJHits() {
             return (vResult == null || !vResult.hasHits()) &&
                     (jResult == null || !jResult.hasHits());
         }
 
-        public boolean isFull() {
+        public boolean hasKVAndJHits() {
             return vResult != null && jResult != null &&
                     vResult.hasHits() && jResult.hasHits();
         }
@@ -268,7 +286,7 @@ public final class VDJCAlignerSJFirst extends VDJCAlignerAbstract<SingleRead> {
             return jResult != null && jResult.hasHits();
         }
 
-        public boolean hasVJHits() {
+        public boolean hasVAndJHits() {
             return vHits != null && vHits.length > 0 &&
                     jHits != null && jHits.length > 0;
         }
