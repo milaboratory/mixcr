@@ -62,13 +62,11 @@ public class VDJCAlignmentsFormatter {
                 alignmentRightComments.add(" " + hit.getAlignment(targetId).getScore());
             }
 
-        if (alignments.isEmpty())
-            return null;
-
         MultiAlignmentHelper helper = MultiAlignmentHelper.build(MultiAlignmentHelper.DEFAULT_SETTINGS,
-                new Range(0, target.size()), alignments.toArray(new Alignment[alignments.size()]));
+                new Range(0, target.size()), targetSeq, alignments.toArray(new Alignment[alignments.size()]));
 
-        drawPoints(helper, partitioning, POINTS_FOR_REARRANGED);
+        if (!alignments.isEmpty())
+            drawPoints(helper, partitioning, POINTS_FOR_REARRANGED);
 
         helper.addSubjectQuality("Quality", target.getQuality());
         helper.setSubjectLeftTitle("Target" + targetId);

@@ -146,7 +146,7 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
         return paired ?
                 merge ? new VDJCAlignerWithMerge(alignerParameters)
                         : new VDJCAlignerPVFirst(alignerParameters)
-                : new VDJCAlignerSJFirst(alignerParameters);
+                : new VDJCAlignerS(alignerParameters);
     }
 
     public static Set<Locus> getPossibleDLoci(VDJCHit[] vHits, VDJCHit[] jHits) {

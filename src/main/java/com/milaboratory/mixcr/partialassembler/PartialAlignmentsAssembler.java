@@ -62,6 +62,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
     final boolean writePartial, overlappedOnly;
     final TargetMerger targetMerger;
     public final AtomicLong leftParts = new AtomicLong(),
+            rightParts = new AtomicLong(),
             noKMer = new AtomicLong(),
             wildCardsInKMer = new AtomicLong(),
             total = new AtomicLong(),
@@ -155,6 +156,8 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         int rightTargetId = getRightPartitionedSequence(rightAl);
         if (rightTargetId == -1)
             return null;
+
+        rightParts.incrementAndGet();
 
         final VDJCPartitionedSequence rightTarget = rightAl.getPartitionedTarget(rightTargetId);
         NSequenceWithQuality rightSeqQ = rightTarget.getSequence();
@@ -305,6 +308,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         helper.writePercentAndAbsoluteField("noKMer", noKMer, total);
         helper.writePercentAndAbsoluteField("wildCardsInKMer", wildCardsInKMer, total);
         helper.writePercentAndAbsoluteField("leftParts", leftParts, total);
+        helper.writePercentAndAbsoluteField("rightParts", rightParts, total);
         helper.writePercentAndAbsoluteField("containsCDR3", containsCDR3, total);
         helper.writePercentAndAbsoluteField("overlapped", overlapped, total);
         helper.writePercentAndAbsoluteField("complexOverlapped", complexOverlapped, total);

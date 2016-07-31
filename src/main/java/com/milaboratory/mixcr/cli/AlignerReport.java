@@ -118,14 +118,9 @@ public final class AlignerReport implements VDJCAlignerEventListener, ReportWrit
                 hasDifferentVJLoci.get(), total);
 
         for (VDJCAlignmentFailCause cause : VDJCAlignmentFailCause.values())
-            if (fails.get(cause.ordinal()) != 0) {
-                String failCauseText = "Alignment failed because of " + cause.name;
-                if ((cause == VDJCAlignmentFailCause.NoVHits && order == VJAlignmentOrder.VThenJ) ||
-                        (cause == VDJCAlignmentFailCause.NoJHits && order == VJAlignmentOrder.JThenV))
-                    failCauseText = "Alignment failed (not TCR/IG?)";
-                helper.writePercentField(failCauseText,
-                        fails.get(cause.ordinal()), total);
-            }
+            if (fails.get(cause.ordinal()) != 0)
+                helper.writePercentField(cause.reportLine, fails.get(cause.ordinal()), total);
+        
         helper.writePercentField("Overlapped, percent", alignedOverlap.get() + nonAlignedOverlap.get(), total);
         helper.writePercentField("Overlapped and aligned, percent", alignedOverlap.get(), total);
         helper.writePercentField("Overlapped and not aligned, percent", nonAlignedOverlap.get(), total);

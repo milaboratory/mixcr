@@ -43,7 +43,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class VDJCAlignerSJFirstTest {
+public class VDJCAlignerSTest {
     @Test
     public void testSerialization1() throws Exception {
         VDJCAlignerParameters parameters =
@@ -54,9 +54,9 @@ public class VDJCAlignerSJFirstTest {
         int header;
         try (SingleFastqReader reader =
                      new SingleFastqReader(
-                             VDJCAlignerSJFirstTest.class.getClassLoader()
+                             VDJCAlignerSTest.class.getClassLoader()
                                      .getResourceAsStream("sequences/sample_IGH_R1.fastq"), true)) {
-            VDJCAlignerSJFirst aligner = new VDJCAlignerSJFirst(parameters);
+            VDJCAlignerS aligner = new VDJCAlignerS(parameters);
             for (Allele allele : ll.getLocus(Species.HomoSapiens, Locus.IGH).getAllAlleles())
                 if (parameters.containsRequiredFeature(allele))
                     aligner.addAllele(allele);
@@ -92,9 +92,9 @@ public class VDJCAlignerSJFirstTest {
 //        int header;
 //        try (SingleFastqReader reader =
 //                     new SingleFastqReader(
-//                             VDJCAlignerSJFirstTest.class.getClassLoader()
+//                             VDJCAlignerSTest.class.getClassLoader()
 //                                     .getResourceAsStream("sequences/sample_IGH_R1.fastq"))) {
-//            VDJCAlignerSJFirst aligner = new VDJCAlignerSJFirst(parameters);
+//            VDJCAlignerS aligner = new VDJCAlignerS(parameters);
 //            for (Allele allele : ll.getLocus(Species.HomoSapiens, Locus.IGH).getAllAlleles())
 //                if (parameters.containsRequiredFeature(allele))
 //                    aligner.addAllele(allele);

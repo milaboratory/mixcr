@@ -94,7 +94,7 @@
         "includeDScore": false,
         "includeCScore": false,
         "mergerParameters": {
-            "qualityMergingAlgorithm" : "SumSubtraction",
+            "qualityMergingAlgorithm" : "MaxSubtraction",
             "minimalOverlap": 17,
             "minimalIdentity": 0.9
         },
@@ -215,7 +215,7 @@
         "includeDScore": false,
         "includeCScore": false,
         "mergerParameters": {
-            "qualityMergingAlgorithm" : "SumSubtraction",
+            "qualityMergingAlgorithm" : "MaxSubtraction",
             "minimalOverlap": 17,
             "minimalIdentity": 0.9
         },
@@ -271,7 +271,7 @@
             "parameters": {
                 "mapperKValue": 5,
                 "floatingLeftBound": true,
-                "floatingRightBound": true,
+                "floatingRightBound": false,
                 "mapperAbsoluteMinScore": 1.5,
                 "mapperRelativeMinScore": 0.75,
                 "mapperMatchScore": 1.0,
@@ -322,7 +322,7 @@
         "includeDScore": true,
         "includeCScore": true,
         "mergerParameters": {
-            "qualityMergingAlgorithm" : "SumSubtraction",
+            "qualityMergingAlgorithm" : "MaxSubtraction",
             "minimalOverlap": 17,
             "minimalIdentity": 0.9
         },

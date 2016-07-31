@@ -63,9 +63,9 @@ public class VDJCAlignerPVFirstTest {
 
         try (PairedFastqReader reader =
                      new PairedFastqReader(
-                             VDJCAlignerSJFirstTest.class.getClassLoader()
+                             VDJCAlignerSTest.class.getClassLoader()
                                      .getResourceAsStream("sequences/sample_IGH_R1.fastq"),
-                             VDJCAlignerSJFirstTest.class.getClassLoader()
+                             VDJCAlignerSTest.class.getClassLoader()
                                      .getResourceAsStream("sequences/sample_IGH_R2.fastq"), true)) {
 
             VDJCAlignerPVFirst aligner = new VDJCAlignerPVFirst(parameters);

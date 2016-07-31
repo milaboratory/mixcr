@@ -89,6 +89,11 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                 bestHelper = helpers[i];
         }
 
+        if (!bestHelper.hasVOrJHits()) {
+            onFailedAlignment(input, VDJCAlignmentFailCause.NoHits);
+            return new VDJCAlignmentResult<>(input);
+        }
+
         // Calculates if this score is bigger then the threshold
         if (bestHelper.score() < parameters.getMinSumScore()) {
             onFailedAlignment(input, VDJCAlignmentFailCause.LowTotalScore);
@@ -98,28 +103,32 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         // Finally filtering hits inside this helper to meet minSumScore and maxHits limits
         bestHelper.filterHits(parameters.getMinSumScore(), parameters.getMaxHits());
 
-        if (!bestHelper.hasAnyVJHits()) {
-            onFailedAlignment(input, VDJCAlignmentFailCause.NoHits);
+        // TODO do we really need this ?
+        if (!bestHelper.hasVOrJHits()) {
+            onFailedAlignment(input, VDJCAlignmentFailCause.LowTotalScore);
             return new VDJCAlignmentResult<>(input);
         }
 
         VDJCAlignments alignments = bestHelper.createResult(input.getId(), this);
 
+        // Final check
         if (!parameters.getAllowNoCDR3PartAlignments()) {
             // CDR3 Begin / End
-            boolean isGood = false;
+            boolean containCDR3Edge = false;
             for (int i = 0; i < 2; i++)
                 if (alignments.getPartitionedTarget(i).getPartitioning().isAvailable(reqPointL)
                         || alignments.getPartitionedTarget(i).getPartitioning().isAvailable(reqPointR)) {
-                    isGood = true;
+                    containCDR3Edge = true;
                     break;
                 }
 
-            if (!isGood) {
+            if (!containCDR3Edge) {
                 onFailedAlignment(input, VDJCAlignmentFailCause.NoCDR3Parts);
                 return new VDJCAlignmentResult<>(input);
             }
         }
+
+        // Read successfully aligned
 
         onSuccessfulAlignment(input, alignments);
 
@@ -134,15 +143,17 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                 bestHelper = helpers[i];
 
         // If V or J hits are absent
-        if (!bestHelper.hasVJHits()) {
-            if (!bestHelper.hasVHits())
+        if (!bestHelper.hasVAndJHits()) {
+            if (!bestHelper.hasVOrJHits())
+                onFailedAlignment(input, VDJCAlignmentFailCause.NoHits);
+            else if (!bestHelper.hasVHits())
                 onFailedAlignment(input, VDJCAlignmentFailCause.NoVHits);
             else
                 onFailedAlignment(input, VDJCAlignmentFailCause.NoJHits);
             return new VDJCAlignmentResult<>(input);
         }
 
-        // Performing alignment of C and D genes if corresponding parameters are set to include their scores to
+        // Performing alignment of C and D genes; if corresponding parameters are set include their scores to
         // the total score value
         bestHelper.performCDAlignment();
 
@@ -160,6 +171,8 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
             onFailedAlignment(input, VDJCAlignmentFailCause.LowTotalScore);
             return new VDJCAlignmentResult<>(input);
         }
+
+        // Read successfully aligned
 
         VDJCAlignments alignments = bestHelper.createResult(input.getId(), this);
 
@@ -258,18 +271,18 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
             return vHits != null && vHits.length > 0;
         }
 
-        boolean hasAnyVJHits() {
+        boolean hasVOrJHits() {
             return (vHits != null && vHits.length > 0) ||
                     (jHits != null && jHits.length > 0);
         }
 
-        boolean hasVJHits() {
+        boolean hasVAndJHits() {
             return vHits != null && jHits != null &&
                     vHits.length > 0 && jHits.length > 0;
         }
 
         boolean isGoodVJ() {
-            return hasVJHits() && hasVJOnTheSameTarget();
+            return hasVAndJHits() && hasVJOnTheSameTarget();
         }
 
         private boolean hasVJOnTheSameTarget() {

@@ -364,8 +364,8 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
             gf2 = gf2.withoutLast();
         }
 
-        GeneFeature gfLeft = intersection1R(gf1left, gf2left),
-                gfRight = intersection1R(gf1right, gf2right);
+        GeneFeature gfLeft = intersection1R(gf1left, gf2left, gf1, gf2),
+                gfRight = intersection1R(gf1right, gf2right, gf1, gf2);
 
         GeneFeature r = intersection0(gf1, gf2);
 
@@ -377,17 +377,21 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         return r;
     }
 
-    private static GeneFeature intersection1R(GeneFeature gf1, GeneFeature gf2) {
-        if (gf1 == null && gf2 == null)
+    private static GeneFeature reverse(GeneFeature gf) {
+        return gf == null ? null : gf.reverse();
+    }
+
+    private static GeneFeature intersection1R(GeneFeature gf1r, GeneFeature gf2r, GeneFeature gf1, GeneFeature gf2) {
+        if (gf1r == null && gf2r == null)
             return null;
 
-        if (gf1 == null)
-            return gf2;
+        if (gf1r == null)
+            return reverse(intersection0(gf2r.reverse(), gf1));
 
-        if (gf2 == null)
-            return gf1;
+        if (gf2r == null)
+            return reverse(intersection0(gf1r.reverse(), gf2));
 
-        GeneFeature i = intersection0(gf1.reverse(), gf2.reverse());
+        GeneFeature i = intersection0(gf1r.reverse(), gf2r.reverse());
         return i == null ? null : i.reverse();
     }
 
@@ -487,7 +491,7 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         for (int i = 1; i < ranges.length; ++i) {
             cur = ranges[i];
             if (cur.begin.compareTo(prev.end) < 0)
-                throw new IllegalArgumentException("Intersecting ranges.");
+                throw new IllegalArgumentException("Intersecting ranges: " + cur + " and " + prev);
             if (cur.begin.equals(prev.end) && cur.isReversed() == prev.isReversed()) {
                 //merge
                 prev = new ReferenceRange(prev.begin, cur.end);

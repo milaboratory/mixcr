@@ -38,11 +38,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
 
-import static com.milaboratory.mixcr.reference.ReferencePoint.*;
 import static com.milaboratory.mixcr.reference.GeneFeature.*;
-import static com.milaboratory.mixcr.reference.ReferencePoint.DBegin;
-import static com.milaboratory.mixcr.reference.ReferencePoint.DEnd;
-import static com.milaboratory.mixcr.reference.ReferencePoint.VEnd;
+import static com.milaboratory.mixcr.reference.GeneFeature.encode;
+import static com.milaboratory.mixcr.reference.ReferencePoint.*;
 import static org.junit.Assert.*;
 
 /**
@@ -489,5 +487,31 @@ public class GeneFeatureTest {
         assertEquals(
                 intersection(new GeneFeature(new GeneFeature(UTR5Begin, L1End.move(-1)), new GeneFeature(L2Begin.move(-5), VEnd.move(1))), new GeneFeature(UTR5Begin.move(1), VEnd)),
                 new GeneFeature(new GeneFeature(UTR5Begin.move(1), L1End.move(-1)), new GeneFeature(L2Begin.move(-5), VEnd)));
+    }
+
+    @Test
+    public void testIntersection18() throws Exception {
+        //System.out.println(intersection(CDR1.append(VPSegment), VTranscriptWithP));
+        assertEquals(CDR1, intersection(CDR1, VTranscriptWithP));
+        assertEquals(CDR1, intersection(CDR1, VRegionWithP));
+        assertEquals(CDR1, intersection(VTranscriptWithP, CDR1));
+        assertEquals(CDR1, intersection(VRegionWithP, CDR1));
+        assertEquals(CDR1.append(GermlineVPSegment), intersection(CDR1.append(GermlineVPSegment), VTranscriptWithP));
+        assertEquals(CDR1.append(GermlineVPSegment), intersection(CDR1.append(GermlineVPSegment), VRegionWithP));
+        assertEquals(CDR1.append(GermlineVPSegment), intersection(VTranscriptWithP, CDR1.append(GermlineVPSegment)));
+        assertEquals(CDR1.append(GermlineVPSegment), intersection(VRegionWithP, CDR1.append(GermlineVPSegment)));
+    }
+
+    @Test
+    public void testIntersection19() throws Exception {
+        assertNull(intersection(CDR1, JRegionWithP));
+        assertNull(intersection(FR4, VRegionWithP));
+        assertNull(intersection(CDR1, JRegion));
+        assertNull(intersection(FR4, VRegion));
+    }
+
+    @Test
+    public void testIntersection20() throws Exception {
+        assertEquals(VTranscriptWithP, intersection(VTranscript, VTranscriptWithP));
     }
 }
