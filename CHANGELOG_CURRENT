@@ -1,6 +1,0 @@
-Fixed `floatingRightBound=false` for rna-seq alignment parameters
-Added new action `filterAlignments`
-Fixed wrong output for *gene family* export columns
-Several fixes for alignment report
-Default value for `qualityMergingAlgorithm` for paired-end merger changed to `MaxSubtraction`
-Fixed `NPE` / `IllegalArgumentException` in case of complex assemblingFeatures

@@ -1,4 +1,15 @@
 
+MiXCR 1.8.2 (31 Jul 2016)
+========================
+
+-- Fixed `floatingRightBound=false` for rna-seq alignment parameters
+-- Added new action `filterAlignments`
+-- Fixed wrong output for *gene family* export columns
+-- Several fixes for alignment report
+-- Default value for `qualityMergingAlgorithm` for paired-end merger changed to `MaxSubtraction`
+-- Fixed `NPE` / `IllegalArgumentException` in case of complex assemblingFeatures
+
+
 MiXCR 1.8.1 (29 Jun 2016)
 ========================
 
