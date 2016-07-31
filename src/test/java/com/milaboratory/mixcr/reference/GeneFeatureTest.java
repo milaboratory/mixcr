@@ -491,15 +491,15 @@ public class GeneFeatureTest {
 
     @Test
     public void testIntersection18() throws Exception {
-        System.out.println(intersection(CDR1.append(VPSegment), VTranscriptWithP));
+        //System.out.println(intersection(CDR1.append(VPSegment), VTranscriptWithP));
         assertEquals(CDR1, intersection(CDR1, VTranscriptWithP));
         assertEquals(CDR1, intersection(CDR1, VRegionWithP));
         assertEquals(CDR1, intersection(VTranscriptWithP, CDR1));
         assertEquals(CDR1, intersection(VRegionWithP, CDR1));
-        assertEquals(CDR1.append(VPSegment), intersection(CDR1.append(VPSegment), VTranscriptWithP));
-        assertEquals(CDR1.append(VPSegment), intersection(CDR1.append(VPSegment), VRegionWithP));
-        assertEquals(CDR1.append(VPSegment), intersection(VTranscriptWithP, CDR1.append(VPSegment)));
-        assertEquals(CDR1.append(VPSegment), intersection(VRegionWithP, CDR1.append(VPSegment)));
+        assertEquals(CDR1.append(GermlineVPSegment), intersection(CDR1.append(GermlineVPSegment), VTranscriptWithP));
+        assertEquals(CDR1.append(GermlineVPSegment), intersection(CDR1.append(GermlineVPSegment), VRegionWithP));
+        assertEquals(CDR1.append(GermlineVPSegment), intersection(VTranscriptWithP, CDR1.append(GermlineVPSegment)));
+        assertEquals(CDR1.append(GermlineVPSegment), intersection(VRegionWithP, CDR1.append(GermlineVPSegment)));
     }
 
     @Test
