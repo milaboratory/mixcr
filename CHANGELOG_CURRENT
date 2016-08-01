@@ -1,0 +1,1 @@
+Fix: for C alignment now will be performed in R2 for only alignment with V gene in R1 (affects only `align` with `-OallowPartialAlignments=true`)
