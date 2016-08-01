@@ -484,11 +484,14 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                         totalMScore + vHits[0].sumScore // = minTotalScore - topJScore - topCScore - topDScore
                 );
                 this.vHits = extractHits(minScore, vHits, maxHits);
+                assert vHits.length > 0;
             }
 
-            if (jHits != null && jHits.length > 0)
+            if (jHits != null && jHits.length > 0) {
                 this.jHits = extractHits(totalMScore + jHits[0].sumScore, // = minTotalScore - topVScore - topCScore - topDScore
                         jHits, maxHits);
+                assert jHits.length > 0;
+            }
         }
 
         /**
@@ -497,11 +500,13 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         private PairedHit[] extractHits(float minScore, PairedHit[] result, int maxHits) {
             int count = 0;
             for (PairedHit hit : result)
-                if (hit.sumScore > minScore) {
+                if (hit.sumScore >= minScore) {
                     if (++count >= maxHits)
                         break;
                 } else
                     break;
+
+            assert count > 0;
 
             return Arrays.copyOfRange(result, 0, count);
         }
