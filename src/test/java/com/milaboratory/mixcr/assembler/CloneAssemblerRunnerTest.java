@@ -36,6 +36,7 @@ import com.milaboratory.core.io.sequence.SequenceReader;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.core.sequence.quality.QualityAggregationType;
 import com.milaboratory.core.tree.TreeSearchParameters;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
@@ -44,7 +45,8 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.vdjaligners.*;
 import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.SmartProgressReporter;
-import io.repseq.reference.*;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -77,13 +79,13 @@ public class CloneAssemblerRunnerTest {
     private static CloneSet runFullPipeline(String... fastqFiles) throws IOException, InterruptedException {
         //building alignments
         VDJCAlignerParameters alignerParameters = VDJCParametersPresets.getByName("default");
-        VDJCAligner aligner = fastqFiles.length == 1 ? new VDJCAlignerSJFirst(alignerParameters) : new VDJCAlignerWithMerge(alignerParameters);
+        VDJCAligner aligner = fastqFiles.length == 1 ? new VDJCAlignerS(alignerParameters) : new VDJCAlignerWithMerge(alignerParameters);
 
         InputStream sample = LociLibraryReader.class.getClassLoader().getResourceAsStream("reference/mi.ll");
         LociLibrary library = LociLibraryReader.read(sample, true);
         for (Allele allele : library.getLocus(Species.HomoSapiens, Chain.IGH).getAllAlleles())
             if (alignerParameters.containsRequiredFeature(allele))
-                aligner.addAllele(allele);
+                aligner.addGene(allele);
 
         SequenceReader reader;
         if (fastqFiles.length == 1)
@@ -120,13 +122,14 @@ public class CloneAssemblerRunnerTest {
 
         CloneAssemblerParameters assemblerParameters = new CloneAssemblerParameters(
                 new GeneFeature[]{GeneFeature.CDR3}, 12,
+                QualityAggregationType.Average,
                 new CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
-                factoryParameters, true, true, false, 0.4, true, (byte) 20, .8, "2 of 6");
+                factoryParameters, true, true, false, 0.4, true, (byte) 20, .8, "2 of 6", (byte) 15);
 
         System.out.println(GlobalObjectMappers.toOneLine(assemblerParameters));
 
         CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(alignmentsProvider,
-                new CloneAssembler(assemblerParameters, true, aligner.getUsedAlleles()), 2);
+                new CloneAssembler(assemblerParameters, true, aligner.getUsedGenes()), 2);
         SmartProgressReporter.startProgressReport(assemblerRunner);
         assemblerRunner.run();
 

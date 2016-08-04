@@ -31,29 +31,29 @@ package com.milaboratory.mixcr.basictypes;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.AlignmentHelper;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import io.repseq.reference.Allele;
-import io.repseq.reference.GeneFeature;
-import io.repseq.reference.GeneType;
-import io.repseq.reference.ReferencePoint;
 import com.milaboratory.primitivio.annotations.Serializable;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
+import io.repseq.core.ReferencePoint;
+import io.repseq.core.VDJCGene;
 
 import java.util.Arrays;
 
 @Serializable(by = IO.VDJCHitSerializer.class)
 public final class VDJCHit implements Comparable<VDJCHit> {
-    private final Allele allele;
+    private final VDJCGene gene;
     private final Alignment<NucleotideSequence>[] alignments;
     private final GeneFeature alignedFeature;
     private final float score;
 
-    public VDJCHit(Allele allele, Alignment<NucleotideSequence> alignments, GeneFeature alignedFeature) {
-        this(allele, new Alignment[]{alignments}, alignedFeature);
+    public VDJCHit(VDJCGene gene, Alignment<NucleotideSequence> alignments, GeneFeature alignedFeature) {
+        this(gene, new Alignment[]{alignments}, alignedFeature);
     }
 
-    public VDJCHit(Allele allele, Alignment<NucleotideSequence>[] alignments, GeneFeature alignedFeature) {
-        assert (alignments[0] == null || allele.getFeature(alignedFeature).equals(alignments[0].getSequence1()));
-        assert (alignments.length < 2 || alignments[1] == null || allele.getFeature(alignedFeature).equals(alignments[1].getSequence1()));
-        this.allele = allele;
+    public VDJCHit(VDJCGene gene, Alignment<NucleotideSequence>[] alignments, GeneFeature alignedFeature) {
+        assert (alignments[0] == null || gene.getFeature(alignedFeature).equals(alignments[0].getSequence1()));
+        assert (alignments.length < 2 || alignments[1] == null || gene.getFeature(alignedFeature).equals(alignments[1].getSequence1()));
+        this.gene = gene;
         this.alignments = alignments;
         this.alignedFeature = alignedFeature;
 
@@ -64,10 +64,10 @@ public final class VDJCHit implements Comparable<VDJCHit> {
         this.score = sum;
     }
 
-    public VDJCHit(Allele allele, Alignment<NucleotideSequence>[] alignments, GeneFeature alignedFeature, float score) {
-        assert (alignments[0] == null || allele.getFeature(alignedFeature).equals(alignments[0].getSequence1()));
-        assert (alignments.length < 2 || alignments[1] == null || allele.getFeature(alignedFeature).equals(alignments[1].getSequence1()));
-        this.allele = allele;
+    public VDJCHit(VDJCGene gene, Alignment<NucleotideSequence>[] alignments, GeneFeature alignedFeature, float score) {
+        assert (alignments[0] == null || gene.getFeature(alignedFeature).equals(alignments[0].getSequence1()));
+        assert (alignments.length < 2 || alignments[1] == null || gene.getFeature(alignedFeature).equals(alignments[1].getSequence1()));
+        this.gene = gene;
         this.alignments = alignments;
         this.alignedFeature = alignedFeature;
         this.score = score;
@@ -76,22 +76,22 @@ public final class VDJCHit implements Comparable<VDJCHit> {
     public int getPosition(int target, ReferencePoint referencePoint) {
         if (alignments[target] == null)
             return -1;
-        int positionInAllele = allele.getPartitioning().getRelativePosition(alignedFeature, referencePoint);
+        int positionInAllele = gene.getPartitioning().getRelativePosition(alignedFeature, referencePoint);
         if (positionInAllele == -1)
             return -1;
         return alignments[target].convertPosition(positionInAllele);
     }
 
     public GeneType getGeneType() {
-        return allele.getGeneType();
+        return gene.getGeneType();
     }
 
     public float getScore() {
         return score;
     }
 
-    public Allele getAllele() {
-        return allele;
+    public VDJCGene getGene() {
+        return gene;
     }
 
     public GeneFeature getAlignedFeature() {
@@ -123,14 +123,14 @@ public final class VDJCHit implements Comparable<VDJCHit> {
 
     @Override
     public String toString() {
-        return allele.getName() + "[" + score + "]";
+        return gene.getName() + "[" + score + "]";
     }
 
     @Override
     public int compareTo(VDJCHit o) {
         int compare = Float.compare(o.score, score);
         if (compare == 0)
-            compare = allele.getId().compareTo(o.allele.getId());
+            compare = gene.getId().compareTo(o.gene.getId());
         return compare;
     }
 
@@ -144,14 +144,14 @@ public final class VDJCHit implements Comparable<VDJCHit> {
         if (Float.compare(vdjcHit.score, score) != 0) return false;
         if (!alignedFeature.equals(vdjcHit.alignedFeature)) return false;
         if (!Arrays.equals(alignments, vdjcHit.alignments)) return false;
-        if (!allele.getId().equals(vdjcHit.allele.getId())) return false;
+        if (!gene.getId().equals(vdjcHit.gene.getId())) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        int result = allele.getId().hashCode();
+        int result = gene.getId().hashCode();
         result = 31 * result + Arrays.hashCode(alignments);
         result = 31 * result + alignedFeature.hashCode();
         result = 31 * result + (score != +0.0f ? Float.floatToIntBits(score) : 0);

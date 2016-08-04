@@ -33,7 +33,7 @@ import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerSJFirst;
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignerS;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
 import io.repseq.reference.*;
@@ -67,11 +67,11 @@ public class IOTest {
                              IOTest.class.getClassLoader()
                                      .getResourceAsStream("sequences/sample_IGH_R1.fastq"), true)) {
 
-            VDJCAlignerSJFirst aligner = new VDJCAlignerSJFirst(parameters);
+            VDJCAlignerS aligner = new VDJCAlignerS(parameters);
 
             for (Allele allele : ll.getLocus(Species.HomoSapiens, Chain.IGH).getAllAlleles()) {
                 if (parameters.containsRequiredFeature(allele))
-                    aligner.addAllele(allele);
+                    aligner.addGene(allele);
             }
 
 

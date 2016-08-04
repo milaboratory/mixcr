@@ -32,30 +32,40 @@ import com.milaboratory.core.alignment.batch.AlignmentHit;
 import com.milaboratory.core.alignment.batch.BatchAlignerWithBase;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import io.repseq.reference.Allele;
-import io.repseq.reference.GeneType;
+import io.repseq.core.GeneType;
+import io.repseq.core.VDJCGene;
 
 import java.util.List;
 
 public abstract class VDJCAlignerAbstract<R extends SequenceRead> extends VDJCAligner<R> {
     protected volatile SingleDAligner singleDAligner = null;
-    protected volatile BatchAlignerWithBase<NucleotideSequence, Allele, AlignmentHit<NucleotideSequence, Allele>> vAligner = null;
-    protected volatile BatchAlignerWithBase<NucleotideSequence, Allele, AlignmentHit<NucleotideSequence, Allele>> jAligner = null;
-    protected volatile BatchAlignerWithBase<NucleotideSequence, Allele, AlignmentHit<NucleotideSequence, Allele>> cAligner = null;
+    protected volatile BatchAlignerWithBase<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> vAligner = null;
+    protected volatile BatchAlignerWithBase<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> jAligner = null;
+    protected volatile BatchAlignerWithBase<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> cAligner = null;
 
     public VDJCAlignerAbstract(VDJCAlignerParameters parameters) {
         super(parameters);
     }
 
     @SuppressWarnings("unchecked")
-    private BatchAlignerWithBase<NucleotideSequence, Allele, AlignmentHit<NucleotideSequence, Allele>> createKAligner(GeneType geneType) {
+    private BatchAlignerWithBase<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> createKAligner(GeneType geneType) {
         if (parameters.getVJCGeneAlignerParameters(geneType) != null &&
-                !allelesToAlign.get(geneType).isEmpty()) {
-            BatchAlignerWithBase<NucleotideSequence, Allele, AlignmentHit<NucleotideSequence, Allele>> aligner =
+                !genesToAlign.get(geneType).isEmpty()) {
+            BatchAlignerWithBase<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> aligner =
                     (BatchAlignerWithBase) parameters.getVJCGeneAlignerParameters(geneType).getParameters().createAligner();
-            for (Allele a : allelesToAlign.get(geneType))
+            for (VDJCGene a : genesToAlign.get(geneType))
                 aligner.addReference(a.getFeature(parameters.getVJCGeneAlignerParameters(geneType).getGeneFeatureToAlign()), a);
             return aligner;
+        }
+        return null;
+    }
+
+    protected final BatchAlignerWithBase<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>>
+    getAligner(GeneType type) {
+        switch (type) {
+            case Variable: return vAligner;
+            case Joining: return jAligner;
+            case Constant: return cAligner;
         }
         return null;
     }
@@ -63,10 +73,10 @@ public abstract class VDJCAlignerAbstract<R extends SequenceRead> extends VDJCAl
     @Override
     protected void init() {
         DAlignerParameters dAlignerParameters = parameters.getDAlignerParameters();
-        List<Allele> dAlleles = allelesToAlign.get(GeneType.Diversity);
+        List<VDJCGene> dAlleles = genesToAlign.get(GeneType.Diversity);
         if (dAlignerParameters != null && dAlleles.size() != 0)
             singleDAligner = new SingleDAligner(dAlignerParameters,
-                    allelesToAlign.get(GeneType.Diversity));
+                    genesToAlign.get(GeneType.Diversity));
         vAligner = createKAligner(GeneType.Variable);
         jAligner = createKAligner(GeneType.Joining);
         cAligner = createKAligner(GeneType.Constant);

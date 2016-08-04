@@ -1,9 +1,11 @@
 {
     "default": {
         "assemblingFeatures": ["CDR3"],
+        "minimalQuality" : 0,
         "minimalClonalSequenceLength": 12,
-        "separateByV": true,
-        "separateByJ": true,
+        "qualityAggregationType": "Max",
+        "separateByV": false,
+        "separateByJ": false,
         "separateByC": false,
         "maximalPreClusteringRatio": 1.0,
         "cloneClusteringParameters": {
@@ -73,9 +75,11 @@
     },
     "default_affine": {
         "assemblingFeatures": ["CDR3"],
+        "minimalQuality" : 0,
         "minimalClonalSequenceLength": 12,
-        "separateByV": true,
-        "separateByJ": true,
+        "qualityAggregationType": "Max",
+        "separateByV": false,
+        "separateByJ": false,
         "separateByC": false,
         "maximalPreClusteringRatio": 1.0,
         "cloneClusteringParameters": {

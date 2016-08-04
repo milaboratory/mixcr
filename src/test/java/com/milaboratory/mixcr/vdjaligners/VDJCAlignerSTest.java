@@ -44,7 +44,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class VDJCAlignerSJFirstTest {
+public class VDJCAlignerSTest {
     @Test
     public void testSerialization1() throws Exception {
         VDJCAlignerParameters parameters =
@@ -55,12 +55,17 @@ public class VDJCAlignerSJFirstTest {
         int header;
         try (SingleFastqReader reader =
                      new SingleFastqReader(
-                             VDJCAlignerSJFirstTest.class.getClassLoader()
+                             VDJCAlignerSTest.class.getClassLoader()
                                      .getResourceAsStream("sequences/sample_IGH_R1.fastq"), true)) {
+<<<<<<< HEAD:src/test/java/com/milaboratory/mixcr/vdjaligners/VDJCAlignerSJFirstTest.java
             VDJCAlignerSJFirst aligner = new VDJCAlignerSJFirst(parameters);
             for (Allele allele : ll.getLocus(Species.HomoSapiens, Chain.IGH).getAllAlleles())
+=======
+            VDJCAlignerS aligner = new VDJCAlignerS(parameters);
+            for (Allele allele : ll.getLocus(Species.HomoSapiens, Locus.IGH).getAllAlleles())
+>>>>>>> develop:src/test/java/com/milaboratory/mixcr/vdjaligners/VDJCAlignerSTest.java
                 if (parameters.containsRequiredFeature(allele))
-                    aligner.addAllele(allele);
+                    aligner.addGene(allele);
             try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(bos)) {
                 writer.header(aligner);
                 header = bos.size();
@@ -93,12 +98,17 @@ public class VDJCAlignerSJFirstTest {
 //        int header;
 //        try (SingleFastqReader reader =
 //                     new SingleFastqReader(
-//                             VDJCAlignerSJFirstTest.class.getClassLoader()
+//                             VDJCAlignerSTest.class.getClassLoader()
 //                                     .getResourceAsStream("sequences/sample_IGH_R1.fastq"))) {
+<<<<<<< HEAD:src/test/java/com/milaboratory/mixcr/vdjaligners/VDJCAlignerSJFirstTest.java
 //            VDJCAlignerSJFirst aligner = new VDJCAlignerSJFirst(parameters);
 //            for (Allele allele : ll.getChain(Species.HomoSapiens, Chain.IGH).getAllAlleles())
+=======
+//            VDJCAlignerS aligner = new VDJCAlignerS(parameters);
+//            for (Allele allele : ll.getLocus(Species.HomoSapiens, Locus.IGH).getAllAlleles())
+>>>>>>> develop:src/test/java/com/milaboratory/mixcr/vdjaligners/VDJCAlignerSTest.java
 //                if (parameters.containsRequiredFeature(allele))
-//                    aligner.addAllele(allele);
+//                    aligner.addGene(allele);
 //            int accepted = 0;
 //            AFilter filter = AFilter.build("l = length(CDR3); targetAlignedTop(0, V) && l > 50");
 //            try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(bos)) {

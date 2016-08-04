@@ -6,7 +6,7 @@ import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.cli.ActionAlign;
 import io.repseq.reference.Chain;
-import io.repseq.reference.GeneType;
+import io.repseq.core.GeneType;
 import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import org.junit.Assert;
@@ -34,7 +34,7 @@ public class RunMiXCRTest {
         for (Clone clone : assemble.cloneSet.getClones()) {
             Set<Chain> vjLoci = VDJCAligner.getPossibleDLoci(clone.getHits(GeneType.Variable), clone.getHits(GeneType.Joining));
             for (VDJCHit dHit : clone.getHits(GeneType.Diversity))
-                Assert.assertTrue(vjLoci.contains(dHit.getAllele().getLocus()));
+                Assert.assertTrue(vjLoci.contains(dHit.getGene().getLocus()));
         }
     }
 

@@ -28,11 +28,13 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
-import io.repseq.reference.Allele;
 import com.milaboratory.mixcr.util.VersionInfoProvider;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivO;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
+import io.repseq.core.VDJCGene;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,11 +43,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
-    static final String MAGIC_V3 = "MiXCR.VDJC.V03";
-    static final String MAGIC_V4 = "MiXCR.VDJC.V04";
-    static final String MAGIC_V5 = "MiXCR.VDJC.V05";
-    static final String MAGIC_V6 = "MiXCR.VDJC.V06";
-    static final String MAGIC = MAGIC_V6;
+    static final String MAGIC_V8 = "MiXCR.VDJC.V08";
+    static final String MAGIC = MAGIC_V8;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
     final PrimitivO output;
@@ -70,11 +69,11 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     }
 
     public void header(VDJCAligner aligner) {
-        header(aligner.getParameters(), aligner.getUsedAlleles());
+        header(aligner.getParameters(), aligner.getUsedGenes());
     }
 
     @Override
-    public void header(VDJCAlignerParameters parameters, List<Allele> alleles) {
+    public void header(VDJCAlignerParameters parameters, List<VDJCGene> alleles) {
         if (parameters == null || alleles == null)
             throw new IllegalArgumentException();
 
@@ -93,7 +92,15 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
         // Writing parameters
         output.writeObject(parameters);
 
-        IOUtil.writeAlleleReferences(output, alleles, parameters);
+        IOUtil.writeGeneReferences(output, alleles, parameters);
+
+        // Registering links to features to align
+        for (GeneType gt : GeneType.VDJC_REFERENCE) {
+            GeneFeature feature = parameters.getFeatureToAlign(gt);
+            output.writeObject(feature);
+            if (feature != null)
+                output.putKnownReference(feature);
+        }
 
         header = true;
     }

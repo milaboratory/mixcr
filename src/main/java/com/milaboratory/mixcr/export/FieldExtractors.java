@@ -35,10 +35,9 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.cli.ActionAssemble;
-import io.repseq.reference.GeneFeature;
-import io.repseq.reference.GeneType;
-import io.repseq.reference.ReferencePoint;
-import io.repseq.core.SequencePartitioning;
+import io.repseq.core.*;
+import gnu.trove.iterator.TObjectFloatIterator;
+import gnu.trove.map.hash.TObjectFloatHashMap;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
@@ -57,6 +56,10 @@ public final class FieldExtractors {
     private static final DecimalFormat SCORE_FORMAT = new DecimalFormat("#.#");
 
     static Field[] descriptors = null;
+
+    private static String alleleName(VDJCGene allele, boolean familyOnly) {
+        return familyOnly ? allele.getFamilyName() : allele.getName();
+    }
 
     public synchronized static Field[] getFields() {
         if (descriptors == null) {
@@ -80,12 +83,27 @@ public final class FieldExtractors {
                         VDJCHit bestHit = object.getBestHit(type);
                         if (bestHit == null)
                             return NULL;
-                        return bestHit.getAllele().getName();
+                        return bestHit.getGene().getName();
                     }
                 });
             }
 
-            // Best hits
+            // Best family
+            for (final GeneType type : GeneType.values()) {
+                char l = type.getLetter();
+                desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Family",
+                        "Export best " + l + " hit family name", "Best " + l + " hit family", "best" + l + "Family") {
+                    @Override
+                    protected String extract(VDJCObject object) {
+                        VDJCHit bestHit = object.getBestHit(type);
+                        if (bestHit == null)
+                            return NULL;
+                        return bestHit.getGene().getFamilyName();
+                    }
+                });
+            }
+
+            // Best hit scores
             for (final GeneType type : GeneType.values()) {
                 char l = type.getLetter();
                 desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "HitScore",
@@ -100,6 +118,7 @@ public final class FieldExtractors {
                 });
             }
 
+
             // All hits
             for (final GeneType type : GeneType.values()) {
                 char l = type.getLetter();
@@ -112,7 +131,7 @@ public final class FieldExtractors {
                             return "";
                         StringBuilder sb = new StringBuilder();
                         for (int i = 0; ; i++) {
-                            sb.append(hits[i].getAllele().getName())
+                            sb.append(hits[i].getGene().getName())
                                     .append("(").append(SCORE_FORMAT.format(hits[i].getScore()))
                                     .append(")");
                             if (i == hits.length - 1)
@@ -136,8 +155,44 @@ public final class FieldExtractors {
                             return "";
                         StringBuilder sb = new StringBuilder();
                         for (int i = 0; ; i++) {
-                            sb.append(hits[i].getAllele().getName());
+                            sb.append(hits[i].getGene().getName());
                             if (i == hits.length - 1)
+                                break;
+                            sb.append(",");
+                        }
+                        return sb.toString();
+                    }
+                });
+            }
+
+            // All families
+            for (final GeneType type : GeneType.values()) {
+                char l = type.getLetter();
+                desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Families",
+                        "Export all " + l + " hit families", "All " + l + " families", "all" + l + "Families") {
+                    @Override
+                    protected String extract(VDJCObject object) {
+                        TObjectFloatHashMap<String> familyScores = new TObjectFloatHashMap<>();
+                        VDJCHit[] hits = object.getHits(type);
+                        if (hits.length == 0)
+                            return "";
+                        for (VDJCHit hit : hits)
+                            familyScores.adjustOrPutValue(hit.getGene().getFamilyName(), hit.getScore(), hit.getScore());
+
+                        final Holder[] hs = new Holder[familyScores.size()];
+                        final TObjectFloatIterator<String> it = familyScores.iterator();
+                        int i = 0;
+                        while (it.hasNext()) {
+                            it.advance();
+                            hs[i++] = new Holder(it.key(), it.value());
+                        }
+
+                        Arrays.sort(hs);
+
+                        StringBuilder sb = new StringBuilder();
+                        for (i = 0; ; i++) {
+                            sb.append(hs[i].str);
+                            if (i == hs.length - 1)
                                 break;
                             sb.append(",");
                         }
@@ -609,7 +664,7 @@ public final class FieldExtractors {
 
             int cloneIndex = currentMapping.getCloneIndex();
             ReadToCloneMapping.MappingType mt = currentMapping.getMappingType();
-            if (mt == Dropped)
+            if (currentMapping.isDropped())
                 return printMapping ? mt.toString().toLowerCase() : NULL;
             return printMapping ? Integer.toString(cloneIndex) + ":" + mt.toString().toLowerCase() : Integer.toString(cloneIndex);
         }
@@ -683,6 +738,21 @@ public final class FieldExtractors {
                 return sString;
             default:
                 throw new NullPointerException();
+        }
+    }
+
+    private static final class Holder implements Comparable<Holder> {
+        final String str;
+        final float score;
+
+        public Holder(String str, float score) {
+            this.str = str;
+            this.score = score;
+        }
+
+        @Override
+        public int compareTo(Holder o) {
+            return Float.compare(o.score, score);
         }
     }
 }

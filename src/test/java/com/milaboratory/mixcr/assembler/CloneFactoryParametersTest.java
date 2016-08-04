@@ -31,7 +31,7 @@ package com.milaboratory.mixcr.assembler;
 import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.alignment.BandedAlignerParameters;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
-import io.repseq.reference.GeneFeature;
+import io.repseq.core.GeneFeature;
 import com.milaboratory.mixcr.vdjaligners.DAlignerParameters;
 import com.milaboratory.util.GlobalObjectMappers;
 import org.junit.Test;

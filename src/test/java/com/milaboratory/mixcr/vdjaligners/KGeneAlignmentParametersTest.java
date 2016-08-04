@@ -30,7 +30,7 @@ package com.milaboratory.mixcr.vdjaligners;
 
 import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
-import io.repseq.reference.GeneFeature;
+import io.repseq.core.GeneFeature;
 import com.milaboratory.util.GlobalObjectMappers;
 import org.junit.Test;
 

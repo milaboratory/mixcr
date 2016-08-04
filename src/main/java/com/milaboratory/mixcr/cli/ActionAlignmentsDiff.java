@@ -9,8 +9,8 @@ import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriterI;
-import io.repseq.reference.GeneFeature;
-import io.repseq.reference.GeneType;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
 import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.mixcr.util.VDJCAlignmentsDifferenceReader;
 import com.milaboratory.util.SmartProgressReporter;
@@ -18,6 +18,7 @@ import com.milaboratory.util.SmartProgressReporter;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -59,9 +60,17 @@ public final class ActionAlignmentsDiff implements Action {
                     parameters.getFeature(), parameters.hitsCompareLevel);
             for (VDJCAlignmentsDifferenceReader.Diff diff : CUtils.it(diffReader)) {
                 switch (diff.status) {
-                    case AlignmentsAreSame: ++same; break;
-                    case AlignmentPresentOnlyInFirst: ++onlyIn1; only1.write(diff.first); break;
-                    case AlignmentPresentOnlyInSecond: ++onlyIn2; only2.write(diff.second); break;
+                    case AlignmentsAreSame:
+                        ++same;
+                        break;
+                    case AlignmentPresentOnlyInFirst:
+                        ++onlyIn1;
+                        only1.write(diff.first);
+                        break;
+                    case AlignmentPresentOnlyInSecond:
+                        ++onlyIn2;
+                        only2.write(diff.second);
+                        break;
                     case AlignmentsAreDifferent:
                         ++justDiff;
 
@@ -88,6 +97,7 @@ public final class ActionAlignmentsDiff implements Action {
             report.println("Aligned reads present only in the SECOND file: " + onlyIn2 + " (" + Util.PERCENT_FORMAT.format(100. * onlyIn2 / reader2.getNumberOfReads()) + ")%");
             report.println("Total number of different reads: " + justDiff);
             report.println("Reads with not same " + parameters.geneFeatureToMatch + ": " + diffFeature);
+
             for (GeneType geneType : GeneType.VDJC_REFERENCE)
                 report.println("Reads with not same " + geneType.name() + " hits: " + diffHits[geneType.ordinal()]);
         }
@@ -103,22 +113,26 @@ public final class ActionAlignmentsDiff implements Action {
         return parameters;
     }
 
-    @Parameters(commandDescription = "Calculates the difference between two .vdjca files",
-            optionPrefixes = "-")
+    @Parameters(commandDescription = "Calculates the difference between two .vdjca files")
     public static class DiffParameters extends ActionParametersWithOutput {
-        @Parameter(description = "input_file1 input_file2 report", variableArity = true)
+        @Parameter(description = "input_file1 input_file2 [report]")
         public List<String> parameters = new ArrayList<>();
-        @Parameter(names = {"-o1", "--only-in-first"}, description = "output for alignments contained only in the first .vdjca file", variableArity = false)
+
+        @Parameter(names = {"-o1", "--only-in-first"}, description = "output for alignments contained only " +
+                "in the first .vdjca file")
         public String onlyFirst;
-        @Parameter(names = {"-o2", "--only-in-second"}, description = "output for alignments contained only in the second .vdjca file", variableArity = false)
+        @Parameter(names = {"-o2", "--only-in-second"}, description = "output for alignments contained only " +
+                "in the second .vdjca file")
         public String onlySecond;
-        @Parameter(names = {"-d1", "--diff-from-first"}, description = "output for alignments from the first file that are different from those alignments in the second file", variableArity = false)
+        @Parameter(names = {"-d1", "--diff-from-first"}, description = "output for alignments from the first file " +
+                "that are different from those alignments in the second file")
         public String diff1;
-        @Parameter(names = {"-d2", "--diff-from-second"}, description = "output for alignments from the second file that are different from those alignments in the first file", variableArity = false)
+        @Parameter(names = {"-d2", "--diff-from-second"}, description = "output for alignments from the second file " +
+                "that are different from those alignments in the first file")
         public String diff2;
-        @Parameter(names = {"-g", "--gene-feature"}, description = "Gene feature to compare", variableArity = false)
+        @Parameter(names = {"-g", "--gene-feature"}, description = "Gene feature to compare")
         public String geneFeatureToMatch = "CDR3";
-        @Parameter(names = {"-l", "--top-hits-level"}, description = "Number of top hits to search for match", variableArity = false)
+        @Parameter(names = {"-l", "--top-hits-level"}, description = "Number of top hits to search for match")
         public int hitsCompareLevel = 1;
 
         GeneFeature getFeature() {
@@ -126,20 +140,30 @@ public final class ActionAlignmentsDiff implements Action {
         }
 
         String get1() {
-            return parameters.get(parameters.size() - 3);
+            return parameters.get(0);
         }
 
         String get2() {
-            return parameters.get(parameters.size() - 2);
+            return parameters.get(1);
         }
 
         String report() {
-            return parameters.get(parameters.size() - 1);
+            return parameters.size() == 2 ? "." : parameters.get(2);
         }
 
         @Override
+        @SuppressWarnings("unckecked")
         protected List<String> getOutputFiles() {
-            return parameters.subList(parameters.size() - 1, parameters.size());
+            return parameters.size() == 2 ?
+                    Collections.EMPTY_LIST :
+                    Collections.singletonList(parameters.get(parameters.size() - 1));
+        }
+
+        @Override
+        public void validate() {
+            super.validate();
+            if (parameters.size() < 2 || parameters.size() > 3)
+                throw new IllegalArgumentException("Wrong number of parameters.");
         }
     }
 }

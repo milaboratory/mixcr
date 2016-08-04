@@ -28,66 +28,7 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
-import com.milaboratory.core.sequence.NSequenceWithQuality;
-import io.repseq.reference.GeneType;
-import io.repseq.reference.ReferenceCompatibilityIO;
-import com.milaboratory.primitivio.PrimitivI;
-import com.milaboratory.primitivio.PrimitivO;
-import com.milaboratory.primitivio.Serializer;
-import com.milaboratory.primitivio.SerializersManager;
-
-import java.util.EnumMap;
-import java.util.Map;
-
 public final class CompatibilityIO {
     private CompatibilityIO() {
-    }
-
-    public static void registerV3Serializers(SerializersManager manager) {
-        registerV5Serializers(manager);
-        ReferenceCompatibilityIO.registerV3BasicReferencePointSerializers(manager);
-    }
-
-    public static void registerV5Serializers(SerializersManager manager) {
-        manager.registerCustomSerializer(VDJCAlignments.class, new VDJCAlignmentsSerializerV5());
-    }
-
-    public static class VDJCAlignmentsSerializerV5 implements Serializer<VDJCAlignments> {
-        @Override
-        public void write(PrimitivO output, VDJCAlignments object) {
-            output.writeObject(object.targets);
-            output.writeObject(object.descriptions);
-            output.writeByte(object.hits.size());
-            for (Map.Entry<GeneType, VDJCHit[]> entry : object.hits.entrySet()) {
-                output.writeObject(entry.getKey());
-                output.writeObject(entry.getValue());
-            }
-            output.writeLong(object.readId);
-        }
-
-        @Override
-        public VDJCAlignments read(PrimitivI input) {
-            NSequenceWithQuality[] targets = input.readObject(NSequenceWithQuality[].class);
-            String[] descriptions = input.readObject(String[].class);
-            int size = input.readByte();
-            EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
-            for (int i = 0; i < size; i++) {
-                GeneType key = input.readObject(GeneType.class);
-                hits.put(key, input.readObject(VDJCHit[].class));
-            }
-            VDJCAlignments vdjcAlignments = new VDJCAlignments(input.readLong(), hits, targets);
-            vdjcAlignments.setDescriptions(descriptions);
-            return vdjcAlignments;
-        }
-
-        @Override
-        public boolean isReference() {
-            return true;
-        }
-
-        @Override
-        public boolean handlesReference() {
-            return false;
-        }
     }
 }

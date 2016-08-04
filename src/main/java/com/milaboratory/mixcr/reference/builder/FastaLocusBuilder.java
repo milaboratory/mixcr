@@ -38,11 +38,13 @@ import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.mutations.MutationsUtil;
 import com.milaboratory.core.sequence.*;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
+import io.repseq.core.ReferencePoint;
 import io.repseq.core.SequencePartitioning;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter;
 import com.milaboratory.util.StringUtil;
 import gnu.trove.map.TObjectIntMap;
-import io.repseq.reference.*;
 
 import java.io.*;
 import java.util.*;

@@ -29,10 +29,15 @@
 package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.cli.JCommanderBasedMain;
+import com.milaboratory.mixcr.util.TempFileManager;
 import com.milaboratory.mixcr.util.VersionInfoProvider;
+
+import java.security.SecureRandom;
+import java.util.Arrays;
 
 public class Main {
     public static void main(String... args) throws Exception {
+        TempFileManager.seed(Arrays.hashCode(args) + 17 * (new SecureRandom()).nextLong());
         // Getting command string if executed from script
         String command = System.getProperty("mixcr.command", "java -jar mixcr.jar");
 
@@ -49,7 +54,11 @@ public class Main {
                 new ActionExportCloneReads(),
                 new VersionInfoAction(),
                 new ActionImportSegments(),
-                new ActionAlignmentsDiff());
+                new ActionAlignmentsDiff(),
+                new ActionAssemblePartialAlignments(),
+                new ActionExportReads(),
+                new ActionClonesDiff(),
+                new ActionFilterAlignments());
 
         // Adding version info callback
         main.setVersionInfoCallback(new Runnable() {
@@ -62,6 +71,10 @@ public class Main {
         });
 
         // Executing main method
-        main.main(args);
+        JCommanderBasedMain.ProcessResult processResult = main.main(args);
+
+        // If something was wrong, exit with code 1
+        if (processResult == JCommanderBasedMain.ProcessResult.Error)
+            System.exit(1);
     }
 }

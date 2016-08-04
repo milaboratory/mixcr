@@ -29,10 +29,14 @@
 package com.milaboratory.mixcr.vdjaligners;
 
 public enum VDJCAlignmentFailCause {
-    NoVHits("absence of V hits"), NoJHits("absence of J hits"), LowTotalScore("low total score");
-    public final String name;
+    NoHits("Alignment failed, no hits (not TCR/IG?)"),
+    NoCDR3Parts("Alignment failed because of absence of CDR3 parts"),
+    NoVHits("Alignment failed because of absence of V hits"),
+    NoJHits("Alignment failed because of absence of J hits"),
+    LowTotalScore("Alignment failed because of low total score");
+    public final String reportLine;
 
-    VDJCAlignmentFailCause(String name) {
-        this.name = name;
+    VDJCAlignmentFailCause(String reportLine) {
+        this.reportLine = reportLine;
     }
 }

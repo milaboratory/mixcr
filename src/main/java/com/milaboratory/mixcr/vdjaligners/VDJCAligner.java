@@ -30,26 +30,51 @@ package com.milaboratory.mixcr.vdjaligners;
 
 import cc.redberry.pipe.Processor;
 import com.milaboratory.core.io.sequence.SequenceRead;
+import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import io.repseq.reference.Allele;
-import io.repseq.reference.Chain;
-import io.repseq.reference.GeneType;
+import com.milaboratory.util.HashFunctions;
+import com.milaboratory.util.RandomUtil;
+import io.repseq.core.Chains;
+import io.repseq.core.GeneType;
+import io.repseq.core.VDJCGene;
 
 import java.util.*;
 
 public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R, VDJCAlignmentResult<R>> {
     protected volatile boolean initialized = false;
     protected final VDJCAlignerParameters parameters;
-    protected final EnumMap<GeneType, List<Allele>> allelesToAlign = new EnumMap<>(GeneType.class);
-    protected final List<Allele> usedAlleles = new ArrayList<>();
+    protected final EnumMap<GeneType, List<VDJCGene>> genesToAlign = new EnumMap<>(GeneType.class);
+    protected final List<VDJCGene> usedAlleles = new ArrayList<>();
     protected VDJCAlignerEventListener listener = null;
 
     protected VDJCAligner(VDJCAlignerParameters parameters) {
         this.parameters = parameters.clone();
         for (GeneType geneType : GeneType.values())
-            allelesToAlign.put(geneType, new ArrayList<Allele>());
+            genesToAlign.put(geneType, new ArrayList<VDJCGene>());
     }
+
+    private static <R extends SequenceRead> long hash(R input) {
+        long hash = 1;
+        for (int i = 0; i < input.numberOfReads(); i++) {
+            final SingleRead r = input.getRead(i);
+            hash = 31 * hash + r.getData().getSequence().hashCode();
+            if (r.getDescription() != null)
+                hash = 31 * hash + r.getDescription().hashCode();
+            else
+                hash = 31 * hash + HashFunctions.JenkinWang64shift(input.getId());
+        }
+        return hash;
+    }
+
+    @Override
+    public final VDJCAlignmentResult<R> process(R input) {
+        if (parameters.isFixSeed())
+            RandomUtil.reseedThreadLocal(hash(input));
+        return process0(input);
+    }
+
+    protected abstract VDJCAlignmentResult<R> process0(final R input);
 
     public void setEventsListener(VDJCAlignerEventListener listener) {
         this.listener = listener;
@@ -85,35 +110,35 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
         return parameters.clone();
     }
 
-    public List<Allele> getUsedAlleles() {
+    public List<VDJCGene> getUsedGenes() {
         return Collections.unmodifiableList(usedAlleles);
     }
 
-    public int addAllele(Allele allele) {
+    public int addGene(VDJCGene allele) {
         usedAlleles.add(allele);
-        List<Allele> alleles = allelesToAlign.get(allele.getGeneType());
+        List<VDJCGene> alleles = genesToAlign.get(allele.getGeneType());
         alleles.add(allele);
         return alleles.size() - 1;
     }
 
-    public Allele getAllele(GeneType type, int index) {
-        return allelesToAlign.get(type).get(index);
+    public VDJCGene getGene(GeneType type, int index) {
+        return genesToAlign.get(type).get(index);
     }
 
-    public List<Allele> getVAllelesToAlign() {
-        return allelesToAlign.get(GeneType.Variable);
+    public List<VDJCGene> getVAllelesToAlign() {
+        return genesToAlign.get(GeneType.Variable);
     }
 
-    public List<Allele> getDAllelesToAlign() {
-        return allelesToAlign.get(GeneType.Diversity);
+    public List<VDJCGene> getDAllelesToAlign() {
+        return genesToAlign.get(GeneType.Diversity);
     }
 
-    public List<Allele> getJAllelesToAlign() {
-        return allelesToAlign.get(GeneType.Joining);
+    public List<VDJCGene> getJAllelesToAlign() {
+        return genesToAlign.get(GeneType.Joining);
     }
 
-    public List<Allele> getCAllelesToAlign() {
-        return allelesToAlign.get(GeneType.Constant);
+    public List<VDJCGene> getCAllelesToAlign() {
+        return genesToAlign.get(GeneType.Constant);
     }
 
     public static VDJCAligner createAligner(VDJCAlignerParameters alignerParameters,
@@ -121,15 +146,15 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
         return paired ?
                 merge ? new VDJCAlignerWithMerge(alignerParameters)
                         : new VDJCAlignerPVFirst(alignerParameters)
-                : new VDJCAlignerSJFirst(alignerParameters);
+                : new VDJCAlignerS(alignerParameters);
     }
 
-    public static Set<Chain> getPossibleDLoci(VDJCHit[] vHits, VDJCHit[] jHits) {
-        EnumSet loci = EnumSet.noneOf(Chain.class);
+    public static Chains getPossibleDLoci(VDJCHit[] vHits, VDJCHit[] jHits) {
+        Chains chains = new Chains();
         for (VDJCHit h : vHits)
-            loci.add(h.getAllele().getLocus());
+            chains = chains.merge(h.getGene().getChains());
         for (VDJCHit h : jHits)
-            loci.add(h.getAllele().getLocus());
-        return loci;
+            chains = chains.merge(h.getGene().getChains());
+        return chains;
     }
 }

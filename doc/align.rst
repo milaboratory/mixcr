@@ -80,6 +80,10 @@ The following table contains description of command line options for ``align``:
 |                                     |                            | file (this is required for exporting reads aggregated by   |
 |                                     |                            | clones; see :ref:`this section <ref-exporting-reads>`).    |
 +-------------------------------------+----------------------------+------------------------------------------------------------+
+| ``--not-aligned-R1``                |                            | Write all not aligned reads (R1) to the specified file.    |
++-------------------------------------+----------------------------+------------------------------------------------------------+
+| ``--not-aligned-R2``                |                            | Write all not aligned reads (R) to the specified file.     |
++-------------------------------------+----------------------------+------------------------------------------------------------+
 | ``-Oparameter=value``               |                            | Overrides default value of aligner ``parameter``           |
 |                                     |                            | (see next subsection).                                     |
 +-------------------------------------+----------------------------+------------------------------------------------------------+

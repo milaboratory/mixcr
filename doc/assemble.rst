@@ -22,14 +22,14 @@ The following flowchart shows the pipeline of ``assemble``:
 
 This pipeline consists of the following steps:
 
-1. The assembler sequentially processes records (aligned reads) from
-   input ``.vdjca`` file produced by :ref:`align <ref-align>`. On the
-   first step, assembler tries to extract gene feature sequences from
-   aligned reads (called *clonal sequence*) specified by
-   ``assemblingFeatures`` parameter (``CDR3`` by default); the
-   clonotypes are assembled with respect to *clonal sequence*. If
-   aligned read does not contain clonal sequence (e.g. ``CDR3`` region),
-   it will be dropped.
+1.  The assembler sequentially processes records (aligned reads) from
+    input ``.vdjca`` file produced by :ref:`align <ref-align>`. On the
+    first step, assembler tries to extract gene feature sequences from
+    aligned reads (called *clonal sequence*) specified by
+    ``assemblingFeatures`` parameter (``CDR3`` by default); the
+    clonotypes are assembled with respect to *clonal sequence*. If
+    aligned read does not contain clonal sequence (e.g. ``CDR3`` region),
+    it will be dropped.
 
 2.  If clonal sequence contains at least one nucleotide with low quality
     (less than ``badQualityThreshold`` parameter value), then this record
@@ -38,9 +38,10 @@ This pipeline consists of the following steps:
     ``maxBadPointsPercent`` parameter value, then this record will be
     finally dropped. Records with clonal sequence containing only good
     quality nucleotides are used to build core clonotypes by grouping
-    records by equality of clonal sequences (e.g. CDR3). Each core
-    clonotype has two main properties: clonal sequence and ``count`` ---
-    a number of records aggregated by this clonotype.
+    records by equality of clonal sequences (e.g. CDR3). The sequence quality
+    of the resulting core clonotype will be equal to the total of qualities of the 
+    assembled reads. Each core clonotype has two main properties: clonal 
+    sequence and ``count`` --- a number of records aggregated by this clonotype.
 
 3.  After the core clonotypes are built, MiXCR runs *mapping procedure*
     that processes records deferred on the previous step. *Mapping* is
@@ -127,20 +128,34 @@ example:
 
 Other global parameters are:
 
-+-------------------------------+-----------------+-----------------------------------------------------------------------------------------+
-| Parameter                     | Default value   | Description                                                                             |
-+===============================+=================+=========================================================================================+
-| ``badQualityThreshold``       | ``20``          | Minimal value of sequencing quality score: nucleotides with lower quality are           |
-|                               |                 | considered as "bad". If sequence contains at least one "bad" nucleotide, it will be     |
-|                               |                 | deferred at initial assembling stage, for further processing by mapper.                 |
-+-------------------------------+-----------------+-----------------------------------------------------------------------------------------+
-| ``maxBadPointsPercent``       | ``0.7``         | Maximal allowed percent of "bad" points in sequence: if sequence contains more than     |
-|                               |                 | ``maxBadPointsPercent`` "bad" nucleotides, it will be dropped.                          |
-+-------------------------------+-----------------+-----------------------------------------------------------------------------------------+
-| ``addReadsCountOnClustering`` | ``false``       | Aggregate cluster counts when assembling final clones: if ``addReadsCountOnClustering`` |
-|                               |                 | is ``true``, then all children clone counts will be added to the head clone; thus head  | 
-|                               |                 | clone count will be a total of its initial count and counts of all its children.        |
-+-------------------------------+-----------------+-----------------------------------------------------------------------------------------+
++---------------------------------+-----------------+------------------------------------------------------------------------------------------+
+| Parameter                       | Default value   | Description                                                                              |
++=================================+=================+==========================================================================================+
+| ``minimalClonalSequenceLength`` |  ``12``         | Minimal length of clonal sequence                                                        |
++---------------------------------+-----------------+------------------------------------------------------------------------------------------+
+| ``qualityAggregationType``      |  ``Max``        | Algorithm used for aggregation of total clonal sequence quality. Possible values:        |
+|                                 |                 | ``Max`` (maximal quality across all reads for each position),                            |
+|                                 |                 | ``Min`` (minimal quality across all reads for each position),                            |
+|                                 |                 | ``Average`` (average quality across all reads for each position),                        |
+|                                 |                 | ``MiniMax`` (all letters has the same quality which is the maximum of minimal quality of |
+|                                 |                 | clonal sequence in each read).                                                           |
++---------------------------------+-----------------+------------------------------------------------------------------------------------------+
+| ``minimalQuality``              |  ``0``          | Minimal allowed quality of each nucleotide of aggregated clone. If at least one          | 
+|                                 |                 | nucleotide in the aggregated clone has quality lower than ``minimalQuality``, this clone |
+|                                 |                 | will be dropped (remember that qualities of reads are aggregated according to selected   |
+|                                 |                 | aggregation strategy during core clonotypes assembly; see ``qualityAggregationType``).   |
++---------------------------------+-----------------+------------------------------------------------------------------------------------------+
+| ``badQualityThreshold``         | ``20``          | Minimal value of sequencing quality score: nucleotides with lower quality are            |
+|                                 |                 | considered as "bad". If sequence contains at least one "bad" nucleotide, it will be      |
+|                                 |                 | deferred at initial assembling stage, for further processing by mapper.                  |
++---------------------------------+-----------------+------------------------------------------------------------------------------------------+
+| ``maxBadPointsPercent``         | ``0.7``         | Maximal allowed percent of "bad" points in sequence: if sequence contains more than      |
+|                                 |                 | ``maxBadPointsPercent`` "bad" nucleotides, it will be dropped.                           |
++---------------------------------+-----------------+------------------------------------------------------------------------------------------+
+| ``addReadsCountOnClustering``   | ``false``       | Aggregate cluster counts when assembling final clones: if ``addReadsCountOnClustering``  |
+|                                 |                 | is ``true``, then all children clone counts will be added to the head clone; thus head   | 
+|                                 |                 | clone count will be a total of its initial count and counts of all its children.         |
++---------------------------------+-----------------+------------------------------------------------------------------------------------------+
 
 One can override these parameters in the following way:
 

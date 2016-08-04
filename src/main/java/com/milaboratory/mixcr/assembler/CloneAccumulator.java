@@ -31,33 +31,50 @@ package com.milaboratory.mixcr.assembler;
 
 import com.milaboratory.core.Range;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
+import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceQuality;
+import com.milaboratory.core.sequence.quality.QualityAggregationType;
+import com.milaboratory.core.sequence.quality.QualityAggregator;
 import com.milaboratory.mixcr.basictypes.ClonalSequence;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import io.repseq.reference.AlleleId;
-import io.repseq.reference.GeneType;
 import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.map.hash.TObjectFloatHashMap;
+import io.repseq.core.GeneType;
+import io.repseq.core.VDJCGeneId;
 
 import java.util.EnumMap;
 
 public final class CloneAccumulator {
-    final EnumMap<GeneType, TObjectFloatHashMap<AlleleId>> geneScores = new EnumMap<>(GeneType.class);
-    final ClonalSequence sequence;
-    final byte[] quality;
+    final EnumMap<GeneType, TObjectFloatHashMap<VDJCGeneId>> geneScores = new EnumMap<>(GeneType.class);
+    private ClonalSequence sequence;
+    final QualityAggregator aggregator;
     long count = 0, countMapped = 0;
-    volatile int cloneIndex = -1;
+    private volatile int cloneIndex = -1;
     final Range[] nRegions;
 
-    public CloneAccumulator(ClonalSequence sequence, Range[] nRegions) {
+    public CloneAccumulator(ClonalSequence sequence, Range[] nRegions, QualityAggregationType qualityAggregationType) {
         this.sequence = sequence;
         this.nRegions = nRegions;
-        this.quality = sequence.getConcatenated().getQuality().asArray();
+        this.aggregator = qualityAggregationType.create(sequence.getConcatenated().size());
+        //this.quality = sequence.getConcatenated().getQuality().asArray();
     }
 
     public ClonalSequence getSequence() {
         return sequence;
+    }
+
+    public void rebuildClonalSequence() {
+        SequenceQuality newQuality = aggregator.getQuality();
+        final NSequenceWithQuality[] updated = new NSequenceWithQuality[sequence.size()];
+        int pointer = 0;
+        for (int i = 0; i < updated.length; i++) {
+            final NucleotideSequence s = this.sequence.get(i).getSequence();
+            updated[i] = new NSequenceWithQuality(s, newQuality.getRange(pointer, pointer + s.size()));
+            pointer += s.size();
+        }
+        sequence = new ClonalSequence(updated);
+        return;
     }
 
     public Range[] getNRegions() {
@@ -78,17 +95,25 @@ public final class CloneAccumulator {
         return count;
     }
 
+    public long getCoreCount() {
+        return count - countMapped;
+    }
+
+    public long getMappedCount() {
+        return countMapped;
+    }
+
     public void calculateScores(CloneFactoryParameters parameters) {
         for (GeneType geneType : GeneType.VJC_REFERENCE) {
             VJCClonalAlignerParameters vjcParameters = parameters.getVJCParameters(geneType);
             if (vjcParameters == null)
                 continue;
 
-            TObjectFloatHashMap<AlleleId> accumulatorAlleleIds = geneScores.get(geneType);
+            TObjectFloatHashMap<VDJCGeneId> accumulatorAlleleIds = geneScores.get(geneType);
             if (accumulatorAlleleIds == null)
                 continue;
 
-            TObjectFloatIterator<AlleleId> iterator = accumulatorAlleleIds.iterator();
+            TObjectFloatIterator<VDJCGeneId> iterator = accumulatorAlleleIds.iterator();
             float maxScore = 0;
             while (iterator.hasNext()) {
                 iterator.advance();
@@ -120,7 +145,7 @@ public final class CloneAccumulator {
 
             // Accumulate information about all genes
             for (GeneType geneType : GeneType.VJC_REFERENCE) {
-                TObjectFloatHashMap<AlleleId> alleleScores = geneScores.get(geneType);
+                TObjectFloatHashMap<VDJCGeneId> alleleScores = geneScores.get(geneType);
                 VDJCHit[] hits = alignment.getHits(geneType);
                 if (hits.length == 0)
                     continue;
@@ -129,19 +154,12 @@ public final class CloneAccumulator {
                 for (VDJCHit hit : hits) {
                     // Calculating sum of natural logarithms of scores
                     score = hit.getScore();
-                    alleleScores.adjustOrPutValue(hit.getAllele().getId(), score, score);
+                    alleleScores.adjustOrPutValue(hit.getGene().getId(), score, score);
                 }
             }
 
-            int pointer = 0;
-            for (NSequenceWithQuality p : data) {
-                for (int i = 0; i < p.size(); ++i) {
-                    final SequenceQuality q = p.getQuality();
-                    if (quality[pointer] < q.value(i))
-                        quality[pointer] = q.value(i);
-                    ++pointer;
-                }
-            }
+            aggregator.aggregate(data.getConcatenated().getQuality());
+
         } else ++countMapped;
     }
 }

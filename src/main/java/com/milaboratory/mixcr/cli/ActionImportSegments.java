@@ -255,7 +255,7 @@ public class ActionImportSegments implements Action {
                 names = {"-r", "--report"})
         public String report;
 
-        @Parameter(description = "Output file (optional, default path is ~/.mixcr/local.ll", //, or $MIXCR_PATH/system.ll if -g option specified)",
+        @Parameter(description = "Output file (optional, default path is ~/.mixcr/local.ll)", //, or $MIXCR_PATH/system.ll if -g option specified)",
                 names = {"-o", "--output"})
         public String output = null;
 

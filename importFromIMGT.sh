@@ -18,6 +18,9 @@ do
     esac
 done
 
+echo ${mixcr}
+${mixcr} -v
+
 type wget >/dev/null 2>&1 || { echo >&2 "This script requires \"wget\". Try \"brew install wget\" or \"apt-get install wget\"." ; exit 1; }
 type pup >/dev/null 2>&1 || { echo >&2 "This script requires \"pup\". Try \"brew install https://raw.githubusercontent.com/EricChiang/pup/master/pup.rb\" or \"go get github.com/ericchiang/pup\"." ; exit 1; }
 type xmllint >/dev/null 2>&1 || { echo >&2 "This script requires \"xmllint\". Try \"sudo apt-get install libxml2-utils\"." ; exit 1; }
@@ -97,6 +100,15 @@ do
   # Workaround for *** IMGT malformed files
   if [[ "$(echo ${species} | tr [:upper:] [:lower:])" == mus* ]] && [[ "$locus" == TR[AD] ]]; then
     comm="$comm -p imgt_a1"
+    echo "Special parameters for Mouse TRA/D genes activated."
+  fi
+  if [[ "$(echo ${species} | tr [:upper:] [:lower:])" == rat* ]] && [[ "$locus" == IG[HK] ]]; then
+    comm="$comm -p imgt_a2"
+    echo "Special parameters for Rat IGH/K genes activated."
+  fi
+  if [[ "$(echo ${species} | tr [:upper:] [:lower:])" == maca* ]] && [[ "$locus" == IGL ]]; then
+    comm="$comm -p imgt_a3"
+    echo "Special parameters for Macaca IGL genes activated."
   fi
 
   # Output file info on the last iteration

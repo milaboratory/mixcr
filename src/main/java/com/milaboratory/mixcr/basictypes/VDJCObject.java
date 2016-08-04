@@ -33,8 +33,8 @@ import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NSequenceWithQualityBuilder;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import io.repseq.reference.GeneFeature;
-import io.repseq.reference.GeneType;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
 
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -128,7 +128,6 @@ public class VDJCObject {
         }
         if (feature == null && targets.length == 2) {
             VDJCHit bestVHit = getBestHit(GeneType.Variable);
-
             if (bestVHit == null)
                 return null;
 

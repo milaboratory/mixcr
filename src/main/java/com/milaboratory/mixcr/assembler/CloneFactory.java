@@ -37,24 +37,24 @@ import com.milaboratory.mixcr.vdjaligners.SingleDAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.map.hash.TObjectFloatHashMap;
-import io.repseq.reference.*;
+import io.repseq.core.*;
 
 import java.util.*;
 
 class CloneFactory {
     final SingleDAligner dAligner;
     final CloneFactoryParameters parameters;
-    final HashMap<AlleleId, Allele> usedAlleles;
+    final HashMap<VDJCGeneId, VDJCGene> usedAlleles;
     final GeneFeature[] assemblingFeatures;
     final int indexOfAssemblingFeatureWithD;
 
     CloneFactory(CloneFactoryParameters parameters, GeneFeature[] assemblingFeatures,
-                 HashMap<AlleleId, Allele> usedAlleles) {
+                 HashMap<VDJCGeneId, VDJCGene> usedAlleles) {
         this.parameters = parameters.clone();
         this.assemblingFeatures = assemblingFeatures.clone();
         this.usedAlleles = usedAlleles;
-        List<Allele> dAlleles = new ArrayList<>();
-        for (Allele allele : usedAlleles.values())
+        List<VDJCGene> dAlleles = new ArrayList<>();
+        for (VDJCGene allele : usedAlleles.values())
             if (allele.getGeneType() == GeneType.Diversity)
                 dAlleles.add(allele);
         this.dAligner = new SingleDAligner(parameters.getDParameters(), dAlleles);
@@ -78,7 +78,7 @@ class CloneFactory {
 
             GeneFeature featureToAlign = vjcParameters.getFeatureToAlign();
 
-            TObjectFloatHashMap<AlleleId> alleleScores = accumulator.geneScores.get(geneType);
+            TObjectFloatHashMap<VDJCGeneId> alleleScores = accumulator.geneScores.get(geneType);
             if (alleleScores == null)
                 continue;
 
@@ -101,10 +101,10 @@ class CloneFactory {
 
             VDJCHit[] result = new VDJCHit[alleleScores.size()];
             int pointer = 0;
-            TObjectFloatIterator<AlleleId> iterator = alleleScores.iterator();
+            TObjectFloatIterator<VDJCGeneId> iterator = alleleScores.iterator();
             while (iterator.hasNext()) {
                 iterator.advance();
-                Allele allele = usedAlleles.get(iterator.key());
+                VDJCGene allele = usedAlleles.get(iterator.key());
                 Alignment<NucleotideSequence>[] alignments = new Alignment[assemblingFeatures.length];
                 for (int i = 0; i < assemblingFeatures.length; ++i) {
                     if (intersectingFeatures[i] == null)

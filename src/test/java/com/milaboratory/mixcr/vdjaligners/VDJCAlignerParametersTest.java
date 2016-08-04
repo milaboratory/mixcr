@@ -30,15 +30,12 @@ package com.milaboratory.mixcr.vdjaligners;
 
 import com.milaboratory.core.PairedEndReadsLayout;
 import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
-import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
+import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.core.merger.MergerParameters;
 import com.milaboratory.core.merger.QualityMergingAlgorithm;
-import io.repseq.reference.GeneFeature;
-import io.repseq.reference.LociLibrary;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
-import io.repseq.reference.Species;
 import com.milaboratory.util.GlobalObjectMappers;
+import io.repseq.core.GeneFeature;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -63,18 +60,13 @@ public class VDJCAlignerParametersTest {
                                 LinearGapAlignmentScoring.getNucleotideBLASTScoring())),
                 VJAlignmentOrder.JThenV,
                 false, false,
-                120.0f, 5, 0.7f, 0.7f, PairedEndReadsLayout.Opposite, new MergerParameters(
-                QualityMergingAlgorithm.SumSubtraction, null, 12, null, 0.12));
+                120.0f, 5, 0.7f, 0.7f, false, false, PairedEndReadsLayout.Opposite, new MergerParameters(
+                QualityMergingAlgorithm.SumSubtraction, null, 12, null, 0.12), false);
+
         String str = GlobalObjectMappers.PRETTY.writeValueAsString(paramentrs);
         VDJCAlignerParameters deser = GlobalObjectMappers.PRETTY.readValue(str, VDJCAlignerParameters.class);
         assertEquals(paramentrs, deser);
         VDJCAlignerParameters clone = deser.clone();
         assertEquals(paramentrs, clone);
-    }
-
-    @Test
-    public void testName() throws Exception {
-        LociLibrary ll = LociLibraryManager.getDefault().getLibrary("mi");
-        System.out.println(ll.getAllele(Species.HomoSapiens, "TRAV4*00").getFeature(GeneFeature.VRegion));
     }
 }

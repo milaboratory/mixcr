@@ -4,8 +4,8 @@ import cc.redberry.pipe.OutputPort;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import io.repseq.reference.GeneFeature;
-import io.repseq.reference.GeneType;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
 import com.milaboratory.mixcr.reference.LociLibraryManager;
 
 import java.io.IOException;
@@ -100,7 +100,7 @@ public class VDJCAlignmentsDifferenceReader
 
         for (int i = 0; i < level && i < first.length; ++i)
             for (int j = 0; j < level && j < second.length; ++j)
-                if (first[i].getAllele().getId().equals(second[j].getAllele().getId()))
+                if (first[i].getGene().getId().equals(second[j].getGene().getId()))
                     return true;
         return false;
     }

@@ -42,9 +42,9 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.info.AlignmentInfoCollector;
 import com.milaboratory.mixcr.info.GeneFeatureCoverageCollector;
 import com.milaboratory.mixcr.info.ReferencePointCoverageCollector;
-import io.repseq.reference.GeneFeature;
+import io.repseq.core.GeneFeature;
 import com.milaboratory.mixcr.reference.LociLibraryManager;
-import io.repseq.reference.ReferencePoint;
+import io.repseq.core.ReferencePoint;
 import com.milaboratory.util.SmartProgressReporter;
 
 import java.io.BufferedOutputStream;
@@ -53,8 +53,8 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.repseq.reference.GeneFeature.*;
-import static io.repseq.reference.ReferencePoint.*;
+import static io.repseq.core.GeneFeature.*;
+import static io.repseq.core.ReferencePoint.*;
 
 @HiddenAction
 public class ActionAlignmentsStat implements Action {

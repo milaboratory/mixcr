@@ -65,16 +65,8 @@ case $os in
     ;;
 esac
 
-mixcr=${dir}/mixcr
-
 mixcrArgs=()
 javaArgs=()
-
-if [[ $# -eq 1 ]] && [[ $(echo $1 | tr '[:upper:]' '[:lower:]') == "importfromimgt" ]]; then
-    echo "Starting importFromIMGT.sh script"
-    ${dir}/importFromIMGT.sh -mixcr ${mixcr} || exit 1
-    exit 0
-fi
 
 needXmxXms=true
 otherJar=""
@@ -103,6 +95,19 @@ do
             ;;
     esac
 done
+
+mixcr=${dir}/mixcr
+
+if [[ ! -z ${otherJar} ]];
+then
+    mixcr="${mixcr} -V ${otherJar}"
+fi
+
+if [[ $(echo ${mixcrArgs[0]} | tr '[:upper:]' '[:lower:]') == "importfromimgt" ]]; then
+    echo "Starting importFromIMGT.sh script"
+    ${dir}/importFromIMGT.sh -mixcr "${mixcr}" || exit 1
+    exit 0
+fi
 
 if [[ ${needXmxXms} == true ]]
 then
@@ -155,3 +160,4 @@ then
 fi
 
 $java -Dmixcr.path=$dir -Dmixcr.command=mixcr -XX:+AggressiveOpts "${javaArgs[@]}" -jar $jar "${mixcrArgs[@]}"
+exit $?

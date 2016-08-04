@@ -1,4 +1,95 @@
 
+MiXCR 1.8.2 (31 Jul 2016)
+========================
+
+-- Fixed `floatingRightBound=false` for rna-seq alignment parameters
+-- Added new action `filterAlignments`
+-- Fixed wrong output for *gene family* export columns
+-- Several fixes for alignment report
+-- Default value for `qualityMergingAlgorithm` for paired-end merger changed to `MaxSubtraction`
+-- Fixed `NPE` / `IllegalArgumentException` in case of complex assemblingFeatures
+
+
+MiXCR 1.8.1 (29 Jun 2016)
+========================
+
+-- Revert quality filtering/mapping algorithm to MiXCR 1.7.x
+-- Added different quality aggregation algorithms for assemble (Average, Min, Max, MiniMax) option 
+   `-OqualityAggregationType=Max`
+-- Added `clonesDiff` action to calculate descriptive statistics of differnece between two samples
+-- Fixed wrong anchor point positions in Macaca mulatta IGL reference imported from IMGT
+-- MiXCR returns exit code 1 if program terminated with error
+-- Automatic correction of -OvParameters.geneFeatureToAlign in align in some cases (e.g. IMGT 
+   reference and rna-seq paramenters)
+
+
+MiXCR 1.8 (21 Jun 2016)
+========================
+
+-- Assembler of partial reads allows to assemble CDR3s from several short reads: final puzzle piece 
+   for high quality repertoire data extraction from RNA-Seq data
+-- Added support for P-segments; new gene features `VPSegment`, `DLeftPSegment`, `DRightPSegment`, 
+   `JPSegment` now available both in `exportAlignments` and `exportClones`; feature is enabled by 
+   default
+-- Added new anchor points to encode information about P-segment positions
+-- Clone assembler now can separates clones with different V/J/C genes but same clonal sequence 
+   (e.g. CDR3); this behaviour is turned off by default (see `-OseparateByV/J/C` in `assemble` action 
+   parameters to turn it on)
+-- Quality aggregation algorithm in assembler changed (see description of assemble procedure)
+-- Added clone filtration step: filter clones with low quality clonal sequence (see 
+   -OminimalQuality parameter)
+-- Added new action `alignmentsDiff`: run as `mixcr alignmentsDiff file1.vdjca file2.vdjca 
+   report.txt` to find difference between two .vdjca files
+-- Following export fields added: `-vFamily`, `-vFamilies` (same for D/J/C)
+-- Added new options in `align`: `--not-aligned-R1` and `--not-aligned-R2` for exporting not 
+   aligned reads at alignment step (useful for troubleshooting of raw data glitches / analysis 
+   parameters)
+-- Alignment seed is now fixed in order to have completely equal results from run to run on the 
+   same dataset
+-- Added option `-e`/`--cdr3-equals` to `exportAlignmentsPretty` action
+-- Added option `-v`/`--write-all` to align action
+-- Action `exportReads` renamed to `exportReadsForClones`
+-- Added `exportReads` action to re-export raw reads from `*.vdjca` file; useful to filter TCR/IG 
+   containing reads
+-- Added new `-l`/`--filter-locus` option in `exportClones` action to limit the list of exported 
+   clones by specified locus
+-- Added new `-q`/`--minimal-clone-fraction` and `-c`/`--minimal-clone-count` options in 
+   `exportClones` action to filter the list of exported clones by their fraction of reads number
+-- minor: Refactoring of report in `assemble` action: better descriptions, fixes and new 
+   informative lines
+-- minor: Human-readable error messages for illegal analysis options with IMGT reference
+-- minor: Added new export field: `-vBestIdentityPercent` and `-vIdentityPercents` (-j..., -c... in 
+   the same way)
+-- minor: Now IMGT import script produces more useful information
+-- minor: Added human-readable error message for unknown species
+-- minor: Better layout of anchor point marks in `exportAlignmentsPretty`
+-- minor: Optional output of read description lines (if present in vdjca file) in 
+   `exportAlignmentsPretty`
+
+
+MiXCR 1.7.4 (20 Jun 2016)
+========================
+
+-- Better compatibility with highly-paralelized execution of MiXCR on clusters: "more random" 
+   generation of random temp file names
+-- Human-readable messages for two wrong input cases
+-- NPE fixed in case of align with `VGene`, assemble `VTranscript`
+-- Minor fix for documentation
+
+
+MiXCR 1.7.3 (17 May 2016)
+========================
+
+-- Fixed: wrong boundaries of CDR1-CDR3 in Rat IGH/IGK references imported from IMGT
+-- Fixed: bug leading to incorrect parsing of input/output file paths with spaces
+-- Fixed: bug leading to incorrect parsing of input/output file paths with spaces
+-- Automatic adjustment of featureToAlign in assemble action; fixes `NPE` in some use-cases of RNA 
+   data analysis with IMGT reference
+-- Added support for FreeBSD in mixcr script
+-- minor: Human-readable error messages for illegal analysis options with IMGT reference
+-- minor: Added human-readable error message for unknown species
+
+
 MiXCR 1.7.2 ( 5 May 2016)
 ========================
 

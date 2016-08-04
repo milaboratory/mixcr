@@ -32,7 +32,7 @@ import com.milaboratory.core.Range;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.cli.Util;
-import io.repseq.reference.ReferencePoint;
+import io.repseq.core.ReferencePoint;
 
 import java.io.PrintStream;
 import java.util.concurrent.atomic.AtomicLong;

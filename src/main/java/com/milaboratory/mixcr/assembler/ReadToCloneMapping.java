@@ -47,12 +47,12 @@ public final class ReadToCloneMapping {
         this.mappingType = mappingType;
     }
 
-
-    public ReadToCloneMapping(long alignmentsId, long readId, int cloneIndex, boolean clustered, boolean additionalMapping) {
+    public ReadToCloneMapping(long alignmentsId, long readId, int cloneIndex, boolean clustered, boolean additionalMapping, boolean droppedWithClone, boolean preClustered) {
         this.alignmentsId = alignmentsId;
         this.readId = readId;
         this.cloneIndex = cloneIndex;
-        this.mappingType = (byte) ((clustered ? 1 : 0) | (additionalMapping ? 2 : 0));
+        assert !droppedWithClone || cloneIndex < 0;
+        this.mappingType = (byte) ((clustered ? 1 : 0) | (additionalMapping ? 2 : 0) | (droppedWithClone ? 4 : 0) | (preClustered ? 8 : 0));
     }
 
     public int getCloneIndex() {
@@ -75,27 +75,34 @@ public final class ReadToCloneMapping {
         return (mappingType & 2) == 2;
     }
 
+    public boolean isDroppedWithClone() {
+        return (mappingType & 4) == 4;
+    }
+
     public boolean isDropped() {
         return cloneIndex < 0;
     }
 
+    public boolean isPreClustered() {
+        return (mappingType & 8) == 8;
+    }
+
     public MappingType getMappingType() {
-        if (isDropped())
-            return MappingType.Dropped;
-        else if (isMapped())
-            return MappingType.Mapped;
-        else if (isClustered())
-            return MappingType.Clustered;
+        if (isDroppedWithClone()) return MappingType.DroppedWithClone;
+        else if (isDropped()) return MappingType.Dropped;
+        else if (isMapped()) return MappingType.Mapped;
+        else if (isClustered()) return MappingType.Clustered;
+        else if (isPreClustered()) return MappingType.PreClustered;
         else return MappingType.Core;
     }
 
     @Override
     public String toString() {
-        return "" + alignmentsId + " -> " + cloneIndex + " " + (isClustered() ? "c" : "") + (isMapped() ? "m" : "");
+        return isDropped() ? "" : "" + alignmentsId + " -> " + cloneIndex + " " + (isPreClustered() ? "p" : "") + (isClustered() ? "c" : "") + (isMapped() ? "m" : "");
     }
 
     public enum MappingType {
-        Core, Clustered, Mapped, Dropped;
+        Core, Clustered, Mapped, Dropped, DroppedWithClone, PreClustered;
 
         @Override
         public String toString() {

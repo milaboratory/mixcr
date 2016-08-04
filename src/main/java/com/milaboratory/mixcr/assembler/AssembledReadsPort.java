@@ -34,13 +34,16 @@ import gnu.trove.map.hash.TIntIntHashMap;
 public class AssembledReadsPort implements OutputPortCloseable<ReadToCloneMapping> {
     final OutputPortCloseable<AssemblerEvent> initialEvents, mappingEvents;
     final TIntIntHashMap idMapping;
+    final TIntIntHashMap preClustered;
 
     public AssembledReadsPort(OutputPortCloseable<AssemblerEvent> initialEvents,
                               OutputPortCloseable<AssemblerEvent> mappingEvents,
-                              TIntIntHashMap idMapping) {
+                              TIntIntHashMap idMapping,
+                              TIntIntHashMap preClustered) {
         this.initialEvents = initialEvents;
         this.mappingEvents = mappingEvents;
         this.idMapping = idMapping;
+        this.preClustered = preClustered;
     }
 
     @Override
@@ -76,7 +79,16 @@ public class AssembledReadsPort implements OutputPortCloseable<ReadToCloneMappin
         }
 
         if (cloneIndex < 0)
-            return new ReadToCloneMapping(event.alignmentsIndex, event.readId, cloneIndex, false, false);
+            return new ReadToCloneMapping(event.alignmentsIndex, event.readId, cloneIndex, false, false, false, false);
+
+        boolean preCl = false;
+        if (preClustered.containsKey(cloneIndex)) {
+            preCl = true;
+            cloneIndex = preClustered.get(cloneIndex);
+        }
+
+        if (!idMapping.containsKey(cloneIndex))
+            return new ReadToCloneMapping(event.alignmentsIndex, event.readId, Integer.MIN_VALUE, false, false, true, preCl);
 
         cloneIndex = idMapping.get(cloneIndex);
 
@@ -86,7 +98,7 @@ public class AssembledReadsPort implements OutputPortCloseable<ReadToCloneMappin
             cloneIndex = -1 - cloneIndex;
         }
 
-        return new ReadToCloneMapping(event.alignmentsIndex, event.readId, cloneIndex, clustered, mapped);
+        return new ReadToCloneMapping(event.alignmentsIndex, event.readId, cloneIndex, clustered, mapped, false, preCl);
     }
 
     @Override

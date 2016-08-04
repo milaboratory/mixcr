@@ -32,7 +32,8 @@ import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.reference.builder.FastaLocusBuilderParameters.AnchorPointPositionInfo;
-import io.repseq.reference.*;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -40,7 +41,7 @@ import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
-import static io.repseq.reference.ReferencePoint.*;
+import static io.repseq.core.ReferencePoint.*;
 
 /**
  * Created by dbolotin on 25/10/15.

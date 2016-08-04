@@ -28,8 +28,8 @@
  */
 package com.milaboratory.mixcr.cli;
 
-import io.repseq.reference.Chain;
 import gnu.trove.map.hash.TIntObjectHashMap;
+import io.repseq.core.Chains;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -37,7 +37,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 public final class Util {
     private Util() {
@@ -45,35 +47,24 @@ public final class Util {
 
     public static final DecimalFormat PERCENT_FORMAT = new DecimalFormat("#.##");
 
-    public static Set<Chain> parseLoci(String lociString) {
+    public static Chains parseLoci(String lociString) {
         String[] split = lociString.split(",");
-        EnumSet<Chain> loci = EnumSet.noneOf(Chain.class);
+        Chains chains = new Chains();
         for (String s : split)
-            parseLocus(loci, s);
-        return loci;
+            chains = chains.merge(parseLocus(s));
+        return chains;
     }
 
-    private static void parseLocus(Set<Chain> set, String value) {
+    private static Chains parseLocus(String value) {
         switch (value.toLowerCase().trim()) {
             case "tcr":
-                set.add(Chain.TRA);
-                set.add(Chain.TRB);
-                set.add(Chain.TRG);
-                set.add(Chain.TRD);
-                return;
+                return Chains.TCR;
             case "ig":
-                set.add(Chain.IGH);
-                set.add(Chain.IGL);
-                set.add(Chain.IGK);
-                return;
+                return Chains.IG;
             case "all":
-                for (Chain chain : Chain.values())
-                    set.add(chain);
-                return;
+                return Chains.IG.merge(Chains.TCR);
         }
-        Chain l = Chain.fromIdSafe(value);
-        set.add(l);
-        return;
+        return new Chains(value);
     }
 
     public static void writeReport(String input, String output,

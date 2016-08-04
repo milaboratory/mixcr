@@ -43,13 +43,12 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import io.repseq.reference.GeneType;
-import io.repseq.reference.LociLibraryWriter;
-import io.repseq.reference.ReferencePoint;
-import io.repseq.reference.ReferenceUtil;
 import gnu.trove.impl.Constants;
 import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
+import io.repseq.core.GeneType;
+import io.repseq.core.ReferencePoint;
+import io.repseq.core.ReferenceUtil;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -118,16 +117,15 @@ public final class FastaLocusBuilderParameters {
         // Calculating reference points positions
 
         // Getting information about basic anchor points count and offset by gene type
-        LociLibraryWriter.GeneTypeInfo info = LociLibraryWriter.getGeneTypeInfo(geneType, false);
-        int indexOfFirstPoint = info.indexOfFirstPoint;
+        int indexOfFirstPoint = geneType.getIndexOfFirstReferencePoint();
 
         // Extracting frame bounded anchor point id
         this.translationReferencePointIndex = frameBoundedAnchorPoint == null ? -1 :
                 ReferenceUtil.getReferencePointIndex(frameBoundedAnchorPoint) - indexOfFirstPoint;
 
         // Init
-        this.referencePointPositions = new int[info.size];
-        this.indexReferencePointMapping = new ReferencePoint[info.size];
+        this.referencePointPositions = new int[geneType.getCompleteNumberOfReferencePoints()];
+        this.indexReferencePointMapping = new ReferencePoint[geneType.getCompleteNumberOfReferencePoints()];
         this.referencePointIndexMapping = new TObjectIntHashMap<>(Constants.DEFAULT_CAPACITY, Constants.DEFAULT_LOAD_FACTOR, -1);
 
         // -1 == NA

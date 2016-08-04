@@ -7,7 +7,7 @@
 
     This feature is provided for beta testing, and not recommended for production use!
 
-To process data using new aligner, apply special paramenter pre-sets as follows:
+To process data using new aligner, apply special parameter pre-sets as follows:
 
 ::
 

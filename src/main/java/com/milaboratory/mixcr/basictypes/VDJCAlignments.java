@@ -29,8 +29,8 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.sequence.NSequenceWithQuality;
-import io.repseq.reference.GeneType;
 import com.milaboratory.primitivio.annotations.Serializable;
+import io.repseq.core.GeneType;
 
 import java.util.EnumMap;
 
@@ -101,13 +101,48 @@ public final class VDJCAlignments extends VDJCObject {
      * otherwise (first {@code top} V hits have different chain from those have first {@code top} J hits)
      */
     public final boolean hasSameVJLoci(final int top) {
-        VDJCHit[] vHits = hits.get(GeneType.Variable),
-                jHits = hits.get(GeneType.Joining);
-        for (int v = 0; v < actualTop(vHits, top); ++v)
-            for (int j = 0; j < actualTop(jHits, top); ++j)
-                if (vHits[v].getAllele().getLocus() == jHits[j].getAllele().getLocus())
-                    return true;
-        return false;
+        final VDJCHit[] vHits = hits.get(GeneType.Variable),
+                jHits = hits.get(GeneType.Joining),
+                cHits = hits.get(GeneType.Constant);
+
+        if (vHits.length > 0 && jHits.length > 0 && cHits.length > 0) {
+            for (int v = 0; v < actualTop(vHits, top); ++v)
+                for (int j = 0; j < actualTop(jHits, top); ++j)
+                    for (int c = 0; c < actualTop(cHits, top); ++c)
+                        if (hasCommonChain(vHits[v], jHits[j]) && hasCommonChain(vHits[v], cHits[c]))
+                            return true;
+            return false;
+        }
+
+        if (vHits.length > 0 && jHits.length > 0) {
+            for (int v = 0; v < actualTop(vHits, top); ++v)
+                for (int j = 0; j < actualTop(jHits, top); ++j)
+                    if (hasCommonChain(vHits[v], jHits[j]))
+                        return true;
+            return false;
+        }
+
+        if (vHits.length > 0 && cHits.length > 0) {
+            for (int v = 0; v < actualTop(vHits, top); ++v)
+                for (int c = 0; c < actualTop(cHits, top); ++c)
+                    if (hasCommonChain(vHits[v], cHits[c]))
+                        return true;
+            return false;
+        }
+
+        if (cHits.length > 0 && jHits.length > 0) {
+            for (int c = 0; c < actualTop(cHits, top); ++c)
+                for (int j = 0; j < actualTop(jHits, top); ++j)
+                    if (hasCommonChain(cHits[c], jHits[j]))
+                        return true;
+            return false;
+        }
+
+        return true;
+    }
+
+    private static boolean hasCommonChain(VDJCHit g1, VDJCHit g2) {
+        return g1.getGene().getChains().intersects(g2.getGene().getChains());
     }
 
     private static int actualTop(VDJCHit[] hits, int top) {

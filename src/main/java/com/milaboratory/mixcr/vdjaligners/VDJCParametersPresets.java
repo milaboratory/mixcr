@@ -50,9 +50,7 @@ public final class VDJCParametersPresets {
                     Map<String, VDJCAlignerParameters> map;
                     try {
                         InputStream is = VDJCAlignerParameters.class.getClassLoader().getResourceAsStream("parameters/vdjcaligner_parameters.json");
-                        TypeReference<HashMap<String, VDJCAlignerParameters>> typeRef
-                                = new TypeReference<HashMap<String, VDJCAlignerParameters>>() {
-                        };
+                        TypeReference<HashMap<String, VDJCAlignerParameters>> typeRef = new TypeReference<HashMap<String, VDJCAlignerParameters>>() {};
                         map = GlobalObjectMappers.ONE_LINE.readValue(is, typeRef);
                     } catch (IOException ioe) {
                         throw new RuntimeException(ioe);

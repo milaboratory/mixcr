@@ -29,8 +29,9 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.sequence.NSequenceWithQuality;
-import io.repseq.reference.GeneFeature;
-import io.repseq.reference.GeneType;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
+import com.milaboratory.core.sequence.SequencesUtils;
 import com.milaboratory.primitivio.annotations.Serializable;
 
 import java.util.EnumMap;
@@ -71,6 +72,13 @@ public final class Clone extends VDJCObject {
 
     public long getCount() {
         return count;
+    }
+
+    public NSequenceWithQuality getConcatenatedClonalSequence() {
+        NSequenceWithQuality[] seqs = new NSequenceWithQuality[assemblingFeatures.length];
+        for (int i = 0; i < assemblingFeatures.length; i++)
+            seqs[i] = getFeature(assemblingFeatures[i]);
+        return SequencesUtils.concatenate(seqs);
     }
 
     @Override

@@ -35,8 +35,8 @@ import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.MultiAlignmentHelper;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import io.repseq.reference.GeneType;
-import io.repseq.reference.ReferencePoint;
+import io.repseq.core.GeneType;
+import io.repseq.core.ReferencePoint;
 import io.repseq.core.SequencePartitioning;
 
 import java.util.ArrayList;
@@ -59,17 +59,15 @@ public class VDJCAlignmentsFormatter {
                     continue;
                 alignment = alignment.invert(targetSeq);
                 alignments.add(alignment);
-                alignmentLeftComments.add(hit.getAllele().getName());
+                alignmentLeftComments.add(hit.getGene().getName());
                 alignmentRightComments.add(" " + hit.getAlignment(targetId).getScore());
             }
 
-        if (alignments.isEmpty())
-            return null;
-
         MultiAlignmentHelper helper = MultiAlignmentHelper.build(MultiAlignmentHelper.DEFAULT_SETTINGS,
-                new Range(0, target.size()), alignments.toArray(new Alignment[alignments.size()]));
+                new Range(0, target.size()), targetSeq, alignments.toArray(new Alignment[alignments.size()]));
 
-        drawPoints(helper, partitioning, POINTS_FOR_REARRANGED);
+        if (!alignments.isEmpty())
+            drawPoints(helper, partitioning, POINTS_FOR_REARRANGED);
 
         helper.addSubjectQuality("Quality", target.getQuality());
         helper.setSubjectLeftTitle("Target" + targetId);
@@ -132,7 +130,8 @@ public class VDJCAlignmentsFormatter {
             pd(ReferencePoint.DEndTrimmed, "D>", -1),
             pd(ReferencePoint.JBeginTrimmed, "<J"),
             pd(ReferencePoint.CDR3End, "CDR3><FR4"),
-            pd(ReferencePoint.FR4End, "FR4>", -1)
+            pd(ReferencePoint.FR4End, "FR4>", -1),
+            pd(ReferencePoint.CBegin, "<C")
     };
 
     public static final PointToDraw[] POINTS_FOR_GERMLINE = new PointToDraw[]{

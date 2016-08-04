@@ -30,7 +30,7 @@ package com.milaboratory.mixcr.info;
 
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.cli.Util;
-import io.repseq.reference.GeneFeature;
+import io.repseq.core.GeneFeature;
 
 import java.io.PrintStream;
 import java.util.concurrent.atomic.AtomicLong;

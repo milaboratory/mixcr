@@ -30,12 +30,12 @@ package com.milaboratory.mixcr.reference.builder;
 
 import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import io.repseq.reference.GeneType;
+import io.repseq.core.GeneType;
 import com.milaboratory.mixcr.reference.builder.FastaLocusBuilderParameters.AnchorPointPositionInfo;
 import com.milaboratory.test.TestUtil;
 import org.junit.Test;
 
-import static io.repseq.reference.ReferencePoint.*;
+import static io.repseq.core.ReferencePoint.*;
 
 /**
  * Created by dbolotin on 01/12/15.

@@ -7,6 +7,7 @@ import cc.redberry.pipe.blocks.ParallelProcessor;
 import cc.redberry.pipe.util.Chunk;
 import cc.redberry.pipe.util.Indexer;
 import cc.redberry.pipe.util.OrderedOutputPort;
+import com.milaboratory.core.io.sequence.PairedRead;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SequenceReaderCloseable;
 import com.milaboratory.core.io.sequence.fasta.FastaReader;
@@ -17,6 +18,8 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.assembler.*;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.cli.ActionAlign;
 import com.milaboratory.mixcr.cli.AlignerReport;
 import com.milaboratory.mixcr.cli.CloneAssemblerReport;
@@ -29,6 +32,8 @@ import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.reference.*;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -92,16 +97,17 @@ public final class RunMiXCR {
                 if (alignerParameters.containsRequiredFeature(allele) &&
                         (allele.isFunctional() || !parameters.isFunctionalOnly)) {
                     alleles.add(allele);
-                    aligner.addAllele(allele);
+                    aligner.addGene(allele);
                 }
 
-        AlignerReport report = new AlignerReport();
+        AlignerReport report = new AlignerReport(alignerParameters.getVJAlignmentOrder());
         aligner.setEventsListener(report);
 
-        try (SequenceReaderCloseable<? extends SequenceRead> reader = parameters.createReader()) {
+        try (SequenceReaderCloseable<? extends SequenceRead> reader = parameters.getReader()) {
 
             //start progress reporting
-            SmartProgressReporter.startProgressReport("align", (CanReportProgress) reader);
+            if (reader instanceof CanReportProgress)
+                SmartProgressReporter.startProgressReport("align", (CanReportProgress) reader);
 
             OutputPort<Chunk<SequenceRead>> mainInputReads = CUtils.buffered((OutputPort) chunked(reader, 64), 16);
             OutputPort<VDJCAlignmentResult> alignments = unchunked(new ParallelProcessor(mainInputReads, chunked(aligner), parameters.threads));
@@ -135,12 +141,12 @@ public final class RunMiXCR {
     }
 
     public static final class AlignResult {
-        final RunMiXCRAnalysis parameters;
-        final long totalNumberOfReads;
-        final AlignerReport report;
-        final List<VDJCAlignments> alignments;
-        final List<Allele> usedAlleles;
-        final VDJCAligner aligner;
+        public final RunMiXCRAnalysis parameters;
+        public final long totalNumberOfReads;
+        public final AlignerReport report;
+        public final List<VDJCAlignments> alignments;
+        public final List<Allele> usedAlleles;
+        public final VDJCAligner aligner;
 
         public AlignResult(RunMiXCRAnalysis parameters, long totalNumberOfReads, AlignerReport report,
                            List<VDJCAlignments> alignments, List<Allele> usedAlleles, VDJCAligner aligner) {
@@ -151,6 +157,22 @@ public final class RunMiXCR {
             this.usedAlleles = usedAlleles;
             this.aligner = aligner;
         }
+
+        private byte[] serializedAlignments = null;
+
+        public VDJCAlignmentsReader resultReader() {
+            if (serializedAlignments == null) {
+                final ByteArrayOutputStream data = new ByteArrayOutputStream();
+                try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(data)) {
+                    writer.header(aligner);
+                    for (VDJCAlignments alignment : alignments)
+                        writer.write(alignment);
+                    writer.setNumberOfProcessedReads(totalNumberOfReads);
+                }
+                serializedAlignments = data.toByteArray();
+            }
+            return new VDJCAlignmentsReader(new ByteArrayInputStream(serializedAlignments), LociLibraryManager.getDefault());
+        }
     }
 
     public static final class RunMiXCRAnalysis {
@@ -160,28 +182,58 @@ public final class RunMiXCR {
         public int taxonId = Species.HomoSapiens;
         public boolean isFunctionalOnly = true;
         public int threads = Runtime.getRuntime().availableProcessors();
-        public final String[] inputFiles;
+        public final SequenceReaderCloseable<? extends SequenceRead> reader;
+        public final boolean isInputPaired;
 
-        public RunMiXCRAnalysis(String... inputFiles) {
-            this.inputFiles = inputFiles;
-        }
-
-        public boolean isInputPaired() {
-            return inputFiles.length == 2;
-        }
-
-        public SequenceReaderCloseable<? extends SequenceRead> createReader() throws IOException {
+        public RunMiXCRAnalysis(String... inputFiles) throws IOException {
+            this.isInputPaired = inputFiles.length == 2;
             if (isInputPaired())
-                return new PairedFastqReader(inputFiles[0], inputFiles[1], true);
+                reader = new PairedFastqReader(inputFiles[0], inputFiles[1], true);
             else {
                 String[] s = inputFiles[0].split("\\.");
                 if (s[s.length - 1].equals("fasta"))
-                    return new FastaSequenceReaderWrapper(
+                    reader = new FastaSequenceReaderWrapper(
                             new FastaReader<>(inputFiles[0], NucleotideSequence.ALPHABET),
                             true);
                 else
-                    return new SingleFastqReader(inputFiles[0], true);
+                    reader = new SingleFastqReader(inputFiles[0], true);
             }
+        }
+
+        public RunMiXCRAnalysis(SequenceReaderCloseable<? extends SequenceRead> reader, boolean isInputPaired) {
+            this.reader = reader;
+            this.isInputPaired = isInputPaired;
+        }
+
+        public RunMiXCRAnalysis(final SequenceRead... input) {
+            this.reader = new SequenceReaderCloseable<SequenceRead>() {
+                int counter = 0;
+
+                @Override
+                public void close() {
+                }
+
+                @Override
+                public long getNumberOfReads() {
+                    return input.length;
+                }
+
+                @Override
+                public synchronized SequenceRead take() {
+                    if (counter == input.length)
+                        return null;
+                    return input[counter++];
+                }
+            };
+            this.isInputPaired = input.length > 0 && input[0] instanceof PairedRead;
+        }
+
+        public boolean isInputPaired() {
+            return isInputPaired;
+        }
+
+        public SequenceReaderCloseable<? extends SequenceRead> getReader() throws IOException {
+            return reader;
         }
     }
 

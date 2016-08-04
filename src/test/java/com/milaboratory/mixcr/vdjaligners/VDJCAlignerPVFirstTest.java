@@ -36,7 +36,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.reference.LociLibraryManager;
-import io.repseq.reference.*;
+import io.repseq.core.GeneType;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -64,16 +64,16 @@ public class VDJCAlignerPVFirstTest {
 
         try (PairedFastqReader reader =
                      new PairedFastqReader(
-                             VDJCAlignerSJFirstTest.class.getClassLoader()
+                             VDJCAlignerSTest.class.getClassLoader()
                                      .getResourceAsStream("sequences/sample_IGH_R1.fastq"),
-                             VDJCAlignerSJFirstTest.class.getClassLoader()
+                             VDJCAlignerSTest.class.getClassLoader()
                                      .getResourceAsStream("sequences/sample_IGH_R2.fastq"), true)) {
 
             VDJCAlignerPVFirst aligner = new VDJCAlignerPVFirst(parameters);
 
             for (Allele allele : ll.getLocus(Species.HomoSapiens, Chain.IGH).getAllAlleles()) {
                 if (parameters.containsRequiredFeature(allele))
-                    aligner.addAllele(allele);
+                    aligner.addGene(allele);
             }
 
             for (PairedRead read : CUtils.it(reader)) {

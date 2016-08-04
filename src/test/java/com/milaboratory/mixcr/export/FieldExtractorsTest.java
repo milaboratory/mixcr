@@ -30,7 +30,7 @@ package com.milaboratory.mixcr.export;
 
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.cli.Util;
-import io.repseq.reference.GeneType;
+import io.repseq.core.GeneType;
 import org.junit.Ignore;
 import org.junit.Test;
 

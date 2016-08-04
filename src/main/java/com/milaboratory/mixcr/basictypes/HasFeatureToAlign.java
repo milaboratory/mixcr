@@ -28,8 +28,8 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
-import io.repseq.reference.GeneFeature;
-import io.repseq.reference.GeneType;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
 
 /**
  * Parameters that can return gene features used in alignments for different gene types.

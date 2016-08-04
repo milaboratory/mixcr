@@ -29,10 +29,10 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.primitives.Filter;
-import io.repseq.reference.Allele;
-import io.repseq.reference.AlleleId;
-import io.repseq.reference.GeneFeature;
-import io.repseq.reference.GeneType;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
+import io.repseq.core.VDJCGene;
+import io.repseq.core.VDJCGeneId;
 
 import java.util.*;
 
@@ -43,11 +43,11 @@ public final class CloneSet implements Iterable<Clone> {
     String versionInfo;
     final GeneFeature[] assemblingFeatures;
     final EnumMap<GeneType, GeneFeature> alignedFeatures;
-    final List<Allele> usedAlleles;
+    final List<VDJCGene> usedAlleles;
     final List<Clone> clones;
     final long totalCount;
 
-    public CloneSet(List<Clone> clones, Collection<Allele> usedAlleles, EnumMap<GeneType, GeneFeature> alignedFeatures,
+    public CloneSet(List<Clone> clones, Collection<VDJCGene> usedAlleles, EnumMap<GeneType, GeneFeature> alignedFeatures,
                     GeneFeature[] assemblingFeatures) {
         this.clones = Collections.unmodifiableList(new ArrayList<>(clones));
         long totalCount = 0;
@@ -64,7 +64,7 @@ public final class CloneSet implements Iterable<Clone> {
     public CloneSet(List<Clone> clones) {
         this.clones = Collections.unmodifiableList(new ArrayList<>(clones));
         long totalCount = 0;
-        HashMap<AlleleId, Allele> alleles = new HashMap<>();
+        HashMap<VDJCGeneId, VDJCGene> alleles = new HashMap<>();
         EnumMap<GeneType, GeneFeature> alignedFeatures = new EnumMap<>(GeneType.class);
         GeneFeature[] assemblingFeatures = null;
         for (Clone clone : clones) {
@@ -76,7 +76,7 @@ public final class CloneSet implements Iterable<Clone> {
                 throw new IllegalArgumentException("Different assembling features.");
             for (GeneType geneType : GeneType.values())
                 for (VDJCHit hit : clone.getHits(geneType)) {
-                    Allele allele = hit.getAllele();
+                    VDJCGene allele = hit.getGene();
                     alleles.put(allele.getId(), allele);
                     GeneFeature alignedFeature = hit.getAlignedFeature();
                     GeneFeature f = alignedFeatures.put(geneType, alignedFeature);
@@ -106,7 +106,7 @@ public final class CloneSet implements Iterable<Clone> {
         return assemblingFeatures;
     }
 
-    public List<Allele> getUsedAlleles() {
+    public List<VDJCGene> getUsedAlleles() {
         return usedAlleles;
     }
 

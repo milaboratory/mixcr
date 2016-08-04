@@ -30,26 +30,29 @@ package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.core.io.CompressionType;
-import io.repseq.reference.Allele;
-import io.repseq.reference.AlleleResolver;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.SerializersManager;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.CountingInputStream;
+import gnu.trove.list.array.TLongArrayList;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
+import io.repseq.core.VDJCGene;
+import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.*;
 import java.util.List;
+import java.util.Objects;
 
-import static com.milaboratory.mixcr.basictypes.CompatibilityIO.registerV3Serializers;
-import static com.milaboratory.mixcr.basictypes.CompatibilityIO.registerV5Serializers;
 import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.*;
 
-public class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>, CanReportProgress {
+public final class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>, CanReportProgress {
+    private static final int DEFAULT_BUFFER_SIZE = 1048576; // 1 MB
     VDJCAlignerParameters parameters;
-    List<Allele> usedAlleles;
+    List<VDJCGene> usedAlleles;
     final PrimitivI input;
-    final AlleleResolver alleleResolver;
+    final VDJCLibraryRegistry vdjcRegistry;
     String versionInfo;
     String magic;
     long numberOfReads = -1;
@@ -57,30 +60,62 @@ public class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>
     long counter = 0;
     final long size;
     final CountingInputStream countingInputStream;
+    final CountingInputStream indexingStream;
+    volatile TLongArrayList index = null;
 
-    public VDJCAlignmentsReader(String fileName, AlleleResolver alleleResolver) throws IOException {
-        this(new File(fileName), alleleResolver);
+    public VDJCAlignmentsReader(String fileName) throws IOException {
+        this(new File(fileName), VDJCLibraryRegistry.getDefault());
     }
 
-    public VDJCAlignmentsReader(File file, AlleleResolver alleleResolver) throws IOException {
+    public VDJCAlignmentsReader(String fileName, VDJCLibraryRegistry vdjcRegistry) throws IOException {
+        this(new File(fileName), vdjcRegistry);
+    }
+
+    public VDJCAlignmentsReader(File file, VDJCLibraryRegistry vdjcRegistry) throws IOException {
         CompressionType ct = CompressionType.detectCompressionType(file);
         this.countingInputStream = new CountingInputStream(new FileInputStream(file));
         if (ct == CompressionType.None)
-            this.input = new PrimitivI(new BufferedInputStream(countingInputStream, 65536));
-        else
-            this.input = new PrimitivI(ct.createInputStream(countingInputStream, 65536));
-        this.alleleResolver = alleleResolver;
+            this.input = new PrimitivI(indexingStream = new CountingInputStream(
+                    new BufferedInputStream(countingInputStream, DEFAULT_BUFFER_SIZE)));
+        else {
+            this.input = new PrimitivI(ct.createInputStream(countingInputStream, DEFAULT_BUFFER_SIZE));
+            indexingStream = null;
+        }
+        this.vdjcRegistry = vdjcRegistry;
         this.size = file.length();
     }
 
-    public VDJCAlignmentsReader(InputStream input, AlleleResolver alleleResolver) {
-        this(input, alleleResolver, 0);
+    public VDJCAlignmentsReader(InputStream input) {
+        this(input, VDJCLibraryRegistry.getDefault(), 0);
     }
 
-    public VDJCAlignmentsReader(InputStream input, AlleleResolver alleleResolver, long size) {
-        this.input = new PrimitivI(countingInputStream = new CountingInputStream(input));
-        this.alleleResolver = alleleResolver;
+    public VDJCAlignmentsReader(InputStream input, VDJCLibraryRegistry vdjcRegistry) {
+        this(input, vdjcRegistry, 0);
+    }
+
+    public VDJCAlignmentsReader(InputStream input, long size) {
+        this(input, VDJCLibraryRegistry.getDefault(), size);
+    }
+
+    public VDJCAlignmentsReader(InputStream input, VDJCLibraryRegistry vdjcRegistry, long size) {
+        this.input = new PrimitivI(indexingStream = countingInputStream =
+                new CountingInputStream(input));
+        this.vdjcRegistry = vdjcRegistry;
         this.size = size;
+    }
+
+    public VDJCAlignmentsReader(DataInput input, VDJCLibraryRegistry vdjcRegistry) {
+        this.input = new PrimitivI(input);
+        this.vdjcRegistry = vdjcRegistry;
+        this.countingInputStream = null;
+        this.indexingStream = null;
+        this.size = 0;
+    }
+
+    public void setIndexer(TLongArrayList index) {
+        if (indexingStream == null)
+            throw new IllegalStateException("Can't index compressed file.");
+        this.index = index;
     }
 
     public void init() {
@@ -95,25 +130,27 @@ public class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>
 
         SerializersManager serializersManager = input.getSerializersManager();
         switch (magicString) {
-            case MAGIC_V3:
-                registerV3Serializers(serializersManager);
-                break;
-            case MAGIC_V4:
-            case MAGIC_V5:
-                registerV5Serializers(serializersManager);
-                break;
             case MAGIC:
                 break;
             default:
                 throw new RuntimeException("Unsupported file format; .vdjca file of version " + new String(magic) + " while you are running MiXCR " + MAGIC);
         }
 
-        if (magicString.compareTo(MAGIC_V5) >= 0)
-            versionInfo = input.readUTF();
+        versionInfo = input.readUTF();
 
         parameters = input.readObject(VDJCAlignerParameters.class);
 
-        this.usedAlleles = IOUtil.readAlleleReferences(input, alleleResolver, parameters);
+        this.usedAlleles = IOUtil.readAlleleReferences(input, vdjcRegistry, parameters);
+
+        // Registering links to features to align
+        for (GeneType gt : GeneType.VDJC_REFERENCE) {
+            GeneFeature featureParams = parameters.getFeatureToAlign(gt);
+            GeneFeature featureDeserialized = input.readObject(GeneFeature.class);
+            if (!Objects.equals(featureDeserialized, featureParams))
+                throw new RuntimeException("Wrong format.");
+            if (featureDeserialized != null)
+                input.putKnownReference(featureParams);
+        }
     }
 
     public synchronized VDJCAlignerParameters getParameters() {
@@ -121,7 +158,7 @@ public class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>
         return parameters;
     }
 
-    public synchronized List<Allele> getUsedAlleles() {
+    public synchronized List<VDJCGene> getUsedAlleles() {
         init();
         return usedAlleles;
     }
@@ -157,7 +194,7 @@ public class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>
 
     @Override
     public boolean isFinished() {
-        return countingInputStream.getBytesRead() == size || closed;
+        return closed || (countingInputStream != null && countingInputStream.getBytesRead() == size);
     }
 
     @Override
@@ -188,11 +225,16 @@ public class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>
 
         init();
 
+        if (index != null)
+            index.add(indexingStream.getBytesRead());
+
         VDJCAlignments alignments = input.readObject(VDJCAlignments.class);
 
-        if (alignments == null)
+        if (alignments == null) {
+            if (index != null)
+                index.removeAt(index.size() - 1);
             close(true);
-        else
+        } else
             alignments.setAlignmentsIndex(counter++);
 
         return alignments;

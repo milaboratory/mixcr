@@ -84,7 +84,7 @@ The list of command line parameters for both ``exportAlignments`` and
 +-----------------------------+-------------------------------------------------------------------+
 | ``-pf``, ``--preset-file``  | load file with a list of fields to export                         |
 +-----------------------------+-------------------------------------------------------------------+
-| ``-l``, ``--list-fields``   | list availabel fields that can be exported                        |
+| ``-lf``, ``--list-fields``  | list availabel fields that can be exported                        |
 +-----------------------------+-------------------------------------------------------------------+
 | ``-s``, ``--no-spaces``     | output short versions of column headers which facilitates analysis|
 |                             | with Pandas, R/DataFrames or other data tables processing library |
@@ -92,12 +92,19 @@ The list of command line parameters for both ``exportAlignments`` and
 
 The line parameters are only for ``exportClones``:
 
-+------------------------------------+-------------------------------------------------------------------+
-| ``-o``, ``--filter-out-of-frames`` | Exclude out of frames (fractions will be recalculated)            |
-+------------------------------------+-------------------------------------------------------------------+
-| ``-t``, ``--filter-stops``         | Exclude sequences containing stop codons (fractions will be       |
-|                                    | recalculated)                                                     |
-+------------------------------------+-------------------------------------------------------------------+
++--------------------------------------+-------------------------------------------------------------------+
+| ``-l``, ``--filter-locus``           | Limit output to specific locus (e.g. TRA or IGH). Clone fractions |
+|                                      | will be recalculated accordingly.                                 |
++--------------------------------------+-------------------------------------------------------------------+
+| ``-o``, ``--filter-out-of-frames``   | Exclude out of frames (fractions will be recalculated)            |
++--------------------------------------+-------------------------------------------------------------------+
+| ``-t``, ``--filter-stops``           | Exclude sequences containing stop codons (fractions will be       |
+|                                      | recalculated)                                                     |
++--------------------------------------+-------------------------------------------------------------------+
+| ``-c``, ``--minimal-clone-count``    | Filter clones by minimal read count.                              |
++--------------------------------------+-------------------------------------------------------------------+
+| ``-q``, ``--minimal-clone-fraction`` | Filter clones by minimal clone fraction.                          |
++--------------------------------------+-------------------------------------------------------------------+
 
 
 
@@ -125,13 +132,13 @@ The following fields can be exported both for alignments and clones:
 +-----------------------------------+----------------------------------------------------------+
 | ``-cHits``                        | All C hits.                                              |
 +-----------------------------------+----------------------------------------------------------+
-| ``-vHitsWithoutScore``            | All V hits without scores.                               |
+| ``-vHitsWithScore``               | All V hits with scores.                                  |
 +-----------------------------------+----------------------------------------------------------+
-| ``-dHitsWithoutScore``            | All D hits without scores.                               |
+| ``-dHitsWithScore``               | All D hits with scores.                                  |
 +-----------------------------------+----------------------------------------------------------+
-| ``-jHitsWithoutScore``            | All J hits without scores.                               |
+| ``-jHitsWithScore``               | All J hits with scores.                                  |
 +-----------------------------------+----------------------------------------------------------+
-| ``-cHitsWithoutScore``            | All C hits without scores.                               |
+| ``-cHitsWithScore``               | All C hits with scores.                                  |
 +-----------------------------------+----------------------------------------------------------+
 | ``-vAlignment``                   | Best V alignment.                                        |
 +-----------------------------------+----------------------------------------------------------+
@@ -191,7 +198,22 @@ The following fields can be exported both for alignments and clones:
 +-----------------------------------+----------------------------------------------------------+
 | ``-cIdentityPercents``            | Alignment identity percents for all C hits.              |
 +-----------------------------------+----------------------------------------------------------+
-
+| ``-vFamily``                      | Best V hit family.                                       |
++-----------------------------------+----------------------------------------------------------+
+| ``-dFamily``                      | Best D hit family.                                       |
++-----------------------------------+----------------------------------------------------------+
+| ``-jFamily``                      | Best J hit family.                                       |
++-----------------------------------+----------------------------------------------------------+
+| ``-cFamily``                      | Best C hit family.                                       |
++-----------------------------------+----------------------------------------------------------+
+| ``-vFamilies``                    | All V hit families.                                      |
++-----------------------------------+----------------------------------------------------------+
+| ``-dFamilies``                    | All D hit families.                                      |
++-----------------------------------+----------------------------------------------------------+
+| ``-jFamilies``                    | All J hit families.                                      |
++-----------------------------------+----------------------------------------------------------+
+| ``-cFamilies``                    | All C hit families.                                      |
++-----------------------------------+----------------------------------------------------------+
 
 
 
@@ -616,7 +638,7 @@ In any way, first one need to specify additonal option ``--index`` for the :ref:
 
     mixcr assemble --index index_file alignments.vdjca output.clns
 
-This will tell MiXCR to store mapping in the file ``index_file``. Now one can use ``index_file`` in order to access this information. For example using ``-cloneId`` option for ``exportAlignments`` command:
+This will tell MiXCR to store mapping in the file ``index_file`` (actually two files will be created: ``index_file`` and ``index_file.p`` both of which are used to store the index; in further options one should specify only ``index_file`` without ``.p`` extension and MiXCR will automatically read both required files). Now one can use ``index_file`` in order to access this information. For example using ``-cloneId`` option for ``exportAlignments`` command:
 
 ::
 
@@ -664,7 +686,7 @@ One can also export all read IDs that were aggregated by eah clone. For this one
 
 ::
 
-    mixcr exportAlignments -p min -readIds index_file clones.clns clones.txt
+    mixcr exportClones -p min -readIds index_file clones.clns clones.txt
 
 This will add a column with full enumeration of all reads that were absorbed by particular clone:
 
@@ -692,17 +714,17 @@ Finally, one can export reads aggregated by each clone into separate ``.fastq`` 
 
     mixcr align -g -l IGH input.fastq alignments.vdjca.gz
 
-With this option MiXCR will store original reads in the ``.vdjca`` file. Then one can export reads corresponding for particular clone with ``exportReads`` command. For example, export all reads that were assembled into the first clone (clone with cloneId = 1):
+With this option MiXCR will store original reads in the ``.vdjca`` file. Then one can export reads corresponding for particular clone with ``exportReadsForClones`` command. For example, export all reads that were assembled into the first clone (clone with cloneId = 0):
 
 ::
 
-    mixcr exportReads index_file alignments.vdjca.gz 0 reads.fastq.gz
+    mixcr exportReadsForClones index_file alignments.vdjca.gz 0 reads.fastq.gz
 
 This will create file ``reads_clns0.fastq.gz`` (or two files ``reads_clns0_R1.fastq.gz`` and ``reads_clns0_R2.fastq.gz`` if the original data were paired) with all reads that were aggregated by the first clone. One can export reads for several clones at a time:
 
 ::
 
-    mixcr exportReads index_file alignments.vdjca.gz 0 1 2 33 54 reads.fastq.gz
+    mixcr exportReadsForClones index_file alignments.vdjca.gz 0 1 2 33 54 reads.fastq.gz
 
 This will create several files (``reads_clns0.fastq.gz``, ``reads_clns1.fastq.gz`` etc.) for each clone with cloneId equal to 0, 1, 2, 33 and 54 respectively.
 

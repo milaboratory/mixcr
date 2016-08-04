@@ -45,9 +45,13 @@ public class ActionExportParameters extends ActionParametersWithOutput {
 
     @Parameter(description = "Output only first N records",
             names = {"-n", "--limit"}, validateWith = PositiveInteger.class)
-    public long limit = Long.MAX_VALUE;
+    private Long limit = null;
 
     public ArrayList<FieldExtractor> exporters;
+
+    public long getLimit() {
+        return limit == null ? Long.MAX_VALUE : limit;
+    }
 
     @Override
     protected List<String> getOutputFiles() {
