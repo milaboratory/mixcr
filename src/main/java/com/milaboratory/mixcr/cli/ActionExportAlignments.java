@@ -31,8 +31,8 @@ package com.milaboratory.mixcr.cli;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.export.InfoWriter;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.util.SmartProgressReporter;
+import io.repseq.core.VDJCLibraryRegistry;
 
 import java.util.List;
 
@@ -43,7 +43,7 @@ public class ActionExportAlignments extends ActionExport {
 
     @Override
     public void go0() throws Exception {
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getInputFile(), LociLibraryManager.getDefault());
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getInputFile(), VDJCLibraryRegistry.getDefault());
              InfoWriter<VDJCAlignments> writer = new InfoWriter<>(parameters.getOutputFile())) {
             SmartProgressReporter.startProgressReport("Exporting alignments", reader, System.err);
             writer.attachInfoProviders((List) parameters.exporters);

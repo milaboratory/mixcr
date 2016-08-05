@@ -28,9 +28,9 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
-import com.milaboratory.mixcr.reference.Allele;
-import com.milaboratory.mixcr.reference.AlleleResolver;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
+import io.repseq.core.VDJCGene;
+import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -44,22 +44,30 @@ public class RandomAccessVDJCAReader implements AutoCloseable {
     final VDJCAlignmentsReader innerReader;
     int currentIndex = 0;
 
-    public RandomAccessVDJCAReader(File file, long[] index, AlleleResolver resolver) {
+    public RandomAccessVDJCAReader(File file, long[] index) {
+        this(file, index, VDJCLibraryRegistry.getDefault());
+    }
+
+    public RandomAccessVDJCAReader(File file, long[] index, VDJCLibraryRegistry registry) {
         try {
             this.raf = new RandomAccessFile(file, "rw");
             this.index = index;
-            this.innerReader = new VDJCAlignmentsReader(raf, resolver);
+            this.innerReader = new VDJCAlignmentsReader(raf, registry);
             this.innerReader.init();
         } catch (FileNotFoundException e) {
             throw new IllegalArgumentException(e);
         }
     }
 
-    public RandomAccessVDJCAReader(String file, long[] index, AlleleResolver resolver) {
+    public RandomAccessVDJCAReader(String file, long[] index) {
+        this(file, index, VDJCLibraryRegistry.getDefault());
+    }
+
+    public RandomAccessVDJCAReader(String file, long[] index, VDJCLibraryRegistry registry) {
         try {
             this.raf = new RandomAccessFile(file, "rw");
             this.index = index;
-            this.innerReader = new VDJCAlignmentsReader(raf, resolver);
+            this.innerReader = new VDJCAlignmentsReader(raf, registry);
             this.innerReader.init();
         } catch (FileNotFoundException e) {
             throw new IllegalArgumentException(e);
@@ -70,7 +78,7 @@ public class RandomAccessVDJCAReader implements AutoCloseable {
         return innerReader.getParameters();
     }
 
-    public List<Allele> getUsedAlleles() {
+    public List<VDJCGene> getUsedAlleles() {
         return innerReader.getUsedAlleles();
     }
 

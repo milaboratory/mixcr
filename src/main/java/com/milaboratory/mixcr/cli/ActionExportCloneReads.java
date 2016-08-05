@@ -18,7 +18,6 @@ import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
@@ -77,7 +76,7 @@ public final class ActionExportCloneReads implements Action {
 
     private boolean originalReadsPresent() throws IOException {
         try (VDJCAlignmentsReader reader
-                     = new VDJCAlignmentsReader(parameters.getVDJCAFile(), LociLibraryManager.getDefault())) {
+                     = new VDJCAlignmentsReader(parameters.getVDJCAFile())) {
             VDJCAlignments test = reader.take();
             return test == null || test.getOriginalSequences() != null;
         }
@@ -89,8 +88,7 @@ public final class ActionExportCloneReads implements Action {
         for (int cloneId : clonIds)
             writers.put(cloneId, null);
 
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getVDJCAFile(),
-                LociLibraryManager.getDefault())) {
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getVDJCAFile())) {
 
             Iterator<ReadToCloneMapping> mappingIterator = byAlignments.iterator();
             Iterator<VDJCAlignments> vdjcaIterator = new CUtils.OPIterator<>(reader);
@@ -129,8 +127,7 @@ public final class ActionExportCloneReads implements Action {
 
         if (selected.isEmpty())
             return;
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getVDJCAFile(),
-                LociLibraryManager.getDefault())) {
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getVDJCAFile())) {
 
             Iterator<ReadToCloneMapping> mappingIterator = selected.iterator();
             Iterator<VDJCAlignments> vdjcaIterator = new CUtils.OPIterator<>(reader);

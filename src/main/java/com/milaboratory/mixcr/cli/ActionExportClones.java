@@ -35,13 +35,12 @@ import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.export.InfoWriter;
-import io.repseq.core.Chains;
-import io.repseq.reference.Chain;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.util.CanReportProgressAndStage;
 import com.milaboratory.util.SmartProgressReporter;
+import io.repseq.core.Chains;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
+import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.InputStream;
 import java.util.List;
@@ -56,7 +55,7 @@ public class ActionExportClones extends ActionExport {
         CloneExportParameters parameters = (CloneExportParameters) this.parameters;
         try (InputStream inputStream = IOUtil.createIS(parameters.getInputFile());
              InfoWriter<Clone> writer = new InfoWriter<>(parameters.getOutputFile())) {
-            CloneSet set = CloneSetIO.read(inputStream, LociLibraryManager.getDefault());
+            CloneSet set = CloneSetIO.read(inputStream, VDJCLibraryRegistry.getDefault());
 
             if (parameters.filterOutOfFrames || parameters.filterStops || !"all".equals(parameters.loci))
                 set = CloneSet.transform(set, new CFilter(parameters.filterOutOfFrames, parameters.filterStops,

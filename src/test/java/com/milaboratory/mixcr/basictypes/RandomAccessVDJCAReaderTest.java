@@ -28,8 +28,6 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
-import com.milaboratory.mixcr.reference.LociLibrary;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.mixcr.util.RunMiXCR;
 import com.milaboratory.util.TempFileManager;
 import gnu.trove.list.array.TLongArrayList;
@@ -48,8 +46,6 @@ public class RandomAccessVDJCAReaderTest {
 
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
 
-        LociLibrary resolver = LociLibraryManager.getDefault().getLibrary("mi");
-
         File file = TempFileManager.getTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(file)) {
             writer.header(align.aligner);
@@ -59,7 +55,7 @@ public class RandomAccessVDJCAReaderTest {
 
         TLongArrayList index = new TLongArrayList();
 
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(file, resolver)) {
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(file)) {
             reader.setIndexer(index);
             int i = 0;
             VDJCAlignments alignments;
@@ -67,7 +63,7 @@ public class RandomAccessVDJCAReaderTest {
                 Assert.assertEquals(align.alignments.get(i++), alignments);
         }
 
-        try (RandomAccessVDJCAReader reader = new RandomAccessVDJCAReader(file, index.toArray(), resolver)) {
+        try (RandomAccessVDJCAReader reader = new RandomAccessVDJCAReader(file, index.toArray())) {
             Assert.assertEquals(align.parameters.alignerParameters, reader.getParameters());
             for (int i = 0; i < 1000; i++) {
                 int ind = ThreadLocalRandom.current().nextInt(align.alignments.size());

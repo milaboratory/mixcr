@@ -53,7 +53,7 @@ public class Main {
                 new ActionInfo(),
                 new ActionExportCloneReads(),
                 new VersionInfoAction(),
-                new ActionImportSegments(),
+                //new ActionImportSegments(),
                 new ActionAlignmentsDiff(),
                 new ActionAssemblePartialAlignments(),
                 new ActionExportReads(),

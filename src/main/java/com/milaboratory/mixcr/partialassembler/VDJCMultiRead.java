@@ -3,7 +3,7 @@ package com.milaboratory.mixcr.partialassembler;
 import com.milaboratory.core.io.sequence.MultiRead;
 import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.core.io.sequence.SingleReadImpl;
-import com.milaboratory.mixcr.reference.GeneType;
+import io.repseq.core.GeneType;
 
 import java.util.EnumSet;
 import java.util.List;

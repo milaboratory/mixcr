@@ -14,17 +14,15 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
-import com.milaboratory.mixcr.reference.Locus;
 import com.milaboratory.util.SmartProgressReporter;
+import io.repseq.core.Chains;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author Dmitry Bolotin
@@ -65,15 +63,13 @@ public final class ActionFilterAlignments implements Action {
 
     public static final class AlignmentsFilter implements Filter<VDJCAlignments> {
         final GeneFeature containsFeature;
-        final NucleotideSequence cdr3Contains;
         final NucleotideSequence cdr3Equals;
-        final Set<Locus> locus;
+        final Chains chains;
 
-        public AlignmentsFilter(GeneFeature containsFeature, NucleotideSequence cdr3Contains, NucleotideSequence cdr3Equals, Set<Locus> locus) {
+        public AlignmentsFilter(GeneFeature containsFeature, NucleotideSequence cdr3Equals, Chains chains) {
             this.containsFeature = containsFeature;
-            this.cdr3Contains = cdr3Contains;
             this.cdr3Equals = cdr3Equals;
-            this.locus = locus;
+            this.chains = chains;
         }
 
         @Override
@@ -84,7 +80,7 @@ public final class ActionFilterAlignments implements Action {
             boolean lMatch = false;
             for (GeneType gt : GeneType.VDJC_REFERENCE) {
                 final VDJCHit hit = object.getBestHit(gt);
-                if (hit != null && locus.contains(hit.getGene().getLocus())) {
+                if (hit != null && chains.intersects(hit.getGene().getChains())) {
                     lMatch = true;
                     break;
                 }
@@ -95,38 +91,29 @@ public final class ActionFilterAlignments implements Action {
             if (containsFeature != null && object.getFeature(containsFeature) == null)
                 return false;
 
-            if (cdr3Contains != null || cdr3Equals != null) {
+            if (cdr3Equals != null) {
                 final NSequenceWithQuality cdr3 = object.getFeature(GeneFeature.CDR3);
                 if (cdr3 == null)
                     return false;
                 if (cdr3Equals != null && !cdr3.getSequence().equals(cdr3Equals))
                     return false;
-
-                if (cdr3Contains != null && cdr3.getSequence().indexOf(cdr3Contains) == -1)
-                    return false;
-
             }
             return true;
         }
     }
 
-    @Parameters(commandDescription = "Filter alignments.",
-            optionPrefixes = "-")
+    @Parameters(commandDescription = "Filter alignments.")
     public static final class FilterAlignmentsFilterParameters extends ActionParametersWithOutput {
         @Parameter(description = "input_file.vdjca output_file.vdjca", variableArity = true)
         public List<String> parameters = new ArrayList<>();
 
-        @Parameter(description = "Immunological loci to align with separated by ','. Available loci: IGH, IGL, IGK, TRA, TRB, TRG, TRD.",
-                names = {"-l", "--loci"})
-        public String loci = "all";
+        @Parameter(description = "Output only specific chains. Available chains: IGH, IGL, IGK, TRA, TRB, TRG, TRD, etc...",
+                names = {"-c", "--chains"})
+        public String chains = "all";
 
         @Parameter(description = "Include alignments that contain specified feature.",
                 names = {"-g", "--contains-feature"})
         public String containsFeature = null;
-
-        @Parameter(description = "Include alignments which CDR3 contains specified sequence.",
-                names = {"-c", "--cdr3-contains"})
-        public String cdr3Contains = null;
 
         @Parameter(description = "Include alignments which CDR3 equals to specified sequence.",
                 names = {"-e", "--cdr3-equals"})
@@ -141,12 +128,12 @@ public final class ActionFilterAlignments implements Action {
             return Collections.singletonList(parameters.get(1));
         }
 
-        public Set<Locus> getLoci() {
-            return Util.parseLoci(loci);
+        public Chains getChains() {
+            return Util.parseLoci(chains);
         }
 
         public VDJCAlignmentsReader getInput() throws IOException {
-            return new VDJCAlignmentsReader(parameters.get(0), LociLibraryManager.getDefault());
+            return new VDJCAlignmentsReader(parameters.get(0));
         }
 
         public VDJCAlignmentsWriter getOutput() throws IOException {
@@ -159,12 +146,6 @@ public final class ActionFilterAlignments implements Action {
             return GeneFeature.parse(containsFeature);
         }
 
-        public NucleotideSequence getCdr3Contains() {
-            if (cdr3Contains == null)
-                return null;
-            return new NucleotideSequence(cdr3Contains);
-        }
-
         public NucleotideSequence getCdr3Equals() {
             if (cdr3Equals == null)
                 return null;
@@ -172,7 +153,7 @@ public final class ActionFilterAlignments implements Action {
         }
 
         public AlignmentsFilter getFilter() {
-            return new AlignmentsFilter(getContainFeature(), getCdr3Contains(), getCdr3Equals(), getLoci());
+            return new AlignmentsFilter(getContainFeature(), getCdr3Equals(), getChains());
         }
     }
 }

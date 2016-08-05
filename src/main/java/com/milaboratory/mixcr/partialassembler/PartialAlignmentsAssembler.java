@@ -37,13 +37,13 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence;
 import com.milaboratory.mixcr.cli.ReportHelper;
 import com.milaboratory.mixcr.cli.ReportWriter;
-import com.milaboratory.mixcr.reference.Allele;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
-import com.milaboratory.mixcr.reference.ReferencePoint;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.hash.TLongHashSet;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
+import io.repseq.core.ReferencePoint;
+import io.repseq.core.VDJCGene;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -101,7 +101,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         final VDJCAlignerParameters alignerParameters = reader.getParameters();
         PartialAlignmentsAssemblerAligner aligner = new PartialAlignmentsAssemblerAligner(alignerParameters);
         targetMerger.setAlignerParameters(alignerParameters);
-        for (Allele allele : reader.getUsedAlleles())
+        for (VDJCGene allele : reader.getUsedAlleles())
             aligner.addGene(allele);
 
         for (VDJCAlignments alignment : CUtils.it(reader)) {

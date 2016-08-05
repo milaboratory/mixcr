@@ -33,8 +33,10 @@ import com.milaboratory.core.io.sequence.PairedRead;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
+import io.repseq.core.Chains;
 import io.repseq.core.GeneType;
+import io.repseq.core.VDJCGene;
+import io.repseq.core.VDJCLibraryRegistry;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -51,8 +53,6 @@ public class VDJCAlignerWithMergeTest {
         VDJCAlignerParameters parameters =
                 VDJCParametersPresets
                         .getByName("default");
-
-        LociLibrary ll = LociLibraryManager.getDefault().getLibrary("mi");
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
@@ -72,9 +72,9 @@ public class VDJCAlignerWithMergeTest {
 
             VDJCAlignerWithMerge aligner = new VDJCAlignerWithMerge(parameters);
 
-            for (Allele allele : ll.getLocus(Species.HomoSapiens, Chain.IGH).getAllAlleles()) {
-                if (parameters.containsRequiredFeature(allele))
-                    aligner.addAllele(allele);
+            for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("mi", "hs").getGenes(Chains.IGH)) {
+                if (parameters.containsRequiredFeature(gene))
+                    aligner.addGene(gene);
             }
 
             for (PairedRead read : CUtils.it(reader)) {

@@ -6,7 +6,6 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
 
 import java.io.IOException;
 import java.util.EnumMap;
@@ -34,8 +33,8 @@ public class VDJCAlignmentsDifferenceReader
     public VDJCAlignmentsDifferenceReader(String first, String second,
                                           GeneFeature featureToCompare,
                                           int hitsCompareLevel) throws IOException {
-        this(new VDJCAlignmentsReader(first, LociLibraryManager.getDefault()),
-                new VDJCAlignmentsReader(second, LociLibraryManager.getDefault()),
+        this(new VDJCAlignmentsReader(first),
+                new VDJCAlignmentsReader(second),
                 featureToCompare, hitsCompareLevel);
     }
 

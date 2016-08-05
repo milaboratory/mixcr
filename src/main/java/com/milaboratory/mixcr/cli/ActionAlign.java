@@ -64,8 +64,7 @@ import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.SmartProgressReporter;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
+import io.repseq.core.*;
 
 import java.io.IOException;
 import java.util.*;
@@ -95,20 +94,18 @@ public class ActionAlign implements Action {
         GeneFeature correctingFeature = alignerParameters.getVAlignerParameters().getGeneFeatureToAlign().hasReversedRegions() ?
                 GeneFeature.VRegionWithP :
                 GeneFeature.VRegion;
-        for (Locus locus : actionParameters.getLoci()) {
-            LocusContainer lc = ll.getLocus(speciesId, locus);
-            if (lc == null)
+
+        VDJCLibrary library = VDJCLibraryRegistry.getDefault().getLibrary(actionParameters.library, actionParameters.species);
+
+        for (VDJCGene gene : library.getGenes(actionParameters.getChains())) {
+            if (actionParameters.isFunctionalOnly() && !gene.isFunctional())
                 continue;
-            for (Allele allele : lc.getAllAlleles()) {
-                if (actionParameters.isFunctionalOnly() && !allele.isFunctional())
-                    continue;
-                if (allele.getGeneType() == GeneType.Variable)
-                    totalV++;
-                if (!alignerParameters.containsRequiredFeature(allele)) {
-                    totalVErrors++;
-                    if (allele.getPartitioning().isAvailable(correctingFeature))
-                        hasVRegion++;
-                }
+            if (gene.getGeneType() == GeneType.Variable)
+                totalV++;
+            if (!alignerParameters.containsRequiredFeature(gene)) {
+                totalVErrors++;
+                if (gene.getPartitioning().isAvailable(correctingFeature))
+                    hasVRegion++;
             }
         }
 
@@ -122,43 +119,31 @@ public class ActionAlign implements Action {
 
         boolean warnings = false;
 
-        for (Chain chain : actionParameters.getLoci()) {
-            LocusContainer lc = ll.getLocus(speciesId, chain);
-            if (lc == null) {
+        for (VDJCGene gene : library.getGenes(actionParameters.getChains())) {
+            if (actionParameters.isFunctionalOnly() && !gene.isFunctional())
+                continue;
+            if (!alignerParameters.containsRequiredFeature(gene)) {
                 if (params().printWarnings()) {
-                    System.err.println("WARNING: No records for " + chain);
+                    System.err.println("WARNING: Allele " + gene.getName() +
+                            " doesn't contain full " + GeneFeature.encode(alignerParameters
+                            .getFeatureToAlign(gene.getGeneType())) + " (excluded)");
                     warnings = true;
                 }
                 continue;
             }
-            for (Allele allele : lc.getAllAlleles()) {
-                if (actionParameters.isFunctionalOnly() && !allele.isFunctional())
-                    continue;
-                if (!alignerParameters.containsRequiredFeature(allele)) {
-                    if (params().printWarnings()) {
-                        System.err.println("WARNING: Allele " + allele.getName() +
-                                " doesn't contain full " + GeneFeature.encode(alignerParameters
-                                .getFeatureToAlign(allele.getGeneType())) + " (excluded)");
-                        warnings = true;
-                    }
-                    continue;
-                }
-                aligner.addGene(allele);
-            }
+            aligner.addGene(gene);
         }
 
         if (warnings)
             System.err.println("To turn off warnings use '-nw' option.");
 
-        if (aligner.getVAllelesToAlign().isEmpty()) {
+        if (aligner.getVAllelesToAlign().isEmpty())
             throw new ProcessException("No V alleles to align. Aborting execution. See warnings for more info " +
                     "(turn warnings by adding -w option).");
-        }
 
-        if (aligner.getJAllelesToAlign().isEmpty()) {
+        if (aligner.getJAllelesToAlign().isEmpty())
             throw new ProcessException("No J alleles to align. Aborting execution. See warnings for more info " +
                     "(turn warnings by adding -w option).");
-        }
 
         AlignerReport report = actionParameters.report == null ? null : new AlignerReport(alignerParameters.getVJAlignmentOrder());
         if (report != null) {
@@ -282,11 +267,7 @@ public class ActionAlign implements Action {
 
         @Parameter(description = "Segment library to use",
                 names = {"-b", "--library"})
-        public String ll = "mi";
-
-        @Parameter(description = "Print warnings",
-                names = {"-w", "--warnings"})
-        public Boolean warnings = null;
+        public String library = "mi";
 
         @Parameter(description = "Don't print warnings",
                 names = {"-nw", "--no-warnings"})
@@ -302,11 +283,11 @@ public class ActionAlign implements Action {
 
         @Parameter(description = "Species (organism). Possible values: hs, HomoSapiens, musmusculus, mmu, hsa, etc..",
                 names = {"-s", "--species"})
-        public String species = "HomoSapiens";
+        public String species = "hs";
 
-        @Parameter(description = "Immunological loci to align with separated by ','. Available loci: IGH, IGL, IGK, TRA, TRB, TRG, TRD.",
-                names = {"-l", "--loci"})
-        public String loci = "all";
+        @Parameter(description = "Chain to align with; separated by ','. Possible chains: IGH, IGL, IGK, TRA, TRB, TRG, TRD, etc...",
+                names = {"-c", "--chain"})
+        public String chains = "all";
 
         @Parameter(description = "Processing threads",
                 names = {"-t", "--threads"}, validateWith = PositiveInteger.class)
@@ -317,7 +298,7 @@ public class ActionAlign implements Action {
         public long limit = 0;
 
         @Parameter(description = "Use only functional alleles.",
-                names = {"-u", "--functional"})
+                names = {"-u", "--functional-only"})
         public Boolean functionalOnly = null;
 
         @Parameter(description = "Do not merge paired reads.",
@@ -337,8 +318,8 @@ public class ActionAlign implements Action {
                 names = {"-g", "--save-reads"})
         public Boolean saveOriginalReads = false;
 
-        @Parameter(description = "Allow alignments with different loci of V and J hits.",
-                names = {"-i", "--diff-loci"})
+        @Parameter(description = "Allow alignments with different chains of V and J hits.",
+                names = {"-i", "--diff-chains"})
         public Boolean allowDifferentVJLoci = false;
 
         @Parameter(description = "Write not aligned reads (R1).",
@@ -352,10 +333,6 @@ public class ActionAlign implements Action {
         public String getSpecies() {
             return species;
         }
-
-        //public int getTaxonID() {
-        //    return Species.fromStringStrict(species);
-        //}
 
         public VDJCAlignerParameters getAlignerParameters() {
             VDJCAlignerParameters params = VDJCParametersPresets.getByName(alignerParametersName);
@@ -380,16 +357,11 @@ public class ActionAlign implements Action {
         }
 
         public boolean printWarnings() {
-            if (warnings != null && noWarnings != null)
-                throw new ParameterException("Simultaneous use of -w and -nw.");
-            if (warnings == null)
-                return !"mi".equals(ll) && noWarnings == null;
-            else
-                return warnings;
+            return noWarnings == null;
         }
 
-        public Set<Chain> getLoci() {
-            return Util.parseLoci(loci);
+        public Chains getChains() {
+            return Util.parseLoci(chains);
         }
 
         public boolean getWriteAllResults() {

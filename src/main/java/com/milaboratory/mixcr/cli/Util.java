@@ -62,7 +62,7 @@ public final class Util {
             case "ig":
                 return Chains.IG;
             case "all":
-                return Chains.IG.merge(Chains.TCR);
+                return Chains.ALL;
         }
         return new Chains(value);
     }

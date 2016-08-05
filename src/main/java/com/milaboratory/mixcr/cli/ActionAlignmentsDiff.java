@@ -9,11 +9,10 @@ import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriterI;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.mixcr.util.VDJCAlignmentsDifferenceReader;
 import com.milaboratory.util.SmartProgressReporter;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
 
 import java.io.FileOutputStream;
 import java.io.PrintStream;
@@ -31,8 +30,8 @@ public final class ActionAlignmentsDiff implements Action {
 
     @Override
     public void go(ActionHelper actionHelper) throws Exception {
-        try (VDJCAlignmentsReader reader1 = new VDJCAlignmentsReader(parameters.get1(), LociLibraryManager.getDefault());
-             VDJCAlignmentsReader reader2 = new VDJCAlignmentsReader(parameters.get2(), LociLibraryManager.getDefault());
+        try (VDJCAlignmentsReader reader1 = new VDJCAlignmentsReader(parameters.get1());
+             VDJCAlignmentsReader reader2 = new VDJCAlignmentsReader(parameters.get2());
              VDJCAlignmentsWriterI only1 = parameters.onlyFirst == null ?
                      VDJCAlignmentsWriterI.DummyWriter.INSTANCE : new VDJCAlignmentsWriter(parameters.onlyFirst);
              VDJCAlignmentsWriterI only2 = parameters.onlySecond == null ?

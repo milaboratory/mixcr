@@ -31,12 +31,13 @@ package com.milaboratory.mixcr.basictypes;
 import cc.redberry.pipe.CUtils;
 import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerS;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
-import io.repseq.reference.*;
+import io.repseq.core.Chains;
+import io.repseq.core.VDJCGene;
+import io.repseq.core.VDJCLibraryRegistry;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -53,8 +54,6 @@ public class IOTest {
     public void testSerialization1() throws Exception {
         VDJCAlignerParameters parameters = VDJCParametersPresets.getByName("default");
 
-        LociLibrary ll = LociLibraryManager.getDefault().getLibrary("mi");
-
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
         List<VDJCAlignments> alignemntsList = new ArrayList<>();
@@ -69,9 +68,9 @@ public class IOTest {
 
             VDJCAlignerS aligner = new VDJCAlignerS(parameters);
 
-            for (Allele allele : ll.getLocus(Species.HomoSapiens, Chain.IGH).getAllAlleles()) {
-                if (parameters.containsRequiredFeature(allele))
-                    aligner.addGene(allele);
+            for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("mi", "hs").getGenes(Chains.IGH)) {
+                if (parameters.containsRequiredFeature(gene))
+                    aligner.addGene(gene);
             }
 
 
@@ -97,7 +96,7 @@ public class IOTest {
 
         System.out.println("Bytes per alignment: " + (bos.size() - header) / alignemntsList.size());
 
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(new ByteArrayInputStream(bos.toByteArray()), ll)) {
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(new ByteArrayInputStream(bos.toByteArray()))) {
             int i = 0;
             for (VDJCAlignments alignments : CUtils.it(reader))
                 assertEquals(alignemntsList.get(i++), alignments);

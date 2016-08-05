@@ -43,13 +43,13 @@ import com.milaboratory.mixcr.assembler.*;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
-import io.repseq.reference.Allele;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PipeWriter;
 import com.milaboratory.util.SmartProgressReporter;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
+import io.repseq.core.VDJCGene;
+import io.repseq.core.VDJCLibraryRegistry;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.Pump;
@@ -69,9 +69,9 @@ public class ActionAssemble implements Action {
 
     @Override
     public void go(ActionHelper helper) throws Exception {
-        final List<Allele> alleles;
+        final List<VDJCGene> alleles;
         final VDJCAlignerParameters alignerParameters;
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(actionParameters.getInputFileName(), LociLibraryManager.getDefault())) {
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(actionParameters.getInputFileName(), VDJCLibraryRegistry.getDefault())) {
             alleles = reader.getUsedAlleles();
             // Saving aligner parameters to correct assembler parameters
             alignerParameters = reader.getParameters();
@@ -79,7 +79,7 @@ public class ActionAssemble implements Action {
 
         AlignmentsProvider alignmentsProvider = AlignmentsProvider.Util.createProvider(
                 actionParameters.getInputFileName(),
-                LociLibraryManager.getDefault());
+                VDJCLibraryRegistry.getDefault());
 
         CloneAssemblerParameters assemblerParameters = actionParameters.getCloneAssemblerParameters();
 
@@ -201,8 +201,7 @@ public class ActionAssemble implements Action {
         return actionParameters;
     }
 
-    @Parameters(commandDescription = "Assemble clones",
-            optionPrefixes = "-")
+    @Parameters(commandDescription = "Assemble clones")
     public static final class AssembleParameters extends ActionParametersWithOutput {
         @Parameter(description = "input_file output_file")
         public List<String> parameters;

@@ -33,11 +33,11 @@ import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.reference.Allele;
-import com.milaboratory.mixcr.reference.GeneType;
 import gnu.trove.iterator.TObjectLongIterator;
 import gnu.trove.map.TObjectLongMap;
 import gnu.trove.map.hash.TObjectLongHashMap;
+import io.repseq.core.GeneType;
+import io.repseq.core.VDJCGene;
 
 import java.util.*;
 
@@ -83,9 +83,9 @@ public final class AlignedTarget {
 
     public static List<AlignedTarget> orderTargets(List<AlignedTarget> targets) {
         // Selecting best alleles by total score
-        final EnumMap<GeneType, Allele> bestAlleles = new EnumMap<>(GeneType.class);
+        final EnumMap<GeneType, VDJCGene> bestAlleles = new EnumMap<>(GeneType.class);
         for (GeneType geneType : GeneType.VDJC_REFERENCE) {
-            TObjectLongMap<Allele> scores = new TObjectLongHashMap<>();
+            TObjectLongMap<VDJCGene> scores = new TObjectLongHashMap<>();
             for (AlignedTarget target : targets) {
                 for (VDJCHit hit : target.getAlignments().getHits(geneType)) {
                     Alignment<NucleotideSequence> alignment = hit.getAlignment(target.getTargetId());
@@ -93,9 +93,9 @@ public final class AlignedTarget {
                         scores.adjustOrPutValue(hit.getGene(), (long) alignment.getScore(), (long) alignment.getScore());
                 }
             }
-            Allele bestAllele = null;
+            VDJCGene bestAllele = null;
             long bestScore = Long.MIN_VALUE;
-            TObjectLongIterator<Allele> it = scores.iterator();
+            TObjectLongIterator<VDJCGene> it = scores.iterator();
             while (it.hasNext()) {
                 it.advance();
                 if (bestScore < it.value()) {
@@ -114,7 +114,7 @@ public final class AlignedTarget {
 
             Wrapper(AlignedTarget target) {
                 this.target = target;
-                for (Allele allele : bestAlleles.values())
+                for (VDJCGene allele : bestAlleles.values())
                     for (VDJCHit hit : target.getAlignments().getHits(allele.getGeneType()))
                         if (hit.getGene() == allele) {
                             Alignment<NucleotideSequence> alignment = hit.getAlignment(target.targetId);

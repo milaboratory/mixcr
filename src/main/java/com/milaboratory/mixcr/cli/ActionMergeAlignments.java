@@ -38,10 +38,9 @@ import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
-import io.repseq.reference.AlleleResolver;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.SmartProgressReporter;
+import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.IOException;
 import java.util.List;
@@ -74,8 +73,7 @@ public class ActionMergeAlignments implements Action {
         return parameters;
     }
 
-    @Parameters(commandDescription = "Merge several *.vdjca[.gz] files with alignments into a single alignments file.",
-            optionPrefixes = "-")
+    @Parameters(commandDescription = "Merge several *.vdjca[.gz] files with alignments into a single alignments file.")
     public static final class MergeParameters extends ActionParameters {
         @Parameter(description = "[input_file1.vdjca[.gz] [input_file2.vdjca[.gz] ....]] output_file.vdjca[.gz]")
         public List<String> parameters;
@@ -92,7 +90,7 @@ public class ActionMergeAlignments implements Action {
     // Not thread-safe !
     private static final class MultiReader implements
             OutputPort<VDJCAlignments>, CanReportProgress, AutoCloseable {
-        final AlleleResolver resolver = LociLibraryManager.getDefault();
+        final VDJCLibraryRegistry registry = VDJCLibraryRegistry.getDefault();
         final List<String> files;
         final AtomicInteger fileId = new AtomicInteger(0);
         final AtomicLong recordId = new AtomicLong(), readIdOffset = new AtomicLong();
@@ -126,7 +124,7 @@ public class ActionMergeAlignments implements Action {
                     int idToCreate = fileId.getAndIncrement();
                     if (idToCreate >= files.size())
                         return false;
-                    currentInnerReader = new VDJCAlignmentsReader(files.get(idToCreate), resolver);
+                    currentInnerReader = new VDJCAlignmentsReader(files.get(idToCreate), registry);
                 }
                 return true;
             } catch (IOException e) {

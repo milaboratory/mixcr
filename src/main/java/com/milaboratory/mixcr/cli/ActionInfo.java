@@ -38,7 +38,6 @@ import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.cli.HiddenAction;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.mixcr.util.PrintStreamTableAdapter;
 import com.milaboratory.util.SmartProgressReporter;
 
@@ -80,8 +79,7 @@ public class ActionInfo implements Action {
     public void processAlignmentsFile(String name) throws IOException {
         long size = Files.size(Paths.get(name));
 
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(name,
-                LociLibraryManager.getDefault())) {
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(name)) {
             long numberOfAlignedReads = 0;
             if (size > 30000000)
                 SmartProgressReporter.startProgressReport("Processing " + name, reader, System.err);
@@ -112,8 +110,7 @@ public class ActionInfo implements Action {
         return parameters;
     }
 
-    @Parameters(commandDescription = "Outputs information about mixcr binary file.",
-            optionPrefixes = "-")
+    @Parameters(commandDescription = "Outputs information about mixcr binary file.")
     public static final class InfoParameters extends ActionParameters {
         @Parameter(description = "binary_file{.vdjca|.clns}[.gz]...")
         public List<String> input;

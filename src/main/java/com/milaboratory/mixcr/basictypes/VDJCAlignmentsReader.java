@@ -71,6 +71,10 @@ public final class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlign
         this(new File(fileName), vdjcRegistry);
     }
 
+    public VDJCAlignmentsReader(File file) throws IOException {
+        this(file, VDJCLibraryRegistry.getDefault());
+    }
+
     public VDJCAlignmentsReader(File file, VDJCLibraryRegistry vdjcRegistry) throws IOException {
         CompressionType ct = CompressionType.detectCompressionType(file);
         this.countingInputStream = new CountingInputStream(new FileInputStream(file));

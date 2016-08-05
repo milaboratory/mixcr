@@ -14,6 +14,10 @@ import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
 import com.milaboratory.test.TestUtil;
 import com.milaboratory.util.RandomUtil;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
+import io.repseq.core.VDJCGene;
+import io.repseq.core.VDJCLibraryRegistry;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.junit.Assert;
 import org.junit.Test;
@@ -23,8 +27,8 @@ import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.EnumMap;
 
-import static com.milaboratory.mixcr.reference.GeneFeature.*;
-import static com.milaboratory.mixcr.reference.GeneType.*;
+import static io.repseq.core.GeneFeature.*;
+import static io.repseq.core.GeneType.*;
 
 /**
  * Created by poslavsky on 21/05/16.
@@ -57,29 +61,29 @@ public class PartialAlignmentsAssemblerTest {
         }
     }
 
-    @Test
-    public void testMaxAllele() throws Exception {
-        final LociLibrary ll = LociLibraryManager.getDefault().getLibrary("mi");
-        final Locus locus = Locus.TRB;
-
-        for (GeneFeature feature : new GeneFeature[]{VRegionWithP, DRegion, JRegionWithP, CRegion}) {
-            Allele maxAllele = null;
-            for (Allele allele : ll.getAllAlleles()) {
-                if (allele.getLocusContainer().getSpeciesAndLocus().taxonId != Species.HomoSapiens)
-                    continue;
-                if (!allele.isFunctional())
-                    continue;
-                if (allele.getLocus() != locus)
-                    continue;
-                if (maxAllele == null && allele.getFeature(feature) != null)
-                    maxAllele = allele;
-                if (allele.getFeature(feature) != null && allele.getFeature(feature).size() > maxAllele.getFeature(feature).size())
-                    maxAllele = allele;
-            }
-
-            System.out.println(maxAllele.getName() + "    Size: " + maxAllele.getFeature(feature).size());
-        }
-    }
+    //@Test
+    //public void testMaxAllele() throws Exception {
+    //    final LociLibrary ll = LociLibraryManager.getDefault().getLibrary("mi");
+    //    final Locus locus = Locus.TRB;
+    //
+    //    for (GeneFeature feature : new GeneFeature[]{VRegionWithP, DRegion, JRegionWithP, CRegion}) {
+    //        Allele maxAllele = null;
+    //        for (Allele allele : ll.getAllAlleles()) {
+    //            if (allele.getLocusContainer().getSpeciesAndLocus().taxonId != Species.HomoSapiens)
+    //                continue;
+    //            if (!allele.isFunctional())
+    //                continue;
+    //            if (allele.getLocus() != locus)
+    //                continue;
+    //            if (maxAllele == null && allele.getFeature(feature) != null)
+    //                maxAllele = allele;
+    //            if (allele.getFeature(feature) != null && allele.getFeature(feature).size() > maxAllele.getFeature(feature).size())
+    //                maxAllele = allele;
+    //        }
+    //
+    //        System.out.println(maxAllele.getName() + "    Size: " + maxAllele.getFeature(feature).size());
+    //    }
+    //}
 
 
     @Test
@@ -174,13 +178,13 @@ public class PartialAlignmentsAssemblerTest {
     }
 
     static class InputTestData {
-        final EnumMap<GeneType, Allele> alleles;
+        final EnumMap<GeneType, VDJCGene> alleles;
         final EnumMap<GeneType, NucleotideSequence> germlineRegions;
         final EnumMap<GeneType, int[]> germlineCuts;
         final EnumMap<GeneType, int[]> refPositions;
         final NucleotideSequence VDJunction, DJJunction, reference, VJJunction;
 
-        public InputTestData(EnumMap<GeneType, Allele> alleles, EnumMap<GeneType, NucleotideSequence> germlineRegions, EnumMap<GeneType, int[]> germlineCuts, EnumMap<GeneType, int[]> refPositions, NucleotideSequence VDJunction, NucleotideSequence DJJunction, NucleotideSequence reference, NucleotideSequence VJJunction) {
+        public InputTestData(EnumMap<GeneType, VDJCGene> alleles, EnumMap<GeneType, NucleotideSequence> germlineRegions, EnumMap<GeneType, int[]> germlineCuts, EnumMap<GeneType, int[]> refPositions, NucleotideSequence VDJunction, NucleotideSequence DJJunction, NucleotideSequence reference, NucleotideSequence VJJunction) {
             this.alleles = alleles;
             this.germlineRegions = germlineRegions;
             this.germlineCuts = germlineCuts;
@@ -251,7 +255,7 @@ public class PartialAlignmentsAssemblerTest {
         }
 
 
-        VDJCAlignmentsReader readResult = new VDJCAlignmentsReader(new ByteArrayInputStream(overlappedSerializedData.toByteArray()), LociLibraryManager.getDefault());
+        VDJCAlignmentsReader readResult = new VDJCAlignmentsReader(new ByteArrayInputStream(overlappedSerializedData.toByteArray()));
 
         final ArrayList<VDJCAlignments> overlapped = new ArrayList<>();
         VDJCAlignments al;
@@ -282,7 +286,7 @@ public class PartialAlignmentsAssemblerTest {
         defaultFeatures.getJAlignerParameters().setGeneFeatureToAlign(JRegion);
 
         //used alleles
-        EnumMap<GeneType, Allele> alleles = new EnumMap<>(GeneType.class);
+        EnumMap<GeneType, VDJCGene> alleles = new EnumMap<>(GeneType.class);
         //germline parts of sequences
         EnumMap<GeneType, NucleotideSequence> germlineRegions = gtMap();
         //left, right cut of germline
@@ -295,21 +299,20 @@ public class PartialAlignmentsAssemblerTest {
         NucleotideSequence VDJunction = TestUtil.randomSequence(NucleotideSequence.ALPHABET, 3, 10);
         NucleotideSequence DJJunction = TestUtil.randomSequence(NucleotideSequence.ALPHABET, 3, 10);
 
-        final LociLibrary ll = LociLibraryManager.getDefault().getLibrary("mi");
         for (GeneType gt : GeneType.VDJC_REFERENCE) {
-            Allele allele = ll.getAllele(Species.HomoSapiens, allelesNames.get(gt));
-            NucleotideSequence seq = allele.getFeature(defaultFeatures.getFeatureToAlign(gt));
+            VDJCGene gene = VDJCLibraryRegistry.getDefault().getLibrary("mi", "hs").get(allelesNames.get(gt));
+            NucleotideSequence seq = gene.getFeature(defaultFeatures.getFeatureToAlign(gt));
 
             int[] cuts = null;
             switch (gt) {
                 case Variable:
-                    cuts = new int[]{0, rnd.nextInt(allele.getFeature(GermlineVCDR3Part).size() - 5)};
+                    cuts = new int[]{0, rnd.nextInt(gene.getFeature(GermlineVCDR3Part).size() - 5)};
                     break;
                 case Diversity:
                     cuts = new int[]{rnd.nextInt(seq.size() / 3), rnd.nextInt(seq.size() / 3)};
                     break;
                 case Joining:
-                    cuts = new int[]{rnd.nextInt(allele.getFeature(GermlineJCDR3Part).size() - 5), 0};
+                    cuts = new int[]{rnd.nextInt(gene.getFeature(GermlineJCDR3Part).size() - 5), 0};
                     break;
                 case Constant:
                     cuts = new int[]{0, rnd.nextInt(seq.size() / 2)};
@@ -328,7 +331,7 @@ public class PartialAlignmentsAssemblerTest {
             if (gt == Diversity)
                 referenceBuilder.append(DJJunction);
 
-            alleles.put(gt, allele);
+            alleles.put(gt, gene);
             germlineCuts.put(gt, cuts);
             germlineRegions.put(gt, gSeq);
             refPositions.put(gt, positions);

@@ -5,10 +5,9 @@ import com.milaboratory.core.io.sequence.PairedRead;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.cli.ActionAlign;
-import io.repseq.reference.Chain;
-import io.repseq.core.GeneType;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
+import io.repseq.core.Chains;
+import io.repseq.core.GeneType;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -16,7 +15,6 @@ import org.junit.Test;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by poslavsky on 01/09/15.
@@ -32,9 +30,9 @@ public class RunMiXCRTest {
         RunMiXCR.AssembleResult assemble = RunMiXCR.assemble(align);
 
         for (Clone clone : assemble.cloneSet.getClones()) {
-            Set<Chain> vjLoci = VDJCAligner.getPossibleDLoci(clone.getHits(GeneType.Variable), clone.getHits(GeneType.Joining));
+            Chains vjLoci = VDJCAligner.getPossibleDLoci(clone.getHits(GeneType.Variable), clone.getHits(GeneType.Joining));
             for (VDJCHit dHit : clone.getHits(GeneType.Diversity))
-                Assert.assertTrue(vjLoci.contains(dHit.getGene().getLocus()));
+                Assert.assertTrue(vjLoci.intersects(dHit.getGene().getChains()));
         }
     }
 
@@ -61,7 +59,7 @@ public class RunMiXCRTest {
                 writer.write(alignment);
         }
 
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile, LociLibraryManager.getDefault())) {
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile)) {
             int tr = 0;
             for (VDJCAlignments alignment : CUtils.it(reader)) {
                 PairedRead actual = reads.get((int) alignment.getReadId());
@@ -98,7 +96,7 @@ public class RunMiXCRTest {
                 writer.write(alignment);
         }
 
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile, LociLibraryManager.getDefault())) {
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile)) {
             int tr = 0;
             for (VDJCAlignments alignment : CUtils.it(reader)) {
                 PairedRead actual = reads.get((int) alignment.getReadId());

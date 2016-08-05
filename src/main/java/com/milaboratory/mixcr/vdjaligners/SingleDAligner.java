@@ -89,7 +89,7 @@ public final class SingleDAligner {
 
             PreVDJCHit h;
             for (PreVDJCHit hit : cachedResult) {
-                //filter non-possible loci
+                //filter non-possible chains
                 if (!chains.intersects(sequences.get(hit.id).chains))
                     continue;
 

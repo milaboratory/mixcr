@@ -8,11 +8,11 @@ import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.reference.Allele;
-import com.milaboratory.mixcr.reference.GeneType;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerAbstract;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
+import io.repseq.core.GeneType;
+import io.repseq.core.VDJCGene;
 
 import java.util.EnumMap;
 
@@ -47,9 +47,9 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
 
                 final NucleotideSequence sequence = input.getRead(i).getData().getSequence();
 
-                AlignmentResult<AlignmentHit<NucleotideSequence, Allele>> als;
+                AlignmentResult<AlignmentHit<NucleotideSequence, VDJCGene>> als;
                 if (input.expectedGeneTypes[i].contains(gt)) {
-                    final BatchAlignerWithBase<NucleotideSequence, Allele, AlignmentHit<NucleotideSequence, Allele>> aligner = getAligner(gt);
+                    final BatchAlignerWithBase<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> aligner = getAligner(gt);
                     if (aligner != null) {
                         int pointer = 0;
                         if (g != 0) {

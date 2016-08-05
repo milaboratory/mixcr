@@ -66,7 +66,7 @@ public class FastaLocusBuilder {
     /**
      * Target chain
      */
-    private final Chain chain;
+    private final String chain;
     /**
      * Parameters
      */
@@ -96,7 +96,7 @@ public class FastaLocusBuilder {
      */
     private boolean allowNonStandardAlleleNames = false;
 
-    public FastaLocusBuilder(Chain chain, FastaLocusBuilderParameters parameters) {
+    public FastaLocusBuilder(String chain, FastaLocusBuilderParameters parameters) {
         if (chain == null || parameters == null)
             throw new NullPointerException();
         this.chain = chain;
@@ -446,8 +446,8 @@ public class FastaLocusBuilder {
     }
 
     public boolean checkLocus(String locusName) {
-        if (chain == Chain.TRA || chain == Chain.TRD)
-            return "TRA".equalsIgnoreCase(locusName) || "TRD".equalsIgnoreCase(locusName);
+        //if (chain == Chain.TRA || chain == Chain.TRD)
+        //    return "TRA".equalsIgnoreCase(locusName) || "TRD".equalsIgnoreCase(locusName);
         return chain.toString().equalsIgnoreCase(locusName);
     }
 
@@ -474,21 +474,21 @@ public class FastaLocusBuilder {
         return true;
     }
 
-    public void writeAlleles(LociLibraryWriter writer) throws IOException {
-        for (GeneInfo gene : genes.values()) {
-            for (AlleleInfo alleleInfo : gene.finalList) {
-                if (alleleInfo.isReference) {
-                    String accession = UUID.randomUUID().toString() + "-" + alleleInfo.alleleName;
-                    writer.writeSequencePart(accession, 0, alleleInfo.baseSequence);
-                    writer.writeAllele(parameters.getGeneType(), alleleInfo.alleleName, true,
-                            alleleInfo.isFunctional, accession, alleleInfo.referencePoints, null, null, null);
-                } else
-                    writer.writeAllele(parameters.getGeneType(), alleleInfo.alleleName, false,
-                            alleleInfo.isFunctional, null, null, alleleInfo.reference.alleleName,
-                            alleleInfo.mutations.getRAWMutations(), alleleInfo.getReferenceGeneFeature());
-            }
-        }
-    }
+    //public void writeAlleles(LociLibraryWriter writer) throws IOException {
+    //    for (GeneInfo gene : genes.values()) {
+    //        for (AlleleInfo alleleInfo : gene.finalList) {
+    //            if (alleleInfo.isReference) {
+    //                String accession = UUID.randomUUID().toString() + "-" + alleleInfo.alleleName;
+    //                writer.writeSequencePart(accession, 0, alleleInfo.baseSequence);
+    //                writer.writeAllele(parameters.getGeneType(), alleleInfo.alleleName, true,
+    //                        alleleInfo.isFunctional, accession, alleleInfo.referencePoints, null, null, null);
+    //            } else
+    //                writer.writeAllele(parameters.getGeneType(), alleleInfo.alleleName, false,
+    //                        alleleInfo.isFunctional, null, null, alleleInfo.reference.alleleName,
+    //                        alleleInfo.mutations.getRAWMutations(), alleleInfo.getReferenceGeneFeature());
+    //        }
+    //    }
+    //}
 
     private static final class SeqPartitioning extends SequencePartitioning {
         final TObjectIntMap<ReferencePoint> refMapping;

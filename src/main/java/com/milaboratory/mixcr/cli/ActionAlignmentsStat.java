@@ -42,10 +42,9 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.info.AlignmentInfoCollector;
 import com.milaboratory.mixcr.info.GeneFeatureCoverageCollector;
 import com.milaboratory.mixcr.info.ReferencePointCoverageCollector;
-import io.repseq.core.GeneFeature;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
-import io.repseq.core.ReferencePoint;
 import com.milaboratory.util.SmartProgressReporter;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.ReferencePoint;
 
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
@@ -76,8 +75,7 @@ public class ActionAlignmentsStat implements Action {
 
         final Collector collector = new Collector(collectors);
 
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(actionParameters.getInputFileName(),
-                LociLibraryManager.getDefault());
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(actionParameters.getInputFileName());
              PrintStream output = actionParameters.getOutputFileName().equals("-") ? System.out :
                      new PrintStream(new BufferedOutputStream(new FileOutputStream(actionParameters.getOutputFileName()), 32768))
         ) {

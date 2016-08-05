@@ -10,7 +10,6 @@ import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssembler;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParameters;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.util.SmartProgressReporter;
 
 import java.util.Collections;
@@ -40,11 +39,11 @@ public final class ActionAssemblePartialAlignments implements Action {
         long start = System.currentTimeMillis();
         try (PartialAlignmentsAssembler assembler = new PartialAlignmentsAssembler(assemblerParameters, parameters.getOutputFileName(),
                 parameters.getWritePartial(), parameters.getOverlappedOnly())) {
-            try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getInputFileName(), LociLibraryManager.getDefault())) {
+            try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getInputFileName())) {
                 SmartProgressReporter.startProgressReport("Building index", reader);
                 assembler.buildLeftPartsIndex(reader);
             }
-            try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getInputFileName(), LociLibraryManager.getDefault())) {
+            try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getInputFileName())) {
                 SmartProgressReporter.startProgressReport("Searching for overlaps", reader);
                 assembler.searchOverlaps(reader);
             }
