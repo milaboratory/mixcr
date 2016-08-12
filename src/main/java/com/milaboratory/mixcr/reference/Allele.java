@@ -35,7 +35,8 @@ import com.milaboratory.primitivio.annotations.Serializable;
 
 @Serializable(by = IO.AlleleSerializer.class)
 public abstract class Allele
-        extends PartitionedSequenceCached<NucleotideSequence> {
+        extends PartitionedSequenceCached<NucleotideSequence>
+        implements Comparable<Allele> {
     final Gene gene;
     final LocusContainer locusContainer;
     final int taxonId;
@@ -100,4 +101,9 @@ public abstract class Allele
 
     @Override
     public abstract ReferencePoints getPartitioning();
+
+    @Override
+    public int compareTo(Allele o) {
+        return alleleId.compareTo(o.alleleId);
+    }
 }
