@@ -176,8 +176,8 @@ public class ActionPrettyAlignments implements Action {
                                 output.println(subHelper.toStringWithSeq2Quality(alignments.getTarget(i).getQuality()));
                                 output.println();
                             }
-                            if (actionParameters.isAlleleSequence()) {
-                                output.println("Allele sequence:");
+                            if (actionParameters.printGeneSequence()) {
+                                output.println("Gene sequence:");
                                 output.println(alignment.getSequence1());
                                 output.println();
                             }
@@ -235,9 +235,9 @@ public class ActionPrettyAlignments implements Action {
                 names = {"-t", "--top"})
         public Boolean onlyTop = null;
 
-        @Parameter(description = "Output full allele sequence",
-                names = {"-a", "--allele"})
-        public Boolean alleleSequence = null;
+        @Parameter(description = "Output full gene sequence",
+                names = {"-a", "--gene"})
+        public Boolean geneSequence = null;
 
         @Parameter(description = "Limit number of alignments before filtering",
                 names = {"-b", "--limitBefore"})
@@ -303,15 +303,6 @@ public class ActionPrettyAlignments implements Action {
                 }
             });
 
-            //if (cdr3Contains != null)
-            //    filters.add(new Filter<VDJCAlignments>() {
-            //        @Override
-            //        public boolean accept(VDJCAlignments object) {
-            //            NSequenceWithQuality feature = object.getFeature(GeneFeature.CDR3);
-            //            return feature != null && feature.getSequence().toString().contains(cdr3Contains);
-            //        }
-            //    });
-
             if (feature != null) {
                 final GeneFeature feature = GeneFeature.parse(this.feature);
                 filters.add(new Filter<VDJCAlignments>() {
@@ -363,8 +354,8 @@ public class ActionPrettyAlignments implements Action {
             return onlyTop == null ? false : onlyTop;
         }
 
-        public boolean isAlleleSequence() {
-            return alleleSequence == null ? false : alleleSequence;
+        public boolean printGeneSequence() {
+            return geneSequence == null ? false : geneSequence;
         }
 
         public String getInputFileName() {

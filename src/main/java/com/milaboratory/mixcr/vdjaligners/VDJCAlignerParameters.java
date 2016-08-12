@@ -186,9 +186,9 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         return getVJCGeneAlignerParameters(GeneType.Constant);
     }
 
-    public boolean containsRequiredFeature(VDJCGene allele) {
-        GeneFeature featureToAlign = getFeatureToAlign(allele.getGeneType());
-        return featureToAlign != null && allele.getPartitioning().isAvailable(featureToAlign);
+    public boolean containsRequiredFeature(VDJCGene gene) {
+        GeneFeature featureToAlign = getFeatureToAlign(gene.getGeneType());
+        return featureToAlign != null && gene.getPartitioning().isAvailable(featureToAlign);
     }
 
     @JsonProperty("minSumScore")

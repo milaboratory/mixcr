@@ -50,7 +50,7 @@ public final class SingleDAligner {
     private final float absoluteMinScore, relativeMinScore;
     private final int maxHits;
     private final List<SequenceWithChains> sequences = new ArrayList<>();
-    private final List<VDJCGene> alleles;
+    private final List<VDJCGene> genes;
     private final GeneFeature featureToAlign;
 
     private final LoadingCache<NucleotideSequence, List<PreVDJCHit>> resultsCache =
@@ -66,15 +66,15 @@ public final class SingleDAligner {
                     );
 
     public SingleDAligner(DAlignerParameters parameters,
-                          List<VDJCGene> alleles) {
+                          List<VDJCGene> genes) {
         this.scoring = parameters.getScoring();
         this.absoluteMinScore = parameters.getAbsoluteMinScore();
         this.relativeMinScore = parameters.getRelativeMinScore();
         this.maxHits = parameters.getMaxHits();
         this.featureToAlign = parameters.getGeneFeatureToAlign();
-        for (VDJCGene allele : alleles)
-            sequences.add(new SequenceWithChains(allele, featureToAlign));
-        this.alleles = new ArrayList<>(alleles);
+        for (VDJCGene gene : genes)
+            sequences.add(new SequenceWithChains(gene, featureToAlign));
+        this.genes = new ArrayList<>(genes);
     }
 
     List<PreVDJCHit> align0(NucleotideSequence sequence, Chains chains, int from, int to) {
@@ -112,7 +112,7 @@ public final class SingleDAligner {
     public VDJCHit[] align(NucleotideSequence sequence, Chains chains, int from, int to,
                            int targetIndex, int numberOfTargets) {
         List<PreVDJCHit> preHits = align0(sequence, chains, from, to);
-        return PreVDJCHit.convert(alleles, featureToAlign, preHits,
+        return PreVDJCHit.convert(genes, featureToAlign, preHits,
                 targetIndex, numberOfTargets);
     }
 

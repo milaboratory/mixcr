@@ -99,16 +99,16 @@ public class ActionClonesDiff implements Action {
                 String error = "";
                 char letter = 'X';
                 if (!Objects.equals(
-                        getBestAllele(cRec.clones[i], GeneType.Variable),
-                        getBestAllele(clone, GeneType.Variable)))
+                        getBestGene(cRec.clones[i], GeneType.Variable),
+                        getBestGene(clone, GeneType.Variable)))
                     letter = 'v';
                 if (!Objects.equals(
-                        getBestAllele(cRec.clones[i], GeneType.Joining),
-                        getBestAllele(clone, GeneType.Joining)))
+                        getBestGene(cRec.clones[i], GeneType.Joining),
+                        getBestGene(clone, GeneType.Joining)))
                     letter = 'j';
                 if (!Objects.equals(
-                        getBestAllele(cRec.clones[i], GeneType.Constant),
-                        getBestAllele(clone, GeneType.Constant)))
+                        getBestGene(cRec.clones[i], GeneType.Constant),
+                        getBestGene(clone, GeneType.Constant)))
                     letter = 'c';
 
                 if (letter != 'X')
@@ -132,7 +132,7 @@ public class ActionClonesDiff implements Action {
         return params;
     }
 
-    private VDJCGeneId getBestAllele(Clone clone, GeneType geneType) {
+    private VDJCGeneId getBestGene(Clone clone, GeneType geneType) {
         return clone.getBestHit(geneType) == null ? null : clone.getBestHit(geneType).getGene().getId();
     }
 
@@ -141,11 +141,11 @@ public class ActionClonesDiff implements Action {
         for (int i = 0; i < clonalSequence.length; i++)
             clonalSequence[i] = clone.getTarget(i).getSequence();
 
-        final VDJCGeneId v = params.useV() ? getBestAllele(clone, GeneType.Variable) : null;
+        final VDJCGeneId v = params.useV() ? getBestGene(clone, GeneType.Variable) : null;
 
-        final VDJCGeneId j = params.useJ() ? getBestAllele(clone, GeneType.Joining) : null;
+        final VDJCGeneId j = params.useJ() ? getBestGene(clone, GeneType.Joining) : null;
 
-        final VDJCGeneId c = params.useC() ? getBestAllele(clone, GeneType.Constant) : null;
+        final VDJCGeneId c = params.useC() ? getBestGene(clone, GeneType.Constant) : null;
 
         return new CKey(clonalSequence, v, j, c);
     }

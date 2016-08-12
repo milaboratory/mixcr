@@ -76,10 +76,10 @@ public final class VDJCHit implements Comparable<VDJCHit> {
     public int getPosition(int target, ReferencePoint referencePoint) {
         if (alignments[target] == null)
             return -1;
-        int positionInAllele = gene.getPartitioning().getRelativePosition(alignedFeature, referencePoint);
-        if (positionInAllele == -1)
+        int positionInGene = gene.getPartitioning().getRelativePosition(alignedFeature, referencePoint);
+        if (positionInGene == -1)
             return -1;
-        return alignments[target].convertPosition(positionInAllele);
+        return alignments[target].convertPosition(positionInGene);
     }
 
     public GeneType getGeneType() {

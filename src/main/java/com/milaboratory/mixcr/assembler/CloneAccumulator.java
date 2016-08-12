@@ -109,11 +109,11 @@ public final class CloneAccumulator {
             if (vjcParameters == null)
                 continue;
 
-            TObjectFloatHashMap<VDJCGeneId> accumulatorAlleleIds = geneScores.get(geneType);
-            if (accumulatorAlleleIds == null)
+            TObjectFloatHashMap<VDJCGeneId> accumulatorGeneIds = geneScores.get(geneType);
+            if (accumulatorGeneIds == null)
                 continue;
 
-            TObjectFloatIterator<VDJCGeneId> iterator = accumulatorAlleleIds.iterator();
+            TObjectFloatIterator<VDJCGeneId> iterator = accumulatorGeneIds.iterator();
             float maxScore = 0;
             while (iterator.hasNext()) {
                 iterator.advance();
@@ -123,7 +123,7 @@ public final class CloneAccumulator {
             }
 
             maxScore = maxScore * vjcParameters.getRelativeMinScore();
-            iterator = accumulatorAlleleIds.iterator();
+            iterator = accumulatorGeneIds.iterator();
             while (iterator.hasNext()) {
                 iterator.advance();
                 if (maxScore > iterator.value())
@@ -145,16 +145,16 @@ public final class CloneAccumulator {
 
             // Accumulate information about all genes
             for (GeneType geneType : GeneType.VJC_REFERENCE) {
-                TObjectFloatHashMap<VDJCGeneId> alleleScores = geneScores.get(geneType);
+                TObjectFloatHashMap<VDJCGeneId> geneScores = this.geneScores.get(geneType);
                 VDJCHit[] hits = alignment.getHits(geneType);
                 if (hits.length == 0)
                     continue;
-                if (alleleScores == null)
-                    geneScores.put(geneType, alleleScores = new TObjectFloatHashMap<>());
+                if (geneScores == null)
+                    this.geneScores.put(geneType, geneScores = new TObjectFloatHashMap<>());
                 for (VDJCHit hit : hits) {
                     // Calculating sum of natural logarithms of scores
                     score = hit.getScore();
-                    alleleScores.adjustOrPutValue(hit.getGene().getId(), score, score);
+                    geneScores.adjustOrPutValue(hit.getGene().getId(), score, score);
                 }
             }
 

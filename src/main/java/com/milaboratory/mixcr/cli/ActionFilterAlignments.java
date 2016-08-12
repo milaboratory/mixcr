@@ -36,7 +36,7 @@ public final class ActionFilterAlignments implements Action {
     public void go(ActionHelper helper) throws Exception {
         try (VDJCAlignmentsReader reader = parameters.getInput();
              VDJCAlignmentsWriter writer = parameters.getOutput()) {
-            writer.header(reader.getParameters(), reader.getUsedAlleles());
+            writer.header(reader.getParameters(), reader.getUsedGenes());
             SmartProgressReporter.startProgressReport("Filtering", reader);
             int total = 0, passed = 0;
             final AlignmentsFilter filter = parameters.getFilter();
@@ -110,7 +110,7 @@ public final class ActionFilterAlignments implements Action {
 
         @Parameter(description = "Output only specific chains. Available chains: IGH, IGL, IGK, TRA, TRB, TRG, TRD, etc...",
                 names = {"-c", "--chains"})
-        public String chains = "all";
+        public String chains = "ALL";
 
         @Parameter(description = "Include alignments that contain specified feature.",
                 names = {"-g", "--contains-feature"})

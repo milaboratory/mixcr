@@ -82,8 +82,8 @@ public final class AlignedTarget {
     }
 
     public static List<AlignedTarget> orderTargets(List<AlignedTarget> targets) {
-        // Selecting best alleles by total score
-        final EnumMap<GeneType, VDJCGene> bestAlleles = new EnumMap<>(GeneType.class);
+        // Selecting best gene by total score
+        final EnumMap<GeneType, VDJCGene> bestGenes = new EnumMap<>(GeneType.class);
         for (GeneType geneType : GeneType.VDJC_REFERENCE) {
             TObjectLongMap<VDJCGene> scores = new TObjectLongHashMap<>();
             for (AlignedTarget target : targets) {
@@ -93,18 +93,18 @@ public final class AlignedTarget {
                         scores.adjustOrPutValue(hit.getGene(), (long) alignment.getScore(), (long) alignment.getScore());
                 }
             }
-            VDJCGene bestAllele = null;
+            VDJCGene bestGene = null;
             long bestScore = Long.MIN_VALUE;
             TObjectLongIterator<VDJCGene> it = scores.iterator();
             while (it.hasNext()) {
                 it.advance();
                 if (bestScore < it.value()) {
                     bestScore = it.value();
-                    bestAllele = it.key();
+                    bestGene = it.key();
                 }
             }
-            if (bestAllele != null)
-                bestAlleles.put(geneType, bestAllele);
+            if (bestGene != null)
+                bestGenes.put(geneType, bestGene);
         }
 
         // Class to facilitate comparison between targets
@@ -114,12 +114,12 @@ public final class AlignedTarget {
 
             Wrapper(AlignedTarget target) {
                 this.target = target;
-                for (VDJCGene allele : bestAlleles.values())
-                    for (VDJCHit hit : target.getAlignments().getHits(allele.getGeneType()))
-                        if (hit.getGene() == allele) {
+                for (VDJCGene gene : bestGenes.values())
+                    for (VDJCHit hit : target.getAlignments().getHits(gene.getGeneType()))
+                        if (hit.getGene() == gene) {
                             Alignment<NucleotideSequence> alignment = hit.getAlignment(target.targetId);
                             if (alignment != null) {
-                                alignments.put(allele.getGeneType(), alignment);
+                                alignments.put(gene.getGeneType(), alignment);
                                 break;
                             }
                         }

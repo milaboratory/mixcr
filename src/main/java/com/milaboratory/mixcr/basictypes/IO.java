@@ -55,14 +55,14 @@ class IO {
 
         @Override
         public VDJCHit read(PrimitivI input) {
-            VDJCGene allele = input.readObject(VDJCGene.class);
+            VDJCGene gene = input.readObject(VDJCGene.class);
             GeneFeature alignedFeature = input.readObject(GeneFeature.class);
             int numberOfTargets = input.readVarInt();
             Alignment<NucleotideSequence>[] alignments = new Alignment[numberOfTargets];
             for (int i = numberOfTargets - 1; i >= 0; --i)
                 alignments[i] = input.readObject(Alignment.class);
             float score = input.readFloat();
-            return new VDJCHit(allele, alignments, alignedFeature, score);
+            return new VDJCHit(gene, alignments, alignedFeature, score);
         }
 
         @Override

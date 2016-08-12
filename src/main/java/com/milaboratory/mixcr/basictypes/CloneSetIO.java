@@ -96,7 +96,7 @@ public final class CloneSetIO {
 
             output.writeObject(cloneSet.getAssemblingFeatures());
             IO.writeGT2GFMap(output, cloneSet.alignedFeatures);
-            IOUtil.writeGeneReferences(output, cloneSet.getUsedAlleles(), new GT2GFAdapter(cloneSet.alignedFeatures));
+            IOUtil.writeGeneReferences(output, cloneSet.getUsedGenes(), new GT2GFAdapter(cloneSet.alignedFeatures));
 
             output.writeInt(cloneSet.getClones().size());
 
@@ -175,13 +175,13 @@ public final class CloneSetIO {
 
         GeneFeature[] assemblingFeatures = input.readObject(GeneFeature[].class);
         EnumMap<GeneType, GeneFeature> alignedFeatures = IO.readGF2GTMap(input);
-        List<VDJCGene> alleles = IOUtil.readAlleleReferences(input, libraryRegistry, new GT2GFAdapter(alignedFeatures));
+        List<VDJCGene> genes = IOUtil.readGeneReferences(input, libraryRegistry, new GT2GFAdapter(alignedFeatures));
         int count = input.readInt();
         List<Clone> clones = new ArrayList<>(count);
         for (int i = 0; i < count; i++)
             clones.add(input.readObject(Clone.class));
 
-        CloneSet cloneSet = new CloneSet(clones, alleles, alignedFeatures, assemblingFeatures);
+        CloneSet cloneSet = new CloneSet(clones, genes, alignedFeatures, assemblingFeatures);
         cloneSet.versionInfo = versionInfo;
 
         return cloneSet;

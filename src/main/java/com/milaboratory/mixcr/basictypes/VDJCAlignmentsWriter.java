@@ -73,8 +73,8 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     }
 
     @Override
-    public void header(VDJCAlignerParameters parameters, List<VDJCGene> alleles) {
-        if (parameters == null || alleles == null)
+    public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes) {
+        if (parameters == null || genes == null)
             throw new IllegalArgumentException();
 
         if (header)
@@ -92,7 +92,7 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
         // Writing parameters
         output.writeObject(parameters);
 
-        IOUtil.writeGeneReferences(output, alleles, parameters);
+        IOUtil.writeGeneReferences(output, genes, parameters);
 
         // Registering links to features to align
         for (GeneType gt : GeneType.VDJC_REFERENCE) {

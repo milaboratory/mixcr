@@ -45,7 +45,7 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
     protected volatile boolean initialized = false;
     protected final VDJCAlignerParameters parameters;
     protected final EnumMap<GeneType, List<VDJCGene>> genesToAlign = new EnumMap<>(GeneType.class);
-    protected final List<VDJCGene> usedAlleles = new ArrayList<>();
+    protected final List<VDJCGene> usedGenes = new ArrayList<>();
     protected VDJCAlignerEventListener listener = null;
 
     protected VDJCAligner(VDJCAlignerParameters parameters) {
@@ -98,9 +98,9 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
         if (!initialized)
             synchronized (this) {
                 if (!initialized) {
-                    // Sorting alleles
-                    for (List<VDJCGene> alleles : genesToAlign.values())
-                        Collections.sort(alleles);
+                    // Sorting genes
+                    for (List<VDJCGene> genes : genesToAlign.values())
+                        Collections.sort(genes);
 
                     init();
                     initialized = true;
@@ -115,33 +115,33 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
     }
 
     public List<VDJCGene> getUsedGenes() {
-        return Collections.unmodifiableList(usedAlleles);
+        return Collections.unmodifiableList(usedGenes);
     }
 
-    public int addGene(VDJCGene allele) {
-        usedAlleles.add(allele);
-        List<VDJCGene> alleles = genesToAlign.get(allele.getGeneType());
-        alleles.add(allele);
-        return alleles.size() - 1;
+    public int addGene(VDJCGene gene) {
+        usedGenes.add(gene);
+        List<VDJCGene> genes = genesToAlign.get(gene.getGeneType());
+        genes.add(gene);
+        return genes.size() - 1;
     }
 
     public VDJCGene getGene(GeneType type, int index) {
         return genesToAlign.get(type).get(index);
     }
 
-    public List<VDJCGene> getVAllelesToAlign() {
+    public List<VDJCGene> getVGenesToAlign() {
         return genesToAlign.get(GeneType.Variable);
     }
 
-    public List<VDJCGene> getDAllelesToAlign() {
+    public List<VDJCGene> getDGenesToAlign() {
         return genesToAlign.get(GeneType.Diversity);
     }
 
-    public List<VDJCGene> getJAllelesToAlign() {
+    public List<VDJCGene> getJGenesToAlign() {
         return genesToAlign.get(GeneType.Joining);
     }
 
-    public List<VDJCGene> getCAllelesToAlign() {
+    public List<VDJCGene> getCGenesToAlign() {
         return genesToAlign.get(GeneType.Constant);
     }
 

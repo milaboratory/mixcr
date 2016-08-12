@@ -186,7 +186,7 @@ public class FastaLocusBuilder {
             }
 
             // Parsing allele name
-            matcher = ALLELE_NAME_PATTERN.matcher(alleleName);
+            matcher = GENE_NAME_PATTERN.matcher(alleleName);
 
             String geneName;
 

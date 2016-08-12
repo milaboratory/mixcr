@@ -78,8 +78,8 @@ public class RandomAccessVDJCAReader implements AutoCloseable {
         return innerReader.getParameters();
     }
 
-    public List<VDJCGene> getUsedAlleles() {
-        return innerReader.getUsedAlleles();
+    public List<VDJCGene> getUsedGenes() {
+        return innerReader.getUsedGenes();
     }
 
     /**

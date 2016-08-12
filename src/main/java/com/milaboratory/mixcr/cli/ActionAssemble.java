@@ -70,10 +70,10 @@ public class ActionAssemble implements Action {
 
     @Override
     public void go(ActionHelper helper) throws Exception {
-        final List<VDJCGene> alleles;
+        final List<VDJCGene> genes;
         final VDJCAlignerParameters alignerParameters;
         try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(actionParameters.getInputFileName(), VDJCLibraryRegistry.getDefault())) {
-            alleles = reader.getUsedAlleles();
+            genes = reader.getUsedGenes();
             // Saving aligner parameters to correct assembler parameters
             alignerParameters = reader.getParameters();
         }
@@ -113,7 +113,7 @@ public class ActionAssemble implements Action {
             assemblerParameters.getCloneFactoryParameters().setFeatureToAlign(geneType, intersection);
         }
 
-        try (CloneAssembler assembler = new CloneAssembler(assemblerParameters, false, alleles)) {
+        try (CloneAssembler assembler = new CloneAssembler(assemblerParameters, false, genes)) {
 
             CloneAssemblerReport report = actionParameters.report == null ? null : new CloneAssemblerReport();
             if (report != null)

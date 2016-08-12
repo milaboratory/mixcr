@@ -32,9 +32,9 @@ import java.util.regex.Pattern;
 
 public class BuilderUtils {
     // ex. TRBV12-2*01
-    public static final Pattern ALLELE_NAME_PATTERN = Pattern.compile("^((...)(.).*)\\*(\\d\\d)$");
+    public static final Pattern GENE_NAME_PATTERN = Pattern.compile("^((...)(.).*)\\*(\\d\\d)$");
     public static final int GENE_NAME_GROUP = 1;
     public static final int LOCUS_GROUP = 2;
     public static final int GENE_TYPE_LETTER_GROUP = 3;
-    public static final int ALLELE_ID_GROUP = 4;
+    public static final int GENE_ID_GROUP = 4;
 }

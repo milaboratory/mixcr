@@ -125,7 +125,7 @@ public class ActionAlign implements Action {
                 continue;
             if (!alignerParameters.containsRequiredFeature(gene)) {
                 if (params().printWarnings()) {
-                    System.err.println("WARNING: Allele " + gene.getName() +
+                    System.err.println("WARNING: Gene " + gene.getName() +
                             " doesn't contain full " + GeneFeature.encode(alignerParameters
                             .getFeatureToAlign(gene.getGeneType())) + " (excluded)");
                     warnings = true;
@@ -138,12 +138,12 @@ public class ActionAlign implements Action {
         if (warnings)
             System.err.println("To turn off warnings use '-nw' option.");
 
-        if (aligner.getVAllelesToAlign().isEmpty())
-            throw new ProcessException("No V alleles to align. Aborting execution. See warnings for more info " +
+        if (aligner.getVGenesToAlign().isEmpty())
+            throw new ProcessException("No V genes to align. Aborting execution. See warnings for more info " +
                     "(turn warnings by adding -w option).");
 
-        if (aligner.getJAllelesToAlign().isEmpty())
-            throw new ProcessException("No J alleles to align. Aborting execution. See warnings for more info " +
+        if (aligner.getJGenesToAlign().isEmpty())
+            throw new ProcessException("No J genes to align. Aborting execution. See warnings for more info " +
                     "(turn warnings by adding -w option).");
 
         AlignerReport report = actionParameters.report == null ? null : new AlignerReport(alignerParameters.getVJAlignmentOrder());
@@ -285,9 +285,9 @@ public class ActionAlign implements Action {
                 names = {"-s", "--species"})
         public String species = "hs";
 
-        @Parameter(description = "Chain to align with; separated by ','. Possible chains: IGH, IGL, IGK, TRA, TRB, TRG, TRD, etc...",
-                names = {"-c", "--chain"})
-        public String chains = "all";
+        @Parameter(description = "List of chains to align with separated by ','. Possible chains: IGH, IGL, IGK, TRA, TRB, TRG, TRD, etc...",
+                names = {"-c", "--chains"})
+        public String chains = "ALL";
 
         @Parameter(description = "Processing threads",
                 names = {"-t", "--threads"}, validateWith = PositiveInteger.class)
@@ -297,7 +297,7 @@ public class ActionAlign implements Action {
                 names = {"-n", "--limit"}, validateWith = PositiveInteger.class)
         public long limit = 0;
 
-        @Parameter(description = "Use only functional alleles.",
+        @Parameter(description = "Use only functional genes.",
                 names = {"-u", "--functional-only"})
         public Boolean functionalOnly = null;
 

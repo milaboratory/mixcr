@@ -57,10 +57,6 @@ public final class FieldExtractors {
 
     static Field[] descriptors = null;
 
-    private static String alleleName(VDJCGene allele, boolean familyOnly) {
-        return familyOnly ? allele.getFamilyName() : allele.getName();
-    }
-
     public synchronized static Field[] getFields() {
         if (descriptors == null) {
             List<Field> desctiptorsList = new ArrayList<>();
@@ -88,11 +84,26 @@ public final class FieldExtractors {
                 });
             }
 
+            // Best gene
+            for (final GeneType type : GeneType.values()) {
+                char l = type.getLetter();
+                desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Gene",
+                        "Export best " + l + " hit gene name (e.g. TRBV12-3 for TRBV12-3*00)", "Best " + l + " gene", "best" + l + "Gene") {
+                    @Override
+                    protected String extract(VDJCObject object) {
+                        VDJCHit bestHit = object.getBestHit(type);
+                        if (bestHit == null)
+                            return NULL;
+                        return bestHit.getGene().getGeneName();
+                    }
+                });
+            }
+
             // Best family
             for (final GeneType type : GeneType.values()) {
                 char l = type.getLetter();
                 desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Family",
-                        "Export best " + l + " hit family name", "Best " + l + " hit family", "best" + l + "Family") {
+                        "Export best " + l + " hit family name (e.g. TRBV12 for TRBV12-3*00)", "Best " + l + " family", "best" + l + "Family") {
                     @Override
                     protected String extract(VDJCObject object) {
                         VDJCHit bestHit = object.getBestHit(type);
@@ -103,11 +114,11 @@ public final class FieldExtractors {
                 });
             }
 
-            // Best hit scores
+            // Best hit score
             for (final GeneType type : GeneType.values()) {
                 char l = type.getLetter();
                 desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "HitScore",
-                        "Export best score for best " + l + " hit", "Best " + l + " hit score", "best" + l + "HitScore") {
+                        "Export score for best " + l + " hit", "Best " + l + " hit score", "best" + l + "HitScore") {
                     @Override
                     protected String extract(VDJCObject object) {
                         VDJCHit bestHit = object.getBestHit(type);
@@ -117,7 +128,6 @@ public final class FieldExtractors {
                     }
                 });
             }
-
 
             // All hits
             for (final GeneType type : GeneType.values()) {
@@ -165,38 +175,26 @@ public final class FieldExtractors {
                 });
             }
 
+            // All gene names
+            for (final GeneType type : GeneType.values()) {
+                char l = type.getLetter();
+                desctiptorsList.add(new StringExtractor("-" + Character.toLowerCase(l) + "Genes",
+                        "Export all " + l + " gene names (e.g. TRBV12-3 for TRBV12-3*00)", "All " + l + " genes", "all" + l + "Genes", type) {
+                    @Override
+                    String extractStringForHit(VDJCHit hit) {
+                        return hit.getGene().getGeneName();
+                    }
+                });
+            }
+
             // All families
             for (final GeneType type : GeneType.values()) {
                 char l = type.getLetter();
-                desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Families",
-                        "Export all " + l + " hit families", "All " + l + " families", "all" + l + "Families") {
+                desctiptorsList.add(new StringExtractor("-" + Character.toLowerCase(l) + "Families",
+                        "Export all " + l + " gene family anmes (e.g. TRBV12 for TRBV12-3*00)", "All " + l + " families", "all" + l + "Families", type) {
                     @Override
-                    protected String extract(VDJCObject object) {
-                        TObjectFloatHashMap<String> familyScores = new TObjectFloatHashMap<>();
-                        VDJCHit[] hits = object.getHits(type);
-                        if (hits.length == 0)
-                            return "";
-                        for (VDJCHit hit : hits)
-                            familyScores.adjustOrPutValue(hit.getGene().getFamilyName(), hit.getScore(), hit.getScore());
-
-                        final Holder[] hs = new Holder[familyScores.size()];
-                        final TObjectFloatIterator<String> it = familyScores.iterator();
-                        int i = 0;
-                        while (it.hasNext()) {
-                            it.advance();
-                            hs[i++] = new Holder(it.key(), it.value());
-                        }
-
-                        Arrays.sort(hs);
-
-                        StringBuilder sb = new StringBuilder();
-                        for (i = 0; ; i++) {
-                            sb.append(hs[i].str);
-                            if (i == hs.length - 1)
-                                break;
-                            sb.append(",");
-                        }
-                        return sb.toString();
+                    String extractStringForHit(VDJCHit hit) {
+                        return hit.getGene().getFamilyName();
                     }
                 });
             }
@@ -739,6 +737,51 @@ public final class FieldExtractors {
             default:
                 throw new NullPointerException();
         }
+    }
+
+    private abstract static class StringExtractor extends PL_O {
+        final GeneType type;
+
+        public StringExtractor(String command, String description, String hHeader, String sHeader,
+                               GeneType type) {
+            super(command, description, hHeader, sHeader);
+            this.type = type;
+        }
+
+        @Override
+        protected String extract(VDJCObject object) {
+            TObjectFloatHashMap<String> familyScores = new TObjectFloatHashMap<>();
+            VDJCHit[] hits = object.getHits(type);
+            if (hits.length == 0)
+                return "";
+
+            for (VDJCHit hit : hits) {
+                String s = extractStringForHit(hit);
+                if (!familyScores.containsKey(s))
+                    familyScores.put(s, hit.getScore());
+            }
+
+            final Holder[] hs = new Holder[familyScores.size()];
+            final TObjectFloatIterator<String> it = familyScores.iterator();
+            int i = 0;
+            while (it.hasNext()) {
+                it.advance();
+                hs[i++] = new Holder(it.key(), it.value());
+            }
+
+            Arrays.sort(hs);
+
+            StringBuilder sb = new StringBuilder();
+            for (i = 0; ; i++) {
+                sb.append(hs[i].str);
+                if (i == hs.length - 1)
+                    break;
+                sb.append(",");
+            }
+            return sb.toString();
+        }
+
+        abstract String extractStringForHit(VDJCHit hit);
     }
 
     private static final class Holder implements Comparable<Holder> {

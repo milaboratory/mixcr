@@ -43,11 +43,11 @@ public final class CloneSet implements Iterable<Clone> {
     String versionInfo;
     final GeneFeature[] assemblingFeatures;
     final EnumMap<GeneType, GeneFeature> alignedFeatures;
-    final List<VDJCGene> usedAlleles;
+    final List<VDJCGene> usedGenes;
     final List<Clone> clones;
     final long totalCount;
 
-    public CloneSet(List<Clone> clones, Collection<VDJCGene> usedAlleles, EnumMap<GeneType, GeneFeature> alignedFeatures,
+    public CloneSet(List<Clone> clones, Collection<VDJCGene> usedGenes, EnumMap<GeneType, GeneFeature> alignedFeatures,
                     GeneFeature[] assemblingFeatures) {
         this.clones = Collections.unmodifiableList(new ArrayList<>(clones));
         long totalCount = 0;
@@ -56,7 +56,7 @@ public final class CloneSet implements Iterable<Clone> {
             clone.setParentCloneSet(this);
         }
         this.alignedFeatures = alignedFeatures.clone();
-        this.usedAlleles = Collections.unmodifiableList(new ArrayList<>(usedAlleles));
+        this.usedGenes = Collections.unmodifiableList(new ArrayList<>(usedGenes));
         this.totalCount = totalCount;
         this.assemblingFeatures = assemblingFeatures;
     }
@@ -64,7 +64,7 @@ public final class CloneSet implements Iterable<Clone> {
     public CloneSet(List<Clone> clones) {
         this.clones = Collections.unmodifiableList(new ArrayList<>(clones));
         long totalCount = 0;
-        HashMap<VDJCGeneId, VDJCGene> alleles = new HashMap<>();
+        HashMap<VDJCGeneId, VDJCGene> genes = new HashMap<>();
         EnumMap<GeneType, GeneFeature> alignedFeatures = new EnumMap<>(GeneType.class);
         GeneFeature[] assemblingFeatures = null;
         for (Clone clone : clones) {
@@ -76,8 +76,8 @@ public final class CloneSet implements Iterable<Clone> {
                 throw new IllegalArgumentException("Different assembling features.");
             for (GeneType geneType : GeneType.values())
                 for (VDJCHit hit : clone.getHits(geneType)) {
-                    VDJCGene allele = hit.getGene();
-                    alleles.put(allele.getId(), allele);
+                    VDJCGene gene = hit.getGene();
+                    genes.put(gene.getId(), gene);
                     GeneFeature alignedFeature = hit.getAlignedFeature();
                     GeneFeature f = alignedFeatures.put(geneType, alignedFeature);
                     if (f != null && !f.equals(alignedFeature))
@@ -86,7 +86,7 @@ public final class CloneSet implements Iterable<Clone> {
         }
         this.assemblingFeatures = assemblingFeatures;
         this.alignedFeatures = alignedFeatures;
-        this.usedAlleles = Collections.unmodifiableList(new ArrayList<>(alleles.values()));
+        this.usedGenes = Collections.unmodifiableList(new ArrayList<>(genes.values()));
         this.totalCount = totalCount;
     }
 
@@ -106,8 +106,8 @@ public final class CloneSet implements Iterable<Clone> {
         return assemblingFeatures;
     }
 
-    public List<VDJCGene> getUsedAlleles() {
-        return usedAlleles;
+    public List<VDJCGene> getUsedGenes() {
+        return usedGenes;
     }
 
     public GeneFeature getAlignedGeneFeature(GeneType geneType) {
@@ -139,6 +139,6 @@ public final class CloneSet implements Iterable<Clone> {
                 newClones.add(c);
             }
         }
-        return new CloneSet(newClones, in.usedAlleles, in.alignedFeatures, in.assemblingFeatures);
+        return new CloneSet(newClones, in.usedGenes, in.alignedFeatures, in.assemblingFeatures);
     }
 }

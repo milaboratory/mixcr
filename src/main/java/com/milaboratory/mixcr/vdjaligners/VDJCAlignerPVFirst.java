@@ -400,7 +400,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                         preDHits[i] = temp.toArray(new PreVDJCHit[temp.size()]);
                     }
 
-                dHits = PreVDJCHit.combine(getDAllelesToAlign(),
+                dHits = PreVDJCHit.combine(getDGenesToAlign(),
                         parameters.getFeatureToAlign(GeneType.Diversity), preDHits);
             }
 
@@ -623,19 +623,19 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         VDJCHit convert(GeneType geneType, VDJCAlignerPVFirst aligner) {
             Alignment<NucleotideSequence>[] alignments = new Alignment[2];
 
-            VDJCGene allele = null;
+            VDJCGene gene = null;
             if (hit0 != null) {
-                allele = hit0.getRecordPayload();
+                gene = hit0.getRecordPayload();
                 alignments[0] = hit0.getAlignment();
             }
             if (hit1 != null) {
-                assert allele == null ||
-                        allele == hit1.getRecordPayload();
-                allele = hit1.getRecordPayload();
+                assert gene == null ||
+                        gene == hit1.getRecordPayload();
+                gene = hit1.getRecordPayload();
                 alignments[1] = hit1.getAlignment();
             }
 
-            return new VDJCHit(allele, alignments,
+            return new VDJCHit(gene, alignments,
                     aligner.getParameters().getFeatureToAlign(geneType));
         }
 
@@ -653,8 +653,8 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
      * Calculates alignment score only for FR3 and CDR3 part of V gene.
      */
     float calculateVEndScore(AlignmentHit<NucleotideSequence, VDJCGene> hit) {
-        final VDJCGene allele = hit.getRecordPayload();
-        final int boundary = allele.getPartitioning().getRelativePosition(
+        final VDJCGene gene = hit.getRecordPayload();
+        final int boundary = gene.getPartitioning().getRelativePosition(
                 parameters.getFeatureToAlign(GeneType.Variable),
                 ReferencePoint.FR3Begin);
         final Alignment<NucleotideSequence> alignment = hit.getAlignment();
@@ -690,42 +690,42 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     @SuppressWarnings("unchecked")
     public static VDJCHit[] combine(final GeneFeature feature, final AlignmentHit<NucleotideSequence, VDJCGene>[][] hits) {
         for (int i = 0; i < hits.length; i++)
-            Arrays.sort(hits[i], ALLELE_ID_COMPARATOR);
+            Arrays.sort(hits[i], GENE_ID_COMPARATOR);
         ArrayList<VDJCHit> result = new ArrayList<>();
 
         // Sort-join-like algorithm
         int i;
-        VDJCGene minAllele;
+        VDJCGene minGene;
         Alignment<NucleotideSequence>[] alignments;
         final int[] pointers = new int[hits.length];
         while (true) {
-            minAllele = null;
+            minGene = null;
             for (i = 0; i < pointers.length; ++i)
-                if (pointers[i] < hits[i].length && (minAllele == null || minAllele.getId().compareTo(
+                if (pointers[i] < hits[i].length && (minGene == null || minGene.getId().compareTo(
                         hits[i][pointers[i]].getRecordPayload().getId()) > 0))
-                    minAllele = hits[i][pointers[i]].getRecordPayload();
+                    minGene = hits[i][pointers[i]].getRecordPayload();
 
             // All pointers > hits.length
-            if (minAllele == null)
+            if (minGene == null)
                 break;
 
             // Collecting alignments for minAllele
             alignments = new Alignment[hits.length];
             for (i = 0; i < pointers.length; ++i)
-                if (pointers[i] < hits[i].length && minAllele == hits[i][pointers[i]].getRecordPayload()) {
+                if (pointers[i] < hits[i].length && minGene == hits[i][pointers[i]].getRecordPayload()) {
                     alignments[i] = hits[i][pointers[i]].getAlignment();
                     ++pointers[i];
                 }
 
             // Collecting results
-            result.add(new VDJCHit(minAllele, alignments, feature));
+            result.add(new VDJCHit(minGene, alignments, feature));
         }
         VDJCHit[] vdjcHits = result.toArray(new VDJCHit[result.size()]);
         Arrays.sort(vdjcHits);
         return vdjcHits;
     }
 
-    public static final Comparator<AlignmentHit<NucleotideSequence, VDJCGene>> ALLELE_ID_COMPARATOR =
+    public static final Comparator<AlignmentHit<NucleotideSequence, VDJCGene>> GENE_ID_COMPARATOR =
             new Comparator<AlignmentHit<NucleotideSequence, VDJCGene>>() {
                 @Override
                 public int compare(AlignmentHit<NucleotideSequence, VDJCGene> o1, AlignmentHit<NucleotideSequence, VDJCGene> o2) {

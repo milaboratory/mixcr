@@ -32,6 +32,7 @@ import com.milaboratory.cli.JCommanderBasedMain;
 import com.milaboratory.mixcr.util.TempFileManager;
 import com.milaboratory.mixcr.util.VersionInfoProvider;
 import io.repseq.core.VDJCLibraryRegistry;
+import io.repseq.seqbase.SequenceResolvers;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -44,10 +45,17 @@ public class Main {
         // Getting command string if executed from script
         String command = System.getProperty("mixcr.command", "java -jar mixcr.jar");
 
-        Path cachePath = Paths.get(System.getProperty("user.home"), ".mixcr", "libraries");
+        Path cachePath = Paths.get(System.getProperty("user.home"), ".mixcr", "cache");
+        if (System.getProperty("allow.http") != null || System.getenv("MIXCR_ALLOW_HTTP") != null)
+            SequenceResolvers.initDefaultResolver(cachePath);
+
+        Path libraries = Paths.get(System.getProperty("user.home"), ".mixcr", "libraries");
         if (System.getProperty("library.path") != null)
             VDJCLibraryRegistry.getDefault().addPathResolver(System.getProperty("library.path"));
-        VDJCLibraryRegistry.getDefault().addPathResolver(cachePath);
+        else if (System.getenv("MIXCR_LIBRARY_PATH") != null)
+            VDJCLibraryRegistry.getDefault().addPathResolver(System.getenv("MIXCR_LIBRARY_PATH"));
+
+        VDJCLibraryRegistry.getDefault().addPathResolver(libraries);
         VDJCLibraryRegistry.getDefault().addPathResolver(".");
 
         // Setting up main helper

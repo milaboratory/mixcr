@@ -50,7 +50,7 @@ import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.*;
 public final class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>, CanReportProgress {
     private static final int DEFAULT_BUFFER_SIZE = 1048576; // 1 MB
     VDJCAlignerParameters parameters;
-    List<VDJCGene> usedAlleles;
+    List<VDJCGene> usedGenes;
     final PrimitivI input;
     final VDJCLibraryRegistry vdjcRegistry;
     String versionInfo;
@@ -123,7 +123,7 @@ public final class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlign
     }
 
     public void init() {
-        if (usedAlleles != null)
+        if (usedGenes != null)
             return;
 
         assert MAGIC_BYTES.length == MAGIC_LENGTH;
@@ -144,7 +144,7 @@ public final class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlign
 
         parameters = input.readObject(VDJCAlignerParameters.class);
 
-        this.usedAlleles = IOUtil.readAlleleReferences(input, vdjcRegistry, parameters);
+        this.usedGenes = IOUtil.readGeneReferences(input, vdjcRegistry, parameters);
 
         // Registering links to features to align
         for (GeneType gt : GeneType.VDJC_REFERENCE) {
@@ -162,9 +162,9 @@ public final class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlign
         return parameters;
     }
 
-    public synchronized List<VDJCGene> getUsedAlleles() {
+    public synchronized List<VDJCGene> getUsedGenes() {
         init();
-        return usedAlleles;
+        return usedGenes;
     }
 
     /**

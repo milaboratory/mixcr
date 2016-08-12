@@ -249,7 +249,7 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
                 int from = vResult.getBestHit().getAlignment().getSequence2Range().getTo(),
                         to = jResult.getBestHit().getAlignment().getSequence2Range().getFrom();
                 List<PreVDJCHit> dResult = singleDAligner.align0(sequence, getPossibleDLoci(), from, to);
-                dHits = PreVDJCHit.convert(getDAllelesToAlign(),
+                dHits = PreVDJCHit.convert(getDGenesToAlign(),
                         parameters.getFeatureToAlign(GeneType.Diversity), dResult);
             }
 

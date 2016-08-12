@@ -70,8 +70,7 @@ public class VersionInfoAction implements Action {
         return parameters;
     }
 
-    @Parameters(commandDescription = "Outputs information about MiXCR version which generated the file.",
-            optionPrefixes = "-")
+    @Parameters(commandDescription = "Outputs information about MiXCR version which generated the file.")
     private static class AParameters extends ActionParameters {
         @Parameter(description = "binary_file{.vdjca|.clns}[.gz]")
         public List<String> input;

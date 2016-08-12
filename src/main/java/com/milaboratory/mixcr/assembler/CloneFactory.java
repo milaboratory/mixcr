@@ -44,20 +44,20 @@ import java.util.*;
 class CloneFactory {
     final SingleDAligner dAligner;
     final CloneFactoryParameters parameters;
-    final HashMap<VDJCGeneId, VDJCGene> usedAlleles;
+    final HashMap<VDJCGeneId, VDJCGene> usedGenes;
     final GeneFeature[] assemblingFeatures;
     final int indexOfAssemblingFeatureWithD;
 
     CloneFactory(CloneFactoryParameters parameters, GeneFeature[] assemblingFeatures,
-                 HashMap<VDJCGeneId, VDJCGene> usedAlleles) {
+                 HashMap<VDJCGeneId, VDJCGene> usedGenes) {
         this.parameters = parameters.clone();
         this.assemblingFeatures = assemblingFeatures.clone();
-        this.usedAlleles = usedAlleles;
-        List<VDJCGene> dAlleles = new ArrayList<>();
-        for (VDJCGene allele : usedAlleles.values())
-            if (allele.getGeneType() == GeneType.Diversity)
-                dAlleles.add(allele);
-        this.dAligner = new SingleDAligner(parameters.getDParameters(), dAlleles);
+        this.usedGenes = usedGenes;
+        List<VDJCGene> dGenes = new ArrayList<>();
+        for (VDJCGene gene : usedGenes.values())
+            if (gene.getGeneType() == GeneType.Diversity)
+                dGenes.add(gene);
+        this.dAligner = new SingleDAligner(parameters.getDParameters(), dGenes);
 
         int indexOfAssemblingFeatureWithD = -1;
         for (int i = 0; i < assemblingFeatures.length; ++i)
@@ -78,8 +78,8 @@ class CloneFactory {
 
             GeneFeature featureToAlign = vjcParameters.getFeatureToAlign();
 
-            TObjectFloatHashMap<VDJCGeneId> alleleScores = accumulator.geneScores.get(geneType);
-            if (alleleScores == null)
+            TObjectFloatHashMap<VDJCGeneId> geneScores = accumulator.geneScores.get(geneType);
+            if (geneScores == null)
                 continue;
 
             GeneFeature[] intersectingFeatures = new GeneFeature[assemblingFeatures.length];
@@ -99,18 +99,18 @@ class CloneFactory {
                     }
             }
 
-            VDJCHit[] result = new VDJCHit[alleleScores.size()];
+            VDJCHit[] result = new VDJCHit[geneScores.size()];
             int pointer = 0;
-            TObjectFloatIterator<VDJCGeneId> iterator = alleleScores.iterator();
+            TObjectFloatIterator<VDJCGeneId> iterator = geneScores.iterator();
             while (iterator.hasNext()) {
                 iterator.advance();
-                VDJCGene allele = usedAlleles.get(iterator.key());
+                VDJCGene gene = usedGenes.get(iterator.key());
                 Alignment<NucleotideSequence>[] alignments = new Alignment[assemblingFeatures.length];
                 for (int i = 0; i < assemblingFeatures.length; ++i) {
                     if (intersectingFeatures[i] == null)
                         continue;
-                    NucleotideSequence referenceSequence = allele.getFeature(featureToAlign);
-                    Range rangeInReference = allele.getPartitioning().getRelativeRange(featureToAlign, intersectingFeatures[i]);
+                    NucleotideSequence referenceSequence = gene.getFeature(featureToAlign);
+                    Range rangeInReference = gene.getPartitioning().getRelativeRange(featureToAlign, intersectingFeatures[i]);
 
                     if (rangeInReference == null || referenceSequence == null)
                         continue;
@@ -189,7 +189,7 @@ class CloneFactory {
                         }
                     }
                 }
-                result[pointer++] = new VDJCHit(allele, alignments, featureToAlign, iterator.value());
+                result[pointer++] = new VDJCHit(gene, alignments, featureToAlign, iterator.value());
             }
             Arrays.sort(result, 0, pointer);
             hits.put(geneType, pointer < result.length ? Arrays.copyOf(result, pointer) : result);

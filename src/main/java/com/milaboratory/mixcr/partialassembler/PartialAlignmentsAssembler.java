@@ -89,7 +89,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
     }
 
     public void buildLeftPartsIndex(VDJCAlignmentsReader reader) {
-        writer.header(reader.getParameters(), reader.getUsedAlleles());
+        writer.header(reader.getParameters(), reader.getUsedGenes());
         for (VDJCAlignments alignment : CUtils.it(reader)) {
             if (alignment.getFeature(GeneFeature.CDR3) != null)
                 continue;
@@ -101,8 +101,8 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         final VDJCAlignerParameters alignerParameters = reader.getParameters();
         PartialAlignmentsAssemblerAligner aligner = new PartialAlignmentsAssemblerAligner(alignerParameters);
         targetMerger.setAlignerParameters(alignerParameters);
-        for (VDJCGene allele : reader.getUsedAlleles())
-            aligner.addGene(allele);
+        for (VDJCGene gene : reader.getUsedGenes())
+            aligner.addGene(gene);
 
         for (VDJCAlignments alignment : CUtils.it(reader)) {
             total.incrementAndGet();

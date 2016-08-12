@@ -73,8 +73,8 @@ public abstract class VDJCAlignerAbstract<R extends SequenceRead> extends VDJCAl
     @Override
     protected void init() {
         DAlignerParameters dAlignerParameters = parameters.getDAlignerParameters();
-        List<VDJCGene> dAlleles = genesToAlign.get(GeneType.Diversity);
-        if (dAlignerParameters != null && dAlleles.size() != 0)
+        List<VDJCGene> dGenes = genesToAlign.get(GeneType.Diversity);
+        if (dAlignerParameters != null && dGenes.size() != 0)
             singleDAligner = new SingleDAligner(dAlignerParameters,
                     genesToAlign.get(GeneType.Diversity));
         vAligner = createKAligner(GeneType.Variable);

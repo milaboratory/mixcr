@@ -178,14 +178,14 @@ public class PartialAlignmentsAssemblerTest {
     }
 
     static class InputTestData {
-        final EnumMap<GeneType, VDJCGene> alleles;
+        final EnumMap<GeneType, VDJCGene> genes;
         final EnumMap<GeneType, NucleotideSequence> germlineRegions;
         final EnumMap<GeneType, int[]> germlineCuts;
         final EnumMap<GeneType, int[]> refPositions;
         final NucleotideSequence VDJunction, DJJunction, reference, VJJunction;
 
-        public InputTestData(EnumMap<GeneType, VDJCGene> alleles, EnumMap<GeneType, NucleotideSequence> germlineRegions, EnumMap<GeneType, int[]> germlineCuts, EnumMap<GeneType, int[]> refPositions, NucleotideSequence VDJunction, NucleotideSequence DJJunction, NucleotideSequence reference, NucleotideSequence VJJunction) {
-            this.alleles = alleles;
+        public InputTestData(EnumMap<GeneType, VDJCGene> genes, EnumMap<GeneType, NucleotideSequence> germlineRegions, EnumMap<GeneType, int[]> germlineCuts, EnumMap<GeneType, int[]> refPositions, NucleotideSequence VDJunction, NucleotideSequence DJJunction, NucleotideSequence reference, NucleotideSequence VJJunction) {
+            this.genes = genes;
             this.germlineRegions = germlineRegions;
             this.germlineCuts = germlineCuts;
             this.refPositions = refPositions;
@@ -225,7 +225,7 @@ public class PartialAlignmentsAssemblerTest {
                     continue;
                 boolean yes = false;
                 for (VDJCHit hit : hits) {
-                    if (input.alleles.get(gt).equals(hit.getGene())) {
+                    if (input.genes.get(gt).equals(hit.getGene())) {
                         yes = true;
                         break;
                     }
@@ -269,7 +269,7 @@ public class PartialAlignmentsAssemblerTest {
     }
 
     public static InputTestData createTestData(long seed) throws Exception {
-        EnumMap<GeneType, String> allelesNames = new EnumMap<GeneType, String>(GeneType.class) {{
+        EnumMap<GeneType, String> geneNames = new EnumMap<GeneType, String>(GeneType.class) {{
             put(Variable, "TRBV20-1*00");
             put(Diversity, "TRBD2*00");
             put(Joining, "TRBJ2-6*00");
@@ -286,7 +286,7 @@ public class PartialAlignmentsAssemblerTest {
         defaultFeatures.getJAlignerParameters().setGeneFeatureToAlign(JRegion);
 
         //used alleles
-        EnumMap<GeneType, VDJCGene> alleles = new EnumMap<>(GeneType.class);
+        EnumMap<GeneType, VDJCGene> genes = new EnumMap<>(GeneType.class);
         //germline parts of sequences
         EnumMap<GeneType, NucleotideSequence> germlineRegions = gtMap();
         //left, right cut of germline
@@ -300,7 +300,7 @@ public class PartialAlignmentsAssemblerTest {
         NucleotideSequence DJJunction = TestUtil.randomSequence(NucleotideSequence.ALPHABET, 3, 10);
 
         for (GeneType gt : GeneType.VDJC_REFERENCE) {
-            VDJCGene gene = VDJCLibraryRegistry.getDefault().getLibrary("mi", "hs").get(allelesNames.get(gt));
+            VDJCGene gene = VDJCLibraryRegistry.getDefault().getLibrary("mi", "hs").get(geneNames.get(gt));
             NucleotideSequence seq = gene.getFeature(defaultFeatures.getFeatureToAlign(gt));
 
             int[] cuts = null;
@@ -331,7 +331,7 @@ public class PartialAlignmentsAssemblerTest {
             if (gt == Diversity)
                 referenceBuilder.append(DJJunction);
 
-            alleles.put(gt, gene);
+            genes.put(gt, gene);
             germlineCuts.put(gt, cuts);
             germlineRegions.put(gt, gSeq);
             refPositions.put(gt, positions);
@@ -344,6 +344,6 @@ public class PartialAlignmentsAssemblerTest {
                 .createAndDestroy();
 
         NucleotideSequence reference = referenceBuilder.createAndDestroy();
-        return new InputTestData(alleles, germlineRegions, germlineCuts, refPositions, VDJunction, DJJunction, reference, VJJunction);
+        return new InputTestData(genes, germlineRegions, germlineCuts, refPositions, VDJunction, DJJunction, reference, VJJunction);
     }
 }

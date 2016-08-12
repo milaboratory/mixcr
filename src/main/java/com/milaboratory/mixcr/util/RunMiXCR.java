@@ -51,7 +51,7 @@ public final class RunMiXCR {
     public static AssembleResult assemble(final AlignResult align) {
         RunMiXCRAnalysis parameters = align.parameters;
         try (CloneAssembler assembler = new CloneAssembler(parameters.cloneAssemblerParameters,
-                false, align.usedAlleles)) {
+                false, align.usedGenes)) {
 
             CloneAssemblerReport report = new CloneAssemblerReport();
             assembler.setListener(report);
@@ -88,12 +88,12 @@ public final class RunMiXCR {
         VDJCAligner aligner = VDJCAligner.createAligner(alignerParameters,
                 parameters.isInputPaired(), alignerParameters.getMergerParameters() != null);
 
-        List<VDJCGene> alleles = new ArrayList<>();
-        for (VDJCGene allele : VDJCLibraryRegistry.getDefault().getLibrary(parameters.library, parameters.species).getGenes(parameters.chains))
-            if (alignerParameters.containsRequiredFeature(allele) &&
-                    (allele.isFunctional() || !parameters.isFunctionalOnly)) {
-                alleles.add(allele);
-                aligner.addGene(allele);
+        List<VDJCGene> genes = new ArrayList<>();
+        for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary(parameters.library, parameters.species).getGenes(parameters.chains))
+            if (alignerParameters.containsRequiredFeature(gene) &&
+                    (gene.isFunctional() || !parameters.isFunctionalOnly)) {
+                genes.add(gene);
+                aligner.addGene(gene);
             }
 
         AlignerReport report = new AlignerReport(alignerParameters.getVJAlignmentOrder());
@@ -122,7 +122,7 @@ public final class RunMiXCR {
                     als.add(t.alignment);
                 }
             }
-            return new AlignResult(parameters, reader.getNumberOfReads(), report, als, alleles, aligner);
+            return new AlignResult(parameters, reader.getNumberOfReads(), report, als, genes, aligner);
         }
     }
 
@@ -141,16 +141,16 @@ public final class RunMiXCR {
         public final long totalNumberOfReads;
         public final AlignerReport report;
         public final List<VDJCAlignments> alignments;
-        public final List<VDJCGene> usedAlleles;
+        public final List<VDJCGene> usedGenes;
         public final VDJCAligner aligner;
 
         public AlignResult(RunMiXCRAnalysis parameters, long totalNumberOfReads, AlignerReport report,
-                           List<VDJCAlignments> alignments, List<VDJCGene> usedAlleles, VDJCAligner aligner) {
+                           List<VDJCAlignments> alignments, List<VDJCGene> usedGenes, VDJCAligner aligner) {
             this.parameters = parameters;
             this.totalNumberOfReads = totalNumberOfReads;
             this.report = report;
             this.alignments = alignments;
-            this.usedAlleles = usedAlleles;
+            this.usedGenes = usedGenes;
             this.aligner = aligner;
         }
 

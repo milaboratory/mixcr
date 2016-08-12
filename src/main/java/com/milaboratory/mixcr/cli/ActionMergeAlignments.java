@@ -56,7 +56,7 @@ public class ActionMergeAlignments implements Action {
              VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(parameters.getOutputFileName())) {
             reader.initNextReader();
             SmartProgressReporter.startProgressReport("Merging", reader);
-            writer.header(reader.currentInnerReader.getParameters(), reader.currentInnerReader.getUsedAlleles());
+            writer.header(reader.currentInnerReader.getParameters(), reader.currentInnerReader.getUsedGenes());
             for (VDJCAlignments record : CUtils.it(reader))
                 writer.write(record);
             writer.setNumberOfProcessedReads(reader.readIdOffset.get());

@@ -82,13 +82,13 @@ public class TargetMerger {
             Map<VDJCGene, Alignment<NucleotideSequence>[]> map = extractHitsMapping(targetLeft, targetRight, geneType);
             ArrayList<VDJCHit> resultingHits = new ArrayList<>();
             for (Map.Entry<VDJCGene, Alignment<NucleotideSequence>[]> mE : map.entrySet()) {
-                final VDJCGene allele = mE.getKey();
+                final VDJCGene gene = mE.getKey();
 
                 Alignment<NucleotideSequence> mergedAl = merge(
                         bp.getScoring(), extractBandedWidth(bp),
                         mergedTarget.getSequence(), offset,
                         mE.getValue()[0], mE.getValue()[1]);
-                resultingHits.add(new VDJCHit(allele, mergedAl, alignedFeature));
+                resultingHits.add(new VDJCHit(gene, mergedAl, alignedFeature));
             }
 
             Collections.sort(resultingHits);
@@ -109,19 +109,19 @@ public class TargetMerger {
     static Map<VDJCGene, Alignment<NucleotideSequence>[]> extractHitsMapping(AlignedTarget targetLeft, AlignedTarget targetRight, GeneType geneType) {
         Map<VDJCGene, Alignment<NucleotideSequence>[]> map = new HashMap<>();
         for (VDJCHit l : targetLeft.getAlignments().getHits(geneType)) {
-            final VDJCGene allele = l.getGene();
+            final VDJCGene gene = l.getGene();
             final Alignment<NucleotideSequence> al = l.getAlignment(targetLeft.getTargetId());
             if (al != null)
-                map.put(allele, new Alignment[]{al, null});
+                map.put(gene, new Alignment[]{al, null});
         }
         for (VDJCHit r : targetRight.getAlignments().getHits(geneType)) {
-            final VDJCGene allele = r.getGene();
+            final VDJCGene gene = r.getGene();
             final Alignment<NucleotideSequence> alignment = r.getAlignment(targetRight.getTargetId());
             if (alignment == null)
                 continue;
-            final Alignment<NucleotideSequence>[] als = map.get(allele);
+            final Alignment<NucleotideSequence>[] als = map.get(gene);
             if (als == null)
-                map.put(allele, new Alignment[]{null, alignment});
+                map.put(gene, new Alignment[]{null, alignment});
             else {
                 assert als[1] == null;
                 als[1] = alignment;

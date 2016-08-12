@@ -44,7 +44,7 @@ import java.util.List;
 public class IOUtil {
     public static void writeGeneReferences(PrimitivO output, List<VDJCGene> genes,
                                            HasFeatureToAlign featuresToAlign) {
-        // Writing allele ids
+        // Writing gene ids
         output.writeInt(genes.size());
         for (VDJCGene gene : genes)
             output.writeObject(gene.getId());
@@ -65,17 +65,17 @@ public class IOUtil {
         }
     }
 
-    public static List<VDJCGene> readAlleleReferences(PrimitivI input, VDJCLibraryRegistry registry,
+    public static List<VDJCGene> readGeneReferences(PrimitivI input, VDJCLibraryRegistry registry,
                                                     HasFeatureToAlign featuresToAlign) {
-        // Reading allele ids
+        // Reading gene ids
         int count = input.readInt();
         List<VDJCGene> genes = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
             VDJCGeneId id = input.readObject(VDJCGeneId.class);
-            VDJCGene allele = registry.getGene(id);
-            if (allele == null)
-                throw new RuntimeException("Allele not found: " + id);
-            genes.add(allele);
+            VDJCGene gene = registry.getGene(id);
+            if (gene == null)
+                throw new RuntimeException("Gene not found: " + id);
+            genes.add(gene);
         }
 
         // Putting genes references and feature sequences to be serialized/deserialized as references
