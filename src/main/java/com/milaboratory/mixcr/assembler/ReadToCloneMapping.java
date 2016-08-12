@@ -101,6 +101,29 @@ public final class ReadToCloneMapping {
         return isDropped() ? "" : "" + alignmentsId + " -> " + cloneIndex + " " + (isPreClustered() ? "p" : "") + (isClustered() ? "c" : "") + (isMapped() ? "m" : "");
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ReadToCloneMapping that = (ReadToCloneMapping) o;
+
+        if (alignmentsId != that.alignmentsId) return false;
+        if (readId != that.readId) return false;
+        if (cloneIndex != that.cloneIndex) return false;
+        return mappingType == that.mappingType;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (alignmentsId ^ (alignmentsId >>> 32));
+        result = 31 * result + (int) (readId ^ (readId >>> 32));
+        result = 31 * result + cloneIndex;
+        result = 31 * result + (int) mappingType;
+        return result;
+    }
+
     public enum MappingType {
         Core, Clustered, Mapped, Dropped, DroppedWithClone, PreClustered;
 
@@ -123,8 +146,12 @@ public final class ReadToCloneMapping {
 
         @Override
         public int compare(ReadToCloneMapping o1, ReadToCloneMapping o2) {
-            int c = Integer.compare(o1.cloneIndex, o2.cloneIndex);
-            return c == 0 ? Long.compare(o1.alignmentsId, o2.alignmentsId) : c;
+            int c;
+            if ((c = Integer.compare(o1.cloneIndex, o2.cloneIndex)) != 0)
+                return c;
+            if ((c = Long.compare(o1.alignmentsId, o2.alignmentsId)) != 0)
+                return c;
+            return Byte.compare(o1.mappingType, o2.mappingType);
         }
 
         @Override
@@ -142,8 +169,12 @@ public final class ReadToCloneMapping {
 
         @Override
         public int compare(ReadToCloneMapping o1, ReadToCloneMapping o2) {
-            int c = Long.compare(o1.alignmentsId, o2.alignmentsId);
-            return c == 0 ? Integer.compare(o1.cloneIndex, o2.cloneIndex) : c;
+            int c;
+            if ((c = Long.compare(o1.alignmentsId, o2.alignmentsId)) != 0)
+                return c;
+            if ((c = Integer.compare(o1.cloneIndex, o2.cloneIndex)) != 0)
+                return c;
+            return Byte.compare(o1.mappingType, o2.mappingType);
         }
 
         @Override

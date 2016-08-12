@@ -413,7 +413,12 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                 if (bestVHit == null && bestJHit == null)
                     calculated = true;
 
-                if (!calculated && bestJHit != null) {
+                if (!calculated && bestJHit != null) { // If J hit is present somewhere
+
+                    // The following algorithm represents following behaviour:
+                    // If there is a J hit in R1 search for C gene in R1 (after J) and R2
+                    // If there is a J hit in R2 search for C gene in R2 (after J)
+
                     for (int i = 0; i < 2; ++i) {
                         Alignment<NucleotideSequence> jAlignment = bestJHit.get(i) == null ? null : bestJHit.get(i).getAlignment();
                         if (i == 0 && jAlignment == null)
@@ -426,12 +431,13 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                     calculated = true;
                 }
 
-                if (!calculated) { // At least one V hit must be present here
-                    if (bestVHit.get(1) != null) {
-                        List<AlignmentHit<NucleotideSequence, VDJCGene>> temp = cAligner.align(target.targets[1].getSequence(), 0,
-                                target.targets[1].size()).getHits();
-                        results[1] = temp.toArray(new AlignmentHit[temp.size()]);
-                    }
+                if (!calculated && bestVHit.get(0) != null) { // At least one V hit must be present in the first read
+
+                    // Searching for C gene in second read
+
+                    List<AlignmentHit<NucleotideSequence, VDJCGene>> temp = cAligner.align(target.targets[1].getSequence(), 0,
+                            target.targets[1].size()).getHits();
+                    results[1] = temp.toArray(new AlignmentHit[temp.size()]);
                 }
 
                 cHits = combine(parameters.getFeatureToAlign(GeneType.Constant), results);
@@ -478,11 +484,14 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                         totalMScore + vHits[0].sumScore // = minTotalScore - topJScore - topCScore - topDScore
                 );
                 this.vHits = extractHits(minScore, vHits, maxHits);
+                assert vHits.length > 0;
             }
 
-            if (jHits != null && jHits.length > 0)
+            if (jHits != null && jHits.length > 0) {
                 this.jHits = extractHits(totalMScore + jHits[0].sumScore, // = minTotalScore - topVScore - topCScore - topDScore
                         jHits, maxHits);
+                assert jHits.length > 0;
+            }
         }
 
         /**
@@ -491,11 +500,13 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         private PairedHit[] extractHits(float minScore, PairedHit[] result, int maxHits) {
             int count = 0;
             for (PairedHit hit : result)
-                if (hit.sumScore > minScore) {
+                if (hit.sumScore >= minScore) {
                     if (++count >= maxHits)
                         break;
                 } else
                     break;
+
+            assert count > 0;
 
             return Arrays.copyOfRange(result, 0, count);
         }

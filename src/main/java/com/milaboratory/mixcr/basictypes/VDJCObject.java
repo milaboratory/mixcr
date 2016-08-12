@@ -48,17 +48,20 @@ public class VDJCObject {
     public VDJCObject(EnumMap<GeneType, VDJCHit[]> hits, NSequenceWithQuality... targets) {
         this.targets = targets;
         this.hits = hits;
+
+        // Sorting hits
+        for (VDJCHit[] h : hits.values())
+            Arrays.sort(h);
     }
 
     protected VDJCObject(VDJCHit[] vHits, VDJCHit[] dHits,
                          VDJCHit[] jHits, VDJCHit[] cHits,
                          NSequenceWithQuality... targets) {
-        this.targets = targets;
-        this.hits = createHits(vHits, dHits, jHits, cHits);
+        this(createHits(vHits, dHits, jHits, cHits), targets);
     }
 
-    protected EnumMap<GeneType, VDJCHit[]> createHits(VDJCHit[] vHits, VDJCHit[] dHits,
-                                                      VDJCHit[] jHits, VDJCHit[] cHits) {
+    protected static EnumMap<GeneType, VDJCHit[]> createHits(VDJCHit[] vHits, VDJCHit[] dHits,
+                                                             VDJCHit[] jHits, VDJCHit[] cHits) {
         EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<GeneType, VDJCHit[]>(GeneType.class);
         if (vHits != null)
             hits.put(GeneType.Variable, vHits);
