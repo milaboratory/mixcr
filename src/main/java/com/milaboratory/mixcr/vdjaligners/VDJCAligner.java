@@ -98,6 +98,10 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
         if (!initialized)
             synchronized (this) {
                 if (!initialized) {
+                    // Sorting alleles
+                    for (List<VDJCGene> alleles : genesToAlign.values())
+                        Collections.sort(alleles);
+
                     init();
                     initialized = true;
                 }
