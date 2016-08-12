@@ -31,7 +31,10 @@ package com.milaboratory.mixcr.cli;
 import com.milaboratory.cli.JCommanderBasedMain;
 import com.milaboratory.mixcr.util.TempFileManager;
 import com.milaboratory.mixcr.util.VersionInfoProvider;
+import io.repseq.core.VDJCLibraryRegistry;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
@@ -40,6 +43,12 @@ public class Main {
         TempFileManager.seed(Arrays.hashCode(args) + 17 * (new SecureRandom()).nextLong());
         // Getting command string if executed from script
         String command = System.getProperty("mixcr.command", "java -jar mixcr.jar");
+
+        Path cachePath = Paths.get(System.getProperty("user.home"), ".mixcr", "libraries");
+        if (System.getProperty("library.path") != null)
+            VDJCLibraryRegistry.getDefault().addPathResolver(System.getProperty("library.path"));
+        VDJCLibraryRegistry.getDefault().addPathResolver(cachePath);
+        VDJCLibraryRegistry.getDefault().addPathResolver(".");
 
         // Setting up main helper
         JCommanderBasedMain main = new JCommanderBasedMain(command,

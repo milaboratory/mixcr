@@ -35,14 +35,14 @@ import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.sun.org.apache.xpath.internal.operations.String;
 import io.repseq.core.*;
 
-import java.util.*;
+import java.util.EnumMap;
+import java.util.List;
 
 public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
-    private static final ReferencePoint reqPointR = ReferencePoint.CDR3End.move(3);
     private static final ReferencePoint reqPointL = ReferencePoint.CDR3Begin.move(-3);
+    private static final ReferencePoint reqPointR = ReferencePoint.CDR3End.move(3);
 
     public VDJCAlignerS(VDJCAlignerParameters parameters) {
         super(parameters);
@@ -58,7 +58,6 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
                 processPartial(input) :
                 processStrict(input);
     }
-
 
     private VDJCAlignmentResult<SingleRead> processPartial(SingleRead input) {
         Target[] targets = parameters.getReadsLayout().createTargets(input);
@@ -354,7 +353,7 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
                                                                             int maxHits) {
         int count = 0;
         for (AlignmentHit<NucleotideSequence, VDJCGene> hit : result.getHits())
-            if (hit.getAlignment().getScore() > minScore) {
+            if (hit.getAlignment().getScore() >= minScore) {
                 if (++count >= maxHits)
                     break;
             } else

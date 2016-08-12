@@ -42,6 +42,7 @@ import com.beust.jcommander.Parameters;
 import com.beust.jcommander.validators.PositiveInteger;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
+import com.milaboratory.cli.ActionParametersWithOutput;
 import com.milaboratory.cli.ProcessException;
 import com.milaboratory.core.PairedEndReadsLayout;
 import com.milaboratory.core.io.sequence.SequenceRead;
@@ -256,8 +257,7 @@ public class ActionAlign implements Action {
         return actionParameters;
     }
 
-    @Parameters(commandDescription = "Builds alignments with V,D,J and C genes for input sequencing reads.",
-            optionPrefixes = "-")
+    @Parameters(commandDescription = "Builds alignments with V,D,J and C genes for input sequencing reads.")
     public static class AlignParameters extends ActionParametersWithOutput {
         @Parameter(description = "input_file1 [input_file2] output_file.vdjca", variableArity = true)
         public List<String> parameters = new ArrayList<>();
@@ -267,7 +267,7 @@ public class ActionAlign implements Action {
 
         @Parameter(description = "Segment library to use",
                 names = {"-b", "--library"})
-        public String library = "mi";
+        public String library = "default";
 
         @Parameter(description = "Don't print warnings",
                 names = {"-nw", "--no-warnings"})

@@ -174,7 +174,7 @@ public final class RunMiXCR {
     public static final class RunMiXCRAnalysis {
         public VDJCAlignerParameters alignerParameters = VDJCParametersPresets.getByName("default");
         public CloneAssemblerParameters cloneAssemblerParameters = CloneAssemblerParametersPresets.getByName("default");
-        public String library = "mi";
+        public String library = "default";
         public Chains chains = Chains.ALL;
         public String species = "hs";
         public boolean isFunctionalOnly = true;

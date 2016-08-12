@@ -36,11 +36,30 @@ public class RunMiXCRTest {
         }
     }
 
+    //@Test
+    //public void testt() throws Exception {
+    //    try {
+    //        Path cachePath = Paths.get(System.getProperty("user.home"), ".repseqio", "cache");
+    //        SequenceResolvers.initDefaultResolver(cachePath);
+    //        VDJCLibraryRegistry.getDefault().registerLibraries("/Volumes/Data/Projects/repseqio/reference/human/TRB.json", "mi");
+    //        System.out.println(VDJCLibraryRegistry.getDefault().getLibrary("mi", "hs").get("TRBV12-3*00").getFeature(GeneFeature.parse("VRegion(-100,+10000000)")));
+    //    } catch (SequenceProviderIndexOutOfBoundsException e) {
+    //        System.out.println(e.getAvailableRange());
+    //    }
+    //}
+
     @Test
     public void test2() throws Exception {
+        //Path cachePath = Paths.get(System.getProperty("user.home"), ".repseqio", "cache");
+        //SequenceResolvers.initDefaultResolver(cachePath);
+        //VDJCLibraryRegistry.getDefault().addPathResolver("/Volumes/Data/Projects/repseqio/reference/human/");
+
         RunMiXCR.RunMiXCRAnalysis params = new RunMiXCR.RunMiXCRAnalysis(
                 RunMiXCR.class.getResource("/sequences/test_R1.fastq").getFile(),
                 RunMiXCR.class.getResource("/sequences/test_R2.fastq").getFile());
+
+        //params.library = "human_TR";
+        //params.species = "hs";
 
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
 
