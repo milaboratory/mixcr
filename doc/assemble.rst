@@ -192,10 +192,10 @@ The following paramenter control separation behaviour and pre-clusterization:
 +=======================================+===========================+============================================================+
 | ``maximalPreClusteringRatio``         | ``1.0``                   | See conditions for clustering above for more inforamtion.  |
 +---------------------------------------+---------------------------+------------------------------------------------------------+
-| ``separateByV``                       | ``true``                  | If ``false`` clones with equal clonal sequence but         |
+| ``separateByV``                       | ``false``                  | If ``false`` clones with equal clonal sequence but         |
 |                                       |                           | different V gene will be merged into single clone.         |
 +---------------------------------------+---------------------------+------------------------------------------------------------+
-| ``separateByJ``                       | ``true``                  | If ``false`` clones with equal clonal sequence but         |
+| ``separateByJ``                       | ``false``                  | If ``false`` clones with equal clonal sequence but         |
 |                                       |                           | different J gene will be merged into single clone.         |
 +---------------------------------------+---------------------------+------------------------------------------------------------+
 | ``separateByC``                       | ``false``                 | If ``false`` clones with equal clonal sequence but         |
