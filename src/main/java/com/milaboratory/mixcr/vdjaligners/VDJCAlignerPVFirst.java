@@ -67,7 +67,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                 helper.sortAndFilterBasedOnVEndScore();
 
                 // Calculating best V hits (basing on filtered list of V hits)
-                helper.updateBestV();
+                //helper.updateBestV();
             }
 
             // Perform J alignments
@@ -208,7 +208,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         AlignmentResult<AlignmentHit<NucleotideSequence, VDJCGene>>[] jResults;
         PairedHit[] vHits, jHits;
         VDJCHit[] dHits = null, cHits = null;
-        PairedHit bestVHits;
+        //PairedHit bestVHits;
 
         PAlignmentHelper(Target target, AlignmentResult<AlignmentHit<NucleotideSequence, VDJCGene>>... vResults) {
             this.target = target;
@@ -246,26 +246,26 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
             calculateScoreAndSort(vHits);
         }
 
-        /**
-         * Calculates best V hits for each read
-         */
-        void updateBestV() {
-            AlignmentHit<NucleotideSequence, VDJCGene> hit0 = null, hit1 = null;
-
-            for (PairedHit hit : vHits) {
-                if (hit.hit0 != null &&
-                        (hit0 == null ||
-                                hit0.getAlignment().getScore() > hit.hit0.getAlignment().getScore()))
-                    hit0 = hit.hit0;
-                if (hit.hit1 != null &&
-                        (hit1 == null ||
-                                hit1.getAlignment().getScore() > hit.hit1.getAlignment().getScore()))
-                    hit1 = hit.hit1;
-            }
-
-            // Setting best hits for current array of hits (after filtration)
-            bestVHits = new PairedHit(hit0, hit1, true);
-        }
+        ///**
+        // * Calculates best V hits for each read
+        // */
+        //void updateBestV() {
+        //    AlignmentHit<NucleotideSequence, VDJCGene> hit0 = null, hit1 = null;
+        //
+        //    for (PairedHit hit : vHits) {
+        //        if (hit.hit0 != null &&
+        //                (hit0 == null ||
+        //                        hit0.getAlignment().getScore() > hit.hit0.getAlignment().getScore()))
+        //            hit0 = hit.hit0;
+        //        if (hit.hit1 != null &&
+        //                (hit1 == null ||
+        //                        hit1.getAlignment().getScore() > hit.hit1.getAlignment().getScore()))
+        //            hit1 = hit.hit1;
+        //    }
+        //
+        //    // Setting best hits for current array of hits (after filtration)
+        //    bestVHits = new PairedHit(hit0, hit1, true);
+        //}
 
         boolean hasVHits() {
             return vHits != null && vHits.length > 0;
@@ -435,7 +435,8 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
 
                     // Searching for C gene in second read
 
-                    List<AlignmentHit<NucleotideSequence, VDJCGene>> temp = cAligner.align(target.targets[1].getSequence(), 0,
+                    List<AlignmentHit<NucleotideSequence, VDJCGene>> temp = cAligner.align(target.targets[1].getSequence(),
+                            bestVHit.get(1) == null ? 0 : bestVHit.get(1).getAlignment().getSequence2Range().getTo(),
                             target.targets[1].size()).getHits();
                     results[1] = temp.toArray(new AlignmentHit[temp.size()]);
                 }
@@ -452,7 +453,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
             //if (index == 0 && bestVHits != null && bestVHits.get(1) != null)
             //    return null;
 
-            AlignmentHit<NucleotideSequence, VDJCGene> vHit = bestVHits == null ? null : bestVHits.get(index);
+            AlignmentHit<NucleotideSequence, VDJCGene> vHit = vHits.length == 0 ? null : vHits[0].get(index); //bestVHits == null ? null : bestVHits.get(index);
 
             final NucleotideSequence targetSequence = target.targets[index].getSequence();
 
