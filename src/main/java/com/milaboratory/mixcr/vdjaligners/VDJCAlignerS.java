@@ -197,7 +197,8 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
                 return new KVJResultsForSingle(target, vResult,
                         jAligner.align(sequence,
                                 vResult.getBestHit().getAlignment().getSequence2Range().getTo(),
-                                sequence.size()));
+                                sequence.size(),
+                                getFilter(GeneType.Joining, vResult)));
             case JThenV:
                 jResult = jAligner.align(sequence);
 
@@ -211,7 +212,8 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
 
                 // Returning result
                 return new KVJResultsForSingle(target, vAligner.align(sequence, 0,
-                        jResult.getBestHit().getAlignment().getSequence2Range().getFrom()),
+                        jResult.getBestHit().getAlignment().getSequence2Range().getFrom(),
+                        getFilter(GeneType.Variable, jResult)),
                         jResult);
         }
 
@@ -253,12 +255,20 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
                         parameters.getFeatureToAlign(GeneType.Diversity), dResult);
             }
 
-            if (cAligner != null) {
+            boolean doCAlignment = cAligner != null;
+
+            if (parameters.getAllowNoCDR3PartAlignments())
+                doCAlignment &= hasKVAndJHits() || hasKJHits();
+            else
+                doCAlignment &= hasKJHits();
+
+            if (doCAlignment) {
                 int from = hasKJHits() ?
                         jResult.getBestHit().getAlignment().getSequence2Range().getTo()
                         : 0;
                 AlignmentResult<AlignmentHit<NucleotideSequence, VDJCGene>> res = cAligner
-                        .align(sequence, from, sequence.size());
+                        .align(sequence, from, sequence.size(),
+                                getFilter(GeneType.Constant, vResult, jResult));
 
                 cHits = createHits(res.getHits(), parameters.getFeatureToAlign(GeneType.Constant));
             } else

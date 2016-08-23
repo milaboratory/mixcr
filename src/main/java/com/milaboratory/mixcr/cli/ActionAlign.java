@@ -118,25 +118,31 @@ public class ActionAlign implements Action {
             alignerParameters.getVAlignerParameters().setGeneFeatureToAlign(correctingFeature);
         }
 
-        boolean warnings = false;
+        //boolean warnings = false;
 
+        int numberOfExcludedNFGenes = 0;
         for (VDJCGene gene : library.getGenes(actionParameters.getChains())) {
             if (actionParameters.isFunctionalOnly() && !gene.isFunctional())
                 continue;
             if (!alignerParameters.containsRequiredFeature(gene)) {
-                if (params().printWarnings()) {
-                    System.err.println("WARNING: Gene " + gene.getName() +
+                if (params().printWarnings() && (gene.isFunctional() || params().printNonFunctionalWarnings())) {
+                    System.err.println("WARNING: " + (gene.isFunctional() ? "Functional gene" : "Gene") + " " + gene.getName() +
                             " doesn't contain full " + GeneFeature.encode(alignerParameters
                             .getFeatureToAlign(gene.getGeneType())) + " (excluded)");
-                    warnings = true;
+                    //warnings = true;
                 }
+                if (!gene.isFunctional())
+                    ++numberOfExcludedNFGenes;
                 continue;
             }
             aligner.addGene(gene);
         }
 
-        if (warnings)
-            System.err.println("To turn off warnings use '-nw' option.");
+        if (numberOfExcludedNFGenes > 0 && !params().printNonFunctionalWarnings())
+            System.out.println("WARNING: " + numberOfExcludedNFGenes + " non-functional genes excluded due to absent \"featureToAlign\".");
+
+        //if (warnings)
+        //    System.err.println("To turn off warnings use '-nw' option.");
 
         if (aligner.getVGenesToAlign().isEmpty())
             throw new ProcessException("No V genes to align. Aborting execution. See warnings for more info " +
@@ -147,10 +153,8 @@ public class ActionAlign implements Action {
                     "(turn warnings by adding -w option).");
 
         AlignerReport report = actionParameters.report == null ? null : new AlignerReport(alignerParameters.getVJAlignmentOrder());
-        if (report != null) {
+        if (report != null)
             aligner.setEventsListener(report);
-            report.setAllowDifferentVJLoci(actionParameters.allowDifferentVJLoci);
-        }
 
         try (SequenceReaderCloseable<? extends SequenceRead> reader = actionParameters.createReader();
 
@@ -201,15 +205,10 @@ public class ActionAlign implements Action {
                         continue;
                     }
                 }
-                if (!alignment.hasSameVJLoci(1)) {
+                if (!alignment.hasSameVJLoci(1))
                     if (report != null)
                         report.onAlignmentWithDifferentVJLoci();
-                    if (!actionParameters.allowDifferentVJLoci && !writeAllResults) {
-                        if (notAlignedWriter != null)
-                            notAlignedWriter.write(result.read);
-                        continue;
-                    }
-                }
+
                 if (writer != null) {
                     if (actionParameters.saveReadDescription || actionParameters.saveOriginalReads) {
                         if (result.read.numberOfReads() == 2 && alignment.numberOfTargets() == 1
@@ -269,6 +268,10 @@ public class ActionAlign implements Action {
                 names = {"-b", "--library"})
         public String library = "default";
 
+        @Parameter(description = "Print warnings for non-functional V/D/J/C genes",
+                names = {"-wf", "--non-functional-warnings"})
+        public Boolean nonFunctionalWarnings = null;
+
         @Parameter(description = "Don't print warnings",
                 names = {"-nw", "--no-warnings"})
         public Boolean noWarnings = null;
@@ -318,10 +321,6 @@ public class ActionAlign implements Action {
                 names = {"-g", "--save-reads"})
         public Boolean saveOriginalReads = false;
 
-        @Parameter(description = "Allow alignments with different chains of V and J hits.",
-                names = {"-i", "--diff-chains"})
-        public Boolean allowDifferentVJLoci = false;
-
         @Parameter(description = "Write not aligned reads (R1).",
                 names = {"--not-aligned-R1"})
         public String failedReadsR1 = null;
@@ -356,8 +355,12 @@ public class ActionAlign implements Action {
             return builder.toString();
         }
 
+        public boolean printNonFunctionalWarnings() {
+            return nonFunctionalWarnings != null && nonFunctionalWarnings;
+        }
+
         public boolean printWarnings() {
-            return noWarnings == null;
+            return noWarnings == null || !noWarnings;
         }
 
         public Chains getChains() {

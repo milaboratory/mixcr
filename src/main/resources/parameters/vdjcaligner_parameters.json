@@ -104,6 +104,7 @@
         "relativeMinVScore": 0.7,
         "allowPartialAlignments": false,
         "allowNoCDR3PartAlignments": false,
+        "allowChimeras": false,
         "readsLayout": "Opposite"
     },
     "kaligner2": {
@@ -225,6 +226,7 @@
         "relativeMinVScore": 0.7,
         "allowPartialAlignments": false,
         "allowNoCDR3PartAlignments": false,
+        "allowChimeras": false,
         "readsLayout": "Opposite"
     },
     "rna-seq": {
@@ -332,6 +334,7 @@
         "relativeMinVScore": 0.7,
         "allowPartialAlignments": false,
         "allowNoCDR3PartAlignments": false,
+        "allowChimeras": false,
         "readsLayout": "Opposite"
     }
 }

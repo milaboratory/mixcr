@@ -40,7 +40,7 @@ import io.repseq.core.VDJCGene;
 import java.util.Arrays;
 
 @Serializable(by = IO.VDJCHitSerializer.class)
-public final class VDJCHit implements Comparable<VDJCHit> {
+public final class VDJCHit implements Comparable<VDJCHit>, HasGene {
     private final VDJCGene gene;
     private final Alignment<NucleotideSequence>[] alignments;
     private final GeneFeature alignedFeature;
@@ -90,6 +90,7 @@ public final class VDJCHit implements Comparable<VDJCHit> {
         return score;
     }
 
+    @Override
     public VDJCGene getGene() {
         return gene;
     }

@@ -177,7 +177,7 @@ public final class RunMiXCR {
         public String library = "default";
         public Chains chains = Chains.ALL;
         public String species = "hs";
-        public boolean isFunctionalOnly = true;
+        public boolean isFunctionalOnly = false;
         public int threads = Runtime.getRuntime().availableProcessors();
         public final SequenceReaderCloseable<? extends SequenceRead> reader;
         public final boolean isInputPaired;

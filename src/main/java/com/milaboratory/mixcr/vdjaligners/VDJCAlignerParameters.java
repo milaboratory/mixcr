@@ -56,7 +56,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
     protected int maxHits;
     protected float relativeMinVFR3CDR3Score;
     protected float relativeMinVScore;
-    protected boolean allowPartialAlignments, allowNoCDR3PartAlignments;
+    protected boolean allowPartialAlignments, allowNoCDR3PartAlignments, allowChimeras;
     protected PairedEndReadsLayout readsLayout;
     protected MergerParameters mergerParameters;
     protected boolean fixSeed;
@@ -75,6 +75,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
                                  @JsonProperty("relativeMinVFR3CDR3Score") float relativeMinVFR3CDR3Score,
                                  @JsonProperty("allowPartialAlignments") boolean allowPartialAlignments,
                                  @JsonProperty("allowNoCDR3PartAlignments") boolean allowNoCDR3PartAlignments,
+                                 @JsonProperty("allowChimeras") boolean allowChimeras,
                                  @JsonProperty("readsLayout") PairedEndReadsLayout readsLayout,
                                  @JsonProperty("mergerParameters") MergerParameters mergerParameters,
                                  @JsonProperty("fixSeed") boolean fixSeed) {
@@ -92,6 +93,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         this.relativeMinVFR3CDR3Score = relativeMinVFR3CDR3Score;
         this.allowPartialAlignments = allowPartialAlignments;
         this.allowNoCDR3PartAlignments = allowNoCDR3PartAlignments;
+        this.allowChimeras = allowChimeras;
         this.readsLayout = readsLayout;
         this.mergerParameters = mergerParameters;
         this.fixSeed = fixSeed;
@@ -142,6 +144,15 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
 
     public VDJCAlignerParameters setAllowPartialAlignments(boolean allowPartialAlignments) {
         this.allowPartialAlignments = allowPartialAlignments;
+        return this;
+    }
+
+    public boolean isAllowChimeras() {
+        return allowChimeras;
+    }
+
+    public VDJCAlignerParameters setAllowChimeras(boolean allowChimeras) {
+        this.allowChimeras = allowChimeras;
         return this;
     }
 
@@ -317,6 +328,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         if (Float.compare(that.relativeMinVScore, relativeMinVScore) != 0) return false;
         if (allowPartialAlignments != that.allowPartialAlignments) return false;
         if (allowNoCDR3PartAlignments != that.allowNoCDR3PartAlignments) return false;
+        if (allowChimeras != that.allowChimeras) return false;
         if (alignmentParameters != null ? !alignmentParameters.equals(that.alignmentParameters) : that.alignmentParameters != null)
             return false;
         if (vjAlignmentOrder != that.vjAlignmentOrder) return false;
@@ -337,6 +349,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         result = 31 * result + (relativeMinVScore != +0.0f ? Float.floatToIntBits(relativeMinVScore) : 0);
         result = 31 * result + (allowPartialAlignments ? 1 : 0);
         result = 31 * result + (allowNoCDR3PartAlignments ? 1 : 0);
+        result = 31 * result + (allowChimeras ? 1 : 0);
         result = 31 * result + (readsLayout != null ? readsLayout.hashCode() : 0);
         result = 31 * result + (mergerParameters != null ? mergerParameters.hashCode() : 0);
         result = 31 * result + (fixSeed ? 133 : -11);
@@ -348,6 +361,6 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         return new VDJCAlignerParameters(getVAlignerParameters(), getDAlignerParameters(), getJAlignerParameters(),
                 getCAlignerParameters(), vjAlignmentOrder, includeDScore, includeCScore, minSumScore, maxHits,
                 relativeMinVFR3CDR3Score, relativeMinVScore, allowPartialAlignments, allowNoCDR3PartAlignments,
-                readsLayout, mergerParameters, fixSeed);
+                allowChimeras, readsLayout, mergerParameters, fixSeed);
     }
 }

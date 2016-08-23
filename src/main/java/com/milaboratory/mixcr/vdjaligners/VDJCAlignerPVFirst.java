@@ -37,8 +37,10 @@ import com.milaboratory.core.alignment.batch.AlignmentResult;
 import com.milaboratory.core.io.sequence.PairedRead;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.basictypes.HasGene;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.util.BitArray;
 import io.repseq.core.*;
 
 import java.util.*;
@@ -425,19 +427,23 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                             continue;
                         int from = jAlignment == null ? 0 : jAlignment.getSequence2Range().getTo();
                         List<AlignmentHit<NucleotideSequence, VDJCGene>> temp = cAligner.align(target.targets[i].getSequence(), from,
-                                target.targets[i].size()).getHits();
+                                target.targets[i].size(),
+                                getFilter(GeneType.Constant, vHits, jHits))
+                                .getHits();
                         results[i] = temp.toArray(new AlignmentHit[temp.size()]);
                     }
                     calculated = true;
                 }
 
-                if (!calculated && bestVHit.get(0) != null) { // At least one V hit must be present in the first read
+                if (!calculated && bestVHit.get(0) != null && bestVHit.get(1) == null) { // At least one V hit must be present in the first read
 
                     // Searching for C gene in second read
 
                     List<AlignmentHit<NucleotideSequence, VDJCGene>> temp = cAligner.align(target.targets[1].getSequence(),
-                            bestVHit.get(1) == null ? 0 : bestVHit.get(1).getAlignment().getSequence2Range().getTo(),
-                            target.targets[1].size()).getHits();
+                            0, target.targets[1].size(),
+                            getFilter(GeneType.Constant, vHits))
+                            .getHits();
+
                     results[1] = temp.toArray(new AlignmentHit[temp.size()]);
                 }
 
@@ -450,15 +456,14 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
          * Preforms J alignment for a single read
          */
         AlignmentResult<AlignmentHit<NucleotideSequence, VDJCGene>> performJAlignment(int index) {
-            //if (index == 0 && bestVHits != null && bestVHits.get(1) != null)
-            //    return null;
-
-            AlignmentHit<NucleotideSequence, VDJCGene> vHit = vHits.length == 0 ? null : vHits[0].get(index); //bestVHits == null ? null : bestVHits.get(index);
+            AlignmentHit<NucleotideSequence, VDJCGene> vHit = vHits.length == 0 ? null : vHits[0].get(index);
 
             final NucleotideSequence targetSequence = target.targets[index].getSequence();
 
             if (vHit == null)
                 return parameters.getAllowPartialAlignments() ? jAligner.align(targetSequence) : null;
+
+            BitArray filterForJ = getFilter(GeneType.Joining, vHits);
 
             if (vHit.getAlignment().getSequence1Range().getTo() <=
                     vHit.getRecordPayload().getPartitioning().getRelativePosition(
@@ -469,7 +474,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
 
             return jAligner.align(targetSequence,
                     vHit.getAlignment().getSequence2Range().getTo(),
-                    targetSequence.size());
+                    targetSequence.size(), filterForJ);
         }
 
         /**
@@ -547,7 +552,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
      * Internal storage of paired hit. Combines information from two hits for right and left reads of a paired-end
      * read.
      */
-    static final class PairedHit {
+    static final class PairedHit implements HasGene {
         AlignmentHit<NucleotideSequence, VDJCGene> hit0, hit1;
         float sumScore = -1, vEndScore = -1;
 
@@ -612,7 +617,8 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         /**
          * Returns id of reference sequence
          */
-        VDJCGene getGene() {
+        @Override
+        public VDJCGene getGene() {
             assert hit0 == null || hit1 == null || hit0.getRecordPayload() == hit1.getRecordPayload();
             return hit0 == null ? hit1.getRecordPayload() : hit0.getRecordPayload();
         }
@@ -639,7 +645,6 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
             return new VDJCHit(gene, alignments,
                     aligner.getParameters().getFeatureToAlign(geneType));
         }
-
     }
 
     private static VDJCHit[] convert(PairedHit[] preHits,

@@ -28,31 +28,39 @@
  */
 package com.milaboratory.mixcr.vdjaligners;
 
+import cc.redberry.primitives.Filter;
 import com.milaboratory.core.alignment.batch.AlignmentHit;
-import com.milaboratory.core.alignment.batch.BatchAlignerWithBase;
+import com.milaboratory.core.alignment.batch.AlignmentResult;
+import com.milaboratory.core.alignment.batch.BatchAlignerWithBaseWithFilter;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.basictypes.HasGene;
+import com.milaboratory.util.BitArray;
+import io.repseq.core.Chains;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
 
+import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 
 public abstract class VDJCAlignerAbstract<R extends SequenceRead> extends VDJCAligner<R> {
     protected volatile SingleDAligner singleDAligner = null;
-    protected volatile BatchAlignerWithBase<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> vAligner = null;
-    protected volatile BatchAlignerWithBase<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> jAligner = null;
-    protected volatile BatchAlignerWithBase<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> cAligner = null;
+    protected volatile EnumMap<GeneType, HashMap<String, BitArray>> filters;
+    protected volatile BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> vAligner = null;
+    protected volatile BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> jAligner = null;
+    protected volatile BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> cAligner = null;
 
     public VDJCAlignerAbstract(VDJCAlignerParameters parameters) {
         super(parameters);
     }
 
     @SuppressWarnings("unchecked")
-    private BatchAlignerWithBase<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> createKAligner(GeneType geneType) {
+    private BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> createKAligner(GeneType geneType) {
         if (parameters.getVJCGeneAlignerParameters(geneType) != null &&
                 !genesToAlign.get(geneType).isEmpty()) {
-            BatchAlignerWithBase<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> aligner =
-                    (BatchAlignerWithBase) parameters.getVJCGeneAlignerParameters(geneType).getParameters().createAligner();
+            BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> aligner =
+                    (BatchAlignerWithBaseWithFilter) parameters.getVJCGeneAlignerParameters(geneType).getParameters().createAligner();
             for (VDJCGene a : genesToAlign.get(geneType))
                 aligner.addReference(a.getFeature(parameters.getVJCGeneAlignerParameters(geneType).getGeneFeatureToAlign()), a);
             return aligner;
@@ -60,14 +68,80 @@ public abstract class VDJCAlignerAbstract<R extends SequenceRead> extends VDJCAl
         return null;
     }
 
-    protected final BatchAlignerWithBase<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>>
-    getAligner(GeneType type) {
+    protected final BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene,
+            AlignmentHit<NucleotideSequence, VDJCGene>> getAligner(GeneType type) {
         switch (type) {
-            case Variable: return vAligner;
-            case Joining: return jAligner;
-            case Constant: return cAligner;
+            case Variable:
+                return vAligner;
+            case Joining:
+                return jAligner;
+            case Constant:
+                return cAligner;
         }
         return null;
+    }
+
+    protected BitArray getFilter(GeneType targetAlignerType,
+                                 AlignmentResult<? extends AlignmentHit<?, ? extends VDJCGene>> result) {
+        if (parameters.isAllowChimeras() || result == null || !result.hasHits())
+            return null;
+
+        Chains c = result.getHits().get(0).getRecordPayload().getChains();
+        for (int i = 1; i < result.getHits().size(); i++)
+            c = c.merge(result.getHits().get(i).getRecordPayload().getChains());
+
+        return getFilter(targetAlignerType, c);
+    }
+
+    protected BitArray getFilter(GeneType targetAlignerType,
+                                 AlignmentResult<? extends AlignmentHit<?, ? extends VDJCGene>> result1,
+                                 AlignmentResult<? extends AlignmentHit<?, ? extends VDJCGene>> result2) {
+        if (parameters.isAllowChimeras())
+            return null;
+
+        return mergeFilters(
+                getFilter(targetAlignerType, result1),
+                getFilter(targetAlignerType, result2));
+    }
+
+    protected BitArray getFilter(GeneType targetAlignerType, HasGene[] hits) {
+        if (parameters.isAllowChimeras() || hits == null || hits.length == 0)
+            return null;
+        Chains c = hits[0].getGene().getChains();
+        for (int i = 1; i < hits.length; i++)
+            c = c.merge(hits[i].getGene().getChains());
+        return getFilter(targetAlignerType, c);
+    }
+
+    protected BitArray getFilter(GeneType targetAlignerType, HasGene[] hits1, HasGene[] hits2) {
+        if (parameters.isAllowChimeras())
+            return null;
+
+        return mergeFilters(
+                getFilter(targetAlignerType, hits1),
+                getFilter(targetAlignerType, hits2));
+    }
+
+    protected BitArray mergeFilters(BitArray filter1, BitArray filter2) {
+        if (filter1 == null)
+            return filter2;
+        if (filter2 == null)
+            return filter1;
+        filter1 = filter1.clone();
+        filter1.or(filter2);
+        return filter1;
+    }
+
+    private BitArray getFilter(GeneType targetAlignerType, Chains chains) {
+        BitArray ret = null;
+        for (String chain : chains)
+            if (ret == null)
+                ret = filters.get(targetAlignerType).get(chain);
+            else {
+                ret = ret.clone();
+                ret.or(filters.get(targetAlignerType).get(chain));
+            }
+        return ret;
     }
 
     @Override
@@ -80,5 +154,24 @@ public abstract class VDJCAlignerAbstract<R extends SequenceRead> extends VDJCAl
         vAligner = createKAligner(GeneType.Variable);
         jAligner = createKAligner(GeneType.Joining);
         cAligner = createKAligner(GeneType.Constant);
+
+        Chains chains = new Chains();
+        for (VDJCGene gene : getUsedGenes())
+            chains = chains.merge(gene.getChains());
+
+        filters = new EnumMap<>(GeneType.class);
+
+        for (GeneType geneType : GeneType.VJC_REFERENCE) {
+            HashMap<String, BitArray> f = new HashMap<>();
+            for (final String chain : chains) {
+                f.put(chain, getAligner(geneType).createFilter(new Filter<VDJCGene>() {
+                    @Override
+                    public boolean accept(VDJCGene object) {
+                        return object.getChains().contains(chain);
+                    }
+                }));
+            }
+            filters.put(geneType, f);
+        }
     }
 }
