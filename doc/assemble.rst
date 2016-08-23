@@ -185,7 +185,7 @@ smaller clone (``clone2``) if ``clone2.count < clone1.count * maximalPreClusteri
 denotes number of reads in corresponding clone)and ``clone2`` contain top V/J/C gene from ``clone1`` in
 it's corresponding gene list.
 
-The following paramenter control separation behaviour and pre-clusterization:
+The following parameter control separation behaviour and pre-clusterization:
 
 +---------------------------------------+---------------------------+------------------------------------------------------------+
 | Parameter                             | Default value             | Description                                                |
