@@ -225,7 +225,7 @@ Clustering strategy
 --------------------
 
 Parameters that control clustering procedure are placed in
-``cloneClusteringParameters`` parameters group:
+``cloneClusteringParameters`` parameters group which determines the rules for the frequency-based correction of PCR and sequencing errors:
 
 +---------------------------------------+---------------------------+------------------------------------------------------------+
 | Parameter                             | Default value             | Description                                                |
