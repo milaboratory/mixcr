@@ -146,7 +146,7 @@ Other global parameters are:
 |                                 |                 | contain at least one “bad” nucleotide.                                                   |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
 | ``qualityAggregationType``      |  ``Max``        | Algorithm used for aggregation of total clonal sequence quality during assembling        |
-|                                 |                 | of sequencing reads. Possible values:                                                     |
+|                                 |                 | of sequencing reads. Possible values:                                                    |
 |                                 |                 | ``Max`` (maximal quality across all reads for each position),                            |
 |                                 |                 | ``Min`` (minimal quality across all reads for each position),                            |
 |                                 |                 | ``Average`` (average quality across all reads for each position),                        |
@@ -164,7 +164,6 @@ Other global parameters are:
 |                                 |                 | Refers to further clustering strategy (see below). Does not refer to mapping of low      |
 |                                 |                 | quality sequencing reads described above.                                                |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
-
 
 
 
