@@ -133,34 +133,37 @@ Other global parameters are:
 +=================================+=================+==========================================================================================+
 | ``minimalClonalSequenceLength`` |  ``12``         | Minimal length of clonal sequence                                                        |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
-| ``qualityAggregationType``      |  ``Max``        | Algorithm used for aggregation of total clonal sequence quality. Possible values:        |
+| ``qualityAggregationType``      |  ``Max``        | Algorithm used for aggregation of total clonal sequence quality during assembling        |
+|                                 |                 | of  “good” sequencing reads (sequencing reads that do not contain “bad” nucleotides      |
+|                                 |                 | within the target gene region). Possible values:                                         |
 |                                 |                 | ``Max`` (maximal quality across all reads for each position),                            |
 |                                 |                 | ``Min`` (minimal quality across all reads for each position),                            |
 |                                 |                 | ``Average`` (average quality across all reads for each position),                        |
 |                                 |                 | ``MiniMax`` (all letters has the same quality which is the maximum of minimal quality of |
 |                                 |                 | clonal sequence in each read).                                                           |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
-| ``minimalQuality``              |  ``0``          | Minimal allowed quality of each nucleotide of aggregated clone. If at least one          | 
+| ``minimalQuality``              |  ``0``          | Minimal allowed quality of each nucleotide of aggregated clone. If at least one          |
 |                                 |                 | nucleotide in the aggregated clone has quality lower than ``minimalQuality``, this clone |
 |                                 |                 | will be dropped (remember that qualities of reads are aggregated according to selected   |
 |                                 |                 | aggregation strategy during core clonotypes assembly; see ``qualityAggregationType``).   |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
 | ``badQualityThreshold``         | ``20``          | Minimal value of sequencing quality score: nucleotides with lower quality are            |
-|                                 |                 | considered as "bad". If sequencing read contains at least one “bad” nucleotide within   |
-|                                 |                 | the target gene region, it will be deferred at initial assembling stage, for further |
-|                                 |                 |  processing by mapper.       |
+|                                 |                 | considered as "bad". If sequencing read contains at least one “bad” nucleotide within    |
+|                                 |                 | the target gene region, it will be deferred at initial assembling stage, for further     |
+|                                 |                 |  processing by mapper.                                                                   |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
 | ``maxBadPointsPercent``         | ``0.7``         | Maximal allowed percent of "bad" points in sequence: if sequence contains more than      |
-|                                 |                 | ``maxBadPointsPercent`` "bad" nucleotides, it will be completely dropped.                           |
-|                                 |                 | and will not be used for further processing by mapper. Sequences with the allowed   |
-|                                 |                 | percent of “bad” points will be mapped to the assembled core clonotypes.        |
-|                                 |                 | Set  ``-OmaxBadPointsPercent=0`` in order to completely drop all sequences that |
-|                                 |                 | contain at least one “bad” nucleotide. |
+|                                 |                 | ``maxBadPointsPercent`` "bad" nucleotides, it will be completely dropped.                |
+|                                 |                 | and will not be used for further processing by mapper. Sequences with the allowed        |
+|                                 |                 | percent of “bad” points will be mapped to the assembled core clonotypes.                 |
+|                                 |                 | Set  ``-OmaxBadPointsPercent=0`` in order to completely drop all sequences that          |
+|                                 |                 | contain at least one “bad” nucleotide.                                                   |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
 | ``addReadsCountOnClustering``   | ``false``       | Aggregate cluster counts when assembling final clones: if ``addReadsCountOnClustering``  |
-|                                 |                 | is ``true``, then all children clone counts will be added to the head clone; thus head   | 
+|                                 |                 | is ``true``, then all children clone counts will be added to the head clone; thus head   |
 |                                 |                 | clone count will be a total of its initial count and counts of all its children.         |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
+
 
 One can override these parameters in the following way:
 
