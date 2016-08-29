@@ -133,10 +133,10 @@ Other global parameters are:
 +=================================+=================+==========================================================================================+
 | ``minimalClonalSequenceLength`` |  ``12``         | Minimal length of clonal sequence                                                        |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
-| ``badQualityThreshold``         | ``20``          | Minimal value of sequencing quality score: nucleotides with lower quality are            |
-|                                 |                 | considered as "bad". If sequencing read contains at least one “bad” nucleotide within    |
-|                                 |                 | the target gene region, it will be deferred at initial assembling stage, for further     |
-|                                 |                 |  processing by mapper.                                                                   |
+| ``badQualityThreshold``         | ``20``          | Minimal value of sequencing quality score: nucleotides with lower quality are considered |
+|                                 |                 | as "bad". If sequencing read contains at least one “bad” nucleotide within the target    |
+|                                 |                 | gene region, it will be deferred at initial assembling stage, for further processing     |
+|                                 |                 | by mapper.                                                                               |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
 | ``maxBadPointsPercent``         | ``0.7``         | Maximal allowed percent of "bad" points in sequence: if sequence contains more than      |
 |                                 |                 | ``maxBadPointsPercent`` "bad" nucleotides, it will be completely dropped.                |
@@ -165,6 +165,7 @@ Other global parameters are:
 |                                 |                 | Refers to further clustering strategy (see below). Does not refer to mapping of low      |
 |                                 |                 | quality sequencing reads described above.                                                |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
+
 
 
 
