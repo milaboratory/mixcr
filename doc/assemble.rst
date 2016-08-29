@@ -146,11 +146,16 @@ Other global parameters are:
 |                                 |                 | aggregation strategy during core clonotypes assembly; see ``qualityAggregationType``).   |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
 | ``badQualityThreshold``         | ``20``          | Minimal value of sequencing quality score: nucleotides with lower quality are            |
-|                                 |                 | considered as "bad". If sequence contains at least one "bad" nucleotide, it will be      |
-|                                 |                 | deferred at initial assembling stage, for further processing by mapper.                  |
+|                                 |                 | considered as "bad". If sequencing read contains at least one “bad” nucleotide within   |
+|                                 |                 | the target gene region, it will be deferred at initial assembling stage, for further |
+|                                 |                 |  processing by mapper.                                                         |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
 | ``maxBadPointsPercent``         | ``0.7``         | Maximal allowed percent of "bad" points in sequence: if sequence contains more than      |
-|                                 |                 | ``maxBadPointsPercent`` "bad" nucleotides, it will be dropped.                           |
+|                                 |                 | ``maxBadPointsPercent`` "bad" nucleotides, it will be completely dropped.                           |
+|                                 |                 | and will not be used for further processing by mapper. Sequences with the allowed   |
+|                                 |                 | percent of “bad” points will be mapped to the assembled core clonotypes.        |
+|                                 |                 | Set  ``-OmaxBadPointsPercent=0`` in order to completely drop all sequences that |
+|                                 |                 | contain at least one “bad” nucleotide. 
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
 | ``addReadsCountOnClustering``   | ``false``       | Aggregate cluster counts when assembling final clones: if ``addReadsCountOnClustering``  |
 |                                 |                 | is ``true``, then all children clone counts will be added to the head clone; thus head   | 
