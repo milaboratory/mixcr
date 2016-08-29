@@ -139,15 +139,14 @@ Other global parameters are:
 |                                 |                 | by mapper.                                                                               |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
 | ``maxBadPointsPercent``         | ``0.7``         | Maximal allowed percent of "bad" points in sequence: if sequence contains more than      |
-|                                 |                 | ``maxBadPointsPercent`` "bad" nucleotides, it will be completely dropped.                |
+|                                 |                 | ``maxBadPointsPercent`` "bad" nucleotides, it will be completely dropped                 |
 |                                 |                 | and will not be used for further processing by mapper. Sequences with the allowed        |
 |                                 |                 | percent of “bad” points will be mapped to the assembled core clonotypes.                 |
 |                                 |                 | Set ``-OmaxBadPointsPercent=0`` in order to completely drop all sequences that           |
 |                                 |                 | contain at least one “bad” nucleotide.                                                   |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
 | ``qualityAggregationType``      |  ``Max``        | Algorithm used for aggregation of total clonal sequence quality during assembling        |
-|                                 |                 | of  “good” sequencing reads (sequencing reads that do not contain “bad” nucleotides      |
-|                                 |                 | within the target gene region). Possible values:                                         |
+|                                 |                 | of sequencing reads. Possible values:                                                     |
 |                                 |                 | ``Max`` (maximal quality across all reads for each position),                            |
 |                                 |                 | ``Min`` (minimal quality across all reads for each position),                            |
 |                                 |                 | ``Average`` (average quality across all reads for each position),                        |
@@ -165,6 +164,7 @@ Other global parameters are:
 |                                 |                 | Refers to further clustering strategy (see below). Does not refer to mapping of low      |
 |                                 |                 | quality sequencing reads described above.                                                |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
+
 
 
 
