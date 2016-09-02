@@ -31,10 +31,15 @@ package com.milaboratory.mixcr.assembler;
 
 import com.milaboratory.primitivio.annotations.Serializable;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.util.Comparator;
 
 @Serializable(by = IO.ReadToCloneMappingSerializer.class)
 public final class ReadToCloneMapping {
+    public static final int RECORD_SIZE = 8 + 8 + 4 + 1;
+
     final long alignmentsId;
     final long readId;
     final int cloneIndex;
@@ -130,6 +135,29 @@ public final class ReadToCloneMapping {
         @Override
         public String toString() {
             return super.toString().toLowerCase();
+        }
+    }
+
+    public static void write(DataOutput output, ReadToCloneMapping object) {
+        try {
+            output.writeLong(object.alignmentsId);
+            output.writeLong(object.readId);
+            output.writeInt(object.cloneIndex);
+            output.writeByte(object.mappingType);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static ReadToCloneMapping read(DataInput input) {
+        try {
+            long alignmentsIndex = input.readLong();
+            long readId = input.readLong();
+            int cloneIndex = input.readInt();
+            byte mappingType = input.readByte();
+            return new ReadToCloneMapping(alignmentsIndex, readId, cloneIndex, mappingType);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

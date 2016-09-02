@@ -51,12 +51,12 @@ public final class IO {
 
         @Override
         public void serialize(DataOutput out, ReadToCloneMapping value) throws IOException {
-            write0(out, value);
+            ReadToCloneMapping.write(out, value);
         }
 
         @Override
         public ReadToCloneMapping deserialize(DataInput in, int available) throws IOException {
-            return read0(in);
+            return ReadToCloneMapping.read(in);
         }
 
         @Override
@@ -78,14 +78,14 @@ public final class IO {
         @Override
         public void serialize(DataOutput out, int start, int end, Object[] keys) throws IOException {
             for (int i = start; i < end; ++i)
-                write0(out, (ReadToCloneMapping) keys[i]);
+                ReadToCloneMapping.write(out, (ReadToCloneMapping) keys[i]);
         }
 
         @Override
         public Object[] deserialize(DataInput in, int start, int end, int size) throws IOException {
             Object[] r = new Object[size];
             for (int i = start; i < end; ++i)
-                r[i] = read0(in);
+                r[i] = ReadToCloneMapping.read(in);
             return r;
         }
 
@@ -98,12 +98,12 @@ public final class IO {
     public static class ReadToCloneMappingSerializer implements Serializer<ReadToCloneMapping> {
         @Override
         public void write(PrimitivO output, ReadToCloneMapping object) {
-            write0(output, object);
+            ReadToCloneMapping.write(output, object);
         }
 
         @Override
         public ReadToCloneMapping read(PrimitivI input) {
-            return read0(input);
+            return ReadToCloneMapping.read(input);
         }
 
         @Override
@@ -114,29 +114,6 @@ public final class IO {
         @Override
         public boolean handlesReference() {
             return false;
-        }
-    }
-
-    private static void write0(DataOutput output, ReadToCloneMapping object) {
-        try {
-            output.writeLong(object.alignmentsId);
-            output.writeLong(object.readId);
-            output.writeInt(object.cloneIndex);
-            output.writeByte(object.mappingType);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static ReadToCloneMapping read0(DataInput input) {
-        try {
-            long alignmentsIndex = input.readLong();
-            long readId = input.readLong();
-            int cloneIndex = input.readInt();
-            byte mappingType = input.readByte();
-            return new ReadToCloneMapping(alignmentsIndex, readId, cloneIndex, mappingType);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 }
