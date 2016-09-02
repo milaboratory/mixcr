@@ -62,8 +62,8 @@ public class CloneClusteringStrategy implements ClusteringStrategy<CloneAccumula
                     if (--nMismatches < 0)
                         return false;
                     else continue out;
-        return parameters.getClusteringFilter().allow(currentMutations, cluster.getHead().count,
-                minorObject.count, cluster.getHead().getSequence())
+        return parameters.getClusteringFilter().allow(currentMutations, cluster.getHead().getCount(),
+                minorObject.getCount(), cluster.getHead().getSequence())
                 && cloneAssembler.extractSignature(cluster.getHead()).matchHits(
                 minorObject);
     }
@@ -80,6 +80,6 @@ public class CloneClusteringStrategy implements ClusteringStrategy<CloneAccumula
 
     @Override
     public int compare(CloneAccumulator o1, CloneAccumulator o2) {
-        return Long.compare(o1.count, o2.count);
+        return Long.compare(o1.getCount(), o2.getCount());
     }
 }

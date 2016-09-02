@@ -1,2 +1,3 @@
 Fix for C alignment now will be performed in R2 for only alignment with V gene in R1 (affects only `align` with `-OallowPartialAlignments=true`)
 Fix for wrong hits filtration in case of `-OallowPartialAlignments=true`
+minor: Additional fixes for reproducible results (internal rounding of `float` hit scores, additional reseeding of random seed in mapping).
