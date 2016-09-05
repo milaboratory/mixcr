@@ -34,6 +34,7 @@ import com.milaboratory.primitivio.annotations.Serializable;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Comparator;
 
 @Serializable(by = IO.ReadToCloneMappingSerializer.class)
@@ -159,6 +160,14 @@ public final class ReadToCloneMapping {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static ReadToCloneMapping read(ByteBuffer input) {
+        long alignmentsIndex = input.getLong();
+        long readId = input.getLong();
+        int cloneIndex = input.getInt();
+        byte mappingType = input.get();
+        return new ReadToCloneMapping(alignmentsIndex, readId, cloneIndex, mappingType);
     }
 
     public static final Comparator<ReadToCloneMapping>

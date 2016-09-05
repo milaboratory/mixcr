@@ -4,6 +4,7 @@ import cc.redberry.pipe.OutputPort;
 import com.milaboratory.mixcr.util.TempFileManager;
 
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.PriorityQueue;
 
@@ -15,49 +16,122 @@ import static com.milaboratory.mixcr.assembler.ReadToCloneMapping.*;
 public class AlignmentsToClonesMappingContainer implements AutoCloseable, Closeable {
     public static final int MAGIC = 0x95bf97e3;
 
-    final RandomAccessFile rnd;
+    final RandomAccessFile raf;
     final int cloneCount;
     final long alignmentCount;
     final long[] cloneOffsets;
+    final long lastOffset;
 
-    public AlignmentsToClonesMappingContainer(RandomAccessFile rnd, int cloneCount, long alignmentCount, long[] cloneOffsets) {
-        this.rnd = rnd;
+    public AlignmentsToClonesMappingContainer(RandomAccessFile raf, int cloneCount, long alignmentCount, long[] cloneOffsets, long lastOffset) {
+        this.raf = raf;
         this.cloneCount = cloneCount;
         this.alignmentCount = alignmentCount;
         this.cloneOffsets = cloneOffsets;
+        this.lastOffset = lastOffset;
     }
 
     @Override
     public void close() throws IOException {
-        rnd.close();
+        raf.close();
     }
 
-    public static AlignmentsToClonesMappingContainer readMapping(String fileName) throws IOException {
-        RandomAccessFile file = new RandomAccessFile(fileName, "r");
-        final int magic = file.readInt();
+    public int getCloneCount() {
+        return cloneCount;
+    }
+
+    public long getAlignmentCount() {
+        return alignmentCount;
+    }
+
+    public OutputPort<ReadToCloneMapping> createPortForClone(int cloneId) {
+        long nextOffset = (cloneId == cloneOffsets.length - 1) ?
+                lastOffset : cloneOffsets[cloneId + 1];
+        return new OP(cloneOffsets[cloneId], (nextOffset - cloneOffsets[cloneId]) / RECORD_SIZE);
+    }
+
+    public OutputPort<ReadToCloneMapping> createPortByAlignments() {
+        return new OP(4, alignmentCount);
+    }
+
+    public static AlignmentsToClonesMappingContainer open(String fileName) throws IOException {
+        return open(new File(fileName));
+    }
+
+    public static AlignmentsToClonesMappingContainer open(File file) throws IOException {
+        RandomAccessFile raf = new RandomAccessFile(file, "r");
+
+        // Checking magic bytes
+        final int magic = raf.readInt();
         if (magic != MAGIC) {
-            file.close();
-            throw new RuntimeException("Wrong magic.");
+            raf.close();
+            throw new RuntimeException("Wrong file format.");
         }
-        final long fileSize = file.length();
+        final long fileSize = raf.length();
 
-        file.seek(fileSize - 4 - 8);
-        final int cloneCount = file.readInt();
-        final long alignmentCount = file.readLong();
+        // Reading cloneCount and alignmentCount in the footer of the file
+        raf.seek(fileSize - 4 - 8);
+        final int cloneCount = raf.readInt();
+        final long alignmentCount = raf.readLong();
 
-        file.seek(fileSize - 4 - 8 - cloneCount * 4);
+        final long lastOffset = fileSize - 4 - 8 - cloneCount * 8;
+        raf.seek(lastOffset);
         final long[] cloneOffsets = new long[cloneCount];
         for (int i = 0; i < cloneCount; i++)
-            cloneOffsets[i] = file.readLong();
+            cloneOffsets[i] = raf.readLong();
 
-        return new AlignmentsToClonesMappingContainer(file, cloneCount, alignmentCount, cloneOffsets);
+        return new AlignmentsToClonesMappingContainer(raf, cloneCount, alignmentCount, cloneOffsets, lastOffset);
     }
 
+    public static final int MAX_BUFFER_SIZE_RECORDS = 65536; // <~ 1.4Mb
+
+    public final class OP implements OutputPort<ReadToCloneMapping> {
+        private final long offset;
+        private final long limit;
+        private long pointer = 0;
+        //private boolean bufferEmpty;
+        //private ByteBuffer buffer = null;
+        private final ByteBuffer buffer;
+
+        public OP(long offset, long limit) {
+            this.offset = offset;
+            this.limit = limit;
+            this.buffer = ByteBuffer.allocate((int) Math.min(MAX_BUFFER_SIZE_RECORDS, limit) * RECORD_SIZE);
+            readMore();
+        }
+
+        private void readMore() {
+            try {
+                int chunkSize = (int) Math.min(MAX_BUFFER_SIZE_RECORDS, limit - pointer) * RECORD_SIZE;
+                buffer.clear();
+                buffer.limit(chunkSize);
+                int read = raf.getChannel().read(buffer, offset + pointer * RECORD_SIZE);
+                assert read == chunkSize;
+                buffer.flip();
+            } catch (IOException e) {
+                throw new RuntimeException();
+            }
+        }
+
+        @Override
+        public synchronized ReadToCloneMapping take() {
+            if (pointer == limit)
+                return null;
+
+            if (!buffer.hasRemaining())
+                readMore();
+
+            ReadToCloneMapping record = ReadToCloneMapping.read(buffer);
+
+            ++pointer;
+
+            return record;
+        }
+    }
 
     public static void writeMapping(final OutputPort<ReadToCloneMapping> mappingPort,
                                     final int cloneCount,
                                     final DataOutput output,
-                                    final int chunkSize) throws IOException {
+                                    final int sortingChunkSize) throws IOException {
         // Writing 4 magic bytes
         output.writeInt(MAGIC);
 
@@ -70,10 +144,10 @@ public class AlignmentsToClonesMappingContainer implements AutoCloseable, Closea
         // Saving number of records for each clone
         final long[] cloneOffsets = new long[cloneCount];
 
-        // Sorting blocks (chunkSize) of records by clone id (for "by clone id" index file section)
+        // Sorting blocks (sortingChunkSize) of records by clone id (for "by clone id" index file section)
         // Simultaneously writing records sorted "by alignment id"
         try (final DataOutputStream tempOutput = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(tempFile), 262144))) {
-            final ReadToCloneMapping[] buffer = new ReadToCloneMapping[chunkSize];
+            final ReadToCloneMapping[] buffer = new ReadToCloneMapping[sortingChunkSize];
             ReadToCloneMapping mapping;
             ReadToCloneMapping previous = null;
             int pointer = 0;
@@ -94,11 +168,11 @@ public class AlignmentsToClonesMappingContainer implements AutoCloseable, Closea
                 // Writing record to "by alignment id" section
                 ReadToCloneMapping.write(output, mapping);
 
-                // If we collected chunkSize records,
+                // If we collected sortingChunkSize records,
                 // sort by clone id, and write sorted block to temp file
-                if (pointer == chunkSize) {
+                if (pointer == sortingChunkSize) {
                     Arrays.sort(buffer, CLONE_COMPARATOR);
-                    for (int i = 0; i < chunkSize; ++i)
+                    for (int i = 0; i < sortingChunkSize; ++i)
                         ReadToCloneMapping.write(tempOutput, buffer[i]);
 
                     // Resetting pointer
@@ -121,7 +195,7 @@ public class AlignmentsToClonesMappingContainer implements AutoCloseable, Closea
         // Writing "by clone id" file section using merge-sort
 
         // Calculating number of chunks
-        final int nPivots = (int) ((alignmentsCount + chunkSize - 1) / chunkSize);
+        final int nPivots = (int) ((alignmentsCount + sortingChunkSize - 1) / sortingChunkSize);
 
         // Queue's head will always contain SortedBlock pointing to the least record (in terms of CLONE_COMPARATOR)
         final PriorityQueue<SortedBlockReader> blocks = new PriorityQueue<>();
@@ -131,7 +205,7 @@ public class AlignmentsToClonesMappingContainer implements AutoCloseable, Closea
         try {
             // Opening SortedBlocks and initiating reading
             for (int i = 0; i < nPivots; i++) {
-                final SortedBlockReader pivot = new SortedBlockReader(tempFile, i, chunkSize);
+                final SortedBlockReader pivot = new SortedBlockReader(tempFile, i, sortingChunkSize);
                 pivot.advance();
                 blocks.add(pivot);
             }
@@ -168,6 +242,9 @@ public class AlignmentsToClonesMappingContainer implements AutoCloseable, Closea
         // in "by clone id" index file section
         long cOffset = 4 + alignmentsCount * RECORD_SIZE; // Initial offset
         for (int i = 0; i < cloneCount; i++) {
+            // Checking that all clones appeared at least once in the stream
+            if (cloneOffsets[i] == 0)
+                throw new IllegalArgumentException();
             long p = cloneOffsets[i];
             cloneOffsets[i] = cOffset;
             cOffset += p * RECORD_SIZE;
