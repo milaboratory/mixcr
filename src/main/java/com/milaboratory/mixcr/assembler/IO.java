@@ -31,70 +31,11 @@ package com.milaboratory.mixcr.assembler;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.Serializer;
-import org.mapdb.BTreeKeySerializer;
-
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.Comparator;
 
 /**
  * Created by poslavsky on 13/08/14.
  */
 public final class IO {
-    public static final ReadToCloneMappingMapDBSerializer MAPDB_SERIALIZER = new ReadToCloneMappingMapDBSerializer();
-
-    public static final class ReadToCloneMappingMapDBSerializer implements
-            org.mapdb.Serializer<ReadToCloneMapping>, Serializable {
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        public void serialize(DataOutput out, ReadToCloneMapping value) throws IOException {
-            ReadToCloneMapping.write(out, value);
-        }
-
-        @Override
-        public ReadToCloneMapping deserialize(DataInput in, int available) throws IOException {
-            return ReadToCloneMapping.read(in);
-        }
-
-        @Override
-        public int fixedSize() {
-            return 21;
-        }
-    }
-
-    public static final class ReadToCloneMappingBtreeSerializer
-            extends BTreeKeySerializer<ReadToCloneMapping> implements Serializable {
-        private static final long serialVersionUID = 1L;
-
-        private final Comparator<ReadToCloneMapping> comparator;
-
-        public ReadToCloneMappingBtreeSerializer(Comparator<ReadToCloneMapping> comparator) {
-            this.comparator = comparator;
-        }
-
-        @Override
-        public void serialize(DataOutput out, int start, int end, Object[] keys) throws IOException {
-            for (int i = start; i < end; ++i)
-                ReadToCloneMapping.write(out, (ReadToCloneMapping) keys[i]);
-        }
-
-        @Override
-        public Object[] deserialize(DataInput in, int start, int end, int size) throws IOException {
-            Object[] r = new Object[size];
-            for (int i = start; i < end; ++i)
-                r[i] = ReadToCloneMapping.read(in);
-            return r;
-        }
-
-        @Override
-        public Comparator<ReadToCloneMapping> getComparator() {
-            return comparator;
-        }
-    }
-
     public static class ReadToCloneMappingSerializer implements Serializer<ReadToCloneMapping> {
         @Override
         public void write(PrimitivO output, ReadToCloneMapping object) {

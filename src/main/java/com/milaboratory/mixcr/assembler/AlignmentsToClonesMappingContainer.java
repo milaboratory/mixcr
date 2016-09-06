@@ -49,6 +49,10 @@ public class AlignmentsToClonesMappingContainer implements AutoCloseable, Closea
         return new OP(cloneOffsets[cloneId], (nextOffset - cloneOffsets[cloneId]) / RECORD_SIZE);
     }
 
+    public OutputPort<ReadToCloneMapping> createPortByClones() {
+        return new OP(4 + alignmentCount * RECORD_SIZE, alignmentCount);
+    }
+
     public OutputPort<ReadToCloneMapping> createPortByAlignments() {
         return new OP(4, alignmentCount);
     }
@@ -125,6 +129,22 @@ public class AlignmentsToClonesMappingContainer implements AutoCloseable, Closea
             ++pointer;
 
             return record;
+        }
+    }
+
+    public static final int DEFAULT_SORTING_CHUNK_SIZE = 2097152;
+
+    public static void writeMapping(final OutputPort<ReadToCloneMapping> mappingPort,
+                                    final int cloneCount,
+                                    final String fileName) throws IOException {
+        writeMapping(mappingPort, cloneCount, new File(fileName));
+    }
+
+    public static void writeMapping(final OutputPort<ReadToCloneMapping> mappingPort,
+                                    final int cloneCount,
+                                    final File file) throws IOException {
+        try (DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(file)))) {
+            writeMapping(mappingPort, cloneCount, dos, DEFAULT_SORTING_CHUNK_SIZE);
         }
     }
 
