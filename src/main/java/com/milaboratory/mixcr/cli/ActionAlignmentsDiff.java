@@ -130,9 +130,9 @@ public final class ActionAlignmentsDiff implements Action {
         @Parameter(names = {"-d2", "--diff-from-second"}, description = "output for alignments from the second file " +
                 "that are different from those alignments in the first file")
         public String diff2;
-        @Parameter(names = {"-g", "--gene-feature"}, description = "Gene feature to compare")
+        @Parameter(names = {"-g", "--gene-feature"}, description = "Specifies a gene feature to compare")
         public String geneFeatureToMatch = "CDR3";
-        @Parameter(names = {"-l", "--top-hits-level"}, description = "Number of top hits to search for match")
+        @Parameter(names = {"-l", "--top-hits-level"}, description = "Number of top hits to search for a match")
         public int hitsCompareLevel = 1;
 
         GeneFeature getFeature() {

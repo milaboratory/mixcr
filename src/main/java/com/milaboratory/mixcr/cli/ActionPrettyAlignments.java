@@ -239,7 +239,7 @@ public class ActionPrettyAlignments implements Action {
         @Parameter(description = "input_file.vdjca [output.txt]", variableArity = true)
         public List<String> parameters = new ArrayList<>();
 
-        @Parameter(description = "Output only top",
+        @Parameter(description = "Output only top number of clones",
                 names = {"-t", "--top"})
         public Boolean onlyTop = null;
 
@@ -256,7 +256,7 @@ public class ActionPrettyAlignments implements Action {
                 names = {"-n", "--limit"})
         public Integer limitAfter = null;
 
-        @Parameter(description = "Filter export to specific loci (e.g. TRA or IGH).",
+        @Parameter(description = "Filter export to a specific protein chain gene (e.g. TRA or IGH).",
                 names = {"-l", "--filter-locus"})
         public String loci = "ALL";
 
@@ -264,19 +264,19 @@ public class ActionPrettyAlignments implements Action {
                 names = {"-s", "--skip"})
         public Integer skipAfter = null;
 
-        @Parameter(description = "Only output alignments where CDR3 contains given substring",
+        @Parameter(description = "Only output alignments where CDR3 contains a given substring",
                 names = {"-c", "--cdr3-contains"})
         public String cdr3Contains = null;
 
-        @Parameter(description = "Only output alignments where CDR3 exactly equals to given sequence",
+        @Parameter(description = "Only output alignments where CDR3 exactly equals to a given sequence",
                 names = {"-e", "--cdr3-equals"})
         public String cdr3Equals = null;
 
-        @Parameter(description = "Only output alignments which contains corresponding gene feature",
+        @Parameter(description = "Only output alignments which contain a corresponding gene feature",
                 names = {"-g", "--feature"})
         public String feature = null;
 
-        @Parameter(description = "Only output alignments where target read contains given substring",
+        @Parameter(description = "Only output alignments where target read contains a given substring",
                 names = {"-r", "--read-contains"})
         public String readContains = null;
 

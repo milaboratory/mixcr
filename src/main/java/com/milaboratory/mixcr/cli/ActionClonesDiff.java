@@ -112,7 +112,7 @@ public class ActionClonesDiff implements Action {
                     letter = 'c';
 
                 if (letter != 'X')
-                    error = "Error: clones with the same key in one of clonesets. Seems that clones were assembled " +
+                    error = "Error: clones with the same key present in one of the clonesets. Seems that clones were assembled " +
                             "using -OseparateBy" + Character.toUpperCase(letter) + "=true option, please add -" + letter + " option to this command.";
 
                 throw new ParameterException(error);
@@ -195,16 +195,16 @@ public class ActionClonesDiff implements Action {
         @Parameter(description = "input1.clns input2.clns [report]")
         public List<String> parameters = new ArrayList<>();
 
-        @Parameter(names = {"-v"}, description = "Use V gene in clones comparison (include it as clone key along " +
-                "with clonal sequence).")
+        @Parameter(names = {"-v"}, description = "Use V gene in clone comparison (include it as a clone key along " +
+                "with a clone sequence).")
         public Boolean v;
 
-        @Parameter(names = {"-j"}, description = "Use J gene in clones comparison (include it as clone key along " +
-                "with clonal sequence).")
+        @Parameter(names = {"-j"}, description = "Use J gene in clone comparison (include it as a clone key along " +
+                "with a clone sequence).")
         public Boolean j;
 
-        @Parameter(names = {"-c"}, description = "Use C gene in clones comparison (include it as clone key along " +
-                "with clonal sequence).")
+        @Parameter(names = {"-c"}, description = "Use C gene in clone comparison (include it as a clone key along " +
+                "with a clone sequence).")
         public Boolean c;
 
         public boolean useV() {

@@ -76,12 +76,12 @@ public class ActionExportReads implements Action {
                 }
 
                 if (sequecnes.length == 1 && (writer instanceof PairedFastqWriter)) {
-                    System.err.println("VDJCA file contain single-end reads, but two output files specified.");
+                    System.err.println("VDJCA file contains single-end reads, but two output files are specified.");
                     return;
                 }
 
                 if (sequecnes.length == 2 && (writer instanceof SingleFastqWriter)) {
-                    System.err.println("VDJCA file contain paired-end reads, but only one / no output file specified.");
+                    System.err.println("VDJCA file contains paired-end reads, but only one / no output file is specified.");
                     return;
                 }
 
@@ -153,7 +153,7 @@ public class ActionExportReads implements Action {
             if (parameters.size() == 3)
                 return new String[]{parameters.get(1), parameters.get(2)};
 
-            throw new ParameterException("Required parameters missed.");
+            throw new ParameterException("Required parameters missing.");
         }
 
         @Override

@@ -71,7 +71,7 @@ public final class ActionAssemblePartialAlignments implements Action {
         @Parameter(description = "input_file output_file")
         public List<String> parameters;
 
-        @DynamicParameter(names = "-O", description = "Overrides base values of parameters.")
+        @DynamicParameter(names = "-O", description = "Overrides default parameter values.")
         public Map<String, String> overrides = new HashMap<>();
 
         @Parameter(description = "Report file.",

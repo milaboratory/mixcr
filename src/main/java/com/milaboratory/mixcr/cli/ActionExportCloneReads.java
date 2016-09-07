@@ -212,7 +212,7 @@ public final class ActionExportCloneReads implements Action {
         @Override
         public void validate() {
             if (parameters.size() < 4)
-                throw new ParameterException("Required parameters missed.");
+                throw new ParameterException("Required parameters missing.");
             super.validate();
         }
     }
