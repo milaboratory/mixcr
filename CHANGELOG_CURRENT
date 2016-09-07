@@ -3,5 +3,6 @@ Fix for wrong hits filtration in case of `-OallowPartialAlignments=true`
 Alignment-to-clone index rewritten from scratch (see `-i` / `--index` option in `assemble`)
 MapDB dependency removed
 Fixes occasional NullPointerException during reading of alignemnt-clone index
-Fixes NPE with -descrR2 in exportAlignments
+Fixes NullPointerException with -descrR2 in exportAlignments
+Better wording for command options descriptions in built-in help (printed by `mixcr -h`)
 minor: Additional fixes for reproducibility of run-to-run results (internal rounding of `float` hit scores, additional reseeding of random seed in mapping).
