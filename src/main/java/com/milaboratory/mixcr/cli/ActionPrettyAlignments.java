@@ -104,10 +104,15 @@ public class ActionPrettyAlignments implements Action {
     public void outputCompact(PrintStream output, final VDJCAlignments alignments) {
         output.println(">>> Read id: " + alignments.getReadId());
         output.println();
-        final String[] descriptions = alignments.getDescriptions();
+        final String[] tDescriptions = alignments.getTargetDescriptions();
+        final String[] oDescriptions = alignments.getOriginalDescriptions();
         for (int i = 0; i < alignments.numberOfTargets(); i++) {
-            if (actionParameters.printDescriptions() && descriptions != null)
-                output.println(">>> Description: " + descriptions[i] + "\n");
+            if (actionParameters.printDescriptions()) {
+                if (tDescriptions != null)
+                    output.println(">>> Target Description: " + tDescriptions[i] + "\n");
+                if (oDescriptions != null && oDescriptions.length - 1 >= i)
+                    output.println(">>> Original Description: " + oDescriptions[i] + "\n");
+            }
 
             MultiAlignmentHelper targetAsMultiAlignment = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, i);
             if (targetAsMultiAlignment == null)

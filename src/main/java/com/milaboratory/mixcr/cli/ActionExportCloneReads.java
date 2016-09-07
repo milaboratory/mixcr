@@ -95,7 +95,7 @@ public final class ActionExportCloneReads implements Action {
                 if (writer == null)
                     writers.put(mapping.getCloneIndex(), writer = createWriter(vdjca.getOriginalSequences().length == 2,
                             createFileName(parameters.getOutputFileName(), mapping.getCloneIndex())));
-                writer.write(createRead(vdjca.getOriginalSequences(), vdjca.getDescriptions()));
+                writer.write(createRead(vdjca.getOriginalSequences(), vdjca.getOriginalDescriptions()));
             }
 
             for (SequenceWriter writer : writers.valueCollection())
@@ -127,7 +127,7 @@ public final class ActionExportCloneReads implements Action {
                 if (writer == null)
                     writer = createWriter(vdjca.getOriginalSequences().length == 2,
                             createFileName(parameters.getOutputFileName(), cloneId));
-                writer.write(createRead(vdjca.getOriginalSequences(), vdjca.getDescriptions()));
+                writer.write(createRead(vdjca.getOriginalSequences(), vdjca.getOriginalDescriptions()));
             }
             if (writer != null)
                 writer.close();

@@ -36,8 +36,9 @@ import java.util.EnumMap;
 
 @Serializable(by = IO.VDJCAlignmentsSerializer.class)
 public final class VDJCAlignments extends VDJCObject {
-    volatile String[] descriptions;
+    volatile String[] targetDescriptions;
     volatile NSequenceWithQuality[] originalSequences;
+    volatile String[] originalDescriptions;
     final long readId;
     private volatile long alignmentsIndex = -1;
 
@@ -45,7 +46,8 @@ public final class VDJCAlignments extends VDJCObject {
         super(alignments.hits, alignments.targets);
         this.readId = readId;
         this.alignmentsIndex = alignmentsIndex;
-        this.descriptions = alignments.descriptions;
+        this.targetDescriptions = alignments.targetDescriptions;
+        this.originalDescriptions = alignments.originalDescriptions;
     }
 
     public VDJCAlignments(long readId, EnumMap<GeneType, VDJCHit[]> hits, NSequenceWithQuality target) {
@@ -76,15 +78,26 @@ public final class VDJCAlignments extends VDJCObject {
         this.alignmentsIndex = alignmentsIndex;
     }
 
-    public void setDescriptions(String[] description) {
-        this.descriptions = description;
+    public void setOriginalDescriptions(String[] description) {
+        assert description == null || originalSequences == null || description.length == originalSequences.length;
+        this.originalDescriptions = description;
     }
 
-    public String[] getDescriptions() {
-        return descriptions;
+    public String[] getOriginalDescriptions() {
+        return originalDescriptions;
+    }
+
+    public void setTargetDescriptions(String[] description) {
+        assert description.length == targets.length;
+        this.targetDescriptions = description;
+    }
+
+    public String[] getTargetDescriptions() {
+        return targetDescriptions;
     }
 
     public void setOriginalSequences(NSequenceWithQuality[] originalSequences) {
+        assert originalDescriptions == null || originalSequences == null || originalDescriptions.length == originalSequences.length;
         this.originalSequences = originalSequences;
     }
 

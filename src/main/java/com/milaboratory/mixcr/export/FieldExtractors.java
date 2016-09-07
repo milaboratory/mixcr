@@ -375,7 +375,7 @@ public final class FieldExtractors {
                     "of the first read (only available if --save-description was used in align command)", "Description R1", "descrR1") {
                 @Override
                 protected String extract(VDJCAlignments object) {
-                    String[] ds = object.getDescriptions();
+                    String[] ds = object.getOriginalDescriptions();
                     if (ds == null || ds.length == 0)
                         throw new IllegalArgumentException("Error for option \'-descrR1\':\n" +
                                 "No description available for read: either re-run align action with --save-description option " +
@@ -388,7 +388,7 @@ public final class FieldExtractors {
                     "of the second read (only available if --save-description was used in align command)", "Description R2", "descrR2") {
                 @Override
                 protected String extract(VDJCAlignments object) {
-                    String[] ds = object.getDescriptions();
+                    String[] ds = object.getOriginalDescriptions();
                     if (ds == null || ds.length < 2)
                         throw new IllegalArgumentException("Error for option \'-descrR2\':\n" +
                                 "No description available for second read: either re-run align action with --save-description option " +

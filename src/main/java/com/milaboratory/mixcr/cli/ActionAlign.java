@@ -237,16 +237,16 @@ public class ActionAlign implements Action {
                     }
                 }
                 if (writer != null) {
-                    if (actionParameters.saveReadDescription || actionParameters.saveOriginalReads) {
-                        if (result.read.numberOfReads() == 2 && alignment.numberOfTargets() == 1
-                                && !actionParameters.saveOriginalReads) {
-                            assert alignment.getDescriptions() != null && alignment.getDescriptions().length == 1;
-                            alignment.getDescriptions()[0] += " = " + read.getRead(0).getDescription() + " + " + read.getRead(1).getDescription();
-                        } else
-                            alignment.setDescriptions(extractDescription(read));
-                    }
+                    if (actionParameters.saveReadDescription || actionParameters.saveOriginalReads)
+                        //if (result.read.numberOfReads() == 2 && alignment.numberOfTargets() == 1
+                        //        && !actionParameters.saveOriginalReads) {
+                        //    assert alignment.getTargetDescriptions() != null && alignment.getTargetDescriptions().length == 1;
+                        //    alignment.getTargetDescriptions()[0] += " = " + read.getRead(0).getDescription() + " + " + read.getRead(1).getDescription();
+                        //} else
+                        alignment.setOriginalDescriptions(extractDescriptions(read));
                     if (actionParameters.saveOriginalReads)
-                        alignment.setOriginalSequences(extractNSeqs(read));
+                        alignment.setOriginalSequences(extractSequences(read));
+
                     writer.write(alignment);
                 }
             }
@@ -259,14 +259,14 @@ public class ActionAlign implements Action {
                     helper.getCommandLineArguments(), actionParameters.report, report);
     }
 
-    public static String[] extractDescription(SequenceRead r) {
+    public static String[] extractDescriptions(SequenceRead r) {
         String[] descrs = new String[r.numberOfReads()];
         for (int i = 0; i < r.numberOfReads(); i++)
             descrs[i] = r.getRead(i).getDescription();
         return descrs;
     }
 
-    public static NSequenceWithQuality[] extractNSeqs(SequenceRead r) {
+    public static NSequenceWithQuality[] extractSequences(SequenceRead r) {
         NSequenceWithQuality[] seqs = new NSequenceWithQuality[r.numberOfReads()];
         for (int i = 0; i < r.numberOfReads(); i++)
             seqs[i] = r.getRead(i).getData();

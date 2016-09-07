@@ -120,8 +120,8 @@ public final class RunMiXCR {
             }))) {
                 if (t.alignment != null) {
                     t.alignment.setAlignmentsIndex(ind++);
-                    t.alignment.setDescriptions(ActionAlign.extractDescription(t.read));
-                    t.alignment.setOriginalSequences(ActionAlign.extractNSeqs(t.read));
+                    t.alignment.setOriginalDescriptions(ActionAlign.extractDescriptions(t.read));
+                    t.alignment.setOriginalSequences(ActionAlign.extractSequences(t.read));
                     als.add(t.alignment);
                 }
             }

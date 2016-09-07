@@ -3,7 +3,6 @@ package com.milaboratory.mixcr.util;
 import cc.redberry.pipe.CUtils;
 import com.milaboratory.core.io.sequence.PairedRead;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
-import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.cli.ActionAlign;
 import com.milaboratory.mixcr.reference.GeneType;
@@ -68,7 +67,7 @@ public class RunMiXCRTest {
                 PairedRead actual = reads.get((int) alignment.getReadId());
                 ++tr;
 
-                Assert.assertArrayEquals(ActionAlign.extractNSeqs(actual), alignment.getOriginalSequences());
+                Assert.assertArrayEquals(ActionAlign.extractSequences(actual), alignment.getOriginalSequences());
             }
 
             System.out.println(tr);
@@ -105,7 +104,7 @@ public class RunMiXCRTest {
                 PairedRead actual = reads.get((int) alignment.getReadId());
                 ++tr;
 
-                Assert.assertArrayEquals(ActionAlign.extractNSeqs(actual), alignment.getOriginalSequences());
+                Assert.assertArrayEquals(ActionAlign.extractSequences(actual), alignment.getOriginalSequences());
             }
 
             System.out.println(tr);

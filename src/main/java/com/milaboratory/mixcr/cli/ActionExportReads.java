@@ -86,7 +86,7 @@ public class ActionExportReads implements Action {
                 }
 
                 // Extracting original read descriptions
-                String[] descriptions = alignments.getDescriptions();
+                String[] descriptions = alignments.getOriginalDescriptions();
                 if (descriptions == null || descriptions.length != sequecnes.length) {
                     descriptions = sequecnes.length == 1 ?
                             new String[]{"R" + id} :

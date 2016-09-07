@@ -40,9 +40,6 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-/**
- * Created by dbolotin on 29/12/15.
- */
 public class BackwardCompatibilityTests {
     @Test
     public void testAlignments() throws Exception {
@@ -50,6 +47,7 @@ public class BackwardCompatibilityTests {
         assertGoodVDJCA("/backward_compatibility/test_16.vdjca.gz", 76);
         assertGoodVDJCA("/backward_compatibility/test_17.vdjca.gz", 75);
         assertGoodVDJCA("/backward_compatibility/test_18.vdjca.gz", 76);
+        assertGoodVDJCA("/backward_compatibility/test_183.vdjca.gz", 76);
     }
 
     public static void assertGoodVDJCA(String resource, int size) throws IOException {

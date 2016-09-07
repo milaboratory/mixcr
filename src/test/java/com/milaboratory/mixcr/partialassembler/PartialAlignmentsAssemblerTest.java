@@ -44,8 +44,8 @@ public class PartialAlignmentsAssemblerTest {
 
     static void printAlignment(VDJCAlignments alignments) {
         for (int i = 0; i < alignments.numberOfTargets(); i++) {
-            if (alignments.getDescriptions() != null)
-                System.out.println(">>> Description: " + alignments.getDescriptions()[i] + "\n");
+            if (alignments.getTargetDescriptions() != null)
+                System.out.println(">>> Description: " + alignments.getTargetDescriptions()[i] + "\n");
 
             MultiAlignmentHelper targetAsMultiAlignment = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, i);
             if (targetAsMultiAlignment == null)

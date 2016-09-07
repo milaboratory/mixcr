@@ -135,7 +135,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
             String[] descriptions = new String[mRead.numberOfReads()];
             for (int i = 0; i < mRead.numberOfReads(); i++)
                 descriptions[i] = mRead.getRead(i).getDescription();
-            al.setDescriptions(descriptions);
+            al.setTargetDescriptions(descriptions);
             totalWritten.incrementAndGet();
             writer.write(al);
         }
