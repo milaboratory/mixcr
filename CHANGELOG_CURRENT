@@ -1,3 +1,7 @@
-Fix for C alignment now will be performed in R2 for only alignment with V gene in R1 (affects only `align` with `-OallowPartialAlignments=true`)
+Fix for C alignment now will be performed in R2 only for alignments with V gene in R1 (affects only `align` with `-OallowPartialAlignments=true`)
 Fix for wrong hits filtration in case of `-OallowPartialAlignments=true`
-minor: Additional fixes for reproducible results (internal rounding of `float` hit scores, additional reseeding of random seed in mapping).
+Alignment-to-clone index rewritten from scratch (see `-i` / `--index` option in `assemble`)
+MapDB dependency removed
+Fixes occasional NullPointerException during reading of alignemnt-clone index
+Fixes NPE with -descrR2 in exportAlignments
+minor: Additional fixes for reproducibility of run-to-run results (internal rounding of `float` hit scores, additional reseeding of random seed in mapping).
