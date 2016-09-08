@@ -88,7 +88,7 @@ public final class VDJCAlignments extends VDJCObject {
     }
 
     public void setTargetDescriptions(String[] description) {
-        assert description.length == targets.length;
+        assert description == null || description.length == targets.length;
         this.targetDescriptions = description;
     }
 
