@@ -28,6 +28,7 @@
  */
 package com.milaboratory.mixcr.cli;
 
+import com.milaboratory.util.TimeUtils;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import io.repseq.core.Chains;
 
@@ -74,6 +75,15 @@ public final class Util {
         writeReport(input, output, commandLineArguments, reportFileName, reportWriter, -1);
     }
 
+    public static void writeReportToStdout(ReportWriter reportWriter, long milliseconds) {
+        ReportHelper helper = new ReportHelper(System.out);
+
+        if (milliseconds != -1)
+            helper.writeField("Analysis time", TimeUtils.nanoTimeToString(milliseconds * 1000_000));
+
+        reportWriter.writeReport(helper);
+    }
+
     public static void writeReport(String input, String output,
                                    String commandLineArguments,
                                    String reportFileName,
@@ -88,7 +98,7 @@ public final class Util {
                     .writeField("Output file", output);
 
             if (milliseconds != -1)
-                helper.writeField("Total timing (ms)", milliseconds);
+                helper.writeField("Analysis time", TimeUtils.nanoTimeToString(milliseconds * 1000_000));
 
             if (commandLineArguments != null)
                 helper.writeField("Command line arguments", commandLineArguments);

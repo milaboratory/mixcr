@@ -46,16 +46,20 @@ public class Main {
         String command = System.getProperty("mixcr.command", "java -jar mixcr.jar");
 
         Path cachePath = Paths.get(System.getProperty("user.home"), ".mixcr", "cache");
-        if (System.getProperty("allow.http") != null || System.getenv("MIXCR_ALLOW_HTTP") != null)
-            SequenceResolvers.initDefaultResolver(cachePath);
+        //if (System.getProperty("allow.http") != null || System.getenv("MIXCR_ALLOW_HTTP") != null)
+        //TODO add mechanism to deny http requests
+        SequenceResolvers.initDefaultResolver(cachePath);
 
         Path libraries = Paths.get(System.getProperty("user.home"), ".mixcr", "libraries");
+
         if (System.getProperty("library.path") != null)
             VDJCLibraryRegistry.getDefault().addPathResolver(System.getProperty("library.path"));
-        else if (System.getenv("MIXCR_LIBRARY_PATH") != null)
+
+        if (System.getenv("MIXCR_LIBRARY_PATH") != null)
             VDJCLibraryRegistry.getDefault().addPathResolver(System.getenv("MIXCR_LIBRARY_PATH"));
 
         VDJCLibraryRegistry.getDefault().addPathResolver(libraries);
+
         VDJCLibraryRegistry.getDefault().addPathResolver(".");
 
         // Setting up main helper
@@ -70,7 +74,6 @@ public class Main {
                 new ActionInfo(),
                 new ActionExportCloneReads(),
                 new VersionInfoAction(),
-                //new ActionImportSegments(),
                 new ActionAlignmentsDiff(),
                 new ActionAssemblePartialAlignments(),
                 new ActionExportReads(),

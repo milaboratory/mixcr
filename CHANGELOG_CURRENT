@@ -1,0 +1,7 @@
+New Json-based reference library format (see [RepSeq.IO](https://github.com/repseqio/repseqio))
+Completely reviewed V/D/J/C gene library (see [repository](https://github.com/repseqio/library))
+New simplified method to import IMGT library (see documentation)
+Removed: option `-u`/`--functional-only` in `align` action
+Run statistics now is printed to standard output additionaly to dedicated report file
+Many small fixes
+minor: execution time information added to report

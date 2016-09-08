@@ -41,7 +41,7 @@ public final class AlignerReport implements VDJCAlignerEventListener, ReportWrit
     private final VJAlignmentOrder order;
     private final AtomicLongArray fails = new AtomicLongArray(VDJCAlignmentFailCause.values().length);
     private final AtomicLong successes = new AtomicLong(0);
-    private final AtomicLong hasDifferentVJLoci = new AtomicLong(0);
+    private final AtomicLong differentVJLoci = new AtomicLong(0);
     private final AtomicLong alignedOverlap = new AtomicLong(0);
     private final AtomicLong nonAlignedOverlap = new AtomicLong(0);
 
@@ -96,7 +96,7 @@ public final class AlignerReport implements VDJCAlignerEventListener, ReportWrit
     }
 
     public void onAlignmentWithDifferentVJLoci() {
-        hasDifferentVJLoci.incrementAndGet();
+        differentVJLoci.incrementAndGet();
     }
 
     @Override
@@ -104,20 +104,19 @@ public final class AlignerReport implements VDJCAlignerEventListener, ReportWrit
         long total = getTotal();
         long success = successes.get();
         helper.writeField("Total sequencing reads", total);
-        helper.writeField("Successfully aligned reads", success);
-        helper.writePercentField("Successfully aligned, percent", success, total);
+        helper.writePercentAndAbsoluteField("Successfully aligned reads", success, total);
 
-        if (hasDifferentVJLoci.get() != 0)
-            helper.writePercentField("Alignment with different V and J immunological chain genes",
-                    hasDifferentVJLoci.get(), total);
+        if (differentVJLoci.get() != 0)
+            helper.writePercentAndAbsoluteField("Alignment with different V and J immunological chain genes",
+                    differentVJLoci.get(), total);
 
         for (VDJCAlignmentFailCause cause : VDJCAlignmentFailCause.values())
             if (fails.get(cause.ordinal()) != 0)
-                helper.writePercentField(cause.reportLine, fails.get(cause.ordinal()), total);
+                helper.writePercentAndAbsoluteField(cause.reportLine, fails.get(cause.ordinal()), total);
 
-        helper.writePercentField("Overlapped, percent", alignedOverlap.get() + nonAlignedOverlap.get(), total);
-        helper.writePercentField("Overlapped and aligned, percent", alignedOverlap.get(), total);
-        helper.writePercentField("Overlapped and not aligned, percent", nonAlignedOverlap.get(), total);
+        helper.writePercentAndAbsoluteField("Overlapped", alignedOverlap.get() + nonAlignedOverlap.get(), total);
+        helper.writePercentAndAbsoluteField("Overlapped and aligned", alignedOverlap.get(), total);
+        helper.writePercentAndAbsoluteField("Overlapped and not aligned", nonAlignedOverlap.get(), total);
     }
 
     public long getTotal() {

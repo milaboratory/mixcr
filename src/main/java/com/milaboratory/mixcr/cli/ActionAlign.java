@@ -79,16 +79,22 @@ public class ActionAlign implements Action {
     @Override
     @SuppressWarnings("unchecked")
     public void go(ActionHelper helper) throws Exception {
+        // Saving initial timestamp
+        long beginTimestamp = System.currentTimeMillis();
+
+        // Getting aligner parameters
         VDJCAlignerParameters alignerParameters = actionParameters.getAlignerParameters();
 
         if (!actionParameters.overrides.isEmpty()) {
+            // Perform parameters overriding
             alignerParameters = JsonOverrider.override(alignerParameters, VDJCAlignerParameters.class, actionParameters.overrides);
             if (alignerParameters == null)
                 throw new ProcessException("Failed to override some parameter.");
         }
 
+        // Creating aligner
         VDJCAligner aligner = VDJCAligner.createAligner(alignerParameters,
-                actionParameters.isInputPaired(), !actionParameters.noMerge);
+                actionParameters.isInputPaired(), !actionParameters.getNoMerge());
 
         // Detect if automatic featureToAlign correction is required
         int totalV = 0, totalVErrors = 0, hasVRegion = 0;
@@ -99,8 +105,6 @@ public class ActionAlign implements Action {
         VDJCLibrary library = VDJCLibraryRegistry.getDefault().getLibrary(actionParameters.library, actionParameters.species);
 
         for (VDJCGene gene : library.getGenes(actionParameters.getChains())) {
-            if (actionParameters.isFunctionalOnly() && !gene.isFunctional())
-                continue;
             if (gene.getGeneType() == GeneType.Variable)
                 totalV++;
             if (!alignerParameters.containsRequiredFeature(gene)) {
@@ -112,7 +116,7 @@ public class ActionAlign implements Action {
 
         // Performing V featureToAlign correction if needed
         if (totalVErrors > totalV * 0.9 && hasVRegion > totalVErrors * 0.8) {
-            System.err.println("WARNING: forcing -OvParameters.geneFeatureToAlign=" + GeneFeature.encode(correctingFeature) +
+            System.out.println("WARNING: forcing -OvParameters.geneFeatureToAlign=" + GeneFeature.encode(correctingFeature) +
                     " since current gene feature (" + GeneFeature.encode(alignerParameters.getVAlignerParameters().getGeneFeatureToAlign()) + ") is absent in " +
                     Util.PERCENT_FORMAT.format(100.0 * totalVErrors / totalV) + "% of V genes.");
             alignerParameters.getVAlignerParameters().setGeneFeatureToAlign(correctingFeature);
@@ -122,11 +126,9 @@ public class ActionAlign implements Action {
 
         int numberOfExcludedNFGenes = 0;
         for (VDJCGene gene : library.getGenes(actionParameters.getChains())) {
-            if (actionParameters.isFunctionalOnly() && !gene.isFunctional())
-                continue;
             if (!alignerParameters.containsRequiredFeature(gene)) {
                 if (params().printWarnings() && (gene.isFunctional() || params().printNonFunctionalWarnings())) {
-                    System.err.println("WARNING: " + (gene.isFunctional() ? "Functional gene" : "Gene") + " " + gene.getName() +
+                    System.out.println("WARNING: " + (gene.isFunctional() ? "Functional gene" : "Gene") + " " + gene.getName() +
                             " doesn't contain full " + GeneFeature.encode(alignerParameters
                             .getFeatureToAlign(gene.getGeneType())) + " (excluded)");
                     //warnings = true;
@@ -141,9 +143,6 @@ public class ActionAlign implements Action {
         if (numberOfExcludedNFGenes > 0 && !params().printNonFunctionalWarnings())
             System.out.println("WARNING: " + numberOfExcludedNFGenes + " non-functional genes excluded due to absent \"featureToAlign\".");
 
-        //if (warnings)
-        //    System.err.println("To turn off warnings use '-nw' option.");
-
         if (aligner.getVGenesToAlign().isEmpty())
             throw new ProcessException("No V genes to align. Aborting execution. See warnings for more info " +
                     "(turn warnings by adding -w option).");
@@ -152,9 +151,8 @@ public class ActionAlign implements Action {
             throw new ProcessException("No J genes to align. Aborting execution. See warnings for more info " +
                     "(turn warnings by adding -w option).");
 
-        AlignerReport report = actionParameters.report == null ? null : new AlignerReport(alignerParameters.getVJAlignmentOrder());
-        if (report != null)
-            aligner.setEventsListener(report);
+        AlignerReport report = new AlignerReport(alignerParameters.getVJAlignmentOrder());
+        aligner.setEventsListener(report);
 
         try (SequenceReaderCloseable<? extends SequenceRead> reader = actionParameters.createReader();
 
@@ -205,19 +203,14 @@ public class ActionAlign implements Action {
                         continue;
                     }
                 }
+
                 if (!alignment.hasSameVJLoci(1))
-                    if (report != null)
-                        report.onAlignmentWithDifferentVJLoci();
+                    report.onAlignmentWithDifferentVJLoci();
 
                 if (writer != null) {
-                    if (actionParameters.saveReadDescription || actionParameters.saveOriginalReads)
-                        //if (result.read.numberOfReads() == 2 && alignment.numberOfTargets() == 1
-                        //        && !actionParameters.saveOriginalReads) {
-                        //    assert alignment.getTargetDescriptions() != null && alignment.getTargetDescriptions().length == 1;
-                        //    alignment.getTargetDescriptions()[0] += " = " + read.getRead(0).getDescription() + " + " + read.getRead(1).getDescription();
-                        //} else
+                    if (actionParameters.getSaveReadDescription() || actionParameters.getSaveOriginalReads())
                         alignment.setOriginalDescriptions(extractDescriptions(read));
-                    if (actionParameters.saveOriginalReads)
+                    if (actionParameters.getSaveOriginalReads())
                         alignment.setOriginalSequences(extractSequences(read));
 
                     writer.write(alignment);
@@ -227,9 +220,13 @@ public class ActionAlign implements Action {
                 writer.setNumberOfProcessedReads(reader.getNumberOfReads());
         }
 
-        if (report != null)
+        long time = System.currentTimeMillis() - beginTimestamp;
+
+        Util.writeReportToStdout(report, time);
+
+        if (actionParameters.report != null)
             Util.writeReport(actionParameters.getInputForReport(), actionParameters.getOutputName(),
-                    helper.getCommandLineArguments(), actionParameters.report, report);
+                    helper.getCommandLineArguments(), actionParameters.report, report, time);
     }
 
     public static String[] extractDescriptions(SequenceRead r) {
@@ -284,7 +281,8 @@ public class ActionAlign implements Action {
                 names = {"-r", "--report"})
         public String report;
 
-        @Parameter(description = "Species (organism). Possible values: hs, HomoSapiens, musmusculus, mmu, hsa, etc..",
+        @Parameter(description = "Species (organism), as specified in library file or taxon id. " +
+                "Possible values: hs, HomoSapiens, musmusculus, mmu, hsa, 9606, 10090 etc..",
                 names = {"-s", "--species"})
         public String species = "hs";
 
@@ -301,26 +299,22 @@ public class ActionAlign implements Action {
                 names = {"-n", "--limit"}, validateWith = PositiveInteger.class)
         public long limit = 0;
 
-        @Parameter(description = "Use only functional genes.",
-                names = {"-u", "--functional-only"})
-        public Boolean functionalOnly = null;
-
         @Parameter(description = "Do not merge paired reads.",
                 names = {"-d", "--noMerge"})
-        public Boolean noMerge = false;
+        public Boolean noMerge;
 
         @Parameter(description = "Copy read(s) description line from .fastq or .fasta to .vdjca file (can then be " +
                 "exported with -descrR1 and -descrR2 options in exportAlignments action).",
                 names = {"-a", "--save-description"})
-        public Boolean saveReadDescription = false;
+        public Boolean saveReadDescription;
 
         @Parameter(description = "Write alignment results for all input reads (even if alignment has failed).",
                 names = {"-v", "--write-all"})
-        public Boolean writeAllResults = null;
+        public Boolean writeAllResults;
 
         @Parameter(description = "Copy original reads (sequences + qualities + descriptions) to .vdjca file.",
                 names = {"-g", "--save-reads"})
-        public Boolean saveOriginalReads = false;
+        public Boolean saveOriginalReads;
 
         @Parameter(description = "Write not aligned reads (R1).",
                 names = {"--not-aligned-R1"})
@@ -341,10 +335,6 @@ public class ActionAlign implements Action {
             return params;
         }
 
-        public boolean isFunctionalOnly() {
-            return functionalOnly != null && functionalOnly;
-        }
-
         public String getInputForReport() {
             StringBuilder builder = new StringBuilder();
             for (int i = 0; ; ++i) {
@@ -354,6 +344,18 @@ public class ActionAlign implements Action {
                 builder.append(',');
             }
             return builder.toString();
+        }
+
+        public Boolean getNoMerge() {
+            return noMerge != null && noMerge;
+        }
+
+        public Boolean getSaveReadDescription() {
+            return saveReadDescription != null && saveReadDescription;
+        }
+
+        public Boolean getSaveOriginalReads() {
+            return saveOriginalReads != null && saveOriginalReads;
         }
 
         public boolean printNonFunctionalWarnings() {
