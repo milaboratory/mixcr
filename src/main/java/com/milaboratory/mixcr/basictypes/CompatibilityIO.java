@@ -55,14 +55,61 @@ public final class CompatibilityIO {
     }
 
     public static void registerV6Serializers(SerializersManager manager) {
+        registerV7Serializers(manager);
         CompatibilityIOReference.registerV6Serializers(manager);
+    }
+
+    public static void registerV7Serializers(SerializersManager manager) {
+        manager.registerCustomSerializer(VDJCAlignments.class, new VDJCAlignmentsSerializerV7());
+    }
+
+    public static class VDJCAlignmentsSerializerV7 implements Serializer<VDJCAlignments> {
+        @Override
+        public void write(PrimitivO output, VDJCAlignments object) {
+            output.writeObject(object.targets);
+            output.writeObject(object.targetDescriptions);
+            output.writeObject(object.originalSequences);
+            output.writeByte(object.hits.size());
+            for (Map.Entry<GeneType, VDJCHit[]> entry : object.hits.entrySet()) {
+                output.writeObject(entry.getKey());
+                output.writeObject(entry.getValue());
+            }
+            output.writeLong(object.readId);
+        }
+
+        @Override
+        public VDJCAlignments read(PrimitivI input) {
+            NSequenceWithQuality[] targets = input.readObject(NSequenceWithQuality[].class);
+            String[] descriptions = input.readObject(String[].class);
+            NSequenceWithQuality[] originalSequences = input.readObject(NSequenceWithQuality[].class);
+            int size = input.readByte();
+            EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
+            for (int i = 0; i < size; i++) {
+                GeneType key = input.readObject(GeneType.class);
+                hits.put(key, input.readObject(VDJCHit[].class));
+            }
+            VDJCAlignments vdjcAlignments = new VDJCAlignments(input.readLong(), hits, targets);
+            vdjcAlignments.setTargetDescriptions(descriptions);
+            vdjcAlignments.setOriginalSequences(originalSequences);
+            return vdjcAlignments;
+        }
+
+        @Override
+        public boolean isReference() {
+            return true;
+        }
+
+        @Override
+        public boolean handlesReference() {
+            return false;
+        }
     }
 
     public static class VDJCAlignmentsSerializerV5 implements Serializer<VDJCAlignments> {
         @Override
         public void write(PrimitivO output, VDJCAlignments object) {
             output.writeObject(object.targets);
-            output.writeObject(object.descriptions);
+            output.writeObject(object.targetDescriptions);
             output.writeByte(object.hits.size());
             for (Map.Entry<GeneType, VDJCHit[]> entry : object.hits.entrySet()) {
                 output.writeObject(entry.getKey());
@@ -82,7 +129,7 @@ public final class CompatibilityIO {
                 hits.put(key, input.readObject(VDJCHit[].class));
             }
             VDJCAlignments vdjcAlignments = new VDJCAlignments(input.readLong(), hits, targets);
-            vdjcAlignments.setDescriptions(descriptions);
+            vdjcAlignments.setTargetDescriptions(descriptions);
             return vdjcAlignments;
         }
 

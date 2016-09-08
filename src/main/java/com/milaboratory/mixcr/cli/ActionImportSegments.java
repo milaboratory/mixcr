@@ -108,7 +108,7 @@ public class ActionImportSegments implements Action {
                 LociLibraryIOUtils.filterLociLibrary(outputFile.toFile(), filter);
             } else {
                 if (ll.getLocus(sl) != null) {
-                    System.err.println("Specified file (" + outputFile + ") already contain record for: " + sl + "; use -f to overwrite.");
+                    System.err.println("Specified file (" + outputFile + ") already contain a record for: " + sl + "; use -f to overwrite.");
                     return;
                 }
                 for (String commonName : commonNames) {
@@ -247,7 +247,7 @@ public class ActionImportSegments implements Action {
                 names = {"-l", "--locus"})
         public String locus;
 
-        @Parameter(description = "Species taxonID and it's common names (e.g. 9606:human:HomoSapiens:hsa)",
+        @Parameter(description = "Species taxonIDs and its common names (e.g. 9606:human:HomoSapiens:hsa)",
                 names = {"-s", "--species"})
         public String species;
 
@@ -310,13 +310,13 @@ public class ActionImportSegments implements Action {
         @Override
         public void validate() {
             if (v == null)
-                throw new ParameterException("Please specify file for V gene.");
+                throw new ParameterException("Please specify a file for V gene.");
 
             if (j == null)
-                throw new ParameterException("Please specify file for J gene.");
+                throw new ParameterException("Please specify a file for J gene.");
 
             if (locus == null)
-                throw new ParameterException("Please specify locus (e.g. \"-l TRB\").");
+                throw new ParameterException("Please specify a protein chain gene (e.g. \"-l TRB\").");
             if (Locus.fromId(locus) == null)
                 throw new ParameterException("Unrecognized locus: " + locus);
 

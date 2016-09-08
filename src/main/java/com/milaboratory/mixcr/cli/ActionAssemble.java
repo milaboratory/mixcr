@@ -50,21 +50,11 @@ import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PipeWriter;
 import com.milaboratory.util.SmartProgressReporter;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
-import org.mapdb.Pump;
 
 import java.io.File;
 import java.util.*;
 
-import static com.milaboratory.mixcr.assembler.ReadToCloneMapping.ALIGNMENTS_COMPARATOR;
-import static com.milaboratory.mixcr.assembler.ReadToCloneMapping.CLONE_COMPARATOR;
-
 public class ActionAssemble implements Action {
-    public static final String MAPDB_SORTED_BY_CLONE = "sortedByClone";
-    public static final String MAPDB_SORTED_BY_ALIGNMENT = "sortedByAlignment";
-    public static final int MAPDB_BUFFER = 50000;
-
     private final AssembleParameters actionParameters = new AssembleParameters();
 
     @Override
@@ -142,42 +132,9 @@ public class ActionAssemble implements Action {
                     CUtils.drain(assembler.getAssembledReadsPort(), writer);
                 }
 
-            if (actionParameters.readsToClonesMapping != null) {
-                File dbFile = new File(actionParameters.readsToClonesMapping);
-                if (dbFile.exists()) {
-                    dbFile.delete();
-                    dbFile = new File(actionParameters.readsToClonesMapping);
-                }
-
-                DB db = DBMaker.newFileDB(dbFile)
-                        .transactionDisable()
-                        .make();
-
-                //byClones
-                db.createTreeSet(MAPDB_SORTED_BY_CLONE)
-                        .pumpSource(Pump.sort(
-                                source(assembler.getAssembledReadsPort()),
-                                true, MAPDB_BUFFER,
-                                Collections.reverseOrder(CLONE_COMPARATOR),
-                                IO.MAPDB_SERIALIZER))
-                        .serializer(new IO.ReadToCloneMappingBtreeSerializer(CLONE_COMPARATOR))
-                        .comparator(CLONE_COMPARATOR)
-                        .make();
-
-                //byAlignments
-                db.createTreeSet(MAPDB_SORTED_BY_ALIGNMENT)
-                        .pumpSource(Pump.sort(
-                                source(assembler.getAssembledReadsPort()),
-                                true, MAPDB_BUFFER,
-                                Collections.reverseOrder(ALIGNMENTS_COMPARATOR),
-                                IO.MAPDB_SERIALIZER))
-                        .serializer(new IO.ReadToCloneMappingBtreeSerializer(ALIGNMENTS_COMPARATOR))
-                        .comparator(ALIGNMENTS_COMPARATOR)
-                        .make();
-
-                db.commit();
-                db.close();
-            }
+            if (actionParameters.readsToClonesMapping != null)
+                AlignmentsToClonesMappingContainer.writeMapping(assembler.getAssembledReadsPort(), cloneSet.size(),
+                        actionParameters.readsToClonesMapping);
         }
     }
 
@@ -201,8 +158,7 @@ public class ActionAssemble implements Action {
         return actionParameters;
     }
 
-    @Parameters(commandDescription = "Assemble clones",
-            optionPrefixes = "-")
+    @Parameters(commandDescription = "Assemble clones")
     public static final class AssembleParameters extends ActionParametersWithOutput {
         @Parameter(description = "input_file output_file")
         public List<String> parameters;
@@ -224,10 +180,10 @@ public class ActionAssemble implements Action {
         public String events;
 
         @Parameter(description = ".",
-                names = {"-i", "--index"}, hidden = true)
+                names = {"-i", "--index"})
         public String readsToClonesMapping;
 
-        @DynamicParameter(names = "-O", description = "Overrides base values of parameters.")
+        @DynamicParameter(names = "-O", description = "Overrides default parameter values.")
         private Map<String, String> overrides = new HashMap<>();
 
         public String getInputFileName() {

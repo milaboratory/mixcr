@@ -32,7 +32,7 @@
 
     <groupId>com.milaboratory</groupId>
     <artifactId>mixcr</artifactId>
-    <version>1.8.2</version>
+    <version>1.8.3</version>
     <packaging>jar</packaging>
     <name>MiXCR</name>
 
@@ -44,16 +44,10 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <milib.version>1.5-SNAPSHOT</milib.version>
+        <milib.version>1.5</milib.version>
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>org.mapdb</groupId>
-            <artifactId>mapdb</artifactId>
-            <version>1.0.8</version>
-        </dependency>
-
         <dependency>
             <groupId>com.milaboratory</groupId>
             <artifactId>milib</artifactId>

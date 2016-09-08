@@ -15,19 +15,16 @@ import com.milaboratory.core.io.sequence.fasta.FastaSequenceWriterWrapper;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
+import com.milaboratory.mixcr.assembler.AlignmentsToClonesMappingContainer;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.reference.LociLibraryManager;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
-import java.util.NavigableSet;
 
 /**
  * @author Dmitry Bolotin
@@ -53,46 +50,33 @@ public final class ActionExportCloneReads implements Action {
             throw new IllegalArgumentException(msg);
         }
 
-        DB db;
-        try {
-            db = DBMaker.newFileDB(new File(parameters.getMapDBFile()))
-                    .transactionDisable()
-                    .make();
-        } catch (Exception | Error e) {
-            final String msg = "Error: corrupted or malformed index file.";
-            throw new IllegalArgumentException(msg, e);
+        try (AlignmentsToClonesMappingContainer index = AlignmentsToClonesMappingContainer.open(parameters.getIndexFile())) {
+            int[] cloneIds = parameters.getCloneIds();
+            if (cloneIds.length == 1) //byClones
+                writeSingle(index, cloneIds[0]);
+            else
+                writeMany(index, cloneIds);
         }
-
-        int[] cloneIds = parameters.getCloneIds();
-        if (cloneIds.length == 1) {//byClones
-            NavigableSet<ReadToCloneMapping> byClones = db.getTreeSet(ActionAssemble.MAPDB_SORTED_BY_CLONE);
-            writeSingle(byClones, cloneIds[0]);
-        } else {
-            NavigableSet<ReadToCloneMapping> byAls = db.getTreeSet(ActionAssemble.MAPDB_SORTED_BY_ALIGNMENT);
-            writeMany(byAls, cloneIds);
-        }
-
-        db.close();
     }
 
     private boolean originalReadsPresent() throws IOException {
         try (VDJCAlignmentsReader reader
-                     = new VDJCAlignmentsReader(parameters.getVDJCAFile(), LociLibraryManager.getDefault())) {
+                     = new VDJCAlignmentsReader(parameters.getAlignmentsFile(), LociLibraryManager.getDefault())) {
             VDJCAlignments test = reader.take();
             return test == null || test.getOriginalSequences() != null;
         }
     }
 
-    public void writeMany(NavigableSet<ReadToCloneMapping> byAlignments, int[] clonIds)
+    public void writeMany(AlignmentsToClonesMappingContainer index, int[] cloneIds)
             throws Exception {
-        TIntObjectHashMap<SequenceWriter> writers = new TIntObjectHashMap<>(clonIds.length);
-        for (int cloneId : clonIds)
+        TIntObjectHashMap<SequenceWriter> writers = new TIntObjectHashMap<>(cloneIds.length);
+        for (int cloneId : cloneIds)
             writers.put(cloneId, null);
 
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getVDJCAFile(),
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getAlignmentsFile(),
                 LociLibraryManager.getDefault())) {
 
-            Iterator<ReadToCloneMapping> mappingIterator = byAlignments.iterator();
+            Iterator<ReadToCloneMapping> mappingIterator = CUtils.it(index.createPortByClones()).iterator();
             Iterator<VDJCAlignments> vdjcaIterator = new CUtils.OPIterator<>(reader);
 
             for (; mappingIterator.hasNext() && vdjcaIterator.hasNext(); ) {
@@ -111,7 +95,7 @@ public final class ActionExportCloneReads implements Action {
                 if (writer == null)
                     writers.put(mapping.getCloneIndex(), writer = createWriter(vdjca.getOriginalSequences().length == 2,
                             createFileName(parameters.getOutputFileName(), mapping.getCloneIndex())));
-                writer.write(createRead(vdjca.getOriginalSequences(), vdjca.getDescriptions()));
+                writer.write(createRead(vdjca.getOriginalSequences(), vdjca.getOriginalDescriptions()));
             }
 
             for (SequenceWriter writer : writers.valueCollection())
@@ -121,18 +105,11 @@ public final class ActionExportCloneReads implements Action {
     }
 
 
-    public void writeSingle(NavigableSet<ReadToCloneMapping> byClones, int cloneId)
+    public void writeSingle(AlignmentsToClonesMappingContainer index, int cloneId)
             throws Exception {
-        NavigableSet<ReadToCloneMapping> selected = byClones.subSet(
-                new ReadToCloneMapping(0, 0, cloneId, false, false, false, false), true,
-                new ReadToCloneMapping(Long.MAX_VALUE, 0, cloneId, false, false, false, false), true);
-
-        if (selected.isEmpty())
-            return;
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getVDJCAFile(),
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getAlignmentsFile(),
                 LociLibraryManager.getDefault())) {
-
-            Iterator<ReadToCloneMapping> mappingIterator = selected.iterator();
+            Iterator<ReadToCloneMapping> mappingIterator = CUtils.it(index.createPortForClone(cloneId)).iterator();
             Iterator<VDJCAlignments> vdjcaIterator = new CUtils.OPIterator<>(reader);
 
             SequenceWriter writer = null;
@@ -150,7 +127,7 @@ public final class ActionExportCloneReads implements Action {
                 if (writer == null)
                     writer = createWriter(vdjca.getOriginalSequences().length == 2,
                             createFileName(parameters.getOutputFileName(), cloneId));
-                writer.write(createRead(vdjca.getOriginalSequences(), vdjca.getDescriptions()));
+                writer.write(createRead(vdjca.getOriginalSequences(), vdjca.getOriginalDescriptions()));
             }
             if (writer != null)
                 writer.close();
@@ -213,11 +190,11 @@ public final class ActionExportCloneReads implements Action {
         @Parameter(description = "mappingFile vdjcaFile clone1 [clone2] [clone3] ... output")
         public List<String> parameters;
 
-        public String getMapDBFile() {
+        public String getIndexFile() {
             return parameters.get(0);
         }
 
-        public String getVDJCAFile() {
+        public String getAlignmentsFile() {
             return parameters.get(1);
         }
 
@@ -235,7 +212,7 @@ public final class ActionExportCloneReads implements Action {
         @Override
         public void validate() {
             if (parameters.size() < 4)
-                throw new ParameterException("Required parameters missed.");
+                throw new ParameterException("Required parameters missing.");
             super.validate();
         }
     }

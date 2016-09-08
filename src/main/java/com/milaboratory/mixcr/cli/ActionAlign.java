@@ -237,16 +237,16 @@ public class ActionAlign implements Action {
                     }
                 }
                 if (writer != null) {
-                    if (actionParameters.saveReadDescription || actionParameters.saveOriginalReads) {
-                        if (result.read.numberOfReads() == 2 && alignment.numberOfTargets() == 1
-                                && !actionParameters.saveOriginalReads) {
-                            assert alignment.getDescriptions() != null && alignment.getDescriptions().length == 1;
-                            alignment.getDescriptions()[0] += " = " + read.getRead(0).getDescription() + " + " + read.getRead(1).getDescription();
-                        } else
-                            alignment.setDescriptions(extractDescription(read));
-                    }
+                    if (actionParameters.saveReadDescription || actionParameters.saveOriginalReads)
+                        //if (result.read.numberOfReads() == 2 && alignment.numberOfTargets() == 1
+                        //        && !actionParameters.saveOriginalReads) {
+                        //    assert alignment.getTargetDescriptions() != null && alignment.getTargetDescriptions().length == 1;
+                        //    alignment.getTargetDescriptions()[0] += " = " + read.getRead(0).getDescription() + " + " + read.getRead(1).getDescription();
+                        //} else
+                        alignment.setOriginalDescriptions(extractDescriptions(read));
                     if (actionParameters.saveOriginalReads)
-                        alignment.setOriginalSequences(extractNSeqs(read));
+                        alignment.setOriginalSequences(extractSequences(read));
+
                     writer.write(alignment);
                 }
             }
@@ -259,14 +259,14 @@ public class ActionAlign implements Action {
                     helper.getCommandLineArguments(), actionParameters.report, report);
     }
 
-    public static String[] extractDescription(SequenceRead r) {
+    public static String[] extractDescriptions(SequenceRead r) {
         String[] descrs = new String[r.numberOfReads()];
         for (int i = 0; i < r.numberOfReads(); i++)
             descrs[i] = r.getRead(i).getDescription();
         return descrs;
     }
 
-    public static NSequenceWithQuality[] extractNSeqs(SequenceRead r) {
+    public static NSequenceWithQuality[] extractSequences(SequenceRead r) {
         NSequenceWithQuality[] seqs = new NSequenceWithQuality[r.numberOfReads()];
         for (int i = 0; i < r.numberOfReads(); i++)
             seqs[i] = r.getRead(i).getData();
@@ -289,10 +289,10 @@ public class ActionAlign implements Action {
         @Parameter(description = "input_file1 [input_file2] output_file.vdjca", variableArity = true)
         public List<String> parameters = new ArrayList<>();
 
-        @DynamicParameter(names = "-O", description = "Overrides base values of parameters.")
+        @DynamicParameter(names = "-O", description = "Overrides default parameter values.")
         public Map<String, String> overrides = new HashMap<>();
 
-        @Parameter(description = "Segment library to use",
+        @Parameter(description = "Specifies segments library for alignment",
                 names = {"-b", "--library"})
         public String ll = "mi";
 
@@ -316,7 +316,7 @@ public class ActionAlign implements Action {
                 names = {"-s", "--species"})
         public String species = "HomoSapiens";
 
-        @Parameter(description = "Immunological loci to align with separated by ','. Available loci: IGH, IGL, IGK, TRA, TRB, TRG, TRD.",
+        @Parameter(description = " Specifies protein chain gene(s) for alignment. If many, separate by comma ','. Available loci: IGH, IGL, IGK, TRA, TRB, TRG, TRD.",
                 names = {"-l", "--loci"})
         public String loci = "all";
 
@@ -336,12 +336,12 @@ public class ActionAlign implements Action {
                 names = {"-d", "--noMerge"})
         public Boolean noMerge = false;
 
-        @Parameter(description = "Copy read(s) description line from .fastq or .fasta to .vdjca file (can be then " +
+        @Parameter(description = "Copy read(s) description line from .fastq or .fasta to .vdjca file (can then be " +
                 "exported with -descrR1 and -descrR2 options in exportAlignments action).",
                 names = {"-a", "--save-description"})
         public Boolean saveReadDescription = false;
 
-        @Parameter(description = "Write alignment results for all input reads (even if alignment failed).",
+        @Parameter(description = "Write alignment results for all input reads (even if alignment has failed).",
                 names = {"-v", "--write-all"})
         public Boolean writeAllResults = null;
 
@@ -349,7 +349,7 @@ public class ActionAlign implements Action {
                 names = {"-g", "--save-reads"})
         public Boolean saveOriginalReads = false;
 
-        @Parameter(description = "Allow alignments with different loci of V and J hits.",
+        @Parameter(description = "Allow alignments with V hits from one chain and J hits from another.",
                 names = {"-i", "--diff-loci"})
         public Boolean allowDifferentVJLoci = false;
 

@@ -31,10 +31,16 @@ package com.milaboratory.mixcr.assembler;
 
 import com.milaboratory.primitivio.annotations.Serializable;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Comparator;
 
 @Serializable(by = IO.ReadToCloneMappingSerializer.class)
 public final class ReadToCloneMapping {
+    public static final int RECORD_SIZE = 8 + 8 + 4 + 1;
+
     final long alignmentsId;
     final long readId;
     final int cloneIndex;
@@ -101,6 +107,29 @@ public final class ReadToCloneMapping {
         return isDropped() ? "" : "" + alignmentsId + " -> " + cloneIndex + " " + (isPreClustered() ? "p" : "") + (isClustered() ? "c" : "") + (isMapped() ? "m" : "");
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ReadToCloneMapping that = (ReadToCloneMapping) o;
+
+        if (alignmentsId != that.alignmentsId) return false;
+        if (readId != that.readId) return false;
+        if (cloneIndex != that.cloneIndex) return false;
+        return mappingType == that.mappingType;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (alignmentsId ^ (alignmentsId >>> 32));
+        result = 31 * result + (int) (readId ^ (readId >>> 32));
+        result = 31 * result + cloneIndex;
+        result = 31 * result + (int) mappingType;
+        return result;
+    }
+
     public enum MappingType {
         Core, Clustered, Mapped, Dropped, DroppedWithClone, PreClustered;
 
@@ -108,6 +137,37 @@ public final class ReadToCloneMapping {
         public String toString() {
             return super.toString().toLowerCase();
         }
+    }
+
+    public static void write(DataOutput output, ReadToCloneMapping object) {
+        try {
+            output.writeLong(object.alignmentsId);
+            output.writeLong(object.readId);
+            output.writeInt(object.cloneIndex);
+            output.writeByte(object.mappingType);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static ReadToCloneMapping read(DataInput input) {
+        try {
+            long alignmentsIndex = input.readLong();
+            long readId = input.readLong();
+            int cloneIndex = input.readInt();
+            byte mappingType = input.readByte();
+            return new ReadToCloneMapping(alignmentsIndex, readId, cloneIndex, mappingType);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static ReadToCloneMapping read(ByteBuffer input) {
+        long alignmentsIndex = input.getLong();
+        long readId = input.getLong();
+        int cloneIndex = input.getInt();
+        byte mappingType = input.get();
+        return new ReadToCloneMapping(alignmentsIndex, readId, cloneIndex, mappingType);
     }
 
     public static final Comparator<ReadToCloneMapping>
@@ -123,8 +183,12 @@ public final class ReadToCloneMapping {
 
         @Override
         public int compare(ReadToCloneMapping o1, ReadToCloneMapping o2) {
-            int c = Integer.compare(o1.cloneIndex, o2.cloneIndex);
-            return c == 0 ? Long.compare(o1.alignmentsId, o2.alignmentsId) : c;
+            int c;
+            if ((c = Integer.compare(o1.cloneIndex, o2.cloneIndex)) != 0)
+                return c;
+            if ((c = Long.compare(o1.alignmentsId, o2.alignmentsId)) != 0)
+                return c;
+            return Byte.compare(o1.mappingType, o2.mappingType);
         }
 
         @Override
@@ -142,8 +206,12 @@ public final class ReadToCloneMapping {
 
         @Override
         public int compare(ReadToCloneMapping o1, ReadToCloneMapping o2) {
-            int c = Long.compare(o1.alignmentsId, o2.alignmentsId);
-            return c == 0 ? Integer.compare(o1.cloneIndex, o2.cloneIndex) : c;
+            int c;
+            if ((c = Long.compare(o1.alignmentsId, o2.alignmentsId)) != 0)
+                return c;
+            if ((c = Integer.compare(o1.cloneIndex, o2.cloneIndex)) != 0)
+                return c;
+            return Byte.compare(o1.mappingType, o2.mappingType);
         }
 
         @Override

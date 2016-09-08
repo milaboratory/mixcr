@@ -232,7 +232,7 @@ class CloneFactory {
         else
             hits.put(GeneType.Diversity, new VDJCHit[0]);
 
-        return new Clone(accumulator.getSequence().sequences, hits, assemblingFeatures, accumulator.count, id);
+        return new Clone(accumulator.getSequence().sequences, hits, assemblingFeatures, accumulator.getCount(), id);
     }
 
     private static boolean containsD(GeneFeature feature) {

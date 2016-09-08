@@ -103,4 +103,18 @@ public class IOTest {
             Assert.assertEquals(numberOfReads, reader.getNumberOfReads());
         }
     }
+
+    @Test
+    public void tesd() throws Exception {
+        CloneSet c1 = CloneSetIO.read("/Volumes/Data/Projects/MiLaboratory/tmp/mixcrBug6/clones_rep1.clns",
+                LociLibraryManager.getDefault().getLibrary("mi"));
+        CloneSet c2 = CloneSetIO.read("/Volumes/Data/Projects/MiLaboratory/tmp/mixcrBug6/clones_rep2.clns",
+                LociLibraryManager.getDefault().getLibrary("mi"));
+        for (VDJCHit vdjcHit : c1.get(0).getHits(GeneType.Variable)) {
+            System.out.println(vdjcHit);
+        }
+        for (VDJCHit vdjcHit : c2.get(0).getHits(GeneType.Variable)) {
+            System.out.println(vdjcHit);
+        }
+    }
 }

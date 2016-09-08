@@ -45,6 +45,7 @@ import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.reference.*;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.Factory;
+import com.milaboratory.util.HashFunctions;
 import com.milaboratory.util.RandomUtil;
 import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.map.hash.TIntIntHashMap;
@@ -189,8 +190,11 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             return false;
         deferredAlignmentsLogger = new AssemblerEventLogger();
         mappingTree = new SequenceTreeMap<>(NucleotideSequence.ALPHABET);
-        for (CloneAccumulatorContainer container : clones.values())
+        for (CloneAccumulatorContainer container : clones.values()) {
+            for (CloneAccumulator accumulator : container.accumulators.values())
+                accumulator.onBeforeMapping();
             mappingTree.createIfAbsent(container.getSequence().getConcatenated().getSequence(), LIST_FACTORY).add(container);
+        }
         return true;
     }
 
@@ -259,7 +263,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 public boolean execute(Cluster<CloneAccumulator> object) {
                     onClustered(head, object.getHead());
                     if (parameters.isAddReadsCountOnClustering())
-                        head.count += object.getHead().count;
+                        head.mergeCounts(object.getHead());
                     idMapping.put(object.getHead().getCloneIndex(), k);
                     return true;
                 }
@@ -396,6 +400,8 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         public void process(VDJCAlignments input) {
             final ClonalSequence clonalSequence = extractClonalSequence(input);
 
+            RandomUtil.reseedThreadLocal(HashFunctions.JenkinWang64shift(input.getReadId()));
+
             int badPoints = numberOfBadPoints(clonalSequence);
             int threshold = thresholdCalculator.getThreshold(badPoints);
 
@@ -421,7 +427,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                         else if (minMismatches < iterator.getMismatches())
                             break;
                         candidates.add(acc);
-                        count += acc.count;
+                        count += acc.getInitialCoreCount();
                     }
                 }
 
@@ -436,7 +442,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             count = (count == 1 ? 1 : RandomUtil.getThreadLocalRandomData().nextLong(1, count));
             CloneAccumulator accumulator = null;
             for (CloneAccumulator acc : candidates)
-                if ((count -= acc.count) <= 0)
+                if ((count -= acc.getInitialCoreCount()) <= 0)
                     accumulator = acc;
 
             assert accumulator != null;
@@ -561,13 +567,12 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
 
                 // Top V, J and C genes of the major clonotype
                 VJCSignature vjcSignature = extractSignature(accs[i]);
-                long countThreshold = (long) (accs[i].count * parameters.maximalPreClusteringRatio);
+                long countThreshold = (long) (accs[i].getCount() * parameters.maximalPreClusteringRatio);
                 for (int j = i + 1; j < accs.length; j++)
                     // Clustering j'th clone to i'th
-                    if (accs[j] != null && accs[j].count <= countThreshold &&
+                    if (accs[j] != null && accs[j].getCount() <= countThreshold &&
                             vjcSignature.matchHits(accs[j])) {
-                        accs[i].count += accs[j].count;
-                        accs[i].countMapped += accs[j].countMapped;
+                        accs[i].mergeCounts(accs[j]);
                         onPreClustered(accs[i], accs[j]);
                         preClustered.put(accs[j].getCloneIndex(), accs[i].getCloneIndex());
                         accs[j] = null;
@@ -748,7 +753,37 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     static final Comparator<CloneAccumulator> CLONE_ACCUMULATOR_COMPARATOR = new Comparator<CloneAccumulator>() {
         @Override
         public int compare(CloneAccumulator o1, CloneAccumulator o2) {
-            return Long.compare(o2.count, o1.count);
+            int c;
+
+            if ((c = Long.compare(o2.getCount(), o1.getCount())) != 0)
+                return c;
+
+            if ((c = compareByBestHists(o1, o2, GeneType.Variable)) != 0)
+                return c;
+
+            if ((c = compareByBestHists(o1, o2, GeneType.Joining)) != 0)
+                return c;
+
+            if ((c = compareByBestHists(o1, o2, GeneType.Constant)) != 0)
+                return c;
+
+            return 0;
         }
     };
+
+    public static int compareByBestHists(CloneAccumulator o1, CloneAccumulator o2, GeneType geneType) {
+        AlleleId a1 = o1.getBestAllele(geneType);
+        AlleleId a2 = o2.getBestAllele(geneType);
+
+        if (a1 == null && a2 == null)
+            return 0;
+
+        if (a1 == null)
+            return -1;
+
+        if (a2 == null)
+            return 1;
+
+        return a1.compareTo(a2);
+    }
 }

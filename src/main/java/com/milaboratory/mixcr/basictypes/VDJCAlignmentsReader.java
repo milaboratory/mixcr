@@ -45,9 +45,7 @@ import java.io.*;
 import java.util.List;
 import java.util.Objects;
 
-import static com.milaboratory.mixcr.basictypes.CompatibilityIO.registerV3Serializers;
-import static com.milaboratory.mixcr.basictypes.CompatibilityIO.registerV5Serializers;
-import static com.milaboratory.mixcr.basictypes.CompatibilityIO.registerV6Serializers;
+import static com.milaboratory.mixcr.basictypes.CompatibilityIO.*;
 import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.*;
 
 public final class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>, CanReportProgress {
@@ -130,6 +128,9 @@ public final class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlign
                 break;
             case MAGIC_V6:
                 registerV6Serializers(serializersManager);
+                break;
+            case MAGIC_V7:
+                registerV7Serializers(serializersManager);
                 break;
             case MAGIC:
                 break;
