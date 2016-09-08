@@ -108,7 +108,8 @@ public final class AlignerReport implements VDJCAlignerEventListener, ReportWrit
         helper.writePercentField("Successfully aligned, percent", success, total);
 
         if (hasDifferentVJLoci.get() != 0)
-            helper.writePercentField("Alignment with different V and J chains", hasDifferentVJLoci.get(), total);
+            helper.writePercentField("Alignment with different V and J immunological chain genes",
+                    hasDifferentVJLoci.get(), total);
 
         for (VDJCAlignmentFailCause cause : VDJCAlignmentFailCause.values())
             if (fails.get(cause.ordinal()) != 0)

@@ -48,8 +48,8 @@ import java.util.EnumMap;
 public final class CloneAccumulator {
     final EnumMap<GeneType, TObjectFloatHashMap<VDJCGeneId>> geneScores = new EnumMap<>(GeneType.class);
     private ClonalSequence sequence;
-    final QualityAggregator aggregator;
-    long count = 0, countMapped = 0;
+    private final QualityAggregator aggregator;
+    private long coreCount = 0, mappedCount = 0, initialCoreCount = -1;
     private volatile int cloneIndex = -1;
     final Range[] nRegions;
 
@@ -77,6 +77,27 @@ public final class CloneAccumulator {
         return;
     }
 
+    public void onBeforeMapping() {
+        initialCoreCount = coreCount;
+    }
+
+    public VDJCGeneId getBestGene(GeneType geneType) {
+        TObjectFloatHashMap<VDJCGeneId> scores = geneScores.get(geneType);
+        if (scores == null)
+            return null;
+        float maxScore = 0;
+        VDJCGeneId maxAllele = null;
+        TObjectFloatIterator<VDJCGeneId> iterator = scores.iterator();
+        while (iterator.hasNext()) {
+            iterator.advance();
+            if (maxAllele == null || maxScore < iterator.value()) {
+                maxAllele = iterator.key();
+                maxScore = iterator.value();
+            }
+        }
+        return maxAllele;
+    }
+
     public Range[] getNRegions() {
         return nRegions;
     }
@@ -91,16 +112,20 @@ public final class CloneAccumulator {
         return cloneIndex;
     }
 
+    public long getInitialCoreCount() {
+        return initialCoreCount;
+    }
+
     public long getCount() {
-        return count;
+        return coreCount + mappedCount;
     }
 
     public long getCoreCount() {
-        return count - countMapped;
+        return coreCount;
     }
 
     public long getMappedCount() {
-        return countMapped;
+        return mappedCount;
     }
 
     public void calculateScores(CloneFactoryParameters parameters) {
@@ -129,16 +154,20 @@ public final class CloneAccumulator {
                 if (maxScore > iterator.value())
                     iterator.remove();
                 else
-                    iterator.setValue(iterator.value() / (count - countMapped));
+                    iterator.setValue(Math.round(iterator.value() * 10f / coreCount) / 10f);
             }
         }
     }
 
-    public synchronized void accumulate(ClonalSequence data, VDJCAlignments alignment, boolean mapped) {
-        //Increment count
-        ++count;
+    public void mergeCounts(CloneAccumulator acc) {
+        coreCount += acc.coreCount;
+        mappedCount += acc.mappedCount;
+    }
 
-        if (!mapped) {
+    public synchronized void accumulate(ClonalSequence data, VDJCAlignments alignment, boolean mapped) {
+        if (!mapped) { // Core sequence accumulation
+            ++coreCount;
+
             // Accumulate information about V-D-J alignments only for strictly clustered reads
             // (only for core clonotypes members)
             float score;
@@ -159,7 +188,19 @@ public final class CloneAccumulator {
             }
 
             aggregator.aggregate(data.getConcatenated().getQuality());
-
-        } else ++countMapped;
+            //int pointer = 0;
+            //for (NSequenceWithQuality p : data) {
+            //    for (int i = 0; i < p.size(); ++i) {
+            //        final SequenceQuality q = p.getQuality();
+            //        if (quality[pointer] != MergerParameters.DEFAULT_MAX_QUALITY_VALUE)
+            //            if (quality[pointer] + q.value(i) > MergerParameters.DEFAULT_MAX_QUALITY_VALUE)
+            //                quality[pointer] = MergerParameters.DEFAULT_MAX_QUALITY_VALUE;
+            //            else
+            //                quality[pointer] += q.value(i);
+            //        ++pointer;
+            //    }
+            //}
+        } else // Mapped sequence accumulation
+            ++mappedCount;
     }
 }

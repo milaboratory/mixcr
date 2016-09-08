@@ -108,15 +108,16 @@ public final class ActionFilterAlignments implements Action {
         @Parameter(description = "input_file.vdjca output_file.vdjca", variableArity = true)
         public List<String> parameters = new ArrayList<>();
 
-        @Parameter(description = "Output only specific chains. Available chains: IGH, IGL, IGK, TRA, TRB, TRG, TRD, etc...",
+        @Parameter(description = "Specifies immunological protein chain gene for an alignment. If many, " +
+                "separated by ','. Available genes: IGH, IGL, IGK, TRA, TRB, TRG, TRD.",
                 names = {"-c", "--chains"})
         public String chains = "ALL";
 
-        @Parameter(description = "Include alignments that contain specified feature.",
+        @Parameter(description = "Include only those alignments that contain specified feature.",
                 names = {"-g", "--contains-feature"})
         public String containsFeature = null;
 
-        @Parameter(description = "Include alignments which CDR3 equals to specified sequence.",
+        @Parameter(description = "Include only those alignments which CDR3 equals to a specified sequence.",
                 names = {"-e", "--cdr3-equals"})
         public String cdr3Equals = null;
 

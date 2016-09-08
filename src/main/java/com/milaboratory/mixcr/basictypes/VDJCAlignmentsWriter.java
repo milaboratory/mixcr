@@ -43,8 +43,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
+    static final String MAGIC_V3 = "MiXCR.VDJC.V03";
+    static final String MAGIC_V4 = "MiXCR.VDJC.V04";
+    static final String MAGIC_V5 = "MiXCR.VDJC.V05";
+    static final String MAGIC_V6 = "MiXCR.VDJC.V06";
+    static final String MAGIC_V7 = "MiXCR.VDJC.V07";
     static final String MAGIC_V8 = "MiXCR.VDJC.V08";
-    static final String MAGIC = MAGIC_V8;
+    static final String MAGIC_V9 = "MiXCR.VDJC.V09";
+    static final String MAGIC = MAGIC_V9;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
     final PrimitivO output;

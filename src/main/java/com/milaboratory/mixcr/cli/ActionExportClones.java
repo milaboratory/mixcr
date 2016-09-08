@@ -164,7 +164,7 @@ public class ActionExportClones extends ActionExport {
     }
 
     public static class CloneExportParameters extends ActionExportParameters {
-        @Parameter(description = "Exclude clones with out-of-frame clonal sequences (fractions will be recalculated)",
+        @Parameter(description = "Exclude clones with out-of-frame clone sequences (fractions will be recalculated)",
                 names = {"-o", "--filter-out-of-frames"})
         public Boolean filterOutOfFrames = false;
 
@@ -172,7 +172,8 @@ public class ActionExportClones extends ActionExport {
                 names = {"-t", "--filter-stops"})
         public Boolean filterStops = false;
 
-        @Parameter(description = "Limit export to specific locus (e.g. TRA or IGH) (fractions will be recalculated)",
+
+        @Parameter(description = "Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)",
                 names = {"-c", "--filter-chains"})
         public String loci = "ALL";
 

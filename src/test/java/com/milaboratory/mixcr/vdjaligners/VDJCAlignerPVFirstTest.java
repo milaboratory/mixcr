@@ -71,7 +71,7 @@ public class VDJCAlignerPVFirstTest {
 
             VDJCAlignerPVFirst aligner = new VDJCAlignerPVFirst(parameters);
 
-            for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("mi", "hs").getGenes(Chains.IGH)) {
+            for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("default", "hs").getGenes(Chains.IGH)) {
                 if (parameters.containsRequiredFeature(gene))
                     aligner.addGene(gene);
             }

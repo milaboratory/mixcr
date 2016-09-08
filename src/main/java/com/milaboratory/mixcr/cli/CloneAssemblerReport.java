@@ -189,15 +189,15 @@ public final class CloneAssemblerReport implements CloneAssemblerListener, Repor
         long clusterizationBase = deferredAlignmentsMapped.get() + coreAlignments.get();
 
         helper.writeField("Final clonotype count", clonesCount)
-                .writeField("Average reads per clonotype", Util.PERCENT_FORMAT.format(1.0 * alignmentsInClones / clonesCount))
-                .writeField("Total reads used in clonotypes", alignmentsInClones)
+                .writeField("Average number of reads per clonotype", Util.PERCENT_FORMAT.format(1.0 * alignmentsInClones / clonesCount))
+                .writeField("Total number of reads used in clonotypes", alignmentsInClones)
                 .writePercentField("Reads used in clonotypes, percent of total", alignmentsInClones, totalReads)
-                .writePercentField("Clonal sequences analysed, percent of total", clusterizationBase, totalReads)
-                .writePercentField("Reads used as core, percent of used", coreAlignments.get(), clusterizationBase)
+                .writePercentField("Clone sequences analysed, percent of total", clusterizationBase, totalReads)
+                .writePercentField("Number of reads used as a core, percent of used", coreAlignments.get(), clusterizationBase)
                 .writePercentField("Mapped low quality reads, percent of used", deferredAlignmentsMapped.get(), clusterizationBase)
                 .writePercentField("Reads clustered in PCR error correction, percent of used", readsClustered.get(), clusterizationBase)
                 .writePercentField("Reads pre-clustered due to the similar VJC-lists, percent of used", readsPreClustered.get(), alignmentsInClones)
-                .writePercentField("Percent of reads dropped due to the lack of clonal sequence",
+                .writePercentField("Percent of reads dropped due to the lack of a clone sequence",
                         failedToExtractTarget.get(), totalReads)
                 .writePercentField("Percent of reads dropped due to low quality",
                         droppedAsLowQuality.get(), totalReads)

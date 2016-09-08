@@ -101,10 +101,15 @@ public class ActionPrettyAlignments implements Action {
     public void outputCompact(PrintStream output, final VDJCAlignments alignments) {
         output.println(">>> Read id: " + alignments.getReadId());
         output.println();
-        final String[] descriptions = alignments.getDescriptions();
+        final String[] tDescriptions = alignments.getTargetDescriptions();
+        final String[] oDescriptions = alignments.getOriginalDescriptions();
         for (int i = 0; i < alignments.numberOfTargets(); i++) {
-            if (actionParameters.printDescriptions() && descriptions != null)
-                output.println(">>> Description: " + descriptions[i] + "\n");
+            if (actionParameters.printDescriptions()) {
+                if (tDescriptions != null)
+                    output.println(">>> Target Description: " + tDescriptions[i] + "\n");
+                if (oDescriptions != null && oDescriptions.length - 1 >= i)
+                    output.println(">>> Original Description: " + oDescriptions[i] + "\n");
+            }
 
             MultiAlignmentHelper targetAsMultiAlignment = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, i);
             if (targetAsMultiAlignment == null)
@@ -231,7 +236,7 @@ public class ActionPrettyAlignments implements Action {
         @Parameter(description = "input_file.vdjca [output.txt]", variableArity = true)
         public List<String> parameters = new ArrayList<>();
 
-        @Parameter(description = "Output only top",
+        @Parameter(description = "Output only top number of clones",
                 names = {"-t", "--top"})
         public Boolean onlyTop = null;
 
@@ -248,7 +253,7 @@ public class ActionPrettyAlignments implements Action {
                 names = {"-n", "--limit"})
         public Integer limitAfter = null;
 
-        @Parameter(description = "Limit export to specific chains (e.g. TRA or IGH).",
+        @Parameter(description = "Filter export to a specific protein chain gene (e.g. TRA or IGH).",
                 names = {"-c", "--chains"})
         public String chain = "ALL";
 
@@ -260,11 +265,11 @@ public class ActionPrettyAlignments implements Action {
                 names = {"-e", "--cdr3-equals"})
         public String cdr3Equals = null;
 
-        @Parameter(description = "Only output alignments which contains corresponding gene feature",
+        @Parameter(description = "Only output alignments which contain a corresponding gene feature",
                 names = {"-g", "--feature"})
         public String feature = null;
 
-        @Parameter(description = "Only output alignments where target read contains given substring",
+        @Parameter(description = "Only output alignments where target read contains a given substring",
                 names = {"-r", "--read-contains"})
         public String readContains = null;
 

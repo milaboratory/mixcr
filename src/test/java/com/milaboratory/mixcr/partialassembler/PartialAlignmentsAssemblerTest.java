@@ -47,8 +47,8 @@ public class PartialAlignmentsAssemblerTest {
 
     static void printAlignment(VDJCAlignments alignments) {
         for (int i = 0; i < alignments.numberOfTargets(); i++) {
-            if (alignments.getDescriptions() != null)
-                System.out.println(">>> Description: " + alignments.getDescriptions()[i] + "\n");
+            if (alignments.getTargetDescriptions() != null)
+                System.out.println(">>> Description: " + alignments.getTargetDescriptions()[i] + "\n");
 
             MultiAlignmentHelper targetAsMultiAlignment = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, i);
             if (targetAsMultiAlignment == null)
@@ -300,7 +300,7 @@ public class PartialAlignmentsAssemblerTest {
         NucleotideSequence DJJunction = TestUtil.randomSequence(NucleotideSequence.ALPHABET, 3, 10);
 
         for (GeneType gt : GeneType.VDJC_REFERENCE) {
-            VDJCGene gene = VDJCLibraryRegistry.getDefault().getLibrary("mi", "hs").get(geneNames.get(gt));
+            VDJCGene gene = VDJCLibraryRegistry.getDefault().getLibrary("default", "hs").get(geneNames.get(gt));
             NucleotideSequence seq = gene.getFeature(defaultFeatures.getFeatureToAlign(gt));
 
             int[] cuts = null;

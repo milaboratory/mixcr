@@ -72,7 +72,7 @@ public class VDJCAlignerWithMergeTest {
 
             VDJCAlignerWithMerge aligner = new VDJCAlignerWithMerge(parameters);
 
-            for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("mi", "hs").getGenes(Chains.IGH)) {
+            for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("default", "hs").getGenes(Chains.IGH)) {
                 if (parameters.containsRequiredFeature(gene))
                     aligner.addGene(gene);
             }
