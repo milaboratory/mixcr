@@ -29,12 +29,17 @@
 package com.milaboratory.mixcr.util;
 
 import com.milaboratory.util.VersionInfo;
+import io.repseq.core.VDJCLibrary;
+import io.repseq.core.VDJCLibraryRegistry;
 
 public class VersionInfoProvider {
     private VersionInfoProvider() {
     }
 
     public static String getVersionString(OutputType outputType) {
+        VDJCLibraryRegistry reg = VDJCLibraryRegistry.createDefaultRegistry();
+        reg.loadAllLibraries("default");
+
         VersionInfo milib = VersionInfo.getVersionInfoForArtifact("milib");
         VersionInfo mixcr = VersionInfo.getVersionInfoForArtifact("mixcr");
 
@@ -59,6 +64,11 @@ public class VersionInfoProvider {
                 .append(" (rev=").append(milib.getRevision())
                 .append("; branch=").append(milib.getBranch())
                 .append(")");
+
+        builder.append("Built-in libraries:\n");
+
+        for (VDJCLibrary lib : reg.getLoadedLibraries())
+            builder.append(lib.getLibraryId()).append("\n");
 
         return builder.toString();
     }

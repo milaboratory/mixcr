@@ -84,7 +84,7 @@ public class Main {
         main.setVersionInfoCallback(new Runnable() {
             @Override
             public void run() {
-                System.err.println(
+                System.err.print(
                         VersionInfoProvider.getVersionString(
                                 VersionInfoProvider.OutputType.ToConsole));
             }
