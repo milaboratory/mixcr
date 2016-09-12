@@ -104,6 +104,8 @@ public class ActionAlign implements Action {
 
         VDJCLibrary library = VDJCLibraryRegistry.getDefault().getLibrary(actionParameters.library, actionParameters.species);
 
+        System.out.println("Reference library: " + library.getLibraryId());
+
         for (VDJCGene gene : library.getGenes(actionParameters.getChains())) {
             if (gene.getGeneType() == GeneType.Variable)
                 totalV++;

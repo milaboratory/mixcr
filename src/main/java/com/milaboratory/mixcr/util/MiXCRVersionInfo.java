@@ -37,12 +37,13 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 public final class MiXCRVersionInfo {
-    private final VersionInfo mixcr, milib;
+    private final VersionInfo mixcr, milib, repseqio;
     private final String builtInLibrary;
 
-    private MiXCRVersionInfo(VersionInfo mixcr, VersionInfo milib, String builtInLibrary) {
+    private MiXCRVersionInfo(VersionInfo mixcr, VersionInfo milib, VersionInfo repseqio, String builtInLibrary) {
         this.mixcr = mixcr;
         this.milib = milib;
+        this.repseqio = repseqio;
         this.builtInLibrary = builtInLibrary;
     }
 
@@ -60,7 +61,8 @@ public final class MiXCRVersionInfo {
                     }
                     VersionInfo mixcr = VersionInfo.getVersionInfoForArtifact("mixcr");
                     VersionInfo milib = VersionInfo.getVersionInfoForArtifact("milib");
-                    instance = new MiXCRVersionInfo(mixcr, milib, libName);
+                    VersionInfo repseqio = VersionInfo.getVersionInfoForArtifact("repseqio");
+                    instance = new MiXCRVersionInfo(mixcr, milib, repseqio, libName);
                 }
             }
         return instance;
@@ -92,15 +94,22 @@ public final class MiXCRVersionInfo {
                 .append(")")
                 .append(outputType.delimiter);
 
+        builder.append("RepSeq.IO v")
+                .append(repseqio.getVersion())
+                .append(" (rev=")
+                .append(repseqio.getRevision())
+                .append(")")
+                .append(outputType.delimiter);
+
         builder.append("MiLib v")
                 .append(milib.getVersion())
-                .append(" (rev=").append(milib.getRevision())
-                .append("; branch=").append(milib.getBranch())
+                .append(" (rev=")
+                .append(milib.getRevision())
                 .append(")")
                 .append(outputType.delimiter);
 
         if (!builtInLibrary.isEmpty())
-            builder.append("Built-in library: ")
+            builder.append("Built-in V/D/J/C library: ")
                     .append(builtInLibrary)
                     .append(outputType.delimiter);
 
