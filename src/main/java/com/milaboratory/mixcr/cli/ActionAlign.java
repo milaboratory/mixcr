@@ -107,6 +107,8 @@ public class ActionAlign implements Action {
         for (VDJCGene gene : library.getGenes(actionParameters.getChains())) {
             if (gene.getGeneType() == GeneType.Variable)
                 totalV++;
+            else
+                continue;
             if (!alignerParameters.containsRequiredFeature(gene)) {
                 totalVErrors++;
                 if (gene.getPartitioning().isAvailable(correctingFeature))
@@ -204,7 +206,7 @@ public class ActionAlign implements Action {
                     }
                 }
 
-                if (!alignment.isChimera())
+                if (alignment.isChimera())
                     report.onChimera();
 
                 if (writer != null) {

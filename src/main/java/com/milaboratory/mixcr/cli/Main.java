@@ -30,7 +30,7 @@ package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.cli.JCommanderBasedMain;
 import com.milaboratory.mixcr.util.TempFileManager;
-import com.milaboratory.mixcr.util.VersionInfoProvider;
+import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import io.repseq.core.VDJCLibraryRegistry;
 import io.repseq.seqbase.SequenceResolvers;
 
@@ -52,15 +52,15 @@ public class Main {
 
         Path libraries = Paths.get(System.getProperty("user.home"), ".mixcr", "libraries");
 
+        VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(".");
+
         if (System.getProperty("library.path") != null)
-            VDJCLibraryRegistry.getDefault().addPathResolver(System.getProperty("library.path"));
+            VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(System.getProperty("library.path"));
 
         if (System.getenv("MIXCR_LIBRARY_PATH") != null)
-            VDJCLibraryRegistry.getDefault().addPathResolver(System.getenv("MIXCR_LIBRARY_PATH"));
+            VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(System.getenv("MIXCR_LIBRARY_PATH"));
 
-        VDJCLibraryRegistry.getDefault().addPathResolver(libraries);
-
-        VDJCLibraryRegistry.getDefault().addPathResolver(".");
+        VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(libraries);
 
         // Setting up main helper
         JCommanderBasedMain main = new JCommanderBasedMain(command,
@@ -85,8 +85,8 @@ public class Main {
             @Override
             public void run() {
                 System.err.print(
-                        VersionInfoProvider.getVersionString(
-                                VersionInfoProvider.OutputType.ToConsole));
+                        MiXCRVersionInfo.get().getVersionString(
+                                MiXCRVersionInfo.OutputType.ToConsole));
                 System.err.println();
                 System.err.println("Library search path:");
                 for (VDJCLibraryRegistry.LibraryResolver resolvers : VDJCLibraryRegistry.getDefault()

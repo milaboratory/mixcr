@@ -29,20 +29,56 @@
 package com.milaboratory.mixcr.util;
 
 import com.milaboratory.util.VersionInfo;
-import io.repseq.core.VDJCLibrary;
 import io.repseq.core.VDJCLibraryRegistry;
+import org.apache.commons.io.IOUtils;
 
-public class VersionInfoProvider {
-    private VersionInfoProvider() {
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+
+public final class MiXCRVersionInfo {
+    private final VersionInfo mixcr, milib;
+    private final String builtInLibrary;
+
+    private MiXCRVersionInfo(VersionInfo mixcr, VersionInfo milib, String builtInLibrary) {
+        this.mixcr = mixcr;
+        this.milib = milib;
+        this.builtInLibrary = builtInLibrary;
     }
 
-    public static String getVersionString(OutputType outputType) {
-        VDJCLibraryRegistry reg = VDJCLibraryRegistry.createDefaultRegistry();
-        reg.loadAllLibraries("default");
+    private static volatile MiXCRVersionInfo instance = null;
 
-        VersionInfo mixcr = VersionInfo.getVersionInfoForArtifact("mixcr");
-        VersionInfo milib = VersionInfo.getVersionInfoForArtifact("milib");
+    public static MiXCRVersionInfo get() {
+        if (instance == null)
+            synchronized (MiXCRVersionInfo.class) {
+                if (instance == null) {
+                    String libName = "";
+                    try (InputStream stream = VDJCLibraryRegistry.class.getResourceAsStream("/libraries/default.alias")) {
+                        if (stream != null)
+                            libName = IOUtils.toString(stream, StandardCharsets.UTF_8);
+                    } catch (IOException e) {
+                    }
+                    VersionInfo mixcr = VersionInfo.getVersionInfoForArtifact("mixcr");
+                    VersionInfo milib = VersionInfo.getVersionInfoForArtifact("milib");
+                    instance = new MiXCRVersionInfo(mixcr, milib, libName);
+                }
+            }
+        return instance;
+    }
 
+    public String getShortestVersionString() {
+        String builder = mixcr.getVersion() +
+                "; built=" +
+                mixcr.getTimestamp() +
+                "; rev=" +
+                mixcr.getRevision() +
+                "; lib=" +
+                builtInLibrary;
+
+        return builder;
+    }
+
+    public String getVersionString(OutputType outputType) {
         StringBuilder builder = new StringBuilder();
 
         builder.append("MiXCR v")
@@ -61,14 +97,12 @@ public class VersionInfoProvider {
                 .append(" (rev=").append(milib.getRevision())
                 .append("; branch=").append(milib.getBranch())
                 .append(")")
-                .append(outputType.delimiter)
                 .append(outputType.delimiter);
 
-        builder.append("Built-in libraries:")
-                .append(outputType.delimiter);
-
-        for (VDJCLibrary lib : reg.getLoadedLibraries())
-            builder.append(lib.getLibraryId()).append(outputType.delimiter);
+        if (!builtInLibrary.isEmpty())
+            builder.append("Built-in library: ")
+                    .append(builtInLibrary)
+                    .append(outputType.delimiter);
 
         return builder.toString();
     }

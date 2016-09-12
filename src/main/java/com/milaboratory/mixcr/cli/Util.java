@@ -28,6 +28,7 @@
  */
 package com.milaboratory.mixcr.cli;
 
+import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.util.TimeUtils;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import io.repseq.core.Chains;
@@ -95,7 +96,8 @@ public final class Util {
             ReportHelper helper = new ReportHelper(outputStream);
             helper.writeField("Analysis Date", new Date())
                     .writeField("Input file(s)", input)
-                    .writeField("Output file", output);
+                    .writeField("Output file", output)
+                    .writeField("Version", MiXCRVersionInfo.get().getShortestVersionString());
 
             if (milliseconds != -1)
                 helper.writeField("Analysis time", TimeUtils.nanoTimeToString(milliseconds * 1000_000));

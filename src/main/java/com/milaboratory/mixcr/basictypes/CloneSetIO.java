@@ -28,7 +28,7 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
-import com.milaboratory.mixcr.util.VersionInfoProvider;
+import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.util.CanReportProgressAndStage;
@@ -91,8 +91,8 @@ public final class CloneSetIO {
 
             // Writing version information
             output.writeUTF(
-                    VersionInfoProvider.getVersionString(
-                            VersionInfoProvider.OutputType.ToFile));
+                    MiXCRVersionInfo.get().getVersionString(
+                            MiXCRVersionInfo.OutputType.ToFile));
 
             GeneFeature[] assemblingFeatures = cloneSet.getAssemblingFeatures();
             output.writeObject(assemblingFeatures);

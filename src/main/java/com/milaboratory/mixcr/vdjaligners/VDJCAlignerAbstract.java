@@ -174,12 +174,14 @@ public abstract class VDJCAlignerAbstract<R extends SequenceRead> extends VDJCAl
         for (GeneType geneType : GeneType.VJC_REFERENCE) {
             HashMap<String, BitArray> f = new HashMap<>();
             for (final String chain : chains) {
-                f.put(chain, getAligner(geneType).createFilter(new Filter<VDJCGene>() {
-                    @Override
-                    public boolean accept(VDJCGene object) {
-                        return object.getChains().contains(chain);
-                    }
-                }));
+                BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> aligner = getAligner(geneType);
+                if (aligner != null)
+                    f.put(chain, aligner.createFilter(new Filter<VDJCGene>() {
+                        @Override
+                        public boolean accept(VDJCGene object) {
+                            return object.getChains().contains(chain);
+                        }
+                    }));
             }
             filters.put(geneType, f);
         }
