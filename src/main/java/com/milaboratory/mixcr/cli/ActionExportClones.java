@@ -174,7 +174,7 @@ public class ActionExportClones extends ActionExport {
 
 
         @Parameter(description = "Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)",
-                names = {"-c", "--filter-chains"})
+                names = {"-c", "--chains"})
         public String loci = "ALL";
 
         @Parameter(description = "Filter clones by minimal clone fraction",
