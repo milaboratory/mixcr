@@ -40,11 +40,12 @@ The following table contains description of command line options for ``align``:
 | ``-r {file}`` |br|                  |                            | Report file name. If this option is not                    |
 | ``--report ...``                    |                            | specified, no report file be produced.                     |
 +-------------------------------------+----------------------------+------------------------------------------------------------+
-| ``-l {loci}`` |br|                  | ``ALL``                    | Target immunological loci list separated by "``,``".       |
-| ``--loci ...``                      |                            | Available values: ``IGH``, ``IGL``, ``IGK``, ``TRA``,      |
+| ``-с {chain}`` |br|                 | ``ALL``                    | Target immunological chain list separated by "``,``".      |
+| ``--chains ...``                    |                            | Available values: ``IGH``, ``IGL``, ``IGK``, ``TRA``,      |
 |                                     |                            | ``TRB``, ``TRG``, ``TRD``, ``IG`` (for all immunoglobulin  |
-|                                     |                            | loci), ``TCR`` (for all T-cell receptor loci), ``ALL``     |
-|                                     |                            | (for all loci) .                                           |
+|                                     |                            | chains), ``TCR`` (for all T-cell receptor chains), ``ALL`` |
+|                                     |                            | (for all chains) . It is highly recomended to use          |                   |                                     |                            | the default value for this parameter in most cases         |                   |                                     |                            | at the align step. Filltering is also possible at the      |
+|                                     |                            | export step.                                               |
 +-------------------------------------+----------------------------+------------------------------------------------------------+
 | ``-s {speciesName}`` |br|           | ``HomoSapiens``            | Species (organism). Possible values: ``hsa`` (or           |
 | ``--species ...``                   |                            | ``HomoSapiens``) and ``mmu`` (or ``MusMusculus``), or any  |
