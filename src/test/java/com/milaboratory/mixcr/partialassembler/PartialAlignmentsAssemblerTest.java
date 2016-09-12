@@ -8,6 +8,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceBuilder;
 import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.cli.Main;
 import com.milaboratory.mixcr.cli.ReportHelper;
 import com.milaboratory.mixcr.util.RunMiXCR;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
@@ -59,6 +60,15 @@ public class PartialAlignmentsAssemblerTest {
                 System.out.println();
             }
         }
+    }
+
+    @Test
+    public void ttt3() throws Exception {
+        Main.main("assemblePartial",
+                "-f",
+                "/Volumes/Data/Projects/MiLaboratory/tmp/mixcrBug7/" +
+                        "fed55b2d-2c04-4a5b-b714-38962c061f72.10M.V200.allowChimerasFalse.vdjca",
+                "/Volumes/Data/Projects/MiLaboratory/tmp/mixcrBug7/a.vdjca");
     }
 
     //@Test

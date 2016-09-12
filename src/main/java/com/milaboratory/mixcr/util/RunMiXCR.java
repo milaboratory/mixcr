@@ -96,7 +96,7 @@ public final class RunMiXCR {
                 aligner.addGene(gene);
             }
 
-        AlignerReport report = new AlignerReport(alignerParameters.getVJAlignmentOrder());
+        AlignerReport report = new AlignerReport();
         aligner.setEventsListener(report);
 
         try (SequenceReaderCloseable<? extends SequenceRead> reader = parameters.getReader()) {

@@ -64,13 +64,9 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
 
         // Main alignment logic
         for (PAlignmentHelper helper : helpers) {
-            if (helper.hasVHits()) {
+            if (helper.hasVHits())
                 // Sorting and filtering hits with low V-end (FR3, CDR3) score
                 helper.sortAndFilterBasedOnVEndScore();
-
-                // Calculating best V hits (basing on filtered list of V hits)
-                //helper.updateBestV();
-            }
 
             // Perform J alignments
             helper.performJAlignment();
@@ -456,6 +452,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
          * Preforms J alignment for a single read
          */
         AlignmentResult<AlignmentHit<NucleotideSequence, VDJCGene>> performJAlignment(int index) {
+            // Getting best V hit
             AlignmentHit<NucleotideSequence, VDJCGene> vHit = vHits.length == 0 ? null : vHits[0].get(index);
 
             final NucleotideSequence targetSequence = target.targets[index].getSequence();

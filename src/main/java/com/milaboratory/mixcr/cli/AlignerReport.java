@@ -32,21 +32,18 @@ import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerEventListener;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause;
-import com.milaboratory.mixcr.vdjaligners.VJAlignmentOrder;
 
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 
 public final class AlignerReport implements VDJCAlignerEventListener, ReportWriter {
-    private final VJAlignmentOrder order;
     private final AtomicLongArray fails = new AtomicLongArray(VDJCAlignmentFailCause.values().length);
     private final AtomicLong successes = new AtomicLong(0);
-    private final AtomicLong differentVJLoci = new AtomicLong(0);
+    private final AtomicLong chimeras = new AtomicLong(0);
     private final AtomicLong alignedOverlap = new AtomicLong(0);
     private final AtomicLong nonAlignedOverlap = new AtomicLong(0);
 
-    public AlignerReport(VJAlignmentOrder order) {
-        this.order = order;
+    public AlignerReport() {
     }
 
     public long getFails(VDJCAlignmentFailCause cause) {
@@ -95,8 +92,8 @@ public final class AlignerReport implements VDJCAlignerEventListener, ReportWrit
             alignedOverlap.incrementAndGet();
     }
 
-    public void onAlignmentWithDifferentVJLoci() {
-        differentVJLoci.incrementAndGet();
+    public void onChimera() {
+        chimeras.incrementAndGet();
     }
 
     @Override
@@ -106,9 +103,8 @@ public final class AlignerReport implements VDJCAlignerEventListener, ReportWrit
         helper.writeField("Total sequencing reads", total);
         helper.writePercentAndAbsoluteField("Successfully aligned reads", success, total);
 
-        if (differentVJLoci.get() != 0)
-            helper.writePercentAndAbsoluteField("Alignment with different V and J immunological chain genes",
-                    differentVJLoci.get(), total);
+        if (chimeras.get() != 0)
+            helper.writePercentAndAbsoluteField("Chimeras", chimeras.get(), total);
 
         for (VDJCAlignmentFailCause cause : VDJCAlignmentFailCause.values())
             if (fails.get(cause.ordinal()) != 0)

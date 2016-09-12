@@ -90,7 +90,7 @@ public abstract class VDJCAlignerAbstract<R extends SequenceRead> extends VDJCAl
         for (int i = 1; i < result.getHits().size(); i++)
             c = c.merge(result.getHits().get(i).getRecordPayload().getChains());
 
-        return getFilter(targetAlignerType, c);
+        return getFilter0(targetAlignerType, c);
     }
 
     protected BitArray getFilter(GeneType targetAlignerType,
@@ -110,7 +110,7 @@ public abstract class VDJCAlignerAbstract<R extends SequenceRead> extends VDJCAl
         Chains c = hits[0].getGene().getChains();
         for (int i = 1; i < hits.length; i++)
             c = c.merge(hits[i].getGene().getChains());
-        return getFilter(targetAlignerType, c);
+        return getFilter0(targetAlignerType, c);
     }
 
     protected BitArray getFilter(GeneType targetAlignerType, HasGene[] hits1, HasGene[] hits2) {
@@ -132,13 +132,23 @@ public abstract class VDJCAlignerAbstract<R extends SequenceRead> extends VDJCAl
         return filter1;
     }
 
-    private BitArray getFilter(GeneType targetAlignerType, Chains chains) {
+    protected BitArray getFilter(GeneType targetAlignerType, Chains chains) {
+        if (parameters.isAllowChimeras() || chains.equals(Chains.ALL))
+            return null;
+        return getFilter0(targetAlignerType, chains);
+    }
+
+    private BitArray getFilter0(GeneType targetAlignerType, Chains chains) {
         BitArray ret = null;
+        boolean cloned = false;
         for (String chain : chains)
             if (ret == null)
                 ret = filters.get(targetAlignerType).get(chain);
             else {
-                ret = ret.clone();
+                if (!cloned) {
+                    ret = ret.clone();
+                    cloned = true;
+                }
                 ret.or(filters.get(targetAlignerType).get(chain));
             }
         return ret;

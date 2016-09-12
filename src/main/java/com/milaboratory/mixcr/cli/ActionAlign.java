@@ -151,7 +151,7 @@ public class ActionAlign implements Action {
             throw new ProcessException("No J genes to align. Aborting execution. See warnings for more info " +
                     "(turn warnings by adding -w option).");
 
-        AlignerReport report = new AlignerReport(alignerParameters.getVJAlignmentOrder());
+        AlignerReport report = new AlignerReport();
         aligner.setEventsListener(report);
 
         try (SequenceReaderCloseable<? extends SequenceRead> reader = actionParameters.createReader();
@@ -204,8 +204,8 @@ public class ActionAlign implements Action {
                     }
                 }
 
-                if (!alignment.hasSameVJLoci(1))
-                    report.onAlignmentWithDifferentVJLoci();
+                if (!alignment.isChimera())
+                    report.onChimera();
 
                 if (writer != null) {
                     if (actionParameters.getSaveReadDescription() || actionParameters.getSaveOriginalReads())

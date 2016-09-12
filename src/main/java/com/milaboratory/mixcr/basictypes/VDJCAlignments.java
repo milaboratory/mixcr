@@ -30,6 +30,7 @@ package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.primitivio.annotations.Serializable;
+import io.repseq.core.Chains;
 import io.repseq.core.GeneType;
 
 import java.util.EnumMap;
@@ -103,6 +104,19 @@ public final class VDJCAlignments extends VDJCObject {
 
     public NSequenceWithQuality[] getOriginalSequences() {
         return originalSequences;
+    }
+
+    public final boolean isChimera() {
+        Chains chains = Chains.ALL;
+        for (GeneType gt : GeneType.VJC_REFERENCE) {
+            Chains c = getAllChains(gt);
+            if (c == null)
+                continue;
+            chains = chains.intersection(c);
+            if (chains.isEmpty())
+                return true;
+        }
+        return false;
     }
 
     /**
