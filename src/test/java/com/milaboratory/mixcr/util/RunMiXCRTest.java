@@ -36,6 +36,29 @@ public class RunMiXCRTest {
         }
     }
 
+    @Test
+    public void testIO() throws Exception {
+        RunMiXCR.RunMiXCRAnalysis params = new RunMiXCR.RunMiXCRAnalysis(
+                RunMiXCR.class.getResource("/sequences/test_R1.fastq").getFile(),
+                RunMiXCR.class.getResource("/sequences/test_R2.fastq").getFile());
+
+        RunMiXCR.AlignResult align = RunMiXCR.align(params);
+        RunMiXCR.AssembleResult assemble = RunMiXCR.assemble(align);
+
+        File tempFile = TempFileManager.getTempFile();
+        CloneSetIO.write(assemble.cloneSet, tempFile);
+        CloneSet read = CloneSetIO.read(tempFile);
+
+        System.out.println("Clns file size: " + tempFile.length());
+        // Before GFRef : Clns file size: 37 372
+        // S1 : Clns file size: 41 134
+        // After ref: Clns file size: 36 073
+        // After checksum to byte[] : Clns file size: 28242
+
+        for (int i = 0; i < read.size(); i++)
+            Assert.assertEquals(assemble.cloneSet.get(i), read.get(i));
+    }
+
     //@Test
     //public void testt() throws Exception {
     //    try {

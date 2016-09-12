@@ -129,6 +129,8 @@ public class ActionAssemble implements Action {
 
             report.setTotalReads(alignmentsProvider.getTotalNumberOfReads());
 
+            // Writing report to stout
+            System.out.println("============= Report ==============");
             Util.writeReportToStdout(report, time);
 
             if (actionParameters.report != null)

@@ -87,6 +87,15 @@ public class Main {
                 System.err.print(
                         VersionInfoProvider.getVersionString(
                                 VersionInfoProvider.OutputType.ToConsole));
+                System.err.println();
+                System.err.println("Library search path:");
+                for (VDJCLibraryRegistry.LibraryResolver resolvers : VDJCLibraryRegistry.getDefault()
+                        .getLibraryResolvers()) {
+                    if (resolvers instanceof VDJCLibraryRegistry.ClasspathLibraryResolver)
+                        System.out.println("- built-in libraries");
+                    if (resolvers instanceof VDJCLibraryRegistry.FolderLibraryResolver)
+                        System.out.println("- " + ((VDJCLibraryRegistry.FolderLibraryResolver) resolvers).getPath());
+                }
             }
         });
 

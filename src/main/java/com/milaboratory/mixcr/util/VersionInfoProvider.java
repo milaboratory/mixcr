@@ -40,8 +40,8 @@ public class VersionInfoProvider {
         VDJCLibraryRegistry reg = VDJCLibraryRegistry.createDefaultRegistry();
         reg.loadAllLibraries("default");
 
-        VersionInfo milib = VersionInfo.getVersionInfoForArtifact("milib");
         VersionInfo mixcr = VersionInfo.getVersionInfoForArtifact("mixcr");
+        VersionInfo milib = VersionInfo.getVersionInfoForArtifact("milib");
 
         StringBuilder builder = new StringBuilder();
 
@@ -56,19 +56,19 @@ public class VersionInfoProvider {
                 .append(")")
                 .append(outputType.delimiter);
 
-        if (outputType.componentsWord)
-            builder.append("Components: ").append(outputType.delimiter);
-
         builder.append("MiLib v")
                 .append(milib.getVersion())
                 .append(" (rev=").append(milib.getRevision())
                 .append("; branch=").append(milib.getBranch())
-                .append(")");
+                .append(")")
+                .append(outputType.delimiter)
+                .append(outputType.delimiter);
 
-        builder.append("Built-in libraries:\n");
+        builder.append("Built-in libraries:")
+                .append(outputType.delimiter);
 
         for (VDJCLibrary lib : reg.getLoadedLibraries())
-            builder.append(lib.getLibraryId()).append("\n");
+            builder.append(lib.getLibraryId()).append(outputType.delimiter);
 
         return builder.toString();
     }

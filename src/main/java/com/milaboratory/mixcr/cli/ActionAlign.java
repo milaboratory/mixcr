@@ -222,6 +222,8 @@ public class ActionAlign implements Action {
 
         long time = System.currentTimeMillis() - beginTimestamp;
 
+        // Writing report to stout
+        System.out.println("============= Report ==============");
         Util.writeReportToStdout(report, time);
 
         if (actionParameters.report != null)

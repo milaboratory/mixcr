@@ -32,10 +32,7 @@ import com.milaboratory.mixcr.util.VersionInfoProvider;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.util.CanReportProgressAndStage;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
-import io.repseq.core.VDJCGene;
-import io.repseq.core.VDJCLibraryRegistry;
+import io.repseq.core.*;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -86,6 +83,9 @@ public final class CloneSetIO {
         }
 
         public void write() {
+            // Registering custom serializer
+            output.getSerializersManager().registerCustomSerializer(GeneFeature.class, new GeneFeatureSerializer(true));
+
             // Writing magic bytes
             output.write(MAGIC_BYTES);
 
@@ -94,8 +94,10 @@ public final class CloneSetIO {
                     VersionInfoProvider.getVersionString(
                             VersionInfoProvider.OutputType.ToFile));
 
-            output.writeObject(cloneSet.getAssemblingFeatures());
+            GeneFeature[] assemblingFeatures = cloneSet.getAssemblingFeatures();
+            output.writeObject(assemblingFeatures);
             IO.writeGT2GFMap(output, cloneSet.alignedFeatures);
+
             IOUtil.writeGeneReferences(output, cloneSet.getUsedGenes(), new GT2GFAdapter(cloneSet.alignedFeatures));
 
             output.writeInt(cloneSet.getClones().size());
@@ -157,6 +159,9 @@ public final class CloneSetIO {
     public static CloneSet read(InputStream inputStream, VDJCLibraryRegistry libraryRegistry) {
         PrimitivI input = new PrimitivI(inputStream);
 
+        // Registering custom serializer
+        input.getSerializersManager().registerCustomSerializer(GeneFeature.class, new GeneFeatureSerializer(true));
+
         byte[] magicBytes = new byte[MAGIC_LENGTH];
         input.readFully(magicBytes);
 
@@ -168,7 +173,8 @@ public final class CloneSetIO {
             case MAGIC:
                 break;
             default:
-                throw new RuntimeException("Unsupported file format; .clns file of version " + magicString + " while you are running MiXCR " + MAGIC);
+                throw new RuntimeException("Unsupported file format; .clns file of version " + magicString +
+                        " while you are running MiXCR " + MAGIC);
         }
 
         String versionInfo = input.readUTF();
@@ -176,6 +182,7 @@ public final class CloneSetIO {
         GeneFeature[] assemblingFeatures = input.readObject(GeneFeature[].class);
         EnumMap<GeneType, GeneFeature> alignedFeatures = IO.readGF2GTMap(input);
         List<VDJCGene> genes = IOUtil.readGeneReferences(input, libraryRegistry, new GT2GFAdapter(alignedFeatures));
+
         int count = input.readInt();
         List<Clone> clones = new ArrayList<>(count);
         for (int i = 0; i < count; i++)
