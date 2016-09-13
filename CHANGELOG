@@ -1,4 +1,21 @@
 
+MiXCR 2.0 (13 Sep 2016)
+========================
+
+-- New JSON-based reference library format (see [RepSeq.IO](https://github.com/repseqio/repseqio))
+-- Complete review of V/D/J/C gene library (see [repository](https://github.com/repseqio/library))
+-- New simplified method to import IMGT library (see documentation)
+-- All `--loci` options replaced with `--chain` (`-l` -> `-c`)
+-- Removed option `--diff-loci` at `align` step
+-- Added `-OallowChimeras=true` / `false` option at `align` step (better algorithm than was with 
+   `--diff-loci`)
+-- Removed: option `-u`/`--functional-only` in `align` action
+-- Many small fixes
+-- minor: Improved report content with absolute values for all rows and additional version info
+-- minor: Now report with run statistics is additionally printed to stdout
+-- minor: Execution time information added to report
+
+
 MiXCR 1.8.3 ( 8 Sep 2016)
 ========================
 
