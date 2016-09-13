@@ -35,16 +35,15 @@ import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.export.InfoWriter;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
-import com.milaboratory.mixcr.reference.Locus;
 import com.milaboratory.util.CanReportProgressAndStage;
 import com.milaboratory.util.SmartProgressReporter;
+import io.repseq.core.Chains;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
+import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.InputStream;
 import java.util.List;
-import java.util.Set;
 
 public class ActionExportClones extends ActionExport {
     public ActionExportClones() {
@@ -56,7 +55,7 @@ public class ActionExportClones extends ActionExport {
         CloneExportParameters parameters = (CloneExportParameters) this.parameters;
         try (InputStream inputStream = IOUtil.createIS(parameters.getInputFile());
              InfoWriter<Clone> writer = new InfoWriter<>(parameters.getOutputFile())) {
-            CloneSet set = CloneSetIO.read(inputStream, LociLibraryManager.getDefault());
+            CloneSet set = CloneSetIO.read(inputStream, VDJCLibraryRegistry.getDefault());
 
             if (parameters.filterOutOfFrames || parameters.filterStops || !"all".equals(parameters.loci))
                 set = CloneSet.transform(set, new CFilter(parameters.filterOutOfFrames, parameters.filterStops,
@@ -84,13 +83,13 @@ public class ActionExportClones extends ActionExport {
 
     private static final class CFilter implements Filter<Clone> {
         final boolean filterOutOfFrames, filterStopCodons;
-        final Set<Locus> loci;
+        final Chains chains;
 
         public CFilter(boolean filterOutOfFrames, boolean filterStopCodons,
-                       Set<Locus> loci) {
+                       Chains chains) {
             this.filterOutOfFrames = filterOutOfFrames;
             this.filterStopCodons = filterStopCodons;
-            this.loci = loci;
+            this.chains = chains;
         }
 
         @Override
@@ -105,14 +104,14 @@ public class ActionExportClones extends ActionExport {
                     if (AminoAcidSequence.translateFromCenter(clone.getTarget(i).getSequence()).containStops())
                         return false;
 
-            if (loci != null) {
+            if (chains != null) {
                 boolean ok = false;
                 VDJCHit h = clone.getBestHit(GeneType.Variable);
-                if (h != null && loci.contains(h.getAllele().getLocus()))
+                if (h != null && h.getGene().getChains().intersects(chains))
                     ok = true;
 
                 h = clone.getBestHit(GeneType.Joining);
-                if (h != null && loci.contains(h.getAllele().getLocus()))
+                if (h != null && h.getGene().getChains().intersects(chains))
                     ok = true;
 
                 if (!ok)
@@ -173,8 +172,9 @@ public class ActionExportClones extends ActionExport {
                 names = {"-t", "--filter-stops"})
         public Boolean filterStops = false;
 
+
         @Parameter(description = "Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)",
-                names = {"-l", "--filter-locus"})
+                names = {"-c", "--chains"})
         public String loci = "ALL";
 
         @Parameter(description = "Filter clones by minimal clone fraction",
@@ -182,10 +182,10 @@ public class ActionExportClones extends ActionExport {
         public float minFraction = 0;
 
         @Parameter(description = "Filter clones by minimal clone read count",
-                names = {"-c", "--minimal-clone-count"})
+                names = {"-m", "--minimal-clone-count"})
         public long minCount = 0;
 
-        public Set<Locus> getLoci() {
+        public Chains getLoci() {
             return Util.parseLoci(loci);
         }
     }

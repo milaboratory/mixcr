@@ -28,15 +28,11 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
-import com.milaboratory.mixcr.reference.Allele;
-import com.milaboratory.mixcr.reference.AlleleResolver;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
-import com.milaboratory.mixcr.util.VersionInfoProvider;
+import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
-import com.milaboratory.primitivio.SerializersManager;
 import com.milaboratory.util.CanReportProgressAndStage;
+import io.repseq.core.*;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -44,13 +40,9 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 
-import static com.milaboratory.mixcr.basictypes.CompatibilityIO.registerV6Serializers;
-
 public final class CloneSetIO {
-    static final String MAGIC_V2 = "MiXCR.CLNS.V02";
-    static final String MAGIC_V3 = "MiXCR.CLNS.V03";
-    static final String MAGIC_V4 = "MiXCR.CLNS.V04";
-    static final String MAGIC = MAGIC_V4;
+    static final String MAGIC_V5 = "MiXCR.CLNS.V05";
+    static final String MAGIC = MAGIC_V5;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
 
@@ -91,17 +83,22 @@ public final class CloneSetIO {
         }
 
         public void write() {
+            // Registering custom serializer
+            output.getSerializersManager().registerCustomSerializer(GeneFeature.class, new GeneFeatureSerializer(true));
+
             // Writing magic bytes
             output.write(MAGIC_BYTES);
 
             // Writing version information
             output.writeUTF(
-                    VersionInfoProvider.getVersionString(
-                            VersionInfoProvider.OutputType.ToFile));
+                    MiXCRVersionInfo.get().getVersionString(
+                            MiXCRVersionInfo.OutputType.ToFile));
 
-            output.writeObject(cloneSet.getAssemblingFeatures());
+            GeneFeature[] assemblingFeatures = cloneSet.getAssemblingFeatures();
+            output.writeObject(assemblingFeatures);
             IO.writeGT2GFMap(output, cloneSet.alignedFeatures);
-            IOUtil.writeAlleleReferences(output, cloneSet.getUsedAlleles(), new GT2GFAdapter(cloneSet.alignedFeatures));
+
+            IOUtil.writeGeneReferences(output, cloneSet.getUsedGenes(), new GT2GFAdapter(cloneSet.alignedFeatures));
 
             output.writeInt(cloneSet.getClones().size());
 
@@ -130,54 +127,68 @@ public final class CloneSetIO {
     }
 
     public static void write(CloneSet cloneSet, OutputStream outputStream) {
-        try(CloneSetWriter writer = new CloneSetWriter(cloneSet, outputStream)){
+        try (CloneSetWriter writer = new CloneSetWriter(cloneSet, outputStream)) {
             writer.write();
         }
     }
 
-    public static CloneSet read(String fileName, AlleleResolver alleleResolver) throws IOException {
-        return read(new File(fileName), alleleResolver);
+    public static CloneSet read(String fileName) throws IOException {
+        return read(new File(fileName), VDJCLibraryRegistry.getDefault());
     }
 
-    public static CloneSet read(File file, AlleleResolver alleleResolver) throws IOException {
+    public static CloneSet read(String fileName, VDJCLibraryRegistry libraryRegistry) throws IOException {
+        return read(new File(fileName), libraryRegistry);
+    }
+
+    public static CloneSet read(File file) throws IOException {
         try (InputStream inputStream = IOUtil.createIS(file)) {
-            return read(inputStream, alleleResolver);
+            return read(inputStream);
         }
     }
 
-    public static CloneSet read(InputStream inputStream, AlleleResolver alleleResolver) {
+    public static CloneSet read(File file, VDJCLibraryRegistry libraryRegistry) throws IOException {
+        try (InputStream inputStream = IOUtil.createIS(file)) {
+            return read(inputStream, libraryRegistry);
+        }
+    }
+
+    public static CloneSet read(InputStream inputStream) {
+        return read(inputStream, VDJCLibraryRegistry.getDefault());
+    }
+
+    public static CloneSet read(InputStream inputStream, VDJCLibraryRegistry libraryRegistry) {
         PrimitivI input = new PrimitivI(inputStream);
+
+        // Registering custom serializer
+        input.getSerializersManager().registerCustomSerializer(GeneFeature.class, new GeneFeatureSerializer(true));
 
         byte[] magicBytes = new byte[MAGIC_LENGTH];
         input.readFully(magicBytes);
 
         String magicString = new String(magicBytes);
 
-        SerializersManager serializersManager = input.getSerializersManager();
+        //SerializersManager serializersManager = input.getSerializersManager();
+
         switch (magicString) {
-            case MAGIC_V2:
-            case MAGIC_V3:
-                registerV6Serializers(serializersManager);
-                break;
             case MAGIC:
                 break;
             default:
-                throw new RuntimeException("Unsupported file format; .clns file of version " + magicString + " while you are running MiXCR " + MAGIC);
+                throw new RuntimeException("Unsupported file format; .clns file of version " + magicString +
+                        " while you are running MiXCR " + MAGIC);
         }
 
-        String versionInfo = null;
-        if (magicString.compareTo(MAGIC_V3) >= 0)
-            versionInfo = input.readUTF();
+        String versionInfo = input.readUTF();
 
         GeneFeature[] assemblingFeatures = input.readObject(GeneFeature[].class);
         EnumMap<GeneType, GeneFeature> alignedFeatures = IO.readGF2GTMap(input);
-        List<Allele> alleles = IOUtil.readAlleleReferences(input, alleleResolver, new GT2GFAdapter(alignedFeatures));
+        List<VDJCGene> genes = IOUtil.readGeneReferences(input, libraryRegistry, new GT2GFAdapter(alignedFeatures));
+
         int count = input.readInt();
         List<Clone> clones = new ArrayList<>(count);
         for (int i = 0; i < count; i++)
             clones.add(input.readObject(Clone.class));
 
-        CloneSet cloneSet = new CloneSet(clones, alleles, alignedFeatures, assemblingFeatures);
+        CloneSet cloneSet = new CloneSet(clones, genes, alignedFeatures, assemblingFeatures);
         cloneSet.versionInfo = versionInfo;
 
         return cloneSet;

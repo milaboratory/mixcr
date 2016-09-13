@@ -93,7 +93,7 @@ The list of command line parameters for both ``exportAlignments`` and
 The line parameters are only for ``exportClones``:
 
 +--------------------------------------+-------------------------------------------------------------------+
-| ``-l``, ``--filter-locus``           | Limit output to specific locus (e.g. TRA or IGH). Clone fractions |
+| ``-c``, ``--chains``                 | Limit output to specific locus (e.g. TRA or IGH). Clone fractions |
 |                                      | will be recalculated accordingly.                                 |
 +--------------------------------------+-------------------------------------------------------------------+
 | ``-o``, ``--filter-out-of-frames``   | Exclude out of frames (fractions will be recalculated)            |
@@ -101,7 +101,7 @@ The line parameters are only for ``exportClones``:
 | ``-t``, ``--filter-stops``           | Exclude sequences containing stop codons (fractions will be       |
 |                                      | recalculated)                                                     |
 +--------------------------------------+-------------------------------------------------------------------+
-| ``-c``, ``--minimal-clone-count``    | Filter clones by minimal read count.                              |
+| ``-m``, ``--minimal-clone-count``    | Filter clones by minimal read count.                              |
 +--------------------------------------+-------------------------------------------------------------------+
 | ``-q``, ``--minimal-clone-fraction`` | Filter clones by minimal clone fraction.                          |
 +--------------------------------------+-------------------------------------------------------------------+
@@ -686,7 +686,7 @@ One can also export all read IDs that were aggregated by eah clone. For this one
 
 ::
 
-    mixcr exportClones -p min -readIds index_file clones.clns clones.txt
+    mixcr exportClones -c IGH -p min -readIds index_file clones.clns clones.txt
 
 This will add a column with full enumeration of all reads that were absorbed by particular clone:
 
@@ -712,7 +712,7 @@ Finally, one can export reads aggregated by each clone into separate ``.fastq`` 
 
 ::
 
-    mixcr align -g -l IGH input.fastq alignments.vdjca.gz
+    mixcr align -g input.fastq alignments.vdjca.gz
 
 With this option MiXCR will store original reads in the ``.vdjca`` file. Then one can export reads corresponding for particular clone with ``exportReadsForClones`` command. For example, export all reads that were assembled into the first clone (clone with cloneId = 0):
 

@@ -31,11 +31,13 @@ package com.milaboratory.mixcr.basictypes;
 import cc.redberry.pipe.CUtils;
 import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
-import com.milaboratory.mixcr.reference.*;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerS;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
+import io.repseq.core.Chains;
+import io.repseq.core.VDJCGene;
+import io.repseq.core.VDJCLibraryRegistry;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -52,8 +54,6 @@ public class IOTest {
     public void testSerialization1() throws Exception {
         VDJCAlignerParameters parameters = VDJCParametersPresets.getByName("default");
 
-        LociLibrary ll = LociLibraryManager.getDefault().getLibrary("mi");
-
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
         List<VDJCAlignments> alignemntsList = new ArrayList<>();
@@ -68,9 +68,9 @@ public class IOTest {
 
             VDJCAlignerS aligner = new VDJCAlignerS(parameters);
 
-            for (Allele allele : ll.getLocus(Species.HomoSapiens, Locus.IGH).getAllAlleles()) {
-                if (parameters.containsRequiredFeature(allele))
-                    aligner.addAllele(allele);
+            for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("default", "hs").getGenes(Chains.IGH)) {
+                if (parameters.containsRequiredFeature(gene))
+                    aligner.addGene(gene);
             }
 
 
@@ -96,25 +96,11 @@ public class IOTest {
 
         System.out.println("Bytes per alignment: " + (bos.size() - header) / alignemntsList.size());
 
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(new ByteArrayInputStream(bos.toByteArray()), ll)) {
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(new ByteArrayInputStream(bos.toByteArray()))) {
             int i = 0;
             for (VDJCAlignments alignments : CUtils.it(reader))
                 assertEquals(alignemntsList.get(i++), alignments);
             Assert.assertEquals(numberOfReads, reader.getNumberOfReads());
-        }
-    }
-
-    @Test
-    public void tesd() throws Exception {
-        CloneSet c1 = CloneSetIO.read("/Volumes/Data/Projects/MiLaboratory/tmp/mixcrBug6/clones_rep1.clns",
-                LociLibraryManager.getDefault().getLibrary("mi"));
-        CloneSet c2 = CloneSetIO.read("/Volumes/Data/Projects/MiLaboratory/tmp/mixcrBug6/clones_rep2.clns",
-                LociLibraryManager.getDefault().getLibrary("mi"));
-        for (VDJCHit vdjcHit : c1.get(0).getHits(GeneType.Variable)) {
-            System.out.println(vdjcHit);
-        }
-        for (VDJCHit vdjcHit : c2.get(0).getHits(GeneType.Variable)) {
-            System.out.println(vdjcHit);
         }
     }
 }

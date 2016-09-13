@@ -29,9 +29,9 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.sequence.NSequenceWithQuality;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
 import com.milaboratory.core.sequence.SequencesUtils;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
 import com.milaboratory.primitivio.annotations.Serializable;
 
 import java.util.EnumMap;

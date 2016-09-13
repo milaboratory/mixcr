@@ -32,8 +32,8 @@ package com.milaboratory.mixcr.assembler;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
 import com.milaboratory.mixcr.vdjaligners.DAlignerParameters;
 
 import java.util.EnumMap;

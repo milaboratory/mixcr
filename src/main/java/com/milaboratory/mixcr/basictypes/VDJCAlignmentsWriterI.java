@@ -1,7 +1,7 @@
 package com.milaboratory.mixcr.basictypes;
 
-import com.milaboratory.mixcr.reference.Allele;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
+import io.repseq.core.VDJCGene;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.List;
 public interface VDJCAlignmentsWriterI extends AutoCloseable {
     void setNumberOfProcessedReads(long numberOfProcessedReads);
 
-    void header(VDJCAlignerParameters parameters, List<Allele> alleles);
+    void header(VDJCAlignerParameters parameters, List<VDJCGene> genes);
 
     void write(VDJCAlignments alignment);
 
@@ -31,7 +31,7 @@ public interface VDJCAlignmentsWriterI extends AutoCloseable {
         }
 
         @Override
-        public void header(VDJCAlignerParameters parameters, List<Allele> alleles) {
+        public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes) {
         }
 
         @Override
@@ -46,7 +46,7 @@ public interface VDJCAlignmentsWriterI extends AutoCloseable {
     final class ArrayWriter implements VDJCAlignmentsWriterI {
         public long numberOfProcessedReads;
         public VDJCAlignerParameters parameters;
-        public List<Allele> alleles;
+        public List<VDJCGene> genes;
         public final ArrayList<VDJCAlignments> data;
 
         public ArrayWriter(int capacity) {
@@ -63,9 +63,9 @@ public interface VDJCAlignmentsWriterI extends AutoCloseable {
         }
 
         @Override
-        public void header(VDJCAlignerParameters parameters, List<Allele> alleles) {
+        public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes) {
             this.parameters = parameters;
-            this.alleles = alleles;
+            this.genes = genes;
         }
 
         @Override

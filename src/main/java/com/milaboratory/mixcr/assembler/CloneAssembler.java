@@ -42,7 +42,7 @@ import com.milaboratory.core.tree.MutationGuide;
 import com.milaboratory.core.tree.NeighborhoodIterator;
 import com.milaboratory.core.tree.SequenceTreeMap;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.reference.*;
+import io.repseq.core.*;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.Factory;
 import com.milaboratory.util.HashFunctions;
@@ -57,7 +57,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.milaboratory.mixcr.reference.GeneFeature.*;
+import static io.repseq.core.GeneFeature.*;
 
 public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     final CloneAssemblerParameters parameters;
@@ -76,7 +76,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     private volatile SequenceTreeMap<NucleotideSequence, ArrayList<CloneAccumulatorContainer>> mappingTree;
     private ArrayList<CloneAccumulator> clusteredClonesAccumulators;
     private volatile Clone[] realClones;
-    private final HashMap<AlleleId, Allele> usedAlleles = new HashMap<>();
+    private final HashMap<VDJCGeneId, VDJCGene> usedGenes = new HashMap<>();
     volatile CanReportProgress progressReporter;
     private CloneAssemblerListener listener;
     volatile boolean deferredExists = false;
@@ -90,14 +90,14 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         }
     };
 
-    public CloneAssembler(CloneAssemblerParameters parameters, boolean logAssemblerEvents, Collection<Allele> alleles) {
+    public CloneAssembler(CloneAssemblerParameters parameters, boolean logAssemblerEvents, Collection<VDJCGene> genes) {
         this.parameters = parameters.clone();
         if (!logAssemblerEvents && !parameters.isMappingEnabled())
             globalLogger = null;
         else
             globalLogger = new AssemblerEventLogger();
-        for (Allele allele : alleles)
-            usedAlleles.put(allele.getId(), allele);
+        for (VDJCGene gene : genes)
+            usedGenes.put(gene.getId(), gene);
     }
 
     /* Initial Assembly Events */
@@ -297,7 +297,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             if (gf != null)
                 features.put(geneType, gf);
         }
-        return new CloneSet(Arrays.asList(realClones), usedAlleles.values(), features, parameters.getAssemblingFeatures());
+        return new CloneSet(Arrays.asList(realClones), usedGenes.values(), features, parameters.getAssemblingFeatures());
     }
 
     public OutputPortCloseable<ReadToCloneMapping> getAssembledReadsPort() {
@@ -503,7 +503,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         void buildClones() {
             CloneFactory cloneFactory =
                     new CloneFactory(parameters.getCloneFactoryParameters(),
-                            parameters.getAssemblingFeatures(), usedAlleles);
+                            parameters.getAssemblingFeatures(), usedGenes);
             Collection<CloneAccumulator> source;
             if (clusteredClonesAccumulators != null)
                 source = clusteredClonesAccumulators;
@@ -644,62 +644,61 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
 
     VJCSignature extractSignature(VDJCAlignments alignments) {
         return new VJCSignature(
-                parameters.getSeparateByV() ? getAlleleId(alignments, GeneType.Variable) : DO_NOT_CHECK,
-                parameters.getSeparateByJ() ? getAlleleId(alignments, GeneType.Joining) : DO_NOT_CHECK,
-                parameters.getSeparateByC() ? getAlleleId(alignments, GeneType.Constant) : DO_NOT_CHECK
+                parameters.getSeparateByV() ? getGeneId(alignments, GeneType.Variable) : DO_NOT_CHECK,
+                parameters.getSeparateByJ() ? getGeneId(alignments, GeneType.Joining) : DO_NOT_CHECK,
+                parameters.getSeparateByC() ? getGeneId(alignments, GeneType.Constant) : DO_NOT_CHECK
         );
     }
 
     VJCSignature extractSignature(CloneAccumulator alignments) {
         return new VJCSignature(
-                parameters.getSeparateByV() ? getAlleleId(alignments, GeneType.Variable) : DO_NOT_CHECK,
-                parameters.getSeparateByJ() ? getAlleleId(alignments, GeneType.Joining) : DO_NOT_CHECK,
-                parameters.getSeparateByC() ? getAlleleId(alignments, GeneType.Constant) : DO_NOT_CHECK
+                parameters.getSeparateByV() ? getGeneId(alignments, GeneType.Variable) : DO_NOT_CHECK,
+                parameters.getSeparateByJ() ? getGeneId(alignments, GeneType.Joining) : DO_NOT_CHECK,
+                parameters.getSeparateByC() ? getGeneId(alignments, GeneType.Constant) : DO_NOT_CHECK
         );
     }
 
     /**
-     * Special marker AlleleID used to make matchHits procedure to ignore V, J or C genes during matchHits procedure
+     * Special marker GeneID used to make matchHits procedure to ignore V, J or C genes during matchHits procedure
      */
-    private static final AlleleId DO_NOT_CHECK = new AlleleId(UUID.fromString("8dd1d48e-0f75-410c-bc9c-efb53b1037f2"),
-            new SpeciesAndLocus(0, Locus.IGL), "DO_NOT_CHECK");
+    private static final VDJCGeneId DO_NOT_CHECK = new VDJCGeneId(new VDJCLibraryId("NO_LIBRARY", 0), "DO_NOT_CHECK");
 
     static final class VJCSignature {
-        final AlleleId vAllele, jAllele, cAllele;
+        final VDJCGeneId vGene, jGene, cGene;
 
         /**
          * null for absent hits, DO_NOT_CHECK to ignore corresponding gene
          */
-        VJCSignature(AlleleId vAllele, AlleleId jAllele, AlleleId cAllele) {
-            this.vAllele = vAllele;
-            this.jAllele = jAllele;
-            this.cAllele = cAllele;
+        VJCSignature(VDJCGeneId vGene, VDJCGeneId jGene, VDJCGeneId cGene) {
+            this.vGene = vGene;
+            this.jGene = jGene;
+            this.cGene = cGene;
         }
 
         boolean matchHits(CloneAccumulator acc) {
-            TObjectFloatHashMap<AlleleId> minor;
+            TObjectFloatHashMap<VDJCGeneId> minor;
 
-            if (vAllele != DO_NOT_CHECK) {
+            if (vGene != DO_NOT_CHECK) {
                 minor = acc.geneScores.get(GeneType.Variable);
-                if (vAllele == null && (minor != null && !minor.isEmpty()))
+                if (vGene == null && (minor != null && !minor.isEmpty()))
                     return false;
-                if (vAllele != null && minor != null && !minor.containsKey(vAllele))
+                if (vGene != null && minor != null && !minor.containsKey(vGene))
                     return false;
             }
 
-            if (jAllele != DO_NOT_CHECK) {
+            if (jGene != DO_NOT_CHECK) {
                 minor = acc.geneScores.get(GeneType.Joining);
-                if (jAllele == null && (minor != null && !minor.isEmpty()))
+                if (jGene == null && (minor != null && !minor.isEmpty()))
                     return false;
-                if (jAllele != null && minor != null && !minor.containsKey(jAllele))
+                if (jGene != null && minor != null && !minor.containsKey(jGene))
                     return false;
             }
 
-            if (cAllele != DO_NOT_CHECK) {
+            if (cGene != DO_NOT_CHECK) {
                 minor = acc.geneScores.get(GeneType.Constant);
-                if (cAllele == null && (minor != null && !minor.isEmpty()))
+                if (cGene == null && (minor != null && !minor.isEmpty()))
                     return false;
-                if (cAllele != null && minor != null && !minor.containsKey(cAllele))
+                if (cGene != null && minor != null && !minor.containsKey(cGene))
                     return false;
             }
 
@@ -713,33 +712,33 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
 
             VJCSignature that = (VJCSignature) o;
 
-            if (vAllele != null ? !vAllele.equals(that.vAllele) : that.vAllele != null) return false;
-            if (jAllele != null ? !jAllele.equals(that.jAllele) : that.jAllele != null) return false;
-            return !(cAllele != null ? !cAllele.equals(that.cAllele) : that.cAllele != null);
+            if (vGene != null ? !vGene.equals(that.vGene) : that.vGene != null) return false;
+            if (jGene != null ? !jGene.equals(that.jGene) : that.jGene != null) return false;
+            return !(cGene != null ? !cGene.equals(that.cGene) : that.cGene != null);
 
         }
 
         @Override
         public int hashCode() {
-            int result = vAllele != null ? vAllele.hashCode() : 0;
-            result = 31 * result + (jAllele != null ? jAllele.hashCode() : 0);
-            result = 31 * result + (cAllele != null ? cAllele.hashCode() : 0);
+            int result = vGene != null ? vGene.hashCode() : 0;
+            result = 31 * result + (jGene != null ? jGene.hashCode() : 0);
+            result = 31 * result + (cGene != null ? cGene.hashCode() : 0);
             return result;
         }
     }
 
-    static AlleleId getAlleleId(VDJCAlignments alignments, GeneType type) {
+    static VDJCGeneId getGeneId(VDJCAlignments alignments, GeneType type) {
         VDJCHit hit = alignments.getBestHit(type);
-        return hit == null ? null : hit.getAllele().getId();
+        return hit == null ? null : hit.getGene().getId();
     }
 
-    static AlleleId getAlleleId(CloneAccumulator acc, GeneType type) {
-        TObjectFloatHashMap<AlleleId> aScores = acc.geneScores.get(type);
+    static VDJCGeneId getGeneId(CloneAccumulator acc, GeneType type) {
+        TObjectFloatHashMap<VDJCGeneId> aScores = acc.geneScores.get(type);
         if (aScores == null || aScores.isEmpty())
             return null;
-        AlleleId id = null;
+        VDJCGeneId id = null;
         float maxScore = Float.MIN_VALUE;
-        TObjectFloatIterator<AlleleId> it = aScores.iterator();
+        TObjectFloatIterator<VDJCGeneId> it = aScores.iterator();
         while (it.hasNext()) {
             it.advance();
             if (maxScore < it.value()) {
@@ -772,8 +771,8 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     };
 
     public static int compareByBestHists(CloneAccumulator o1, CloneAccumulator o2, GeneType geneType) {
-        AlleleId a1 = o1.getBestAllele(geneType);
-        AlleleId a2 = o2.getBestAllele(geneType);
+        VDJCGeneId a1 = o1.getBestGene(geneType);
+        VDJCGeneId a2 = o2.getBestGene(geneType);
 
         if (a1 == null && a2 == null)
             return 0;

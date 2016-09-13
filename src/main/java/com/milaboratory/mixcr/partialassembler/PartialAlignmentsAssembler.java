@@ -37,13 +37,10 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence;
 import com.milaboratory.mixcr.cli.ReportHelper;
 import com.milaboratory.mixcr.cli.ReportWriter;
-import com.milaboratory.mixcr.reference.Allele;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
-import com.milaboratory.mixcr.reference.ReferencePoint;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.hash.TLongHashSet;
+import io.repseq.core.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -89,7 +86,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
     }
 
     public void buildLeftPartsIndex(VDJCAlignmentsReader reader) {
-        writer.header(reader.getParameters(), reader.getUsedAlleles());
+        writer.header(reader.getParameters(), reader.getUsedGenes());
         for (VDJCAlignments alignment : CUtils.it(reader)) {
             if (alignment.getFeature(GeneFeature.CDR3) != null)
                 continue;
@@ -101,8 +98,8 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         final VDJCAlignerParameters alignerParameters = reader.getParameters();
         PartialAlignmentsAssemblerAligner aligner = new PartialAlignmentsAssemblerAligner(alignerParameters);
         targetMerger.setAlignerParameters(alignerParameters);
-        for (Allele allele : reader.getUsedAlleles())
-            aligner.addAllele(allele);
+        for (VDJCGene gene : reader.getUsedGenes())
+            aligner.addGene(gene);
 
         for (VDJCAlignments alignment : CUtils.it(reader)) {
             total.incrementAndGet();
@@ -119,7 +116,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
                 continue;
             }
 
-            VDJCMultiRead mRead = searchOverlaps(alignment);
+            VDJCMultiRead mRead = searchOverlaps(alignment, alignerParameters.isAllowChimeras());
             if (mRead == null) {
                 if (writePartial && !overlappedOnly) {
                     totalWritten.incrementAndGet();
@@ -152,7 +149,10 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
     }
 
     @SuppressWarnings("unchecked")
-    private VDJCMultiRead searchOverlaps(VDJCAlignments rightAl) {
+    private VDJCMultiRead searchOverlaps(final VDJCAlignments rightAl,
+                                         final boolean allowChimeras) {
+        final Chains jChains = rightAl.getAllChains(GeneType.Joining);
+
         int rightTargetId = getRightPartitionedSequence(rightAl);
         if (rightTargetId == -1)
             return null;
@@ -181,6 +181,11 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
             out:
             for (int i = 0; i < match.size(); i++) {
                 final VDJCAlignments leftAl = match.get(i).getAlignments();
+
+                // Checking chains compatibility
+                if (!allowChimeras && !leftAl.getAllChains(GeneType.Variable).intersects(jChains))
+                    continue;
+
                 final NucleotideSequence leftSeq = leftAl.getPartitionedTarget(getLeftPartitionedSequence(leftAl))
                         .getSequence().getSequence();
                 int lFrom = match.get(i).kMerPositionFrom;

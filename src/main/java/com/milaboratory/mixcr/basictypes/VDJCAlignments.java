@@ -29,8 +29,9 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.sequence.NSequenceWithQuality;
-import com.milaboratory.mixcr.reference.GeneType;
 import com.milaboratory.primitivio.annotations.Serializable;
+import io.repseq.core.Chains;
+import io.repseq.core.GeneType;
 
 import java.util.EnumMap;
 
@@ -105,13 +106,26 @@ public final class VDJCAlignments extends VDJCObject {
         return originalSequences;
     }
 
+    public final boolean isChimera() {
+        Chains chains = Chains.ALL;
+        for (GeneType gt : GeneType.VJC_REFERENCE) {
+            Chains c = getAllChains(gt);
+            if (c == null)
+                continue;
+            chains = chains.intersection(c);
+            if (chains.isEmpty())
+                return true;
+        }
+        return false;
+    }
+
     /**
-     * Returns {@code true} if at least one V and one J hit among first {@code top} hits have same locus and false
-     * otherwise (first {@code top} V hits have different locus from those have first {@code top} J hits).
+     * Returns {@code true} if at least one V and one J hit among first {@code top} hits have same chain and false
+     * otherwise (first {@code top} V hits have different chain from those have first {@code top} J hits).
      *
      * @param top numer of top hits to test
-     * @return {@code true} if at least one V and one J hit among first {@code top} hits have same locus and false
-     * otherwise (first {@code top} V hits have different locus from those have first {@code top} J hits)
+     * @return {@code true} if at least one V and one J hit among first {@code top} hits have same chain and false
+     * otherwise (first {@code top} V hits have different chain from those have first {@code top} J hits)
      */
     public final boolean hasSameVJLoci(final int top) {
         final VDJCHit[] vHits = hits.get(GeneType.Variable),
@@ -122,8 +136,7 @@ public final class VDJCAlignments extends VDJCObject {
             for (int v = 0; v < actualTop(vHits, top); ++v)
                 for (int j = 0; j < actualTop(jHits, top); ++j)
                     for (int c = 0; c < actualTop(cHits, top); ++c)
-                        if (vHits[v].getAllele().getLocus() == jHits[j].getAllele().getLocus() &&
-                                vHits[v].getAllele().getLocus() == cHits[c].getAllele().getLocus())
+                        if (hasCommonChain(vHits[v], jHits[j]) && hasCommonChain(vHits[v], cHits[c]))
                             return true;
             return false;
         }
@@ -131,7 +144,7 @@ public final class VDJCAlignments extends VDJCObject {
         if (vHits.length > 0 && jHits.length > 0) {
             for (int v = 0; v < actualTop(vHits, top); ++v)
                 for (int j = 0; j < actualTop(jHits, top); ++j)
-                    if (vHits[v].getAllele().getLocus() == jHits[j].getAllele().getLocus())
+                    if (hasCommonChain(vHits[v], jHits[j]))
                         return true;
             return false;
         }
@@ -139,7 +152,7 @@ public final class VDJCAlignments extends VDJCObject {
         if (vHits.length > 0 && cHits.length > 0) {
             for (int v = 0; v < actualTop(vHits, top); ++v)
                 for (int c = 0; c < actualTop(cHits, top); ++c)
-                    if (vHits[v].getAllele().getLocus() == cHits[c].getAllele().getLocus())
+                    if (hasCommonChain(vHits[v], cHits[c]))
                         return true;
             return false;
         }
@@ -147,12 +160,16 @@ public final class VDJCAlignments extends VDJCObject {
         if (cHits.length > 0 && jHits.length > 0) {
             for (int c = 0; c < actualTop(cHits, top); ++c)
                 for (int j = 0; j < actualTop(jHits, top); ++j)
-                    if (cHits[c].getAllele().getLocus() == jHits[j].getAllele().getLocus())
+                    if (hasCommonChain(cHits[c], jHits[j]))
                         return true;
             return false;
         }
 
         return true;
+    }
+
+    private static boolean hasCommonChain(VDJCHit g1, VDJCHit g2) {
+        return g1.getGene().getChains().intersects(g2.getGene().getChains());
     }
 
     private static int actualTop(VDJCHit[] hits, int top) {

@@ -33,8 +33,9 @@ import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NSequenceWithQualityBuilder;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
+import io.repseq.core.Chains;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
 
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -43,6 +44,7 @@ import java.util.Map;
 public class VDJCObject {
     protected final NSequenceWithQuality[] targets;
     protected final EnumMap<GeneType, VDJCHit[]> hits;
+    protected volatile EnumMap<GeneType, Chains> allChains;
     protected VDJCPartitionedSequence[] partitionedTargets;
 
     public VDJCObject(EnumMap<GeneType, VDJCHit[]> hits, NSequenceWithQuality... targets) {
@@ -77,6 +79,25 @@ public class VDJCObject {
     public final VDJCHit[] getHits(GeneType type) {
         VDJCHit[] hits = this.hits.get(type);
         return hits == null ? new VDJCHit[0] : hits;
+    }
+
+    public Chains getAllChains(GeneType geneType) {
+        if (allChains == null)
+            synchronized (this) {
+                if (allChains == null) {
+                    allChains = new EnumMap<>(GeneType.class);
+                    for (GeneType type : GeneType.VDJC_REFERENCE) {
+                        Chains c = Chains.EMPTY;
+                        VDJCHit[] hs = hits.get(type);
+                        if (hs == null || hs.length == 0)
+                            continue;
+                        for (VDJCHit hit : hs)
+                            c = c.merge(hit.getGene().getChains());
+                        allChains.put(type, c);
+                    }
+                }
+            }
+        return allChains.get(geneType);
     }
 
     public final int numberOfTargets() {

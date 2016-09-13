@@ -34,14 +34,14 @@ import com.beust.jcommander.Parameters;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
+import com.milaboratory.cli.ActionParametersWithOutput;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.basictypes.IOUtil;
-import com.milaboratory.mixcr.reference.AlleleId;
-import com.milaboratory.mixcr.reference.GeneType;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
+import io.repseq.core.GeneType;
+import io.repseq.core.VDJCGeneId;
 
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -57,8 +57,8 @@ public class ActionClonesDiff implements Action {
              InputStream is2 = IOUtil.createIS(params.get2());
              PrintStream report = params.report().equals(".") ? System.out : new PrintStream(new FileOutputStream(params.report()))) {
 
-            CloneSet cs1 = CloneSetIO.read(is1, LociLibraryManager.getDefault());
-            CloneSet cs2 = CloneSetIO.read(is2, LociLibraryManager.getDefault());
+            CloneSet cs1 = CloneSetIO.read(is1);
+            CloneSet cs2 = CloneSetIO.read(is2);
 
             HashMap<CKey, CRec> recs = new HashMap<>();
 
@@ -99,16 +99,16 @@ public class ActionClonesDiff implements Action {
                 String error = "";
                 char letter = 'X';
                 if (!Objects.equals(
-                        getBestAllele(cRec.clones[i], GeneType.Variable),
-                        getBestAllele(clone, GeneType.Variable)))
+                        getBestGene(cRec.clones[i], GeneType.Variable),
+                        getBestGene(clone, GeneType.Variable)))
                     letter = 'v';
                 if (!Objects.equals(
-                        getBestAllele(cRec.clones[i], GeneType.Joining),
-                        getBestAllele(clone, GeneType.Joining)))
+                        getBestGene(cRec.clones[i], GeneType.Joining),
+                        getBestGene(clone, GeneType.Joining)))
                     letter = 'j';
                 if (!Objects.equals(
-                        getBestAllele(cRec.clones[i], GeneType.Constant),
-                        getBestAllele(clone, GeneType.Constant)))
+                        getBestGene(cRec.clones[i], GeneType.Constant),
+                        getBestGene(clone, GeneType.Constant)))
                     letter = 'c';
 
                 if (letter != 'X')
@@ -132,8 +132,8 @@ public class ActionClonesDiff implements Action {
         return params;
     }
 
-    private AlleleId getBestAllele(Clone clone, GeneType geneType) {
-        return clone.getBestHit(geneType) == null ? null : clone.getBestHit(geneType).getAllele().getId();
+    private VDJCGeneId getBestGene(Clone clone, GeneType geneType) {
+        return clone.getBestHit(geneType) == null ? null : clone.getBestHit(geneType).getGene().getId();
     }
 
     private CKey getKey(Clone clone) {
@@ -141,11 +141,11 @@ public class ActionClonesDiff implements Action {
         for (int i = 0; i < clonalSequence.length; i++)
             clonalSequence[i] = clone.getTarget(i).getSequence();
 
-        final AlleleId v = params.useV() ? getBestAllele(clone, GeneType.Variable) : null;
+        final VDJCGeneId v = params.useV() ? getBestGene(clone, GeneType.Variable) : null;
 
-        final AlleleId j = params.useJ() ? getBestAllele(clone, GeneType.Joining) : null;
+        final VDJCGeneId j = params.useJ() ? getBestGene(clone, GeneType.Joining) : null;
 
-        final AlleleId c = params.useC() ? getBestAllele(clone, GeneType.Constant) : null;
+        final VDJCGeneId c = params.useC() ? getBestGene(clone, GeneType.Constant) : null;
 
         return new CKey(clonalSequence, v, j, c);
     }
@@ -156,9 +156,9 @@ public class ActionClonesDiff implements Action {
 
     private static final class CKey {
         final NucleotideSequence[] clonalSequence;
-        final AlleleId v, j, c;
+        final VDJCGeneId v, j, c;
 
-        public CKey(NucleotideSequence[] clonalSequence, AlleleId v, AlleleId j, AlleleId c) {
+        public CKey(NucleotideSequence[] clonalSequence, VDJCGeneId v, VDJCGeneId j, VDJCGeneId c) {
             this.clonalSequence = clonalSequence;
             this.v = v;
             this.j = j;

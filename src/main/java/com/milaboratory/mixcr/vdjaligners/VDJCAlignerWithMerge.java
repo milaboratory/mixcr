@@ -33,7 +33,7 @@ import com.milaboratory.core.io.sequence.SingleReadImpl;
 import com.milaboratory.core.merger.MismatchOnlyPairedReadMerger;
 import com.milaboratory.core.merger.PairedReadMergingResult;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.reference.Allele;
+import io.repseq.core.VDJCGene;
 
 /**
  * @author Dmitry Bolotin
@@ -54,10 +54,10 @@ public final class VDJCAlignerWithMerge extends VDJCAligner<PairedRead> {
     }
 
     @Override
-    public int addAllele(Allele allele) {
-        singleAligner.addAllele(allele);
-        pairedAligner.addAllele(allele);
-        return super.addAllele(allele);
+    public int addGene(VDJCGene gene) {
+        singleAligner.addGene(gene);
+        pairedAligner.addGene(gene);
+        return super.addGene(gene);
     }
 
     @Override

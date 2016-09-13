@@ -28,8 +28,10 @@
  */
 package com.milaboratory.mixcr.cli;
 
-import com.milaboratory.mixcr.reference.Locus;
+import com.milaboratory.mixcr.util.MiXCRVersionInfo;
+import com.milaboratory.util.TimeUtils;
 import gnu.trove.map.hash.TIntObjectHashMap;
+import io.repseq.core.Chains;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -37,7 +39,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 public final class Util {
     private Util() {
@@ -45,35 +49,24 @@ public final class Util {
 
     public static final DecimalFormat PERCENT_FORMAT = new DecimalFormat("#.##");
 
-    public static Set<Locus> parseLoci(String lociString) {
+    public static Chains parseLoci(String lociString) {
         String[] split = lociString.split(",");
-        EnumSet<Locus> loci = EnumSet.noneOf(Locus.class);
+        Chains chains = new Chains();
         for (String s : split)
-            parseLocus(loci, s);
-        return loci;
+            chains = chains.merge(parseLocus(s));
+        return chains;
     }
 
-    private static void parseLocus(Set<Locus> set, String value) {
+    private static Chains parseLocus(String value) {
         switch (value.toLowerCase().trim()) {
             case "tcr":
-                set.add(Locus.TRA);
-                set.add(Locus.TRB);
-                set.add(Locus.TRG);
-                set.add(Locus.TRD);
-                return;
+                return Chains.TCR;
             case "ig":
-                set.add(Locus.IGH);
-                set.add(Locus.IGL);
-                set.add(Locus.IGK);
-                return;
+                return Chains.IG;
             case "all":
-                for (Locus locus : Locus.values())
-                    set.add(locus);
-                return;
+                return Chains.ALL;
         }
-        Locus l = Locus.fromIdSafe(value);
-        set.add(l);
-        return;
+        return new Chains(value);
     }
 
     public static void writeReport(String input, String output,
@@ -81,6 +74,15 @@ public final class Util {
                                    String reportFileName,
                                    ReportWriter reportWriter) {
         writeReport(input, output, commandLineArguments, reportFileName, reportWriter, -1);
+    }
+
+    public static void writeReportToStdout(ReportWriter reportWriter, long milliseconds) {
+        ReportHelper helper = new ReportHelper(System.out);
+
+        if (milliseconds != -1)
+            helper.writeField("Analysis time", TimeUtils.nanoTimeToString(milliseconds * 1000_000));
+
+        reportWriter.writeReport(helper);
     }
 
     public static void writeReport(String input, String output,
@@ -94,10 +96,11 @@ public final class Util {
             ReportHelper helper = new ReportHelper(outputStream);
             helper.writeField("Analysis Date", new Date())
                     .writeField("Input file(s)", input)
-                    .writeField("Output file", output);
+                    .writeField("Output file", output)
+                    .writeField("Version", MiXCRVersionInfo.get().getShortestVersionString());
 
             if (milliseconds != -1)
-                helper.writeField("Total timing (ms)", milliseconds);
+                helper.writeField("Analysis time", TimeUtils.nanoTimeToString(milliseconds * 1000_000));
 
             if (commandLineArguments != null)
                 helper.writeField("Command line arguments", commandLineArguments);

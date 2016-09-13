@@ -5,10 +5,9 @@ import com.milaboratory.core.io.sequence.PairedRead;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.cli.ActionAlign;
-import com.milaboratory.mixcr.reference.GeneType;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
-import com.milaboratory.mixcr.reference.Locus;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
+import io.repseq.core.Chains;
+import io.repseq.core.GeneType;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -16,7 +15,6 @@ import org.junit.Test;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by poslavsky on 01/09/15.
@@ -32,17 +30,59 @@ public class RunMiXCRTest {
         RunMiXCR.AssembleResult assemble = RunMiXCR.assemble(align);
 
         for (Clone clone : assemble.cloneSet.getClones()) {
-            Set<Locus> vjLoci = VDJCAligner.getPossibleDLoci(clone.getHits(GeneType.Variable), clone.getHits(GeneType.Joining));
+            Chains vjLoci = VDJCAligner.getPossibleDLoci(clone.getHits(GeneType.Variable), clone.getHits(GeneType.Joining));
             for (VDJCHit dHit : clone.getHits(GeneType.Diversity))
-                Assert.assertTrue(vjLoci.contains(dHit.getAllele().getLocus()));
+                Assert.assertTrue(vjLoci.intersects(dHit.getGene().getChains()));
         }
     }
 
     @Test
-    public void test2() throws Exception {
+    public void testIO() throws Exception {
         RunMiXCR.RunMiXCRAnalysis params = new RunMiXCR.RunMiXCRAnalysis(
                 RunMiXCR.class.getResource("/sequences/test_R1.fastq").getFile(),
                 RunMiXCR.class.getResource("/sequences/test_R2.fastq").getFile());
+
+        RunMiXCR.AlignResult align = RunMiXCR.align(params);
+        RunMiXCR.AssembleResult assemble = RunMiXCR.assemble(align);
+
+        File tempFile = TempFileManager.getTempFile();
+        CloneSetIO.write(assemble.cloneSet, tempFile);
+        CloneSet read = CloneSetIO.read(tempFile);
+
+        System.out.println("Clns file size: " + tempFile.length());
+        // Before GFRef : Clns file size: 37 372
+        // S1 : Clns file size: 41 134
+        // After ref: Clns file size: 36 073
+        // After checksum to byte[] : Clns file size: 28242
+
+        for (int i = 0; i < read.size(); i++)
+            Assert.assertEquals(assemble.cloneSet.get(i), read.get(i));
+    }
+
+    //@Test
+    //public void testt() throws Exception {
+    //    try {
+    //        Path cachePath = Paths.get(System.getProperty("user.home"), ".repseqio", "cache");
+    //        SequenceResolvers.initDefaultResolver(cachePath);
+    //        VDJCLibraryRegistry.getDefault().registerLibraries("/Volumes/Data/Projects/repseqio/reference/human/TRB.json", "mi");
+    //        System.out.println(VDJCLibraryRegistry.getDefault().getLibrary("mi", "hs").get("TRBV12-3*00").getFeature(GeneFeature.parse("VRegion(-100,+10000000)")));
+    //    } catch (SequenceProviderIndexOutOfBoundsException e) {
+    //        System.out.println(e.getAvailableRange());
+    //    }
+    //}
+
+    @Test
+    public void test2() throws Exception {
+        //Path cachePath = Paths.get(System.getProperty("user.home"), ".repseqio", "cache");
+        //SequenceResolvers.initDefaultResolver(cachePath);
+        //VDJCLibraryRegistry.getDefault().addPathResolver("/Volumes/Data/Projects/repseqio/reference/human/");
+
+        RunMiXCR.RunMiXCRAnalysis params = new RunMiXCR.RunMiXCRAnalysis(
+                RunMiXCR.class.getResource("/sequences/test_R1.fastq").getFile(),
+                RunMiXCR.class.getResource("/sequences/test_R2.fastq").getFile());
+
+        //params.library = "human_TR";
+        //params.species = "hs";
 
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
 
@@ -61,7 +101,7 @@ public class RunMiXCRTest {
                 writer.write(alignment);
         }
 
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile, LociLibraryManager.getDefault())) {
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile)) {
             int tr = 0;
             for (VDJCAlignments alignment : CUtils.it(reader)) {
                 PairedRead actual = reads.get((int) alignment.getReadId());
@@ -98,7 +138,7 @@ public class RunMiXCRTest {
                 writer.write(alignment);
         }
 
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile, LociLibraryManager.getDefault())) {
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile)) {
             int tr = 0;
             for (VDJCAlignments alignment : CUtils.it(reader)) {
                 PairedRead actual = reads.get((int) alignment.getReadId());

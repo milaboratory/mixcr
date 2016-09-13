@@ -33,21 +33,20 @@ import cc.redberry.primitives.Filter;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
+import com.milaboratory.cli.Action;
+import com.milaboratory.cli.ActionHelper;
+import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.AlignmentHelper;
 import com.milaboratory.core.alignment.MultiAlignmentHelper;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.cli.Action;
-import com.milaboratory.cli.ActionHelper;
-import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.cli.afiltering.AFilter;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
-import com.milaboratory.mixcr.reference.Locus;
 import com.milaboratory.util.NSequenceWithQualityPrintHelper;
+import io.repseq.core.Chains;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
 
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
@@ -55,7 +54,6 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
 import static cc.redberry.primitives.FilterUtil.ACCEPT_ALL;
 import static cc.redberry.primitives.FilterUtil.and;
@@ -70,8 +68,7 @@ public class ActionPrettyAlignments implements Action {
     public void go(ActionHelper helper) throws Exception {
         Filter<VDJCAlignments> filter = actionParameters.getFilter();
         long total = 0, filtered = 0;
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(actionParameters.getInputFileName(),
-                LociLibraryManager.getDefault());
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(actionParameters.getInputFileName());
              PrintStream output = actionParameters.getOutputFileName().equals("-") ? System.out :
                      new PrintStream(new BufferedOutputStream(new FileOutputStream(actionParameters.getOutputFileName()), 32768))
         ) {
@@ -171,7 +168,7 @@ public class ActionPrettyAlignments implements Action {
                 hits = actionParameters.isOnlyTop() ? new VDJCHit[]{hits[0]} : hits;
                 for (VDJCHit hit : hits) {
                     exists = true;
-                    output.println(hit.getAllele().getName() + " (total score = " + hit.getScore() + ")");
+                    output.println(hit.getGene().getName() + " (total score = " + hit.getScore() + ")");
                     for (int i = 0; i < alignments.numberOfTargets(); i++) {
                         Alignment<NucleotideSequence> alignment = hit.getAlignment(i);
 
@@ -184,8 +181,8 @@ public class ActionPrettyAlignments implements Action {
                                 output.println(subHelper.toStringWithSeq2Quality(alignments.getTarget(i).getQuality()));
                                 output.println();
                             }
-                            if (actionParameters.isAlleleSequence()) {
-                                output.println("Allele sequence:");
+                            if (actionParameters.printGeneSequence()) {
+                                output.println("Gene sequence:");
                                 output.println(alignment.getSequence1());
                                 output.println();
                             }
@@ -243,9 +240,9 @@ public class ActionPrettyAlignments implements Action {
                 names = {"-t", "--top"})
         public Boolean onlyTop = null;
 
-        @Parameter(description = "Output full allele sequence",
-                names = {"-a", "--allele"})
-        public Boolean alleleSequence = null;
+        @Parameter(description = "Output full gene sequence",
+                names = {"-a", "--gene"})
+        public Boolean geneSequence = null;
 
         @Parameter(description = "Limit number of alignments before filtering",
                 names = {"-b", "--limitBefore"})
@@ -257,18 +254,14 @@ public class ActionPrettyAlignments implements Action {
         public Integer limitAfter = null;
 
         @Parameter(description = "Filter export to a specific protein chain gene (e.g. TRA or IGH).",
-                names = {"-l", "--filter-locus"})
-        public String loci = "ALL";
+                names = {"-c", "--chains"})
+        public String chain = "ALL";
 
         @Parameter(description = "Number of output alignments to skip",
                 names = {"-s", "--skip"})
         public Integer skipAfter = null;
 
-        @Parameter(description = "Only output alignments where CDR3 contains a given substring",
-                names = {"-c", "--cdr3-contains"})
-        public String cdr3Contains = null;
-
-        @Parameter(description = "Only output alignments where CDR3 exactly equals to a given sequence",
+        @Parameter(description = "Only output alignments where CDR3 exactly equals to given sequence",
                 names = {"-e", "--cdr3-equals"})
         public String cdr3Equals = null;
 
@@ -292,12 +285,12 @@ public class ActionPrettyAlignments implements Action {
                 names = {"-d", "--descriptions"})
         public Boolean descr = null;
 
-        public Set<Locus> getLoci() {
-            return Util.parseLoci(loci);
+        public Chains getChain() {
+            return Util.parseLoci(chain);
         }
 
         public Filter<VDJCAlignments> getFilter() {
-            final Set<Locus> loci = getLoci();
+            final Chains chains = getChain();
 
             List<Filter<VDJCAlignments>> filters = new ArrayList<>();
             if (filter != null)
@@ -308,21 +301,12 @@ public class ActionPrettyAlignments implements Action {
                 public boolean accept(VDJCAlignments object) {
                     for (GeneType gt : GeneType.VJC_REFERENCE) {
                         VDJCHit bestHit = object.getBestHit(gt);
-                        if (bestHit != null && loci.contains(bestHit.getAllele().getLocus()))
+                        if (bestHit != null && chains.intersects(bestHit.getGene().getChains()))
                             return true;
                     }
                     return false;
                 }
             });
-
-            if (cdr3Contains != null)
-                filters.add(new Filter<VDJCAlignments>() {
-                    @Override
-                    public boolean accept(VDJCAlignments object) {
-                        NSequenceWithQuality feature = object.getFeature(GeneFeature.CDR3);
-                        return feature != null && feature.getSequence().toString().contains(cdr3Contains);
-                    }
-                });
 
             if (feature != null) {
                 final GeneFeature feature = GeneFeature.parse(this.feature);
@@ -375,8 +359,8 @@ public class ActionPrettyAlignments implements Action {
             return onlyTop == null ? false : onlyTop;
         }
 
-        public boolean isAlleleSequence() {
-            return alleleSequence == null ? false : alleleSequence;
+        public boolean printGeneSequence() {
+            return geneSequence == null ? false : geneSequence;
         }
 
         public String getInputFileName() {

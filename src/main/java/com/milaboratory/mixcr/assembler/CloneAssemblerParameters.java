@@ -32,8 +32,8 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.repseq.core.GeneFeature;
 import com.milaboratory.core.sequence.quality.QualityAggregationType;
-import com.milaboratory.mixcr.reference.GeneFeature;
 
 import java.util.Arrays;
 import java.util.regex.Matcher;

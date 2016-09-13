@@ -30,6 +30,8 @@ package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.Range;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
+import io.repseq.core.PartitionedSequence;
+import io.repseq.core.SequencePartitioning;
 
 /**
  * Created by poslavsky on 09/07/14.

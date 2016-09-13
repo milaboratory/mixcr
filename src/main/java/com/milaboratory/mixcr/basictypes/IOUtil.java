@@ -30,70 +30,70 @@ package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.io.CompressionType;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.reference.Allele;
-import com.milaboratory.mixcr.reference.AlleleId;
-import com.milaboratory.mixcr.reference.AlleleResolver;
-import com.milaboratory.mixcr.reference.GeneFeature;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.VDJCGene;
+import io.repseq.core.VDJCGeneId;
+import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class IOUtil {
-    public static void writeAlleleReferences(PrimitivO output, List<Allele> alleles,
-                                             HasFeatureToAlign featuresToAlign) {
-        // Writing allele ids
-        output.writeInt(alleles.size());
-        for (Allele allele : alleles)
-            output.writeObject(allele.getId());
+    public static void writeGeneReferences(PrimitivO output, List<VDJCGene> genes,
+                                           HasFeatureToAlign featuresToAlign) {
+        // Writing gene ids
+        output.writeInt(genes.size());
+        for (VDJCGene gene : genes)
+            output.writeObject(gene.getId());
 
-        // Putting alleles references and feature sequences to be serialized/deserialized as references
-        for (Allele allele : alleles) {
-            output.putKnownReference(allele);
-            // Also put sequences of certain gene features of alleles as known references if required
+        // Putting genes references and feature sequences to be serialized/deserialized as references
+        for (VDJCGene gene : genes) {
+            output.putKnownReference(gene);
+            // Also put sequences of certain gene features of genes as known references if required
             if (featuresToAlign != null) {
-                GeneFeature featureToAlign = featuresToAlign.getFeatureToAlign(allele.getGeneType());
+                GeneFeature featureToAlign = featuresToAlign.getFeatureToAlign(gene.getGeneType());
                 if (featureToAlign == null)
                     continue;
-                NucleotideSequence featureSequence = allele.getFeature(featureToAlign);
+                NucleotideSequence featureSequence = gene.getFeature(featureToAlign);
                 if (featureSequence == null)
                     continue;
-                output.putKnownReference(allele.getFeature(featuresToAlign.getFeatureToAlign(allele.getGeneType())));
+                output.putKnownReference(gene.getFeature(featuresToAlign.getFeatureToAlign(gene.getGeneType())));
             }
         }
     }
 
-    public static List<Allele> readAlleleReferences(PrimitivI input, AlleleResolver alleleResolver,
+    public static List<VDJCGene> readGeneReferences(PrimitivI input, VDJCLibraryRegistry registry,
                                                     HasFeatureToAlign featuresToAlign) {
-        // Reading allele ids
+        // Reading gene ids
         int count = input.readInt();
-        List<Allele> alleles = new ArrayList<>(count);
+        List<VDJCGene> genes = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
-            AlleleId id = input.readObject(AlleleId.class);
-            Allele allele = alleleResolver.getAllele(id);
-            if (allele == null)
-                throw new RuntimeException("Allele not found: " + id);
-            alleles.add(allele);
+            VDJCGeneId id = input.readObject(VDJCGeneId.class);
+            VDJCGene gene = registry.getGene(id);
+            if (gene == null)
+                throw new RuntimeException("Gene not found: " + id);
+            genes.add(gene);
         }
 
-        // Putting alleles references and feature sequences to be serialized/deserialized as references
-        for (Allele allele : alleles) {
-            input.putKnownReference(allele);
-            // Also put sequences of certain gene features of alleles as known references if required
+        // Putting genes references and feature sequences to be serialized/deserialized as references
+        for (VDJCGene gene : genes) {
+            input.putKnownReference(gene);
+            // Also put sequences of certain gene features of genes as known references if required
             if (featuresToAlign != null) {
-                GeneFeature featureToAlign = featuresToAlign.getFeatureToAlign(allele.getGeneType());
+                GeneFeature featureToAlign = featuresToAlign.getFeatureToAlign(gene.getGeneType());
                 if (featureToAlign == null)
                     continue;
-                NucleotideSequence featureSequence = allele.getFeature(featureToAlign);
+                NucleotideSequence featureSequence = gene.getFeature(featureToAlign);
                 if (featureSequence == null)
                     continue;
                 input.putKnownReference(featureSequence);
             }
         }
 
-        return alleles;
+        return genes;
     }
 
     public static InputStream createIS(String file) throws IOException {

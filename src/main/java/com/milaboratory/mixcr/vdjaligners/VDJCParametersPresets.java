@@ -28,10 +28,7 @@
  */
 package com.milaboratory.mixcr.vdjaligners;
 
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.MapperFeature;
 import com.milaboratory.util.GlobalObjectMappers;
 
 import java.io.IOException;

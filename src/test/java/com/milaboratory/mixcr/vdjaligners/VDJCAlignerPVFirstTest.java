@@ -35,7 +35,10 @@ import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.reference.*;
+import io.repseq.core.Chains;
+import io.repseq.core.GeneType;
+import io.repseq.core.VDJCGene;
+import io.repseq.core.VDJCLibraryRegistry;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -49,8 +52,6 @@ public class VDJCAlignerPVFirstTest {
         VDJCAlignerParameters parameters =
                 VDJCParametersPresets
                         .getByName("default");
-
-        LociLibrary ll = LociLibraryManager.getDefault().getLibrary("mi");
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
@@ -70,9 +71,9 @@ public class VDJCAlignerPVFirstTest {
 
             VDJCAlignerPVFirst aligner = new VDJCAlignerPVFirst(parameters);
 
-            for (Allele allele : ll.getLocus(Species.HomoSapiens, Locus.IGH).getAllAlleles()) {
-                if (parameters.containsRequiredFeature(allele))
-                    aligner.addAllele(allele);
+            for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("default", "hs").getGenes(Chains.IGH)) {
+                if (parameters.containsRequiredFeature(gene))
+                    aligner.addGene(gene);
             }
 
             for (PairedRead read : CUtils.it(reader)) {
@@ -97,12 +98,12 @@ public class VDJCAlignerPVFirstTest {
         for (VDJCAlignments alignments : alignemntsList) {
             for (int target = 0; target < alignments.numberOfTargets(); target++) {
                 MultiAlignmentHelper helperBig = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, target);
-                if(helperBig == null)
+                if (helperBig == null)
                     continue;
                 for (MultiAlignmentHelper helper : helperBig.split(80)) {
                     System.out.println(helper);
                     System.out.println();
-                    if(--k < 0)
+                    if (--k < 0)
                         return;
                 }
             }

@@ -4,9 +4,8 @@ import cc.redberry.pipe.OutputPort;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
 
 import java.io.IOException;
 import java.util.EnumMap;
@@ -34,8 +33,8 @@ public class VDJCAlignmentsDifferenceReader
     public VDJCAlignmentsDifferenceReader(String first, String second,
                                           GeneFeature featureToCompare,
                                           int hitsCompareLevel) throws IOException {
-        this(new VDJCAlignmentsReader(first, LociLibraryManager.getDefault()),
-                new VDJCAlignmentsReader(second, LociLibraryManager.getDefault()),
+        this(new VDJCAlignmentsReader(first),
+                new VDJCAlignmentsReader(second),
                 featureToCompare, hitsCompareLevel);
     }
 
@@ -100,7 +99,7 @@ public class VDJCAlignmentsDifferenceReader
 
         for (int i = 0; i < level && i < first.length; ++i)
             for (int j = 0; j < level && j < second.length; ++j)
-                if (first[i].getAllele().getId().equals(second[j].getAllele().getId()))
+                if (first[i].getGene().getId().equals(second[j].getGene().getId()))
                     return true;
         return false;
     }

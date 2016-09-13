@@ -36,7 +36,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.quality.QualityAggregationType;
 import com.milaboratory.core.tree.TreeSearchParameters;
 import com.milaboratory.mixcr.assembler.*;
-import com.milaboratory.mixcr.reference.GeneFeature;
+import io.repseq.core.GeneFeature;
 import com.milaboratory.mixcr.vdjaligners.DAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;

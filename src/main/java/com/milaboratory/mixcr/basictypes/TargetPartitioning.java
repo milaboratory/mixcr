@@ -31,9 +31,10 @@ package com.milaboratory.mixcr.basictypes;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
-import com.milaboratory.mixcr.reference.ReferencePoint;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
+import io.repseq.core.ReferencePoint;
+import io.repseq.core.SequencePartitioning;
 
 import java.util.EnumMap;
 
@@ -86,7 +87,7 @@ public final class TargetPartitioning extends SequencePartitioning {
 
             int positionOfActivationPoint = -2;
             if (referencePoint.getActivationPoint() != null)
-                positionOfActivationPoint = hit.getAllele().getPartitioning()
+                positionOfActivationPoint = hit.getGene().getPartitioning()
                         .getRelativePosition(hit.getAlignedFeature(), referencePoint.getActivationPoint());
 
             if (referencePoint.isAttachedToLeftAlignmentBound()) {

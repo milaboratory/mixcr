@@ -28,11 +28,9 @@
  */
 package com.milaboratory.mixcr.export;
 
-import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.cli.Util;
-import com.milaboratory.mixcr.reference.GeneType;
+import io.repseq.core.GeneType;
 import org.junit.Ignore;
 import org.junit.Test;
 

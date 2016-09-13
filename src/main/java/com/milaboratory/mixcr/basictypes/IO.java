@@ -31,12 +31,12 @@ package com.milaboratory.mixcr.basictypes;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.reference.Allele;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.Serializer;
+import io.repseq.core.VDJCGene;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -45,7 +45,7 @@ class IO {
     public static class VDJCHitSerializer implements Serializer<VDJCHit> {
         @Override
         public void write(PrimitivO output, VDJCHit object) {
-            output.writeObject(object.getAllele());
+            output.writeObject(object.getGene());
             output.writeObject(object.getAlignedFeature());
             output.writeVarInt(object.numberOfTargets());
             for (int i = object.numberOfTargets() - 1; i >= 0; --i)
@@ -55,14 +55,14 @@ class IO {
 
         @Override
         public VDJCHit read(PrimitivI input) {
-            Allele allele = input.readObject(Allele.class);
+            VDJCGene gene = input.readObject(VDJCGene.class);
             GeneFeature alignedFeature = input.readObject(GeneFeature.class);
             int numberOfTargets = input.readVarInt();
             Alignment<NucleotideSequence>[] alignments = new Alignment[numberOfTargets];
             for (int i = numberOfTargets - 1; i >= 0; --i)
                 alignments[i] = input.readObject(Alignment.class);
             float score = input.readFloat();
-            return new VDJCHit(allele, alignments, alignedFeature, score);
+            return new VDJCHit(gene, alignments, alignedFeature, score);
         }
 
         @Override

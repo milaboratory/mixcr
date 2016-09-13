@@ -22,7 +22,7 @@ To install MiXCR using Homebrew just type the following commands:
 Installation on Mac OS X / Linux / FreeBSD from zip distribution
 ----------------------------------------------------------------
 
-- Check that you have Java **1.7+** installed on your system by typing ``java -version``. Here is the example output of this command:
+- Check that you have Java **1.8+** installed on your system by typing ``java -version``. Here is the example output of this command:
 
   .. code-block:: console
 

@@ -190,20 +190,19 @@ public final class CloneAssemblerReport implements CloneAssemblerListener, Repor
 
         helper.writeField("Final clonotype count", clonesCount)
                 .writeField("Average number of reads per clonotype", Util.PERCENT_FORMAT.format(1.0 * alignmentsInClones / clonesCount))
-                .writeField("Total number of reads used in clonotypes", alignmentsInClones)
-                .writePercentField("Reads used in clonotypes, percent of total", alignmentsInClones, totalReads)
-                .writePercentField("Clone sequences analysed, percent of total", clusterizationBase, totalReads)
-                .writePercentField("Number of reads used as a core, percent of used", coreAlignments.get(), clusterizationBase)
-                .writePercentField("Mapped low quality reads, percent of used", deferredAlignmentsMapped.get(), clusterizationBase)
-                .writePercentField("Reads clustered in PCR error correction, percent of used", readsClustered.get(), clusterizationBase)
-                .writePercentField("Reads pre-clustered due to the similar VJC-lists, percent of used", readsPreClustered.get(), alignmentsInClones)
-                .writePercentField("Percent of reads dropped due to the lack of a clone sequence",
+                .writePercentAndAbsoluteField("Reads used in clonotypes, percent of total", alignmentsInClones, totalReads)
+                .writePercentAndAbsoluteField("Reads used in clonotypes before clustering, percent of total", clusterizationBase, totalReads)
+                .writePercentAndAbsoluteField("Number of reads used as a core, percent of used", coreAlignments.get(), clusterizationBase)
+                .writePercentAndAbsoluteField("Mapped low quality reads, percent of used", deferredAlignmentsMapped.get(), clusterizationBase)
+                .writePercentAndAbsoluteField("Reads clustered in PCR error correction, percent of used", readsClustered.get(), clusterizationBase)
+                .writePercentAndAbsoluteField("Reads pre-clustered due to the similar VJC-lists, percent of used", readsPreClustered.get(), alignmentsInClones)
+                .writePercentAndAbsoluteField("Reads dropped due to the lack of a clone sequence",
                         failedToExtractTarget.get(), totalReads)
-                .writePercentField("Percent of reads dropped due to low quality",
+                .writePercentAndAbsoluteField("Reads dropped due to low quality",
                         droppedAsLowQuality.get(), totalReads)
-                .writePercentField("Percent of reads dropped due to failed mapping",
+                .writePercentAndAbsoluteField("Reads dropped due to failed mapping",
                         deferredAlignmentsDropped.get(), totalReads)
-                .writePercentField("Reads dropped with low quality clones", readsDroppedWithClones.get(), alignmentsInClones)
+                .writePercentAndAbsoluteField("Reads dropped with low quality clones", readsDroppedWithClones.get(), alignmentsInClones)
                 .writeField("Clonotypes eliminated by PCR error correction", clonesClustered.get())
                 .writeField("Clonotypes dropped as low quality", clonesDropped.get())
                 .writeField("Clonotypes pre-clustered due to the similar VJC-lists", clonesPreClustered.get());

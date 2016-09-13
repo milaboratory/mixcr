@@ -32,7 +32,7 @@
 
     <groupId>com.milaboratory</groupId>
     <artifactId>mixcr</artifactId>
-    <version>1.8.3</version>
+    <version>2.0</version>
     <packaging>jar</packaging>
     <name>MiXCR</name>
 
@@ -49,9 +49,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.milaboratory</groupId>
-            <artifactId>milib</artifactId>
-            <version>${milib.version}</version>
+            <groupId>io.repseq</groupId>
+            <artifactId>repseqio</artifactId>
+            <version>1.2.0</version>
         </dependency>
 
         <dependency>
@@ -192,6 +192,18 @@
                             <filters>
                                 <filter>
                                     <artifact>com.milaboratory:milib</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>log4j:log4j</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>commons-logging:commons-logging</artifact>
                                     <includes>
                                         <include>**</include>
                                     </includes>

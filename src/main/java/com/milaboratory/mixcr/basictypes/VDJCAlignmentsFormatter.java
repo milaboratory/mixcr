@@ -35,8 +35,9 @@ import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.MultiAlignmentHelper;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.reference.GeneType;
-import com.milaboratory.mixcr.reference.ReferencePoint;
+import io.repseq.core.GeneType;
+import io.repseq.core.ReferencePoint;
+import io.repseq.core.SequencePartitioning;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,7 +59,7 @@ public class VDJCAlignmentsFormatter {
                     continue;
                 alignment = alignment.invert(targetSeq);
                 alignments.add(alignment);
-                alignmentLeftComments.add(hit.getAllele().getName());
+                alignmentLeftComments.add(hit.getGene().getName());
                 alignmentRightComments.add(" " + hit.getAlignment(targetId).getScore());
             }
 

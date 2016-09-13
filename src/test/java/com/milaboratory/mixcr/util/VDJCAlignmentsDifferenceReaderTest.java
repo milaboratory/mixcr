@@ -2,7 +2,7 @@ package com.milaboratory.mixcr.util;
 
 import cc.redberry.pipe.CUtils;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.reference.GeneFeature;
+import io.repseq.core.GeneFeature;
 import org.junit.Assert;
 import org.junit.Test;
 

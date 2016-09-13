@@ -31,10 +31,13 @@ package com.milaboratory.mixcr.assembler;
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
-import com.milaboratory.mixcr.reference.AlleleResolver;
 import com.milaboratory.util.Factory;
+import io.repseq.core.VDJCLibraryRegistry;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 
 public interface AlignmentsProvider {
     OutputPortCloseable<VDJCAlignments> create();
@@ -47,21 +50,21 @@ public interface AlignmentsProvider {
     long getTotalNumberOfReads();
 
     final class Util {
-        static AlignmentsProvider createProvider(final byte[] rawData, final AlleleResolver alleleResolver) {
+        static AlignmentsProvider createProvider(final byte[] rawData, final VDJCLibraryRegistry geneResolver) {
             return new VDJCAlignmentsReaderWrapper(new Factory<VDJCAlignmentsReader>() {
                 @Override
                 public VDJCAlignmentsReader create() {
-                    return new VDJCAlignmentsReader(new ByteArrayInputStream(rawData), alleleResolver);
+                    return new VDJCAlignmentsReader(new ByteArrayInputStream(rawData), geneResolver);
                 }
             });
         }
 
-        public static AlignmentsProvider createProvider(final String file, final AlleleResolver alleleResolver) {
+        public static AlignmentsProvider createProvider(final String file, final VDJCLibraryRegistry geneResolver) {
             return new VDJCAlignmentsReaderWrapper(new Factory<VDJCAlignmentsReader>() {
                 @Override
                 public VDJCAlignmentsReader create() {
                     try {
-                        return new VDJCAlignmentsReader(file, alleleResolver);
+                        return new VDJCAlignmentsReader(file, geneResolver);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -69,12 +72,12 @@ public interface AlignmentsProvider {
             });
         }
 
-        public static AlignmentsProvider createProvider(final File file, final AlleleResolver alleleResolver) {
+        public static AlignmentsProvider createProvider(final File file, final VDJCLibraryRegistry geneResolver) {
             return new VDJCAlignmentsReaderWrapper(new Factory<VDJCAlignmentsReader>() {
                 @Override
                 public VDJCAlignmentsReader create() {
                     try {
-                        return new VDJCAlignmentsReader(file, alleleResolver);
+                        return new VDJCAlignmentsReader(file, geneResolver);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -82,11 +85,11 @@ public interface AlignmentsProvider {
             });
         }
 
-        public static AlignmentsProvider createProvider(final InputStream file, final AlleleResolver alleleResolver) {
+        public static AlignmentsProvider createProvider(final InputStream file, final VDJCLibraryRegistry geneResolver) {
             return new VDJCAlignmentsReaderWrapper(new Factory<VDJCAlignmentsReader>() {
                 @Override
                 public VDJCAlignmentsReader create() {
-                    return new VDJCAlignmentsReader(file, alleleResolver);
+                    return new VDJCAlignmentsReader(file, geneResolver);
                 }
             });
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * Copyright (c) 2014-2016, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
  * (here and after addressed as Inventors)
  * All Rights Reserved
  *
@@ -26,49 +26,10 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.reference;
+package com.milaboratory.mixcr.basictypes;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import io.repseq.core.VDJCGene;
 
-public class Gene {
-    final int index;
-    final GeneGroup group;
-    final String name;
-    final List<Allele> alleles, uAlleles;
-    final LocusContainer locusContainer;
-
-    public Gene(int index, String name, GeneGroup group, LocusContainer container) {
-        this.index = index;
-        this.name = name;
-        this.group = group;
-        this.alleles = new ArrayList<>();
-        this.uAlleles = Collections.unmodifiableList(alleles);
-        this.locusContainer = container;
-    }
-
-    public LocusContainer getLocusContainer() {
-        return locusContainer;
-    }
-
-    public int getIndex() {
-        return index;
-    }
-
-    public GeneGroup getGroup() {
-        return group;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public List<Allele> getAlleles() {
-        return uAlleles;
-    }
-
-    public Allele getReferenceAllele() {
-        return alleles.get(0);
-    }
+public interface HasGene {
+    VDJCGene getGene();
 }

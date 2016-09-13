@@ -6,14 +6,14 @@ import com.beust.jcommander.Parameters;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
+import com.milaboratory.cli.ActionParametersWithOutput;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriterI;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.mixcr.util.VDJCAlignmentsDifferenceReader;
 import com.milaboratory.util.SmartProgressReporter;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
 
 import java.io.FileOutputStream;
 import java.io.PrintStream;
@@ -31,8 +31,8 @@ public final class ActionAlignmentsDiff implements Action {
 
     @Override
     public void go(ActionHelper actionHelper) throws Exception {
-        try (VDJCAlignmentsReader reader1 = new VDJCAlignmentsReader(parameters.get1(), LociLibraryManager.getDefault());
-             VDJCAlignmentsReader reader2 = new VDJCAlignmentsReader(parameters.get2(), LociLibraryManager.getDefault());
+        try (VDJCAlignmentsReader reader1 = new VDJCAlignmentsReader(parameters.get1());
+             VDJCAlignmentsReader reader2 = new VDJCAlignmentsReader(parameters.get2());
              VDJCAlignmentsWriterI only1 = parameters.onlyFirst == null ?
                      VDJCAlignmentsWriterI.DummyWriter.INSTANCE : new VDJCAlignmentsWriter(parameters.onlyFirst);
              VDJCAlignmentsWriterI only2 = parameters.onlySecond == null ?
@@ -51,10 +51,10 @@ public final class ActionAlignmentsDiff implements Action {
             long same = 0, onlyIn1 = 0, onlyIn2 = 0, diffFeature = 0, justDiff = 0;
             long[] diffHits = new long[GeneType.NUMBER_OF_TYPES];
 
-            only1.header(reader1.getParameters(), reader1.getUsedAlleles());
-            diff1.header(reader1.getParameters(), reader1.getUsedAlleles());
-            only2.header(reader2.getParameters(), reader2.getUsedAlleles());
-            diff2.header(reader2.getParameters(), reader2.getUsedAlleles());
+            only1.header(reader1.getParameters(), reader1.getUsedGenes());
+            diff1.header(reader1.getParameters(), reader1.getUsedGenes());
+            only2.header(reader2.getParameters(), reader2.getUsedGenes());
+            diff2.header(reader2.getParameters(), reader2.getUsedGenes());
 
             VDJCAlignmentsDifferenceReader diffReader = new VDJCAlignmentsDifferenceReader(reader1, reader2,
                     parameters.getFeature(), parameters.hitsCompareLevel);

@@ -52,7 +52,7 @@ where
 
 -  ``targetFrom`` - position of first aligned nucleotide in **target
    sequence** (sequence of gene feature from reference V, D, J or C
-   allele used in alignment; e.g. ``VRegion`` in TRBV12-2); this
+   gene used in alignment; e.g. ``VRegion`` in TRBV12-2); this
    boundary is inclusive
 -  ``targetTo`` - next position after last aligned nucleotide in **target
    sequence**; this boundary is exclusive

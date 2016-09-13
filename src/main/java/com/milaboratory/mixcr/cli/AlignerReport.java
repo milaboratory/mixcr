@@ -32,22 +32,18 @@ import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerEventListener;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause;
-import com.milaboratory.mixcr.vdjaligners.VJAlignmentOrder;
 
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 
 public final class AlignerReport implements VDJCAlignerEventListener, ReportWriter {
-    private final VJAlignmentOrder order;
     private final AtomicLongArray fails = new AtomicLongArray(VDJCAlignmentFailCause.values().length);
     private final AtomicLong successes = new AtomicLong(0);
-    private final AtomicLong hasDifferentVJLoci = new AtomicLong(0);
+    private final AtomicLong chimeras = new AtomicLong(0);
     private final AtomicLong alignedOverlap = new AtomicLong(0);
     private final AtomicLong nonAlignedOverlap = new AtomicLong(0);
-    private volatile boolean allowDifferentVJLoci = false;
 
-    public AlignerReport(VJAlignmentOrder order) {
-        this.order = order;
+    public AlignerReport() {
     }
 
     public long getFails(VDJCAlignmentFailCause cause) {
@@ -78,10 +74,6 @@ public final class AlignerReport implements VDJCAlignerEventListener, ReportWrit
         return nonAlignedOverlap.get();
     }
 
-    public void setAllowDifferentVJLoci(boolean allowDifferentVJLoci) {
-        this.allowDifferentVJLoci = allowDifferentVJLoci;
-    }
-
     @Override
     public void onFailedAlignment(SequenceRead read, VDJCAlignmentFailCause cause) {
         fails.incrementAndGet(cause.ordinal());
@@ -100,30 +92,27 @@ public final class AlignerReport implements VDJCAlignerEventListener, ReportWrit
             alignedOverlap.incrementAndGet();
     }
 
-    public void onAlignmentWithDifferentVJLoci() {
-        hasDifferentVJLoci.incrementAndGet();
+    public void onChimera() {
+        chimeras.incrementAndGet();
     }
 
     @Override
     public void writeReport(ReportHelper helper) {
         long total = getTotal();
-        long success = allowDifferentVJLoci ? successes.get() : successes.get() - hasDifferentVJLoci.get();
+        long success = successes.get();
         helper.writeField("Total sequencing reads", total);
-        helper.writeField("Successfully aligned reads", success);
-        helper.writePercentField("Successfully aligned, percent", success, total);
+        helper.writePercentAndAbsoluteField("Successfully aligned reads", success, total);
 
-        helper.writePercentField(allowDifferentVJLoci ?
-                        "Alignment with different V and J protein chain genes" :
-                        "Alignment filtered because V and J segments were assigned to different protein chain genes",
-                hasDifferentVJLoci.get(), total);
+        if (chimeras.get() != 0)
+            helper.writePercentAndAbsoluteField("Chimeras", chimeras.get(), total);
 
         for (VDJCAlignmentFailCause cause : VDJCAlignmentFailCause.values())
             if (fails.get(cause.ordinal()) != 0)
-                helper.writePercentField(cause.reportLine, fails.get(cause.ordinal()), total);
-        
-        helper.writePercentField("Overlapped, percent", alignedOverlap.get() + nonAlignedOverlap.get(), total);
-        helper.writePercentField("Overlapped and aligned, percent", alignedOverlap.get(), total);
-        helper.writePercentField("Overlapped and not aligned, percent", nonAlignedOverlap.get(), total);
+                helper.writePercentAndAbsoluteField(cause.reportLine, fails.get(cause.ordinal()), total);
+
+        helper.writePercentAndAbsoluteField("Overlapped", alignedOverlap.get() + nonAlignedOverlap.get(), total);
+        helper.writePercentAndAbsoluteField("Overlapped and aligned", alignedOverlap.get(), total);
+        helper.writePercentAndAbsoluteField("Overlapped and not aligned", nonAlignedOverlap.get(), total);
     }
 
     public long getTotal() {

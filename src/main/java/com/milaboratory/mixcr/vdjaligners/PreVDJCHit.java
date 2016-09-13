@@ -31,8 +31,8 @@ package com.milaboratory.mixcr.vdjaligners;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.reference.Allele;
-import com.milaboratory.mixcr.reference.GeneFeature;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.VDJCGene;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,12 +48,12 @@ final class PreVDJCHit implements Comparable<PreVDJCHit> {
         this.alignment = alignment;
     }
 
-    static VDJCHit[] convert(List<Allele> alleles, GeneFeature feature,
+    static VDJCHit[] convert(List<VDJCGene> genes, GeneFeature feature,
                              List<PreVDJCHit> preHits) {
-        return convert(alleles, feature, preHits, 0, 1);
+        return convert(genes, feature, preHits, 0, 1);
     }
 
-    static VDJCHit[] convert(List<Allele> alleles, GeneFeature feature,
+    static VDJCHit[] convert(List<VDJCGene> genes, GeneFeature feature,
                              List<PreVDJCHit> preHits, int indexOfTargets,
                              int numberOfTargets) {
         VDJCHit[] hits = new VDJCHit[preHits.size()];
@@ -61,12 +61,12 @@ final class PreVDJCHit implements Comparable<PreVDJCHit> {
             PreVDJCHit h = preHits.get(i);
             Alignment<NucleotideSequence>[] alignments = new Alignment[numberOfTargets];
             alignments[indexOfTargets] = h.alignment;
-            hits[i] = new VDJCHit(alleles.get(h.id), alignments, feature);
+            hits[i] = new VDJCHit(genes.get(h.id), alignments, feature);
         }
         return hits;
     }
 
-    static VDJCHit[] combine(final List<Allele> alleles, final GeneFeature feature, final PreVDJCHit[][] hits) {
+    static VDJCHit[] combine(final List<VDJCGene> genes, final GeneFeature feature, final PreVDJCHit[][] hits) {
         for (int i = 0; i < hits.length; i++)
             Arrays.sort(hits[i]);
         ArrayList<VDJCHit> result = new ArrayList<>();
@@ -89,7 +89,7 @@ final class PreVDJCHit implements Comparable<PreVDJCHit> {
                     ++pointers[i];
                 }
 
-            result.add(new VDJCHit(alleles.get(minId), alignments, feature));
+            result.add(new VDJCHit(genes.get(minId), alignments, feature));
         }
         VDJCHit[] vdjcHits = result.toArray(new VDJCHit[result.size()]);
         Arrays.sort(vdjcHits);

@@ -37,7 +37,6 @@ import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
 
 import java.util.List;
 
@@ -49,13 +48,13 @@ public class VersionInfoAction implements Action {
         String inputFile = parameters.getInputFile();
         String i = inputFile.toLowerCase();
         if (i.endsWith(".vdjca.gz") || i.endsWith(".vdjca")) {
-            try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(inputFile, LociLibraryManager.getDefault())) {
+            try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(inputFile)) {
                 reader.init();
                 System.out.println("MagicBytes = " + reader.getMagic());
                 System.out.println(reader.getVersionInfo());
             }
         } else if (i.endsWith(".clns.gz") || i.endsWith(".clns")) {
-            CloneSet cs = CloneSetIO.read(inputFile, LociLibraryManager.getDefault());
+            CloneSet cs = CloneSetIO.read(inputFile);
             System.out.println(cs.getVersionInfo());
         } else
             throw new ParameterException("Wrong file type.");
@@ -71,8 +70,7 @@ public class VersionInfoAction implements Action {
         return parameters;
     }
 
-    @Parameters(commandDescription = "Outputs information about MiXCR version which generated the file.",
-            optionPrefixes = "-")
+    @Parameters(commandDescription = "Outputs information about MiXCR version which generated the file.")
     private static class AParameters extends ActionParameters {
         @Parameter(description = "binary_file{.vdjca|.clns}[.gz]")
         public List<String> input;

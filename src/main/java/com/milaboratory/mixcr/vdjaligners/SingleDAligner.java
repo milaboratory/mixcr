@@ -36,22 +36,21 @@ import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.reference.Allele;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.Locus;
+import io.repseq.core.Chains;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.VDJCGene;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 public final class SingleDAligner {
     private final AlignmentScoring<NucleotideSequence> scoring;
     private final float absoluteMinScore, relativeMinScore;
     private final int maxHits;
-    private final List<SequenceWithLocus> sequences = new ArrayList<>();
-    private final List<Allele> alleles;
+    private final List<SequenceWithChains> sequences = new ArrayList<>();
+    private final List<VDJCGene> genes;
     private final GeneFeature featureToAlign;
 
     private final LoadingCache<NucleotideSequence, List<PreVDJCHit>> resultsCache =
@@ -67,18 +66,18 @@ public final class SingleDAligner {
                     );
 
     public SingleDAligner(DAlignerParameters parameters,
-                          List<Allele> alleles) {
+                          List<VDJCGene> genes) {
         this.scoring = parameters.getScoring();
         this.absoluteMinScore = parameters.getAbsoluteMinScore();
         this.relativeMinScore = parameters.getRelativeMinScore();
         this.maxHits = parameters.getMaxHits();
         this.featureToAlign = parameters.getGeneFeatureToAlign();
-        for (Allele allele : alleles)
-            sequences.add(new SequenceWithLocus(allele, featureToAlign));
-        this.alleles = new ArrayList<>(alleles);
+        for (VDJCGene gene : genes)
+            sequences.add(new SequenceWithChains(gene, featureToAlign));
+        this.genes = new ArrayList<>(genes);
     }
 
-    List<PreVDJCHit> align0(NucleotideSequence sequence, Set<Locus> loci, int from, int to) {
+    List<PreVDJCHit> align0(NucleotideSequence sequence, Chains chains, int from, int to) {
         if (from > to)
             throw new IllegalArgumentException();
 
@@ -90,8 +89,8 @@ public final class SingleDAligner {
 
             PreVDJCHit h;
             for (PreVDJCHit hit : cachedResult) {
-                //filter non-possible loci
-                if (!loci.contains(sequences.get(hit.id).locus))
+                //filter non-possible chains
+                if (!chains.intersects(sequences.get(hit.id).chains))
                     continue;
 
                 result.add(h = convert(hit, from));
@@ -110,10 +109,10 @@ public final class SingleDAligner {
         }
     }
 
-    public VDJCHit[] align(NucleotideSequence sequence, Set<Locus> loci, int from, int to,
+    public VDJCHit[] align(NucleotideSequence sequence, Chains chains, int from, int to,
                            int targetIndex, int numberOfTargets) {
-        List<PreVDJCHit> preHits = align0(sequence, loci, from, to);
-        return PreVDJCHit.convert(alleles, featureToAlign, preHits,
+        List<PreVDJCHit> preHits = align0(sequence, chains, from, to);
+        return PreVDJCHit.convert(genes, featureToAlign, preHits,
                 targetIndex, numberOfTargets);
     }
 
@@ -155,13 +154,13 @@ public final class SingleDAligner {
                 result.remove(i);
     }
 
-    private static final class SequenceWithLocus {
+    private static final class SequenceWithChains {
         private final NucleotideSequence sequence;
-        private final Locus locus;
+        private final Chains chains;
 
-        public SequenceWithLocus(Allele allele, GeneFeature featureToAlign) {
-            this.sequence = allele.getFeature(featureToAlign);
-            this.locus = allele.getLocus();
+        public SequenceWithChains(VDJCGene gene, GeneFeature featureToAlign) {
+            this.sequence = gene.getFeature(featureToAlign);
+            this.chains = gene.getChains();
         }
     }
 }

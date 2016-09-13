@@ -44,7 +44,6 @@ import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.util.SmartProgressReporter;
 
 import java.io.IOException;
@@ -56,8 +55,7 @@ public class ActionExportReads implements Action {
     @Override
     @SuppressWarnings("unchecked")
     public void go(ActionHelper helper) throws Exception {
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getInputFile(),
-                LociLibraryManager.getDefault());
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getInputFile());
              SequenceWriter writer = createWriter()) {
             SmartProgressReporter.startProgressReport("Extracting reads", reader,
                     System.err);

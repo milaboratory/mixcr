@@ -28,7 +28,7 @@
  */
 package com.milaboratory.mixcr.assembler;
 
-import com.milaboratory.mixcr.reference.GeneFeature;
+import io.repseq.core.GeneFeature;
 
 public abstract class AbstractClonalAlignerParameters<T extends AbstractClonalAlignerParameters<T>>
         implements java.io.Serializable {

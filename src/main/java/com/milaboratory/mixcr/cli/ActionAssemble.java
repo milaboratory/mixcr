@@ -29,9 +29,6 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
-import cc.redberry.pipe.OutputPortCloseable;
-import cc.redberry.pipe.blocks.FilteringPort;
-import cc.redberry.primitives.Filter;
 import com.beust.jcommander.DynamicParameter;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
@@ -39,40 +36,50 @@ import com.beust.jcommander.Parameters;
 import com.beust.jcommander.validators.PositiveInteger;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
+import com.milaboratory.cli.ActionParametersWithOutput;
 import com.milaboratory.mixcr.assembler.*;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
-import com.milaboratory.mixcr.reference.Allele;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
-import com.milaboratory.mixcr.reference.LociLibraryManager;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PipeWriter;
 import com.milaboratory.util.SmartProgressReporter;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
+import io.repseq.core.VDJCGene;
+import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ActionAssemble implements Action {
     private final AssembleParameters actionParameters = new AssembleParameters();
 
     @Override
     public void go(ActionHelper helper) throws Exception {
-        final List<Allele> alleles;
+        // Saving initial timestamp
+        long beginTimestamp = System.currentTimeMillis();
+
+        // Extracting V/D/J/C gene list from input vdjca file
+        final List<VDJCGene> genes;
         final VDJCAlignerParameters alignerParameters;
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(actionParameters.getInputFileName(), LociLibraryManager.getDefault())) {
-            alleles = reader.getUsedAlleles();
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(actionParameters.getInputFileName(),
+                VDJCLibraryRegistry.getDefault())) {
+            genes = reader.getUsedGenes();
             // Saving aligner parameters to correct assembler parameters
             alignerParameters = reader.getParameters();
         }
 
         AlignmentsProvider alignmentsProvider = AlignmentsProvider.Util.createProvider(
                 actionParameters.getInputFileName(),
-                LociLibraryManager.getDefault());
+                VDJCLibraryRegistry.getDefault());
 
         CloneAssemblerParameters assemblerParameters = actionParameters.getCloneAssemblerParameters();
 
+        // Overriding JSON parameters
         if (!actionParameters.overrides.isEmpty()) {
             assemblerParameters = JsonOverrider.override(assemblerParameters, CloneAssemblerParameters.class,
                     actionParameters.overrides);
@@ -92,60 +99,55 @@ public class ActionAssemble implements Action {
             assemblerParameters.getCloneFactoryParameters().setFeatureToAlign(geneType, intersection);
         }
 
-        // Adjusting features to align for correct processing
-        for (GeneType geneType : GeneType.values()) {
-            GeneFeature featureAssemble = assemblerParameters.getCloneFactoryParameters().getFeatureToAlign(geneType);
-            GeneFeature featureAlignment = alignerParameters.getFeatureToAlign(geneType);
-            if (featureAssemble == null || featureAlignment == null)
-                continue;
-            GeneFeature intersection = GeneFeature.intersection(featureAlignment, featureAssemble);
-            assemblerParameters.getCloneFactoryParameters().setFeatureToAlign(geneType, intersection);
-        }
+        // Performing assembly
+        try (CloneAssembler assembler = new CloneAssembler(assemblerParameters, false, genes)) {
+            // Creating event listener to collect run statistics
+            CloneAssemblerReport report = new CloneAssemblerReport();
+            assembler.setListener(report);
 
-        try (CloneAssembler assembler = new CloneAssembler(assemblerParameters, false, alleles)) {
 
-            CloneAssemblerReport report = actionParameters.report == null ? null : new CloneAssemblerReport();
-            if (report != null)
-                assembler.setListener(report);
-
+            // Running assembler
             CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(
                     alignmentsProvider,
                     assembler, actionParameters.threads);
             SmartProgressReporter.startProgressReport(assemblerRunner);
             assemblerRunner.run();
+
+            // Getting results
             final CloneSet cloneSet = assemblerRunner.getCloneSet();
+
+            // Writing results
             try (CloneSetIO.CloneSetWriter writer = new CloneSetIO.CloneSetWriter(cloneSet, actionParameters.getOutputFileName())) {
                 SmartProgressReporter.startProgressReport(writer);
                 writer.write();
             }
 
-            if (report != null) {
-                if (cloneSet.getClones().size() != report.getCloneCount())
-                    throw new RuntimeException("Ooops");
-                report.setTotalReads(alignmentsProvider.getTotalNumberOfReads());
-                Util.writeReport(actionParameters.getInputFileName(), actionParameters.getOutputFileName(),
-                        helper.getCommandLineArguments(), actionParameters.report, report);
-            }
+            // Writing report
+            long time = System.currentTimeMillis() - beginTimestamp;
 
+            assert cloneSet.getClones().size() == report.getCloneCount();
+
+            report.setTotalReads(alignmentsProvider.getTotalNumberOfReads());
+
+            // Writing report to stout
+            System.out.println("============= Report ==============");
+            Util.writeReportToStdout(report, time);
+
+            if (actionParameters.report != null)
+                Util.writeReport(actionParameters.getInputFileName(), actionParameters.getOutputFileName(),
+                        helper.getCommandLineArguments(), actionParameters.report, report, time);
+
+            // Writing raw events (not documented feature)
             if (actionParameters.events != null)
                 try (PipeWriter<ReadToCloneMapping> writer = new PipeWriter<>(actionParameters.events)) {
                     CUtils.drain(assembler.getAssembledReadsPort(), writer);
                 }
 
+            // Writing Alignment to clone index file
             if (actionParameters.readsToClonesMapping != null)
                 AlignmentsToClonesMappingContainer.writeMapping(assembler.getAssembledReadsPort(), cloneSet.size(),
                         actionParameters.readsToClonesMapping);
         }
-    }
-
-    private static Iterator<ReadToCloneMapping> source(OutputPortCloseable<ReadToCloneMapping> assemblerReadsPort) {
-        return new CUtils.OPIterator<>(new FilteringPort<>(assemblerReadsPort,
-                new Filter<ReadToCloneMapping>() {
-                    @Override
-                    public boolean accept(ReadToCloneMapping object) {
-                        return !object.isDropped();
-                    }
-                }));
     }
 
     @Override

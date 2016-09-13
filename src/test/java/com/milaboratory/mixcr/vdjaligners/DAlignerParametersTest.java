@@ -30,7 +30,7 @@ package com.milaboratory.mixcr.vdjaligners;
 
 import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.io.util.IOTestUtil;
-import com.milaboratory.mixcr.reference.GeneFeature;
+import io.repseq.core.GeneFeature;
 import com.milaboratory.util.GlobalObjectMappers;
 import org.junit.Test;
 

@@ -40,11 +40,14 @@ The following table contains description of command line options for ``align``:
 | ``-r {file}`` |br|                  |                            | Report file name. If this option is not                    |
 | ``--report ...``                    |                            | specified, no report file be produced.                     |
 +-------------------------------------+----------------------------+------------------------------------------------------------+
-| ``-l {loci}`` |br|                  | ``ALL``                    | Target immunological loci list separated by "``,``".       |
-| ``--loci ...``                      |                            | Available values: ``IGH``, ``IGL``, ``IGK``, ``TRA``,      |
+| ``-с {chain}`` |br|                 | ``ALL``                    | Target immunological chain list separated by "``,``".      |
+| ``--chains ...``                    |                            | Available values: ``IGH``, ``IGL``, ``IGK``, ``TRA``,      |
 |                                     |                            | ``TRB``, ``TRG``, ``TRD``, ``IG`` (for all immunoglobulin  |
-|                                     |                            | loci), ``TCR`` (for all T-cell receptor loci), ``ALL``     |
-|                                     |                            | (for all loci) .                                           |
+|                                     |                            | chains), ``TCR`` (for all T-cell receptor chains), ``ALL`` |
+|                                     |                            | (for all chains) . It is highly recomended to use          |
+|                                     |                            | the default value for this parameter in most cases         |
+|                                     |                            | at the align step. Filltering is also possible at the      |
+|                                     |                            | export step.                                               |
 +-------------------------------------+----------------------------+------------------------------------------------------------+
 | ``-s {speciesName}`` |br|           | ``HomoSapiens``            | Species (organism). Possible values: ``hsa`` (or           |
 | ``--species ...``                   |                            | ``HomoSapiens``) and ``mmu`` (or ``MusMusculus``), or any  |
@@ -62,7 +65,7 @@ The following table contains description of command line options for ``align``:
 | ``-t {numberOfThreads}`` |br|       | number of                  | Number of processing threads.                              |
 | ``--threads ...``                   | available CPU cores        |                                                            |
 +-------------------------------------+----------------------------+------------------------------------------------------------+
-| ``-n {numberOfReads}`` |br|         |                            | Limit number of sequences that will be analysed (only      | 
+| ``-n {numberOfReads}`` |br|         |                            | Limit number of sequences that will be analysed (only      |
 | ``--limit ...``                     |                            | first ``-n`` sequences will be processed from input        |
 |                                     |                            | file(s)).                                                  |
 +-------------------------------------+----------------------------+------------------------------------------------------------+
@@ -291,24 +294,3 @@ These parameters can be overridden in the following way:
 
 
 .. _ref-alignRNASeq:
-
-Analysis of RNA-Seq data
-------------------------
-
-Analysis of RNA-Seq data performed with ``-p rna-seq`` option is almost equivalent to the following set of aligners parameters:
-
- - (**most important**) turned off floating bounds of V and J alignments:
-   
-   - ``-OvParameters.parameters.floatingLeftBound=false``
-   - ``-OjParameters.parameters.floatingRightBound=false``
- 
- - higher thresholds:
-
-   - ``-OvParameters.parameters.absoluteMinScore=80`` (was 40)
-   - ``-OjParameters.parameters.absoluteMinScore=70`` (was 40)
-   - ``-OminSumScore=200`` (was 120; see below)
-
- - more strict scoring for all alignments (V, J, C):
-
-   - ``-OxParameters.parameters.scoring.gapPenalty=-21``
-   - ``-OxParameters.parameters.scoring.subsMatrix='simple(match=5,mismatch=-12)'``

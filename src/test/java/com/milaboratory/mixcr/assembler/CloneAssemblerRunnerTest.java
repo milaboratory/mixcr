@@ -32,6 +32,7 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.core.alignment.BandedAlignerParameters;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
+import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SequenceReader;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
@@ -42,10 +43,10 @@ import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
-import com.milaboratory.mixcr.reference.*;
 import com.milaboratory.mixcr.vdjaligners.*;
 import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.SmartProgressReporter;
+import io.repseq.core.*;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -53,7 +54,6 @@ import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 
 public class CloneAssemblerRunnerTest {
@@ -80,11 +80,9 @@ public class CloneAssemblerRunnerTest {
         VDJCAlignerParameters alignerParameters = VDJCParametersPresets.getByName("default");
         VDJCAligner aligner = fastqFiles.length == 1 ? new VDJCAlignerS(alignerParameters) : new VDJCAlignerWithMerge(alignerParameters);
 
-        InputStream sample = LociLibraryReader.class.getClassLoader().getResourceAsStream("reference/mi.ll");
-        LociLibrary library = LociLibraryReader.read(sample, true);
-        for (Allele allele : library.getLocus(Species.HomoSapiens, Locus.IGH).getAllAlleles())
-            if (alignerParameters.containsRequiredFeature(allele))
-                aligner.addAllele(allele);
+        for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("mi", "hs").getGenes(Chains.IGH))
+            if (alignerParameters.containsRequiredFeature(gene))
+                aligner.addGene(gene);
 
         SequenceReader reader;
         if (fastqFiles.length == 1)
@@ -99,7 +97,7 @@ public class CloneAssemblerRunnerTest {
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(alignmentsSerialized)) {
             writer.header(aligner);
             for (Object read : CUtils.it(reader)) {
-                VDJCAlignmentResult result = (VDJCAlignmentResult) aligner.process(read);
+                VDJCAlignmentResult result = (VDJCAlignmentResult) aligner.process((SequenceRead) read);
                 if (result.alignment != null)
                     writer.write(result.alignment);
             }
@@ -107,7 +105,7 @@ public class CloneAssemblerRunnerTest {
 
         AlignmentsProvider alignmentsProvider = AlignmentsProvider.Util.createProvider(
                 alignmentsSerialized.toByteArray(),
-                library);
+                VDJCLibraryRegistry.getDefault());
 
         LinearGapAlignmentScoring<NucleotideSequence> scoring = new LinearGapAlignmentScoring<>(NucleotideSequence.ALPHABET, 5, -9, -12);
         CloneFactoryParameters factoryParameters = new CloneFactoryParameters(
@@ -128,7 +126,7 @@ public class CloneAssemblerRunnerTest {
         System.out.println(GlobalObjectMappers.toOneLine(assemblerParameters));
 
         CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(alignmentsProvider,
-                new CloneAssembler(assemblerParameters, true, aligner.getUsedAlleles()), 2);
+                new CloneAssembler(assemblerParameters, true, aligner.getUsedGenes()), 2);
         SmartProgressReporter.startProgressReport(assemblerRunner);
         assemblerRunner.run();
 
@@ -137,7 +135,7 @@ public class CloneAssemblerRunnerTest {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         CloneSetIO.write(cloneSet, bos);
 
-        CloneSet cloneSetDeserialized = CloneSetIO.read(new ByteArrayInputStream(bos.toByteArray()), library);
+        CloneSet cloneSetDeserialized = CloneSetIO.read(new ByteArrayInputStream(bos.toByteArray()));
 
         assertCSEquals(cloneSet, cloneSetDeserialized);
 

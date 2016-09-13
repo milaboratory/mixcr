@@ -42,11 +42,11 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequencesUtils;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.reference.Allele;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
 import com.milaboratory.mixcr.vdjaligners.KGeneAlignmentParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
+import io.repseq.core.VDJCGene;
 
 import java.util.*;
 
@@ -79,16 +79,16 @@ public class TargetMerger {
             final VDJCHit[] rightHits = targetRight.getAlignments().getHits(geneType);
             GeneFeature alignedFeature = leftHits.length == 0 ? rightHits.length == 0 ? null : rightHits[0].getAlignedFeature() : leftHits[0].getAlignedFeature();
 
-            Map<Allele, Alignment<NucleotideSequence>[]> map = extractHitsMapping(targetLeft, targetRight, geneType);
+            Map<VDJCGene, Alignment<NucleotideSequence>[]> map = extractHitsMapping(targetLeft, targetRight, geneType);
             ArrayList<VDJCHit> resultingHits = new ArrayList<>();
-            for (Map.Entry<Allele, Alignment<NucleotideSequence>[]> mE : map.entrySet()) {
-                final Allele allele = mE.getKey();
+            for (Map.Entry<VDJCGene, Alignment<NucleotideSequence>[]> mE : map.entrySet()) {
+                final VDJCGene gene = mE.getKey();
 
                 Alignment<NucleotideSequence> mergedAl = merge(
                         bp.getScoring(), extractBandedWidth(bp),
                         mergedTarget.getSequence(), offset,
                         mE.getValue()[0], mE.getValue()[1]);
-                resultingHits.add(new VDJCHit(allele, mergedAl, alignedFeature));
+                resultingHits.add(new VDJCHit(gene, mergedAl, alignedFeature));
             }
 
             Collections.sort(resultingHits);
@@ -106,22 +106,22 @@ public class TargetMerger {
     }
 
     @SuppressWarnings("unchecked")
-    static Map<Allele, Alignment<NucleotideSequence>[]> extractHitsMapping(AlignedTarget targetLeft, AlignedTarget targetRight, GeneType geneType) {
-        Map<Allele, Alignment<NucleotideSequence>[]> map = new HashMap<>();
+    static Map<VDJCGene, Alignment<NucleotideSequence>[]> extractHitsMapping(AlignedTarget targetLeft, AlignedTarget targetRight, GeneType geneType) {
+        Map<VDJCGene, Alignment<NucleotideSequence>[]> map = new HashMap<>();
         for (VDJCHit l : targetLeft.getAlignments().getHits(geneType)) {
-            final Allele allele = l.getAllele();
+            final VDJCGene gene = l.getGene();
             final Alignment<NucleotideSequence> al = l.getAlignment(targetLeft.getTargetId());
             if (al != null)
-                map.put(allele, new Alignment[]{al, null});
+                map.put(gene, new Alignment[]{al, null});
         }
         for (VDJCHit r : targetRight.getAlignments().getHits(geneType)) {
-            final Allele allele = r.getAllele();
+            final VDJCGene gene = r.getGene();
             final Alignment<NucleotideSequence> alignment = r.getAlignment(targetRight.getTargetId());
             if (alignment == null)
                 continue;
-            final Alignment<NucleotideSequence>[] als = map.get(allele);
+            final Alignment<NucleotideSequence>[] als = map.get(gene);
             if (als == null)
-                map.put(allele, new Alignment[]{null, alignment});
+                map.put(gene, new Alignment[]{null, alignment});
             else {
                 assert als[1] == null;
                 als[1] = alignment;
@@ -204,7 +204,7 @@ public class TargetMerger {
     public TargetMergingResult merge(long readId, AlignedTarget targetLeft, AlignedTarget targetRight) {
         for (GeneType geneType : GeneType.VJC_REFERENCE) {
 
-            Map<Allele, Alignment<NucleotideSequence>[]> map = extractHitsMapping(targetLeft, targetRight, geneType);
+            Map<VDJCGene, Alignment<NucleotideSequence>[]> map = extractHitsMapping(targetLeft, targetRight, geneType);
             if (map.isEmpty())
                 continue;
             List<Alignment<NucleotideSequence>[]> als = new ArrayList<>(map.values());

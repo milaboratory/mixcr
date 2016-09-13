@@ -25,7 +25,7 @@ to upgrade already installed MiXCR to the newest version:
 #### Requirements
 
 * Any OS with Java support (Linux, Windows, Mac OS X, etc..)
-* Java 1.7 or higher
+* Java 1.8 or higher
  
 ## Usage
 

@@ -37,10 +37,8 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.assembler.AlignmentsToClonesMappingContainer;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.reference.Allele;
-import com.milaboratory.mixcr.reference.GeneFeature;
-import com.milaboratory.mixcr.reference.GeneType;
-import com.milaboratory.mixcr.reference.ReferencePoint;
+import com.milaboratory.mixcr.cli.ActionAssemble;
+import io.repseq.core.*;
 import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.map.hash.TObjectFloatHashMap;
 
@@ -61,10 +59,6 @@ public final class FieldExtractors {
     private static final DecimalFormat SCORE_FORMAT = new DecimalFormat("#.#");
 
     static Field[] descriptors = null;
-
-    private static String alleleName(Allele allele, boolean familyOnly) {
-        return familyOnly ? allele.getFamilyName() : allele.getName();
-    }
 
     public synchronized static Field[] getFields() {
         if (descriptors == null) {
@@ -88,7 +82,22 @@ public final class FieldExtractors {
                         VDJCHit bestHit = object.getBestHit(type);
                         if (bestHit == null)
                             return NULL;
-                        return bestHit.getAllele().getName();
+                        return bestHit.getGene().getName();
+                    }
+                });
+            }
+
+            // Best gene
+            for (final GeneType type : GeneType.values()) {
+                char l = type.getLetter();
+                desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Gene",
+                        "Export best " + l + " hit gene name (e.g. TRBV12-3 for TRBV12-3*00)", "Best " + l + " gene", "best" + l + "Gene") {
+                    @Override
+                    protected String extract(VDJCObject object) {
+                        VDJCHit bestHit = object.getBestHit(type);
+                        if (bestHit == null)
+                            return NULL;
+                        return bestHit.getGene().getGeneName();
                     }
                 });
             }
@@ -97,22 +106,22 @@ public final class FieldExtractors {
             for (final GeneType type : GeneType.values()) {
                 char l = type.getLetter();
                 desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Family",
-                        "Export best " + l + " hit family name", "Best " + l + " hit family", "best" + l + "Family") {
+                        "Export best " + l + " hit family name (e.g. TRBV12 for TRBV12-3*00)", "Best " + l + " family", "best" + l + "Family") {
                     @Override
                     protected String extract(VDJCObject object) {
                         VDJCHit bestHit = object.getBestHit(type);
                         if (bestHit == null)
                             return NULL;
-                        return bestHit.getAllele().getFamilyName();
+                        return bestHit.getGene().getFamilyName();
                     }
                 });
             }
 
-            // Best hit scores
+            // Best hit score
             for (final GeneType type : GeneType.values()) {
                 char l = type.getLetter();
                 desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "HitScore",
-                        "Export best score for best " + l + " hit", "Best " + l + " hit score", "best" + l + "HitScore") {
+                        "Export score for best " + l + " hit", "Best " + l + " hit score", "best" + l + "HitScore") {
                     @Override
                     protected String extract(VDJCObject object) {
                         VDJCHit bestHit = object.getBestHit(type);
@@ -122,7 +131,6 @@ public final class FieldExtractors {
                     }
                 });
             }
-
 
             // All hits
             for (final GeneType type : GeneType.values()) {
@@ -136,7 +144,7 @@ public final class FieldExtractors {
                             return "";
                         StringBuilder sb = new StringBuilder();
                         for (int i = 0; ; i++) {
-                            sb.append(hits[i].getAllele().getName())
+                            sb.append(hits[i].getGene().getName())
                                     .append("(").append(SCORE_FORMAT.format(hits[i].getScore()))
                                     .append(")");
                             if (i == hits.length - 1)
@@ -160,7 +168,7 @@ public final class FieldExtractors {
                             return "";
                         StringBuilder sb = new StringBuilder();
                         for (int i = 0; ; i++) {
-                            sb.append(hits[i].getAllele().getName());
+                            sb.append(hits[i].getGene().getName());
                             if (i == hits.length - 1)
                                 break;
                             sb.append(",");
@@ -170,38 +178,26 @@ public final class FieldExtractors {
                 });
             }
 
+            // All gene names
+            for (final GeneType type : GeneType.values()) {
+                char l = type.getLetter();
+                desctiptorsList.add(new StringExtractor("-" + Character.toLowerCase(l) + "Genes",
+                        "Export all " + l + " gene names (e.g. TRBV12-3 for TRBV12-3*00)", "All " + l + " genes", "all" + l + "Genes", type) {
+                    @Override
+                    String extractStringForHit(VDJCHit hit) {
+                        return hit.getGene().getGeneName();
+                    }
+                });
+            }
+
             // All families
             for (final GeneType type : GeneType.values()) {
                 char l = type.getLetter();
-                desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Families",
-                        "Export all " + l + " hit families", "All " + l + " families", "all" + l + "Families") {
+                desctiptorsList.add(new StringExtractor("-" + Character.toLowerCase(l) + "Families",
+                        "Export all " + l + " gene family anmes (e.g. TRBV12 for TRBV12-3*00)", "All " + l + " families", "all" + l + "Families", type) {
                     @Override
-                    protected String extract(VDJCObject object) {
-                        TObjectFloatHashMap<String> familyScores = new TObjectFloatHashMap<>();
-                        VDJCHit[] hits = object.getHits(type);
-                        if (hits.length == 0)
-                            return "";
-                        for (VDJCHit hit : hits)
-                            familyScores.adjustOrPutValue(hit.getAllele().getFamilyName(), hit.getScore(), hit.getScore());
-
-                        final Holder[] hs = new Holder[familyScores.size()];
-                        final TObjectFloatIterator<String> it = familyScores.iterator();
-                        int i = 0;
-                        while (it.hasNext()) {
-                            it.advance();
-                            hs[i++] = new Holder(it.key(), it.value());
-                        }
-
-                        Arrays.sort(hs);
-
-                        StringBuilder sb = new StringBuilder();
-                        for (i = 0; ; i++) {
-                            sb.append(hs[i].str);
-                            if (i == hs.length - 1)
-                                break;
-                            sb.append(",");
-                        }
-                        return sb.toString();
+                    String extractStringForHit(VDJCHit hit) {
+                        return hit.getGene().getFamilyName();
                     }
                 });
             }
@@ -748,6 +744,51 @@ public final class FieldExtractors {
             default:
                 throw new NullPointerException();
         }
+    }
+
+    private abstract static class StringExtractor extends PL_O {
+        final GeneType type;
+
+        public StringExtractor(String command, String description, String hHeader, String sHeader,
+                               GeneType type) {
+            super(command, description, hHeader, sHeader);
+            this.type = type;
+        }
+
+        @Override
+        protected String extract(VDJCObject object) {
+            TObjectFloatHashMap<String> familyScores = new TObjectFloatHashMap<>();
+            VDJCHit[] hits = object.getHits(type);
+            if (hits.length == 0)
+                return "";
+
+            for (VDJCHit hit : hits) {
+                String s = extractStringForHit(hit);
+                if (!familyScores.containsKey(s))
+                    familyScores.put(s, hit.getScore());
+            }
+
+            final Holder[] hs = new Holder[familyScores.size()];
+            final TObjectFloatIterator<String> it = familyScores.iterator();
+            int i = 0;
+            while (it.hasNext()) {
+                it.advance();
+                hs[i++] = new Holder(it.key(), it.value());
+            }
+
+            Arrays.sort(hs);
+
+            StringBuilder sb = new StringBuilder();
+            for (i = 0; ; i++) {
+                sb.append(hs[i].str);
+                if (i == hs.length - 1)
+                    break;
+                sb.append(",");
+            }
+            return sb.toString();
+        }
+
+        abstract String extractStringForHit(VDJCHit hit);
     }
 
     private static final class Holder implements Comparable<Holder> {
