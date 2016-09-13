@@ -129,12 +129,15 @@ public class ActionAlign implements Action {
         //boolean warnings = false;
 
         int numberOfExcludedNFGenes = 0;
+        int numberOfExcludedFGenes = 0;
         for (VDJCGene gene : library.getGenes(actionParameters.getChains())) {
             if (!alignerParameters.containsRequiredFeature(gene)) {
                 if (params().printWarnings() && (gene.isFunctional() || params().printNonFunctionalWarnings())) {
-                    System.out.println("WARNING: " + (gene.isFunctional() ? "Functional gene" : "Gene") + " " + gene.getName() +
-                            " doesn't contain full " + GeneFeature.encode(alignerParameters
-                            .getFeatureToAlign(gene.getGeneType())) + " (excluded)");
+                    ++numberOfExcludedFGenes;
+                    if (numberOfExcludedFGenes < 2)
+                        System.out.println("WARNING: " + (gene.isFunctional() ? "Functional gene" : "Gene") + " " + gene.getName() +
+                                " doesn't contain full " + GeneFeature.encode(alignerParameters
+                                .getFeatureToAlign(gene.getGeneType())) + " (excluded)");
                     //warnings = true;
                 }
                 if (!gene.isFunctional())
@@ -143,6 +146,10 @@ public class ActionAlign implements Action {
             }
             aligner.addGene(gene);
         }
+
+        if (numberOfExcludedFGenes > 1)
+            System.out.println("WARNING: ... " + (numberOfExcludedFGenes - 1) + " more functional genes excluded due to absent " +
+                    "\"featureToAlign\".");
 
         //if (numberOfExcludedNFGenes > 0 && !params().printNonFunctionalWarnings())
         //    System.out.println("WARNING: " + numberOfExcludedNFGenes + " non-functional genes excluded due to absent \"featureToAlign\".");
