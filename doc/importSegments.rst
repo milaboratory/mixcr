@@ -21,11 +21,11 @@ Compiled IMGT library file for MiXCR can be downloaded at https://github.com/rep
 
 .. code-block:: console
 
-  > mixcr align -b imgt input_R1.fastq input_R2.fastq alignments.vdjca
+  > mixcr align --library imgt input_R1.fastq input_R2.fastq alignments.vdjca
 
   ... Building alignments
 
-``-b`` option specifies the library to use for alignment. If the short name is given (ex.``-b imgt``) mixcr will look for the latest version in the folder. Otherwise, to use one of the old versions give the full name including the version number (ex. ``-b imgt.201631-4`` ) 
+``--library`` option specifies the library to use for alignment. If the short name is given (ex.``--library imgt``) mixcr will look for the latest version in the folder. Otherwise, to use one of the old versions give the full name including the version number (ex. ``-library imgt.201631-4`` ) 
 
 .. code-block:: console
 

@@ -71,7 +71,7 @@ the following sequence of commands:
 
 
 The value of only one parameter is changed from its default in this snippet (``--chains IGH``) to tell MiXCR to export only IGH sequences. However even this parameter can be omitted (in this case MiXCR will export all T-/B- cell receptor sequences, that have been found in the sample).
- *We reccomend always specify ``--chain`` parameter at the exportClones step.*
+ We reccomend always specify ``--chain`` parameter at the exportClones step.
 
 The file produced (``clone.txt``) will contain a tab-delimited table with information about all clonotypes assembled by CDR3 sequence (clone abundance, CDR3 sequence, V, D, J genes, etc.). For full length analysis and other useful features see examples below.
 
@@ -162,7 +162,8 @@ Each of the above steps can be customized in order to adapt the analysis pipelin
 Full length IGH analysis
 ^^^^^^^^^^^^^^^^^^^^^^^^
 For full length cDNA-based immunoglobulin repertoire analysis we generally recommend to prepare libraries with unique molecular identifiers (UMI) and sequence them using asymmetric paired-end 360 bp + 100 bp Illumina MiSeq sequencing (see Nature Protocols paper: http://www.nature.com/nprot/journal/v11/n9/full/nprot.2016.093.html). This approach allows to obtain long-range high quality sequencing and to efficiently eliminate PCR and sequencing errors using MiGEC software (https://milaboratory.com/software/migec/ ). 
-For merging paired-end reads (or UMI-based groups of reads) we recommend using MiTools instrument (https://github.com/milaboratory/mitools), merge subcommand with SumSubtraction quality merging algorithm:
+We recommend  MiTools instrument (https://github.com/milaboratory/mitools) for merging paired-end reads (or UMI-based groups of reads).  
+Merge subcommand with SumSubtraction quality merging algorithm:
 
   .. code-block:: console
 
@@ -176,7 +177,7 @@ For merging paired-end reads (or UMI-based groups of reads) we recommend using M
 
     > mixcr align -p kaligner2 -r alignmentReport.txt -OjParameters.parameters.floatingRightBound=false -OvParameters.geneFeatureToAlign=VTranscript data.fastq(.gz) data.vdjca
 
-  ``-OjParameters.parameters.floatingRightBound=false`` increases the accuracy of J gene identification if the library was amplified using primer annealing to the C region.
+  ``-OjParameters.parameters.floatingRightBound=false`` increases the accuracy of J gene identification if the library was amplified using primer annealing to the C region.
 
   Instead of KAligner2, default MiXCR aligner can be used as well, but it may miss immunoglobulin subvariants that contain several nucleotide-lengths indels within a V gene segment.
 
@@ -213,7 +214,7 @@ MiXCR allows to extract immunological sequences from a large RNA-Seq datasamples
 .. code-block:: console
 
   > mixcr align -p rna-seq -f -OallowPartialAlignments=true -r alignmentReport.txt data_R1.fastq(.gz) data_R2.fastq(.gz) alignments.vdjca
-All ``mixcr align`` parametrs are also suitble here (e.g. -s to specify organism). ``-OallowPartialAlignments=true`` option preserves partial alignments for their further use in assembly.
+All ``mixcr align`` parametrs are also suitable here (e.g. -s to specify organism). ``-OallowPartialAlignments=true`` option preserves partial alignments for their further use in assembly.
 
 2. Assembling reads
 
@@ -255,7 +256,7 @@ http://mixcr.readthedocs.io/en/latest/rnaseq.html
 Assembling of CDR3-based clonotypes for mouse TRB sample
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This example shows how to perform routine assembly of clonotypes (based on CDR3 sequence) for mouse TRB library (alighning is performed for all possible genes - TRA/B/D/G and IGH/L/K, butonly TRB clones are exported in the final table at the end).
+This example shows how to perform routine assembly of clonotypes (based on CDR3 sequence) for mouse TRB library (aligning is performed for all possible genes - TRA/B/D/G and IGH/L/K, but only TRB clones are exported in the final table at the end).
 
 .. code-block:: console
 
