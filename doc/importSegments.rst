@@ -17,7 +17,24 @@ Using external libraries for alignment
 
 IMGT library
 -------------------------------------------------
-Compiled IMGT library file for MiXCR can be downloaded at https://github.com/repseqio/library-imgt/releases. In order to use the library put the .json library file to ~/.mixcr/libraries or to the directory from where mixcr is started.
+Compiled IMGT library file for MiXCR can be downloaded at https://github.com/repseqio/library-imgt/releases. In order to use the library put the .json library file to ``~/.mixcr/libraries``, to the directory from where mixcr is started or to ``libraries/`` subfolder of mixcr installation folder.
+
+.. tip::
+
+    Use ``mixcr -v`` to see what folders mixcr uses to look for library .json file in.
+
+    .. code-block:: console
+
+        > mixcr -v
+
+        ...
+
+        Library search path:
+        - built-in libraries
+        - /home/username/.
+        - /home/username/.mixcr/libraries
+        - /software/mixcr/libraries
+
 
 .. code-block:: console
 
