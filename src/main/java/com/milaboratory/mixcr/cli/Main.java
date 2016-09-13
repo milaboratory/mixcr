@@ -54,6 +54,11 @@ public class Main {
 
         VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(".");
 
+        if (System.getProperty("mixcr.path") != null) {
+            Path bin = Paths.get(System.getProperty("mixcr.path"));
+            VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(bin.resolve("libraries"));
+        }
+
         if (System.getProperty("library.path") != null)
             VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(System.getProperty("library.path"));
 
