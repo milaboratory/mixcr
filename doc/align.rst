@@ -44,7 +44,9 @@ The following table contains description of command line options for ``align``:
 | ``--chains ...``                    |                            | Available values: ``IGH``, ``IGL``, ``IGK``, ``TRA``,      |
 |                                     |                            | ``TRB``, ``TRG``, ``TRD``, ``IG`` (for all immunoglobulin  |
 |                                     |                            | chains), ``TCR`` (for all T-cell receptor chains), ``ALL`` |
-|                                     |                            | (for all chains) . It is highly recomended to use          |                   |                                     |                            | the default value for this parameter in most cases         |                   |                                     |                            | at the align step. Filltering is also possible at the      |
+|                                     |                            | (for all chains) . It is highly recomended to use          |
+|                                     |                            | the default value for this parameter in most cases         |
+|                                     |                            | at the align step. Filltering is also possible at the      |
 |                                     |                            | export step.                                               |
 +-------------------------------------+----------------------------+------------------------------------------------------------+
 | ``-s {speciesName}`` |br|           | ``HomoSapiens``            | Species (organism). Possible values: ``hsa`` (or           |
@@ -63,7 +65,7 @@ The following table contains description of command line options for ``align``:
 | ``-t {numberOfThreads}`` |br|       | number of                  | Number of processing threads.                              |
 | ``--threads ...``                   | available CPU cores        |                                                            |
 +-------------------------------------+----------------------------+------------------------------------------------------------+
-| ``-n {numberOfReads}`` |br|         |                            | Limit number of sequences that will be analysed (only      | 
+| ``-n {numberOfReads}`` |br|         |                            | Limit number of sequences that will be analysed (only      |
 | ``--limit ...``                     |                            | first ``-n`` sequences will be processed from input        |
 |                                     |                            | file(s)).                                                  |
 +-------------------------------------+----------------------------+------------------------------------------------------------+
