@@ -190,9 +190,8 @@ public final class CloneAssemblerReport implements CloneAssemblerListener, Repor
 
         helper.writeField("Final clonotype count", clonesCount)
                 .writeField("Average number of reads per clonotype", Util.PERCENT_FORMAT.format(1.0 * alignmentsInClones / clonesCount))
-                .writeField("Total number of reads used in clonotypes", alignmentsInClones)
                 .writePercentAndAbsoluteField("Reads used in clonotypes, percent of total", alignmentsInClones, totalReads)
-                .writePercentAndAbsoluteField("Clone sequences analysed, percent of total", clusterizationBase, totalReads)
+                .writePercentAndAbsoluteField("Reads used in clonotypes before clustering, percent of total", clusterizationBase, totalReads)
                 .writePercentAndAbsoluteField("Number of reads used as a core, percent of used", coreAlignments.get(), clusterizationBase)
                 .writePercentAndAbsoluteField("Mapped low quality reads, percent of used", deferredAlignmentsMapped.get(), clusterizationBase)
                 .writePercentAndAbsoluteField("Reads clustered in PCR error correction, percent of used", readsClustered.get(), clusterizationBase)

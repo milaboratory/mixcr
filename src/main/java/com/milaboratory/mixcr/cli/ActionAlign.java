@@ -144,8 +144,8 @@ public class ActionAlign implements Action {
             aligner.addGene(gene);
         }
 
-        if (numberOfExcludedNFGenes > 0 && !params().printNonFunctionalWarnings())
-            System.out.println("WARNING: " + numberOfExcludedNFGenes + " non-functional genes excluded due to absent \"featureToAlign\".");
+        //if (numberOfExcludedNFGenes > 0 && !params().printNonFunctionalWarnings())
+        //    System.out.println("WARNING: " + numberOfExcludedNFGenes + " non-functional genes excluded due to absent \"featureToAlign\".");
 
         if (aligner.getVGenesToAlign().isEmpty())
             throw new ProcessException("No V genes to align. Aborting execution. See warnings for more info " +
