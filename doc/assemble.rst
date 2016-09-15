@@ -34,7 +34,7 @@ This pipeline consists of the following steps:
 2.  If clonal sequence contains at least one nucleotide with low quality
     (less than ``badQualityThreshold`` parameter value), then this record
     will be deferred for further processing by *mapping procedure*. If
-    percent of low quality nucleotides in deferred record is greater than
+    fraction of low quality nucleotides in deferred record is greater than
     ``maxBadPointsPercent`` parameter value, then this record will be
     finally dropped. Records with clonal sequence containing only good
     quality nucleotides are used to build core clonotypes by grouping
@@ -138,7 +138,7 @@ Other global parameters are:
 |                                 |                 | gene region, it will be deferred at initial assembling stage, for further processing     |
 |                                 |                 | by mapper.                                                                               |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
-| ``maxBadPointsPercent``         | ``0.7``         | Maximal allowed percent of "bad" points in sequence: if sequence contains more than      |
+| ``maxBadPointsPercent``         | ``0.7``         | Maximal allowed fraction of "bad" points in sequence: if sequence contains more than     |
 |                                 |                 | ``maxBadPointsPercent`` "bad" nucleotides, it will be completely dropped                 |
 |                                 |                 | and will not be used for further processing by mapper. Sequences with the allowed        |
 |                                 |                 | percent of “bad” points will be mapped to the assembled core clonotypes.                 |
