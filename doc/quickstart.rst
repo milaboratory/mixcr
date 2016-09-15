@@ -161,13 +161,13 @@ Each of the above steps can be customized in order to adapt the analysis pipelin
 
 Full length IGH analysis
 ^^^^^^^^^^^^^^^^^^^^^^^^
-For full length cDNA-based immunoglobulin repertoire analysis we generally recommend to prepare libraries with unique molecular identifiers (UMI) and sequence them using asymmetric paired-end 360 bp + 100 bp Illumina MiSeq sequencing (see Nature Protocols paper: http://www.nature.com/nprot/journal/v11/n9/full/nprot.2016.093.html). This approach allows to obtain long-range high quality sequencing and to efficiently eliminate PCR and sequencing errors using MiGEC software (https://milaboratory.com/software/migec/ ). 
+For full length cDNA-based immunoglobulin repertoire analysis we generally recommend to prepare libraries with unique molecular identifiers (UMI) and sequence them using asymmetric paired-end 350 bp + 100 bp Illumina MiSeq sequencing (see Nature Protocols paper: http://www.nature.com/nprot/journal/v11/n9/full/nprot.2016.093.html). This approach allows to obtain long-range high quality sequencing and to efficiently eliminate PCR and sequencing errors using MiGEC software (https://milaboratory.com/software/migec/ ). 
 We recommend  MiTools instrument (https://github.com/milaboratory/mitools) for merging paired-end reads (or UMI-based groups of reads).  
 Merge subcommand with SumSubtraction quality merging algorithm:
 
   .. code-block:: console
 
-    > java -jar mitools.jar  merge -s 0.7 -ss -r mitoolsReport.txt data_R1.fastq(.gz) data_R2.fastq(.gz) data_merged.fastq(.gz)
+    > java -jar mitools.jar  merge -s 0.7 -ss -r mitoolsReport.txt data_R1.fastq.gz data_R2.fastq.gz data_merged.fastq.gz
 
 1. Alignment:
 
@@ -175,7 +175,7 @@ Merge subcommand with SumSubtraction quality merging algorithm:
 
   .. code-block:: console
 
-    > mixcr align -p kaligner2 -r alignmentReport.txt -OjParameters.parameters.floatingRightBound=false -OvParameters.geneFeatureToAlign=VTranscript data.fastq(.gz) data.vdjca
+    > mixcr align -p kaligner2 -r alignmentReport.txt -OjParameters.parameters.floatingRightBound=false -OvParameters.geneFeatureToAlign=VTranscript data.fastq.gz data.vdjca
 
   ``-OjParameters.parameters.floatingRightBound=false`` increases the accuracy of J gene identification if the library was amplified using primer annealing to the C region.
 
@@ -198,7 +198,7 @@ Merge subcommand with SumSubtraction quality merging algorithm:
 
     >mixcr exportClones -o -t --chains IGH clones.clns clones.txt
 
-  Options ``-o`` and ``-t``  filter off out-of-frame and stop codon containing clonotypes, respectively. Option ``--chains`` (-c) allows to set the name of chain to be exported (e.g. IGH, IGL)
+  Options ``-o`` and ``-t``  filter off out-of-frame and stop codon containing clonotypes, respectively. Option ``--chains`` ``(-c)`` allows to set the name of chain to be exported (e.g. IGH, IGL)
 
 
 
@@ -222,7 +222,7 @@ All ``mixcr align`` parametrs are also suitable here (e.g. -s to specify organ
 
   > mixcr assemblePartial -r assembleReport.txt alignments.vdjca alignmentsRescued.vdjca
 
-To obtain more assembled reads containing full CDR3 sequence it is recomended to perform several iterations of reads assembling using ``mixcr assemblePartial`` subcommand (``-p`` parameter is required for several iterations). In our experience, the best result is obtained after the second iteration:
+To obtain more assembled reads containing full CDR3 sequence it is recomended to perform several iterations of reads assembling using ``mixcr assemblePartial`` subcommand ``-p`` parameter is required for several iterations). In our experience, the best result is obtained after the second iteration:
 
 .. code-block:: console
 
@@ -236,7 +236,7 @@ To obtain more assembled reads containing full CDR3 sequence it is recomended to
   >mixcr assemble -OaddReadsCountOnClustering=true -ObadQualityThreshold=15 -r assembleClonesReport.txt alignmentsRescued_2.vdjca clones.clns
 
 All ``mixcr assemble`` parametrs are also suitble here. For poor quality data it is recomended to decrease input quality threshold 
-(``-ObadQualityThreshold``) to obtain more clones.
+(``-ObadQualityThreshold``).
 
 4.Export clones
 
@@ -244,7 +244,7 @@ All ``mixcr assemble`` parametrs are also suitble here. For poor quality data it
 
   >mixcr exportClones -c TRA  -o -t clones.clns clones.txt
 
-One can specify immunological chain of interest to extract (``-c TRA`` or ``-c TRB``, etc.) and exclude out-of-frame (option ``-o``) and stop codon containing variants (option ``-t``).
+One can specify immunological chain of interest to extract (``-c TRA`` or ``-c TRB``, etc.) and exclude out-of-frame (option ``-o``) and stop codon containing variants (option ``-t``).
 
 Other parameters that can be modified are listed in the section “Processing RNA-Seq data”  of the MiXCR documentation: 
 http://mixcr.readthedocs.io/en/latest/rnaseq.html
