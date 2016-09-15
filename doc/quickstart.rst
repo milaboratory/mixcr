@@ -213,8 +213,8 @@ MiXCR allows to extract immunological sequences from a large RNA-Seq datasamples
 
 .. code-block:: console
 
-  > mixcr align -p rna-seq -f -OallowPartialAlignments=true -r alignmentReport.txt data_R1.fastq(.gz) data_R2.fastq(.gz) alignments.vdjca
-All ``mixcr align`` parametrs are also suitable here (e.g. -s to specify organism). ``-OallowPartialAlignments=true`` option preserves partial alignments for their further use in assembly.
+  > mixcr align -p rna-seq -f -OallowPartialAlignments=true -r alignmentReport.txt data_R1.fastq.gz data_R2.fastq.gz alignments.vdjca
+All ``mixcr align`` parametrs are also suitable here (e.g. ``-s`` to specify organism). ``-OallowPartialAlignments=true`` option preserves partial alignments for their further use in assembly.
 
 2. Assembling reads
 
