@@ -198,7 +198,7 @@ Merge subcommand with SumSubtraction quality merging algorithm:
 
     >mixcr exportClones -o -t --chains IGH clones.clns clones.txt
 
-  Options ``-o`` and ``-t``  filter off out-of-frame and stop codon containing clonotypes, respectively. Option ``--chains`` ``(-c)`` allows to set the name of chain to be exported (e.g. IGH, IGL)
+  Options ``-o`` and ``-t``  filter off out-of-frame and stop codon containing clonotypes, respectively. Option ``--chains`` (``-c``) allows to set the name of chain to be exported (e.g. IGH, IGL)
 
 
 
@@ -207,7 +207,7 @@ Merge subcommand with SumSubtraction quality merging algorithm:
 Analysis of RNA-Seq data
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-MiXCR allows to extract immunological sequences from a large RNA-Seq datasamples. This can be done in the following way:
+MiXCR allows to efficiently extract TCR and BCR sequences from RNA-Seq data. This can be done in the following way:
 
 1. Alignment
 
@@ -222,7 +222,7 @@ All ``mixcr align`` parametrs are also suitable here (e.g. ``-s`` to specify org
 
   > mixcr assemblePartial -r assembleReport.txt alignments.vdjca alignmentsRescued.vdjca
 
-To obtain more assembled reads containing full CDR3 sequence it is recomended to perform several iterations of reads assembling using ``mixcr assemblePartial`` subcommand ``-p`` parameter is required for several iterations). In our experience, the best result is obtained after the second iteration:
+To obtain more assembled reads containing full CDR3 sequence it is recomended to perform several iterations of reads assembling using ``mixcr assemblePartial`` subcommand. ``-p`` parameter is required for several iterations. In our experience, the best result is obtained after the second iteration:
 
 .. code-block:: console
 
