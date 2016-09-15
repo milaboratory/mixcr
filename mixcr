@@ -12,7 +12,7 @@ fi
 
 if [[ $jVersion -lt 8 ]];
 then
-    echo "WARNING: Several issue have been detected while using Java 7. Please consider updateing to Java 8 or higher."
+    echo "WARNING: Several issues have been detected while using Java 7. Please consider updateing to Java 8 or higher."
 fi
 
 # Linux readlink -f alternative for Mac OS X
