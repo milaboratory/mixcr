@@ -69,14 +69,13 @@ the following sequence of commands:
 
   ... Exporting clones to tab-delimited file
 
-
-The value of only one parameter is changed from its default in this snippet (``--chains IGH``) to tell MiXCR to export only IGH sequences. However even this parameter can be omitted (in this case MiXCR will export all T-/B- cell receptor sequences, that have been found in the sample).
- We reccomend always specify ``--chain`` parameter at the exportClones step.
+The value of only one parameter is changed from its default in this snippet (``--chains IGH``) to tell MiXCR to export only IGH sequences. However even this parameter can be omitted (in this case MiXCR will export all T-/B- cell receptor sequences, that have been found in the sample). We reccomend always specify ``--chain`` parameter at the ``exportClones step`` to simplify further analysis.
 
 The file produced (``clone.txt``) will contain a tab-delimited table with information about all clonotypes assembled by CDR3 sequence (clone abundance, CDR3 sequence, V, D, J genes, etc.). For full length analysis and other useful features see examples below.
 
 
 .. _ref-example5RACE:
+
 
 Analysis of data obtained using 5'RACE-based amplification protocols
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
