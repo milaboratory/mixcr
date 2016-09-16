@@ -75,6 +75,7 @@ The value of only one parameter is changed from its default in this snippet (``-
 
 The file produced (``clone.txt``) will contain a tab-delimited table with information about all clonotypes assembled by CDR3 sequence (clone abundance, CDR3 sequence, V, D, J genes, etc.). For full length analysis and other useful features see examples below.
 
+
 .. _ref-example5RACE:
 
 Analysis of data obtained using 5'RACE-based amplification protocols
@@ -161,6 +162,7 @@ Each of the above steps can be customized in order to adapt the analysis pipelin
 
 
 
+
 Full length IGH analysis
 ^^^^^^^^^^^^^^^^^^^^^^^^
 For the full length cDNA-based immunoglobulin repertoire analysis we generally recommend to prepare libraries with unique molecular identifiers (UMI) and sequence them using asymmetric paired-end 350 bp + 100 bp Illumina MiSeq sequencing (see Nature Protocols paper: http://www.nature.com/nprot/journal/v11/n9/full/nprot.2016.093.html). This approach allows to obtain long-range high quality sequencing and to efficiently eliminate PCR and sequencing errors using MiGEC software (https://milaboratory.com/software/migec/).
@@ -185,19 +187,22 @@ Instead of KAligner2, default MiXCR aligner can be used as well, but it may miss
 
   ``default_affine`` parameter is specifically required for the data aligned using KAligner2
   
+  ``–OseparateByC=true`` separates clones with different antibody isotype.
+  
   Set ``-OcloneClusteringParameters=null`` parameter to switch off the frequency-based correction of PCR errors.
   
   Depending on data quality, one can adjust input threshold by changing the parameter ``-ObadQualityThreshold``  to improve clonotypes extraction. 
   
   See “Assembler parameters” section of documentation for the advanced quality filtering parameters.
 
-3. Export clones:
+3. Exporting clones:
   
   .. code-block:: console
 
     > mixcr exportClones –c IGH -o -t clones.clns clones.txt
 
-  where options ``-o`` and ``-t`` filter off the out-of-frame and stop codon containing clonotypes, respectively, and ``–c`` which loci will be extracted (e.g. IGH, IGL).
+  where options ``-o`` and ``-t`` filter off the out-of-frame and stop codon containing clonotypes, respectively, and ``–c`` indicates which loci will be extracted (e.g. ``IGH``, ``IGL``).
+
 
 
 
@@ -209,7 +214,7 @@ Analysis of RNA-Seq data
 
 MiXCR allows to efficiently extract TCR and BCR sequences from RNA-Seq data. This can be done in the following way:
 
-1. Alignment
+1. Alignment:
 
 .. code-block:: console
 
@@ -219,7 +224,7 @@ All ``mixcr align`` parametrs are also suitable here (e.g. ``-s`` to specify org
 
 ``-OallowPartialAlignments=true`` option preserves partial alignments for their further use in assembly.
 
-2. Assembling reads
+2. Assembling reads:
 
 .. code-block:: console
 
@@ -232,7 +237,7 @@ To obtain more assembled reads containing full CDR3 sequence it is recommended t
   > mixcr assemblePartial -p -r assembleReport.txt alignments.vdjca alignmentsRescued_1.vdjca
   > mixcr assemblePartial -p -r assembleReport.txt alignmentsRescued_1.vdjca alignmentsRescued_2.vdjca
 
-3. Assembling clones
+3. Assembling clones:
 
 .. code-block:: console
 
@@ -241,7 +246,7 @@ To obtain more assembled reads containing full CDR3 sequence it is recommended t
 All ``mixcr assemble`` parametrs are also suitable here. For poor quality data it is recommended to decrease input quality threshold 
 (``-ObadQualityThreshold``).
 
-4.Export clones
+4. Exporting clones:
 
 .. code-block:: console
 
