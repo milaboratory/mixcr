@@ -2,7 +2,7 @@
 
    <br />
 
-.. _ref-assemble:
+.. _ref-rna-seq:
 
 Processing RNA-seq data
 =======================

@@ -2,11 +2,10 @@
 
    <br />
 
-.. _ref-align:
+.. _ref-utils:
 
 Utility actions
 ===============
-
 
 
 Version info
@@ -21,7 +20,6 @@ In order to check the current version of MiXCR as usual one can use ``-v'` optio
     Components: 
     MiLib v1.4-SNAPSHOT (rev=65c048a; branch=feature/mutations_aggregation)
     MiTools v1.4-SNAPSHOT (rev=c05934a; branch=develop)
-
 
 
 In order to check which version of MiXCR was used to build some vdjca/clns file:
