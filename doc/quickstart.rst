@@ -159,46 +159,45 @@ sequenced cDNA library of IGH gene prepared using 5'RACE-based protocol
 
 Each of the above steps can be customized in order to adapt the analysis pipeline for a specific research task (see below).
 
+
+
 Full length IGH analysis
 ^^^^^^^^^^^^^^^^^^^^^^^^
-For full length cDNA-based immunoglobulin repertoire analysis we generally recommend to prepare libraries with unique molecular identifiers (UMI) and sequence them using asymmetric paired-end 350 bp + 100 bp Illumina MiSeq sequencing (see Nature Protocols paper: http://www.nature.com/nprot/journal/v11/n9/full/nprot.2016.093.html). This approach allows to obtain long-range high quality sequencing and to efficiently eliminate PCR and sequencing errors using MiGEC software (https://milaboratory.com/software/migec/ ). 
-We recommend  MiTools instrument (https://github.com/milaboratory/mitools) for merging paired-end reads (or UMI-based groups of reads).  
-Merge subcommand with SumSubtraction quality merging algorithm:
+For the full length cDNA-based immunoglobulin repertoire analysis we generally recommend to prepare libraries with unique molecular identifiers (UMI) and sequence them using asymmetric paired-end 350 bp + 100 bp Illumina MiSeq sequencing (see Nature Protocols paper: http://www.nature.com/nprot/journal/v11/n9/full/nprot.2016.093.html). This approach allows to obtain long-range high quality sequencing and to efficiently eliminate PCR and sequencing errors using MiGEC software (https://milaboratory.com/software/migec/).
+
+1. Merging paired-end reads and alignment:
+
+``Mixcr align`` subcommand performs paired-end reads merging and alignment to the immunological locus of interest. We recommend using KAligner2 (http://mixcr.readthedocs.io/en/latest/newAligner.html) for the full length immunoglobulin profiling (currently in beta testing):
 
   .. code-block:: console
+  
+   > mixcr align -p kaligner2 –s hsa -r alignmentReport.txt -OreadsLayout=Collinear -OvParameters.geneFeatureToAlign=VTranscript read_R1.fastq.gz read_R2.fastq.gz alignments.vdjca
+   
+Option ``-s`` allows to set name of species (e.g. homo sapiens - ``hsa``, mus musculus - ``mmu``). Parameter ``–OreadsLayout`` allow us to set paired-end reads orientation (``Collinear``, ``Opposite``, ``Unknown``). Note, that after MiGEC analysis paired-end read pairs are in ``Collinear`` orientation.
 
-    > java -jar mitools.jar  merge -s 0.7 -ss -r mitoolsReport.txt data_R1.fastq.gz data_R2.fastq.gz data_merged.fastq.gz
-
-1. Alignment:
-
-  We recommend using KAligner2 (http://mixcr.readthedocs.io/en/latest/newAligner.html) for the full length immunoglobulin profiling (currently in beta testing): 
-
-  .. code-block:: console
-
-    > mixcr align -p kaligner2 -r alignmentReport.txt -OjParameters.parameters.floatingRightBound=false -OvParameters.geneFeatureToAlign=VTranscript data.fastq.gz data.vdjca
-
-  ``-OjParameters.parameters.floatingRightBound=false`` increases the accuracy of J gene identification if the library was amplified using primer annealing to the C region.
-
-  Instead of KAligner2, default MiXCR aligner can be used as well, but it may miss immunoglobulin subvariants that contain several nucleotide-lengths indels within a V gene segment.
+Instead of KAligner2, default MiXCR aligner can be used as well, but it may miss immunoglobulin subvariants that contain several nucleotide-lengths indels within the V gene segment.
 
 2. Assembling clones:
 
   .. code-block:: console
-
-    > mixcr assemble -p default_affine -r assembleReport.txt -OassemblingFeatures=VDJRegion -OqualityAggregationType=Average -OminimalQuality=20 -OclusteringFilter.specificMutationProbability=1E-5 -OmaxBadPointsPercent=0 data.vdjca data.clns
+  
+    > mixcr assemble -p default_affine -r assembleReport.txt -OassemblingFeatures=VDJRegion –OseparateByC=true -OqualityAggregationType=Average -OclusteringFilter.specificMutationProbability=1E-5 -OmaxBadPointsPercent=0 alignments.vdjca clones.clns
 
   ``default_affine`` parameter is specifically required for the data aligned using KAligner2
+  
   Set ``-OcloneClusteringParameters=null`` parameter to switch off the frequency-based correction of PCR errors.
+  
   Depending on data quality, one can adjust input threshold by changing the parameter ``-ObadQualityThreshold``  to improve clonotypes extraction. 
+  
   See “Assembler parameters” section of documentation for the advanced quality filtering parameters.
 
 3. Export clones:
   
   .. code-block:: console
 
-    >mixcr exportClones -o -t --chains IGH clones.clns clones.txt
+    > mixcr exportClones –c IGH -o -t clones.clns clones.txt
 
-  Options ``-o`` and ``-t``  filter off out-of-frame and stop codon containing clonotypes, respectively. Option ``--chains`` (``-c``) allows to set the name of chain to be exported (e.g. IGH, IGL)
+  where options ``-o`` and ``-t`` filter off the out-of-frame and stop codon containing clonotypes, respectively, and ``–c`` which loci will be extracted (e.g. IGH, IGL).
 
 
 
@@ -214,7 +213,10 @@ MiXCR allows to efficiently extract TCR and BCR sequences from RNA-Seq data. Thi
 .. code-block:: console
 
   > mixcr align -p rna-seq -f -OallowPartialAlignments=true -r alignmentReport.txt data_R1.fastq.gz data_R2.fastq.gz alignments.vdjca
-All ``mixcr align`` parametrs are also suitable here (e.g. ``-s`` to specify organism). ``-OallowPartialAlignments=true`` option preserves partial alignments for their further use in assembly.
+  
+All ``mixcr align`` parametrs are also suitable here (e.g. ``-s`` to specify organism). 
+
+``-OallowPartialAlignments=true`` option preserves partial alignments for their further use in assembly.
 
 2. Assembling reads
 
@@ -222,7 +224,7 @@ All ``mixcr align`` parametrs are also suitable here (e.g. ``-s`` to specify org
 
   > mixcr assemblePartial -r assembleReport.txt alignments.vdjca alignmentsRescued.vdjca
 
-To obtain more assembled reads containing full CDR3 sequence it is recomended to perform several iterations of reads assembling using ``mixcr assemblePartial`` subcommand. ``-p`` parameter is required for several iterations. In our experience, the best result is obtained after the second iteration:
+To obtain more assembled reads containing full CDR3 sequence it is recommended to perform several iterations of reads assembling using ``mixcr assemblePartial`` subcommand. ``-p`` parameter is required for several iterations. In our experience, the best result is obtained after the second iteration:
 
 .. code-block:: console
 
@@ -235,16 +237,16 @@ To obtain more assembled reads containing full CDR3 sequence it is recomended to
 
   >mixcr assemble -OaddReadsCountOnClustering=true -ObadQualityThreshold=15 -r assembleClonesReport.txt alignmentsRescued_2.vdjca clones.clns
 
-All ``mixcr assemble`` parametrs are also suitble here. For poor quality data it is recomended to decrease input quality threshold 
+All ``mixcr assemble`` parametrs are also suitable here. For poor quality data it is recommended to decrease input quality threshold 
 (``-ObadQualityThreshold``).
 
 4.Export clones
 
 .. code-block:: console
 
-  >mixcr exportClones -c TRA  -o -t clones.clns clones.txt
+  >mixcr exportClones -c TRA -o -t clones.clns clones.txt
 
-One can specify immunological chain of interest to extract (``-c TRA`` or ``-c TRB``, etc.) and exclude out-of-frame (option ``-o``) and stop codon containing variants (option ``-t``).
+One can specify immune receptor chain of interest to extract (``-c TRA`` or ``-c TRB``, etc) and exclude out-of-frame (option ``-o``) and stop codon containing variants (option ``-t``).
 
 Other parameters that can be modified are listed in the section “Processing RNA-Seq data”  of the MiXCR documentation: 
 http://mixcr.readthedocs.io/en/latest/rnaseq.html
