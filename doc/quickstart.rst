@@ -75,6 +75,7 @@ The value of only one parameter is changed from its default in this snippet (``-
 
 The file produced (``clone.txt``) will contain a tab-delimited table with information about all clonotypes assembled by CDR3 sequence (clone abundance, CDR3 sequence, V, D, J genes, etc.). For full length analysis and other useful features see examples below.
 
+
 .. _ref-example5RACE:
 
 Analysis of data obtained using 5'RACE-based amplification protocols
@@ -163,10 +164,10 @@ Each of the above steps can be customized in order to adapt the analysis pipelin
 .. _ref-exampleFullLength:
 
 
-Full length IGH analysis
-^^^^^^^^^^^^^^^^^^^^^^^^
+High quality full length IG repertoire analysis
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For the full length cDNA-based immunoglobulin repertoire analysis we generally recommend to prepare libraries with unique molecular identifiers (UMI) and sequence them using asymmetric paired-end 350 bp + 100 bp Illumina MiSeq sequencing (see `Nature Protocols paper <http://www.nature.com/nprot/journal/v11/n9/full/nprot.2016.093.html>`_). This approach allows to obtain long-range high quality sequencing and to efficiently eliminate PCR and sequencing errors using `MiGEC software <https://milaboratory.com/software/migec/>`_.
+For the full length cDNA-based immunoglobulin repertoire analysis we generally recommend to prepare libraries with unique molecular identifiers (UMI) and sequence them using asymmetric paired-end 350 bp + 100 bp Illumina MiSeq sequencing (see `Nature Protocols paper <http://www.nature.com/nprot/journal/v11/n9/full/nprot.2016.093.html>`_). This approach allows to obtain long-range high quality sequencing and efficiently eliminate PCR and sequencing errors using `MiGEC software <https://milaboratory.com/software/migec/>`_.
 
 1. Merging paired-end reads and :ref:`alignment <ref-align>`:
 
@@ -193,6 +194,8 @@ For the full length cDNA-based immunoglobulin repertoire analysis we generally r
 
   ``default_affine`` parameter is specifically required for the data aligned using KAligner2 (use this option only if ``-p kaligner2`` was used on the alignemnt step)
   
+  ``–OseparateByC=true`` separates clones with different antibody isotype.
+  
   Set ``-OcloneClusteringParameters=null`` parameter to switch off the frequency-based correction of PCR errors.
   
   Depending on data quality, one can adjust input threshold by changing the parameter ``-ObadQualityThreshold`` to improve clonotypes extraction. 
@@ -205,7 +208,7 @@ For the full length cDNA-based immunoglobulin repertoire analysis we generally r
 
     > mixcr exportClones –c IGH -o -t clones.clns clones.txt
 
-  where options ``-o`` and ``-t`` filter off the out-of-frame and stop codon containing clonotypes, respectively, and ``–c`` which loci will be extracted (e.g. IGH, IGL).
+  where options ``-o`` and ``-t`` filter off the out-of-frame and stop codon containing clonotypes, respectively, and ``–c`` indicates which chain will be extracted (e.g. ``IGH``, ``IGL``).
 
 
 .. _ref-exampleRnaSeq:
@@ -253,7 +256,7 @@ MiXCR allows to efficiently extract TCR and BCR sequences from RNA-Seq data. Thi
   All ``mixcr assemble`` parametrs are also suitable here. For poor quality data it is recommended to decrease input quality threshold 
   (``-ObadQualityThreshold``).
 
-4. :ref:`Export <ref-export>` clones:
+4. :ref:`Exporting <ref-export>` clones:
 
   .. code-block:: console
 
