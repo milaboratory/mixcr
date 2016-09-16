@@ -163,8 +163,8 @@ Each of the above steps can be customized in order to adapt the analysis pipelin
 
 
 
-Full length IGH analysis
-^^^^^^^^^^^^^^^^^^^^^^^^
+High quality full length IG repertoire analysis
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 For the full length cDNA-based immunoglobulin repertoire analysis we generally recommend to prepare libraries with unique molecular identifiers (UMI) and sequence them using asymmetric paired-end 350 bp + 100 bp Illumina MiSeq sequencing (see Nature Protocols paper: http://www.nature.com/nprot/journal/v11/n9/full/nprot.2016.093.html). This approach allows to obtain long-range high quality sequencing and to efficiently eliminate PCR and sequencing errors using MiGEC software (https://milaboratory.com/software/migec/).
 
 1. Merging paired-end reads and alignment:
