@@ -166,7 +166,7 @@ Each of the above steps can be customized in order to adapt the analysis pipelin
 High quality full length IG repertoire analysis
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For the full length cDNA-based immunoglobulin repertoire analysis we generally recommend to prepare libraries with unique molecular identifiers (UMI) and sequence them using asymmetric paired-end 350 bp + 100 bp Illumina MiSeq sequencing (see `Nature Protocols paper <http://www.nature.com/nprot/journal/v11/n9/full/nprot.2016.093.html>`_). This approach allows to obtain long-range high quality sequencing and efficiently eliminate PCR and sequencing errors using `MiGEC software <https://milaboratory.com/software/migec/>`_.
+For the full length cDNA-based immunoglobulin repertoire analysis we generally recommend to prepare libraries with unique molecular identifiers (UMI) and sequence them using asymmetric paired-end 350 bp + 100 bp Illumina MiSeq sequencing (see `Nature Protocols paper <http://www.nature.com/nprot/journal/v11/n9/full/nprot.2016.093.html>`_). This approach allows to obtain long-range high quality sequencing and efficiently eliminate PCR and sequencing errors using `MiGEC software <https://milaboratory.com/software/migec/>`_. The resulting high quality data can be further processed by MiXCR for the efficent full length IGH or IGL repertoire extraction:
 
 1. Merging paired-end reads and :ref:`alignment <ref-align>`:
 
@@ -216,7 +216,7 @@ For the full length cDNA-based immunoglobulin repertoire analysis we generally r
 Analysis of RNA-Seq data
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-MiXCR allows to efficiently extract TCR and BCR sequences from RNA-Seq data. This can be done in the following way:
+MiXCR allows to extract TCR and BCR CDR3 repertoires from RNA-Seq data. Extraction efficiency depends on the abundance of T or B cells in a sample, and also on the sequencing length. 2x150 bp or 2x100 bp paired-end sequencing is recommended. However, even from the paired-end 2x50 bp RNA-Seq data, information on the major clonotypes present (e.g. in a tumor sample) can usually be extracted. The analysis can be perfromed in the following way:
 
 1. :ref:`Align <ref-align>` reads:
 
@@ -225,7 +225,7 @@ MiXCR allows to efficiently extract TCR and BCR sequences from RNA-Seq data. Thi
     > mixcr align -p rna-seq -f -OallowPartialAlignments=true -r alignmentReport.txt \
       data_R1.fastq.gz data_R2.fastq.gz alignments.vdjca
   
-  All ``mixcr align`` parametrs are also suitable here (e.g. ``-s`` to specify organism). 
+  All ``mixcr align`` parameters are also suitable here (e.g. ``-s`` to specify organism). 
 
   ``-OallowPartialAlignments=true`` option preserves partial alignments for their further use in assembly.
 
