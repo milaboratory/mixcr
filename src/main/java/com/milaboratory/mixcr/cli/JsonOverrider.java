@@ -33,10 +33,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.milaboratory.util.ParseUtil;
 import com.milaboratory.util.GlobalObjectMappers;
+import com.milaboratory.util.ParseUtil;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 public class JsonOverrider {
@@ -93,6 +95,10 @@ public class JsonOverrider {
         return b;
     }
 
+    private static void overrideWarn(String fieldName, String newValue) {
+        System.out.printf("WARNING: unnecessary override -O%s=%s with the same value.\n", fieldName, newValue);
+    }
+
     public static boolean override0(JsonNode node, String path, String value) {
         String[] pathArray = path.split("\\.");
         for (int i = 0; i < pathArray.length - 1; ++i)
@@ -109,22 +115,40 @@ public class JsonOverrider {
         ObjectNode oNode = (ObjectNode) node;
 
         JsonNode valueNode = oNode.get(fieldName);
-        if (valueNode == null)
+        if (valueNode == null) {
+            if (setToNull)
+                overrideWarn(fieldName, value);
             return setToNull;
+        }
         if (valueNode instanceof ArrayNode) {
             ArrayNode arrayNode = (ArrayNode) valueNode;
+            List<String> oldValues = new ArrayList<>();
+            final Iterator<JsonNode> it = arrayNode.elements();
+            while (it.hasNext())
+                oldValues.add(it.next().asText());
+
             arrayNode.removeAll();
 
-            if (!value.startsWith("[") || !value.endsWith("]"))
+            boolean settingTheSame;
+            if (!value.startsWith("[") || !value.endsWith("]")) {
                 arrayNode.add(value);
-            else {
+                settingTheSame = oldValues.size() == 1 && oldValues.get(0).equalsIgnoreCase(value);
+            } else {
                 value = value.substring(1, value.length() - 1);
                 String[] values = ParseUtil.splitWithBrackets(value, ',', "(){}[]");
-                for (String v : values)
-                    arrayNode.add(v);
+                settingTheSame = true;
+                for (int i = 0; i < values.length; i++) {
+                    arrayNode.add(values[i]);
+                    if (settingTheSame && oldValues.size() > i)
+                        settingTheSame = oldValues.get(i).equalsIgnoreCase(values[i]);
+                }
             }
+            if (settingTheSame)
+                overrideWarn(fieldName, value);
             return true;
         } else if (valueNode.isTextual()) {
+            if (valueNode.asText().equals(value))
+                overrideWarn(fieldName, value);
             oNode.put(fieldName, value);
             return true;
         } else if (valueNode.isBoolean()) {
@@ -135,6 +159,8 @@ public class JsonOverrider {
                 v = false;
             else
                 return false;
+            if (v == valueNode.asBoolean())
+                overrideWarn(fieldName, value);
             oNode.put(fieldName, v);
             return true;
         } else if (valueNode.isIntegralNumber()) {
@@ -144,6 +170,8 @@ public class JsonOverrider {
             } catch (NumberFormatException e) {
                 return false;
             }
+            if (v == valueNode.asLong())
+                overrideWarn(fieldName, value);
             oNode.put(fieldName, v);
             return true;
         } else if (valueNode.isFloatingPointNumber()) {
@@ -153,9 +181,13 @@ public class JsonOverrider {
             } catch (NumberFormatException e) {
                 return false;
             }
+            if (v == valueNode.asDouble())
+                overrideWarn(fieldName, value);
             oNode.put(fieldName, v);
             return true;
         } else if (valueNode.isObject() && setToNull) {
+            if (valueNode.isNull())
+                overrideWarn(fieldName, value);
             oNode.set(fieldName, NullNode.getInstance());
             return true;
         }
