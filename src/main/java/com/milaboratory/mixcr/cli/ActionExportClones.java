@@ -57,6 +57,11 @@ public class ActionExportClones extends ActionExport {
              InfoWriter<Clone> writer = new InfoWriter<>(parameters.getOutputFile())) {
             CloneSet set = CloneSetIO.read(inputStream, VDJCLibraryRegistry.getDefault());
 
+            if (parameters.loci_legacy != null) {
+                System.out.println("WARNING: using of -l (--loci) option is deprecated; use -c (--chains) instead.");
+                parameters.loci = parameters.loci_legacy;
+            }
+            
             if (parameters.filterOutOfFrames || parameters.filterStops || !"all".equals(parameters.loci))
                 set = CloneSet.transform(set, new CFilter(parameters.filterOutOfFrames, parameters.filterStops,
                         parameters.getLoci()));
@@ -176,6 +181,11 @@ public class ActionExportClones extends ActionExport {
         @Parameter(description = "Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)",
                 names = {"-c", "--chains"})
         public String loci = "ALL";
+
+        @Deprecated
+        @Parameter(description = "Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)",
+                names = {"-l", "--loci"}, hidden = true)
+        public String loci_legacy = null;
 
         @Parameter(description = "Filter clones by minimal clone fraction",
                 names = {"-q", "--minimal-clone-fraction"})
