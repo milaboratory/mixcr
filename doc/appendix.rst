@@ -126,7 +126,7 @@ Consider the following BLAST-like alignments encoded in MiXCR notation:
       3 GTGCTGACAGATACC 17
       
       MiXCR alignment:
-      0|15|17|3|18||75.0
+      2|17|19|3|18||75.0
       </pre>
 
 subsequence from ``target`` (from nucleotide 0 to nucleotide 15) was
@@ -147,7 +147,7 @@ nucleotide 18).
       3 GTGCT-ATAGACTACC 17
       
       MiXCR alignment:
-      0|15|17|3|18|DG7SC9TI13C|41.0
+      2|17|19|3|18|DG7SC9TI13C|41.0
       </pre>
 
 so, to obtain subseqeunce from **query sequence** from 3 to 18 we need
