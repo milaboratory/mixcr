@@ -36,11 +36,16 @@ import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.assembler.AlignmentsToClonesMappingContainer;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
-import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.cli.ActionAssemble;
-import io.repseq.core.*;
+import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.basictypes.VDJCObject;
 import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.map.hash.TObjectFloatHashMap;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
+import io.repseq.core.ReferencePoint;
+import io.repseq.core.SequencePartitioning;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -50,8 +55,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import static com.milaboratory.core.sequence.TranslationParameters.FromCenter;
-import static com.milaboratory.core.sequence.TranslationParameters.FromLeftWithoutIncompleteCodon;
+import static com.milaboratory.core.sequence.TranslationParameters.*;
 import static com.milaboratory.mixcr.assembler.ReadToCloneMapping.MappingType.Dropped;
 
 public final class FieldExtractors {
@@ -294,7 +298,7 @@ public final class FieldExtractors {
                     "sequences which length are not multiple of 3)", "AA. Seq.", "aaSeq") {
                 @Override
                 public String convert(NSequenceWithQuality seq) {
-                    return AminoAcidSequence.translate(seq.getSequence(), FromLeftWithoutIncompleteCodon).toString();
+                    return AminoAcidSequence.translate(seq.getSequence(), FromRightWithoutIncompleteCodon).toString();
                 }
             });
 
