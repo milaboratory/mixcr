@@ -34,6 +34,7 @@ import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import io.repseq.core.VDJCLibraryRegistry;
 import io.repseq.seqbase.SequenceResolvers;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.SecureRandom;
@@ -56,7 +57,9 @@ public class Main {
 
         if (System.getProperty("mixcr.path") != null) {
             Path bin = Paths.get(System.getProperty("mixcr.path"));
-            VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(bin.resolve("libraries"));
+            Path searchPath = bin.resolve("libraries");
+            if (Files.exists(searchPath))
+                VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(searchPath);
         }
 
         if (System.getProperty("library.path") != null)
@@ -65,7 +68,8 @@ public class Main {
         if (System.getenv("MIXCR_LIBRARY_PATH") != null)
             VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(System.getenv("MIXCR_LIBRARY_PATH"));
 
-        VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(libraries);
+        if (Files.exists(libraries))
+            VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(libraries);
 
         // Setting up main helper
         JCommanderBasedMain main = new JCommanderBasedMain(command,
