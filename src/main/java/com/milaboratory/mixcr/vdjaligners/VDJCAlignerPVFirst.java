@@ -70,6 +70,9 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
 
             // Perform J alignments
             helper.performJAlignment();
+
+            // Perform filtering of chimeric hits if needed
+            helper.performChainFilteringIfNeeded();
         }
 
         return parameters.getAllowPartialAlignments() ?
@@ -365,6 +368,73 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
             });
 
             calculateScoreAndSort(jHits);
+        }
+
+        Chains getVJCommonChains() {
+            return getChains(vHits).intersection(getChains(jHits));
+        }
+
+        Chains getChains(PairedHit[] hits) {
+            Chains c = Chains.EMPTY;
+            for (PairedHit hit : hits)
+                c = c.merge(hit.getGene().getChains());
+            return c;
+        }
+
+        /**
+         * Filter V/J hits with common chain only
+         */
+        void performChainFilteringIfNeeded() {
+            // Check if parameters allow chimeras
+            if (parameters.isAllowChimeras())
+                return;
+
+            // Calculate common chains
+            Chains commonChains = getVJCommonChains();
+
+            if (commonChains.isEmpty())
+                // Exceptional case, or partial alignment
+                return;
+
+            // Filtering V genes
+
+            int filteredSize = 0;
+            for (PairedHit hit : vHits)
+                if (hit.getGene().getChains().intersects(commonChains))
+                    ++filteredSize;
+
+            // Perform filtering (new array allocation) only if needed
+            if (vHits.length != filteredSize) {
+                PairedHit[] newHits = new PairedHit[filteredSize];
+                filteredSize = 0; // Used as pointer
+                for (PairedHit hit : vHits)
+                    if (hit.getGene().getChains().intersects(commonChains))
+                        newHits[filteredSize++] = hit;
+
+                assert newHits.length == filteredSize;
+
+                vHits = newHits;
+            }
+
+            // Filtering J genes
+
+            filteredSize = 0;
+            for (PairedHit hit : jHits)
+                if (hit.getGene().getChains().intersects(commonChains))
+                    ++filteredSize;
+
+            // Perform filtering (new array allocation) only if needed
+            if (jHits.length != filteredSize) {
+                PairedHit[] newHits = new PairedHit[filteredSize];
+                filteredSize = 0; // Used as pointer
+                for (PairedHit hit : jHits)
+                    if (hit.getGene().getChains().intersects(commonChains))
+                        newHits[filteredSize++] = hit;
+
+                assert newHits.length == filteredSize;
+
+                jHits = newHits;
+            }
         }
 
         /**
