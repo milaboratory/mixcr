@@ -308,16 +308,16 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
     @Override
     public void writeReport(ReportHelper helper) {
         long total = this.total.get();
-        helper.writeField("total", total);
-        helper.writePercentAndAbsoluteField("totalWritten", totalWritten, total);
-        helper.writePercentAndAbsoluteField("noKMer", noKMer, total);
-        helper.writePercentAndAbsoluteField("wildCardsInKMer", wildCardsInKMer, total);
-        helper.writePercentAndAbsoluteField("leftParts", leftParts, total);
-        helper.writePercentAndAbsoluteField("rightParts", rightParts, total);
-        helper.writePercentAndAbsoluteField("containsCDR3", containsCDR3, total);
-        helper.writePercentAndAbsoluteField("overlapped", overlapped, total);
-        helper.writePercentAndAbsoluteField("complexOverlapped", complexOverlapped, total);
-        helper.writePercentAndAbsoluteField("partialAsIs", partialAsIs, total);
+        helper.writeField("Total alignments analysed", total);
+        helper.writePercentAndAbsoluteField("Number of output alignments", totalWritten, total);
+        helper.writePercentAndAbsoluteField("Alignments already with CDR3 (no overlapping is performed)", containsCDR3, total);
+        helper.writePercentAndAbsoluteField("Successfully overlapped alignments", overlapped, total);
+        helper.writePercentAndAbsoluteField("Left parts with too small N-region (failed to extract k-mer)", noKMer, total);
+        helper.writePercentAndAbsoluteField("Dropped due to wildcard in k-mer", wildCardsInKMer, total);
+        helper.writePercentAndAbsoluteField("Number of left-side alignments", leftParts, total);
+        helper.writePercentAndAbsoluteField("Number of right-side alignments", rightParts, total);
+        helper.writePercentAndAbsoluteField("Complex overlaps", complexOverlapped, total);
+        helper.writePercentAndAbsoluteField("Partial alignments written to output", partialAsIs, total);
         if (!writePartial && !overlappedOnly && totalWritten.get() != overlapped.get() + partialAsIs.get() + containsCDR3.get())
             throw new AssertionError();
     }
