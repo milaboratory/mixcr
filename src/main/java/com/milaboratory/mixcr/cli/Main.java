@@ -88,7 +88,8 @@ public class Main {
                 new ActionAssemblePartialAlignments(),
                 new ActionExportReads(),
                 new ActionClonesDiff(),
-                new ActionFilterAlignments());
+                new ActionFilterAlignments(),
+                new ActionListLibraries());
 
         // Adding version info callback
         main.setVersionInfoCallback(new Runnable() {
