@@ -32,9 +32,15 @@ import com.beust.jcommander.Parameters;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
+import com.milaboratory.cli.AllowNoArguments;
 import io.repseq.core.VDJCLibrary;
 import io.repseq.core.VDJCLibraryRegistry;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+@AllowNoArguments
 public class ActionListLibraries implements Action {
     final AParameters parameters = new AParameters();
 
@@ -42,8 +48,12 @@ public class ActionListLibraries implements Action {
     public void go(ActionHelper helper) throws Exception {
         VDJCLibraryRegistry.getDefault().loadAllLibraries();
         System.out.println("Available libraries:");
-        for (VDJCLibrary library : VDJCLibraryRegistry.getDefault().getLoadedLibraries())
+        List<VDJCLibrary> loadedLibraries = new ArrayList<>(VDJCLibraryRegistry.getDefault().getLoadedLibraries());
+        Collections.sort(loadedLibraries);
+        for (VDJCLibrary library : loadedLibraries) {
             System.out.println(library.getLibraryId());
+            System.out.println(VDJCLibraryRegistry.getDefault().getSpeciesNames(library.getTaxonId()));
+        }
     }
 
     @Override
