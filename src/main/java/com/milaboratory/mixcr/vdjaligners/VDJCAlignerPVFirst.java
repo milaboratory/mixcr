@@ -48,8 +48,8 @@ import io.repseq.core.*;
 import java.util.*;
 
 public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
-    private static final ReferencePoint reqPointR = ReferencePoint.CDR3End.move(3);
-    private static final ReferencePoint reqPointL = ReferencePoint.CDR3Begin.move(-3);
+    private static final ReferencePoint reqPointR = ReferencePoint.CDR3End.move(-3);
+    private static final ReferencePoint reqPointL = ReferencePoint.CDR3Begin.move(+3);
 
     public VDJCAlignerPVFirst(VDJCAlignerParameters parameters) {
         super(parameters);
@@ -104,15 +104,23 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         // Final check
         if (!parameters.getAllowNoCDR3PartAlignments()) {
             // CDR3 Begin / End
-            boolean containCDR3Edge = false;
-            for (int i = 0; i < 2; i++)
-                if (alignments.getPartitionedTarget(i).getPartitioning().isAvailable(reqPointL)
-                        || alignments.getPartitionedTarget(i).getPartitioning().isAvailable(reqPointR)) {
-                    containCDR3Edge = true;
+            boolean containCDR3Parts = false;
+            final VDJCHit bestV = alignments.getBestHit(GeneType.Variable);
+            final VDJCHit bestJ = alignments.getBestHit(GeneType.Joining);
+            for (int i = 0; i < 2; i++) {
+                if ((bestV != null
+                        && bestV.getAlignment(i).getSequence1Range().getTo()
+                        >= bestV.getGene().getPartitioning().getRelativePosition(parameters.getFeatureToAlign(GeneType.Variable), reqPointL))
+                        ||
+                        (bestJ != null
+                                && bestJ.getAlignment(i).getSequence1Range().getFrom()
+                                <= bestJ.getGene().getPartitioning().getRelativePosition(parameters.getFeatureToAlign(GeneType.Joining), reqPointR))) {
+                    containCDR3Parts = true;
                     break;
                 }
+            }
 
-            if (!containCDR3Edge) {
+            if (!containCDR3Parts) {
                 onFailedAlignment(input, VDJCAlignmentFailCause.NoCDR3Parts);
                 return new VDJCAlignmentResult<>(input);
             }
