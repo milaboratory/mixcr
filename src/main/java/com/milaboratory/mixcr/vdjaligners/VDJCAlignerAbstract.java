@@ -31,6 +31,7 @@ package com.milaboratory.mixcr.vdjaligners;
 import cc.redberry.primitives.Filter;
 import com.milaboratory.core.alignment.batch.AlignmentHit;
 import com.milaboratory.core.alignment.batch.AlignmentResult;
+import com.milaboratory.core.alignment.batch.BatchAlignerWithBaseParameters;
 import com.milaboratory.core.alignment.batch.BatchAlignerWithBaseWithFilter;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.sequence.NucleotideSequence;
@@ -60,12 +61,16 @@ public abstract class VDJCAlignerAbstract<R extends SequenceRead> extends VDJCAl
         if (parameters.getVJCGeneAlignerParameters(geneType) != null &&
                 !genesToAlign.get(geneType).isEmpty()) {
             BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> aligner =
-                    (BatchAlignerWithBaseWithFilter) parameters.getVJCGeneAlignerParameters(geneType).getParameters().createAligner();
+                    (BatchAlignerWithBaseWithFilter) extractBatchParameters(parameters.getVJCGeneAlignerParameters(geneType)).createAligner();
             for (VDJCGene a : genesToAlign.get(geneType))
                 aligner.addReference(a.getFeature(parameters.getVJCGeneAlignerParameters(geneType).getGeneFeatureToAlign()), a);
             return aligner;
         }
         return null;
+    }
+
+    protected BatchAlignerWithBaseParameters extractBatchParameters(KGeneAlignmentParameters init) {
+        return init.getParameters();
     }
 
     protected final BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene,

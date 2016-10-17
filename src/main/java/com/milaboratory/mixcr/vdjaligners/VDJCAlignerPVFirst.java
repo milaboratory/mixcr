@@ -190,6 +190,24 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         return result;
     }
 
+
+    void createInitialHelper1(Target target) {
+        AlignmentResult<AlignmentHit<NucleotideSequence, VDJCGene>>
+                al1 = vAligner.align(target.targets[0].getSequence()),
+                al2 = vAligner.align(target.targets[1].getSequence());
+
+
+        //Additional round --- TODO
+
+        //filter due to minSumScore = score(R1) + score(R2)
+        int sumScore = 0;
+
+
+
+        //filter due to relativeMinScore
+
+    }
+
     PAlignmentHelper createInitialHelper(Target target) {
         return new PAlignmentHelper(target,
                 vAligner.align(target.targets[0].getSequence()),
@@ -212,6 +230,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
             this.target = target;
             this.vResults = vResults;
             this.vHits = extractDoubleHits(vResults);
+
             //this.bestVHits = new PairedHit(
             //        vResults[0].getBestHit(),
             //        vResults[1].getBestHit()
@@ -483,7 +502,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
 
             if (vHits != null && vHits.length > 0) {
                 float minScore = Math.max(
-                        parameters.getRelativeMinVScore() * vHits[0].sumScore,
+                        parameters.getVAlignerParameters().getRelativeMinScore() * vHits[0].sumScore,
                         totalMScore + vHits[0].sumScore // = minTotalScore - topJScore - topCScore - topDScore
                 );
                 this.vHits = extractHits(minScore, vHits, maxHits);
