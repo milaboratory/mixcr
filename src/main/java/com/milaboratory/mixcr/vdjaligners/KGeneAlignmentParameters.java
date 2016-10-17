@@ -32,6 +32,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.core.alignment.batch.BatchAlignerWithBaseParameters;
+import com.milaboratory.core.alignment.kaligner1.AbstractKAlignerParameters;
 import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import io.repseq.core.GeneFeature;
 
@@ -39,7 +40,7 @@ import io.repseq.core.GeneFeature;
         getterVisibility = JsonAutoDetect.Visibility.NONE)
 public final class KGeneAlignmentParameters extends GeneAlignmentParameters<KGeneAlignmentParameters>
         implements java.io.Serializable {
-    private BatchAlignerWithBaseParameters parameters;
+    private AbstractKAlignerParameters parameters;
     private int minSumScore;
     private float relativeMinScore;
 
@@ -48,7 +49,7 @@ public final class KGeneAlignmentParameters extends GeneAlignmentParameters<KGen
             @JsonProperty("geneFeatureToAlign") GeneFeature geneFeatureToAlign,
             @JsonProperty("minSumScore") int minSumScore,
             @JsonProperty("relativeMinScore") float relativeMinScore,
-            @JsonProperty("parameters") BatchAlignerWithBaseParameters parameters) {
+            @JsonProperty("parameters") AbstractKAlignerParameters parameters) {
         super(geneFeatureToAlign);
         this.minSumScore = minSumScore;
         this.relativeMinScore = relativeMinScore;
@@ -74,7 +75,7 @@ public final class KGeneAlignmentParameters extends GeneAlignmentParameters<KGen
         return this;
     }
 
-    public BatchAlignerWithBaseParameters getParameters() {
+    public AbstractKAlignerParameters getParameters() {
         return parameters;
     }
 
