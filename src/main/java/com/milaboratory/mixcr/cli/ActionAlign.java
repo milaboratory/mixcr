@@ -64,6 +64,7 @@ import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
 import com.milaboratory.util.CanReportProgress;
+import com.milaboratory.util.RandomUtil;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.*;
 
@@ -91,6 +92,9 @@ public class ActionAlign implements Action {
             if (alignerParameters == null)
                 throw new ProcessException("Failed to override some parameter.");
         }
+
+        if (!alignerParameters.isFixSeed())
+            RandomUtil.setGlobalInitialSeed(System.currentTimeMillis());
 
         // Creating aligner
         VDJCAligner aligner = VDJCAligner.createAligner(alignerParameters,

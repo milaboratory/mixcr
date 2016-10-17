@@ -1,3 +1,4 @@
 Fixes problem with absent library search folders
 Added action `exportClonesPretty`, that prints well-formatted alignments for segments and clonal sequence
 RepSeq.IO: fixes bug when MIXCR fails to resolve partial library name for files without .gz extension
+minor: Real random for fixRandom=false
