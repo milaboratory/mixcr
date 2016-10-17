@@ -218,9 +218,11 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
                                     jAligner.align(sequence) : null);
 
                 // Returning result
+                int jFrom = vResult.getBestHit().getAlignment().getSequence2Range().getTo() - parameters.getVJOverlapWindow();
+                jFrom = jFrom < 0 ? 0 : jFrom;
                 return new KVJResultsForSingle(target, vResult,
                         jAligner.align(sequence,
-                                vResult.getBestHit().getAlignment().getSequence2Range().getTo(),
+                                jFrom,
                                 sequence.size(),
                                 getFilter(GeneType.Joining, vResult.getHits())));
             case JThenV:
@@ -235,8 +237,10 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
                             jResult); // J result is empty
 
                 // Returning result
+                int vTo = jResult.getBestHit().getAlignment().getSequence2Range().getFrom() + parameters.getVJOverlapWindow();
+                vTo = vTo > sequence.size() ? sequence.size() : vTo;
                 return new KVJResultsForSingle(target, vAligner.align(sequence, 0,
-                        jResult.getBestHit().getAlignment().getSequence2Range().getFrom(),
+                        vTo,
                         getFilter(GeneType.Variable, jResult.getHits())),
                         jResult);
         }

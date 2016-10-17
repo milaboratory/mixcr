@@ -28,10 +28,7 @@
  */
 package com.milaboratory.mixcr.vdjaligners;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.milaboratory.core.PairedEndReadsLayout;
 import com.milaboratory.core.merger.MergerParameters;
@@ -47,6 +44,7 @@ import java.util.Map;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
 @Serializable(asJson = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.Serializable {
     @JsonIgnore
     protected final EnumMap<GeneType, GeneAlignmentParameters> alignmentParameters;
@@ -99,13 +97,13 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         this.vjOverlapWindow = vjOverlapWindow;
     }
 
-    public VDJCAlignerParameters setVjOverlapWindow(int vjOverlapWindow) {
-        this.vjOverlapWindow = vjOverlapWindow;
-        return this;
+    public int getVJOverlapWindow() {
+        return vjOverlapWindow;
     }
 
-    public VJAlignmentOrder getVjAlignmentOrder() {
-        return vjAlignmentOrder;
+    public VDJCAlignerParameters setVJOverlapWindow(int vjOverlapWindow) {
+        this.vjOverlapWindow = vjOverlapWindow;
+        return this;
     }
 
     public VDJCAlignerParameters setFixSeed(boolean fixSeed) {
@@ -364,6 +362,6 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         return new VDJCAlignerParameters(getVAlignerParameters(), getDAlignerParameters(), getJAlignerParameters(),
                 getCAlignerParameters(), vjAlignmentOrder, includeDScore, includeCScore, minSumScore, maxHits,
                 relativeMinVFR3CDR3Score, allowPartialAlignments, allowNoCDR3PartAlignments,
-                allowChimeras, readsLayout, mergerParameters, fixSeed,vjOverlapWindow);
+                allowChimeras, readsLayout, mergerParameters, fixSeed, vjOverlapWindow);
     }
 }

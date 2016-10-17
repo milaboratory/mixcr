@@ -47,7 +47,7 @@ public final class KGeneAlignmentParameters extends GeneAlignmentParameters<KGen
     public KGeneAlignmentParameters(
             @JsonProperty("geneFeatureToAlign") GeneFeature geneFeatureToAlign,
             @JsonProperty("minSumScore") int minSumScore,
-            @JsonProperty("minSumScore") float relativeMinScore,
+            @JsonProperty("relativeMinScore") float relativeMinScore,
             @JsonProperty("parameters") BatchAlignerWithBaseParameters parameters) {
         super(geneFeatureToAlign);
         this.minSumScore = minSumScore;
