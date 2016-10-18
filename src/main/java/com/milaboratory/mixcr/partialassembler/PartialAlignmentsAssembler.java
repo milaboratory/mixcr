@@ -323,6 +323,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
     }
 
     private int getLeftPartitionedSequence(VDJCAlignments alignment) {
+        //TODO why > 2 ?
         if (alignment.numberOfTargets() > 2)
             return -1;
         for (int i = 0; i < alignment.numberOfTargets(); i++) {
@@ -338,6 +339,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
     }
 
     private int getRightPartitionedSequence(VDJCAlignments alignment) {
+        //TODO why > 2 ?
         if (alignment.numberOfTargets() > 2)
             return -1;
         for (int i = 0; i < alignment.numberOfTargets(); i++) {

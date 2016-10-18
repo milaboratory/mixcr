@@ -108,11 +108,11 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
             final VDJCHit bestV = alignments.getBestHit(GeneType.Variable);
             final VDJCHit bestJ = alignments.getBestHit(GeneType.Joining);
             for (int i = 0; i < 2; i++) {
-                if ((bestV != null
+                if ((bestV != null && bestV.getAlignment(i) != null
                         && bestV.getAlignment(i).getSequence1Range().getTo()
                         >= bestV.getGene().getPartitioning().getRelativePosition(parameters.getFeatureToAlign(GeneType.Variable), reqPointL))
                         ||
-                        (bestJ != null
+                        (bestJ != null && bestJ.getAlignment(i) != null
                                 && bestJ.getAlignment(i).getSequence1Range().getFrom()
                                 <= bestJ.getGene().getPartitioning().getRelativePosition(parameters.getFeatureToAlign(GeneType.Joining), reqPointR))) {
                     containCDR3Parts = true;
@@ -258,6 +258,8 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                     final NucleotideSequence sequence2 = target.targets[1].getSequence();
                     final NucleotideSequence sequence1 = leftHit.getAlignment().getSequence1();
                     final int beginFR3 = leftHit.getRecordPayload().getPartitioning().getRelativePosition(parameters.getFeatureToAlign(GeneType.Variable), ReferencePoint.FR3Begin);
+                    if (beginFR3 == -1)
+                        continue;
                     final Alignment alignment = AlignerCustom.alignLinearSemiLocalLeft0(
                             (LinearGapAlignmentScoring) scoring,
                             sequence1, sequence2,
@@ -797,8 +799,14 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         Mutations<NucleotideSequence> vEndMutations = alignment.getAbsoluteMutations()
                 .extractMutationsForRange(range);
 
-        return AlignmentUtils.calculateScore(parameters.getVAlignerParameters().getParameters().getScoring(),
-                range.length(), vEndMutations);
+        return AlignmentUtils.calculateScore(
+                alignment.getSequence1().getRange(range),
+                vEndMutations,
+                parameters.getVAlignerParameters().getParameters().getScoring());
+
+//        return AlignmentUtils.calculateScore(
+//                parameters.getVAlignerParameters().getParameters().getScoring(),
+//                range.length(), vEndMutations);
     }
 
     static final Comparator<PairedHit> V_END_SCORE_COMPARATOR = new Comparator<PairedHit>() {
