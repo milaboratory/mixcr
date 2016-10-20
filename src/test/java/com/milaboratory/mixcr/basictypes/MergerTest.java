@@ -34,10 +34,13 @@ import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import io.repseq.core.GeneFeature;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class MergerTest {
     //@Test
@@ -96,5 +99,23 @@ public class MergerTest {
         char[] chars = new char[count];
         Arrays.fill(chars, letter);
         return new String(chars);
+    }
+
+    @Test
+    public void test1() throws Exception {
+        List<VDJCAlignments> list = new ArrayList<>();
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader("/Users/poslavsky/Downloads/hui")) {
+            reader.getNumberOfReads();
+            VDJCAlignments take;
+            while ((take = reader.take()) != null) {
+                list.add(take);
+            }
+        }
+
+        final VDJCAlignments al = list.get(2);
+        System.out.println(al.getReadId() - 28388844);
+        System.out.println(al.getFeature(GeneFeature.CDR3));
+
+
     }
 }

@@ -16,6 +16,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.util.SmartProgressReporter;
+import gnu.trove.set.hash.TLongHashSet;
 import io.repseq.core.Chains;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
@@ -66,17 +67,22 @@ public final class ActionFilterAlignments implements Action {
         final GeneFeature containsFeature;
         final NucleotideSequence cdr3Equals;
         final Chains chains;
+        final TLongHashSet readsIds;
 
-        public AlignmentsFilter(GeneFeature containsFeature, NucleotideSequence cdr3Equals, Chains chains) {
+        public AlignmentsFilter(GeneFeature containsFeature, NucleotideSequence cdr3Equals, Chains chains, TLongHashSet readsIds) {
             this.containsFeature = containsFeature;
             this.cdr3Equals = cdr3Equals;
             this.chains = chains;
+            this.readsIds = readsIds;
         }
 
         @Override
         public boolean accept(VDJCAlignments object) {
             if (object == null)
                 return true;
+
+            if (readsIds != null && !readsIds.contains(object.getReadId()))
+                return false;
 
             boolean lMatch = false;
             for (GeneType gt : GeneType.VDJC_REFERENCE) {
@@ -125,6 +131,19 @@ public final class ActionFilterAlignments implements Action {
                 names = {"-n", "--limit"}, validateWith = PositiveInteger.class)
         public long limit = 0;
 
+        @Parameter(description = "List of read ids to export",
+                names = {"-i", "--readsIds"}, variableArity = true)
+        public List<String> ids = new ArrayList<>();
+
+        TLongHashSet getReadIds() {
+            if (ids.isEmpty())
+                return null;
+            TLongHashSet r = new TLongHashSet(ids.size());
+            for (String id : ids)
+                r.add(Long.parseLong(id));
+            return r;
+        }
+
         @Override
         protected List<String> getOutputFiles() {
             return Collections.singletonList(parameters.get(1));
@@ -155,7 +174,7 @@ public final class ActionFilterAlignments implements Action {
         }
 
         public AlignmentsFilter getFilter() {
-            return new AlignmentsFilter(getContainFeature(), getCdr3Equals(), getChains());
+            return new AlignmentsFilter(getContainFeature(), getCdr3Equals(), getChains(), getReadIds());
         }
     }
 }
