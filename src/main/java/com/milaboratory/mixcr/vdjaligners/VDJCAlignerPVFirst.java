@@ -28,6 +28,7 @@
  */
 package com.milaboratory.mixcr.vdjaligners;
 
+import com.milaboratory.core.PairedEndReadsLayout;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.Target;
 import com.milaboratory.core.alignment.*;
@@ -37,11 +38,14 @@ import com.milaboratory.core.alignment.kaligner1.AbstractKAlignerParameters;
 import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.core.alignment.kaligner2.KAlignerParameters2;
 import com.milaboratory.core.io.sequence.PairedRead;
+import com.milaboratory.core.merger.MergerParameters;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.HasGene;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.partialassembler.AlignedTarget;
+import com.milaboratory.mixcr.partialassembler.TargetMerger;
 import com.milaboratory.util.BitArray;
 import io.repseq.core.*;
 
@@ -50,9 +54,13 @@ import java.util.*;
 public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     private static final ReferencePoint reqPointR = ReferencePoint.CDR3End.move(-3);
     private static final ReferencePoint reqPointL = ReferencePoint.CDR3Begin.move(+3);
+    private final TargetMerger alignmentsMerger;
 
     public VDJCAlignerPVFirst(VDJCAlignerParameters parameters) {
         super(parameters);
+        MergerParameters mp = parameters.getMergerParameters().overrideReadsLayout(PairedEndReadsLayout.CollinearDirect);
+        alignmentsMerger = new TargetMerger(mp);
+        alignmentsMerger.setAlignerParameters(parameters);
     }
 
     @Override
@@ -64,9 +72,24 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         // Creates helper classes for each PTarget
         PAlignmentHelper[] helpers = createInitialHelpers(targets);
 
-        return parameters.getAllowPartialAlignments() ?
+        VDJCAlignmentResult<PairedRead> result = parameters.getAllowPartialAlignments() ?
                 processPartial(input, helpers) :
                 processStrict(input, helpers);
+        if (result.alignment != null) {
+            final VDJCAlignments alignment = result.alignment;
+            final TargetMerger.TargetMergingResult mergeResult = alignmentsMerger.merge(
+                    input.getId(),
+                    new AlignedTarget(alignment, 0),
+                    new AlignedTarget(alignment, 1));
+
+            if (mergeResult != null)
+                result = new VDJCAlignmentResult<>(input,
+                        mergeResult
+                                .result
+                                .overrideDescription("VJOverlap(" + mergeResult.matched + ")")
+                                .getAlignments());
+        }
+        return result;
     }
 
     private VDJCAlignmentResult<PairedRead> processPartial(PairedRead input, PAlignmentHelper[] helpers) {
@@ -362,9 +385,10 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         final NucleotideSequence targetSequence = target.targets[index].getSequence();
 
         if (vHit == null)
-            return parameters.getAllowPartialAlignments()
-                    ? jAligner.align(targetSequence).getHits()
-                    : Collections.EMPTY_LIST;
+            return jAligner.align(targetSequence).getHits();
+//        parameters.getAllowPartialAlignments()
+//                    ? jAligner.align(targetSequence).getHits()
+//                    : Collections.EMPTY_LIST;
 
         BitArray filterForJ = getFilter(GeneType.Joining, vHits);
 

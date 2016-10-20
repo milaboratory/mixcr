@@ -200,6 +200,60 @@ public class TargetMerger {
         return BandedAligner.alignGlobal(scoring, left == null ? right.getSequence1() : left.getSequence1(),
                 seq, seq1From, seq1To - seq1From, seq2From, seq2To - seq2From, bandedWidth);
     }
+//
+//    static Alignment<NucleotideSequence> merge1(AlignmentScoring<NucleotideSequence> scoring,
+//                                               int bandedWidth,
+//                                               NucleotideSequence seq, int offset,
+//                                               Alignment<NucleotideSequence> left,
+//                                               Alignment<NucleotideSequence> right) {
+//        assert left != null || right != null;
+//        assert offset >= 0;
+//        assert left == null || right == null || left.getSequence1().equals(right.getSequence1());
+//
+//        int seq1From = -1, seq2From = -1, seq1To = -1, seq2To = -1;
+//
+//        if (left != null && right != null) {
+//            if (left.convertPosition(right.getSequence1Range().getFrom()) != right.getSequence2Range().getFrom() + offset) {
+//                if (left.getScore() > right.getScore())
+//                    right = null;
+//                else
+//                    left = null;
+//            } else {
+//                if (left.getSequence1Range().getFrom() < right.getSequence1Range().getFrom()) {
+//                    seq1From = left.getSequence1Range().getFrom();
+//                    seq2From = left.getSequence2Range().getFrom();
+//                } else {
+//                    seq1From = right.getSequence1Range().getFrom();
+//                    seq2From = right.getSequence2Range().getFrom() + offset;
+//                }
+//
+//                if (left.getSequence1Range().getTo() > right.getSequence1Range().getTo()) {
+//                    seq1To = left.getSequence1Range().getTo();
+//                    seq2To = left.getSequence2Range().getTo();
+//                } else {
+//                    seq1To = right.getSequence1Range().getTo();
+//                    seq2To = right.getSequence2Range().getTo() + offset;
+//                }
+//            }
+//        }
+//
+//        if (left == null) {
+//            seq1From = right.getSequence1Range().getFrom();
+//            seq1To = right.getSequence1Range().getTo();
+//
+//            seq2From = right.getSequence2Range().getFrom() + offset;
+//            seq2To = right.getSequence2Range().getTo() + offset;
+//        } else if (right == null) {
+//            seq1From = left.getSequence1Range().getFrom();
+//            seq1To = left.getSequence1Range().getTo();
+//
+//            seq2From = left.getSequence2Range().getFrom();
+//            seq2To = left.getSequence2Range().getTo();
+//        }
+//
+//        return BandedAligner.alignGlobal(scoring, left == null ? right.getSequence1() : left.getSequence1(),
+//                seq, seq1From, seq1To - seq1From, seq2From, seq2To - seq2From, bandedWidth);
+//    }
 
     public TargetMergingResult merge(long readId, AlignedTarget targetLeft, AlignedTarget targetRight) {
         for (GeneType geneType : GeneType.VJC_REFERENCE) {
