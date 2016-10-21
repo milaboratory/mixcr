@@ -68,12 +68,14 @@ public final class ActionFilterAlignments implements Action {
         final NucleotideSequence cdr3Equals;
         final Chains chains;
         final TLongHashSet readsIds;
+        final boolean chimerasOnly;
 
-        public AlignmentsFilter(GeneFeature containsFeature, NucleotideSequence cdr3Equals, Chains chains, TLongHashSet readsIds) {
+        public AlignmentsFilter(GeneFeature containsFeature, NucleotideSequence cdr3Equals, Chains chains, TLongHashSet readsIds, boolean chimerasOnly) {
             this.containsFeature = containsFeature;
             this.cdr3Equals = cdr3Equals;
             this.chains = chains;
             this.readsIds = readsIds;
+            this.chimerasOnly = chimerasOnly;
         }
 
         @Override
@@ -102,9 +104,13 @@ public final class ActionFilterAlignments implements Action {
                 final NSequenceWithQuality cdr3 = object.getFeature(GeneFeature.CDR3);
                 if (cdr3 == null)
                     return false;
-                if (cdr3Equals != null && !cdr3.getSequence().equals(cdr3Equals))
+                if (!cdr3.getSequence().equals(cdr3Equals))
                     return false;
             }
+
+            if (chimerasOnly)
+                return object.isChimera();
+
             return true;
         }
     }
@@ -126,6 +132,10 @@ public final class ActionFilterAlignments implements Action {
         @Parameter(description = "Include only those alignments which CDR3 equals to a specified sequence.",
                 names = {"-e", "--cdr3-equals"})
         public String cdr3Equals = null;
+
+        @Parameter(description = "Output only chimeric alignments.",
+                names = {"-x", "--chimeras-only"})
+        public Boolean chimerasOnly = null;
 
         @Parameter(description = "Maximal number of reads to process",
                 names = {"-n", "--limit"}, validateWith = PositiveInteger.class)
@@ -174,7 +184,8 @@ public final class ActionFilterAlignments implements Action {
         }
 
         public AlignmentsFilter getFilter() {
-            return new AlignmentsFilter(getContainFeature(), getCdr3Equals(), getChains(), getReadIds());
+            return new AlignmentsFilter(getContainFeature(), getCdr3Equals(), getChains(),
+                    getReadIds(), chimerasOnly == null ? false : chimerasOnly);
         }
     }
 }
