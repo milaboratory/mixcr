@@ -276,7 +276,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
 
                     final AlignmentScoring<NucleotideSequence> scoring = parameters.getVAlignerParameters().getParameters().getScoring();
                     if (scoring instanceof AffineGapAlignmentScoring)
-                        throw new UnsupportedOperationException();
+                        continue;//TODO IMPLEMENT
 
                     final NucleotideSequence sequence2 = target.targets[1].getSequence();
                     final NucleotideSequence sequence1 = leftHit.getAlignment().getSequence1();
@@ -313,6 +313,45 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                         performJAlignment(target, vHits, 1)),
                 parameters.getJAlignerParameters());
 
+        if (!parameters.getJAlignerParameters().getParameters().isFloatingRightBound()) {
+            boolean modified = false;
+            for (PairedHit jHit : jHits) {
+                if (jHit.hit0 == null) {
+                    AlignmentHit<NucleotideSequence, VDJCGene> rightHit = jHit.hit1;
+
+                    final AlignmentScoring<NucleotideSequence> scoring = parameters.getJAlignerParameters().getParameters().getScoring();
+                    if (scoring instanceof AffineGapAlignmentScoring)
+                        continue;//TODO IMPLEMENT
+
+                    final NucleotideSequence sequence2 = target.targets[0].getSequence();
+                    final NucleotideSequence sequence1 = rightHit.getAlignment().getSequence1();
+
+                    int begin = 0;
+                    if (vHits.length != 0 && vHits[0].hit0 != null) {
+                        begin = vHits[0].hit0.getAlignment().getSequence2Range().getTo() - parameters.getVJOverlapWindow();
+                        if (begin < 0)
+                            begin = 0;
+                    }
+
+                    final Alignment alignment = AlignerCustom.alignLinearSemiLocalRight0(
+                            (LinearGapAlignmentScoring) scoring,
+                            sequence1, sequence2,
+                            0, sequence1.size(),
+                            begin, sequence2.size() - begin,
+                            false, true,
+                            NucleotideSequence.ALPHABET,
+                            linearMatrixCache.get());
+                    if (alignment.getScore() < getAbsoluteMinScore(parameters.getJAlignerParameters().getParameters()))
+                        continue;
+
+                    jHit.set(0, new AlignmentHitImpl<>(alignment, rightHit.getRecordPayload()));
+                    jHit.calculateScore();
+                    modified = true;
+                }
+            }
+            if (modified)
+                jHits = sortAndFilterHits(jHits, parameters.getJAlignerParameters());
+        }
 
         /*
          * Step 4: Filter V/J hits with common chain only
@@ -384,13 +423,14 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
 
         final NucleotideSequence targetSequence = target.targets[index].getSequence();
 
+        BitArray filterForJ = getFilter(GeneType.Joining, vHits);
+
         if (vHit == null)
-            return jAligner.align(targetSequence).getHits();
+            return jAligner.align(targetSequence, 0, targetSequence.size(), filterForJ).getHits();
 //        parameters.getAllowPartialAlignments()
 //                    ? jAligner.align(targetSequence).getHits()
 //                    : Collections.EMPTY_LIST;
 
-        BitArray filterForJ = getFilter(GeneType.Joining, vHits);
 
         //TODO remove
         if (vHit.getAlignment().getSequence1Range().getTo() <=
