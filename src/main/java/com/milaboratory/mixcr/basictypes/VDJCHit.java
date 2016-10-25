@@ -103,6 +103,10 @@ public final class VDJCHit implements Comparable<VDJCHit>, HasGene {
         return alignments[target];
     }
 
+    public Alignment<NucleotideSequence>[] getAlignments() {
+        return alignments.clone();
+    }
+
     public int numberOfTargets() {
         return alignments.length;
     }
