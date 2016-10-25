@@ -2,26 +2,51 @@ package com.milaboratory.mixcr.util;
 
 import cc.redberry.pipe.Processor;
 import com.milaboratory.core.alignment.Alignment;
+import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.cli.ReportHelper;
+import com.milaboratory.mixcr.cli.ReportWriter;
 import io.repseq.core.*;
 
 import java.util.EnumMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author Stanislav Poslavsky
  */
-public final class CDR3Extender implements Processor<VDJCAlignments, VDJCAlignments> {
+public final class CDR3Extender implements Processor<VDJCAlignments, VDJCAlignments>, ReportWriter {
     final Chains chains;
+    final byte extensionQuality;
+    final AlignmentScoring<NucleotideSequence> vScoring, jScoring;
+    final ReferencePoint vLeftExtensionRefPoint, jRightExtensionRefPoint;
 
-    public CDR3Extender(Chains chains) {
+    //metrics
+    final AtomicLong total = new AtomicLong(0),
+            vExtended = new AtomicLong(0),
+            jExtended = new AtomicLong(0),
+            vExtendedMerged = new AtomicLong(0),
+            jExtendedMerged = new AtomicLong(0),
+            vjExtended = new AtomicLong(0),
+            vExtensionLength = new AtomicLong(0),
+            jExtensionLength = new AtomicLong(0);
+
+    public CDR3Extender(Chains chains, byte extensionQuality, AlignmentScoring<NucleotideSequence> vScoring, AlignmentScoring<NucleotideSequence> jScoring,
+                        ReferencePoint vLeftExtensionRefPoint, ReferencePoint jRightExtensionRefPoint) {
         this.chains = chains;
+        this.extensionQuality = extensionQuality;
+        this.vScoring = vScoring;
+        this.jScoring = jScoring;
+        this.vLeftExtensionRefPoint = vLeftExtensionRefPoint;
+        this.jRightExtensionRefPoint = jRightExtensionRefPoint;
     }
 
     @Override
     public VDJCAlignments process(VDJCAlignments input) {
+        total.incrementAndGet();
         //check input chains
         if (!chains.intersects(input.getTopChain(GeneType.Variable))
                 && !chains.intersects(input.getTopChain(GeneType.Joining)))
@@ -48,8 +73,11 @@ public final class CDR3Extender implements Processor<VDJCAlignments, VDJCAlignme
             cdr3target = i;
         }
 
+        if (cdr3target == -1)
+            return input;
+
         ExtendResult vExtension = null;
-        if (!topV.getPartitioningForTarget(cdr3target).isAvailable(ReferencePoint.CDR3Begin)) {
+        if (!topV.getPartitioningForTarget(cdr3target).isAvailable(vLeftExtensionRefPoint)) {
             final GeneFeature vFeature = topV.getAlignedFeature();
             for (VDJCHit vHit : input.getHits(GeneType.Variable)) {
                 if (vHit.getAlignment(cdr3target) == null)
@@ -61,7 +89,7 @@ public final class CDR3Extender implements Processor<VDJCAlignments, VDJCAlignme
                 final VDJCGene vGene = vHit.getGene();
 
                 //check if input contains some V CDR3 part
-                final int vCdr3BeginPositionInRef = vGene.getPartitioning().getRelativePosition(vFeature, ReferencePoint.CDR3Begin);
+                final int vCdr3BeginPositionInRef = vGene.getPartitioning().getRelativePosition(vFeature, vLeftExtensionRefPoint);
                 if (vCdr3BeginPositionInRef == -1
                         || vHit.getAlignment(cdr3target).getSequence1Range().getTo()
                         < vCdr3BeginPositionInRef)
@@ -95,10 +123,11 @@ public final class CDR3Extender implements Processor<VDJCAlignments, VDJCAlignme
                 if (vLeftTargetid != -1 && vLeftTargetid != cdr3target - 1)
                     return input;
 
-                ExtendResult r = new ExtendResult(cdr3target,
+                ExtendResult r = new VExtender(cdr3target,
                         vLeftTargetid == -1 ? -1 : vLeftEndCoord - vCdr3BeginPositionInRef,
-                        vHit.getAlignment(cdr3target).getSequence1().getRange(vLeftEndCoord, vHit.getAlignment(cdr3target).getSequence1Range().getFrom()),
-                        true);
+                        vHit.getAlignment(cdr3target).getSequence1().getRange(
+                                vLeftTargetid == -1 ? vCdr3BeginPositionInRef : vLeftEndCoord,
+                                vHit.getAlignment(cdr3target).getSequence1Range().getFrom()));
 
                 if (vExtension == null)
                     vExtension = r;
@@ -115,32 +144,40 @@ public final class CDR3Extender implements Processor<VDJCAlignments, VDJCAlignme
 
 
         if (vExtension != null) {
+            vExtended.incrementAndGet();
+            if (vExtension.relativeInsertionStart != -1)
+                vExtendedMerged.incrementAndGet();
+            vExtensionLength.addAndGet(vExtension.extension.size());
 
-            if (vExtension.relativeInsertionStart == -1) {
-                //extend
-                input = transform(input, new VDJCAlignmentTransformer() {
-                    @Override
-                    @SuppressWarnings("unchecked")
-                    public Alignment<NucleotideSequence>[] transform(VDJCGene gene, Alignment<NucleotideSequence>[] alignment) {
-                        return new Alignment[0];
-                    }
-                }, null);
-            }
-
-
+            //extend
+            input = transform(input, vExtension);
         }
 
 
         return input;
     }
 
+    @Override
+    public void writeReport(ReportHelper helper) {
+        long total = this.total.get();
+        helper.writePercentAndAbsoluteField("Extended alignments count", vExtended.get() + jExtended.get() - vjExtended.get(), total);
+        helper.writePercentAndAbsoluteField("V extensions total", vExtended, total);
+        helper.writePercentAndAbsoluteField("V extensions with merged targets", vExtendedMerged, total);
+        helper.writePercentAndAbsoluteField("J extensions total", jExtended, total);
+        helper.writePercentAndAbsoluteField("J extensions with merged targets", jExtendedMerged, total);
+        helper.writePercentAndAbsoluteField("V+J extensions", vjExtended, total);
+        helper.writeField("Mean V extension length", 1.0 * vExtensionLength.get() / vExtended.get());
+        helper.writeField("Mean J extension length", 1.0 * jExtensionLength.get() / jExtended.get());
+    }
+
     interface VDJCAlignmentTransformer {
         Alignment<NucleotideSequence>[] transform(VDJCGene gene, Alignment<NucleotideSequence>[] alignment);
+
+        NSequenceWithQuality[] transform(NSequenceWithQuality[] targets);
     }
 
     static VDJCAlignments transform(VDJCAlignments input,
-                                    VDJCAlignmentTransformer transformer,
-                                    NSequenceWithQuality[] newTargets) {
+                                    VDJCAlignmentTransformer transformer) {
         EnumMap<GeneType, VDJCHit[]> newHitsMap = new EnumMap<>(GeneType.class);
         for (GeneType gt : GeneType.VDJC_REFERENCE) {
             final VDJCHit[] inputHits = input.getHits(gt);
@@ -152,7 +189,7 @@ public final class CDR3Extender implements Processor<VDJCAlignments, VDJCAlignme
             newHitsMap.put(gt, newHits);
         }
 
-        final VDJCAlignments result = new VDJCAlignments(input.getReadId(), newHitsMap, newTargets);
+        final VDJCAlignments result = new VDJCAlignments(input.getReadId(), newHitsMap, transformer.transform(input.getTargets()));
         result.setAlignmentsIndex(input.getAlignmentsIndex());
         result.setOriginalDescriptions(input.getOriginalDescriptions());
         result.setOriginalSequences(input.getOriginalSequences());
@@ -168,17 +205,9 @@ public final class CDR3Extender implements Processor<VDJCAlignments, VDJCAlignme
         return result;
     }
 
-    final static class ExtendResult implements VDJCAlignmentTransformer {
-        final int cdr3targetId;
-        final int relativeInsertionStart;
-        final NucleotideSequence extension;
-        final boolean extendV;
-
-        public ExtendResult(int cdr3targetId, int relativeInsertionStart, NucleotideSequence extension, boolean extendV) {
-            this.cdr3targetId = cdr3targetId;
-            this.relativeInsertionStart = relativeInsertionStart;
-            this.extension = extension;
-            this.extendV = extendV;
+    final class VExtender extends ExtendResult {
+        public VExtender(int cdr3targetId, int relativeInsertionStart, NucleotideSequence extension) {
+            super(cdr3targetId, relativeInsertionStart, extension);
         }
 
         @Override
@@ -186,10 +215,52 @@ public final class CDR3Extender implements Processor<VDJCAlignments, VDJCAlignme
             if (relativeInsertionStart == -1) {
                 //no adjacent target
 
-            } else {
+                Alignment<NucleotideSequence> al = alignment[cdr3targetId];
+                if (gene.getGeneType() == GeneType.Variable) {
+                    alignment[cdr3targetId] = new Alignment<>(
+                            al.getSequence1(),
+                            al.getAbsoluteMutations(),
+                            al.getSequence1Range().expand(extension.size(), 0),
+                            al.getSequence2Range().expand(0, extension.size()),
+                            vScoring);
+                } else if (al != null) {
+                    alignment[cdr3targetId] = new Alignment<>(
+                            al.getSequence1(),
+                            al.getAbsoluteMutations(),
+                            al.getSequence1Range(),
+                            al.getSequence2Range().move(extension.size()),
+                            al.getScore());
+                }
 
+                return alignment;
+            } else {
+                return alignment;
             }
-            return new Alignment[0];
+        }
+
+        @Override
+        public NSequenceWithQuality[] transform(NSequenceWithQuality[] targets) {
+            if (relativeInsertionStart == -1) {
+
+                targets[cdr3targetId] = new NSequenceWithQuality(extension,
+                        SequenceQuality.getUniformQuality(extensionQuality, extension.size()))
+                        .concatenate(targets[cdr3targetId]);
+                return targets;
+            } else {
+                return targets;
+            }
+        }
+    }
+
+    abstract class ExtendResult implements VDJCAlignmentTransformer {
+        final int cdr3targetId;
+        final int relativeInsertionStart;
+        final NucleotideSequence extension;
+
+        public ExtendResult(int cdr3targetId, int relativeInsertionStart, NucleotideSequence extension) {
+            this.cdr3targetId = cdr3targetId;
+            this.relativeInsertionStart = relativeInsertionStart;
+            this.extension = extension;
         }
 
         @Override
@@ -201,7 +272,6 @@ public final class CDR3Extender implements Processor<VDJCAlignments, VDJCAlignme
 
             if (cdr3targetId != that.cdr3targetId) return false;
             if (relativeInsertionStart != that.relativeInsertionStart) return false;
-            if (extendV != that.extendV) return false;
             return extension.equals(that.extension);
 
         }
@@ -211,7 +281,6 @@ public final class CDR3Extender implements Processor<VDJCAlignments, VDJCAlignme
             int result = cdr3targetId;
             result = 31 * result + relativeInsertionStart;
             result = 31 * result + extension.hashCode();
-            result = 31 * result + (extendV ? 1 : 0);
             return result;
         }
     }

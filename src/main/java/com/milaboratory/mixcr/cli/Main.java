@@ -94,7 +94,8 @@ public class Main {
                 new ActionExportReads(),
                 new ActionClonesDiff(),
                 new ActionFilterAlignments(),
-                new ActionListLibraries());
+                new ActionListLibraries(),
+                new ActionExtendCD3());
 
         // Adding version info callback
         main.setVersionInfoCallback(new Runnable() {

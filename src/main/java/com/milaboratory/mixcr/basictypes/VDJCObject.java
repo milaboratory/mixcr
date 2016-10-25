@@ -115,6 +115,10 @@ public class VDJCObject {
         return targets[target];
     }
 
+    public final NSequenceWithQuality[] getTargets(){
+        return targets.clone();
+    }
+
     public final VDJCPartitionedSequence getPartitionedTarget(int target) {
         if (partitionedTargets == null) {
             partitionedTargets = new VDJCPartitionedSequence[targets.length];
