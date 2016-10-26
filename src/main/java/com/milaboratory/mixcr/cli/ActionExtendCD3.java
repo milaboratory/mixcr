@@ -12,8 +12,7 @@ import com.milaboratory.cli.ActionParametersWithOutput;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
-import com.milaboratory.mixcr.util.CDR3Extender;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
+import com.milaboratory.mixcr.util.AlignmentExtender;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.Chains;
 import io.repseq.core.ReferencePoint;
@@ -34,7 +33,7 @@ public class ActionExtendCD3 implements Action {
             SmartProgressReporter.startProgressReport("Processing", reader);
 
             writer.header(reader.getParameters(), reader.getUsedGenes());
-            CDR3Extender extender = new CDR3Extender(parameters.getChains(), parameters.extensionQuality,
+            AlignmentExtender extender = new AlignmentExtender(parameters.getChains(), parameters.extensionQuality,
                     reader.getParameters().getVAlignerParameters().getParameters().getScoring(),
                     reader.getParameters().getJAlignerParameters().getParameters().getScoring(),
                     ReferencePoint.parse(parameters.vAnchorPoint),
