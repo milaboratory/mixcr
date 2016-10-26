@@ -75,7 +75,7 @@ public class ActionExtendAlignments implements Action {
         @Parameter(description = "input.vdjca[.gz] output.vdjca[.gz]")
         public List<String> parameters;
 
-        @Parameter(description = "Filter export to a specific protein chain gene (e.g. TRA or IGH).",
+        @Parameter(description = "Apply procedure only to alignments with specific immunological-receptor chains.",
                 names = {"-c", "--chains"})
         public String chains = "TCR";
 
