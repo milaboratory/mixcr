@@ -81,30 +81,28 @@ public class CloneAssemblerRunner implements CanReportProgressAndStage {
                 throw new RuntimeException(e);
             }
         }
-        //run mapping
-        if (assembler.parameters.isMappingEnabled()) {
+        // run mapping if required
+        if (assembler.beginMapping()) {
             synchronized (this) {
                 stage = "Preparing for mapping of low quality reads";
                 innerProgress = null;
             }
-            if (assembler.beginMapping()) {
-                try (OutputPortCloseable<VDJCAlignments> alignmentsPort = alignmentsProvider.create()) {
-                    synchronized (this) {
-                        stage = "Mapping low quality reads";
-                        if (alignmentsPort instanceof CanReportProgress)
-                            innerProgress = (CanReportProgress) alignmentsPort;
-                    }
-                    try {
-                        CUtils.processAllInParallel(CUtils.buffered(
-                                        new FilteringPort<>(alignmentsPort,
-                                                assembler.getDeferredAlignmentsFilter()), 128),
-                                assembler.getDeferredAlignmentsMapper(), threads);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
+            try (OutputPortCloseable<VDJCAlignments> alignmentsPort = alignmentsProvider.create()) {
+                synchronized (this) {
+                    stage = "Mapping low quality reads";
+                    if (alignmentsPort instanceof CanReportProgress)
+                        innerProgress = (CanReportProgress) alignmentsPort;
                 }
-                assembler.endMapping();
+                try {
+                    CUtils.processAllInParallel(CUtils.buffered(
+                            new FilteringPort<>(alignmentsPort,
+                                    assembler.getDeferredAlignmentsFilter()), 128),
+                            assembler.getDeferredAlignmentsMapper(), threads);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
+            assembler.endMapping();
         }
         assembler.preClustering();
         //run clustering

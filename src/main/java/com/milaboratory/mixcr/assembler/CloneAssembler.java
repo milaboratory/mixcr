@@ -181,11 +181,13 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     }
 
     public boolean beginMapping() {
+        globalLogger.end(totalAlignments.get());
         if (!parameters.isMappingEnabled())
-            throw new IllegalStateException("No mapping is needed for this parameters.");
+            return false;
+
         if (deferredAlignmentsLogger != null)
             throw new IllegalStateException();
-        globalLogger.end(totalAlignments.get());
+
         if (!deferredExists)
             return false;
         deferredAlignmentsLogger = new AssemblerEventLogger();
