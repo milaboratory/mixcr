@@ -29,7 +29,6 @@
 package com.milaboratory.mixcr.vdjaligners;
 
 import com.milaboratory.core.PairedEndReadsLayout;
-import com.milaboratory.core.Range;
 import com.milaboratory.core.Target;
 import com.milaboratory.core.alignment.*;
 import com.milaboratory.core.alignment.batch.AlignmentHit;
@@ -39,7 +38,6 @@ import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.core.alignment.kaligner2.KAlignerParameters2;
 import com.milaboratory.core.io.sequence.PairedRead;
 import com.milaboratory.core.merger.MergerParameters;
-import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.HasGene;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
@@ -229,7 +227,9 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
 
     static PairedHit[] filterHits(final PairedHit[] hits, final int minSumScore, final int maxHits) {
         int i = 0;
-        while (i < hits.length && i < maxHits && hits[i].sumScore >= minSumScore) {++i;}
+        while (i < hits.length && i < maxHits && hits[i].sumScore >= minSumScore) {
+            ++i;
+        }
         return i == hits.length ? hits : Arrays.copyOf(hits, i);
     }
 
@@ -259,17 +259,13 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                 vAl1 = vAligner.align(target.targets[0].getSequence()).getHits(),
                 vAl2 = vAligner.align(target.targets[1].getSequence()).getHits();
 
-        PairedHit[] vHits = sortAndFilterHits(
-                extractDoubleHits(vAl1, vAl2),
-                parameters.getVAlignerParameters());
-
+        PairedHit[] vHits = extractDoubleHits(vAl1, vAl2);
 
         /*
          * Step 2: of round of V gene alignment with more precise algorithm
          */
 
-        if (!parameters.getVAlignerParameters().getParameters().isFloatingLeftBound()) {
-            boolean modified = false;
+        if (!parameters.getVAlignerParameters().getParameters().isFloatingLeftBound())
             for (PairedHit vHit : vHits) {
                 if (vHit.hit1 == null) {
                     AlignmentHit<NucleotideSequence, VDJCGene> leftHit = vHit.hit0;
@@ -296,25 +292,19 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
 
                     vHit.set(1, new AlignmentHitImpl<>(alignment, leftHit.getRecordPayload()));
                     vHit.calculateScore();
-                    modified = true;
                 }
             }
-            if (modified)
-                vHits = sortAndFilterHits(vHits, parameters.getVAlignerParameters());
-        }
+
+        vHits = sortAndFilterHits(vHits, parameters.getVAlignerParameters());
 
         /*
          * Step 3: alignment of J gene
          */
 
-        PairedHit[] jHits = sortAndFilterHits(
-                extractDoubleHits(
-                        performJAlignment(target, vHits, 0),
-                        performJAlignment(target, vHits, 1)),
-                parameters.getJAlignerParameters());
+        PairedHit[] jHits = extractDoubleHits(performJAlignment(target, vHits, 0),
+                performJAlignment(target, vHits, 1));
 
-        if (!parameters.getJAlignerParameters().getParameters().isFloatingRightBound()) {
-            boolean modified = false;
+        if (!parameters.getJAlignerParameters().getParameters().isFloatingRightBound())
             for (PairedHit jHit : jHits) {
                 if (jHit.hit0 == null) {
                     AlignmentHit<NucleotideSequence, VDJCGene> rightHit = jHit.hit1;
@@ -346,12 +336,10 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
 
                     jHit.set(0, new AlignmentHitImpl<>(alignment, rightHit.getRecordPayload()));
                     jHit.calculateScore();
-                    modified = true;
                 }
             }
-            if (modified)
-                jHits = sortAndFilterHits(jHits, parameters.getJAlignerParameters());
-        }
+
+        jHits = sortAndFilterHits(jHits, parameters.getJAlignerParameters());
 
         /*
          * Step 4: Filter V/J hits with common chain only
@@ -752,21 +740,22 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         public AlignmentHit<NucleotideSequence, VDJCGene> hit0, hit1;
         float sumScore = -1, vEndScore = -1;
 
-        PairedHit() {}
-
-        /**
-         * Calculates alignment score only for FR3 and CDR3 part of V gene.
-         */
-        void calculateVEndScore(VDJCAlignerPVFirst aligner) {
-            if (hit0 != null)
-                vEndScore = aligner.calculateVEndScore(hit0);
-
-            if (hit1 != null) {
-                float sc = aligner.calculateVEndScore(hit1);
-                if (vEndScore < sc)
-                    vEndScore = sc;
-            }
+        PairedHit() {
         }
+
+        ///**
+        // * Calculates alignment score only for FR3 and CDR3 part of V gene.
+        // */
+        //void calculateVEndScore(VDJCAlignerPVFirst aligner) {
+        //    if (hit0 != null)
+        //        vEndScore = aligner.calculateVEndScore(hit0);
+        //
+        //    if (hit1 != null) {
+        //        float sc = aligner.calculateVEndScore(hit1);
+        //        if (vEndScore < sc)
+        //            vEndScore = sc;
+        //    }
+        //}
 
         /**
          * Calculates normal "sum" score for this paired hit.
@@ -843,35 +832,35 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         return hits;
     }
 
-    /**
-     * Calculates alignment score only for FR3 and CDR3 part of V gene.
-     */
-    float calculateVEndScore(AlignmentHit<NucleotideSequence, VDJCGene> hit) {
-        final VDJCGene gene = hit.getRecordPayload();
-        final int boundary = gene.getPartitioning().getRelativePosition(
-                parameters.getFeatureToAlign(GeneType.Variable),
-                ReferencePoint.FR3Begin);
-        final Alignment<NucleotideSequence> alignment = hit.getAlignment();
-
-        if (alignment.getSequence1Range().getUpper() <= boundary)
-            return 0.0f;
-
-        if (alignment.getSequence1Range().getLower() >= boundary)
-            return alignment.getScore();
-
-        final Range range = new Range(boundary, alignment.getSequence1Range().getUpper());
-        Mutations<NucleotideSequence> vEndMutations = alignment.getAbsoluteMutations()
-                .extractMutationsForRange(range);
-
-        return AlignmentUtils.calculateScore(
-                alignment.getSequence1().getRange(range),
-                vEndMutations,
-                parameters.getVAlignerParameters().getParameters().getScoring());
-
+//    /**
+//     * Calculates alignment score only for FR3 and CDR3 part of V gene.
+//     */
+//    float calculateVEndScore(AlignmentHit<NucleotideSequence, VDJCGene> hit) {
+//        final VDJCGene gene = hit.getRecordPayload();
+//        final int boundary = gene.getPartitioning().getRelativePosition(
+//                parameters.getFeatureToAlign(GeneType.Variable),
+//                ReferencePoint.FR3Begin);
+//        final Alignment<NucleotideSequence> alignment = hit.getAlignment();
+//
+//        if (alignment.getSequence1Range().getUpper() <= boundary)
+//            return 0.0f;
+//
+//        if (alignment.getSequence1Range().getLower() >= boundary)
+//            return alignment.getScore();
+//
+//        final Range range = new Range(boundary, alignment.getSequence1Range().getUpper());
+//        Mutations<NucleotideSequence> vEndMutations = alignment.getAbsoluteMutations()
+//                .extractMutationsForRange(range);
+//
 //        return AlignmentUtils.calculateScore(
-//                parameters.getVAlignerParameters().getParameters().getScoring(),
-//                range.length(), vEndMutations);
-    }
+//                alignment.getSequence1().getRange(range),
+//                vEndMutations,
+//                parameters.getVAlignerParameters().getParameters().getScoring());
+//
+////        return AlignmentUtils.calculateScore(
+////                parameters.getVAlignerParameters().getParameters().getScoring(),
+////                range.length(), vEndMutations);
+//    }
 
     static final Comparator<PairedHit> V_END_SCORE_COMPARATOR = new Comparator<PairedHit>() {
         @Override

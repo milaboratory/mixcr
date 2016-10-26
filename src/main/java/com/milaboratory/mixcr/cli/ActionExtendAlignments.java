@@ -22,7 +22,7 @@ import java.util.List;
 /**
  * @author Stanislav Poslavsky
  */
-public class ActionExtendCD3 implements Action {
+public class ActionExtendAlignments implements Action {
     private final ExtendCD3Parameters parameters = new ExtendCD3Parameters();
 
     @Override
@@ -63,7 +63,7 @@ public class ActionExtendCD3 implements Action {
 
     @Override
     public String command() {
-        return "extendCDR3";
+        return "extendAlignments";
     }
 
     @Override

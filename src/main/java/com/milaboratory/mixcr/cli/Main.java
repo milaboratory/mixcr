@@ -95,7 +95,7 @@ public class Main {
                 new ActionClonesDiff(),
                 new ActionFilterAlignments(),
                 new ActionListLibraries(),
-                new ActionExtendCD3());
+                new ActionExtendAlignments());
 
         // Adding version info callback
         main.setVersionInfoCallback(new Runnable() {
