@@ -1,0 +1,1 @@
+Fix for NPE in assemble action invoked with `-OmaxBadPointsPercent=0`
