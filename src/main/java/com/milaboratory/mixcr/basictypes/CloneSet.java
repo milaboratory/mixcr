@@ -128,7 +128,7 @@ public final class CloneSet implements Iterable<Clone> {
     }
 
     /**
-     * WARNING: in will be destroyed
+     * WARNING: current object will be destroyed
      */
     public static CloneSet transform(CloneSet in, Filter<Clone> filter) {
         List<Clone> newClones = new ArrayList<>(in.size());
