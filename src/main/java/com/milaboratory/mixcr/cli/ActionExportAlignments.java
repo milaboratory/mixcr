@@ -28,6 +28,8 @@
  */
 package com.milaboratory.mixcr.cli;
 
+import cc.redberry.pipe.OutputPort;
+import cc.redberry.pipe.blocks.FilteringPort;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.export.InfoWriter;
@@ -36,9 +38,9 @@ import io.repseq.core.VDJCLibraryRegistry;
 
 import java.util.List;
 
-public class ActionExportAlignments extends ActionExport {
+public class ActionExportAlignments extends ActionExport<VDJCAlignments> {
     public ActionExportAlignments() {
-        super(new ActionExportParameters(), VDJCAlignments.class);
+        super(new ActionExportParameters<VDJCAlignments>(), VDJCAlignments.class);
     }
 
     @Override
@@ -50,7 +52,8 @@ public class ActionExportAlignments extends ActionExport {
             VDJCAlignments alignments;
             long count = 0;
             long limit = parameters.getLimit();
-            while ((alignments = reader.take()) != null && count < limit) {
+            OutputPort<VDJCAlignments> alignmentsPort = new FilteringPort<>(reader, parameters.getFilter());
+            while ((alignments = alignmentsPort.take()) != null && count < limit) {
                 writer.put(alignments);
                 ++count;
             }

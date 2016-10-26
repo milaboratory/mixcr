@@ -1,5 +1,6 @@
 package com.milaboratory.mixcr.cli;
 
+import cc.redberry.primitives.Filter;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
@@ -8,25 +9,41 @@ import com.beust.jcommander.validators.PositiveInteger;
 import com.milaboratory.cli.ActionParametersWithOutput;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.basictypes.VDJCObject;
 import com.milaboratory.mixcr.export.FieldExtractor;
 import com.milaboratory.mixcr.export.FieldExtractors;
 import com.milaboratory.mixcr.export.OutputMode;
+import io.repseq.core.Chains;
+import io.repseq.core.GeneType;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 
+import static cc.redberry.primitives.FilterUtil.ACCEPT_ALL;
+import static cc.redberry.primitives.FilterUtil.and;
+
 /**
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-@Parameters(commandDescription = "Export alignments/clones to tab-delimited text file", optionPrefixes = "-")
-public class ActionExportParameters extends ActionParametersWithOutput {
+@Parameters(commandDescription = "Export alignments/clones to tab-delimited text file")
+public class ActionExportParameters<T extends VDJCObject> extends ActionParametersWithOutput {
     public static final String DEFAULT_PRESET = "full";
 
     @Parameter(description = "input_file output_file")
     public List<String> files = new ArrayList<>();
+
+    @Parameter(description = "Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)",
+            names = {"-c", "--chains"})
+    public String chains = "ALL";
+
+    @Deprecated
+    @Parameter(description = "Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)",
+            names = {"-l", "--loci"}, hidden = true)
+    public String chains_legacy = null;
 
     @Parameter(description = "Specify preset of export fields (full, min)",
             names = {"-p", "--preset"})
@@ -69,6 +86,42 @@ public class ActionExportParameters extends ActionParametersWithOutput {
 
     public String getInputFile() {
         return files.get(0);
+    }
+
+    public Chains getChains() {
+        if (chains_legacy != null) {
+            if (!chains.equals("ALL"))
+                throw new ParameterException("Use -c without -l parameter.");
+            System.out.println("WARNING: using of -l (--loci) option is deprecated; use -c (--chains) instead.");
+            return Util.parseLoci(chains_legacy);
+        }
+        return Util.parseLoci(chains);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Filter<T> getFilter() {
+        List<Filter<T>> filters = new ArrayList<>();
+
+        final Chains chains = getChains();
+        filters.add(new Filter<T>() {
+            @Override
+            public boolean accept(T object) {
+                for (GeneType gt : GeneType.VJC_REFERENCE) {
+                    VDJCHit bestHit = object.getBestHit(gt);
+                    if (bestHit != null && chains.intersects(bestHit.getGene().getChains()))
+                        return true;
+                }
+                return false;
+            }
+        });
+
+        if (filters.isEmpty())
+            return ACCEPT_ALL;
+
+        if (filters.size() == 1)
+            return filters.get(0);
+
+        return and(filters.toArray(new Filter[filters.size()]));
     }
 
     @Override
