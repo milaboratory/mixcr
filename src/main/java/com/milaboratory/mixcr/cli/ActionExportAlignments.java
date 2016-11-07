@@ -49,6 +49,7 @@ public class ActionExportAlignments extends ActionExport<VDJCAlignments> {
              InfoWriter<VDJCAlignments> writer = new InfoWriter<>(parameters.getOutputFile())) {
             SmartProgressReporter.startProgressReport("Exporting alignments", reader, System.err);
             writer.attachInfoProviders((List) parameters.exporters);
+            writer.ensureHeader();
             VDJCAlignments alignments;
             long count = 0;
             long limit = parameters.getLimit();
