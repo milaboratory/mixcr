@@ -100,7 +100,8 @@ public class ActionAssemble implements Action {
         }
 
         // Performing assembly
-        try (CloneAssembler assembler = new CloneAssembler(assemblerParameters, false, genes)) {
+        try (CloneAssembler assembler = new CloneAssembler(assemblerParameters,
+                actionParameters.readsToClonesMapping != null, genes)) {
             // Creating event listener to collect run statistics
             CloneAssemblerReport report = new CloneAssemblerReport();
             assembler.setListener(report);

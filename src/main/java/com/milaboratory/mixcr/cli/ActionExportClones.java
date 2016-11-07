@@ -61,6 +61,7 @@ public class ActionExportClones extends ActionExport<Clone> {
             set = CloneSet.transform(set, parameters.getFilter());
 
             writer.attachInfoProviders((List) parameters.exporters);
+            writer.ensureHeader();
             long limit = parameters.getLimit();
             for (int i = 0; i < set.size(); i++) {
                 if (set.get(i).getFraction() < parameters.minFraction ||

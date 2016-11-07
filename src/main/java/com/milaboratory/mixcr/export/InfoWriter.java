@@ -57,7 +57,7 @@ public final class InfoWriter<T> implements InputPort<T>, AutoCloseable {
         this.outputStream = outputStream;
     }
 
-    private void ensureInitialized() {
+    public void ensureHeader() {
         if (!initialized) {
             try {
                 for (int i = 0; i < fieldExtractors.size(); ++i) {
@@ -76,7 +76,7 @@ public final class InfoWriter<T> implements InputPort<T>, AutoCloseable {
 
     @Override
     public void put(T t) {
-        ensureInitialized();
+        ensureHeader();
         try {
             for (int i = 0; i < fieldExtractors.size(); ++i) {
                 outputStream.write(fieldExtractors.get(i).extractValue(t).getBytes());
