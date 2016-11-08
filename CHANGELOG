@@ -1,4 +1,20 @@
 
+MiXCR 2.0.1 ( 8 Nov 2016)
+========================
+
+-- Fixes problem with absent library search folders
+-- Added action `exportClonesPretty`, that prints well-formatted alignments for segments and clonal 
+   sequence
+-- Human readable report for assemblePartial action
+-- Additional micro-filtering step for alignment hits to exclude wrong chain hits
+-- RepSeq.IO: fixes bug when MIXCR fails to resolve partial library name for files without .gz 
+   extension
+-- Print warning when using java version <= 7 
+-- minor: Statistics about chains usage is added to `align` and `assemble` reports
+-- minor: Added chains (`--chains` or `-c` option) filter for `exportAlignments` 
+-- minor: Execution time is now printed in reports
+
+
 MiXCR 2.0 (13 Sep 2016)
 ========================
 
