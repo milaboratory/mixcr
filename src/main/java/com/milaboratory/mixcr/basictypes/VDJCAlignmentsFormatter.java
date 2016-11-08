@@ -44,23 +44,27 @@ import java.util.Arrays;
 import java.util.List;
 
 public class VDJCAlignmentsFormatter {
-    public static MultiAlignmentHelper getTargetAsMultiAlignment(VDJCAlignments vdjcaAlignments, int targetId) {
-        NSequenceWithQuality target = vdjcaAlignments.getTarget(targetId);
+    public static MultiAlignmentHelper getTargetAsMultiAlignment(VDJCObject vdjcObject, int targetId) {
+        return getTargetAsMultiAlignment(vdjcObject, targetId, false);
+    }
+
+    public static MultiAlignmentHelper getTargetAsMultiAlignment(VDJCObject vdjcObject, int targetId, boolean addHitScore) {
+        NSequenceWithQuality target = vdjcObject.getTarget(targetId);
         NucleotideSequence targetSeq = target.getSequence();
-        SequencePartitioning partitioning = vdjcaAlignments.getPartitionedTarget(targetId).getPartitioning();
+        SequencePartitioning partitioning = vdjcObject.getPartitionedTarget(targetId).getPartitioning();
 
         List<Alignment<NucleotideSequence>> alignments = new ArrayList<>();
         List<String> alignmentLeftComments = new ArrayList<>();
         List<String> alignmentRightComments = new ArrayList<>();
         for (GeneType gt : GeneType.values())
-            for (VDJCHit hit : vdjcaAlignments.getHits(gt)) {
+            for (VDJCHit hit : vdjcObject.getHits(gt)) {
                 Alignment<NucleotideSequence> alignment = hit.getAlignment(targetId);
                 if (alignment == null)
                     continue;
                 alignment = alignment.invert(targetSeq);
                 alignments.add(alignment);
                 alignmentLeftComments.add(hit.getGene().getName());
-                alignmentRightComments.add(" " + hit.getAlignment(targetId).getScore());
+                alignmentRightComments.add(" " + (int) (hit.getAlignment(targetId).getScore()) + (addHitScore ? " (" + (int) (hit.getScore()) + ")" : ""));
             }
 
         MultiAlignmentHelper helper = MultiAlignmentHelper.build(MultiAlignmentHelper.DEFAULT_SETTINGS,
@@ -71,7 +75,7 @@ public class VDJCAlignmentsFormatter {
 
         helper.addSubjectQuality("Quality", target.getQuality());
         helper.setSubjectLeftTitle("Target" + targetId);
-        helper.setSubjectRightTitle(" Score");
+        helper.setSubjectRightTitle(" Score" + (addHitScore ? " (hit score)" : ""));
         for (int i = 0; i < alignmentLeftComments.size(); i++) {
             helper.setQueryLeftTitle(i, alignmentLeftComments.get(i));
             helper.setQueryRightTitle(i, alignmentRightComments.get(i));

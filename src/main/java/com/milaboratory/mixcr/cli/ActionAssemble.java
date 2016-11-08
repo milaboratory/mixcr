@@ -38,6 +38,7 @@ import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParametersWithOutput;
 import com.milaboratory.mixcr.assembler.*;
+import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
@@ -100,11 +101,11 @@ public class ActionAssemble implements Action {
         }
 
         // Performing assembly
-        try (CloneAssembler assembler = new CloneAssembler(assemblerParameters, false, genes)) {
+        try (CloneAssembler assembler = new CloneAssembler(assemblerParameters,
+                actionParameters.readsToClonesMapping != null, genes)) {
             // Creating event listener to collect run statistics
             CloneAssemblerReport report = new CloneAssemblerReport();
             assembler.setListener(report);
-
 
             // Running assembler
             CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(
@@ -115,6 +116,10 @@ public class ActionAssemble implements Action {
 
             // Getting results
             final CloneSet cloneSet = assemblerRunner.getCloneSet();
+
+            ChainUsageStats chainsStatistics = new ChainUsageStats();
+            for (Clone clone : cloneSet)
+                chainsStatistics.put(clone);
 
             // Writing results
             try (CloneSetIO.CloneSetWriter writer = new CloneSetIO.CloneSetWriter(cloneSet, actionParameters.getOutputFileName())) {
@@ -131,11 +136,11 @@ public class ActionAssemble implements Action {
 
             // Writing report to stout
             System.out.println("============= Report ==============");
-            Util.writeReportToStdout(report, time);
+            Util.writeReportToStdout(time, report, chainsStatistics);
 
             if (actionParameters.report != null)
                 Util.writeReport(actionParameters.getInputFileName(), actionParameters.getOutputFileName(),
-                        helper.getCommandLineArguments(), actionParameters.report, report, time);
+                        helper.getCommandLineArguments(), actionParameters.report, time, report, chainsStatistics);
 
             // Writing raw events (not documented feature)
             if (actionParameters.events != null)

@@ -58,7 +58,7 @@ import java.util.List;
 import static cc.redberry.primitives.FilterUtil.ACCEPT_ALL;
 import static cc.redberry.primitives.FilterUtil.and;
 
-public class ActionPrettyAlignments implements Action {
+public class ActionExportAlignmentsPretty implements Action {
     public static final int LINE_LENGTH = 80;
     public static final int LINE_OFFSET = 7;
     public static final int MAX_LENGTH = 2 * LINE_OFFSET + LINE_LENGTH;

@@ -27,6 +27,8 @@ public final class ActionAssemblePartialAlignments implements Action {
 
     @Override
     public void go(ActionHelper helper) throws Exception {
+        // Saving initial timestamp
+        long beginTimestamp = System.currentTimeMillis();
         PartialAlignmentsAssemblerParameters assemblerParameters = PartialAlignmentsAssemblerParameters.getDefault();
 
         if (!parameters.overrides.isEmpty()) {
@@ -51,8 +53,14 @@ public final class ActionAssemblePartialAlignments implements Action {
 
             if (parameters.report != null)
                 Util.writeReport(parameters.getInputFileName(), parameters.getOutputFileName(),
-                        helper.getCommandLineArguments(), parameters.report, assembler,
-                        System.currentTimeMillis() - start);
+                        helper.getCommandLineArguments(), parameters.report, System.currentTimeMillis() - start, assembler
+                );
+
+            long time = System.currentTimeMillis() - beginTimestamp;
+
+            // Writing report to stout
+            System.out.println("============= Report ==============");
+            Util.writeReportToStdout(time, assembler);
         }
     }
 

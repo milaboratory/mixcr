@@ -32,7 +32,7 @@
 
     <groupId>com.milaboratory</groupId>
     <artifactId>mixcr</artifactId>
-    <version>2.0</version>
+    <version>2.0.1</version>
     <packaging>jar</packaging>
     <name>MiXCR</name>
 
@@ -44,14 +44,14 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <milib.version>1.5</milib.version>
+        <milib.version>1.5.1</milib.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>io.repseq</groupId>
             <artifactId>repseqio</artifactId>
-            <version>1.2.0</version>
+            <version>1.2.2</version>
         </dependency>
 
         <dependency>
@@ -179,7 +179,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>2.3</version>
+                <version>2.4</version>
                 <executions>
                     <execution>
                         <phase>pre-integration-test</phase>

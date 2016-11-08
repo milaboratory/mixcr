@@ -33,19 +33,20 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
-import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.basictypes.CloneSet;
+import com.milaboratory.mixcr.basictypes.CloneSetIO;
+import com.milaboratory.mixcr.basictypes.IOUtil;
 import com.milaboratory.mixcr.export.InfoWriter;
 import com.milaboratory.util.CanReportProgressAndStage;
 import com.milaboratory.util.SmartProgressReporter;
-import io.repseq.core.Chains;
 import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
 import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.InputStream;
 import java.util.List;
 
-public class ActionExportClones extends ActionExport {
+public class ActionExportClones extends ActionExport<Clone> {
     public ActionExportClones() {
         super(new CloneExportParameters(), Clone.class);
     }
@@ -57,11 +58,10 @@ public class ActionExportClones extends ActionExport {
              InfoWriter<Clone> writer = new InfoWriter<>(parameters.getOutputFile())) {
             CloneSet set = CloneSetIO.read(inputStream, VDJCLibraryRegistry.getDefault());
 
-            if (parameters.filterOutOfFrames || parameters.filterStops || !"all".equals(parameters.loci))
-                set = CloneSet.transform(set, new CFilter(parameters.filterOutOfFrames, parameters.filterStops,
-                        parameters.getLoci()));
+            set = CloneSet.transform(set, parameters.getFilter());
 
             writer.attachInfoProviders((List) parameters.exporters);
+            writer.ensureHeader();
             long limit = parameters.getLimit();
             for (int i = 0; i < set.size(); i++) {
                 if (set.get(i).getFraction() < parameters.minFraction ||
@@ -83,13 +83,10 @@ public class ActionExportClones extends ActionExport {
 
     private static final class CFilter implements Filter<Clone> {
         final boolean filterOutOfFrames, filterStopCodons;
-        final Chains chains;
 
-        public CFilter(boolean filterOutOfFrames, boolean filterStopCodons,
-                       Chains chains) {
+        public CFilter(boolean filterOutOfFrames, boolean filterStopCodons) {
             this.filterOutOfFrames = filterOutOfFrames;
             this.filterStopCodons = filterStopCodons;
-            this.chains = chains;
         }
 
         @Override
@@ -99,30 +96,16 @@ public class ActionExportClones extends ActionExport {
                 if (cdr3 == null || cdr3.size() % 3 != 0)
                     return false;
             }
+
             if (filterStopCodons)
                 for (int i = 0; i < clone.numberOfTargets(); i++)
                     if (AminoAcidSequence.translateFromCenter(clone.getTarget(i).getSequence()).containStops())
                         return false;
 
-            if (chains != null) {
-                boolean ok = false;
-                VDJCHit h = clone.getBestHit(GeneType.Variable);
-                if (h != null && h.getGene().getChains().intersects(chains))
-                    ok = true;
-
-                h = clone.getBestHit(GeneType.Joining);
-                if (h != null && h.getGene().getChains().intersects(chains))
-                    ok = true;
-
-                if (!ok)
-                    return false;
-            }
-
             return true;
         }
     }
 
-    @Parameters(commandDescription = "Export clones to tab-delimited text file")
     public static final class ExportClones implements CanReportProgressAndStage {
         final static String stage = "Exporting clones";
         final CloneSet clones;
@@ -163,19 +146,15 @@ public class ActionExportClones extends ActionExport {
         }
     }
 
-    public static class CloneExportParameters extends ActionExportParameters {
+    @Parameters(commandDescription = "Export clones to tab-delimited text file")
+    public static class CloneExportParameters extends ActionExportParameters<Clone> {
         @Parameter(description = "Exclude clones with out-of-frame clone sequences (fractions will be recalculated)",
                 names = {"-o", "--filter-out-of-frames"})
-        public Boolean filterOutOfFrames = false;
+        public Boolean filterOutOfFrames;
 
         @Parameter(description = "Exclude sequences containing stop codons (fractions will be recalculated)",
                 names = {"-t", "--filter-stops"})
-        public Boolean filterStops = false;
-
-
-        @Parameter(description = "Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)",
-                names = {"-c", "--chains"})
-        public String loci = "ALL";
+        public Boolean filterStops;
 
         @Parameter(description = "Filter clones by minimal clone fraction",
                 names = {"-q", "--minimal-clone-fraction"})
@@ -185,8 +164,26 @@ public class ActionExportClones extends ActionExport {
                 names = {"-m", "--minimal-clone-count"})
         public long minCount = 0;
 
-        public Chains getLoci() {
-            return Util.parseLoci(loci);
+        public boolean getFilterOutOfFrames() {
+            return filterOutOfFrames != null && filterOutOfFrames;
+        }
+
+        public boolean getFilterStops() {
+            return filterStops != null && filterStops;
+        }
+
+        @Override
+        public Filter<Clone> getFilter() {
+            final Filter<Clone> superFilter = super.getFilter();
+            final CFilter cFilter = new CFilter(filterOutOfFrames, filterStops);
+            return new Filter<Clone>() {
+                @Override
+                public boolean accept(Clone object) {
+                    if (!superFilter.accept(object))
+                        return false;
+                    return cFilter.accept(object);
+                }
+            };
         }
     }
 }

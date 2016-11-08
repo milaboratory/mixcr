@@ -6,9 +6,8 @@ MiXCR is a universal software for fast and accurate analysis of raw T- or B- cel
 
 #### Using Homebrew on Mac OS X or Linux (linuxbrew)
 
-    brew tap milaboratory/all
-    brew install mixcr
-
+    brew install milaboratory/all/mixcr
+    
 to upgrade already installed MiXCR to the newest version:
 
     brew update

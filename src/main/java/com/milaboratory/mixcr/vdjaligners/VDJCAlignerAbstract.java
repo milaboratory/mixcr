@@ -30,7 +30,6 @@ package com.milaboratory.mixcr.vdjaligners;
 
 import cc.redberry.primitives.Filter;
 import com.milaboratory.core.alignment.batch.AlignmentHit;
-import com.milaboratory.core.alignment.batch.AlignmentResult;
 import com.milaboratory.core.alignment.batch.BatchAlignerWithBaseWithFilter;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.sequence.NucleotideSequence;
@@ -82,20 +81,20 @@ public abstract class VDJCAlignerAbstract<R extends SequenceRead> extends VDJCAl
     }
 
     protected BitArray getFilter(GeneType targetAlignerType,
-                                 AlignmentResult<? extends AlignmentHit<?, ? extends VDJCGene>> result) {
-        if (parameters.isAllowChimeras() || result == null || !result.hasHits())
+                                 List<? extends AlignmentHit<?, ? extends VDJCGene>> result) {
+        if (parameters.isAllowChimeras() || result == null || result.isEmpty())
             return null;
 
-        Chains c = result.getHits().get(0).getRecordPayload().getChains();
-        for (int i = 1; i < result.getHits().size(); i++)
-            c = c.merge(result.getHits().get(i).getRecordPayload().getChains());
+        Chains c = result.get(0).getRecordPayload().getChains();
+        for (int i = 1; i < result.size(); i++)
+            c = c.merge(result.get(i).getRecordPayload().getChains());
 
         return getFilter0(targetAlignerType, c);
     }
 
     protected BitArray getFilter(GeneType targetAlignerType,
-                                 AlignmentResult<? extends AlignmentHit<?, ? extends VDJCGene>> result1,
-                                 AlignmentResult<? extends AlignmentHit<?, ? extends VDJCGene>> result2) {
+                                 List<? extends AlignmentHit<?, ? extends VDJCGene>> result1,
+                                 List<? extends AlignmentHit<?, ? extends VDJCGene>> result2) {
         if (parameters.isAllowChimeras())
             return null;
 
