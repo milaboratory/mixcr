@@ -129,7 +129,7 @@ public class ActionExportParameters<T extends VDJCObject> extends ActionParamete
         if (help || listFields)
             return;
         if (files.size() != 2)
-            throw new ParameterException("Input/output file is not specified.");
+            throw new ParameterException("Output file is not specified.");
         super.validate();
     }
 
@@ -139,6 +139,8 @@ public class ActionExportParameters<T extends VDJCObject> extends ActionParamete
         jc.parse(cutArgs(args));
 
         if (!parameters.help && !parameters.listFields) {
+            if (args.length < 2)
+                throw new ParameterException("Output file is not specified.");
             parameters.files = new ArrayList<String>() {{
                 add(args[args.length - 2]);
                 add(args[args.length - 1]);
