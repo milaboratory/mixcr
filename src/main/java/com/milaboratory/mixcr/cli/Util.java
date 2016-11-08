@@ -73,23 +73,24 @@ public final class Util {
                                    String commandLineArguments,
                                    String reportFileName,
                                    ReportWriter reportWriter) {
-        writeReport(input, output, commandLineArguments, reportFileName, reportWriter, -1);
+        writeReport(input, output, commandLineArguments, reportFileName, -1, reportWriter);
     }
 
-    public static void writeReportToStdout(ReportWriter reportWriter, long milliseconds) {
+    public static void writeReportToStdout(long milliseconds, ReportWriter... reportWriters) {
         ReportHelper helper = new ReportHelper(System.out);
 
         if (milliseconds != -1)
             helper.writeField("Analysis time", TimeUtils.nanoTimeToString(milliseconds * 1000_000));
 
-        reportWriter.writeReport(helper);
+        for (ReportWriter wr : reportWriters)
+            wr.writeReport(helper);
+
     }
 
     public static void writeReport(String input, String output,
                                    String commandLineArguments,
                                    String reportFileName,
-                                   ReportWriter reportWriter,
-                                   long milliseconds) {
+                                   long milliseconds, ReportWriter... reportWriters) {
         File file = new File(reportFileName);
         boolean newFile = !file.exists();
         try (FileOutputStream outputStream = new FileOutputStream(file, !newFile)) {
@@ -105,7 +106,9 @@ public final class Util {
             if (commandLineArguments != null)
                 helper.writeField("Command line arguments", commandLineArguments);
 
-            reportWriter.writeReport(helper);
+            for (ReportWriter wrt : reportWriters)
+                wrt.writeReport(helper);
+
             helper.end();
         } catch (IOException ioe) {
             throw new RuntimeException(ioe);

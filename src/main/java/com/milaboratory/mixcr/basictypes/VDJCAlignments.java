@@ -106,19 +106,6 @@ public final class VDJCAlignments extends VDJCObject {
         return originalSequences;
     }
 
-    public final boolean isChimera() {
-        Chains chains = Chains.ALL;
-        for (GeneType gt : GeneType.VJC_REFERENCE) {
-            Chains c = getAllChains(gt);
-            if (c == null)
-                continue;
-            chains = chains.intersection(c);
-            if (chains.isEmpty())
-                return true;
-        }
-        return false;
-    }
-
     /**
      * Returns {@code true} if at least one V and one J hit among first {@code top} hits have same chain and false
      * otherwise (first {@code top} V hits have different chain from those have first {@code top} J hits).

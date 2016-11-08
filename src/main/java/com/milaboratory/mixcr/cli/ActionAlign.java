@@ -165,6 +165,8 @@ public class ActionAlign implements Action {
         AlignerReport report = new AlignerReport();
         aligner.setEventsListener(report);
 
+        ChainUsageStats chainsStatistics = new ChainUsageStats();
+
         try (SequenceReaderCloseable<? extends SequenceRead> reader = actionParameters.createReader();
 
              VDJCAlignmentsWriter writer = actionParameters.getOutputName().equals(".") ? null : new VDJCAlignmentsWriter(actionParameters.getOutputName());
@@ -215,6 +217,8 @@ public class ActionAlign implements Action {
                     }
                 }
 
+                chainsStatistics.put(alignment);
+
                 if (alignment.isChimera())
                     report.onChimera();
 
@@ -235,11 +239,11 @@ public class ActionAlign implements Action {
 
         // Writing report to stout
         System.out.println("============= Report ==============");
-        Util.writeReportToStdout(report, time);
+        Util.writeReportToStdout(time, report, chainsStatistics);
 
         if (actionParameters.report != null)
             Util.writeReport(actionParameters.getInputForReport(), actionParameters.getOutputName(),
-                    helper.getCommandLineArguments(), actionParameters.report, report, time);
+                    helper.getCommandLineArguments(), actionParameters.report, time, report, chainsStatistics);
     }
 
     public static String[] extractDescriptions(SequenceRead r) {

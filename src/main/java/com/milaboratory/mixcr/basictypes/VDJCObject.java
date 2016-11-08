@@ -100,6 +100,40 @@ public class VDJCObject {
         return allChains.get(geneType);
     }
 
+    public final boolean isChimera() {
+        return commonChains().isEmpty();
+    }
+
+    public final Chains commonChains() {
+        Chains chains = Chains.ALL;
+        boolean notNull = false;
+        for (GeneType gt : GeneType.VJC_REFERENCE) {
+            Chains c = getAllChains(gt);
+            if (c == null)
+                continue;
+            notNull = true;//for safety
+            chains = chains.intersection(c);
+        }
+        if (!notNull)//all null
+            return Chains.EMPTY;
+        return chains;
+    }
+
+    public final Chains commonTopChains() {
+        Chains chains = Chains.ALL;
+        boolean notNull = false;
+        for (GeneType gt : GeneType.VJC_REFERENCE) {
+            VDJCHit bestHit = getBestHit(gt);
+            if (bestHit == null)
+                continue;
+            notNull = true;//for safety
+            chains = chains.intersection(bestHit.getGene().getChains());
+        }
+        if (!notNull)//all null
+            return Chains.EMPTY;
+        return chains;
+    }
+
     public final int numberOfTargets() {
         return targets.length;
     }
