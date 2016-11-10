@@ -175,7 +175,7 @@ public class ActionExportClones extends ActionExport<Clone> {
         @Override
         public Filter<Clone> getFilter() {
             final Filter<Clone> superFilter = super.getFilter();
-            final CFilter cFilter = new CFilter(filterOutOfFrames, filterStops);
+            final CFilter cFilter = new CFilter(getFilterOutOfFrames(), getFilterStops());
             return new Filter<Clone>() {
                 @Override
                 public boolean accept(Clone object) {
