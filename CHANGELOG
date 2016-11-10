@@ -1,4 +1,10 @@
 
+MiXCR 2.0.2 (10 Nov 2016)
+========================
+
+-- Fixes NPE in `exportClones` action
+
+
 MiXCR 2.0.1 ( 8 Nov 2016)
 ========================
 
