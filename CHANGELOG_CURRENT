@@ -1,1 +1,2 @@
 Fix for NPE in assemble action invoked with `-OmaxBadPointsPercent=0`
+Support for Linux `free` version 3.3.10 in `mixcr` wrapper script (now MiXCR runs on Centos 7.2)
