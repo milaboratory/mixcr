@@ -165,13 +165,13 @@ class Merger {
 
     private static byte getQuality(int position, int pointer, int length, Alignment<NucleotideSequence> alignment, SequenceQuality quality) {
         if (length == 0)
-            return quality.value(alignment.convertPosition(position));
+            return quality.value(alignment.convertToSeq2Position(position));
 
         switch (alignment.getAbsoluteMutations().getRawTypeByIndex(pointer)) {
             case Mutation.RAW_MUTATION_TYPE_SUBSTITUTION:
-                return quality.value(alignment.convertPosition(position));
+                return quality.value(alignment.convertToSeq2Position(position));
             case Mutation.RAW_MUTATION_TYPE_DELETION:
-                int localPosition = -2 - alignment.convertPosition(position);
+                int localPosition = -2 - alignment.convertToSeq2Position(position);
                 if (quality.size() == localPosition)
                     return quality.value(localPosition - 1);
                 else if (localPosition == 0)
@@ -179,17 +179,17 @@ class Merger {
                 else
                     return (byte) ((quality.value(localPosition - 1) + quality.value(localPosition)) / 2);
             case Mutation.RAW_MUTATION_TYPE_INSERTION:
-                int from = alignment.convertPosition(position - 1);
+                int from = alignment.convertToSeq2Position(position - 1);
 
                 if (from < 0)
                     if (from == -1)
-                        from = alignment.convertPosition(position) - 1;
+                        from = alignment.convertToSeq2Position(position) - 1;
                     else
                         from = -from - 2 + 1;
                 else
                     from += 1;
 
-                int to = alignment.convertPosition(position);
+                int to = alignment.convertToSeq2Position(position);
 
                 if (to == -1)
                     throw new IllegalArgumentException(); // assert false!!!

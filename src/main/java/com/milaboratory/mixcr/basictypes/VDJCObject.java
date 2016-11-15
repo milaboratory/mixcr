@@ -225,9 +225,9 @@ public class VDJCObject {
 
             Range lRange = new Range(
                     lFrom,
-                    aabs(lAlignment.convertPosition(intersection.getFrom())));
+                    aabs(lAlignment.convertToSeq2Position(intersection.getFrom())));
             Range rRange = new Range(
-                    aabs(rAlignment.convertPosition(intersection.getTo())),
+                    aabs(rAlignment.convertToSeq2Position(intersection.getTo())),
                     rTo);
 
             feature =
