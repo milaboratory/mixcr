@@ -92,6 +92,11 @@ public class ActionAlign implements Action {
                 throw new ProcessException("Failed to override some parameter.");
         }
 
+        if (actionParameters.allowDifferentVJLoci != null && actionParameters.allowDifferentVJLoci) {
+            System.out.println("Warning: usage of --diff-loci is deprecated. Use -OallowChimeras=true instead.");
+            alignerParameters.setAllowChimeras(true);
+        }
+
         // Creating aligner
         VDJCAligner aligner = VDJCAligner.createAligner(alignerParameters,
                 actionParameters.isInputPaired(), !actionParameters.getNoMerge());
@@ -340,6 +345,11 @@ public class ActionAlign implements Action {
         @Parameter(description = "Write not aligned reads (R2).",
                 names = {"--not-aligned-R2"})
         public String failedReadsR2 = null;
+
+        @Parameter(description = "Allow alignments with different chains of V and J hits.",
+                names = {"-i", "--diff-loci"}, hidden = true)
+        public Boolean allowDifferentVJLoci = null;
+
 
         public String getSpecies() {
             return species;
