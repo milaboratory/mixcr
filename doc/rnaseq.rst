@@ -2,7 +2,7 @@
 
    <br />
 
-.. _ref-assemble:
+.. _ref-rna-seq:
 
 Processing RNA-seq data
 =======================
@@ -11,7 +11,7 @@ The typical MiXCR workflow can be applied for the analysis of RNA-seq samples. T
 
 ::
 
-    mixcr align --preset rna-seq data_R1.fastq.gz data_R2.fastq.gz alignments.vdjca
+    mixcr align --parameters rna-seq data_R1.fastq.gz data_R2.fastq.gz alignments.vdjca
     mixcr assemble alignments.vdjca clones.clns
 
 
@@ -21,7 +21,7 @@ The typical workflow including `partial assembling` looks like:
 
 ::
 
-    mixcr align --preset rna-seq -OallowPartialAlignments=true data_R1.fastq.gz data_R2.fastq.gz alignments.vdjca
+    mixcr align --parameters rna-seq -OallowPartialAlignments=true data_R1.fastq.gz data_R2.fastq.gz alignments.vdjca
     mixcr assemblePartial alignments.vdjca alignmentsRescued.vdjca
     mixcr assemble alignmentsRescued.vdjca clones.clns
 
