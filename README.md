@@ -34,7 +34,7 @@ Here is a very simple example of analysis of raw human RepSeq data:
     mixcr assemble -r log.txt alignments.vdjca clones.clns
     mixcr exportClones clones.clns clones.txt
   
-this sequence of commands will produce a tab-delimited list of clones (`clones.txt`) assembled by their CDR3 sequences with extensive information on their abondancies, V, D and J genes etc.
+this sequence of commands will produce a tab-delimited list of clones (`clones.txt`) assembled by their CDR3 sequences with extensive information on their abundancies, V, D and J genes etc.
 
 For more details see documentation.
 
