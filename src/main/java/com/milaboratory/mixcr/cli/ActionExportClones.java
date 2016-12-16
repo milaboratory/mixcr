@@ -33,6 +33,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
+import com.milaboratory.core.sequence.TranslationParameters;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
@@ -41,6 +42,7 @@ import com.milaboratory.mixcr.export.InfoWriter;
 import com.milaboratory.util.CanReportProgressAndStage;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.GeneFeature;
+import io.repseq.core.ReferencePoint;
 import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.InputStream;
@@ -97,10 +99,22 @@ public class ActionExportClones extends ActionExport<Clone> {
                     return false;
             }
 
-            if (filterStopCodons)
-                for (int i = 0; i < clone.numberOfTargets(); i++)
-                    if (AminoAcidSequence.translateFromCenter(clone.getTarget(i).getSequence()).containStops())
+            if (filterStopCodons) {
+                for (int i = 0; i < clone.numberOfTargets(); i++) {
+                    GeneFeature codingFeature = GeneFeature.getCodingGeneFeature(clone.getAssemblingFeatures()[i]);
+                    if (codingFeature == null)
+                        continue;
+                    ReferencePoint frameReference = GeneFeature.getFrameReference(codingFeature);
+                    if (frameReference == null)
+                        continue;
+                    if (AminoAcidSequence.translate(
+                            clone.getPartitionedTarget(i).getFeature(codingFeature).getSequence(),
+                            TranslationParameters
+                                    .withoutIncompleteCodon(clone.getPartitionedTarget(i).getPartitioning().getRelativePosition(codingFeature, frameReference))
+                    ).containStops())
                         return false;
+                }
+            }
 
             return true;
         }

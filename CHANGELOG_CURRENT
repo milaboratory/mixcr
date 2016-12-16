@@ -1,2 +1,3 @@
 Fix for NPE in assemble action invoked with `-OmaxBadPointsPercent=0`
 Support for Linux `free` version 3.3.10 in `mixcr` wrapper script (now MiXCR runs on Centos 7.2, Ubuntu 16.04.1)
+Fix for wrong filtering of stop codons in case of featuresToAlign with non-coding regions
