@@ -30,12 +30,14 @@ package com.milaboratory.mixcr.export;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
-import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
+import com.milaboratory.core.mutations.Mutation;
 import com.milaboratory.core.mutations.Mutations;
+import com.milaboratory.core.mutations.MutationsUtil;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.core.sequence.TranslationParameters;
 import com.milaboratory.mixcr.assembler.AlignmentsToClonesMappingContainer;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
 import com.milaboratory.mixcr.basictypes.Clone;
@@ -44,7 +46,6 @@ import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.VDJCObject;
 import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.map.hash.TObjectFloatHashMap;
-import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.ReferencePoint;
 import io.repseq.core.SequencePartitioning;
@@ -57,11 +58,10 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import static com.milaboratory.core.sequence.TranslationParameters.*;
 import static com.milaboratory.mixcr.assembler.ReadToCloneMapping.MappingType.Dropped;
 
 public final class FieldExtractors {
-    private static final String NULL = "";
+    static final String NULL = "";
     private static final DecimalFormat SCORE_FORMAT = new DecimalFormat("#.#");
 
     static Field[] descriptors = null;
@@ -265,100 +265,130 @@ public final class FieldExtractors {
                 });
             }
 
-            descriptorsList.add(new FeatureExtractorDescriptor("-nFeature", "Export nucleotide sequence of specified gene feature", "N. Seq.", "nSeq") {
+            descriptorsList.add(new FeatureExtractors.NSeqExtractor("-nFeature", "Export nucleotide sequence of specified gene feature", "N. Seq. ", "nSeq") {
                 @Override
                 public String convert(NSequenceWithQuality seq) {
                     return seq.getSequence().toString();
                 }
             });
 
-            descriptorsList.add(new FeatureExtractorDescriptor("-qFeature", "Export quality string of specified gene feature", "Qual.", "qual") {
+            descriptorsList.add(new FeatureExtractors.NSeqExtractor("-qFeature", "Export quality string of specified gene feature", "Qual. ", "qual") {
                 @Override
                 public String convert(NSequenceWithQuality seq) {
                     return seq.getQuality().toString();
                 }
             });
 
-            descriptorsList.add(new FeatureExtractorDescriptor("-aaFeature", "Export amino acid sequence of specified gene feature", "AA. Seq.", "aaSeq") {
-                @Override
-                public String convert(NSequenceWithQuality seq) {
-                    return AminoAcidSequence.translate(seq.getSequence(), FromCenter).toString();
-                }
-            });
+            descriptorsList.add(new FeatureExtractors.AAFeatureExtractor());
 
-            descriptorsList.add(new FeatureExtractorDescriptor("-aaFeatureFromLeft", "Export amino acid sequence of " +
-                    "specified gene feature starting from the leftmost nucleotide (differs from -aaFeature only for " +
-                    "sequences which length are not multiple of 3)", "AA. Seq.", "aaSeq") {
-                @Override
-                public String convert(NSequenceWithQuality seq) {
-                    return AminoAcidSequence.translate(seq.getSequence(), FromLeftWithoutIncompleteCodon).toString();
-                }
-            });
+//            descriptorsList.add(new FeatureExtractorDescriptor("-aaFeatureFromLeft", "Export amino acid sequence of " +
+//                    "specified gene feature starting from the leftmost nucleotide (differs from -aaFeature only for " +
+//                    "sequences which length are not multiple of 3)", "AA. Seq.", "aaSeq") {
+//                @Override
+//                public String convert(NSequenceWithQuality seq) {
+//                    return AminoAcidSequence.translate(seq.getSequence(), FromLeftWithoutIncompleteCodon).toString();
+//                }
+//            });
+//
+//            descriptorsList.add(new FeatureExtractorDescriptor("-aaFeatureFromRight", "Export amino acid sequence of " +
+//                    "specified gene feature starting from the rightmost nucleotide (differs from -aaFeature only for " +
+//                    "sequences which length are not multiple of 3)", "AA. Seq.", "aaSeq") {
+//                @Override
+//                public String convert(NSequenceWithQuality seq) {
+//                    return AminoAcidSequence.translate(seq.getSequence(), FromRightWithoutIncompleteCodon).toString();
+//                }
+//            });
 
-            descriptorsList.add(new FeatureExtractorDescriptor("-aaFeatureFromRight", "Export amino acid sequence of " +
-                    "specified gene feature starting from the rightmost nucleotide (differs from -aaFeature only for " +
-                    "sequences which length are not multiple of 3)", "AA. Seq.", "aaSeq") {
-                @Override
-                public String convert(NSequenceWithQuality seq) {
-                    return AminoAcidSequence.translate(seq.getSequence(), FromRightWithoutIncompleteCodon).toString();
-                }
-            });
-
-            descriptorsList.add(new FeatureExtractorDescriptor("-minFeatureQuality", "Export minimal quality of specified gene feature", "Min. qual.", "minQual") {
+            descriptorsList.add(new FeatureExtractors.NSeqExtractor("-minFeatureQuality", "Export minimal quality of specified gene feature", "Min. qual. ", "minQual") {
                 @Override
                 public String convert(NSequenceWithQuality seq) {
                     return "" + seq.getQuality().minValue();
                 }
             });
 
-            descriptorsList.add(new FeatureExtractorDescriptor("-avrgFeatureQuality", "Export average quality of specified gene feature", "Mean. qual.", "meanQual") {
+            descriptorsList.add(new FeatureExtractors.NSeqExtractor("-avrgFeatureQuality", "Export average quality of specified gene feature", "Mean. qual. ", "meanQual") {
                 @Override
                 public String convert(NSequenceWithQuality seq) {
                     return "" + seq.getQuality().meanValue();
                 }
             });
 
-            descriptorsList.add(new FeatureExtractorDescriptor("-lengthOf", "Exports length of specified gene feature.", "Length of ", "lengthOf") {
+            descriptorsList.add(new FeatureExtractors.NSeqExtractor("-lengthOf", "Exports length of specified gene feature.", "Length of ", "lengthOf") {
                 @Override
                 public String convert(NSequenceWithQuality seq) {
                     return "" + seq.size();
                 }
             });
 
-            descriptorsList.add(new FeatureInfoExtractorDescriptor("-nMutations",
-                    "Extract nucleotide mutations for specific gene feature; relative to germline sequence.",
-                    "N. Mutations", "nMutations") {
-
+            descriptorsList.add(new FeatureExtractors.MutationsExtractor("-nMutations",
+                    "Extract nucleotide mutations for specific gene feature; relative to germline sequence.", 1,
+                    new String[]{"N. Mutations in "}, new String[]{"nMutations"}) {
                 @Override
-                protected void validate(GeneFeature geneFeature) {
-                    if (geneFeature.getGeneType() == null)
-                        throw new RuntimeException(geneFeature.toString() + " gene feature does not belong to single gene segment (V/D/J/C).");
+                String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1,
+                               NucleotideSequence seq2, TranslationParameters tr) {
+                    return mutations.encode(",");
                 }
+            });
 
+            descriptorsList.add(new FeatureExtractors.MutationsExtractor("-nMutationsRelative",
+                    "Extract nucleotide mutations for specific gene feature relative to another feature.", 2,
+                    new String[]{"N. Mutations in ", " relative to "}, new String[]{"nMutationsIn", "Relative"}) {
                 @Override
-                protected String extractValue(VDJCObject object, GeneFeature parameters) {
-                    GeneType geneType = parameters.getGeneType();
-                    VDJCHit hit = object.getBestHit(geneType);
+                String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1,
+                               NucleotideSequence seq2, TranslationParameters tr) {
+                    return mutations.encode(",");
+                }
+            });
 
-                    GeneFeature alignedFeature = hit.getAlignedFeature();
-
-                    if (!alignedFeature.contains(parameters))
+            descriptorsList.add(new FeatureExtractors.MutationsExtractor("-aaMutations",
+                    "Extract amino acid mutations for specific gene feature", 1,
+                    new String[]{"AA. Mutations in "}, new String[]{"aaMutations"}) {
+                @Override
+                String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1,
+                               NucleotideSequence seq2, TranslationParameters tr) {
+                    if (tr == null) return "-";
+                    Mutations<AminoAcidSequence> aaMuts = MutationsUtil.nt2aa(seq1, mutations, tr);
+                    if (aaMuts == null)
                         return "-";
+                    return aaMuts.encode(",");
+                }
+            });
 
-                    Range targetRage = hit.getGene().getPartitioning().getRelativeRange(alignedFeature, parameters);
+            descriptorsList.add(new FeatureExtractors.MutationsExtractor("-aaMutationsRelative",
+                    "Extract amino acid mutations for specific gene feature relative to another feature.", 2,
+                    new String[]{"AA. Mutations in ", " relative to "}, new String[]{"aaMutationsIn", "Relative"}) {
+                @Override
+                String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1,
+                               NucleotideSequence seq2, TranslationParameters tr) {
+                    if (tr == null) return "-";
+                    Mutations<AminoAcidSequence> aaMuts = MutationsUtil.nt2aa(seq1, mutations, tr);
+                    if (aaMuts == null)
+                        return "-";
+                    return aaMuts.encode(",");
+                }
+            });
 
-                    for (int i = 0; i < hit.numberOfTargets(); i++) {
-                        Alignment<NucleotideSequence> alignment = hit.getAlignment(i);
-
-                        if (alignment == null || !alignment.getSequence1Range().contains(targetRage))
-                            continue;
-
-                        Mutations<NucleotideSequence> mutations = alignment.getAbsoluteMutations().extractRelativeMutationsForRange(targetRage);
-
-                        return mutations.encode(",");
+            descriptorsList.add(new FeatureExtractors.MutationsExtractor("-mutationsInfo",
+                    "Extract amino acid mutations for specific gene feature relative to another feature.", 2,
+                    new String[]{"AA. Mutations in ", " relative to "}, new String[]{"aaMutationsIn", "Relative"}) {
+                @Override
+                String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1,
+                               NucleotideSequence seq2, TranslationParameters tr) {
+                    if (tr == null) return "-";
+                    MutationsUtil.MutationNt2AADescriptor[] descriptors = MutationsUtil.nt2aaDetailed(seq1, mutations, tr, 10);
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; ; i++) {
+                        MutationsUtil.MutationNt2AADescriptor descr = descriptors[i];
+                        sb
+                                .append(Mutation.encode(descr.originalNtMutation, NucleotideSequence.ALPHABET))
+                                .append(":")
+                                .append(Mutation.encode(descr.individualAAMutation, AminoAcidSequence.ALPHABET))
+                                .append(":")
+                                .append(Mutation.encode(descr.cumulativeAAMutation, AminoAcidSequence.ALPHABET));
+                        if (i == descriptors.length - 1)
+                            return sb.toString();
+                        sb.append(",");
                     }
-
-                    return "-";
                 }
             });
 
@@ -527,49 +557,7 @@ public final class FieldExtractors {
         }
     }
 
-    private static abstract class FeatureInfoExtractorDescriptor extends WP_O<GeneFeature> {
-        final String hPrefix, sPrefix;
-
-        protected FeatureInfoExtractorDescriptor(String command, String description, String hPrefix, String sPrefix) {
-            super(command, description);
-            this.hPrefix = hPrefix;
-            this.sPrefix = sPrefix;
-        }
-
-        protected void validate(GeneFeature geneFeature) {
-        }
-
-        @Override
-        protected GeneFeature getParameters(String[] string) {
-            if (string.length != 1)
-                throw new RuntimeException("Wrong number of parameters for " + getCommand());
-            GeneFeature gf = GeneFeature.parse(string[0]);
-            validate(gf);
-            return gf;
-        }
-
-        @Override
-        protected String getHeader(OutputMode outputMode, GeneFeature parameters) {
-            return choose(outputMode, hPrefix + " ", sPrefix) + GeneFeature.encode(parameters);
-        }
-    }
-
-    private static abstract class FeatureExtractorDescriptor extends FeatureInfoExtractorDescriptor {
-        public FeatureExtractorDescriptor(String command, String description, String hPrefix, String sPrefix) {
-            super(command, description, hPrefix, sPrefix);
-        }
-
-        @Override
-        protected String extractValue(VDJCObject object, GeneFeature parameters) {
-            NSequenceWithQuality feature = object.getFeature(parameters);
-            if (feature == null)
-                return NULL;
-            return convert(feature);
-        }
-
-        public abstract String convert(NSequenceWithQuality seq);
-    }
-
+    /***************************************************/
     private static class ExtractSequence extends FieldParameterless<VDJCObject> {
         private ExtractSequence(Class targetType, String command, String description, String hHeader, String sHeader) {
             super(targetType, command, description, hHeader, sHeader);
