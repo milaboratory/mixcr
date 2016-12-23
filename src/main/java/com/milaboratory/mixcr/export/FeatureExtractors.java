@@ -104,7 +104,7 @@ final class FeatureExtractors {
                 if (parameters.length == 2)
                     mutations = mutations.extractAbsoluteMutationsForRange(targetRage.getRelativeRangeOf(smallTargetRage));
 
-                return convert(mutations, alignment.getSequence1(), object.getFeature(smallGeneFeature).getSequence(), partitioning.getTranslationParameters(bigGeneFeature));
+                return convert(mutations, alignment.getSequence1().getRange(smallTargetRage), object.getFeature(smallGeneFeature).getSequence(), partitioning.getTranslationParameters(bigGeneFeature));
             }
 
             return "-";

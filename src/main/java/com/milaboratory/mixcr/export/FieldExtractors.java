@@ -368,29 +368,39 @@ public final class FieldExtractors {
                 }
             });
 
-            descriptorsList.add(new FeatureExtractors.MutationsExtractor("-mutationsInfo",
-                    "Extract amino acid mutations for specific gene feature relative to another feature.", 2,
-                    new String[]{"AA. Mutations in ", " relative to "}, new String[]{"aaMutationsIn", "Relative"}) {
+            final class mutationsDetailed extends FeatureExtractors.MutationsExtractor {
+                private mutationsDetailed(String command, String description, int nArgs, String[] hPrefix, String[] sPrefix) {
+                    super(command, description, nArgs, hPrefix, sPrefix);
+                }
+
                 @Override
-                String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1,
-                               NucleotideSequence seq2, TranslationParameters tr) {
+                String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1, NucleotideSequence seq2, TranslationParameters tr) {
                     if (tr == null) return "-";
                     MutationsUtil.MutationNt2AADescriptor[] descriptors = MutationsUtil.nt2aaDetailed(seq1, mutations, tr, 10);
                     StringBuilder sb = new StringBuilder();
-                    for (int i = 0; ; i++) {
+                    for (int i = 0; i < descriptors.length; i++) {
                         MutationsUtil.MutationNt2AADescriptor descr = descriptors[i];
                         sb
                                 .append(Mutation.encode(descr.originalNtMutation, NucleotideSequence.ALPHABET))
                                 .append(":")
-                                .append(Mutation.encode(descr.individualAAMutation, AminoAcidSequence.ALPHABET))
+                                .append(descr.individualAAMutation == Mutation.NON_MUTATION ? "" : Mutation.encode(descr.individualAAMutation, AminoAcidSequence.ALPHABET))
                                 .append(":")
-                                .append(Mutation.encode(descr.cumulativeAAMutation, AminoAcidSequence.ALPHABET));
+                                .append(descr.cumulativeAAMutation == Mutation.NON_MUTATION ? "" : Mutation.encode(descr.cumulativeAAMutation, AminoAcidSequence.ALPHABET));
                         if (i == descriptors.length - 1)
-                            return sb.toString();
+                            break;
                         sb.append(",");
                     }
+                    return sb.toString();
                 }
-            });
+            }
+
+            descriptorsList.add(new mutationsDetailed("-nMutationsDetailed",
+                    "DETALIZATION", 1,
+                    new String[]{"DETALIZATION RELATIVE"}, new String[]{"DETALIZATION"}));
+
+            descriptorsList.add(new mutationsDetailed("-nMutationsRelativeDetailed",
+                    "DETALIZATION", 2,
+                    new String[]{"DETALIZATIONin ", " relative to "}, new String[]{"DETALIZATION", "Relative"}));
 
             descriptorsList.add(new ExtractReferencePointPosition());
 
