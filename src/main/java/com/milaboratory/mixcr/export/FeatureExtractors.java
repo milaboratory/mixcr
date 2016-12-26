@@ -2,10 +2,7 @@ package com.milaboratory.mixcr.export;
 
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
-import com.milaboratory.core.mutations.Mutation;
 import com.milaboratory.core.mutations.Mutations;
-import com.milaboratory.core.mutations.MutationsUtil;
-import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.TranslationParameters;
@@ -90,6 +87,9 @@ final class FeatureExtractors {
 
             GeneType geneType = bigGeneFeature.getGeneType();
             VDJCHit hit = object.getBestHit(geneType);
+
+            if (hit == null)
+                return "-";
 
             GeneFeature alignedFeature = hit.getAlignedFeature();
             if (!alignedFeature.contains(smallGeneFeature))
