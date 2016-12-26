@@ -57,6 +57,14 @@ final class FeatureExtractors {
         protected String getHeader(OutputMode outputMode, GeneFeature[] features) {
             return FieldExtractors.choose(outputMode, header0(hPrefix, features) + " ", header0(sPrefix, features));
         }
+
+        @Override
+        public String metaVars() {
+            if (nArgs == 1)
+                return "<gene_feature>";
+            else
+                return "<gene_feature> <relative_to_gene_feature>";
+        }
     }
 
     static abstract class NSeqExtractor extends WithHeader {

@@ -206,7 +206,7 @@ public class ActionExportParameters<T extends VDJCObject> extends ActionParamete
 
     public static String listOfFields(Class clazz) {
         ArrayList<String>[] description = FieldExtractors.getDescription(clazz);
-        return "Available export fields:\n" + Util.printTwoColumns(description[0], description[1], 30, 70, 5, "\n");
+        return "Available export fields:\n" + Util.printTwoColumns(description[0], description[1], 45, 70, 5, "\n");
     }
 
     private static final Map<Class, Map<String, String>> presets;

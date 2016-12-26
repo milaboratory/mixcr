@@ -494,6 +494,11 @@ public final class FieldExtractors {
                 public FieldExtractor<Clone> create(OutputMode outputMode, String[] args) {
                     return new CloneToReadsExtractor(outputMode, args[0]);
                 }
+
+                @Override
+                public String metaVars() {
+                    return "<index_file>";
+                }
             });
 
             for (final GeneType type : GeneType.values()) {
@@ -546,11 +551,40 @@ public final class FieldExtractors {
         ArrayList<String>[] description = new ArrayList[]{new ArrayList(), new ArrayList()};
         for (Field field : getFields())
             if (field.canExtractFrom(clazz)) {
-                description[0].add(field.getCommand());
+                description[0].add(field.getCommand() + " " + field.metaVars());
                 description[1].add(field.getDescription());
             }
-
         return description;
+    }
+
+    private static ArrayList<String>[] getDescriptionsForSpecificClassOnly(boolean clones) {
+        ArrayList<String>[] description = new ArrayList[]{new ArrayList(), new ArrayList()};
+        for (Field field : getFields()) {
+            boolean c;
+            if (clones)
+                c = field.canExtractFrom(Clone.class) && !field.canExtractFrom(VDJCAlignments.class);
+            else
+                c = field.canExtractFrom(VDJCAlignments.class) && !field.canExtractFrom(Clone.class);
+            if (c) {
+                description[0].add(field.getCommand() + " " + field.metaVars());
+                description[1].add(field.getDescription());
+            }
+        }
+        return description;
+    }
+
+    static ArrayList<String>[] getDescriptionSpecificForClones() {
+        return getDescriptionsForSpecificClassOnly(true);
+    }
+
+    static ArrayList<String>[] getDescriptionSpecificForAlignments() {
+        return getDescriptionsForSpecificClassOnly(false);
+    }
+
+    static ArrayList<String>[] getDescriptionSpecificForClass(Class clazz) {
+        if (clazz.equals(VDJCObject.class))
+            return getDescription(clazz);
+        return getDescriptionsForSpecificClassOnly(clazz.equals(Clone.class));
     }
 
     /* Some typedefs */
@@ -646,6 +680,11 @@ public final class FieldExtractors {
             }
             return sb.toString();
         }
+
+        @Override
+        public String metaVars() {
+            return "<reference_point>";
+        }
     }
 
     private static class ExtractDefaultReferencePointsPositions extends PL_O {
@@ -683,6 +722,11 @@ public final class FieldExtractors {
             @Override
             public FieldExtractor<VDJCAlignments> create(OutputMode outputMode, String[] args) {
                 return new AlignmentToCloneExtractor(outputMode, args[0], printMapping);
+            }
+
+            @Override
+            public String metaVars() {
+                return "<index_file>";
             }
         };
     }

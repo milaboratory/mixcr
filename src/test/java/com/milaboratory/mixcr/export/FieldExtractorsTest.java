@@ -29,12 +29,17 @@
 package com.milaboratory.mixcr.export;
 
 import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.basictypes.VDJCObject;
 import com.milaboratory.mixcr.cli.Util;
 import io.repseq.core.GeneType;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.ListIterator;
 
 public class FieldExtractorsTest {
@@ -111,18 +116,68 @@ public class FieldExtractorsTest {
     @Ignore
     @Test
     public void testName() throws Exception {
-        ArrayList<String>[] cols = FieldExtractors.getDescription(Clone.class);
-        ListIterator<String>[] iterators = new ListIterator[]{cols[0].listIterator(), cols[1].listIterator()};
-        while (iterators[0].hasNext()){
-            iterators[0].set("| " + remEx(iterators[0].next()));
-            iterators[1].set("| " + remEx(iterators[1].next()) + " |");
+        for (Class clazz : Arrays.asList(VDJCObject.class, VDJCAlignments.class, Clone.class)) {
+            try(FileOutputStream out = new FileOutputStream(new File("doc/ExportFields" + clazz.getSimpleName() + ".rst"))) {
+                out.write(prindDocumentation(clazz).getBytes());
+            }
         }
-        System.out.println(Util.printTwoColumns(cols[0],cols[1],25,160,2));
-
-
     }
 
-    static String remEx(String str){
+    public static String prindDocumentation(Class clazz) {
+        ArrayList<String>[] cols = FieldExtractors.getDescriptionSpecificForClass(clazz);
+        cols[0].add(0, "Field name");
+        cols[1].add(0, "Description");
+        ListIterator<String>[] iterators = new ListIterator[]{cols[0].listIterator(), cols[1].listIterator()};
+        int max = Integer.MIN_VALUE, min = Integer.MIN_VALUE;
+        int maxLeftLength = Integer.MIN_VALUE;
+        while (iterators[0].hasNext()) {
+            String left = iterators[0].next();
+//            left = left.trim();
+            if (!left.contains("Field name")) {
+                left = "``" + left.replaceFirst(" ", "`` ");
+                left = left.replace("<", "``<");
+                left = left.replace(">", ">``");
+            }
+            iterators[0].set(left = "| " + remEx(left));
+            maxLeftLength = Math.max(maxLeftLength, left.length());
+            String right = iterators[1].next();
+            iterators[1].set(right = "| " + remEx(right));
+            max = Math.max(max, right.length());
+            min = Math.min(min, right.length());
+        }
+        ListIterator<String> it = cols[1].listIterator();
+        while (it.hasNext()) {
+            String next = it.next();
+            it.set(next + zeros(max - next.length()) + "    |");
+        }
+        String result = Util.printTwoColumns(cols[0], cols[1], maxLeftLength + 10, 5000, 2);
+        String[] split = result.split("\\n")[0].split("\\|");
+        String left = chars(split[1].length(), '-');
+        String right = chars(split[2].length(), '-');
+        String separator = "+" + left + "+" + right + "+";
+        String headerSeparator = separator.replace("-", "=");
+        StringBuilder sb = new StringBuilder();
+        sb.append(separator).append("\n");
+        result = result.replaceFirst("\\|\\n", "|\n" + headerSeparator + "\n");
+        result = result.replaceAll("\\|\\n\\|", "|\n" + separator + "\n|");
+        result = result.replaceAll("^\\s*$", "");
+        result = result.substring(0, result.length() - 1);
+        sb.append(result).append("\n");
+        sb.append(separator).append("\n");
+        return sb.toString();
+    }
+
+    static String zeros(int l) {
+        return chars(l, ' ');
+    }
+
+    private static String chars(int n, char cc) {
+        char[] c = new char[n];
+        Arrays.fill(c, cc);
+        return String.valueOf(c);
+    }
+
+    static String remEx(String str) {
         String replace = str.trim().replace("Export", "").trim();
         replace = String.valueOf(replace.charAt(0)).toUpperCase() + replace.substring(1);
         return replace;
