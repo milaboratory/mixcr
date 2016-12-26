@@ -404,7 +404,7 @@ public final class FieldExtractors {
             String detailedMutationsFormat =
                     "Format <nt_mutation>:<aa_mutation_individual>:<aa_mutation_cumulative>, where <aa_mutation_individual> is an expected amino acid " +
                             "mutation given no other mutations have occurred, and <aa_mutation_cumulative> amino acid mutation is the observed amino acid " +
-                            "mutation combining effect from all other";
+                            "mutation combining effect from all other. WARNING: format may change in following versions.";
             descriptorsList.add(new MutationsDetailed("-mutationsDetailed",
                     "Detailed list of nucleotide and corresponding amino acid mutations. " + detailedMutationsFormat, 1,
                     new String[]{"Detailed mutations in "}, new String[]{"mutationsDetailedIn"}));
