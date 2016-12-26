@@ -1,3 +1,6 @@
+User-friendly export of mutations in germline sequences: nucleotide, amino-acid and detailed (provides means to link nucleotide mutations with resulting amino-acid mutations; e.g. it allows to easy differentiate between sense and nonsense nucleotide mutations). Mutations can be exported for any gene feature (e.g. FR3) realtive to any gene feature (e.g. VRegion).
 Fix for NPE in assemble action invoked with `-OmaxBadPointsPercent=0`
 Support for Linux `free` version 3.3.10 in `mixcr` wrapper script (now MiXCR runs on Centos 7.2, Ubuntu 16.04.1)
-Fix for wrong filtering of stop codons in case of featuresToAlign with non-coding regions
+Unified way for gene feature translation (frame is inferred using closest reference point known to be in-frame)
+minor: fix for wrong filtering of stop codons in case of featuresToAlign with non-coding regions
+minor: Backward compatibility option --diff-loci in align action
