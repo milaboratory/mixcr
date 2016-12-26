@@ -42,7 +42,6 @@ import com.milaboratory.mixcr.export.InfoWriter;
 import com.milaboratory.util.CanReportProgressAndStage;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.GeneFeature;
-import io.repseq.core.ReferencePoint;
 import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.InputStream;
@@ -56,8 +55,8 @@ public class ActionExportClones extends ActionExport<Clone> {
     @Override
     public void go0() throws Exception {
         CloneExportParameters parameters = (CloneExportParameters) this.parameters;
-        try (InputStream inputStream = IOUtil.createIS(parameters.getInputFile());
-             InfoWriter<Clone> writer = new InfoWriter<>(parameters.getOutputFile())) {
+        try(InputStream inputStream = IOUtil.createIS(parameters.getInputFile());
+            InfoWriter<Clone> writer = new InfoWriter<>(parameters.getOutputFile())) {
             CloneSet set = CloneSetIO.read(inputStream, VDJCLibraryRegistry.getDefault());
 
             set = CloneSet.transform(set, parameters.getFilter());
@@ -104,14 +103,9 @@ public class ActionExportClones extends ActionExport<Clone> {
                     GeneFeature codingFeature = GeneFeature.getCodingGeneFeature(clone.getAssemblingFeatures()[i]);
                     if (codingFeature == null)
                         continue;
-                    ReferencePoint frameReference = GeneFeature.getFrameReference(codingFeature);
-                    if (frameReference == null)
-                        continue;
-                    if (AminoAcidSequence.translate(
-                            clone.getPartitionedTarget(i).getFeature(codingFeature).getSequence(),
-                            TranslationParameters
-                                    .withoutIncompleteCodon(clone.getPartitionedTarget(i).getPartitioning().getRelativePosition(codingFeature, frameReference))
-                    ).containStops())
+                    TranslationParameters tr = clone.getPartitionedTarget(i).getPartitioning().getTranslationParameters(codingFeature);
+                    if (tr == null || AminoAcidSequence.translate(
+                            clone.getPartitionedTarget(i).getFeature(codingFeature).getSequence(), tr).containStops())
                         return false;
                 }
             }
