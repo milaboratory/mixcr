@@ -31,7 +31,6 @@ package com.milaboratory.mixcr.export;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import com.milaboratory.core.alignment.Alignment;
-import com.milaboratory.core.mutations.Mutation;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.mutations.MutationsUtil;
 import com.milaboratory.core.sequence.AminoAcidSequence;
@@ -46,6 +45,7 @@ import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.VDJCObject;
 import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.map.hash.TObjectFloatHashMap;
+import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.ReferencePoint;
 import io.repseq.core.SequencePartitioning;
@@ -279,7 +279,22 @@ public final class FieldExtractors {
                 }
             });
 
-            descriptorsList.add(new FeatureExtractors.AAFeatureExtractor());
+            descriptorsList.add(new FeatureExtractors.WithHeader("-aaFeature", "Export amino acid sequence of specified gene feature", 1, new String[]{"AA. Seq."}, new String[]{"aaSeq"}) {
+                @Override
+                protected String extractValue(VDJCObject object, GeneFeature[] parameters) {
+                    GeneFeature geneFeature = parameters[parameters.length - 1];
+                    NSequenceWithQuality feature = object.getFeature(geneFeature);
+                    if (feature == null)
+                        return NULL;
+                    int targetId = object.getTargetContainingFeature(geneFeature);
+                    TranslationParameters tr = targetId == -1 ?
+                            TranslationParameters.FromLeftWithIncompleteCodon
+                            : object.getPartitionedTarget(targetId).getPartitioning().getTranslationParameters(geneFeature);
+                    if (tr == null)
+                        return NULL;
+                    return AminoAcidSequence.translate(feature.getSequence(), tr).toString();
+                }
+            });
 
 //            descriptorsList.add(new FeatureExtractorDescriptor("-aaFeatureFromLeft", "Export amino acid sequence of " +
 //                    "specified gene feature starting from the leftmost nucleotide (differs from -aaFeature only for " +
@@ -340,36 +355,32 @@ public final class FieldExtractors {
                 }
             });
 
-            descriptorsList.add(new FeatureExtractors.MutationsExtractor("-aaMutations",
+            final class AAMutations extends FeatureExtractors.MutationsExtractor {
+                AAMutations(String command, String description, int nArgs, String[] hPrefix, String[] sPrefix) {
+                    super(command, description, nArgs, hPrefix, sPrefix);
+                }
+
+                @Override
+                String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1,
+                               NucleotideSequence seq2, TranslationParameters tr) {
+                    if (tr == null) return "-";
+                    Mutations<AminoAcidSequence> aaMuts = MutationsUtil.nt2aa(seq1, mutations, tr);
+                    if (aaMuts == null)
+                        return "-";
+                    return aaMuts.encode(",");
+                }
+            }
+
+            descriptorsList.add(new AAMutations("-aaMutations",
                     "Extract amino acid mutations for specific gene feature", 1,
-                    new String[]{"AA. Mutations in "}, new String[]{"aaMutations"}) {
-                @Override
-                String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1,
-                               NucleotideSequence seq2, TranslationParameters tr) {
-                    if (tr == null) return "-";
-                    Mutations<AminoAcidSequence> aaMuts = MutationsUtil.nt2aa(seq1, mutations, tr);
-                    if (aaMuts == null)
-                        return "-";
-                    return aaMuts.encode(",");
-                }
-            });
+                    new String[]{"AA. Mutations in "}, new String[]{"aaMutations"}));
 
-            descriptorsList.add(new FeatureExtractors.MutationsExtractor("-aaMutationsRelative",
+            descriptorsList.add(new AAMutations("-aaMutationsRelative",
                     "Extract amino acid mutations for specific gene feature relative to another feature.", 2,
-                    new String[]{"AA. Mutations in ", " relative to "}, new String[]{"aaMutationsIn", "Relative"}) {
-                @Override
-                String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1,
-                               NucleotideSequence seq2, TranslationParameters tr) {
-                    if (tr == null) return "-";
-                    Mutations<AminoAcidSequence> aaMuts = MutationsUtil.nt2aa(seq1, mutations, tr);
-                    if (aaMuts == null)
-                        return "-";
-                    return aaMuts.encode(",");
-                }
-            });
+                    new String[]{"AA. Mutations in ", " relative to "}, new String[]{"aaMutationsIn", "Relative"}));
 
-            final class mutationsDetailed extends FeatureExtractors.MutationsExtractor {
-                private mutationsDetailed(String command, String description, int nArgs, String[] hPrefix, String[] sPrefix) {
+            final class MutationsDetailed extends FeatureExtractors.MutationsExtractor {
+                MutationsDetailed(String command, String description, int nArgs, String[] hPrefix, String[] sPrefix) {
                     super(command, description, nArgs, hPrefix, sPrefix);
                 }
 
@@ -377,15 +388,11 @@ public final class FieldExtractors {
                 String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1, NucleotideSequence seq2, TranslationParameters tr) {
                     if (tr == null) return "-";
                     MutationsUtil.MutationNt2AADescriptor[] descriptors = MutationsUtil.nt2aaDetailed(seq1, mutations, tr, 10);
+                    if (descriptors == null)
+                        return "-";
                     StringBuilder sb = new StringBuilder();
                     for (int i = 0; i < descriptors.length; i++) {
-                        MutationsUtil.MutationNt2AADescriptor descr = descriptors[i];
-                        sb
-                                .append(Mutation.encode(descr.originalNtMutation, NucleotideSequence.ALPHABET))
-                                .append(":")
-                                .append(descr.individualAAMutation == Mutation.NON_MUTATION ? "" : Mutation.encode(descr.individualAAMutation, AminoAcidSequence.ALPHABET))
-                                .append(":")
-                                .append(descr.cumulativeAAMutation == Mutation.NON_MUTATION ? "" : Mutation.encode(descr.cumulativeAAMutation, AminoAcidSequence.ALPHABET));
+                        sb.append(descriptors[i]);
                         if (i == descriptors.length - 1)
                             break;
                         sb.append(",");
@@ -394,13 +401,17 @@ public final class FieldExtractors {
                 }
             }
 
-            descriptorsList.add(new mutationsDetailed("-nMutationsDetailed",
-                    "DETALIZATION", 1,
-                    new String[]{"DETALIZATION RELATIVE"}, new String[]{"DETALIZATION"}));
+            String detailedMutationsFormat =
+                    "Format <nt_mutation>:<aa_mutation_individual>:<aa_mutation_cumulative>, where <aa_mutation_individual> is an expected amino acid " +
+                            "mutation given no other mutations have occurred, and <aa_mutation_cumulative> amino acid mutation is the observed amino acid " +
+                            "mutation combining effect from all other";
+            descriptorsList.add(new MutationsDetailed("-mutationsDetailed",
+                    "Detailed list of nucleotide and corresponding amino acid mutations. " + detailedMutationsFormat, 1,
+                    new String[]{"Detailed mutations in "}, new String[]{"mutationsDetailedIn"}));
 
-            descriptorsList.add(new mutationsDetailed("-nMutationsRelativeDetailed",
-                    "DETALIZATION", 2,
-                    new String[]{"DETALIZATIONin ", " relative to "}, new String[]{"DETALIZATION", "Relative"}));
+            descriptorsList.add(new MutationsDetailed("-mutationsDetailedRelative",
+                    "Detailed list of nucleotide and corresponding amino acid mutations written, positions relative to specified gene feature. " + detailedMutationsFormat, 2,
+                    new String[]{"Detailed mutations in ", " relative to "}, new String[]{"mutationsDetailedIn", "Relative"}));
 
             descriptorsList.add(new ExtractReferencePointPosition());
 
