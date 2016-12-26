@@ -100,7 +100,7 @@ public final class TargetPartitioning extends SequencePartitioning {
                     return -1;
             }
             positionInSeq1 += referencePoint.getOffset();
-            position = alignment.convertPosition(positionInSeq1);
+            position = alignment.convertToSeq2Position(positionInSeq1);
         } else
             position = hit.getPosition(targetIndex, referencePoint);
         if (position == -1)

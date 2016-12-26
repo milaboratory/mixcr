@@ -739,11 +739,11 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
             return alignment.getScore();
 
         final Range range = new Range(boundary, alignment.getSequence1Range().getUpper());
-        Mutations<NucleotideSequence> vEndMutations = alignment.getAbsoluteMutations()
-                .extractMutationsForRange(range);
+        Mutations<NucleotideSequence> vEndMutations = alignment.getAbsoluteMutations().
+                extractAbsoluteMutationsForRange(range);
 
-        return AlignmentUtils.calculateScore(parameters.getVAlignerParameters().getParameters().getScoring(),
-                range.length(), vEndMutations);
+        return AlignmentUtils.calculateScore(alignment.getSequence1(), range, vEndMutations,
+                parameters.getVAlignerParameters().getParameters().getScoring());
     }
 
     static final Comparator<PairedHit> V_END_SCORE_COMPARATOR = new Comparator<PairedHit>() {

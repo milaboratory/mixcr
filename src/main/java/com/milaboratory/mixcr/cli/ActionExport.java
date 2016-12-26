@@ -29,11 +29,12 @@
 package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.cli.Action;
+import com.milaboratory.cli.ActionHelpProvider;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParametersParser;
 import com.milaboratory.mixcr.basictypes.VDJCObject;
 
-public abstract class ActionExport<T extends VDJCObject> implements Action, ActionParametersParser {
+public abstract class ActionExport<T extends VDJCObject> implements Action, ActionParametersParser, ActionHelpProvider {
     public final ActionExportParameters<T> parameters;
     private final Class clazz;
 
@@ -57,6 +58,16 @@ public abstract class ActionExport<T extends VDJCObject> implements Action, Acti
     }
 
     protected abstract void go0() throws Exception;
+
+    @Override
+    public boolean printDefaultHelp() {
+        return true;
+    }
+
+    @Override
+    public void printHelp(StringBuilder builder) {
+        builder.append(ActionExportParameters.listOfFields(clazz));
+    }
 
     @Override
     public ActionExportParameters<T> params() {

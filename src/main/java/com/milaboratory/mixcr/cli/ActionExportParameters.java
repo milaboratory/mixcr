@@ -206,7 +206,7 @@ public class ActionExportParameters<T extends VDJCObject> extends ActionParamete
 
     public static String listOfFields(Class clazz) {
         ArrayList<String>[] description = FieldExtractors.getDescription(clazz);
-        return "Available export fields:\n" + Util.printTwoColumns(description[0], description[1], 23, 50, 5, "\n");
+        return "Available export fields:\n\n" + Util.printTwoColumns(description[0], description[1], 45, 70, 5, "\n");
     }
 
     private static final Map<Class, Map<String, String>> presets;
@@ -224,7 +224,7 @@ public class ActionExportParameters<T extends VDJCObject> extends ActionParamete
                 "-nFeature FR3 -minFeatureQuality FR3 -nFeature CDR3 -minFeatureQuality CDR3 " +
                 "-nFeature FR4 -minFeatureQuality FR4 " +
                 "-aaFeature FR1 -aaFeature CDR1 -aaFeature FR2 -aaFeature CDR2 " +
-                "-aaFeature FR3 -aaFeature CDR3 -aaFeatureFromLeft FR4 -defaultAnchorPoints");
+                "-aaFeature FR3 -aaFeature CDR3 -defaultAnchorPoints");
         clones.put("full", "-cloneId -count -fraction -sequence -quality " +
                 "-vHitsWithScore -dHitsWithScore -jHitsWithScore -cHitsWithScore " +
                 "-vAlignments -dAlignments -jAlignments -cAlignments " +
@@ -233,7 +233,7 @@ public class ActionExportParameters<T extends VDJCObject> extends ActionParamete
                 "-nFeature FR3 -minFeatureQuality FR3 -nFeature CDR3 -minFeatureQuality CDR3 " +
                 "-nFeature FR4 -minFeatureQuality FR4 " +
                 "-aaFeature FR1 -aaFeature CDR1 -aaFeature FR2 -aaFeature CDR2 " +
-                "-aaFeature FR3 -aaFeature CDR3 -aaFeatureFromLeft FR4 -defaultAnchorPoints");
+                "-aaFeature FR3 -aaFeature CDR3 -aaFeature FR4 -defaultAnchorPoints");
         presets.put(Clone.class, clones);
 
         Map<String, String> alignments = new HashMap<>();
@@ -246,7 +246,7 @@ public class ActionExportParameters<T extends VDJCObject> extends ActionParamete
                 "-nFeature FR3 -minFeatureQuality FR3 -nFeature CDR3 -minFeatureQuality CDR3 " +
                 "-nFeature FR4 -minFeatureQuality FR4 " +
                 "-aaFeature FR1 -aaFeature CDR1 -aaFeature FR2 -aaFeature CDR2 " +
-                "-aaFeature FR3 -aaFeature CDR3 -aaFeatureFromLeft FR4 -defaultAnchorPoints")
+                "-aaFeature FR3 -aaFeature CDR3 -aaFeature FR4 -defaultAnchorPoints")
         ;
         presets.put(VDJCAlignments.class, alignments);
     }

@@ -159,7 +159,7 @@ public class TargetMerger {
         int seq1From = -1, seq2From = -1, seq1To = -1, seq2To = -1;
 
         if (left != null && right != null) {
-            if (left.convertPosition(right.getSequence1Range().getFrom()) != right.getSequence2Range().getFrom() + offset) {
+            if (left.convertToSeq2Position(right.getSequence1Range().getFrom()) != right.getSequence2Range().getFrom() + offset) {
                 if (left.getScore() > right.getScore())
                     right = null;
                 else
@@ -228,8 +228,8 @@ public class TargetMerger {
                 if (to <= from)
                     continue;
 
-                int delta = left.convertPosition(from) - right.convertPosition(from);
-                if (delta != left.convertPosition(to) - right.convertPosition(to))
+                int delta = left.convertToSeq2Position(from) - right.convertToSeq2Position(from);
+                if (delta != left.convertToSeq2Position(to) - right.convertToSeq2Position(to))
                     continue;
 
 

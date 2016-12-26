@@ -35,5 +35,7 @@ public interface Field<T> {
 
     String getDescription();
 
+    String metaVars();
+
     FieldExtractor<T> create(OutputMode outputMode, String[] args);
 }

@@ -31,9 +31,12 @@ package com.milaboratory.mixcr.export;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import com.milaboratory.core.alignment.Alignment;
+import com.milaboratory.core.mutations.Mutations;
+import com.milaboratory.core.mutations.MutationsUtil;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.core.sequence.TranslationParameters;
 import com.milaboratory.mixcr.assembler.AlignmentsToClonesMappingContainer;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
 import com.milaboratory.mixcr.basictypes.Clone;
@@ -55,21 +58,20 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import static com.milaboratory.core.sequence.TranslationParameters.*;
 import static com.milaboratory.mixcr.assembler.ReadToCloneMapping.MappingType.Dropped;
 
 public final class FieldExtractors {
-    private static final String NULL = "";
+    static final String NULL = "";
     private static final DecimalFormat SCORE_FORMAT = new DecimalFormat("#.#");
 
     static Field[] descriptors = null;
 
     public synchronized static Field[] getFields() {
         if (descriptors == null) {
-            List<Field> desctiptorsList = new ArrayList<>();
+            List<Field> descriptorsList = new ArrayList<>();
 
             // Number of targets
-            desctiptorsList.add(new PL_O("-targets", "Export number of targets", "Number of targets", "numberOfTargets") {
+            descriptorsList.add(new PL_O("-targets", "Export number of targets", "Number of targets", "numberOfTargets") {
                 @Override
                 protected String extract(VDJCObject object) {
                     return Integer.toString(object.numberOfTargets());
@@ -79,7 +81,7 @@ public final class FieldExtractors {
             // Best hits
             for (final GeneType type : GeneType.values()) {
                 char l = type.getLetter();
-                desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Hit",
+                descriptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Hit",
                         "Export best " + l + " hit", "Best " + l + " hit", "best" + l + "Hit") {
                     @Override
                     protected String extract(VDJCObject object) {
@@ -94,7 +96,7 @@ public final class FieldExtractors {
             // Best gene
             for (final GeneType type : GeneType.values()) {
                 char l = type.getLetter();
-                desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Gene",
+                descriptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Gene",
                         "Export best " + l + " hit gene name (e.g. TRBV12-3 for TRBV12-3*00)", "Best " + l + " gene", "best" + l + "Gene") {
                     @Override
                     protected String extract(VDJCObject object) {
@@ -109,7 +111,7 @@ public final class FieldExtractors {
             // Best family
             for (final GeneType type : GeneType.values()) {
                 char l = type.getLetter();
-                desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Family",
+                descriptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Family",
                         "Export best " + l + " hit family name (e.g. TRBV12 for TRBV12-3*00)", "Best " + l + " family", "best" + l + "Family") {
                     @Override
                     protected String extract(VDJCObject object) {
@@ -124,7 +126,7 @@ public final class FieldExtractors {
             // Best hit score
             for (final GeneType type : GeneType.values()) {
                 char l = type.getLetter();
-                desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "HitScore",
+                descriptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "HitScore",
                         "Export score for best " + l + " hit", "Best " + l + " hit score", "best" + l + "HitScore") {
                     @Override
                     protected String extract(VDJCObject object) {
@@ -139,7 +141,7 @@ public final class FieldExtractors {
             // All hits
             for (final GeneType type : GeneType.values()) {
                 char l = type.getLetter();
-                desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "HitsWithScore",
+                descriptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "HitsWithScore",
                         "Export all " + l + " hits with score", "All " + l + " hits", "all" + l + "HitsWithScore") {
                     @Override
                     protected String extract(VDJCObject object) {
@@ -163,7 +165,7 @@ public final class FieldExtractors {
             // All hits without score
             for (final GeneType type : GeneType.values()) {
                 char l = type.getLetter();
-                desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Hits",
+                descriptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Hits",
                         "Export all " + l + " hits", "All " + l + " Hits", "all" + l + "Hits") {
                     @Override
                     protected String extract(VDJCObject object) {
@@ -185,7 +187,7 @@ public final class FieldExtractors {
             // All gene names
             for (final GeneType type : GeneType.values()) {
                 char l = type.getLetter();
-                desctiptorsList.add(new StringExtractor("-" + Character.toLowerCase(l) + "Genes",
+                descriptorsList.add(new StringExtractor("-" + Character.toLowerCase(l) + "Genes",
                         "Export all " + l + " gene names (e.g. TRBV12-3 for TRBV12-3*00)", "All " + l + " genes", "all" + l + "Genes", type) {
                     @Override
                     String extractStringForHit(VDJCHit hit) {
@@ -197,7 +199,7 @@ public final class FieldExtractors {
             // All families
             for (final GeneType type : GeneType.values()) {
                 char l = type.getLetter();
-                desctiptorsList.add(new StringExtractor("-" + Character.toLowerCase(l) + "Families",
+                descriptorsList.add(new StringExtractor("-" + Character.toLowerCase(l) + "Families",
                         "Export all " + l + " gene family anmes (e.g. TRBV12 for TRBV12-3*00)", "All " + l + " families", "all" + l + "Families", type) {
                     @Override
                     String extractStringForHit(VDJCHit hit) {
@@ -209,7 +211,7 @@ public final class FieldExtractors {
             // Best alignment
             for (final GeneType type : GeneType.values()) {
                 char l = type.getLetter();
-                desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Alignment",
+                descriptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Alignment",
                         "Export best " + l + " alignment", "Best " + l + " alignment", "best" + l + "Alignment") {
                     @Override
                     protected String extract(VDJCObject object) {
@@ -235,7 +237,7 @@ public final class FieldExtractors {
             // All alignments
             for (final GeneType type : GeneType.values()) {
                 char l = type.getLetter();
-                desctiptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Alignments",
+                descriptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Alignments",
                         "Export all " + l + " alignments", "All " + l + " alignments", "all" + l + "Alignments") {
                     @Override
                     protected String extract(VDJCObject object) {
@@ -263,115 +265,203 @@ public final class FieldExtractors {
                 });
             }
 
-            desctiptorsList.add(new FeatureExtractorDescriptor("-nFeature", "Export nucleotide sequence of specified gene feature", "N. Seq.", "nSeq") {
+            descriptorsList.add(new FeatureExtractors.NSeqExtractor("-nFeature", "Export nucleotide sequence of specified gene feature", "N. Seq. ", "nSeq") {
                 @Override
                 public String convert(NSequenceWithQuality seq) {
                     return seq.getSequence().toString();
                 }
             });
 
-            desctiptorsList.add(new FeatureExtractorDescriptor("-qFeature", "Export quality string of specified gene feature", "Qual.", "qual") {
+            descriptorsList.add(new FeatureExtractors.NSeqExtractor("-qFeature", "Export quality string of specified gene feature", "Qual. ", "qual") {
                 @Override
                 public String convert(NSequenceWithQuality seq) {
                     return seq.getQuality().toString();
                 }
             });
 
-            desctiptorsList.add(new FeatureExtractorDescriptor("-aaFeature", "Export amino acid sequence of specified gene feature", "AA. Seq.", "aaSeq") {
+            descriptorsList.add(new FeatureExtractors.WithHeader("-aaFeature", "Export amino acid sequence of specified gene feature", 1, new String[]{"AA. Seq."}, new String[]{"aaSeq"}) {
                 @Override
-                public String convert(NSequenceWithQuality seq) {
-                    return AminoAcidSequence.translate(seq.getSequence(), FromCenter).toString();
+                protected String extractValue(VDJCObject object, GeneFeature[] parameters) {
+                    GeneFeature geneFeature = parameters[parameters.length - 1];
+                    NSequenceWithQuality feature = object.getFeature(geneFeature);
+                    if (feature == null)
+                        return NULL;
+                    int targetId = object.getTargetContainingFeature(geneFeature);
+                    TranslationParameters tr = targetId == -1 ?
+                            TranslationParameters.FromLeftWithIncompleteCodon
+                            : object.getPartitionedTarget(targetId).getPartitioning().getTranslationParameters(geneFeature);
+                    if (tr == null)
+                        return NULL;
+                    return AminoAcidSequence.translate(feature.getSequence(), tr).toString();
                 }
             });
 
-            desctiptorsList.add(new FeatureExtractorDescriptor("-aaFeatureFromLeft", "Export amino acid sequence of " +
-                    "specified gene feature starting from the leftmost nucleotide (differs from -aaFeature only for " +
-                    "sequences which length are not multiple of 3)", "AA. Seq.", "aaSeq") {
-                @Override
-                public String convert(NSequenceWithQuality seq) {
-                    return AminoAcidSequence.translate(seq.getSequence(), FromLeftWithoutIncompleteCodon).toString();
-                }
-            });
+//            descriptorsList.add(new FeatureExtractorDescriptor("-aaFeatureFromLeft", "Export amino acid sequence of " +
+//                    "specified gene feature starting from the leftmost nucleotide (differs from -aaFeature only for " +
+//                    "sequences which length are not multiple of 3)", "AA. Seq.", "aaSeq") {
+//                @Override
+//                public String convert(NSequenceWithQuality seq) {
+//                    return AminoAcidSequence.translate(seq.getSequence(), FromLeftWithoutIncompleteCodon).toString();
+//                }
+//            });
+//
+//            descriptorsList.add(new FeatureExtractorDescriptor("-aaFeatureFromRight", "Export amino acid sequence of " +
+//                    "specified gene feature starting from the rightmost nucleotide (differs from -aaFeature only for " +
+//                    "sequences which length are not multiple of 3)", "AA. Seq.", "aaSeq") {
+//                @Override
+//                public String convert(NSequenceWithQuality seq) {
+//                    return AminoAcidSequence.translate(seq.getSequence(), FromRightWithoutIncompleteCodon).toString();
+//                }
+//            });
 
-            desctiptorsList.add(new FeatureExtractorDescriptor("-aaFeatureFromRight", "Export amino acid sequence of " +
-                    "specified gene feature starting from the rightmost nucleotide (differs from -aaFeature only for " +
-                    "sequences which length are not multiple of 3)", "AA. Seq.", "aaSeq") {
-                @Override
-                public String convert(NSequenceWithQuality seq) {
-                    return AminoAcidSequence.translate(seq.getSequence(), FromRightWithoutIncompleteCodon).toString();
-                }
-            });
-
-            desctiptorsList.add(new FeatureExtractorDescriptor("-minFeatureQuality", "Export minimal quality of specified gene feature", "Min. qual.", "minQual") {
+            descriptorsList.add(new FeatureExtractors.NSeqExtractor("-minFeatureQuality", "Export minimal quality of specified gene feature", "Min. qual. ", "minQual") {
                 @Override
                 public String convert(NSequenceWithQuality seq) {
                     return "" + seq.getQuality().minValue();
                 }
             });
 
-            desctiptorsList.add(new FeatureExtractorDescriptor("-avrgFeatureQuality", "Export average quality of specified gene feature", "Mean. qual.", "meanQual") {
+            descriptorsList.add(new FeatureExtractors.NSeqExtractor("-avrgFeatureQuality", "Export average quality of specified gene feature", "Mean. qual. ", "meanQual") {
                 @Override
                 public String convert(NSequenceWithQuality seq) {
                     return "" + seq.getQuality().meanValue();
                 }
             });
 
-            desctiptorsList.add(new FeatureExtractorDescriptor("-lengthOf", "Exports length of specified gene feature.", "Length of ", "lengthOf") {
+            descriptorsList.add(new FeatureExtractors.NSeqExtractor("-lengthOf", "Exports length of specified gene feature.", "Length of ", "lengthOf") {
                 @Override
                 public String convert(NSequenceWithQuality seq) {
                     return "" + seq.size();
                 }
             });
 
-            desctiptorsList.add(new ExtractReferencePointPosition());
+            descriptorsList.add(new FeatureExtractors.MutationsExtractor("-nMutations",
+                    "Extract nucleotide mutations for specific gene feature; relative to germline sequence.", 1,
+                    new String[]{"N. Mutations in "}, new String[]{"nMutations"}) {
+                @Override
+                String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1,
+                               NucleotideSequence seq2, TranslationParameters tr) {
+                    return mutations.encode(",");
+                }
+            });
 
-            desctiptorsList.add(new ExtractDefaultReferencePointsPositions());
+            descriptorsList.add(new FeatureExtractors.MutationsExtractor("-nMutationsRelative",
+                    "Extract nucleotide mutations for specific gene feature relative to another feature.", 2,
+                    new String[]{"N. Mutations in ", " relative to "}, new String[]{"nMutationsIn", "Relative"}) {
+                @Override
+                String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1,
+                               NucleotideSequence seq2, TranslationParameters tr) {
+                    return mutations.encode(",");
+                }
+            });
 
-            desctiptorsList.add(new PL_A("-readId", "Export id of read corresponding to alignment", "Read id", "readId") {
+            final class AAMutations extends FeatureExtractors.MutationsExtractor {
+                AAMutations(String command, String description, int nArgs, String[] hPrefix, String[] sPrefix) {
+                    super(command, description, nArgs, hPrefix, sPrefix);
+                }
+
+                @Override
+                String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1,
+                               NucleotideSequence seq2, TranslationParameters tr) {
+                    if (tr == null) return "-";
+                    Mutations<AminoAcidSequence> aaMuts = MutationsUtil.nt2aa(seq1, mutations, tr);
+                    if (aaMuts == null)
+                        return "-";
+                    return aaMuts.encode(",");
+                }
+            }
+
+            descriptorsList.add(new AAMutations("-aaMutations",
+                    "Extract amino acid mutations for specific gene feature", 1,
+                    new String[]{"AA. Mutations in "}, new String[]{"aaMutations"}));
+
+            descriptorsList.add(new AAMutations("-aaMutationsRelative",
+                    "Extract amino acid mutations for specific gene feature relative to another feature.", 2,
+                    new String[]{"AA. Mutations in ", " relative to "}, new String[]{"aaMutationsIn", "Relative"}));
+
+            final class MutationsDetailed extends FeatureExtractors.MutationsExtractor {
+                MutationsDetailed(String command, String description, int nArgs, String[] hPrefix, String[] sPrefix) {
+                    super(command, description, nArgs, hPrefix, sPrefix);
+                }
+
+                @Override
+                String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1, NucleotideSequence seq2, TranslationParameters tr) {
+                    if (tr == null) return "-";
+                    MutationsUtil.MutationNt2AADescriptor[] descriptors = MutationsUtil.nt2aaDetailed(seq1, mutations, tr, 10);
+                    if (descriptors == null)
+                        return "-";
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; i < descriptors.length; i++) {
+                        sb.append(descriptors[i]);
+                        if (i == descriptors.length - 1)
+                            break;
+                        sb.append(",");
+                    }
+                    return sb.toString();
+                }
+            }
+
+            String detailedMutationsFormat =
+                    "Format <nt_mutation>:<aa_mutation_individual>:<aa_mutation_cumulative>, where <aa_mutation_individual> is an expected amino acid " +
+                            "mutation given no other mutations have occurred, and <aa_mutation_cumulative> amino acid mutation is the observed amino acid " +
+                            "mutation combining effect from all other. WARNING: format may change in following versions.";
+            descriptorsList.add(new MutationsDetailed("-mutationsDetailed",
+                    "Detailed list of nucleotide and corresponding amino acid mutations. " + detailedMutationsFormat, 1,
+                    new String[]{"Detailed mutations in "}, new String[]{"mutationsDetailedIn"}));
+
+            descriptorsList.add(new MutationsDetailed("-mutationsDetailedRelative",
+                    "Detailed list of nucleotide and corresponding amino acid mutations written, positions relative to specified gene feature. " + detailedMutationsFormat, 2,
+                    new String[]{"Detailed mutations in ", " relative to "}, new String[]{"mutationsDetailedIn", "Relative"}));
+
+            descriptorsList.add(new ExtractReferencePointPosition());
+
+            descriptorsList.add(new ExtractDefaultReferencePointsPositions());
+
+            descriptorsList.add(new PL_A("-readId", "Export id of read corresponding to alignment", "Read id", "readId") {
                 @Override
                 protected String extract(VDJCAlignments object) {
                     return "" + object.getReadId();
                 }
             });
 
-            desctiptorsList.add(new ExtractSequence(VDJCAlignments.class, "-sequence",
+            descriptorsList.add(new ExtractSequence(VDJCAlignments.class, "-sequence",
                     "Export aligned sequence (initial read), or 2 sequences in case of paired-end reads",
                     "Read(s) sequence", "readSequence"));
 
-            desctiptorsList.add(new ExtractSequenceQuality(VDJCAlignments.class, "-quality",
+            descriptorsList.add(new ExtractSequenceQuality(VDJCAlignments.class, "-quality",
                     "Export initial read quality, or 2 qualities in case of paired-end reads",
                     "Read(s) sequence qualities", "readQuality"));
 
-            desctiptorsList.add(new PL_C("-cloneId", "Unique clone identifier", "Clone ID", "cloneId") {
+            descriptorsList.add(new PL_C("-cloneId", "Unique clone identifier", "Clone ID", "cloneId") {
                 @Override
                 protected String extract(Clone object) {
                     return "" + object.getId();
                 }
             });
 
-            desctiptorsList.add(new PL_C("-count", "Export clone count", "Clone count", "cloneCount") {
+            descriptorsList.add(new PL_C("-count", "Export clone count", "Clone count", "cloneCount") {
                 @Override
                 protected String extract(Clone object) {
                     return "" + object.getCount();
                 }
             });
 
-            desctiptorsList.add(new PL_C("-fraction", "Export clone fraction", "Clone fraction", "cloneFraction") {
+            descriptorsList.add(new PL_C("-fraction", "Export clone fraction", "Clone fraction", "cloneFraction") {
                 @Override
                 protected String extract(Clone object) {
                     return "" + object.getFraction();
                 }
             });
 
-            desctiptorsList.add(new ExtractSequence(Clone.class, "-sequence",
+            descriptorsList.add(new ExtractSequence(Clone.class, "-sequence",
                     "Export aligned sequence (initial read), or 2 sequences in case of paired-end reads",
                     "Clonal sequence(s)", "clonalSequence"));
 
-            desctiptorsList.add(new ExtractSequenceQuality(Clone.class, "-quality",
+            descriptorsList.add(new ExtractSequenceQuality(Clone.class, "-quality",
                     "Export initial read quality, or 2 qualities in case of paired-end reads",
                     "Clonal sequence quality(s)", "clonalSequenceQuality"));
 
-            desctiptorsList.add(new PL_A("-descrR1", "Export description line from initial .fasta or .fastq file " +
+            descriptorsList.add(new PL_A("-descrR1", "Export description line from initial .fasta or .fastq file " +
                     "of the first read (only available if --save-description was used in align command)", "Description R1", "descrR1") {
                 @Override
                 protected String extract(VDJCAlignments object) {
@@ -384,7 +474,7 @@ public final class FieldExtractors {
                 }
             });
 
-            desctiptorsList.add(new PL_A("-descrR2", "Export description line from initial .fasta or .fastq file " +
+            descriptorsList.add(new PL_A("-descrR2", "Export description line from initial .fasta or .fastq file " +
                     "of the second read (only available if --save-description was used in align command)", "Description R2", "descrR2") {
                 @Override
                 protected String extract(VDJCAlignments object) {
@@ -397,18 +487,23 @@ public final class FieldExtractors {
                 }
             });
 
-            desctiptorsList.add(alignmentsToClone("-cloneId", "To which clone alignment was attached.", false));
-            desctiptorsList.add(alignmentsToClone("-cloneIdWithMappingType", "To which clone alignment was attached with additional info on mapping type.", true));
-            desctiptorsList.add(new AbstractField<Clone>(Clone.class, "-readIds", "Read IDs aggregated by clone.") {
+            descriptorsList.add(alignmentsToClone("-cloneId", "To which clone alignment was attached.", false));
+            descriptorsList.add(alignmentsToClone("-cloneIdWithMappingType", "To which clone alignment was attached with additional info on mapping type.", true));
+            descriptorsList.add(new AbstractField<Clone>(Clone.class, "-readIds", "Read IDs aggregated by clone.") {
                 @Override
                 public FieldExtractor<Clone> create(OutputMode outputMode, String[] args) {
                     return new CloneToReadsExtractor(outputMode, args[0]);
+                }
+
+                @Override
+                public String metaVars() {
+                    return "<index_file>";
                 }
             });
 
             for (final GeneType type : GeneType.values()) {
                 String c = Character.toLowerCase(type.getLetter()) + "IdentityPercents";
-                desctiptorsList.add(new PL_O("-" + c, type.getLetter() + " alignment identity percents",
+                descriptorsList.add(new PL_O("-" + c, type.getLetter() + " alignment identity percents",
                         type.getLetter() + " alignment identity percents", c) {
                     @Override
                     protected String extract(VDJCObject object) {
@@ -428,7 +523,7 @@ public final class FieldExtractors {
             }
             for (final GeneType type : GeneType.values()) {
                 String c = Character.toLowerCase(type.getLetter()) + "BestIdentityPercent";
-                desctiptorsList.add(new PL_O("-" + c, type.getLetter() + "best alignment identity percent",
+                descriptorsList.add(new PL_O("-" + c, type.getLetter() + "best alignment identity percent",
                         type.getLetter() + "best alignment identity percent", c) {
                     @Override
                     protected String extract(VDJCObject object) {
@@ -439,7 +534,7 @@ public final class FieldExtractors {
                     }
                 });
             }
-            descriptors = desctiptorsList.toArray(new Field[desctiptorsList.size()]);
+            descriptors = descriptorsList.toArray(new Field[descriptorsList.size()]);
         }
 
         return descriptors;
@@ -456,11 +551,40 @@ public final class FieldExtractors {
         ArrayList<String>[] description = new ArrayList[]{new ArrayList(), new ArrayList()};
         for (Field field : getFields())
             if (field.canExtractFrom(clazz)) {
-                description[0].add(field.getCommand());
+                description[0].add(field.getCommand() + " " + field.metaVars());
                 description[1].add(field.getDescription());
             }
-
         return description;
+    }
+
+    private static ArrayList<String>[] getDescriptionsForSpecificClassOnly(boolean clones) {
+        ArrayList<String>[] description = new ArrayList[]{new ArrayList(), new ArrayList()};
+        for (Field field : getFields()) {
+            boolean c;
+            if (clones)
+                c = field.canExtractFrom(Clone.class) && !field.canExtractFrom(VDJCAlignments.class);
+            else
+                c = field.canExtractFrom(VDJCAlignments.class) && !field.canExtractFrom(Clone.class);
+            if (c) {
+                description[0].add(field.getCommand() + " " + field.metaVars());
+                description[1].add(field.getDescription());
+            }
+        }
+        return description;
+    }
+
+    static ArrayList<String>[] getDescriptionSpecificForClones() {
+        return getDescriptionsForSpecificClassOnly(true);
+    }
+
+    static ArrayList<String>[] getDescriptionSpecificForAlignments() {
+        return getDescriptionsForSpecificClassOnly(false);
+    }
+
+    static ArrayList<String>[] getDescriptionSpecificForClass(Class clazz) {
+        if (clazz.equals(VDJCObject.class))
+            return getDescription(clazz);
+        return getDescriptionsForSpecificClassOnly(clazz.equals(Clone.class));
     }
 
     /* Some typedefs */
@@ -488,38 +612,7 @@ public final class FieldExtractors {
         }
     }
 
-    private static abstract class FeatureExtractorDescriptor extends WP_O<GeneFeature> {
-        final String hPrefix, sPrefix;
-
-        protected FeatureExtractorDescriptor(String command, String description, String hPrefix, String sPrefix) {
-            super(command, description);
-            this.hPrefix = hPrefix;
-            this.sPrefix = sPrefix;
-        }
-
-        @Override
-        protected GeneFeature getParameters(String[] string) {
-            if (string.length != 1)
-                throw new RuntimeException("Wrong number of parameters for " + getCommand());
-            return GeneFeature.parse(string[0]);
-        }
-
-        @Override
-        protected String getHeader(OutputMode outputMode, GeneFeature parameters) {
-            return choose(outputMode, hPrefix + " ", sPrefix) + GeneFeature.encode(parameters);
-        }
-
-        @Override
-        protected String extractValue(VDJCObject object, GeneFeature parameters) {
-            NSequenceWithQuality feature = object.getFeature(parameters);
-            if (feature == null)
-                return NULL;
-            return convert(feature);
-        }
-
-        public abstract String convert(NSequenceWithQuality seq);
-    }
-
+    /***************************************************/
     private static class ExtractSequence extends FieldParameterless<VDJCObject> {
         private ExtractSequence(Class targetType, String command, String description, String hHeader, String sHeader) {
             super(targetType, command, description, hHeader, sHeader);
@@ -587,6 +680,11 @@ public final class FieldExtractors {
             }
             return sb.toString();
         }
+
+        @Override
+        public String metaVars() {
+            return "<reference_point>";
+        }
     }
 
     private static class ExtractDefaultReferencePointsPositions extends PL_O {
@@ -624,6 +722,11 @@ public final class FieldExtractors {
             @Override
             public FieldExtractor<VDJCAlignments> create(OutputMode outputMode, String[] args) {
                 return new AlignmentToCloneExtractor(outputMode, args[0], printMapping);
+            }
+
+            @Override
+            public String metaVars() {
+                return "<index_file>";
             }
         };
     }
