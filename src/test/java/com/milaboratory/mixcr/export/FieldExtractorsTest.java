@@ -31,6 +31,7 @@ package com.milaboratory.mixcr.export;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCObject;
+import com.milaboratory.mixcr.cli.Main;
 import com.milaboratory.mixcr.cli.Util;
 import io.repseq.core.GeneType;
 import org.junit.Ignore;
