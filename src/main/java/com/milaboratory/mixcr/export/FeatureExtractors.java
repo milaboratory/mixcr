@@ -130,7 +130,7 @@ final class FeatureExtractors {
             if (smallTargetRage == null)
                 return "-";
 
-            GeneFeature intersection = GeneFeature.intersection(bigGeneFeature, alignedFeature);
+            GeneFeature intersectionBigAligned = GeneFeature.intersection(bigGeneFeature, alignedFeature);
 
             for (int i = 0; i < hit.numberOfTargets(); ++i) {
                 Alignment<NucleotideSequence> alignment = hit.getAlignment(i);
@@ -138,17 +138,23 @@ final class FeatureExtractors {
                 if (alignment == null || !alignment.getSequence1Range().contains(smallTargetRage))
                     continue;
 
-                Mutations<NucleotideSequence> mutations = alignment.getAbsoluteMutations().extractRelativeMutationsForRange(smallTargetRage);
+                Mutations<NucleotideSequence> mutations;
                 if (parameters.length == 2) {
-                    int shift = object.getPartitionedTarget(i).getPartitioning().getRelativePosition(intersection, smallGeneFeature.getFirstPoint());
-                    if (shift < 0)
+                    mutations = alignment.getAbsoluteMutations().extractAbsoluteMutationsForRange(smallTargetRage);
+
+                    ReferencePoint baIntersectionBegin = intersectionBigAligned.getFirstPoint();
+
+                    int referencePosition = germlinePartitioning.getRelativePosition(alignedFeature, baIntersectionBegin);
+                    int bigFeaturePosition = germlinePartitioning.getRelativePosition(bigGeneFeature, baIntersectionBegin);
+
+                    if (bigFeaturePosition < 0 || referencePosition < 0)
                         continue;
 
-                    int offset = germlinePartitioning.getRelativePosition(bigGeneFeature, intersection.getFirstPoint());
-                    if (offset < 0)
-                        throw new RuntimeException();
+                    int shift = bigFeaturePosition - referencePosition;
 
-                    shift += offset;
+                    if (shift < 0)
+                        mutations = mutations.getRange(Mutations.pabs(mutations.firstMutationWithPosition(-shift)), mutations.size());
+
                     mutations = mutations.move(shift);
 
 //                    int shift = germlinePartitioning.getRelativePosition(bigGeneFeature, smallGeneFeature.getFirstPoint());
@@ -158,7 +164,8 @@ final class FeatureExtractors {
 //                    mutations = mutations.extractRelativeMutationsForRange(bigRange);
 //                    if (mutations == null)
 //                        continue;
-                }
+                } else
+                    mutations = alignment.getAbsoluteMutations().extractRelativeMutationsForRange(smallTargetRage);
 
                 return convert(mutations, gene.getFeature(bigGeneFeature), object.getFeature(smallGeneFeature).getSequence(), germlinePartitioning.getTranslationParameters(bigGeneFeature));
             }
