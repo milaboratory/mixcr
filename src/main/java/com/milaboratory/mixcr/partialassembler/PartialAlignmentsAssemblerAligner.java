@@ -91,17 +91,20 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
             vdjcHits.put(gt, combine(parameters.getFeatureToAlign(gt), alignmentHits));
         }
 
+        // Additional (fine) alignment step for V gene
+
         VDJCHit[] vHits = vdjcHits.get(GeneType.Variable);
         final AlignmentScoring<NucleotideSequence> vScoring = parameters.getVAlignerParameters().getParameters().getScoring();
-        if (vHits != null && vHits.length > 0 && !(vScoring instanceof AffineGapAlignmentScoring)) { // TODO implement AffineGapAlignmentScoring
+        if (vHits != null && vHits.length > 0 && !(vScoring instanceof AffineGapAlignmentScoring) && // TODO implement AffineGapAlignmentScoring
+                vdjcHits.get(GeneType.Joining) != null && vdjcHits.get(GeneType.Joining).length > 0) {
             int minimalVSpace = getAbsoluteMinScore(parameters.getVAlignerParameters().getParameters()) /
-                    parameters.getVAlignerParameters().getParameters().getScoring().getMaximalMatchScore();
+                    vScoring.getMaximalMatchScore();
 
             for (int targetId = 1; targetId < nReads; targetId++) {
                 int vSpace;
-                if (vdjcHits.get(GeneType.Joining) != null && vdjcHits.get(GeneType.Joining).length > 0 &&
-                        vdjcHits.get(GeneType.Joining)[0].getAlignment(targetId) != null &&
-                        (vSpace = vdjcHits.get(GeneType.Joining)[0].getAlignment(targetId).getSequence2Range().getFrom()) > minimalVSpace) {
+                final NucleotideSequence sequence2 = targets[targetId].getSequence();
+                if (vdjcHits.get(GeneType.Joining)[0].getAlignment(targetId) != null &&
+                        (vSpace = vdjcHits.get(GeneType.Joining)[0].getAlignment(targetId).getSequence2Range().getFrom()) >= minimalVSpace) {
                     for (int vHitIndex = 0; vHitIndex < vHits.length; vHitIndex++) {
                         VDJCHit vHit = vHits[vHitIndex];
                         Alignment<NucleotideSequence> leftAlignment = vHit.getAlignment(targetId - 1);
@@ -109,7 +112,6 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
                             continue;
 
                         final NucleotideSequence sequence1 = leftAlignment.getSequence1();
-                        final NucleotideSequence sequence2 = targets[targetId].getSequence();
 
                         final int beginFR3 = vHit.getGene().getPartitioning().getRelativePosition(parameters.getFeatureToAlign(GeneType.Variable), ReferencePoint.FR3Begin);
                         if (beginFR3 == -1)
@@ -133,6 +135,51 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
             }
         }
         Arrays.sort(vHits);
+        vdjcHits.put(GeneType.Variable, cutRelativeScore(vHits, parameters.getVAlignerParameters().getRelativeMinScore(),
+                parameters.getVAlignerParameters().getParameters().getMaxHits()));
+
+        // Additional (fine) alignment step for J gene
+
+        VDJCHit[] jHits = vdjcHits.get(GeneType.Joining);
+        final AlignmentScoring<NucleotideSequence> jScoring = parameters.getJAlignerParameters().getParameters().getScoring();
+        if (jHits != null && jHits.length > 0 && !(jScoring instanceof AffineGapAlignmentScoring) && // TODO implement AffineGapAlignmentScoring
+                vdjcHits.get(GeneType.Variable) != null && vdjcHits.get(GeneType.Variable).length > 0) {
+            int minimalJSpace = getAbsoluteMinScore(parameters.getJAlignerParameters().getParameters()) /
+                    jScoring.getMaximalMatchScore();
+
+            for (int targetId = 0; targetId < nReads - 1; targetId++) {
+                int jSpaceBegin;
+                final NucleotideSequence sequence2 = targets[targetId].getSequence();
+                if (vdjcHits.get(GeneType.Variable)[0].getAlignment(targetId) != null &&
+                        (sequence2.size() - (jSpaceBegin = vdjcHits.get(GeneType.Variable)[0].getAlignment(targetId).getSequence2Range().getTo())) >= minimalJSpace) {
+                    for (int jHitIndex = 0; jHitIndex < jHits.length; jHitIndex++) {
+                        VDJCHit jHit = jHits[jHitIndex];
+                        Alignment<NucleotideSequence> rightAlignment = jHit.getAlignment(targetId + 1);
+                        if (rightAlignment == null)
+                            continue;
+
+                        final NucleotideSequence sequence1 = rightAlignment.getSequence1();
+
+                        final Alignment alignment = AlignerCustom.alignLinearSemiLocalRight0(
+                                (LinearGapAlignmentScoring) jScoring,
+                                sequence1, sequence2,
+                                0, sequence1.size(),
+                                jSpaceBegin, sequence2.size() - jSpaceBegin,
+                                false, true,
+                                NucleotideSequence.ALPHABET,
+                                linearMatrixCache.get());
+
+                        if (alignment.getScore() < getAbsoluteMinScore(parameters.getJAlignerParameters().getParameters()))
+                            continue;
+
+                        jHits[jHitIndex] = jHit.setAlignment(targetId, alignment);
+                    }
+                }
+            }
+        }
+        Arrays.sort(jHits);
+        vdjcHits.put(GeneType.Joining, cutRelativeScore(jHits, parameters.getJAlignerParameters().getRelativeMinScore(),
+                parameters.getJAlignerParameters().getParameters().getMaxHits()));
 
 
         int dGeneTarget = -1;
@@ -168,6 +215,18 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
                 targets
         );
         return new VDJCAlignmentResult<>(input, alignment);
+    }
+
+    private static VDJCHit[] cutRelativeScore(VDJCHit[] hs, float relativeMinScore, int maxHits) {
+        if (hs.length == 0)
+            return hs;
+        float maxScore = hs[0].getScore() * relativeMinScore;
+        int j = Math.min(hs.length - 1, maxHits - 1);
+        while (j >= 0 && hs[j].getScore() < maxScore)
+            --j;
+        if (j != hs.length - 1)
+            hs = Arrays.copyOf(hs, j + 1);
+        return hs;
     }
 
     private static int getAbsoluteMinScore(AbstractKAlignerParameters kParameters) {
