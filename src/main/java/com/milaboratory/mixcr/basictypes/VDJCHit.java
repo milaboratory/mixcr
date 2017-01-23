@@ -73,6 +73,12 @@ public final class VDJCHit implements Comparable<VDJCHit>, HasGene {
         this.score = score;
     }
 
+    public VDJCHit setAlignment(int target, Alignment<NucleotideSequence> alignment) {
+        Alignment<NucleotideSequence>[] newAlignments = alignments.clone();
+        newAlignments[target] = alignment;
+        return new VDJCHit(gene, newAlignments, alignedFeature);
+    }
+
     public int getPosition(int target, ReferencePoint referencePoint) {
         if (alignments[target] == null)
             return -1;

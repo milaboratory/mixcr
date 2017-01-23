@@ -225,6 +225,8 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         ArrayList<AlignedTarget> leftTargets = extractAlignedTargets(leftAl, true);
         ArrayList<AlignedTarget> rightTargets = extractAlignedTargets(rightAl, false);
 
+
+
         AlignedTarget leftCentral = leftTargets.get(left.targetId);
         AlignedTarget rightCentral = rightTargets.get(rightTargetId);
 
