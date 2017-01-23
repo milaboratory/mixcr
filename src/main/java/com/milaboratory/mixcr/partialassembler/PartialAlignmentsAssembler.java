@@ -362,22 +362,25 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         VDJCPartitionedSequence left = alignment.getPartitionedTarget(leftTargetId);
         NSequenceWithQuality seq = left.getSequence();
 
-        int kFrom = left.getPartitioning().getPosition(ReferencePoint.VEndTrimmed) + kOffset;
-        if (kFrom < 0 || kFrom + kValue >= seq.size()) {
+        int kFromFirst = left.getPartitioning().getPosition(ReferencePoint.VEndTrimmed) + kOffset;
+        if (kFromFirst < 0 || kFromFirst + kValue >= seq.size()) {
             noKMer.incrementAndGet();
             return;
         }
 
-        long kmer = kMer(seq.getSequence(), kFrom, kValue);
-        if (kmer == -1) {
-            wildCardsInKMer.incrementAndGet();
-            return;
+        for (int kFrom = kFromFirst; kFrom < seq.size() - kValue; ++kFrom) {
+            long kmer = kMer(seq.getSequence(), kFrom, kValue);
+            if (kmer == -1) {
+                wildCardsInKMer.incrementAndGet();
+                continue;
+            }
+
+            List<KMerInfo> ids = kToIndexLeft.get(kmer);
+            if (ids == null)
+                kToIndexLeft.put(kmer, ids = new ArrayList<>(1));
+            ids.add(new KMerInfo(alignment, kFrom, leftTargetId));
         }
 
-        List<KMerInfo> ids = kToIndexLeft.get(kmer);
-        if (ids == null)
-            kToIndexLeft.put(kmer, ids = new ArrayList<>(1));
-        ids.add(new KMerInfo(alignment, kFrom, leftTargetId));
         leftPartsIds.add(alignment.getAlignmentsIndex());
         leftParts.incrementAndGet();
     }
