@@ -5,7 +5,7 @@ System requirements
 -----------------------
   
 - Any Java-enabled platform (Windows, Linux, Mac OS X)
-- Java version 7 or higher (download from `Oracle web site <http://www.oracle.com/technetwork/java/javase/downloads/index.html>`_)
+- Java version 8 or higher (download from `Oracle web site <http://www.oracle.com/technetwork/java/javase/downloads/index.html>`_)
 - 1--16 Gb RAM (depending on number of clones in the sample)
 
 Installation on Mac OS X / Linux using Homebrew
@@ -27,9 +27,9 @@ Installation on Mac OS X / Linux / FreeBSD from zip distribution
   .. code-block:: console
 
     > java -version
-    java version "1.7.0_65"
-    Java(TM) SE Runtime Environment (build 1.7.0_65-b17)
-    Java HotSpot(TM) 64-Bit Server VM (build 24.65-b04, mixed mode)
+    java version "1.8.0_66"
+    Java(TM) SE Runtime Environment (build 1.8.0_66-b17)
+    Java HotSpot(TM) 64-Bit Server VM (build 25.66-b17, mixed mode)
 
 - download latest binary distributaion of MiXCR from the `release page <https://github.com/milaboratory/mixcr/releases>`_ on GitHub
 - unzip the archive

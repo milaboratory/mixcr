@@ -61,4 +61,9 @@ public abstract class FieldParameterless<T> extends AbstractField<T> {
             }
         };
     }
+
+    @Override
+    public String metaVars() {
+        return "";
+    }
 }

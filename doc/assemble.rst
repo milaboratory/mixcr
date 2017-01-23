@@ -34,7 +34,7 @@ This pipeline consists of the following steps:
 2.  If clonal sequence contains at least one nucleotide with low quality
     (less than ``badQualityThreshold`` parameter value), then this record
     will be deferred for further processing by *mapping procedure*. If
-    percent of low quality nucleotides in deferred record is greater than
+    fraction of low quality nucleotides in deferred record is greater than
     ``maxBadPointsPercent`` parameter value, then this record will be
     finally dropped. Records with clonal sequence containing only good
     quality nucleotides are used to build core clonotypes by grouping
@@ -133,29 +133,40 @@ Other global parameters are:
 +=================================+=================+==========================================================================================+
 | ``minimalClonalSequenceLength`` |  ``12``         | Minimal length of clonal sequence                                                        |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
-| ``qualityAggregationType``      |  ``Max``        | Algorithm used for aggregation of total clonal sequence quality. Possible values:        |
+| ``badQualityThreshold``         | ``20``          | Minimal value of sequencing quality score: nucleotides with lower quality are considered |
+|                                 |                 | as "bad". If sequencing read contains at least one “bad” nucleotide within the target    |
+|                                 |                 | gene region, it will be deferred at initial assembling stage, for further processing     |
+|                                 |                 | by mapper.                                                                               |
++---------------------------------+-----------------+------------------------------------------------------------------------------------------+
+| ``maxBadPointsPercent``         | ``0.7``         | Maximal allowed fraction of "bad" points in sequence: if sequence contains more than     |
+|                                 |                 | ``maxBadPointsPercent`` "bad" nucleotides, it will be completely dropped                 |
+|                                 |                 | and will not be used for further processing by mapper. Sequences with the allowed        |
+|                                 |                 | percent of “bad” points will be mapped to the assembled core clonotypes.                 |
+|                                 |                 | Set ``-OmaxBadPointsPercent=0`` in order to completely drop all sequences that           |
+|                                 |                 | contain at least one “bad” nucleotide.                                                   |
++---------------------------------+-----------------+------------------------------------------------------------------------------------------+
+| ``qualityAggregationType``      |  ``Max``        | Algorithm used for aggregation of total clonal sequence quality during assembling        |
+|                                 |                 | of sequencing reads. Possible values:                                                    |
 |                                 |                 | ``Max`` (maximal quality across all reads for each position),                            |
 |                                 |                 | ``Min`` (minimal quality across all reads for each position),                            |
 |                                 |                 | ``Average`` (average quality across all reads for each position),                        |
 |                                 |                 | ``MiniMax`` (all letters has the same quality which is the maximum of minimal quality of |
 |                                 |                 | clonal sequence in each read).                                                           |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
-| ``minimalQuality``              |  ``0``          | Minimal allowed quality of each nucleotide of aggregated clone. If at least one          | 
-|                                 |                 | nucleotide in the aggregated clone has quality lower than ``minimalQuality``, this clone |
+| ``minimalQuality``              |  ``0``          | Minimal allowed quality of each nucleotide of assembled clone. If at least one           |
+|                                 |                 | nucleotide in the assembled clone has quality lower than ``minimalQuality``, this clone  |
 |                                 |                 | will be dropped (remember that qualities of reads are aggregated according to selected   |
 |                                 |                 | aggregation strategy during core clonotypes assembly; see ``qualityAggregationType``).   |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
-| ``badQualityThreshold``         | ``20``          | Minimal value of sequencing quality score: nucleotides with lower quality are            |
-|                                 |                 | considered as "bad". If sequence contains at least one "bad" nucleotide, it will be      |
-|                                 |                 | deferred at initial assembling stage, for further processing by mapper.                  |
-+---------------------------------+-----------------+------------------------------------------------------------------------------------------+
-| ``maxBadPointsPercent``         | ``0.7``         | Maximal allowed percent of "bad" points in sequence: if sequence contains more than      |
-|                                 |                 | ``maxBadPointsPercent`` "bad" nucleotides, it will be dropped.                           |
-+---------------------------------+-----------------+------------------------------------------------------------------------------------------+
 | ``addReadsCountOnClustering``   | ``false``       | Aggregate cluster counts when assembling final clones: if ``addReadsCountOnClustering``  |
-|                                 |                 | is ``true``, then all children clone counts will be added to the head clone; thus head   | 
+|                                 |                 | is ``true``, then all children clone counts will be added to the head clone; thus head   |
 |                                 |                 | clone count will be a total of its initial count and counts of all its children.         |
+|                                 |                 | Refers to further clustering strategy (see below). Does not refer to mapping of low      |
+|                                 |                 | quality sequencing reads described above.                                                |
 +---------------------------------+-----------------+------------------------------------------------------------------------------------------+
+
+
+
 
 One can override these parameters in the following way:
 
@@ -185,17 +196,17 @@ smaller clone (``clone2``) if ``clone2.count < clone1.count * maximalPreClusteri
 denotes number of reads in corresponding clone)and ``clone2`` contain top V/J/C gene from ``clone1`` in
 it's corresponding gene list.
 
-The following paramenter control separation behaviour and pre-clusterization:
+The following parameter control separation behaviour and pre-clusterization:
 
 +---------------------------------------+---------------------------+------------------------------------------------------------+
 | Parameter                             | Default value             | Description                                                |
 +=======================================+===========================+============================================================+
 | ``maximalPreClusteringRatio``         | ``1.0``                   | See conditions for clustering above for more inforamtion.  |
 +---------------------------------------+---------------------------+------------------------------------------------------------+
-| ``separateByV``                       | ``true``                  | If ``false`` clones with equal clonal sequence but         |
+| ``separateByV``                       | ``false``                 | If ``false`` clones with equal clonal sequence but         |
 |                                       |                           | different V gene will be merged into single clone.         |
 +---------------------------------------+---------------------------+------------------------------------------------------------+
-| ``separateByJ``                       | ``true``                  | If ``false`` clones with equal clonal sequence but         |
+| ``separateByJ``                       | ``false``                 | If ``false`` clones with equal clonal sequence but         |
 |                                       |                           | different J gene will be merged into single clone.         |
 +---------------------------------------+---------------------------+------------------------------------------------------------+
 | ``separateByC``                       | ``false``                 | If ``false`` clones with equal clonal sequence but         |
@@ -214,7 +225,7 @@ Clustering strategy
 --------------------
 
 Parameters that control clustering procedure are placed in
-``cloneClusteringParameters`` parameters group:
+``cloneClusteringParameters`` parameters group which determines the rules for the frequency-based correction of PCR and sequencing errors:
 
 +---------------------------------------+---------------------------+------------------------------------------------------------+
 | Parameter                             | Default value             | Description                                                |

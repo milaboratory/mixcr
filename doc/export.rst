@@ -113,157 +113,16 @@ Available fields
 
 The following fields can be exported both for alignments and clones:
 
-+-----------------------------------+----------------------------------------------------------+
-| Field                             | Description                                              |
-+===================================+==========================================================+
-| ``-vHit``                         | Best V hit.                                              |
-+-----------------------------------+----------------------------------------------------------+
-| ``-dHit``                         | Best D hit.                                              |
-+-----------------------------------+----------------------------------------------------------+
-| ``-jHit``                         | Best J hit.                                              |
-+-----------------------------------+----------------------------------------------------------+
-| ``-cHit``                         | Best C hit.                                              |
-+-----------------------------------+----------------------------------------------------------+
-| ``-vHits``                        | All V hits.                                              |
-+-----------------------------------+----------------------------------------------------------+
-| ``-dHits``                        | All D hits.                                              |
-+-----------------------------------+----------------------------------------------------------+
-| ``-jHits``                        | All J hits.                                              |
-+-----------------------------------+----------------------------------------------------------+
-| ``-cHits``                        | All C hits.                                              |
-+-----------------------------------+----------------------------------------------------------+
-| ``-vHitsWithScore``               | All V hits with scores.                                  |
-+-----------------------------------+----------------------------------------------------------+
-| ``-dHitsWithScore``               | All D hits with scores.                                  |
-+-----------------------------------+----------------------------------------------------------+
-| ``-jHitsWithScore``               | All J hits with scores.                                  |
-+-----------------------------------+----------------------------------------------------------+
-| ``-cHitsWithScore``               | All C hits with scores.                                  |
-+-----------------------------------+----------------------------------------------------------+
-| ``-vAlignment``                   | Best V alignment.                                        |
-+-----------------------------------+----------------------------------------------------------+
-| ``-dAlignment``                   | Best D alignment.                                        |
-+-----------------------------------+----------------------------------------------------------+
-| ``-jAlignment``                   | Best J alignment.                                        |
-+-----------------------------------+----------------------------------------------------------+
-| ``-cAlignment``                   | Best C alignment.                                        |
-+-----------------------------------+----------------------------------------------------------+
-| ``-vAlignments``                  | All V alignments.                                        |
-+-----------------------------------+----------------------------------------------------------+
-| ``-dAlignments``                  | All D alignments.                                        |
-+-----------------------------------+----------------------------------------------------------+
-| ``-jAlignments``                  | All J alignments.                                        |
-+-----------------------------------+----------------------------------------------------------+
-| ``-cAlignments``                  | All C alignments.                                        |
-+-----------------------------------+----------------------------------------------------------+
-| ``-nFeature [feature]``           | Nucleotide sequence of specified gene feature.           |
-+-----------------------------------+----------------------------------------------------------+
-| ``-qFeature [feature]``           | Quality of sequences of specified gene feature.          |
-+-----------------------------------+----------------------------------------------------------+
-| ``-aaFeature [feature]``          | Amino acid sequence of specified gene feature.           |
-+-----------------------------------+----------------------------------------------------------+
-| ``-aaFeatureFromLeft [feature]``  | Amino acid sequence of specified gene feature            |
-|                                   | (translated from leftmost nucleotide).                   |
-+-----------------------------------+----------------------------------------------------------+
-| ``-aaFeatureFromRight [feature]`` | Amino acid sequence of specified gene feature.           |
-|                                   | (translated from rightmost nucleotide).                  |
-+-----------------------------------+----------------------------------------------------------+
-| ``-avrgFeatureQuality [feature]`` | Average quality of sequence of specified gene feature.   |
-+-----------------------------------+----------------------------------------------------------+
-| ``-minFeatureQuality [feature]``  | Minimal quality of sequence of specified gene feature.   |
-+-----------------------------------+----------------------------------------------------------+
-| ``-defaultAnchorPoints``          | Outputs a list of default anchor points (see table       |
-|                                   | below for the list of anchor points and format).         |
-+-----------------------------------+----------------------------------------------------------+
-| ``-lengthOf [feature]``           | Outputs length of specified gene feature.                |
-+-----------------------------------+----------------------------------------------------------+
-| ``-positionOf [anchorPoint]``     | Outputs position of specified anchor point in the        |
-|                                   | clonal sequence or aligned read.                         |
-+-----------------------------------+----------------------------------------------------------+
-| ``-vBestIdentityPercent``         | Alignment identity percent of the best V hit.            |
-|                                   | Percent Identity = (Matches x 100)/Length of aligned     |
-|                                   | region (with gaps)                                       |
-+-----------------------------------+----------------------------------------------------------+
-| ``-dBestIdentityPercent``         | Alignment identity percent of the best D hit.            |
-+-----------------------------------+----------------------------------------------------------+
-| ``-jBestIdentityPercent``         | Alignment identity percent of the best J hit.            |
-+-----------------------------------+----------------------------------------------------------+
-| ``-cBestIdentityPercent``         | Alignment identity percent of the best C hit.            |
-+-----------------------------------+----------------------------------------------------------+
-| ``-vIdentityPercents``            | Alignment identity percents for all V hits.              |
-+-----------------------------------+----------------------------------------------------------+
-| ``-dIdentityPercents``            | Alignment identity percents for all D hits.              |
-+-----------------------------------+----------------------------------------------------------+
-| ``-jIdentityPercents``            | Alignment identity percents for all J hits.              |
-+-----------------------------------+----------------------------------------------------------+
-| ``-cIdentityPercents``            | Alignment identity percents for all C hits.              |
-+-----------------------------------+----------------------------------------------------------+
-| ``-vFamily``                      | Best V hit family.                                       |
-+-----------------------------------+----------------------------------------------------------+
-| ``-dFamily``                      | Best D hit family.                                       |
-+-----------------------------------+----------------------------------------------------------+
-| ``-jFamily``                      | Best J hit family.                                       |
-+-----------------------------------+----------------------------------------------------------+
-| ``-cFamily``                      | Best C hit family.                                       |
-+-----------------------------------+----------------------------------------------------------+
-| ``-vFamilies``                    | All V hit families.                                      |
-+-----------------------------------+----------------------------------------------------------+
-| ``-dFamilies``                    | All D hit families.                                      |
-+-----------------------------------+----------------------------------------------------------+
-| ``-jFamilies``                    | All J hit families.                                      |
-+-----------------------------------+----------------------------------------------------------+
-| ``-cFamilies``                    | All C hit families.                                      |
-+-----------------------------------+----------------------------------------------------------+
-
-
+.. include:: ExportFieldsVDJCObject.rst
 
 The following fields are specific for alignments:
 
-+-----------------------------+------------------------------------------------------------------------------------------------------------+
-| Field                       | Description                                                                                                |
-+=============================+============================================================================================================+
-| ``-sequence``               | Aligned sequence (initial read), or 2 sequences in case of paired-end reads.                               |
-+-----------------------------+------------------------------------------------------------------------------------------------------------+
-| ``-quality``                | Initial read quality, or 2 qualities in case of paired-end reads.                                          |
-+-----------------------------+------------------------------------------------------------------------------------------------------------+
-| ``-readId``                 | Index of source read (in e.g. ``.fastq`` file) for alignment.                                              |
-+-----------------------------+------------------------------------------------------------------------------------------------------------+
-| ``-targets``                | Number of targets, i.e. 1 in case of single reads and 2 in case of paired-end reads.                       |
-+-----------------------------+------------------------------------------------------------------------------------------------------------+
-| ``-descrR1``                | Description line from initial ``.fasta`` or ``.fastq`` file of the first read (only available if           | 
-|                             | ``--save-description`` was used in :ref:`align <ref-align>` command).                                      |
-+-----------------------------+------------------------------------------------------------------------------------------------------------+
-| ``-descrR2``                | Description line from initial ``.fastq`` file of the second read (only available if ``--save-description`` |
-|                             | was used in :ref:`align <ref-align>` command).                                                             |
-+-----------------------------+------------------------------------------------------------------------------------------------------------+
-| ``-cloneId [file]``         | Id of clone that aggregated this alignment. The index file must be specified (this file can be built with  |
-|                             | ``--index [file]`` option for :ref:`align <ref-assemble>` command). For examples see                       |
-|                             | :ref:`this paragraph <ref-exporting-reads>`.                                                               |
-+-----------------------------+------------------------------------------------------------------------------------------------------------+
-| ``-cloneIdWithMappinfType`` | Id of clone that aggregated this alignment with additional information about mapping type. The index       |
-| ``[file]``                  | file must be specified (this file can be built with ``--index [file]`` option for                          |
-|                             | :ref:`align <ref-assemble>` command). For examples see :ref:`this paragraph <ref-exporting-reads>`.        |
-+-----------------------------+------------------------------------------------------------------------------------------------------------+
+.. include:: ExportFieldsVDJCAlignments.rst
 
 The following fields are specific for clones:
 
-+---------------------+----------------------------------------------------------------------------------------+
-| Field               | Description                                                                            |
-+=====================+========================================================================================+
-| ``-count``          | Clone count.                                                                           |
-+---------------------+----------------------------------------------------------------------------------------+
-| ``-fraction``       | Clone fraction.                                                                        |
-+---------------------+----------------------------------------------------------------------------------------+
-| ``-sequence``       | Clonal sequence (or several sequences in case of multi-featured assembling).           |
-+---------------------+----------------------------------------------------------------------------------------+
-| ``-quality``        | Clonal sequence quality (or several qualities in case of multi-featured assembling).   |
-+---------------------+----------------------------------------------------------------------------------------+
-| ``-targets``        | Number of targets, i.e. number of gene regions used to assemble clones.                |
-+---------------------+----------------------------------------------------------------------------------------+
-| ``-readIds [file]`` | IDs of reads that were aggregated by clone. The index file must be specified (this     |
-|                     | file can be built with ``--index [file]`` option for :ref:`align <ref-assemble>`       |
-|                     | command). For examples see :ref:`this paragraph <ref-exporting-reads>`.                |
-+---------------------+----------------------------------------------------------------------------------------+
+.. include:: ExportFieldsClone.rst
+
 
 
 Default anchor point positions

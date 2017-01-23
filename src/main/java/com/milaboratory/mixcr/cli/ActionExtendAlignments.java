@@ -54,10 +54,10 @@ public class ActionExtendAlignments implements Action {
 
             // Writing report to stout
             System.out.println("============= Report ==============");
-            Util.writeReportToStdout(extender, time);
+            Util.writeReportToStdout(time, extender);
             if (parameters.report != null)
                 Util.writeReport(parameters.getInput(), parameters.getOutput(),
-                        helper.getCommandLineArguments(), parameters.report, extender, time);
+                        helper.getCommandLineArguments(), parameters.report, time, extender);
         }
     }
 

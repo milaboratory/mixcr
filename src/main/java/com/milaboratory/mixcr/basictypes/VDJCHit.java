@@ -79,7 +79,7 @@ public final class VDJCHit implements Comparable<VDJCHit>, HasGene {
         int positionInGene = gene.getPartitioning().getRelativePosition(alignedFeature, referencePoint);
         if (positionInGene == -1)
             return -1;
-        return alignments[target].convertPosition(positionInGene);
+        return alignments[target].convertToSeq2Position(positionInGene);
     }
 
     public GeneType getGeneType() {

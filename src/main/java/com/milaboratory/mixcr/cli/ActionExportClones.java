@@ -33,6 +33,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
+import com.milaboratory.core.sequence.TranslationParameters;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
@@ -54,8 +55,8 @@ public class ActionExportClones extends ActionExport<Clone> {
     @Override
     public void go0() throws Exception {
         CloneExportParameters parameters = (CloneExportParameters) this.parameters;
-        try (InputStream inputStream = IOUtil.createIS(parameters.getInputFile());
-             InfoWriter<Clone> writer = new InfoWriter<>(parameters.getOutputFile())) {
+        try(InputStream inputStream = IOUtil.createIS(parameters.getInputFile());
+            InfoWriter<Clone> writer = new InfoWriter<>(parameters.getOutputFile())) {
             CloneSet set = CloneSetIO.read(inputStream, VDJCLibraryRegistry.getDefault());
 
             set = CloneSet.transform(set, parameters.getFilter());
@@ -97,10 +98,17 @@ public class ActionExportClones extends ActionExport<Clone> {
                     return false;
             }
 
-            if (filterStopCodons)
-                for (int i = 0; i < clone.numberOfTargets(); i++)
-                    if (AminoAcidSequence.translateFromCenter(clone.getTarget(i).getSequence()).containStops())
+            if (filterStopCodons) {
+                for (int i = 0; i < clone.numberOfTargets(); i++) {
+                    GeneFeature codingFeature = GeneFeature.getCodingGeneFeature(clone.getAssemblingFeatures()[i]);
+                    if (codingFeature == null)
+                        continue;
+                    TranslationParameters tr = clone.getPartitionedTarget(i).getPartitioning().getTranslationParameters(codingFeature);
+                    if (tr == null || AminoAcidSequence.translate(
+                            clone.getPartitionedTarget(i).getFeature(codingFeature).getSequence(), tr).containStops())
                         return false;
+                }
+            }
 
             return true;
         }

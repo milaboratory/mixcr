@@ -59,9 +59,6 @@ The following table contains description of command line options for ``align``:
 |                                     |                            | optimized for analysis of Rna-Seq data                     |
 |                                     |                            | :ref:`(see below) <ref-alignRNASeq>`                       |
 +-------------------------------------+----------------------------+------------------------------------------------------------+
-| ``-i``, ``--diff-loci``             |                            | Accept alignments with different loci of V and J genes     |
-|                                     |                            | (by default such alignments are dropped).                  |
-+-------------------------------------+----------------------------+------------------------------------------------------------+
 | ``-t {numberOfThreads}`` |br|       | number of                  | Number of processing threads.                              |
 | ``--threads ...``                   | available CPU cores        |                                                            |
 +-------------------------------------+----------------------------+------------------------------------------------------------+
@@ -75,9 +72,7 @@ The following table contains description of command line options for ``align``:
 |                                     |                            | :ref:`exportAlignments <ref-export>` action).              |
 +-------------------------------------+----------------------------+------------------------------------------------------------+
 | ``-v``, ``--write-all``             |                            | Write alignment results for all input reads: including     |
-|                                     |                            | empty results for non-aligned reads. This option also turns|
-|                                     |                            | off "same locus filter", so ``--diff-loci`` has no effect  |
-|                                     |                            | if this option is specified.                               |
+|                                     |                            | empty results for non-aligned reads.                       |
 +-------------------------------------+----------------------------+------------------------------------------------------------+
 | ``-g``, ``--save-reads``            |                            | Copy read(s) from ``.fastq`` or ``.fasta`` to ``.vdjca``   |
 |                                     |                            | file (this is required for exporting reads aggregated by   |
@@ -125,6 +120,9 @@ Other global aligner parameters are:
 +------------------------------------+---------------+---------------------------------------------------------------------------------------+
 | Parameter                          | Default value | Description                                                                           |
 +====================================+===============+=======================================================================================+
+|  ``allowChimeras``                 | ``false``     | Accept alignments with different loci of V and J genes (by default such alignments    |
+|                                    |               | are dropped).                                                                         |
++------------------------------------+---------------+---------------------------------------------------------------------------------------+
 |  ``minSumScore``                   | ``120.0``     | Minimal total alignment score value of V and J genes.                                 |
 +------------------------------------+---------------+---------------------------------------------------------------------------------------+
 |  ``maxHits``                       | ``5``         | Maximal number of hits for each gene type: if input sequence align to more than       |

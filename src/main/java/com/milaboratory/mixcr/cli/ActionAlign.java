@@ -64,7 +64,6 @@ import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
 import com.milaboratory.util.CanReportProgress;
-import com.milaboratory.util.RandomUtil;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.*;
 
@@ -93,8 +92,10 @@ public class ActionAlign implements Action {
                 throw new ProcessException("Failed to override some parameter.");
         }
 
-        if (!alignerParameters.isFixSeed())
-            RandomUtil.setGlobalInitialSeed(System.currentTimeMillis());
+        if (actionParameters.allowDifferentVJLoci != null && actionParameters.allowDifferentVJLoci) {
+            System.out.println("Warning: usage of --diff-loci is deprecated. Use -OallowChimeras=true instead.");
+            alignerParameters.setAllowChimeras(true);
+        }
 
         // Creating aligner
         VDJCAligner aligner = VDJCAligner.createAligner(alignerParameters,
@@ -169,6 +170,8 @@ public class ActionAlign implements Action {
         AlignerReport report = new AlignerReport();
         aligner.setEventsListener(report);
 
+        ChainUsageStats chainsStatistics = new ChainUsageStats();
+
         try (SequenceReaderCloseable<? extends SequenceRead> reader = actionParameters.createReader();
 
              VDJCAlignmentsWriter writer = actionParameters.getOutputName().equals(".") ? null : new VDJCAlignmentsWriter(actionParameters.getOutputName());
@@ -219,6 +222,8 @@ public class ActionAlign implements Action {
                     }
                 }
 
+                chainsStatistics.put(alignment);
+
                 if (alignment.isChimera())
                     report.onChimera();
 
@@ -239,11 +244,11 @@ public class ActionAlign implements Action {
 
         // Writing report to stout
         System.out.println("============= Report ==============");
-        Util.writeReportToStdout(report, time);
+        Util.writeReportToStdout(time, report, chainsStatistics);
 
         if (actionParameters.report != null)
             Util.writeReport(actionParameters.getInputForReport(), actionParameters.getOutputName(),
-                    helper.getCommandLineArguments(), actionParameters.report, report, time);
+                    helper.getCommandLineArguments(), actionParameters.report, time, report, chainsStatistics);
     }
 
     public static String[] extractDescriptions(SequenceRead r) {
@@ -340,6 +345,11 @@ public class ActionAlign implements Action {
         @Parameter(description = "Write not aligned reads (R2).",
                 names = {"--not-aligned-R2"})
         public String failedReadsR2 = null;
+
+        @Parameter(description = "Allow alignments with different chains of V and J hits.",
+                names = {"-i", "--diff-loci"}, hidden = true)
+        public Boolean allowDifferentVJLoci = null;
+
 
         public String getSpecies() {
             return species;

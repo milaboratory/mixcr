@@ -90,7 +90,7 @@ public class VDJCObject {
 
     public Chains getAllChains(GeneType geneType) {
         if (allChains == null)
-            synchronized (this) {
+            synchronized ( this ){
                 if (allChains == null) {
                     allChains = new EnumMap<>(GeneType.class);
                     for (GeneType type : GeneType.VDJC_REFERENCE) {
@@ -105,6 +105,40 @@ public class VDJCObject {
                 }
             }
         return allChains.get(geneType);
+    }
+
+    public final boolean isChimera() {
+        return commonChains().isEmpty();
+    }
+
+    public final Chains commonChains() {
+        Chains chains = Chains.ALL;
+        boolean notNull = false;
+        for (GeneType gt : GeneType.VJC_REFERENCE) {
+            Chains c = getAllChains(gt);
+            if (c == null)
+                continue;
+            notNull = true;//for safety
+            chains = chains.intersection(c);
+        }
+        if (!notNull)//all null
+            return Chains.EMPTY;
+        return chains;
+    }
+
+    public final Chains commonTopChains() {
+        Chains chains = Chains.ALL;
+        boolean notNull = false;
+        for (GeneType gt : GeneType.VJC_REFERENCE) {
+            VDJCHit bestHit = getBestHit(gt);
+            if (bestHit == null)
+                continue;
+            notNull = true;//for safety
+            chains = chains.intersection(bestHit.getGene().getChains());
+        }
+        if (!notNull)//all null
+            return Chains.EMPTY;
+        return chains;
     }
 
     public final int numberOfTargets() {
@@ -142,16 +176,21 @@ public class VDJCObject {
     }
 
     public final Range getRelativeRange(GeneFeature big, GeneFeature subfeature) {
-        NSequenceWithQuality tmp;
-        int targetIndex = -1, quality = -1;
-        for (int i = 0; i < targets.length; ++i) {
-            tmp = getPartitionedTarget(i).getFeature(big);
-            if (tmp != null && quality < tmp.getQuality().minValue())
-                targetIndex = i;
-        }
+        int targetIndex = getTargetContainingFeature(big);
         if (targetIndex == -1)
             return null;
         return getPartitionedTarget(targetIndex).getPartitioning().getRelativeRange(big, subfeature);
+    }
+
+    public final int getTargetContainingFeature(GeneFeature feature) {
+        NSequenceWithQuality tmp;
+        int targetIndex = -1, quality = -1;
+        for (int i = 0; i < targets.length; ++i) {
+            tmp = getPartitionedTarget(i).getFeature(feature);
+            if (tmp != null && quality < tmp.getQuality().minValue())
+                targetIndex = i;
+        }
+        return targetIndex;
     }
 
     public NSequenceWithQuality getFeature(GeneFeature geneFeature) {
@@ -202,9 +241,9 @@ public class VDJCObject {
 
             Range lRange = new Range(
                     lFrom,
-                    aabs(lAlignment.convertPosition(intersection.getFrom())));
+                    aabs(lAlignment.convertToSeq2Position(intersection.getFrom())));
             Range rRange = new Range(
-                    aabs(rAlignment.convertPosition(intersection.getTo())),
+                    aabs(rAlignment.convertToSeq2Position(intersection.getTo())),
                     rTo);
 
             feature =

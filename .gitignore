@@ -5,3 +5,4 @@ target
 doc/_build
 .floo
 .flooignore
+out

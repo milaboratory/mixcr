@@ -96,7 +96,7 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
         else {
             final Alignment<NucleotideSequence> vAl = vResult[0].getAlignment(dGeneTarget);
             final Alignment<NucleotideSequence> jAl = jResult[0].getAlignment(dGeneTarget);
-            if (vAl == null || jAl == null)
+            if (vAl == null || jAl == null || singleDAligner == null)
                 dResult = new VDJCHit[0];
             else
                 dResult = singleDAligner.align(targets[dGeneTarget].getSequence(), getPossibleDLoci(vResult, jResult),
