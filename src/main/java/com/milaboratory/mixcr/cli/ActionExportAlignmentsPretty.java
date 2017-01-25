@@ -111,7 +111,7 @@ public class ActionExportAlignmentsPretty implements Action {
                     output.println(">>> Original Description: " + oDescriptions[i] + "\n");
             }
 
-            MultiAlignmentHelper targetAsMultiAlignment = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, i);
+            MultiAlignmentHelper targetAsMultiAlignment = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, i, false, actionParameters.isShowTranslations());
             if (targetAsMultiAlignment == null)
                 continue;
             MultiAlignmentHelper[] split = targetAsMultiAlignment.split(80);
@@ -285,6 +285,10 @@ public class ActionExportAlignmentsPretty implements Action {
                 names = {"-d", "--descriptions"})
         public Boolean descr = null;
 
+        @Parameter(description = "Print CDR3 AA translations",
+                names = {"-tr", "--aaTranslations"})
+        public Boolean translations = null;
+
         public Chains getChain() {
             return Util.parseLoci(chain);
         }
@@ -353,6 +357,10 @@ public class ActionExportAlignmentsPretty implements Action {
 
         public boolean isVerbose() {
             return verbose != null && verbose;
+        }
+
+        public boolean isShowTranslations() {
+            return translations != null && translations;
         }
 
         public boolean isOnlyTop() {

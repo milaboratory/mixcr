@@ -33,8 +33,11 @@ import cc.redberry.primitives.FilterUtil;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.MultiAlignmentHelper;
+import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.core.sequence.TranslationParameters;
+import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.ReferencePoint;
 import io.repseq.core.SequencePartitioning;
@@ -49,6 +52,10 @@ public class VDJCAlignmentsFormatter {
     }
 
     public static MultiAlignmentHelper getTargetAsMultiAlignment(VDJCObject vdjcObject, int targetId, boolean addHitScore) {
+        return getTargetAsMultiAlignment(vdjcObject, targetId, addHitScore, false);
+    }
+
+    public static MultiAlignmentHelper getTargetAsMultiAlignment(VDJCObject vdjcObject, int targetId, boolean addHitScore, boolean showCDR3Translation) {
         NSequenceWithQuality target = vdjcObject.getTarget(targetId);
         NucleotideSequence targetSeq = target.getSequence();
         SequencePartitioning partitioning = vdjcObject.getPartitionedTarget(targetId).getPartitioning();
@@ -70,8 +77,20 @@ public class VDJCAlignmentsFormatter {
         MultiAlignmentHelper helper = MultiAlignmentHelper.build(MultiAlignmentHelper.DEFAULT_SETTINGS,
                 new Range(0, target.size()), targetSeq, alignments.toArray(new Alignment[alignments.size()]));
 
-        if (!alignments.isEmpty())
-            drawPoints(helper, partitioning, POINTS_FOR_REARRANGED);
+        if (!alignments.isEmpty()){
+            List<PointToDraw> toDraw = new ArrayList<>(Arrays.asList(POINTS_FOR_REARRANGED));
+
+            if (showCDR3Translation){
+                NSequenceWithQuality cdr3NT = vdjcObject.getFeature(GeneFeature.CDR3);
+                if (cdr3NT != null){
+                    TranslationParameters tr = partitioning.getTranslationParameters(GeneFeature.CDR3);
+                    appendTranslation(toDraw, AminoAcidSequence.translate(cdr3NT.getSequence(), tr));
+                }
+            }
+
+            drawPoints(helper, partitioning, toDraw.toArray(new PointToDraw[toDraw.size()]));
+        }
+
 
         helper.addSubjectQuality("Quality", target.getQuality());
         helper.setSubjectLeftTitle("Target" + targetId);
@@ -81,6 +100,23 @@ public class VDJCAlignmentsFormatter {
             helper.setQueryRightTitle(i, alignmentRightComments.get(i));
         }
         return helper;
+    }
+
+    private static void appendTranslation(List<PointToDraw> toDraw, AminoAcidSequence aa){
+        if (aa == null){
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        int i = 0;
+        for (byte b : aa.asArray()){
+            sb.append(i == 0 ? "<" : "-");
+            sb.append(aa.getAlphabet().codeToSymbol(b));
+            i++;
+            sb.append(i == aa.size() ? ">" : "-");
+        }
+
+        toDraw.add(pd(ReferencePoint.CDR3End, sb.toString()));
     }
 
     public static void drawPoints(MultiAlignmentHelper helper, SequencePartitioning partitioning,
