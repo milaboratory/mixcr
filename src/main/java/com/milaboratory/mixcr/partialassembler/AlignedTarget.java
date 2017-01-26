@@ -28,6 +28,7 @@
  */
 package com.milaboratory.mixcr.partialassembler;
 
+import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
@@ -41,19 +42,24 @@ import io.repseq.core.VDJCGene;
 
 import java.util.*;
 
+import static com.milaboratory.mixcr.partialassembler.BPoint.OverlapBegin;
+import static com.milaboratory.mixcr.partialassembler.BPoint.OverlapEnd;
+
 public final class AlignedTarget {
     private final VDJCAlignments alignments;
     private final int targetId;
     private final String descriptionOverride;
+    private final int[] bPoints;
 
     public AlignedTarget(VDJCAlignments alignments, int targetId) {
-        this(alignments, targetId, null);
+        this(alignments, targetId, null, null);
     }
 
-    public AlignedTarget(VDJCAlignments alignments, int targetId, String descriptionOverride) {
+    public AlignedTarget(VDJCAlignments alignments, int targetId, String descriptionOverride, int[] bPoints) {
         this.alignments = alignments;
         this.targetId = targetId;
         this.descriptionOverride = descriptionOverride;
+        this.bPoints = bPoints;
     }
 
     public VDJCAlignments getAlignments() {
@@ -69,11 +75,40 @@ public final class AlignedTarget {
     }
 
     public AlignedTarget overrideDescription(String newDescription) {
-        return new AlignedTarget(alignments, targetId, newDescription);
+        return new AlignedTarget(alignments, targetId, newDescription, bPoints);
+    }
+
+    public AlignedTarget setBPoint(BPoint point, int value) {
+        int[] newBPoints;
+        if (bPoints == null) {
+            if (value == -1)
+                return this;
+            newBPoints = new int[BPoint.values().length];
+            Arrays.fill(newBPoints, -1);
+        } else
+            newBPoints = bPoints.clone();
+        newBPoints[point.ordinal()] = value;
+        return new AlignedTarget(alignments, targetId, descriptionOverride, newBPoints);
+    }
+
+    public AlignedTarget setBPoints(BPoint point1, int value1, BPoint point2, int value2) {
+        int[] newBPoints;
+        if (bPoints == null) {
+            newBPoints = new int[BPoint.values().length];
+            Arrays.fill(newBPoints, -1);
+        } else
+            newBPoints = bPoints.clone();
+        newBPoints[point1.ordinal()] = value1;
+        newBPoints[point2.ordinal()] = value2;
+        return new AlignedTarget(alignments, targetId, descriptionOverride, newBPoints);
+    }
+
+    public int getBPoint(BPoint point) {
+        return bPoints == null ? -1 : bPoints[point.ordinal()];
     }
 
     public String getDescription() {
-        if(descriptionOverride != null)
+        if (descriptionOverride != null)
             return descriptionOverride;
         if (alignments.getTargetDescriptions() != null && alignments.getTargetDescriptions().length - 1 >= targetId &&
                 alignments.getTargetDescriptions()[targetId] != null)
@@ -162,7 +197,7 @@ public final class AlignedTarget {
         return result;
     }
 
-    public EnumSet<GeneType> getExpectedGenes(){
+    public EnumSet<GeneType> getExpectedGenes() {
         return extractExpectedGenes(targetId, alignments);
     }
 
@@ -182,5 +217,18 @@ public final class AlignedTarget {
         if (gts.contains(GeneType.Variable) && gts.contains(GeneType.Joining))
             gts.add(GeneType.Diversity);
         return gts;
+    }
+
+    public static AlignedTarget setOverlapRange(AlignedTarget target, int begin, int end) {
+        return target.setBPoints(OverlapBegin, begin, OverlapEnd, end);
+    }
+
+    public static Range getOverlapRange(AlignedTarget target) {
+        int begin = target.getBPoint(OverlapBegin);
+        int end = target.getBPoint(OverlapEnd);
+        if (begin == -1 || end == -1)
+            return null;
+        else
+            return new Range(begin, end);
     }
 }

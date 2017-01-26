@@ -47,6 +47,7 @@ import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
+import io.repseq.core.VDJCGeneId;
 
 import java.util.*;
 
@@ -79,52 +80,74 @@ public class TargetMerger {
             final VDJCHit[] rightHits = targetRight.getAlignments().getHits(geneType);
             GeneFeature alignedFeature = leftHits.length == 0 ? rightHits.length == 0 ? null : rightHits[0].getAlignedFeature() : leftHits[0].getAlignedFeature();
 
-            Map<VDJCGene, Alignment<NucleotideSequence>[]> map = extractHitsMapping(targetLeft, targetRight, geneType);
+            Map<VDJCGeneId, HitMappingRecord> map = extractHitsMapping(targetLeft, targetRight, geneType);
             ArrayList<VDJCHit> resultingHits = new ArrayList<>();
-            for (Map.Entry<VDJCGene, Alignment<NucleotideSequence>[]> mE : map.entrySet()) {
-                final VDJCGene gene = mE.getKey();
+            for (Map.Entry<VDJCGeneId, HitMappingRecord> mE : map.entrySet()) {
+                final VDJCGene gene = mE.getValue().gene;
 
                 Alignment<NucleotideSequence> mergedAl = merge(
                         bp.getScoring(), extractBandedWidth(bp),
                         mergedTarget.getSequence(), offset,
-                        mE.getValue()[0], mE.getValue()[1]);
+                        mE.getValue().alignments[0], mE.getValue().alignments[1]);
                 resultingHits.add(new VDJCHit(gene, mergedAl, alignedFeature));
             }
 
             Collections.sort(resultingHits);
-            final float relativeMinScore = extractRelativeMinScore(bp);
 
-            int threshold = (int) (resultingHits.size() > 0 ? resultingHits.get(0).getScore() * relativeMinScore : 0);
-            for (int i = resultingHits.size() - 1; i > 0; --i)
-                if (resultingHits.get(i).getScore() < threshold)
-                    resultingHits.remove(i);
+            //final float relativeMinScore = extractRelativeMinScore(bp);
+            //int threshold = (int) (resultingHits.size() > 0 ? resultingHits.get(0).getScore() * relativeMinScore : 0);
+            //for (int i = resultingHits.size() - 1; i > 0; --i)
+            //    if (resultingHits.get(i).getScore() < threshold)
+            //        resultingHits.remove(i);
 
             result.put(geneType, resultingHits.toArray(new VDJCHit[resultingHits.size()]));
         }
 
-        return new AlignedTarget(new VDJCAlignments(readId, result, mergedTarget), 0);
+        AlignedTarget resultTarget = new AlignedTarget(new VDJCAlignments(readId, result, mergedTarget), 0);
+        for (BPoint bPoint : BPoint.values()) {
+            int leftPoint = targetLeft.getBPoint(bPoint);
+            int rightPoint = targetRight.getBPoint(bPoint);
+            if (leftPoint != -1 && rightPoint != -1)
+                throw new IllegalArgumentException("Same bPoint defined in both input targets.");
+            else if (leftPoint != -1)
+                resultTarget = resultTarget.setBPoint(bPoint, leftPoint);
+            else if (rightPoint != -1)
+                resultTarget = resultTarget.setBPoint(bPoint, offset + rightPoint);
+        }
+
+        return resultTarget;
+    }
+
+    static final class HitMappingRecord {
+        final VDJCGene gene;
+        final Alignment<NucleotideSequence>[] alignments;
+
+        public HitMappingRecord(VDJCGene gene, Alignment<NucleotideSequence>[] alignments) {
+            this.gene = gene;
+            this.alignments = alignments;
+        }
     }
 
     @SuppressWarnings("unchecked")
-    static Map<VDJCGene, Alignment<NucleotideSequence>[]> extractHitsMapping(AlignedTarget targetLeft, AlignedTarget targetRight, GeneType geneType) {
-        Map<VDJCGene, Alignment<NucleotideSequence>[]> map = new HashMap<>();
+    static Map<VDJCGeneId, HitMappingRecord> extractHitsMapping(AlignedTarget targetLeft, AlignedTarget targetRight, GeneType geneType) {
+        Map<VDJCGeneId, HitMappingRecord> map = new HashMap<>();
         for (VDJCHit l : targetLeft.getAlignments().getHits(geneType)) {
             final VDJCGene gene = l.getGene();
             final Alignment<NucleotideSequence> al = l.getAlignment(targetLeft.getTargetId());
             if (al != null)
-                map.put(gene, new Alignment[]{al, null});
+                map.put(gene.getId(), new HitMappingRecord(gene, new Alignment[]{al, null}));
         }
         for (VDJCHit r : targetRight.getAlignments().getHits(geneType)) {
             final VDJCGene gene = r.getGene();
             final Alignment<NucleotideSequence> alignment = r.getAlignment(targetRight.getTargetId());
             if (alignment == null)
                 continue;
-            final Alignment<NucleotideSequence>[] als = map.get(gene);
+            final HitMappingRecord als = map.get(gene.getId());
             if (als == null)
-                map.put(gene, new Alignment[]{null, alignment});
+                map.put(gene.getId(), new HitMappingRecord(gene, new Alignment[]{null, alignment}));
             else {
-                assert als[1] == null;
-                als[1] = alignment;
+                assert als.alignments[1] == null;
+                als.alignments[1] = alignment;
             }
         }
 
@@ -258,19 +281,19 @@ public class TargetMerger {
     public TargetMergingResult merge(long readId, AlignedTarget targetLeft, AlignedTarget targetRight) {
         for (GeneType geneType : GeneType.VJC_REFERENCE) {
 
-            Map<VDJCGene, Alignment<NucleotideSequence>[]> map = extractHitsMapping(targetLeft, targetRight, geneType);
+            Map<VDJCGeneId, HitMappingRecord> map = extractHitsMapping(targetLeft, targetRight, geneType);
             if (map.isEmpty())
                 continue;
-            List<Alignment<NucleotideSequence>[]> als = new ArrayList<>(map.values());
+            List<HitMappingRecord> als = new ArrayList<>(map.values());
 
-            Collections.sort(als, new Comparator<Alignment<NucleotideSequence>[]>() {
+            Collections.sort(als, new Comparator<HitMappingRecord>() {
                 @Override
-                public int compare(Alignment<NucleotideSequence>[] o1, Alignment<NucleotideSequence>[] o2) {
-                    return Integer.compare(sumScore(o2), sumScore(o1));
+                public int compare(HitMappingRecord o1, HitMappingRecord o2) {
+                    return Integer.compare(sumScore(o2.alignments), sumScore(o1.alignments));
                 }
             });
 
-            Alignment<NucleotideSequence>[] topHits = als.get(0);
+            Alignment<NucleotideSequence>[] topHits = als.get(0).alignments;
 
             if (topHits[0] != null && topHits[1] != null) {
                 final Alignment<NucleotideSequence> left = topHits[0];
@@ -285,7 +308,6 @@ public class TargetMerger {
                 int delta = left.convertToSeq2Position(from) - right.convertToSeq2Position(from);
                 if (delta != left.convertToSeq2Position(to) - right.convertToSeq2Position(to))
                     continue;
-
 
                 int seq1Offset = delta > 0 ? delta : 0;
                 int seq2Offset = delta > 0 ? 0 : -delta;
@@ -321,7 +343,7 @@ public class TargetMerger {
         return r;
     }
 
-    public static class TargetMergingResult {
+    public final static class TargetMergingResult {
         public final AlignedTarget result;
         public final int score;
         public final boolean usingAlignments;
