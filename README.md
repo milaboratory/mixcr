@@ -2,6 +2,40 @@
 
 MiXCR is a universal software for fast and accurate analysis of raw T- or B- cell receptor repertoire sequencing data.
 
+ - Easy to use. Default pipeline can be executed without any additional parameters (see *Usage* section)
+
+ - TCR and IG repertoires
+ 
+ - Following species are supported *out-of-the-box* using built-in library:
+   - human
+   - mouse
+   - rat (only TRB and TRA)
+   - *... several new species will be available soon*
+
+- Efficiently extract repertoires from most of (if not *all*) types of TCR/IG-containing raw sequencing data:
+  - data from all specialized RepSeq sample preparation protocols
+  - RNA-Seq
+  - WGS
+  - single-cell data
+  - *etc..*
+
+- Has optional CDR3 reconstruction step, that allows to *recover full hypervariable region from several disjoint reads*. Uses suphisticated algorithms protecting from false-positive assemblies at the same time having best in class efficiency.
+
+- Assemble clonotypes, applying several *error-correction* algorithms to eliminate artificial diversity arising from PCR and sequencing errors
+
+- Clonotypes can be assembled based on CDR3 sequence (default) as well as any other region, including *full-length* variable sequence (from beginning of FR1 to the end of FR4)
+
+- Provides exhaustive output information for clonotypes and per-read alignments:
+  - nucleotide and amino acid sequences of all immunologically relevant regions (FR1, CDR1, ..., CDR3, etc..)
+  - identified V, D, J, C genes
+  - nucleotide and amino acid mutations in germline regions
+  - variable region topology (number of end V / D / J nucleotide deletions, length of P-segments, number of non-template N nucleotides)
+  - sequencing quality scores for any extracted sequence
+  - several other useful pieces of information
+  
+- Completely transpatent pipeline, possible to track individual read fate from raw fastq entry to clonotype. Several useful tools available to evaluate pipeline performance: human readable alignments visualization, diff tool for alignment and clonotype files, etc...
+
+
 ## Installation / Download
 
 #### Using Homebrew on Mac OS X or Linux (linuxbrew)
@@ -15,7 +49,7 @@ to upgrade already installed MiXCR to the newest version:
 
 #### Manual install (any OS)
 
-* download latest MiXCR version from [release page](https://github.com/milaboratory/mixcr/releases/latest)
+* download latest stable MiXCR build from [release page](https://github.com/milaboratory/mixcr/releases/latest)
 * unzip the archive
 * add resulting folder to your ``PATH`` variable
   * or add symbolic link for ``mixcr`` script to your ``bin`` folder
@@ -28,19 +62,34 @@ to upgrade already installed MiXCR to the newest version:
  
 ## Usage
 
-Here is a very simple example of analysis of raw human RepSeq data:
+#### Enriched RepSeq Data
+
+Here is a very simple usage example that will extract repertoire data (in the form of clonotypes list) from raw sequencing data of enriched RepSeq library:
 
     mixcr align -r log.txt input_R1.fastq.gz input_R2.fastq.gz alignments.vdjca
     mixcr assemble -r log.txt alignments.vdjca clones.clns
     mixcr exportClones clones.clns clones.txt
   
-this sequence of commands will produce a tab-delimited list of clones (`clones.txt`) assembled by their CDR3 sequences with extensive information on their abundancies, V, D and J genes etc.
+this will produce a tab-delimited list of clones (`clones.txt`) assembled by their CDR3 sequences with extensive information on their abundancies, V, D and J genes, mutations in germline regions, topology of VDJ junction etc.
 
-For more details see documentation.
+#### Repertoire extraction from RNA-Seq
+
+MiXCR is equally effective in extraction of repertoire information from non-enriched data, like RNA-Seq or WGS. This example illustrates usage for RNA-Seq:
+
+    mixcr align -p rna-seq -r log.txt input_R1.fastq.gz input_R2.fastq.gz alignments.vdjca
+    mixcr assemblePartial alignments.vdjca alignment_contigs.vdjca
+    mixcr assemble -r log.txt alignment_contigs.vdjca clones.clns
+    mixcr exportClones clones.clns clones.txt
+
+#### Further reading
+
+MiXCR pipeline is very flexible, and can be applied to raw data from broad spectrum of experimental setups. For detailed desctioption of MiXCR features and options please see documentation.
 
 ## Documentation
 
 Detailed documentation can be found at https://mixcr.readthedocs.io/
+
+If you didn't find the answer to your question in documentation, or have any suggestions concerning new features, feel free to create an issue here on GitHub, or write an email to support@milaboratory.com .
 
 ## License
 
