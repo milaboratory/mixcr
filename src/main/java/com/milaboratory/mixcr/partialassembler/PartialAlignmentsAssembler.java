@@ -50,7 +50,7 @@ import static com.milaboratory.mixcr.vdjaligners.VDJCAlignerWithMerge.getMMDescr
 
 public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
     final TLongObjectHashMap<List<KMerInfo>> kToIndexLeft = new TLongObjectHashMap<>();
-    final TLongHashSet leftPartsIds = new TLongHashSet();
+    final TLongHashSet alreadyMergedIds = new TLongHashSet();
     final VDJCAlignmentsWriter writer;
     final int kValue;
     final int kOffset;
@@ -107,9 +107,6 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
 
         for (final VDJCAlignments alignment : CUtils.it(reader)) {
             total.incrementAndGet();
-
-            if (leftPartsIds.contains(alignment.getAlignmentsIndex()))
-                continue;
 
             if (alignment.getFeature(GeneFeature.CDR3) != null) {
                 containsCDR3.incrementAndGet();
@@ -218,6 +215,9 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
             mAlignment.setTargetDescriptions(descriptions);
             totalWritten.incrementAndGet();
             writer.write(mAlignment);
+
+            // Saving alignment that where merge to prevent it's use as left part
+            alreadyMergedIds.add(alignment.getReadId());
         }
 
         if (writePartial && !overlappedOnly)
@@ -283,6 +283,9 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
             for (int i = 0; i < match.size(); i++) {
                 boolean isOverOverlapped = false;
                 final VDJCAlignments leftAl = match.get(i).getAlignments();
+
+                if (alreadyMergedIds.contains(leftAl.getReadId()))
+                    continue;
 
                 // Checking chains compatibility
                 if (!allowChimeras && !leftAl.getAllChains(GeneType.Variable).intersects(jChains))
@@ -499,7 +502,6 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
             ids.add(new KMerInfo(alignment, kFrom, leftTargetId));
         }
 
-        leftPartsIds.add(alignment.getAlignmentsIndex());
         leftParts.incrementAndGet();
     }
 
