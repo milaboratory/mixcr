@@ -5,6 +5,7 @@ import cc.redberry.pipe.blocks.ParallelProcessor;
 import cc.redberry.pipe.util.Indexer;
 import cc.redberry.pipe.util.OrderedOutputPort;
 import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
@@ -71,6 +72,7 @@ public class ActionExtendAlignments implements Action {
         return parameters;
     }
 
+    @Parameters(commandDescription = "Extend alignment using germline sequence.")
     private static final class ExtendCD3Parameters extends ActionParametersWithOutput {
         @Parameter(description = "input.vdjca[.gz] output.vdjca[.gz]")
         public List<String> parameters;
