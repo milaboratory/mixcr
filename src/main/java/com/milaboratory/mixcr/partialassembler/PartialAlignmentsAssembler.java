@@ -78,7 +78,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         this.kOffset = params.getKOffset();
         this.minimalAssembleOverlap = params.getMinimalAssembleOverlap();
         this.minimalNOverlap = params.getMinimalNOverlap();
-        this.targetMerger = new TargetMerger(params.getMergerParameters());
+        this.targetMerger = new TargetMerger(params.getMergerParameters(), params.getMinimalAlignmentMergeIdentity());
         this.writePartial = writePartial;
         this.overlappedOnly = overlappedOnly;
         this.writer = writer;

@@ -41,6 +41,7 @@ import java.io.IOException;
         getterVisibility = JsonAutoDetect.Visibility.NONE)
 public class PartialAlignmentsAssemblerParameters {
     private int kValue, kOffset, minimalAssembleOverlap, minimalNOverlap;
+    private float minimalAlignmentMergeIdentity;
     private MergerParameters mergerParameters;
 
     @JsonCreator
@@ -49,11 +50,13 @@ public class PartialAlignmentsAssemblerParameters {
             @JsonProperty("kOffset") int kOffset,
             @JsonProperty("minimalAssembleOverlap") int minimalAssembleOverlap,
             @JsonProperty("minimalNOverlap") int minimalNOverlap,
+            @JsonProperty("minimalAlignmentMergeIdentity") int minimalAlignmentMergeIdentity,
             @JsonProperty("mergerParameters") MergerParameters mergerParameters) {
         this.kValue = kValue;
         this.kOffset = kOffset;
         this.minimalAssembleOverlap = minimalAssembleOverlap;
         this.minimalNOverlap = minimalNOverlap;
+        this.minimalAlignmentMergeIdentity = minimalAlignmentMergeIdentity;
         this.mergerParameters = mergerParameters;
     }
 
@@ -79,6 +82,14 @@ public class PartialAlignmentsAssemblerParameters {
 
     public void setMinimalNOverlap(int minimalNOverlap) {
         this.minimalNOverlap = minimalNOverlap;
+    }
+
+    public float getMinimalAlignmentMergeIdentity() {
+        return minimalAlignmentMergeIdentity;
+    }
+
+    public void setMinimalAlignmentMergeIdentity(float minimalAlignmentMergeIdentity) {
+        this.minimalAlignmentMergeIdentity = minimalAlignmentMergeIdentity;
     }
 
     public int getKOffset() {

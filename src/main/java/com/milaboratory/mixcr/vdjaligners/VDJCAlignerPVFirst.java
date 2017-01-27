@@ -57,7 +57,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     public VDJCAlignerPVFirst(VDJCAlignerParameters parameters) {
         super(parameters);
         MergerParameters mp = parameters.getMergerParameters().overrideReadsLayout(PairedEndReadsLayout.CollinearDirect);
-        alignmentsMerger = new TargetMerger(mp);
+        alignmentsMerger = new TargetMerger(mp, (float) parameters.getMergerParameters().getMinimalIdentity());
         alignmentsMerger.setAlignerParameters(parameters);
     }
 

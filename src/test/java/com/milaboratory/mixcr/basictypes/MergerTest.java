@@ -108,8 +108,9 @@ public class MergerTest {
 
     @Test
     public void test1() throws Exception {
-        final TargetMerger merger = new TargetMerger(new MergerParameters(QualityMergingAlgorithm.MaxMax, PairedEndReadsLayout.Collinear, 10, 50, 0.9));
-
+        final TargetMerger merger = new TargetMerger(new MergerParameters(QualityMergingAlgorithm.MaxMax,
+                PairedEndReadsLayout.Collinear, 10, 50, 0.9),
+                0.9f);
 
         List<VDJCAlignments> list = new ArrayList<>();
         try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader("/Users/poslavsky/Downloads/hui")) {

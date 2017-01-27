@@ -54,11 +54,11 @@ import java.util.*;
 public class TargetMerger {
     final MismatchOnlyPairedReadMerger merger;
     private volatile VDJCAlignerParameters alignerParameters;
-    final double minimalIdentity;
+    final float minimalAlignmentMergeIdentity;
 
-    public TargetMerger(MergerParameters mergerParameters) {
+    public TargetMerger(MergerParameters mergerParameters, float minimalAlignmentMergeIdentity) {
         this.merger = new MismatchOnlyPairedReadMerger(mergerParameters);
-        this.minimalIdentity = mergerParameters.getMinimalIdentity();
+        this.minimalAlignmentMergeIdentity = minimalAlignmentMergeIdentity;
     }
 
     public void setAlignerParameters(VDJCAlignerParameters alignerParameters) {
@@ -318,7 +318,7 @@ public class TargetMerger {
                         targetRight.getTarget().getSequence(), seq2Offset,
                         overlap);
 
-                if (1.0 - 1.0 * mismatches / overlap < minimalIdentity)
+                if (1.0 - 1.0 * mismatches / overlap < minimalAlignmentMergeIdentity)
                     continue;
 
                 final AlignedTarget merge = merge(readId, targetLeft, targetRight, delta);
