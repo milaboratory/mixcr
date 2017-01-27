@@ -33,6 +33,7 @@ import com.milaboratory.core.Range;
 import java.util.*;
 
 public final class RangeSet implements Iterable<Range> {
+    public static final RangeSet EMPTY = new RangeSet();
     private final List<Range> ranges;
 
     private RangeSet(List<Range> ranges) {
@@ -51,6 +52,8 @@ public final class RangeSet implements Iterable<Range> {
     }
 
     public RangeSet add(Range range) {
+        if (range.isEmpty())
+            return this;
         if (range.isReverse())
             throw new IllegalArgumentException();
         List<Range> result = new ArrayList<>(ranges.size() + 1);
@@ -74,9 +77,11 @@ public final class RangeSet implements Iterable<Range> {
 
     public RangeSet intersection(Range range) {
         List<Range> result = new ArrayList<>(4);
-        for (Range r : this)
-            if (r.intersectsWith(range))
-                result.add(range.intersection(r));
+        for (Range r : this) {
+            Range intersection = range.intersection(r);
+            if (intersection != null)
+                result.add(intersection);
+        }
         return new RangeSet(result);
     }
 

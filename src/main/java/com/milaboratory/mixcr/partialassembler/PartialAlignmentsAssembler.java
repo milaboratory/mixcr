@@ -181,7 +181,9 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
             if (jAlignment != null)
                 ndnRegionEnd = jAlignment.getSequence2Range().getFrom();
 
-            RangeSet nRegion = RangeSet.create(ndnRegionBegin, ndnRegionEnd);
+            RangeSet nRegion = ndnRegionBegin >= ndnRegionEnd ?
+                    RangeSet.EMPTY :
+                    RangeSet.create(ndnRegionBegin, ndnRegionEnd);
 
             Range dRange = mAlignment.getPartitionedTarget(overlapTargetId).getPartitioning().getRange(GeneFeature.DRegionTrimmed);
             if (dRange != null)

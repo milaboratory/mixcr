@@ -37,7 +37,10 @@ import com.milaboratory.core.alignment.kaligner1.AbstractKAlignerParameters;
 import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.core.alignment.kaligner2.KAlignerParameters2;
 import com.milaboratory.core.io.sequence.PairedRead;
+import com.milaboratory.core.io.sequence.SingleRead;
+import com.milaboratory.core.io.sequence.SingleReadImpl;
 import com.milaboratory.core.merger.MergerParameters;
+import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.HasGene;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
@@ -52,13 +55,20 @@ import java.util.*;
 public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     private static final ReferencePoint reqPointR = ReferencePoint.CDR3End.move(-3);
     private static final ReferencePoint reqPointL = ReferencePoint.CDR3Begin.move(+3);
+    // Used in case of AMerge
+    private final VDJCAlignerS sAligner;
     private final TargetMerger alignmentsMerger;
 
     public VDJCAlignerPVFirst(VDJCAlignerParameters parameters) {
+        this(parameters, new VDJCAlignerS(parameters));
+    }
+
+    public VDJCAlignerPVFirst(VDJCAlignerParameters parameters, VDJCAlignerS sAligner) {
         super(parameters);
         MergerParameters mp = parameters.getMergerParameters().overrideReadsLayout(PairedEndReadsLayout.CollinearDirect);
         alignmentsMerger = new TargetMerger(mp, (float) parameters.getMergerParameters().getMinimalIdentity());
         alignmentsMerger.setAlignerParameters(parameters);
+        this.sAligner = sAligner;
     }
 
     @Override
@@ -80,12 +90,16 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                     new AlignedTarget(alignment, 0),
                     new AlignedTarget(alignment, 1));
 
-            if (mergeResult != null)
-                result = new VDJCAlignmentResult<>(input,
-                        mergeResult
-                                .result
-                                .overrideDescription("VJOverlap(" + mergeResult.matched + ")")
-                                .getAlignments());
+            if (mergeResult != null) {
+                NSequenceWithQuality alignedTarget = mergeResult.result.getTarget();
+                SingleRead sRead = new SingleReadImpl(input.getId(), alignedTarget, "");
+                VDJCAlignmentResult<SingleRead> sResult = sAligner.process0(sRead);
+                if (sResult.alignment == null)
+                    return result;
+                VDJCAlignments sAlignment = sResult.alignment;
+                sAlignment.setTargetDescriptions(new String[]{"AOverlap(" + mergeResult.matched + ")"});
+                return new VDJCAlignmentResult<>(input, sAlignment);
+            }
         }
         return result;
     }
