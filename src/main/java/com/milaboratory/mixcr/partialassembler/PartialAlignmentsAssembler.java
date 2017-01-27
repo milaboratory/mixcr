@@ -67,7 +67,8 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
             totalWritten = new AtomicLong(),
             partialAsIs = new AtomicLong(),
             overoverlapped = new AtomicLong(),
-            droppedNRegion = new AtomicLong(),
+            droppedSmallOverlapNRegion = new AtomicLong(),
+            droppedNoNRegion = new AtomicLong(),
             complexOverlapped = new AtomicLong(),
             containsCDR3 = new AtomicLong();
 
@@ -163,7 +164,6 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
             }
 
             int targetLength = mergedTargets.get(overlapTargetId).getTarget().size();
-            RangeSet nRegion = RangeSet.create(0, targetLength);
             VDJCHit bestVHit = mAlignment.getBestHit(GeneType.Variable),
                     bestJHit = mAlignment.getBestHit(GeneType.Joining);
 
@@ -174,13 +174,17 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
                 continue;
             }
 
+            int ndnRegionBegin = 0;
+            int ndnRegionEnd = targetLength;
             Alignment<NucleotideSequence> vAlignment = bestVHit.getAlignment(overlapTargetId);
             if (vAlignment != null)
-                nRegion = nRegion.subtract(new Range(0, vAlignment.getSequence2Range().getTo()));
+                ndnRegionBegin = vAlignment.getSequence2Range().getTo();
 
             Alignment<NucleotideSequence> jAlignment = bestJHit.getAlignment(overlapTargetId);
             if (jAlignment != null)
-                nRegion = nRegion.subtract(new Range(jAlignment.getSequence2Range().getFrom(), targetLength));
+                ndnRegionEnd = jAlignment.getSequence2Range().getFrom();
+
+            RangeSet nRegion = RangeSet.create(ndnRegionBegin, ndnRegionEnd);
 
             Range dRange = mAlignment.getPartitionedTarget(overlapTargetId).getPartitioning().getRange(GeneFeature.DRegionTrimmed);
             if (dRange != null)
@@ -188,10 +192,21 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
 
             RangeSet nRegionInOverlap = nRegion.intersection(overlapRange);
 
-            int minimalN = Math.min(minimalNOverlap, nRegion.totalLength());
+            int actualNRegionLength = nRegion.totalLength();
+            int minimalN = Math.min(minimalNOverlap, actualNRegionLength);
 
             if (nRegionInOverlap.totalLength() < minimalN) {
-                droppedNRegion.incrementAndGet();
+                droppedSmallOverlapNRegion.incrementAndGet();
+                cancelCurrentResult.run();
+                continue;
+            }
+
+            // Checking for dangerous false-positive overlap case:
+            // VVVVVVVVVVDDDDDDDDDDDDD
+            //                  DDDDDDDDDJJJJJJJJJJJJJJJ
+            if (minimalN == 0 &&
+                    (!overlapRange.contains(ndnRegionBegin - 1) || !overlapRange.contains(ndnRegionEnd))) {
+                droppedNoNRegion.incrementAndGet();
                 cancelCurrentResult.run();
                 continue;
             }
@@ -414,7 +429,8 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         helper.writePercentAndAbsoluteField("Successfully overlapped alignments", overlapped, total);
         helper.writePercentAndAbsoluteField("Left parts with too small N-region (failed to extract k-mer)", noKMer, total);
         helper.writePercentAndAbsoluteField("Dropped due to wildcard in k-mer", wildCardsInKMer, total);
-        helper.writePercentAndAbsoluteField("Dropped due to too short NRegion parts in overlap", droppedNRegion, total);
+        helper.writePercentAndAbsoluteField("Dropped due to too short NRegion parts in overlap", droppedSmallOverlapNRegion, total);
+        helper.writePercentAndAbsoluteField("Dropped overlaps with empty N region due to no complete NDN coverage", droppedNoNRegion, total);
         helper.writePercentAndAbsoluteField("Number of left-side alignments", leftParts, total);
         helper.writePercentAndAbsoluteField("Number of right-side alignments", rightParts, total);
         helper.writePercentAndAbsoluteField("Complex overlaps", complexOverlapped, total);
