@@ -89,7 +89,7 @@ MiXCR pipeline is very flexible, and can be applied to raw data from broad spect
 
 Detailed documentation can be found at https://mixcr.readthedocs.io/
 
-If you didn't find the answer to your question in documentation, or have any suggestions concerning new features, feel free to create an issue here on GitHub, or write an email to support@milaboratory.com .
+If you haven't found the answer to your question in the docs, or have any suggestions concerning new features, feel free to create an issue here, on GitHub, or write an email to support@milaboratory.com .
 
 ## License
 
