@@ -91,6 +91,8 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
             vdjcHits.put(gt, combine(parameters.getFeatureToAlign(gt), alignmentHits));
         }
 
+        boolean fineVAlignmentPerformed = false, fineJAlignmentPerformed = false;
+
         // Additional (fine) alignment step for V gene
 
         VDJCHit[] vHits = vdjcHits.get(GeneType.Variable);
@@ -107,6 +109,11 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
                         (vSpace = vdjcHits.get(GeneType.Joining)[0].getAlignment(targetId).getSequence2Range().getFrom()) >= minimalVSpace) {
                     for (int vHitIndex = 0; vHitIndex < vHits.length; vHitIndex++) {
                         VDJCHit vHit = vHits[vHitIndex];
+
+                        // Perform fine alignment only if target is not already aligned by fast aligner
+                        if(vHit.getAlignment(targetId) != null)
+                            continue;
+
                         Alignment<NucleotideSequence> leftAlignment = vHit.getAlignment(targetId - 1);
                         if (leftAlignment == null)
                             continue;
@@ -129,6 +136,7 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
                         if (alignment.getScore() < getAbsoluteMinScore(parameters.getVAlignerParameters().getParameters()))
                             continue;
 
+                        fineVAlignmentPerformed = true;
                         vHits[vHitIndex] = vHit.setAlignment(targetId, alignment);
                     }
                 }
@@ -154,6 +162,11 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
                         (sequence2.size() - (jSpaceBegin = vdjcHits.get(GeneType.Variable)[0].getAlignment(targetId).getSequence2Range().getTo())) >= minimalJSpace) {
                     for (int jHitIndex = 0; jHitIndex < jHits.length; jHitIndex++) {
                         VDJCHit jHit = jHits[jHitIndex];
+
+                        // Perform fine alignment only if target is not already aligned by fast aligner
+                        if(jHit.getAlignment(targetId) != null)
+                            continue;
+
                         Alignment<NucleotideSequence> rightAlignment = jHit.getAlignment(targetId + 1);
                         if (rightAlignment == null)
                             continue;
@@ -172,6 +185,7 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
                         if (alignment.getScore() < getAbsoluteMinScore(parameters.getJAlignerParameters().getParameters()))
                             continue;
 
+                        fineJAlignmentPerformed = true;
                         jHits[jHitIndex] = jHit.setAlignment(targetId, alignment);
                     }
                 }
@@ -191,6 +205,9 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
                     dGeneTarget = i;
                     break;
                 }
+
+        //if (fineVAlignmentPerformed && fineJAlignmentPerformed)
+        //    System.out.println("sd");
 
         VDJCHit[] dResult;
         if (dGeneTarget == -1)
