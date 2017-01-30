@@ -51,6 +51,7 @@ import static com.milaboratory.mixcr.vdjaligners.VDJCAlignerWithMerge.getMMDescr
 public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
     final TLongObjectHashMap<List<KMerInfo>> kToIndexLeft = new TLongObjectHashMap<>();
     final TLongHashSet alreadyMergedIds = new TLongHashSet();
+    final TLongHashSet notInLeftIndexIds = new TLongHashSet();
     final VDJCAlignmentsWriter writer;
     final int kValue;
     final int kOffset;
@@ -94,7 +95,8 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         for (VDJCAlignments alignment : CUtils.it(reader)) {
             if (alignment.getFeature(GeneFeature.CDR3) != null)
                 continue;
-            addLeftToIndex(alignment);
+            if (!addLeftToIndex(alignment))
+                notInLeftIndexIds.add(alignment.getAlignmentsIndex());
         }
     }
 
@@ -117,16 +119,20 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
                 continue;
             }
 
+            if (alreadyMergedIds.contains(alignment.getAlignmentsIndex()))
+                continue;
+
             final OverlapSearchResult searchResult = searchOverlaps(alignment, alignerParameters.isAllowChimeras());
 
             // Common procedure to cancel processing of current input alignment if it fails to pass some good
             // overlap filtering criterion
-            Runnable cancelCurrentResult = new Runnable() {
+            final Runnable cancelCurrentResult = new Runnable() {
                 @Override
                 public void run() {
                     if (searchResult != null)
                         searchResult.cancel();
-                    if (writePartial && !overlappedOnly) {
+                    if (writePartial && !overlappedOnly &&
+                            notInLeftIndexIds.contains(alignment.getAlignmentsIndex())) {
                         totalWritten.incrementAndGet();
                         partialAsIs.incrementAndGet();
                         writer.write(alignment);
@@ -219,16 +225,20 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
             writer.write(mAlignment);
 
             // Saving alignment that where merge to prevent it's use as left part
-            alreadyMergedIds.add(alignment.getReadId());
+            boolean a = alreadyMergedIds.add(alignment.getAlignmentsIndex());
+            boolean b = alreadyMergedIds.add(searchResult.KMerInfo.alignments.getAlignmentsIndex());
+            if (!a || !b)
+                System.out.println("SDASD");
         }
 
         if (writePartial && !overlappedOnly)
             for (List<KMerInfo> kMerInfos : kToIndexLeft.valueCollection())
-                for (KMerInfo kMerInfo : kMerInfos) {
-                    totalWritten.incrementAndGet();
-                    partialAsIs.incrementAndGet();
-                    writer.write(kMerInfo.getAlignments());
-                }
+                for (KMerInfo kMerInfo : kMerInfos)
+                    if (alreadyMergedIds.add(kMerInfo.alignments.getAlignmentsIndex())) {
+                        totalWritten.incrementAndGet();
+                        partialAsIs.incrementAndGet();
+                        writer.write(kMerInfo.getAlignments());
+                    }
 
         writer.setNumberOfProcessedReads(reader.getNumberOfReads() - overlapped.get());
     }
@@ -286,7 +296,8 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
                 boolean isOverOverlapped = false;
                 final VDJCAlignments leftAl = match.get(i).getAlignments();
 
-                if (alreadyMergedIds.contains(leftAl.getReadId()))
+                if (leftAl.getAlignmentsIndex() == rightAl.getAlignmentsIndex() || // You shall not merge with yourself
+                        alreadyMergedIds.contains(leftAl.getAlignmentsIndex()))
                     continue;
 
                 // Checking chains compatibility
@@ -334,7 +345,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         if (isMaxOverOverlapped)
             overoverlapped.incrementAndGet();
 
-        KMerInfo left = maxOverlapList.remove(maxOverlapIndexInList);
+        final KMerInfo left = maxOverlapList.remove(maxOverlapIndexInList);
         VDJCAlignments leftAl = left.alignments;
 
         final long readId = rightAl.getReadId();
@@ -477,10 +488,10 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         return -1;
     }
 
-    private void addLeftToIndex(VDJCAlignments alignment) {
+    private boolean addLeftToIndex(VDJCAlignments alignment) {
         int leftTargetId = getLeftPartitionedSequence(alignment);
         if (leftTargetId == -1)
-            return;
+            return false;
 
         VDJCPartitionedSequence left = alignment.getPartitionedTarget(leftTargetId);
         NSequenceWithQuality seq = left.getSequence();
@@ -488,7 +499,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         int kFromFirst = left.getPartitioning().getPosition(ReferencePoint.VEndTrimmed) + kOffset;
         if (kFromFirst < 0 || kFromFirst + kValue >= seq.size()) {
             noKMer.incrementAndGet();
-            return;
+            return false;
         }
 
         for (int kFrom = kFromFirst; kFrom < seq.size() - kValue; ++kFrom) {
@@ -505,6 +516,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         }
 
         leftParts.incrementAndGet();
+        return true;
     }
 
     private static long kMer(NucleotideSequence seq, int from, int length) {
@@ -562,8 +574,6 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
 //   ------>            -------------------->                    <---------------
 //            -------->                  <--------------------
 
-
 //  ------------------>   -------------------->            <--------------------
-
 //        ----------------->     <--------------------
 
