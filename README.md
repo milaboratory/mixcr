@@ -19,7 +19,7 @@ MiXCR is a universal software for fast and accurate analysis of raw T- or B- cel
   - single-cell data
   - *etc..*
 
-- Has optional CDR3 reconstruction step, that allows to *recover full hypervariable region from several disjoint reads*. Uses suphisticated algorithms protecting from false-positive assemblies at the same time having best in class efficiency.
+- Has optional CDR3 reconstruction step, that allows to *recover full hypervariable region from several disjoint reads*. Uses sophisticated algorithms protecting from false-positive assemblies at the same time having best in class efficiency.
 
 - Assemble clonotypes, applying several *error-correction* algorithms to eliminate artificial diversity arising from PCR and sequencing errors
 
@@ -33,7 +33,7 @@ MiXCR is a universal software for fast and accurate analysis of raw T- or B- cel
   - sequencing quality scores for any extracted sequence
   - several other useful pieces of information
   
-- Completely transpatent pipeline, possible to track individual read fate from raw fastq entry to clonotype. Several useful tools available to evaluate pipeline performance: human readable alignments visualization, diff tool for alignment and clonotype files, etc...
+- Completely transparent pipeline, possible to track individual read fate from raw fastq entry to clonotype. Several useful tools available to evaluate pipeline performance: human readable alignments visualization, diff tool for alignment and clonotype files, etc...
 
 
 ## Installation / Download
@@ -70,7 +70,7 @@ Here is a very simple usage example that will extract repertoire data (in the fo
     mixcr assemble -r log.txt alignments.vdjca clones.clns
     mixcr exportClones clones.clns clones.txt
   
-this will produce a tab-delimited list of clones (`clones.txt`) assembled by their CDR3 sequences with extensive information on their abundancies, V, D and J genes, mutations in germline regions, topology of VDJ junction etc.
+this will produce a tab-delimited list of clones (`clones.txt`) assembled by their CDR3 sequences with extensive information on their abundances, V, D and J genes, mutations in germline regions, topology of VDJ junction etc.
 
 #### Repertoire extraction from RNA-Seq
 
@@ -83,7 +83,7 @@ MiXCR is equally effective in extraction of repertoire information from non-enri
 
 #### Further reading
 
-MiXCR pipeline is very flexible, and can be applied to raw data from broad spectrum of experimental setups. For detailed desctioption of MiXCR features and options please see documentation.
+MiXCR pipeline is very flexible, and can be applied to raw data from broad spectrum of experimental setups. For detailed description of MiXCR features and options please see documentation.
 
 ## Documentation
 
