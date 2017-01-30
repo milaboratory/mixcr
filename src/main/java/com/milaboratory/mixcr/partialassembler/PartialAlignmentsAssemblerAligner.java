@@ -52,15 +52,20 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
 
         Chains currentChains = Chains.ALL;
 
+        // Across all gene types
+        int lastAlignedTarget = 0;
+        int firstJTarget = -1;
+        int lastVTarget = -1;
+
         for (int g = 0; g < GeneType.VJC_REFERENCE.length; g++) {
             GeneType gt = GeneType.VJC_REFERENCE[g];
             AlignmentHit<NucleotideSequence, VDJCGene>[][] alignmentHits = new AlignmentHit[nReads][];
-            for (int i = 0; i < nReads; i++) {
-                alignmentHits[i] = new AlignmentHit[0];
+            for (int targetId = lastAlignedTarget; targetId < nReads; targetId++) {
+                alignmentHits[targetId] = new AlignmentHit[0];
 
-                targets[i] = input.getRead(i).getData();
+                targets[targetId] = input.getRead(targetId).getData();
 
-                final NucleotideSequence sequence = input.getRead(i).getData().getSequence();
+                final NucleotideSequence sequence = input.getRead(targetId).getData().getSequence();
 
                 AlignmentResult<AlignmentHit<NucleotideSequence, VDJCGene>> als;
 
@@ -72,12 +77,21 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
                     if (g != 0) { // Not V gene
                         VDJCHit[] vdjcHits1 = vdjcHits.get(GeneType.VJC_REFERENCE[g - 1]);
                         Alignment<NucleotideSequence> alignment;
-                        if (vdjcHits1.length != 0 && (alignment = vdjcHits1[0].getAlignment(i)) != null)
+                        if (vdjcHits1.length != 0 && (alignment = vdjcHits1[0].getAlignment(targetId)) != null)
                             pointer = alignment.getSequence2Range().getTo();
                     }
                     als = aligner.align(sequence, pointer, sequence.size(), getFilter(gt, currentChains));
-                    if (als != null && als.hasHits())
-                        alignmentHits[i] = als.getHits().toArray(new AlignmentHit[als.getHits().size()]);
+                    if (als != null && als.hasHits()) {
+                        lastAlignedTarget = targetId;
+
+                        if (g == 0) // V
+                            lastVTarget = targetId;
+
+                        if (g == 1) // J
+                            firstJTarget = targetId;
+
+                        alignmentHits[targetId] = als.getHits().toArray(new AlignmentHit[als.getHits().size()]);
+                    }
                 }
             }
 
@@ -102,7 +116,12 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
             int minimalVSpace = getAbsoluteMinScore(parameters.getVAlignerParameters().getParameters()) /
                     vScoring.getMaximalMatchScore();
 
-            for (int targetId = 1; targetId < nReads; targetId++) {
+            // Because vdjcHits.get(GeneType.Joining) != null && vdjcHits.get(GeneType.Joining).length > 0
+            // Assert
+            if (firstJTarget == -1)
+                throw new AssertionError();
+
+            for (int targetId = 1; targetId <= firstJTarget; targetId++) {
                 int vSpace;
                 final NucleotideSequence sequence2 = targets[targetId].getSequence();
                 if (vdjcHits.get(GeneType.Joining)[0].getAlignment(targetId) != null &&
@@ -111,7 +130,7 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
                         VDJCHit vHit = vHits[vHitIndex];
 
                         // Perform fine alignment only if target is not already aligned by fast aligner
-                        if(vHit.getAlignment(targetId) != null)
+                        if (vHit.getAlignment(targetId) != null)
                             continue;
 
                         Alignment<NucleotideSequence> leftAlignment = vHit.getAlignment(targetId - 1);
@@ -155,7 +174,12 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
             int minimalJSpace = getAbsoluteMinScore(parameters.getJAlignerParameters().getParameters()) /
                     jScoring.getMaximalMatchScore();
 
-            for (int targetId = 0; targetId < nReads - 1; targetId++) {
+            // Because vdjcHits.get(GeneType.Variable) != null && vdjcHits.get(GeneType.Variable).length > 0
+            // Assert
+            if (lastVTarget == -1)
+                throw new AssertionError();
+
+            for (int targetId = lastVTarget; targetId < nReads - 1; targetId++) {
                 int jSpaceBegin;
                 final NucleotideSequence sequence2 = targets[targetId].getSequence();
                 if (vdjcHits.get(GeneType.Variable)[0].getAlignment(targetId) != null &&
@@ -164,7 +188,7 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
                         VDJCHit jHit = jHits[jHitIndex];
 
                         // Perform fine alignment only if target is not already aligned by fast aligner
-                        if(jHit.getAlignment(targetId) != null)
+                        if (jHit.getAlignment(targetId) != null)
                             continue;
 
                         Alignment<NucleotideSequence> rightAlignment = jHit.getAlignment(targetId + 1);
@@ -245,6 +269,41 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
             hs = Arrays.copyOf(hs, j + 1);
         return hs;
     }
+
+    ///**
+    // * @param target exclusive
+    // */
+    //private static boolean hasAnyAlignmentsInNextTargets(VDJCHit[] hits, int target, int numberOfTargets) {
+    //    for (int t = target + 1; t < numberOfTargets; t++)
+    //        if (hasAnyAlignmentsInTarget(hits, t))
+    //            return true;
+    //    return false;
+    //}
+    //
+    ///**
+    // * @param target exclusive
+    // */
+    //private static boolean hasAnyAlignmentsInPreviousTargets(VDJCHit[] hits, int target) {
+    //    for (int t = target - 1; t >= 0; t--)
+    //        if (hasAnyAlignmentsInTarget(hits, t))
+    //            return true;
+    //    return false;
+    //}
+    //
+    //private static boolean hasAnyAlignmentsInTarget(VDJCHit[] hits, int target) {
+    //    for (VDJCHit hit : hits)
+    //        if (hit.getAlignment(target) != null)
+    //            return true;
+    //    return false;
+    //}
+    //
+    //private static int getVRightBoundary(VDJCHit hit, int target) {
+    //    return hit.getPartitioningForTarget(target).getPosition(ReferencePoint.VEndTrimmed);
+    //}
+    //
+    //private static int getJLeftBoundary(VDJCHit hit, int target) {
+    //    return hit.getPartitioningForTarget(target).getPosition(ReferencePoint.JBeginTrimmed);
+    //}
 
     private static int getAbsoluteMinScore(AbstractKAlignerParameters kParameters) {
         if (kParameters instanceof KAlignerParameters)

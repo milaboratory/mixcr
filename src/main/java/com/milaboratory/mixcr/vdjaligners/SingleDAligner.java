@@ -79,7 +79,7 @@ public final class SingleDAligner {
 
     List<PreVDJCHit> align0(NucleotideSequence sequence, Chains chains, int from, int to) {
         if (from > to)
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("from > to. from = " + from + " to = " + to + " .");
 
         NucleotideSequence key = sequence.getRange(from, to);
 
