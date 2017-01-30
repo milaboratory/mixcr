@@ -60,9 +60,8 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
         for (int g = 0; g < GeneType.VJC_REFERENCE.length; g++) {
             GeneType gt = GeneType.VJC_REFERENCE[g];
             AlignmentHit<NucleotideSequence, VDJCGene>[][] alignmentHits = new AlignmentHit[nReads][];
+            Arrays.fill(alignmentHits, new AlignmentHit[0]);
             for (int targetId = lastAlignedTarget; targetId < nReads; targetId++) {
-                alignmentHits[targetId] = new AlignmentHit[0];
-
                 targets[targetId] = input.getRead(targetId).getData();
 
                 final NucleotideSequence sequence = input.getRead(targetId).getData().getSequence();
