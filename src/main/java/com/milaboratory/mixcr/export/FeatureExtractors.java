@@ -130,7 +130,7 @@ final class FeatureExtractors {
             if (smallTargetRage == null)
                 return "-";
 
-            GeneFeature intersectionBigAligned = GeneFeature.intersection(bigGeneFeature, alignedFeature);
+            GeneFeature intersectionBigAligned = GeneFeature.intersectionStrict(bigGeneFeature, alignedFeature);
 
             for (int i = 0; i < hit.numberOfTargets(); ++i) {
                 Alignment<NucleotideSequence> alignment = hit.getAlignment(i);
