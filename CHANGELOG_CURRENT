@@ -1,0 +1,3 @@
+Fix for NPE in `-nMutations ...` `-aaMutations ...`
+Correct visualization of D gene P segments in exportAlignmentsPretty
+minor: Fix for error in export when fields are given in the file
