@@ -225,10 +225,8 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
             writer.write(mAlignment);
 
             // Saving alignment that where merge to prevent it's use as left part
-            boolean a = alreadyMergedIds.add(alignment.getAlignmentsIndex());
-            boolean b = alreadyMergedIds.add(searchResult.KMerInfo.alignments.getAlignmentsIndex());
-            if (!a || !b)
-                System.out.println("SDASD");
+            alreadyMergedIds.add(alignment.getAlignmentsIndex());
+            alreadyMergedIds.add(searchResult.KMerInfo.alignments.getAlignmentsIndex());
         }
 
         if (writePartial && !overlappedOnly)
