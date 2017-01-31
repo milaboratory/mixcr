@@ -31,10 +31,6 @@ final class FeatureExtractors {
             if (features.length == 2 && !features[1].contains(features[0]))
                 throw new IllegalArgumentException(String.format("%s: Base feature %s does not contain relative feature %s",
                         command, GeneFeature.encode(features[1]), GeneFeature.encode(features[0])));
-            for (GeneFeature feature : features)
-                if (feature.getGeneType() == null)
-                    throw new IllegalArgumentException(String.format("%s: Gene feature %s covers several gene types " +
-                            "(not possible to select corresponding alignment)", command, GeneFeature.encode(feature)));
 
             //todo bigfeature nofloating bounds
         }
@@ -90,6 +86,15 @@ final class FeatureExtractors {
     static abstract class MutationsExtractor extends WithHeader {
         MutationsExtractor(String command, String description, int nArgs, String[] hPrefix, String[] sPrefix) {
             super(command, description, nArgs, hPrefix, sPrefix);
+        }
+
+        @Override
+        void validate(GeneFeature[] features) {
+            super.validate(features);
+            for (GeneFeature feature : features)
+                if (feature.getGeneType() == null)
+                    throw new IllegalArgumentException(String.format("%s: Gene feature %s covers several gene types " +
+                            "(not possible to select corresponding alignment)", command, GeneFeature.encode(feature)));
         }
 
         @Override
