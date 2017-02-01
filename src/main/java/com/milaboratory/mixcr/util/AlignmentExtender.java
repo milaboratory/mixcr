@@ -224,7 +224,7 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
 
                     //extend J
                     int jRightTargetId = -1;
-                    int jRightEndCoord = -1;
+                    int jRightEndCoord = Integer.MAX_VALUE;
 
                     //searching for adjacent alignment (i.e. right J alignment)
                     for (int i = 0; i < input.numberOfTargets(); i++) {
@@ -351,6 +351,8 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
         result.setAlignmentsIndex(input.getAlignmentsIndex());
         result.setOriginalDescriptions(input.getOriginalDescriptions());
         result.setOriginalSequences(input.getOriginalSequences());
+        if (result.numberOfTargets() == input.numberOfTargets())
+            result.setTargetDescriptions(input.getTargetDescriptions());
 
 //        String[] tdescrs = result.getTargetDescriptions();
 //        if (mergedTargetid != -1) {
