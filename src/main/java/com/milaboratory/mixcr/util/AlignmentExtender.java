@@ -7,7 +7,6 @@ import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
-import com.milaboratory.core.sequence.NSequenceWithQualityBuilder;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
@@ -16,7 +15,6 @@ import com.milaboratory.mixcr.cli.ReportHelper;
 import com.milaboratory.mixcr.cli.ReportWriter;
 import io.repseq.core.*;
 
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -142,12 +140,17 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
                     if (vLeftTargetId != -1 && vLeftTargetId != cdr3target - 1)
                         break OUTER;
 
-                    Extender r = new Extender(cdr3target,
-                            vLeftTargetId == -1 ? -1 : vLeftEndCoord - vAnchorPositionInRef,
-                            vHit.getAlignment(cdr3target).getSequence1().getRange(
-                                    vLeftTargetId == -1 ? vAnchorPositionInRef : vLeftEndCoord,
-                                    vHit.getAlignment(cdr3target).getSequence1Range().getFrom()),
-                            true);
+                    NucleotideSequence ext = vHit.getAlignment(cdr3target).getSequence1().getRange(
+                            vLeftTargetId == -1 ? vAnchorPositionInRef : vLeftEndCoord,
+                            vHit.getAlignment(cdr3target).getSequence1Range().getFrom());
+                    Extender r = new Extender(vLeftTargetId, cdr3target, ext, vScoring, GeneType.Variable);
+
+                    //Extender r = new Extender(cdr3target,
+                    //        vLeftTargetId == -1 ? -1 : vLeftEndCoord - vAnchorPositionInRef,
+                    //        vHit.getAlignment(cdr3target).getSequence1().getRange(
+                    //                vLeftTargetId == -1 ? vAnchorPositionInRef : vLeftEndCoord,
+                    //                vHit.getAlignment(cdr3target).getSequence1Range().getFrom()),
+                    //        true);
 
                     if (vExtension == null)
                         vExtension = r;
@@ -169,7 +172,7 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
             input = transformed;
 
             vExtended = true;
-            if (vExtension.relativeInsertionStart != -1)
+            if (vExtension.isMerging())
                 vMerged = true;
             vExtensionLength.addAndGet(vExtension.extension.size());
 
@@ -258,12 +261,18 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
                     if (jRightTargetId != -1 && jRightTargetId != cdr3target + 1)
                         break OUTER;
 
-                    Extender r = new Extender(cdr3target,
-                            jRightTargetId == -1 ? -1 : jAnchorPositionInRef - jRightEndCoord,
-                            jHit.getAlignment(cdr3target).getSequence1().getRange(
-                                    jHit.getAlignment(cdr3target).getSequence1Range().getTo(),
-                                    jRightTargetId == -1 ? jAnchorPositionInRef : jRightEndCoord),
-                            false);
+                    NucleotideSequence ext = jHit.getAlignment(cdr3target).getSequence1().getRange(
+                            jHit.getAlignment(cdr3target).getSequence1Range().getTo(),
+                            jRightTargetId == -1 ? jAnchorPositionInRef : jRightEndCoord);
+
+                    Extender r = new Extender(cdr3target, jRightTargetId, ext, jScoring, GeneType.Joining);
+
+                    //Extender r = new Extender(cdr3target,
+                    //        jRightTargetId == -1 ? -1 : jAnchorPositionInRef - jRightEndCoord,
+                    //        jHit.getAlignment(cdr3target).getSequence1().getRange(
+                    //                jHit.getAlignment(cdr3target).getSequence1Range().getTo(),
+                    //                jRightTargetId == -1 ? jAnchorPositionInRef : jRightEndCoord),
+                    //        false);
 
                     if (jExtension == null)
                         jExtension = r;
@@ -285,7 +294,7 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
             input = transformed;
 
             jExtended = true;
-            if (jExtension.relativeInsertionStart != -1)
+            if (jExtension.isMerging())
                 jMerged = true;
             jExtensionLength.addAndGet(jExtension.extension.size());
 
@@ -373,14 +382,14 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
         return result;
     }
 
-    final class Extender1 implements VDJCAlignmentTransformer {
+    final class Extender implements VDJCAlignmentTransformer {
         final int leftTargetId;
         final int rightTargetId;
         final NucleotideSequence extension;
         final AlignmentScoring<NucleotideSequence> scoring;
         final GeneType extensionGeneType;
 
-        public Extender1(int leftTargetId, int rightTargetId, NucleotideSequence extension, AlignmentScoring<NucleotideSequence> scoring, GeneType extensionGeneType) {
+        public Extender(int leftTargetId, int rightTargetId, NucleotideSequence extension, AlignmentScoring<NucleotideSequence> scoring, GeneType extensionGeneType) {
             this.leftTargetId = leftTargetId;
             this.rightTargetId = rightTargetId;
             this.extension = extension;
@@ -389,7 +398,7 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
         }
 
         boolean isMerging() {
-            return rightTargetId != -1 || leftTargetId != -1;
+            return rightTargetId != -1 && leftTargetId != -1;
         }
 
         <T> void shrinkArray(T[] src, T[] dest) {
@@ -495,167 +504,34 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
 
             return newTargets;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Extender)) return false;
+
+            Extender extender1 = (Extender) o;
+
+            if (leftTargetId != extender1.leftTargetId) return false;
+            if (rightTargetId != extender1.rightTargetId) return false;
+            if (!extension.equals(extender1.extension)) return false;
+            if (!scoring.equals(extender1.scoring)) return false;
+            return extensionGeneType == extender1.extensionGeneType;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = leftTargetId;
+            result = 31 * result + rightTargetId;
+            result = 31 * result + extension.hashCode();
+            result = 31 * result + scoring.hashCode();
+            result = 31 * result + extensionGeneType.hashCode();
+            return result;
+        }
         //
         //@Override
         //public String[] transform(String[] targets) {
         //    return new NSequenceWithQuality[0];
         //}
     }
-
-    final class Extender implements VDJCAlignmentTransformer {
-        final int cdr3targetId;
-        final int leftTargetId;
-        final int relativeInsertionStart;
-        final NucleotideSequence extension;
-        final boolean isV;
-
-        public Extender(int cdr3targetId, int relativeInsertionStart, NucleotideSequence extension, boolean isV) {
-            this.cdr3targetId = cdr3targetId;
-            this.relativeInsertionStart = relativeInsertionStart;
-            this.extension = extension;
-            this.isV = isV;
-            this.leftTargetId = relativeInsertionStart == -1 ? Integer.MIN_VALUE :
-                    (isV ? cdr3targetId - 1 : cdr3targetId);
-        }
-
-        public AlignmentScoring<NucleotideSequence> getScoring() {
-            return isV ? vScoring : jScoring;
-        }
-
-        @Override
-        public Alignment<NucleotideSequence>[] transform(VDJCGene gene, Alignment<NucleotideSequence>[] alignments,
-                                                         NSequenceWithQuality[] originalTargets) {
-            alignments = alignments.clone();
-
-            boolean isTargetGeneType;
-            if (isV)
-                isTargetGeneType = gene.getGeneType() == GeneType.Variable;
-            else
-                isTargetGeneType = gene.getGeneType() == GeneType.Joining;
-
-            if (relativeInsertionStart == -1) {
-                //no adjacent target
-
-                Alignment<NucleotideSequence> al = alignments[cdr3targetId];
-                if (isTargetGeneType) {
-                    alignments[cdr3targetId] = new Alignment<>(
-                            al.getSequence1(),
-                            al.getAbsoluteMutations(),
-                            isV ?
-                                    al.getSequence1Range().expand(extension.size(), 0) :
-                                    al.getSequence1Range().expand(0, extension.size()),
-                            al.getSequence2Range().expand(0, extension.size()),
-                            getScoring());
-                } else if (al != null) {
-                    alignments[cdr3targetId] = new Alignment<>(
-                            al.getSequence1(),
-                            al.getAbsoluteMutations(),
-                            al.getSequence1Range(),
-                            isV ?
-                                    al.getSequence2Range().move(extension.size()) :
-                                    al.getSequence2Range(),
-                            al.getScore());
-                }
-
-                return alignments;
-            } else {
-                // adjacent target id = cdr3targetId - 1
-
-                Alignment<NucleotideSequence> al1 = alignments[leftTargetId];
-                Alignment<NucleotideSequence> al2 = alignments[leftTargetId + 1];
-                int rightOffset = originalTargets[leftTargetId].size() + extension.size();
-
-                alignments = shrinkArray(alignments);
-
-                if (isTargetGeneType) {
-                    Mutations<NucleotideSequence> m1 = al1.getAbsoluteMutations(),
-                            m2 = al2.getAbsoluteMutations();
-
-                    Mutations<NucleotideSequence> mutations = new MutationsBuilder<>(NucleotideSequence.ALPHABET)
-                            .ensureCapacity(m1.size() + m2.size())
-                            .append(m1)
-                            .append(m2)
-                            .createAndDestroy();
-
-                    alignments[leftTargetId] = new Alignment<>(
-                            al1.getSequence1(), mutations,
-                            new Range(al1.getSequence1Range().getFrom(),
-                                    al2.getSequence1Range().getTo()),
-                            new Range(al1.getSequence2Range().getFrom(),
-                                    al2.getSequence2Range().getTo() + rightOffset),
-                            getScoring());
-                } else if (al1 != null && al2 != null)
-                    return null;
-                else
-                    alignments[leftTargetId] = al1 == null ? new Alignment<>(
-                            al2.getSequence1(),
-                            al2.getAbsoluteMutations(),
-                            al2.getSequence1Range(),
-                            isV ?
-                                    al2.getSequence2Range().move(rightOffset) :
-                                    al2.getSequence2Range(),
-                            al2.getScore()) : al1;
-
-                return alignments;
-            }
-        }
-
-        <T> T[] shrinkArray(T[] array) {
-            if (array.length - leftTargetId - 2 != 0)
-                System.arraycopy(array, leftTargetId + 2, array, leftTargetId + 1,
-                        array.length - leftTargetId - 2);
-            return Arrays.copyOf(array, array.length - 1);
-        }
-
-        @Override
-        public NSequenceWithQuality[] transform(NSequenceWithQuality[] targets) {
-            NSequenceWithQuality ext = new NSequenceWithQuality(extension,
-                    SequenceQuality.getUniformQuality(extensionQuality, extension.size()));
-
-            if (relativeInsertionStart == -1) {
-                if (isV)
-                    targets[cdr3targetId] = ext
-                            .concatenate(targets[cdr3targetId]);
-                else
-                    targets[cdr3targetId] = targets[cdr3targetId]
-                            .concatenate(ext);
-                return targets;
-            } else {
-                NSequenceWithQuality t1 = targets[leftTargetId];
-                NSequenceWithQuality t2 = targets[leftTargetId + 1];
-                targets = shrinkArray(targets);
-
-                targets[leftTargetId] = new NSequenceWithQualityBuilder()
-                        .ensureCapacity(t1.size() + extension.size() + t2.size())
-                        .append(t1)
-                        .append(ext)
-                        .append(t2)
-                        .createAndDestroy();
-
-                return targets;
-            }
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            Extender that = (Extender) o;
-
-            if (cdr3targetId != that.cdr3targetId) return false;
-            if (relativeInsertionStart != that.relativeInsertionStart) return false;
-            return extension.equals(that.extension);
-
-        }
-
-        @Override
-        public int hashCode() {
-            int result = cdr3targetId;
-            result = 31 * result + relativeInsertionStart;
-            result = 31 * result + extension.hashCode();
-            return result;
-        }
-    }
-
 }

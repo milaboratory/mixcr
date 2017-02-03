@@ -38,7 +38,7 @@ import java.util.regex.Pattern;
 
 public class TargetBuilder {
     public static final class VDJCGenes {
-        final VDJCGene v, d, j, c;
+        public final VDJCGene v, d, j, c;
 
         public VDJCGenes(VDJCLibrary library, String v, String d, String j, String c) {
             this.v = library.getSafe(v);
@@ -86,13 +86,15 @@ public class TargetBuilder {
     }
 
     final static Pattern preProcessPattern = Pattern.compile("\\*(\\d+)|(.)");
-    final static Pattern modelParserPattern = Pattern.compile("(\\{[A-za-z()0-9\\-]+})|([Vv]+)|([Dd]+)|([Jj]+)|([Cc]+)|(N+)| ");
+    final static Pattern modelParserPattern = Pattern.compile("\\{([A-za-z()0-9\\-]+)}|\\{([A-za-z()0-9\\-]+):([A-za-z()0-9\\-]+)}|([Vv]+)|([Dd]+)|([Jj]+)|([Cc]+)|(N+)| ");
     final static int refPointGroupId = 1;
-    final static int vGroupId = 2;
-    final static int dGroupId = 3;
-    final static int jGroupId = 4;
-    final static int cGroupId = 5;
-    final static int nGroupId = 6;
+    final static int geneFeaturePoint1GroupId = 2;
+    final static int geneFeaturePoint2GroupId = 3;
+    final static int vGroupId = 4;
+    final static int dGroupId = 5;
+    final static int jGroupId = 6;
+    final static int cGroupId = 7;
+    final static int nGroupId = 8;
 
     public static String preProcessModel(String model) {
         StringBuilder processedModel = new StringBuilder();
@@ -109,6 +111,7 @@ public class TargetBuilder {
         return processedModel.toString();
     }
 
+
     public static NucleotideSequence generateSequence(VDJCGenes genes, String model, RandomGenerator rg) {
         // Pre-processing
         model = preProcessModel(model);
@@ -119,6 +122,7 @@ public class TargetBuilder {
 
         Matcher matcher = modelParserPattern.matcher(model);
         ReferencePoint leftPoint = null;
+        ReferencePoint rightPoint;
         int prevPosition = 0;
         while (matcher.find()) {
             if (matcher.start() != prevPosition)
@@ -126,9 +130,21 @@ public class TargetBuilder {
 
             prevPosition = matcher.end();
             String rpGroup = matcher.group(refPointGroupId);
+            String gf1Group = matcher.group(geneFeaturePoint1GroupId);
+            String gf2Group = matcher.group(geneFeaturePoint2GroupId);
             String nGroup = matcher.group(nGroupId);
-            if (rpGroup != null) {
-                leftPoint = ReferencePoint.parse(((String) rpGroup).substring(1, rpGroup.length() - 1));
+            if (rpGroup != null)
+                leftPoint = ReferencePoint.parse(rpGroup);
+            else if (gf1Group != null) {
+                leftPoint = ReferencePoint.parse(gf1Group);
+                rightPoint = ReferencePoint.parse(gf2Group);
+                GeneFeature geneFeature = new GeneFeature(leftPoint, rightPoint);
+                VDJCGene gene = genes.geneByGeneType(geneFeature.getGeneType());
+                NucleotideSequence seqGF = gene.getFeature(geneFeature);
+                if (seqGF == null)
+                    throw new RuntimeException("No sequence for feature " + geneFeature);
+                builder.append(seqGF);
+                leftPoint = rightPoint;
             } else if (nGroup != null)
                 for (int j = 0; j < nGroup.length(); j++)
                     builder.append((byte) rg.nextInt(4));
@@ -139,7 +155,7 @@ public class TargetBuilder {
                     if (group != null) {
                         if (leftPoint == null || leftPoint.getGeneType() != geneType)
                             throw new IllegalArgumentException("No reference point for " + group);
-                        ReferencePoint rightPoint = leftPoint.move(group.length());
+                        rightPoint = leftPoint.move(group.length());
                         GeneFeature geneFeature = new GeneFeature(leftPoint, rightPoint);
                         VDJCGene gene = genes.geneByGeneType(geneType);
                         NucleotideSequence seqGF = gene.getFeature(geneFeature);

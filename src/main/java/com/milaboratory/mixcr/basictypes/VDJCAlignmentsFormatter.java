@@ -154,7 +154,7 @@ public class VDJCAlignmentsFormatter {
             pd(ReferencePoint.DEndTrimmed, "DP>", IsDPRight),
 
             pd(ReferencePoint.JBeginTrimmed, "<J"),
-            pd(ReferencePoint.CDR3End, "CDR3><FR4"),
+            pd(ReferencePoint.CDR3End.move(-1), "CDR3><FR4").moveMarkerPoint(1),
             pd(ReferencePoint.FR4End, "FR4>", -1),
             pd(ReferencePoint.CBegin, "<C")
     };
@@ -174,7 +174,7 @@ public class VDJCAlignmentsFormatter {
             pd(ReferencePoint.DBegin, "<D"),
             pd(ReferencePoint.DEnd, "D>", -1),
             pd(ReferencePoint.JBegin, "<J"),
-            pd(ReferencePoint.CDR3End, "CDR3><FR4"),
+            pd(ReferencePoint.CDR3End.move(-1), "CDR3><FR4").moveMarkerPoint(1),
             pd(ReferencePoint.FR4End, "FR4>", -1)
     };
 
@@ -211,6 +211,10 @@ public class VDJCAlignmentsFormatter {
             this.marker = marker;
             this.markerOffset = markerOffset;
             this.activator = activator;
+        }
+
+        public PointToDraw moveMarkerPoint(int offset) {
+            return new PointToDraw(rp, marker, markerOffset + offset, activator);
         }
 
         public boolean draw(SequencePartitioning partitioning, MultiAlignmentHelper helper, char[] line, boolean overwrite) {
