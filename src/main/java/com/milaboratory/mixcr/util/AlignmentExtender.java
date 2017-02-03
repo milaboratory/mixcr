@@ -431,7 +431,7 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
                             .append(mR)
                             .createAndDestroy();
 
-                    alignments[leftTargetId] = new Alignment<>(
+                    newAlignments[leftTargetId] = new Alignment<>(
                             alL.getSequence1(), mutations,
                             new Range(alL.getSequence1Range().getFrom(),
                                     alR.getSequence1Range().getTo()),
@@ -445,7 +445,7 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
                 } else {
                     assert alignments[leftTargetId] != null;
                     newAlignments[leftTargetId] = expandSeq2Range(newAlignments[leftTargetId], 0, extension.size());
-                    assert newAlignments[rightTargetId].getSequence2Range().getTo() == originalTargets[rightTargetId].size() + extension.size();
+                    assert newAlignments[leftTargetId].getSequence2Range().getTo() == originalTargets[leftTargetId].size() + extension.size();
                 }
             } else {
                 if (leftTargetId != -1 && rightTargetId != -1) {
@@ -482,8 +482,8 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
             return new Alignment<>(
                     alignment.getSequence1(),
                     alignment.getAbsoluteMutations(),
-                    alignment.getSequence1Range(),
-                    alignment.getSequence2Range().expand(left, right),
+                    alignment.getSequence1Range().expand(left, right),
+                    alignment.getSequence2Range().expand(0, right + left),
                     alignment.getScore());
         }
 

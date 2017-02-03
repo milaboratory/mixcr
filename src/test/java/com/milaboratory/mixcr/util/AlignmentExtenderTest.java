@@ -46,6 +46,7 @@ import org.junit.Test;
 public class AlignmentExtenderTest {
     @Test
     public void testTripleRead() throws Exception {
+        final boolean print = true;
         Well44497b rg = new Well44497b(12312);
 
         final VDJCAlignerParameters rnaSeqParams = VDJCParametersPresets.getByName("rna-seq");
@@ -66,12 +67,14 @@ public class AlignmentExtenderTest {
 
         F4 goAssert = new F4() {
             @Override
-            public void go(int len, int offset1, int offset2, int offset3) {
+            public VDJCAlignments go(int len, int offset1, int offset2, int offset3) {
                 NucleotideSequence seq1 = baseSeq.getRange(offset1, offset1 + len);
                 NucleotideSequence seq2 = baseSeq.getRange(offset2, offset2 + len);
-                NucleotideSequence seq3 = baseSeq.getRange(offset3, offset3 + len);
+                NucleotideSequence seq3 = offset3 == -1 ? null : baseSeq.getRange(offset3, offset3 + len);
 
-                VDJCAlignmentResult<VDJCMultiRead> alignment = aligner.process(PartialAlignmentsAssemblerAlignerTest.createMultiRead(seq1, seq2, seq3));
+                VDJCAlignmentResult<VDJCMultiRead> alignment = offset3 == -1 ?
+                        aligner.process(PartialAlignmentsAssemblerAlignerTest.createMultiRead(seq1, seq2)) :
+                        aligner.process(PartialAlignmentsAssemblerAlignerTest.createMultiRead(seq1, seq2, seq3));
                 VDJCAlignments al = alignment.alignment;
                 Assert.assertNotNull(al);
 
@@ -81,19 +84,53 @@ public class AlignmentExtenderTest {
                         ReferencePoint.CDR3Begin, ReferencePoint.CDR3End);
 
                 MiXCRTestUtils.assertAlignments(al);
-                MiXCRTestUtils.printAlignment(al);
-                System.out.println("============================");
+
+                if (print) {
+                    MiXCRTestUtils.printAlignment(al);
+                    System.out.println();
+                    System.out.println("-------------------------------------------");
+                    System.out.println();
+                }
+
                 VDJCAlignments processed = extender.process(al);
-                MiXCRTestUtils.printAlignment(processed);
+
+                if (print) {
+                    MiXCRTestUtils.printAlignment(processed);
+                    System.out.println();
+                    System.out.println("===========================================");
+                    System.out.println();
+                    System.out.println();
+                }
+
                 MiXCRTestUtils.assertAlignments(processed);
+                Assert.assertEquals(al.getFeature(GeneFeature.VDJunction), processed.getFeature(GeneFeature.VDJunction));
+                Assert.assertEquals(al.getFeature(GeneFeature.DJJunction), processed.getFeature(GeneFeature.DJJunction));
+                Assert.assertEquals(al.getFeature(GeneFeature.VJJunction), processed.getFeature(GeneFeature.VJJunction));
+
+                return processed;
             }
         };
 
-        goAssert.go(60, 245, 307, 450);
-        //goAssert.go(57, 0, 255, 320);
+        VDJCAlignments a1 = goAssert.go(60, 245, 307, 450);
+        Assert.assertEquals(2, a1.numberOfTargets());
+
+        VDJCAlignments a2 = goAssert.go(60, 245, 315, 450);
+        Assert.assertEquals(3, a2.numberOfTargets());
+
+        VDJCAlignments a3 = goAssert.go(60, 245, 315, -1);
+        Assert.assertEquals(2, a3.numberOfTargets());
+
+        VDJCAlignments a4 = goAssert.go(60, 245, 307, -1);
+        Assert.assertEquals(1, a4.numberOfTargets());
+
+        VDJCAlignments a5 = goAssert.go(53, 252, 307, -1);
+        Assert.assertEquals(1, a5.numberOfTargets());
+
+        VDJCAlignments a6 = goAssert.go(53, 252, 307, 450);
+        Assert.assertEquals(2, a6.numberOfTargets());
     }
 
     public interface F4 {
-        void go(int len, int offset1, int offset2, int offset3);
+        VDJCAlignments go(int len, int offset1, int offset2, int offset3);
     }
 }
