@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/milaboratory/mixcr.svg)](https://travis-ci.org/milaboratory/mixcr)
+
 ## Overview
 
 MiXCR is a universal software for fast and accurate analysis of raw T- or B- cell receptor repertoire sequencing data.
