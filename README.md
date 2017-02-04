@@ -44,6 +44,27 @@ For more details see documentation.
 
 Detailed documentation can be found at https://mixcr.readthedocs.io/
 
+## Build
+
+Dependancy:
+
+- Maven 3 (https://maven.apache.org/)
+
+To build MiXCR from source:
+
+- Refresh git submodules
+
+  ```
+  git submodule update --init --recursive
+  ```
+  
+- Run build script. First build may take several minuties to download sequences for built-in V/D/J/C gene libraries from NCBI.
+
+  ```
+  ./build.sh
+  ```
+  
+
 ## License
 
 Copyright (c) 2014-2015, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
