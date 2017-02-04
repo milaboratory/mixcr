@@ -1,0 +1,3 @@
+[submodule "repseqio"]
+	path = repseqio
+	url = https://github.com/repseqio/repseqio.git
