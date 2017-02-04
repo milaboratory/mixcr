@@ -1,4 +1,12 @@
 
+MiXCR 2.0.4 ( 4 Feb 2017)
+========================
+
+-- Fix for NPE in `-nMutations ...` `-aaMutations ...`
+-- Correct visualization of D gene P segments in exportAlignmentsPretty
+-- minor: Fix for error in export when fields are given in the file
+
+
 MiXCR 2.0.3 (26 Dec 2016)
 ========================
 
