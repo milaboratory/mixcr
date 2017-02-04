@@ -250,8 +250,8 @@ public class PartialAlignmentsAssemblerTest {
             try (final VDJCAlignmentsReader reader = inputAlignments.resultReader()) {
                 assembler.searchOverlaps(reader);
             }
-            assembler.writeReport(new ReportHelper(System.out));
-            System.out.println("\n");
+            //assembler.writeReport(new ReportHelper(System.out));
+            //System.out.println("\n");
         }
 
 

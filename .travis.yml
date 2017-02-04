@@ -17,3 +17,4 @@ jdk:
 cache:
   directories:
   - $HOME/.m2
+  - ./repseqio/.cache
