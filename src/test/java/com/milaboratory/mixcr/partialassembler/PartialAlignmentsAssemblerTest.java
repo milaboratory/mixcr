@@ -8,7 +8,6 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceBuilder;
 import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.cli.ReportHelper;
 import com.milaboratory.mixcr.util.RunMiXCR;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
@@ -214,9 +213,8 @@ public class PartialAlignmentsAssemblerTest {
         params.alignerParameters.setAllowPartialAlignments(true);
 
         final RunMiXCR.AlignResult inputAlignments = RunMiXCR.align(params);
-        inputAlignments.report.writeReport(new ReportHelper(System.out));
-        System.out.println("\n");
-
+        //inputAlignments.report.writeReport(new ReportHelper(System.out));
+        //System.out.println("\n");
 
         for (VDJCAlignments al : inputAlignments.alignments) {
             for (GeneType gt : GeneType.VJC_REFERENCE) {
