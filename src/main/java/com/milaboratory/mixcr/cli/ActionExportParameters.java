@@ -195,6 +195,7 @@ public class ActionExportParameters<T extends VDJCObject> extends ActionParamete
             String line;
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
+                line = line.replace("\"", "");
                 if (!line.isEmpty())
                     options.addAll(Arrays.asList(line.split(" ")));
             }

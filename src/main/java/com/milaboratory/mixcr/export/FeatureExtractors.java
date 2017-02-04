@@ -8,10 +8,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.TranslationParameters;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.VDJCObject;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
-import io.repseq.core.ReferencePoints;
-import io.repseq.core.VDJCGene;
+import io.repseq.core.*;
 
 import static com.milaboratory.mixcr.export.FieldExtractors.NULL;
 
@@ -32,7 +29,10 @@ final class FeatureExtractors {
 
         void validate(GeneFeature[] features) {
             if (features.length == 2 && !features[1].contains(features[0]))
-                throw new IllegalArgumentException(String.format("%s: Base feature %s does not contain relative feature %s", command, features[1], features[0]));
+                throw new IllegalArgumentException(String.format("%s: Base feature %s does not contain relative feature %s",
+                        command, GeneFeature.encode(features[1]), GeneFeature.encode(features[0])));
+
+            //todo bigfeature nofloating bounds
         }
 
         private String header0(String[] prefixes, GeneFeature[] features) {
@@ -89,42 +89,90 @@ final class FeatureExtractors {
         }
 
         @Override
+        void validate(GeneFeature[] features) {
+            super.validate(features);
+            for (GeneFeature feature : features)
+                if (feature.getGeneType() == null)
+                    throw new IllegalArgumentException(String.format("%s: Gene feature %s covers several gene types " +
+                            "(not possible to select corresponding alignment)", command, GeneFeature.encode(feature)));
+        }
+
+        @Override
         protected String extractValue(VDJCObject object, GeneFeature[] parameters) {
             GeneFeature smallGeneFeature = parameters[0];
             GeneFeature bigGeneFeature = parameters[parameters.length - 1];
 
             GeneType geneType = bigGeneFeature.getGeneType();
+            assert geneType != null;
+
             VDJCHit hit = object.getBestHit(geneType);
 
             if (hit == null)
                 return "-";
 
             GeneFeature alignedFeature = hit.getAlignedFeature();
-            if (!alignedFeature.contains(smallGeneFeature))
-                return "-";
+//            if (!alignedFeature.contains(smallGeneFeature))
+//                return "-";
 
             VDJCGene gene = hit.getGene();
-            ReferencePoints partitioning = gene.getPartitioning();
-            if (!partitioning.isAvailable(bigGeneFeature))
+            ReferencePoints germlinePartitioning = gene.getPartitioning();
+            if (!germlinePartitioning.isAvailable(bigGeneFeature))
                 return "-";
 
-            Range smallTargetRage = partitioning.getRelativeRange(alignedFeature, smallGeneFeature);
+            Range smallTargetRage = germlinePartitioning.getRelativeRange(alignedFeature, smallGeneFeature);
+            if (smallTargetRage == null)
+                for (int i = 0; i < object.numberOfTargets(); i++) {
+                    SequencePartitioning pt = object.getPartitionedTarget(i).getPartitioning();
+                    Range range = pt.getRange(smallGeneFeature);
+                    if (range == null)
+                        continue;
+                    Alignment<NucleotideSequence> alignment = object.getBestHit(geneType).getAlignment(i);
+                    smallTargetRage = alignment.convertToSeq1Range(range);
+                    if (smallTargetRage != null)
+                        break;
+                }
 
-            for (int i = 0; i < hit.numberOfTargets(); i++) {
+            if (smallTargetRage == null)
+                return "-";
+
+            GeneFeature intersectionBigAligned = GeneFeature.intersectionStrict(bigGeneFeature, alignedFeature);
+
+            for (int i = 0; i < hit.numberOfTargets(); ++i) {
                 Alignment<NucleotideSequence> alignment = hit.getAlignment(i);
 
                 if (alignment == null || !alignment.getSequence1Range().contains(smallTargetRage))
                     continue;
 
-                Mutations<NucleotideSequence> mutations = alignment.getAbsoluteMutations().extractRelativeMutationsForRange(smallTargetRage);
+                Mutations<NucleotideSequence> mutations;
                 if (parameters.length == 2) {
-                    int shift = partitioning.getRelativePosition(bigGeneFeature, smallGeneFeature.getFirstPoint());
-                    if (shift < 0)
-                        continue;
-                    mutations = mutations.move(shift);
-                }
+                    mutations = alignment.getAbsoluteMutations().extractAbsoluteMutationsForRange(smallTargetRage);
 
-                return convert(mutations, gene.getFeature(bigGeneFeature), object.getFeature(smallGeneFeature).getSequence(), partitioning.getTranslationParameters(bigGeneFeature));
+                    ReferencePoint baIntersectionBegin = intersectionBigAligned.getFirstPoint();
+
+                    int referencePosition = germlinePartitioning.getRelativePosition(alignedFeature, baIntersectionBegin);
+                    int bigFeaturePosition = germlinePartitioning.getRelativePosition(bigGeneFeature, baIntersectionBegin);
+
+                    if (bigFeaturePosition < 0 || referencePosition < 0)
+                        continue;
+
+                    int shift = bigFeaturePosition - referencePosition;
+
+                    if (shift < 0)
+                        mutations = mutations.getRange(Mutations.pabs(mutations.firstMutationWithPosition(-shift)), mutations.size());
+
+                    mutations = mutations.move(shift);
+
+//                    int shift = germlinePartitioning.getRelativePosition(bigGeneFeature, smallGeneFeature.getFirstPoint());
+//                    if (shift < 0)
+//                        continue;
+//                    mutations = mutations.move(shift);
+//                    mutations = mutations.extractRelativeMutationsForRange(bigRange);
+//                    if (mutations == null)
+//                        continue;
+                } else
+                    mutations = alignment.getAbsoluteMutations().extractRelativeMutationsForRange(smallTargetRage);
+
+                return convert(mutations, gene.getFeature(bigGeneFeature), object.getFeature(smallGeneFeature).getSequence(), germlinePartitioning.getTranslationParameters(bigGeneFeature));
             }
             return "-";
         }

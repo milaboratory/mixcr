@@ -1,0 +1,23 @@
+language: java
+
+sudo: false
+
+git:
+  submodules: false
+
+before_install:
+  - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
+  - git submodule update --init --recursive
+  - rm -rf ./repseqio/.cache
+  - mv .cache ./repseqio/.cache
+  - cd repseqio/milib && mvn clean install -DskipTests -B && cd ..
+  - mvn clean install -DskipTests -B && cd ..
+  - mv ./repseqio/.cache .cache
+
+jdk:
+  - openjdk7
+
+cache:
+  directories:
+  - $HOME/.m2
+  - .cache

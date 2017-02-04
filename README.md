@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/milaboratory/mixcr.svg)](https://travis-ci.org/milaboratory/mixcr)
+
 ## Overview
 
 MiXCR is a universal software for fast and accurate analysis of raw T- or B- cell receptor repertoire sequencing data.
@@ -41,6 +43,27 @@ For more details see documentation.
 ## Documentation
 
 Detailed documentation can be found at https://mixcr.readthedocs.io/
+
+## Build
+
+Dependancy:
+
+- Maven 3 (https://maven.apache.org/)
+
+To build MiXCR from source:
+
+- Refresh git submodules
+
+  ```
+  git submodule update --init --recursive
+  ```
+  
+- Run build script. First build may take several minuties to download sequences for built-in V/D/J/C gene libraries from NCBI.
+
+  ```
+  ./build.sh
+  ```
+  
 
 ## License
 

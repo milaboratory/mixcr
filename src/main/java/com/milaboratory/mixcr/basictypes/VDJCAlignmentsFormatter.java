@@ -113,6 +113,20 @@ public class VDJCAlignmentsFormatter {
             return object.isAvailable(ReferencePoint.VEnd) && object.getPosition(ReferencePoint.VEnd) != object.getPosition(ReferencePoint.VEndTrimmed);
         }
     };
+    public static final Filter<SequencePartitioning> IsDPLeft = new Filter<SequencePartitioning>() {
+        @Override
+        public boolean accept(SequencePartitioning object) {
+            return object.isAvailable(ReferencePoint.DBegin) && object.getPosition(ReferencePoint.DBegin) != object.getPosition(ReferencePoint.DBeginTrimmed);
+        }
+    };
+    public static final Filter<SequencePartitioning> IsDPRight = new Filter<SequencePartitioning>() {
+        @Override
+        public boolean accept(SequencePartitioning object) {
+            return object.isAvailable(ReferencePoint.DEnd) && object.getPosition(ReferencePoint.DEnd) != object.getPosition(ReferencePoint.DEndTrimmed);
+        }
+    };
+    public static final Filter<SequencePartitioning> NotDPLeft = FilterUtil.not(IsDPLeft);
+    public static final Filter<SequencePartitioning> NotDPRight = FilterUtil.not(IsDPRight);
     public static final Filter<SequencePartitioning> NotVP = FilterUtil.not(IsVP);
 
 
@@ -130,8 +144,15 @@ public class VDJCAlignmentsFormatter {
             pd(ReferencePoint.VEndTrimmed, "V>", -1, NotVP),
             pd(ReferencePoint.VEnd, "V><VP", IsVP),
             pd(ReferencePoint.VEndTrimmed, "VP>", -1, IsVP),
-            pd(ReferencePoint.DBeginTrimmed, "<D"),
-            pd(ReferencePoint.DEndTrimmed, "D>", -1),
+
+            pd(ReferencePoint.DBeginTrimmed, "<D", NotDPLeft),
+            pd(ReferencePoint.DBegin, "DP><D", IsDPLeft),
+            pd(ReferencePoint.DBeginTrimmed, "<DP", IsDPLeft),
+
+            pd(ReferencePoint.DEndTrimmed, "D>", -1, NotDPRight),
+            pd(ReferencePoint.DEnd, "D><DP", IsDPRight),
+            pd(ReferencePoint.DEndTrimmed, "DP>", IsDPRight),
+
             pd(ReferencePoint.JBeginTrimmed, "<J"),
             pd(ReferencePoint.CDR3End, "CDR3><FR4"),
             pd(ReferencePoint.FR4End, "FR4>", -1),
