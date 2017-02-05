@@ -304,7 +304,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                     if (alignment.getScore() < getAbsoluteMinScore(parameters.getVAlignerParameters().getParameters()))
                         continue;
 
-                    vHit.set(1, new AlignmentHitImpl<>(alignment, leftHit.getRecordPayload()));
+                    vHit.set(1, new AlignmentHitImpl<NucleotideSequence, VDJCGene>(alignment, leftHit.getRecordPayload()));
                     vHit.calculateScore();
                 }
             }
@@ -348,7 +348,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                     if (alignment.getScore() < getAbsoluteMinScore(parameters.getJAlignerParameters().getParameters()))
                         continue;
 
-                    jHit.set(0, new AlignmentHitImpl<>(alignment, rightHit.getRecordPayload()));
+                    jHit.set(0, new AlignmentHitImpl<NucleotideSequence, VDJCGene>(alignment, rightHit.getRecordPayload()));
                     jHit.calculateScore();
                 }
             }
