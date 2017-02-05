@@ -7,7 +7,7 @@
 Processing RNA-seq data
 =======================
 
-The typical MiXCR workflow can be applied for the analysis of RNA-seq samples. Though MiXCR can be used with the default parameters for aligning RNA-seq data, it is recommended to use ``rna-seq`` preset which is specifically tuned to perform well on such type of input:
+The typical MiXCR workflow can be applied for the analysis of RNA-seq samples. It is recommended to use ``rna-seq`` preset which is specifically tuned to perform well on such type of input:
 
 ::
 
@@ -35,7 +35,7 @@ Note option ``-OallowPartialAlignments=true`` of the ``align`` command: it will 
 +------------------------------+---------------+--------------------------------------------------------------+
 | ``kOffset``                  | ``0``         | Offset taken from ``VEndTrimmed``/``JBeginTrimmed``.         |
 +------------------------------+---------------+--------------------------------------------------------------+
-| ``minimalAssembleOverlap`` | ``18``        | Minimal length of the overlapped VJ region: two squences can |
+| ``minimalAssembleOverlap``   | ``18``        | Minimal length of the overlapped VJ region: two squences can |
 |                              |               | be potentially merged only if they has at least              |
 |                              |               | ``minimalAssembleOverlap`` consequent same nucleotides     |
 |                              |               | in the VJJunction region.                                    |
@@ -60,7 +60,7 @@ The algorithm which restores merged sequence from two overlapped alignments has 
 +-----------------------------+---------------------+--------------------------------------------------------------+
 | ``partsLayout``             | ``CollinearDirect`` | Relative orientation of paired reads.                        |
 +-----------------------------+---------------------+--------------------------------------------------------------+
-| ``minimalAssembleOverlap``          | ``20``              | Minimal length of the overlapped region.                     |
+| ``minimalAssembleOverlap``  | ``20``              | Minimal length of the overlapped region.                     |
 +-----------------------------+---------------------+--------------------------------------------------------------+
 | ``maxQuality``              | ``45``              | Maximal sequence quality that can may be assigned in the     | 
 |                             |                     | region of overlap.                                           |
