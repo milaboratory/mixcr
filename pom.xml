@@ -53,23 +53,7 @@
             <groupId>io.repseq</groupId>
             <artifactId>repseqio</artifactId>
             <version>1.2.6-SNAPSHOT</version>
-            <!-- TEMP -->
-            <!--<exclusions>-->
-            <!--<exclusion>-->
-            <!--<artifactId>milib</artifactId>-->
-            <!--<groupId>com.milaboratory</groupId>-->
-            <!--</exclusion>-->
-            <!--</exclusions>-->
-            <!-- TEMP -->
         </dependency>
-
-        <!-- TEMP -->
-        <!--<dependency>-->
-        <!--<groupId>com.milaboratory</groupId>-->
-        <!--<artifactId>milib</artifactId>-->
-        <!--<version>${milib.version}</version>-->
-        <!--</dependency>-->
-        <!-- TEMP -->
 
         <dependency>
             <groupId>com.milaboratory</groupId>

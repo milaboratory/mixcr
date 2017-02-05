@@ -31,7 +31,6 @@ package com.milaboratory.mixcr.util;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerAligner;
-import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerAlignerTest;
 import com.milaboratory.mixcr.partialassembler.VDJCMultiRead;
 import com.milaboratory.mixcr.tests.MiXCRTestUtils;
 import com.milaboratory.mixcr.tests.TargetBuilder;
@@ -73,8 +72,8 @@ public class AlignmentExtenderTest {
                 NucleotideSequence seq3 = offset3 == -1 ? null : baseSeq.getRange(offset3, offset3 + len);
 
                 VDJCAlignmentResult<VDJCMultiRead> alignment = offset3 == -1 ?
-                        aligner.process(PartialAlignmentsAssemblerAlignerTest.createMultiRead(seq1, seq2)) :
-                        aligner.process(PartialAlignmentsAssemblerAlignerTest.createMultiRead(seq1, seq2, seq3));
+                        aligner.process(MiXCRTestUtils.createMultiRead(seq1, seq2)) :
+                        aligner.process(MiXCRTestUtils.createMultiRead(seq1, seq2, seq3));
                 VDJCAlignments al = alignment.alignment;
                 Assert.assertNotNull(al);
 

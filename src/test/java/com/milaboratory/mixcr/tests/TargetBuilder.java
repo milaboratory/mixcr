@@ -86,15 +86,16 @@ public class TargetBuilder {
     }
 
     final static Pattern preProcessPattern = Pattern.compile("\\*(\\d+)|(.)");
-    final static Pattern modelParserPattern = Pattern.compile("\\{([A-za-z()0-9\\-]+)}|\\{([A-za-z()0-9\\-]+):([A-za-z()0-9\\-]+)}|([Vv]+)|([Dd]+)|([Jj]+)|([Cc]+)|(N+)| ");
-    final static int refPointGroupId = 1;
-    final static int geneFeaturePoint1GroupId = 2;
-    final static int geneFeaturePoint2GroupId = 3;
-    final static int vGroupId = 4;
-    final static int dGroupId = 5;
-    final static int jGroupId = 6;
-    final static int cGroupId = 7;
-    final static int nGroupId = 8;
+    final static Pattern modelParserPattern = Pattern.compile("([ATGCatgc]+)|\\{([A-za-z()0-9\\-]+)}|\\{([A-za-z()0-9\\-]+):([A-za-z()0-9\\-]+)}|([Vv]+)|([Dd]+)|([Jj]+)|([Cc]+)|(N+)| ");
+    final static int atgcGroupId = 1;
+    final static int refPointGroupId = 2;
+    final static int geneFeaturePoint1GroupId = 3;
+    final static int geneFeaturePoint2GroupId = 4;
+    final static int vGroupId = 5;
+    final static int dGroupId = 6;
+    final static int jGroupId = 7;
+    final static int cGroupId = 8;
+    final static int nGroupId = 9;
 
     public static String preProcessModel(String model) {
         StringBuilder processedModel = new StringBuilder();
@@ -133,6 +134,7 @@ public class TargetBuilder {
             String gf1Group = matcher.group(geneFeaturePoint1GroupId);
             String gf2Group = matcher.group(geneFeaturePoint2GroupId);
             String nGroup = matcher.group(nGroupId);
+            String atgcGroup = matcher.group(atgcGroupId);
             if (rpGroup != null)
                 leftPoint = ReferencePoint.parse(rpGroup);
             else if (gf1Group != null) {
@@ -148,6 +150,8 @@ public class TargetBuilder {
             } else if (nGroup != null)
                 for (int j = 0; j < nGroup.length(); j++)
                     builder.append((byte) rg.nextInt(4));
+            else if (atgcGroup != null)
+                builder.append(new NucleotideSequence(atgcGroup));
             else {
                 for (int i = 0; i < 4; i++) {
                     GeneType geneType = GeneType.VDJC_REFERENCE[i];

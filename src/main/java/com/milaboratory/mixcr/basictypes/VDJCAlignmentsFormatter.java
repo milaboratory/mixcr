@@ -113,6 +113,12 @@ public class VDJCAlignmentsFormatter {
             return object.isAvailable(ReferencePoint.VEnd) && object.getPosition(ReferencePoint.VEnd) != object.getPosition(ReferencePoint.VEndTrimmed);
         }
     };
+    public static final Filter<SequencePartitioning> IsJP = new Filter<SequencePartitioning>() {
+        @Override
+        public boolean accept(SequencePartitioning object) {
+            return object.isAvailable(ReferencePoint.JBegin) && object.getPosition(ReferencePoint.JBegin) != object.getPosition(ReferencePoint.JBeginTrimmed);
+        }
+    };
     public static final Filter<SequencePartitioning> IsDPLeft = new Filter<SequencePartitioning>() {
         @Override
         public boolean accept(SequencePartitioning object) {
@@ -128,6 +134,7 @@ public class VDJCAlignmentsFormatter {
     public static final Filter<SequencePartitioning> NotDPLeft = FilterUtil.not(IsDPLeft);
     public static final Filter<SequencePartitioning> NotDPRight = FilterUtil.not(IsDPRight);
     public static final Filter<SequencePartitioning> NotVP = FilterUtil.not(IsVP);
+    public static final Filter<SequencePartitioning> NotJP = FilterUtil.not(IsJP);
 
 
     public static final PointToDraw[] POINTS_FOR_REARRANGED = new PointToDraw[]{
@@ -153,7 +160,9 @@ public class VDJCAlignmentsFormatter {
             pd(ReferencePoint.DEnd, "D><DP", IsDPRight),
             pd(ReferencePoint.DEndTrimmed, "DP>", IsDPRight),
 
-            pd(ReferencePoint.JBeginTrimmed, "<J"),
+            pd(ReferencePoint.JBeginTrimmed, "<J", NotJP),
+            pd(ReferencePoint.JBegin, "JP><J", IsJP),
+            pd(ReferencePoint.JBeginTrimmed, "<JP", IsJP),
             pd(ReferencePoint.CDR3End.move(-1), "CDR3><FR4").moveMarkerPoint(1),
             pd(ReferencePoint.FR4End, "FR4>", -1),
             pd(ReferencePoint.CBegin, "<C")

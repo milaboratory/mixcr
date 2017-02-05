@@ -28,13 +28,10 @@
  */
 package com.milaboratory.mixcr.partialassembler;
 
-import com.milaboratory.core.io.sequence.SingleRead;
-import com.milaboratory.core.io.sequence.SingleReadImpl;
-import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.tests.MiXCRTestUtils;
 import com.milaboratory.mixcr.tests.TargetBuilder;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
@@ -74,7 +71,7 @@ public class PartialAlignmentsAssemblerAlignerTest {
         NucleotideSequence seq2 = baseSeq.getRange(245, 245 + len);
         NucleotideSequence seq3 = baseSeq.getRange(320, 320 + len);
 
-        VDJCAlignmentResult<VDJCMultiRead> alignment = aligner.process(createMultiRead(seq1, seq2, seq3));
+        VDJCAlignmentResult<VDJCMultiRead> alignment = aligner.process(MiXCRTestUtils.createMultiRead(seq1, seq2, seq3));
         VDJCAlignments al = alignment.alignment;
         Assert.assertNotNull(al);
         assertInHits(genes.v, al);
@@ -113,12 +110,4 @@ public class PartialAlignmentsAssemblerAlignerTest {
         Assert.assertTrue(gene.getId().toString() + " in hits.", inHits);
     }
 
-    public static VDJCMultiRead createMultiRead(NucleotideSequence... seq) {
-        SingleRead[] sr = new SingleRead[seq.length];
-
-        for (int i = 0; i < sr.length; i++)
-            sr[i] = new SingleReadImpl(0, new NSequenceWithQuality(seq[i], SequenceQuality.getUniformQuality((byte) 35, seq[i].size())), "");
-
-        return new VDJCMultiRead(sr);
-    }
 }

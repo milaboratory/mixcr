@@ -31,10 +31,15 @@ package com.milaboratory.mixcr.tests;
 import com.milaboratory.core.alignment.AlignerTest;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.MultiAlignmentHelper;
+import com.milaboratory.core.io.sequence.SingleRead;
+import com.milaboratory.core.io.sequence.SingleReadImpl;
+import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.partialassembler.VDJCMultiRead;
 import io.repseq.core.GeneType;
 
 public class MiXCRTestUtils {
@@ -66,5 +71,14 @@ public class MiXCRTestUtils {
                 System.out.println();
             }
         }
+    }
+
+    public static VDJCMultiRead createMultiRead(NucleotideSequence... seq) {
+        SingleRead[] sr = new SingleRead[seq.length];
+
+        for (int i = 0; i < sr.length; i++)
+            sr[i] = new SingleReadImpl(0, new NSequenceWithQuality(seq[i], SequenceQuality.getUniformQuality((byte) 35, seq[i].size())), "");
+
+        return new VDJCMultiRead(sr);
     }
 }
