@@ -57,13 +57,13 @@ public class ActionExportParameters<T extends VDJCObject> extends ActionParamete
             names = {"-lf", "--list-fields"})
     public Boolean listFields = false;
 
+    @Deprecated
     @Parameter(description = "Output short versions of column headers which facilitates analysis with Pandas, R/DataFrames or other data tables processing library.",
             names = {"-s", "--no-spaces"})
-    @Deprecated
     public Boolean noSpaces;
 
-    @Parameter(description = "Output human-readable version of column headers.",
-            names = {"-v", "--human-readable"})
+    @Parameter(description = "Output column headers with spaces.",
+            names = {"-v", "--with-spaces"})
     public Boolean humanReadable;
 
     @Parameter(description = "Output only first N records",
@@ -145,7 +145,7 @@ public class ActionExportParameters<T extends VDJCObject> extends ActionParamete
     public static void parse(Class clazz, final String[] args, ActionExportParameters parameters) {
         if (parameters.noSpaces != null)
             System.out.println("\"-s\" / \"--no-spaces\" option is deprecated.\nScripting friendly output format now used " +
-                    "by default.\nUse \"-v\" / \"--human-readable\" to switch back to human readable format.");
+                    "by default.\nUse \"-v\" / \"--with-spaces\" to switch back to human readable format.");
 
         JCommander jc = new JCommander(parameters);
         jc.setAcceptUnknownOptions(true);

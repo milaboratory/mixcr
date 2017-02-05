@@ -1,4 +1,5 @@
-Major review of analysis steps for non-enriched libraries (RNA-Seq, etc...). Efficiency of TCR/IG extraction substantially improved (according to our benchmarks, efficiency is highest among all tools available for RNA-Seq repertoire extraction to date; successfully work even for 48+48 RNA-Seq data). Zero false-positive alignments and false-overlaps.
-Additional round of alignment for V gene in PVFirst.
+Major review of all analysis steps for non-enriched libraries (RNA-Seq, etc...). Efficiency of TCR/IG extraction substantially improved (according to our benchmarks, efficiency is highest among all tools available for RNA-Seq repertoire extraction to date; successfully work even for 48+48 RNA-Seq data). Zero false-positive alignments and false-overlaps.
+Additional round of alignment for V gene in paired-end reads aligner (improve efficiency and accuracy for some boundary cases; negligible impact on analysis speed).
+Scripting-friendly export format now used by default. Use `-v` to return to column names with spaces.
 Information on the number of deleted nucleotides / size of P-segment for `V`, `D`, and `J` genes now is explicitly exported in `-defaultAnchorPoints` field (see docs for more info).
 Correct marks for P-segment of J gene in `exportAlignmentsPretty` and `exportClonesPretty`
