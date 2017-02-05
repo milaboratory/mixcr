@@ -81,6 +81,13 @@ public class VDJCObject {
         return hits == null ? new VDJCHit[0] : hits;
     }
 
+    public Chains getTopChain(GeneType gt) {
+        final VDJCHit top = getBestHit(gt);
+        if (top == null)
+            return Chains.EMPTY;
+        return top.getGene().getChains();
+    }
+
     public Chains getAllChains(GeneType geneType) {
         if (allChains == null)
             synchronized ( this ){
@@ -140,6 +147,10 @@ public class VDJCObject {
 
     public final NSequenceWithQuality getTarget(int target) {
         return targets[target];
+    }
+
+    public final NSequenceWithQuality[] getTargets(){
+        return targets.clone();
     }
 
     public final VDJCPartitionedSequence getPartitionedTarget(int target) {

@@ -28,16 +28,24 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
+import com.milaboratory.core.PairedEndReadsLayout;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Aligner;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
+import com.milaboratory.core.merger.MergerParameters;
+import com.milaboratory.core.merger.QualityMergingAlgorithm;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.partialassembler.AlignedTarget;
+import com.milaboratory.mixcr.partialassembler.TargetMerger;
+import io.repseq.core.GeneFeature;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class MergerTest {
     //@Test
@@ -96,5 +104,33 @@ public class MergerTest {
         char[] chars = new char[count];
         Arrays.fill(chars, letter);
         return new String(chars);
+    }
+
+    @Test
+    public void test1() throws Exception {
+        final TargetMerger merger = new TargetMerger(new MergerParameters(QualityMergingAlgorithm.MaxMax,
+                PairedEndReadsLayout.Collinear, 10, 50, 0.9),
+                0.9f);
+
+        List<VDJCAlignments> list = new ArrayList<>();
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader("/Users/poslavsky/Downloads/hui")) {
+            merger.setAlignerParameters(reader.getParameters());
+            reader.getNumberOfReads();
+            VDJCAlignments take;
+            while ((take = reader.take()) != null) {
+                list.add(take);
+            }
+        }
+
+        final VDJCAlignments al = list.get(2);
+
+
+        final TargetMerger.TargetMergingResult m = merger.merge(1, new AlignedTarget(al, 0), new AlignedTarget(al, 1));
+        System.out.println(m.result.getAlignments().getFeature(GeneFeature.CDR3));
+
+        System.out.println(al.getReadId() - 28388844);
+        System.out.println(al.getFeature(GeneFeature.CDR3));
+
+
     }
 }

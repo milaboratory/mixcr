@@ -44,24 +44,24 @@ public class VDJCAlignerParametersTest {
     @Test
     public void test1() throws Exception {
         VDJCAlignerParameters paramentrs = new VDJCAlignerParameters(
-                new KGeneAlignmentParameters(GeneFeature.VRegion,
+                new KGeneAlignmentParameters(GeneFeature.VRegion, 120, 0.87f,
                         new KAlignerParameters(5, false, false,
                                 1.5f, 0.75f, 1.0f, -0.1f, -0.3f, 4, 10, 15, 2, -10, 40.0f, 0.87f, 7,
                                 LinearGapAlignmentScoring.getNucleotideBLASTScoring())),
                 new DAlignerParameters(GeneFeature.DRegion,
                         30.0f, 0.85f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring()),
-                new KGeneAlignmentParameters(GeneFeature.JRegion,
+                new KGeneAlignmentParameters(GeneFeature.JRegion, 120, 0.87f,
                         new KAlignerParameters(5, false, false,
                                 1.5f, 0.75f, 1.0f, -0.1f, -0.3f, 4, 10, 15, 2, -10, 40.0f, 0.87f, 7,
                                 LinearGapAlignmentScoring.getNucleotideBLASTScoring())),
-                new KGeneAlignmentParameters(GeneFeature.CExon1,
+                new KGeneAlignmentParameters(GeneFeature.CExon1, 120, 0.87f,
                         new KAlignerParameters(5, false, false,
                                 1.5f, 0.75f, 1.0f, -0.1f, -0.3f, 4, 10, 15, 2, -10, 40.0f, 0.87f, 7,
                                 LinearGapAlignmentScoring.getNucleotideBLASTScoring())),
                 VJAlignmentOrder.JThenV,
                 false, false,
-                120.0f, 5, 0.7f, 0.7f, false, false, false, PairedEndReadsLayout.Opposite, new MergerParameters(
-                QualityMergingAlgorithm.SumSubtraction, null, 12, null, 0.12), false);
+                120.0f, 5, 0.7f, false, false, false, PairedEndReadsLayout.Opposite, new MergerParameters(
+                QualityMergingAlgorithm.SumSubtraction, null, 12, null, 0.12), false, 10);
 
         String str = GlobalObjectMappers.PRETTY.writeValueAsString(paramentrs);
         VDJCAlignerParameters deser = GlobalObjectMappers.PRETTY.readValue(str, VDJCAlignerParameters.class);

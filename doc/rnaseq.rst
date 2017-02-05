@@ -35,9 +35,9 @@ Note option ``-OallowPartialAlignments=true`` of the ``align`` command: it will 
 +------------------------------+---------------+--------------------------------------------------------------+
 | ``kOffset``                  | ``0``         | Offset taken from ``VEndTrimmed``/``JBeginTrimmed``.         |
 +------------------------------+---------------+--------------------------------------------------------------+
-| ``minimalVJJunctionOverlap`` | ``18``        | Minimal length of the overlapped VJ region: two squences can |
+| ``minimalAssembleOverlap`` | ``18``        | Minimal length of the overlapped VJ region: two squences can |
 |                              |               | be potentially merged only if they has at least              |
-|                              |               | ``minimalVJJunctionOverlap`` consequent same nucleotides     |
+|                              |               | ``minimalAssembleOverlap`` consequent same nucleotides     |
 |                              |               | in the VJJunction region.                                    |
 +------------------------------+---------------+--------------------------------------------------------------+
 
@@ -60,7 +60,7 @@ The algorithm which restores merged sequence from two overlapped alignments has 
 +-----------------------------+---------------------+--------------------------------------------------------------+
 | ``partsLayout``             | ``CollinearDirect`` | Relative orientation of paired reads.                        |
 +-----------------------------+---------------------+--------------------------------------------------------------+
-| ``minimalOverlap``          | ``20``              | Minimal length of the overlapped region.                     |
+| ``minimalAssembleOverlap``          | ``20``              | Minimal length of the overlapped region.                     |
 +-----------------------------+---------------------+--------------------------------------------------------------+
 | ``maxQuality``              | ``45``              | Maximal sequence quality that can may be assigned in the     | 
 |                             |                     | region of overlap.                                           |
@@ -73,5 +73,5 @@ The above parameters can be specified in e.g. the following way:
 
 ::
 
-    mixcr assemblePartial -OmergerParameters.minimalOverlap=15 alignments.vdjca alignmentsRescued.vdjca
+    mixcr assemblePartial -OmergerParameters.minimalAssembleOverlap=15 alignments.vdjca alignmentsRescued.vdjca
 
