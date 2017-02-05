@@ -121,7 +121,7 @@ public class FieldExtractorsTest {
 
         // No PSegments, just deletions
 
-        Integer[][] r = goAssert.go("{CDR3Begin(-250):VEnd(-3)} CCAAA {DBegin(0):DEnd(0)} AAA {JBegin(2):FR4End} " +
+        Integer[][] r = goAssert.go("{CDR3Begin(-250):VEnd(-3)} 'CCAAA' {DBegin(0):DEnd(0)} 'AAA' {JBegin(2):FR4End} " +
                         "{CBegin}C*100 N*100",
                 100, 240, 307, 450, "");
         assertExportPoint(r[0], ReferencePoint.VEndTrimmed, -3);
@@ -129,7 +129,7 @@ public class FieldExtractorsTest {
         assertExportPoint(r[0], ReferencePoint.DEndTrimmed, 0);
         assertExportPoint(r[0], ReferencePoint.JBeginTrimmed, -2);
 
-        r = goAssert.go("{CDR3Begin(-250):VEnd(0)} CCAAA {DBegin(0):DEnd(-2)} AAA {JBegin:FR4End} {CBegin}C*100 N*100",
+        r = goAssert.go("{CDR3Begin(-250):VEnd(0)} 'CCAAA' {DBegin(0):DEnd(-2)} 'AAA' {JBegin:FR4End} {CBegin}C*100 N*100",
                 100, 240, 307, 450, "");
         assertExportPoint(r[0], ReferencePoint.VEndTrimmed, 0);
         assertExportPoint(r[0], ReferencePoint.DBeginTrimmed, 0);
@@ -138,7 +138,7 @@ public class FieldExtractorsTest {
 
         // With PSegments
 
-        r = goAssert.go("{CDR3Begin(-250):VEnd(0)} {VEnd:VEnd(-3)} CCAAA {DBegin(3):DBegin} {DBegin:DEnd(-2)} AAA " +
+        r = goAssert.go("{CDR3Begin(-250):VEnd(0)} {VEnd:VEnd(-3)} 'CCAAA' {DBegin(3):DBegin} {DBegin:DEnd(-2)} 'AAA' " +
                         "{JBegin(2):JBegin} {JBegin:FR4End} {CBegin}C*100 N*100",
                 100, 240, 307, 450, "");
         assertExportPoint(r[0], ReferencePoint.VEndTrimmed, 3);

@@ -65,7 +65,7 @@ public class PartialAlignmentsAssemblerAlignerTest {
         //                                 | 305
         // 250V + 55CDR3 (20V 7N 10D 3N 15J) + 28J + 100C
         NucleotideSequence baseSeq = TargetBuilder.generateSequence(genes, "{CDR3Begin(-250)}V*270 NNNNNNN {DBegin(0)}D*10 NNN {CDR3End(-15):FR4End} {CBegin}C*100", rg);
-
+        
         int len = 70;
         NucleotideSequence seq1 = baseSeq.getRange(0, len);
         NucleotideSequence seq2 = baseSeq.getRange(245, 245 + len);

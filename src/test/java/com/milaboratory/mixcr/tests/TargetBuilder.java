@@ -86,7 +86,7 @@ public class TargetBuilder {
     }
 
     final static Pattern preProcessPattern = Pattern.compile("\\*(\\d+)|(.)");
-    final static Pattern modelParserPattern = Pattern.compile("([ATGCatgc]+)|\\{([A-za-z()0-9\\-]+)}|\\{([A-za-z()0-9\\-]+):([A-za-z()0-9\\-]+)}|([Vv]+)|([Dd]+)|([Jj]+)|([Cc]+)|(N+)| ");
+    final static Pattern modelParserPattern = Pattern.compile("\'([ATGCatgc]+)\'|\\{([A-za-z()0-9\\-]+)}|\\{([A-za-z()0-9\\-]+):([A-za-z()0-9\\-]+)}|([Vv]+)|([Dd]+)|([Jj]+)|([Cc]+)|(N+)| ");
     final static int atgcGroupId = 1;
     final static int refPointGroupId = 2;
     final static int geneFeaturePoint1GroupId = 3;
@@ -119,7 +119,7 @@ public class TargetBuilder {
 
         // Building sequence
         SequenceBuilder<NucleotideSequence> builder = NucleotideSequence.ALPHABET.createBuilder();
-        builder.ensureCapacity(model.length());
+        //builder.ensureCapacity(model.length());
 
         Matcher matcher = modelParserPattern.matcher(model);
         ReferencePoint leftPoint = null;
