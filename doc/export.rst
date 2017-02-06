@@ -177,17 +177,29 @@ The following table shows the correspondance between anchor point and positions 
 +--------------------------+---------------------+--------------------+
 | VEnd / *PSegmentBegin*   | 10                  | 11                 |
 +--------------------------+---------------------+--------------------+
-| VEndTrimmed              | 11                  | 12                 |
+| Number of 3' V deletions | 11                  | 12                 |
+| (negative value), or     |                     |                    |
+| length of 3' V P-segment |                     |                    |
+| (positive value)         |                     |                    |
 +--------------------------+---------------------+--------------------+
-| DBeginTrimmed            | 12                  | 13                 |
+| Number of 5' D deletions | 12                  | 13                 |
+| (negative value), or     |                     |                    |
+| length of 5' D P-segment |                     |                    |
+| (positive value)         |                     |                    |
 +--------------------------+---------------------+--------------------+
 | DBegin / *PSegmentEnd*   | 13                  | 14                 |
 +--------------------------+---------------------+--------------------+
 | DEnd / *PSegmentBegin*   | 14                  | 15                 |
 +--------------------------+---------------------+--------------------+
-| DEndTrimmed              | 15                  | 16                 |
+| Number of 3' D deletions | 15                  | 16                 |
+| (negative value), or     |                     |                    |
+| length of 3' D P-segment |                     |                    |
+| (positive value)         |                     |                    |
 +--------------------------+---------------------+--------------------+
-| JBeginTrimmed            | 16                  | 17                 |
+| Number of 3' J deletions | 16                  | 17                 |
+| (negative value), or     |                     |                    |
+| length of 3' J P-segment |                     |                    |
+| (positive value)         |                     |                    |
 +--------------------------+---------------------+--------------------+
 | JBegin / *PSegmentEnd*   | 17                  | 18                 |
 +--------------------------+---------------------+--------------------+

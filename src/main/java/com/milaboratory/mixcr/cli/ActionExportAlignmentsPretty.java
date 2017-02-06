@@ -44,6 +44,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.cli.afiltering.AFilter;
 import com.milaboratory.util.NSequenceWithQualityPrintHelper;
+import gnu.trove.set.hash.TLongHashSet;
 import io.repseq.core.Chains;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
@@ -245,7 +246,7 @@ public class ActionExportAlignmentsPretty implements Action {
         public Boolean geneSequence = null;
 
         @Parameter(description = "Limit number of alignments before filtering",
-                names = {"-b", "--limitBefore"})
+                names = {"-b", "--limit-before"})
         public Integer limitBefore = null;
 
         @Parameter(description = "Limit number of filtered alignments; no more " +
@@ -285,6 +286,19 @@ public class ActionExportAlignmentsPretty implements Action {
                 names = {"-d", "--descriptions"})
         public Boolean descr = null;
 
+        @Parameter(description = "List of read ids to export",
+                names = {"-i", "--reads-ids"}, variableArity = true)
+        public List<String> ids = new ArrayList<>();
+
+        TLongHashSet getReadIds() {
+            if (ids.isEmpty())
+                return null;
+            TLongHashSet r = new TLongHashSet(ids.size());
+            for (String id : ids)
+                r.add(Long.parseLong(id));
+            return r;
+        }
+
         public Chains getChain() {
             return Util.parseLoci(chain);
         }
@@ -307,6 +321,15 @@ public class ActionExportAlignmentsPretty implements Action {
                     return false;
                 }
             });
+
+            final TLongHashSet readIds = getReadIds();
+            if (readIds != null)
+                filters.add(new Filter<VDJCAlignments>() {
+                    @Override
+                    public boolean accept(VDJCAlignments object) {
+                        return readIds.contains(object.getReadId());
+                    }
+                });
 
             if (feature != null) {
                 final GeneFeature feature = GeneFeature.parse(this.feature);

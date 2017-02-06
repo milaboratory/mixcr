@@ -57,9 +57,14 @@ public class ActionExportParameters<T extends VDJCObject> extends ActionParamete
             names = {"-lf", "--list-fields"})
     public Boolean listFields = false;
 
+    @Deprecated
     @Parameter(description = "Output short versions of column headers which facilitates analysis with Pandas, R/DataFrames or other data tables processing library.",
             names = {"-s", "--no-spaces"})
-    public Boolean noSpaces = false;
+    public Boolean noSpaces;
+
+    @Parameter(description = "Output column headers with spaces.",
+            names = {"-v", "--with-spaces"})
+    public Boolean humanReadable;
 
     @Parameter(description = "Output only first N records",
             names = {"-n", "--limit"}, validateWith = PositiveInteger.class)
@@ -74,6 +79,10 @@ public class ActionExportParameters<T extends VDJCObject> extends ActionParamete
     @Override
     protected List<String> getOutputFiles() {
         return files.subList(1, 2);
+    }
+
+    public boolean isHumanReadableParameters() {
+        return humanReadable != null && humanReadable;
     }
 
     public String getOutputFile() {
@@ -134,6 +143,10 @@ public class ActionExportParameters<T extends VDJCObject> extends ActionParamete
     }
 
     public static void parse(Class clazz, final String[] args, ActionExportParameters parameters) {
+        if (parameters.noSpaces != null)
+            System.out.println("\"-s\" / \"--no-spaces\" option is deprecated.\nScripting friendly output format now used " +
+                    "by default.\nUse \"-v\" / \"--with-spaces\" to switch back to human readable format.");
+
         JCommander jc = new JCommander(parameters);
         jc.setAcceptUnknownOptions(true);
         jc.parse(cutArgs(args));
@@ -145,10 +158,11 @@ public class ActionExportParameters<T extends VDJCObject> extends ActionParamete
                 add(args[args.length - 2]);
                 add(args[args.length - 1]);
             }};
-            OutputMode outputMode = parameters.noSpaces ? OutputMode.ScriptingFriendly : OutputMode.HumanFriendly;
+            OutputMode outputMode = parameters.isHumanReadableParameters() ? OutputMode.HumanFriendly : OutputMode.ScriptingFriendly;
             parameters.exporters = new ArrayList<>();
+
             //if preset was explicitly specified
-            if (parameters.preset != DEFAULT_PRESET)
+            if (!parameters.preset.equals(DEFAULT_PRESET))
                 parameters.exporters.addAll(getPresetParameters(outputMode, clazz, parameters.preset));
 
             if (parameters.presetFile != null)
@@ -157,7 +171,7 @@ public class ActionExportParameters<T extends VDJCObject> extends ActionParamete
             parameters.exporters.addAll(parseFields(outputMode, clazz, jc.getUnknownOptions()));
 
             if (parameters.exporters.isEmpty())
-                parameters.exporters.addAll(getPresetParameters(outputMode, clazz, parameters.preset));
+                parameters.exporters.addAll(getPresetParameters(outputMode, clazz, DEFAULT_PRESET));
 
             parameters.validate();
         }

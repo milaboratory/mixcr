@@ -1,7 +1,9 @@
 {
   "kValue": 12,
-  "kOffset": 0,
-  "minimalVJJunctionOverlap": 18,
+  "kOffset": -7,
+  "minimalAssembleOverlap": 12,
+  "minimalNOverlap": 5,
+  "minimalAlignmentMergeIdentity": 0.85,
   "mergerParameters": {
     "qualityMergingAlgorithm": "SumSubtraction",
     "partsLayout": "CollinearDirect",

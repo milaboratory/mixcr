@@ -3,6 +3,8 @@
         "fixSeed" : true,
         "vParameters": {
             "geneFeatureToAlign": "VRegionWithP",
+            "minSumScore" : 40,
+            "relativeMinScore" : 0.87,
             "parameters": {
                 "mapperKValue": 5,
                 "floatingLeftBound": true,
@@ -40,6 +42,8 @@
         },
         "jParameters": {
             "geneFeatureToAlign": "JRegionWithP",
+            "minSumScore" : 40,
+            "relativeMinScore" : 0.87,
             "parameters": {
                 "mapperKValue": 5,
                 "floatingLeftBound": true,
@@ -66,6 +70,8 @@
         },
         "cParameters": {
             "geneFeatureToAlign": "CExon1",
+            "minSumScore" : 40,
+            "relativeMinScore" : 0.87,
             "parameters": {
                 "mapperKValue": 5,
                 "floatingLeftBound": false,
@@ -101,16 +107,18 @@
         "minSumScore": 120.0,
         "maxHits": 5,
         "relativeMinVFR3CDR3Score": 0.7,
-        "relativeMinVScore": 0.7,
         "allowPartialAlignments": false,
         "allowNoCDR3PartAlignments": false,
         "allowChimeras": false,
+        "vjOverlapWindow": 3,
         "readsLayout": "Opposite"
     },
     "kaligner2": {
         "fixSeed" : true,
         "vParameters": {
             "geneFeatureToAlign": "VRegionWithP",
+            "minSumScore" : 150,
+            "relativeMinScore" : 0.8,
             "parameters":{
                 "type" : "kaligner2",
                 "mapperNValue" : 8,
@@ -155,6 +163,8 @@
         },
         "jParameters": {
             "geneFeatureToAlign": "JRegionWithP",
+            "minSumScore" : 150,
+            "relativeMinScore" : 0.8,
             "parameters": {
                 "type" : "kaligner2",
                 "mapperNValue" : 8,
@@ -188,6 +198,8 @@
         },
         "cParameters": {
             "geneFeatureToAlign": "CExon1",
+            "minSumScore" : 40,
+            "relativeMinScore" : 0.8,
             "parameters": {
                 "mapperKValue": 5,
                 "floatingLeftBound": false,
@@ -223,16 +235,18 @@
         "minSumScore": 120.0,
         "maxHits": 5,
         "relativeMinVFR3CDR3Score": 0.7,
-        "relativeMinVScore": 0.7,
         "allowPartialAlignments": false,
         "allowNoCDR3PartAlignments": false,
         "allowChimeras": false,
+        "vjOverlapWindow": 3,
         "readsLayout": "Opposite"
     },
     "rna-seq": {
         "fixSeed" : true,
         "vParameters": {
             "geneFeatureToAlign": "VTranscriptWithout5UTRWithP",
+            "minSumScore" : 80,
+            "relativeMinScore" : 0.87,
             "parameters": {
                 "mapperKValue": 5,
                 "floatingLeftBound": false,
@@ -247,7 +261,7 @@
                 "minAlignmentLength": 15,
                 "maxAdjacentIndels": 2,
                 "alignmentStopPenalty": -1000,
-                "absoluteMinScore": 80.0,
+                "absoluteMinScore": 55.0,
                 "relativeMinScore": 0.87,
                 "maxHits": 7,
                 "scoring": {
@@ -270,6 +284,8 @@
         },
         "jParameters": {
             "geneFeatureToAlign": "JRegionWithP",
+            "minSumScore" : 60,
+            "relativeMinScore" : 0.87,
             "parameters": {
                 "mapperKValue": 5,
                 "floatingLeftBound": true,
@@ -284,7 +300,7 @@
                 "minAlignmentLength": 15,
                 "maxAdjacentIndels": 2,
                 "alignmentStopPenalty": -1000,
-                "absoluteMinScore": 60.0,
+                "absoluteMinScore": 50.0,
                 "relativeMinScore": 0.87,
                 "maxHits": 7,
                 "scoring": {
@@ -296,6 +312,8 @@
         },
         "cParameters": {
             "geneFeatureToAlign": "CExon1",
+            "minSumScore" : 40,
+            "relativeMinScore" : 0.87,
             "parameters": {
                 "mapperKValue": 5,
                 "floatingLeftBound": false,
@@ -331,10 +349,10 @@
         "minSumScore": 200.0,
         "maxHits": 5,
         "relativeMinVFR3CDR3Score": 0.7,
-        "relativeMinVScore": 0.7,
         "allowPartialAlignments": false,
         "allowNoCDR3PartAlignments": false,
         "allowChimeras": false,
+        "vjOverlapWindow": 3,
         "readsLayout": "Opposite"
     }
 }
