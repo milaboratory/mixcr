@@ -243,11 +243,17 @@ MiXCR allows to extract TCR and BCR CDR3 repertoires from RNA-Seq data. Extracti
 
     > mixcr assemblePartial -p alignmentsRescued_1.vdjca alignmentsRescued_2.vdjca
 
-3. :ref:`Assemble <ref-assemble>` clones:
+3. Extend TCR alignments with uniquely determined V and J genes and having incomplete coverage of CDR3s using germline sequences:
 
   .. code-block:: console
 
-    > mixcr assemble alignmentsRescued_2.vdjca clones.clns
+    > mixcr extendAlignments alignmentsRescued_2.vdjca alignmentsRescued_2_extended.vdjca
+
+4. :ref:`Assemble <ref-assemble>` clones:
+
+  .. code-block:: console
+
+    > mixcr assemble alignmentsRescued_2_extended.vdjca clones.clns
 
   All ``mixcr assemble`` parametrs can also be used here.
 
@@ -255,7 +261,7 @@ MiXCR allows to extract TCR and BCR CDR3 repertoires from RNA-Seq data. Extracti
 
   - To make error correction algorithms to combine clone abundancies add the following option: ``-OaddReadsCountOnClustering=true``
 
-4. :ref:`Exporting <ref-export>` clones:
+5. :ref:`Exporting <ref-export>` clones:
 
   .. code-block:: console
 
