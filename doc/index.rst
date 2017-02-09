@@ -18,19 +18,51 @@ MiXCR is free for academic and non-profit use (see :ref:`License <license>`).
 
    *MiXCR pipeline. The workflow from IG or T-cell receptor data sets to final clonotypes is shown*
 
+:ref:`getting-started`
+:ref:`main-actions`
+:ref:`special-cases`
+:ref:`in-depth-topics`
+
+.. _getting-started:
+
 .. toctree::
    :hidden:
-   :maxdepth: 1
+   :caption: Getting started
+   :maxdepth: 3
 
    install
    quickstart
+
+.. _main-actions:
+
+.. toctree::
+   :hidden:
+   :caption: Main actions
+   :maxdepth: 1
+
    align
    assemble
    export
-   newAligner
-   importSegments
+
+.. _special-cases:
+
+.. toctree::
+   :hidden:
+   :caption: Main actions
+   :maxdepth: 1
+
    rnaseq
+   importSegments
+   newAligner
+
+.. _in-depth-topics:
+
+.. toctree::
+   :hidden:
+   :caption: In-depth topics
+   :maxdepth: 1
+
    geneFeatures
    appendix
-   license
    utils
+   license
