@@ -48,7 +48,7 @@ MiXCR is free for academic and non-profit use (see :ref:`License <license>`).
 
 .. toctree::
    :hidden:
-   :caption: Main actions
+   :caption: Special cases
    :maxdepth: 1
 
    rnaseq
