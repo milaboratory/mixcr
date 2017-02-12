@@ -165,13 +165,13 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
 
     private ClonalSequence extractClonalSequence(VDJCAlignments alignments) {
         final NSequenceWithQuality[] targets = new NSequenceWithQuality[parameters.assemblingFeatures.length];
-        int totalLengt = 0;
+        int totalLength = 0;
         for (int i = 0; i < targets.length; ++i)
             if ((targets[i] = alignments.getFeature(parameters.assemblingFeatures[i])) == null)
                 return null;
             else
-                totalLengt += targets[i].size();
-        if (totalLengt < parameters.minimalClonalSequenceLength)
+                totalLength += targets[i].size();
+        if (totalLength < parameters.minimalClonalSequenceLength)
             return null;
         return new ClonalSequence(targets);
     }
