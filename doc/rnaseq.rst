@@ -159,7 +159,5 @@ The above parameters can be specified in e.g. the following way:
 
 .. The above parameters can be specified in e.g. the following way:
 
-.. ::
-
 ..     mixcr assemblePartial -OmergerParameters.minimalOverlap=15 alignments.vdjca alignmentsRescued.vdjca
 
