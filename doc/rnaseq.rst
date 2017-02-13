@@ -16,7 +16,7 @@ There are two main challenges of repertoire extraction from non-enriched and ran
 
   - **Extraction and alignment of fragments of target molecules.** This procedure must be *sensitive* enough to detect and align sequences with very small parts of V or J genes, but at the same time must be very *selective* not to align non-target sequences homologous to TCR or Ig. Alignment of such sequences and treating them as TCRs or IGs bring a risk of introducing reproducible false-positive clonotypes into resulting clonesets, and may, in turn, lead to detection of false intersections between unlinked repertoires.
   
-    MiXCR has a special set of alignment parameters (``-p rna-seq``), which was specifically optimized, and automatically and manually checked on tens of different datasets to give the best possible sensitivity keeping a zero false-positive rate. |br| |br|
+    MiXCR has a special set of alignment parameters (``-p rna-seq``), which was specifically optimized, and automatically and manually checked on tens of different datasets to give the best possible sensitivity keeping zero false-positive rate. |br| |br|
   
   - **Assembly of overlapping fragmented sequencing reads into long-enough CDR3 containing contigs.** In contrast to sequencing reads from targeted IG or TCR libraries with very determined CDR3 position, reads from randomly shred libraries may cover only a part of CDR3. This fact is especially true for short-read data (like very common 50+50 RNA-Seq), where most part of target sequences only partially cover CDR3. In order to efficiently extract repertoire from such data one have to reconstruct initial CDR3s from fragments scattered all over the initial sequencing dataset. The main challenge of this procedure is, again, the possibility to introduce false-positive clones, namely to perform an overlap between two sequences from different clones. This false positives are not so dangerous as those described in the previous paragraph, but still may introduce certain biases. The problem is that it is very easy to make such false-overlaps as TCR or IG sequences consist mainly from conservative V, D and J regions. So overlapping must be done very carefully, taking into account the positions of all conserved regions.
 
@@ -32,7 +32,7 @@ Analysis pipeline
 
 MiXCR has all of the steps required to efficiently extract repertoire data from RNA-Seq and similar sequencing datasets, starting from raw ``fastq(.gz)`` files to final list of clonotypes for each immunological chain (``TRB``, ``IGH``, etc..).
 
-All default values for analysis parameters were carefully optimized, and sould be suitable for most of the use-cases.
+All default values for analysis parameters were carefully optimized, and should be suitable for most of the use-cases.
 
 Prerequisite
 ^^^^^^^^^^^^
