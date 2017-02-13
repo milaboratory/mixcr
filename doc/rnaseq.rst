@@ -18,7 +18,7 @@ There are two main challenges of repertoire extraction from non-enriched and ran
   
     MiXCR has a special set of alignment parameters (``-p rna-seq``), which was specifically optimized, and automatically and manually checked on tens of different datasets to give the best possible sensitivity keeping a zero false-positive rate. |br| |br|
   
-  - **Assembly of overlapping fragmented sequencing reads into long-enough CDR3 containing contigs.** In contrast to sequencing reads from targeted IG or TCR libraries with very determined CDR3 position, reads from randomly shred libraries may cover only a part of CDR3. This fact is especially true for short-read data (like very common 50+50 RNA-Seq), where most part of target sequences only partially cover CDR3. In order to efficiently extract repertoire from such data one must to reconstruct initial CDR3s from fragments scattered all over the initial sequencing dataset. The main challenge of this procedure is, again, the possibility to introduce false-positive clones, namely to perform an overlap between two sequences from different clones. This false-positives are not so dangerous as those described in the prefious paragraph, but still may introduce certain biases. The problem is that it is very easy to make such false-overlaps as TCR or IG sequences consist mainly from conservative V, D and J regions. So overlapping must be done very carefully, taking into account the positions of all conserved regions.
+  - **Assembly of overlapping fragmented sequencing reads into long-enough CDR3 containing contigs.** In contrast to sequencing reads from targeted IG or TCR libraries with very determined CDR3 position, reads from randomly shred libraries may cover only a part of CDR3. This fact is especially true for short-read data (like very common 50+50 RNA-Seq), where most part of target sequences only partially cover CDR3. In order to efficiently extract repertoire from such data one have to reconstruct initial CDR3s from fragments scattered all over the initial sequencing dataset. The main challenge of this procedure is, again, the possibility to introduce false-positive clones, namely to perform an overlap between two sequences from different clones. This false positives are not so dangerous as those described in the previous paragraph, but still may introduce certain biases. The problem is that it is very easy to make such false-overlaps as TCR or IG sequences consist mainly from conservative V, D and J regions. So overlapping must be done very carefully, taking into account the positions of all conserved regions.
 
     MiXCR has a special action to perform such an assembly of reads, partially covering CDR3 - ``assemblePartial``. Basically it performs an overlap of already aligned reads from `*.vdjca` file, realigns resulting contig, and checks if initial overlap has covered enough part of a non-template N region. Default thresholds in this procedure were optimized to assemble as many contigs as possible while producing zero false overlaps (no false overlaps were detected in all of the benchmarks we have performed).
 
@@ -30,18 +30,18 @@ In case of short reads input, even after ``assemblePartial`` many contigs/reads 
 Analysis pipeline
 -----------------
 
-MiXCR has all of the steps required to efficiently extract repertoire data from RNA-Seq and similar sequencing datasets, starting from raw ``fastq(.gz)`` files to final list of clonotypes for each of the immunological chain (``TRB``, ``IGH``, etc..).
+MiXCR has all of the steps required to efficiently extract repertoire data from RNA-Seq and similar sequencing datasets, starting from raw ``fastq(.gz)`` files to final list of clonotypes for each immunological chain (``TRB``, ``IGH``, etc..).
 
 All default values for analysis parameters were carefully optimized, and sould be suitable for most of the use-cases.
 
 Prerequisite
 ^^^^^^^^^^^^
 
-There are only two things you must tell mixcr for a successfull analysis. Both on the first ``align`` step.
+There are only two things you must tell MiXCR for a successfull analysis. Both on the first ``align`` step.
 
 1. **Species.** Using ``-s ...`` parameter. See :ref:`here <ref-align-cli-params>`.
 
-2. **Data source origin**. Genomic or transcriptomic. This affects which part of reference V gene seqeucnes will be used for alignment, with or without intron. By default transcriptomic source is assumed, so no additional parameters have to be specified for an analysis of RNA-Seq data. If your data has a genomic origin add the following option to the ``align`` command:
+2. **Data source origin**. Genomic or transcriptomic. This affects which part of reference V gene seqeucnes will be used for alignment, with or without intron. By default transcriptomic source is assumed, so no additional parameters have to be specified for an analysis of RNA-Seq data. If your data has a genomic DNA origin add the following option to the ``align`` command:
 
   ::
 
@@ -78,7 +78,7 @@ Typical analysis workflow
     mixcr assemblePartial -p alignments.vdjca alignments_rescued_1.vdjca
     mixcr assemblePartial -p alignments_rescued_1.vdjca alignments_rescued_2.vdjca
 
-  ``-p`` option tells mixcr to pass unassembled alignments to the output file.
+  ``-p`` option tells MiXCRsquences to pass unassembled alignments to the output file.
 
 3. (optional) Perform extension of incomplete TCR CDR3s with uniquely determined V and J genes using germline sequences. As described in the :ref:`last paragraph of introduction <ref-rna-seq-extend-description>`
 
@@ -124,8 +124,8 @@ The following options are available for ``assemblePartial``:
 +------------------------------+---------------+--------------------------------------------------------------+
 | ``kOffset``                  | ``-7``        | Offset taken from ``VEndTrimmed``/``JBeginTrimmed``.         |
 +------------------------------+---------------+--------------------------------------------------------------+
-| ``minimalAssembleOverlap``   | ``12``        | Minimal length of the overlapped VJ region: two squences can |
-|                              |               | be potentially merged only if they has at least              |
+| ``minimalAssembleOverlap``   | ``12``        | Minimal length of the overlapped VJ region: two sequences    |
+|                              |               | can be potentially merged only if they have at least         |
 |                              |               | ``minimalAssembleOverlap``-wide overlap in the VJJunction    |
 |                              |               | region. No mismatches are allowed in the overlapped region.  |
 +------------------------------+---------------+--------------------------------------------------------------+
@@ -148,9 +148,7 @@ The algorithm which restores merged sequence from two overlapped alignments has 
 | ``qualityMergingAlgorithm`` | ``SumSubtraction``  | Algorithm used for assigning quality of the merged read.     |
 |                             |                     | Possible values: ``SumMax``, ``SumSubtraction``              |
 +-----------------------------+---------------------+--------------------------------------------------------------+
-| ``partsLayout``             | ``CollinearDirect`` | Relative orientation of paired reads.                        |
-+-----------------------------+---------------------+--------------------------------------------------------------+
-| ``minimalAssembleOverlap``  | ``20``              | Minimal length of the overlapped region.                     |
+| ``minimalOverlap``          | ``20``              | Minimal length of the overlapped region.                     |
 +-----------------------------+---------------------+--------------------------------------------------------------+
 | ``maxQuality``              | ``45``              | Maximal sequence quality that can may be assigned in the     | 
 |                             |                     | region of overlap.                                           |
@@ -163,5 +161,5 @@ The above parameters can be specified in e.g. the following way:
 
 ::
 
-    mixcr assemblePartial -OmergerParameters.minimalAssembleOverlap=15 alignments.vdjca alignmentsRescued.vdjca
+    mixcr assemblePartial -OmergerParameters.minimalOverlap=15 alignments.vdjca alignmentsRescued.vdjca
 
