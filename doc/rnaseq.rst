@@ -137,29 +137,29 @@ The above parameters can be specified in e.g. the following way:
 
 ::
 
-    mixcr assemblePartial -OminimalVJJunctionOverlap=25 alignments.vdjca alignmentsRescued.vdjca
+    mixcr assemblePartial -OminimalAssembleOverlap=10 alignments.vdjca alignmentsRescued.vdjca
 
 
-The algorithm which restores merged sequence from two overlapped alignments has the following parameters:
+.. The algorithm which restores merged sequence from two overlapped alignments has the following parameters:
 
-+-----------------------------+---------------------+--------------------------------------------------------------+
-| Parameter                   | Default value       | Description                                                  |
-+=============================+=====================+==============================================================+
-| ``qualityMergingAlgorithm`` | ``SumSubtraction``  | Algorithm used for assigning quality of the merged read.     |
-|                             |                     | Possible values: ``SumMax``, ``SumSubtraction``              |
-+-----------------------------+---------------------+--------------------------------------------------------------+
-| ``minimalOverlap``          | ``20``              | Minimal length of the overlapped region.                     |
-+-----------------------------+---------------------+--------------------------------------------------------------+
-| ``maxQuality``              | ``45``              | Maximal sequence quality that can may be assigned in the     | 
-|                             |                     | region of overlap.                                           |
-+-----------------------------+---------------------+--------------------------------------------------------------+
-| ``minimalIdentity``         | ``0.95``            | Minimal identity in the region of overlap.                   |
-+-----------------------------+---------------------+--------------------------------------------------------------+
+.. +-----------------------------+---------------------+--------------------------------------------------------------+
+.. | Parameter                   | Default value       | Description                                                  |
+.. +=============================+=====================+==============================================================+
+.. | ``qualityMergingAlgorithm`` | ``SumSubtraction``  | Algorithm used for assigning quality of the merged read.     |
+.. |                             |                     | Possible values: ``SumMax``, ``SumSubtraction``              |
+.. +-----------------------------+---------------------+--------------------------------------------------------------+
+.. | ``minimalOverlap``          | ``20``              | Minimal length of the overlapped region.                     |
+.. +-----------------------------+---------------------+--------------------------------------------------------------+
+.. | ``maxQuality``              | ``45``              | Maximal sequence quality that can may be assigned in the     | 
+.. |                             |                     | region of overlap.                                           |
+.. +-----------------------------+---------------------+--------------------------------------------------------------+
+.. | ``minimalIdentity``         | ``0.95``            | Minimal identity in the region of overlap.                   |
+.. +-----------------------------+---------------------+--------------------------------------------------------------+
 
 
-The above parameters can be specified in e.g. the following way:
+.. The above parameters can be specified in e.g. the following way:
 
-::
+.. ::
 
-    mixcr assemblePartial -OmergerParameters.minimalOverlap=15 alignments.vdjca alignmentsRescued.vdjca
+..     mixcr assemblePartial -OmergerParameters.minimalOverlap=15 alignments.vdjca alignmentsRescued.vdjca
 
