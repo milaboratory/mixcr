@@ -288,7 +288,7 @@ public class ActionExportAlignmentsPretty implements Action {
         public Boolean descr = null;
 
         @Parameter(description = "List of read ids to export",
-                names = {"-i", "--reads-ids"},
+                names = {"-i", "--read-ids"},
                 converter = LongConverter.class)
         public List<Long> ids = new ArrayList<>();
 

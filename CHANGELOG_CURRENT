@@ -1,1 +1,2 @@
-minor: multiple reads in `exportAlignmentsPretty` and `filterAlignments` should be now specified as `-i 123 -i 456` or ‘-i 123,456’ etc.
+minor: multiple reads in `exportAlignmentsPretty` and `filterAlignments` should be now specified as `-i 123 -i 456` or `-i 123,456` etc.
+minor: `--reads-ids` in `exportAlignmentsPretty` and `--readsIds` in `filterAlignments` both renamed to `--read-ids`
