@@ -33,6 +33,7 @@ import cc.redberry.primitives.Filter;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
+import com.beust.jcommander.converters.LongConverter;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
@@ -69,9 +70,9 @@ public class ActionExportAlignmentsPretty implements Action {
     public void go(ActionHelper helper) throws Exception {
         Filter<VDJCAlignments> filter = actionParameters.getFilter();
         long total = 0, filtered = 0;
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(actionParameters.getInputFileName());
-             PrintStream output = actionParameters.getOutputFileName().equals("-") ? System.out :
-                     new PrintStream(new BufferedOutputStream(new FileOutputStream(actionParameters.getOutputFileName()), 32768))
+        try(VDJCAlignmentsReader reader = new VDJCAlignmentsReader(actionParameters.getInputFileName());
+            PrintStream output = actionParameters.getOutputFileName().equals("-") ? System.out :
+                    new PrintStream(new BufferedOutputStream(new FileOutputStream(actionParameters.getOutputFileName()), 32768))
         ) {
             long countBefore = actionParameters.limitBefore == null ? Long.MAX_VALUE : actionParameters.limitBefore;
             long countAfter = actionParameters.limitAfter == null ? Long.MAX_VALUE : actionParameters.limitAfter;
@@ -287,22 +288,21 @@ public class ActionExportAlignmentsPretty implements Action {
         public Boolean descr = null;
 
         @Parameter(description = "List of read ids to export",
-                names = {"-i", "--reads-ids"})
-        public List<String> ids = new ArrayList<>();
+                names = {"-i", "--reads-ids"},
+                converter = LongConverter.class)
+        public List<Long> ids = new ArrayList<>();
 
         TLongHashSet getReadIds() {
             if (ids.isEmpty())
                 return null;
-            TLongHashSet r = new TLongHashSet(ids.size());
-            for (String id : ids)
-                r.add(Long.parseLong(id));
-            return r;
+            return new TLongHashSet(ids);
         }
 
         public Chains getChain() {
             return Util.parseLoci(chain);
         }
 
+        @SuppressWarnings("unchecked")
         public Filter<VDJCAlignments> getFilter() {
             final Chains chains = getChain();
 
