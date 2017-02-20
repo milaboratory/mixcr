@@ -302,6 +302,12 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
                 if (!allowChimeras && !leftAl.getAllChains(GeneType.Variable).intersects(jChains))
                     continue;
 
+                // Check for the same V
+                if (leftAl.getBestHit(GeneType.Variable) != null
+                        && rightAl.getBestHit(GeneType.Variable) != null
+                        && !leftAl.hasCommonGenes(GeneType.Variable, rightAl))
+                    continue;
+
                 final NucleotideSequence leftSeq = leftAl.getPartitionedTarget(getLeftPartitionedSequence(leftAl))
                         .getSequence().getSequence();
                 int lFrom = match.get(i).kMerPositionFrom;
@@ -523,7 +529,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
             byte c = seq.codeAt(j);
             if (NucleotideSequence.ALPHABET.isWildcard(c))
                 return -1;
-            kmer = (kmer << 2 | c);
+            kmer = (kmer << 2|c);
         }
         return kmer;
     }
