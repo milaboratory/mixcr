@@ -287,7 +287,7 @@ public class ActionExportAlignmentsPretty implements Action {
         public Boolean descr = null;
 
         @Parameter(description = "List of read ids to export",
-                names = {"-i", "--reads-ids"}, variableArity = true)
+                names = {"-i", "--reads-ids"})
         public List<String> ids = new ArrayList<>();
 
         TLongHashSet getReadIds() {

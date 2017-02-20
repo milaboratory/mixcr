@@ -142,7 +142,7 @@ public final class ActionFilterAlignments implements Action {
         public long limit = 0;
 
         @Parameter(description = "List of read ids to export",
-                names = {"-i", "--readsIds"}, variableArity = true)
+                names = {"-i", "--readsIds"})
         public List<String> ids = new ArrayList<>();
 
         TLongHashSet getReadIds() {
