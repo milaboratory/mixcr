@@ -1,6 +1,6 @@
 .. _ref-kAligner2:
  
-(BETA) KAligner2: New aligner with big gaps support
+KAligner2: New aligner with big gaps support
 ===================================================
 
 .. danger::

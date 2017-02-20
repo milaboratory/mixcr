@@ -2,6 +2,7 @@
 
    <br />
 
+.. include:: <isonum.txt>
 .. _ref-align:
 
 Alignment
@@ -27,6 +28,8 @@ MiXCR supports ``fasta``, ``fastq``, ``fastq.gz`` and paired-end ``fastq`` and `
 
    -->
 
+.. _ref-align-cli-params:
+
 Command line parameters
 -----------------------
 
@@ -50,9 +53,11 @@ The following table contains description of command line options for ``align``:
 |                                     |                            | export step.                                               |
 +-------------------------------------+----------------------------+------------------------------------------------------------+
 | ``-s {speciesName}`` |br|           | ``HomoSapiens``            | Species (organism). Possible values: ``hsa`` (or           |
-| ``--species ...``                   |                            | ``HomoSapiens``) and ``mmu`` (or ``MusMusculus``), or any  |
-|                                     |                            | that was provided during import of segments (see           |
-|                                     |                            | :ref:`import segments <ref-importSegments>`)               |
+| ``--species ...``                   |                            | ``HomoSapiens``), ``mmu`` (or ``MusMusculus``), ``rat``    |
+|                                     |                            | (currently only ``TRB``, ``TRA`` and ``TRD`` are           |
+|                                     |                            | supported), or any species from imported IMGT |reg|        |
+|                                     |                            | library import as described here                           |
+|                                     |                            | :ref:`import segments <ref-importSegments>`                |
 +-------------------------------------+----------------------------+------------------------------------------------------------+
 | ``-p {parameterName}`` |br|         | ``default``                | Preset of parameters. Possible values: ``default`` and     |
 | ``--parameters ...``                |                            | ``rna-seq``. The ``rna-seq`` preset are specifically       |
