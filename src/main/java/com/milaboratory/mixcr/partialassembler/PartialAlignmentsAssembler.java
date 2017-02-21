@@ -278,162 +278,181 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
 
         stop -= kOffset;
 
-        int maxOverlap = -1, maxDelta = -1,
-                maxOverlapIndexInList = -1,
-                maxBegin = -1, maxEnd = -1;
-        List<KMerInfo> maxOverlapList = null;
-        boolean isMaxOverOverlapped = false;
-        for (int rFrom = 0; rFrom < stop && rFrom + kValue < rightSeqQ.size(); rFrom++) {
-            long kMer = kMer(rightSeqQ.getSequence(), rFrom, kValue);
-            List<KMerInfo> match = kToIndexLeft.get(kMer);
-            if (match == null)
-                continue;
-
-            out:
-            for (int i = 0; i < match.size(); i++) {
-                boolean isOverOverlapped = false;
-                final VDJCAlignments leftAl = match.get(i).getAlignments();
-
-                if (leftAl.getAlignmentsIndex() == rightAl.getAlignmentsIndex() || // You shall not merge with yourself
-                        alreadyMergedIds.contains(leftAl.getAlignmentsIndex()))
+        // black list of left parts failed due to inconsistent overlapped alignments (failed AMerge)
+        TLongHashSet blackList = new TLongHashSet();
+        SEARCH_LEFT_PARTS:
+        while (true) {
+            int maxOverlap = -1, maxDelta = -1,
+                    maxOverlapIndexInList = -1,
+                    maxBegin = -1, maxEnd = -1;
+            List<KMerInfo> maxOverlapList = null;
+            boolean isMaxOverOverlapped = false;
+            for (int rFrom = 0; rFrom < stop && rFrom + kValue < rightSeqQ.size(); rFrom++) {
+                long kMer = kMer(rightSeqQ.getSequence(), rFrom, kValue);
+                List<KMerInfo> match = kToIndexLeft.get(kMer);
+                if (match == null)
                     continue;
 
-                // Checking chains compatibility
-                if (!allowChimeras && !leftAl.getAllChains(GeneType.Variable).intersects(jChains))
-                    continue;
+                out:
+                for (int i = 0; i < match.size(); i++) {
+                    boolean isOverOverlapped = false;
+                    final VDJCAlignments leftAl = match.get(i).getAlignments();
 
-                // Check for the same V
-                if (leftAl.getBestHit(GeneType.Variable) != null
-                        && rightAl.getBestHit(GeneType.Variable) != null
-                        && !leftAl.hasCommonGenes(GeneType.Variable, rightAl))
-                    continue;
+                    if (blackList.contains(leftAl.getReadId()))
+                        continue;
 
-                final NucleotideSequence leftSeq = leftAl.getPartitionedTarget(getLeftPartitionedSequence(leftAl))
-                        .getSequence().getSequence();
-                int lFrom = match.get(i).kMerPositionFrom;
+                    if (leftAl.getAlignmentsIndex() == rightAl.getAlignmentsIndex() || // You shall not merge with yourself
+                            alreadyMergedIds.contains(leftAl.getAlignmentsIndex()))
+                        continue;
 
-                int delta, begin = delta = lFrom - rFrom;
-                if (begin < 0) {
-                    begin = 0;
-                    isOverOverlapped = true;
-                }
-                int end = leftSeq.size();
-                if (end - delta >= rightSeq.size()) {
-                    end = rightSeq.size() + delta;
-                    isOverOverlapped = true;
-                }
+                    // Checking chains compatibility
+                    if (!allowChimeras && !leftAl.getAllChains(GeneType.Variable).intersects(jChains))
+                        continue;
 
-                for (int j = begin; j < end; j++)
-                    if (leftSeq.codeAt(j) != rightSeq.codeAt(j - delta))
-                        continue out;
+                    // Check for the same V
+                    if (leftAl.getBestHit(GeneType.Variable) != null
+                            && rightAl.getBestHit(GeneType.Variable) != null
+                            && !leftAl.hasCommonGenes(GeneType.Variable, rightAl))
+                        continue;
 
-                int overlap = end - begin;
-                if (maxOverlap < overlap) {
-                    maxOverlap = overlap;
-                    maxOverlapList = match;
-                    maxOverlapIndexInList = i;
-                    maxDelta = delta;
-                    maxBegin = begin;
-                    maxEnd = end;
-                    isMaxOverOverlapped = isOverOverlapped;
+                    final NucleotideSequence leftSeq = leftAl.getPartitionedTarget(getLeftPartitionedSequence(leftAl))
+                            .getSequence().getSequence();
+                    int lFrom = match.get(i).kMerPositionFrom;
+
+                    int delta, begin = delta = lFrom - rFrom;
+                    if (begin < 0) {
+                        begin = 0;
+                        isOverOverlapped = true;
+                    }
+                    int end = leftSeq.size();
+                    if (end - delta >= rightSeq.size()) {
+                        end = rightSeq.size() + delta;
+                        isOverOverlapped = true;
+                    }
+
+                    for (int j = begin; j < end; j++)
+                        if (leftSeq.codeAt(j) != rightSeq.codeAt(j - delta))
+                            continue out;
+
+                    int overlap = end - begin;
+                    if (maxOverlap < overlap) {
+                        maxOverlap = overlap;
+                        maxOverlapList = match;
+                        maxOverlapIndexInList = i;
+                        maxDelta = delta;
+                        maxBegin = begin;
+                        maxEnd = end;
+                        isMaxOverOverlapped = isOverOverlapped;
+                    }
                 }
             }
-        }
 
-        if (maxOverlapList == null)
-            return null;
+            if (maxOverlapList == null)
+                return null;
 
-        if (maxOverlap < minimalAssembleOverlap)
-            return null;
+            if (maxOverlap < minimalAssembleOverlap)
+                return null;
 
-        if (isMaxOverOverlapped)
-            overoverlapped.incrementAndGet();
+            final KMerInfo left = maxOverlapList.remove(maxOverlapIndexInList);
+            VDJCAlignments leftAl = left.alignments;
 
-        final KMerInfo left = maxOverlapList.remove(maxOverlapIndexInList);
-        VDJCAlignments leftAl = left.alignments;
+            final long readId = rightAl.getReadId();
 
-        final long readId = rightAl.getReadId();
+            ArrayList<AlignedTarget> leftTargets = extractAlignedTargets(leftAl, true);
+            ArrayList<AlignedTarget> rightTargets = extractAlignedTargets(rightAl, false);
 
-        ArrayList<AlignedTarget> leftTargets = extractAlignedTargets(leftAl, true);
-        ArrayList<AlignedTarget> rightTargets = extractAlignedTargets(rightAl, false);
+            AlignedTarget leftCentral = leftTargets.get(left.targetId);
+            AlignedTarget rightCentral = rightTargets.get(rightTargetId);
 
-        AlignedTarget leftCentral = leftTargets.get(left.targetId);
-        AlignedTarget rightCentral = rightTargets.get(rightTargetId);
+            AlignedTarget central = targetMerger.merge(readId, leftCentral, rightCentral, maxDelta)
+                    .overrideDescription("VJOverlap(" + maxOverlap + ") = " + leftCentral.getDescription() + " + " + rightCentral.getDescription());
 
-        AlignedTarget central = targetMerger.merge(readId, leftCentral, rightCentral, maxDelta)
-                .overrideDescription("VJOverlap(" + maxOverlap + ") = " + leftCentral.getDescription() + " + " + rightCentral.getDescription());
+            // Setting overlap position
+            central = AlignedTarget.setOverlapRange(central, maxBegin, maxEnd);
 
-        // Setting overlap position
-        central = AlignedTarget.setOverlapRange(central, maxBegin, maxEnd);
+            final List<AlignedTarget> leftDescriptors = new ArrayList<>(2),
+                    rightDescriptors = new ArrayList<>(2);
 
-        final List<AlignedTarget> leftDescriptors = new ArrayList<>(2),
-                rightDescriptors = new ArrayList<>(2);
-
-        for (int i = 0; i < left.targetId; ++i)
-            leftDescriptors.add(leftTargets.get(i));
-        for (int i = left.targetId + 1; i < leftAl.numberOfTargets(); ++i)
-            rightDescriptors.add(leftTargets.get(i));
-        for (int i = 0; i < rightTargetId; ++i)
-            leftDescriptors.add(rightTargets.get(i));
-        for (int i = rightTargetId + 1; i < rightAl.numberOfTargets(); ++i)
-            rightDescriptors.add(rightTargets.get(i));
+            for (int i = 0; i < left.targetId; ++i)
+                leftDescriptors.add(leftTargets.get(i));
+            for (int i = left.targetId + 1; i < leftAl.numberOfTargets(); ++i)
+                rightDescriptors.add(leftTargets.get(i));
+            for (int i = 0; i < rightTargetId; ++i)
+                leftDescriptors.add(rightTargets.get(i));
+            for (int i = rightTargetId + 1; i < rightAl.numberOfTargets(); ++i)
+                rightDescriptors.add(rightTargets.get(i));
 
 
-        // Merging to VJ junction
-        List<AlignedTarget>[] allDescriptors = new List[]{leftDescriptors, rightDescriptors};
-        TargetMerger.TargetMergingResult bestResult = null;
-        int bestI;
+            // Merging to VJ junction
+            List<AlignedTarget>[] allDescriptors = new List[]{leftDescriptors, rightDescriptors};
+            TargetMerger.TargetMergingResult bestResult = TargetMerger.FAILED_RESULT;
+            int bestI;
 
-        // Trying to merge left and right reads to central one
-        for (List<AlignedTarget> descriptors : allDescriptors)
-            do {
-                bestI = -1;
-                for (int i = 0; i < descriptors.size(); i++) {
-                    TargetMerger.TargetMergingResult result = targetMerger.merge(readId, descriptors.get(i), central);
-                    if (result != null && (bestResult == null || bestResult.score < result.score)) {
-                        bestResult = result;
-                        bestI = i;
+            // Trying to merge left and right reads to central one
+            for (List<AlignedTarget> descriptors : allDescriptors)
+                do {
+                    bestI = -1;
+                    for (int i = 0; i < descriptors.size(); i++) {
+                        TargetMerger.TargetMergingResult result = targetMerger.merge(readId, descriptors.get(i), central);
+                        if (result.failedDueInconsistentAlignments()) {
+                            // Inconsistent alignments -> retry
+                            blackList.add(leftAl.getReadId());
+                            continue SEARCH_LEFT_PARTS;
+                        }
+                        if (bestResult.getScore() < result.getScore()) {
+                            bestResult = result;
+                            bestI = i;
+                        }
                     }
-                }
 
-                if (bestI != -1) {
-                    central = bestResult.result.overrideDescription(
-                            central.getDescription() + " / " + mergeTypePrefix(bestResult.usingAlignments) + "MergedFrom" +
-                                    (descriptors == leftDescriptors ? "Left" : "Right") +
-                                    "(" + getMMDescr(bestResult.matched, bestResult.mismatched) + ") = " +
-                                    descriptors.get(bestI).getDescription());
-                    descriptors.remove(bestI);
-                }
-            } while (bestI != -1);
-
-
-        // Merging left+left / right+right
-        outer:
-        for (int d = 0; d < allDescriptors.length; d++) {
-            List<AlignedTarget> descriptors = allDescriptors[d];
-            for (int i = 0; i < descriptors.size(); i++)
-                for (int j = i + 1; j < descriptors.size(); j++) {
-                    TargetMerger.TargetMergingResult result = targetMerger.merge(readId, descriptors.get(i), descriptors.get(j));
-                    if (result != null) {
-                        descriptors.set(i, result.result.overrideDescription(
-                                mergeTypePrefix(result.usingAlignments) +
-                                        "Merged(" + getMMDescr(result.matched, result.mismatched) + ") = " + descriptors.get(i).getDescription() +
-                                        " + " + descriptors.get(j).getDescription()));
-                        descriptors.remove(j);
-                        --d;
-                        continue outer;
+                    if (bestI != -1) {
+                        assert bestResult != TargetMerger.FAILED_RESULT;
+                        central = bestResult.getResult().overrideDescription(
+                                central.getDescription() + " / " + mergeTypePrefix(bestResult.isUsingAlignments()) + "MergedFrom" +
+                                        (descriptors == leftDescriptors ? "Left" : "Right") +
+                                        "(" + getMMDescr(bestResult.getMatched(), bestResult.getMismatched()) + ") = " +
+                                        descriptors.get(bestI).getDescription());
+                        descriptors.remove(bestI);
                     }
-                }
+                } while (bestI != -1);
+
+
+            // Merging left+left / right+right
+            outer:
+            for (int d = 0; d < allDescriptors.length; d++) {
+                List<AlignedTarget> descriptors = allDescriptors[d];
+                for (int i = 0; i < descriptors.size(); i++)
+                    for (int j = i + 1; j < descriptors.size(); j++) {
+                        TargetMerger.TargetMergingResult result = targetMerger.merge(readId, descriptors.get(i), descriptors.get(j));
+                        if (result.failedDueInconsistentAlignments()) {
+                            // Inconsistent alignments -> retry
+                            blackList.add(leftAl.getReadId());
+                            continue SEARCH_LEFT_PARTS;
+                        }
+                        if (result.isSuccessful()) {
+                            descriptors.set(i, result.getResult().overrideDescription(
+                                    mergeTypePrefix(result.isUsingAlignments()) +
+                                            "Merged(" + getMMDescr(result.getMatched(), result.getMismatched()) + ") = " + descriptors.get(i).getDescription() +
+                                            " + " + descriptors.get(j).getDescription()));
+                            descriptors.remove(j);
+                            --d;
+                            continue outer;
+                        }
+                    }
+            }
+
+            if (isMaxOverOverlapped)
+                overoverlapped.incrementAndGet();
+
+            // Creating pre-list of resulting targets
+            List<AlignedTarget> result = new ArrayList<>();
+            result.addAll(leftDescriptors);
+            result.add(central);
+            result.addAll(rightDescriptors);
+
+            // Ordering and filtering final targets
+            return new OverlapSearchResult(maxOverlapList, left, AlignedTarget.orderTargets(result));
         }
-
-        // Creating pre-list of resulting targets
-        List<AlignedTarget> result = new ArrayList<>();
-        result.addAll(leftDescriptors);
-        result.add(central);
-        result.addAll(rightDescriptors);
-
-        // Ordering and filtering final targets
-        return new OverlapSearchResult(maxOverlapList, left, AlignedTarget.orderTargets(result));
     }
 
     private static String mergeTypePrefix(boolean usingAlignment) {

@@ -223,60 +223,6 @@ public class TargetMerger {
         return BandedAligner.alignGlobal(scoring, left == null ? right.getSequence1() : left.getSequence1(),
                 seq, seq1From, seq1To - seq1From, seq2From, seq2To - seq2From, bandedWidth);
     }
-//
-//    static Alignment<NucleotideSequence> merge1(AlignmentScoring<NucleotideSequence> scoring,
-//                                               int bandedWidth,
-//                                               NucleotideSequence seq, int offset,
-//                                               Alignment<NucleotideSequence> left,
-//                                               Alignment<NucleotideSequence> right) {
-//        assert left != null || right != null;
-//        assert offset >= 0;
-//        assert left == null || right == null || left.getSequence1().equals(right.getSequence1());
-//
-//        int seq1From = -1, seq2From = -1, seq1To = -1, seq2To = -1;
-//
-//        if (left != null && right != null) {
-//            if (left.convertPosition(right.getSequence1Range().getFrom()) != right.getSequence2Range().getFrom() + offset) {
-//                if (left.getScore() > right.getScore())
-//                    right = null;
-//                else
-//                    left = null;
-//            } else {
-//                if (left.getSequence1Range().getFrom() < right.getSequence1Range().getFrom()) {
-//                    seq1From = left.getSequence1Range().getFrom();
-//                    seq2From = left.getSequence2Range().getFrom();
-//                } else {
-//                    seq1From = right.getSequence1Range().getFrom();
-//                    seq2From = right.getSequence2Range().getFrom() + offset;
-//                }
-//
-//                if (left.getSequence1Range().getTo() > right.getSequence1Range().getTo()) {
-//                    seq1To = left.getSequence1Range().getTo();
-//                    seq2To = left.getSequence2Range().getTo();
-//                } else {
-//                    seq1To = right.getSequence1Range().getTo();
-//                    seq2To = right.getSequence2Range().getTo() + offset;
-//                }
-//            }
-//        }
-//
-//        if (left == null) {
-//            seq1From = right.getSequence1Range().getFrom();
-//            seq1To = right.getSequence1Range().getTo();
-//
-//            seq2From = right.getSequence2Range().getFrom() + offset;
-//            seq2To = right.getSequence2Range().getTo() + offset;
-//        } else if (right == null) {
-//            seq1From = left.getSequence1Range().getFrom();
-//            seq1To = left.getSequence1Range().getTo();
-//
-//            seq2From = left.getSequence2Range().getFrom();
-//            seq2To = left.getSequence2Range().getTo();
-//        }
-//
-//        return BandedAligner.alignGlobal(scoring, left == null ? right.getSequence1() : left.getSequence1(),
-//                seq, seq1From, seq1To - seq1From, seq2From, seq2To - seq2From, bandedWidth);
-//    }
 
     public TargetMergingResult merge(long readId, AlignedTarget targetLeft, AlignedTarget targetRight) {
         for (GeneType geneType : GeneType.VJC_REFERENCE) {
@@ -319,19 +265,21 @@ public class TargetMerger {
                         overlap);
 
                 if (1.0 - 1.0 * mismatches / overlap < minimalAlignmentMergeIdentity)
-                    continue;
+                    return new TargetMergingResult(geneType);
 
                 final AlignedTarget merge = merge(readId, targetLeft, targetRight, delta);
-                return new TargetMergingResult(merge,
+                return new TargetMergingResult(true, null, merge,
                         PairedReadMergingResult.MATCH_SCORE * (overlap - mismatches) +
-                                PairedReadMergingResult.MISMATCH_SCORE * mismatches, true, overlap, mismatches);
+                                PairedReadMergingResult.MISMATCH_SCORE * mismatches, overlap, mismatches);
             }
         }
 
         final PairedReadMergingResult merge = merger.merge(targetLeft.getTarget(), targetRight.getTarget());
         if (!merge.isSuccessful())
-            return null;
-        return new TargetMergingResult(merge(readId, targetLeft, targetRight, merge.getOffset()), merge.score(), false, merge.getOverlap(), merge.getErrors());
+            return new TargetMergingResult();
+        return new TargetMergingResult(false, null,
+                merge(readId, targetLeft, targetRight, merge.getOffset()),
+                merge.score(), merge.getOverlap(), merge.getErrors());
     }
 
     private static int sumScore(Alignment[] als) {
@@ -343,18 +291,78 @@ public class TargetMerger {
         return r;
     }
 
-    public final static class TargetMergingResult {
-        public final AlignedTarget result;
-        public final int score;
-        public final boolean usingAlignments;
-        public final int matched, mismatched;
+    public static final TargetMergingResult FAILED_RESULT = new TargetMergingResult();
 
-        public TargetMergingResult(AlignedTarget result, int score, boolean usingAlignments, int matched, int mismatched) {
+    public final static class TargetMergingResult {
+        private final boolean usingAlignments;
+        private final GeneType failedMergedGeneType;
+
+        private final AlignedTarget result;
+        private final int score;
+        private final int matched, mismatched;
+
+//        public TargetMergingResult(AlignedTarget result, int score, boolean usingAlignments, int matched, int mismatched) {
+//            this.result = result;
+//            this.score = score;
+//            this.usingAlignments = usingAlignments;
+//            this.matched = matched;
+//            this.mismatched = mismatched;
+//        }
+
+        private TargetMergingResult() {
+            this(false, null, null, 0, 0, 0);
+        }
+
+        private TargetMergingResult(GeneType failedGeneType) {
+            this(true, failedGeneType, null, 0, 0, 0);
+        }
+
+        private TargetMergingResult(boolean usingAlignments, GeneType failedMergedGeneType, AlignedTarget result, int score, int matched, int mismatched) {
+            this.usingAlignments = usingAlignments;
+            this.failedMergedGeneType = failedMergedGeneType;
             this.result = result;
             this.score = score;
-            this.usingAlignments = usingAlignments;
             this.matched = matched;
             this.mismatched = mismatched;
+        }
+
+        public boolean isSuccessful() {
+            return result != null;
+        }
+
+        public boolean isUsingAlignments() {
+            return usingAlignments;
+        }
+
+        public boolean failedDueInconsistentAlignments(){
+            return failedMergedGeneType != null;
+        }
+
+        public GeneType getFailedMergedGeneType() {
+            return failedMergedGeneType;
+        }
+
+        private void checkSuccessful() {
+            if (!isSuccessful())
+                throw new IllegalStateException();
+        }
+
+        public AlignedTarget getResult() {
+            checkSuccessful();
+            return result;
+        }
+
+        public int getScore() {
+            return score;
+        }
+
+        public int getMatched() {
+            return matched;
+        }
+
+        public int getMismatched() {
+            checkSuccessful();
+            return mismatched;
         }
     }
 }
