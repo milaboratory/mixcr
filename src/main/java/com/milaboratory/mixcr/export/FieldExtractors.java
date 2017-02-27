@@ -280,7 +280,8 @@ public final class FieldExtractors {
                 }
             });
 
-            descriptorsList.add(new FeatureExtractors.WithHeader("-aaFeature", "Export amino acid sequence of specified gene feature", 1, new String[]{"AA. Seq."}, new String[]{"aaSeq"}) {
+            descriptorsList.add(new FeatureExtractors.WithHeader("-aaFeature", "Export amino acid sequence of specified gene feature",
+                    1, new String[]{"AA. Seq. "}, new String[]{"aaSeq"}) {
                 @Override
                 protected String extractValue(VDJCObject object, GeneFeature[] parameters) {
                     GeneFeature geneFeature = parameters[parameters.length - 1];
