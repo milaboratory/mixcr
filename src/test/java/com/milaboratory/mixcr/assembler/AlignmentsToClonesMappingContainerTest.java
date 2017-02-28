@@ -55,9 +55,15 @@ public class AlignmentsToClonesMappingContainerTest {
         Well19937c rnd = RandomUtil.getThreadLocalRandom();
         RandomDataGenerator rndD = RandomUtil.getThreadLocalRandomData();
 
-        ReadToCloneMapping[] mappings = new ReadToCloneMapping[minRecords + rnd.nextInt(maxRecords - minRecords)];
+        int readsCount, clonesCount;
 
-        TLongHashSet[] clones = new TLongHashSet[minClones + rnd.nextInt(maxClones - minClones)];
+        do {
+            readsCount = minRecords + rnd.nextInt(maxRecords - minRecords);
+            clonesCount = minClones + rnd.nextInt(maxClones - minClones);
+        } while (readsCount <= clonesCount);
+
+        ReadToCloneMapping[] mappings = new ReadToCloneMapping[readsCount];
+        TLongHashSet[] clones = new TLongHashSet[clonesCount];
 
         int[] initialReads = rndD.nextPermutation(mappings.length, clones.length);
 
@@ -87,7 +93,7 @@ public class AlignmentsToClonesMappingContainerTest {
         }
 
         File tempFile = TempFileManager.getTempFile();
-        try (DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(tempFile)))) {
+        try(DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(tempFile)))) {
             AlignmentsToClonesMappingContainer.writeMapping(CUtils.asOutputPort(mappings), clones.length, dos, sortChunk);
         }
 
