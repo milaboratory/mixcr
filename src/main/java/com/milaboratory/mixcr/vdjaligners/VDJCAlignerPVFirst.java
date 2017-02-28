@@ -89,7 +89,8 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
             final TargetMerger.TargetMergingResult mergeResult = alignmentsMerger.merge(
                     input.getId(),
                     new AlignedTarget(alignment, 0),
-                    new AlignedTarget(alignment, 1));
+                    new AlignedTarget(alignment, 1),
+                    false);
 
             if (mergeResult.failedDueInconsistentAlignments()) {
                 GeneType gt = mergeResult.getFailedMergedGeneType();

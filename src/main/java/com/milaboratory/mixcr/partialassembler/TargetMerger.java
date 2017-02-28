@@ -225,6 +225,17 @@ public class TargetMerger {
     }
 
     public TargetMergingResult merge(long readId, AlignedTarget targetLeft, AlignedTarget targetRight) {
+        return merge(readId, targetLeft, targetRight, true);
+    }
+
+    /**
+     * @param readId           read id
+     * @param targetLeft       left sequence
+     * @param targetRight      right sequence
+     * @param trySequenceMerge whether to try merging using sequence overlap (if alignment overlap failed)
+     */
+    public TargetMergingResult merge(long readId, AlignedTarget targetLeft, AlignedTarget targetRight,
+                                     boolean trySequenceMerge) {
         for (GeneType geneType : GeneType.VJC_REFERENCE) {
 
             Map<VDJCGeneId, HitMappingRecord> map = extractHitsMapping(targetLeft, targetRight, geneType);
@@ -273,6 +284,9 @@ public class TargetMerger {
                                 PairedReadMergingResult.MISMATCH_SCORE * mismatches, overlap, mismatches);
             }
         }
+
+        if (!trySequenceMerge)
+            return new TargetMergingResult();
 
         final PairedReadMergingResult merge = merger.merge(targetLeft.getTarget(), targetRight.getTarget());
         if (!merge.isSuccessful())
@@ -334,7 +348,7 @@ public class TargetMerger {
             return usingAlignments;
         }
 
-        public boolean failedDueInconsistentAlignments(){
+        public boolean failedDueInconsistentAlignments() {
             return failedMergedGeneType != null;
         }
 
