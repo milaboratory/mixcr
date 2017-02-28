@@ -93,7 +93,8 @@ public class Main {
                 new ActionClonesDiff(),
                 new ActionFilterAlignments(),
                 new ActionListLibraries(),
-                new ActionExtendAlignments());
+                new ActionExtendAlignments(),
+                new ActionSortAlignments());
 
         // Adding version info callback
         main.setVersionInfoCallback(new Runnable() {
