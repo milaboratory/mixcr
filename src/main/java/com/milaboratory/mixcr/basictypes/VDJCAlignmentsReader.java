@@ -263,16 +263,25 @@ public final class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlign
     /**
      * Produce reader that uses the same reference for geneFeatures.
      *
-     * @param reader       target reader
-     * @param sourceReader reader to take reference from
+     * @param reader     target reader
+     * @param parameters parameters to take reference from
      */
-    public static void initGeneFeatureReferencesFrom(VDJCAlignmentsReader reader, VDJCAlignmentsReader sourceReader) {
+    public static void initGeneFeatureReferencesFrom(VDJCAlignmentsReader reader, VDJCAlignerParameters parameters) {
         Map<GeneFeature, GeneFeature> featureRefs = new HashMap<>();
-        VDJCAlignerParameters parameters = sourceReader.getParameters();
         for (GeneType gt : GeneType.VDJC_REFERENCE) {
             GeneFeature f = parameters.getFeatureToAlign(gt);
             featureRefs.put(f, f);
         }
         reader.init(featureRefs);
+    }
+
+    /**
+     * Produce reader that uses the same reference for geneFeatures.
+     *
+     * @param reader       target reader
+     * @param sourceReader reader to take reference from
+     */
+    public static void initGeneFeatureReferencesFrom(VDJCAlignmentsReader reader, VDJCAlignmentsReader sourceReader) {
+        initGeneFeatureReferencesFrom(reader, sourceReader.getParameters());
     }
 }
