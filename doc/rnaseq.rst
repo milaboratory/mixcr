@@ -75,10 +75,8 @@ Typical analysis workflow
 
   ::
 
-    mixcr assemblePartial -p alignments.vdjca alignments_rescued_1.vdjca
-    mixcr assemblePartial -p alignments_rescued_1.vdjca alignments_rescued_2.vdjca
-
-  ``-p`` option tells MiXCRsquences to pass unassembled alignments to the output file.
+    mixcr assemblePartial alignments.vdjca alignments_rescued_1.vdjca
+    mixcr assemblePartial alignments_rescued_1.vdjca alignments_rescued_2.vdjca
 
 3. (optional) Perform extension of incomplete TCR CDR3s with uniquely determined V and J genes using germline sequences. As described in the :ref:`last paragraph of introduction <ref-rna-seq-extend-description>`
 

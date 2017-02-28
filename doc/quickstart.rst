@@ -239,9 +239,9 @@ MiXCR allows to extract TCR and BCR CDR3 repertoires from RNA-Seq data. Extracti
 
   .. code-block:: console
 
-    > mixcr assemblePartial -p alignments.vdjca alignmentsRescued_1.vdjca
+    > mixcr assemblePartial alignments.vdjca alignmentsRescued_1.vdjca
 
-    > mixcr assemblePartial -p alignmentsRescued_1.vdjca alignmentsRescued_2.vdjca
+    > mixcr assemblePartial alignmentsRescued_1.vdjca alignmentsRescued_2.vdjca
 
 3. Extend TCR alignments with uniquely determined V and J genes and having incomplete coverage of CDR3s using germline sequences:
 

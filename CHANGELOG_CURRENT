@@ -1,5 +1,7 @@
 Fixed absent space in `AA. Seq. ...` column name and excessive space in the end of several column names (affects `exportClones` and `exportAlignments` with `-v` option; fixes compatibility with VDJTools v1.1.3 and below).
-Added `sortAlignments` action. Sort `*.vdjca` files by read id, allows diffing alignments after `assembleParial` and other actions that shuffle records inside file.
 Fixes NPE in `exportClones` in some cases with mmu reference
+`-p` option in `assemblePartial` enabled by default; deprecated, will be removed in 2.2
+Added `-d` option in `assemblePartial` to drop non-assembled partial reads to reduce output file size
+Added `sortAlignments` action. Sort `*.vdjca` files by read id, allows diffing alignments after `assembleParial` and other actions that shuffle records inside file.
 minor: Multiple reads in `exportAlignmentsPretty` and `filterAlignments` should be now specified as `-i 123 -i 456` or `-i 123,456` etc.
 minor: `--reads-ids` in `exportAlignmentsPretty` and `--readsIds` in `filterAlignments` both renamed to `--read-ids`

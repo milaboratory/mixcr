@@ -27,12 +27,17 @@ public final class ActionAssemblePartialAlignments implements Action {
 
     @Override
     public void go(ActionHelper helper) throws Exception {
+        if (parameters.writePartial != null)
+            System.err.println("'-p' option is deprecated and will be removed in 2.2. " +
+                    "Use '-d' option to drop not-overlapped partial reads.");
+
         // Saving initial timestamp
         long beginTimestamp = System.currentTimeMillis();
         PartialAlignmentsAssemblerParameters assemblerParameters = PartialAlignmentsAssemblerParameters.getDefault();
 
         if (!parameters.overrides.isEmpty()) {
-            assemblerParameters = JsonOverrider.override(assemblerParameters, PartialAlignmentsAssemblerParameters.class, parameters.overrides);
+            assemblerParameters = JsonOverrider.override(assemblerParameters,
+                    PartialAlignmentsAssemblerParameters.class, parameters.overrides);
             if (assemblerParameters == null) {
                 System.err.println("Failed to override some parameter.");
                 return;
@@ -40,8 +45,9 @@ public final class ActionAssemblePartialAlignments implements Action {
         }
 
         long start = System.currentTimeMillis();
-        try (PartialAlignmentsAssembler assembler = new PartialAlignmentsAssembler(assemblerParameters, parameters.getOutputFileName(),
-                parameters.getWritePartial(), parameters.getOverlappedOnly())) {
+        try (PartialAlignmentsAssembler assembler = new PartialAlignmentsAssembler(assemblerParameters,
+                parameters.getOutputFileName(), !parameters.doDropPartial(),
+                parameters.getOverlappedOnly())) {
             try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getInputFileName())) {
                 SmartProgressReporter.startProgressReport("Building index", reader);
                 assembler.buildLeftPartsIndex(reader);
@@ -53,7 +59,8 @@ public final class ActionAssemblePartialAlignments implements Action {
 
             if (parameters.report != null)
                 Util.writeReport(parameters.getInputFileName(), parameters.getOutputFileName(),
-                        helper.getCommandLineArguments(), parameters.report, System.currentTimeMillis() - start, assembler
+                        helper.getCommandLineArguments(), parameters.report,
+                        System.currentTimeMillis() - start, assembler
                 );
 
             long time = System.currentTimeMillis() - beginTimestamp;
@@ -90,9 +97,14 @@ public final class ActionAssemblePartialAlignments implements Action {
                 names = {"-o", "--overlapped-only"})
         public Boolean overlappedOnly;
 
-        @Parameter(description = "Write partial sequences (for recurrent overlapping).",
+        @Parameter(description = "[Deprecated, enabled by default] Write partial sequences (for recurrent overlapping).",
                 names = {"-p", "--write-partial"})
         public Boolean writePartial;
+
+        @Parameter(description = "Drop partial sequences which were not assembled. Can be used to reduce output file " +
+                "size if no additional rounds of 'assemblePartial' are required.",
+                names = {"-d", "--drop-partial"})
+        public Boolean dropPartial;
 
         public String getInputFileName() {
             return parameters.get(0);
@@ -106,8 +118,8 @@ public final class ActionAssemblePartialAlignments implements Action {
             return overlappedOnly != null && overlappedOnly;
         }
 
-        public Boolean getWritePartial() {
-            return writePartial != null && writePartial;
+        public Boolean doDropPartial() {
+            return dropPartial != null && dropPartial;
         }
 
         @Override
