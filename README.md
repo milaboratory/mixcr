@@ -101,6 +101,12 @@ Dependancy:
 
 To build MiXCR from source:
 
+- Clone repository
+
+  ```
+  git clone https://github.com/milaboratory/mixcr.git
+  ```
+
 - Refresh git submodules
 
   ```
