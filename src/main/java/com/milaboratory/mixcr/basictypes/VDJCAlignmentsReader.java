@@ -42,7 +42,9 @@ import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.*;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.*;
@@ -123,6 +125,10 @@ public final class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlign
     }
 
     public void init() {
+        init(null);
+    }
+
+    void init(Map<GeneFeature, GeneFeature> geneFeatureRefs) {
         if (usedGenes != null)
             return;
 
@@ -152,6 +158,16 @@ public final class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlign
             GeneFeature featureDeserialized = input.readObject(GeneFeature.class);
             if (!Objects.equals(featureDeserialized, featureParams))
                 throw new RuntimeException("Wrong format.");
+
+            // Find corresponding reference
+            if (geneFeatureRefs != null) {
+                featureParams = geneFeatureRefs.get(featureParams);
+                if (featureParams == null)
+                    throw new RuntimeException("Absent record for " + featureDeserialized + " in geneFeatureRefs map.");
+            }
+
+            parameters.getGeneAlignerParameters(gt).setGeneFeatureToAlign(featureParams);
+
             if (featureDeserialized != null)
                 input.putKnownReference(featureParams);
         }
@@ -242,5 +258,21 @@ public final class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlign
             alignments.setAlignmentsIndex(counter++);
 
         return alignments;
+    }
+
+    /**
+     * Produce reader that uses the same reference for geneFeatures.
+     *
+     * @param reader       target reader
+     * @param sourceReader reader to take reference from
+     */
+    public static void initGeneFeatureReferencesFrom(VDJCAlignmentsReader reader, VDJCAlignmentsReader sourceReader) {
+        Map<GeneFeature, GeneFeature> featureRefs = new HashMap<>();
+        VDJCAlignerParameters parameters = sourceReader.getParameters();
+        for (GeneType gt : GeneType.VDJC_REFERENCE) {
+            GeneFeature f = parameters.getFeatureToAlign(gt);
+            featureRefs.put(f, f);
+        }
+        reader.init(featureRefs);
     }
 }
