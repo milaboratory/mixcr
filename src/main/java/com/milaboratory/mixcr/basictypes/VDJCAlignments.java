@@ -85,6 +85,17 @@ public final class VDJCAlignments extends VDJCObject {
         return result;
     }
 
+    public boolean hasNoHitsInTarget(int i) {
+        for (VDJCHit[] vdjcHits : hits.values()) {
+            if (vdjcHits == null)
+                continue;
+            for (VDJCHit hit : vdjcHits)
+                if (hit.getAlignment(i) != null)
+                    return false;
+        }
+        return true;
+    }
+
     public long getReadId() {
         return readId;
     }

@@ -274,9 +274,10 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         NucleotideSequence rightSeq = rightSeqQ.getSequence();
 
         int stop = rightTarget.getPartitioning().getPosition(ReferencePoint.JBeginTrimmed);
-        assert stop != -1;
-
-        stop -= kOffset;
+        if (stop == -1)
+            stop = rightTarget.getSequence().size();
+        else
+            stop -= kOffset;
 
         // black list of left parts failed due to inconsistent overlapped alignments (failed AMerge)
         TLongHashSet blackList = new TLongHashSet();
@@ -306,7 +307,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
                         continue;
 
                     // Checking chains compatibility
-                    if (!allowChimeras && !leftAl.getAllChains(GeneType.Variable).intersects(jChains))
+                    if (!allowChimeras && jChains != null && !leftAl.getAllChains(GeneType.Variable).intersects(jChains))
                         continue;
 
                     // Check for the same V
@@ -502,8 +503,33 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
             if (ps.getPartitioning().isAvailable(ReferencePoint.JBeginTrimmed))
                 return i;
         }
+
+        if (alignment.numberOfTargets() != 2)
+            return -1;
+
+
+        if (getAlignmentLength(alignment, GeneType.Variable, 0) == alignment.getTarget(0).size()
+                && alignment.hasNoHitsInTarget(1))
+            return 1;
+
+        if (getAlignmentLength(alignment, GeneType.Constant, 1)
+                + getAlignmentLength(alignment, GeneType.Joining, 1) == alignment.getTarget(1).size()
+                && alignment.hasNoHitsInTarget(0))
+            return 0;
+
         return -1;
     }
+
+    private static int getAlignmentLength(VDJCAlignments alignment, GeneType gt, int id) {
+        VDJCHit bh = alignment.getBestHit(gt);
+        if (bh == null)
+            return 0;
+        Alignment<NucleotideSequence> al = bh.getAlignment(id);
+        if (al == null)
+            return 0;
+        return al.getSequence2Range().length();
+    }
+
 
     private boolean addLeftToIndex(VDJCAlignments alignment) {
         int leftTargetId = getLeftPartitionedSequence(alignment);
@@ -561,6 +587,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         public VDJCAlignments getAlignments() {
             return alignments;
         }
+
     }
 
     private static AlignedTarget overrideDescription(AlignedTarget target, boolean isLeft) {
