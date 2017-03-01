@@ -42,11 +42,8 @@ import java.io.IOException;
 public class BackwardCompatibilityTests {
     @Test
     public void testAlignments() throws Exception {
-        //assertGoodVDJCA("/backward_compatibility/alignments_v1.6.vdjca.gz", 98);
-        //assertGoodVDJCA("/backward_compatibility/test_16.vdjca.gz", 76);
-        //assertGoodVDJCA("/backward_compatibility/test_17.vdjca.gz", 75);
-        //assertGoodVDJCA("/backward_compatibility/test_18.vdjca.gz", 76);
-        //assertGoodVDJCA("/backward_compatibility/test_183.vdjca.gz", 76);
+        assertGoodVDJCA("/backward_compatibility/2.1.0/test.vdjca.gz", 76);
+        assertGoodVDJCA("/backward_compatibility/2.1.0/sample_IGH.vdjca.gz", 76);
     }
 
     public static void assertGoodVDJCA(String resource, int size) throws IOException {
@@ -68,10 +65,8 @@ public class BackwardCompatibilityTests {
 
     @Test
     public void testBC16Cloneset() throws Exception {
-        //assertGoodCLNS("/backward_compatibility/clones_v1.6.clns.gz", 24, 24);
-        //assertGoodCLNS("/backward_compatibility/test_16.clns.gz", 22, 17);
-        //assertGoodCLNS("/backward_compatibility/test_17.clns.gz", 21, 16);
-        //assertGoodCLNS("/backward_compatibility/test_18.clns.gz", 81, 66);
+        assertGoodCLNS("/backward_compatibility/2.1.0/test.clns.gz", 81, 66);
+        assertGoodCLNS("/backward_compatibility/2.1.0/sample_IGH.clns.gz", 81, 66);
     }
 
     public static void assertGoodCLNS(String resource, int size, int good) throws IOException {
