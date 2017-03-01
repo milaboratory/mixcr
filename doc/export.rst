@@ -201,7 +201,7 @@ The following table shows the correspondance between anchor point and positions 
 +--------------------------+---------------------+--------------------+
 | DEndTrimmed, next        | 15                  | 16                 |
 | position after last      |                     |                    |
-| aligned nucleotide of V  |                     |                    |
+| aligned nucleotide of D  |                     |                    |
 | gene                     |                     |                    |
 +--------------------------+---------------------+--------------------+
 | JBeginTrimmed, position  | 16                  | 17                 |
