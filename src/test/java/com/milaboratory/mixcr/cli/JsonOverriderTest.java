@@ -29,17 +29,15 @@
 package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
-import com.milaboratory.core.alignment.BandedAlignerParameters;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
 import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.quality.QualityAggregationType;
 import com.milaboratory.core.tree.TreeSearchParameters;
 import com.milaboratory.mixcr.assembler.*;
-import io.repseq.core.GeneFeature;
-import com.milaboratory.mixcr.vdjaligners.DAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
+import io.repseq.core.GeneFeature;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -89,11 +87,11 @@ public class JsonOverriderTest {
     @Test
     public void testArray1() throws Exception {
         CloneFactoryParameters factoryParameters = new CloneFactoryParameters(
-                new VJCClonalAlignerParameters(GeneFeature.VRegion, 0.3f,
-                        new BandedAlignerParameters(LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3, -50)),
-                new VJCClonalAlignerParameters(GeneFeature.JRegion, 0.4f,
-                        new BandedAlignerParameters(LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 5, -40)),
-                null, new DAlignerParameters(GeneFeature.DRegion, 30.0f, 0.85f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
+                new VJCClonalAlignerParameters(0.3f,
+                        LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3),
+                new VJCClonalAlignerParameters(0.4f,
+                        LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 5),
+                null, new DClonalAlignerParameters(0.85f, 30.0f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
         );
 
         CloneAssemblerParameters params = new CloneAssemblerParameters(new GeneFeature[]{GeneFeature.FR1, GeneFeature.CDR3}, 12,
@@ -118,17 +116,17 @@ public class JsonOverriderTest {
     @Test
     public void testCloneFactoryParameters2() throws Exception {
         CloneFactoryParameters factoryParameters = new CloneFactoryParameters(
-                new VJCClonalAlignerParameters(GeneFeature.VRegion, 0.3f,
-                        new BandedAlignerParameters(LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3, -50)),
-                new VJCClonalAlignerParameters(GeneFeature.JRegion, 0.4f,
-                        new BandedAlignerParameters(LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 5, -40)),
-                null, new DAlignerParameters(GeneFeature.DRegion, 30.0f, 0.85f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
+                new VJCClonalAlignerParameters(0.3f,
+                        LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3),
+                new VJCClonalAlignerParameters(0.4f,
+                        LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 5),
+                null, new DClonalAlignerParameters(0.85f, 30.0f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
         );
 
         CloneAssemblerParameters params = new CloneAssemblerParameters(new GeneFeature[]{GeneFeature.FR1, GeneFeature.CDR3}, 12,
                 QualityAggregationType.Average,
                 new CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
-                factoryParameters, true, true, false, 0.4, true, (byte) 20, .8, "2of6",  (byte) 15);
+                factoryParameters, true, true, false, 0.4, true, (byte) 20, .8, "2of6", (byte) 15);
 
         CloneAssemblerParameters override = JsonOverrider.override(
                 params,
@@ -136,11 +134,11 @@ public class JsonOverriderTest {
                 "dParameters.absoluteMinScore=101");
 
         CloneFactoryParameters expectedFactoryParameters = new CloneFactoryParameters(
-                new VJCClonalAlignerParameters(GeneFeature.VRegion, 0.3f,
-                        new BandedAlignerParameters(LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3, -50)),
-                new VJCClonalAlignerParameters(GeneFeature.JRegion, 0.4f,
-                        new BandedAlignerParameters(LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 5, -40)),
-                null, new DAlignerParameters(GeneFeature.DRegion, 101f, 0.85f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
+                new VJCClonalAlignerParameters(0.3f,
+                        LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3),
+                new VJCClonalAlignerParameters(0.4f,
+                        LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 5),
+                null, new DClonalAlignerParameters(0.85f, 101f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
         );
 
         Assert.assertEquals(expectedFactoryParameters, override.getCloneFactoryParameters());

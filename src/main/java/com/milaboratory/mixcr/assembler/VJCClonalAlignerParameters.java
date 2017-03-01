@@ -28,59 +28,138 @@
  */
 package com.milaboratory.mixcr.assembler;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
+import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
+import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.alignment.BandedAlignerParameters;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import io.repseq.core.GeneFeature;
+import com.milaboratory.mixcr.basictypes.ClonalUpdatableParameters;
+import com.milaboratory.mixcr.vdjaligners.ClonalGeneAlignmentParameters;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
-public final class VJCClonalAlignerParameters extends AbstractClonalAlignerParameters<VJCClonalAlignerParameters>
-        implements java.io.Serializable {
-    BandedAlignerParameters<NucleotideSequence> alignmentParameters;
+@JsonIgnoreProperties({"featureToAlign", "alignmentParameters"})
+public final class VJCClonalAlignerParameters
+        implements ClonalGeneAlignmentParameters, java.io.Serializable, ClonalUpdatableParameters {
+    Float relativeMinScore;
+    AlignmentScoring<NucleotideSequence> scoring;
+    @JsonIgnore
+    int maxAlignmentWidthLinear;
+    @JsonIgnore
+    int maxAlignmentWidthAffine;
+
+    public VJCClonalAlignerParameters(
+            float relativeMinScore,
+            AlignmentScoring<NucleotideSequence> scoring,
+            int maxAlignmentWidth) {
+        this.relativeMinScore = relativeMinScore;
+        this.scoring = scoring;
+        this.maxAlignmentWidthLinear = maxAlignmentWidth;
+        this.maxAlignmentWidthAffine = maxAlignmentWidth;
+    }
 
     @JsonCreator
     public VJCClonalAlignerParameters(
-            @JsonProperty("featureToAlign") GeneFeature featureToAlign,
-            @JsonProperty("relativeMinScore") float relativeMinScore,
-            @JsonProperty("alignmentParameters") BandedAlignerParameters<NucleotideSequence> alignmentParameters) {
-        super(featureToAlign, relativeMinScore);
-        this.alignmentParameters = alignmentParameters;
+            @JsonProperty("relativeMinScore") Float relativeMinScore,
+            @JsonProperty("scoring") AlignmentScoring<NucleotideSequence> scoring,
+            @JsonProperty(value = "maxAlignmentWidth") Integer maxAlignmentWidth,
+            @JsonProperty(value = "maxAlignmentWidthLinear") Integer maxAlignmentWidthLinear,
+            @JsonProperty(value = "maxAlignmentWidthAffine") Integer maxAlignmentWidthAffine) {
+        this.relativeMinScore = relativeMinScore;
+        this.scoring = scoring;
+        if (maxAlignmentWidth == null && (maxAlignmentWidthAffine == null || maxAlignmentWidthLinear == null))
+            throw new IllegalArgumentException("maxAlignmentWidth or maxAlignmentWidthAffine and maxAlignmentWidthLinear are not specified");
+
+        this.maxAlignmentWidthLinear = maxAlignmentWidth != null ? maxAlignmentWidth : maxAlignmentWidthLinear;
+        this.maxAlignmentWidthAffine = maxAlignmentWidth != null ? maxAlignmentWidth : maxAlignmentWidthAffine;
     }
 
     public BandedAlignerParameters<NucleotideSequence> getAlignmentParameters() {
-        return alignmentParameters;
+        if (!isComplete())
+            throw new IllegalStateException();
+        return new BandedAlignerParameters<>(scoring, getMaxAlignmentWidth(), Integer.MIN_VALUE);
     }
 
-    public VJCClonalAlignerParameters setAlignmentParameters(BandedAlignerParameters<NucleotideSequence> alignmentParameters) {
-        this.alignmentParameters = alignmentParameters;
+    @Override
+    public void updateFrom(ClonalGeneAlignmentParameters alignerParameters) {
+        if (scoring == null)
+            scoring = alignerParameters.getScoring();
+        if (relativeMinScore == null)
+            relativeMinScore = alignerParameters.getRelativeMinScore();
+    }
+
+    @Override
+    public boolean isComplete() {
+        return relativeMinScore != null && scoring != null;
+    }
+
+    @Override
+    public AlignmentScoring<NucleotideSequence> getScoring() {
+        return scoring;
+    }
+
+    public VJCClonalAlignerParameters setScoring(AlignmentScoring<NucleotideSequence> scoring) {
+        this.scoring = scoring;
         return this;
     }
 
     @Override
+    public float getRelativeMinScore() {
+        return relativeMinScore;
+    }
+
+    public VJCClonalAlignerParameters setRelativeMinScore(Float relativeMinScore) {
+        this.relativeMinScore = relativeMinScore;
+        return this;
+    }
+
+    public int getMaxAlignmentWidth() {
+        return scoring instanceof AffineGapAlignmentScoring ? maxAlignmentWidthAffine : maxAlignmentWidthLinear;
+    }
+
+    @JsonProperty("maxAlignmentWidth")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public Integer getMaxAlignmentWidthJSON() {
+        return (maxAlignmentWidthAffine == maxAlignmentWidthLinear) ? maxAlignmentWidthAffine : null;
+    }
+
+    @JsonProperty("maxAlignmentWidthLinear")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public Integer getMaxAlignmentWidthLinearJSON() {
+        return (maxAlignmentWidthAffine != maxAlignmentWidthLinear) ? maxAlignmentWidthLinear : null;
+    }
+
+    @JsonProperty("maxAlignmentWidthAffine")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public Integer getMaxAlignmentWidthAffineJSON() {
+        return (maxAlignmentWidthAffine != maxAlignmentWidthLinear) ? maxAlignmentWidthAffine : null;
+    }
+
+    @Override
     public VJCClonalAlignerParameters clone() {
-        return new VJCClonalAlignerParameters(featureToAlign, relativeMinScore, alignmentParameters.clone());
+        return new VJCClonalAlignerParameters(relativeMinScore, scoring, null, maxAlignmentWidthLinear, maxAlignmentWidthAffine);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
 
         VJCClonalAlignerParameters that = (VJCClonalAlignerParameters) o;
 
-        if (!alignmentParameters.equals(that.alignmentParameters)) return false;
-
-        return true;
+        if (maxAlignmentWidthLinear != that.maxAlignmentWidthLinear) return false;
+        if (maxAlignmentWidthAffine != that.maxAlignmentWidthAffine) return false;
+        if (relativeMinScore != null ? !relativeMinScore.equals(that.relativeMinScore) : that.relativeMinScore != null)
+            return false;
+        return scoring != null ? scoring.equals(that.scoring) : that.scoring == null;
     }
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + alignmentParameters.hashCode();
+        int result = relativeMinScore != null ? relativeMinScore.hashCode() : 0;
+        result = 31 * result + (scoring != null ? scoring.hashCode() : 0);
+        result = 31 * result + maxAlignmentWidthLinear;
+        result = 31 * result + maxAlignmentWidthAffine;
         return result;
     }
 }

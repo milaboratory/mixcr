@@ -49,7 +49,7 @@ public class VDJCAlignerParametersTest {
                                 1.5f, 0.75f, 1.0f, -0.1f, -0.3f, 4, 10, 15, 2, -10, 40.0f, 0.87f, 7,
                                 LinearGapAlignmentScoring.getNucleotideBLASTScoring())),
                 new DAlignerParameters(GeneFeature.DRegion,
-                        30.0f, 0.85f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring()),
+                        0.85f, 30.0f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring()),
                 new KGeneAlignmentParameters(GeneFeature.JRegion, 120, 0.87f,
                         new KAlignerParameters(5, false, false,
                                 1.5f, 0.75f, 1.0f, -0.1f, -0.3f, 4, 10, 15, 2, -10, 40.0f, 0.87f, 7,

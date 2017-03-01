@@ -35,6 +35,7 @@ import com.milaboratory.core.alignment.Aligner;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.assembler.DClonalAlignerParameters;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import io.repseq.core.Chains;
 import io.repseq.core.GeneFeature;
@@ -67,11 +68,16 @@ public final class SingleDAligner {
 
     public SingleDAligner(DAlignerParameters parameters,
                           List<VDJCGene> genes) {
+        this(parameters, parameters.getGeneFeatureToAlign(), genes);
+    }
+
+    public SingleDAligner(DClonalAlignerParameters<?> parameters, GeneFeature geneFeature,
+                          List<VDJCGene> genes) {
         this.scoring = parameters.getScoring();
         this.absoluteMinScore = parameters.getAbsoluteMinScore();
         this.relativeMinScore = parameters.getRelativeMinScore();
         this.maxHits = parameters.getMaxHits();
-        this.featureToAlign = parameters.getGeneFeatureToAlign();
+        this.featureToAlign = geneFeature;
         for (VDJCGene gene : genes)
             sequences.add(new SequenceWithChains(gene, featureToAlign));
         this.genes = new ArrayList<>(genes);
