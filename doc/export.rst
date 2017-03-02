@@ -175,33 +175,43 @@ The following table shows the correspondance between anchor point and positions 
 +--------------------------+---------------------+--------------------+
 | FR3End / CDR3Begin       | 9                   | 10                 |
 +--------------------------+---------------------+--------------------+
-| VEnd / *PSegmentBegin*   | 10                  | 11                 |
-+--------------------------+---------------------+--------------------+
-| Number of 3' V deletions | 11                  | 12                 |
+| Number of 3' V deletions | 10                  | 11                 |
 | (negative value), or     |                     |                    |
 | length of 3' V P-segment |                     |                    |
 | (positive value)         |                     |                    |
 +--------------------------+---------------------+--------------------+
-| Number of 5' D deletions | 12                  | 13                 |
+| VEndTrimmed, next        | 11                  | 12                 |
+| position after last      |                     |                    |
+| aligned nucleotide of V  |                     |                    |
+| gene                     |                     |                    |
++--------------------------+---------------------+--------------------+
+| DBeginTrimmed, position  | 12                  | 13                 |
+| of first aligned         |                     |                    |
+| nucleotide of D gene     |                     |                    |
++--------------------------+---------------------+--------------------+
+| Number of 5' D deletions | 13                  | 14                 |
 | (negative value), or     |                     |                    |
 | length of 5' D P-segment |                     |                    |
 | (positive value)         |                     |                    |
 +--------------------------+---------------------+--------------------+
-| DBegin / *PSegmentEnd*   | 13                  | 14                 |
-+--------------------------+---------------------+--------------------+
-| DEnd / *PSegmentBegin*   | 14                  | 15                 |
-+--------------------------+---------------------+--------------------+
-| Number of 3' D deletions | 15                  | 16                 |
+| Number of 3' D deletions | 14                  | 15                 |
 | (negative value), or     |                     |                    |
 | length of 3' D P-segment |                     |                    |
 | (positive value)         |                     |                    |
 +--------------------------+---------------------+--------------------+
-| Number of 3' J deletions | 16                  | 17                 |
+| DEndTrimmed, next        | 15                  | 16                 |
+| position after last      |                     |                    |
+| aligned nucleotide of D  |                     |                    |
+| gene                     |                     |                    |
++--------------------------+---------------------+--------------------+
+| JBeginTrimmed, position  | 16                  | 17                 |
+| of first aligned         |                     |                    |
+| nucleotide of J gene     |                     |                    |
++--------------------------+---------------------+--------------------+
+| Number of 3' J deletions | 17                  | 18                 |
 | (negative value), or     |                     |                    |
 | length of 3' J P-segment |                     |                    |
 | (positive value)         |                     |                    |
-+--------------------------+---------------------+--------------------+
-| JBegin / *PSegmentEnd*   | 17                  | 18                 |
 +--------------------------+---------------------+--------------------+
 | CDR3End / FR4Begin       | 18                  | 19                 |
 +--------------------------+---------------------+--------------------+
@@ -211,8 +221,6 @@ The following table shows the correspondance between anchor point and positions 
 +--------------------------+---------------------+--------------------+
 | CExon1End                | 21                  | 22                 |
 +--------------------------+---------------------+--------------------+
-
-Positions of anchor points like ``VEnd`` are printed only if corresponding P-segment was detected in the sequence, in this case e.g. P-segment of V gene can be found between positions of ``VEnd`` and ``VEndTrimmed``.
 
 Examples
 --------
