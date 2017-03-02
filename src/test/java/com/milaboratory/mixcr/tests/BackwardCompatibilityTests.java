@@ -43,7 +43,6 @@ public class BackwardCompatibilityTests {
     @Test
     public void testAlignments() throws Exception {
         assertGoodVDJCA("/backward_compatibility/2.1.0/test.vdjca.gz", 76);
-        assertGoodVDJCA("/backward_compatibility/2.1.0/sample_IGH.vdjca.gz", 76);
     }
 
     public static void assertGoodVDJCA(String resource, int size) throws IOException {
@@ -65,8 +64,7 @@ public class BackwardCompatibilityTests {
 
     @Test
     public void testBC16Cloneset() throws Exception {
-        assertGoodCLNS("/backward_compatibility/2.1.0/test.clns.gz", 81, 66);
-        assertGoodCLNS("/backward_compatibility/2.1.0/sample_IGH.clns.gz", 81, 66);
+        assertGoodCLNS("/backward_compatibility/2.1.0/test.clns.gz", 22, 17);
     }
 
     public static void assertGoodCLNS(String resource, int size, int good) throws IOException {
