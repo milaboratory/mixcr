@@ -55,7 +55,7 @@ final class FeatureExtractors {
 
         @Override
         protected String getHeader(OutputMode outputMode, GeneFeature[] features) {
-            return FieldExtractors.choose(outputMode, header0(hPrefix, features) + " ", header0(sPrefix, features));
+            return FieldExtractors.choose(outputMode, header0(hPrefix, features), header0(sPrefix, features));
         }
 
         @Override

@@ -31,7 +31,7 @@ package com.milaboratory.mixcr.assembler;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.core.io.util.IOUtil;
-import com.milaboratory.mixcr.util.TempFileManager;
+import com.milaboratory.util.TempFileManager;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -179,7 +179,7 @@ public final class AssemblerEventLogger {
                 if (closed)
                     return null;
                 final int cloneIndex;
-                synchronized (this) {
+                synchronized ( this ){
                     if (closed)
                         return null;
                     else {

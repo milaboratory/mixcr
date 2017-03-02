@@ -45,9 +45,9 @@ public class ActionExportParameters<T extends VDJCObject> extends ActionParamete
             names = {"-l", "--loci"}, hidden = true)
     public String chains_legacy = null;
 
-    @Parameter(description = "Specify preset of export fields (full, min)",
+    @Parameter(description = "Specify preset of export fields (possible values: 'full', 'min'; 'full' by default)",
             names = {"-p", "--preset"})
-    public String preset = "full";
+    public String preset;
 
     @Parameter(description = "Specify preset file of export fields",
             names = {"-pf", "--preset-file"})
@@ -162,7 +162,7 @@ public class ActionExportParameters<T extends VDJCObject> extends ActionParamete
             parameters.exporters = new ArrayList<>();
 
             //if preset was explicitly specified
-            if (!parameters.preset.equals(DEFAULT_PRESET))
+            if (parameters.preset != null)
                 parameters.exporters.addAll(getPresetParameters(outputMode, clazz, parameters.preset));
 
             if (parameters.presetFile != null)

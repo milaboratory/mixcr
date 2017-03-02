@@ -1,7 +1,7 @@
 package com.milaboratory.mixcr.assembler;
 
 import cc.redberry.pipe.OutputPort;
-import com.milaboratory.mixcr.util.TempFileManager;
+import com.milaboratory.util.TempFileManager;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -143,7 +143,7 @@ public class AlignmentsToClonesMappingContainer implements AutoCloseable, Closea
     public static void writeMapping(final OutputPort<ReadToCloneMapping> mappingPort,
                                     final int cloneCount,
                                     final File file) throws IOException {
-        try (DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(file)))) {
+        try(DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(file)))) {
             writeMapping(mappingPort, cloneCount, dos, DEFAULT_SORTING_CHUNK_SIZE);
         }
     }
@@ -166,7 +166,7 @@ public class AlignmentsToClonesMappingContainer implements AutoCloseable, Closea
 
         // Sorting blocks (sortingChunkSize) of records by clone id (for "by clone id" index file section)
         // Simultaneously writing records sorted "by alignment id"
-        try (final DataOutputStream tempOutput = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(tempFile), 262144))) {
+        try(final DataOutputStream tempOutput = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(tempFile), 262144))) {
             final ReadToCloneMapping[] buffer = new ReadToCloneMapping[sortingChunkSize];
             ReadToCloneMapping mapping;
             ReadToCloneMapping previous = null;

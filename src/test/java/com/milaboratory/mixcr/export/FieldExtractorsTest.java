@@ -124,27 +124,27 @@ public class FieldExtractorsTest {
         Integer[][] r = goAssert.go("{CDR3Begin(-250):VEnd(-3)} 'CCAAA' {DBegin(0):DEnd(0)} 'AAA' {JBegin(2):FR4End} " +
                         "{CBegin}C*100 N*100",
                 100, 240, 307, 450, "");
-        assertExportPoint(r[0], ReferencePoint.VEndTrimmed, -3);
-        assertExportPoint(r[0], ReferencePoint.DBeginTrimmed, 0);
-        assertExportPoint(r[0], ReferencePoint.DEndTrimmed, 0);
-        assertExportPoint(r[0], ReferencePoint.JBeginTrimmed, -2);
+        assertExportPoint(r[0], ReferencePoint.VEnd, -3);
+        assertExportPoint(r[0], ReferencePoint.DBegin, 0);
+        assertExportPoint(r[0], ReferencePoint.DEnd, 0);
+        assertExportPoint(r[0], ReferencePoint.JBegin, -2);
 
         r = goAssert.go("{CDR3Begin(-250):VEnd(0)} 'CCAAA' {DBegin(0):DEnd(-2)} 'AAA' {JBegin:FR4End} {CBegin}C*100 N*100",
                 100, 240, 307, 450, "");
-        assertExportPoint(r[0], ReferencePoint.VEndTrimmed, 0);
-        assertExportPoint(r[0], ReferencePoint.DBeginTrimmed, 0);
-        assertExportPoint(r[0], ReferencePoint.DEndTrimmed, -2);
-        assertExportPoint(r[0], ReferencePoint.JBeginTrimmed, 0);
+        assertExportPoint(r[0], ReferencePoint.VEnd, 0);
+        assertExportPoint(r[0], ReferencePoint.DBegin, 0);
+        assertExportPoint(r[0], ReferencePoint.DEnd, -2);
+        assertExportPoint(r[0], ReferencePoint.JBegin, 0);
 
         // With PSegments
 
         r = goAssert.go("{CDR3Begin(-250):VEnd(0)} {VEnd:VEnd(-3)} 'CCAAA' {DBegin(3):DBegin} {DBegin:DEnd(-2)} 'AAA' " +
                         "{JBegin(2):JBegin} {JBegin:FR4End} {CBegin}C*100 N*100",
                 100, 240, 307, 450, "");
-        assertExportPoint(r[0], ReferencePoint.VEndTrimmed, 3);
-        assertExportPoint(r[0], ReferencePoint.DBeginTrimmed, 3);
-        assertExportPoint(r[0], ReferencePoint.DEndTrimmed, -2);
-        assertExportPoint(r[0], ReferencePoint.JBeginTrimmed, 2);
+        assertExportPoint(r[0], ReferencePoint.VEnd, 3);
+        assertExportPoint(r[0], ReferencePoint.DBegin, 3);
+        assertExportPoint(r[0], ReferencePoint.DEnd, -2);
+        assertExportPoint(r[0], ReferencePoint.JBegin, 2);
     }
 
     static void assertExportPoint(Integer[] r, ReferencePoint rp, Integer value) {

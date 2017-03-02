@@ -4,6 +4,7 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.primitives.Filter;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.beust.jcommander.converters.LongConverter;
 import com.beust.jcommander.validators.PositiveInteger;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
@@ -142,16 +143,13 @@ public final class ActionFilterAlignments implements Action {
         public long limit = 0;
 
         @Parameter(description = "List of read ids to export",
-                names = {"-i", "--readsIds"}, variableArity = true)
-        public List<String> ids = new ArrayList<>();
+                names = {"-i", "--read-ids"}, converter = LongConverter.class)
+        public List<Long> ids = new ArrayList<>();
 
         TLongHashSet getReadIds() {
             if (ids.isEmpty())
                 return null;
-            TLongHashSet r = new TLongHashSet(ids.size());
-            for (String id : ids)
-                r.add(Long.parseLong(id));
-            return r;
+            return new TLongHashSet(ids);
         }
 
         @Override

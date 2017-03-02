@@ -14,8 +14,15 @@ before_install:
   - mvn clean install -DskipTests -B && cd ..
   - mv ./repseqio/.cache .cache
 
+script:
+  - mvn test -B && ./itests.sh test
+
 jdk:
   - openjdk7
+
+before_cache:
+  - rm -f $HOME/.m2/repository/io/repseqio/
+  - rm -f $HOME/.m2/repository/com/milaboratory/
 
 cache:
   directories:

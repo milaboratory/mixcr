@@ -42,7 +42,7 @@ import com.milaboratory.core.tree.MutationGuide;
 import com.milaboratory.core.tree.NeighborhoodIterator;
 import com.milaboratory.core.tree.SequenceTreeMap;
 import com.milaboratory.mixcr.basictypes.*;
-import io.repseq.core.*;
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.Factory;
 import com.milaboratory.util.HashFunctions;
@@ -51,6 +51,8 @@ import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TObjectFloatHashMap;
 import gnu.trove.procedure.TObjectProcedure;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -82,6 +84,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     volatile boolean deferredExists = false;
     volatile boolean preClusteringDone = false;
     final TIntIntHashMap preClustered = new TIntIntHashMap();
+    final EnumMap<GeneType, GeneFeature> featuresToAlign;
 
     public static final Factory<ArrayList<CloneAccumulatorContainer>> LIST_FACTORY = new Factory<ArrayList<CloneAccumulatorContainer>>() {
         @Override
@@ -90,14 +93,21 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         }
     };
 
-    public CloneAssembler(CloneAssemblerParameters parameters, boolean logAssemblerEvents, Collection<VDJCGene> genes) {
+    public CloneAssembler(CloneAssemblerParameters parameters, boolean logAssemblerEvents, Collection<VDJCGene> genes, EnumMap<GeneType, GeneFeature> featuresToAlign) {
+        if (!parameters.isComplete())
+            throw new IllegalArgumentException("Not complete parameters");
         this.parameters = parameters.clone();
+        this.featuresToAlign = featuresToAlign;
         if (!logAssemblerEvents && !parameters.isMappingEnabled())
             globalLogger = null;
         else
             globalLogger = new AssemblerEventLogger();
         for (VDJCGene gene : genes)
             usedGenes.put(gene.getId(), gene);
+    }
+
+    public CloneAssembler(CloneAssemblerParameters parameters, boolean logAssemblerEvents, Collection<VDJCGene> genes, VDJCAlignerParameters alignerParameters) {
+        this(parameters.clone().updateFrom(alignerParameters), logAssemblerEvents, genes, alignerParameters.getFeaturesToAlignMap());
     }
 
     /* Initial Assembly Events */
@@ -165,13 +175,13 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
 
     private ClonalSequence extractClonalSequence(VDJCAlignments alignments) {
         final NSequenceWithQuality[] targets = new NSequenceWithQuality[parameters.assemblingFeatures.length];
-        int totalLengt = 0;
+        int totalLength = 0;
         for (int i = 0; i < targets.length; ++i)
             if ((targets[i] = alignments.getFeature(parameters.assemblingFeatures[i])) == null)
                 return null;
             else
-                totalLengt += targets[i].size();
-        if (totalLengt < parameters.minimalClonalSequenceLength)
+                totalLength += targets[i].size();
+        if (totalLength < parameters.minimalClonalSequenceLength)
             return null;
         return new ClonalSequence(targets);
     }
@@ -296,7 +306,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     public CloneSet getCloneSet() {
         EnumMap<GeneType, GeneFeature> features = new EnumMap<>(GeneType.class);
         for (GeneType geneType : GeneType.values()) {
-            GeneFeature gf = parameters.cloneFactoryParameters.getFeatureToAlign(geneType);
+            GeneFeature gf = featuresToAlign.get(geneType);
             if (gf != null)
                 features.put(geneType, gf);
         }
@@ -506,7 +516,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         void buildClones() {
             CloneFactory cloneFactory =
                     new CloneFactory(parameters.getCloneFactoryParameters(),
-                            parameters.getAssemblingFeatures(), usedGenes);
+                            parameters.getAssemblingFeatures(), usedGenes, featuresToAlign);
             Collection<CloneAccumulator> source;
             if (clusteredClonesAccumulators != null)
                 source = clusteredClonesAccumulators;

@@ -40,7 +40,7 @@ public class DAlignerParametersTest {
     @Test
     public void test1() throws Exception {
         DAlignerParameters paramentrs = new DAlignerParameters(GeneFeature.DRegion,
-                30.0f, 0.85f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring());
+                0.85f, 30.0f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring());
         String str = GlobalObjectMappers.PRETTY.writeValueAsString(paramentrs);
         DAlignerParameters deser = GlobalObjectMappers.PRETTY.readValue(str, DAlignerParameters.class);
         assertEquals(paramentrs, deser);
@@ -51,7 +51,7 @@ public class DAlignerParametersTest {
     @Test
     public void test2() throws Exception {
         DAlignerParameters se = new DAlignerParameters(GeneFeature.DRegion,
-                30.0f, 0.85f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring());
+                0.85f, 30.0f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring());
         IOTestUtil.assertJavaSerialization(se);
     }
 }

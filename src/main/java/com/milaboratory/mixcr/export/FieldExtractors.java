@@ -280,7 +280,8 @@ public final class FieldExtractors {
                 }
             });
 
-            descriptorsList.add(new FeatureExtractors.WithHeader("-aaFeature", "Export amino acid sequence of specified gene feature", 1, new String[]{"AA. Seq."}, new String[]{"aaSeq"}) {
+            descriptorsList.add(new FeatureExtractors.WithHeader("-aaFeature", "Export amino acid sequence of specified gene feature",
+                    1, new String[]{"AA. Seq. "}, new String[]{"aaSeq"}) {
                 @Override
                 protected String extractValue(VDJCObject object, GeneFeature[] parameters) {
                     GeneFeature geneFeature = parameters[parameters.length - 1];
@@ -705,15 +706,15 @@ public final class FieldExtractors {
                 for (int j = 0; ; j++) {
                     ReferencePoint refPoint = ReferencePoint.DefaultReferencePoints[j];
 
-                    // Processing special cases of trimmed points
-                    if (refPoint.equals(ReferencePoint.VEndTrimmed))
-                        sb.append(trimmedPosition(bestVHit, i, refPoint, ReferencePoint.VEnd));
-                    else if (refPoint.equals(ReferencePoint.DBeginTrimmed))
-                        sb.append(trimmedPosition(bestDHit, i, refPoint, ReferencePoint.DBegin));
-                    else if (refPoint.equals(ReferencePoint.DEndTrimmed))
-                        sb.append(trimmedPosition(bestDHit, i, refPoint, ReferencePoint.DEnd));
-                    else if (refPoint.equals(ReferencePoint.JBeginTrimmed))
-                        sb.append(trimmedPosition(bestJHit, i, refPoint, ReferencePoint.JBegin));
+                    // Processing special cases for number of deleted / P-segment nucleotides
+                    if (refPoint.equals(ReferencePoint.VEnd))
+                        sb.append(trimmedPosition(bestVHit, i, ReferencePoint.VEndTrimmed, ReferencePoint.VEnd));
+                    else if (refPoint.equals(ReferencePoint.DBegin))
+                        sb.append(trimmedPosition(bestDHit, i, ReferencePoint.DBeginTrimmed, ReferencePoint.DBegin));
+                    else if (refPoint.equals(ReferencePoint.DEnd))
+                        sb.append(trimmedPosition(bestDHit, i, ReferencePoint.DEndTrimmed, ReferencePoint.DEnd));
+                    else if (refPoint.equals(ReferencePoint.JBegin))
+                        sb.append(trimmedPosition(bestJHit, i, ReferencePoint.JBeginTrimmed, ReferencePoint.JBegin));
 
                     else {
                         // Normal points

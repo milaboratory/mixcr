@@ -47,17 +47,19 @@ class CloneFactory {
     final HashMap<VDJCGeneId, VDJCGene> usedGenes;
     final GeneFeature[] assemblingFeatures;
     final int indexOfAssemblingFeatureWithD;
+    final EnumMap<GeneType, GeneFeature> featuresToAlign;
 
     CloneFactory(CloneFactoryParameters parameters, GeneFeature[] assemblingFeatures,
-                 HashMap<VDJCGeneId, VDJCGene> usedGenes) {
+                 HashMap<VDJCGeneId, VDJCGene> usedGenes, EnumMap<GeneType, GeneFeature> featuresToAlign) {
         this.parameters = parameters.clone();
         this.assemblingFeatures = assemblingFeatures.clone();
         this.usedGenes = usedGenes;
+        this.featuresToAlign = featuresToAlign;
         List<VDJCGene> dGenes = new ArrayList<>();
         for (VDJCGene gene : usedGenes.values())
             if (gene.getGeneType() == GeneType.Diversity)
                 dGenes.add(gene);
-        this.dAligner = new SingleDAligner(parameters.getDParameters(), dGenes);
+        this.dAligner = new SingleDAligner(parameters.getDParameters(), featuresToAlign.get(GeneType.Diversity), dGenes);
 
         int indexOfAssemblingFeatureWithD = -1;
         for (int i = 0; i < assemblingFeatures.length; ++i)
@@ -76,7 +78,7 @@ class CloneFactory {
             if (vjcParameters == null)
                 continue;
 
-            GeneFeature featureToAlign = vjcParameters.getFeatureToAlign();
+            GeneFeature featureToAlign = featuresToAlign.get(geneType);
 
             TObjectFloatHashMap<VDJCGeneId> geneScores = accumulator.geneScores.get(geneType);
             if (geneScores == null)

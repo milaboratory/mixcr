@@ -28,11 +28,13 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
+import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
+import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.primitivio.annotations.Serializable;
-import io.repseq.core.Chains;
 import io.repseq.core.GeneType;
 
+import java.util.Arrays;
 import java.util.EnumMap;
 
 @Serializable(by = IO.VDJCAlignmentsSerializer.class)
@@ -65,6 +67,33 @@ public final class VDJCAlignments extends VDJCObject {
                           NSequenceWithQuality... targets) {
         super(vHits, dHits, jHits, cHits, targets);
         this.readId = readId;
+    }
+
+    public VDJCAlignments removeBestHitAlignment(GeneType geneType, int targetId) {
+        if (getBestHit(geneType) == null)
+            return this;
+        EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(this.hits);
+        VDJCHit[] gHits = hits.get(geneType).clone();
+        Alignment<NucleotideSequence>[] als = gHits[0].getAlignments().clone();
+        als[targetId] = null;
+        gHits[0] = new VDJCHit(gHits[0].getGene(), als, gHits[0].getAlignedFeature());
+        Arrays.sort(gHits);
+        hits.put(geneType, gHits);
+
+        VDJCAlignments result = new VDJCAlignments(readId, hits, targets);
+        result.alignmentsIndex = alignmentsIndex;
+        return result;
+    }
+
+    public boolean hasNoHitsInTarget(int i) {
+        for (VDJCHit[] vdjcHits : hits.values()) {
+            if (vdjcHits == null)
+                continue;
+            for (VDJCHit hit : vdjcHits)
+                if (hit.getAlignment(i) != null)
+                    return false;
+        }
+        return true;
     }
 
     public long getReadId() {
@@ -186,7 +215,7 @@ public final class VDJCAlignments extends VDJCObject {
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (int) (readId ^ (readId >>> 32));
+        result = 31 * result + (int) (readId^(readId >>> 32));
         return result;
     }
 }

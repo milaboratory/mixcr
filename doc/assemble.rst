@@ -271,72 +271,41 @@ In order to turn off clustering one should use the following parameters:
 
     mixcr assemble -OcloneClusteringParameters=null alignments.vdjca output.clns
 
-Clone factory parameters
-------------------------
+.. Clone factory parameters
+.. ------------------------
 
-Parameters which control final alignment of clonal sequences are placed
-in ``cloneFactoryParameters`` group. These parameters includes separate
-groups for V, D, J and C aligners: ``vParameters``, ``dParameters``,
-``jParameters`` and ``cParameters``. The D aligner is the same as used
-in ``align`` and thus all its parameters and their default values are
-the same as described for :ref:`D aligner in align <ref-dAlignerParameters>`. One
-can override these parameters in the following way:
+.. Parameters which control final alignment of clonal sequences are placed in ``cloneFactoryParameters`` group. These parameters includes separate groups for V, D, J and C aligners: ``vParameters``, ``dParameters``, ``jParameters`` and ``cParameters``. The D aligner is the same as used in ``align`` and thus all its parameters and their default values are the same as described for :ref:`D aligner in align <ref-dAlignerParameters>`. One can override these parameters in the following way:
 
-::
+.. 
 
-    mixcr assemble -OcloneFactoryParameters.dParameters.absoluteMinScore=10 alignments.vdjca output.clns
+..     mixcr assemble -OcloneFactoryParameters.dParameters.absoluteMinScore=10 alignments.vdjca output.clns
 
-::
+.. 
 
-    mixcr assemble -OcloneFactoryParameters.dParameters.scoring.gapOpenPenalty=-10 alignments.vdjca output.clns
+..     mixcr assemble -OcloneFactoryParameters.dParameters.scoring.gapOpenPenalty=-10 alignments.vdjca output.clns
 
-The aligners used to build alignments with V, J and C genes are
-different from those used by ``align``.
+.. The aligners used to build alignments with V, J and C genes are different from those used by ``align``.
 
-V, J and C aligner parameters
-'''''''''''''''''''''''''''''
+.. The scoring parameters are placed in group ``alignmentParameters.scoring``:
 
-The following table lists parameters of V, J and C aligners:
+.. +-------------------------+----------------------------------------+--------------------------------------------------------------------+
+.. | Parameter               | Default value (same for V, J, C)       | Description                                                        |
+.. +=========================+========================================+====================================================================+
+.. | ``subsMatrix``          | ``simple(match = 5,``                  | Substitution matrix. Available types:                              |
+.. |                         |  ``mismatch = -9)``                    |                                                                    |
+.. |                         |                                        |  - ``simple`` --- a matrix with diagonal elements equal to         |
+.. |                         |                                        |    ``match`` and other elements equal to ``mismatch``              |
+.. |                         |                                        |  - ``raw`` --- a complete set of 16 matrix elements should be      |
+.. |                         |                                        |    specified; for  example:                                        |
+.. |                         |                                        |    ``raw(5,-9,-9,-9,-9,5,-9,-9,-9,-9,5,-9,-9,-9,-9,5)``            |
+.. |                         |                                        |     (*equivalent to the default value*)                            |
+.. +-------------------------+----------------------------------------+--------------------------------------------------------------------+
+.. | ``gapPenalty``          | ``-12``                                | Penalty for gap.                                                   |
+.. +-------------------------+----------------------------------------+--------------------------------------------------------------------+
 
+.. One can override these parameters in the following way
 
+.. 
 
-+----------------------+-----------------+-----------------+------------------+-----------------------------------------------------------+
-| Parameter            | Default V value | Default J value | Default C value  |Description                                                |
-+======================+=================+=================+==================+===========================================================+
-| ``featureToAlign``   | ``VTranscript`` | ``JRegion``     | ``CExon1``       | Gene region used to build alignments.                     |
-+----------------------+-----------------+-----------------+------------------+-----------------------------------------------------------+
-| ``relativeMinScore`` | ``0.8``         | ``0.8``         | ``0.8``          | Relative minimal score of hit: hits with score less than  |
-|                      |                 |                 |                  | ``relativeMinScore * maxScore`` (``maxScore`` is score of |
-|                      |                 |                 |                  | best hit) will be dropped.                                |
-+----------------------+-----------------+-----------------+------------------+-----------------------------------------------------------+
-
-One can override these parameters in the following way
-
-::
-
-    mixcr assemble -OcloneFactoryParameters.jParameters.featureToAlign=JRegion(-6,0) alignments.vdjca output.clns
-
-The scoring parameters are placed in group
-``alignmentParameters.scoring``:
-
-+-------------------------+----------------------------------------+--------------------------------------------------------------------+
-| Parameter               | Default value (same for V, J, C)       | Description                                                        |
-+=========================+========================================+====================================================================+
-| ``subsMatrix``          | ``simple(match = 5,``                  | Substitution matrix. Available types:                              |
-|                         |  ``mismatch = -9)``                    |                                                                    |
-|                         |                                        |  - ``simple`` --- a matrix with diagonal elements equal to         |
-|                         |                                        |    ``match`` and other elements equal to ``mismatch``              |
-|                         |                                        |  - ``raw`` --- a complete set of 16 matrix elements should be      |
-|                         |                                        |    specified; for  example:                                        |
-|                         |                                        |    ``raw(5,-9,-9,-9,-9,5,-9,-9,-9,-9,5,-9,-9,-9,-9,5)``            |
-|                         |                                        |     (*equivalent to the default value*)                            |
-+-------------------------+----------------------------------------+--------------------------------------------------------------------+
-| ``gapPenalty``          | ``-12``                                | Penalty for gap.                                                   |
-+-------------------------+----------------------------------------+--------------------------------------------------------------------+
-
-One can override these parameters in the following way
-
-::
-
-    mixcr assemble -OcloneFactoryParameters.vParameters.alignmentParameters.scoring.gapPenalty=-5 \
-                   alignments.vdjca output.clns
+..     mixcr assemble -OcloneFactoryParameters.vParameters.alignmentParameters.scoring.gapPenalty=-5 \
+..                    alignments.vdjca output.clns

@@ -30,15 +30,13 @@ package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.cli.JCommanderBasedMain;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
-import com.milaboratory.mixcr.util.TempFileManager;
+import com.milaboratory.util.TempFileManager;
 import io.repseq.core.VDJCLibraryRegistry;
 import io.repseq.seqbase.SequenceResolvers;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.SecureRandom;
-import java.util.Arrays;
 
 public class Main {
     private static volatile boolean initialized = false;
@@ -48,7 +46,7 @@ public class Main {
         String command = System.getProperty("mixcr.command", "java -jar mixcr.jar");
 
         if (!initialized) {
-            TempFileManager.seed(Arrays.hashCode(args) + 17 * (new SecureRandom()).nextLong());
+            TempFileManager.setPrefix("mixcr_");
 
             Path cachePath = Paths.get(System.getProperty("user.home"), ".mixcr", "cache");
             //if (System.getProperty("allow.http") != null || System.getenv("MIXCR_ALLOW_HTTP") != null)
@@ -95,7 +93,8 @@ public class Main {
                 new ActionClonesDiff(),
                 new ActionFilterAlignments(),
                 new ActionListLibraries(),
-                new ActionExtendAlignments());
+                new ActionExtendAlignments(),
+                new ActionSortAlignments());
 
         // Adding version info callback
         main.setVersionInfoCallback(new Runnable() {

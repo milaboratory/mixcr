@@ -26,25 +26,20 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.assembler;
+package com.milaboratory.mixcr.vdjaligners;
 
+import com.milaboratory.mixcr.basictypes.ClonalUpdatableParameters;
 import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
 
-public abstract class AbstractClonalAlignerParameters<T extends AbstractClonalAlignerParameters<T>>
-        implements java.io.Serializable {
-    protected float relativeMinScore;
-    protected GeneFeature featureToAlign;
+public abstract class GeneAlignmentParametersAbstract<T extends GeneAlignmentParametersAbstract<T>>
+        implements  java.io.Serializable, GeneAlignmentParameters {
+    protected GeneFeature geneFeatureToAlign;
+    protected Float relativeMinScore;
 
-    protected AbstractClonalAlignerParameters() {
-    }
-
-    protected AbstractClonalAlignerParameters(GeneFeature featureToAlign, float relativeMinScore) {
+    protected GeneAlignmentParametersAbstract(GeneFeature geneFeatureToAlign, Float relativeMinScore) {
+        this.geneFeatureToAlign = geneFeatureToAlign;
         this.relativeMinScore = relativeMinScore;
-        this.featureToAlign = featureToAlign;
-    }
-
-    public float getRelativeMinScore() {
-        return relativeMinScore;
     }
 
     public T setRelativeMinScore(float relativeMinScore) {
@@ -52,13 +47,24 @@ public abstract class AbstractClonalAlignerParameters<T extends AbstractClonalAl
         return (T) this;
     }
 
-    public GeneFeature getFeatureToAlign() {
-        return featureToAlign;
+    @Override
+    public float getRelativeMinScore() {
+        return relativeMinScore;
     }
 
-    public T setFeatureToAlign(GeneFeature featureToAlign) {
-        this.featureToAlign = featureToAlign;
+    @Override
+    public GeneFeature getGeneFeatureToAlign() {
+        return geneFeatureToAlign;
+    }
+
+    public T setGeneFeatureToAlign(GeneFeature geneFeatureToAlign) {
+        this.geneFeatureToAlign = geneFeatureToAlign;
         return (T) this;
+    }
+
+    @Override
+    public GeneType getGeneType() {
+        return geneFeatureToAlign.getGeneType();
     }
 
     public abstract T clone();
@@ -66,20 +72,18 @@ public abstract class AbstractClonalAlignerParameters<T extends AbstractClonalAl
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof AbstractClonalAlignerParameters)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
 
-        AbstractClonalAlignerParameters that = (AbstractClonalAlignerParameters) o;
+        GeneAlignmentParametersAbstract<?> that = (GeneAlignmentParametersAbstract<?>) o;
 
         if (Float.compare(that.relativeMinScore, relativeMinScore) != 0) return false;
-        if (!featureToAlign.equals(that.featureToAlign)) return false;
-
-        return true;
+        return geneFeatureToAlign != null ? geneFeatureToAlign.equals(that.geneFeatureToAlign) : that.geneFeatureToAlign == null;
     }
 
     @Override
     public int hashCode() {
-        int result = (relativeMinScore != +0.0f ? Float.floatToIntBits(relativeMinScore) : 0);
-        result = 31 * result + featureToAlign.hashCode();
+        int result = geneFeatureToAlign != null ? geneFeatureToAlign.hashCode() : 0;
+        result = 31 * result + (relativeMinScore != +0.0f ? Float.floatToIntBits(relativeMinScore) : 0);
         return result;
     }
 }

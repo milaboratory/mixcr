@@ -83,21 +83,30 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         VDJCAlignmentResult<PairedRead> result = parameters.getAllowPartialAlignments() ?
                 processPartial(input, helpers) :
                 processStrict(input, helpers);
+
         if (result.alignment != null) {
             final VDJCAlignments alignment = result.alignment;
             final TargetMerger.TargetMergingResult mergeResult = alignmentsMerger.merge(
                     input.getId(),
                     new AlignedTarget(alignment, 0),
-                    new AlignedTarget(alignment, 1));
+                    new AlignedTarget(alignment, 1),
+                    false);
 
-            if (mergeResult != null) {
-                NSequenceWithQuality alignedTarget = mergeResult.result.getTarget();
+            if (mergeResult.failedDueInconsistentAlignments()) {
+                GeneType gt = mergeResult.getFailedMergedGeneType();
+                int removeId =
+                        alignment.getBestHit(gt).getAlignment(0).getScore()
+                                > alignment.getBestHit(gt).getAlignment(1).getScore()
+                                ? 1 : 0;
+                return new VDJCAlignmentResult<>(input, alignment.removeBestHitAlignment(gt, removeId));
+            } else if (mergeResult.isSuccessful()) {
+                NSequenceWithQuality alignedTarget = mergeResult.getResult().getTarget();
                 SingleRead sRead = new SingleReadImpl(input.getId(), alignedTarget, "");
                 VDJCAlignmentResult<SingleRead> sResult = sAligner.process0(sRead);
                 if (sResult.alignment == null)
                     return result;
                 VDJCAlignments sAlignment = sResult.alignment;
-                sAlignment.setTargetDescriptions(new String[]{"AOverlap(" + mergeResult.matched + ")"});
+                sAlignment.setTargetDescriptions(new String[]{"AOverlap(" + mergeResult.getMatched() + ")"});
                 return new VDJCAlignmentResult<>(input, sAlignment);
             }
         }

@@ -251,7 +251,7 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
                 vResult,
                 dResult,
                 jResult,
-                vdjcHits.get(GeneType.Constant),
+                cutRelativeScore(vdjcHits.get(GeneType.Constant), parameters.getCAlignerParameters().getRelativeMinScore(), parameters.getMaxHits()),
                 targets
         );
         return new VDJCAlignmentResult<>(input, alignment);
