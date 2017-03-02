@@ -36,6 +36,10 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.ClonalUpdatableParameters;
 import com.milaboratory.mixcr.vdjaligners.ClonalGeneAlignmentParameters;
 
+/**
+ * Some fields of this object might not be set, to indicate that their values must be taken from original alignment
+ * parameters (from *.vdjca file)
+ */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonIgnoreProperties({"featureToAlign", "alignmentParameters"})
@@ -62,11 +66,12 @@ public final class VJCClonalAlignerParameters
     public VJCClonalAlignerParameters(
             @JsonProperty("relativeMinScore") Float relativeMinScore,
             @JsonProperty("scoring") AlignmentScoring<NucleotideSequence> scoring,
-            @JsonProperty(value = "maxAlignmentWidth") Integer maxAlignmentWidth,
-            @JsonProperty(value = "maxAlignmentWidthLinear") Integer maxAlignmentWidthLinear,
-            @JsonProperty(value = "maxAlignmentWidthAffine") Integer maxAlignmentWidthAffine) {
+            @JsonProperty("maxAlignmentWidth") Integer maxAlignmentWidth,
+            @JsonProperty("maxAlignmentWidthLinear") Integer maxAlignmentWidthLinear,
+            @JsonProperty("maxAlignmentWidthAffine") Integer maxAlignmentWidthAffine) {
         this.relativeMinScore = relativeMinScore;
         this.scoring = scoring;
+
         if (maxAlignmentWidth == null && (maxAlignmentWidthAffine == null || maxAlignmentWidthLinear == null))
             throw new IllegalArgumentException("maxAlignmentWidth or maxAlignmentWidthAffine and maxAlignmentWidthLinear are not specified");
 

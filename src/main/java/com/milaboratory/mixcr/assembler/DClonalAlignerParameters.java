@@ -9,6 +9,9 @@ import com.milaboratory.mixcr.basictypes.ClonalUpdatableParameters;
 import com.milaboratory.mixcr.vdjaligners.ClonalGeneAlignmentParameters;
 
 /**
+ * Some fields of this object might not be set, to indicate that their values must be taken from original alignment
+ * parameters (from *.vdjca file)
+ *
  * Created by poslavsky on 01/03/2017.
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
