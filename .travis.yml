@@ -14,6 +14,9 @@ before_install:
   - mvn clean install -DskipTests -B && cd ..
   - mv ./repseqio/.cache .cache
 
+script:
+  - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V && mvn test -B && ./itests.sh test
+
 jdk:
   - openjdk7
 
