@@ -166,7 +166,7 @@ public final class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlign
                     throw new RuntimeException("Absent record for " + featureDeserialized + " in geneFeatureRefs map.");
             }
 
-            parameters.getGeneAlignerParameters(gt).setGeneFeatureToAlign(featureParams);
+//            parameters.getGeneAlignerParameters(gt).setGeneFeatureToAlign(featureParams);
 
             if (featureDeserialized != null)
                 input.putKnownReference(featureParams);

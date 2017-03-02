@@ -45,8 +45,6 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PipeWriter;
 import com.milaboratory.util.SmartProgressReporter;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
 
@@ -67,7 +65,7 @@ public class ActionAssemble implements Action {
         // Extracting V/D/J/C gene list from input vdjca file
         final List<VDJCGene> genes;
         final VDJCAlignerParameters alignerParameters;
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(actionParameters.getInputFileName(),
+        try(VDJCAlignmentsReader reader = new VDJCAlignmentsReader(actionParameters.getInputFileName(),
                 VDJCLibraryRegistry.getDefault())) {
             genes = reader.getUsedGenes();
             // Saving aligner parameters to correct assembler parameters
@@ -79,6 +77,8 @@ public class ActionAssemble implements Action {
                 VDJCLibraryRegistry.getDefault());
 
         CloneAssemblerParameters assemblerParameters = actionParameters.getCloneAssemblerParameters();
+        //set aligner parameters
+        assemblerParameters.updateFrom(alignerParameters);
 
         // Overriding JSON parameters
         if (!actionParameters.overrides.isEmpty()) {
@@ -90,19 +90,9 @@ public class ActionAssemble implements Action {
             }
         }
 
-        // Adjusting features to align for correct processing
-        for (GeneType geneType : GeneType.values()) {
-            GeneFeature featureAssemble = assemblerParameters.getCloneFactoryParameters().getFeatureToAlign(geneType);
-            GeneFeature featureAlignment = alignerParameters.getFeatureToAlign(geneType);
-            if (featureAssemble == null || featureAlignment == null)
-                continue;
-            GeneFeature intersection = GeneFeature.intersection(featureAlignment, featureAssemble);
-            assemblerParameters.getCloneFactoryParameters().setFeatureToAlign(geneType, intersection);
-        }
-
         // Performing assembly
-        try (CloneAssembler assembler = new CloneAssembler(assemblerParameters,
-                actionParameters.readsToClonesMapping != null, genes)) {
+        try(CloneAssembler assembler = new CloneAssembler(assemblerParameters,
+                actionParameters.readsToClonesMapping != null, genes, alignerParameters.getFeaturesToAlignMap())) {
             // Creating event listener to collect run statistics
             CloneAssemblerReport report = new CloneAssemblerReport();
             assembler.setListener(report);
@@ -122,7 +112,7 @@ public class ActionAssemble implements Action {
                 chainsStatistics.put(clone);
 
             // Writing results
-            try (CloneSetIO.CloneSetWriter writer = new CloneSetIO.CloneSetWriter(cloneSet, actionParameters.getOutputFileName())) {
+            try(CloneSetIO.CloneSetWriter writer = new CloneSetIO.CloneSetWriter(cloneSet, actionParameters.getOutputFileName())) {
                 SmartProgressReporter.startProgressReport(writer);
                 writer.write();
             }
@@ -144,7 +134,7 @@ public class ActionAssemble implements Action {
 
             // Writing raw events (not documented feature)
             if (actionParameters.events != null)
-                try (PipeWriter<ReadToCloneMapping> writer = new PipeWriter<>(actionParameters.events)) {
+                try(PipeWriter<ReadToCloneMapping> writer = new PipeWriter<>(actionParameters.events)) {
                     CUtils.drain(assembler.getAssembledReadsPort(), writer);
                 }
 

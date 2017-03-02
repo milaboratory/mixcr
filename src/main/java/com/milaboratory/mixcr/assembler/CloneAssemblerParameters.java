@@ -32,8 +32,9 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.repseq.core.GeneFeature;
 import com.milaboratory.core.sequence.quality.QualityAggregationType;
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
+import io.repseq.core.GeneFeature;
 
 import java.util.Arrays;
 import java.util.regex.Matcher;
@@ -88,6 +89,18 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
         this.mappingThreshold = mappingThreshold;
         this.minimalQuality = minimalQuality;
         updateVariants();
+    }
+
+    public CloneAssemblerParameters updateFrom(VDJCAlignerParameters alignerParameters) {
+        if (cloneFactoryParameters != null)
+            cloneFactoryParameters.update(alignerParameters);
+        return this;
+    }
+
+    public boolean isComplete() {
+        if (cloneFactoryParameters != null)
+            return cloneFactoryParameters.isComplete();
+        return true;
     }
 
     public static final Pattern thresholdPattern = Pattern.compile("\\s*(\\d+)\\s*(of|from)\\s*(\\d+)\\s*");
@@ -295,13 +308,13 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
         result = 31 * result + (separateByJ ? 1 : 0);
         result = 31 * result + (separateByC ? 1 : 0);
         temp = Double.doubleToLongBits(maximalPreClusteringRatio);
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        result = 31 * result + (int) (temp^(temp >>> 32));
         result = 31 * result + (addReadsCountOnClustering ? 1 : 0);
         result = 31 * result + (int) badQualityThreshold;
         temp = Double.doubleToLongBits(maxBadPointsPercent);
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
-        result = 31 * result + (int) (variants ^ (variants >>> 32));
-        result = 31 * result + (int) (minimalQuality ^ (minimalQuality >>> 32));
+        result = 31 * result + (int) (temp^(temp >>> 32));
+        result = 31 * result + (int) (variants^(variants >>> 32));
+        result = 31 * result + (int) (minimalQuality^(minimalQuality >>> 32));
         return result;
     }
 }

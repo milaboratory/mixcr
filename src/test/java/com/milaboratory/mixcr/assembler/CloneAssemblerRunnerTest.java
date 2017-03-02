@@ -30,7 +30,6 @@ package com.milaboratory.mixcr.assembler;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
-import com.milaboratory.core.alignment.BandedAlignerParameters;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SequenceReader;
@@ -94,7 +93,7 @@ public class CloneAssemblerRunnerTest {
 
         //write alignments to byte array
         ByteArrayOutputStream alignmentsSerialized = new ByteArrayOutputStream();
-        try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(alignmentsSerialized)) {
+        try(VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(alignmentsSerialized)) {
             writer.header(aligner);
             for (Object read : CUtils.it(reader)) {
                 VDJCAlignmentResult result = (VDJCAlignmentResult) aligner.process((SequenceRead) read);
@@ -109,12 +108,12 @@ public class CloneAssemblerRunnerTest {
 
         LinearGapAlignmentScoring<NucleotideSequence> scoring = new LinearGapAlignmentScoring<>(NucleotideSequence.ALPHABET, 5, -9, -12);
         CloneFactoryParameters factoryParameters = new CloneFactoryParameters(
-                new VJCClonalAlignerParameters(GeneFeature.VRegion, 0.8f,
-                        new BandedAlignerParameters(scoring, 5, -150)),
-                new VJCClonalAlignerParameters(GeneFeature.JRegion, 0.8f,
-                        new BandedAlignerParameters(scoring, 5, -150)),
+                new VJCClonalAlignerParameters(0.8f,
+                        scoring, 5),
+                new VJCClonalAlignerParameters(0.8f,
+                        scoring, 5),
                 null,
-                new DAlignerParameters(GeneFeature.DRegion, 30.0f, 0.85f, 3, scoring)
+                new DAlignerParameters(GeneFeature.DRegion, 0.85f, 30.0f, 3, scoring)
         );
 
         CloneAssemblerParameters assemblerParameters = new CloneAssemblerParameters(
@@ -126,7 +125,7 @@ public class CloneAssemblerRunnerTest {
         System.out.println(GlobalObjectMappers.toOneLine(assemblerParameters));
 
         CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(alignmentsProvider,
-                new CloneAssembler(assemblerParameters, true, aligner.getUsedGenes()), 2);
+                new CloneAssembler(assemblerParameters, true, aligner.getUsedGenes(), alignerParameters), 2);
         SmartProgressReporter.startProgressReport(assemblerRunner);
         assemblerRunner.run();
 
