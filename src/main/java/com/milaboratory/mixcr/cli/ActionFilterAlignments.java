@@ -158,7 +158,7 @@ public final class ActionFilterAlignments implements Action {
         }
 
         public Chains getChains() {
-            return Util.parseLoci(chains);
+            return Chains.parse(chains);
         }
 
         public VDJCAlignmentsReader getInput() throws IOException {

@@ -150,7 +150,7 @@ public class ActionExportClonesPretty implements Action {
         public String csContain = null;
 
         public Chains getChain() {
-            return Util.parseLoci(chain);
+            return Chains.parse(chain);
         }
 
         public Filter<Clone> getFilter() {

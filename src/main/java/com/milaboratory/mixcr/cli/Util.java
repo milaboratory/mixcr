@@ -48,27 +48,7 @@ public final class Util {
     }
 
     public static final DecimalFormat PERCENT_FORMAT = new DecimalFormat("#.##");
-
-    public static Chains parseLoci(String lociString) {
-        String[] split = lociString.split(",");
-        Chains chains = new Chains();
-        for (String s : split)
-            chains = chains.merge(parseLocus(s));
-        return chains;
-    }
-
-    private static Chains parseLocus(String value) {
-        switch (value.toLowerCase().trim()) {
-            case "tcr":
-                return Chains.TCR;
-            case "ig":
-                return Chains.IG;
-            case "all":
-                return Chains.ALL;
-        }
-        return new Chains(value);
-    }
-
+    
     public static void writeReport(String input, String output,
                                    String commandLineArguments,
                                    String reportFileName,

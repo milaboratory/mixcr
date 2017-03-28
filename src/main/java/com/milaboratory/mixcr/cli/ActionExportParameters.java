@@ -102,9 +102,9 @@ public class ActionExportParameters<T extends VDJCObject> extends ActionParamete
             if (!chains.equals("ALL"))
                 throw new ParameterException("Use -c without -l parameter.");
             System.out.println("WARNING: using of -l (--loci) option is deprecated; use -c (--chains) instead.");
-            return Util.parseLoci(chains_legacy);
+            return Chains.parse(chains_legacy);
         }
-        return Util.parseLoci(chains);
+        return Chains.parse(chains);
     }
 
     @SuppressWarnings("unchecked")
