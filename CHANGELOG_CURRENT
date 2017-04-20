@@ -1,2 +1,0 @@
-Fixed rear IllegalArgumentException in `extendAlignments` action
-Fixed rear NPE in `align` action

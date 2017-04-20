@@ -1,4 +1,11 @@
 
+MiXCR 2.1.2 (20 Apr 2017)
+========================
+
+-- Fixed rear IllegalArgumentException in `extendAlignments` action
+-- Fixed rear NPE in `align` action
+
+
 MiXCR 2.1.1 ( 3 Mar 2017)
 ========================
 
