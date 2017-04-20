@@ -174,11 +174,11 @@ For the full length cDNA-based immunoglobulin repertoire analysis we generally r
 
   ::
   
-    > mixcr align -p kaligner2 –s hsa -r alignmentReport.txt -OreadsLayout=Collinear \
+    > mixcr align -p kaligner2 -s hsa -r alignmentReport.txt -OreadsLayout=Collinear \
       -OvParameters.geneFeatureToAlign=VTranscript read_R1.fastq.gz read_R2.fastq.gz \
       alignments.vdjca
      
-  Option ``-s`` allows to specify species (e.g. homo sapiens - ``hsa``, mus musculus - ``mmu``). Parameter ``–OreadsLayout`` allow us to set paired-end reads orientation (``Collinear``, ``Opposite``, ``Unknown``). Note, that after MiGEC analysis paired-end read pairs are in ``Collinear`` orientation.
+  Option ``-s`` allows to specify species (e.g. homo sapiens - ``hsa``, mus musculus - ``mmu``). Parameter ``-OreadsLayout`` allow us to set paired-end reads orientation (``Collinear``, ``Opposite``, ``Unknown``). Note, that after MiGEC analysis paired-end read pairs are in ``Collinear`` orientation.
 
   Instead of KAligner2, default MiXCR aligner can be used as well, but it may miss immunoglobulin subvariants that contain several nucleotide-lengths indels within the V gene segment.
 
@@ -187,13 +187,13 @@ For the full length cDNA-based immunoglobulin repertoire analysis we generally r
   ::
   
     > mixcr assemble -p default_affine -r assembleReport.txt -OassemblingFeatures=VDJRegion \
-      –OseparateByC=true -OqualityAggregationType=Average \
+      -OseparateByC=true -OqualityAggregationType=Average \
       -OclusteringFilter.specificMutationProbability=1E-5 -OmaxBadPointsPercent=0 \
       alignments.vdjca clones.clns
 
   ``default_affine`` parameter is specifically required for the data aligned using KAligner2 (use this option only if ``-p kaligner2`` was used on the alignemnt step)
   
-  ``–OseparateByC=true`` separates clones with different antibody isotype.
+  ``-OseparateByC=true`` separates clones with different antibody isotype.
   
   Set ``-OcloneClusteringParameters=null`` parameter to switch off the frequency-based correction of PCR errors.
   
@@ -205,9 +205,9 @@ For the full length cDNA-based immunoglobulin repertoire analysis we generally r
   
   ::
 
-    > mixcr exportClones –c IGH -o -t clones.clns clones.txt
+    > mixcr exportClones -c IGH -o -t clones.clns clones.txt
 
-  where options ``-o`` and ``-t`` filter off the out-of-frame and stop codon containing clonotypes, respectively, and ``–c`` indicates which chain will be extracted (e.g. ``IGH``, ``IGL``).
+  where options ``-o`` and ``-t`` filter off the out-of-frame and stop codon containing clonotypes, respectively, and ``-c`` indicates which chain will be extracted (e.g. ``IGH``, ``IGL``).
 
 
 .. _ref-exampleRnaSeq:

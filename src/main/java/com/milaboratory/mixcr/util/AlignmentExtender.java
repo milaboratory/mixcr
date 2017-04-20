@@ -108,6 +108,16 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
                             < vAnchorPositionInRef)
                         break OUTER;
 
+                    //checking one more time, whether extension is required
+                    //this termination point will be triggered if aligned V hits do not agree on
+                    //the position of vLeftExtensionRefPoint
+                    if (vAnchorPositionInRef >= vHit.getAlignment(cdr3target).getSequence1Range().getFrom()) {
+                        //dropping any previous extension intents
+                        vExtension = null;
+                        //breaking only current loop
+                        break;
+                    }
+
                     //extend V
                     int vLeftTargetId = -1;
                     int vLeftEndCoord = -1;
@@ -228,6 +238,16 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
                             || jHit.getAlignment(cdr3target).getSequence1Range().getFrom()
                             >= jAnchorPositionInRef)
                         break OUTER;
+
+                    //checking one more time, whether extension is required
+                    //this termination point will be triggered if aligned J hits do not agree on
+                    //the position of jRightExtensionRefPoint
+                    if (jAnchorPositionInRef <= jHit.getAlignment(cdr3target).getSequence1Range().getTo()) {
+                        //dropping any previous extension intents
+                        jExtension = null;
+                        //breaking only current loop
+                        break;
+                    }
 
                     //extend J
                     int jRightTargetId = -1;
