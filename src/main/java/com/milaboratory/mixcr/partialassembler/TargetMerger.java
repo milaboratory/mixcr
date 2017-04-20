@@ -128,6 +128,42 @@ public class TargetMerger {
         }
     }
 
+    static boolean hasAlignments(AlignedTarget target, GeneType geneType) {
+        for (VDJCHit l : target.getAlignments().getHits(geneType))
+            if (l.getAlignment(target.getTargetId()) != null)
+                return true;
+        return false;
+    }
+
+    @SuppressWarnings("unchecked")
+    static List<HitMappingRecord> extractSortedHits(AlignedTarget targetLeft, AlignedTarget targetRight, GeneType geneType) {
+        // Fast calculation for targets from the same PE-read (or multi-read)
+        if (targetLeft.getAlignments() == targetRight.getAlignments()) {
+            VDJCHit[] hits = targetLeft.getAlignments().getHits(geneType);
+            List<HitMappingRecord> mRecords = new ArrayList<>(hits.length);
+            for (VDJCHit hit : hits)
+                mRecords.add(new HitMappingRecord(hit.getGene(), new Alignment[]{
+                        hit.getAlignment(targetLeft.getTargetId()), hit.getAlignment(targetRight.getTargetId())}));
+
+            // Don't resort mRecords because "hits" were already sorted. Sorting may be different from
+            // Collections.sort(mRecords, ...), if initial Alignments object contain more than two targets,
+            // however soring in "hits" is considered here to be more accurate because it was supported by
+            // other parts of the multi-read object
+            return mRecords;
+        }
+
+        // Full recalculation for targets form two different Alignments objects
+        Map<VDJCGeneId, HitMappingRecord> map = extractHitsMapping(targetLeft, targetRight, geneType);
+        List<HitMappingRecord> mRecords = new ArrayList<>(map.values());
+        Collections.sort(mRecords, new Comparator<HitMappingRecord>() {
+            @Override
+            public int compare(HitMappingRecord o1, HitMappingRecord o2) {
+                return Integer.compare(sumScore(o2.alignments), sumScore(o1.alignments));
+            }
+        });
+        return mRecords;
+    }
+
     @SuppressWarnings("unchecked")
     static Map<VDJCGeneId, HitMappingRecord> extractHitsMapping(AlignedTarget targetLeft, AlignedTarget targetRight, GeneType geneType) {
         Map<VDJCGeneId, HitMappingRecord> map = new HashMap<>();
@@ -237,18 +273,10 @@ public class TargetMerger {
     public TargetMergingResult merge(long readId, AlignedTarget targetLeft, AlignedTarget targetRight,
                                      boolean trySequenceMerge) {
         for (GeneType geneType : GeneType.VJC_REFERENCE) {
-
-            Map<VDJCGeneId, HitMappingRecord> map = extractHitsMapping(targetLeft, targetRight, geneType);
-            if (map.isEmpty())
+            if (!hasAlignments(targetLeft, geneType) || !hasAlignments(targetRight, geneType))
                 continue;
-            List<HitMappingRecord> als = new ArrayList<>(map.values());
 
-            Collections.sort(als, new Comparator<HitMappingRecord>() {
-                @Override
-                public int compare(HitMappingRecord o1, HitMappingRecord o2) {
-                    return Integer.compare(sumScore(o2.alignments), sumScore(o1.alignments));
-                }
-            });
+            List<HitMappingRecord> als = extractSortedHits(targetLeft, targetRight, geneType);
 
             Alignment<NucleotideSequence>[] topHits = als.get(0).alignments;
 
