@@ -53,6 +53,8 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
     final TLongHashSet alreadyMergedIds = new TLongHashSet();
     final TLongHashSet notInLeftIndexIds = new TLongHashSet();
     final VDJCAlignmentsWriter writer;
+    final GeneFeature targetFeature;
+    final ReferencePoint targetFeatureLeftPoint, targetFeatureRightPoint;
     final int kValue;
     final int kOffset;
     final int minimalAssembleOverlap;
@@ -71,10 +73,13 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
             droppedSmallOverlapNRegion = new AtomicLong(),
             droppedNoNRegion = new AtomicLong(),
             complexOverlapped = new AtomicLong(),
-            containsCDR3 = new AtomicLong();
+            containsTargetFeature = new AtomicLong();
 
     public PartialAlignmentsAssembler(PartialAlignmentsAssemblerParameters params, VDJCAlignmentsWriter writer,
                                       boolean writePartial, boolean overlappedOnly) {
+        this.targetFeature = params.getTargetFeature();
+        this.targetFeatureLeftPoint = this.targetFeature.getFirstPoint();
+        this.targetFeatureRightPoint = this.targetFeature.getLastPoint();
         this.kValue = params.getKValue();
         this.kOffset = params.getKOffset();
         this.minimalAssembleOverlap = params.getMinimalAssembleOverlap();
@@ -93,7 +98,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
     public void buildLeftPartsIndex(VDJCAlignmentsReader reader) {
         writer.header(reader.getParameters(), reader.getUsedGenes());
         for (VDJCAlignments alignment : CUtils.it(reader)) {
-            if (alignment.getFeature(GeneFeature.CDR3) != null)
+            if (alignment.getFeature(targetFeature) != null)
                 continue;
             if (!addLeftToIndex(alignment))
                 notInLeftIndexIds.add(alignment.getAlignmentsIndex());
@@ -110,8 +115,8 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         for (final VDJCAlignments alignment : CUtils.it(reader)) {
             total.incrementAndGet();
 
-            if (alignment.getFeature(GeneFeature.CDR3) != null) {
-                containsCDR3.incrementAndGet();
+            if (alignment.getFeature(targetFeature) != null) {
+                containsTargetFeature.incrementAndGet();
                 if (!overlappedOnly) {
                     totalWritten.incrementAndGet();
                     writer.write(alignment);
@@ -465,7 +470,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         long total = this.total.get();
         helper.writeField("Total alignments analysed", total);
         helper.writePercentAndAbsoluteField("Number of output alignments", totalWritten, total);
-        helper.writePercentAndAbsoluteField("Alignments already with CDR3 (no overlapping is performed)", containsCDR3, total);
+        helper.writePercentAndAbsoluteField("Alignments already with " + targetFeature + " (no overlapping is performed)", containsTargetFeature, total);
         helper.writePercentAndAbsoluteField("Successfully overlapped alignments", overlapped, total);
         helper.writePercentAndAbsoluteField("Left parts with too small N-region (failed to extract k-mer)", noKMer, total);
         helper.writePercentAndAbsoluteField("Dropped due to wildcard in k-mer", wildCardsInKMer, total);
@@ -476,7 +481,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         helper.writePercentAndAbsoluteField("Complex overlaps", complexOverlapped, total);
         helper.writePercentAndAbsoluteField("Over-overlaps", overoverlapped, total);
         helper.writePercentAndAbsoluteField("Partial alignments written to output", partialAsIs, total);
-        if (!writePartial && !overlappedOnly && totalWritten.get() != overlapped.get() + partialAsIs.get() + containsCDR3.get())
+        if (!writePartial && !overlappedOnly && totalWritten.get() != overlapped.get() + partialAsIs.get() + containsTargetFeature.get())
             throw new AssertionError();
     }
 
@@ -484,7 +489,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         for (int i = 0; i < alignment.numberOfTargets(); i++) {
             if (alignment.getBestHit(GeneType.Joining) != null &&
                     alignment.getBestHit(GeneType.Joining)
-                            .getPartitioningForTarget(i).isAvailable(ReferencePoint.CDR3End))
+                            .getPartitioningForTarget(i).isAvailable(targetFeatureRightPoint))
                 continue;
             VDJCPartitionedSequence ps = alignment.getPartitionedTarget(i);
             if (ps.getPartitioning().isAvailable(ReferencePoint.VEndTrimmed))
@@ -497,7 +502,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         for (int i = 0; i < alignment.numberOfTargets(); i++) {
             if (alignment.getBestHit(GeneType.Variable) != null &&
                     alignment.getBestHit(GeneType.Variable)
-                            .getPartitioningForTarget(i).isAvailable(ReferencePoint.CDR3Begin))
+                            .getPartitioningForTarget(i).isAvailable(targetFeatureLeftPoint))
                 continue;
             VDJCPartitionedSequence ps = alignment.getPartitionedTarget(i);
             if (ps.getPartitioning().isAvailable(ReferencePoint.JBeginTrimmed))
@@ -568,7 +573,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
             byte c = seq.codeAt(j);
             if (NucleotideSequence.ALPHABET.isWildcard(c))
                 return -1;
-            kmer = (kmer << 2|c);
+            kmer = (kmer << 2 | c);
         }
         return kmer;
     }

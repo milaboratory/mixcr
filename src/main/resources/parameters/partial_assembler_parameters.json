@@ -1,4 +1,5 @@
 {
+  "targetFeature": "CDR3",
   "kValue": 12,
   "kOffset": -7,
   "minimalAssembleOverlap": 12,

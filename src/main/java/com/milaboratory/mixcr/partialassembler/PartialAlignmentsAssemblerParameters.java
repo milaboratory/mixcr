@@ -34,24 +34,30 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.milaboratory.core.merger.MergerParameters;
 import com.milaboratory.util.GlobalObjectMappers;
+import io.repseq.core.GeneFeature;
 
 import java.io.IOException;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
 public class PartialAlignmentsAssemblerParameters {
+    private GeneFeature targetFeature;
     private int kValue, kOffset, minimalAssembleOverlap, minimalNOverlap;
     private float minimalAlignmentMergeIdentity;
     private MergerParameters mergerParameters;
 
     @JsonCreator
     public PartialAlignmentsAssemblerParameters(
+            @JsonProperty("targetFeature") GeneFeature targetFeature,
             @JsonProperty("kValue") int kValue,
             @JsonProperty("kOffset") int kOffset,
             @JsonProperty("minimalAssembleOverlap") int minimalAssembleOverlap,
             @JsonProperty("minimalNOverlap") int minimalNOverlap,
             @JsonProperty("minimalAlignmentMergeIdentity") int minimalAlignmentMergeIdentity,
             @JsonProperty("mergerParameters") MergerParameters mergerParameters) {
+        if (targetFeature.isComposite())
+            throw new IllegalArgumentException("Don't support composite gene features in assemble partial.");
+        this.targetFeature = targetFeature;
         this.kValue = kValue;
         this.kOffset = kOffset;
         this.minimalAssembleOverlap = minimalAssembleOverlap;
@@ -66,6 +72,16 @@ public class PartialAlignmentsAssemblerParameters {
 
     public void setMergerParameters(MergerParameters mergerParameters) {
         this.mergerParameters = mergerParameters;
+    }
+
+    public GeneFeature getTargetFeature() {
+        return targetFeature;
+    }
+
+    public void setTargetFeature(GeneFeature targetFeature) {
+        if (targetFeature.isComposite())
+            throw new IllegalArgumentException("Don't support composite gene features in assemble partial.");
+        this.targetFeature = targetFeature;
     }
 
     public int getKValue() {
