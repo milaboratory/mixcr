@@ -15,6 +15,7 @@ import com.milaboratory.mixcr.cli.ReportHelper;
 import com.milaboratory.mixcr.cli.ReportWriter;
 import io.repseq.core.*;
 
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -348,22 +349,12 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
         helper.writeField("Mean J extension length", 1.0 * jExtensionLength.get() / jExtended.get());
     }
 
-    interface VDJCAlignmentTransformer {
-        /**
-         * @return result or null is something went wrong
-         */
-        Alignment<NucleotideSequence>[] transform(VDJCGene gene, Alignment<NucleotideSequence>[] alignments,
-                                                  NSequenceWithQuality[] originalTargets);
-
-        NSequenceWithQuality[] transform(NSequenceWithQuality[] targets);
-    }
-
     /**
      * @return result or null is something went wrong
      */
 
     static VDJCAlignments transform(VDJCAlignments input,
-                                    VDJCAlignmentTransformer transformer) {
+                                    Extender transformer) {
 
         NSequenceWithQuality[] originalTargets = input.getTargets();
         EnumMap<GeneType, VDJCHit[]> newHitsMap = new EnumMap<>(GeneType.class);
@@ -388,28 +379,46 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
         result.setAlignmentsIndex(input.getAlignmentsIndex());
         result.setOriginalDescriptions(input.getOriginalDescriptions());
         result.setOriginalSequences(input.getOriginalSequences());
-        if (result.numberOfTargets() == input.numberOfTargets())
-            result.setTargetDescriptions(input.getTargetDescriptions());
+//        if (result.numberOfTargets() == input.numberOfTargets())
+//            result.setTargetDescriptions(input.getTargetDescriptions());
 
-//        String[] tdescrs = result.getTargetDescriptions();
-//        if (mergedTargetid != -1) {
-//            tdescrs[mergedTargetid] = addon + ";  " + tdescrs[mergedTargetid] + ";  " + tdescrs[mergedTargetid + 1];
-//            if (mergedTargetid + 2 < tdescrs.length)
-//                System.arraycopy(tdescrs, mergedTargetid + 2, tdescrs, mergedTargetid + 1, tdescrs.length - mergedTargetid - 2);
-//            tdescrs = Arrays.copyOf(tdescrs, tdescrs.length - 1);
-//        }
-//        result.setTargetDescriptions(tdescrs);
+        String[] tDescrs = input.getTargetDescriptions();
+        if (tDescrs == null) {
+            tDescrs = new String[input.numberOfTargets()];
+            Arrays.fill(tDescrs, "");
+        }
+
+        if (transformer.leftTargetId != -1 && transformer.rightTargetId != -1) {
+            int mergedTargetId = transformer.leftTargetId;
+            tDescrs[mergedTargetId] =
+                    tDescrs[transformer.leftTargetId] + "[" + input.getTarget(transformer.leftTargetId).size() + "]"
+                            + " + MExtended(" + transformer.extension.size() + ") + "
+                            + tDescrs[transformer.rightTargetId] + "[" + input.getTarget(transformer.rightTargetId).size() + "]";
+            shrinkArray0(tDescrs, tDescrs, transformer.leftTargetId, transformer.rightTargetId);
+            tDescrs = Arrays.copyOf(tDescrs, tDescrs.length - 1);
+        } else if (transformer.leftTargetId != -1)
+            tDescrs[transformer.leftTargetId] = tDescrs[transformer.leftTargetId] + "[" + input.getTarget(transformer.leftTargetId).size() + "]" + " + RExtended(" + transformer.extension.size() + ")";
+        else if (transformer.rightTargetId != -1)
+            tDescrs[transformer.rightTargetId] = "LExtended(" + transformer.extension.size() + ") + " + tDescrs[transformer.rightTargetId] + "[" + input.getTarget(transformer.rightTargetId).size() + "]";
+        result.setTargetDescriptions(tDescrs);
         return result;
     }
 
-    final class Extender implements VDJCAlignmentTransformer {
+    static <T> void shrinkArray0(T[] src, T[] dest, int leftTargetId, int rightTargetId) {
+        assert leftTargetId == rightTargetId - 1;
+        System.arraycopy(src, 0, dest, 0, leftTargetId);
+        if (rightTargetId < src.length - 1)
+            System.arraycopy(src, rightTargetId + 1, dest, rightTargetId, src.length - rightTargetId - 1);
+    }
+
+    final class Extender {
         final int leftTargetId;
         final int rightTargetId;
         final NucleotideSequence extension;
         final AlignmentScoring<NucleotideSequence> scoring;
         final GeneType extensionGeneType;
 
-        public Extender(int leftTargetId, int rightTargetId, NucleotideSequence extension, AlignmentScoring<NucleotideSequence> scoring, GeneType extensionGeneType) {
+        Extender(int leftTargetId, int rightTargetId, NucleotideSequence extension, AlignmentScoring<NucleotideSequence> scoring, GeneType extensionGeneType) {
             this.leftTargetId = leftTargetId;
             this.rightTargetId = rightTargetId;
             this.extension = extension;
@@ -422,13 +431,9 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
         }
 
         <T> void shrinkArray(T[] src, T[] dest) {
-            System.arraycopy(src, 0, dest, 0, leftTargetId);
-            if (rightTargetId < src.length - 1)
-                System.arraycopy(src, rightTargetId + 1, dest, rightTargetId,
-                        src.length - rightTargetId - 1);
+            shrinkArray0(src, dest, leftTargetId, rightTargetId);
         }
 
-        @Override
         @SuppressWarnings("unchecked")
         public Alignment<NucleotideSequence>[] transform(VDJCGene gene, Alignment<NucleotideSequence>[] alignments, NSequenceWithQuality[] originalTargets) {
             Alignment<NucleotideSequence>[] newAlignments = isMerging() ? new Alignment[alignments.length - 1] : alignments.clone();
@@ -507,7 +512,6 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
                     alignment.getScore());
         }
 
-        @Override
         public NSequenceWithQuality[] transform(NSequenceWithQuality[] targets) {
             NSequenceWithQuality ext = new NSequenceWithQuality(extension,
                     SequenceQuality.getUniformQuality(extensionQuality, extension.size()));
