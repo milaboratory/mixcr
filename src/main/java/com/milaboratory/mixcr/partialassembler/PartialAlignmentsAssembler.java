@@ -63,6 +63,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
             rightParts = new AtomicLong(),
             noKMer = new AtomicLong(),
             wildCardsInKMer = new AtomicLong(),
+            kMerDiversity = new AtomicLong(),
             total = new AtomicLong(),
             overlapped = new AtomicLong(),
             totalWritten = new AtomicLong(),
@@ -468,6 +469,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
         helper.writePercentAndAbsoluteField("Alignments already with CDR3 (no overlapping is performed)", containsCDR3, total);
         helper.writePercentAndAbsoluteField("Successfully overlapped alignments", overlapped, total);
         helper.writePercentAndAbsoluteField("Left parts with too small N-region (failed to extract k-mer)", noKMer, total);
+        helper.writeField("Extracted k-mer diversity", kMerDiversity);
         helper.writePercentAndAbsoluteField("Dropped due to wildcard in k-mer", wildCardsInKMer, total);
         helper.writePercentAndAbsoluteField("Dropped due to too short NRegion parts in overlap", droppedSmallOverlapNRegion, total);
         helper.writePercentAndAbsoluteField("Dropped overlaps with empty N region due to no complete NDN coverage", droppedNoNRegion, total);
@@ -553,8 +555,10 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
             }
 
             List<KMerInfo> ids = kToIndexLeft.get(kmer);
-            if (ids == null)
+            if (ids == null) {
                 kToIndexLeft.put(kmer, ids = new ArrayList<>(1));
+                kMerDiversity.incrementAndGet();
+            }
             ids.add(new KMerInfo(alignment, kFrom, leftTargetId));
         }
 
@@ -568,7 +572,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
             byte c = seq.codeAt(j);
             if (NucleotideSequence.ALPHABET.isWildcard(c))
                 return -1;
-            kmer = (kmer << 2|c);
+            kmer = (kmer << 2 | c);
         }
         return kmer;
     }
