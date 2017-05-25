@@ -352,7 +352,6 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
     /**
      * @return result or null is something went wrong
      */
-
     static VDJCAlignments transform(VDJCAlignments input,
                                     Extender transformer) {
 
