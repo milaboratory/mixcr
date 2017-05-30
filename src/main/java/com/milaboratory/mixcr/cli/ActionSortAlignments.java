@@ -15,6 +15,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
+import com.milaboratory.util.ObjectSerializer;
 import com.milaboratory.util.SmartProgressReporter;
 import com.milaboratory.util.Sorter;
 import com.milaboratory.util.TempFileManager;
@@ -70,7 +71,7 @@ public final class ActionSortAlignments implements Action {
         }
     };
 
-    private static final class VDJCAlignmnetsSerializer implements Sorter.ObjectSerializer<VDJCAlignments> {
+    private static final class VDJCAlignmnetsSerializer implements ObjectSerializer<VDJCAlignments> {
         final VDJCAlignerParameters parameters;
         final List<VDJCGene> usedAlleles;
 

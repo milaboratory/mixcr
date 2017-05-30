@@ -80,6 +80,7 @@ public class AlignmentExtenderTest {
                 AlignmentExtender extender = new AlignmentExtender(Chains.TCR, (byte) 35,
                         rnaSeqParams.getVAlignerParameters().getParameters().getScoring(),
                         rnaSeqParams.getJAlignerParameters().getParameters().getScoring(),
+                        100, 70,
                         ReferencePoint.CDR3Begin, ReferencePoint.CDR3End);
 
                 MiXCRTestUtils.assertAlignments(al);

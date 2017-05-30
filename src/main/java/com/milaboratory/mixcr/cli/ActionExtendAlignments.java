@@ -37,6 +37,7 @@ public class ActionExtendAlignments implements Action {
             AlignmentExtender extender = new AlignmentExtender(parameters.getChains(), parameters.extensionQuality,
                     reader.getParameters().getVAlignerParameters().getParameters().getScoring(),
                     reader.getParameters().getJAlignerParameters().getParameters().getScoring(),
+                    parameters.minimalVScore, parameters.minimalJScore,
                     ReferencePoint.parse(parameters.vAnchorPoint),
                     ReferencePoint.parse(parameters.jAnchorPoint));
 
