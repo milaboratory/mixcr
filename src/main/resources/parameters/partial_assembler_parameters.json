@@ -2,7 +2,7 @@
   "kValue": 12,
   "kOffset": -7,
   "minimalAssembleOverlap": 12,
-  "minimalNOverlap": 5,
+  "minimalNOverlap": 7,
   "minimalAlignmentMergeIdentity": 0.85,
   "mergerParameters": {
     "qualityMergingAlgorithm": "SumSubtraction",

@@ -1,3 +1,4 @@
 Minimal thresholds added for V and J alignments in `extendAlignments`
+`minimalNOverlap` in `assemblePartial` changed to 7
 Information on k-mer diversity added to alignPartial report file
 Detainls of V/J Extension during extendAlignments are now added to target description, and can be retrieved using `-targetDescriptions` field in `exportAlignments`
