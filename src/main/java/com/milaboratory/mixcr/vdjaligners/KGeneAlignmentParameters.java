@@ -47,11 +47,11 @@ public final class KGeneAlignmentParameters extends GeneAlignmentParametersAbstr
     @JsonCreator
     public KGeneAlignmentParameters(
             @JsonProperty("geneFeatureToAlign") GeneFeature geneFeatureToAlign,
-            @JsonProperty("minSumScore") int minSumScore,
-            @JsonProperty("relativeMinScore") float relativeMinScore,
+            @JsonProperty("minSumScore") Integer minSumScore,
+            @JsonProperty("relativeMinScore") Float relativeMinScore,
             @JsonProperty("parameters") AbstractKAlignerParameters parameters) {
-        super(geneFeatureToAlign, relativeMinScore);
-        this.minSumScore = minSumScore;
+        super(geneFeatureToAlign, relativeMinScore  == null ? 0.87f : relativeMinScore.floatValue());
+        this.minSumScore = minSumScore == null ? 40 : minSumScore.intValue();
         this.parameters = parameters;
     }
 

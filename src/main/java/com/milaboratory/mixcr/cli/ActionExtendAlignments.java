@@ -37,6 +37,7 @@ public class ActionExtendAlignments implements Action {
             AlignmentExtender extender = new AlignmentExtender(parameters.getChains(), parameters.extensionQuality,
                     reader.getParameters().getVAlignerParameters().getParameters().getScoring(),
                     reader.getParameters().getJAlignerParameters().getParameters().getScoring(),
+                    parameters.minimalVScore, parameters.minimalJScore,
                     ReferencePoint.parse(parameters.vAnchorPoint),
                     ReferencePoint.parse(parameters.jAnchorPoint));
 
@@ -89,13 +90,21 @@ public class ActionExtendAlignments implements Action {
                 names = {"-q", "--quality"})
         public byte extensionQuality = 30;
 
-        @Parameter(description = "V extension anchor point",
+        @Parameter(description = "V extension anchor point.",
                 names = {"--v-anchor"})
         public String vAnchorPoint = "CDR3Begin";
 
-        @Parameter(description = "J extension anchor point",
+        @Parameter(description = "J extension anchor point.",
                 names = {"--j-anchor"})
         public String jAnchorPoint = "CDR3End";
+
+        @Parameter(description = "Minimal score of V alignment to perform left extension.",
+                names = {"--min-v-score"})
+        public int minimalVScore = 100;
+
+        @Parameter(description = "Minimal score of J alignment to perform right extension.",
+                names = {"--min-j-score"})
+        public int minimalJScore = 70;
 
         private String getInput() {
             return parameters.get(0);
@@ -106,7 +115,7 @@ public class ActionExtendAlignments implements Action {
         }
 
         public Chains getChains() {
-            return Util.parseLoci(chains);
+            return Chains.parse(chains);
         }
 
         @Override

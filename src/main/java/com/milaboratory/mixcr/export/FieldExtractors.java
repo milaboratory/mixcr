@@ -489,6 +489,26 @@ public final class FieldExtractors {
                 }
             });
 
+            descriptorsList.add(new PL_A("-targetDescriptions", "Export target descriptions", "Target descriptions", "targetDescriptions") {
+                @Override
+                protected String extract(VDJCAlignments object) {
+                    String[] ds = object.getTargetDescriptions();
+                    if (ds == null || ds.length == 0) {
+                        char[] commas = new char[object.numberOfTargets() - 1];
+                        Arrays.fill(commas, ',');
+                        return new String(commas);
+                    }
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; ; i++) {
+                        sb.append(ds[i]);
+                        if (i == ds.length - 1)
+                            break;
+                        sb.append(',');
+                    }
+                    return sb.toString();
+                }
+            });
+
             descriptorsList.add(alignmentsToClone("-cloneId", "To which clone alignment was attached.", false));
             descriptorsList.add(alignmentsToClone("-cloneIdWithMappingType", "To which clone alignment was attached with additional info on mapping type.", true));
             descriptorsList.add(new AbstractField<Clone>(Clone.class, "-readIds", "Read IDs aggregated by clone.") {

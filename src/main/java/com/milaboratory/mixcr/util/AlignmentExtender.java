@@ -15,6 +15,7 @@ import com.milaboratory.mixcr.cli.ReportHelper;
 import com.milaboratory.mixcr.cli.ReportWriter;
 import io.repseq.core.*;
 
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -26,6 +27,8 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
     final byte extensionQuality;
     final AlignmentScoring<NucleotideSequence> vScoring, jScoring;
     final ReferencePoint vLeftExtensionRefPoint, jRightExtensionRefPoint;
+    final int minimalVScore;
+    final int minimalJScore;
 
     //metrics
     final AtomicLong total = new AtomicLong(0),
@@ -37,12 +40,16 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
             vExtensionLength = new AtomicLong(0),
             jExtensionLength = new AtomicLong(0);
 
-    public AlignmentExtender(Chains chains, byte extensionQuality, AlignmentScoring<NucleotideSequence> vScoring, AlignmentScoring<NucleotideSequence> jScoring,
+    public AlignmentExtender(Chains chains, byte extensionQuality,
+                             AlignmentScoring<NucleotideSequence> vScoring, AlignmentScoring<NucleotideSequence> jScoring,
+                             int minimalVScore, int minimalJScore,
                              ReferencePoint vLeftExtensionRefPoint, ReferencePoint jRightExtensionRefPoint) {
         this.chains = chains;
         this.extensionQuality = extensionQuality;
         this.vScoring = vScoring;
         this.jScoring = jScoring;
+        this.minimalVScore = minimalVScore;
+        this.minimalJScore = minimalJScore;
         this.vLeftExtensionRefPoint = vLeftExtensionRefPoint;
         this.jRightExtensionRefPoint = jRightExtensionRefPoint;
     }
@@ -69,126 +76,128 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
 
         boolean vExtended = false, vMerged = false;
 
-        OUTER:
-        while (true) {
-            //check whether extensionFeature is already covered
-            if (input.getFeature(extensionFeature) != null)
-                break OUTER;
-
-            int cdr3target = -1;
-            for (int i = 0; i < input.numberOfTargets(); i++) {
-                if (topV.getAlignment(i) == null || topJ.getAlignment(i) == null)
-                    continue;
-
-                if (cdr3target != -1)
+        if (topV.getScore() >= minimalVScore) {
+            OUTER:
+            while (true) {
+                //check whether extensionFeature is already covered
+                if (input.getFeature(extensionFeature) != null)
                     break OUTER;
 
-                cdr3target = i;
-            }
+                int cdr3target = -1;
+                for (int i = 0; i < input.numberOfTargets(); i++) {
+                    if (topV.getAlignment(i) == null || topJ.getAlignment(i) == null)
+                        continue;
 
-            if (cdr3target == -1)
-                break OUTER;
-
-            Extender vExtension = null;
-            if (!topV.getPartitioningForTarget(cdr3target).isAvailable(vLeftExtensionRefPoint)) {
-                final GeneFeature vFeature = topV.getAlignedFeature();
-                for (VDJCHit vHit : input.getHits(GeneType.Variable)) {
-                    if (vHit.getAlignment(cdr3target) == null)
+                    if (cdr3target != -1)
                         break OUTER;
 
-                    if (vHit.getAlignment(cdr3target).getSequence2Range().getFrom() != 0)
-                        break OUTER;
+                    cdr3target = i;
+                }
 
-                    final VDJCGene vGene = vHit.getGene();
+                if (cdr3target == -1)
+                    break OUTER;
 
-                    //check if input contains some V CDR3 part
-                    final int vAnchorPositionInRef = vGene.getPartitioning().getRelativePosition(vFeature, vLeftExtensionRefPoint);
-                    if (vAnchorPositionInRef == -1
-                            || vHit.getAlignment(cdr3target).getSequence1Range().getTo()
-                            < vAnchorPositionInRef)
-                        break OUTER;
+                Extender vExtension = null;
+                if (!topV.getPartitioningForTarget(cdr3target).isAvailable(vLeftExtensionRefPoint)) {
+                    final GeneFeature vFeature = topV.getAlignedFeature();
+                    for (VDJCHit vHit : input.getHits(GeneType.Variable)) {
+                        if (vHit.getAlignment(cdr3target) == null)
+                            break OUTER;
 
-                    //checking one more time, whether extension is required
-                    //this termination point will be triggered if aligned V hits do not agree on
-                    //the position of vLeftExtensionRefPoint
-                    if (vAnchorPositionInRef >= vHit.getAlignment(cdr3target).getSequence1Range().getFrom()) {
-                        //dropping any previous extension intents
-                        vExtension = null;
-                        //breaking only current loop
-                        break;
-                    }
+                        if (vHit.getAlignment(cdr3target).getSequence2Range().getFrom() != 0)
+                            break OUTER;
 
-                    //extend V
-                    int vLeftTargetId = -1;
-                    int vLeftEndCoord = -1;
+                        final VDJCGene vGene = vHit.getGene();
 
-                    //searching for adjacent alignment (i.e. left V alignment)
-                    for (int i = 0; i < input.numberOfTargets(); i++) {
-                        if (i == cdr3target)
-                            continue;
+                        //check if input contains some V CDR3 part
+                        final int vAnchorPositionInRef = vGene.getPartitioning().getRelativePosition(vFeature, vLeftExtensionRefPoint);
+                        if (vAnchorPositionInRef == -1
+                                || vHit.getAlignment(cdr3target).getSequence1Range().getTo()
+                                < vAnchorPositionInRef)
+                            break OUTER;
 
-                        if (vHit.getAlignment(i) != null) {
-                            if (vHit.getAlignment(i).getSequence1Range().getTo() > vLeftEndCoord) {
-                                vLeftTargetId = i;
-                                vLeftEndCoord = vHit.getAlignment(i).getSequence1Range().getTo();
+                        //checking one more time, whether extension is required
+                        //this termination point will be triggered if aligned V hits do not agree on
+                        //the position of vLeftExtensionRefPoint
+                        if (vAnchorPositionInRef >= vHit.getAlignment(cdr3target).getSequence1Range().getFrom()) {
+                            //dropping any previous extension intents
+                            vExtension = null;
+                            //breaking only current loop
+                            break;
+                        }
+
+                        //extend V
+                        int vLeftTargetId = -1;
+                        int vLeftEndCoord = -1;
+
+                        //searching for adjacent alignment (i.e. left V alignment)
+                        for (int i = 0; i < input.numberOfTargets(); i++) {
+                            if (i == cdr3target)
+                                continue;
+
+                            if (vHit.getAlignment(i) != null) {
+                                if (vHit.getAlignment(i).getSequence1Range().getTo() > vLeftEndCoord) {
+                                    vLeftTargetId = i;
+                                    vLeftEndCoord = vHit.getAlignment(i).getSequence1Range().getTo();
+                                }
                             }
                         }
-                    }
 
-                    if (vLeftTargetId != -1) {
-                        //check that vLeft aligned to right
-                        if (vHit.getAlignment(vLeftTargetId).getSequence2Range().getTo() != input.getTarget(vLeftTargetId).size())
+                        if (vLeftTargetId != -1) {
+                            //check that vLeft aligned to right
+                            if (vHit.getAlignment(vLeftTargetId).getSequence2Range().getTo() != input.getTarget(vLeftTargetId).size())
+                                break OUTER;
+                            //check that there is no overlap between left and right parts
+                            if (vLeftEndCoord > vHit.getAlignment(cdr3target).getSequence1Range().getFrom())
+                                break OUTER;
+                        }
+
+                        if (vAnchorPositionInRef > vLeftEndCoord)
+                            vLeftTargetId = -1;
+
+                        if (vLeftTargetId != -1 && vLeftTargetId != cdr3target - 1)
                             break OUTER;
-                        //check that there is no overlap between left and right parts
-                        if (vLeftEndCoord > vHit.getAlignment(cdr3target).getSequence1Range().getFrom())
+
+                        NucleotideSequence ext = vHit.getAlignment(cdr3target).getSequence1().getRange(
+                                vLeftTargetId == -1 ? vAnchorPositionInRef : vLeftEndCoord,
+                                vHit.getAlignment(cdr3target).getSequence1Range().getFrom());
+                        Extender r = new Extender(vLeftTargetId, cdr3target, ext, vScoring, GeneType.Variable);
+
+                        //Extender r = new Extender(cdr3target,
+                        //        vLeftTargetId == -1 ? -1 : vLeftEndCoord - vAnchorPositionInRef,
+                        //        vHit.getAlignment(cdr3target).getSequence1().getRange(
+                        //                vLeftTargetId == -1 ? vAnchorPositionInRef : vLeftEndCoord,
+                        //                vHit.getAlignment(cdr3target).getSequence1Range().getFrom()),
+                        //        true);
+
+                        if (vExtension == null)
+                            vExtension = r;
+                        else if (!vExtension.equals(r))
                             break OUTER;
                     }
-
-                    if (vAnchorPositionInRef > vLeftEndCoord)
-                        vLeftTargetId = -1;
-
-                    if (vLeftTargetId != -1 && vLeftTargetId != cdr3target - 1)
-                        break OUTER;
-
-                    NucleotideSequence ext = vHit.getAlignment(cdr3target).getSequence1().getRange(
-                            vLeftTargetId == -1 ? vAnchorPositionInRef : vLeftEndCoord,
-                            vHit.getAlignment(cdr3target).getSequence1Range().getFrom());
-                    Extender r = new Extender(vLeftTargetId, cdr3target, ext, vScoring, GeneType.Variable);
-
-                    //Extender r = new Extender(cdr3target,
-                    //        vLeftTargetId == -1 ? -1 : vLeftEndCoord - vAnchorPositionInRef,
-                    //        vHit.getAlignment(cdr3target).getSequence1().getRange(
-                    //                vLeftTargetId == -1 ? vAnchorPositionInRef : vLeftEndCoord,
-                    //                vHit.getAlignment(cdr3target).getSequence1Range().getFrom()),
-                    //        true);
-
-                    if (vExtension == null)
-                        vExtension = r;
-                    else if (!vExtension.equals(r))
-                        break OUTER;
                 }
+
+                if (vExtension == null)
+                    break OUTER;
+
+                // extend
+                VDJCAlignments transformed = transform(input, vExtension);
+
+                if (transformed == null)
+                    // Something went wrong
+                    return originalInput;
+
+                input = transformed;
+
+                vExtended = true;
+                if (vExtension.isMerging())
+                    vMerged = true;
+                vExtensionLength.addAndGet(vExtension.extension.size());
+
+                // Update top hits
+                topV = input.getBestHit(GeneType.Variable);
+                topJ = input.getBestHit(GeneType.Joining);
             }
-
-            if (vExtension == null)
-                break OUTER;
-
-            // extend
-            VDJCAlignments transformed = transform(input, vExtension);
-
-            if (transformed == null)
-                // Something went wrong
-                return originalInput;
-
-            input = transformed;
-
-            vExtended = true;
-            if (vExtension.isMerging())
-                vMerged = true;
-            vExtensionLength.addAndGet(vExtension.extension.size());
-
-            // Update top hits
-            topV = input.getBestHit(GeneType.Variable);
-            topJ = input.getBestHit(GeneType.Joining);
         }
 
         if (vExtended) {
@@ -200,127 +209,129 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
 
         boolean jExtended = false, jMerged = false;
 
-        OUTER:
-        while (true) {
-            //check whether extensionFeature is already covered
-            if (input.getFeature(extensionFeature) != null)
-                break OUTER;
-
-            int cdr3target = -1;
-            for (int i = 0; i < input.numberOfTargets(); i++) {
-                if (topV.getAlignment(i) == null || topJ.getAlignment(i) == null)
-                    continue;
-
-                if (cdr3target != -1)
+        if (topJ.getScore() >= minimalJScore) {
+            OUTER:
+            while (true) {
+                //check whether extensionFeature is already covered
+                if (input.getFeature(extensionFeature) != null)
                     break OUTER;
 
-                cdr3target = i;
-            }
+                int cdr3target = -1;
+                for (int i = 0; i < input.numberOfTargets(); i++) {
+                    if (topV.getAlignment(i) == null || topJ.getAlignment(i) == null)
+                        continue;
 
-            if (cdr3target == -1)
-                break OUTER;
-
-            Extender jExtension = null;
-            if (!topJ.getPartitioningForTarget(cdr3target).isAvailable(jRightExtensionRefPoint)) {
-                final GeneFeature jFeature = topJ.getAlignedFeature();
-                for (VDJCHit jHit : input.getHits(GeneType.Joining)) {
-                    if (jHit.getAlignment(cdr3target) == null)
+                    if (cdr3target != -1)
                         break OUTER;
 
-                    if (jHit.getAlignment(cdr3target).getSequence2Range().getTo() != input.getTarget(cdr3target).size())
-                        break OUTER;
+                    cdr3target = i;
+                }
 
-                    final VDJCGene jGene = jHit.getGene();
+                if (cdr3target == -1)
+                    break OUTER;
 
-                    //check if input contains some V CDR3 part
-                    final int jAnchorPositionInRef = jGene.getPartitioning().getRelativePosition(jFeature, jRightExtensionRefPoint);
-                    if (jAnchorPositionInRef == -1
-                            || jHit.getAlignment(cdr3target).getSequence1Range().getFrom()
-                            >= jAnchorPositionInRef)
-                        break OUTER;
+                Extender jExtension = null;
+                if (!topJ.getPartitioningForTarget(cdr3target).isAvailable(jRightExtensionRefPoint)) {
+                    final GeneFeature jFeature = topJ.getAlignedFeature();
+                    for (VDJCHit jHit : input.getHits(GeneType.Joining)) {
+                        if (jHit.getAlignment(cdr3target) == null)
+                            break OUTER;
 
-                    //checking one more time, whether extension is required
-                    //this termination point will be triggered if aligned J hits do not agree on
-                    //the position of jRightExtensionRefPoint
-                    if (jAnchorPositionInRef <= jHit.getAlignment(cdr3target).getSequence1Range().getTo()) {
-                        //dropping any previous extension intents
-                        jExtension = null;
-                        //breaking only current loop
-                        break;
-                    }
+                        if (jHit.getAlignment(cdr3target).getSequence2Range().getTo() != input.getTarget(cdr3target).size())
+                            break OUTER;
 
-                    //extend J
-                    int jRightTargetId = -1;
-                    int jRightEndCoord = Integer.MAX_VALUE;
+                        final VDJCGene jGene = jHit.getGene();
 
-                    //searching for adjacent alignment (i.e. right J alignment)
-                    for (int i = 0; i < input.numberOfTargets(); i++) {
-                        if (i == cdr3target)
-                            continue;
+                        //check if input contains some V CDR3 part
+                        final int jAnchorPositionInRef = jGene.getPartitioning().getRelativePosition(jFeature, jRightExtensionRefPoint);
+                        if (jAnchorPositionInRef == -1
+                                || jHit.getAlignment(cdr3target).getSequence1Range().getFrom()
+                                >= jAnchorPositionInRef)
+                            break OUTER;
 
-                        if (jHit.getAlignment(i) != null) {
-                            if (jHit.getAlignment(i).getSequence1Range().getFrom() < jRightEndCoord) {
-                                jRightTargetId = i;
-                                jRightEndCoord = jHit.getAlignment(i).getSequence1Range().getFrom();
+                        //checking one more time, whether extension is required
+                        //this termination point will be triggered if aligned J hits do not agree on
+                        //the position of jRightExtensionRefPoint
+                        if (jAnchorPositionInRef <= jHit.getAlignment(cdr3target).getSequence1Range().getTo()) {
+                            //dropping any previous extension intents
+                            jExtension = null;
+                            //breaking only current loop
+                            break;
+                        }
+
+                        //extend J
+                        int jRightTargetId = -1;
+                        int jRightEndCoord = Integer.MAX_VALUE;
+
+                        //searching for adjacent alignment (i.e. right J alignment)
+                        for (int i = 0; i < input.numberOfTargets(); i++) {
+                            if (i == cdr3target)
+                                continue;
+
+                            if (jHit.getAlignment(i) != null) {
+                                if (jHit.getAlignment(i).getSequence1Range().getFrom() < jRightEndCoord) {
+                                    jRightTargetId = i;
+                                    jRightEndCoord = jHit.getAlignment(i).getSequence1Range().getFrom();
+                                }
                             }
                         }
-                    }
 
-                    if (jRightTargetId != -1) {
-                        //check that jRight aligned to right
-                        if (jHit.getAlignment(jRightTargetId).getSequence2Range().getFrom() != 0)
+                        if (jRightTargetId != -1) {
+                            //check that jRight aligned to right
+                            if (jHit.getAlignment(jRightTargetId).getSequence2Range().getFrom() != 0)
+                                break OUTER;
+                            //check that there is no overlap between left and right parts
+                            if (jRightEndCoord < jHit.getAlignment(cdr3target).getSequence1Range().getTo())
+                                break OUTER;
+                        }
+
+                        if (jAnchorPositionInRef < jRightEndCoord)
+                            jRightTargetId = -1;
+
+                        if (jRightTargetId != -1 && jRightTargetId != cdr3target + 1)
                             break OUTER;
-                        //check that there is no overlap between left and right parts
-                        if (jRightEndCoord < jHit.getAlignment(cdr3target).getSequence1Range().getTo())
+
+                        NucleotideSequence ext = jHit.getAlignment(cdr3target).getSequence1().getRange(
+                                jHit.getAlignment(cdr3target).getSequence1Range().getTo(),
+                                jRightTargetId == -1 ? jAnchorPositionInRef : jRightEndCoord);
+
+                        Extender r = new Extender(cdr3target, jRightTargetId, ext, jScoring, GeneType.Joining);
+
+                        //Extender r = new Extender(cdr3target,
+                        //        jRightTargetId == -1 ? -1 : jAnchorPositionInRef - jRightEndCoord,
+                        //        jHit.getAlignment(cdr3target).getSequence1().getRange(
+                        //                jHit.getAlignment(cdr3target).getSequence1Range().getTo(),
+                        //                jRightTargetId == -1 ? jAnchorPositionInRef : jRightEndCoord),
+                        //        false);
+
+                        if (jExtension == null)
+                            jExtension = r;
+                        else if (!jExtension.equals(r))
                             break OUTER;
                     }
-
-                    if (jAnchorPositionInRef < jRightEndCoord)
-                        jRightTargetId = -1;
-
-                    if (jRightTargetId != -1 && jRightTargetId != cdr3target + 1)
-                        break OUTER;
-
-                    NucleotideSequence ext = jHit.getAlignment(cdr3target).getSequence1().getRange(
-                            jHit.getAlignment(cdr3target).getSequence1Range().getTo(),
-                            jRightTargetId == -1 ? jAnchorPositionInRef : jRightEndCoord);
-
-                    Extender r = new Extender(cdr3target, jRightTargetId, ext, jScoring, GeneType.Joining);
-
-                    //Extender r = new Extender(cdr3target,
-                    //        jRightTargetId == -1 ? -1 : jAnchorPositionInRef - jRightEndCoord,
-                    //        jHit.getAlignment(cdr3target).getSequence1().getRange(
-                    //                jHit.getAlignment(cdr3target).getSequence1Range().getTo(),
-                    //                jRightTargetId == -1 ? jAnchorPositionInRef : jRightEndCoord),
-                    //        false);
-
-                    if (jExtension == null)
-                        jExtension = r;
-                    else if (!jExtension.equals(r))
-                        break OUTER;
                 }
+
+                if (jExtension == null)
+                    break OUTER;
+
+                // extend
+                VDJCAlignments transformed = transform(input, jExtension);
+
+                if (transformed == null)
+                    // Something went wrong
+                    return originalInput;
+
+                input = transformed;
+
+                jExtended = true;
+                if (jExtension.isMerging())
+                    jMerged = true;
+                jExtensionLength.addAndGet(jExtension.extension.size());
+
+                // Update top hits
+                topV = input.getBestHit(GeneType.Variable);
+                topJ = input.getBestHit(GeneType.Joining);
             }
-
-            if (jExtension == null)
-                break OUTER;
-
-            // extend
-            VDJCAlignments transformed = transform(input, jExtension);
-
-            if (transformed == null)
-                // Something went wrong
-                return originalInput;
-
-            input = transformed;
-
-            jExtended = true;
-            if (jExtension.isMerging())
-                jMerged = true;
-            jExtensionLength.addAndGet(jExtension.extension.size());
-
-            // Update top hits
-            topV = input.getBestHit(GeneType.Variable);
-            topJ = input.getBestHit(GeneType.Joining);
         }
 
         if (jExtended) {
@@ -348,22 +359,11 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
         helper.writeField("Mean J extension length", 1.0 * jExtensionLength.get() / jExtended.get());
     }
 
-    interface VDJCAlignmentTransformer {
-        /**
-         * @return result or null is something went wrong
-         */
-        Alignment<NucleotideSequence>[] transform(VDJCGene gene, Alignment<NucleotideSequence>[] alignments,
-                                                  NSequenceWithQuality[] originalTargets);
-
-        NSequenceWithQuality[] transform(NSequenceWithQuality[] targets);
-    }
-
     /**
      * @return result or null is something went wrong
      */
-
     static VDJCAlignments transform(VDJCAlignments input,
-                                    VDJCAlignmentTransformer transformer) {
+                                    Extender transformer) {
 
         NSequenceWithQuality[] originalTargets = input.getTargets();
         EnumMap<GeneType, VDJCHit[]> newHitsMap = new EnumMap<>(GeneType.class);
@@ -388,28 +388,46 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
         result.setAlignmentsIndex(input.getAlignmentsIndex());
         result.setOriginalDescriptions(input.getOriginalDescriptions());
         result.setOriginalSequences(input.getOriginalSequences());
-        if (result.numberOfTargets() == input.numberOfTargets())
-            result.setTargetDescriptions(input.getTargetDescriptions());
+//        if (result.numberOfTargets() == input.numberOfTargets())
+//            result.setTargetDescriptions(input.getTargetDescriptions());
 
-//        String[] tdescrs = result.getTargetDescriptions();
-//        if (mergedTargetid != -1) {
-//            tdescrs[mergedTargetid] = addon + ";  " + tdescrs[mergedTargetid] + ";  " + tdescrs[mergedTargetid + 1];
-//            if (mergedTargetid + 2 < tdescrs.length)
-//                System.arraycopy(tdescrs, mergedTargetid + 2, tdescrs, mergedTargetid + 1, tdescrs.length - mergedTargetid - 2);
-//            tdescrs = Arrays.copyOf(tdescrs, tdescrs.length - 1);
-//        }
-//        result.setTargetDescriptions(tdescrs);
+        String[] tDescrs = input.getTargetDescriptions();
+        if (tDescrs == null) {
+            tDescrs = new String[input.numberOfTargets()];
+            Arrays.fill(tDescrs, "");
+        }
+
+        if (transformer.leftTargetId != -1 && transformer.rightTargetId != -1) {
+            int mergedTargetId = transformer.leftTargetId;
+            tDescrs[mergedTargetId] =
+                    tDescrs[transformer.leftTargetId] + "[" + input.getTarget(transformer.leftTargetId).size() + "]"
+                            + " + MExtended(" + transformer.extension.size() + ") + "
+                            + tDescrs[transformer.rightTargetId] + "[" + input.getTarget(transformer.rightTargetId).size() + "]";
+            shrinkArray0(tDescrs, tDescrs, transformer.leftTargetId, transformer.rightTargetId);
+            tDescrs = Arrays.copyOf(tDescrs, tDescrs.length - 1);
+        } else if (transformer.leftTargetId != -1)
+            tDescrs[transformer.leftTargetId] = tDescrs[transformer.leftTargetId] + "[" + input.getTarget(transformer.leftTargetId).size() + "]" + " + RExtended(" + transformer.extension.size() + ")";
+        else if (transformer.rightTargetId != -1)
+            tDescrs[transformer.rightTargetId] = "LExtended(" + transformer.extension.size() + ") + " + tDescrs[transformer.rightTargetId] + "[" + input.getTarget(transformer.rightTargetId).size() + "]";
+        result.setTargetDescriptions(tDescrs);
         return result;
     }
 
-    final class Extender implements VDJCAlignmentTransformer {
+    static <T> void shrinkArray0(T[] src, T[] dest, int leftTargetId, int rightTargetId) {
+        assert leftTargetId == rightTargetId - 1;
+        System.arraycopy(src, 0, dest, 0, leftTargetId);
+        if (rightTargetId < src.length - 1)
+            System.arraycopy(src, rightTargetId + 1, dest, rightTargetId, src.length - rightTargetId - 1);
+    }
+
+    final class Extender {
         final int leftTargetId;
         final int rightTargetId;
         final NucleotideSequence extension;
         final AlignmentScoring<NucleotideSequence> scoring;
         final GeneType extensionGeneType;
 
-        public Extender(int leftTargetId, int rightTargetId, NucleotideSequence extension, AlignmentScoring<NucleotideSequence> scoring, GeneType extensionGeneType) {
+        Extender(int leftTargetId, int rightTargetId, NucleotideSequence extension, AlignmentScoring<NucleotideSequence> scoring, GeneType extensionGeneType) {
             this.leftTargetId = leftTargetId;
             this.rightTargetId = rightTargetId;
             this.extension = extension;
@@ -422,13 +440,9 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
         }
 
         <T> void shrinkArray(T[] src, T[] dest) {
-            System.arraycopy(src, 0, dest, 0, leftTargetId);
-            if (rightTargetId < src.length - 1)
-                System.arraycopy(src, rightTargetId + 1, dest, rightTargetId,
-                        src.length - rightTargetId - 1);
+            shrinkArray0(src, dest, leftTargetId, rightTargetId);
         }
 
-        @Override
         @SuppressWarnings("unchecked")
         public Alignment<NucleotideSequence>[] transform(VDJCGene gene, Alignment<NucleotideSequence>[] alignments, NSequenceWithQuality[] originalTargets) {
             Alignment<NucleotideSequence>[] newAlignments = isMerging() ? new Alignment[alignments.length - 1] : alignments.clone();
@@ -507,7 +521,6 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
                     alignment.getScore());
         }
 
-        @Override
         public NSequenceWithQuality[] transform(NSequenceWithQuality[] targets) {
             NSequenceWithQuality ext = new NSequenceWithQuality(extension,
                     SequenceQuality.getUniformQuality(extensionQuality, extension.size()));

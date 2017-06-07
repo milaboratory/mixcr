@@ -299,7 +299,7 @@ public class ActionExportAlignmentsPretty implements Action {
         }
 
         public Chains getChain() {
-            return Util.parseLoci(chain);
+            return Chains.parse(chain);
         }
 
         @SuppressWarnings("unchecked")
