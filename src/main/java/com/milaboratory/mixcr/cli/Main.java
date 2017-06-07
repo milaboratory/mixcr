@@ -97,23 +97,19 @@ public class Main {
                 new ActionSortAlignments());
 
         // Adding version info callback
-        main.setVersionInfoCallback(new Runnable() {
-            @Override
-            public void run() {
-                System.err.print(
-                        MiXCRVersionInfo.get().getVersionString(
-                                MiXCRVersionInfo.OutputType.ToConsole));
-                System.err.println();
-                System.err.println("Library search path:");
-                for (VDJCLibraryRegistry.LibraryResolver resolvers : VDJCLibraryRegistry.getDefault()
-                        .getLibraryResolvers()) {
-                    if (resolvers instanceof VDJCLibraryRegistry.ClasspathLibraryResolver)
-                        System.out.println("- built-in libraries");
-                    if (resolvers instanceof VDJCLibraryRegistry.FolderLibraryResolver)
-                        System.out.println("- " + ((VDJCLibraryRegistry.FolderLibraryResolver) resolvers).getPath());
-                }
-            }
-        });
+        main.setVersionInfoCallback(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        printVersion(false);
+                    }
+                },
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        printVersion(true);
+                    }
+                });
 
         // Executing main method
         JCommanderBasedMain.ProcessResult processResult = main.main(args);
@@ -121,5 +117,20 @@ public class Main {
         // If something was wrong, exit with code 1
         if (processResult == JCommanderBasedMain.ProcessResult.Error)
             System.exit(1);
+    }
+
+    static void printVersion(boolean full) {
+        System.err.print(
+                MiXCRVersionInfo.get().getVersionString(
+                        MiXCRVersionInfo.OutputType.ToConsole, full));
+        System.err.println();
+        System.err.println("Library search path:");
+        for (VDJCLibraryRegistry.LibraryResolver resolvers : VDJCLibraryRegistry.getDefault()
+                .getLibraryResolvers()) {
+            if (resolvers instanceof VDJCLibraryRegistry.ClasspathLibraryResolver)
+                System.out.println("- built-in libraries");
+            if (resolvers instanceof VDJCLibraryRegistry.FolderLibraryResolver)
+                System.out.println("- " + ((VDJCLibraryRegistry.FolderLibraryResolver) resolvers).getPath());
+        }
     }
 }
