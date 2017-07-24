@@ -1,4 +1,11 @@
 
+MiXCR 2.1.5 (24 Jul 2017)
+========================
+
+-- Fixed backward compatibility of `*.vdjca` files produced by MiXCR 2.1.2 and lower with 
+   `kaligner2`.
+
+
 MiXCR 2.1.4 (24 Jul 2017)
 ========================
 
