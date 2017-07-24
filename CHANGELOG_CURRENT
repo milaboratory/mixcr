@@ -1,1 +1,0 @@
-Fixed backward compatibility of `*.vdjca` files produced by MiXCR 2.1.2 and lower with `kaligner2`.
