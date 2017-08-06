@@ -52,7 +52,7 @@ public class MainTest {
         //String input = System.getProperty("java.io.tmpdir") + "/out.vdjca";
         //String tempDir = System.getProperty("java.io.tmpdir");
         //System.out.println(tempDir);
-        Main.main("exportClones", "-h");
+        Main.main("listLibraries");
     }
 
     @Ignore

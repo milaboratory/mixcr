@@ -31,9 +31,9 @@ package com.milaboratory.mixcr.assembler;
 import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.alignment.BandedAlignerParameters;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
-import io.repseq.core.GeneFeature;
 import com.milaboratory.mixcr.vdjaligners.DAlignerParameters;
 import com.milaboratory.util.GlobalObjectMappers;
+import io.repseq.core.GeneFeature;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -43,13 +43,13 @@ public class CloneFactoryParametersTest {
     @Test
     public void test1() throws Exception {
         CloneFactoryParameters paramentrs = new CloneFactoryParameters(
-                new VJCClonalAlignerParameters(GeneFeature.VRegion, 0.3f,
-                        new BandedAlignerParameters(LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3, -50)),
-                new VJCClonalAlignerParameters(GeneFeature.JRegion, 0.4f,
-                        new BandedAlignerParameters(LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 5, -40)),
-                new VJCClonalAlignerParameters(GeneFeature.CExon1, 0.2f,
-                        new BandedAlignerParameters(LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 9, -30)),
-                new DAlignerParameters(GeneFeature.DRegion, 30.0f, 0.85f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
+                new VJCClonalAlignerParameters(0.3f,
+                        LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3),
+                new VJCClonalAlignerParameters(0.4f,
+                        LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 5),
+                new VJCClonalAlignerParameters(0.2f,
+                        LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 9),
+                new DClonalAlignerParameters(0.85f, 30.0f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
         );
         String str = GlobalObjectMappers.PRETTY.writeValueAsString(paramentrs);
         //System.out.println(str);
@@ -64,11 +64,11 @@ public class CloneFactoryParametersTest {
     @Test
     public void test2() throws Exception {
         CloneFactoryParameters paramentrs = new CloneFactoryParameters(
-                new VJCClonalAlignerParameters(GeneFeature.VRegion, 0.3f,
-                        new BandedAlignerParameters(LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3, -50)),
-                new VJCClonalAlignerParameters(GeneFeature.JRegion, 0.4f,
-                        new BandedAlignerParameters(LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 5, -40)),
-                null, new DAlignerParameters(GeneFeature.DRegion, 30.0f, 0.85f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
+                new VJCClonalAlignerParameters(0.3f,
+                        LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3),
+                new VJCClonalAlignerParameters(0.4f,
+                        LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 5),
+                null, new DClonalAlignerParameters(0.85f, 30.0f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
         );
         String str = GlobalObjectMappers.PRETTY.writeValueAsString(paramentrs);
         //System.out.println(str);

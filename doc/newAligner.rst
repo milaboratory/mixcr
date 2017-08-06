@@ -1,6 +1,6 @@
 .. _ref-kAligner2:
  
-(BETA) KAligner2: New aligner with big gaps support
+KAligner2: New aligner with big gaps support
 ===================================================
 
 .. danger::
@@ -12,7 +12,7 @@ To process data using new aligner, apply special parameter pre-sets as follows:
 ::
 
     mixcr align -p kaligner2 ....
-    mixcr assemble -p default_affine ....
+    mixcr assemble ....
     ....
 
 Any other parameters can also be provided along with ``-p ...`` option.

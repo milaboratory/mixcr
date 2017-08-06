@@ -28,9 +28,8 @@
  */
 package com.milaboratory.mixcr.assembler;
 
-import com.milaboratory.core.alignment.BandedAlignerParameters;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
-import io.repseq.core.GeneFeature;
+import com.milaboratory.test.TestUtil;
 import com.milaboratory.util.GlobalObjectMappers;
 import org.junit.Test;
 
@@ -39,11 +38,23 @@ import static org.junit.Assert.assertEquals;
 public class VJCClonalAlignerParametersTest {
     @Test
     public void test1() throws Exception {
-        VJCClonalAlignerParameters paramentrs = new VJCClonalAlignerParameters(GeneFeature.VRegion, 0.3f,
-                new BandedAlignerParameters(LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3, -50));
+        VJCClonalAlignerParameters paramentrs = new VJCClonalAlignerParameters(0.3f,
+                LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3);
         String str = GlobalObjectMappers.PRETTY.writeValueAsString(paramentrs);
         VJCClonalAlignerParameters deser = GlobalObjectMappers.PRETTY.readValue(str, VJCClonalAlignerParameters.class);
         assertEquals(paramentrs, deser);
         assertEquals(paramentrs, deser.clone());
+    }
+
+    @Test
+    public void test2() throws Exception {
+        TestUtil.assertJson(new VJCClonalAlignerParameters(0.3f,
+                LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3), true);
+
+        TestUtil.assertJson(new VJCClonalAlignerParameters(0.3f,
+                LinearGapAlignmentScoring.getNucleotideBLASTScoring(), null, 2, 3), true);
+
+        TestUtil.assertJson(new VJCClonalAlignerParameters(0.3f,
+                LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 1, 2, 3), true);
     }
 }

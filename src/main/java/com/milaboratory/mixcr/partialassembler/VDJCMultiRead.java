@@ -1,6 +1,7 @@
 package com.milaboratory.mixcr.partialassembler;
 
 import com.milaboratory.core.io.sequence.MultiRead;
+import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.core.io.sequence.SingleReadImpl;
 
 import java.util.List;
@@ -11,6 +12,10 @@ import java.util.List;
  */
 public class VDJCMultiRead extends MultiRead {
     //final EnumSet<GeneType>[] expectedGeneTypes;
+
+    public VDJCMultiRead(SingleRead... data) {
+        super(data.clone());
+    }
 
     @SuppressWarnings("unchecked")
     public VDJCMultiRead(long readId, List<AlignedTarget> targets) {

@@ -28,11 +28,21 @@
  */
 package com.milaboratory.mixcr.export;
 
+import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCObject;
 import com.milaboratory.mixcr.cli.Util;
-import io.repseq.core.GeneType;
+import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerAligner;
+import com.milaboratory.mixcr.partialassembler.VDJCMultiRead;
+import com.milaboratory.mixcr.tests.MiXCRTestUtils;
+import com.milaboratory.mixcr.tests.TargetBuilder;
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
+import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
+import io.repseq.core.*;
+import org.apache.commons.math3.random.Well44497b;
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -43,6 +53,113 @@ import java.util.Arrays;
 import java.util.ListIterator;
 
 public class FieldExtractorsTest {
+    @Test
+    public void testAnchorPoints1() throws Exception {
+        final boolean print = false;
+        final Well44497b rg = new Well44497b(12312);
+
+        final VDJCAlignerParameters rnaSeqParams = VDJCParametersPresets.getByName("rna-seq");
+        final PartialAlignmentsAssemblerAligner aligner = new PartialAlignmentsAssemblerAligner(rnaSeqParams);
+
+        final VDJCLibrary lib = VDJCLibraryRegistry.getDefault().getLibrary("default", "hs");
+
+        for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("default", "hs").getGenes())
+            if (gene.isFunctional())
+                aligner.addGene(gene);
+
+        final TargetBuilder.VDJCGenes genes = new TargetBuilder.VDJCGenes(lib,
+                "TRBV12-3*00", "TRBD1*00", "TRBJ1-3*00", "TRBC2*00");
+
+        //                                 | 310  | 338   | 438
+        // 250V + 60CDR3 (20V 7N 10D 3N 20J) + 28J + 100C + 100N
+        // "{CDR3Begin(-250)}V*270 NNNNNNN {DBegin(0)}D*10 NNN {CDR3End(-20):FR4End} {CBegin}C*100 N*100"
+
+        final FieldExtractors.ExtractDefaultReferencePointsPositions extractor = new FieldExtractors.ExtractDefaultReferencePointsPositions();
+
+        F6 goAssert = new F6() {
+            @Override
+            public Integer[][] go(String seq, int len, int offset1, int offset2, int offset3, String expected) {
+                final NucleotideSequence baseSeq = TargetBuilder.generateSequence(genes, seq, rg);
+                NucleotideSequence seq1 = baseSeq.getRange(offset1, offset1 + len);
+                NucleotideSequence seq2 = offset2 == -1 ? null : baseSeq.getRange(offset2, offset2 + len);
+                NucleotideSequence seq3 = offset3 == -1 ? null : baseSeq.getRange(offset3, offset3 + len);
+
+                VDJCAlignmentResult<VDJCMultiRead> alignment = offset3 == -1 ?
+                        offset2 == -1 ?
+                                aligner.process(MiXCRTestUtils.createMultiRead(seq1)) :
+                                aligner.process(MiXCRTestUtils.createMultiRead(seq1, seq2)) :
+                        aligner.process(MiXCRTestUtils.createMultiRead(seq1, seq2, seq3));
+                VDJCAlignments al = alignment.alignment;
+                Assert.assertNotNull(al);
+
+                if (print) {
+                    MiXCRTestUtils.printAlignment(al);
+                    System.out.println();
+                    System.out.println("-------------------------------------------");
+                    System.out.println();
+                }
+
+                String val = extractor.extract(al);
+
+                if (print)
+                    System.out.println(val);
+
+                String[] spl = val.split(",");
+                Integer[][] result = new Integer[spl.length][ReferencePoint.DefaultReferencePoints.length];
+                for (int i = 0; i < spl.length; i++) {
+                    String[] spl1 = spl[i].split(":");
+                    for (int j = 0; j < spl1.length; j++) {
+                        try {
+                            result[i][j] = Integer.decode(spl1[j]);
+                        } catch (NumberFormatException e) {
+                        }
+                    }
+                }
+                return result;
+            }
+        };
+
+        // No PSegments, just deletions
+
+        Integer[][] r = goAssert.go("{CDR3Begin(-250):VEnd(-3)} 'CCAAA' {DBegin(0):DEnd(0)} 'AAA' {JBegin(2):FR4End} " +
+                        "{CBegin}C*100 N*100",
+                100, 240, 307, 450, "");
+        assertExportPoint(r[0], ReferencePoint.VEnd, -3);
+        assertExportPoint(r[0], ReferencePoint.DBegin, 0);
+        assertExportPoint(r[0], ReferencePoint.DEnd, 0);
+        assertExportPoint(r[0], ReferencePoint.JBegin, -2);
+
+        r = goAssert.go("{CDR3Begin(-250):VEnd(0)} 'CCAAA' {DBegin(0):DEnd(-2)} 'AAA' {JBegin:FR4End} {CBegin}C*100 N*100",
+                100, 240, 307, 450, "");
+        assertExportPoint(r[0], ReferencePoint.VEnd, 0);
+        assertExportPoint(r[0], ReferencePoint.DBegin, 0);
+        assertExportPoint(r[0], ReferencePoint.DEnd, -2);
+        assertExportPoint(r[0], ReferencePoint.JBegin, 0);
+
+        // With PSegments
+
+        r = goAssert.go("{CDR3Begin(-250):VEnd(0)} {VEnd:VEnd(-3)} 'CCAAA' {DBegin(3):DBegin} {DBegin:DEnd(-2)} 'AAA' " +
+                        "{JBegin(2):JBegin} {JBegin:FR4End} {CBegin}C*100 N*100",
+                100, 240, 307, 450, "");
+        assertExportPoint(r[0], ReferencePoint.VEnd, 3);
+        assertExportPoint(r[0], ReferencePoint.DBegin, 3);
+        assertExportPoint(r[0], ReferencePoint.DEnd, -2);
+        assertExportPoint(r[0], ReferencePoint.JBegin, 2);
+    }
+
+    static void assertExportPoint(Integer[] r, ReferencePoint rp, Integer value) {
+        for (int i = 0; i < ReferencePoint.DefaultReferencePoints.length; i++)
+            if (ReferencePoint.DefaultReferencePoints[i].equals(rp)) {
+                Assert.assertEquals(value, r[i]);
+                return;
+            }
+        Assert.fail();
+    }
+
+    public interface F6 {
+        Integer[][] go(String seq, int len, int offset1, int offset2, int offset3, String expected);
+    }
+
     @Ignore
     @Test
     public void bestHits() throws Exception {
@@ -117,13 +234,13 @@ public class FieldExtractorsTest {
     @Test
     public void testName() throws Exception {
         for (Class clazz : Arrays.asList(VDJCObject.class, VDJCAlignments.class, Clone.class)) {
-            try(FileOutputStream out = new FileOutputStream(new File("doc/ExportFields" + clazz.getSimpleName() + ".rst"))) {
-                out.write(prindDocumentation(clazz).getBytes());
+            try (FileOutputStream out = new FileOutputStream(new File("doc/ExportFields" + clazz.getSimpleName() + ".rst"))) {
+                out.write(printDocumentation(clazz).getBytes());
             }
         }
     }
 
-    public static String prindDocumentation(Class clazz) {
+    public static String printDocumentation(Class clazz) {
         ArrayList<String>[] cols = FieldExtractors.getDescriptionSpecificForClass(clazz);
         cols[0].add(0, "Field name");
         cols[1].add(0, "Description");

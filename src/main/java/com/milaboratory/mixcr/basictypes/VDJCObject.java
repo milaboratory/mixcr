@@ -36,10 +36,9 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import io.repseq.core.Chains;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
+import io.repseq.core.VDJCGeneId;
 
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.Map;
+import java.util.*;
 
 public class VDJCObject {
     protected final NSequenceWithQuality[] targets;
@@ -76,9 +75,35 @@ public class VDJCObject {
         return hits;
     }
 
+    @SuppressWarnings("unchecked")
+    private Set<VDJCGeneId> getGenes(GeneType gt) {
+        VDJCHit[] hits = getHits(gt);
+        if (hits == null)
+            return Collections.EMPTY_SET;
+        Set<VDJCGeneId> genes = new HashSet<>();
+        for (VDJCHit hit : hits)
+            genes.add(hit.getGene().getId());
+        return genes;
+    }
+
+    public final boolean hasCommonGenes(GeneType gt, VDJCObject other) {
+        Set<VDJCGeneId> thisGenes = this.getGenes(gt);
+        for (VDJCGeneId gene : other.getGenes(gt))
+            if (thisGenes.contains(gene))
+                return true;
+        return false;
+    }
+
     public final VDJCHit[] getHits(GeneType type) {
         VDJCHit[] hits = this.hits.get(type);
         return hits == null ? new VDJCHit[0] : hits;
+    }
+
+    public Chains getTopChain(GeneType gt) {
+        final VDJCHit top = getBestHit(gt);
+        if (top == null)
+            return Chains.EMPTY;
+        return top.getGene().getChains();
     }
 
     public Chains getAllChains(GeneType geneType) {
@@ -142,6 +167,10 @@ public class VDJCObject {
         return targets[target];
     }
 
+    public final NSequenceWithQuality[] getTargets() {
+        return targets.clone();
+    }
+
     public final VDJCPartitionedSequence getPartitionedTarget(int target) {
         if (partitionedTargets == null) {
             partitionedTargets = new VDJCPartitionedSequence[targets.length];
@@ -189,60 +218,60 @@ public class VDJCObject {
             if (tmp != null && (feature == null || feature.getQuality().minValue() < tmp.getQuality().minValue()))
                 feature = tmp;
         }
-        if (feature == null && targets.length == 2) {
-            VDJCHit bestVHit = getBestHit(GeneType.Variable);
-            if (bestVHit == null)
-                return null;
-
-            //TODO check for V feature compatibility
-            Alignment<NucleotideSequence>
-                    lAlignment = bestVHit.getAlignment(0),
-                    rAlignment = bestVHit.getAlignment(1);
-
-            if (lAlignment == null || rAlignment == null)
-                return null;
-
-            int lTargetIndex = 0;
-
-            int lFrom, rTo, f, t;
-            if ((f = getPartitionedTarget(1).getPartitioning().getPosition(geneFeature.getFirstPoint())) >= 0 &&
-                    (t = getPartitionedTarget(0).getPartitioning().getPosition(geneFeature.getLastPoint())) >= 0) {
-                lAlignment = bestVHit.getAlignment(1);
-                rAlignment = bestVHit.getAlignment(0);
-                lFrom = f;
-                rTo = t;
-                lTargetIndex = 1;
-            } else if ((f = getPartitionedTarget(0).getPartitioning().getPosition(geneFeature.getFirstPoint())) < 0 ||
-                    (t = getPartitionedTarget(1).getPartitioning().getPosition(geneFeature.getLastPoint())) < 0)
-                return null;
-            else {
-                lFrom = f;
-                rTo = t;
-            }
-
-            Range intersection = lAlignment.getSequence1Range().intersection(rAlignment.getSequence1Range());
-            if (intersection == null)
-                return null;
-
-            NSequenceWithQuality intersectionSequence = Merger.merge(intersection,
-                    new Alignment[]{bestVHit.getAlignment(0), bestVHit.getAlignment(1)},
-                    targets);
-
-            Range lRange = new Range(
-                    lFrom,
-                    aabs(lAlignment.convertToSeq2Position(intersection.getFrom())));
-            Range rRange = new Range(
-                    aabs(rAlignment.convertToSeq2Position(intersection.getTo())),
-                    rTo);
-
-            feature =
-                    new NSequenceWithQualityBuilder()
-                            .ensureCapacity(lRange.length() + rRange.length() + intersectionSequence.size())
-                            .append(targets[lTargetIndex].getRange(lRange))
-                            .append(intersectionSequence)
-                            .append(targets[1 - lTargetIndex].getRange(rRange))
-                            .createAndDestroy();
-        }
+//        if (feature == null && targets.length == 2) {
+//            VDJCHit bestVHit = getBestHit(GeneType.Variable);
+//            if (bestVHit == null)
+//                return null;
+//
+//            //TODO check for V feature compatibility
+//            Alignment<NucleotideSequence>
+//                    lAlignment = bestVHit.getAlignment(0),
+//                    rAlignment = bestVHit.getAlignment(1);
+//
+//            if (lAlignment == null || rAlignment == null)
+//                return null;
+//
+//            int lTargetIndex = 0;
+//
+//            int lFrom, rTo, f, t;
+//            if ((f = getPartitionedTarget(1).getPartitioning().getPosition(geneFeature.getFirstPoint())) >= 0 &&
+//                    (t = getPartitionedTarget(0).getPartitioning().getPosition(geneFeature.getLastPoint())) >= 0) {
+//                lAlignment = bestVHit.getAlignment(1);
+//                rAlignment = bestVHit.getAlignment(0);
+//                lFrom = f;
+//                rTo = t;
+//                lTargetIndex = 1;
+//            } else if ((f = getPartitionedTarget(0).getPartitioning().getPosition(geneFeature.getFirstPoint())) < 0 ||
+//                    (t = getPartitionedTarget(1).getPartitioning().getPosition(geneFeature.getLastPoint())) < 0)
+//                return null;
+//            else {
+//                lFrom = f;
+//                rTo = t;
+//            }
+//
+//            Range intersection = lAlignment.getSequence1Range().intersection(rAlignment.getSequence1Range());
+//            if (intersection == null)
+//                return null;
+//
+//            NSequenceWithQuality intersectionSequence = Merger.merge(intersection,
+//                    new Alignment[]{bestVHit.getAlignment(0), bestVHit.getAlignment(1)},
+//                    targets);
+//
+//            Range lRange = new Range(
+//                    lFrom,
+//                    aabs(lAlignment.convertToSeq2Position(intersection.getFrom())));
+//            Range rRange = new Range(
+//                    aabs(rAlignment.convertToSeq2Position(intersection.getTo())),
+//                    rTo);
+//
+//            feature =
+//                    new NSequenceWithQualityBuilder()
+//                            .ensureCapacity(lRange.length() + rRange.length() + intersectionSequence.size())
+//                            .append(targets[lTargetIndex].getRange(lRange))
+//                            .append(intersectionSequence)
+//                            .append(targets[1 - lTargetIndex].getRange(rRange))
+//                            .createAndDestroy();
+//        }
         return feature;
     }
 

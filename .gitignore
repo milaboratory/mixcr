@@ -6,3 +6,4 @@ doc/_build
 .floo
 .flooignore
 out
+test_target

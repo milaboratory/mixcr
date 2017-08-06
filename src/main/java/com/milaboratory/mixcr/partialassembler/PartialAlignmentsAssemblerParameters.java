@@ -40,18 +40,23 @@ import java.io.IOException;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
 public class PartialAlignmentsAssemblerParameters {
-    private int kValue, kOffset, minimalVJJunctionOverlap;
+    private int kValue, kOffset, minimalAssembleOverlap, minimalNOverlap;
+    private float minimalAlignmentMergeIdentity;
     private MergerParameters mergerParameters;
 
     @JsonCreator
     public PartialAlignmentsAssemblerParameters(
             @JsonProperty("kValue") int kValue,
             @JsonProperty("kOffset") int kOffset,
-            @JsonProperty("minimalVJJunctionOverlap") int minimalVJJunctionOverlap,
+            @JsonProperty("minimalAssembleOverlap") int minimalAssembleOverlap,
+            @JsonProperty("minimalNOverlap") int minimalNOverlap,
+            @JsonProperty("minimalAlignmentMergeIdentity") int minimalAlignmentMergeIdentity,
             @JsonProperty("mergerParameters") MergerParameters mergerParameters) {
         this.kValue = kValue;
         this.kOffset = kOffset;
-        this.minimalVJJunctionOverlap = minimalVJJunctionOverlap;
+        this.minimalAssembleOverlap = minimalAssembleOverlap;
+        this.minimalNOverlap = minimalNOverlap;
+        this.minimalAlignmentMergeIdentity = minimalAlignmentMergeIdentity;
         this.mergerParameters = mergerParameters;
     }
 
@@ -71,6 +76,22 @@ public class PartialAlignmentsAssemblerParameters {
         this.kValue = kValue;
     }
 
+    public int getMinimalNOverlap() {
+        return minimalNOverlap;
+    }
+
+    public void setMinimalNOverlap(int minimalNOverlap) {
+        this.minimalNOverlap = minimalNOverlap;
+    }
+
+    public float getMinimalAlignmentMergeIdentity() {
+        return minimalAlignmentMergeIdentity;
+    }
+
+    public void setMinimalAlignmentMergeIdentity(float minimalAlignmentMergeIdentity) {
+        this.minimalAlignmentMergeIdentity = minimalAlignmentMergeIdentity;
+    }
+
     public int getKOffset() {
         return kOffset;
     }
@@ -79,12 +100,12 @@ public class PartialAlignmentsAssemblerParameters {
         this.kOffset = kOffset;
     }
 
-    public int getMinimalVJJunctionOverlap() {
-        return minimalVJJunctionOverlap;
+    public int getMinimalAssembleOverlap() {
+        return minimalAssembleOverlap;
     }
 
-    public void setMinimalVJJunctionOverlap(int minimalVJJunctionOverlap) {
-        this.minimalVJJunctionOverlap = minimalVJJunctionOverlap;
+    public void setMinimalAssembleOverlap(int minimalAssembleOverlap) {
+        this.minimalAssembleOverlap = minimalAssembleOverlap;
     }
 
     @Override

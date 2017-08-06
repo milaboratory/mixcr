@@ -28,74 +28,58 @@
  */
 package com.milaboratory.mixcr.vdjaligners;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.assembler.DClonalAlignerParameters;
 import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
 
-@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-        getterVisibility = JsonAutoDetect.Visibility.NONE)
-public final class DAlignerParameters extends GeneAlignmentParameters<DAlignerParameters>
-        implements java.io.Serializable {
-    private float absoluteMinScore, relativeMinScore;
-    private int maxHits;
-    private AlignmentScoring<NucleotideSequence> scoring;
+public final class DAlignerParameters extends DClonalAlignerParameters<DAlignerParameters>
+        implements GeneAlignmentParameters, java.io.Serializable {
+    private GeneFeature geneFeatureToAlign;
 
     @JsonCreator
     public DAlignerParameters(
             @JsonProperty("geneFeatureToAlign") GeneFeature geneFeatureToAlign,
-            @JsonProperty("absoluteMinScore") float absoluteMinScore,
-            @JsonProperty("relativeMinScore") float relativeMinScore,
-            @JsonProperty("maxHits") int maxHits,
-            @JsonProperty("scoring") AlignmentScoring scoring) {
-        super(geneFeatureToAlign);
-        this.absoluteMinScore = absoluteMinScore;
-        this.relativeMinScore = relativeMinScore;
-        this.maxHits = maxHits;
-        this.scoring = scoring;
+            @JsonProperty("relativeMinScore") Float relativeMinScore,
+            @JsonProperty("absoluteMinScore") Float absoluteMinScore,
+            @JsonProperty("maxHits") Integer maxHits,
+            @JsonProperty("scoring") AlignmentScoring<NucleotideSequence> scoring) {
+        super(relativeMinScore, absoluteMinScore, maxHits, scoring);
+        this.geneFeatureToAlign = geneFeatureToAlign;
     }
 
-    public AlignmentScoring getScoring() {
-        return scoring;
+    @Override
+    public GeneFeature getGeneFeatureToAlign() {
+        return geneFeatureToAlign;
     }
 
-    public DAlignerParameters setScoring(AlignmentScoring scoring) {
-        this.scoring = scoring;
-        return this;
-    }
-
-    public float getAbsoluteMinScore() {
-        return absoluteMinScore;
-    }
-
-    public DAlignerParameters setAbsoluteMinScore(float absoluteMinScore) {
-        this.absoluteMinScore = absoluteMinScore;
-        return this;
-    }
-
-    public float getRelativeMinScore() {
-        return relativeMinScore;
-    }
-
-    public DAlignerParameters setRelativeMinScore(float relativeMinScore) {
-        this.relativeMinScore = relativeMinScore;
-        return this;
-    }
-
-    public int getMaxHits() {
-        return maxHits;
-    }
-
-    public DAlignerParameters setMaxHits(int maxHits) {
-        this.maxHits = maxHits;
+    public DAlignerParameters setGeneFeatureToAlign(GeneFeature geneFeatureToAlign) {
+        this.geneFeatureToAlign = geneFeatureToAlign;
         return this;
     }
 
     @Override
+    public GeneType getGeneType() {
+        return GeneType.Diversity;
+    }
+
+    @Override
+    public void updateFrom(ClonalGeneAlignmentParameters alignerParameters) {
+        throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean isComplete() {
+        throw new IllegalStateException();
+    }
+
+
+    @Override
     public DAlignerParameters clone() {
-        return new DAlignerParameters(geneFeatureToAlign, absoluteMinScore, relativeMinScore, maxHits, scoring);
+        return new DAlignerParameters(geneFeatureToAlign, relativeMinScore, absoluteMinScore, maxHits, scoring);
     }
 
     @Override
@@ -111,26 +95,18 @@ public final class DAlignerParameters extends GeneAlignmentParameters<DAlignerPa
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DAlignerParameters)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
 
         DAlignerParameters that = (DAlignerParameters) o;
 
-        if (Float.compare(that.absoluteMinScore, absoluteMinScore) != 0) return false;
-        if (maxHits != that.maxHits) return false;
-        if (Float.compare(that.relativeMinScore, relativeMinScore) != 0) return false;
-        if (!scoring.equals(that.scoring)) return false;
-
-        return true;
+        return geneFeatureToAlign != null ? geneFeatureToAlign.equals(that.geneFeatureToAlign) : that.geneFeatureToAlign == null;
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (absoluteMinScore != +0.0f ? Float.floatToIntBits(absoluteMinScore) : 0);
-        result = 31 * result + (relativeMinScore != +0.0f ? Float.floatToIntBits(relativeMinScore) : 0);
-        result = 31 * result + maxHits;
-        result = 31 * result + scoring.hashCode();
+        result = 31 * result + (geneFeatureToAlign != null ? geneFeatureToAlign.hashCode() : 0);
         return result;
     }
 }

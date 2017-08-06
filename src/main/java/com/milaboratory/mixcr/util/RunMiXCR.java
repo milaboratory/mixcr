@@ -51,7 +51,7 @@ public final class RunMiXCR {
     public static AssembleResult assemble(final AlignResult align) {
         RunMiXCRAnalysis parameters = align.parameters;
         try (CloneAssembler assembler = new CloneAssembler(parameters.cloneAssemblerParameters,
-                false, align.usedGenes)) {
+                false, align.usedGenes, align.parameters.alignerParameters)) {
 
             CloneAssemblerReport report = new CloneAssemblerReport();
             assembler.setListener(report);

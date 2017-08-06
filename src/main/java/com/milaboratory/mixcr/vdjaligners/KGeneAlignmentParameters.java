@@ -31,25 +31,40 @@ package com.milaboratory.mixcr.vdjaligners;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.core.alignment.batch.BatchAlignerWithBaseParameters;
+import com.milaboratory.core.alignment.AlignmentScoring;
+import com.milaboratory.core.alignment.kaligner1.AbstractKAlignerParameters;
 import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
+import com.milaboratory.core.sequence.NucleotideSequence;
 import io.repseq.core.GeneFeature;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
-public final class KGeneAlignmentParameters extends GeneAlignmentParameters<KGeneAlignmentParameters>
-        implements java.io.Serializable{
-    private BatchAlignerWithBaseParameters parameters;
+public final class KGeneAlignmentParameters extends GeneAlignmentParametersAbstract<KGeneAlignmentParameters>
+        implements java.io.Serializable {
+    private AbstractKAlignerParameters parameters;
+    private int minSumScore;
 
     @JsonCreator
     public KGeneAlignmentParameters(
             @JsonProperty("geneFeatureToAlign") GeneFeature geneFeatureToAlign,
-            @JsonProperty("parameters") BatchAlignerWithBaseParameters parameters) {
-        super(geneFeatureToAlign);
+            @JsonProperty("minSumScore") Integer minSumScore,
+            @JsonProperty("relativeMinScore") Float relativeMinScore,
+            @JsonProperty("parameters") AbstractKAlignerParameters parameters) {
+        super(geneFeatureToAlign, relativeMinScore  == null ? 0.87f : relativeMinScore.floatValue());
+        this.minSumScore = minSumScore == null ? 40 : minSumScore.intValue();
         this.parameters = parameters;
     }
 
-    public BatchAlignerWithBaseParameters getParameters() {
+    public int getMinSumScore() {
+        return minSumScore;
+    }
+
+    public KGeneAlignmentParameters setMinSumScore(int minSumScore) {
+        this.minSumScore = minSumScore;
+        return this;
+    }
+
+    public AbstractKAlignerParameters getParameters() {
         return parameters;
     }
 
@@ -60,33 +75,40 @@ public final class KGeneAlignmentParameters extends GeneAlignmentParameters<KGen
 
     @Override
     public KGeneAlignmentParameters clone() {
-        return new KGeneAlignmentParameters(geneFeatureToAlign, parameters.clone());
+        return new KGeneAlignmentParameters(geneFeatureToAlign, minSumScore, relativeMinScore, parameters.clone());
+    }
+
+    @Override
+    public AlignmentScoring<NucleotideSequence> getScoring() {
+        return parameters.getScoring();
     }
 
     @Override
     public String toString() {
         return "KGeneAlignmentParameters{" +
                 "parameters=" + parameters +
+                ", minSumScore=" + minSumScore +
+                ", relativeMinScore=" + relativeMinScore +
                 '}';
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof KGeneAlignmentParameters)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
 
         KGeneAlignmentParameters that = (KGeneAlignmentParameters) o;
 
-        if (!parameters.equals(that.parameters)) return false;
-
-        return true;
+        if (minSumScore != that.minSumScore) return false;
+        return parameters != null ? parameters.equals(that.parameters) : that.parameters == null;
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + parameters.hashCode();
+        result = 31 * result + (parameters != null ? parameters.hashCode() : 0);
+        result = 31 * result + minSumScore;
         return result;
     }
 }

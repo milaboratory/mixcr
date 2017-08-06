@@ -81,6 +81,10 @@ public final class MiXCRVersionInfo {
     }
 
     public String getVersionString(OutputType outputType) {
+        return getVersionString(outputType, false);
+    }
+
+    public String getVersionString(OutputType outputType, boolean full) {
         StringBuilder builder = new StringBuilder();
 
         builder.append("MiXCR v")
@@ -90,8 +94,13 @@ public final class MiXCRVersionInfo {
                 .append("; rev=")
                 .append(mixcr.getRevision())
                 .append("; branch=")
-                .append(mixcr.getBranch())
-                .append(")")
+                .append(mixcr.getBranch());
+
+        if (full)
+            builder.append("; host=")
+                    .append(mixcr.getHost());
+
+        builder.append(")")
                 .append(outputType.delimiter);
 
         builder.append("RepSeq.IO v")

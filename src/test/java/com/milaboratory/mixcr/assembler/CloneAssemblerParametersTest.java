@@ -45,11 +45,11 @@ public class CloneAssemblerParametersTest {
     @Test
     public void test1() throws Exception {
         CloneFactoryParameters factoryParameters = new CloneFactoryParameters(
-                new VJCClonalAlignerParameters(GeneFeature.VRegion, 0.3f,
-                        new BandedAlignerParameters(LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3, -50)),
-                new VJCClonalAlignerParameters(GeneFeature.JRegion, 0.4f,
-                        new BandedAlignerParameters(LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 5, -40)),
-                null, new DAlignerParameters(GeneFeature.DRegion, 30.0f, 0.85f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
+                new VJCClonalAlignerParameters(0.3f,
+                        LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3),
+                new VJCClonalAlignerParameters(0.4f,
+                        LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 5),
+                null, new DClonalAlignerParameters(0.85f, 30.0f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
         );
 
         CloneAssemblerParameters params = new CloneAssemblerParameters(new GeneFeature[]{GeneFeature.FR1, GeneFeature.CDR3}, 12,
@@ -73,11 +73,11 @@ public class CloneAssemblerParametersTest {
     @Test
     public void test2() throws Exception {
         CloneFactoryParameters factoryParameters = new CloneFactoryParameters(
-                new VJCClonalAlignerParameters(GeneFeature.VRegion, 0.3f,
-                        new BandedAlignerParameters(LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3, -50)),
-                new VJCClonalAlignerParameters(GeneFeature.JRegion, 0.4f,
-                        new BandedAlignerParameters(LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 5, -40)),
-                null, new DAlignerParameters(GeneFeature.DRegion, 30.0f, 0.85f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
+                new VJCClonalAlignerParameters(0.3f,
+                        LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3),
+                new VJCClonalAlignerParameters(0.4f,
+                        LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 5),
+                null, new DClonalAlignerParameters(0.85f, 30.0f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
         );
 
         CloneAssemblerParameters params = new CloneAssemblerParameters(new GeneFeature[]{GeneFeature.FR1, GeneFeature.CDR3}, 12,

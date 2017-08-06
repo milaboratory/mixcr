@@ -33,6 +33,7 @@ import cc.redberry.primitives.Filter;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
+import com.beust.jcommander.converters.LongConverter;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
@@ -44,6 +45,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.cli.afiltering.AFilter;
 import com.milaboratory.util.NSequenceWithQualityPrintHelper;
+import gnu.trove.set.hash.TLongHashSet;
 import io.repseq.core.Chains;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
@@ -68,9 +70,9 @@ public class ActionExportAlignmentsPretty implements Action {
     public void go(ActionHelper helper) throws Exception {
         Filter<VDJCAlignments> filter = actionParameters.getFilter();
         long total = 0, filtered = 0;
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(actionParameters.getInputFileName());
-             PrintStream output = actionParameters.getOutputFileName().equals("-") ? System.out :
-                     new PrintStream(new BufferedOutputStream(new FileOutputStream(actionParameters.getOutputFileName()), 32768))
+        try(VDJCAlignmentsReader reader = new VDJCAlignmentsReader(actionParameters.getInputFileName());
+            PrintStream output = actionParameters.getOutputFileName().equals("-") ? System.out :
+                    new PrintStream(new BufferedOutputStream(new FileOutputStream(actionParameters.getOutputFileName()), 32768))
         ) {
             long countBefore = actionParameters.limitBefore == null ? Long.MAX_VALUE : actionParameters.limitBefore;
             long countAfter = actionParameters.limitAfter == null ? Long.MAX_VALUE : actionParameters.limitAfter;
@@ -245,7 +247,7 @@ public class ActionExportAlignmentsPretty implements Action {
         public Boolean geneSequence = null;
 
         @Parameter(description = "Limit number of alignments before filtering",
-                names = {"-b", "--limitBefore"})
+                names = {"-b", "--limit-before"})
         public Integer limitBefore = null;
 
         @Parameter(description = "Limit number of filtered alignments; no more " +
@@ -285,10 +287,22 @@ public class ActionExportAlignmentsPretty implements Action {
                 names = {"-d", "--descriptions"})
         public Boolean descr = null;
 
-        public Chains getChain() {
-            return Util.parseLoci(chain);
+        @Parameter(description = "List of read ids to export",
+                names = {"-i", "--read-ids"},
+                converter = LongConverter.class)
+        public List<Long> ids = new ArrayList<>();
+
+        TLongHashSet getReadIds() {
+            if (ids.isEmpty())
+                return null;
+            return new TLongHashSet(ids);
         }
 
+        public Chains getChain() {
+            return Chains.parse(chain);
+        }
+
+        @SuppressWarnings("unchecked")
         public Filter<VDJCAlignments> getFilter() {
             final Chains chains = getChain();
 
@@ -307,6 +321,15 @@ public class ActionExportAlignmentsPretty implements Action {
                     return false;
                 }
             });
+
+            final TLongHashSet readIds = getReadIds();
+            if (readIds != null)
+                filters.add(new Filter<VDJCAlignments>() {
+                    @Override
+                    public boolean accept(VDJCAlignments object) {
+                        return readIds.contains(object.getReadId());
+                    }
+                });
 
             if (feature != null) {
                 final GeneFeature feature = GeneFeature.parse(this.feature);

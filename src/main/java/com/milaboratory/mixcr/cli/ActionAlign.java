@@ -394,7 +394,7 @@ public class ActionAlign implements Action {
         }
 
         public Chains getChains() {
-            return Util.parseLoci(chains);
+            return Chains.parse(chains);
         }
 
         public boolean getWriteAllResults() {
@@ -414,7 +414,7 @@ public class ActionAlign implements Action {
                 return new PairedFastqReader(parameters.get(0), parameters.get(1), true);
             else {
                 String[] s = parameters.get(0).split("\\.");
-                if (s[s.length - 1].equals("fasta"))
+                if (s[s.length - 1].equals("fasta") || s[s.length - 1].equals("fa"))
                     return new FastaSequenceReaderWrapper(
                             new FastaReader<>(parameters.get(0), NucleotideSequence.ALPHABET),
                             true

@@ -29,48 +29,51 @@
 package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.cli.JCommanderBasedMain;
-import com.milaboratory.mixcr.util.TempFileManager;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
+import com.milaboratory.util.TempFileManager;
 import io.repseq.core.VDJCLibraryRegistry;
 import io.repseq.seqbase.SequenceResolvers;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.SecureRandom;
-import java.util.Arrays;
 
 public class Main {
+    private static volatile boolean initialized = false;
+
     public static void main(String... args) throws Exception {
-        TempFileManager.seed(Arrays.hashCode(args) + 17 * (new SecureRandom()).nextLong());
         // Getting command string if executed from script
         String command = System.getProperty("mixcr.command", "java -jar mixcr.jar");
 
-        Path cachePath = Paths.get(System.getProperty("user.home"), ".mixcr", "cache");
-        //if (System.getProperty("allow.http") != null || System.getenv("MIXCR_ALLOW_HTTP") != null)
-        //TODO add mechanism to deny http requests
-        SequenceResolvers.initDefaultResolver(cachePath);
+        if (!initialized) {
+            TempFileManager.setPrefix("mixcr_");
 
-        Path libraries = Paths.get(System.getProperty("user.home"), ".mixcr", "libraries");
+            Path cachePath = Paths.get(System.getProperty("user.home"), ".mixcr", "cache");
+            //if (System.getProperty("allow.http") != null || System.getenv("MIXCR_ALLOW_HTTP") != null)
+            //TODO add mechanism to deny http requests
+            SequenceResolvers.initDefaultResolver(cachePath);
 
-        VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(".");
+            Path libraries = Paths.get(System.getProperty("user.home"), ".mixcr", "libraries");
 
-        if (System.getProperty("mixcr.path") != null) {
-            Path bin = Paths.get(System.getProperty("mixcr.path"));
-            Path searchPath = bin.resolve("libraries");
-            if (Files.exists(searchPath))
-                VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(searchPath);
+            VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(".");
+
+            if (System.getProperty("mixcr.path") != null) {
+                Path bin = Paths.get(System.getProperty("mixcr.path"));
+                Path searchPath = bin.resolve("libraries");
+                if (Files.exists(searchPath))
+                    VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(searchPath);
+            }
+
+            if (System.getProperty("library.path") != null)
+                VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(System.getProperty("library.path"));
+
+            if (System.getenv("MIXCR_LIBRARY_PATH") != null)
+                VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(System.getenv("MIXCR_LIBRARY_PATH"));
+
+            if (Files.exists(libraries))
+                VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(libraries);
+            initialized = true;
         }
-
-        if (System.getProperty("library.path") != null)
-            VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(System.getProperty("library.path"));
-
-        if (System.getenv("MIXCR_LIBRARY_PATH") != null)
-            VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(System.getenv("MIXCR_LIBRARY_PATH"));
-
-        if (Files.exists(libraries))
-            VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(libraries);
-
         // Setting up main helper
         JCommanderBasedMain main = new JCommanderBasedMain(command,
                 new ActionAlign(),
@@ -88,26 +91,25 @@ public class Main {
                 new ActionAssemblePartialAlignments(),
                 new ActionExportReads(),
                 new ActionClonesDiff(),
-                new ActionFilterAlignments());
+                new ActionFilterAlignments(),
+                new ActionListLibraries(),
+                new ActionExtendAlignments(),
+                new ActionSortAlignments());
 
         // Adding version info callback
-        main.setVersionInfoCallback(new Runnable() {
-            @Override
-            public void run() {
-                System.err.print(
-                        MiXCRVersionInfo.get().getVersionString(
-                                MiXCRVersionInfo.OutputType.ToConsole));
-                System.err.println();
-                System.err.println("Library search path:");
-                for (VDJCLibraryRegistry.LibraryResolver resolvers : VDJCLibraryRegistry.getDefault()
-                        .getLibraryResolvers()) {
-                    if (resolvers instanceof VDJCLibraryRegistry.ClasspathLibraryResolver)
-                        System.out.println("- built-in libraries");
-                    if (resolvers instanceof VDJCLibraryRegistry.FolderLibraryResolver)
-                        System.out.println("- " + ((VDJCLibraryRegistry.FolderLibraryResolver) resolvers).getPath());
-                }
-            }
-        });
+        main.setVersionInfoCallback(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        printVersion(false);
+                    }
+                },
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        printVersion(true);
+                    }
+                });
 
         // Executing main method
         JCommanderBasedMain.ProcessResult processResult = main.main(args);
@@ -115,5 +117,20 @@ public class Main {
         // If something was wrong, exit with code 1
         if (processResult == JCommanderBasedMain.ProcessResult.Error)
             System.exit(1);
+    }
+
+    static void printVersion(boolean full) {
+        System.err.print(
+                MiXCRVersionInfo.get().getVersionString(
+                        MiXCRVersionInfo.OutputType.ToConsole, full));
+        System.err.println();
+        System.err.println("Library search path:");
+        for (VDJCLibraryRegistry.LibraryResolver resolvers : VDJCLibraryRegistry.getDefault()
+                .getLibraryResolvers()) {
+            if (resolvers instanceof VDJCLibraryRegistry.ClasspathLibraryResolver)
+                System.out.println("- built-in libraries");
+            if (resolvers instanceof VDJCLibraryRegistry.FolderLibraryResolver)
+                System.out.println("- " + ((VDJCLibraryRegistry.FolderLibraryResolver) resolvers).getPath());
+        }
     }
 }

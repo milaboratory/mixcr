@@ -30,6 +30,7 @@ package com.milaboratory.mixcr.export;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
+import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.mutations.MutationsUtil;
@@ -279,7 +280,8 @@ public final class FieldExtractors {
                 }
             });
 
-            descriptorsList.add(new FeatureExtractors.WithHeader("-aaFeature", "Export amino acid sequence of specified gene feature", 1, new String[]{"AA. Seq."}, new String[]{"aaSeq"}) {
+            descriptorsList.add(new FeatureExtractors.WithHeader("-aaFeature", "Export amino acid sequence of specified gene feature",
+                    1, new String[]{"AA. Seq. "}, new String[]{"aaSeq"}) {
                 @Override
                 protected String extractValue(VDJCObject object, GeneFeature[] parameters) {
                     GeneFeature geneFeature = parameters[parameters.length - 1];
@@ -487,6 +489,26 @@ public final class FieldExtractors {
                 }
             });
 
+            descriptorsList.add(new PL_A("-targetDescriptions", "Export target descriptions", "Target descriptions", "targetDescriptions") {
+                @Override
+                protected String extract(VDJCAlignments object) {
+                    String[] ds = object.getTargetDescriptions();
+                    if (ds == null || ds.length == 0) {
+                        char[] commas = new char[object.numberOfTargets() - 1];
+                        Arrays.fill(commas, ',');
+                        return new String(commas);
+                    }
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; ; i++) {
+                        sb.append(ds[i]);
+                        if (i == ds.length - 1)
+                            break;
+                        sb.append(',');
+                    }
+                    return sb.toString();
+                }
+            });
+
             descriptorsList.add(alignmentsToClone("-cloneId", "To which clone alignment was attached.", false));
             descriptorsList.add(alignmentsToClone("-cloneIdWithMappingType", "To which clone alignment was attached with additional info on mapping type.", true));
             descriptorsList.add(new AbstractField<Clone>(Clone.class, "-readIds", "Read IDs aggregated by clone.") {
@@ -687,7 +709,7 @@ public final class FieldExtractors {
         }
     }
 
-    private static class ExtractDefaultReferencePointsPositions extends PL_O {
+    static class ExtractDefaultReferencePointsPositions extends PL_O {
         public ExtractDefaultReferencePointsPositions() {
             super("-defaultAnchorPoints", "Outputs a list of default reference points (like CDR2Begin, FR4End, etc. " +
                     "see documentation for the full list and formatting)", "Ref. points", "refPoints");
@@ -696,12 +718,30 @@ public final class FieldExtractors {
         @Override
         protected String extract(VDJCObject object) {
             StringBuilder sb = new StringBuilder();
+            VDJCHit bestVHit = object.getBestHit(GeneType.Variable);
+            VDJCHit bestDHit = object.getBestHit(GeneType.Diversity);
+            VDJCHit bestJHit = object.getBestHit(GeneType.Joining);
             for (int i = 0; ; i++) {
                 SequencePartitioning partitioning = object.getPartitionedTarget(i).getPartitioning();
                 for (int j = 0; ; j++) {
-                    int referencePointPosition = partitioning.getPosition(ReferencePoint.DefaultReferencePoints[j]);
-                    if (referencePointPosition >= 0)
-                        sb.append(referencePointPosition);
+                    ReferencePoint refPoint = ReferencePoint.DefaultReferencePoints[j];
+
+                    // Processing special cases for number of deleted / P-segment nucleotides
+                    if (refPoint.equals(ReferencePoint.VEnd))
+                        sb.append(trimmedPosition(bestVHit, i, ReferencePoint.VEndTrimmed, ReferencePoint.VEnd));
+                    else if (refPoint.equals(ReferencePoint.DBegin))
+                        sb.append(trimmedPosition(bestDHit, i, ReferencePoint.DBeginTrimmed, ReferencePoint.DBegin));
+                    else if (refPoint.equals(ReferencePoint.DEnd))
+                        sb.append(trimmedPosition(bestDHit, i, ReferencePoint.DEndTrimmed, ReferencePoint.DEnd));
+                    else if (refPoint.equals(ReferencePoint.JBegin))
+                        sb.append(trimmedPosition(bestJHit, i, ReferencePoint.JBeginTrimmed, ReferencePoint.JBegin));
+
+                    else {
+                        // Normal points
+                        int referencePointPosition = partitioning.getPosition(refPoint);
+                        if (referencePointPosition >= 0)
+                            sb.append(referencePointPosition);
+                    }
                     if (j == ReferencePoint.DefaultReferencePoints.length - 1)
                         break;
                     sb.append(":");
@@ -713,6 +753,43 @@ public final class FieldExtractors {
             return sb.toString();
         }
 
+        public static String trimmedPosition(VDJCHit hit, int targetId, ReferencePoint trimmedPoint, ReferencePoint boundaryPoint) {
+            if (!trimmedPoint.isAttachedToAlignmentBound())
+                throw new IllegalArgumentException();
+
+            // No hit - no point
+            if (hit == null)
+                return "";
+
+            Alignment<NucleotideSequence> alignment = hit.getAlignment(targetId);
+
+            // If alignment is not defined for this target
+            if (alignment == null)
+                return "";
+
+            ReferencePoint ap = trimmedPoint.getActivationPoint();
+            Range seq1Range = alignment.getSequence1Range();
+            if (ap != null) {
+                // Point is valid only if activation point is reached
+                int apPositionInSeq1 = hit.getGene().getPartitioning().getRelativePosition(hit.getAlignedFeature(), ap);
+                if (apPositionInSeq1 < 0 ||
+                        trimmedPoint.isAttachedToLeftAlignmentBound() ?
+                        seq1Range.getFrom() > apPositionInSeq1 :
+                        seq1Range.getTo() <= apPositionInSeq1)
+                    return "";
+            }
+
+            int bpPositionInSeq1 = hit.getGene().getPartitioning().getRelativePosition(hit.getAlignedFeature(), boundaryPoint);
+
+            // Just in case
+            if (bpPositionInSeq1 < 0)
+                return "";
+
+            return Integer.toString(
+                    trimmedPoint.isAttachedToLeftAlignmentBound() ?
+                            bpPositionInSeq1 - seq1Range.getFrom() :
+                            seq1Range.getTo() - bpPositionInSeq1);
+        }
     }
 
 

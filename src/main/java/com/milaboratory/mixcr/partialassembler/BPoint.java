@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * Copyright (c) 2014-2017, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
  * (here and after addressed as Inventors)
  * All Rights Reserved
  *
@@ -26,23 +26,8 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.assembler;
+package com.milaboratory.mixcr.partialassembler;
 
-import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
-import io.repseq.core.GeneFeature;
-import com.milaboratory.util.GlobalObjectMappers;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-
-public class DClonalAlignerParametersTest {
-    @Test
-    public void test1() throws Exception {
-        DClonalAlignerParameters paramentrs = new DClonalAlignerParameters(0.3f, GeneFeature.DRegion,
-                LinearGapAlignmentScoring.getNucleotideBLASTScoring());
-        String str = GlobalObjectMappers.PRETTY.writeValueAsString(paramentrs);
-        DClonalAlignerParameters deser = GlobalObjectMappers.PRETTY.readValue(str, DClonalAlignerParameters.class);
-        assertEquals(paramentrs, deser);
-        assertEquals(paramentrs, deser.clone());
-    }
+public enum BPoint {
+    OverlapBegin, OverlapEnd
 }

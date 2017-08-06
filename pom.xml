@@ -32,7 +32,7 @@
 
     <groupId>com.milaboratory</groupId>
     <artifactId>mixcr</artifactId>
-    <version>2.0.3</version>
+    <version>2.1.6-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>MiXCR</name>
 
@@ -44,14 +44,14 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <milib.version>1.7</milib.version>
+        <milib.version>1.8.1</milib.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>io.repseq</groupId>
             <artifactId>repseqio</artifactId>
-            <version>1.2.4</version>
+            <version>1.2.10</version>
         </dependency>
 
         <dependency>
@@ -103,6 +103,32 @@
     <build>
         <plugins>
             <plugin>
+                <!-- Workaround maven not being able to set a property conditionally -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <exportAntProperties>true</exportAntProperties>
+                            <target>
+                                <exec executable="hostname" failonerror="false" outputproperty="hostname"/>
+                                <condition property="hostname" value="unknown">
+                                    <not>
+                                        <isset property="hostname"/>
+                                    </not>
+                                </condition>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>buildnumber-maven-plugin</artifactId>
                 <version>1.4</version>
@@ -123,6 +149,7 @@
                         <configuration>
                             <properties>
                                 <branch>${scmBranch}</branch>
+                                <host>${hostname}</host>
                             </properties>
                         </configuration>
                     </execution>

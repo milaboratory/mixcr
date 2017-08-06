@@ -1,6 +1,5 @@
 package com.milaboratory.mixcr.partialassembler;
 
-import com.milaboratory.core.alignment.MultiAlignmentHelper;
 import com.milaboratory.core.io.sequence.PairedRead;
 import com.milaboratory.core.io.sequence.SingleReadImpl;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
@@ -8,7 +7,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceBuilder;
 import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.cli.ReportHelper;
+import com.milaboratory.mixcr.tests.MiXCRTestUtils;
 import com.milaboratory.mixcr.util.RunMiXCR;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
@@ -30,9 +29,6 @@ import java.util.EnumMap;
 import static io.repseq.core.GeneFeature.*;
 import static io.repseq.core.GeneType.*;
 
-/**
- * Created by poslavsky on 21/05/16.
- */
 public class PartialAlignmentsAssemblerTest {
 
     static PairedRead createPair(long id, String R1, String R2) {
@@ -43,22 +39,6 @@ public class PartialAlignmentsAssemblerTest {
         return new PairedRead(
                 new SingleReadImpl(id, new NSequenceWithQuality(R1, SequenceQuality.getUniformQuality((byte) 25, R1.size())), "" + id + "R1"),
                 new SingleReadImpl(id, new NSequenceWithQuality(R2, SequenceQuality.getUniformQuality((byte) 25, R2.size())), "" + id + "R2"));
-    }
-
-    static void printAlignment(VDJCAlignments alignments) {
-        for (int i = 0; i < alignments.numberOfTargets(); i++) {
-            if (alignments.getTargetDescriptions() != null)
-                System.out.println(">>> Description: " + alignments.getTargetDescriptions()[i] + "\n");
-
-            MultiAlignmentHelper targetAsMultiAlignment = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, i);
-            if (targetAsMultiAlignment == null)
-                continue;
-            MultiAlignmentHelper[] split = targetAsMultiAlignment.split(80);
-            for (MultiAlignmentHelper spl : split) {
-                System.out.println(spl);
-                System.out.println();
-            }
-        }
     }
 
     //@Test
@@ -99,7 +79,7 @@ public class PartialAlignmentsAssemblerTest {
         final TestResult testResult = processData(data, input);
 
         for (VDJCAlignments al : testResult.assembled) {
-            printAlignment(al);
+            MiXCRTestUtils.printAlignment(al);
         }
     }
 
@@ -117,7 +97,7 @@ public class PartialAlignmentsAssemblerTest {
 
         final TestResult testResult = processData(data, input);
         for (VDJCAlignments al : testResult.assembled) {
-            printAlignment(al);
+            MiXCRTestUtils.printAlignment(al);
 //            System.out.println(input.VJJunction);
 //            System.out.println(al.getFeature(GeneFeature.VJJunction).getSequence());
             Assert.assertTrue(input.VJJunction.toString().contains(al.getFeature(GeneFeature.VJJunction).getSequence().toString()));
@@ -141,7 +121,7 @@ public class PartialAlignmentsAssemblerTest {
 
         final TestResult testResult = processData(data, input);
         for (VDJCAlignments al : testResult.assembled) {
-            printAlignment(al);
+            MiXCRTestUtils.printAlignment(al);
 //            System.out.println(input.VJJunction);
 //            System.out.println(al.getFeature(GeneFeature.VJJunction).getSequence());
 //            Assert.assertTrue(input.VJJunction.toString().contains(al.getFeature(GeneFeature.VJJunction).getSequence().toString()));
@@ -214,9 +194,8 @@ public class PartialAlignmentsAssemblerTest {
         params.alignerParameters.setAllowPartialAlignments(true);
 
         final RunMiXCR.AlignResult inputAlignments = RunMiXCR.align(params);
-        inputAlignments.report.writeReport(new ReportHelper(System.out));
-        System.out.println("\n");
-
+        //inputAlignments.report.writeReport(new ReportHelper(System.out));
+        //System.out.println("\n");
 
         for (VDJCAlignments al : inputAlignments.alignments) {
             for (GeneType gt : GeneType.VJC_REFERENCE) {
@@ -250,8 +229,8 @@ public class PartialAlignmentsAssemblerTest {
             try (final VDJCAlignmentsReader reader = inputAlignments.resultReader()) {
                 assembler.searchOverlaps(reader);
             }
-            assembler.writeReport(new ReportHelper(System.out));
-            System.out.println("\n");
+            //assembler.writeReport(new ReportHelper(System.out));
+            //System.out.println("\n");
         }
 
 

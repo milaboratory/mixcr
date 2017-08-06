@@ -29,25 +29,29 @@
 package com.milaboratory.mixcr.assembler;
 
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import io.repseq.core.GeneFeature;
+import com.milaboratory.mixcr.basictypes.ClonalUpdatableParameters;
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import io.repseq.core.GeneType;
-import com.milaboratory.mixcr.vdjaligners.DAlignerParameters;
 
 import java.util.EnumMap;
 import java.util.Map;
 
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE)
 public final class CloneFactoryParameters implements java.io.Serializable {
     EnumMap<GeneType, VJCClonalAlignerParameters> vdcParameters = new EnumMap<>(GeneType.class);
-    DAlignerParameters dParameters;
+    @JsonSerialize(as = DClonalAlignerParameters.class)
+    DClonalAlignerParameters dParameters;
 
     @JsonCreator
     public CloneFactoryParameters(@JsonProperty("vParameters") VJCClonalAlignerParameters vParameters,
                                   @JsonProperty("jParameters") VJCClonalAlignerParameters jParameters,
                                   @JsonProperty("cParameters") VJCClonalAlignerParameters cParameters,
-                                  @JsonProperty("dParameters") DAlignerParameters dParameters) {
+                                  @JsonProperty("dParameters") DClonalAlignerParameters dParameters) {
         if (vParameters != null)
             vdcParameters.put(GeneType.Variable, vParameters);
         if (jParameters != null)
@@ -57,9 +61,30 @@ public final class CloneFactoryParameters implements java.io.Serializable {
         this.dParameters = dParameters;
     }
 
-    CloneFactoryParameters(EnumMap<GeneType, VJCClonalAlignerParameters> vdcParameters, DAlignerParameters dParameters) {
+    CloneFactoryParameters(EnumMap<GeneType, VJCClonalAlignerParameters> vdcParameters, DClonalAlignerParameters dParameters) {
         this.vdcParameters = vdcParameters;
         this.dParameters = dParameters;
+    }
+
+    private ClonalUpdatableParameters uParameters(GeneType gt) {
+        return gt == GeneType.Diversity ? dParameters : vdcParameters.get(gt);
+    }
+
+    public void update(VDJCAlignerParameters alignerParameters) {
+        for (GeneType gt : GeneType.VDJC_REFERENCE) {
+            ClonalUpdatableParameters up = uParameters(gt);
+            if (up != null)
+                up.updateFrom(alignerParameters.getGeneAlignerParameters(gt));
+        }
+    }
+
+    public boolean isComplete() {
+        for (GeneType gt : GeneType.VDJC_REFERENCE) {
+            ClonalUpdatableParameters up = uParameters(gt);
+            if (up != null && !up.isComplete())
+                return false;
+        }
+        return true;
     }
 
     public VJCClonalAlignerParameters getVJCParameters(GeneType geneType) {
@@ -86,37 +111,8 @@ public final class CloneFactoryParameters implements java.io.Serializable {
 
     @JsonProperty("dParameters")
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-    public DAlignerParameters getDParameters() {
+    public DClonalAlignerParameters getDParameters() {
         return dParameters;
-    }
-
-    public GeneFeature getFeatureToAlign(GeneType geneType) {
-        if (geneType == GeneType.Diversity)
-            if (dParameters == null)
-                return null;
-            else
-                return dParameters.getGeneFeatureToAlign();
-        VJCClonalAlignerParameters params = getVJCParameters(geneType);
-        if (params == null)
-            return null;
-        else
-            return params.getFeatureToAlign();
-    }
-
-    public CloneFactoryParameters setFeatureToAlign(GeneType geneType, GeneFeature feature) {
-        if (geneType == GeneType.Diversity)
-            if (dParameters == null)
-                throw new IllegalArgumentException("No D parameters.");
-            else
-                dParameters.setGeneFeatureToAlign(feature);
-        else {
-            VJCClonalAlignerParameters params = getVJCParameters(geneType);
-            if (params == null)
-                throw new IllegalArgumentException("No parameters for " + geneType + ".");
-            else
-                params.setFeatureToAlign(feature);
-        }
-        return this;
     }
 
     public CloneFactoryParameters setVJCParameters(GeneType geneType, VJCClonalAlignerParameters parameters) {
@@ -142,7 +138,7 @@ public final class CloneFactoryParameters implements java.io.Serializable {
         return this;
     }
 
-    public CloneFactoryParameters setDParameters(DAlignerParameters dParameters) {
+    public CloneFactoryParameters setDParameters(DClonalAlignerParameters dParameters) {
         this.dParameters = dParameters;
         return this;
     }

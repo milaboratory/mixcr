@@ -4,6 +4,7 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.primitives.Filter;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.beust.jcommander.converters.LongConverter;
 import com.beust.jcommander.validators.PositiveInteger;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
@@ -16,6 +17,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.util.SmartProgressReporter;
+import gnu.trove.set.hash.TLongHashSet;
 import io.repseq.core.Chains;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
@@ -66,17 +68,24 @@ public final class ActionFilterAlignments implements Action {
         final GeneFeature containsFeature;
         final NucleotideSequence cdr3Equals;
         final Chains chains;
+        final TLongHashSet readsIds;
+        final boolean chimerasOnly;
 
-        public AlignmentsFilter(GeneFeature containsFeature, NucleotideSequence cdr3Equals, Chains chains) {
+        public AlignmentsFilter(GeneFeature containsFeature, NucleotideSequence cdr3Equals, Chains chains, TLongHashSet readsIds, boolean chimerasOnly) {
             this.containsFeature = containsFeature;
             this.cdr3Equals = cdr3Equals;
             this.chains = chains;
+            this.readsIds = readsIds;
+            this.chimerasOnly = chimerasOnly;
         }
 
         @Override
         public boolean accept(VDJCAlignments object) {
             if (object == null)
                 return true;
+
+            if (readsIds != null && !readsIds.contains(object.getReadId()))
+                return false;
 
             boolean lMatch = false;
             for (GeneType gt : GeneType.VDJC_REFERENCE) {
@@ -96,9 +105,13 @@ public final class ActionFilterAlignments implements Action {
                 final NSequenceWithQuality cdr3 = object.getFeature(GeneFeature.CDR3);
                 if (cdr3 == null)
                     return false;
-                if (cdr3Equals != null && !cdr3.getSequence().equals(cdr3Equals))
+                if (!cdr3.getSequence().equals(cdr3Equals))
                     return false;
             }
+
+            if (chimerasOnly)
+                return object.isChimera();
+
             return true;
         }
     }
@@ -121,9 +134,23 @@ public final class ActionFilterAlignments implements Action {
                 names = {"-e", "--cdr3-equals"})
         public String cdr3Equals = null;
 
+        @Parameter(description = "Output only chimeric alignments.",
+                names = {"-x", "--chimeras-only"})
+        public Boolean chimerasOnly = null;
+
         @Parameter(description = "Maximal number of reads to process",
                 names = {"-n", "--limit"}, validateWith = PositiveInteger.class)
         public long limit = 0;
+
+        @Parameter(description = "List of read ids to export",
+                names = {"-i", "--read-ids"}, converter = LongConverter.class)
+        public List<Long> ids = new ArrayList<>();
+
+        TLongHashSet getReadIds() {
+            if (ids.isEmpty())
+                return null;
+            return new TLongHashSet(ids);
+        }
 
         @Override
         protected List<String> getOutputFiles() {
@@ -131,7 +158,7 @@ public final class ActionFilterAlignments implements Action {
         }
 
         public Chains getChains() {
-            return Util.parseLoci(chains);
+            return Chains.parse(chains);
         }
 
         public VDJCAlignmentsReader getInput() throws IOException {
@@ -155,7 +182,8 @@ public final class ActionFilterAlignments implements Action {
         }
 
         public AlignmentsFilter getFilter() {
-            return new AlignmentsFilter(getContainFeature(), getCdr3Equals(), getChains());
+            return new AlignmentsFilter(getContainFeature(), getCdr3Equals(), getChains(),
+                    getReadIds(), chimerasOnly == null ? false : chimerasOnly);
         }
     }
 }

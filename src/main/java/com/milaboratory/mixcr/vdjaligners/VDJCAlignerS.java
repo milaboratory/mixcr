@@ -31,6 +31,9 @@ package com.milaboratory.mixcr.vdjaligners;
 import com.milaboratory.core.Target;
 import com.milaboratory.core.alignment.batch.AlignmentHit;
 import com.milaboratory.core.alignment.batch.AlignmentResult;
+import com.milaboratory.core.alignment.batch.BatchAlignerWithBaseParameters;
+import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
+import com.milaboratory.core.alignment.kaligner2.KAlignerParameters2;
 import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
@@ -47,6 +50,23 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
 
     public VDJCAlignerS(VDJCAlignerParameters parameters) {
         super(parameters);
+    }
+
+    @Override
+    protected BatchAlignerWithBaseParameters extractBatchParameters(KGeneAlignmentParameters init) {
+        final BatchAlignerWithBaseParameters p = init.getParameters().clone();
+        if (p instanceof KAlignerParameters) {
+            KAlignerParameters p1 = (KAlignerParameters) p;
+            p1.setAbsoluteMinScore(init.getMinSumScore());
+            p1.setRelativeMinScore(init.getRelativeMinScore());
+        } else if (p instanceof KAlignerParameters2) {
+            KAlignerParameters2 p2 = (KAlignerParameters2) p;
+            p2.setAbsoluteMinScore(init.getMinSumScore());
+            p2.setRelativeMinScore(init.getRelativeMinScore());
+        } else
+            throw new RuntimeException();
+
+        return p;
     }
 
     @Override
@@ -198,9 +218,11 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
                                     jAligner.align(sequence) : null);
 
                 // Returning result
+                int jFrom = vResult.getBestHit().getAlignment().getSequence2Range().getTo() - parameters.getVJOverlapWindow();
+                jFrom = jFrom < 0 ? 0 : jFrom;
                 return new KVJResultsForSingle(target, vResult,
                         jAligner.align(sequence,
-                                vResult.getBestHit().getAlignment().getSequence2Range().getTo(),
+                                jFrom,
                                 sequence.size(),
                                 getFilter(GeneType.Joining, vResult.getHits())));
             case JThenV:
@@ -215,8 +237,10 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
                             jResult); // J result is empty
 
                 // Returning result
+                int vTo = jResult.getBestHit().getAlignment().getSequence2Range().getFrom() + parameters.getVJOverlapWindow();
+                vTo = vTo > sequence.size() ? sequence.size() : vTo;
                 return new KVJResultsForSingle(target, vAligner.align(sequence, 0,
-                        jResult.getBestHit().getAlignment().getSequence2Range().getFrom(),
+                        vTo,
                         getFilter(GeneType.Variable, jResult.getHits())),
                         jResult);
         }
