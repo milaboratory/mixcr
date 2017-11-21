@@ -1,6 +1,8 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
+import cc.redberry.pipe.OutputPort;
+import cc.redberry.pipe.util.CountLimitingOutputPort;
 import cc.redberry.primitives.Filter;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -10,12 +12,14 @@ import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.cli.ActionParametersWithOutput;
+import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.SmartProgressReporter;
 import gnu.trove.set.hash.TLongHashSet;
 import io.repseq.core.Chains;
@@ -38,11 +42,17 @@ public final class ActionFilterAlignments implements Action {
     public void go(ActionHelper helper) throws Exception {
         try (VDJCAlignmentsReader reader = parameters.getInput();
              VDJCAlignmentsWriter writer = parameters.getOutput()) {
+            CanReportProgress progress = reader;
+            OutputPort<VDJCAlignments> sReads = reader;
+            if (parameters.limit != 0) {
+                sReads = new CountLimitingOutputPort<>(sReads, parameters.limit);
+                progress = SmartProgressReporter.extractProgress((CountLimitingOutputPort<?>) sReads);
+            }
             writer.header(reader.getParameters(), reader.getUsedGenes());
-            SmartProgressReporter.startProgressReport("Filtering", reader);
+            SmartProgressReporter.startProgressReport("Filtering", progress);
             int total = 0, passed = 0;
             final AlignmentsFilter filter = parameters.getFilter();
-            for (VDJCAlignments al : CUtils.it(CUtils.buffered(reader, 2048))) {
+            for (VDJCAlignments al : CUtils.it(CUtils.buffered(sReads, 2048))) {
                 ++total;
                 if (filter.accept(al)) {
                     writer.write(al);
@@ -50,7 +60,8 @@ public final class ActionFilterAlignments implements Action {
                 }
             }
             writer.setNumberOfProcessedReads(reader.getNumberOfReads());
-            System.out.printf("Written %s alignments (%s alignments considered in total)\n", passed, total);
+            System.out.printf("%s alignments analysed\n", total);
+            System.out.printf("%s alignments written (%.1f%%)\n", passed, 100.0 * passed / total);
         }
     }
 
