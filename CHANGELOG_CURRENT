@@ -1,0 +1,1 @@
+minor: Fix bug in align report (wrong total count in rare cases) #265

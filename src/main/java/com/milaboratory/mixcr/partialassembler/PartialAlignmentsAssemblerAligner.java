@@ -43,8 +43,6 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
     @Override
     @SuppressWarnings("unchecked")
     protected VDJCAlignmentResult<VDJCMultiRead> process0(VDJCMultiRead input) {
-        ensureInitialized();
-
         final int nReads = input.numberOfReads();
         EnumMap<GeneType, VDJCHit[]> vdjcHits = new EnumMap<>(GeneType.class);
 
