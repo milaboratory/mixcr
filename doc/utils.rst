@@ -47,3 +47,31 @@ Allows to merge multiple ``.vdjca`` files into a single one:
     > mixcr mergeAlignments file1.vdjca file2.vdjca ... output.vdjca
 
 
+Filter alignments
+-----------------
+
+Allows to filter alignments in ``.vdjca`` file. Example:
+
+::
+
+    > mixcr filterAlignments --chains TRA,TRB input_file.vdjca output_file.vdjca
+
+The available options are:
+
++--------------------------------+-------------------------------------------------------------------------------------------------+
+| Option                         | Description                                                                                     |
++================================+=================================================================================================+
+| ``-e``, ``--cdr3-equals``      | Include only those alignments which CDR3 equals to a specified nucleotide sequence              |
++--------------------------------+-------------------------------------------------------------------------------------------------+
+| ``c``, ``--chains``            | Include only alignments with specified immunological protein chains (comma separated list       |
+|                                | of some of IGH, IGL, IGK, TRA, TRB, TRG, TRD chains)                                            |
++--------------------------------+-------------------------------------------------------------------------------------------------+
+| ``-x``, ``--chimeras-only``    | Output only chimeric alignments                                                                 |
++--------------------------------+-------------------------------------------------------------------------------------------------+
+| ``-g``, ``--contains-feature`` | Include only those alignments that contain specified gene feature (see :ref:`ref-geneFeatures`) |
++--------------------------------+-------------------------------------------------------------------------------------------------+
+| ``-i``, ``--read-ids``         | Output alignments with specified IDs only                                                       |
++--------------------------------+-------------------------------------------------------------------------------------------------+
+| ``-n``, ``--limit``            | Maximal number of alignments to process                                                         |
++--------------------------------+-------------------------------------------------------------------------------------------------+
+
