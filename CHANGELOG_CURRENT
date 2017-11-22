@@ -1,3 +1,4 @@
-minor: Fix bug in align report (wrong total count in rare cases) #265
+Added chains column in export (-chains and -topChains)
 minor: Added proper filtering for alleles with wildcard symbols in `featureToAlign` region
+minor: Fixed bug in align report (wrong total count in rare cases) #265
 minor: Documentation added for `filterAlignments`
