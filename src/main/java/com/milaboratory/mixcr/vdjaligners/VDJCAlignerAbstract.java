@@ -46,6 +46,9 @@ import java.util.List;
 
 public abstract class VDJCAlignerAbstract<R extends SequenceRead> extends VDJCAligner<R> {
     protected volatile SingleDAligner singleDAligner = null;
+    /**
+     * Filter geneType -> (chain -> [corresponding gene indexes])
+     */
     protected volatile EnumMap<GeneType, HashMap<String, BitArray>> filters;
     protected volatile BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> vAligner = null;
     protected volatile BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> jAligner = null;
@@ -53,6 +56,23 @@ public abstract class VDJCAlignerAbstract<R extends SequenceRead> extends VDJCAl
 
     public VDJCAlignerAbstract(VDJCAlignerParameters parameters) {
         super(parameters);
+    }
+
+    VDJCAlignerAbstract(boolean initialized,
+                               VDJCAlignerParameters parameters,
+                               EnumMap<GeneType, List<VDJCGene>> genesToAlign,
+                               List<VDJCGene> usedGenes,
+                               SingleDAligner singleDAligner,
+                               EnumMap<GeneType, HashMap<String, BitArray>> filters,
+                               BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> vAligner,
+                               BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> jAligner,
+                               BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> cAligner) {
+        super(initialized, parameters, genesToAlign, usedGenes);
+        this.singleDAligner = singleDAligner;
+        this.filters = filters;
+        this.vAligner = vAligner;
+        this.jAligner = jAligner;
+        this.cAligner = cAligner;
     }
 
     @SuppressWarnings("unchecked")
