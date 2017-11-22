@@ -32,16 +32,19 @@ import com.milaboratory.core.Target;
 import com.milaboratory.core.alignment.batch.AlignmentHit;
 import com.milaboratory.core.alignment.batch.AlignmentResult;
 import com.milaboratory.core.alignment.batch.BatchAlignerWithBaseParameters;
+import com.milaboratory.core.alignment.batch.BatchAlignerWithBaseWithFilter;
 import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.core.alignment.kaligner2.KAlignerParameters2;
 import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.util.BitArray;
 import io.repseq.core.*;
 
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 
 public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
@@ -50,6 +53,27 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
 
     public VDJCAlignerS(VDJCAlignerParameters parameters) {
         super(parameters);
+    }
+
+    VDJCAlignerS(boolean initialized,
+                 VDJCAlignerParameters parameters,
+                 EnumMap<GeneType, List<VDJCGene>> genesToAlign,
+                 List<VDJCGene> usedGenes,
+                 SingleDAligner singleDAligner,
+                 EnumMap<GeneType, HashMap<String, BitArray>> filters,
+                 BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> vAligner,
+                 BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> jAligner,
+                 BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> cAligner) {
+        super(initialized, parameters, genesToAlign, usedGenes, singleDAligner, filters, vAligner, jAligner, cAligner);
+    }
+
+    VDJCAlignerS copyWithoutListener() {
+        if (!initialized)
+            throw new IllegalStateException();
+        else
+            return new VDJCAlignerS(
+                    true, parameters, genesToAlign, usedGenes, singleDAligner,
+                    filters, vAligner, jAligner, cAligner);
     }
 
     @Override
@@ -71,8 +95,6 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
 
     @Override
     protected VDJCAlignmentResult<SingleRead> process0(SingleRead input) {
-        ensureInitialized();
-
         // Different algorithms for
         // -OallowPartialAlignments=false and -OallowPartialAlignments=true
         return parameters.getAllowPartialAlignments() ?

@@ -56,7 +56,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     private static final ReferencePoint reqPointR = ReferencePoint.CDR3End.move(-3);
     private static final ReferencePoint reqPointL = ReferencePoint.CDR3Begin.move(+3);
     // Used in case of AMerge
-    private final VDJCAlignerS sAligner;
+    private VDJCAlignerS sAligner;
     private final TargetMerger alignmentsMerger;
 
     public VDJCAlignerPVFirst(VDJCAlignerParameters parameters) {
@@ -71,10 +71,19 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         this.sAligner = sAligner;
     }
 
+    public void setSAligner(VDJCAlignerS sAligner) {
+        this.sAligner = sAligner;
+    }
+
+    @Override
+    protected void init() {
+        if (sAligner == null)
+            throw new IllegalStateException();
+        super.init();
+    }
+
     @Override
     protected VDJCAlignmentResult<PairedRead> process0(final PairedRead input) {
-        ensureInitialized();
-
         Target[] targets = getTargets(input);
 
         // Creates helper classes for each PTarget
