@@ -64,10 +64,14 @@ import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
 import com.milaboratory.util.CanReportProgress;
+import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.*;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 
 import static cc.redberry.pipe.CUtils.chunked;
@@ -258,6 +262,10 @@ public class ActionAlign implements Action {
         if (actionParameters.report != null)
             Util.writeReport(actionParameters.getInputForReport(), actionParameters.getOutputName(),
                     helper.getCommandLineArguments(), actionParameters.report, time, report, chainsStatistics);
+        if (actionParameters.jsonReport != null)
+            Files.write(Paths.get(actionParameters.jsonReport),
+                    (GlobalObjectMappers.toOneLine(report) + "\n").getBytes(),
+                    StandardOpenOption.APPEND);
     }
 
     public static String[] extractDescriptions(SequenceRead r) {
@@ -316,6 +324,10 @@ public class ActionAlign implements Action {
         @Parameter(description = "Report file.",
                 names = {"-r", "--report"})
         public String report;
+
+        @Parameter(description = "JSON report file.",
+                names = {"--json-report"})
+        public String jsonReport = null;
 
         @Parameter(description = "Species (organism), as specified in library file or taxon id. " +
                 "Possible values: hs, HomoSapiens, musmusculus, mmu, hsa, 9606, 10090 etc..",

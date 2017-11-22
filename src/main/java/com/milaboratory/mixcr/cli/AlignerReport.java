@@ -28,11 +28,15 @@
  */
 package com.milaboratory.mixcr.cli;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerEventListener;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 
@@ -48,6 +52,48 @@ public final class AlignerReport implements VDJCAlignerEventListener, ReportWrit
 
     public long getFails(VDJCAlignmentFailCause cause) {
         return fails.get(cause.ordinal());
+    }
+
+    @JsonProperty("total")
+    public long getTotal() {
+        long total = 0;
+        for (int i = 0; i < fails.length(); ++i)
+            total += fails.get(i);
+        total += successes.get();
+        return total;
+    }
+
+    @JsonProperty("success")
+    public long getSuccess() {
+        return successes.get();
+    }
+
+    @JsonProperty("fails")
+    public Map<String, Long> getFailsJSON() {
+        Map<String, Long> map = new HashMap<>();
+        for (VDJCAlignmentFailCause cause : VDJCAlignmentFailCause.values())
+            map.put(cause.toString(), fails.get(cause.ordinal()));
+        return map;
+    }
+
+    @JsonProperty("chimeras")
+    public long getChimeras() {
+        return chimeras.get();
+    }
+
+    @JsonProperty("overlapped")
+    public long getOverlapped() {
+        return alignedOverlap.get() + nonAlignedOverlap.get();
+    }
+
+    @JsonProperty("overlappedAligned")
+    public long getAlignedOverlapped() {
+        return alignedOverlap.get();
+    }
+
+    @JsonProperty("overlappedNotAligned")
+    public long getNonAlignedOverlapped() {
+        return nonAlignedOverlap.get();
     }
 
     public long getFailsNoVHits() {
@@ -99,27 +145,19 @@ public final class AlignerReport implements VDJCAlignerEventListener, ReportWrit
     @Override
     public void writeReport(ReportHelper helper) {
         long total = getTotal();
-        long success = successes.get();
+        long success = getSuccess();
         helper.writeField("Total sequencing reads", total);
         helper.writePercentAndAbsoluteField("Successfully aligned reads", success, total);
 
         if (chimeras.get() != 0)
-            helper.writePercentAndAbsoluteField("Chimeras", chimeras.get(), total);
+            helper.writePercentAndAbsoluteField("Chimeras", getChimeras(), total);
 
         for (VDJCAlignmentFailCause cause : VDJCAlignmentFailCause.values())
             if (fails.get(cause.ordinal()) != 0)
                 helper.writePercentAndAbsoluteField(cause.reportLine, fails.get(cause.ordinal()), total);
 
-        helper.writePercentAndAbsoluteField("Overlapped", alignedOverlap.get() + nonAlignedOverlap.get(), total);
-        helper.writePercentAndAbsoluteField("Overlapped and aligned", alignedOverlap.get(), total);
-        helper.writePercentAndAbsoluteField("Overlapped and not aligned", nonAlignedOverlap.get(), total);
-    }
-
-    public long getTotal() {
-        long total = 0;
-        for (int i = 0; i < fails.length(); ++i)
-            total += fails.get(i);
-        total += successes.get();
-        return total;
+        helper.writePercentAndAbsoluteField("Overlapped", getOverlapped(), total);
+        helper.writePercentAndAbsoluteField("Overlapped and aligned", getAlignedOverlap(), total);
+        helper.writePercentAndAbsoluteField("Overlapped and not aligned", getNonAlignedOverlap(), total);
     }
 }
