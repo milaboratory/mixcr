@@ -556,6 +556,21 @@ public final class FieldExtractors {
                     }
                 });
             }
+
+            descriptorsList.add(new PL_O("-chains", "Chains", "Chains", "Chains") {
+                @Override
+                protected String extract(VDJCObject object) {
+                    return object.commonChains().toString();
+                }
+            });
+
+            descriptorsList.add(new PL_O("-topChains", "Top chains", "Top chains", "topChains") {
+                @Override
+                protected String extract(VDJCObject object) {
+                    return object.commonTopChains().toString();
+                }
+            });
+
             descriptors = descriptorsList.toArray(new Field[descriptorsList.size()]);
         }
 
