@@ -18,11 +18,6 @@ MiXCR is free for academic and non-profit use (see :ref:`License <license>`).
 
    *MiXCR pipeline. The workflow from IG or T-cell receptor data sets to final clonotypes is shown*
 
-:ref:`getting-started`
-:ref:`main-actions`
-:ref:`special-cases`
-:ref:`in-depth-topics`
-
 .. _getting-started:
 
 .. toctree::
