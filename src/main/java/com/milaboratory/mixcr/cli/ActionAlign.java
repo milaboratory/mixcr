@@ -348,7 +348,7 @@ public class ActionAlign implements Action {
         public long limit = 0;
 
         @Parameter(description = "Do not merge paired reads.",
-                names = {"-d", "--noMerge"})
+                names = {"-d", "--no-merge"})
         public Boolean noMerge;
 
         @Parameter(description = "Copy read(s) description line from .fastq or .fasta to .vdjca file (can then be " +
