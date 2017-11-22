@@ -79,6 +79,11 @@ public class ActionAlign implements Action {
     @Override
     @SuppressWarnings("unchecked")
     public void go(ActionHelper helper) throws Exception {
+        // FIXME remove in 2.2
+        if (actionParameters.printNonFunctionalWarnings())
+            System.out.println("WARNING: -wf / --non-functional-warnings option is deprecated, will be removed in 2.2 " +
+                    "release. Use -v / --verbose instead.");
+
         // Saving initial timestamp
         long beginTimestamp = System.currentTimeMillis();
 
@@ -92,6 +97,7 @@ public class ActionAlign implements Action {
                 throw new ProcessException("Failed to override some parameter.");
         }
 
+        // FIXME remove in 2.2
         if (actionParameters.allowDifferentVJLoci != null && actionParameters.allowDifferentVJLoci) {
             System.out.println("Warning: usage of --diff-loci is deprecated. Use -OallowChimeras=true instead.");
             alignerParameters.setAllowChimeras(true);
@@ -112,14 +118,13 @@ public class ActionAlign implements Action {
         System.out.println("Reference library: " + library.getLibraryId());
 
         for (VDJCGene gene : library.getGenes(actionParameters.getChains())) {
-            if (gene.getGeneType() == GeneType.Variable)
+            if (gene.getGeneType() == GeneType.Variable) {
                 totalV++;
-            else
-                continue;
-            if (!alignerParameters.containsRequiredFeature(gene)) {
-                totalVErrors++;
-                if (gene.getPartitioning().isAvailable(correctingFeature))
-                    hasVRegion++;
+                if (!alignerParameters.containsRequiredFeature(gene)) {
+                    totalVErrors++;
+                    if (gene.getPartitioning().isAvailable(correctingFeature))
+                        hasVRegion++;
+                }
             }
         }
 
@@ -131,41 +136,45 @@ public class ActionAlign implements Action {
             alignerParameters.getVAlignerParameters().setGeneFeatureToAlign(correctingFeature);
         }
 
-        //boolean warnings = false;
-
         int numberOfExcludedNFGenes = 0;
         int numberOfExcludedFGenes = 0;
         for (VDJCGene gene : library.getGenes(actionParameters.getChains())) {
-            if (!alignerParameters.containsRequiredFeature(gene)) {
-                if (params().printWarnings() && (gene.isFunctional() || params().printNonFunctionalWarnings())) {
+            NucleotideSequence featureSequence = alignerParameters.extractFeatureToAlign(gene);
+
+            // exclusionReason is null ==> gene is not excluded
+            String exclusionReason = null;
+            if (featureSequence == null)
+                exclusionReason = "absent " + GeneFeature.encode(alignerParameters.getFeatureToAlign(gene.getGeneType()));
+            else if (featureSequence.containsWildcards())
+                exclusionReason = "wildcard symbols in " + GeneFeature.encode(alignerParameters.getFeatureToAlign(gene.getGeneType()));
+
+            if (exclusionReason == null)
+                aligner.addGene(gene); // If there are no reasons to exclude the gene, adding it to aligner
+            else {
+                if (gene.isFunctional()) {
                     ++numberOfExcludedFGenes;
-                    if (numberOfExcludedFGenes < 2)
-                        System.out.println("WARNING: " + (gene.isFunctional() ? "Functional gene" : "Gene") + " " + gene.getName() +
-                                " doesn't contain full " + GeneFeature.encode(alignerParameters
-                                .getFeatureToAlign(gene.getGeneType())) + " (excluded)");
-                    //warnings = true;
-                }
-                if (!gene.isFunctional())
+                    if (actionParameters.verbose())
+                        System.out.println("WARNING: Functional gene " + gene.getName() +
+                                " excluded due to " + exclusionReason);
+                } else
                     ++numberOfExcludedNFGenes;
-                continue;
             }
-            aligner.addGene(gene);
         }
 
-        if (numberOfExcludedFGenes > 1)
-            System.out.println("WARNING: ... " + (numberOfExcludedFGenes - 1) + " more functional genes excluded due to absent " +
-                    "\"featureToAlign\".");
+        if (actionParameters.printWarnings() && numberOfExcludedFGenes > 0)
+            System.out.println("WARNING: " + numberOfExcludedFGenes + " functional genes were excluded, re-run " +
+                    "with -v option to see the list of excluded genes and exclusion reason.");
 
-        //if (numberOfExcludedNFGenes > 0 && !params().printNonFunctionalWarnings())
-        //    System.out.println("WARNING: " + numberOfExcludedNFGenes + " non-functional genes excluded due to absent \"featureToAlign\".");
+        if (actionParameters.verbose() && numberOfExcludedNFGenes > 0)
+            System.out.println("WARNING: " + numberOfExcludedNFGenes + " non-functional genes excluded.");
 
         if (aligner.getVGenesToAlign().isEmpty())
             throw new ProcessException("No V genes to align. Aborting execution. See warnings for more info " +
-                    "(turn warnings by adding -w option).");
+                    "(turn on verbose warnings by adding --verbose option).");
 
         if (aligner.getJGenesToAlign().isEmpty())
             throw new ProcessException("No J genes to align. Aborting execution. See warnings for more info " +
-                    "(turn warnings by adding -w option).");
+                    "(turn on verbose warnings by adding --verbose option).");
 
         AlignerReport report = new AlignerReport();
         aligner.setEventsListener(report);
@@ -287,9 +296,14 @@ public class ActionAlign implements Action {
                 names = {"-b", "--library"})
         public String library = "default";
 
+        // TODO remove in 2.2 release
         @Parameter(description = "Print warnings for non-functional V/D/J/C genes",
                 names = {"-wf", "--non-functional-warnings"})
         public Boolean nonFunctionalWarnings = null;
+
+        @Parameter(description = "Verbose warning messages.",
+                names = {"--verbose"})
+        public Boolean verbose = null;
 
         @Parameter(description = "Don't print warnings",
                 names = {"-nw", "--no-warnings"})
@@ -385,8 +399,15 @@ public class ActionAlign implements Action {
             return saveOriginalReads != null && saveOriginalReads;
         }
 
+        @Deprecated
         public boolean printNonFunctionalWarnings() {
             return nonFunctionalWarnings != null && nonFunctionalWarnings;
+        }
+
+        public boolean verbose() {
+            return (verbose != null && verbose) ||
+                    // FIXME remove in 2.2
+                    (nonFunctionalWarnings != null && nonFunctionalWarnings);
         }
 
         public boolean printWarnings() {
@@ -426,7 +447,7 @@ public class ActionAlign implements Action {
 
         @Override
         protected List<String> getOutputFiles() {
-            return Arrays.asList(getOutputName());
+            return Collections.singletonList(getOutputName());
         }
 
         @Override
@@ -439,6 +460,8 @@ public class ActionAlign implements Action {
                 throw new ParameterException("Wrong input for --not-aligned-R1,2");
             if (failedReadsR1 != null && (failedReadsR2 != null) != isInputPaired())
                 throw new ParameterException("Option --not-aligned-R2 is not set.");
+            if (!printWarnings() && verbose())
+                throw new ParameterException("-nw/--no-warnings and -v/--verbose options are not compatible.");
             super.validate();
         }
     }

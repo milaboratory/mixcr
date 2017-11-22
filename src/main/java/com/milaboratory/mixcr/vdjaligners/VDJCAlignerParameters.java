@@ -32,6 +32,7 @@ import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.milaboratory.core.PairedEndReadsLayout;
 import com.milaboratory.core.merger.MergerParameters;
+import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign;
 import com.milaboratory.primitivio.annotations.Serializable;
 import io.repseq.core.GeneFeature;
@@ -209,6 +210,11 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         return featureToAlign != null && gene.getPartitioning().isAvailable(featureToAlign);
     }
 
+    public NucleotideSequence extractFeatureToAlign(VDJCGene gene) {
+        GeneFeature featureToAlign = getFeatureToAlign(gene.getGeneType());
+        return featureToAlign == null ? null : gene.getFeature(featureToAlign);
+    }
+
     @JsonProperty("minSumScore")
     public float getMinSumScore() {
         return minSumScore;
@@ -260,10 +266,10 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         return params == null ? null : params.getGeneFeatureToAlign();
     }
 
-    public EnumMap<GeneType, GeneFeature> getFeaturesToAlignMap(){
+    public EnumMap<GeneType, GeneFeature> getFeaturesToAlignMap() {
         EnumMap<GeneType, GeneFeature> res = new EnumMap<>(GeneType.class);
         for (GeneType gt : GeneType.VDJC_REFERENCE)
-            res.put(gt,getFeatureToAlign(gt));
+            res.put(gt, getFeatureToAlign(gt));
         return res;
     }
 

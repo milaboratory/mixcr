@@ -1,0 +1,1 @@
+minor: Added proper filtering for alleles with wildcard symbols in `featureToAlign` region
