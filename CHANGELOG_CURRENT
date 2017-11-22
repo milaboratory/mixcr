@@ -1,1 +1,2 @@
-added chains column in export (-chains and -topChains)
+Added chains column in export (-chains and -topChains)
+minor: Added proper filtering for alleles with wildcard symbols in `featureToAlign` region
