@@ -1,4 +1,6 @@
-Added chains column in export (-chains and -topChains)
+Added JSON-formatted report, can be produced with `--json-report` option in `align`, `assemblePartial` and `assemble` actions
+Added chains column in export (`-chains` and `-topChains`)
+minor: Several new counters added to `align` report
 minor: Added proper filtering for alleles with wildcard symbols in `featureToAlign` region
 minor: Fixed bug in align report (wrong total count in rare cases) #265
 minor: Documentation added for `filterAlignments`

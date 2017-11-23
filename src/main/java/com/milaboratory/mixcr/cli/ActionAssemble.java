@@ -65,7 +65,7 @@ public class ActionAssemble implements Action {
         // Extracting V/D/J/C gene list from input vdjca file
         final List<VDJCGene> genes;
         final VDJCAlignerParameters alignerParameters;
-        try(VDJCAlignmentsReader reader = new VDJCAlignmentsReader(actionParameters.getInputFileName(),
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(actionParameters.getInputFileName(),
                 VDJCLibraryRegistry.getDefault())) {
             genes = reader.getUsedGenes();
             // Saving aligner parameters to correct assembler parameters
@@ -91,10 +91,15 @@ public class ActionAssemble implements Action {
         }
 
         // Performing assembly
-        try(CloneAssembler assembler = new CloneAssembler(assemblerParameters,
+        try (CloneAssembler assembler = new CloneAssembler(assemblerParameters,
                 actionParameters.readsToClonesMapping != null, genes, alignerParameters.getFeaturesToAlignMap())) {
             // Creating event listener to collect run statistics
             CloneAssemblerReport report = new CloneAssemblerReport();
+            report.setStartMillis(beginTimestamp);
+            report.setInputFiles(new String[]{actionParameters.getInputFileName()});
+            report.setOutputFiles(new String[]{actionParameters.getOutputFileName()});
+            report.setCommandLine(helper.getCommandLineArguments());
+
             assembler.setListener(report);
 
             // Running assembler
@@ -107,18 +112,18 @@ public class ActionAssemble implements Action {
             // Getting results
             final CloneSet cloneSet = assemblerRunner.getCloneSet();
 
-            ChainUsageStats chainsStatistics = new ChainUsageStats();
-            for (Clone clone : cloneSet)
-                chainsStatistics.put(clone);
+            // Passing final cloneset to assemble last pieces of statistics for report
+            report.onClonesetFinished(cloneSet);
 
             // Writing results
-            try(CloneSetIO.CloneSetWriter writer = new CloneSetIO.CloneSetWriter(cloneSet, actionParameters.getOutputFileName())) {
+            try (CloneSetIO.CloneSetWriter writer = new CloneSetIO.CloneSetWriter(cloneSet, actionParameters.getOutputFileName())) {
                 SmartProgressReporter.startProgressReport(writer);
                 writer.write();
             }
 
             // Writing report
-            long time = System.currentTimeMillis() - beginTimestamp;
+
+            report.setFinishMillis(System.currentTimeMillis());
 
             assert cloneSet.getClones().size() == report.getCloneCount();
 
@@ -126,15 +131,17 @@ public class ActionAssemble implements Action {
 
             // Writing report to stout
             System.out.println("============= Report ==============");
-            Util.writeReportToStdout(time, report, chainsStatistics);
+            Util.writeReportToStdout(report);
 
             if (actionParameters.report != null)
-                Util.writeReport(actionParameters.getInputFileName(), actionParameters.getOutputFileName(),
-                        helper.getCommandLineArguments(), actionParameters.report, time, report, chainsStatistics);
+                Util.writeReport(actionParameters.report, report);
+
+            if (actionParameters.jsonReport != null)
+                Util.writeJsonReport(actionParameters.jsonReport, report);
 
             // Writing raw events (not documented feature)
             if (actionParameters.events != null)
-                try(PipeWriter<ReadToCloneMapping> writer = new PipeWriter<>(actionParameters.events)) {
+                try (PipeWriter<ReadToCloneMapping> writer = new PipeWriter<>(actionParameters.events)) {
                     CUtils.drain(assembler.getAssembledReadsPort(), writer);
                 }
 
@@ -168,9 +175,13 @@ public class ActionAssemble implements Action {
                 names = {"-t", "--threads"}, validateWith = PositiveInteger.class)
         public int threads = Runtime.getRuntime().availableProcessors();
 
-        @Parameter(description = "Report file.",
+        @Parameter(description = "Report file",
                 names = {"-r", "--report"})
         public String report;
+
+        @Parameter(description = "JSON report file.",
+                names = {"--json-report"})
+        public String jsonReport = null;
 
         @Parameter(description = ".",
                 names = {"-e", "--events"}, hidden = true)

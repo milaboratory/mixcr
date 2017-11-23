@@ -102,12 +102,14 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                     false);
 
             if (mergeResult.failedDueInconsistentAlignments()) {
-                GeneType gt = mergeResult.getFailedMergedGeneType();
+                GeneType geneType = mergeResult.getFailedMergedGeneType();
                 int removeId =
-                        alignment.getBestHit(gt).getAlignment(0).getScore()
-                                > alignment.getBestHit(gt).getAlignment(1).getScore()
+                        alignment.getBestHit(geneType).getAlignment(0).getScore()
+                                > alignment.getBestHit(geneType).getAlignment(1).getScore()
                                 ? 1 : 0;
-                return new VDJCAlignmentResult<>(input, alignment.removeBestHitAlignment(gt, removeId));
+                if (listener != null)
+                    listener.onTopHitSequenceConflict(input, alignment, geneType);
+                return new VDJCAlignmentResult<>(input, alignment.removeBestHitAlignment(geneType, removeId));
             } else if (mergeResult.isSuccessful()) {
                 NSequenceWithQuality alignedTarget = mergeResult.getResult().getTarget();
                 SingleRead sRead = new SingleReadImpl(input.getId(), alignedTarget, "");
@@ -116,6 +118,8 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                     return result;
                 VDJCAlignments sAlignment = sResult.alignment;
                 sAlignment.setTargetDescriptions(new String[]{"AOverlap(" + mergeResult.getMatched() + ")"});
+                if (listener != null)
+                    listener.onSuccessfulAlignmentOverlap(input, sAlignment);
                 return new VDJCAlignmentResult<>(input, sAlignment);
             }
         }

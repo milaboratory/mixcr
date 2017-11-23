@@ -12,7 +12,7 @@ import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.cli.ReportHelper;
-import com.milaboratory.mixcr.cli.ReportWriter;
+import com.milaboratory.mixcr.cli.Report;
 import io.repseq.core.*;
 
 import java.util.Arrays;
@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * @author Stanislav Poslavsky
  */
-public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAlignments>, ReportWriter {
+public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAlignments>, Report {
     final Chains chains;
     final byte extensionQuality;
     final AlignmentScoring<NucleotideSequence> vScoring, jScoring;

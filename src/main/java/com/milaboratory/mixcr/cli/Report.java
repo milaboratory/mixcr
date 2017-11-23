@@ -37,6 +37,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
         setterVisibility = JsonAutoDetect.Visibility.NONE,
         creatorVisibility = JsonAutoDetect.Visibility.NONE
 )
-public interface ReportWriter {
+public interface Report {
     void writeReport(ReportHelper helper);
 }

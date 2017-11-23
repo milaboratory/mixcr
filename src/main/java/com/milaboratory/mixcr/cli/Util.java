@@ -28,14 +28,18 @@
  */
 package com.milaboratory.mixcr.cli;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
+import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.TimeUtils;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import io.repseq.core.Chains;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.channels.FileLock;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
@@ -48,51 +52,35 @@ public final class Util {
     }
 
     public static final DecimalFormat PERCENT_FORMAT = new DecimalFormat("#.##");
-    
-    public static void writeReport(String input, String output,
-                                   String commandLineArguments,
-                                   String reportFileName,
-                                   ReportWriter reportWriter) {
-        writeReport(input, output, commandLineArguments, reportFileName, -1, reportWriter);
+
+    public static void writeReportToStdout(Report report) {
+        report.writeReport(new ReportHelper(System.out, true));
     }
 
-    public static void writeReportToStdout(long milliseconds, ReportWriter... reportWriters) {
-        ReportHelper helper = new ReportHelper(System.out);
-
-        if (milliseconds != -1)
-            helper.writeField("Analysis time", TimeUtils.nanoTimeToString(milliseconds * 1000_000));
-
-        for (ReportWriter wr : reportWriters)
-            wr.writeReport(helper);
-
-    }
-
-    public static void writeReport(String input, String output,
-                                   String commandLineArguments,
-                                   String reportFileName,
-                                   long milliseconds, ReportWriter... reportWriters) {
-        File file = new File(reportFileName);
-        boolean newFile = !file.exists();
-        try (FileOutputStream outputStream = new FileOutputStream(file, !newFile)) {
-            ReportHelper helper = new ReportHelper(outputStream);
-            helper.writeField("Analysis Date", new Date())
-                    .writeField("Input file(s)", input)
-                    .writeField("Output file", output)
-                    .writeField("Version", MiXCRVersionInfo.get().getShortestVersionString());
-
-            if (milliseconds != -1)
-                helper.writeField("Analysis time", TimeUtils.nanoTimeToString(milliseconds * 1000_000));
-
-            if (commandLineArguments != null)
-                helper.writeField("Command line arguments", commandLineArguments);
-
-            for (ReportWriter wrt : reportWriters)
-                wrt.writeReport(helper);
-
-            helper.end();
+    static void appendAtomically(String reportFileName, byte[] content) {
+        try (FileOutputStream outputStream = new FileOutputStream(new File(reportFileName));
+             // Lock here used to synchronize concurrent writes to the same file
+             FileLock lock = outputStream.getChannel().lock()) {
+            // Appending report at the end of the file
+            outputStream.getChannel().position(outputStream.getChannel().size());
+            // Writing content
+            outputStream.write(content);
         } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
+    }
+
+    public static void writeReport(String reportFileName, Report report) {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ReportHelper helper = new ReportHelper(bos, false);
+        report.writeReport(helper);
+        helper.end();
+        appendAtomically(reportFileName, bos.toByteArray());
+    }
+
+    public static void writeJsonReport(String reportFileName, Report report) throws JsonProcessingException {
+        String content = GlobalObjectMappers.toOneLine(report) + "\n";
+        appendAtomically(reportFileName, content.getBytes(StandardCharsets.UTF_8));
     }
 
 

@@ -35,7 +35,7 @@ import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.cli.ReportHelper;
-import com.milaboratory.mixcr.cli.ReportWriter;
+import com.milaboratory.mixcr.cli.Report;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.hash.TLongHashSet;
@@ -48,7 +48,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static com.milaboratory.mixcr.vdjaligners.VDJCAlignerWithMerge.getMMDescr;
 
-public class PartialAlignmentsAssembler implements AutoCloseable, ReportWriter {
+public class PartialAlignmentsAssembler implements AutoCloseable, Report {
     final TLongObjectHashMap<List<KMerInfo>> kToIndexLeft = new TLongObjectHashMap<>();
     final TLongHashSet alreadyMergedIds = new TLongHashSet();
     final TLongHashSet notInLeftIndexIds = new TLongHashSet();
