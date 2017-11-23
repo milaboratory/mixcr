@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * Copyright (c) 2014-2017, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
  * (here and after addressed as Inventors)
  * All Rights Reserved
  *
@@ -28,16 +28,12 @@
  */
 package com.milaboratory.mixcr.cli;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-@JsonAutoDetect(
-        getterVisibility = JsonAutoDetect.Visibility.NONE,
-        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-        fieldVisibility = JsonAutoDetect.Visibility.NONE,
-        setterVisibility = JsonAutoDetect.Visibility.NONE,
-        creatorVisibility = JsonAutoDetect.Visibility.NONE
-)
-public interface Report {
-    void writeReport(ReportHelper helper);
+public interface ActionReport extends Report {
+    /**
+     * Action (e.g. align, assemble, etc.) that produced this report.
+     */
+    @JsonProperty("action")
+    String getAction();
 }

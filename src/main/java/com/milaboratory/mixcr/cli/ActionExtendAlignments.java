@@ -40,7 +40,7 @@ public class ActionExtendAlignments implements Action {
                     parameters.minimalVScore, parameters.minimalJScore,
                     ReferencePoint.parse(parameters.vAnchorPoint),
                     ReferencePoint.parse(parameters.jAnchorPoint));
-            ReportWrapper report = new ReportWrapper(extender);
+            ReportWrapper report = new ReportWrapper(command(), extender);
             report.setStartMillis(beginTimestamp);
             report.setInputFiles(new String[]{parameters.getInput()});
             report.setOutputFiles(new String[]{parameters.getOutput()});

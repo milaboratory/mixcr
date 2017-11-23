@@ -1,4 +1,5 @@
-Added JSON-formatted report, can be produced with `--json-report` option in `align`, `assemblePartial` and `assemble` actions
+Report file appends made atomic. Now you can safely specify the same report file in several invocations of MiXCR even if you run several instances of MiXCR in parallel. Should also work for NFS etc if file locking is supported.
+(beta) Added JSON-formatted reports. Use `--json-report` option in `align`, `extendAlignments`, `assemblePartial` or `assemble` actions to append json report to the end of the file ([jsonl](http://jsonlines.org/)). This feature intended ot simplify batch analysis, and analysis automation. E.g. [jq](https://stedolan.github.io/jq/) util can be used to aggregate information from multi-json-report file.
 Added chains column in export (`-chains` and `-topChains`)
 minor: Several new counters added to `align` report
 minor: Added proper filtering for alleles with wildcard symbols in `featureToAlign` region

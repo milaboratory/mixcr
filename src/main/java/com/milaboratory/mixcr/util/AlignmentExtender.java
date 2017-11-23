@@ -55,6 +55,10 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
         this.jRightExtensionRefPoint = jRightExtensionRefPoint;
     }
 
+    public String getAction() {
+        return null;
+    }
+
     @Override
     public VDJCAlignments process(VDJCAlignments input) {
         VDJCAlignments originalInput = input;

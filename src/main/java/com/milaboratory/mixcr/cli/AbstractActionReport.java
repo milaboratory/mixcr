@@ -35,7 +35,7 @@ import com.milaboratory.util.TimeUtils;
 
 import java.util.Date;
 
-public abstract class AbstractReport implements Report {
+public abstract class AbstractActionReport implements ActionReport {
     private Date date = new Date();
     private String commandLine;
     private String[] inputFiles, outputFiles;

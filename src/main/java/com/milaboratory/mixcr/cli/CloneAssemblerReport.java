@@ -38,7 +38,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-public final class CloneAssemblerReport extends AbstractReport implements CloneAssemblerListener {
+public final class CloneAssemblerReport extends AbstractActionReport implements CloneAssemblerListener {
     private final ChainUsageStats chainStats = new ChainUsageStats();
     long totalReads = -1;
     final AtomicInteger clonesCreated = new AtomicInteger();
@@ -55,6 +55,11 @@ public final class CloneAssemblerReport extends AbstractReport implements CloneA
     final AtomicInteger clonesPreClustered = new AtomicInteger();
     final AtomicLong readsPreClustered = new AtomicLong();
     final AtomicLong readsClustered = new AtomicLong();
+
+    @Override
+    public String getAction() {
+        return "assemble";
+    }
 
     @JsonProperty("totalReadsProcessed")
     public long getTotalReads() {

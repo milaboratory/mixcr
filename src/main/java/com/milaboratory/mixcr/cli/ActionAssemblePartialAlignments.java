@@ -47,7 +47,7 @@ public final class ActionAssemblePartialAlignments implements Action {
         try (PartialAlignmentsAssembler assembler = new PartialAlignmentsAssembler(assemblerParameters,
                 parameters.getOutputFileName(), !parameters.doDropPartial(),
                 parameters.getOverlappedOnly())) {
-            ReportWrapper report = new ReportWrapper(assembler);
+            ReportWrapper report = new ReportWrapper(command(), assembler);
             report.setStartMillis(beginTimestamp);
             report.setInputFiles(parameters.getInputFileName());
             report.setOutputFiles(parameters.getOutputFileName());
