@@ -30,7 +30,7 @@ package com.milaboratory.mixcr.cli;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
-public class ReportWrapper extends AbstractReport {
+public final class ReportWrapper extends AbstractReport {
     private final Report innerReport;
 
     public ReportWrapper(Report innerReport) {

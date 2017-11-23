@@ -38,10 +38,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -57,14 +61,15 @@ public final class Util {
         report.writeReport(new ReportHelper(System.out, true));
     }
 
-    static void appendAtomically(String reportFileName, byte[] content) {
-        try (FileOutputStream outputStream = new FileOutputStream(new File(reportFileName));
-             // Lock here used to synchronize concurrent writes to the same file
-             FileLock lock = outputStream.getChannel().lock()) {
-            // Appending report at the end of the file
-            outputStream.getChannel().position(outputStream.getChannel().size());
-            // Writing content
-            outputStream.write(content);
+    static void appendAtomically(String fileName, byte[] content) {
+        appendAtomically(new File(fileName), content);
+    }
+
+    static void appendAtomically(File file, byte[] content) {
+        try (FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.WRITE);
+             FileLock lock = channel.lock()) {
+            channel.position(channel.size());
+            channel.write(ByteBuffer.wrap(content));
         } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }

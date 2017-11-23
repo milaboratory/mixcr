@@ -28,6 +28,7 @@
  */
 package com.milaboratory.mixcr.cli;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.util.TimeUtils;
@@ -41,6 +42,7 @@ public abstract class AbstractReport implements Report {
     private long startMillis, finishMillis;
 
     @JsonProperty("timestamp")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSSZ")
     public Date getDate() {
         return date;
     }

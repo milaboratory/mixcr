@@ -28,12 +28,33 @@
  */
 package com.milaboratory.mixcr.cli;
 
+import com.milaboratory.core.io.util.IOTestUtil;
+import com.milaboratory.test.TestUtil;
+import com.milaboratory.util.TempFileManager;
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class UtilTest {
+    @Test
+    public void testAtomicAppend1() throws Exception {
+        File file = TempFileManager.getTempFile();
+        Util.appendAtomically(file, "ATTAG".getBytes());
+        Util.appendAtomically(file, "GACAG".getBytes());
+        byte[] bytes = Files.readAllBytes(file.toPath());
+        Assert.assertEquals("ATTAGGACAG", new String(bytes));
+    }
+
+    // No way to make single JVM concurrent write test for appendAtomically
+
     @Ignore
     @Test
     public void testColumns1() throws Exception {

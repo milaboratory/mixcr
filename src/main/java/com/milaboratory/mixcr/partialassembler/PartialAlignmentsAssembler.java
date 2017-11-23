@@ -29,6 +29,7 @@
 package com.milaboratory.mixcr.partialassembler;
 
 import cc.redberry.pipe.CUtils;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
@@ -62,7 +63,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
     public final AtomicLong leftParts = new AtomicLong(),
             rightParts = new AtomicLong(),
             noKMer = new AtomicLong(),
-            wildCardsInKMer = new AtomicLong(),
+            wildcardsInKMer = new AtomicLong(),
             kMerDiversity = new AtomicLong(),
             total = new AtomicLong(),
             overlapped = new AtomicLong(),
@@ -461,6 +462,76 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
         return usingAlignment ? "A" : "S";
     }
 
+    @JsonProperty("totalProcessed")
+    public long getTotalProcessed() {
+        return total.get();
+    }
+
+    @JsonProperty("outputAlignments")
+    public long getOutputAlignments() {
+        return totalWritten.get();
+    }
+
+    @JsonProperty("withCDR3")
+    public long getContainsCDR3() {
+        return containsCDR3.get();
+    }
+
+    @JsonProperty("overlapped")
+    public long getOverlapped() {
+        return overlapped.get();
+    }
+
+    @JsonProperty("leftTooShortNRegion")
+    public long getLeftShortNRegion() {
+        return noKMer.get();
+    }
+
+    @JsonProperty("kMerDiversity")
+    public long getKMerDiversity() {
+        return kMerDiversity.get();
+    }
+
+    @JsonProperty("droppedWildcardsInKMer")
+    public long getWildcardsInKMer() {
+        return wildcardsInKMer.get();
+    }
+
+    @JsonProperty("droppedSmallOverlapNRegion")
+    public long getDroppedSmallOverlapNRegion() {
+        return droppedSmallOverlapNRegion.get();
+    }
+
+    @JsonProperty("droppedNoNRegion")
+    public long getDroppedNoNRegion() {
+        return droppedNoNRegion.get();
+    }
+
+    @JsonProperty("leftParts")
+    public long getLeftParts() {
+        return leftParts.get();
+    }
+
+    @JsonProperty("rightParts")
+    public long getRightParts() {
+        return rightParts.get();
+    }
+
+    @JsonProperty("complexOverlaps")
+    public long getComplexOverlaps() {
+        return complexOverlapped.get();
+    }
+
+    @JsonProperty("overOverlaps")
+    public long getOverOverlapped() {
+        return overoverlapped.get();
+    }
+
+    @JsonProperty("partialAlignmentsAsIs")
+    public long getPartialAlignmentsAsIs() {
+        return partialAsIs.get();
+    }
+
     @Override
     public void writeReport(ReportHelper helper) {
         long total = this.total.get();
@@ -470,7 +541,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
         helper.writePercentAndAbsoluteField("Successfully overlapped alignments", overlapped, total);
         helper.writePercentAndAbsoluteField("Left parts with too small N-region (failed to extract k-mer)", noKMer, total);
         helper.writeField("Extracted k-mer diversity", kMerDiversity);
-        helper.writePercentAndAbsoluteField("Dropped due to wildcard in k-mer", wildCardsInKMer, total);
+        helper.writePercentAndAbsoluteField("Dropped due to wildcard in k-mer", wildcardsInKMer, total);
         helper.writePercentAndAbsoluteField("Dropped due to too short NRegion parts in overlap", droppedSmallOverlapNRegion, total);
         helper.writePercentAndAbsoluteField("Dropped overlaps with empty N region due to no complete NDN coverage", droppedNoNRegion, total);
         helper.writePercentAndAbsoluteField("Number of left-side alignments", leftParts, total);
@@ -550,7 +621,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
         for (int kFrom = kFromFirst; kFrom < seq.size() - kValue; ++kFrom) {
             long kmer = kMer(seq.getSequence(), kFrom, kValue);
             if (kmer == -1) {
-                wildCardsInKMer.incrementAndGet();
+                wildcardsInKMer.incrementAndGet();
                 continue;
             }
 
