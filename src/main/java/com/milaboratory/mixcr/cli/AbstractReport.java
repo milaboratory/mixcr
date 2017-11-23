@@ -74,11 +74,11 @@ public abstract class AbstractReport implements Report {
         this.commandLine = commandLine;
     }
 
-    public void setInputFiles(String[] inputFiles) {
+    public void setInputFiles(String... inputFiles) {
         this.inputFiles = inputFiles;
     }
 
-    public void setOutputFiles(String[] outputFiles) {
+    public void setOutputFiles(String... outputFiles) {
         this.outputFiles = outputFiles;
     }
 

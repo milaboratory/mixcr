@@ -1,6 +1,7 @@
 package com.milaboratory.mixcr.util;
 
 import cc.redberry.pipe.Processor;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.AlignmentScoring;
@@ -346,17 +347,62 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
         return input;
     }
 
+    @JsonProperty("totalProcessed")
+    public long getTotalProcessed() {
+        return total.get();
+    }
+
+    @JsonProperty("totalExtended")
+    public long getTotalExtended() {
+        return vExtended.get() + jExtended.get() - vjExtended.get();
+    }
+
+    @JsonProperty("vExtended")
+    public long getVExtended() {
+        return vExtended.get();
+    }
+
+    @JsonProperty("vExtendedMerged")
+    public long getVExtendedMerged() {
+        return vExtendedMerged.get();
+    }
+
+    @JsonProperty("jExtended")
+    public long getJExtended() {
+        return jExtended.get();
+    }
+
+    @JsonProperty("jExtendedMerged")
+    public long getJExtendedMerged() {
+        return jExtendedMerged.get();
+    }
+
+    @JsonProperty("vjExtended")
+    public long getVJExtended() {
+        return jExtendedMerged.get();
+    }
+
+    @JsonProperty("meanVExtensionLength")
+    public double getMeanVExtensionLength() {
+        return 1.0 * vExtensionLength.get() / vExtended.get();
+    }
+
+    @JsonProperty("meanJExtensionLength")
+    public double getMeanJExtensionLength() {
+        return 1.0 * jExtensionLength.get() / jExtended.get();
+    }
+
     @Override
     public void writeReport(ReportHelper helper) {
         long total = this.total.get();
-        helper.writePercentAndAbsoluteField("Extended alignments count", vExtended.get() + jExtended.get() - vjExtended.get(), total);
-        helper.writePercentAndAbsoluteField("V extensions total", vExtended, total);
-        helper.writePercentAndAbsoluteField("V extensions with merged targets", vExtendedMerged, total);
-        helper.writePercentAndAbsoluteField("J extensions total", jExtended, total);
-        helper.writePercentAndAbsoluteField("J extensions with merged targets", jExtendedMerged, total);
-        helper.writePercentAndAbsoluteField("V+J extensions", vjExtended, total);
-        helper.writeField("Mean V extension length", 1.0 * vExtensionLength.get() / vExtended.get());
-        helper.writeField("Mean J extension length", 1.0 * jExtensionLength.get() / jExtended.get());
+        helper.writePercentAndAbsoluteField("Extended alignments count", getTotalExtended(), total);
+        helper.writePercentAndAbsoluteField("V extensions total", getVExtended(), total);
+        helper.writePercentAndAbsoluteField("V extensions with merged targets", getVExtendedMerged(), total);
+        helper.writePercentAndAbsoluteField("J extensions total", getJExtended(), total);
+        helper.writePercentAndAbsoluteField("J extensions with merged targets", getJExtendedMerged(), total);
+        helper.writePercentAndAbsoluteField("V+J extensions", getVJExtended(), total);
+        helper.writeField("Mean V extension length", getMeanVExtensionLength());
+        helper.writeField("Mean J extension length", getMeanJExtensionLength());
     }
 
     /**

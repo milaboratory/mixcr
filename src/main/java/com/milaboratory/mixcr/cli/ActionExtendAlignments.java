@@ -28,7 +28,7 @@ public class ActionExtendAlignments implements Action {
 
     @Override
     public void go(ActionHelper helper) throws Exception {
-        long time = System.currentTimeMillis();
+        long beginTimestamp = System.currentTimeMillis();
         try (final VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getInput());
              final VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(parameters.getOutput())) {
             SmartProgressReporter.startProgressReport("Processing", reader);
@@ -40,6 +40,11 @@ public class ActionExtendAlignments implements Action {
                     parameters.minimalVScore, parameters.minimalJScore,
                     ReferencePoint.parse(parameters.vAnchorPoint),
                     ReferencePoint.parse(parameters.jAnchorPoint));
+            ReportWrapper report = new ReportWrapper(extender);
+            report.setStartMillis(beginTimestamp);
+            report.setInputFiles(new String[]{parameters.getInput()});
+            report.setOutputFiles(new String[]{parameters.getOutput()});
+            report.setCommandLine(helper.getCommandLineArguments());
 
             ParallelProcessor<VDJCAlignments, VDJCAlignments> pp = new ParallelProcessor<>(reader, extender, 2);
             for (VDJCAlignments alignments : CUtils.it(new OrderedOutputPort<>(pp,
@@ -52,14 +57,17 @@ public class ActionExtendAlignments implements Action {
                 writer.write(alignments);
             writer.setNumberOfProcessedReads(reader.getNumberOfReads());
 
-            time = System.currentTimeMillis() - time;
+            report.setFinishMillis(System.currentTimeMillis());
 
             // Writing report to stout
             System.out.println("============= Report ==============");
-            Util.writeReportToStdout(time, extender);
+            Util.writeReportToStdout(report);
+
             if (parameters.report != null)
-                Util.writeReport(parameters.getInput(), parameters.getOutput(),
-                        helper.getCommandLineArguments(), parameters.report, time, extender);
+                Util.writeReport(parameters.report, report);
+
+            if (parameters.jsonReport != null)
+                Util.writeJsonReport(parameters.jsonReport, report);
         }
     }
 
@@ -85,6 +93,10 @@ public class ActionExtendAlignments implements Action {
         @Parameter(description = "Report file.",
                 names = {"-r", "--report"})
         public String report;
+
+        @Parameter(description = "JSON report file.",
+                names = {"--json-report"})
+        public String jsonReport = null;
 
         @Parameter(description = "Quality score of extended sequence.",
                 names = {"-q", "--quality"})
