@@ -28,26 +28,78 @@
  */
 package com.milaboratory.mixcr.cli;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerEventListener;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause;
+import io.repseq.core.GeneType;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 
-public final class AlignerReport implements VDJCAlignerEventListener, ReportWriter {
+public final class AlignerReport extends AbstractActionReport implements VDJCAlignerEventListener {
+    private final ChainUsageStats chainStats = new ChainUsageStats();
     private final AtomicLongArray fails = new AtomicLongArray(VDJCAlignmentFailCause.values().length);
     private final AtomicLong successes = new AtomicLong(0);
     private final AtomicLong chimeras = new AtomicLong(0);
-    private final AtomicLong alignedOverlap = new AtomicLong(0);
+    private final AtomicLong alignedSequenceOverlap = new AtomicLong(0);
+    private final AtomicLong alignedAlignmentOverlap = new AtomicLong(0);
     private final AtomicLong nonAlignedOverlap = new AtomicLong(0);
+    private final AtomicLong topHitConflict = new AtomicLong(0);
 
     public AlignerReport() {
     }
 
+    @Override
+    public String getAction() {
+        return "align";
+    }
+
     public long getFails(VDJCAlignmentFailCause cause) {
         return fails.get(cause.ordinal());
+    }
+
+    @JsonProperty("totalReadsProcessed")
+    public long getTotal() {
+        long total = 0;
+        for (int i = 0; i < fails.length(); ++i)
+            total += fails.get(i);
+        total += successes.get();
+        return total;
+    }
+
+    @JsonProperty("aligned")
+    public long getSuccess() {
+        return successes.get();
+    }
+
+    @JsonProperty("notAligned")
+    public long getNonAlignedTotal() {
+        long val = 0;
+        for (int i = 0; i < fails.length(); i++)
+            val += fails.get(i);
+        return val;
+    }
+
+    @JsonProperty("notAlignedReasons")
+    public Map<String, Long> getFailsMap() {
+        Map<String, Long> map = new HashMap<>();
+        for (VDJCAlignmentFailCause cause : VDJCAlignmentFailCause.values())
+            map.put(cause.toString(), fails.get(cause.ordinal()));
+        return map;
+    }
+
+    @JsonProperty("chimeras")
+    public long getChimeras() {
+        return chimeras.get();
+    }
+
+    @JsonProperty("overlapped")
+    public long getOverlapped() {
+        return getAlignedOverlaps() + nonAlignedOverlap.get();
     }
 
     public long getFailsNoVHits() {
@@ -66,12 +118,24 @@ public final class AlignerReport implements VDJCAlignerEventListener, ReportWrit
         return successes.get();
     }
 
-    public long getAlignedOverlap() {
-        return alignedOverlap.get();
+    @JsonProperty("alignmentAidedOverlaps")
+    public long getAlignmentOverlaps() {
+        return alignedAlignmentOverlap.get();
     }
 
-    public long getNonAlignedOverlap() {
+    @JsonProperty("overlappedAligned")
+    public long getAlignedOverlaps() {
+        return alignedSequenceOverlap.get() + alignedAlignmentOverlap.get();
+    }
+
+    @JsonProperty("overlappedNotAligned")
+    public long getNonAlignedOverlaps() {
         return nonAlignedOverlap.get();
+    }
+
+    @JsonProperty("pairedEndAlignmentConflicts")
+    public long getTopHitSequenceConflicts() {
+        return topHitConflict.get();
     }
 
     @Override
@@ -85,11 +149,23 @@ public final class AlignerReport implements VDJCAlignerEventListener, ReportWrit
     }
 
     @Override
-    public void onSuccessfulOverlap(SequenceRead read, VDJCAlignments alignments) {
+    public void onSuccessfulSequenceOverlap(SequenceRead read, VDJCAlignments alignments) {
         if (alignments == null)
             nonAlignedOverlap.incrementAndGet();
         else
-            alignedOverlap.incrementAndGet();
+            alignedSequenceOverlap.incrementAndGet();
+    }
+
+    @Override
+    public void onSuccessfulAlignmentOverlap(SequenceRead read, VDJCAlignments alignments) {
+        if (alignments == null)
+            throw new IllegalArgumentException();
+        alignedAlignmentOverlap.incrementAndGet();
+    }
+
+    @Override
+    public void onTopHitSequenceConflict(SequenceRead read, VDJCAlignments alignments, GeneType geneType) {
+        topHitConflict.incrementAndGet();
     }
 
     public void onChimera() {
@@ -98,28 +174,30 @@ public final class AlignerReport implements VDJCAlignerEventListener, ReportWrit
 
     @Override
     public void writeReport(ReportHelper helper) {
+        // Writing common analysis information
+        writeSuperReport(helper);
+
         long total = getTotal();
-        long success = successes.get();
+        long success = getSuccess();
         helper.writeField("Total sequencing reads", total);
         helper.writePercentAndAbsoluteField("Successfully aligned reads", success, total);
 
-        if (chimeras.get() != 0)
-            helper.writePercentAndAbsoluteField("Chimeras", chimeras.get(), total);
+        if (getChimeras() != 0)
+            helper.writePercentAndAbsoluteField("Chimeras", getChimeras(), total);
+
+        if (getTopHitSequenceConflicts() != 0)
+            helper.writePercentAndAbsoluteField("Paired-end alignment conflicts eliminated", getTopHitSequenceConflicts(), total);
 
         for (VDJCAlignmentFailCause cause : VDJCAlignmentFailCause.values())
             if (fails.get(cause.ordinal()) != 0)
                 helper.writePercentAndAbsoluteField(cause.reportLine, fails.get(cause.ordinal()), total);
 
-        helper.writePercentAndAbsoluteField("Overlapped", alignedOverlap.get() + nonAlignedOverlap.get(), total);
-        helper.writePercentAndAbsoluteField("Overlapped and aligned", alignedOverlap.get(), total);
-        helper.writePercentAndAbsoluteField("Overlapped and not aligned", nonAlignedOverlap.get(), total);
-    }
+        helper.writePercentAndAbsoluteField("Overlapped", getOverlapped(), total);
+        helper.writePercentAndAbsoluteField("Overlapped and aligned", getAlignedOverlaps(), total);
+        helper.writePercentAndAbsoluteField("Alignment-aided overlaps", getAlignmentOverlaps(), getAlignedOverlaps());
+        helper.writePercentAndAbsoluteField("Overlapped and not aligned", getNonAlignedOverlaps(), total);
 
-    public long getTotal() {
-        long total = 0;
-        for (int i = 0; i < fails.length(); ++i)
-            total += fails.get(i);
-        total += successes.get();
-        return total;
+        // Writing distribution by chains
+        chainStats.writeReport(helper);
     }
 }

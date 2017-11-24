@@ -64,10 +64,14 @@ import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
 import com.milaboratory.util.CanReportProgress;
+import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.*;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 
 import static cc.redberry.pipe.CUtils.chunked;
@@ -177,9 +181,13 @@ public class ActionAlign implements Action {
                     "(turn on verbose warnings by adding --verbose option).");
 
         AlignerReport report = new AlignerReport();
-        aligner.setEventsListener(report);
+        report.setStartMillis(beginTimestamp);
+        report.setInputFiles(actionParameters.getInputsForReport());
+        report.setOutputFiles(actionParameters.getOutputsForReport());
+        report.setCommandLine(helper.getCommandLineArguments());
 
-        ChainUsageStats chainsStatistics = new ChainUsageStats();
+        // Attaching report to aligner
+        aligner.setEventsListener(report);
 
         try (SequenceReaderCloseable<? extends SequenceRead> reader = actionParameters.createReader();
 
@@ -231,8 +239,6 @@ public class ActionAlign implements Action {
                     }
                 }
 
-                chainsStatistics.put(alignment);
-
                 if (alignment.isChimera())
                     report.onChimera();
 
@@ -249,15 +255,17 @@ public class ActionAlign implements Action {
                 writer.setNumberOfProcessedReads(reader.getNumberOfReads());
         }
 
-        long time = System.currentTimeMillis() - beginTimestamp;
+        report.setFinishMillis(System.currentTimeMillis());
 
         // Writing report to stout
         System.out.println("============= Report ==============");
-        Util.writeReportToStdout(time, report, chainsStatistics);
+        Util.writeReportToStdout(report);
 
         if (actionParameters.report != null)
-            Util.writeReport(actionParameters.getInputForReport(), actionParameters.getOutputName(),
-                    helper.getCommandLineArguments(), actionParameters.report, time, report, chainsStatistics);
+            Util.writeReport(actionParameters.report, report);
+
+        if (actionParameters.jsonReport != null)
+            Util.writeJsonReport(actionParameters.jsonReport, report);
     }
 
     public static String[] extractDescriptions(SequenceRead r) {
@@ -316,6 +324,10 @@ public class ActionAlign implements Action {
         @Parameter(description = "Report file.",
                 names = {"-r", "--report"})
         public String report;
+
+        @Parameter(description = "JSON report file.",
+                names = {"--json-report"})
+        public String jsonReport = null;
 
         @Parameter(description = "Species (organism), as specified in library file or taxon id. " +
                 "Possible values: hs, HomoSapiens, musmusculus, mmu, hsa, 9606, 10090 etc..",
@@ -376,15 +388,12 @@ public class ActionAlign implements Action {
             return params;
         }
 
-        public String getInputForReport() {
-            StringBuilder builder = new StringBuilder();
-            for (int i = 0; ; ++i) {
-                builder.append(parameters.get(i));
-                if (i == parameters.size() - 2)
-                    break;
-                builder.append(',');
-            }
-            return builder.toString();
+        public String[] getInputsForReport() {
+            return parameters.subList(0, parameters.size() - 1).toArray(new String[parameters.size() - 1]);
+        }
+
+        public String[] getOutputsForReport() {
+            return new String[]{getOutputName()};
         }
 
         public Boolean getNoMerge() {

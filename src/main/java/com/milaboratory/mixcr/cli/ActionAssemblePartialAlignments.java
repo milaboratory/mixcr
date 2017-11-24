@@ -44,10 +44,15 @@ public final class ActionAssemblePartialAlignments implements Action {
             }
         }
 
-        long start = System.currentTimeMillis();
         try (PartialAlignmentsAssembler assembler = new PartialAlignmentsAssembler(assemblerParameters,
                 parameters.getOutputFileName(), !parameters.doDropPartial(),
                 parameters.getOverlappedOnly())) {
+            ReportWrapper report = new ReportWrapper(command(), assembler);
+            report.setStartMillis(beginTimestamp);
+            report.setInputFiles(parameters.getInputFileName());
+            report.setOutputFiles(parameters.getOutputFileName());
+            report.setCommandLine(helper.getCommandLineArguments());
+
             try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getInputFileName())) {
                 SmartProgressReporter.startProgressReport("Building index", reader);
                 assembler.buildLeftPartsIndex(reader);
@@ -57,17 +62,17 @@ public final class ActionAssemblePartialAlignments implements Action {
                 assembler.searchOverlaps(reader);
             }
 
-            if (parameters.report != null)
-                Util.writeReport(parameters.getInputFileName(), parameters.getOutputFileName(),
-                        helper.getCommandLineArguments(), parameters.report,
-                        System.currentTimeMillis() - start, assembler
-                );
-
-            long time = System.currentTimeMillis() - beginTimestamp;
+            report.setFinishMillis(System.currentTimeMillis());
 
             // Writing report to stout
             System.out.println("============= Report ==============");
-            Util.writeReportToStdout(time, assembler);
+            Util.writeReportToStdout(report);
+
+            if (parameters.report != null)
+                Util.writeReport(parameters.report, report);
+
+            if (parameters.jsonReport != null)
+                Util.writeJsonReport(parameters.jsonReport, report);
         }
     }
 
@@ -92,6 +97,10 @@ public final class ActionAssemblePartialAlignments implements Action {
         @Parameter(description = "Report file.",
                 names = {"-r", "--report"})
         public String report;
+
+        @Parameter(description = "JSON report file.",
+                names = {"--json-report"})
+        public String jsonReport = null;
 
         @Parameter(description = "Write only overlapped sequences (needed for testing).",
                 names = {"-o", "--overlapped-only"})
