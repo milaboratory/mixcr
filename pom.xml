@@ -94,13 +94,6 @@
             <version>1.9.5</version>
             <scope>test</scope>
         </dependency>
-
-        <dependency>
-            <groupId>com.kjetland</groupId>
-            <artifactId>mbknor-jackson-jsonschema_2.12</artifactId>
-            <version>1.0.25</version>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
     <scm>
