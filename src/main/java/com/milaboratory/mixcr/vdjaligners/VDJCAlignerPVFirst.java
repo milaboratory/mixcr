@@ -56,29 +56,24 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     private static final ReferencePoint reqPointR = ReferencePoint.CDR3End.move(-3);
     private static final ReferencePoint reqPointL = ReferencePoint.CDR3Begin.move(+3);
     // Used in case of AMerge
-    private VDJCAlignerS sAligner;
+    private VDJCAlignerS sAligner = null;
     private final TargetMerger alignmentsMerger;
 
     public VDJCAlignerPVFirst(VDJCAlignerParameters parameters) {
-        this(parameters, new VDJCAlignerS(parameters));
-    }
-
-    public VDJCAlignerPVFirst(VDJCAlignerParameters parameters, VDJCAlignerS sAligner) {
         super(parameters);
         MergerParameters mp = parameters.getMergerParameters().overrideReadsLayout(PairedEndReadsLayout.CollinearDirect);
         alignmentsMerger = new TargetMerger(mp, (float) parameters.getMergerParameters().getMinimalIdentity());
         alignmentsMerger.setAlignerParameters(parameters);
-        this.sAligner = sAligner;
     }
 
     public void setSAligner(VDJCAlignerS sAligner) {
+        if (this.sAligner != null)
+            throw new IllegalStateException("Single aligner is already set.");
         this.sAligner = sAligner;
     }
 
     @Override
     protected void init() {
-        if (sAligner == null)
-            throw new IllegalStateException();
         super.init();
     }
 
@@ -93,7 +88,8 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                 processPartial(input, helpers) :
                 processStrict(input, helpers);
 
-        if (result.alignment != null) {
+        // if sAligner == null (which means --no-merge option), no merge will be performed
+        if (result.alignment != null && sAligner != null) {
             final VDJCAlignments alignment = result.alignment;
             final TargetMerger.TargetMergingResult mergeResult = alignmentsMerger.merge(
                     input.getId(),
