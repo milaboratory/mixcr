@@ -62,7 +62,8 @@ public class VDJCAlignmentsDifferenceReader
     }
 
     private Diff compare(VDJCAlignments first, VDJCAlignments second) {
-        if (first == null && second == null)
+        // fixme correct in 2.2
+      /*  if (first == null && second == null)
             return null;
         else if (first == null)
             return new Diff(first, second, DiffStatus.AlignmentPresentOnlyInSecond);
@@ -88,7 +89,8 @@ public class VDJCAlignmentsDifferenceReader
                 return new Diff(first, second, DiffStatus.AlignmentsAreSame);
             else
                 return new Diff(first, second, DiffStatus.AlignmentsAreDifferent, new DiffReason(diffGeneFeature, diffHits));
-        }
+        } */
+        throw new RuntimeException();
     }
 
     static boolean sameHits(VDJCHit[] first, VDJCHit[] second, int level) {

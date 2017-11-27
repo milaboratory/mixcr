@@ -37,12 +37,14 @@ import com.milaboratory.core.alignment.kaligner1.AbstractKAlignerParameters;
 import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.core.alignment.kaligner2.KAlignerParameters2;
 import com.milaboratory.core.io.sequence.PairedRead;
+import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.core.io.sequence.SingleReadImpl;
 import com.milaboratory.core.merger.MergerParameters;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.HasGene;
+import com.milaboratory.mixcr.basictypes.SequenceHistory;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.partialassembler.AlignedTarget;
@@ -107,13 +109,21 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                     listener.onTopHitSequenceConflict(input, alignment, geneType);
                 return new VDJCAlignmentResult<>(input, alignment.removeBestHitAlignment(geneType, removeId));
             } else if (mergeResult.isSuccessful()) {
+                assert mergeResult.isUsingAlignments();
+
                 NSequenceWithQuality alignedTarget = mergeResult.getResult().getTarget();
                 SingleRead sRead = new SingleReadImpl(input.getId(), alignedTarget, "");
                 VDJCAlignmentResult<SingleRead> sResult = sAligner.process0(sRead);
                 if (sResult.alignment == null)
                     return result;
                 VDJCAlignments sAlignment = sResult.alignment;
-                sAlignment.setTargetDescriptions(new String[]{"AOverlap(" + mergeResult.getMatched() + ")"});
+                sAlignment.setHistory(
+                        new SequenceHistory[]{
+                                new SequenceHistory.AlignmentOverlap(result.alignment.getHistory(0),
+                                        result.alignment.getHistory(1), mergeResult.getOffset(),
+                                        mergeResult.getMismatched())},
+                        new SequenceRead[]{input}
+                );
                 if (listener != null)
                     listener.onSuccessfulAlignmentOverlap(input, sAlignment);
                 return new VDJCAlignmentResult<>(input, sAlignment);
@@ -152,7 +162,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
             return new VDJCAlignmentResult<>(input);
         }
 
-        VDJCAlignments alignments = bestHelper.createResult(input.getId(), this);
+        VDJCAlignments alignments = bestHelper.createResult(input.getId(), this, input);
 
         // Final check
         if (!parameters.getAllowNoCDR3PartAlignments()) {
@@ -225,7 +235,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
 
         // Read successfully aligned
 
-        VDJCAlignments alignments = bestHelper.createResult(input.getId(), this);
+        VDJCAlignments alignments = bestHelper.createResult(input.getId(), this, input);
 
         onSuccessfulAlignment(input, alignments);
 
@@ -621,11 +631,20 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         /**
          * Converts this object to a final VDJAlignment object.
          */
-        VDJCAlignments createResult(long readId, VDJCAlignerPVFirst aligner) {
+        VDJCAlignments createResult(long readId, VDJCAlignerPVFirst aligner, PairedRead originalRead) {
             VDJCHit[] vHits = convert(this.vHits, GeneType.Variable, aligner);
             VDJCHit[] jHits = convert(this.jHits, GeneType.Joining, aligner);
 
-            return new VDJCAlignments(readId, vHits, dHits, jHits, cHits, target.targets);
+            return new VDJCAlignments(vHits, dHits, jHits, cHits, target.targets, new SequenceHistory[]{
+                    new SequenceHistory.RawSequence(
+                            readId, (byte) target.getReadIdOfTarget(0),
+                            target.targets[0].size(),
+                            target.getRCStateOfTarget(0)),
+                    new SequenceHistory.RawSequence(
+                            readId, (byte) target.getReadIdOfTarget(1),
+                            target.targets[1].size(),
+                            target.getRCStateOfTarget(1))
+            }, aligner.parameters.isSaveOriginalReads() ? new SequenceRead[]{originalRead} : null);
         }
 
         /**

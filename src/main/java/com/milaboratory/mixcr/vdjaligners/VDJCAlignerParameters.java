@@ -48,17 +48,18 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.Serializable {
     @JsonIgnore
-    protected final EnumMap<GeneType, GeneAlignmentParameters> alignmentParameters;
-    protected VJAlignmentOrder vjAlignmentOrder;
-    protected boolean includeDScore, includeCScore;
-    protected float minSumScore;
-    protected int maxHits;
-    protected float relativeMinVFR3CDR3Score;
-    protected boolean allowPartialAlignments, allowNoCDR3PartAlignments, allowChimeras;
-    protected PairedEndReadsLayout readsLayout;
-    protected MergerParameters mergerParameters;
-    protected boolean fixSeed;
-    protected int vjOverlapWindow;
+    private final EnumMap<GeneType, GeneAlignmentParameters> alignmentParameters;
+    private VJAlignmentOrder vjAlignmentOrder;
+    private boolean includeDScore, includeCScore;
+    private float minSumScore;
+    private int maxHits;
+    private float relativeMinVFR3CDR3Score;
+    private boolean allowPartialAlignments, allowNoCDR3PartAlignments, allowChimeras;
+    private PairedEndReadsLayout readsLayout;
+    private MergerParameters mergerParameters;
+    private boolean fixSeed;
+    private int vjOverlapWindow;
+    private boolean saveOriginalReads;
 
     @JsonCreator
     public VDJCAlignerParameters(@JsonProperty("vParameters") KGeneAlignmentParameters vParameters,
@@ -77,7 +78,8 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
                                  @JsonProperty("readsLayout") PairedEndReadsLayout readsLayout,
                                  @JsonProperty("mergerParameters") MergerParameters mergerParameters,
                                  @JsonProperty("fixSeed") boolean fixSeed,
-                                 @JsonProperty("vjOverlapWindow") int vjOverlapWindow) {
+                                 @JsonProperty("vjOverlapWindow") int vjOverlapWindow,
+                                 @JsonProperty("saveOriginalReads") boolean saveOriginalReads) {
         this.alignmentParameters = new EnumMap<>(GeneType.class);
         setGeneAlignerParameters(GeneType.Variable, vParameters);
         setGeneAlignerParameters(GeneType.Diversity, dParameters);
@@ -96,6 +98,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         this.mergerParameters = mergerParameters;
         this.fixSeed = fixSeed;
         this.vjOverlapWindow = vjOverlapWindow;
+        this.saveOriginalReads = saveOriginalReads;
     }
 
     public int getVJOverlapWindow() {
@@ -306,6 +309,15 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         return mergerParameters;
     }
 
+    public boolean isSaveOriginalReads() {
+        return saveOriginalReads;
+    }
+
+    public VDJCAlignerParameters setSaveOriginalReads(boolean saveOriginalReads) {
+        this.saveOriginalReads = saveOriginalReads;
+        return this;
+    }
+
     @Override
     public String toString() {
         return "VDJCAlignerParameters{" +
@@ -323,6 +335,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
                 ", mergerParameters=" + mergerParameters +
                 ", fixSeed=" + fixSeed +
                 ", vjOverlapWindow=" + vjOverlapWindow +
+                ", saveOriginalReads=" + saveOriginalReads +
                 '}';
     }
 
@@ -347,6 +360,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
             return false;
         if (vjAlignmentOrder != that.vjAlignmentOrder) return false;
         if (readsLayout != that.readsLayout) return false;
+        if (saveOriginalReads != that.saveOriginalReads) return false;
         return !(mergerParameters != null ? !mergerParameters.equals(that.mergerParameters) : that.mergerParameters != null);
 
     }
@@ -367,6 +381,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         result = 31 * result + (mergerParameters != null ? mergerParameters.hashCode() : 0);
         result = 31 * result + (fixSeed ? 1 : 0);
         result = 31 * result + vjOverlapWindow;
+        result = 31 * result + (saveOriginalReads ? 1 : 0);
         return result;
     }
 
@@ -375,6 +390,6 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         return new VDJCAlignerParameters(getVAlignerParameters(), getDAlignerParameters(), getJAlignerParameters(),
                 getCAlignerParameters(), vjAlignmentOrder, includeDScore, includeCScore, minSumScore, maxHits,
                 relativeMinVFR3CDR3Score, allowPartialAlignments, allowNoCDR3PartAlignments,
-                allowChimeras, readsLayout, mergerParameters, fixSeed, vjOverlapWindow);
+                allowChimeras, readsLayout, mergerParameters, fixSeed, vjOverlapWindow, saveOriginalReads);
     }
 }
