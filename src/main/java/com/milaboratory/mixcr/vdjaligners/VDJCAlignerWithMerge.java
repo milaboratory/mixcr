@@ -47,7 +47,7 @@ public final class VDJCAlignerWithMerge extends VDJCAligner<PairedRead> {
     public VDJCAlignerWithMerge(VDJCAlignerParameters parameters) {
         super(parameters);
         singleAligner = new VDJCAlignerS(parameters);
-        pairedAligner = new VDJCAlignerPVFirst(parameters, singleAligner);
+        pairedAligner = new VDJCAlignerPVFirst(parameters);
         merger = new MismatchOnlyPairedReadMerger(
                 parameters.getMergerParameters().overrideReadsLayout(
                         parameters.getReadsLayout()));
@@ -62,13 +62,16 @@ public final class VDJCAlignerWithMerge extends VDJCAligner<PairedRead> {
 
     @Override
     public void setEventsListener(VDJCAlignerEventListener listener) {
+        super.setEventsListener(listener);
         singleAligner.setEventsListener(listener);
         pairedAligner.setEventsListener(listener);
-        super.setEventsListener(listener);
     }
 
     @Override
     protected void init() {
+        singleAligner.ensureInitialized();
+        pairedAligner.setSAligner(singleAligner.copyWithoutListener());
+        pairedAligner.ensureInitialized();
     }
 
     @Override
@@ -78,7 +81,7 @@ public final class VDJCAlignerWithMerge extends VDJCAligner<PairedRead> {
             VDJCAlignments alignment = singleAligner.process(
                     new SingleReadImpl(read.getId(), merged.getOverlappedSequence(), "")).alignment;
             if (listener != null)
-                listener.onSuccessfulOverlap(read, alignment);
+                listener.onSuccessfulSequenceOverlap(read, alignment);
             if (alignment != null)
                 alignment.setTargetDescriptions(new String[]{"MOverlapped(" + getMMDescr(merged) + ")"});
             return new VDJCAlignmentResult<>(read, alignment);

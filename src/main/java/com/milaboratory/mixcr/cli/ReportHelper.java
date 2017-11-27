@@ -35,21 +35,29 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public final class ReportHelper {
     private final PrintStream printStream;
+    private final boolean stdout;
 
     public ReportHelper(String fileName) {
         try {
             this.printStream = new PrintStream(fileName);
+            this.stdout = false;
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public ReportHelper(OutputStream outputStream) {
+    public ReportHelper(OutputStream outputStream, boolean stdout) {
         this.printStream = new PrintStream(outputStream);
+        this.stdout = stdout;
     }
 
-    public ReportHelper(PrintStream printStream) {
+    public ReportHelper(PrintStream printStream, boolean stdout) {
         this.printStream = printStream;
+        this.stdout = stdout;
+    }
+
+    public boolean isStdout() {
+        return stdout;
     }
 
     public ReportHelper writeField(String fieldName, Object value) {

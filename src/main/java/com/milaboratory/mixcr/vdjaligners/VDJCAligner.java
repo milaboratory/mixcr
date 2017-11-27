@@ -39,19 +39,31 @@ import io.repseq.core.Chains;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.List;
 
 public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R, VDJCAlignmentResult<R>> {
     protected volatile boolean initialized = false;
     protected final VDJCAlignerParameters parameters;
-    protected final EnumMap<GeneType, List<VDJCGene>> genesToAlign = new EnumMap<>(GeneType.class);
-    protected final List<VDJCGene> usedGenes = new ArrayList<>();
+    protected final EnumMap<GeneType, List<VDJCGene>> genesToAlign;
+    protected final List<VDJCGene> usedGenes;
     protected VDJCAlignerEventListener listener = null;
 
     protected VDJCAligner(VDJCAlignerParameters parameters) {
         this.parameters = parameters.clone();
+        this.genesToAlign = new EnumMap<>(GeneType.class);
+        this.usedGenes = new ArrayList<>();
         for (GeneType geneType : GeneType.values())
             genesToAlign.put(geneType, new ArrayList<VDJCGene>());
+    }
+
+    VDJCAligner(boolean initialized, VDJCAlignerParameters parameters, EnumMap<GeneType, List<VDJCGene>> genesToAlign, List<VDJCGene> usedGenes) {
+        this.initialized = initialized;
+        this.parameters = parameters;
+        this.genesToAlign = genesToAlign;
+        this.usedGenes = usedGenes;
     }
 
     private static <R extends SequenceRead> long hash(R input) {
@@ -71,6 +83,7 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
     public final VDJCAlignmentResult<R> process(R input) {
         if (parameters.isFixSeed())
             RandomUtil.reseedThreadLocal(hash(input));
+        ensureInitialized();
         return process0(input);
     }
 
@@ -94,7 +107,7 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
         return initialized;
     }
 
-    public final void ensureInitialized() {
+    final void ensureInitialized() {
         if (!initialized)
             synchronized (this) {
                 if (!initialized) {

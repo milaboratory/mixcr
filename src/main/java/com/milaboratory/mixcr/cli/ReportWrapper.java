@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * Copyright (c) 2014-2017, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
  * (here and after addressed as Inventors)
  * All Rights Reserved
  *
@@ -26,36 +26,32 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.vdjaligners;
+package com.milaboratory.mixcr.cli;
 
-import com.milaboratory.core.io.sequence.SequenceRead;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import io.repseq.core.GeneType;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
-public interface VDJCAlignerEventListener {
-    void onFailedAlignment(SequenceRead read, VDJCAlignmentFailCause cause);
+public final class ReportWrapper extends AbstractActionReport {
+    private final String action;
+    private final Report innerReport;
 
-    void onSuccessfulAlignment(SequenceRead read, VDJCAlignments alignment);
+    public ReportWrapper(String action, Report innerReport) {
+        this.action = action;
+        this.innerReport = innerReport;
+    }
 
-    /**
-     * Fired on successful sequence-aided overlap (e.g. using PEAR-like algorithm,
-     * see {@link com.milaboratory.core.merger.MismatchOnlyPairedReadMerger})
-     *
-     * @param read       original read
-     * @param alignments resulting alignment
-     */
-    void onSuccessfulSequenceOverlap(SequenceRead read, VDJCAlignments alignments);
+    @Override
+    public String getAction() {
+        return action;
+    }
 
-    /**
-     * Fired on successful alignment-aided overlap (see {@link VDJCAlignerWithMerge})
-     *
-     * @param read       original read
-     * @param alignments resulting alignment
-     */
-    void onSuccessfulAlignmentOverlap(SequenceRead read, VDJCAlignments alignments);
+    @JsonUnwrapped
+    public Report getInnerReport() {
+        return innerReport;
+    }
 
-    /**
-     * Rather technical event, used for algorithm performance monitoring
-     */
-    void onTopHitSequenceConflict(SequenceRead read, VDJCAlignments alignments, GeneType geneType);
+    @Override
+    public void writeReport(ReportHelper helper) {
+        writeSuperReport(helper);
+        innerReport.writeReport(helper);
+    }
 }

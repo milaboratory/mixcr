@@ -28,14 +28,18 @@
  */
 package com.milaboratory.mixcr.cli;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.mixcr.assembler.CloneAccumulator;
 import com.milaboratory.mixcr.assembler.CloneAssemblerListener;
+import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-public final class CloneAssemblerReport implements CloneAssemblerListener, ReportWriter {
+public final class CloneAssemblerReport extends AbstractActionReport implements CloneAssemblerListener {
+    private final ChainUsageStats chainStats = new ChainUsageStats();
     long totalReads = -1;
     final AtomicInteger clonesCreated = new AtomicInteger();
     final AtomicLong failedToExtractTarget = new AtomicLong();
@@ -52,18 +56,27 @@ public final class CloneAssemblerReport implements CloneAssemblerListener, Repor
     final AtomicLong readsPreClustered = new AtomicLong();
     final AtomicLong readsClustered = new AtomicLong();
 
+    @Override
+    public String getAction() {
+        return "assemble";
+    }
+
+    @JsonProperty("totalReadsProcessed")
     public long getTotalReads() {
         return totalReads;
     }
 
+    @JsonProperty("initialClonesCreated")
     public int getClonesCreated() {
         return clonesCreated.get();
     }
 
+    @JsonProperty("alignmentsDroppedNoTargetSequence")
     public long getFailedToExtractTarget() {
         return failedToExtractTarget.get();
     }
 
+    @JsonProperty("alignmentsDroppedLowQuality")
     public long getDroppedAsLowQuality() {
         return droppedAsLowQuality.get();
     }
@@ -72,38 +85,62 @@ public final class CloneAssemblerReport implements CloneAssemblerListener, Repor
         return deferred.get();
     }
 
+    @JsonProperty("coreAlignments")
     public long getCoreAlignments() {
         return coreAlignments.get();
     }
 
+    @JsonProperty("alignmentsDroppedFailedMapping")
     public long getDeferredAlignmentsDropped() {
         return deferredAlignmentsDropped.get();
     }
 
+    @JsonProperty("lowQualityRescued")
     public long getDeferredAlignmentsMapped() {
         return deferredAlignmentsMapped.get();
     }
 
+    @JsonProperty("clonesClustered")
     public int getClonesClustered() {
         return clonesClustered.get();
     }
 
+    @JsonProperty("alignmentsClustered")
     public long getReadsClustered() {
         return readsClustered.get();
     }
 
+    @JsonProperty("clones")
     public int getCloneCount() {
         return clonesCreated.get() - clonesClustered.get() - clonesDropped.get() - clonesPreClustered.get();
     }
 
+    @JsonProperty("clonesDroppedAsLowQuality")
     public int getClonesDropped() {
         return clonesDropped.get();
     }
 
+    @JsonProperty("clonesPreClustered")
+    public int getClonesPreClustered() {
+        return clonesPreClustered.get();
+    }
+
+    @JsonProperty("alignmentsPreClustered")
+    public long getReadsPreClustered() {
+        return readsPreClustered.get();
+    }
+
+    @JsonProperty("alignmentsInClones")
     public long getAlignmentsInClones() {
         return alignmentsInClones.get(); //coreAlignments.get() + deferredAlignmentsMapped.get() - readsDroppedWithClones.get();
     }
 
+    @JsonProperty("alignmentsInClonesBeforeClustering")
+    public long getAlignmentsInClonesBeforeClustering() {
+        return deferredAlignmentsMapped.get() + coreAlignments.get();
+    }
+
+    @JsonProperty("alignmentsDroppedWithLowQualityClones")
     public long getReadsDroppedWithClones() {
         return readsDroppedWithClones.get();
     }
@@ -169,12 +206,20 @@ public final class CloneAssemblerReport implements CloneAssemblerListener, Repor
         deferred.addAndGet(-clone.getMappedCount());
     }
 
+    public void onClonesetFinished(CloneSet cloneSet) {
+        for (Clone clone : cloneSet)
+            chainStats.increment(clone);
+    }
+
     public void setTotalReads(long totalReads) {
         this.totalReads = totalReads;
     }
 
     @Override
     public void writeReport(ReportHelper helper) {
+        // Writing common analysis information
+        writeSuperReport(helper);
+
         if (totalReads == -1)
             throw new IllegalStateException("TotalReads count not set.");
 
@@ -182,11 +227,8 @@ public final class CloneAssemblerReport implements CloneAssemblerListener, Repor
 
         long alignmentsInClones = getAlignmentsInClones();
 
-        //if (deferred.get() != deferredAlignmentsDropped.get() + deferredAlignmentsMapped.get())
-        //    throw new RuntimeException();
-
         // Alignments in clones before clusterization
-        long clusterizationBase = deferredAlignmentsMapped.get() + coreAlignments.get();
+        long clusterizationBase = getAlignmentsInClonesBeforeClustering();
 
         helper.writeField("Final clonotype count", clonesCount)
                 .writeField("Average number of reads per clonotype", Util.PERCENT_FORMAT.format(1.0 * alignmentsInClones / clonesCount))

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * Copyright (c) 2014-2017, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
  * (here and after addressed as Inventors)
  * All Rights Reserved
  *
@@ -26,36 +26,14 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.vdjaligners;
+package com.milaboratory.mixcr.cli;
 
-import com.milaboratory.core.io.sequence.SequenceRead;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import io.repseq.core.GeneType;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public interface VDJCAlignerEventListener {
-    void onFailedAlignment(SequenceRead read, VDJCAlignmentFailCause cause);
-
-    void onSuccessfulAlignment(SequenceRead read, VDJCAlignments alignment);
-
+public interface ActionReport extends Report {
     /**
-     * Fired on successful sequence-aided overlap (e.g. using PEAR-like algorithm,
-     * see {@link com.milaboratory.core.merger.MismatchOnlyPairedReadMerger})
-     *
-     * @param read       original read
-     * @param alignments resulting alignment
+     * Action (e.g. align, assemble, etc.) that produced this report.
      */
-    void onSuccessfulSequenceOverlap(SequenceRead read, VDJCAlignments alignments);
-
-    /**
-     * Fired on successful alignment-aided overlap (see {@link VDJCAlignerWithMerge})
-     *
-     * @param read       original read
-     * @param alignments resulting alignment
-     */
-    void onSuccessfulAlignmentOverlap(SequenceRead read, VDJCAlignments alignments);
-
-    /**
-     * Rather technical event, used for algorithm performance monitoring
-     */
-    void onTopHitSequenceConflict(SequenceRead read, VDJCAlignments alignments, GeneType geneType);
+    @JsonProperty("action")
+    String getAction();
 }

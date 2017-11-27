@@ -56,25 +56,29 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     private static final ReferencePoint reqPointR = ReferencePoint.CDR3End.move(-3);
     private static final ReferencePoint reqPointL = ReferencePoint.CDR3Begin.move(+3);
     // Used in case of AMerge
-    private final VDJCAlignerS sAligner;
+    private VDJCAlignerS sAligner = null;
     private final TargetMerger alignmentsMerger;
 
     public VDJCAlignerPVFirst(VDJCAlignerParameters parameters) {
-        this(parameters, new VDJCAlignerS(parameters));
-    }
-
-    public VDJCAlignerPVFirst(VDJCAlignerParameters parameters, VDJCAlignerS sAligner) {
         super(parameters);
         MergerParameters mp = parameters.getMergerParameters().overrideReadsLayout(PairedEndReadsLayout.CollinearDirect);
         alignmentsMerger = new TargetMerger(mp, (float) parameters.getMergerParameters().getMinimalIdentity());
         alignmentsMerger.setAlignerParameters(parameters);
+    }
+
+    public void setSAligner(VDJCAlignerS sAligner) {
+        if (this.sAligner != null)
+            throw new IllegalStateException("Single aligner is already set.");
         this.sAligner = sAligner;
     }
 
     @Override
-    protected VDJCAlignmentResult<PairedRead> process0(final PairedRead input) {
-        ensureInitialized();
+    protected void init() {
+        super.init();
+    }
 
+    @Override
+    protected VDJCAlignmentResult<PairedRead> process0(final PairedRead input) {
         Target[] targets = getTargets(input);
 
         // Creates helper classes for each PTarget
@@ -84,7 +88,8 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                 processPartial(input, helpers) :
                 processStrict(input, helpers);
 
-        if (result.alignment != null) {
+        // if sAligner == null (which means --no-merge option), no merge will be performed
+        if (result.alignment != null && sAligner != null) {
             final VDJCAlignments alignment = result.alignment;
             final TargetMerger.TargetMergingResult mergeResult = alignmentsMerger.merge(
                     input.getId(),
@@ -93,12 +98,14 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                     false);
 
             if (mergeResult.failedDueInconsistentAlignments()) {
-                GeneType gt = mergeResult.getFailedMergedGeneType();
+                GeneType geneType = mergeResult.getFailedMergedGeneType();
                 int removeId =
-                        alignment.getBestHit(gt).getAlignment(0).getScore()
-                                > alignment.getBestHit(gt).getAlignment(1).getScore()
+                        alignment.getBestHit(geneType).getAlignment(0).getScore()
+                                > alignment.getBestHit(geneType).getAlignment(1).getScore()
                                 ? 1 : 0;
-                return new VDJCAlignmentResult<>(input, alignment.removeBestHitAlignment(gt, removeId));
+                if (listener != null)
+                    listener.onTopHitSequenceConflict(input, alignment, geneType);
+                return new VDJCAlignmentResult<>(input, alignment.removeBestHitAlignment(geneType, removeId));
             } else if (mergeResult.isSuccessful()) {
                 NSequenceWithQuality alignedTarget = mergeResult.getResult().getTarget();
                 SingleRead sRead = new SingleReadImpl(input.getId(), alignedTarget, "");
@@ -107,6 +114,8 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                     return result;
                 VDJCAlignments sAlignment = sResult.alignment;
                 sAlignment.setTargetDescriptions(new String[]{"AOverlap(" + mergeResult.getMatched() + ")"});
+                if (listener != null)
+                    listener.onSuccessfulAlignmentOverlap(input, sAlignment);
                 return new VDJCAlignmentResult<>(input, sAlignment);
             }
         }
