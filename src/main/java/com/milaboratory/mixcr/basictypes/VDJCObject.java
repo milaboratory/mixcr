@@ -55,12 +55,6 @@ public class VDJCObject {
             Arrays.sort(h);
     }
 
-    protected VDJCObject(VDJCHit[] vHits, VDJCHit[] dHits,
-                         VDJCHit[] jHits, VDJCHit[] cHits,
-                         NSequenceWithQuality... targets) {
-        this(createHits(vHits, dHits, jHits, cHits), targets);
-    }
-
     protected static EnumMap<GeneType, VDJCHit[]> createHits(VDJCHit[] vHits, VDJCHit[] dHits,
                                                              VDJCHit[] jHits, VDJCHit[] cHits) {
         EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<GeneType, VDJCHit[]>(GeneType.class);

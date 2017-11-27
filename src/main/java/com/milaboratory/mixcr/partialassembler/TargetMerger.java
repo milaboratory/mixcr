@@ -309,7 +309,7 @@ public class TargetMerger {
                 final AlignedTarget merge = merge(readId, targetLeft, targetRight, delta);
                 return new TargetMergingResult(true, null, merge,
                         PairedReadMergingResult.MATCH_SCORE * (overlap - mismatches) +
-                                PairedReadMergingResult.MISMATCH_SCORE * mismatches, overlap, mismatches);
+                                PairedReadMergingResult.MISMATCH_SCORE * mismatches, overlap, mismatches, delta);
             }
         }
 
@@ -321,7 +321,7 @@ public class TargetMerger {
             return new TargetMergingResult();
         return new TargetMergingResult(false, null,
                 merge(readId, targetLeft, targetRight, merge.getOffset()),
-                merge.score(), merge.getOverlap(), merge.getErrors());
+                merge.score(), merge.getOverlap(), merge.getErrors(), merge.getOffset());
     }
 
     private static int sumScore(Alignment[] als) {
@@ -342,6 +342,7 @@ public class TargetMerger {
         private final AlignedTarget result;
         private final int score;
         private final int matched, mismatched;
+        private final int offset;
 
 //        public TargetMergingResult(AlignedTarget result, int score, boolean usingAlignments, int matched, int mismatched) {
 //            this.result = result;
@@ -352,20 +353,21 @@ public class TargetMerger {
 //        }
 
         private TargetMergingResult() {
-            this(false, null, null, 0, 0, 0);
+            this(false, null, null, 0, 0, 0, 0);
         }
 
         private TargetMergingResult(GeneType failedGeneType) {
-            this(true, failedGeneType, null, 0, 0, 0);
+            this(true, failedGeneType, null, 0, 0, 0, 0);
         }
 
-        private TargetMergingResult(boolean usingAlignments, GeneType failedMergedGeneType, AlignedTarget result, int score, int matched, int mismatched) {
+        private TargetMergingResult(boolean usingAlignments, GeneType failedMergedGeneType, AlignedTarget result, int score, int matched, int mismatched, int offset) {
             this.usingAlignments = usingAlignments;
             this.failedMergedGeneType = failedMergedGeneType;
             this.result = result;
             this.score = score;
             this.matched = matched;
             this.mismatched = mismatched;
+            this.offset = offset;
         }
 
         public boolean isSuccessful() {
@@ -405,6 +407,10 @@ public class TargetMerger {
         public int getMismatched() {
             checkSuccessful();
             return mismatched;
+        }
+
+        public int getOffset() {
+            return offset;
         }
     }
 }
