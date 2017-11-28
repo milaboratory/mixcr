@@ -32,6 +32,7 @@ import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.basictypes.SequenceHistory;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import gnu.trove.iterator.TObjectLongIterator;
@@ -48,17 +49,15 @@ import static com.milaboratory.mixcr.partialassembler.BPoint.OverlapEnd;
 public final class AlignedTarget {
     private final VDJCAlignments alignments;
     private final int targetId;
-    private final String descriptionOverride;
     private final int[] bPoints;
 
     public AlignedTarget(VDJCAlignments alignments, int targetId) {
-        this(alignments, targetId, null, null);
+        this(alignments, targetId, null);
     }
 
-    public AlignedTarget(VDJCAlignments alignments, int targetId, String descriptionOverride, int[] bPoints) {
+    public AlignedTarget(VDJCAlignments alignments, int targetId, int[] bPoints) {
         this.alignments = alignments;
         this.targetId = targetId;
-        this.descriptionOverride = descriptionOverride;
         this.bPoints = bPoints;
     }
 
@@ -74,8 +73,8 @@ public final class AlignedTarget {
         return alignments.getTarget(targetId);
     }
 
-    public AlignedTarget overrideDescription(String newDescription) {
-        return new AlignedTarget(alignments, targetId, newDescription, bPoints);
+    public SequenceHistory getHistory() {
+        return alignments.getHistory(targetId);
     }
 
     public AlignedTarget setBPoint(BPoint point, int value) {
@@ -88,7 +87,7 @@ public final class AlignedTarget {
         } else
             newBPoints = bPoints.clone();
         newBPoints[point.ordinal()] = value;
-        return new AlignedTarget(alignments, targetId, descriptionOverride, newBPoints);
+        return new AlignedTarget(alignments, targetId, newBPoints);
     }
 
     public AlignedTarget setBPoints(BPoint point1, int value1, BPoint point2, int value2) {
@@ -100,20 +99,11 @@ public final class AlignedTarget {
             newBPoints = bPoints.clone();
         newBPoints[point1.ordinal()] = value1;
         newBPoints[point2.ordinal()] = value2;
-        return new AlignedTarget(alignments, targetId, descriptionOverride, newBPoints);
+        return new AlignedTarget(alignments, targetId, newBPoints);
     }
 
     public int getBPoint(BPoint point) {
         return bPoints == null ? -1 : bPoints[point.ordinal()];
-    }
-
-    public String getDescription() {
-        if (descriptionOverride != null)
-            return descriptionOverride;
-        if (alignments.getTargetDescriptions() != null && alignments.getTargetDescriptions().length - 1 >= targetId &&
-                alignments.getTargetDescriptions()[targetId] != null)
-            return alignments.getTargetDescriptions()[targetId];
-        return "";
     }
 
     public static List<AlignedTarget> orderTargets(List<AlignedTarget> targets) {
