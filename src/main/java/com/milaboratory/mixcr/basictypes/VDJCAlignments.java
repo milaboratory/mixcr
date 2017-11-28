@@ -34,6 +34,8 @@ import com.milaboratory.core.io.sequence.SequenceReadUtil;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.primitivio.annotations.Serializable;
+import gnu.trove.map.hash.TLongObjectHashMap;
+import gnu.trove.set.hash.TLongHashSet;
 import io.repseq.core.GeneType;
 
 import java.util.Arrays;
@@ -76,6 +78,21 @@ public final class VDJCAlignments extends VDJCObject {
         return new VDJCAlignments(newAlignmentIndex, hits, targets, shift(history, shift), shift(originalReads, shift));
     }
 
+    public static SequenceRead[] mergeOriginalReads(VDJCAlignments... array) {
+        boolean isNull = array[0].originalReads == null;
+        TLongObjectHashMap<SequenceRead> map = new TLongObjectHashMap<>();
+        for (VDJCAlignments a : array) {
+            if (isNull != (a.originalReads == null))
+                throw new IllegalArgumentException();
+            if (a.originalReads != null)
+                for (SequenceRead s : a.originalReads)
+                    map.put(s.getId(), s);
+        }
+        if (isNull)
+            return null;
+        return map.values(new SequenceRead[map.size()]);
+    }
+
     private static SequenceHistory[] shift(SequenceHistory[] data, long shift) {
         SequenceHistory[] r = new SequenceHistory[data.length];
         for (int i = 0; i < data.length; i++)
@@ -94,6 +111,10 @@ public final class VDJCAlignments extends VDJCObject {
 
     public SequenceHistory getHistory(int targetId) {
         return history[targetId];
+    }
+
+    public SequenceHistory[] getHistory() {
+        return history.clone();
     }
 
     public List<SequenceRead> getOriginalReads() {

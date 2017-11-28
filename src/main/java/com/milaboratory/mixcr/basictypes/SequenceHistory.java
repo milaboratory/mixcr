@@ -95,10 +95,21 @@ public interface SequenceHistory {
         }
     }
 
+    enum OverlapType {
+        SequenceOverlap,
+        AlignmentOverlap,
+        CDR3Overlap,
+        ExtensionMerge
+    }
+
     /**
      * Parent for all events when two alignments or reads are merged into a single one
      */
-    abstract class Merge implements SequenceHistory {
+    final class Merge implements SequenceHistory {
+        /**
+         * Overlap type
+         */
+        final OverlapType overlapType;
         /**
          * Histories of merged alignments
          */
@@ -112,7 +123,8 @@ public interface SequenceHistory {
          */
         public final int nMismatches;
 
-        Merge(SequenceHistory left, SequenceHistory right, int offset, int nMismatches) {
+        public Merge(OverlapType overlapType, SequenceHistory left, SequenceHistory right, int offset, int nMismatches) {
+            this.overlapType = overlapType;
             this.left = left;
             this.right = right;
             this.offset = offset;
@@ -139,6 +151,11 @@ public interface SequenceHistory {
         }
 
         @Override
+        public Merge shiftReadId(long shift) {
+            return new Merge(overlapType, left.shiftReadId(shift), right.shiftReadId(shift), offset, nMismatches);
+        }
+
+        @Override
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -147,13 +164,15 @@ public interface SequenceHistory {
 
             if (offset != merge.offset) return false;
             if (nMismatches != merge.nMismatches) return false;
+            if (overlapType != merge.overlapType) return false;
             if (!left.equals(merge.left)) return false;
             return right.equals(merge.right);
         }
 
         @Override
         public int hashCode() {
-            int result = left.hashCode();
+            int result = overlapType.hashCode();
+            result = 31 * result + left.hashCode();
             result = 31 * result + right.hashCode();
             result = 31 * result + offset;
             result = 31 * result + nMismatches;
@@ -161,25 +180,37 @@ public interface SequenceHistory {
         }
     }
 
-    final class SequenceOverlap extends Merge {
-        public SequenceOverlap(SequenceHistory left, SequenceHistory right, int offset, int nMismatches) {
-            super(left, right, offset, nMismatches);
+    /**
+     * Parent for all events when alignment was extended
+     */
+    final class Extend implements SequenceHistory {
+        final SequenceHistory original;
+        final int extensionLeft, extensionRight;
+
+        public Extend(SequenceHistory original, int extensionLeft, int extensionRight) {
+            this.original = original;
+            this.extensionLeft = extensionLeft;
+            this.extensionRight = extensionRight;
         }
 
         @Override
-        public SequenceOverlap shiftReadId(long shift) {
-            return new SequenceOverlap(left.shiftReadId(shift), right.shiftReadId(shift), offset, nMismatches);
-        }
-    }
-
-    final class AlignmentOverlap extends Merge {
-        public AlignmentOverlap(SequenceHistory left, SequenceHistory right, int offset, int nMismatches) {
-            super(left, right, offset, nMismatches);
+        public int length() {
+            return extensionLeft + original.length() + extensionRight;
         }
 
         @Override
-        public AlignmentOverlap shiftReadId(long shift) {
-            return new AlignmentOverlap(left.shiftReadId(shift), right.shiftReadId(shift), offset, nMismatches);
+        public SequenceHistory shiftReadId(long shift) {
+            return new Extend(original.shiftReadId(shift), extensionLeft, extensionRight);
+        }
+
+        @Override
+        public long[] readIds() {
+            return original.readIds();
+        }
+
+        @Override
+        public long minReadId() {
+            return original.minReadId();
         }
     }
 }

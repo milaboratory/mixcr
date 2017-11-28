@@ -94,7 +94,6 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         if (result.alignment != null && sAligner != null) {
             final VDJCAlignments alignment = result.alignment;
             final TargetMerger.TargetMergingResult mergeResult = alignmentsMerger.merge(
-                    input.getId(),
                     new AlignedTarget(alignment, 0),
                     new AlignedTarget(alignment, 1),
                     false);
@@ -119,8 +118,11 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                 VDJCAlignments sAlignment = sResult.alignment;
                 sAlignment.setHistory(
                         new SequenceHistory[]{
-                                new SequenceHistory.AlignmentOverlap(result.alignment.getHistory(0),
-                                        result.alignment.getHistory(1), mergeResult.getOffset(),
+                                new SequenceHistory.Merge(
+                                        SequenceHistory.OverlapType.AlignmentOverlap,
+                                        result.alignment.getHistory(0),
+                                        result.alignment.getHistory(1),
+                                        mergeResult.getOffset(),
                                         mergeResult.getMismatched())},
                         new SequenceRead[]{input}
                 );
