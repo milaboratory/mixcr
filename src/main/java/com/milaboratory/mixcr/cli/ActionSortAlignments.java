@@ -36,11 +36,11 @@ public final class ActionSortAlignments implements Action {
 
     @Override
     public void go(ActionHelper helper) throws Exception {
-        try(VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getInputFile())) {
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getInputFile())) {
             SmartProgressReporter.startProgressReport("Reading vdjca", reader);
-            try(OutputPortCloseable<VDJCAlignments> sorted =
-                        Sorter.sort(reader, idComparator, 1024 * 512, new VDJCAlignmnetsSerializer(reader), TempFileManager.getTempFile());
-                VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(parameters.getOutputFile())) {
+            try (OutputPortCloseable<VDJCAlignments> sorted =
+                         Sorter.sort(reader, idComparator, 1024 * 512, new VDJCAlignmentsSerializer(reader), TempFileManager.getTempFile());
+                 VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(parameters.getOutputFile())) {
 
                 writer.header(reader.getParameters(), reader.getUsedGenes());
 
@@ -67,22 +67,22 @@ public final class ActionSortAlignments implements Action {
     private static final Comparator<VDJCAlignments> idComparator = new Comparator<VDJCAlignments>() {
         @Override
         public int compare(VDJCAlignments o1, VDJCAlignments o2) {
-            return Long.compare(o1.getReadId(), o2.getReadId());
+            return Long.compare(o1.getMinReadId(), o2.getMinReadId());
         }
     };
 
-    private static final class VDJCAlignmnetsSerializer implements ObjectSerializer<VDJCAlignments> {
+    private static final class VDJCAlignmentsSerializer implements ObjectSerializer<VDJCAlignments> {
         final VDJCAlignerParameters parameters;
         final List<VDJCGene> usedAlleles;
 
-        public VDJCAlignmnetsSerializer(VDJCAlignmentsReader reader) {
+        public VDJCAlignmentsSerializer(VDJCAlignmentsReader reader) {
             this.parameters = reader.getParameters();
             this.usedAlleles = reader.getUsedGenes();
         }
 
         @Override
         public void write(Collection<VDJCAlignments> data, OutputStream stream) {
-            try(VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(stream)) {
+            try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(stream)) {
                 writer.header(parameters, usedAlleles);
                 for (VDJCAlignments datum : data)
                     writer.write(datum);

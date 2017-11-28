@@ -339,7 +339,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             totalAlignments.incrementAndGet();
             final ClonalSequence target = extractClonalSequence(input);
             if (target == null) {
-                log(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadId(), AssemblerEvent.DROPPED));
+                log(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadIds(), AssemblerEvent.DROPPED));
                 droppedAlignments.incrementAndGet();
                 onFailedToExtractTarget(input);
                 return;
@@ -349,7 +349,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
 
             if (badPoints > target.getConcatenated().size() * parameters.getMaxBadPointsPercent()) {
                 // Too many bad points (this read has too low quality in the regions of interest)
-                log(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadId(), AssemblerEvent.DROPPED));
+                log(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadIds(), AssemblerEvent.DROPPED));
                 droppedAlignments.incrementAndGet();
                 onTooManyLowQualityPoints(input);
                 return;
@@ -357,7 +357,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
 
             if (badPoints > 0) {
                 // Has some number of bad points but not greater then maxBadPointsToMap
-                log(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadId(), AssemblerEvent.DEFERRED));
+                log(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadIds(), AssemblerEvent.DEFERRED));
                 onAlignmentDeferred(input);
                 return;
             }
@@ -379,7 +379,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
 
             CloneAccumulator acc = container.accumulate(target, input, false);
             //Logging assembler events for subsequent index creation and mapping filtering
-            log(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadId(), acc.getCloneIndex()));
+            log(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadIds(), acc.getCloneIndex()));
             //Incrementing corresponding counter
             successfullyAssembledAlignments.incrementAndGet();
             onAlignmentAddedToClone(input, acc);
@@ -399,7 +399,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 throw new IllegalArgumentException("This filter can not be used in concurrent " +
                         "environment. Perform pre-filtering in a single thread.");
             if (event.cloneIndex != AssemblerEvent.DEFERRED) {
-                deferredAlignmentsLogger.newEvent(new AssemblerEvent(event.alignmentsIndex, event.readId, AssemblerEvent.DROPPED));
+                deferredAlignmentsLogger.newEvent(new AssemblerEvent(event.alignmentsIndex, event.readIds, AssemblerEvent.DROPPED));
                 return false;
             }
             return true;
@@ -413,7 +413,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         public void process(VDJCAlignments input) {
             final ClonalSequence clonalSequence = extractClonalSequence(input);
 
-            RandomUtil.reseedThreadLocal(HashFunctions.JenkinWang64shift(input.getReadId()));
+            RandomUtil.reseedThreadLocal(HashFunctions.JenkinWang64shift(Arrays.hashCode(input.getReadIds())));
 
             int badPoints = numberOfBadPoints(clonalSequence);
             int threshold = thresholdCalculator.getThreshold(badPoints);
@@ -445,7 +445,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 }
 
             if (candidates.isEmpty()) {
-                deferredAlignmentsLogger.newEvent(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadId(),
+                deferredAlignmentsLogger.newEvent(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadIds(),
                         AssemblerEvent.DROPPED));
                 droppedAlignments.incrementAndGet();
                 onNoCandidateFoundForDefferedAlignment(input);
@@ -463,7 +463,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             mappedAlignments.incrementAndGet();
             successfullyAssembledAlignments.incrementAndGet();
             deferredAlignmentsLogger.newEvent(new AssemblerEvent(input.getAlignmentsIndex(),
-                    input.getReadId(), minMismatches == 0 ?
+                    input.getReadIds(), minMismatches == 0 ?
                     accumulator.getCloneIndex() : -4 - accumulator.getCloneIndex()));
 
             if (minMismatches > 0) {

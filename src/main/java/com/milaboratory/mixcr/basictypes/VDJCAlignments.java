@@ -34,6 +34,7 @@ import com.milaboratory.core.io.sequence.SequenceReadUtil;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.primitivio.annotations.Serializable;
+import com.milaboratory.util.ArraysUtils;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 import io.repseq.core.GeneType;
@@ -119,6 +120,16 @@ public final class VDJCAlignments extends VDJCObject {
 
     public List<SequenceRead> getOriginalReads() {
         return originalReads == null ? null : Collections.unmodifiableList(Arrays.asList(originalReads));
+    }
+
+    /**
+     * The result is always sorted.
+     */
+    public long[] getReadIds() {
+        long[] result = new long[0];
+        for (SequenceHistory h : history)
+            result = ArraysUtils.getSortedDistinct(ArraysUtils.concatenate(result, h.readIds()));
+        return result;
     }
 
     public VDJCAlignments setHistory(SequenceHistory[] history, SequenceRead[] originalReads) {

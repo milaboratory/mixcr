@@ -79,7 +79,7 @@ public class AssembledReadsPort implements OutputPortCloseable<ReadToCloneMappin
         }
 
         if (cloneIndex < 0)
-            return new ReadToCloneMapping(event.alignmentsIndex, event.readId, cloneIndex, false, false, false, false);
+            return new ReadToCloneMapping(event.alignmentsIndex, event.readIds, cloneIndex, false, false, false, false);
 
         boolean preCl = false;
         if (preClustered.containsKey(cloneIndex)) {
@@ -88,7 +88,7 @@ public class AssembledReadsPort implements OutputPortCloseable<ReadToCloneMappin
         }
 
         if (!idMapping.containsKey(cloneIndex))
-            return new ReadToCloneMapping(event.alignmentsIndex, event.readId, Integer.MIN_VALUE, false, false, true, preCl);
+            return new ReadToCloneMapping(event.alignmentsIndex, event.readIds, Integer.MIN_VALUE, false, false, true, preCl);
 
         cloneIndex = idMapping.get(cloneIndex);
 
@@ -98,7 +98,7 @@ public class AssembledReadsPort implements OutputPortCloseable<ReadToCloneMappin
             cloneIndex = -1 - cloneIndex;
         }
 
-        return new ReadToCloneMapping(event.alignmentsIndex, event.readId, cloneIndex, clustered, mapped, false, preCl);
+        return new ReadToCloneMapping(event.alignmentsIndex, event.readIds, cloneIndex, clustered, mapped, false, preCl);
     }
 
     @Override

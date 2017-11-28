@@ -61,7 +61,7 @@ public final class ActionExportCloneReads implements Action {
     private boolean originalReadsPresent() throws IOException {
         try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getAlignmentsFile())) {
             VDJCAlignments test = reader.take();
-            return test == null || test.getOriginalSequences() != null;
+            return test == null || test.getOriginalReads() != null;
         }
     }
 
@@ -88,10 +88,12 @@ public final class ActionExportCloneReads implements Action {
                 assert vdjca.getAlignmentsIndex() == mapping.getAlignmentsId();
 
                 SequenceWriter writer = writers.get(mapping.getCloneIndex());
+                List<SequenceRead> reads = vdjca.getOriginalReads();
                 if (writer == null)
-                    writers.put(mapping.getCloneIndex(), writer = createWriter(vdjca.getOriginalSequences().length == 2,
+                    writers.put(mapping.getCloneIndex(), writer = createWriter(reads.get(0).numberOfReads() == 2,
                             createFileName(parameters.getOutputFileName(), mapping.getCloneIndex())));
-                writer.write(createRead(vdjca.getOriginalSequences(), vdjca.getOriginalDescriptions()));
+                for (SequenceRead r : reads)
+                    writer.write(r);
             }
 
             for (SequenceWriter writer : writers.valueCollection())
@@ -119,10 +121,13 @@ public final class ActionExportCloneReads implements Action {
                 if (vdjca.getAlignmentsIndex() != mapping.getAlignmentsId())
                     continue;
 
+                List<SequenceRead> reads = vdjca.getOriginalReads();
                 if (writer == null)
-                    writer = createWriter(vdjca.getOriginalSequences().length == 2,
+                    writer = createWriter(reads.get(0).numberOfReads() == 2,
                             createFileName(parameters.getOutputFileName(), cloneId));
-                writer.write(createRead(vdjca.getOriginalSequences(), vdjca.getOriginalDescriptions()));
+
+                for (SequenceRead read : reads)
+                    writer.write(read);
             }
             if (writer != null)
                 writer.close();

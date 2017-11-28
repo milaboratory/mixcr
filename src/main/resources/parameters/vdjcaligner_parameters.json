@@ -111,7 +111,8 @@
         "allowNoCDR3PartAlignments": false,
         "allowChimeras": false,
         "vjOverlapWindow": 3,
-        "readsLayout": "Opposite"
+        "readsLayout": "Opposite",
+        "saveOriginalReads": false
     },
     "kaligner2": {
         "fixSeed" : true,
@@ -239,7 +240,8 @@
         "allowNoCDR3PartAlignments": false,
         "allowChimeras": false,
         "vjOverlapWindow": 3,
-        "readsLayout": "Opposite"
+        "readsLayout": "Opposite",
+        "saveOriginalReads": false
     },
     "rna-seq": {
         "fixSeed" : true,
@@ -353,6 +355,7 @@
         "allowNoCDR3PartAlignments": false,
         "allowChimeras": false,
         "vjOverlapWindow": 3,
-        "readsLayout": "Opposite"
+        "readsLayout": "Opposite",
+        "saveOriginalReads": false
     }
 }
