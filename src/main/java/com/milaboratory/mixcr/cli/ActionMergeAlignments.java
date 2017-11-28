@@ -89,7 +89,7 @@ public class ActionMergeAlignments implements Action {
 
     // Not thread-safe !
     private static final class MultiReader implements
-            OutputPort<VDJCAlignments>, CanReportProgress, AutoCloseable {
+                                           OutputPort<VDJCAlignments>, CanReportProgress, AutoCloseable {
         final VDJCLibraryRegistry registry = VDJCLibraryRegistry.getDefault();
         final List<String> files;
         final AtomicInteger fileId = new AtomicInteger(0);
@@ -146,9 +146,7 @@ public class ActionMergeAlignments implements Action {
                 return take();
             } else {
                 updateProgress();
-                return new VDJCAlignments(readIdOffset.get() + record.getReadId(),
-                        recordId.incrementAndGet(),
-                        record);
+                return record.shiftReadId(recordId.incrementAndGet(), readIdOffset.get());
             }
         }
 

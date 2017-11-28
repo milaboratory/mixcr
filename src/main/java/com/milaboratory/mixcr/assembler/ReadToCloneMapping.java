@@ -35,6 +35,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Comparator;
 
 @Serializable(by = IO.ReadToCloneMappingSerializer.class)
@@ -42,20 +43,20 @@ public final class ReadToCloneMapping {
     public static final int RECORD_SIZE = 8 + 8 + 4 + 1;
 
     final long alignmentsId;
-    final long readId;
+    final long[] readIds;
     final int cloneIndex;
     final byte mappingType;
 
-    ReadToCloneMapping(long alignmentsId, long readId, int cloneIndex, byte mappingType) {
+    ReadToCloneMapping(long alignmentsId, long[] readIds, int cloneIndex, byte mappingType) {
         this.alignmentsId = alignmentsId;
-        this.readId = readId;
+        this.readIds = readIds;
         this.cloneIndex = cloneIndex;
         this.mappingType = mappingType;
     }
 
-    public ReadToCloneMapping(long alignmentsId, long readId, int cloneIndex, boolean clustered, boolean additionalMapping, boolean droppedWithClone, boolean preClustered) {
+    public ReadToCloneMapping(long alignmentsId, long[] readIds, int cloneIndex, boolean clustered, boolean additionalMapping, boolean droppedWithClone, boolean preClustered) {
         this.alignmentsId = alignmentsId;
-        this.readId = readId;
+        this.readIds = readIds;
         this.cloneIndex = cloneIndex;
         assert !droppedWithClone || cloneIndex < 0;
         this.mappingType = (byte) ((clustered ? 1 : 0) | (additionalMapping ? 2 : 0) | (droppedWithClone ? 4 : 0) | (preClustered ? 8 : 0));
@@ -69,8 +70,8 @@ public final class ReadToCloneMapping {
         return alignmentsId;
     }
 
-    public long getReadId() {
-        return readId;
+    public long[] getReadIds() {
+        return readIds;
     }
 
     public boolean isClustered() {
@@ -115,16 +116,15 @@ public final class ReadToCloneMapping {
         ReadToCloneMapping that = (ReadToCloneMapping) o;
 
         if (alignmentsId != that.alignmentsId) return false;
-        if (readId != that.readId) return false;
         if (cloneIndex != that.cloneIndex) return false;
-        return mappingType == that.mappingType;
-
+        if (mappingType != that.mappingType) return false;
+        return Arrays.equals(readIds, that.readIds);
     }
 
     @Override
     public int hashCode() {
         int result = (int) (alignmentsId ^ (alignmentsId >>> 32));
-        result = 31 * result + (int) (readId ^ (readId >>> 32));
+        result = 31 * result + Arrays.hashCode(readIds);
         result = 31 * result + cloneIndex;
         result = 31 * result + (int) mappingType;
         return result;
@@ -142,7 +142,9 @@ public final class ReadToCloneMapping {
     public static void write(DataOutput output, ReadToCloneMapping object) {
         try {
             output.writeLong(object.alignmentsId);
-            output.writeLong(object.readId);
+            output.writeInt(object.readIds.length);
+            for (int i = 0; i < object.readIds.length; i++)
+                output.writeLong(object.readIds[i]);
             output.writeInt(object.cloneIndex);
             output.writeByte(object.mappingType);
         } catch (IOException e) {
@@ -153,10 +155,13 @@ public final class ReadToCloneMapping {
     public static ReadToCloneMapping read(DataInput input) {
         try {
             long alignmentsIndex = input.readLong();
-            long readId = input.readLong();
+            int nReadIds = input.readInt();
+            long[] readIds = new long[nReadIds];
+            for (int i = 0; i < nReadIds; i++)
+                readIds[i] = input.readLong();
             int cloneIndex = input.readInt();
             byte mappingType = input.readByte();
-            return new ReadToCloneMapping(alignmentsIndex, readId, cloneIndex, mappingType);
+            return new ReadToCloneMapping(alignmentsIndex, readIds, cloneIndex, mappingType);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -164,10 +169,13 @@ public final class ReadToCloneMapping {
 
     public static ReadToCloneMapping read(ByteBuffer input) {
         long alignmentsIndex = input.getLong();
-        long readId = input.getLong();
+        int nReadIds = input.getInt();
+        long[] readIds = new long[nReadIds];
+        for (int i = 0; i < nReadIds; i++)
+            readIds[i] = input.getLong();
         int cloneIndex = input.getInt();
         byte mappingType = input.get();
-        return new ReadToCloneMapping(alignmentsIndex, readId, cloneIndex, mappingType);
+        return new ReadToCloneMapping(alignmentsIndex, readIds, cloneIndex, mappingType);
     }
 
     public static final Comparator<ReadToCloneMapping>
@@ -175,7 +183,7 @@ public final class ReadToCloneMapping {
             ALIGNMENTS_COMPARATOR = new AlignmentsComparator();
 
     private static final class CloneComparator implements Comparator<ReadToCloneMapping>,
-            java.io.Serializable {
+                                                          java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
         private CloneComparator() {
@@ -198,7 +206,7 @@ public final class ReadToCloneMapping {
     }
 
     private static final class AlignmentsComparator implements Comparator<ReadToCloneMapping>,
-            java.io.Serializable {
+                                                               java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
         private AlignmentsComparator() {

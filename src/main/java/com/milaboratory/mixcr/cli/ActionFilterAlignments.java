@@ -90,12 +90,19 @@ public final class ActionFilterAlignments implements Action {
             this.chimerasOnly = chimerasOnly;
         }
 
+        static boolean containsAny(TLongHashSet set, long[] r) {
+            for (long l : r)
+                if (set.contains(l))
+                    return true;
+            return false;
+        }
+
         @Override
         public boolean accept(VDJCAlignments object) {
             if (object == null)
                 return true;
 
-            if (readsIds != null && !readsIds.contains(object.getReadId()))
+            if (readsIds != null && !containsAny(readsIds, object.getReadIds()))
                 return false;
 
             boolean lMatch = false;
