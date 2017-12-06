@@ -29,26 +29,21 @@
 package com.milaboratory.mixcr.cli;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.util.GlobalObjectMappers;
-import com.milaboratory.util.TimeUtils;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public final class Util {
@@ -66,7 +61,7 @@ public final class Util {
     }
 
     static void appendAtomically(File file, byte[] content) {
-        try (FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.WRITE);
+        try (FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
              FileLock lock = channel.lock()) {
             channel.position(channel.size());
             channel.write(ByteBuffer.wrap(content));
