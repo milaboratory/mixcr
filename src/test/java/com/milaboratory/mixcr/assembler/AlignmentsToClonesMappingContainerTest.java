@@ -44,80 +44,80 @@ import java.io.File;
 import java.io.FileOutputStream;
 
 public class AlignmentsToClonesMappingContainerTest {
-    @Test
-    public void test1() throws Exception {
-        test(20000, 200000, 10, 20000, 17);
-        test(200, 2000, 10, 2000, 2);
-        test(20000, 2000000, 10, 20000, 1048576);
-    }
-
-    public void test(int minRecords, int maxRecords, int minClones, int maxClones, int sortChunk) throws Exception {
-        Well19937c rnd = RandomUtil.getThreadLocalRandom();
-        RandomDataGenerator rndD = RandomUtil.getThreadLocalRandomData();
-
-        int readsCount, clonesCount;
-
-        do {
-            readsCount = minRecords + rnd.nextInt(maxRecords - minRecords);
-            clonesCount = minClones + rnd.nextInt(maxClones - minClones);
-        } while (readsCount <= clonesCount);
-
-        ReadToCloneMapping[] mappings = new ReadToCloneMapping[readsCount];
-        TLongHashSet[] clones = new TLongHashSet[clonesCount];
-
-        int[] initialReads = rndD.nextPermutation(mappings.length, clones.length);
-
-        Assert.assertEquals(initialReads.length, clones.length);
-
-        for (int i = 0; i < clones.length; i++) {
-            mappings[initialReads[i]] = new ReadToCloneMapping(initialReads[i], initialReads[i], i, false, false, false, false);
-            clones[i] = new TLongHashSet();
-            clones[i].add(initialReads[i]);
-        }
-
-        int goodMappings = clones.length;
-
-        for (int i = 0; i < mappings.length; i++) {
-            if (mappings[i] != null)
-                continue;
-            if (rnd.nextInt(100) > 80) // 20% dropped
-                mappings[i] = new ReadToCloneMapping(i, i, -1, false, false,
-                        false, false);
-            else {
-                ++goodMappings;
-                int cloneId = rnd.nextInt(clones.length);
-                mappings[i] = new ReadToCloneMapping(i, i, cloneId, rnd.nextBoolean(), rnd.nextBoolean(),
-                        false, rnd.nextBoolean());
-                clones[cloneId].add(i);
-            }
-        }
-
-        File tempFile = TempFileManager.getTempFile();
-        try(DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(tempFile)))) {
-            AlignmentsToClonesMappingContainer.writeMapping(CUtils.asOutputPort(mappings), clones.length, dos, sortChunk);
-        }
-
-        //System.out.println(tempFile.length());
-
-        AlignmentsToClonesMappingContainer container = AlignmentsToClonesMappingContainer.open(tempFile);
-
-        Assert.assertEquals(clones.length, container.getCloneCount());
-        Assert.assertEquals(goodMappings, container.getAlignmentCount());
-
-        OutputPort<ReadToCloneMapping> portByAlignments = container.createPortByAlignments();
-        for (int i = 0; i < mappings.length; i++) {
-            if (mappings[i].isDropped())
-                continue;
-            Assert.assertEquals(mappings[i], portByAlignments.take());
-        }
-
-        int[] sClonesId = rndD.nextPermutation(clones.length, clones.length);
-
-        for (int j = 0; j < clones.length; j++) {
-            int i = sClonesId[j];
-            for (ReadToCloneMapping reads : CUtils.it(container.createPortForClone(i)))
-                Assert.assertTrue(clones[i].remove(reads.alignmentsId));
-            Assert.assertTrue(clones[i].isEmpty());
-        }
-    }
+    // @Test
+    // public void test1() throws Exception {
+    //     test(20000, 200000, 10, 20000, 17);
+    //     test(200, 2000, 10, 2000, 2);
+    //     test(20000, 2000000, 10, 20000, 1048576);
+    // }
+    //
+    // public void test(int minRecords, int maxRecords, int minClones, int maxClones, int sortChunk) throws Exception {
+    //     Well19937c rnd = RandomUtil.getThreadLocalRandom();
+    //     RandomDataGenerator rndD = RandomUtil.getThreadLocalRandomData();
+    //
+    //     int readsCount, clonesCount;
+    //
+    //     do {
+    //         readsCount = minRecords + rnd.nextInt(maxRecords - minRecords);
+    //         clonesCount = minClones + rnd.nextInt(maxClones - minClones);
+    //     } while (readsCount <= clonesCount);
+    //
+    //     ReadToCloneMapping[] mappings = new ReadToCloneMapping[readsCount];
+    //     TLongHashSet[] clones = new TLongHashSet[clonesCount];
+    //
+    //     int[] initialReads = rndD.nextPermutation(mappings.length, clones.length);
+    //
+    //     Assert.assertEquals(initialReads.length, clones.length);
+    //
+    //     for (int i = 0; i < clones.length; i++) {
+    //         mappings[initialReads[i]] = new ReadToCloneMapping(initialReads[i], initialReads[i], i, false, false, false, false);
+    //         clones[i] = new TLongHashSet();
+    //         clones[i].add(initialReads[i]);
+    //     }
+    //
+    //     int goodMappings = clones.length;
+    //
+    //     for (int i = 0; i < mappings.length; i++) {
+    //         if (mappings[i] != null)
+    //             continue;
+    //         if (rnd.nextInt(100) > 80) // 20% dropped
+    //             mappings[i] = new ReadToCloneMapping(i, i, -1, false, false,
+    //                     false, false);
+    //         else {
+    //             ++goodMappings;
+    //             int cloneId = rnd.nextInt(clones.length);
+    //             mappings[i] = new ReadToCloneMapping(i, i, cloneId, rnd.nextBoolean(), rnd.nextBoolean(),
+    //                     false, rnd.nextBoolean());
+    //             clones[cloneId].add(i);
+    //         }
+    //     }
+    //
+    //     File tempFile = TempFileManager.getTempFile();
+    //     try(DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(tempFile)))) {
+    //         AlignmentsToClonesMappingContainer.writeMapping(CUtils.asOutputPort(mappings), clones.length, dos, sortChunk);
+    //     }
+    //
+    //     //System.out.println(tempFile.length());
+    //
+    //     AlignmentsToClonesMappingContainer container = AlignmentsToClonesMappingContainer.open(tempFile);
+    //
+    //     Assert.assertEquals(clones.length, container.getCloneCount());
+    //     Assert.assertEquals(goodMappings, container.getAlignmentCount());
+    //
+    //     OutputPort<ReadToCloneMapping> portByAlignments = container.createPortByAlignments();
+    //     for (int i = 0; i < mappings.length; i++) {
+    //         if (mappings[i].isDropped())
+    //             continue;
+    //         Assert.assertEquals(mappings[i], portByAlignments.take());
+    //     }
+    //
+    //     int[] sClonesId = rndD.nextPermutation(clones.length, clones.length);
+    //
+    //     for (int j = 0; j < clones.length; j++) {
+    //         int i = sClonesId[j];
+    //         for (ReadToCloneMapping reads : CUtils.it(container.createPortForClone(i)))
+    //             Assert.assertTrue(clones[i].remove(reads.alignmentsId));
+    //         Assert.assertTrue(clones[i].isEmpty());
+    //     }
+    // }
 }

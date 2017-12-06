@@ -72,83 +72,83 @@ public class RunMiXCRTest {
     //    }
     //}
 
-    @Test
-    public void test2() throws Exception {
-        //Path cachePath = Paths.get(System.getProperty("user.home"), ".repseqio", "cache");
-        //SequenceResolvers.initDefaultResolver(cachePath);
-        //VDJCLibraryRegistry.getDefault().addPathResolver("/Volumes/Data/Projects/repseqio/reference/human/");
+    // @Test
+    // public void test2() throws Exception {
+    //     //Path cachePath = Paths.get(System.getProperty("user.home"), ".repseqio", "cache");
+    //     //SequenceResolvers.initDefaultResolver(cachePath);
+    //     //VDJCLibraryRegistry.getDefault().addPathResolver("/Volumes/Data/Projects/repseqio/reference/human/");
+    //
+    //     RunMiXCR.RunMiXCRAnalysis params = new RunMiXCR.RunMiXCRAnalysis(
+    //             RunMiXCR.class.getResource("/sequences/test_R1.fastq").getFile(),
+    //             RunMiXCR.class.getResource("/sequences/test_R2.fastq").getFile());
+    //
+    //     //params.library = "human_TR";
+    //     //params.species = "hs";
+    //
+    //     RunMiXCR.AlignResult align = RunMiXCR.align(params);
+    //
+    //     List<PairedRead> reads = new ArrayList<>();
+    //     try(PairedFastqReader fReader = new PairedFastqReader(
+    //             RunMiXCR.class.getResource("/sequences/test_R1.fastq").getFile(),
+    //             RunMiXCR.class.getResource("/sequences/test_R2.fastq").getFile())) {
+    //         for (PairedRead s : CUtils.it(fReader))
+    //             reads.add(s);
+    //     }
+    //
+    //     File tempFile = TempFileManager.getTempFile();
+    //     try(VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
+    //         writer.header(align.aligner);
+    //         for (VDJCAlignments alignment : align.alignments)
+    //             writer.write(alignment);
+    //     }
+    //
+    //     try(VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile)) {
+    //         int tr = 0;
+    //         for (VDJCAlignments alignment : CUtils.it(reader)) {
+    //             PairedRead actual = reads.get((int) alignment.getReadId());
+    //             ++tr;
+    //
+    //             Assert.assertArrayEquals(ActionAlign.extractSequences(actual), alignment.getOriginalSequences());
+    //         }
+    //
+    //         System.out.println(tr);
+    //     }
+    // }
 
-        RunMiXCR.RunMiXCRAnalysis params = new RunMiXCR.RunMiXCRAnalysis(
-                RunMiXCR.class.getResource("/sequences/test_R1.fastq").getFile(),
-                RunMiXCR.class.getResource("/sequences/test_R2.fastq").getFile());
-
-        //params.library = "human_TR";
-        //params.species = "hs";
-
-        RunMiXCR.AlignResult align = RunMiXCR.align(params);
-
-        List<PairedRead> reads = new ArrayList<>();
-        try(PairedFastqReader fReader = new PairedFastqReader(
-                RunMiXCR.class.getResource("/sequences/test_R1.fastq").getFile(),
-                RunMiXCR.class.getResource("/sequences/test_R2.fastq").getFile())) {
-            for (PairedRead s : CUtils.it(fReader))
-                reads.add(s);
-        }
-
-        File tempFile = TempFileManager.getTempFile();
-        try(VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
-            writer.header(align.aligner);
-            for (VDJCAlignments alignment : align.alignments)
-                writer.write(alignment);
-        }
-
-        try(VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile)) {
-            int tr = 0;
-            for (VDJCAlignments alignment : CUtils.it(reader)) {
-                PairedRead actual = reads.get((int) alignment.getReadId());
-                ++tr;
-
-                Assert.assertArrayEquals(ActionAlign.extractSequences(actual), alignment.getOriginalSequences());
-            }
-
-            System.out.println(tr);
-        }
-    }
-
-    @Ignore
-    @Test
-    public void test3() throws Exception {
-        RunMiXCR.RunMiXCRAnalysis params = new RunMiXCR.RunMiXCRAnalysis(
-                "/Users/poslavsky/Projects/milab/temp/R1_part.fastq.gz",
-                "/Users/poslavsky/Projects/milab/temp/R2_part.fastq.gz");
-
-        RunMiXCR.AlignResult align = RunMiXCR.align(params);
-
-        List<PairedRead> reads = new ArrayList<>();
-        try(PairedFastqReader fReader = new PairedFastqReader(
-                "/Users/poslavsky/Projects/milab/temp/R1_part.fastq.gz",
-                "/Users/poslavsky/Projects/milab/temp/R2_part.fastq.gz", true)) {
-            for (PairedRead s : CUtils.it(fReader))
-                reads.add(s);
-        }
-
-        File tempFile = TempFileManager.getTempFile();
-        try(VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
-            writer.header(align.aligner);
-            for (VDJCAlignments alignment : align.alignments)
-                writer.write(alignment);
-        }
-
-        try(VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile)) {
-            int tr = 0;
-            for (VDJCAlignments alignment : CUtils.it(reader)) {
-                PairedRead actual = reads.get((int) alignment.getReadId());
-                ++tr;
-
-                Assert.assertArrayEquals(ActionAlign.extractSequences(actual), alignment.getOriginalSequences());
-            }
-
-            System.out.println(tr);
-        }
-    }
+    // @Ignore
+    // @Test
+    // public void test3() throws Exception {
+    //     RunMiXCR.RunMiXCRAnalysis params = new RunMiXCR.RunMiXCRAnalysis(
+    //             "/Users/poslavsky/Projects/milab/temp/R1_part.fastq.gz",
+    //             "/Users/poslavsky/Projects/milab/temp/R2_part.fastq.gz");
+    //
+    //     RunMiXCR.AlignResult align = RunMiXCR.align(params);
+    //
+    //     List<PairedRead> reads = new ArrayList<>();
+    //     try(PairedFastqReader fReader = new PairedFastqReader(
+    //             "/Users/poslavsky/Projects/milab/temp/R1_part.fastq.gz",
+    //             "/Users/poslavsky/Projects/milab/temp/R2_part.fastq.gz", true)) {
+    //         for (PairedRead s : CUtils.it(fReader))
+    //             reads.add(s);
+    //     }
+    //
+    //     File tempFile = TempFileManager.getTempFile();
+    //     try(VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
+    //         writer.header(align.aligner);
+    //         for (VDJCAlignments alignment : align.alignments)
+    //             writer.write(alignment);
+    //     }
+    //
+    //     try(VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile)) {
+    //         int tr = 0;
+    //         for (VDJCAlignments alignment : CUtils.it(reader)) {
+    //             PairedRead actual = reads.get((int) alignment.getReadId());
+    //             ++tr;
+    //
+    //             Assert.assertArrayEquals(ActionAlign.extractSequences(actual), alignment.getOriginalSequences());
+    //         }
+    //
+    //         System.out.println(tr);
+    //     }
+    // }
 }
