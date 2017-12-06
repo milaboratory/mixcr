@@ -29,13 +29,14 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.alignment.Alignment;
+import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.Serializer;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
 
 import java.util.EnumMap;
@@ -80,33 +81,71 @@ class IO {
         @Override
         public void write(PrimitivO output, VDJCAlignments object) {
             output.writeObject(object.targets);
-            output.writeObject(object.targetDescriptions);
-            output.writeObject(object.originalSequences);
-            output.writeObject(object.originalDescriptions);
+            output.writeObject(object.originalReads);
+            output.writeObject(object.history);
             output.writeByte(object.hits.size());
             for (Map.Entry<GeneType, VDJCHit[]> entry : object.hits.entrySet()) {
                 output.writeObject(entry.getKey());
                 output.writeObject(entry.getValue());
             }
-            output.writeLong(object.readId);
         }
 
         @Override
         public VDJCAlignments read(PrimitivI input) {
             NSequenceWithQuality[] targets = input.readObject(NSequenceWithQuality[].class);
-            String[] targetDescriptions = input.readObject(String[].class);
-            NSequenceWithQuality[] originalSequences = input.readObject(NSequenceWithQuality[].class);
-            String[] originalDescriptions = input.readObject(String[].class);
+            SequenceRead[] originalReads = input.readObject(SequenceRead[].class);
+            SequenceHistory[] history = input.readObject(SequenceHistory[].class);
             int size = input.readByte();
             EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
             for (int i = 0; i < size; i++) {
                 GeneType key = input.readObject(GeneType.class);
                 hits.put(key, input.readObject(VDJCHit[].class));
             }
-            VDJCAlignments vdjcAlignments = new VDJCAlignments(input.readLong(), hits, targets);
-            vdjcAlignments.setTargetDescriptions(targetDescriptions);
-            vdjcAlignments.setOriginalSequences(originalSequences);
-            vdjcAlignments.setOriginalDescriptions(originalDescriptions);
+            VDJCAlignments vdjcAlignments = new VDJCAlignments(input.readLong(), hits, targets, history, originalReads);
+            return vdjcAlignments;
+        }
+
+        @Override
+        public boolean isReference() {
+            return true;
+        }
+
+        @Override
+        public boolean handlesReference() {
+            return false;
+        }
+    }
+
+    public static class VDJCAlignmentsSerializer21 implements Serializer<VDJCAlignments> {
+        @Override
+        public void write(PrimitivO output, VDJCAlignments object) {
+            throw new RuntimeException("Backward compatibility reader! Write not implemented.");
+            // output.writeObject(object.targets);
+            // output.writeObject(object.targetDescriptions);
+            // output.writeObject(object.originalSequences);
+            // output.writeObject(object.originalDescriptions);
+            // output.writeByte(object.hits.size());
+            // for (Map.Entry<GeneType, VDJCHit[]> entry : object.hits.entrySet()) {
+            //     output.writeObject(entry.getKey());
+            //     output.writeObject(entry.getValue());
+            // }
+            // output.writeLong(object.readId);
+        }
+
+        @Override
+        public VDJCAlignments read(PrimitivI input) {
+            NSequenceWithQuality[] targets = input.readObject(NSequenceWithQuality[].class);
+            input.readObject(String[].class);
+            input.readObject(NSequenceWithQuality[].class);
+            input.readObject(String[].class);
+            int size = input.readByte();
+            EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
+            for (int i = 0; i < size; i++) {
+                GeneType key = input.readObject(GeneType.class);
+                hits.put(key, input.readObject(VDJCHit[].class));
+            }
+            VDJCAlignments vdjcAlignments = new VDJCAlignments(input.readLong(), hits, targets,
+                    new SequenceHistory[0], new SequenceRead[0]);
             return vdjcAlignments;
         }
 
