@@ -131,6 +131,8 @@ public interface SequenceHistory {
         public final int nMismatches;
 
         public Merge(OverlapType overlapType, SequenceHistory left, SequenceHistory right, int offset, int nMismatches) {
+            if (left == null || right == null)
+                throw new NullPointerException();
             this.overlapType = overlapType;
             this.left = left;
             this.right = right;
@@ -195,6 +197,8 @@ public interface SequenceHistory {
         final int extensionLeft, extensionRight;
 
         public Extend(SequenceHistory original, int extensionLeft, int extensionRight) {
+            if (original == null)
+                throw new NullPointerException();
             this.original = original;
             this.extensionLeft = extensionLeft;
             this.extensionRight = extensionRight;

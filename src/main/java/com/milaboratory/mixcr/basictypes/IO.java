@@ -101,8 +101,7 @@ class IO {
                 GeneType key = input.readObject(GeneType.class);
                 hits.put(key, input.readObject(VDJCHit[].class));
             }
-            VDJCAlignments vdjcAlignments = new VDJCAlignments(input.readLong(), hits, targets, history, originalReads);
-            return vdjcAlignments;
+            return new VDJCAlignments(input.readLong(), hits, targets, history, originalReads);
         }
 
         @Override

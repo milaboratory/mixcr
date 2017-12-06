@@ -55,7 +55,7 @@ public class SequenceHistoryTest {
 
         for (SequenceHistory entry : entries)
             o.writeObject(entry);
-        
+
         PrimitivI i = new PrimitivI(new ByteArrayInputStream(bos.toByteArray()));
         for (SequenceHistory entry : entries)
             Assert.assertEquals(entry, i.readObject(SequenceHistory.class));
