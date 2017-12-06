@@ -3,8 +3,8 @@
 Export
 ======
 
-In order to export result of alignment or clones from binary file
-(``.vdjca`` or ``.clns``) to a human-readable text file one can use
+In order to export alignment results or clones from a binary file
+(``.vdjca`` or ``.clns``) to a human-readable text file one can use the
 ``exportAlignments`` and ``exportClones`` commands respectively. The
 syntax for these commands is:
 
@@ -17,12 +17,12 @@ syntax for these commands is:
     mixcr exportClones [options] clones.clns clones.txt
 
 The resulting tab-delimited text file will contain columns with
-different types of information. If no options specified, the default set
-of columns, which is sufficient in most cases, will be exported. The
-possible columns are (see below for details): aligned sequences,
+different types of information. If no options are specified, the default set
+of columns - which is sufficient in most cases - will be exported. The
+possible columns include (see below for details): aligned sequences,
 qualities, all or just best hit for V, D, J and C genes, corresponding
-alignemtns, nucleotide and amino acid sequences of gene region present
-in sequence etc. In case of clones, the additional columns are: clone
+alignments, nucleotide and amino acid sequences of gene region present
+in sequence, etc. When exporting clones, the additional columns include: clone
 count, clone fraction etc.
 
 One can customize the list of fields that will be exported by passing
@@ -34,25 +34,25 @@ and ``CDR3`` amino acid sequence, one can do:
 
     mixcr exportClones -count -vHit -jHit -vAlignment -jAlignment -aaFeature CDR3 clones.clns clones.txt
 
-The columns in the resulting file will be exported in the exact same
-order as parameters in the command line. The list of available fields
+The columns in the resulting file will be exported in exactly the same
+order as parameters on the command line. The list of available fields
 will be reviewed in the next subsections. For convenience, MiXCR
 provides two predefined sets of fields for exporting: ``min`` (will
 export minimal required information about clones or alignments) and
-``full`` (used by default); one can use these sets by specifying
+``full`` (used by default); one can use these sets by specifying the
 ``--preset`` option:
 
 ::
 
     mixcr exportClones --preset min clones.clns clones.txt
 
-One can add additional columns to preset in the following way:
+One can add additional columns to the preset in the following way:
 
 ::
 
     mixcr exportClones --preset min -qFeature CDR2 clones.clns clones.txt
 
-One can also put all export fields in the file like:
+One can also put all specify export fields in a seperate file:
 
 ::
 
@@ -61,7 +61,7 @@ One can also put all export fields in the file like:
     -feature CDR3
     ...
 
-and pass this file to export command:
+and pass this file to the export command:
 
 ::
 
@@ -70,8 +70,8 @@ and pass this file to export command:
 Command line parameters
 -----------------------
 
-The list of command line parameters for both ``exportAlignments`` and
-``exportClones`` is the following:
+The following is a list of command line parameters for both ``exportAlignments`` and
+``exportClones``:
 
 +-----------------------------+-------------------------------------------------------------------+
 | Option                      | Description                                                       |
@@ -80,17 +80,18 @@ The list of command line parameters for both ``exportAlignments`` and
 +-----------------------------+-------------------------------------------------------------------+
 | ``-f``, ``--fields``        | list available fields that can be exported                        |
 +-----------------------------+-------------------------------------------------------------------+
-| ``-p``, ``--preset``        | select predefined set of fields to export (``full`` or ``min``)   |
+| ``-p``, ``--preset``        | select a predefined set of fields to export (``full`` or ``min``) |
 +-----------------------------+-------------------------------------------------------------------+
-| ``-pf``, ``--preset-file``  | load file with a list of fields to export                         |
+| ``-pf``, ``--preset-file``  | load a file with a list of fields to export                       |
 +-----------------------------+-------------------------------------------------------------------+
-| ``-lf``, ``--list-fields``  | list availabel fields that can be exported                        |
+| ``-lf``, ``--list-fields``  | list available fields that can be exported                        |
 +-----------------------------+-------------------------------------------------------------------+
-| ``-s``, ``--no-spaces``     | output short versions of column headers which facilitates analysis|
-|                             | with Pandas, R/DataFrames or other data tables processing library |
+| ``-s``, ``--no-spaces``     | output short versions of column headers to assist with analysis   |
+|                             | using Pandas, R/DataFrames or another data tables processing      |
+|                             | library                                                           |
 +-----------------------------+-------------------------------------------------------------------+
 
-The line parameters are only for ``exportClones``:
+The following parameters only apply to ``exportClones``:
 
 +--------------------------------------+-------------------------------------------------------------------+
 | ``-c``, ``--chains``                 | Limit output to specific locus (e.g. TRA or IGH). Clone fractions |
@@ -128,16 +129,16 @@ The following fields are specific for clones:
 Default anchor point positions
 ------------------------------
 
-Positions of anchor poins produced by ``-defaultAnchorPoints`` option are outputted as a colon separated list.
-If anchor point is not covered by target sequence nothing is printed for it, but flanking colon symbols are
+Positions of anchor points produced by the ``-defaultAnchorPoints`` option are outputted as a colon separated list.
+If an anchor point is not covered by the target sequence nothing is printed for it, but flanking colon symbols are
 preserved to maintain positions in array. See example:
 
 ::
 
     :::::::::108:117:125:152:186:213:243:244:
 
-If there are several target sequences (e.g. paired-end reads or multi-part clonal sequnce), the array is outputted for
-each target sequence. In this case arrays are sepparated by comma:
+If there are several target sequences (e.g. paired-end reads or multi-part clonal sequnce), an array is outputted for
+each target sequence. In this case arrays are separated by a comma:
 
 ::
 
@@ -150,7 +151,7 @@ Even if there are no anchor points in one of the parts:
     :::::::::::::::::,:::::::::108:117:125:152:186:213:243:244:
 
 
-The following table shows the correspondance between anchor point and positions in default anchor point array:
+The following table shows the correspondence between anchor points and positions in the default anchor point array:
 
 +--------------------------+---------------------+--------------------+
 | Anchors point            | Zero-based position | One-based position |
@@ -222,10 +223,43 @@ The following table shows the correspondance between anchor point and positions 
 | CExon1End                | 21                  | 22                 |
 +--------------------------+---------------------+--------------------+
 
+The following regular expressions can be used to parse the contents of this field in Python:
+
+- for length analysis, or analysis of raw alignments:
+
+    ::
+
+        ^(?P<V5UTRBegin>-?[0-9]*):(?P<L1Begin>-?[0-9]*):(?P<VIntronBegin>-?[0-9]*):(?P<L2Begin>-?[0-9]*):(?P<FR1Begin>-?[0-9]*):(?P<CDR1Begin>-?[0-9]*):(?P<FR2Begin>-?[0-9]*):(?P<CDR2Begin>-?[0-9]*):(?P<FR3Begin>-?[0-9]*):(?P<CDR3Begin>-?[0-9]*):(?P<V3Deletion>-?[0-9]*):(?P<VEnd>-?[0-9]*):(?P<DBegin>-?[0-9]*):(?P<D5Deletion>-?[0-9]*):(?P<D3Deletion>-?[0-9]*):(?P<DEnd>-?[0-9]*):(?P<JBegin>-?[0-9]*):(?P<J5Deletion>-?[0-9]*):(?P<CDR3End>-?[0-9]*):(?P<CBegin>-?[0-9]*):(?P<CExon1End>-?[0-9]*)$
+
+    snipped for Pandas:
+
+    .. code-block:: python
+
+        import pandas as pd
+        data = pd.read_table("exported.txt", low_memory=False)
+        anchorPointsRegex="^(?P<V5UTRBegin>-?[0-9]*):(?P<L1Begin>-?[0-9]*):(?P<VIntronBegin>-?[0-9]*):(?P<L2Begin>-?[0-9]*):(?P<FR1Begin>-?[0-9]*):(?P<CDR1Begin>-?[0-9]*):(?P<FR2Begin>-?[0-9]*):(?P<CDR2Begin>-?[0-9]*):(?P<FR3Begin>-?[0-9]*):(?P<CDR3Begin>-?[0-9]*):(?P<V3Deletion>-?[0-9]*):(?P<VEnd>-?[0-9]*):(?P<DBegin>-?[0-9]*):(?P<D5Deletion>-?[0-9]*):(?P<D3Deletion>-?[0-9]*):(?P<DEnd>-?[0-9]*):(?P<JBegin>-?[0-9]*):(?P<J5Deletion>-?[0-9]*):(?P<CDR3End>-?[0-9]*):(?P<CBegin>-?[0-9]*):(?P<CExon1End>-?[0-9]*)$"
+        data = pd.concat([data, d.refPoints.str.extract(anchorPointsRegex, expand=True).apply(pd.to_numeric)], axis=1)
+
+- A simplified regular expression with a smaller number of fields can be used for analysis of CDR3-assembled clonotypes:
+
+    ::
+
+        ^(?:-?[0-9]*:){8}(?:-?[0-9]*):(?P<CDR3Begin>-?[0-9]*):(?P<V3Deletion>-?[0-9]*):(?P<VEnd>-?[0-9]*):(?P<DBegin>-?[0-9]*):(?P<D5Deletion>-?[0-9]*):(?P<D3Deletion>-?[0-9]*):(?P<DEnd>-?[0-9]*):(?P<JBegin>-?[0-9]*):(?P<J5Deletion>-?[0-9]*):(?P<CDR3End>-?[0-9]*):(?:-?[0-9]*:){2}(?:-?[0-9]*)$
+
+    snipped for Pandas:
+
+    .. code-block:: python
+
+        import pandas as pd
+        data = pd.read_table("exported.txt", low_memory=False)
+        anchorPointsRegex="^^(?:-?[0-9]*:){8}(?:-?[0-9]*):(?P<CDR3Begin>-?[0-9]*):(?P<V3Deletion>-?[0-9]*):(?P<VEnd>-?[0-9]*):(?P<DBegin>-?[0-9]*):(?P<D5Deletion>-?[0-9]*):(?P<D3Deletion>-?[0-9]*):(?P<DEnd>-?[0-9]*):(?P<JBegin>-?[0-9]*):(?P<J5Deletion>-?[0-9]*):(?P<CDR3End>-?[0-9]*):(?:-?[0-9]*:){2}(?:-?[0-9]*)$"
+        data = pd.concat([data, d.refPoints.str.extract(anchorPointsRegex, expand=True).apply(pd.to_numeric)], axis=1)
+
+
 Examples
 --------
 
-Export only best V, D, J hits and best V hit alignment from ``.vdjca``
+Export only the best V, D, J hits and the best V hit alignment from a ``.vdjca``
 file:
 
 ::
@@ -249,28 +283,27 @@ The syntax of alignment is described in :ref:`appendix <ref-encoding>`.
 Exporting well formatted alignments for manual inspection
 ---------------------------------------------------------
 
-MiXCR allows to export resulting alignments after :ref:`align <ref-align>`
-step as a pretty formatted text for manual analysis of produced
-alignments and structure of library to facilitate optimization of
-analysis parameters and libraray preparation protocol. To export pretty
-formatted alignments use ``exportAlignmentsPretty`` command:
+MiXCR is able to export alignments create with the :ref:`align <ref-align>`
+step as pretty formatted text (human readable) for manual analysis. This can be
+used both to inspect alignments and to facilitate optimization of
+analysis parameters and library preparation protocol. To export pretty
+formatted alignments use the ``exportAlignmentsPretty`` command:
 
 ::
 
     mixcr exportAlignmentsPretty --skip 1000 --limit 10 input.vdjca test.txt
 
-this will export 10 results after skipping first 1000 records and place
-result into ``test.txt`` file. Skipping of first records is often useful
-because first sequences in fastq file may have lower quality then
-average reads, so first resulsts are not representative. It is possible
-to omit last paramenter with output file name to print result directly
-to standard output stream (to console), like this:
+this will export 10 results after skipping the first 1000 records, then place the
+results into the file ``test.txt``. Skipping earlier records is often useful
+because the first sequences in a fastq file may have lower than average read quality.
+Omitting the last parameter (output file name) will print results directly
+to the standard output stream (to console), like this:
 
 ::
 
     mixcr exportAlignmentsPretty --skip 1000 --limit 10 input.vdjca
 
-Here is a summary of command line options:
+Here is a summary of the command line options:
 
 +---------------------+-----------------------------------------------------------------------------------------+
 | Option              | Description                                                                             |
@@ -283,17 +316,17 @@ Here is a summary of command line options:
 +---------------------+-----------------------------------------------------------------------------------------+
 | ``-t``, ``--top``   | output only top hits for V, D, J nad C genes                                            |
 +---------------------+-----------------------------------------------------------------------------------------+
-| ``--cdr3-contains`` | output only those alignemnts which CDR3 contains specified nucleotides (e.g.            |
+| ``--cdr3-contains`` | output only those alignments in which CDR3 contains specified nucleotides (e.g.         |
 |                     | ``--cdr3-contains TTCAGAGGAGC``)                                                        |
 +---------------------+-----------------------------------------------------------------------------------------+
-| ``--read-contains`` | output only those alignemnts for which corresonding reads contain specified nucleotides |
-|                     | e.g. ``--read-contains ATGCTTGCGCGCT``)                                                 |
+| ``--read-contains`` | output only those alignments for which the corresonding reads contain specified         |
+|                     | nucleotides e.g. ``--read-contains ATGCTTGCGCGCT``)                                     |
 +---------------------+-----------------------------------------------------------------------------------------+
-| ``--verbose``       | use more verbose format for alignments (see below for example)                          |
+| ``--verbose``       | use a more verbose format for alignments (see below for example)                        |
 +---------------------+-----------------------------------------------------------------------------------------+
 
 
-Results produced by this command has the following structure:
+Results produced by this command have the following structure:
 
 .. raw:: html
 
@@ -350,7 +383,7 @@ Results produced by this command has the following structure:
     </pre>
    
 
-Using of ``--verbose`` option will produce alignments in s slightly different format: 
+Usage of the ``--verbose`` option will produce alignments in a slightly different format: 
 
 
 .. raw:: html
@@ -509,22 +542,21 @@ Using of ``--verbose`` option will produce alignments in s slightly different fo
 Exporting reads aggregated by clones
 ------------------------------------
 
-MiXCR allows to preserve mapping between initial reads and final clonotypes. There are several options how to access this information. 
+MiXCR can preserve the mapping between initial reads and final clonotypes. There are several options for accessing this information. 
 
-In any way, first one need to specify additonal option ``--index`` for the :ref:`assemble <ref-assemble>` command:
+To enable this behaviour, specify the option ``--index`` for the :ref:`assemble <ref-assemble>` command:
 
 ::
 
     mixcr assemble --index index_file alignments.vdjca output.clns
 
-This will tell MiXCR to store mapping in the file ``index_file`` (actually two files will be created: ``index_file`` and ``index_file.p`` both of which are used to store the index; in further options one should specify only ``index_file`` without ``.p`` extension and MiXCR will automatically read both required files). Now one can use ``index_file`` in order to access this information. For example using ``-cloneId`` option for ``exportAlignments`` command:
+This will tell MiXCR to store an index mapping in the file ``index_file`` (actually two files will be created: ``index_file`` and ``index_file.p`` both of which are used to store the index; in further options one should specify only ``index_file`` without ``.p`` extension and MiXCR will automatically read both required files). It is then possible to use this ``index_file`` in order to map clones to initial reads. For example using the ``-cloneId`` option for the ``exportAlignments`` command:
 
 ::
 
     mixcr exportAlignments -p min -cloneId index_file alignments.vdjca alignments.txt
 
-will print additional column with id of the clone which contains corresponding alignment:
-
+will print an additional column with the id of the clone which matches the corresponding alignment:
 
 +----------------+----------------+-------+----------+
 | Best V hit     | Best D hit     |  ...  | CloneId  |
@@ -538,13 +570,13 @@ will print additional column with id of the clone which contains corresponding a
 | ...            | ...            |  ...  | ...      |
 +----------------+----------------+-------+----------+
 
-For more information one can export mapping type as well:
+For more information it's also possible to export the mapping type:
 
 ::
 
     mixcr exportAlignments -p min -cloneIdWithMappingType index_file alignments.vdjca alignments.txt
 
-which will give something like:
+Will give you something like:
 
 +----------------+----------------+-------+----------------------+
 | Best V hit     | Best D hit     |  ...  | Clone mapping        |
@@ -561,13 +593,13 @@ which will give something like:
 +----------------+----------------+-------+----------------------+
 
 
-One can also export all read IDs that were aggregated by eah clone. For this one can use ``-readIds`` export options for ``exportClones`` action:
+It's also possible to export all read IDs that were aggregated by each clone, using the ``-readIds`` export options for ``exportClones``:
 
 ::
 
     mixcr exportClones -c IGH -p min -readIds index_file clones.clns clones.txt
 
-This will add a column with full enumeration of all reads that were absorbed by particular clone:
+This will add a column with a full enumeration of all reads that were clustered into a particular clone:
 
 
 +----------+-------------+----------------+-----+--------------------------------+
@@ -584,22 +616,22 @@ This will add a column with full enumeration of all reads that were absorbed by 
 |   ...    |             | ...            | ... | ...                            |
 +----------+-------------+----------------+-----+--------------------------------+
 
-Note, that resulting txt file may be very huge since all read numbers that were successfully assembled will be printed.
+Note, the resulting txt file may be _very large_ since all read numbers that were successfully assembled will be printed.
 
 
-Finally, one can export reads aggregated by each clone into separate ``.fastq`` file. For that one need first to specify additional ``-g`` option for :ref:`align <ref-align>` command:
+Finally, you can export reads aggregated by clone into separate ``.fastq`` files. To support this behaviour the :ref:`align <ref-align>` command needs to be run with the additional ``-g`` option:
 
 ::
 
     mixcr align -g input.fastq alignments.vdjca.gz
 
-With this option MiXCR will store original reads in the ``.vdjca`` file. Then one can export reads corresponding for particular clone with ``exportReadsForClones`` command. For example, export all reads that were assembled into the first clone (clone with cloneId = 0):
+With this option MiXCR will store the original reads in the ``.vdjca`` file. Then one can export reads corresponding to a particular clone with the ``exportReadsForClones`` command. For example, export all reads that were assembled into the first clone (clone with cloneId = 0):
 
 ::
 
     mixcr exportReadsForClones index_file alignments.vdjca.gz 0 reads.fastq.gz
 
-This will create file ``reads_clns0.fastq.gz`` (or two files ``reads_clns0_R1.fastq.gz`` and ``reads_clns0_R2.fastq.gz`` if the original data were paired) with all reads that were aggregated by the first clone. One can export reads for several clones at a time:
+This will create the file ``reads_clns0.fastq.gz`` (or two files ``reads_clns0_R1.fastq.gz`` and ``reads_clns0_R2.fastq.gz`` if the original data were paired) with all reads that were aggregated by the first clone. One can export reads for several clones at a time:
 
 ::
 
