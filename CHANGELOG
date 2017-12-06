@@ -1,4 +1,10 @@
 
+MiXCR 2.1.7 ( 6 Dec 2017)
+========================
+
+-- Fixes bug leading to IOException if report file not exists. (#295)
+
+
 MiXCR 2.1.6 (28 Nov 2017)
 ========================
 
