@@ -1,0 +1,1 @@
+Fixes bug leading to IOException if report file not exists. (#295)
