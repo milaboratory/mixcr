@@ -230,8 +230,9 @@ public class ActionAlign implements Action {
                 if (alignment == null) {
                     if (writeAllResults)
                         // Creating empty alignment object if alignment for current read failed
-                        alignment = new VDJCAlignments(read.getId(), emptyHits,
-                                readsLayout.createTargets(read)[0].targets);
+                        // alignment = new VDJCAlignments(read.getId(), emptyHits,
+                        //         readsLayout.createTargets(read)[0].targets);
+                        System.out.println("NULL!!!");
                     else {
                         if (notAlignedWriter != null)
                             notAlignedWriter.write(result.read);
@@ -243,10 +244,10 @@ public class ActionAlign implements Action {
                     report.onChimera();
 
                 if (writer != null) {
-                    if (actionParameters.getSaveReadDescription() || actionParameters.getSaveOriginalReads())
-                        alignment.setOriginalDescriptions(extractDescriptions(read));
-                    if (actionParameters.getSaveOriginalReads())
-                        alignment.setOriginalSequences(extractSequences(read));
+                    // if (actionParameters.getSaveReadDescription() || actionParameters.getSaveOriginalReads())
+                    //     alignment.setOriginalDescriptions(extractDescriptions(read));
+                    // if (actionParameters.getSaveOriginalReads())
+                    //     alignment.setOriginalSequences(extractSequences(read));
 
                     writer.write(alignment);
                 }

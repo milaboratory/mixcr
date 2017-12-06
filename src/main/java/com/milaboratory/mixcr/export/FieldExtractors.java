@@ -419,12 +419,12 @@ public final class FieldExtractors {
 
             descriptorsList.add(new ExtractDefaultReferencePointsPositions());
 
-            descriptorsList.add(new PL_A("-readId", "Export id of read corresponding to alignment", "Read id", "readId") {
-                @Override
-                protected String extract(VDJCAlignments object) {
-                    return "" + object.getReadId();
-                }
-            });
+            // descriptorsList.add(new PL_A("-readId", "Export id of read corresponding to alignment", "Read id", "readId") {
+            //     @Override
+            //     protected String extract(VDJCAlignments object) {
+            //         return "" + object.getReadId();
+            //     }
+            // });
 
             descriptorsList.add(new ExtractSequence(VDJCAlignments.class, "-sequence",
                     "Export aligned sequence (initial read), or 2 sequences in case of paired-end reads",
@@ -463,51 +463,51 @@ public final class FieldExtractors {
                     "Export initial read quality, or 2 qualities in case of paired-end reads",
                     "Clonal sequence quality(s)", "clonalSequenceQuality"));
 
-            descriptorsList.add(new PL_A("-descrR1", "Export description line from initial .fasta or .fastq file " +
-                    "of the first read (only available if --save-description was used in align command)", "Description R1", "descrR1") {
-                @Override
-                protected String extract(VDJCAlignments object) {
-                    String[] ds = object.getOriginalDescriptions();
-                    if (ds == null || ds.length == 0)
-                        throw new IllegalArgumentException("Error for option \'-descrR1\':\n" +
-                                "No description available for read: either re-run align action with --save-description option " +
-                                "or don't use \'-descrR1\' in exportAlignments");
-                    return ds[0];
-                }
-            });
+            // descriptorsList.add(new PL_A("-descrR1", "Export description line from initial .fasta or .fastq file " +
+            //         "of the first read (only available if --save-description was used in align command)", "Description R1", "descrR1") {
+            //     @Override
+            //     protected String extract(VDJCAlignments object) {
+            //         String[] ds = object.getOriginalDescriptions();
+            //         if (ds == null || ds.length == 0)
+            //             throw new IllegalArgumentException("Error for option \'-descrR1\':\n" +
+            //                     "No description available for read: either re-run align action with --save-description option " +
+            //                     "or don't use \'-descrR1\' in exportAlignments");
+            //         return ds[0];
+            //     }
+            // });
 
-            descriptorsList.add(new PL_A("-descrR2", "Export description line from initial .fasta or .fastq file " +
-                    "of the second read (only available if --save-description was used in align command)", "Description R2", "descrR2") {
-                @Override
-                protected String extract(VDJCAlignments object) {
-                    String[] ds = object.getOriginalDescriptions();
-                    if (ds == null || ds.length < 2)
-                        throw new IllegalArgumentException("Error for option \'-descrR2\':\n" +
-                                "No description available for second read: either re-run align action with --save-description option " +
-                                "or don't use \'-descrR2\' in exportAlignments");
-                    return ds[1];
-                }
-            });
+            // descriptorsList.add(new PL_A("-descrR2", "Export description line from initial .fasta or .fastq file " +
+            //         "of the second read (only available if --save-description was used in align command)", "Description R2", "descrR2") {
+            //     @Override
+            //     protected String extract(VDJCAlignments object) {
+            //         String[] ds = object.getOriginalDescriptions();
+            //         if (ds == null || ds.length < 2)
+            //             throw new IllegalArgumentException("Error for option \'-descrR2\':\n" +
+            //                     "No description available for second read: either re-run align action with --save-description option " +
+            //                     "or don't use \'-descrR2\' in exportAlignments");
+            //         return ds[1];
+            //     }
+            // });
 
-            descriptorsList.add(new PL_A("-targetDescriptions", "Export target descriptions", "Target descriptions", "targetDescriptions") {
-                @Override
-                protected String extract(VDJCAlignments object) {
-                    String[] ds = object.getTargetDescriptions();
-                    if (ds == null || ds.length == 0) {
-                        char[] commas = new char[object.numberOfTargets() - 1];
-                        Arrays.fill(commas, ',');
-                        return new String(commas);
-                    }
-                    StringBuilder sb = new StringBuilder();
-                    for (int i = 0; ; i++) {
-                        sb.append(ds[i]);
-                        if (i == ds.length - 1)
-                            break;
-                        sb.append(',');
-                    }
-                    return sb.toString();
-                }
-            });
+            // descriptorsList.add(new PL_A("-targetDescriptions", "Export target descriptions", "Target descriptions", "targetDescriptions") {
+            //     @Override
+            //     protected String extract(VDJCAlignments object) {
+            //         String[] ds = object.getTargetDescriptions();
+            //         if (ds == null || ds.length == 0) {
+            //             char[] commas = new char[object.numberOfTargets() - 1];
+            //             Arrays.fill(commas, ',');
+            //             return new String(commas);
+            //         }
+            //         StringBuilder sb = new StringBuilder();
+            //         for (int i = 0; ; i++) {
+            //             sb.append(ds[i]);
+            //             if (i == ds.length - 1)
+            //                 break;
+            //             sb.append(',');
+            //         }
+            //         return sb.toString();
+            //     }
+            // });
 
             descriptorsList.add(alignmentsToClone("-cloneId", "To which clone alignment was attached.", false));
             descriptorsList.add(alignmentsToClone("-cloneIdWithMappingType", "To which clone alignment was attached with additional info on mapping type.", true));
@@ -916,7 +916,7 @@ public final class FieldExtractors {
             while (currentMapping.getCloneIndex() == clone.getId()) {
                 ++count;
                 assert currentMapping.getCloneIndex() == currentMapping.getCloneIndex();
-                sb.append(currentMapping.getReadId()).append(",");
+                // sb.append(currentMapping.getReadId()).append(",");
                 if (!mappingIterator.hasNext())
                     break;
                 currentMapping = mappingIterator.next();
