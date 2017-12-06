@@ -30,11 +30,11 @@ package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
-import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
-import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,13 +50,13 @@ public class SequenceHistoryTest {
         entries.add(new SequenceHistory.Merge(SequenceHistory.OverlapType.CDR3Overlap,
                 new SequenceHistory.Extend(r1, 10, 20), r2, 12, 1));
 
-        ByteOutputStream bos = new ByteOutputStream();
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
         PrimitivO o = new PrimitivO(bos);
 
         for (SequenceHistory entry : entries)
             o.writeObject(entry);
-
-        PrimitivI i = new PrimitivI(new ByteInputStream(bos.getBytes(), bos.size()));
+        
+        PrimitivI i = new PrimitivI(new ByteArrayInputStream(bos.toByteArray()));
         for (SequenceHistory entry : entries)
             Assert.assertEquals(entry, i.readObject(SequenceHistory.class));
     }
