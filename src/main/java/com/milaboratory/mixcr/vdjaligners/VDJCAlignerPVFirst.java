@@ -637,16 +637,8 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
             VDJCHit[] vHits = convert(this.vHits, GeneType.Variable, aligner);
             VDJCHit[] jHits = convert(this.jHits, GeneType.Joining, aligner);
 
-            return new VDJCAlignments(vHits, dHits, jHits, cHits, target.targets, new SequenceHistory[]{
-                    new SequenceHistory.RawSequence(
-                            readId, (byte) target.getReadIdOfTarget(0),
-                            target.targets[0].size(),
-                            target.getRCStateOfTarget(0)),
-                    new SequenceHistory.RawSequence(
-                            readId, (byte) target.getReadIdOfTarget(1),
-                            target.targets[1].size(),
-                            target.getRCStateOfTarget(1))
-            }, aligner.parameters.isSaveOriginalReads() ? new SequenceRead[]{originalRead} : null);
+            return new VDJCAlignments(vHits, dHits, jHits, cHits, target.targets,
+                    SequenceHistory.RawSequence.of(readId, target), aligner.parameters.isSaveOriginalReads() ? new SequenceRead[]{originalRead} : null);
         }
 
         /**

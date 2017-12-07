@@ -30,6 +30,7 @@ package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
+import com.milaboratory.test.TestUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -59,5 +60,8 @@ public class SequenceHistoryTest {
         PrimitivI i = new PrimitivI(new ByteArrayInputStream(bos.toByteArray()));
         for (SequenceHistory entry : entries)
             Assert.assertEquals(entry, i.readObject(SequenceHistory.class));
+
+        for (SequenceHistory entry : entries)
+            TestUtil.assertJson(entry, SequenceHistory.class);
     }
 }

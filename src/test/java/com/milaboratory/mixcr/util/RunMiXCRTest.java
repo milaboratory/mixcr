@@ -2,6 +2,7 @@ package com.milaboratory.mixcr.util;
 
 import cc.redberry.pipe.CUtils;
 import com.milaboratory.core.io.sequence.PairedRead;
+import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.cli.ActionAlign;
@@ -82,6 +83,7 @@ public class RunMiXCRTest {
                 RunMiXCR.class.getResource("/sequences/test_R1.fastq").getFile(),
                 RunMiXCR.class.getResource("/sequences/test_R2.fastq").getFile());
 
+        params.alignerParameters.setSaveOriginalReads(true);
         //params.library = "human_TR";
         //params.species = "hs";
 
@@ -105,10 +107,10 @@ public class RunMiXCRTest {
         try(VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile)) {
             int tr = 0;
             for (VDJCAlignments alignment : CUtils.it(reader)) {
-                PairedRead actual = reads.get((int) alignment.getReadId());
+                PairedRead actual = reads.get((int) alignment.getMinReadId());
                 ++tr;
 
-                Assert.assertArrayEquals(ActionAlign.extractSequences(actual), alignment.getOriginalSequences());
+                Assert.assertEquals(actual, alignment.getOriginalReads().get(0));
             }
 
             System.out.println(tr);
@@ -142,10 +144,10 @@ public class RunMiXCRTest {
         try(VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile)) {
             int tr = 0;
             for (VDJCAlignments alignment : CUtils.it(reader)) {
-                PairedRead actual = reads.get((int) alignment.getReadId());
+                PairedRead actual = reads.get((int) alignment.getMinReadId());
                 ++tr;
 
-                Assert.assertArrayEquals(ActionAlign.extractSequences(actual), alignment.getOriginalSequences());
+                Assert.assertEquals(actual, alignment.getOriginalReads().get(0));
             }
 
             System.out.println(tr);

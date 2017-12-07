@@ -1,5 +1,7 @@
 package com.milaboratory.mixcr.basictypes;
 
+import com.fasterxml.jackson.annotation.*;
+import com.milaboratory.core.Target;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.Serializer;
@@ -10,6 +12,16 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
 @Serializable(by = SequenceHistory.SequenceHistorySerializer.class)
+@JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.ANY,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = SequenceHistory.RawSequence.class, name = "RawRead"),
+        @JsonSubTypes.Type(value = SequenceHistory.Merge.class, name = "Merged"),
+        @JsonSubTypes.Type(value = SequenceHistory.Extend.class, name = "Extended")
+})
 public interface SequenceHistory {
     /**
      * Length of target
@@ -52,7 +64,11 @@ public interface SequenceHistory {
          */
         public final boolean isReverseComplement;
 
-        public RawSequence(long readId, byte mateIndex, int length, boolean isReverseComplement) {
+        @JsonCreator
+        public RawSequence(@JsonProperty("readId") long readId,
+                           @JsonProperty("mateIndex") byte mateIndex,
+                           @JsonProperty("length") int length,
+                           @JsonProperty("isReverseComplement") boolean isReverseComplement) {
             this.readId = readId;
             this.mateIndex = mateIndex;
             this.length = length;
@@ -100,6 +116,16 @@ public interface SequenceHistory {
             result = 31 * result + (isReverseComplement ? 1 : 0);
             return result;
         }
+
+        public static RawSequence[] of(long readId, Target target) {
+            RawSequence[] rw = new RawSequence[target.numberOfParts()];
+            for (int i = 0; i < rw.length; i++)
+                rw[i] = new RawSequence(readId,
+                        (byte) target.getReadIdOfTarget(i),
+                        target.targets[i].size(),
+                        target.getRCStateOfTarget(i));
+            return rw;
+        }
     }
 
     enum OverlapType {
@@ -130,7 +156,13 @@ public interface SequenceHistory {
          */
         public final int nMismatches;
 
-        public Merge(OverlapType overlapType, SequenceHistory left, SequenceHistory right, int offset, int nMismatches) {
+        @JsonCreator
+        public Merge(
+                @JsonProperty("overlapType") OverlapType overlapType,
+                @JsonProperty("left") SequenceHistory left,
+                @JsonProperty("right") SequenceHistory right,
+                @JsonProperty("offset") int offset,
+                @JsonProperty("nMismatches") int nMismatches) {
             if (left == null || right == null)
                 throw new NullPointerException();
             this.overlapType = overlapType;
@@ -196,7 +228,11 @@ public interface SequenceHistory {
         final SequenceHistory original;
         final int extensionLeft, extensionRight;
 
-        public Extend(SequenceHistory original, int extensionLeft, int extensionRight) {
+        @JsonCreator
+        public Extend(
+                @JsonProperty("original") SequenceHistory original,
+                @JsonProperty("extensionLeft") int extensionLeft,
+                @JsonProperty("extensionRight") int extensionRight) {
             if (original == null)
                 throw new NullPointerException();
             this.original = original;

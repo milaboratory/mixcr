@@ -70,7 +70,7 @@ public class AlignmentsToClonesMappingContainerTest {
         Assert.assertEquals(initialReads.length, clones.length);
 
         for (int i = 0; i < clones.length; i++) {
-            mappings[initialReads[i]] = new ReadToCloneMapping(initialReads[i], initialReads[i], i, false, false, false, false);
+            mappings[initialReads[i]] = new ReadToCloneMapping(initialReads[i], new long[]{initialReads[i]}, i, false, false, false, false);
             clones[i] = new TLongHashSet();
             clones[i].add(initialReads[i]);
         }
@@ -81,19 +81,19 @@ public class AlignmentsToClonesMappingContainerTest {
             if (mappings[i] != null)
                 continue;
             if (rnd.nextInt(100) > 80) // 20% dropped
-                mappings[i] = new ReadToCloneMapping(i, i, -1, false, false,
+                mappings[i] = new ReadToCloneMapping(i, new long[]{i}, -1, false, false,
                         false, false);
             else {
                 ++goodMappings;
                 int cloneId = rnd.nextInt(clones.length);
-                mappings[i] = new ReadToCloneMapping(i, i, cloneId, rnd.nextBoolean(), rnd.nextBoolean(),
+                mappings[i] = new ReadToCloneMapping(i, new long[]{i}, cloneId, rnd.nextBoolean(), rnd.nextBoolean(),
                         false, rnd.nextBoolean());
                 clones[cloneId].add(i);
             }
         }
 
         File tempFile = TempFileManager.getTempFile();
-        try(DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(tempFile)))) {
+        try (DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(tempFile)))) {
             AlignmentsToClonesMappingContainer.writeMapping(CUtils.asOutputPort(mappings), clones.length, dos, sortChunk);
         }
 
