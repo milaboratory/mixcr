@@ -101,10 +101,10 @@ public class ActionExportAlignmentsPretty implements Action {
     }
 
     public void outputCompact(PrintStream output, final VDJCAlignments alignments) {
-        // output.println(">>> Read id: " + alignments.getReadId());
+        output.println(">>> Read id: " + alignments.getReadId());
         output.println();
-        final String[] tDescriptions = null; //alignments.getTargetDescriptions();
-        final String[] oDescriptions = null; //alignments.getOriginalDescriptions();
+        final String[] tDescriptions = alignments.getTargetDescriptions();
+        final String[] oDescriptions = alignments.getOriginalDescriptions();
         for (int i = 0; i < alignments.numberOfTargets(); i++) {
             if (actionParameters.printDescriptions()) {
                 if (tDescriptions != null)
@@ -125,7 +125,7 @@ public class ActionExportAlignmentsPretty implements Action {
     }
 
     public void outputVerbose(PrintStream output, final VDJCAlignments alignments) {
-        // output.println(">>> Read id: " + alignments.getReadId());
+        output.println(">>> Read id: " + alignments.getReadId());
         output.println();
         output.println(">>> Target sequences (input sequences):");
         output.println();
@@ -327,7 +327,7 @@ public class ActionExportAlignmentsPretty implements Action {
                 filters.add(new Filter<VDJCAlignments>() {
                     @Override
                     public boolean accept(VDJCAlignments object) {
-                        return false; //readIds.contains(object.getReadId());
+                        return readIds.contains(object.getReadId());
                     }
                 });
 
