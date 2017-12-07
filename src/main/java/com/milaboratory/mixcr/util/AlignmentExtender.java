@@ -575,17 +575,17 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
                 SequenceHistory l, r;
                 if (extensionGeneType == GeneType.Variable) {
                     l = histories[leftTargetId];
-                    r = new SequenceHistory.Extend(newHistories[rightTargetId], extension.size(), 0);
+                    r = new SequenceHistory.Extend(histories[rightTargetId], extension.size(), 0);
                 } else {
-                    l = new SequenceHistory.Extend(newHistories[leftTargetId], 0, extension.size());
+                    l = new SequenceHistory.Extend(histories[leftTargetId], 0, extension.size());
                     r = histories[rightTargetId];
                 }
                 newHistories[leftTargetId] = new SequenceHistory.Merge(SequenceHistory.OverlapType.ExtensionMerge,
                         l, r, l.length(), 0);
             } else if (leftTargetId != -1)
-                newHistories[leftTargetId] = new SequenceHistory.Extend(newHistories[leftTargetId], 0, extension.size());
+                newHistories[leftTargetId] = new SequenceHistory.Extend(histories[leftTargetId], 0, extension.size());
             else
-                newHistories[rightTargetId] = new SequenceHistory.Extend(newHistories[rightTargetId], extension.size(), 0);
+                newHistories[rightTargetId] = new SequenceHistory.Extend(histories[rightTargetId], extension.size(), 0);
 
             return newHistories;
         }
