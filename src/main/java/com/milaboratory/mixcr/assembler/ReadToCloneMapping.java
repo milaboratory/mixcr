@@ -40,7 +40,7 @@ import java.util.Comparator;
 
 @Serializable(by = IO.ReadToCloneMappingSerializer.class)
 public final class ReadToCloneMapping {
-    public static final int RECORD_SIZE = 8 + 8 + 4 + 1;
+    public static final int MINIMAL_RECORD_SIZE = 8 + 8 + 4 + 1;
 
     final long alignmentsId;
     final long[] readIds;
@@ -183,7 +183,7 @@ public final class ReadToCloneMapping {
             ALIGNMENTS_COMPARATOR = new AlignmentsComparator();
 
     private static final class CloneComparator implements Comparator<ReadToCloneMapping>,
-                                                          java.io.Serializable {
+            java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
         private CloneComparator() {
@@ -206,7 +206,7 @@ public final class ReadToCloneMapping {
     }
 
     private static final class AlignmentsComparator implements Comparator<ReadToCloneMapping>,
-                                                               java.io.Serializable {
+            java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
         private AlignmentsComparator() {
