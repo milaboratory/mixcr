@@ -217,6 +217,8 @@ public class AlignmentsToClonesMappingContainer implements AutoCloseable, Closea
             // Saving previous record
             previous = current;
         }
+        // close toSorter port
+        toSorter.put(null);
 
         // Waiting for sorter thread to finish
         try {
