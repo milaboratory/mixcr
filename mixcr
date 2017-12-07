@@ -4,6 +4,7 @@ java="java"
 
 sedString="s/.*1\.\(.*\)\..*/\1/"
 jVersion=$($java -version 2>&1 | grep version | awk '{ print $3 }' | sed $sedString)
+jVersion=$(echo "${jVersion%%.*}" | sed 's/\"//')
 if [[ $jVersion -lt 7 ]];
 then
     echo "Wrong version of java. Please use Java 7 or higher."
