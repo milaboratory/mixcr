@@ -115,17 +115,18 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                 VDJCAlignmentResult<SingleRead> sResult = sAligner.process0(sRead);
                 if (sResult.alignment == null)
                     return result;
-                VDJCAlignments sAlignment = sResult.alignment;
-                sAlignment.setHistory(
-                        new SequenceHistory[]{
-                                new SequenceHistory.Merge(
-                                        SequenceHistory.OverlapType.AlignmentOverlap,
-                                        result.alignment.getHistory(0),
-                                        result.alignment.getHistory(1),
-                                        mergeResult.getOffset(),
-                                        mergeResult.getMismatched())},
-                        new SequenceRead[]{input}
-                );
+                VDJCAlignments sAlignment = sResult
+                        .alignment
+                        .setHistory(
+                                new SequenceHistory[]{
+                                        new SequenceHistory.Merge(
+                                                SequenceHistory.OverlapType.AlignmentOverlap,
+                                                result.alignment.getHistory(0),
+                                                result.alignment.getHistory(1),
+                                                mergeResult.getOffset(),
+                                                mergeResult.getMismatched())},
+                                new SequenceRead[]{input}
+                        );
                 if (listener != null)
                     listener.onSuccessfulAlignmentOverlap(input, sAlignment);
                 return new VDJCAlignmentResult<>(input, sAlignment);

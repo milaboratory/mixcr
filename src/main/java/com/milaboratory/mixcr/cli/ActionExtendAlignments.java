@@ -42,8 +42,8 @@ public class ActionExtendAlignments implements Action {
                     ReferencePoint.parse(parameters.jAnchorPoint));
             ReportWrapper report = new ReportWrapper(command(), extender);
             report.setStartMillis(beginTimestamp);
-            report.setInputFiles(new String[]{parameters.getInput()});
-            report.setOutputFiles(new String[]{parameters.getOutput()});
+            report.setInputFiles(parameters.getInput());
+            report.setOutputFiles(parameters.getOutput());
             report.setCommandLine(helper.getCommandLineArguments());
 
             ParallelProcessor<VDJCAlignments, VDJCAlignments> pp = new ParallelProcessor<>(reader, extender, 2);

@@ -175,8 +175,9 @@ public final class VDJCAlignments extends VDJCObject {
         return alignmentsIndex;
     }
 
-    public void setAlignmentsIndex(long alignmentsIndex) {
+    public VDJCAlignments setAlignmentsIndex(long alignmentsIndex) {
         this.alignmentsIndex = alignmentsIndex;
+        return this;
     }
 
     /**

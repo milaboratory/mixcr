@@ -14,11 +14,10 @@ import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.mixcr.basictypes.SequenceHistory;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.cli.ReportHelper;
 import com.milaboratory.mixcr.cli.Report;
+import com.milaboratory.mixcr.cli.ReportHelper;
 import io.repseq.core.*;
 
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -55,10 +54,6 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
         this.minimalJScore = minimalJScore;
         this.vLeftExtensionRefPoint = vLeftExtensionRefPoint;
         this.jRightExtensionRefPoint = jRightExtensionRefPoint;
-    }
-
-    public String getAction() {
-        return null;
     }
 
     @Override
@@ -439,7 +434,8 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
                 newHitsMap,
                 transformer.transform(originalTargets),
                 transformer.transform(input.getHistory()),
-                input.getOriginalReads() == null ? null : input.getOriginalReads().toArray(new SequenceRead[0]));
+                input.getOriginalReads() == null ? null : input.getOriginalReads().toArray(new SequenceRead[0]))
+                .setAlignmentsIndex(input.getAlignmentsIndex());
     }
 
     static <T> void shrinkArray0(T[] src, T[] dest, int leftTargetId, int rightTargetId) {
