@@ -101,31 +101,31 @@ public class ActionExportAlignmentsPretty implements Action {
     }
 
     public void outputCompact(PrintStream output, final VDJCAlignments alignments) {
-        output.println(">>> Read id: " + alignments.getReadId());
-        output.println();
-        final String[] tDescriptions = alignments.getTargetDescriptions();
-        final String[] oDescriptions = alignments.getOriginalDescriptions();
-        for (int i = 0; i < alignments.numberOfTargets(); i++) {
-            if (actionParameters.printDescriptions()) {
-                if (tDescriptions != null)
-                    output.println(">>> Target Description: " + tDescriptions[i] + "\n");
-                if (oDescriptions != null && oDescriptions.length - 1 >= i)
-                    output.println(">>> Original Description: " + oDescriptions[i] + "\n");
-            }
-
-            MultiAlignmentHelper targetAsMultiAlignment = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, i);
-            if (targetAsMultiAlignment == null)
-                continue;
-            MultiAlignmentHelper[] split = targetAsMultiAlignment.split(80);
-            for (MultiAlignmentHelper spl : split) {
-                output.println(spl);
-                output.println();
-            }
-        }
+//        output.println(">>> Read id: " + alignments.getReadId());
+//        output.println();
+//        final String[] tDescriptions = alignments.getTargetDescriptions();
+//        final String[] oDescriptions = alignments.getOriginalDescriptions();
+//        for (int i = 0; i < alignments.numberOfTargets(); i++) {
+//            if (actionParameters.printDescriptions()) {
+//                if (tDescriptions != null)
+//                    output.println(">>> Target Description: " + tDescriptions[i] + "\n");
+//                if (oDescriptions != null && oDescriptions.length - 1 >= i)
+//                    output.println(">>> Original Description: " + oDescriptions[i] + "\n");
+//            }
+//
+//            MultiAlignmentHelper targetAsMultiAlignment = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, i);
+//            if (targetAsMultiAlignment == null)
+//                continue;
+//            MultiAlignmentHelper[] split = targetAsMultiAlignment.split(80);
+//            for (MultiAlignmentHelper spl : split) {
+//                output.println(spl);
+//                output.println();
+//            }
+//        }
     }
 
     public void outputVerbose(PrintStream output, final VDJCAlignments alignments) {
-        output.println(">>> Read id: " + alignments.getReadId());
+//        output.println(">>> Read id: " + alignments.getReadId());
         output.println();
         output.println(">>> Target sequences (input sequences):");
         output.println();
@@ -323,13 +323,13 @@ public class ActionExportAlignmentsPretty implements Action {
             });
 
             final TLongHashSet readIds = getReadIds();
-            if (readIds != null)
-                filters.add(new Filter<VDJCAlignments>() {
-                    @Override
-                    public boolean accept(VDJCAlignments object) {
-                        return readIds.contains(object.getReadId());
-                    }
-                });
+//            if (readIds != null)
+//                filters.add(new Filter<VDJCAlignments>() {
+//                    @Override
+//                    public boolean accept(VDJCAlignments object) {
+//                        return readIds.contains(object.getReadId());
+//                    }
+//                });
 
             if (feature != null) {
                 final GeneFeature feature = GeneFeature.parse(this.feature);
