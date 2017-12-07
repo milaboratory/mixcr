@@ -140,6 +140,8 @@ public final class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlign
 
         SerializersManager serializersManager = input.getSerializersManager();
         switch (magicString) {
+            case MAGIC_V9:
+                serializersManager.registerCustomSerializer(VDJCAlignments.class, new IO.VDJCAlignmentsSerializer21());
             case MAGIC:
                 break;
             default:

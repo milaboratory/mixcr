@@ -1,10 +1,15 @@
 package com.milaboratory.mixcr.basictypes;
 
+import com.milaboratory.primitivio.PrimitivI;
+import com.milaboratory.primitivio.PrimitivO;
+import com.milaboratory.primitivio.Serializer;
+import com.milaboratory.primitivio.annotations.Serializable;
 import com.milaboratory.util.ArraysUtils;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
+@Serializable(by = SequenceHistory.SequenceHistorySerializer.class)
 public interface SequenceHistory {
     /**
      * Length of target
@@ -55,7 +60,9 @@ public interface SequenceHistory {
         }
 
         @Override
-        public int length() { return length; }
+        public int length() {
+            return length;
+        }
 
         @Override
         public SequenceHistory shiftReadId(long shift) {
@@ -124,6 +131,8 @@ public interface SequenceHistory {
         public final int nMismatches;
 
         public Merge(OverlapType overlapType, SequenceHistory left, SequenceHistory right, int offset, int nMismatches) {
+            if (left == null || right == null)
+                throw new NullPointerException();
             this.overlapType = overlapType;
             this.left = left;
             this.right = right;
@@ -188,6 +197,8 @@ public interface SequenceHistory {
         final int extensionLeft, extensionRight;
 
         public Extend(SequenceHistory original, int extensionLeft, int extensionRight) {
+            if (original == null)
+                throw new NullPointerException();
             this.original = original;
             this.extensionLeft = extensionLeft;
             this.extensionRight = extensionRight;
@@ -211,6 +222,102 @@ public interface SequenceHistory {
         @Override
         public long minReadId() {
             return original.minReadId();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Extend)) return false;
+
+            Extend extend = (Extend) o;
+
+            if (extensionLeft != extend.extensionLeft) return false;
+            if (extensionRight != extend.extensionRight) return false;
+            return original.equals(extend.original);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = original.hashCode();
+            result = 31 * result + extensionLeft;
+            result = 31 * result + extensionRight;
+            return result;
+        }
+    }
+
+    final class SequenceHistorySerializer implements Serializer<SequenceHistory> {
+        @Override
+        public void write(PrimitivO output, SequenceHistory object) {
+            if (object instanceof RawSequence) {
+                RawSequence obj = (RawSequence) object;
+                // Type descriptor
+                output.writeByte(1);
+                // RC flag and mate index
+                output.writeByte((obj.isReverseComplement ? (byte) 0x80 : (byte) 0x00) | obj.mateIndex);
+                // Target length
+                output.writeVarInt(obj.length);
+                // Read id
+                output.writeVarLong(obj.readId);
+            } else if (object instanceof Merge) {
+                Merge obj = (Merge) object;
+                // Type descriptor
+                output.writeByte(2);
+                // Overlap type
+                output.writeObject(obj.overlapType);
+                // Offset and number of mismatches
+                output.writeVarInt(obj.offset);
+                output.writeVarInt(obj.nMismatches);
+                // Recursive write parent history entries
+                write(output, obj.left);
+                write(output, obj.right);
+            } else if (object instanceof Extend) {
+                Extend obj = (Extend) object;
+                // Type descriptor
+                output.writeByte(3);
+                // Left and right extension length
+                output.writeVarInt(obj.extensionLeft);
+                output.writeVarInt(obj.extensionRight);
+                // Writing parent history entry
+                write(output, obj.original);
+            } else
+                throw new IllegalArgumentException("Type not supported: " + object.getClass());
+        }
+
+        @Override
+        public SequenceHistory read(PrimitivI input) {
+            // Reading type descriptor
+            byte t = input.readByte();
+            if (t == 1) {
+                byte rcAndMateIndex = input.readByte();
+                int targetLength = input.readVarInt();
+                long readId = input.readVarLong();
+                return new RawSequence(readId, (byte) (rcAndMateIndex & 0x7F), targetLength,
+                        (rcAndMateIndex & 0x80) == 0x80);
+            } else if (t == 2) {
+                OverlapType type = input.readObject(OverlapType.class);
+                int offset = input.readVarInt();
+                int nMismatches = input.readVarInt();
+                SequenceHistory left = read(input);
+                SequenceHistory right = read(input);
+                return new Merge(type, left, right, offset, nMismatches);
+            } else if (t == 3) {
+                int extensionLeft = input.readVarInt();
+                int extensionRight = input.readVarInt();
+                SequenceHistory original = read(input);
+                return new Extend(original, extensionLeft, extensionRight);
+            } else {
+                throw new RuntimeException("Unknown history entry type.");
+            }
+        }
+
+        @Override
+        public boolean isReference() {
+            return false;
+        }
+
+        @Override
+        public boolean handlesReference() {
+            return false;
         }
     }
 }
