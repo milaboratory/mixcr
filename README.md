@@ -1,4 +1,6 @@
 [![Build Status](https://travis-ci.org/milaboratory/mixcr.svg)](https://travis-ci.org/milaboratory/mixcr)
+[![image](https://readthedocs.org/projects/mixcr/badge/?version=latest)](https://mixcr.readthedocs.io)
+
 
 ## Overview
 
