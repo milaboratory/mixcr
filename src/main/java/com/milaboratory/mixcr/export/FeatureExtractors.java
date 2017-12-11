@@ -119,7 +119,10 @@ final class FeatureExtractors {
             if (!germlinePartitioning.isAvailable(bigGeneFeature))
                 return "-";
 
-            Range smallTargetRage = germlinePartitioning.getRelativeRange(alignedFeature, smallGeneFeature);
+            Range smallTargetRage =
+                    smallGeneFeature.isAlignmentAttached() ?
+                            null :
+                            germlinePartitioning.getRelativeRange(alignedFeature, smallGeneFeature);
             if (smallTargetRage == null)
                 for (int i = 0; i < object.numberOfTargets(); i++) {
                     SequencePartitioning pt = object.getPartitionedTarget(i).getPartitioning();

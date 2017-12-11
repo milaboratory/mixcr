@@ -1,1 +1,2 @@
+Now export fields like `-nMutationsRelative` supports alignment-attached gene features (e.g. this allows to export all mutations of V gene inside CDR3 region: `-nMutationsRelative VCDR3Part VRegionWithP`)
 minor: `--noMerge` option renamed to `--no-merge` in assemble action
