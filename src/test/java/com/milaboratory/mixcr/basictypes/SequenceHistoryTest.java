@@ -43,8 +43,8 @@ public class SequenceHistoryTest {
     @Test
     public void testIO1() throws Exception {
         List<SequenceHistory> entries = new ArrayList<>();
-        SequenceHistory.RawSequence r1 = new SequenceHistory.RawSequence(123151243L, (byte) 1, 100, false);
-        SequenceHistory.RawSequence r2 = new SequenceHistory.RawSequence(0L, (byte) 0, 100, true);
+        SequenceHistory.RawSequence r1 = new SequenceHistory.RawSequence(123151243L, (byte) 1, false, 100);
+        SequenceHistory.RawSequence r2 = new SequenceHistory.RawSequence(0L, (byte) 0, true, 100);
         entries.add(r1);
         entries.add(r2);
         entries.add(new SequenceHistory.Extend(r1, 10, 20));

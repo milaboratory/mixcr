@@ -7,7 +7,6 @@ import com.milaboratory.core.io.sequence.SingleReadImpl;
 import com.milaboratory.mixcr.basictypes.SequenceHistory;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -51,7 +50,7 @@ public class VDJCMultiRead extends MultiRead {
         SequenceHistory[] result = new SequenceHistory[numberOfReads()];
         for (int i = 0; i < result.length; i++)
             result[i] = targets == null
-                    ? new SequenceHistory.RawSequence(getId(), (byte) i, getRead(i).getData().size(), false)
+                    ? new SequenceHistory.RawSequence(getId(), (byte) i, false, getRead(i).getData().size())
                     : targets.get(i).getHistory();
         return result;
     }

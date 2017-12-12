@@ -8,6 +8,7 @@ import com.milaboratory.primitivio.Serializer;
 import com.milaboratory.primitivio.annotations.Serializable;
 import com.milaboratory.util.ArraysUtils;
 
+import static com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
@@ -43,10 +44,7 @@ public interface SequenceHistory {
      */
     long minReadId();
 
-    /**
-     * Initial event, starting point of the history (single fastq record read from file)
-     */
-    final class RawSequence implements SequenceHistory {
+    final class FullReadIndex {
         /**
          * Read index in the initial .fastq file
          */
@@ -56,23 +54,73 @@ public interface SequenceHistory {
          */
         public final byte mateIndex;
         /**
-         * Read length
-         */
-        public final int length;
-        /**
          * Is reverse complement
          */
         public final boolean isReverseComplement;
 
+        public FullReadIndex(@JsonProperty("readId") long readId,
+                             @JsonProperty("mateIndex") byte mateIndex,
+                             @JsonProperty("isReverseComplement") boolean isReverseComplement) {
+            this.readId = readId;
+            this.mateIndex = mateIndex;
+            this.isReverseComplement = isReverseComplement;
+        }
+
+        /**
+         * Returns full read index object with newIndex.readId == this.readId + shift
+         */
+        public FullReadIndex shiftReadId(long shift) {
+            return new FullReadIndex(readId + shift, mateIndex, isReverseComplement);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof FullReadIndex)) return false;
+
+            FullReadIndex that = (FullReadIndex) o;
+
+            if (readId != that.readId) return false;
+            if (mateIndex != that.mateIndex) return false;
+            return isReverseComplement == that.isReverseComplement;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = (int) (readId ^ (readId >>> 32));
+            result = 31 * result + (int) mateIndex;
+            result = 31 * result + (isReverseComplement ? 1 : 0);
+            return result;
+        }
+    }
+
+    /**
+     * Initial event, starting point of the history (single fastq record read from file)
+     */
+    final class RawSequence implements SequenceHistory {
+        /**
+         * Full read index
+         */
+        @JsonUnwrapped
+        @JsonProperty(access = READ_ONLY)
+        public final FullReadIndex index;
+
+        /**
+         * Read length
+         */
+        public final int length;
+
+        private RawSequence(FullReadIndex index, int length) {
+            this.index = index;
+            this.length = length;
+        }
+
         @JsonCreator
         public RawSequence(@JsonProperty("readId") long readId,
                            @JsonProperty("mateIndex") byte mateIndex,
-                           @JsonProperty("length") int length,
-                           @JsonProperty("isReverseComplement") boolean isReverseComplement) {
-            this.readId = readId;
-            this.mateIndex = mateIndex;
-            this.length = length;
-            this.isReverseComplement = isReverseComplement;
+                           @JsonProperty("isReverseComplement") boolean isReverseComplement,
+                           @JsonProperty("length") int length) {
+            this(new FullReadIndex(readId, mateIndex, isReverseComplement), length);
         }
 
         @Override
@@ -82,38 +130,34 @@ public interface SequenceHistory {
 
         @Override
         public SequenceHistory shiftReadId(long shift) {
-            return new RawSequence(readId + shift, mateIndex, length, isReverseComplement);
+            return new RawSequence(index.shiftReadId(shift), length);
         }
 
         @Override
         public long[] readIds() {
-            return new long[]{readId};
+            return new long[]{index.readId};
         }
 
         @Override
         public long minReadId() {
-            return readId;
+            return index.readId;
         }
 
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (!(o instanceof RawSequence)) return false;
 
             RawSequence that = (RawSequence) o;
 
-            if (readId != that.readId) return false;
-            if (mateIndex != that.mateIndex) return false;
             if (length != that.length) return false;
-            return isReverseComplement == that.isReverseComplement;
+            return index.equals(that.index);
         }
 
         @Override
         public int hashCode() {
-            int result = (int) (readId ^ (readId >>> 32));
-            result = 31 * result + (int) mateIndex;
+            int result = index.hashCode();
             result = 31 * result + length;
-            result = 31 * result + (isReverseComplement ? 1 : 0);
             return result;
         }
 
@@ -122,8 +166,8 @@ public interface SequenceHistory {
             for (int i = 0; i < rw.length; i++)
                 rw[i] = new RawSequence(readId,
                         (byte) target.getReadIdOfTarget(i),
-                        target.targets[i].size(),
-                        target.getRCStateOfTarget(i));
+                        target.getRCStateOfTarget(i),
+                        target.targets[i].size());
             return rw;
         }
     }
@@ -289,11 +333,11 @@ public interface SequenceHistory {
                 // Type descriptor
                 output.writeByte(1);
                 // RC flag and mate index
-                output.writeByte((obj.isReverseComplement ? (byte) 0x80 : (byte) 0x00) | obj.mateIndex);
+                output.writeByte((obj.index.isReverseComplement ? (byte) 0x80 : (byte) 0x00) | obj.index.mateIndex);
                 // Target length
                 output.writeVarInt(obj.length);
                 // Read id
-                output.writeVarLong(obj.readId);
+                output.writeVarLong(obj.index.readId);
             } else if (object instanceof Merge) {
                 Merge obj = (Merge) object;
                 // Type descriptor
@@ -327,8 +371,8 @@ public interface SequenceHistory {
                 byte rcAndMateIndex = input.readByte();
                 int targetLength = input.readVarInt();
                 long readId = input.readVarLong();
-                return new RawSequence(readId, (byte) (rcAndMateIndex & 0x7F), targetLength,
-                        (rcAndMateIndex & 0x80) == 0x80);
+                return new RawSequence(readId, (byte) (rcAndMateIndex & 0x7F),
+                        (rcAndMateIndex & 0x80) == 0x80, targetLength);
             } else if (t == 2) {
                 OverlapType type = input.readObject(OverlapType.class);
                 int offset = input.readVarInt();

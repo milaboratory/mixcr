@@ -85,13 +85,13 @@ public final class VDJCAlignerWithMerge extends VDJCAligner<PairedRead> {
             if (listener != null)
                 listener.onSuccessfulSequenceOverlap(read, alignment);
             if (alignment != null) {
-                boolean isRC = ((SequenceHistory.RawSequence) alignment.getHistory(0)).isReverseComplement;
+                boolean isRC = ((SequenceHistory.RawSequence) alignment.getHistory(0)).index.isReverseComplement;
                 alignment = alignment.setHistory(
                         new SequenceHistory[]{
                                 new SequenceHistory.Merge(
                                         SequenceHistory.OverlapType.SequenceOverlap,
-                                        new SequenceHistory.RawSequence(read.getId(), (byte) (isRC ? 1 : 0), read.getR1().getData().size(), false),
-                                        new SequenceHistory.RawSequence(read.getId(), (byte) (isRC ? 0 : 1), read.getR2().getData().size(), merged.isReversed()),
+                                        new SequenceHistory.RawSequence(read.getId(), (byte) (isRC ? 1 : 0), false, read.getR1().getData().size()),
+                                        new SequenceHistory.RawSequence(read.getId(), (byte) (isRC ? 0 : 1), merged.isReversed(), read.getR2().getData().size()),
                                         merged.getOffset(), merged.getErrors())
                         },
                         new SequenceRead[]{read});

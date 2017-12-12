@@ -435,7 +435,7 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
 
             return new VDJCAlignments(hits, target.targets,
                     new SequenceHistory[]{
-                            new SequenceHistory.RawSequence(inputId, (byte) 0, target.targets[0].size(), target.getRCStateOfTarget(0))},
+                            new SequenceHistory.RawSequence(inputId, (byte) 0, target.getRCStateOfTarget(0), target.targets[0].size())},
                     parameters.isSaveOriginalReads() ? new SequenceRead[]{input} : null);
         }
     }
