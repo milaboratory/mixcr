@@ -64,14 +64,10 @@ import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
 import com.milaboratory.util.CanReportProgress;
-import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.*;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.*;
 
 import static cc.redberry.pipe.CUtils.chunked;
@@ -120,6 +116,20 @@ public class ActionAlign implements Action {
         VDJCLibrary library = VDJCLibraryRegistry.getDefault().getLibrary(actionParameters.library, actionParameters.species);
 
         System.out.println("Reference library: " + library.getLibraryId());
+
+        // Printing library level warnings, if specified for the library
+        if (!library.getWarnings().isEmpty()) {
+            System.out.println("Library warnings:");
+            for (String l : library.getWarnings())
+                System.out.println(l);
+        }
+
+        // Printing citation notice, if specified for the library
+        if (!library.getCitations().isEmpty()) {
+            System.out.println("Please cite:");
+            for (String l : library.getCitations())
+                System.out.println(l);
+        }
 
         for (VDJCGene gene : library.getGenes(actionParameters.getChains())) {
             if (gene.getGeneType() == GeneType.Variable) {
