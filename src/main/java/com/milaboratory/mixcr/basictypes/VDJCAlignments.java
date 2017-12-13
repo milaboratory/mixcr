@@ -36,7 +36,6 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.primitivio.annotations.Serializable;
 import com.milaboratory.util.ArraysUtils;
 import gnu.trove.map.hash.TLongObjectHashMap;
-import gnu.trove.set.hash.TLongHashSet;
 import io.repseq.core.GeneType;
 
 import java.util.Arrays;
@@ -116,6 +115,21 @@ public final class VDJCAlignments extends VDJCObject {
 
     public SequenceHistory[] getHistory() {
         return history.clone();
+    }
+
+    public NSequenceWithQuality getOriginalSequence(SequenceHistory.FullReadIndex index) {
+        if (originalReads == null)
+            throw new IllegalStateException("Original reads are not saved for the alignment object.");
+        SequenceRead read = null;
+        for (SequenceRead originalRead : originalReads)
+            if (originalRead.getId() == index.readId) {
+                read = originalRead;
+                break;
+            }
+        if (read == null)
+            throw new IllegalArgumentException("No such read index: " + index);
+        NSequenceWithQuality seq = read.getRead(index.mateIndex).getData();
+        return index.isReverseComplement ? seq.getReverseComplement() : seq;
     }
 
     public List<SequenceRead> getOriginalReads() {

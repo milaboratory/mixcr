@@ -97,7 +97,7 @@ public class ActionExportClonesPretty implements Action {
         output.println(">>> Abundance, reads (fraction): " + clone.getCount() + " (" + clone.getFraction() + ")");
         output.println();
         for (int i = 0; i < clone.numberOfTargets(); i++) {
-            MultiAlignmentHelper targetAsMultiAlignment = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(clone, i, true);
+            MultiAlignmentHelper targetAsMultiAlignment = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(clone, i, true, false);
             if (targetAsMultiAlignment == null)
                 continue;
             MultiAlignmentHelper[] split = targetAsMultiAlignment.split(80);
