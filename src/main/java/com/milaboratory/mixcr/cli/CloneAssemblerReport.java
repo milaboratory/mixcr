@@ -71,12 +71,12 @@ public final class CloneAssemblerReport extends AbstractActionReport implements 
         return clonesCreated.get();
     }
 
-    @JsonProperty("alignmentsDroppedNoTargetSequence")
+    @JsonProperty("readsDroppedNoTargetSequence")
     public long getFailedToExtractTarget() {
         return failedToExtractTarget.get();
     }
 
-    @JsonProperty("alignmentsDroppedLowQuality")
+    @JsonProperty("readsDroppedLowQuality")
     public long getDroppedAsLowQuality() {
         return droppedAsLowQuality.get();
     }
@@ -85,18 +85,18 @@ public final class CloneAssemblerReport extends AbstractActionReport implements 
         return deferred.get();
     }
 
-    @JsonProperty("coreAlignments")
+    @JsonProperty("coreReads")
     public long getCoreAlignments() {
         return coreAlignments.get();
     }
 
-    @JsonProperty("alignmentsDroppedFailedMapping")
+    @JsonProperty("readsDroppedFailedMapping")
     public long getDeferredAlignmentsDropped() {
         return deferredAlignmentsDropped.get();
     }
 
     @JsonProperty("lowQualityRescued")
-    public long getDeferredAlignmentsMapped() {
+    public long getDeferredReadsMapped() {
         return deferredAlignmentsMapped.get();
     }
 
@@ -105,7 +105,7 @@ public final class CloneAssemblerReport extends AbstractActionReport implements 
         return clonesClustered.get();
     }
 
-    @JsonProperty("alignmentsClustered")
+    @JsonProperty("readsClustered")
     public long getReadsClustered() {
         return readsClustered.get();
     }
@@ -125,22 +125,22 @@ public final class CloneAssemblerReport extends AbstractActionReport implements 
         return clonesPreClustered.get();
     }
 
-    @JsonProperty("alignmentsPreClustered")
+    @JsonProperty("readsPreClustered")
     public long getReadsPreClustered() {
         return readsPreClustered.get();
     }
 
-    @JsonProperty("alignmentsInClones")
-    public long getAlignmentsInClones() {
+    @JsonProperty("readsInClones")
+    public long getReadsInClones() {
         return alignmentsInClones.get(); //coreAlignments.get() + deferredAlignmentsMapped.get() - readsDroppedWithClones.get();
     }
 
-    @JsonProperty("alignmentsInClonesBeforeClustering")
-    public long getAlignmentsInClonesBeforeClustering() {
+    @JsonProperty("readsInClonesBeforeClustering")
+    public long getReadsInClonesBeforeClustering() {
         return deferredAlignmentsMapped.get() + coreAlignments.get();
     }
 
-    @JsonProperty("alignmentsDroppedWithLowQualityClones")
+    @JsonProperty("readsDroppedWithLowQualityClones")
     public long getReadsDroppedWithClones() {
         return readsDroppedWithClones.get();
     }
@@ -152,34 +152,34 @@ public final class CloneAssemblerReport extends AbstractActionReport implements 
 
     @Override
     public void onFailedToExtractTarget(VDJCAlignments alignments) {
-        failedToExtractTarget.incrementAndGet();
+        failedToExtractTarget.addAndGet(alignments.getNumberOfReads());
     }
 
     @Override
     public void onTooManyLowQualityPoints(VDJCAlignments alignments) {
-        droppedAsLowQuality.incrementAndGet();
+        droppedAsLowQuality.addAndGet(alignments.getNumberOfReads());
     }
 
     @Override
     public void onAlignmentDeferred(VDJCAlignments alignments) {
-        deferred.incrementAndGet();
+        deferred.addAndGet(alignments.getNumberOfReads());
     }
 
     @Override
     public void onAlignmentAddedToClone(VDJCAlignments alignments, CloneAccumulator accumulator) {
-        coreAlignments.incrementAndGet();
-        alignmentsInClones.incrementAndGet();
+        coreAlignments.addAndGet(alignments.getNumberOfReads());
+        alignmentsInClones.addAndGet(alignments.getNumberOfReads());
     }
 
     @Override
     public void onNoCandidateFoundForDeferredAlignment(VDJCAlignments alignments) {
-        deferredAlignmentsDropped.incrementAndGet();
+        deferredAlignmentsDropped.addAndGet(alignments.getNumberOfReads());
     }
 
     @Override
     public void onDeferredAlignmentMappedToClone(VDJCAlignments alignments, CloneAccumulator accumulator) {
-        deferredAlignmentsMapped.incrementAndGet();
-        alignmentsInClones.incrementAndGet();
+        deferredAlignmentsMapped.addAndGet(alignments.getNumberOfReads());
+        alignmentsInClones.addAndGet(alignments.getNumberOfReads());
     }
 
     @Override
@@ -225,10 +225,10 @@ public final class CloneAssemblerReport extends AbstractActionReport implements 
 
         int clonesCount = getCloneCount();
 
-        long alignmentsInClones = getAlignmentsInClones();
+        long alignmentsInClones = getReadsInClones();
 
         // Alignments in clones before clusterization
-        long clusterizationBase = getAlignmentsInClonesBeforeClustering();
+        long clusterizationBase = getReadsInClonesBeforeClustering();
 
         helper.writeField("Final clonotype count", clonesCount)
                 .writeField("Average number of reads per clonotype", Util.PERCENT_FORMAT.format(1.0 * alignmentsInClones / clonesCount))

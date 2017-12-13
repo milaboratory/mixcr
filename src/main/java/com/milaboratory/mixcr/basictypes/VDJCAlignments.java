@@ -136,14 +136,23 @@ public final class VDJCAlignments extends VDJCObject {
         return originalReads == null ? null : Collections.unmodifiableList(Arrays.asList(originalReads));
     }
 
+    private long[] readIds = null;
+
     /**
      * The result is always sorted.
      */
     public long[] getReadIds() {
-        long[] result = new long[0];
-        for (SequenceHistory h : history)
-            result = ArraysUtils.getSortedDistinct(ArraysUtils.concatenate(result, h.readIds()));
-        return result;
+        if (readIds == null) {
+            long[] result = new long[0];
+            for (SequenceHistory h : history)
+                result = ArraysUtils.getSortedDistinct(ArraysUtils.concatenate(result, h.readIds()));
+            readIds = result;
+        }
+        return readIds;
+    }
+
+    public int getNumberOfReads() {
+        return getReadIds().length;
     }
 
     public VDJCAlignments setHistory(SequenceHistory[] history, SequenceRead[] originalReads) {
