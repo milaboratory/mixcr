@@ -75,17 +75,19 @@ public class VDJCAlignmentsFormatter {
             }
 
         // Adding read information
-        VDJCAlignments vdjcAlignments = (VDJCAlignments) vdjcObject;
-        SequenceHistory history = vdjcAlignments.getHistory(targetId);
-        List<SequenceHistory.RawSequence> reads = history.rawReads();
-        for (SequenceHistory.RawSequence read : reads) {
-            NucleotideSequence seq = vdjcAlignments.getOriginalSequence(read.index).getSequence();
-            int offset = history.offset(read.index);
-            Alignment<NucleotideSequence> alignment = Aligner.alignOnlySubstitutions(targetSeq, seq, offset, seq.size(), 0, seq.size(),
-                    AffineGapAlignmentScoring.IGBLAST_NUCLEOTIDE_SCORING);
-            alignments.add(alignment);
-            alignmentLeftComments.add(read.index.toString());
-            alignmentRightComments.add("");
+        if (addReads) {
+            VDJCAlignments vdjcAlignments = (VDJCAlignments) vdjcObject;
+            SequenceHistory history = vdjcAlignments.getHistory(targetId);
+            List<SequenceHistory.RawSequence> reads = history.rawReads();
+            for (SequenceHistory.RawSequence read : reads) {
+                NucleotideSequence seq = vdjcAlignments.getOriginalSequence(read.index).getSequence();
+                int offset = history.offset(read.index);
+                Alignment<NucleotideSequence> alignment = Aligner.alignOnlySubstitutions(targetSeq, seq, offset, seq.size(), 0, seq.size(),
+                        AffineGapAlignmentScoring.IGBLAST_NUCLEOTIDE_SCORING);
+                alignments.add(alignment);
+                alignmentLeftComments.add(read.index.toString());
+                alignmentRightComments.add("");
+            }
         }
 
         MultiAlignmentHelper helper = MultiAlignmentHelper.build(MultiAlignmentHelper.DEFAULT_SETTINGS,
