@@ -8,9 +8,13 @@ import com.milaboratory.primitivio.Serializer;
 import com.milaboratory.primitivio.annotations.Serializable;
 import com.milaboratory.util.ArraysUtils;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import static com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY;
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 @Serializable(by = SequenceHistory.SequenceHistorySerializer.class)
 @JsonAutoDetect(
@@ -40,9 +44,28 @@ public interface SequenceHistory {
     long[] readIds();
 
     /**
+     * Returns hierarchically ordered list of raw reads of this assembly
+     */
+    List<RawSequence> rawReads();
+
+    /**
+     * Calculates read offset inside the assembly
+     *
+     * @param readIndex target read index
+     * @return offset value (position of first nucleotide of the read inside this assembly), or null if there is no
+     * such read inside the assembly
+     */
+    Integer offset(FullReadIndex readIndex);
+
+    /**
      * Return minimal raw read id occurring in the history
      */
     long minReadId();
+
+    /**
+     * Returns compact string representation of this assembly
+     */
+    String compactString();
 
     final class FullReadIndex {
         /**
@@ -50,7 +73,7 @@ public interface SequenceHistory {
          */
         public final long readId;
         /**
-         * Read index in pair
+         * Read index in pair (0 or 1)
          */
         public final byte mateIndex;
         /**
@@ -71,6 +94,12 @@ public interface SequenceHistory {
          */
         public FullReadIndex shiftReadId(long shift) {
             return new FullReadIndex(readId + shift, mateIndex, isReverseComplement);
+        }
+
+        @Override
+        public String toString() {
+            return (isReverseComplement ? "-" : "") +
+                    readId + "R" + mateIndex;
         }
 
         @Override
@@ -139,8 +168,31 @@ public interface SequenceHistory {
         }
 
         @Override
+        public List<RawSequence> rawReads() {
+            return Collections.singletonList(this);
+        }
+
+        @Override
         public long minReadId() {
             return index.readId;
+        }
+
+        @Override
+        public Integer offset(FullReadIndex readIndex) {
+            if (this.index.equals(readIndex))
+                return 0;
+            else
+                return null;
+        }
+
+        @Override
+        public String compactString() {
+            return index.toString();
+        }
+
+        @Override
+        public String toString() {
+            return compactString();
         }
 
         @Override
@@ -173,10 +225,16 @@ public interface SequenceHistory {
     }
 
     enum OverlapType {
-        SequenceOverlap,
-        AlignmentOverlap,
-        CDR3Overlap,
-        ExtensionMerge
+        SequenceOverlap("Seq"),
+        AlignmentOverlap("Aln"),
+        CDR3Overlap("CDR3"),
+        ExtensionMerge("Ext");
+
+        public final String stringRepresentation;
+
+        OverlapType(String stringRepresentation) {
+            this.stringRepresentation = stringRepresentation;
+        }
     }
 
     /**
@@ -218,16 +276,28 @@ public interface SequenceHistory {
 
         @Override
         public int length() {
-            return abs(offset) +
-                    (offset >= 0 ?
-                            max(left.length() - offset, right.length()) :
-                            max(left.length(), right.length() + offset) // offset is negative here
-                    );
+            return offset >= 0 ?
+                    max(left.length(), right.length() + offset) :
+                    max(left.length() - offset, right.length()); // offset is negative here
+        }
+
+        public int overlap() {
+            return offset >= 0 ?
+                    min(left.length() - offset, right.length()) :
+                    min(left.length(), right.length() + offset); // offset is negative here
         }
 
         @Override
         public long[] readIds() {
             return ArraysUtils.getSortedDistinct(ArraysUtils.concatenate(left.readIds(), right.readIds()));
+        }
+
+        @Override
+        public List<RawSequence> rawReads() {
+            ArrayList<RawSequence> res = new ArrayList<>();
+            res.addAll(left.rawReads());
+            res.addAll(right.rawReads());
+            return res;
         }
 
         @Override
@@ -238,6 +308,37 @@ public interface SequenceHistory {
         @Override
         public Merge shiftReadId(long shift) {
             return new Merge(overlapType, left.shiftReadId(shift), right.shiftReadId(shift), offset, nMismatches);
+        }
+
+        @Override
+        public Integer offset(FullReadIndex readIndex) {
+            Integer leftOffset = left.offset(readIndex);
+            if (leftOffset != null)
+                return offset >= 0 ?
+                        leftOffset :
+                        leftOffset - offset;
+
+            Integer rightOffset = right.offset(readIndex);
+            if (rightOffset != null)
+                return offset >= 0 ?
+                        rightOffset + offset :
+                        rightOffset;
+
+            return null;
+        }
+
+        @Override
+        public String compactString() {
+            return offset >= 0 ?
+                    "(" + left.compactString() + "=>[" + overlapType.stringRepresentation + ":" + overlap() +
+                            ":" + nMismatches + "]<=" + right.compactString() + ")" :
+                    "(" + right.compactString() + "=>[" + overlapType.stringRepresentation + ":" + overlap() +
+                            ":" + nMismatches + "]<=" + left.compactString() + ")";
+        }
+
+        @Override
+        public String toString() {
+            return compactString();
         }
 
         @Override
@@ -302,6 +403,33 @@ public interface SequenceHistory {
         @Override
         public long minReadId() {
             return original.minReadId();
+        }
+
+        @Override
+        public List<RawSequence> rawReads() {
+            return original.rawReads();
+        }
+
+        @Override
+        public Integer offset(FullReadIndex readIndex) {
+            Integer innerOffset = original.offset(readIndex);
+            return innerOffset == null ?
+                    null :
+                    extensionLeft + innerOffset;
+        }
+
+        @Override
+        public String compactString() {
+            return "(" +
+                    (extensionLeft != 0 ? (extensionLeft + "<=") : "") +
+                    original.compactString() +
+                    (extensionRight != 0 ? ("=>" + extensionRight) : "") +
+                    ")";
+        }
+
+        @Override
+        public String toString() {
+            return compactString();
         }
 
         @Override
