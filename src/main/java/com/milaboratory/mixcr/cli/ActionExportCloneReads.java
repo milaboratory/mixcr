@@ -61,7 +61,7 @@ public final class ActionExportCloneReads implements Action {
     private boolean originalReadsPresent() throws IOException {
         try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getAlignmentsFile())) {
             VDJCAlignments test = reader.take();
-            return test == null || test.getOriginalSequences() != null;
+            return test == null || test.getOriginalReads() != null;
         }
     }
 
@@ -88,10 +88,12 @@ public final class ActionExportCloneReads implements Action {
                 assert vdjca.getAlignmentsIndex() == mapping.getAlignmentsId();
 
                 SequenceWriter writer = writers.get(mapping.getCloneIndex());
+                List<SequenceRead> reads = vdjca.getOriginalReads();
                 if (writer == null)
-                    writers.put(mapping.getCloneIndex(), writer = createWriter(vdjca.getOriginalSequences().length == 2,
+                    writers.put(mapping.getCloneIndex(), writer = createWriter(reads.get(0).numberOfReads() == 2,
                             createFileName(parameters.getOutputFileName(), mapping.getCloneIndex())));
-                writer.write(createRead(vdjca.getOriginalSequences(), vdjca.getOriginalDescriptions()));
+                for (SequenceRead r : reads)
+                    writer.write(r);
             }
 
             for (SequenceWriter writer : writers.valueCollection())
@@ -119,10 +121,13 @@ public final class ActionExportCloneReads implements Action {
                 if (vdjca.getAlignmentsIndex() != mapping.getAlignmentsId())
                     continue;
 
+                List<SequenceRead> reads = vdjca.getOriginalReads();
                 if (writer == null)
-                    writer = createWriter(vdjca.getOriginalSequences().length == 2,
+                    writer = createWriter(reads.get(0).numberOfReads() == 2,
                             createFileName(parameters.getOutputFileName(), cloneId));
-                writer.write(createRead(vdjca.getOriginalSequences(), vdjca.getOriginalDescriptions()));
+
+                for (SequenceRead read : reads)
+                    writer.write(read);
             }
             if (writer != null)
                 writer.close();
@@ -134,26 +139,6 @@ public final class ActionExportCloneReads implements Action {
             fileName = fileName.replace(".fast", "_cln" + id + ".fast");
         else fileName += id;
         return fileName;
-    }
-
-    private static SequenceRead createRead(NSequenceWithQuality[] nseqs, String[] descr) {
-        if (nseqs.length == 1)
-            return new SingleReadImpl(-1, nseqs[0], descr[0]);
-        else {
-            String descr1, descr2;
-            if (descr == null)
-                descr1 = descr2 = "";
-            else if (descr.length == 1)
-                descr1 = descr2 = descr[0];
-            else {
-                descr1 = descr[0];
-                descr2 = descr[1];
-            }
-
-            return new PairedRead(
-                    new SingleReadImpl(-1, nseqs[0], descr1),
-                    new SingleReadImpl(-1, nseqs[1], descr2));
-        }
     }
 
     private static SequenceWriter createWriter(boolean paired, String fileName)

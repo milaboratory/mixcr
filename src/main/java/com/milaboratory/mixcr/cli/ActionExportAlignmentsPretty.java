@@ -70,9 +70,9 @@ public class ActionExportAlignmentsPretty implements Action {
     public void go(ActionHelper helper) throws Exception {
         Filter<VDJCAlignments> filter = actionParameters.getFilter();
         long total = 0, filtered = 0;
-        try(VDJCAlignmentsReader reader = new VDJCAlignmentsReader(actionParameters.getInputFileName());
-            PrintStream output = actionParameters.getOutputFileName().equals("-") ? System.out :
-                    new PrintStream(new BufferedOutputStream(new FileOutputStream(actionParameters.getOutputFileName()), 32768))
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(actionParameters.getInputFileName());
+             PrintStream output = actionParameters.getOutputFileName().equals("-") ? System.out :
+                     new PrintStream(new BufferedOutputStream(new FileOutputStream(actionParameters.getOutputFileName()), 32768))
         ) {
             long countBefore = actionParameters.limitBefore == null ? Long.MAX_VALUE : actionParameters.limitBefore;
             long countAfter = actionParameters.limitAfter == null ? Long.MAX_VALUE : actionParameters.limitAfter;
@@ -101,16 +101,13 @@ public class ActionExportAlignmentsPretty implements Action {
     }
 
     public void outputCompact(PrintStream output, final VDJCAlignments alignments) {
-        output.println(">>> Read id: " + alignments.getReadId());
+        output.println(">>> Read ids: " + Arrays.toString(alignments.getReadIds())
+                .replace("[", "")
+                .replace("]", ""));
         output.println();
-        final String[] tDescriptions = alignments.getTargetDescriptions();
-        final String[] oDescriptions = alignments.getOriginalDescriptions();
         for (int i = 0; i < alignments.numberOfTargets(); i++) {
             if (actionParameters.printDescriptions()) {
-                if (tDescriptions != null)
-                    output.println(">>> Target Description: " + tDescriptions[i] + "\n");
-                if (oDescriptions != null && oDescriptions.length - 1 >= i)
-                    output.println(">>> Original Description: " + oDescriptions[i] + "\n");
+                output.println(">>> Assembly history: " + alignments.getHistory(i) + "\n");
             }
 
             MultiAlignmentHelper targetAsMultiAlignment = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, i);
@@ -125,7 +122,9 @@ public class ActionExportAlignmentsPretty implements Action {
     }
 
     public void outputVerbose(PrintStream output, final VDJCAlignments alignments) {
-        output.println(">>> Read id: " + alignments.getReadId());
+        output.println(">>> Read ids: " + Arrays.toString(alignments.getReadIds())
+                .replace("[", "")
+                .replace("]", ""));
         output.println();
         output.println(">>> Target sequences (input sequences):");
         output.println();
@@ -327,7 +326,10 @@ public class ActionExportAlignmentsPretty implements Action {
                 filters.add(new Filter<VDJCAlignments>() {
                     @Override
                     public boolean accept(VDJCAlignments object) {
-                        return readIds.contains(object.getReadId());
+                        for (long id : object.getReadIds())
+                            if (readIds.contains(id))
+                                return true;
+                        return false;
                     }
                 });
 

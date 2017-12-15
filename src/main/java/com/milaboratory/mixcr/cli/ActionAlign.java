@@ -45,6 +45,7 @@ import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParametersWithOutput;
 import com.milaboratory.cli.ProcessException;
 import com.milaboratory.core.PairedEndReadsLayout;
+import com.milaboratory.core.Target;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SequenceReaderCloseable;
 import com.milaboratory.core.io.sequence.SequenceWriter;
@@ -56,6 +57,7 @@ import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.basictypes.SequenceHistory;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
@@ -64,14 +66,10 @@ import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
 import com.milaboratory.util.CanReportProgress;
-import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.*;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.*;
 
 import static cc.redberry.pipe.CUtils.chunked;
@@ -93,6 +91,20 @@ public class ActionAlign implements Action {
 
         // Getting aligner parameters
         VDJCAlignerParameters alignerParameters = actionParameters.getAlignerParameters();
+
+        // FIXME remove in 2.3
+        if (actionParameters.getSaveOriginalReads()) {
+            System.out.println("WARNING: -g / --save-reads option is deprecated, will be removed in 2.3 " +
+                    "release. Use -OsaveOriginalReads=true.");
+            alignerParameters.setSaveOriginalReads(true);
+        }
+
+        // FIXME remove in 2.3
+        if (actionParameters.getSaveReadDescription()) {
+            System.out.println("WARNING: -a / --save-description option is deprecated, will be removed in 2.3 " +
+                    "release. Use -OsaveOriginalReads=true.");
+            alignerParameters.setSaveOriginalReads(true);
+        }
 
         if (!actionParameters.overrides.isEmpty()) {
             // Perform parameters overriding
@@ -229,10 +241,14 @@ public class ActionAlign implements Action {
                 SequenceRead read = result.read;
                 if (alignment == null) {
                     if (writeAllResults)
-                        // Creating empty alignment object if alignment for current read failed
-                        alignment = new VDJCAlignments(read.getId(), emptyHits,
-                                readsLayout.createTargets(read)[0].targets);
-                    else {
+                    // Creating empty alignment object if alignment for current read failed
+                    {
+                        Target target = readsLayout.createTargets(read)[0];
+                        alignment = new VDJCAlignments(emptyHits,
+                                target.targets,
+                                SequenceHistory.RawSequence.of(read.getId(), target),
+                                alignerParameters.isSaveOriginalReads() ? new SequenceRead[]{read} : null);
+                    } else {
                         if (notAlignedWriter != null)
                             notAlignedWriter.write(result.read);
                         continue;
@@ -242,14 +258,8 @@ public class ActionAlign implements Action {
                 if (alignment.isChimera())
                     report.onChimera();
 
-                if (writer != null) {
-                    if (actionParameters.getSaveReadDescription() || actionParameters.getSaveOriginalReads())
-                        alignment.setOriginalDescriptions(extractDescriptions(read));
-                    if (actionParameters.getSaveOriginalReads())
-                        alignment.setOriginalSequences(extractSequences(read));
-
+                if (writer != null)
                     writer.write(alignment);
-                }
             }
             if (writer != null)
                 writer.setNumberOfProcessedReads(reader.getNumberOfReads());
@@ -351,6 +361,7 @@ public class ActionAlign implements Action {
                 names = {"-d", "--no-merge"})
         public Boolean noMerge;
 
+        @Deprecated
         @Parameter(description = "Copy read(s) description line from .fastq or .fasta to .vdjca file (can then be " +
                 "exported with -descrR1 and -descrR2 options in exportAlignments action).",
                 names = {"-a", "--save-description"})
@@ -360,6 +371,7 @@ public class ActionAlign implements Action {
                 names = {"-v", "--write-all"})
         public Boolean writeAllResults;
 
+        @Deprecated
         @Parameter(description = "Copy original reads (sequences + qualities + descriptions) to .vdjca file.",
                 names = {"-g", "--save-reads"})
         public Boolean saveOriginalReads;
@@ -400,10 +412,12 @@ public class ActionAlign implements Action {
             return noMerge != null && noMerge;
         }
 
+        @Deprecated
         public Boolean getSaveReadDescription() {
             return saveReadDescription != null && saveReadDescription;
         }
 
+        @Deprecated
         public Boolean getSaveOriginalReads() {
             return saveOriginalReads != null && saveOriginalReads;
         }

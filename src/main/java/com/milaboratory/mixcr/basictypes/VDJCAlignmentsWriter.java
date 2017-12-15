@@ -50,7 +50,8 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     static final String MAGIC_V7 = "MiXCR.VDJC.V07";
     static final String MAGIC_V8 = "MiXCR.VDJC.V08";
     static final String MAGIC_V9 = "MiXCR.VDJC.V09";
-    static final String MAGIC = MAGIC_V9;
+    static final String MAGIC_V10 = "MiXCR.VDJC.V10";
+    static final String MAGIC = MAGIC_V10;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
     final PrimitivO output;

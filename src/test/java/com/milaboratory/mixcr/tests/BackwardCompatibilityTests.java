@@ -45,6 +45,7 @@ public class BackwardCompatibilityTests {
         assertGoodVDJCA("/backward_compatibility/2.1.0/test.vdjca.gz", 76);
         assertGoodVDJCA("/backward_compatibility/2.1.2/test.vdjca.gz", 76);
         assertGoodVDJCA("/backward_compatibility/2.1.2-kAligner2/test.vdjca.gz", 78);
+        assertGoodVDJCA("/backward_compatibility/2.1.7/test.vdjca.gz", 76);
     }
 
     public static void assertGoodVDJCA(String resource, int size) throws IOException {
@@ -69,6 +70,7 @@ public class BackwardCompatibilityTests {
         assertGoodCLNS("/backward_compatibility/2.1.0/test.clns.gz", 22, 17);
         assertGoodCLNS("/backward_compatibility/2.1.2/test.clns.gz", 22, 17);
         assertGoodCLNS("/backward_compatibility/2.1.2-kAligner2/test.clns.gz", 21, 16);
+        assertGoodCLNS("/backward_compatibility/2.1.7/test.clns.gz", 22, 17);
     }
 
     public static void assertGoodCLNS(String resource, int size, int good) throws IOException {

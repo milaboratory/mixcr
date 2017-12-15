@@ -49,7 +49,6 @@ public final class AssemblerEventLogger {
     //todo replace with ArrayDeque
     final ArrayList<AssemblerEvent> eventsBuffer = new ArrayList<>();
     long counter = 0;
-    long previousReadId = 0;
 
     public AssemblerEventLogger() {
         try {
@@ -97,18 +96,14 @@ public final class AssemblerEventLogger {
         if (event.cloneIndex == -2_147_483_648)
             throw new IllegalArgumentException();
 
-        assert previousReadId <= event.readId;
-
         try {
             // Writing clone index
             writeRawVarint32(os, encodeZigZag32(event.cloneIndex));
 
-            // Saving only difference for compactness
-            // Not zig-zagged because always positive
-            writeRawVarint64(os, event.readId - previousReadId);
+            writeRawVarint32(os, event.readIds.length);
+            for (int i = 0; i < event.readIds.length; i++)
+                writeRawVarint64(os, event.readIds[i]);
 
-            // Saving current read id
-            previousReadId = event.readId;
         } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
@@ -167,7 +162,6 @@ public final class AssemblerEventLogger {
         volatile boolean closed = false;
         final InputStream is;
         long counter = 0;
-        long previousReadId = 0;
 
         private EventsPort(InputStream is) {
             this.is = is;
@@ -179,7 +173,7 @@ public final class AssemblerEventLogger {
                 if (closed)
                     return null;
                 final int cloneIndex;
-                synchronized ( this ){
+                synchronized (this) {
                     if (closed)
                         return null;
                     else {
@@ -194,13 +188,12 @@ public final class AssemblerEventLogger {
                         }
                     }
                 }
-                long readId = IOUtil.readRawVarint64(is, -1);
-                assert readId != -1;
+                int nReadIds = IOUtil.readRawVarint32(is, -1);
+                long[] readIds = new long[nReadIds];
+                for (int i = 0; i < nReadIds; i++)
+                    readIds[i] = IOUtil.readRawVarint64(is, -1);
 
-                // ))
-                previousReadId = readId += previousReadId;
-
-                return new AssemblerEvent(counter++, readId, decodeZigZag32(cloneIndex));
+                return new AssemblerEvent(counter++, readIds, decodeZigZag32(cloneIndex));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

@@ -117,8 +117,6 @@ public final class RunMiXCR {
             }))) {
                 if (t.alignment != null) {
                     t.alignment.setAlignmentsIndex(ind++);
-                    t.alignment.setOriginalDescriptions(ActionAlign.extractDescriptions(t.read));
-                    t.alignment.setOriginalSequences(ActionAlign.extractSequences(t.read));
                     als.add(t.alignment);
                 }
             }

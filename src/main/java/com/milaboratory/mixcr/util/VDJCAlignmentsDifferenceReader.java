@@ -62,15 +62,16 @@ public class VDJCAlignmentsDifferenceReader
     }
 
     private Diff compare(VDJCAlignments first, VDJCAlignments second) {
+        // fixme correct in 2.2
         if (first == null && second == null)
             return null;
         else if (first == null)
             return new Diff(first, second, DiffStatus.AlignmentPresentOnlyInSecond);
         else if (second == null)
             return new Diff(first, second, DiffStatus.AlignmentPresentOnlyInFirst);
-        else if (first.getReadId() < second.getReadId())
+        else if (first.getMinReadId() < second.getMinReadId())
             return new Diff(first, second, DiffStatus.AlignmentPresentOnlyInFirst);
-        else if (first.getReadId() > second.getReadId())
+        else if (first.getMinReadId() > second.getMinReadId())
             return new Diff(first, second, DiffStatus.AlignmentPresentOnlyInSecond);
         else {
             boolean diffGeneFeature = true;

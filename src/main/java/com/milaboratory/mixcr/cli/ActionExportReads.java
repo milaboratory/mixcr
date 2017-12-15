@@ -61,52 +61,28 @@ public class ActionExportReads implements Action {
                     System.err);
 
             for (VDJCAlignments alignments : CUtils.it(reader)) {
-                // Extracting original read id
-                long id = alignments.getReadId();
 
-                // Extracting original read sequences
-                NSequenceWithQuality[] sequecnes = alignments.getOriginalSequences();
-
-                // Checks
-                if (sequecnes == null || sequecnes.length == 0) {
+                List<SequenceRead> reads = alignments.getOriginalReads();
+                if (reads == null) {
                     System.err.println("VDJCA file doesn't contain original reads (perform align action with -g / --save-reads option).");
                     return;
                 }
 
-                if (sequecnes.length == 1 && (writer instanceof PairedFastqWriter)) {
-                    System.err.println("VDJCA file contains single-end reads, but two output files are specified.");
-                    return;
+                for (SequenceRead read : reads) {
+                    if (read.numberOfReads() == 1 && (writer instanceof PairedFastqWriter)) {
+                        System.err.println("VDJCA file contains single-end reads, but two output files are specified.");
+                        return;
+                    }
+
+                    if (read.numberOfReads() == 2 && (writer instanceof SingleFastqWriter)) {
+                        System.err.println("VDJCA file contains paired-end reads, but only one / no output file is specified.");
+                        return;
+                    }
+
+                    writer.write(read);
                 }
-
-                if (sequecnes.length == 2 && (writer instanceof SingleFastqWriter)) {
-                    System.err.println("VDJCA file contains paired-end reads, but only one / no output file is specified.");
-                    return;
-                }
-
-                // Extracting original read descriptions
-                String[] descriptions = alignments.getOriginalDescriptions();
-                if (descriptions == null || descriptions.length != sequecnes.length) {
-                    descriptions = sequecnes.length == 1 ?
-                            new String[]{"R" + id} :
-                            new String[]{"R" + id, "R" + id};
-                }
-
-                SequenceRead read = createRead(id, sequecnes, descriptions);
-
-                writer.write(read);
             }
         }
-    }
-
-    public static SequenceRead createRead(long id, NSequenceWithQuality[] seqs, String[] descrs) {
-        if (seqs.length == 1)
-            return new SingleReadImpl(id, seqs[0], descrs[0]);
-        if (seqs.length == 2)
-            return new PairedRead(
-                    new SingleReadImpl(id, seqs[0], descrs[0]),
-                    new SingleReadImpl(id, seqs[1], descrs[1])
-            );
-        throw new IllegalArgumentException();
     }
 
     public SequenceWriter<?> createWriter() throws IOException {

@@ -31,6 +31,8 @@ package com.milaboratory.mixcr.basictypes;
 import cc.redberry.primitives.Filter;
 import cc.redberry.primitives.FilterUtil;
 import com.milaboratory.core.Range;
+import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
+import com.milaboratory.core.alignment.Aligner;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.MultiAlignmentHelper;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
@@ -45,10 +47,15 @@ import java.util.List;
 
 public class VDJCAlignmentsFormatter {
     public static MultiAlignmentHelper getTargetAsMultiAlignment(VDJCObject vdjcObject, int targetId) {
-        return getTargetAsMultiAlignment(vdjcObject, targetId, false);
+        return getTargetAsMultiAlignment(vdjcObject, targetId, false,
+                vdjcObject instanceof VDJCAlignments && ((VDJCAlignments) vdjcObject).getOriginalReads() != null);
     }
 
-    public static MultiAlignmentHelper getTargetAsMultiAlignment(VDJCObject vdjcObject, int targetId, boolean addHitScore) {
+    public static MultiAlignmentHelper getTargetAsMultiAlignment(VDJCObject vdjcObject, int targetId,
+                                                                 boolean addHitScore, boolean addReads) {
+        if (addReads && !(vdjcObject instanceof VDJCAlignments))
+            throw new IllegalArgumentException("Read alignments supported only for VDJCAlignments.");
+
         NSequenceWithQuality target = vdjcObject.getTarget(targetId);
         NucleotideSequence targetSeq = target.getSequence();
         SequencePartitioning partitioning = vdjcObject.getPartitionedTarget(targetId).getPartitioning();
@@ -66,6 +73,22 @@ public class VDJCAlignmentsFormatter {
                 alignmentLeftComments.add(hit.getGene().getName());
                 alignmentRightComments.add(" " + (int) (hit.getAlignment(targetId).getScore()) + (addHitScore ? " (" + (int) (hit.getScore()) + ")" : ""));
             }
+
+        // Adding read information
+        if (addReads) {
+            VDJCAlignments vdjcAlignments = (VDJCAlignments) vdjcObject;
+            SequenceHistory history = vdjcAlignments.getHistory(targetId);
+            List<SequenceHistory.RawSequence> reads = history.rawReads();
+            for (SequenceHistory.RawSequence read : reads) {
+                NucleotideSequence seq = vdjcAlignments.getOriginalSequence(read.index).getSequence();
+                int offset = history.offset(read.index);
+                Alignment<NucleotideSequence> alignment = Aligner.alignOnlySubstitutions(targetSeq, seq, offset, seq.size(), 0, seq.size(),
+                        AffineGapAlignmentScoring.IGBLAST_NUCLEOTIDE_SCORING);
+                alignments.add(alignment);
+                alignmentLeftComments.add(read.index.toString());
+                alignmentRightComments.add("");
+            }
+        }
 
         MultiAlignmentHelper helper = MultiAlignmentHelper.build(MultiAlignmentHelper.DEFAULT_SETTINGS,
                 new Range(0, target.size()), targetSeq, alignments.toArray(new Alignment[alignments.size()]));

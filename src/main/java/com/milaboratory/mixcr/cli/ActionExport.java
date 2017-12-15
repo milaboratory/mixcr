@@ -33,6 +33,9 @@ import com.milaboratory.cli.ActionHelpProvider;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParametersParser;
 import com.milaboratory.mixcr.basictypes.VDJCObject;
+import com.milaboratory.mixcr.export.FieldExtractor;
+
+import java.util.ArrayList;
 
 public abstract class ActionExport<T extends VDJCObject> implements Action, ActionParametersParser, ActionHelpProvider {
     public final ActionExportParameters<T> parameters;

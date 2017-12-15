@@ -30,8 +30,10 @@ package com.milaboratory.mixcr.export;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
+import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.mutations.MutationsUtil;
 import com.milaboratory.core.sequence.AminoAcidSequence;
@@ -44,6 +46,7 @@ import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.VDJCObject;
+import com.milaboratory.util.GlobalObjectMappers;
 import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.map.hash.TObjectFloatHashMap;
 import io.repseq.core.GeneFeature;
@@ -422,7 +425,27 @@ public final class FieldExtractors {
             descriptorsList.add(new PL_A("-readId", "Export id of read corresponding to alignment", "Read id", "readId") {
                 @Override
                 protected String extract(VDJCAlignments object) {
-                    return "" + object.getReadId();
+                    return "" + object.getMinReadId();
+                }
+
+                @Override
+                public FieldExtractor<VDJCAlignments> create(OutputMode outputMode, String[] args) {
+                    System.out.println("WARNING: -readId is deprecated. Use -readIds");
+                    return super.create(outputMode, args);
+                }
+            });
+
+            descriptorsList.add(new PL_A("-readIds", "Export id of read corresponding to alignment", "Read id", "readId") {
+                @Override
+                protected String extract(VDJCAlignments object) {
+                    long[] readIds = object.getReadIds();
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; ; i++) {
+                        sb.append(readIds[i]);
+                        if (i == readIds.length - 1)
+                            return sb.toString();
+                        sb.append(",");
+                    }
                 }
             });
 
@@ -467,12 +490,19 @@ public final class FieldExtractors {
                     "of the first read (only available if --save-description was used in align command)", "Description R1", "descrR1") {
                 @Override
                 protected String extract(VDJCAlignments object) {
-                    String[] ds = object.getOriginalDescriptions();
-                    if (ds == null || ds.length == 0)
+                    List<SequenceRead> reads = object.getOriginalReads();
+                    if (reads == null)
                         throw new IllegalArgumentException("Error for option \'-descrR1\':\n" +
-                                "No description available for read: either re-run align action with --save-description option " +
+                                "No description available for read: either re-run align action with -OsaveOriginalReads=true option " +
                                 "or don't use \'-descrR1\' in exportAlignments");
-                    return ds[0];
+
+                    return reads.get(0).getRead(0).getDescription();
+                }
+
+                @Override
+                public FieldExtractor<VDJCAlignments> create(OutputMode outputMode, String[] args) {
+                    System.out.println("WARNING: -descrR1 is deprecated. Use -descrsR1");
+                    return super.create(outputMode, args);
                 }
             });
 
@@ -480,32 +510,78 @@ public final class FieldExtractors {
                     "of the second read (only available if --save-description was used in align command)", "Description R2", "descrR2") {
                 @Override
                 protected String extract(VDJCAlignments object) {
-                    String[] ds = object.getOriginalDescriptions();
-                    if (ds == null || ds.length < 2)
+                    List<SequenceRead> reads = object.getOriginalReads();
+                    if (reads == null)
+                        throw new IllegalArgumentException("Error for option \'-descrR1\':\n" +
+                                "No description available for read: either re-run align action with -OsaveOriginalReads=true option " +
+                                "or don't use \'-descrR1\' in exportAlignments");
+                    SequenceRead read = reads.get(0);
+                    if (read.numberOfReads() < 2)
                         throw new IllegalArgumentException("Error for option \'-descrR2\':\n" +
-                                "No description available for second read: either re-run align action with --save-description option " +
-                                "or don't use \'-descrR2\' in exportAlignments");
-                    return ds[1];
+                                "No description available for second read: your input data was single-end");
+                    return read.getRead(1).getDescription();
+                }
+
+                @Override
+                public FieldExtractor<VDJCAlignments> create(OutputMode outputMode, String[] args) {
+                    System.out.println("WARNING: -descrR2 is deprecated. Use -descrsR2");
+                    return super.create(outputMode, args);
                 }
             });
 
-            descriptorsList.add(new PL_A("-targetDescriptions", "Export target descriptions", "Target descriptions", "targetDescriptions") {
+
+            descriptorsList.add(new PL_A("-descrsR1", "Export description lines from initial .fasta or .fastq file " +
+                    "of the first reads (only available if -OsaveOriginalReads=true was used in align command)", "Descriptions R1", "descrsR1") {
                 @Override
                 protected String extract(VDJCAlignments object) {
-                    String[] ds = object.getTargetDescriptions();
-                    if (ds == null || ds.length == 0) {
-                        char[] commas = new char[object.numberOfTargets() - 1];
-                        Arrays.fill(commas, ',');
-                        return new String(commas);
-                    }
+                    List<SequenceRead> reads = object.getOriginalReads();
+                    if (reads == null)
+                        throw new IllegalArgumentException("Error for option \'-descrR1\':\n" +
+                                "No description available for read: either re-run align action with -OsaveOriginalReads option " +
+                                "or don't use \'-descrR1\' in exportAlignments");
+
                     StringBuilder sb = new StringBuilder();
                     for (int i = 0; ; i++) {
-                        sb.append(ds[i]);
-                        if (i == ds.length - 1)
-                            break;
-                        sb.append(',');
+                        sb.append(reads.get(i).getRead(0).getDescription());
+                        if (i == reads.size() - 1)
+                            return sb.toString();
+                        sb.append(",");
                     }
-                    return sb.toString();
+                }
+            });
+
+            descriptorsList.add(new PL_A("-descrsR2", "Export description lines from initial .fasta or .fastq file " +
+                    "of the second reads (only available if -OsaveOriginalReads=true was used in align command)", "Descriptions R2", "descrsR2") {
+                @Override
+                protected String extract(VDJCAlignments object) {
+                    List<SequenceRead> reads = object.getOriginalReads();
+                    if (reads == null)
+                        throw new IllegalArgumentException("Error for option \'-descrR1\':\n" +
+                                "No description available for read: either re-run align action with -OsaveOriginalReads option " +
+                                "or don't use \'-descrR1\' in exportAlignments");
+
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; ; i++) {
+                        SequenceRead read = reads.get(i);
+                        if (read.numberOfReads() < 2)
+                            throw new IllegalArgumentException("Error for option \'-descrsR2\':\n" +
+                                    "No description available for second read: your input data was single-end");
+                        sb.append(read.getRead(1).getDescription());
+                        if (i == reads.size() - 1)
+                            return sb.toString();
+                        sb.append(",");
+                    }
+                }
+            });
+
+            descriptorsList.add(new PL_A("-readHistory", "Export read history", "Read history", "readHistory") {
+                @Override
+                protected String extract(VDJCAlignments object) {
+                    try {
+                        return GlobalObjectMappers.toOneLine(object.getHistory());
+                    } catch (JsonProcessingException ex) {
+                        throw new RuntimeException(ex);
+                    }
                 }
             });
 
@@ -916,7 +992,9 @@ public final class FieldExtractors {
             while (currentMapping.getCloneIndex() == clone.getId()) {
                 ++count;
                 assert currentMapping.getCloneIndex() == currentMapping.getCloneIndex();
-                sb.append(currentMapping.getReadId()).append(",");
+                long[] readIds = currentMapping.getReadIds();
+                for (long readId : readIds)
+                    sb.append(readId).append(",");
                 if (!mappingIterator.hasNext())
                     break;
                 currentMapping = mappingIterator.next();

@@ -29,44 +29,134 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.alignment.Alignment;
+import com.milaboratory.core.io.sequence.SequenceRead;
+import com.milaboratory.core.io.sequence.SequenceReadUtil;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.primitivio.annotations.Serializable;
+import com.milaboratory.util.ArraysUtils;
+import gnu.trove.map.hash.TLongObjectHashMap;
 import io.repseq.core.GeneType;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumMap;
+import java.util.List;
 
 @Serializable(by = IO.VDJCAlignmentsSerializer.class)
 public final class VDJCAlignments extends VDJCObject {
-    volatile String[] targetDescriptions;
-    volatile NSequenceWithQuality[] originalSequences;
-    volatile String[] originalDescriptions;
-    final long readId;
+    final SequenceHistory[] history;
+    final SequenceRead[] originalReads;
     private volatile long alignmentsIndex = -1;
 
-    public VDJCAlignments(long readId, long alignmentsIndex, VDJCAlignments alignments) {
-        super(alignments.hits, alignments.targets);
-        this.readId = readId;
-        this.alignmentsIndex = alignmentsIndex;
-        this.targetDescriptions = alignments.targetDescriptions;
-        this.originalDescriptions = alignments.originalDescriptions;
-    }
-
-    public VDJCAlignments(long readId, EnumMap<GeneType, VDJCHit[]> hits, NSequenceWithQuality target) {
-        super(hits, new NSequenceWithQuality[]{target});
-        this.readId = readId;
-    }
-
-    public VDJCAlignments(long readId, EnumMap<GeneType, VDJCHit[]> hits, NSequenceWithQuality... targets) {
+    public VDJCAlignments(long alignmentsIndex,
+                          EnumMap<GeneType, VDJCHit[]> hits,
+                          NSequenceWithQuality[] targets,
+                          SequenceHistory[] history,
+                          SequenceRead[] originalReads) {
         super(hits, targets);
-        this.readId = readId;
+        this.alignmentsIndex = alignmentsIndex;
+        this.history = history;
+        this.originalReads = originalReads;
     }
 
-    public VDJCAlignments(long readId, VDJCHit[] vHits, VDJCHit[] dHits, VDJCHit[] jHits, VDJCHit[] cHits,
-                          NSequenceWithQuality... targets) {
-        super(vHits, dHits, jHits, cHits, targets);
-        this.readId = readId;
+    public VDJCAlignments(EnumMap<GeneType, VDJCHit[]> hits,
+                          NSequenceWithQuality[] targets,
+                          SequenceHistory[] history,
+                          SequenceRead[] originalReads) {
+        this(-1, hits, targets, history, originalReads);
+    }
+
+    public VDJCAlignments(VDJCHit[] vHits, VDJCHit[] dHits, VDJCHit[] jHits, VDJCHit[] cHits,
+                          NSequenceWithQuality[] targets,
+                          SequenceHistory[] history,
+                          SequenceRead[] originalReads) {
+        this(-1, createHits(vHits, dHits, jHits, cHits), targets, history, originalReads);
+    }
+
+    public VDJCAlignments shiftReadId(long newAlignmentIndex, long shift) {
+        return new VDJCAlignments(newAlignmentIndex, hits, targets, shift(history, shift), shift(originalReads, shift));
+    }
+
+    public static SequenceRead[] mergeOriginalReads(VDJCAlignments... array) {
+        boolean isNull = array[0].originalReads == null;
+        TLongObjectHashMap<SequenceRead> map = new TLongObjectHashMap<>();
+        for (VDJCAlignments a : array) {
+            if (isNull != (a.originalReads == null))
+                throw new IllegalArgumentException();
+            if (a.originalReads != null)
+                for (SequenceRead s : a.originalReads)
+                    map.put(s.getId(), s);
+        }
+        if (isNull)
+            return null;
+        return map.values(new SequenceRead[map.size()]);
+    }
+
+    private static SequenceHistory[] shift(SequenceHistory[] data, long shift) {
+        SequenceHistory[] r = new SequenceHistory[data.length];
+        for (int i = 0; i < data.length; i++)
+            r[i] = data[i].shiftReadId(shift);
+        return r;
+    }
+
+    private static SequenceRead[] shift(SequenceRead[] data, long shift) {
+        if (data == null)
+            return null;
+        SequenceRead[] r = new SequenceRead[data.length];
+        for (int i = 0; i < data.length; i++)
+            r[i] = SequenceReadUtil.setReadId(data[i].getId() + shift, data[i]);
+        return r;
+    }
+
+    public SequenceHistory getHistory(int targetId) {
+        return history[targetId];
+    }
+
+    public SequenceHistory[] getHistory() {
+        return history.clone();
+    }
+
+    public NSequenceWithQuality getOriginalSequence(SequenceHistory.FullReadIndex index) {
+        if (originalReads == null)
+            throw new IllegalStateException("Original reads are not saved for the alignment object.");
+        SequenceRead read = null;
+        for (SequenceRead originalRead : originalReads)
+            if (originalRead.getId() == index.readId) {
+                read = originalRead;
+                break;
+            }
+        if (read == null)
+            throw new IllegalArgumentException("No such read index: " + index);
+        NSequenceWithQuality seq = read.getRead(index.mateIndex).getData();
+        return index.isReverseComplement ? seq.getReverseComplement() : seq;
+    }
+
+    public List<SequenceRead> getOriginalReads() {
+        return originalReads == null ? null : Collections.unmodifiableList(Arrays.asList(originalReads));
+    }
+
+    private long[] readIds = null;
+
+    /**
+     * The result is always sorted.
+     */
+    public long[] getReadIds() {
+        if (readIds == null) {
+            long[] result = new long[0];
+            for (SequenceHistory h : history)
+                result = ArraysUtils.getSortedDistinct(ArraysUtils.concatenate(result, h.readIds()));
+            readIds = result;
+        }
+        return readIds;
+    }
+
+    public int getNumberOfReads() {
+        return getReadIds().length;
+    }
+
+    public VDJCAlignments setHistory(SequenceHistory[] history, SequenceRead[] originalReads) {
+        return new VDJCAlignments(alignmentsIndex, hits, targets, history, originalReads);
     }
 
     public VDJCAlignments removeBestHitAlignment(GeneType geneType, int targetId) {
@@ -79,10 +169,7 @@ public final class VDJCAlignments extends VDJCObject {
         gHits[0] = new VDJCHit(gHits[0].getGene(), als, gHits[0].getAlignedFeature());
         Arrays.sort(gHits);
         hits.put(geneType, gHits);
-
-        VDJCAlignments result = new VDJCAlignments(readId, hits, targets);
-        result.alignmentsIndex = alignmentsIndex;
-        return result;
+        return new VDJCAlignments(alignmentsIndex, hits, targets, history, originalReads);
     }
 
     public boolean hasNoHitsInTarget(int i) {
@@ -96,43 +183,24 @@ public final class VDJCAlignments extends VDJCObject {
         return true;
     }
 
-    public long getReadId() {
-        return readId;
+    private volatile long minReadId = -1;
+
+    public long getMinReadId() {
+        if (minReadId != -1)
+            return minReadId;
+        long min = Long.MAX_VALUE;
+        for (SequenceHistory s : history)
+            min = Math.min(s.minReadId(), min);
+        return minReadId = min;
     }
 
     public long getAlignmentsIndex() {
         return alignmentsIndex;
     }
 
-    public void setAlignmentsIndex(long alignmentsIndex) {
+    public VDJCAlignments setAlignmentsIndex(long alignmentsIndex) {
         this.alignmentsIndex = alignmentsIndex;
-    }
-
-    public void setOriginalDescriptions(String[] description) {
-        assert description == null || originalSequences == null || description.length == originalSequences.length;
-        this.originalDescriptions = description;
-    }
-
-    public String[] getOriginalDescriptions() {
-        return originalDescriptions;
-    }
-
-    public void setTargetDescriptions(String[] description) {
-        assert description == null || description.length == targets.length;
-        this.targetDescriptions = description;
-    }
-
-    public String[] getTargetDescriptions() {
-        return targetDescriptions;
-    }
-
-    public void setOriginalSequences(NSequenceWithQuality[] originalSequences) {
-        assert originalDescriptions == null || originalSequences == null || originalDescriptions.length == originalSequences.length;
-        this.originalSequences = originalSequences;
-    }
-
-    public NSequenceWithQuality[] getOriginalSequences() {
-        return originalSequences;
+        return this;
     }
 
     /**
@@ -202,20 +270,18 @@ public final class VDJCAlignments extends VDJCObject {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof VDJCAlignments)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
 
         VDJCAlignments that = (VDJCAlignments) o;
 
-        if (readId != that.readId) return false;
-
-        return true;
+        return Arrays.equals(history, that.history);
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (int) (readId^(readId >>> 32));
+        result = 31 * result + Arrays.hashCode(history);
         return result;
     }
 }

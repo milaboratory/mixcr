@@ -5,18 +5,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.AlignmentScoring;
+import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceQuality;
+import com.milaboratory.mixcr.basictypes.SequenceHistory;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.cli.ReportHelper;
 import com.milaboratory.mixcr.cli.Report;
+import com.milaboratory.mixcr.cli.ReportHelper;
 import io.repseq.core.*;
 
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -53,10 +54,6 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
         this.minimalJScore = minimalJScore;
         this.vLeftExtensionRefPoint = vLeftExtensionRefPoint;
         this.jRightExtensionRefPoint = jRightExtensionRefPoint;
-    }
-
-    public String getAction() {
-        return null;
     }
 
     @Override
@@ -433,34 +430,12 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
             newHitsMap.put(gt, newHits);
         }
 
-
-        final VDJCAlignments result = new VDJCAlignments(input.getReadId(), newHitsMap, transformer.transform(originalTargets));
-        result.setAlignmentsIndex(input.getAlignmentsIndex());
-        result.setOriginalDescriptions(input.getOriginalDescriptions());
-        result.setOriginalSequences(input.getOriginalSequences());
-//        if (result.numberOfTargets() == input.numberOfTargets())
-//            result.setTargetDescriptions(input.getTargetDescriptions());
-
-        String[] tDescrs = input.getTargetDescriptions();
-        if (tDescrs == null) {
-            tDescrs = new String[input.numberOfTargets()];
-            Arrays.fill(tDescrs, "");
-        }
-
-        if (transformer.leftTargetId != -1 && transformer.rightTargetId != -1) {
-            int mergedTargetId = transformer.leftTargetId;
-            tDescrs[mergedTargetId] =
-                    tDescrs[transformer.leftTargetId] + "[" + input.getTarget(transformer.leftTargetId).size() + "]"
-                            + " + MExtended(" + transformer.extension.size() + ") + "
-                            + tDescrs[transformer.rightTargetId] + "[" + input.getTarget(transformer.rightTargetId).size() + "]";
-            shrinkArray0(tDescrs, tDescrs, transformer.leftTargetId, transformer.rightTargetId);
-            tDescrs = Arrays.copyOf(tDescrs, tDescrs.length - 1);
-        } else if (transformer.leftTargetId != -1)
-            tDescrs[transformer.leftTargetId] = tDescrs[transformer.leftTargetId] + "[" + input.getTarget(transformer.leftTargetId).size() + "]" + " + RExtended(" + transformer.extension.size() + ")";
-        else if (transformer.rightTargetId != -1)
-            tDescrs[transformer.rightTargetId] = "LExtended(" + transformer.extension.size() + ") + " + tDescrs[transformer.rightTargetId] + "[" + input.getTarget(transformer.rightTargetId).size() + "]";
-        result.setTargetDescriptions(tDescrs);
-        return result;
+        return new VDJCAlignments(
+                newHitsMap,
+                transformer.transform(originalTargets),
+                transformer.transform(input.getHistory()),
+                input.getOriginalReads() == null ? null : input.getOriginalReads().toArray(new SequenceRead[0]))
+                .setAlignmentsIndex(input.getAlignmentsIndex());
     }
 
     static <T> void shrinkArray0(T[] src, T[] dest, int leftTargetId, int rightTargetId) {
@@ -586,6 +561,29 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
                 newTargets[rightTargetId] = ext.concatenate(newTargets[rightTargetId]);
 
             return newTargets;
+        }
+
+        public SequenceHistory[] transform(SequenceHistory[] histories) {
+            SequenceHistory[] newHistories = isMerging() ? new SequenceHistory[histories.length - 1] : histories.clone();
+
+            if (leftTargetId != -1 && rightTargetId != -1) {
+                shrinkArray(histories, newHistories);
+                SequenceHistory l, r;
+                if (extensionGeneType == GeneType.Variable) {
+                    l = histories[leftTargetId];
+                    r = new SequenceHistory.Extend(histories[rightTargetId], extension.size(), 0);
+                } else {
+                    l = new SequenceHistory.Extend(histories[leftTargetId], 0, extension.size());
+                    r = histories[rightTargetId];
+                }
+                newHistories[leftTargetId] = new SequenceHistory.Merge(SequenceHistory.OverlapType.ExtensionMerge,
+                        l, r, l.length(), 0);
+            } else if (leftTargetId != -1)
+                newHistories[leftTargetId] = new SequenceHistory.Extend(histories[leftTargetId], 0, extension.size());
+            else
+                newHistories[rightTargetId] = new SequenceHistory.Extend(histories[rightTargetId], extension.size(), 0);
+
+            return newHistories;
         }
 
         @Override
