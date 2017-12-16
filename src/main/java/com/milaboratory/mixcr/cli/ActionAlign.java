@@ -133,6 +133,20 @@ public class ActionAlign implements Action {
 
         System.out.println("Reference library: " + library.getLibraryId());
 
+        // Printing library level warnings, if specified for the library
+        if (!library.getWarnings().isEmpty()) {
+            System.out.println("Library warnings:");
+            for (String l : library.getWarnings())
+                System.out.println(l);
+        }
+
+        // Printing citation notice, if specified for the library
+        if (!library.getCitations().isEmpty()) {
+            System.out.println("Please cite:");
+            for (String l : library.getCitations())
+                System.out.println(l);
+        }
+
         for (VDJCGene gene : library.getGenes(actionParameters.getChains())) {
             if (gene.getGeneType() == GeneType.Variable) {
                 totalV++;
