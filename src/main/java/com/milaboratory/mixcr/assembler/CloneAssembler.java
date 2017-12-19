@@ -51,7 +51,6 @@ import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TObjectFloatHashMap;
 import gnu.trove.procedure.TObjectProcedure;
-import io.repseq.core.GeneFeature;
 import io.repseq.core.*;
 
 import java.util.*;
@@ -339,7 +338,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             totalAlignments.incrementAndGet();
             final ClonalSequence target = extractClonalSequence(input);
             if (target == null) {
-                log(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadIds(), AssemblerEvent.DROPPED));
+                log(new AssemblerEvent(input.getAlignmentsIndex(), AssemblerEvent.DROPPED));
                 droppedAlignments.incrementAndGet();
                 onFailedToExtractTarget(input);
                 return;
@@ -349,7 +348,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
 
             if (badPoints > target.getConcatenated().size() * parameters.getMaxBadPointsPercent()) {
                 // Too many bad points (this read has too low quality in the regions of interest)
-                log(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadIds(), AssemblerEvent.DROPPED));
+                log(new AssemblerEvent(input.getAlignmentsIndex(), AssemblerEvent.DROPPED));
                 droppedAlignments.incrementAndGet();
                 onTooManyLowQualityPoints(input);
                 return;
@@ -357,7 +356,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
 
             if (badPoints > 0) {
                 // Has some number of bad points but not greater then maxBadPointsToMap
-                log(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadIds(), AssemblerEvent.DEFERRED));
+                log(new AssemblerEvent(input.getAlignmentsIndex(), AssemblerEvent.DEFERRED));
                 onAlignmentDeferred(input);
                 return;
             }
@@ -379,7 +378,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
 
             CloneAccumulator acc = container.accumulate(target, input, false);
             //Logging assembler events for subsequent index creation and mapping filtering
-            log(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadIds(), acc.getCloneIndex()));
+            log(new AssemblerEvent(input.getAlignmentsIndex(), acc.getCloneIndex()));
             //Incrementing corresponding counter
             successfullyAssembledAlignments.incrementAndGet();
             onAlignmentAddedToClone(input, acc);
@@ -399,7 +398,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 throw new IllegalArgumentException("This filter can not be used in concurrent " +
                         "environment. Perform pre-filtering in a single thread.");
             if (event.cloneIndex != AssemblerEvent.DEFERRED) {
-                deferredAlignmentsLogger.newEvent(new AssemblerEvent(event.alignmentsIndex, event.readIds, AssemblerEvent.DROPPED));
+                deferredAlignmentsLogger.newEvent(new AssemblerEvent(event.alignmentsIndex, AssemblerEvent.DROPPED));
                 return false;
             }
             return true;
@@ -445,7 +444,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 }
 
             if (candidates.isEmpty()) {
-                deferredAlignmentsLogger.newEvent(new AssemblerEvent(input.getAlignmentsIndex(), input.getReadIds(),
+                deferredAlignmentsLogger.newEvent(new AssemblerEvent(input.getAlignmentsIndex(),
                         AssemblerEvent.DROPPED));
                 droppedAlignments.incrementAndGet();
                 onNoCandidateFoundForDefferedAlignment(input);
@@ -463,8 +462,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             mappedAlignments.incrementAndGet();
             successfullyAssembledAlignments.incrementAndGet();
             deferredAlignmentsLogger.newEvent(new AssemblerEvent(input.getAlignmentsIndex(),
-                    input.getReadIds(), minMismatches == 0 ?
-                    accumulator.getCloneIndex() : -4 - accumulator.getCloneIndex()));
+                    minMismatches == 0 ? accumulator.getCloneIndex() : -4 - accumulator.getCloneIndex()));
 
             if (minMismatches > 0) {
                 // Mapped

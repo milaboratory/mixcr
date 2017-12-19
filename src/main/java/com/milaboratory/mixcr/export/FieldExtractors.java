@@ -40,7 +40,6 @@ import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.TranslationParameters;
-import com.milaboratory.mixcr.assembler.AlignmentsToClonesMappingContainer;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
@@ -585,19 +584,19 @@ public final class FieldExtractors {
                 }
             });
 
-            descriptorsList.add(alignmentsToClone("-cloneId", "To which clone alignment was attached.", false));
-            descriptorsList.add(alignmentsToClone("-cloneIdWithMappingType", "To which clone alignment was attached with additional info on mapping type.", true));
-            descriptorsList.add(new AbstractField<Clone>(Clone.class, "-readIds", "Read IDs aggregated by clone.") {
-                @Override
-                public FieldExtractor<Clone> create(OutputMode outputMode, String[] args) {
-                    return new CloneToReadsExtractor(outputMode, args[0]);
-                }
-
-                @Override
-                public String metaVars() {
-                    return "<index_file>";
-                }
-            });
+            // descriptorsList.add(alignmentsToClone("-cloneId", "To which clone alignment was attached.", false));
+            // descriptorsList.add(alignmentsToClone("-cloneIdWithMappingType", "To which clone alignment was attached with additional info on mapping type.", true));
+            // descriptorsList.add(new AbstractField<Clone>(Clone.class, "-readIds", "Read IDs aggregated by clone.") {
+            //     @Override
+            //     public FieldExtractor<Clone> create(OutputMode outputMode, String[] args) {
+            //         return new CloneToReadsExtractor(outputMode, args[0]);
+            //     }
+            //
+            //     @Override
+            //     public String metaVars() {
+            //         return "<index_file>";
+            //     }
+            // });
 
             for (final GeneType type : GeneType.values()) {
                 String c = Character.toLowerCase(type.getLetter()) + "IdentityPercents";
@@ -884,133 +883,133 @@ public final class FieldExtractors {
     }
 
 
-    private static AbstractField<VDJCAlignments> alignmentsToClone(
-            final String command, final String description, final boolean printMapping) {
-        return new AbstractField<VDJCAlignments>(VDJCAlignments.class, command, description) {
-            @Override
-            public FieldExtractor<VDJCAlignments> create(OutputMode outputMode, String[] args) {
-                return new AlignmentToCloneExtractor(outputMode, args[0], printMapping);
-            }
+    // private static AbstractField<VDJCAlignments> alignmentsToClone(
+    //         final String command, final String description, final boolean printMapping) {
+    //     return new AbstractField<VDJCAlignments>(VDJCAlignments.class, command, description) {
+    //         @Override
+    //         public FieldExtractor<VDJCAlignments> create(OutputMode outputMode, String[] args) {
+    //             return new AlignmentToCloneExtractor(outputMode, args[0], printMapping);
+    //         }
+    //
+    //         @Override
+    //         public String metaVars() {
+    //             return "<index_file>";
+    //         }
+    //     };
+    // }
 
-            @Override
-            public String metaVars() {
-                return "<index_file>";
-            }
-        };
-    }
-
-    private static final class AlignmentToCloneExtractor
-            implements FieldExtractor<VDJCAlignments>, Closeable {
-        private final OutputMode outputMode;
-        private final AlignmentsToClonesMappingContainer container;
-        private final OutputPort<ReadToCloneMapping> byAls;
-        private final boolean printMapping;
-        private final Iterator<ReadToCloneMapping> mappingIterator;
-        private ReadToCloneMapping currentMapping = null;
-
-        public AlignmentToCloneExtractor(OutputMode outputMode, String indexFile, boolean printMapping) {
-            try {
-                this.outputMode = outputMode;
-                this.printMapping = printMapping;
-                this.container = AlignmentsToClonesMappingContainer.open(indexFile);
-                this.byAls = this.container.createPortByAlignments();
-                this.mappingIterator = CUtils.it(byAls).iterator();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        @Override
-        public String getHeader() {
-            if (printMapping)
-                return choose(outputMode, "Clone mapping", "cloneMapping");
-            else
-                return choose(outputMode, "Clone Id", "cloneId");
-        }
-
-        @Override
-        public String extractValue(VDJCAlignments object) {
-            if (currentMapping == null && mappingIterator.hasNext())
-                currentMapping = mappingIterator.next();
-
-            if (currentMapping == null)
-                throw new IllegalArgumentException("Wrong number of records in index.");
-
-            while (currentMapping.getAlignmentsId() < object.getAlignmentsIndex() && mappingIterator.hasNext())
-                currentMapping = mappingIterator.next();
-            if (currentMapping.getAlignmentsId() != object.getAlignmentsIndex())
-                return printMapping ? Dropped.toString().toLowerCase() : NULL;
-
-            int cloneIndex = currentMapping.getCloneIndex();
-            ReadToCloneMapping.MappingType mt = currentMapping.getMappingType();
-            if (currentMapping.isDropped())
-                return printMapping ? mt.toString().toLowerCase() : NULL;
-            return printMapping ? Integer.toString(cloneIndex) + ":" + mt.toString().toLowerCase() : Integer.toString(cloneIndex);
-        }
-
-        @Override
-        public void close() throws IOException {
-            container.close();
-        }
-    }
-
-    private static final class CloneToReadsExtractor
-            implements FieldExtractor<Clone>, Closeable {
-        private final OutputMode outputMode;
-        private final AlignmentsToClonesMappingContainer container;
-        private final Iterator<ReadToCloneMapping> mappingIterator;
-        private ReadToCloneMapping currentMapping;
-
-        public CloneToReadsExtractor(OutputMode outputMode, String file) {
-            try {
-                this.outputMode = outputMode;
-                this.container = AlignmentsToClonesMappingContainer.open(file);
-                this.mappingIterator = CUtils.it(this.container.createPortByClones()).iterator();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        @Override
-        public String getHeader() {
-            return choose(outputMode, "Reads", "reads");
-        }
-
-        @Override
-        public String extractValue(Clone clone) {
-            if (currentMapping == null && mappingIterator.hasNext())
-                currentMapping = mappingIterator.next();
-
-            if (currentMapping == null)
-                throw new IllegalArgumentException("Wrong number of records in index.");
-
-            while (currentMapping.getCloneIndex() < clone.getId() && mappingIterator.hasNext())
-                currentMapping = mappingIterator.next();
-
-            long count = 0;
-            StringBuilder sb = new StringBuilder();
-            while (currentMapping.getCloneIndex() == clone.getId()) {
-                ++count;
-                assert currentMapping.getCloneIndex() == currentMapping.getCloneIndex();
-                long[] readIds = currentMapping.getReadIds();
-                for (long readId : readIds)
-                    sb.append(readId).append(",");
-                if (!mappingIterator.hasNext())
-                    break;
-                currentMapping = mappingIterator.next();
-            }
-            //count == object.getCount() only if addReadsCountOnClustering=true
-            assert count >= clone.getCount() : "Actual count: " + clone.getCount() + ", in mapping: " + count;
-            if (sb.length() != 0)
-                sb.deleteCharAt(sb.length() - 1);
-            return sb.toString();
-        }
-
-        @Override
-        public void close() throws IOException {
-            container.close();
-        }
-    }
+    // private static final class AlignmentToCloneExtractor
+    //         implements FieldExtractor<VDJCAlignments>, Closeable {
+    //     private final OutputMode outputMode;
+    //     private final AlignmentsToClonesMappingContainer container;
+    //     private final OutputPort<ReadToCloneMapping> byAls;
+    //     private final boolean printMapping;
+    //     private final Iterator<ReadToCloneMapping> mappingIterator;
+    //     private ReadToCloneMapping currentMapping = null;
+    //
+    //     public AlignmentToCloneExtractor(OutputMode outputMode, String indexFile, boolean printMapping) {
+    //         try {
+    //             this.outputMode = outputMode;
+    //             this.printMapping = printMapping;
+    //             this.container = AlignmentsToClonesMappingContainer.open(indexFile);
+    //             this.byAls = this.container.createPortByAlignments();
+    //             this.mappingIterator = CUtils.it(byAls).iterator();
+    //         } catch (IOException e) {
+    //             throw new RuntimeException(e);
+    //         }
+    //     }
+    //
+    //     @Override
+    //     public String getHeader() {
+    //         if (printMapping)
+    //             return choose(outputMode, "Clone mapping", "cloneMapping");
+    //         else
+    //             return choose(outputMode, "Clone Id", "cloneId");
+    //     }
+    //
+    //     @Override
+    //     public String extractValue(VDJCAlignments object) {
+    //         if (currentMapping == null && mappingIterator.hasNext())
+    //             currentMapping = mappingIterator.next();
+    //
+    //         if (currentMapping == null)
+    //             throw new IllegalArgumentException("Wrong number of records in index.");
+    //
+    //         while (currentMapping.getAlignmentsId() < object.getAlignmentsIndex() && mappingIterator.hasNext())
+    //             currentMapping = mappingIterator.next();
+    //         if (currentMapping.getAlignmentsId() != object.getAlignmentsIndex())
+    //             return printMapping ? Dropped.toString().toLowerCase() : NULL;
+    //
+    //         int cloneIndex = currentMapping.getCloneIndex();
+    //         ReadToCloneMapping.MappingType mt = currentMapping.getMappingType();
+    //         if (currentMapping.isDropped())
+    //             return printMapping ? mt.toString().toLowerCase() : NULL;
+    //         return printMapping ? Integer.toString(cloneIndex) + ":" + mt.toString().toLowerCase() : Integer.toString(cloneIndex);
+    //     }
+    //
+    //     @Override
+    //     public void close() throws IOException {
+    //         container.close();
+    //     }
+    // }
+    //
+    // private static final class CloneToReadsExtractor
+    //         implements FieldExtractor<Clone>, Closeable {
+    //     private final OutputMode outputMode;
+    //     private final AlignmentsToClonesMappingContainer container;
+    //     private final Iterator<ReadToCloneMapping> mappingIterator;
+    //     private ReadToCloneMapping currentMapping;
+    //
+    //     public CloneToReadsExtractor(OutputMode outputMode, String file) {
+    //         try {
+    //             this.outputMode = outputMode;
+    //             this.container = AlignmentsToClonesMappingContainer.open(file);
+    //             this.mappingIterator = CUtils.it(this.container.createPortByClones()).iterator();
+    //         } catch (IOException e) {
+    //             throw new RuntimeException(e);
+    //         }
+    //     }
+    //
+    //     @Override
+    //     public String getHeader() {
+    //         return choose(outputMode, "Reads", "reads");
+    //     }
+    //
+    //     @Override
+    //     public String extractValue(Clone clone) {
+    //         if (currentMapping == null && mappingIterator.hasNext())
+    //             currentMapping = mappingIterator.next();
+    //
+    //         if (currentMapping == null)
+    //             throw new IllegalArgumentException("Wrong number of records in index.");
+    //
+    //         while (currentMapping.getCloneIndex() < clone.getId() && mappingIterator.hasNext())
+    //             currentMapping = mappingIterator.next();
+    //
+    //         long count = 0;
+    //         StringBuilder sb = new StringBuilder();
+    //         while (currentMapping.getCloneIndex() == clone.getId()) {
+    //             ++count;
+    //             assert currentMapping.getCloneIndex() == currentMapping.getCloneIndex();
+    //             long[] readIds = currentMapping.getReadIds();
+    //             for (long readId : readIds)
+    //                 sb.append(readId).append(",");
+    //             if (!mappingIterator.hasNext())
+    //                 break;
+    //             currentMapping = mappingIterator.next();
+    //         }
+    //         //count == object.getCount() only if addReadsCountOnClustering=true
+    //         assert count >= clone.getCount() : "Actual count: " + clone.getCount() + ", in mapping: " + count;
+    //         if (sb.length() != 0)
+    //             sb.deleteCharAt(sb.length() - 1);
+    //         return sb.toString();
+    //     }
+    //
+    //     @Override
+    //     public void close() throws IOException {
+    //         container.close();
+    //     }
+    // }
 
     public static String choose(OutputMode outputMode, String hString, String sString) {
         switch (outputMode) {

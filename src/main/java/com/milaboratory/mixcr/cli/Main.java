@@ -85,7 +85,7 @@ public class Main {
                 new ActionAlignmentsStat(),
                 new ActionMergeAlignments(),
                 new ActionInfo(),
-                new ActionExportCloneReads(),
+                // new ActionExportCloneReads(),
                 new VersionInfoAction(),
                 new ActionAlignmentsDiff(),
                 new ActionAssemblePartialAlignments(),

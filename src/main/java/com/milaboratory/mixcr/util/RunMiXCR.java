@@ -20,7 +20,6 @@ import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
-import com.milaboratory.mixcr.cli.ActionAlign;
 import com.milaboratory.mixcr.cli.AlignerReport;
 import com.milaboratory.mixcr.cli.CloneAssemblerReport;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
@@ -49,9 +48,15 @@ import static cc.redberry.pipe.CUtils.unchunked;
 public final class RunMiXCR {
 
     public static AssembleResult assemble(final AlignResult align) {
-        RunMiXCRAnalysis parameters = align.parameters;
-        try (CloneAssembler assembler = new CloneAssembler(parameters.cloneAssemblerParameters,
-                false, align.usedGenes, align.parameters.alignerParameters)) {
+        return assemble(align, true);
+    }
+
+    public static AssembleResult assemble(final AlignResult align, boolean close) {
+        CloneAssembler assembler = null;
+        try {
+            RunMiXCRAnalysis parameters = align.parameters;
+            assembler = new CloneAssembler(parameters.cloneAssemblerParameters,
+                    false, align.usedGenes, align.parameters.alignerParameters);
 
             CloneAssemblerReport report = new CloneAssemblerReport();
             assembler.setListener(report);
@@ -74,7 +79,10 @@ public final class RunMiXCR {
             assemblerRunner.run();
 
             CloneSet cloneSet = assemblerRunner.getCloneSet();
-            return new AssembleResult(cloneSet, report);
+            return new AssembleResult(cloneSet, report, assembler);
+        } finally {
+            if (close)
+                assembler.close();
         }
     }
 
@@ -125,12 +133,14 @@ public final class RunMiXCR {
     }
 
     public static final class AssembleResult {
-        final CloneSet cloneSet;
-        final CloneAssemblerReport report;
+        public final CloneSet cloneSet;
+        public final CloneAssemblerReport report;
+        public final CloneAssembler cloneAssembler;
 
-        public AssembleResult(CloneSet cloneSet, CloneAssemblerReport report) {
+        public AssembleResult(CloneSet cloneSet, CloneAssemblerReport report, CloneAssembler cloneAssembler) {
             this.cloneSet = cloneSet;
             this.report = report;
+            this.cloneAssembler = cloneAssembler;
         }
     }
 

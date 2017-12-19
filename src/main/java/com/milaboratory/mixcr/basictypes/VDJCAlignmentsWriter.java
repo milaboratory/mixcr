@@ -99,7 +99,7 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
         // Writing parameters
         output.writeObject(parameters);
 
-        IOUtil.writeGeneReferences(output, genes, parameters);
+        IOUtil.writeAndRegisterGeneReferences(output, genes, parameters);
 
         // Registering links to features to align
         for (GeneType gt : GeneType.VDJC_REFERENCE) {
