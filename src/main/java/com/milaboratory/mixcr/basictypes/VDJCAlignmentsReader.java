@@ -152,7 +152,7 @@ public final class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlign
 
         parameters = input.readObject(VDJCAlignerParameters.class);
 
-        this.usedGenes = IOUtil.readGeneReferences(input, vdjcRegistry, parameters);
+        this.usedGenes = IOUtil.readAndRegisterGeneReferences(input, vdjcRegistry, parameters);
 
         // Registering links to features to align
         for (GeneType gt : GeneType.VDJC_REFERENCE) {

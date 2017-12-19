@@ -100,10 +100,6 @@ public final class AssemblerEventLogger {
             // Writing clone index
             writeRawVarint32(os, encodeZigZag32(event.cloneIndex));
 
-            writeRawVarint32(os, event.readIds.length);
-            for (int i = 0; i < event.readIds.length; i++)
-                writeRawVarint64(os, event.readIds[i]);
-
         } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
@@ -188,12 +184,8 @@ public final class AssemblerEventLogger {
                         }
                     }
                 }
-                int nReadIds = IOUtil.readRawVarint32(is, -1);
-                long[] readIds = new long[nReadIds];
-                for (int i = 0; i < nReadIds; i++)
-                    readIds[i] = IOUtil.readRawVarint64(is, -1);
 
-                return new AssemblerEvent(counter++, readIds, decodeZigZag32(cloneIndex));
+                return new AssemblerEvent(counter++, decodeZigZag32(cloneIndex));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

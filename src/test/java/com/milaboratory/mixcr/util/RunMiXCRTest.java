@@ -2,10 +2,8 @@ package com.milaboratory.mixcr.util;
 
 import cc.redberry.pipe.CUtils;
 import com.milaboratory.core.io.sequence.PairedRead;
-import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.cli.ActionAlign;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.util.TempFileManager;
 import io.repseq.core.Chains;
@@ -90,7 +88,7 @@ public class RunMiXCRTest {
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
 
         List<PairedRead> reads = new ArrayList<>();
-        try(PairedFastqReader fReader = new PairedFastqReader(
+        try (PairedFastqReader fReader = new PairedFastqReader(
                 RunMiXCR.class.getResource("/sequences/test_R1.fastq").getFile(),
                 RunMiXCR.class.getResource("/sequences/test_R2.fastq").getFile())) {
             for (PairedRead s : CUtils.it(fReader))
@@ -98,13 +96,13 @@ public class RunMiXCRTest {
         }
 
         File tempFile = TempFileManager.getTempFile();
-        try(VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
+        try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
             writer.header(align.aligner);
             for (VDJCAlignments alignment : align.alignments)
                 writer.write(alignment);
         }
 
-        try(VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile)) {
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile)) {
             int tr = 0;
             for (VDJCAlignments alignment : CUtils.it(reader)) {
                 PairedRead actual = reads.get((int) alignment.getMinReadId());
@@ -127,7 +125,7 @@ public class RunMiXCRTest {
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
 
         List<PairedRead> reads = new ArrayList<>();
-        try(PairedFastqReader fReader = new PairedFastqReader(
+        try (PairedFastqReader fReader = new PairedFastqReader(
                 "/Users/poslavsky/Projects/milab/temp/R1_part.fastq.gz",
                 "/Users/poslavsky/Projects/milab/temp/R2_part.fastq.gz", true)) {
             for (PairedRead s : CUtils.it(fReader))
@@ -135,13 +133,13 @@ public class RunMiXCRTest {
         }
 
         File tempFile = TempFileManager.getTempFile();
-        try(VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
+        try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
             writer.header(align.aligner);
             for (VDJCAlignments alignment : align.alignments)
                 writer.write(alignment);
         }
 
-        try(VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile)) {
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile)) {
             int tr = 0;
             for (VDJCAlignments alignment : CUtils.it(reader)) {
                 PairedRead actual = reads.get((int) alignment.getMinReadId());

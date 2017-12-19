@@ -34,14 +34,12 @@ public final class AssemblerEvent implements Comparable<AssemblerEvent> {
     //auxiliary status codes used instead of cloneIndex
     public static final int DROPPED = -2, DEFERRED = -3, EOF = -1;
     public final long alignmentsIndex;
-    public final long[] readIds;
     public final int cloneIndex;
 
-    public AssemblerEvent(long alignmentsIndex, long[] readIds, int cloneIndex) {
+    public AssemblerEvent(long alignmentsIndex, int cloneIndex) {
         if (cloneIndex == EOF)
             throw new IllegalArgumentException();
         this.alignmentsIndex = alignmentsIndex;
-        this.readIds = readIds;
         this.cloneIndex = cloneIndex;
     }
 
@@ -53,19 +51,17 @@ public final class AssemblerEvent implements Comparable<AssemblerEvent> {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof AssemblerEvent)) return false;
 
         AssemblerEvent that = (AssemblerEvent) o;
 
         if (alignmentsIndex != that.alignmentsIndex) return false;
-        if (cloneIndex != that.cloneIndex) return false;
-        return Arrays.equals(readIds, that.readIds);
+        return cloneIndex == that.cloneIndex;
     }
 
     @Override
     public int hashCode() {
         int result = (int) (alignmentsIndex ^ (alignmentsIndex >>> 32));
-        result = 31 * result + Arrays.hashCode(readIds);
         result = 31 * result + cloneIndex;
         return result;
     }

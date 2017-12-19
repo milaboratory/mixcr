@@ -71,7 +71,7 @@ public final class ActionSortAlignments implements Action {
         }
     };
 
-    private static final class VDJCAlignmentsSerializer implements ObjectSerializer<VDJCAlignments> {
+    public static final class VDJCAlignmentsSerializer implements ObjectSerializer<VDJCAlignments> {
         final VDJCAlignerParameters parameters;
         final List<VDJCGene> usedAlleles;
 

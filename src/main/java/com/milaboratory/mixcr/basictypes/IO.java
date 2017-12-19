@@ -32,6 +32,7 @@ import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.Serializer;
@@ -88,6 +89,9 @@ class IO {
                 output.writeObject(entry.getKey());
                 output.writeObject(entry.getValue());
             }
+            output.writeByte(object.mappingType);
+            if (!ReadToCloneMapping.isDropped(object.mappingType))
+                output.writeVarInt(object.cloneIndex);
         }
 
         @Override
@@ -99,9 +103,15 @@ class IO {
             EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
             for (int i = 0; i < size; i++) {
                 GeneType key = input.readObject(GeneType.class);
+                if (key == null)
+                    throw new RuntimeException("Illegal file format.");
                 hits.put(key, input.readObject(VDJCHit[].class));
             }
-            return new VDJCAlignments(hits, targets, history, originalReads);
+            byte mappingType = input.readByte();
+            int cloneIndex = -1;
+            if (!ReadToCloneMapping.isDropped(mappingType))
+                cloneIndex = input.readVarInt();
+            return new VDJCAlignments(hits, targets, history, originalReads, mappingType, cloneIndex);
         }
 
         @Override
@@ -119,16 +129,6 @@ class IO {
         @Override
         public void write(PrimitivO output, VDJCAlignments object) {
             throw new RuntimeException("Backward compatibility reader! Write not implemented.");
-            // output.writeObject(object.targets);
-            // output.writeObject(object.targetDescriptions);
-            // output.writeObject(object.originalSequences);
-            // output.writeObject(object.originalDescriptions);
-            // output.writeByte(object.hits.size());
-            // for (Map.Entry<GeneType, VDJCHit[]> entry : object.hits.entrySet()) {
-            //     output.writeObject(entry.getKey());
-            //     output.writeObject(entry.getValue());
-            // }
-            // output.writeLong(object.readId);
         }
 
         @Override
@@ -143,9 +143,8 @@ class IO {
                 GeneType key = input.readObject(GeneType.class);
                 hits.put(key, input.readObject(VDJCHit[].class));
             }
-            VDJCAlignments vdjcAlignments = new VDJCAlignments(input.readLong(), hits, targets,
+            return new VDJCAlignments(input.readLong(), hits, targets,
                     new SequenceHistory[0], new SequenceRead[0]);
-            return vdjcAlignments;
         }
 
         @Override

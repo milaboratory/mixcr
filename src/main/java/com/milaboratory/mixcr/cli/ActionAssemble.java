@@ -146,9 +146,9 @@ public class ActionAssemble implements Action {
                 }
 
             // Writing Alignment to clone index file
-            if (actionParameters.readsToClonesMapping != null)
-                AlignmentsToClonesMappingContainer.writeMapping(assembler.getAssembledReadsPort(), cloneSet.size(),
-                        actionParameters.readsToClonesMapping);
+            // if (actionParameters.readsToClonesMapping != null)
+            //     AlignmentsToClonesMappingContainer.writeMapping(assembler.getAssembledReadsPort(), cloneSet.size(),
+            //             actionParameters.readsToClonesMapping);
         }
     }
 
