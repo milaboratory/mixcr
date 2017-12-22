@@ -1,0 +1,1 @@
+Fixes possible `IOException` during report output on Lustre file system
