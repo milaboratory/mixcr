@@ -62,11 +62,19 @@ public final class Util {
 
     static void appendAtomically(File file, byte[] content) {
         try (FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
-             FileLock lock = channel.lock()) {
+             FileLock lock = lockIfPossible(channel)) {
             channel.position(channel.size());
             channel.write(ByteBuffer.wrap(content));
         } catch (IOException ioe) {
             throw new RuntimeException(ioe);
+        }
+    }
+
+    static FileLock lockIfPossible(FileChannel channel) {
+        try {
+            return channel.lock();
+        } catch (Exception e) {
+            return null;
         }
     }
 
