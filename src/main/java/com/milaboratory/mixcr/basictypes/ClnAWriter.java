@@ -31,11 +31,12 @@ package com.milaboratory.mixcr.basictypes;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.util.CountingOutputPort;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.primitivio.PipeDataInputReader;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
-import com.milaboratory.util.CanReportProgress;
+import com.milaboratory.util.CanReportProgressAndStage;
 import com.milaboratory.util.ObjectSerializer;
 import com.milaboratory.util.Sorter;
 import gnu.trove.list.array.TLongArrayList;
@@ -61,7 +62,7 @@ import java.util.Optional;
  * 4. writeAlignmentsAndIndex()
  * 5. close()
  */
-public final class ClnAWriter implements AutoCloseable, CanReportProgress {
+public final class ClnAWriter implements AutoCloseable, CanReportProgressAndStage {
     static final String MAGIC_V1 = "MiXCR.CLNA.V01";
     static final String MAGIC = MAGIC_V1;
     static final int MAGIC_LENGTH = MAGIC.length();
@@ -75,13 +76,21 @@ public final class ClnAWriter implements AutoCloseable, CanReportProgress {
      */
     private final CountingOutputStream outputStream;
     private final PrimitivO output;
-    private volatile int numberOfClones = -1;
+    /**
+     * Counter OP used to report progress during stage 2
+     */
+    private volatile CountingOutputPort<VDJCAlignments> toSorter;
+    private volatile int numberOfClones = -1, numberOfClonesWritten = 0;
     private volatile OutputPortCloseable<VDJCAlignments> sortedAlignments = null;
     private volatile long numberOfAlignments = -1, numberOfAlignmentsWritten = 0;
-    private volatile boolean finished = false;
+    private volatile boolean clonesBlockFinished = false, finished = false;
+
+    public ClnAWriter(String fileName) throws IOException {
+        this(new File(fileName));
+    }
 
     public ClnAWriter(File file) throws IOException {
-        this.tempFile = new File(file.getAbsolutePath() + ".unsorted");
+        this.tempFile = new File(file.getAbsolutePath() + ".presorted");
         this.outputStream = new CountingOutputStream(new BufferedOutputStream(
                 new FileOutputStream(file), 131072));
         this.outputStream.write(MAGIC.getBytes(StandardCharsets.UTF_8));
@@ -98,7 +107,7 @@ public final class ClnAWriter implements AutoCloseable, CanReportProgress {
      */
     public synchronized void writeClones(CloneSet cloneSet) {
         // Checking state
-        if (numberOfClones != -1)
+        if (clonesBlockFinished)
             throw new IllegalArgumentException("Clone block was already written.");
 
         // Saving VDJC gene list
@@ -135,13 +144,17 @@ public final class ClnAWriter implements AutoCloseable, CanReportProgress {
         // this value will be written to the end of the file
         positionOfFirstClone = outputStream.getByteCount();
 
-        // Writing clones
-        for (Clone clone : cloneSet)
-            output.writeObject(clone);
-
         // Saving number of clones
-        // This is also a flag telling other methods that clones block was written successfully
         numberOfClones = cloneSet.size();
+
+        // Writing clones
+        for (Clone clone : cloneSet) {
+            output.writeObject(clone);
+            ++numberOfClonesWritten;
+        }
+
+        // Setting flag telling other methods that clones block was written successfully
+        clonesBlockFinished = true;
     }
 
     /**
@@ -150,7 +163,7 @@ public final class ClnAWriter implements AutoCloseable, CanReportProgress {
     public synchronized void sortAlignments(OutputPort<VDJCAlignments> alignments,
                                             long numberOfAlignments) throws IOException {
         // Checking state
-        if (numberOfClones == -1)
+        if (!clonesBlockFinished)
             throw new IllegalStateException("Write clones before writing alignments.");
         if (sortedAlignments != null)
             throw new IllegalStateException("Alignments are already sorted.");
@@ -164,7 +177,9 @@ public final class ClnAWriter implements AutoCloseable, CanReportProgress {
 
         // Sorting alignments by cloneId and then by mapping type (core alignments will be written before all others)
         // and saving sorting output port
-        sortedAlignments = Sorter.sort(alignments, (o1, o2) -> {
+        sortedAlignments = Sorter.sort(
+                toSorter = new CountingOutputPort<>(alignments),
+                (o1, o2) -> {
                     int i = Integer.compare(o1.cloneIndex, o2.cloneIndex);
                     if (i != 0)
                         return i;
@@ -248,6 +263,8 @@ public final class ClnAWriter implements AutoCloseable, CanReportProgress {
             output.writeObject(alignments);
             ++numberOfAlignmentsWritten;
         }
+        // Closing sorted output port, this will delete presorted file
+        sortedAlignments.close();
         // Writing count of alignments in the last block
         aBlockCount.add(numberOfAlignmentsWritten - previousAlsCount);
 
@@ -282,7 +299,35 @@ public final class ClnAWriter implements AutoCloseable, CanReportProgress {
 
     @Override
     public double getProgress() {
-        return 1.0 * numberOfAlignmentsWritten / numberOfAlignments;
+        if (!clonesBlockFinished)
+            if (numberOfClones == -1)
+                return Double.NaN;
+            else
+                return 1.0 * numberOfClonesWritten / numberOfClones;
+        else if (sortedAlignments == null) {
+            if (toSorter == null)
+                return Double.NaN;
+            else
+                return 1.0 * toSorter.getCount() / numberOfAlignments;
+        } else
+            return 1.0 * numberOfAlignmentsWritten / numberOfAlignments;
+
+    }
+
+    @Override
+    public String getStage() {
+        if (!clonesBlockFinished)
+            if (numberOfClones == -1)
+                return "Initialization";
+            else
+                return "Writing clones";
+        else if (sortedAlignments == null) {
+            if (toSorter == null)
+                return "Preparing for sorting";
+            else
+                return "Sorting alignments";
+        } else
+            return "Writing alignments";
     }
 
     @Override
@@ -291,7 +336,7 @@ public final class ClnAWriter implements AutoCloseable, CanReportProgress {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         finished = true;
         output.close();
     }

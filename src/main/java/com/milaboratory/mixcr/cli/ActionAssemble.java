@@ -38,7 +38,7 @@ import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParametersWithOutput;
 import com.milaboratory.mixcr.assembler.*;
-import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.basictypes.ClnAWriter;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
@@ -48,7 +48,6 @@ import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -61,6 +60,12 @@ public class ActionAssemble implements Action {
     public void go(ActionHelper helper) throws Exception {
         // Saving initial timestamp
         long beginTimestamp = System.currentTimeMillis();
+
+        // Checking consistency between actionParameters.doWriteClnA() value and file extension
+        if ((actionParameters.getOutputFileName().toLowerCase().endsWith(".clna") && !actionParameters.doWriteClnA()) ||
+                (actionParameters.getOutputFileName().toLowerCase().endsWith(".clns") && actionParameters.doWriteClnA()))
+            System.out.println("WARNING: Unexpected file extension, use .clns extension for clones-only (normal) output and\n" +
+                    ".clna if -a / --write-alignments options specified.");
 
         // Extracting V/D/J/C gene list from input vdjca file
         final List<VDJCGene> genes;
@@ -92,7 +97,8 @@ public class ActionAssemble implements Action {
 
         // Performing assembly
         try (CloneAssembler assembler = new CloneAssembler(assemblerParameters,
-                actionParameters.readsToClonesMapping != null, genes, alignerParameters.getFeaturesToAlignMap())) {
+                actionParameters.doWriteClnA() || actionParameters.events != null,
+                genes, alignerParameters.getFeaturesToAlignMap())) {
             // Creating event listener to collect run statistics
             CloneAssemblerReport report = new CloneAssemblerReport();
             report.setStartMillis(beginTimestamp);
@@ -116,10 +122,24 @@ public class ActionAssemble implements Action {
             report.onClonesetFinished(cloneSet);
 
             // Writing results
-            try (CloneSetIO.CloneSetWriter writer = new CloneSetIO.CloneSetWriter(cloneSet, actionParameters.getOutputFileName())) {
-                SmartProgressReporter.startProgressReport(writer);
-                writer.write();
-            }
+            if (actionParameters.doWriteClnA())
+                try (ClnAWriter writer = new ClnAWriter(actionParameters.getOutputFileName())) {
+                    // writer will supply current stage and completion percent to the progress reporter
+                    SmartProgressReporter.startProgressReport(writer);
+                    // Writing clone block
+                    writer.writeClones(cloneSet);
+                    // Pre-soring alignments
+                    try (AlignmentsMappingMerger merged = new AlignmentsMappingMerger(alignmentsProvider.create(),
+                            assembler.getAssembledReadsPort())) {
+                        writer.sortAlignments(merged, assembler.getAlignmentsCount());
+                    }
+                    writer.writeAlignmentsAndIndex();
+                }
+            else
+                try (CloneSetIO.CloneSetWriter writer = new CloneSetIO.CloneSetWriter(cloneSet, actionParameters.getOutputFileName())) {
+                    SmartProgressReporter.startProgressReport(writer);
+                    writer.write();
+                }
 
             // Writing report
 
@@ -144,11 +164,6 @@ public class ActionAssemble implements Action {
                 try (PipeWriter<ReadToCloneMapping> writer = new PipeWriter<>(actionParameters.events)) {
                     CUtils.drain(assembler.getAssembledReadsPort(), writer);
                 }
-
-            // Writing Alignment to clone index file
-            // if (actionParameters.readsToClonesMapping != null)
-            //     AlignmentsToClonesMappingContainer.writeMapping(assembler.getAssembledReadsPort(), cloneSet.size(),
-            //             actionParameters.readsToClonesMapping);
         }
     }
 
@@ -187,9 +202,12 @@ public class ActionAssemble implements Action {
                 names = {"-e", "--events"}, hidden = true)
         public String events;
 
-        @Parameter(description = ".",
-                names = {"-i", "--index"})
-        public String readsToClonesMapping;
+        @Parameter(description = "If this option is specified, output file will be written in \"Clones & " +
+                "Alignments\" format (*.clna), containing clones and all corresponding alignments. " +
+                "This file then can be used to build wider contigs for clonal sequence and extract original " +
+                "reads for each clone (if -OsaveOriginalReads=true was use on 'align' stage).",
+                names = {"-a", "--write-alignments"})
+        public Boolean clna;
 
         @DynamicParameter(names = "-O", description = "Overrides default parameter values.")
         private Map<String, String> overrides = new HashMap<>();
@@ -200,6 +218,10 @@ public class ActionAssemble implements Action {
 
         public String getOutputFileName() {
             return parameters.get(1);
+        }
+
+        public boolean doWriteClnA() {
+            return clna != null && clna;
         }
 
         public CloneAssemblerParameters getCloneAssemblerParameters() {
@@ -219,9 +241,6 @@ public class ActionAssemble implements Action {
         public void validate() {
             if (parameters.size() != 2)
                 throw new ParameterException("Wrong number of parameters.");
-            if (readsToClonesMapping != null)
-                if (new File(readsToClonesMapping).exists() && !isForceOverwrite())
-                    throw new ParameterException("File " + readsToClonesMapping + " already exists. Use -f option to overwrite it.");
             super.validate();
         }
     }
