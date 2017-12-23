@@ -285,6 +285,10 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         this.progressReporter = null;
     }
 
+    public long getAlignmentsCount() {
+        return totalAlignments.get();
+    }
+
     public void buildClones() {
         if (!preClusteringDone)
             throw new IllegalStateException("No preclustering done.");

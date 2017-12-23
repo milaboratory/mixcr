@@ -82,13 +82,13 @@ public class ActionExportAlignmentsPretty implements Action {
                     break;
                 ++total;
                 if (filter.accept(alignments)) {
-                    ++filtered;
-
                     if (--skipAfter >= 0)
                         continue;
 
                     if (--countAfter < 0)
                         break;
+
+                    ++filtered;
 
                     if (actionParameters.isVerbose())
                         outputVerbose(output, alignments);
