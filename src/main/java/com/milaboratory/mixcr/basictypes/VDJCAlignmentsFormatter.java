@@ -35,9 +35,12 @@ import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.alignment.Aligner;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.MultiAlignmentHelper;
+import com.milaboratory.core.sequence.AminoAcidAlphabet;
+import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import io.repseq.core.GeneType;
+import io.repseq.core.RangeTranslationParameters;
 import io.repseq.core.ReferencePoint;
 import io.repseq.core.SequencePartitioning;
 
@@ -96,6 +99,8 @@ public class VDJCAlignmentsFormatter {
         if (!alignments.isEmpty())
             drawPoints(helper, partitioning, POINTS_FOR_REARRANGED);
 
+        drawAASequence(helper, partitioning, targetSeq);
+
         helper.addSubjectQuality("Quality", target.getQuality());
         helper.setSubjectLeftTitle("Target" + targetId);
         helper.setSubjectRightTitle(" Score" + (addHitScore ? " (hit score)" : ""));
@@ -104,6 +109,50 @@ public class VDJCAlignmentsFormatter {
             helper.setQueryRightTitle(i, alignmentRightComments.get(i));
         }
         return helper;
+    }
+
+    public static void drawAASequence(MultiAlignmentHelper helper, SequencePartitioning partitioning,
+                                      NucleotideSequence target) {
+        List<RangeTranslationParameters> trParams = partitioning.getTranslationParameters(target.size());
+        char[] line = new char[helper.size()];
+        Arrays.fill(line, ' ');
+        for (RangeTranslationParameters trParam : trParams) {
+            NucleotideSequence mainSequence = target.getRange(trParam.range);
+            NucleotideSequence leftover = trParam.codonLeftoverRange == null
+                    ? null
+                    : target.getRange(trParam.codonLeftoverRange);
+            NucleotideSequence bigSeq = leftover == null ? mainSequence :
+                    trParam.leftIncompleteCodonRange() != null
+                            ? leftover.concatenate(mainSequence)
+                            : mainSequence.concatenate(leftover);
+            AminoAcidSequence aa = AminoAcidSequence.translate(bigSeq,
+                    trParam.translationParameters);
+            int aaPosition = 0;
+            int ntPosition = trParam.range.getFrom()
+                    + AminoAcidSequence.convertAAPositionToNt(aaPosition, mainSequence.size(),
+                    trParam.translationParameters);
+            if (aa.codeAt(aaPosition) == AminoAcidAlphabet.INCOMPLETE_CODON) {
+                line[helper.subjectToAlignmentPosition(ntPosition)] =
+                        AminoAcidSequence.ALPHABET.codeToSymbol(aa.codeAt(aaPosition));
+                ++aaPosition;
+            }
+            do {
+                ntPosition = trParam.range.getFrom()
+                        + AminoAcidSequence.convertAAPositionToNt(aaPosition, mainSequence.size(),
+                        trParam.translationParameters);
+                line[helper.subjectToAlignmentPosition(ntPosition + 1)] =
+                        AminoAcidSequence.ALPHABET.codeToSymbol(aa.codeAt(aaPosition));
+            } while (++aaPosition < aa.size() &&
+                    aa.codeAt(aaPosition) != AminoAcidAlphabet.INCOMPLETE_CODON);
+            if (aaPosition < aa.size() && aa.codeAt(aaPosition) == AminoAcidAlphabet.INCOMPLETE_CODON) {
+                ntPosition = trParam.range.getFrom()
+                        + AminoAcidSequence.convertAAPositionToNt(aaPosition, mainSequence.size(),
+                        trParam.translationParameters);
+                line[helper.subjectToAlignmentPosition(ntPosition)] =
+                        AminoAcidSequence.ALPHABET.codeToSymbol(aa.codeAt(aaPosition));
+            }
+        }
+        helper.addAnnotationString("", new String(line));
     }
 
     public static void drawPoints(MultiAlignmentHelper helper, SequencePartitioning partitioning,
