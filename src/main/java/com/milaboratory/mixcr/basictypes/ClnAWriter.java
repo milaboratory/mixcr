@@ -33,6 +33,7 @@ import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.CountingOutputPort;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PipeDataInputReader;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
@@ -55,12 +56,8 @@ import java.util.Optional;
 /**
  * Writer for CLNA file format.
  *
- * Usage:
- * 1. Constructor (opens the output file, buffered)
- * 2. writeClones()
- * 3. sortAlignments()
- * 4. writeAlignmentsAndIndex()
- * 5. close()
+ * Usage: 1. Constructor (opens the output file, buffered) 2. writeClones() 3. sortAlignments() 4.
+ * writeAlignmentsAndIndex() 5. close()
  */
 public final class ClnAWriter implements AutoCloseable, CanReportProgressAndStage {
     static final String MAGIC_V1 = "MiXCR.CLNA.V01";
@@ -93,7 +90,7 @@ public final class ClnAWriter implements AutoCloseable, CanReportProgressAndStag
         this.tempFile = new File(file.getAbsolutePath() + ".presorted");
         this.outputStream = new CountingOutputStream(new BufferedOutputStream(
                 new FileOutputStream(file), 131072));
-        this.outputStream.write(MAGIC.getBytes(StandardCharsets.UTF_8));
+        this.outputStream.write(MAGIC.getBytes(StandardCharsets.US_ASCII));
         this.output = new PrimitivO(this.outputStream);
     }
 
@@ -105,7 +102,7 @@ public final class ClnAWriter implements AutoCloseable, CanReportProgressAndStag
     /**
      * Step 1
      */
-    public synchronized void writeClones(CloneSet cloneSet) {
+    public synchronized void writeClones(CloneSet cloneSet, VDJCAlignerParameters alignerParameters) {
         // Checking state
         if (clonesBlockFinished)
             throw new IllegalArgumentException("Clone block was already written.");
@@ -123,6 +120,9 @@ public final class ClnAWriter implements AutoCloseable, CanReportProgressAndStag
         // Writing version information
         output.writeUTF(MiXCRVersionInfo.get()
                 .getVersionString(MiXCRVersionInfo.OutputType.ToFile));
+
+        // Writing aligner parameters
+        output.writeObject(alignerParameters);
 
         // Saving assembling features
         GeneFeature[] assemblingFeatures = cloneSet.getAssemblingFeatures();

@@ -67,24 +67,26 @@ public class BackwardCompatibilityTests {
 
     @Test
     public void testBC16Cloneset() throws Exception {
-        assertGoodCLNS("/backward_compatibility/2.1.0/test.clns.gz", 22, 17);
-        assertGoodCLNS("/backward_compatibility/2.1.2/test.clns.gz", 22, 17);
-        assertGoodCLNS("/backward_compatibility/2.1.2-kAligner2/test.clns.gz", 21, 16);
-        assertGoodCLNS("/backward_compatibility/2.1.7/test.clns.gz", 22, 17);
+        assertGoodCLNS("/backward_compatibility/2.1.0/test.clns.gz", 22, 17, 22.0);
+        assertGoodCLNS("/backward_compatibility/2.1.2/test.clns.gz", 22, 17, 22.0);
+        assertGoodCLNS("/backward_compatibility/2.1.2-kAligner2/test.clns.gz", 21, 16, 21.0);
+        assertGoodCLNS("/backward_compatibility/2.1.7/test.clns.gz", 22, 17, 22.0);
     }
 
-    public static void assertGoodCLNS(String resource, int size, int good) throws IOException {
+    public static void assertGoodCLNS(String resource, int size, int good, double sumCount) throws IOException {
         CloneSet cloneSet = CloneSetIO.read(BackwardCompatibilityTests.class
                 .getResource(resource).getFile());
         Assert.assertEquals(size, cloneSet.size());
         int countGood = 0;
         for (Clone clone : cloneSet.getClones()) {
+            sumCount -= clone.getCount();
             AminoAcidSequence aaCDR3 = AminoAcidSequence.translateFromCenter(clone.getFeature(GeneFeature.CDR3).getSequence());
             if (aaCDR3.codeAt(0) == AminoAcidAlphabet.C &&
                     aaCDR3.codeAt(aaCDR3.size() - 1) == AminoAcidAlphabet.F) {
                 ++countGood;
             }
         }
+        Assert.assertEquals(0, sumCount, 0.01);
         Assert.assertEquals(good, countGood);
     }
 }

@@ -38,6 +38,7 @@ import io.repseq.core.VDJCGeneId;
 import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -136,5 +137,28 @@ public class IOUtil {
         if (ct == CompressionType.None)
             return new BufferedOutputStream(os, 65536);
         else return ct.createOutputStream(os, 65536);
+    }
+
+    public enum MiXCRFileType {
+        Clns, ClnA, VDJCA
+    }
+
+    public static MiXCRFileType detectFilType(File file) {
+        try {
+            try (FileInputStream reader = new FileInputStream(file)) {
+                byte[] data = new byte[10];
+                reader.read(data);
+                String magic = new String(data, StandardCharsets.US_ASCII);
+                switch (magic) {
+                    case "MiXCR.VDJC": return MiXCRFileType.VDJCA;
+                    case "MiXCR.CLNS": return MiXCRFileType.Clns;
+                    case "MiXCR.CLNA": return MiXCRFileType.ClnA;
+                    default:
+                        throw new IllegalArgumentException("Not a MiXCR file");
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

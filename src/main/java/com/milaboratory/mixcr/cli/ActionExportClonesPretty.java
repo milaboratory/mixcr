@@ -92,7 +92,7 @@ public class ActionExportClonesPretty implements Action {
         }
     }
 
-    public void outputCompact(PrintStream output, final Clone clone) {
+    public static void outputCompact(PrintStream output, final Clone clone) {
         output.println(">>> Clone id: " + clone.getId());
         output.println(">>> Abundance, reads (fraction): " + clone.getCount() + " (" + clone.getFraction() + ")");
         output.println();

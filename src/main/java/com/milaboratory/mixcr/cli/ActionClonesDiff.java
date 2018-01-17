@@ -57,8 +57,8 @@ public class ActionClonesDiff implements Action {
              InputStream is2 = IOUtil.createIS(params.get2());
              PrintStream report = params.report().equals(".") ? System.out : new PrintStream(new FileOutputStream(params.report()))) {
 
-            CloneSet cs1 = CloneSetIO.read(is1);
-            CloneSet cs2 = CloneSetIO.read(is2);
+            CloneSet cs1 = CloneSetIO.readClns(is1);
+            CloneSet cs2 = CloneSetIO.readClns(is2);
 
             HashMap<CKey, CRec> recs = new HashMap<>();
 

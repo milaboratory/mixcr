@@ -29,8 +29,10 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPort;
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PipeDataInputReader;
 import com.milaboratory.primitivio.PrimitivI;
+import com.milaboratory.util.CanReportProgress;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
@@ -42,9 +44,11 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Reader of CLNA file format.
@@ -70,9 +74,11 @@ public final class ClnAReader implements AutoCloseable {
 
     // Read form file header
 
+    final VDJCAlignerParameters alignerParameters;
     final GeneFeature[] assemblingFeatures;
     final CloneSetIO.GT2GFAdapter alignedFeatures;
     final List<VDJCGene> genes;
+    final int numberOfClones;
 
     // Meta data
 
@@ -93,7 +99,7 @@ public final class ClnAReader implements AutoCloseable {
 
         byte[] magicBytes = new byte[ClnAWriter.MAGIC_LENGTH];
         buf.get(magicBytes);
-        String magicString = new String(magicBytes, StandardCharsets.UTF_8);
+        String magicString = new String(magicBytes, StandardCharsets.US_ASCII);
 
         if (!magicString.equals(ClnAWriter.MAGIC))
             throw new IllegalArgumentException("Wrong file type. Magic = " + magicString +
@@ -101,7 +107,7 @@ public final class ClnAReader implements AutoCloseable {
 
         // Reading number of clones
 
-        int numberOfClones = buf.getInt();
+        this.numberOfClones = buf.getInt();
 
         // Reading key file offsets from last 16 bytes of the file
 
@@ -130,6 +136,7 @@ public final class ClnAReader implements AutoCloseable {
 
         input = new PrimitivI(new InputDataStream(ClnAWriter.MAGIC_LENGTH + 4, firstClonePosition));
         this.versionInfo = input.readUTF();
+        this.alignerParameters = input.readObject(VDJCAlignerParameters.class);
         this.assemblingFeatures = input.readObject(GeneFeature[].class);
         this.alignedFeatures = new CloneSetIO.GT2GFAdapter(IO.readGF2GTMap(input));
         this.genes = IOUtil.readGeneReferences(input, libraryRegistry);
@@ -137,6 +144,19 @@ public final class ClnAReader implements AutoCloseable {
 
     public ClnAReader(Path path, VDJCLibraryRegistry libraryRegistry) throws IOException {
         this(path, libraryRegistry, DEFAULT_CHUNK_SIZE);
+    }
+
+    public ClnAReader(String path, VDJCLibraryRegistry libraryRegistry) throws IOException {
+        this(Paths.get(path), libraryRegistry, DEFAULT_CHUNK_SIZE);
+    }
+
+    /** Aligner parameters */
+    public VDJCAlignerParameters getAlignerParameters() {
+        return alignerParameters;
+    }
+
+    public GeneFeature[] getAssemblingFeatures() {
+        return assemblingFeatures;
     }
 
     /**
@@ -147,6 +167,10 @@ public final class ClnAReader implements AutoCloseable {
         //  - first = position of alignment block with cloneIndex == -1
         //  - last = position of the last alignments block end
         return index.length - 2;
+    }
+
+    public List<VDJCGene> getGenes() {
+        return genes;
     }
 
     /**
@@ -234,25 +258,45 @@ public final class ClnAReader implements AutoCloseable {
      * Constructs output port of CloneAlignments objects, that allows to get synchronised view on clone and it's
      * corresponding alignments
      */
-    public OutputPort<CloneAlignments> clonesAndAlignments() throws IOException {
-        PrimitivI input = new PrimitivI(new InputDataStream(firstClonePosition, index[0]));
-        IOUtil.registerGeneReferences(input, genes, alignedFeatures);
+    public CloneAlignmentsPort clonesAndAlignments() throws IOException {
+        return new CloneAlignmentsPort();
+    }
 
-        PipeDataInputReader<Clone> clones = new PipeDataInputReader<>(Clone.class, input, numberOfClones());
+    public final class CloneAlignmentsPort
+            implements OutputPort<CloneAlignments>, CanReportProgress {
+        private int cloneIndex = 0;
+        final PipeDataInputReader<Clone> clones;
+        boolean isFinished = false;
+        AtomicLong processedAlignments = new AtomicLong();
 
-        return new OutputPort<CloneAlignments>() {
-            private int cloneIndex = 0;
+        CloneAlignmentsPort() throws IOException {
+            PrimitivI input = new PrimitivI(new InputDataStream(firstClonePosition, index[0]));
+            IOUtil.registerGeneReferences(input, genes, alignedFeatures);
+            this.clones = new PipeDataInputReader<>(Clone.class, input, numberOfClones());
+        }
 
-            @Override
-            public CloneAlignments take() {
-                Clone clone = clones.take();
-                if (clone == null)
-                    return null;
-                CloneAlignments result = new CloneAlignments(clone, cloneIndex);
-                ++cloneIndex;
-                return result;
+        @Override
+        public CloneAlignments take() {
+            Clone clone = clones.take();
+            if (clone == null) {
+                isFinished = true;
+                return null;
             }
-        };
+            CloneAlignments result = new CloneAlignments(clone, cloneIndex);
+            processedAlignments.addAndGet(result.alignmentsCount);
+            ++cloneIndex;
+            return result;
+        }
+
+        @Override
+        public double getProgress() {
+            return 1.0 * processedAlignments.get() / totalAlignmentsCount;
+        }
+
+        @Override
+        public boolean isFinished() {
+            return isFinished;
+        }
     }
 
     /**
@@ -264,10 +308,12 @@ public final class ClnAReader implements AutoCloseable {
          */
         public final Clone clone;
         final int cloneId;
+        final long alignmentsCount;
 
-        private CloneAlignments(Clone clone, int cloneId) {
+        CloneAlignments(Clone clone, int cloneId) {
             this.clone = clone;
             this.cloneId = cloneId;
+            this.alignmentsCount = counts[cloneId + 1];
         }
 
         /**
@@ -279,7 +325,7 @@ public final class ClnAReader implements AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() throws IOException {
         channel.close();
     }
 

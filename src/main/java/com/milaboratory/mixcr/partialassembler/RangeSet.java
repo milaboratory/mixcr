@@ -79,7 +79,7 @@ public final class RangeSet implements Iterable<Range> {
         List<Range> result = new ArrayList<>(4);
         for (Range r : this) {
             Range intersection = range.intersection(r);
-            if (intersection != null)
+            if (intersection != null && !intersection.isEmpty())
                 result.add(intersection);
         }
         return new RangeSet(result);

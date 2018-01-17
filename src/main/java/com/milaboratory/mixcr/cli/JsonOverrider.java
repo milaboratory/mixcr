@@ -62,7 +62,7 @@ public class JsonOverrider {
         try {
             return (T) GlobalObjectMappers.ONE_LINE.treeToValue(node, clazz);
         } catch (JsonProcessingException e) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException(e);
         }
     }
 

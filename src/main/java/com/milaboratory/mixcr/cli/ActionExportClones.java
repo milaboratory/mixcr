@@ -57,7 +57,7 @@ public class ActionExportClones extends ActionExport<Clone> {
         CloneExportParameters parameters = (CloneExportParameters) this.parameters;
         try(InputStream inputStream = IOUtil.createIS(parameters.getInputFile());
             InfoWriter<Clone> writer = new InfoWriter<>(parameters.getOutputFile())) {
-            CloneSet set = CloneSetIO.read(inputStream, VDJCLibraryRegistry.getDefault());
+            CloneSet set = CloneSetIO.readClns(inputStream, VDJCLibraryRegistry.getDefault());
 
             set = CloneSet.transform(set, parameters.getFilter());
 
