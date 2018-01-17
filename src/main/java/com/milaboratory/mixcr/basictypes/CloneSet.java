@@ -29,6 +29,7 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.primitives.Filter;
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;

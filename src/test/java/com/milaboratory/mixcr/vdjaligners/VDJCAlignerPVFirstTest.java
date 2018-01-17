@@ -31,15 +31,21 @@ package com.milaboratory.mixcr.vdjaligners;
 import cc.redberry.pipe.CUtils;
 import com.milaboratory.core.alignment.MultiAlignmentHelper;
 import com.milaboratory.core.io.sequence.PairedRead;
+import com.milaboratory.core.io.sequence.SingleReadImpl;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
+import com.milaboratory.core.sequence.NSequenceWithQuality;
+import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.util.RunMiXCR;
 import io.repseq.core.Chains;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -117,5 +123,44 @@ public class VDJCAlignerPVFirstTest {
         //    for (VDJCAlignments alignments : CUtils.it(reader))
         //        Assert.assertEquals(alignemntsList.get(i++), alignments);
         //}
+    }
+
+    @Test
+    @Ignore
+    public void test2() throws Exception {
+
+        PairedRead read1 = new PairedRead(
+                new SingleReadImpl(0,
+                        new NSequenceWithQuality(new NucleotideSequence("GCTGTGTATTACTGTGCAAGAGGGCCCCAAGAAAATAGTGGTTATTACTACGGGTTTGACTACTGGGGCCAGGGA"), SequenceQuality.GOOD_QUALITY_VALUE),
+                        "206"),
+                new SingleReadImpl(
+                        0,
+                        new NSequenceWithQuality(new NucleotideSequence("GGCGCCAGGGGGAAGACCGATGGGCCCTTGGTGGAGGCTGAGGAGACGGTGACCAGGGTTCCCTGGCCCCAGTAG"), SequenceQuality.GOOD_QUALITY_VALUE),
+                        "206")
+        );
+
+        PairedRead read2 = new PairedRead(
+                new SingleReadImpl(1,
+                        new NSequenceWithQuality(new NucleotideSequence("GCTGTGTATTACTGTGCAAGAGGGCCCCAAGAAAATAGTGGTTATTACTACGGGTTTGACTACTGGGGCCAGGGA"), SequenceQuality.GOOD_QUALITY_VALUE),
+                        "11621"),
+                new SingleReadImpl(
+                        1,
+                        new NSequenceWithQuality(new NucleotideSequence("GGCGCCAGGGGGAAGACCGATGGGCCCTTGGTGGAGGCTGAGGAGACGGTGACCAGGGTTCCCTGGCCCCAGTAG"), SequenceQuality.GOOD_QUALITY_VALUE),
+                        "11621")
+        );
+
+
+        RunMiXCR.RunMiXCRAnalysis params = new RunMiXCR.RunMiXCRAnalysis(read1);
+        RunMiXCR.AlignResult align = RunMiXCR.align(params);
+
+        for (VDJCAlignments al : align.alignments) {
+            for (int i = 0; i < al.numberOfTargets(); i++) {
+                System.out.println(VDJCAlignmentsFormatter.getTargetAsMultiAlignment(al, i));
+                System.out.println();
+            }
+            System.out.println();
+            System.out.println(" ================================================ ");
+            System.out.println();
+        }
     }
 }

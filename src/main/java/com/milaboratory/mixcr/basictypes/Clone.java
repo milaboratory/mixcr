@@ -51,6 +51,12 @@ public final class Clone extends VDJCObject {
         this.id = id;
     }
 
+    public Clone setId(int id) {
+        Clone r = new Clone(targets, hits, assemblingFeatures, count, id);
+        r.setParentCloneSet(parent);
+        return r;
+    }
+
     public void setParentCloneSet(CloneSet set) {
         if (this.parent != null)
             throw new IllegalStateException("Parent is already set.");

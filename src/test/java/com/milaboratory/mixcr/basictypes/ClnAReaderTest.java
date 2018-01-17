@@ -22,11 +22,6 @@ public class ClnAReaderTest {
                 RunMiXCR.class.getResource("/sequences/test_R1.fastq").getFile(),
                 RunMiXCR.class.getResource("/sequences/test_R2.fastq").getFile());
 
-//        RunMiXCR.RunMiXCRAnalysis params = new RunMiXCR.RunMiXCRAnalysis(
-//                "/Users/poslavskysv/Projects/milab/temp/clean2/synth_R1.fastq",
-//                "/Users/poslavskysv/Projects/milab/temp/clean2/synth_R2.fastq");
-
-
         params.cloneAssemblerParameters.setAddReadsCountOnClustering(true);
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
         RunMiXCR.AssembleResult assemble = RunMiXCR.assemble(align, false);
@@ -35,7 +30,7 @@ public class ClnAReaderTest {
 
         File file = TempFileManager.getTempFile();
         ClnAWriter writer = new ClnAWriter(file);
-        writer.writeClones(assemble.cloneSet);
+        writer.writeClones(assemble.cloneSet, align.parameters.alignerParameters);
         writer.sortAlignments(merged, align.alignments.size());
         writer.writeAlignmentsAndIndex();
 
@@ -49,7 +44,7 @@ public class ClnAReaderTest {
         assertEquals(assemble.cloneSet.size(), reader.numberOfClones());
 
         for (ClnAReader.CloneAlignments c : CUtils.it(reader.clonesAndAlignments())) {
-            assertEquals("" + c.cloneId, c.clone.count, count(c.alignments()));
+            assertEquals("" + c.cloneId, c.clone.count, count(c.alignments()), 0.01);
             assertEquals(c.cloneId, c.clone.id);
             CUtils.it(c.alignments()).forEach(a -> {
                 assertEquals(c.cloneId, a.getCloneIndex());

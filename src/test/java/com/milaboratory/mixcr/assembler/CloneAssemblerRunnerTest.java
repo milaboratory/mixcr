@@ -134,7 +134,7 @@ public class CloneAssemblerRunnerTest {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         CloneSetIO.write(cloneSet, bos);
 
-        CloneSet cloneSetDeserialized = CloneSetIO.read(new ByteArrayInputStream(bos.toByteArray()));
+        CloneSet cloneSetDeserialized = CloneSetIO.readClns(new ByteArrayInputStream(bos.toByteArray()));
 
         assertCSEquals(cloneSet, cloneSetDeserialized);
 

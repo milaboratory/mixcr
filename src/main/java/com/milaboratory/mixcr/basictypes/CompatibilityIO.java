@@ -28,7 +28,48 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
+import com.milaboratory.core.sequence.NSequenceWithQuality;
+import com.milaboratory.primitivio.PrimitivI;
+import com.milaboratory.primitivio.PrimitivO;
+import com.milaboratory.primitivio.Serializer;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
+
+import java.util.EnumMap;
+
 public final class CompatibilityIO {
     private CompatibilityIO() {
+    }
+
+    public static class CloneSerializerV5 implements Serializer<Clone> {
+        @Override
+        public void write(PrimitivO output, Clone object) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Clone read(PrimitivI input) {
+            NSequenceWithQuality[] targets = input.readObject(NSequenceWithQuality[].class);
+            int size = input.readByte();
+            EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
+            for (int i = 0; i < size; i++) {
+                GeneType key = input.readObject(GeneType.class);
+                hits.put(key, input.readObject(VDJCHit[].class));
+            }
+            double count = input.readLong();
+            int id = input.readInt();
+            GeneFeature[] assemblingFeatures = input.readObject(GeneFeature[].class);
+            return new Clone(targets, hits, assemblingFeatures, count, id);
+        }
+
+        @Override
+        public boolean isReference() {
+            return true;
+        }
+
+        @Override
+        public boolean handlesReference() {
+            return false;
+        }
     }
 }

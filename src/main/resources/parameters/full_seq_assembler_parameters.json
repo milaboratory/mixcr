@@ -1,0 +1,11 @@
+{
+  "default": {
+    "minimalQualityShare": 0.1,
+    "minimalSumQuality": 80,
+    "decisiveSumQualityThreshold": 120,
+    "alignedSequenceEdgeDelta": 3,
+    "alignmentEdgeRegionSize": 7,
+    "minimalNonEdgePointsFraction": 0.25,
+    "subCloningRegion": "CDR3"
+  }
+}

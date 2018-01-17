@@ -31,6 +31,7 @@ package com.milaboratory.mixcr.basictypes;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
+import com.milaboratory.primitivio.SerializersManager;
 import com.milaboratory.util.CanReportProgressAndStage;
 import io.repseq.core.*;
 
@@ -42,7 +43,8 @@ import java.util.List;
 
 public final class CloneSetIO {
     static final String MAGIC_V5 = "MiXCR.CLNS.V05";
-    static final String MAGIC = MAGIC_V5;
+    static final String MAGIC_V6 = "MiXCR.CLNS.V06";
+    static final String MAGIC = MAGIC_V6;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
 
@@ -141,22 +143,28 @@ public final class CloneSetIO {
     }
 
     public static CloneSet read(File file) throws IOException {
-        try (InputStream inputStream = IOUtil.createIS(file)) {
-            return read(inputStream);
-        }
+        return read(file, VDJCLibraryRegistry.getDefault());
     }
 
     public static CloneSet read(File file, VDJCLibraryRegistry libraryRegistry) throws IOException {
-        try (InputStream inputStream = IOUtil.createIS(file)) {
-            return read(inputStream, libraryRegistry);
+        switch (IOUtil.detectFilType(file)) {
+            case ClnA:
+                try (ClnAReader r = new ClnAReader(file.toPath(), libraryRegistry)) {
+                    return r.readCloneSet();
+                }
+            case Clns:
+                try (InputStream inputStream = IOUtil.createIS(file)) {
+                    return readClns(inputStream, libraryRegistry);
+                }
+            default: throw new RuntimeException("Unsupported file type");
         }
     }
 
-    public static CloneSet read(InputStream inputStream) {
-        return read(inputStream, VDJCLibraryRegistry.getDefault());
+    public static CloneSet readClns(InputStream inputStream) {
+        return readClns(inputStream, VDJCLibraryRegistry.getDefault());
     }
 
-    public static CloneSet read(InputStream inputStream, VDJCLibraryRegistry libraryRegistry) {
+    public static CloneSet readClns(InputStream inputStream, VDJCLibraryRegistry libraryRegistry) {
         PrimitivI input = new PrimitivI(inputStream);
 
         // Registering custom serializer
@@ -167,9 +175,12 @@ public final class CloneSetIO {
 
         String magicString = new String(magicBytes);
 
-        //SerializersManager serializersManager = input.getSerializersManager();
+        SerializersManager serializersManager = input.getSerializersManager();
 
         switch (magicString) {
+            case MAGIC_V5:
+                serializersManager.registerCustomSerializer(Clone.class, new CompatibilityIO.CloneSerializerV5());
+                break;
             case MAGIC:
                 break;
             default:

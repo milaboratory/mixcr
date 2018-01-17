@@ -30,10 +30,9 @@ package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.Range;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
-import io.repseq.core.Chains;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
-import io.repseq.core.VDJCGeneId;
+import io.repseq.core.*;
+import io.repseq.gen.VDJCGenes;
+
 
 import java.util.*;
 
@@ -189,6 +188,19 @@ public class VDJCObject {
         if (hits == null || hits.length == 0)
             return null;
         return hits[0];
+    }
+
+    public VDJCGene getBestHitGene(GeneType type) {
+        VDJCHit hit = getBestHit(type);
+        return hit == null ? null : hit.getGene();
+    }
+
+    public VDJCGenes getBestHitGenes() {
+        return new VDJCGenes(
+                getBestHitGene(GeneType.Variable),
+                getBestHitGene(GeneType.Diversity),
+                getBestHitGene(GeneType.Joining),
+                getBestHitGene(GeneType.Constant));
     }
 
     public final Range getRelativeRange(GeneFeature big, GeneFeature subfeature) {

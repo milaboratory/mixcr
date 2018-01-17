@@ -30,14 +30,20 @@ package com.milaboratory.mixcr.vdjaligners;
 
 import cc.redberry.pipe.CUtils;
 import com.milaboratory.core.io.sequence.SingleRead;
+import com.milaboratory.core.io.sequence.SingleReadImpl;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
+import com.milaboratory.core.sequence.NSequenceWithQuality;
+import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
+import com.milaboratory.util.RandomUtil;
 import io.repseq.core.Chains;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -81,5 +87,24 @@ public class VDJCAlignerSTest {
             for (VDJCAlignments alignments : CUtils.it(reader))
                 Assert.assertEquals(alignemntsList.get(i++), alignments);
         }
+    }
+
+    @Test
+    @Ignore
+    public void test2() throws Exception {
+//        @
+//                GCTGTGTATTACTGTGCAAGAGGGCCCCAAGAAAATAGTGGTTATTACTACGGGTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCAGCCTCCACCAAGGGCCCATCGGTCTTCCCCCTGGCGCC
+//        +
+//                CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+
+        VDJCAlignerParameters parameters =
+                VDJCParametersPresets.getByName("default");
+        VDJCAlignerS aligner = new VDJCAlignerS(parameters);
+        for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("default", "hs").getGenes(Chains.IGH))
+            if (parameters.containsRequiredFeature(gene))
+                aligner.addGene(gene);
+        SingleReadImpl read = new SingleReadImpl(0, new NSequenceWithQuality(new NucleotideSequence("GCTGTGTATTACTGTGCAAGAGGGCCCCAAGAAAATAGTGGTTATTACTACGGGTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCAGCCTCCACCAAGGGCCCATCGGTCTTCCCCCTGGCGCC"), SequenceQuality.GOOD_QUALITY_VALUE), "");
+        RandomUtil.getThreadLocalRandom().setSeed(29);
+        VDJCAlignmentResult<SingleRead> result = aligner.process0(read);
     }
 }
