@@ -29,21 +29,22 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.sequence.NSequenceWithQuality;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
 import com.milaboratory.core.sequence.SequencesUtils;
 import com.milaboratory.primitivio.annotations.Serializable;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
 
 import java.util.EnumMap;
+import java.util.Objects;
 
 @Serializable(by = IO.CloneSerializer.class)
 public final class Clone extends VDJCObject {
     final GeneFeature[] assemblingFeatures;
-    final long count;
+    final double count;
     final int id;
     CloneSet parent = null;
 
-    public Clone(NSequenceWithQuality[] targets, EnumMap<GeneType, VDJCHit[]> hits, GeneFeature[] assemblingFeatures, long count, int id) {
+    public Clone(NSequenceWithQuality[] targets, EnumMap<GeneType, VDJCHit[]> hits, GeneFeature[] assemblingFeatures, double count, int id) {
         super(hits, targets);
         this.assemblingFeatures = assemblingFeatures;
         this.count = count;
@@ -70,7 +71,7 @@ public final class Clone extends VDJCObject {
         return assemblingFeatures;
     }
 
-    public long getCount() {
+    public double getCount() {
         return count;
     }
 
@@ -103,20 +104,13 @@ public final class Clone extends VDJCObject {
         if (this == o) return true;
         if (!(o instanceof Clone)) return false;
         if (!super.equals(o)) return false;
-
         Clone clone = (Clone) o;
-
-        if (count != clone.count) return false;
-        if (id != clone.id) return false;
-
-        return true;
+        return Double.compare(clone.count, count) == 0 &&
+                id == clone.id;
     }
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (int) (count ^ (count >>> 32));
-        result = 31 * result + id;
-        return result;
+        return Objects.hash(super.hashCode(), count, id);
     }
 }
