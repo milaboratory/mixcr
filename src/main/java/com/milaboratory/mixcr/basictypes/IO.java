@@ -168,7 +168,7 @@ class IO {
                 output.writeObject(entry.getKey());
                 output.writeObject(entry.getValue());
             }
-            output.writeLong(object.count);
+            output.writeDouble(object.count);
             output.writeInt(object.id);
             output.writeObject(object.assemblingFeatures);
         }
@@ -182,7 +182,7 @@ class IO {
                 GeneType key = input.readObject(GeneType.class);
                 hits.put(key, input.readObject(VDJCHit[].class));
             }
-            long count = input.readLong();
+            double count = input.readDouble();
             int id = input.readInt();
             GeneFeature[] assemblingFeatures = input.readObject(GeneFeature[].class);
             return new Clone(targets, hits, assemblingFeatures, count, id);
