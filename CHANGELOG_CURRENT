@@ -1,0 +1,2 @@
+Fix wrong number of chimeric alignments in report with --write-all option
+Remove wrong `-v` in text warnings in align action
