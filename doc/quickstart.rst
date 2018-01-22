@@ -188,12 +188,10 @@ For the full length cDNA-based immunoglobulin repertoire analysis we generally r
 
   ::
   
-    > mixcr assemble -p default_affine -r assembleReport.txt -OassemblingFeatures=VDJRegion \
+    > mixcr assemble -r assembleReport.txt -OassemblingFeatures=VDJRegion \
       -OseparateByC=true -OqualityAggregationType=Average \
       -OclusteringFilter.specificMutationProbability=1E-5 -OmaxBadPointsPercent=0 \
       alignments.vdjca clones.clns
-
-  ``default_affine`` parameter is specifically required for the data aligned using KAligner2 (use this option only if ``-p kaligner2`` was used on the alignemnt step)
   
   ``-OseparateByC=true`` separates clones with different antibody isotype.
   
