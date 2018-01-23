@@ -84,7 +84,7 @@ public class ActionAlign implements Action {
         // FIXME remove in 2.2
         if (actionParameters.printNonFunctionalWarnings())
             System.out.println("WARNING: -wf / --non-functional-warnings option is deprecated, will be removed in 2.2 " +
-                    "release. Use -v / --verbose instead.");
+                    "release. Use --verbose instead.");
 
         // Saving initial timestamp
         long beginTimestamp = System.currentTimeMillis();
@@ -193,7 +193,7 @@ public class ActionAlign implements Action {
 
         if (actionParameters.printWarnings() && numberOfExcludedFGenes > 0)
             System.out.println("WARNING: " + numberOfExcludedFGenes + " functional genes were excluded, re-run " +
-                    "with -v option to see the list of excluded genes and exclusion reason.");
+                    "with --verbose option to see the list of excluded genes and exclusion reason.");
 
         if (actionParameters.verbose() && numberOfExcludedNFGenes > 0)
             System.out.println("WARNING: " + numberOfExcludedNFGenes + " non-functional genes excluded.");
@@ -381,6 +381,7 @@ public class ActionAlign implements Action {
                 names = {"-a", "--save-description"})
         public Boolean saveReadDescription;
 
+        //TODO delete -v in 2.2
         @Parameter(description = "Write alignment results for all input reads (even if alignment has failed).",
                 names = {"-v", "--write-all"})
         public Boolean writeAllResults;
@@ -498,7 +499,7 @@ public class ActionAlign implements Action {
             if (failedReadsR1 != null && (failedReadsR2 != null) != isInputPaired())
                 throw new ParameterException("Option --not-aligned-R2 is not set.");
             if (!printWarnings() && verbose())
-                throw new ParameterException("-nw/--no-warnings and -v/--verbose options are not compatible.");
+                throw new ParameterException("-nw/--no-warnings and --verbose options are not compatible.");
             super.validate();
         }
     }

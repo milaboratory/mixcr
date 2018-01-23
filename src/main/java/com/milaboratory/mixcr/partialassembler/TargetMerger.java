@@ -35,6 +35,7 @@ import com.milaboratory.core.alignment.batch.BatchAlignerWithBaseParameters;
 import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.core.alignment.kaligner2.KAlignerParameters2;
 import com.milaboratory.core.merger.MergerParameters;
+import com.milaboratory.core.merger.MergerParameters.IdentityType;
 import com.milaboratory.core.merger.MismatchOnlyPairedReadMerger;
 import com.milaboratory.core.merger.PairedReadMergingResult;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
@@ -55,11 +56,13 @@ import java.util.*;
 
 public class TargetMerger {
     final MismatchOnlyPairedReadMerger merger;
+    final IdentityType identityType;
     private volatile VDJCAlignerParameters alignerParameters;
     final float minimalAlignmentMergeIdentity;
 
     public TargetMerger(MergerParameters mergerParameters, float minimalAlignmentMergeIdentity) {
         this.merger = new MismatchOnlyPairedReadMerger(mergerParameters);
+        this.identityType = mergerParameters.getIdentityType();
         this.minimalAlignmentMergeIdentity = minimalAlignmentMergeIdentity;
     }
 
@@ -314,7 +317,12 @@ public class TargetMerger {
                         targetRight.getTarget().getSequence(), seq2Offset,
                         overlap);
 
-                if (1.0 - 1.0 * mismatches / overlap < minimalAlignmentMergeIdentity)
+                double identity = MismatchOnlyPairedReadMerger.identity(identityType,
+                        targetLeft.getTarget(), seq1Offset,
+                        targetRight.getTarget(), seq2Offset,
+                        overlap);
+
+                if (identity < minimalAlignmentMergeIdentity)
                     return new TargetMergingResult(geneType);
 
                 final AlignedTarget merge = merge(targetLeft, targetRight, delta, OverlapType.AlignmentOverlap, mismatches);
