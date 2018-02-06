@@ -1007,6 +1007,13 @@ public final class FullSeqAssembler {
 
     static Range convertToSeq1Range(Alignment alignment, Range rangeInSeq2) {
         int from = alignment.convertToSeq1Position(rangeInSeq2.getFrom());
+
+        if (rangeInSeq2.isEmpty())
+            if (from == -1)
+                return null;
+            else
+                return new Range(from, from);
+
         int to = alignment.convertToSeq1Position(rangeInSeq2.getTo() - 1);
 
         if (from == -1 || to == -1)

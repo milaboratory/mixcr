@@ -34,9 +34,11 @@ import com.beust.jcommander.Parameters;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
+import com.milaboratory.mixcr.basictypes.ClnAReader;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
+import io.repseq.core.VDJCLibraryRegistry;
 
 import java.util.List;
 
@@ -56,6 +58,10 @@ public class VersionInfoAction implements Action {
         } else if (i.endsWith(".clns.gz") || i.endsWith(".clns")) {
             CloneSet cs = CloneSetIO.read(inputFile);
             System.out.println(cs.getVersionInfo());
+        } else if (i.endsWith(".clna")) {
+            try (ClnAReader reader = new ClnAReader(inputFile, VDJCLibraryRegistry.createDefaultRegistry())) {
+                System.out.println(reader.getVersionInfo());
+            }
         } else
             throw new ParameterException("Wrong file type.");
     }
@@ -72,7 +78,7 @@ public class VersionInfoAction implements Action {
 
     @Parameters(commandDescription = "Outputs information about MiXCR version which generated the file.")
     private static class AParameters extends ActionParameters {
-        @Parameter(description = "binary_file{.vdjca|.clns}[.gz]")
+        @Parameter(description = "binary_file{.vdjca[.gz]|.clns[.gz]|.clna}")
         public List<String> input;
 
         public String getInputFile() {

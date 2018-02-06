@@ -150,7 +150,9 @@ public final class ClnAReader implements AutoCloseable {
         this(Paths.get(path), libraryRegistry, DEFAULT_CHUNK_SIZE);
     }
 
-    /** Aligner parameters */
+    /**
+     * Aligner parameters
+     */
     public VDJCAlignerParameters getAlignerParameters() {
         return alignerParameters;
     }
@@ -178,6 +180,16 @@ public final class ClnAReader implements AutoCloseable {
      */
     public long numberOfAlignments() {
         return totalAlignmentsCount;
+    }
+
+    /**
+     * Returns number of alignments contained in particular clone
+     *
+     * @param cloneIndex clone index
+     * @return number of alignments
+     */
+    public long numberOfAlignmentsInClone(int cloneIndex) {
+        return counts[cloneIndex + 1];
     }
 
     /**
