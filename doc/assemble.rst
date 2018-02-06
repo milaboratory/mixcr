@@ -7,14 +7,21 @@
 Assemble clones
 ===============
 
-The ``assemble`` command builds a set of clones using alignments
-obtained with :ref:`align <ref-align>` command in order to extract
-specific gene regions (e.g. CDR3). The syntax of ``assemble`` is the
-following:
+The ``assemble`` command builds clonotypes from alignments obtained with :ref:`align <ref-align>`. Clonotypes assembly is performed for a chosen assembling feature (e.g. ``CDR3`` by default).
+
+The syntax is the following:
 
 ::
 
     mixcr assemble [options] alignments.vdjca output.clns
+
+or
+
+::
+
+    mixcr assemble [options] -a alignments.vdjca output.clna
+
+the latter command outputs result in a "clones & alignments" format, allowing subsequent :ref:`contig assembly <ref-assembleContigs>` and other actions requiring clone to alignment mapping (e.g. ).
 
 The following flowchart shows the pipeline of ``assemble``:
 
