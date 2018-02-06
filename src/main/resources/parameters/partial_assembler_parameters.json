@@ -9,6 +9,7 @@
     "partsLayout": "CollinearDirect",
     "minimalOverlap": 20,
     "maxQuality": 45,
-    "minimalIdentity": 0.95
+    "minimalIdentity": 0.95,
+    "identityType": "Unweighted"
   }
 }

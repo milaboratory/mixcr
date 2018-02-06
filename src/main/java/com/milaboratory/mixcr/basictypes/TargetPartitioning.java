@@ -62,6 +62,11 @@ public final class TargetPartitioning extends SequencePartitioning {
     }
 
     @Override
+    public boolean isReversed() {
+        return false;
+    }
+
+    @Override
     protected int getLength(GeneFeature.ReferenceRange refRange) {
         Range range = getRange(refRange);
         return range == null ? -1 : range.length();

@@ -80,9 +80,9 @@ public class FieldExtractorsTest {
             @Override
             public Integer[][] go(String seq, int len, int offset1, int offset2, int offset3, String expected) {
                 final NucleotideSequence baseSeq = TargetBuilder.generateSequence(genes, seq, rg);
-                NucleotideSequence seq1 = baseSeq.getRange(offset1, offset1 + len);
-                NucleotideSequence seq2 = offset2 == -1 ? null : baseSeq.getRange(offset2, offset2 + len);
-                NucleotideSequence seq3 = offset3 == -1 ? null : baseSeq.getRange(offset3, offset3 + len);
+                NucleotideSequence seq1 = baseSeq.getRange(offset1, Math.min(baseSeq.size(), offset1 + len));
+                NucleotideSequence seq2 = offset2 == -1 ? null : baseSeq.getRange(offset2, Math.min(baseSeq.size(), offset2 + len));
+                NucleotideSequence seq3 = offset3 == -1 ? null : baseSeq.getRange(offset3, Math.min(baseSeq.size(), offset3 + len));
 
                 VDJCAlignmentResult<VDJCMultiRead> alignment = offset3 == -1 ?
                         offset2 == -1 ?

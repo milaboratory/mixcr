@@ -29,10 +29,7 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.Range;
-import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
-import com.milaboratory.core.sequence.NSequenceWithQualityBuilder;
-import com.milaboratory.core.sequence.NucleotideSequence;
 import io.repseq.core.Chains;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
@@ -108,7 +105,7 @@ public class VDJCObject {
 
     public Chains getAllChains(GeneType geneType) {
         if (allChains == null)
-            synchronized ( this ){
+            synchronized (this) {
                 if (allChains == null) {
                     allChains = new EnumMap<>(GeneType.class);
                     for (GeneType type : GeneType.VDJC_REFERENCE) {
@@ -126,7 +123,14 @@ public class VDJCObject {
     }
 
     public final boolean isChimera() {
-        return commonChains().isEmpty();
+        return hasAnyHits() && commonChains().isEmpty();
+    }
+
+    public final boolean hasAnyHits() {
+        for (GeneType gt : GeneType.values())
+            if (getBestHit(gt) != null)
+                return true;
+        return false;
     }
 
     public final Chains commonChains() {
