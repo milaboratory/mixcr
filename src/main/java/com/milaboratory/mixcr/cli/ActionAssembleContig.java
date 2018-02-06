@@ -14,6 +14,7 @@ import com.milaboratory.cli.ActionParametersWithOutput;
 import com.milaboratory.cli.ProcessException;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters;
+import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerReport;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PipeDataInputReader;
@@ -30,11 +31,12 @@ import java.util.*;
 /**
  *
  */
-public class ActionFullSeqAssembler implements Action {
+public class ActionAssembleContig implements Action {
     private final FullSeqParameters parameters = new FullSeqParameters();
 
     @Override
     public void go(ActionHelper helper) throws Exception {
+        long beginTimestamp = System.currentTimeMillis();
         FullSeqAssemblerParameters p = FullSeqAssemblerParameters.getByName("default");
         if (!parameters.overrides.isEmpty()) {
             // Perform parameters overriding
@@ -43,12 +45,14 @@ public class ActionFullSeqAssembler implements Action {
                 throw new ProcessException("Failed to override some parameter.");
         }
 
+        final FullSeqAssemblerReport report = new FullSeqAssemblerReport();
+
         FullSeqAssemblerParameters assemblerParameters = p;
         int totalClonesCount = 0;
         List<VDJCGene> genes;
         VDJCAlignerParameters alignerParameters;
         GeneFeature[] assemblingFeatures;
-        try (ClnAReader reader = new ClnAReader(parameters.getInput(), VDJCLibraryRegistry.getDefault());
+        try (ClnAReader reader = new ClnAReader(parameters.getInputFileName(), VDJCLibraryRegistry.getDefault());
              PrimitivO tmpOut = new PrimitivO(new BufferedOutputStream(new FileOutputStream(parameters.getOutputFileName())))) {
 
             alignerParameters = reader.getAlignerParameters();
@@ -60,6 +64,8 @@ public class ActionFullSeqAssembler implements Action {
 
             OutputPort<Clone[]> parallelProcessor = new ParallelProcessor<>(port, cloneAlignments -> {
                 FullSeqAssembler fullSeqAssembler = new FullSeqAssembler(assemblerParameters, cloneAlignments.clone, alignerParameters);
+                fullSeqAssembler.setReport(report);
+
                 FullSeqAssembler.RawVariantsData rawVariantsData = fullSeqAssembler.calculateRawData(() -> {
                     try {
                         return cloneAlignments.alignments();
@@ -94,6 +100,24 @@ public class ActionFullSeqAssembler implements Action {
             SmartProgressReporter.startProgressReport(writer);
             writer.write();
         }
+
+        ReportWrapper reportWrapper = new ReportWrapper(command(), report);
+        reportWrapper.setStartMillis(beginTimestamp);
+        reportWrapper.setInputFiles(parameters.getInputFileName());
+        reportWrapper.setOutputFiles(parameters.getOutputFileName());
+        reportWrapper.setCommandLine(helper.getCommandLineArguments());
+        reportWrapper.setFinishMillis(System.currentTimeMillis());
+
+        // Writing report to stout
+        System.out.println("============= Report ==============");
+        Util.writeReportToStdout(report);
+
+        if (parameters.report != null)
+            Util.writeReport(parameters.report, reportWrapper);
+
+        if (parameters.jsonReport != null)
+            Util.writeJsonReport(parameters.jsonReport, reportWrapper);
+
     }
 
     @Override
@@ -118,7 +142,15 @@ public class ActionFullSeqAssembler implements Action {
         @DynamicParameter(names = "-O", description = "Overrides default parameter values.")
         public Map<String, String> overrides = new HashMap<>();
 
-        String getInput() {
+        @Parameter(description = "Report file.",
+                names = {"-r", "--report"})
+        public String report;
+
+        @Parameter(description = "JSON report file.",
+                names = {"--json-report"})
+        public String jsonReport = null;
+
+        String getInputFileName() {
             return parameters.get(0);
         }
 
