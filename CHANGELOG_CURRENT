@@ -1,2 +1,4 @@
+Built-in library upgrade to v1.5, many fixes, new species *Nannospalax galili* (see library release notes for complete list of changes)
 Fix wrong number of chimeric alignments in report with --write-all option
 Remove wrong `-v` in text warnings in align action
+Drpped out-of-the-box support for files produced with repseq.io libraries v1.0 and 1.1
