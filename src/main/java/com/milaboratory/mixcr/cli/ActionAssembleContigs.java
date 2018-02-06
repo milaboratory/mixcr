@@ -31,7 +31,7 @@ import java.util.*;
 /**
  *
  */
-public class ActionAssembleContig implements Action {
+public class ActionAssembleContigs implements Action {
     private final FullSeqParameters parameters = new FullSeqParameters();
 
     @Override

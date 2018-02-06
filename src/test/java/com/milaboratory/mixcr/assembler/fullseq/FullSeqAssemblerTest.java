@@ -434,10 +434,4 @@ public class FullSeqAssemblerTest {
             System.out.println();
         }
     }
-
-    @Test
-    public void test2() throws Exception {
-        Main.main("assembleContigs", "-f", "/Users/poslavskysv/Projects/milab/temp/hui.clna", "/Users/poslavskysv/Projects/milab/temp/hui2.clns");
-    }
-
 }
