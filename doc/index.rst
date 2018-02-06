@@ -39,6 +39,15 @@ MiXCR is free for academic and non-profit use (see :ref:`License <license>`).
    assemble
    export
 
+.. _other-actions:
+
+.. toctree::
+   :hidden:
+   :caption: Other actions
+   :maxdepth: 1
+
+   assembleContigs
+
 .. _special-cases:
 
 .. toctree::

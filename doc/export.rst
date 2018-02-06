@@ -535,115 +535,131 @@ Usage of the ``--verbose`` option will produce alignments in a slightly differen
    </pre>
    
    
-
-
 .. _ref-exporting-reads:
 
 Exporting reads aggregated by clones
 ------------------------------------
 
-MiXCR can preserve the mapping between initial reads and final clonotypes. There are several options for accessing this information. 
+MiXCR allows to preserve information about mapping between initial reads, alignments and final clonotypes by storing output of the ``assemble`` step into special "clones & alignments" container format. There are several ways of accessing this information.
 
-To enable this behaviour, specify the option ``--index`` for the :ref:`assemble <ref-assemble>` command:
+Extracting reads for specific clones
+####################################
 
-::
+The ``exportReadsForClones`` allows to extract original reads that was mapped to specific clones back into ``fastq`` or ``fasta`` formats.
 
-    mixcr assemble --index index_file alignments.vdjca output.clns
-
-This will tell MiXCR to store an index mapping in the file ``index_file`` (actually two files will be created: ``index_file`` and ``index_file.p`` both of which are used to store the index; in further options one should specify only ``index_file`` without ``.p`` extension and MiXCR will automatically read both required files). It is then possible to use this ``index_file`` in order to map clones to initial reads. For example using the ``-cloneId`` option for the ``exportAlignments`` command:
-
-::
-
-    mixcr exportAlignments -p min -cloneId index_file alignments.vdjca alignments.txt
-
-will print an additional column with the id of the clone which matches the corresponding alignment:
-
-+----------------+----------------+-------+----------+
-| Best V hit     | Best D hit     |  ...  | CloneId  |
-+================+================+=======+==========+
-| IGHV4-34\*\00  |                |  ...  | 321      |
-+----------------+----------------+-------+----------+
-| IGHV2-23\*\00  | IGHD2\*\21     |  ...  |          |
-+----------------+----------------+-------+----------+
-| IGHV4-34\*\00  | IGHD2\*\21     |  ...  | 22143    |
-+----------------+----------------+-------+----------+
-| ...            | ...            |  ...  | ...      |
-+----------------+----------------+-------+----------+
-
-For more information it's also possible to export the mapping type:
+The following command will create reads_cln0_R1.fastq.gz/reads_cln0_R2.fastq.gz, reads_cln1_R1.fastq.gz/reads_cln1_R2.fastq.gz, etc, containing reads corresponding to clone0, clone1 etc...
 
 ::
 
-    mixcr exportAlignments -p min -cloneIdWithMappingType index_file alignments.vdjca alignments.txt
+    mixcr exportReadsForClones -s clonesAndAlignments.clna reads.fastq.gz
 
-Will give you something like:
-
-+----------------+----------------+-------+----------------------+
-| Best V hit     | Best D hit     |  ...  | Clone mapping        |
-+================+================+=======+======================+
-| IGHV4-34\*\00  |                |  ...  | 321:core             |
-+----------------+----------------+-------+----------------------+
-| IGHV2-23\*\00  | IGHD2\*\21     |  ...  | dropped              |
-+----------------+----------------+-------+----------------------+
-| IGHV4-34\*\00  | IGHD2\*\21     |  ...  | 22143:clustered      |
-+----------------+----------------+-------+----------------------+
-| IGHV4-34\*\00  | IGHD2\*\21     |  ...  | 23:mapped            |
-+----------------+----------------+-------+----------------------+
-| ...            | ...            |  ...  | ...                  |
-+----------------+----------------+-------+----------------------+
-
-
-It's also possible to export all read IDs that were aggregated by each clone, using the ``-readIds`` export options for ``exportClones``:
+Or one can extract reads for a buch of clones into a single output:
 
 ::
 
-    mixcr exportClones -c IGH -p min -readIds index_file clones.clns clones.txt
+    mixcr exportReadsForClones clonesAndAlignments.clna 2 12 45 reads_of_my_clones.fastq.gz
 
-This will add a column with a full enumeration of all reads that were clustered into a particular clone:
+See ``mixcr exportReadsForClones -h`` for more information.
+
+.. MiXCR can preserve the mapping between initial reads and final clonotypes. There are several options for accessing this information. 
+
+.. To enable this behaviour, specify the option ``--index`` for the :ref:`assemble <ref-assemble>` command:
+
+.. ::
+
+..     mixcr assemble --index index_file alignments.vdjca output.clns
+
+.. This will tell MiXCR to store an index mapping in the file ``index_file`` (actually two files will be created: ``index_file`` and ``index_file.p`` both of which are used to store the index; in further options one should specify only ``index_file`` without ``.p`` extension and MiXCR will automatically read both required files). It is then possible to use this ``index_file`` in order to map clones to initial reads. For example using the ``-cloneId`` option for the ``exportAlignments`` command:
+
+.. ::
+
+..     mixcr exportAlignments -p min -cloneId index_file alignments.vdjca alignments.txt
+
+.. will print an additional column with the id of the clone which matches the corresponding alignment:
+
+.. +----------------+----------------+-------+----------+
+.. | Best V hit     | Best D hit     |  ...  | CloneId  |
+.. +================+================+=======+==========+
+.. | IGHV4-34\*\00  |                |  ...  | 321      |
+.. +----------------+----------------+-------+----------+
+.. | IGHV2-23\*\00  | IGHD2\*\21     |  ...  |          |
+.. +----------------+----------------+-------+----------+
+.. | IGHV4-34\*\00  | IGHD2\*\21     |  ...  | 22143    |
+.. +----------------+----------------+-------+----------+
+.. | ...            | ...            |  ...  | ...      |
+.. +----------------+----------------+-------+----------+
+
+.. For more information it's also possible to export the mapping type:
+
+.. ::
+
+..     mixcr exportAlignments -p min -cloneIdWithMappingType index_file alignments.vdjca alignments.txt
+
+.. Will give you something like:
+
+.. +----------------+----------------+-------+----------------------+
+.. | Best V hit     | Best D hit     |  ...  | Clone mapping        |
+.. +================+================+=======+======================+
+.. | IGHV4-34\*\00  |                |  ...  | 321:core             |
+.. +----------------+----------------+-------+----------------------+
+.. | IGHV2-23\*\00  | IGHD2\*\21     |  ...  | dropped              |
+.. +----------------+----------------+-------+----------------------+
+.. | IGHV4-34\*\00  | IGHD2\*\21     |  ...  | 22143:clustered      |
+.. +----------------+----------------+-------+----------------------+
+.. | IGHV4-34\*\00  | IGHD2\*\21     |  ...  | 23:mapped            |
+.. +----------------+----------------+-------+----------------------+
+.. | ...            | ...            |  ...  | ...                  |
+.. +----------------+----------------+-------+----------------------+
 
 
-+----------+-------------+----------------+-----+--------------------------------+
-| Clone ID | Clone count | Best V hit     | ... | Reads                          |
-+==========+=============+================+=====+================================+
-|    0     |    7213     | IGHV4-34\*\00  | ... | 56,74,92,96,101,119,169,183... |
-+----------+-------------+----------------+-----+--------------------------------+
-|    1     |    2951     | IGHV2-23\*\00  | ... | 46,145,194,226,382,451,464...  |
-+----------+-------------+----------------+-----+--------------------------------+
-|    2     |    2269     | IGHV4-34\*\00  | ... | 58,85,90,103,113,116,122,123...|
-+----------+-------------+----------------+-----+--------------------------------+
-|    3     |     124     | IGHV4-34\*\00  | ... | 240,376,496,617,715,783,813... |
-+----------+-------------+----------------+-----+--------------------------------+
-|   ...    |             | ...            | ... | ...                            |
-+----------+-------------+----------------+-----+--------------------------------+
+.. It's also possible to export all read IDs that were aggregated by each clone, using the ``-readIds`` export options for ``exportClones``:
 
-Note, the resulting txt file may be _very large_ since all read numbers that were successfully assembled will be printed.
+.. ::
+
+..     mixcr exportClones -c IGH -p min -readIds index_file clones.clns clones.txt
+
+.. This will add a column with a full enumeration of all reads that were clustered into a particular clone:
 
 
-Finally, you can export reads aggregated by clone into separate ``.fastq`` files. To support this behaviour the :ref:`align <ref-align>` command needs to be run with the additional ``-g`` option:
+.. +----------+-------------+----------------+-----+--------------------------------+
+.. | Clone ID | Clone count | Best V hit     | ... | Reads                          |
+.. +==========+=============+================+=====+================================+
+.. |    0     |    7213     | IGHV4-34\*\00  | ... | 56,74,92,96,101,119,169,183... |
+.. +----------+-------------+----------------+-----+--------------------------------+
+.. |    1     |    2951     | IGHV2-23\*\00  | ... | 46,145,194,226,382,451,464...  |
+.. +----------+-------------+----------------+-----+--------------------------------+
+.. |    2     |    2269     | IGHV4-34\*\00  | ... | 58,85,90,103,113,116,122,123...|
+.. +----------+-------------+----------------+-----+--------------------------------+
+.. |    3     |     124     | IGHV4-34\*\00  | ... | 240,376,496,617,715,783,813... |
+.. +----------+-------------+----------------+-----+--------------------------------+
+.. |   ...    |             | ...            | ... | ...                            |
+.. +----------+-------------+----------------+-----+--------------------------------+
 
-::
+.. Note, the resulting txt file may be _very large_ since all read numbers that were successfully assembled will be printed.
 
-    mixcr align -g input.fastq alignments.vdjca.gz
 
-With this option MiXCR will store the original reads in the ``.vdjca`` file. Then one can export reads corresponding to a particular clone with the ``exportReadsForClones`` command. For example, export all reads that were assembled into the first clone (clone with cloneId = 0):
+.. Finally, you can export reads aggregated by clone into separate ``.fastq`` files. To support this behaviour the :ref:`align <ref-align>` command needs to be run with the additional ``-g`` option:
 
-::
+.. ::
 
-    mixcr exportReadsForClones index_file alignments.vdjca.gz 0 reads.fastq.gz
+..     mixcr align -g input.fastq alignments.vdjca.gz
 
-This will create the file ``reads_clns0.fastq.gz`` (or two files ``reads_clns0_R1.fastq.gz`` and ``reads_clns0_R2.fastq.gz`` if the original data were paired) with all reads that were aggregated by the first clone. One can export reads for several clones at a time:
-
-::
-
-    mixcr exportReadsForClones index_file alignments.vdjca.gz 0 1 2 33 54 reads.fastq.gz
-
-This will create several files (``reads_clns0.fastq.gz``, ``reads_clns1.fastq.gz`` etc.) for each clone with cloneId equal to 0, 1, 2, 33 and 54 respectively.
+.. With this option MiXCR will store the original reads in the ``.vdjca`` file.
 
 
 
+.. One can export reads corresponding to a particular clone with the ``exportReadsForClones`` command. For example, export all reads that were assembled into the first clone (clone with cloneId = 0):
 
+.. ::
 
+..     mixcr exportReadsForClones index_file alignments.vdjca.gz 0 reads.fastq.gz
 
+.. This will create the file ``reads_clns0.fastq.gz`` (or two files ``reads_clns0_R1.fastq.gz`` and ``reads_clns0_R2.fastq.gz`` if the original data were paired) with all reads that were aggregated by the first clone. One can export reads for several clones at a time:
 
+.. ::
+
+..     mixcr exportReadsForClones index_file alignments.vdjca.gz 0 1 2 33 54 reads.fastq.gz
+
+.. This will create several files (``reads_clns0.fastq.gz``, ``reads_clns1.fastq.gz`` etc.) for each clone with cloneId equal to 0, 1, 2, 33 and 54 respectively.
 
 
