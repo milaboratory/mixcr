@@ -61,10 +61,10 @@ public final class FullSeqAssembler {
     FullSeqAssemblerParameters parameters;
     /** aligner parameters */
     final VDJCAlignerParameters alignerParameters;
-
+    /** nucleotide sequence -> its integer index */
     final TObjectIntHashMap<NucleotideSequence> sequenceToVariantId
             = new TObjectIntHashMap<>(Constants.DEFAULT_CAPACITY, Constants.DEFAULT_LOAD_FACTOR, -1);
-
+    /** integer index -> nucleotide sequence */
     final TIntObjectHashMap<NucleotideSequence> variantIdToSequence = new TIntObjectHashMap<>();
 
     public FullSeqAssembler(FullSeqAssemblerParameters parameters, Clone clone, VDJCAlignerParameters alignerParameters) {
@@ -153,6 +153,16 @@ public final class FullSeqAssembler {
         this.rightAssemblingFeatureBound = nLeftDummies + lengthV + assemblingFeatureLength;
     }
 
+    FullSeqAssemblerReport report = null;
+
+    public void setReport(FullSeqAssemblerReport report) {
+        this.report = report;
+    }
+
+    public FullSeqAssemblerReport getReport() {
+        return report;
+    }
+
     /* ======================================== Find variants ============================================= */
 
     public Clone[] callVariants(RawVariantsData data) {
@@ -179,11 +189,17 @@ public final class FullSeqAssembler {
             branches = newBranches;
         }
 
-        clusterizeBranches(data.points, branches);
+        if (report != null)
+            report.onVariantsCreated(branches);
 
-        return branches.stream()
+        clusterizeBranches(data.points, branches);
+        Clone[] result = branches.stream()
                 .map(branch -> buildClone(branch.count, assembleBranchSequences(data.points, branch)))
                 .toArray(Clone[]::new);
+
+        if (report != null)
+            report.afterVariantsClustered(clone, result);
+        return result;
     }
 
     private void clusterizeBranches(int[] points, List<VariantBranch> branches) {
@@ -223,13 +239,15 @@ public final class FullSeqAssembler {
                 cluster.count += branch.count * weights[j - i - 1] / sumWeight;
             }
 
+            if (report != null)
+                report.onVariantClustered(branch);
             branches.remove(i);
         }
 
         branches.sort(Comparator.comparingDouble(c -> -c.count));
     }
 
-    private static class VariantBranch {
+    static class VariantBranch {
         double count; // non-final, since will be modified
         final int[] pointStates;
         final BitSet reads;
@@ -737,9 +755,11 @@ public final class FullSeqAssembler {
             for (long target : targets)
                 reads.set((int) target);
             reads.or(unassignedVariants);
+            double p = 1 - 1.0 * bestVariantSumQuality / totalSumQuality;
+            long phredQuality = p == 0 ? bestVariantSumQuality : Math.min((long) (-10 * Math.log10(p)), bestVariantSumQuality);
             // nSignificant = 1 (will not be practically used, only one variant, don't care)
             return Collections.singletonList(
-                    new Variant(bestVariant << 8 | (int) Math.min((long) SequenceQuality.MAX_QUALITY_VALUE, bestVariantSumQuality),
+                    new Variant(bestVariant << 8 | (int) Math.min((long) SequenceQuality.MAX_QUALITY_VALUE, phredQuality),
                             reads, 1));
         } else {
             for (Variant variant : variants)
