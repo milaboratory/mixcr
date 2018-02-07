@@ -55,7 +55,7 @@ public final class FullSeqAssembler {
     final int jOffset;
     /** end of alignment of V gene in the global coordinate grid */
     final int rightAssemblingFeatureBound;
-    /** splitting rehion in global coordinates */
+    /** splitting region in global coordinates */
     final Range splitRegion;
     /** parameters */
     FullSeqAssemblerParameters parameters;
@@ -192,7 +192,7 @@ public final class FullSeqAssembler {
         if (report != null)
             report.onVariantsCreated(branches);
 
-        VariantBranch[] branchesBeforeClustering = branches.stream().map(VariantBranch::clone).toArray(VariantBranch[]::new);
+        // VariantBranch[] branchesBeforeClustering = branches.stream().map(VariantBranch::clone).toArray(VariantBranch[]::new);
 
         clusterizeBranches(data.points, branches);
 
