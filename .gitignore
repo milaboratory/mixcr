@@ -7,3 +7,4 @@ doc/_build
 .flooignore
 out
 test_target
+src/test/resources/sequences/big
