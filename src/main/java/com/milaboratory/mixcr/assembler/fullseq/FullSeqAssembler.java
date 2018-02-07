@@ -55,7 +55,7 @@ public final class FullSeqAssembler {
     final int jOffset;
     /** end of alignment of V gene in the global coordinate grid */
     final int rightAssemblingFeatureBound;
-    /** splitting rehion in global coordinates */
+    /** splitting region in global coordinates */
     final Range splitRegion;
     /** parameters */
     FullSeqAssemblerParameters parameters;
@@ -192,13 +192,19 @@ public final class FullSeqAssembler {
         if (report != null)
             report.onVariantsCreated(branches);
 
+        // VariantBranch[] branchesBeforeClustering = branches.stream().map(VariantBranch::clone).toArray(VariantBranch[]::new);
+
         clusterizeBranches(data.points, branches);
+
         Clone[] result = branches.stream()
                 .map(branch -> buildClone(branch.count, assembleBranchSequences(data.points, branch)))
                 .toArray(Clone[]::new);
 
+        assert result.length >= 1;
+
         if (report != null)
             report.afterVariantsClustered(clone, result);
+
         return result;
     }
 
@@ -272,6 +278,10 @@ public final class FullSeqAssembler {
             int[] newStates = Arrays.copyOf(pointStates, pointStates.length + 1);
             newStates[newStates.length - 1] = variant.variantInfo;
             return new VariantBranch(count * variant.nSignificant / sumSignificant, newStates, variant.reads);
+        }
+
+        protected VariantBranch clone() {
+            return new VariantBranch(count, pointStates, reads);
         }
     }
 
@@ -828,6 +838,8 @@ public final class FullSeqAssembler {
                 var.sumQuality += 0x7F & point.quality;
             }
         }
+
+        assert nAlignments > 0;
 
         long[] forSort = new long[coverage.size()];
         TIntIntIterator iterator = coverage.iterator();

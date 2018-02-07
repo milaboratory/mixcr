@@ -48,6 +48,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -64,6 +65,9 @@ public final class ClnAReader implements AutoCloseable {
     // Index data
 
     final long firstClonePosition;
+    // Index contain two additional records:
+    //  - first = position of alignment block with cloneIndex == -1
+    //  - last = position of the last alignments block end
     final long[] index;
     final long[] counts;
     final long totalAlignmentsCount;
@@ -165,10 +169,7 @@ public final class ClnAReader implements AutoCloseable {
      * Returns number of clones in the file
      */
     public int numberOfClones() {
-        // Index contain two additional records:
-        //  - first = position of alignment block with cloneIndex == -1
-        //  - last = position of the last alignments block end
-        return index.length - 2;
+        return numberOfClones;
     }
 
     public List<VDJCGene> getGenes() {
@@ -276,15 +277,16 @@ public final class ClnAReader implements AutoCloseable {
 
     public final class CloneAlignmentsPort
             implements OutputPort<CloneAlignments>, CanReportProgress {
-        private int cloneIndex = 0;
-        final PipeDataInputReader<Clone> clones;
-        boolean isFinished = false;
-        AtomicLong processedAlignments = new AtomicLong();
+        private final AtomicInteger cloneIndex = new AtomicInteger();
+        private final AtomicLong processedAlignments = new AtomicLong();
+        private final PipeDataInputReader<Clone> clones;
+        volatile boolean isFinished = false;
+
 
         CloneAlignmentsPort() throws IOException {
             PrimitivI input = new PrimitivI(new InputDataStream(firstClonePosition, index[0]));
             IOUtil.registerGeneReferences(input, genes, alignedFeatures);
-            this.clones = new PipeDataInputReader<>(Clone.class, input, numberOfClones());
+            this.clones = new PipeDataInputReader<>(Clone.class, input, numberOfClones);
         }
 
         @Override
@@ -294,9 +296,8 @@ public final class ClnAReader implements AutoCloseable {
                 isFinished = true;
                 return null;
             }
-            CloneAlignments result = new CloneAlignments(clone, cloneIndex);
+            CloneAlignments result = new CloneAlignments(clone, cloneIndex.getAndIncrement());
             processedAlignments.addAndGet(result.alignmentsCount);
-            ++cloneIndex;
             return result;
         }
 

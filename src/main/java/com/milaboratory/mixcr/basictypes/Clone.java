@@ -88,14 +88,6 @@ public final class Clone extends VDJCObject {
         return SequencesUtils.concatenate(seqs);
     }
 
-    @Override
-    public NSequenceWithQuality getFeature(GeneFeature geneFeature) {
-        for (int i = 0; i < assemblingFeatures.length; ++i)
-            if (geneFeature.equals(assemblingFeatures[i]))
-                return targets[i];
-        return super.getFeature(geneFeature);
-    }
-
     public int getId() {
         return id;
     }

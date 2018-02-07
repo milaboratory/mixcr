@@ -105,7 +105,7 @@ public abstract class AbstractActionReport implements ActionReport {
 
     public void writeSuperReport(ReportHelper helper) {
         if (!helper.isStdout())
-            helper.writeField("Analysis Date", getDate())
+            helper.writeField("Analysis date", getDate())
                     .writeField("Input file(s)", join(getInputFiles()))
                     .writeField("Output file(s)", join(getOutputFiles()))
                     .writeField("Version", getVersion());

@@ -36,6 +36,10 @@ public class ActionAssembleContigs implements Action {
 
     @Override
     public void go(ActionHelper helper) throws Exception {
+        //TODO FIX!!!!!!!!!!!!!
+        if (parameters.threads > 1)
+            throw new ParameterException("Multithreaded processing is not supported yet.");
+
         long beginTimestamp = System.currentTimeMillis();
         FullSeqAssemblerParameters p = FullSeqAssemblerParameters.getByName("default");
         if (!parameters.overrides.isEmpty()) {
@@ -57,12 +61,13 @@ public class ActionAssembleContigs implements Action {
 
             alignerParameters = reader.getAlignerParameters();
             genes = reader.getGenes();
-            assemblingFeatures = reader.getAssemblingFeatures();
             IOUtil.registerGeneReferences(tmpOut, genes, alignerParameters);
-            ClnAReader.CloneAlignmentsPort port = reader.clonesAndAlignments();
-            SmartProgressReporter.startProgressReport("Assembling", port);
 
-            OutputPort<Clone[]> parallelProcessor = new ParallelProcessor<>(port, cloneAlignments -> {
+            assemblingFeatures = reader.getAssemblingFeatures();
+            ClnAReader.CloneAlignmentsPort cloneAlignmentsPort = reader.clonesAndAlignments();
+            SmartProgressReporter.startProgressReport("Assembling", cloneAlignmentsPort);
+
+            OutputPort<Clone[]> parallelProcessor = new ParallelProcessor<>(cloneAlignmentsPort, cloneAlignments -> {
                 FullSeqAssembler fullSeqAssembler = new FullSeqAssembler(assemblerParameters, cloneAlignments.clone, alignerParameters);
                 fullSeqAssembler.setReport(report);
 
@@ -81,7 +86,12 @@ public class ActionAssembleContigs implements Action {
                 for (Clone cl : clones)
                     tmpOut.writeObject(cl);
             }
+
+            assert report.getInitialCloneCount() == reader.numberOfClones();
         }
+
+        assert report.getFinalCloneCount() == totalClonesCount;
+        assert report.getFinalCloneCount() >= report.getInitialCloneCount();
 
         Clone[] clones = new Clone[totalClonesCount];
         try (PrimitivI tmpIn = new PrimitivI(new BufferedInputStream(new FileInputStream(parameters.getOutputFileName())))) {
@@ -137,7 +147,7 @@ public class ActionAssembleContigs implements Action {
 
         @Parameter(description = "Processing threads",
                 names = {"-t", "--threads"}, validateWith = PositiveInteger.class)
-        public int threads = 2;
+        public int threads = 1;
 
         @DynamicParameter(names = "-O", description = "Overrides default parameter values.")
         public Map<String, String> overrides = new HashMap<>();

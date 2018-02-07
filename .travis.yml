@@ -13,6 +13,7 @@ before_install:
   - cd repseqio/milib && mvn clean install -DskipTests -B && cd ..
   - mvn clean install -DskipTests -B && cd ..
   - mv ./repseqio/.cache .cache
+  - ./ensure-test-data.sh
 
 script:
   - mvn test -B && ./itests.sh test
@@ -28,3 +29,4 @@ cache:
   directories:
   - $HOME/.m2
   - .cache
+  - src/test/resources/sequences/big
