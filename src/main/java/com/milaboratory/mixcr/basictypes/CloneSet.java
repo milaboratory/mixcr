@@ -29,7 +29,6 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.primitives.Filter;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
@@ -109,6 +108,10 @@ public final class CloneSet implements Iterable<Clone> {
 
     public List<VDJCGene> getUsedGenes() {
         return usedGenes;
+    }
+
+    public EnumMap<GeneType, GeneFeature> getAlignedFeatures() {
+        return new EnumMap<>(alignedFeatures);
     }
 
     public GeneFeature getAlignedGeneFeature(GeneType geneType) {

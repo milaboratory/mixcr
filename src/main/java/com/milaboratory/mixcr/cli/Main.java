@@ -95,7 +95,8 @@ public class Main {
                 new ActionFilterAlignments(),
                 new ActionListLibraries(),
                 new ActionExtendAlignments(),
-                new ActionSortAlignments());
+                new ActionSortAlignments(),
+                new ActionSliceClnA());
 
         // Adding version info callback
         main.setVersionInfoCallback(
