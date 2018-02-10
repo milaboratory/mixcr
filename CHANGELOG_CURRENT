@@ -1,0 +1,1 @@
+Fixed `NPE` in VDJCHit#getIdentity. Commands like `mixcr exportClones ... -cBestIdentityPercent ...` affected.
