@@ -70,7 +70,7 @@ public final class Clone extends VDJCObject {
 
     public double getFraction() {
         if (parent == null)
-            throw new NullPointerException("Parent not set yet.");
+            return Double.NaN;
         return getFraction(parent.getTotalCount());
     }
 

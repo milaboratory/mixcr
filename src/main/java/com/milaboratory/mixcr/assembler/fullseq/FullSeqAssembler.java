@@ -6,10 +6,8 @@ import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.*;
 import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.sequence.*;
-import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence;
+import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.cli.ActionExportClonesPretty;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import gnu.trove.impl.Constants;
 import gnu.trove.iterator.TIntIntIterator;
@@ -134,11 +132,11 @@ public final class FullSeqAssembler {
             if (parameters.subCloningRegion != null) {
                 int p = gene.getPartitioning().getRelativePosition(jFeature, parameters.subCloningRegion.getLastPoint());
                 if (p != -1)
-                    splitRegionEnd = nLeftDummies + lengthV + assemblingFeatureLength + p;
+                    splitRegionEnd = nLeftDummies + lengthV + assemblingFeatureLength - jOffset + p;
 
                 p = gene.getPartitioning().getRelativePosition(jFeature, parameters.subCloningRegion.getFirstPoint());
                 if (p != -1)
-                    splitRegionBegin = nLeftDummies + lengthV + assemblingFeatureLength + p;
+                    splitRegionBegin = nLeftDummies + lengthV + assemblingFeatureLength - jOffset + p;
             }
         } else {
             this.jOffset = 0;
