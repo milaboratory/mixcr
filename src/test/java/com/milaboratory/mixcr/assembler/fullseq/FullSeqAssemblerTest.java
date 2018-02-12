@@ -434,4 +434,19 @@ public class FullSeqAssemblerTest {
             System.out.println();
         }
     }
+
+    @Test
+    public void test2() throws Exception {
+        Main.main("assembleContigs", "-f",
+                "-OsubCloningRegion='{FR3End(-60):FR4End}'",
+                "/Users/poslavskysv/Downloads/problem.clna",
+                "/Users/poslavskysv/Downloads/problem.clns");
+    }
+
+    @Test
+    public void test3() throws Exception {
+        Main.main("assembleContigs", "-f",
+                "/Users/poslavskysv/Downloads/10C12.clna",
+                "/Users/poslavskysv/Downloads/10C12.clns");
+    }
 }
