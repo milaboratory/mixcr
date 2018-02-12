@@ -45,7 +45,7 @@ public class ActionListLibraries implements Action {
     final AParameters parameters = new AParameters();
 
     @Override
-    public void go(ActionHelper helper) throws Exception {
+    public void go(ActionHelper helper) {
         VDJCLibraryRegistry.getDefault().loadAllLibraries();
         System.out.println("Available libraries:");
         List<VDJCLibrary> loadedLibraries = new ArrayList<>(VDJCLibraryRegistry.getDefault().getLoadedLibraries());

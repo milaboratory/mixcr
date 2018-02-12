@@ -1,1 +1,2 @@
-Fixed `NPE` in VDJCHit#getIdentity. Commands like `mixcr exportClones ... -cBestIdentityPercent ...` affected.
+Fixed `NPE` in VDJCHit#getIdentity. Commands like `mixcr exportClones ... -cBestIdentityPercent ...` affected
+Enable asserts for non-release builds, increases chance of detecting subtile error conditions, by trading-off some performance; has no effect on release builds
