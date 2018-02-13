@@ -13,7 +13,7 @@ import com.milaboratory.cli.ActionParametersWithOutput;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
-import com.milaboratory.mixcr.util.AlignmentExtender;
+import com.milaboratory.mixcr.util.VDJCExtender;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.Chains;
 import io.repseq.core.ReferencePoint;
@@ -24,7 +24,7 @@ import java.util.List;
  * @author Stanislav Poslavsky
  */
 public class ActionExtendAlignments implements Action {
-    private final ExtendCD3Parameters parameters = new ExtendCD3Parameters();
+    private final ExtendActionParameters parameters = new ExtendActionParameters();
 
     @Override
     public void go(ActionHelper helper) throws Exception {
@@ -34,7 +34,7 @@ public class ActionExtendAlignments implements Action {
             SmartProgressReporter.startProgressReport("Processing", reader);
 
             writer.header(reader.getParameters(), reader.getUsedGenes());
-            AlignmentExtender extender = new AlignmentExtender(parameters.getChains(), parameters.extensionQuality,
+            VDJCExtender extender = new VDJCExtender(parameters.getChains(), parameters.extensionQuality,
                     reader.getParameters().getVAlignerParameters().getParameters().getScoring(),
                     reader.getParameters().getJAlignerParameters().getParameters().getScoring(),
                     parameters.minimalVScore, parameters.minimalJScore,
@@ -81,8 +81,8 @@ public class ActionExtendAlignments implements Action {
         return parameters;
     }
 
-    @Parameters(commandDescription = "Extend alignment using germline sequence.")
-    private static final class ExtendCD3Parameters extends ActionParametersWithOutput {
+    @Parameters(commandDescription = "Extend corresponding entity (clone or alignment) using germline sequence.")
+    private static final class ExtendActionParameters extends ActionParametersWithOutput {
         @Parameter(description = "input.vdjca[.gz] output.vdjca[.gz]")
         public List<String> parameters;
 
