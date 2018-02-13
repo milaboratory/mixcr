@@ -354,8 +354,9 @@ public class ActionAlign implements Action {
         public String jsonReport = null;
 
         @Parameter(description = "Species (organism), as specified in library file or taxon id. " +
-                "Possible values: hs, HomoSapiens, musmusculus, mmu, hsa, 9606, 10090 etc..",
-                names = {"-s", "--species"})
+                "Possible values: hs, HomoSapiens, musmusculus, mmu, hsa, 9606, 10090 etc.",
+                names = {"-s", "--species"},
+                required = true)
         public String species = "hs";
 
         @Parameter(description = "Specifies immunological chain gene(s) for alignment. If many, separate by comma ','. " +
