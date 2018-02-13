@@ -6,8 +6,10 @@ import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.*;
 import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.sequence.*;
-import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.cli.ActionExportClonesPretty;
+import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import gnu.trove.impl.Constants;
 import gnu.trove.iterator.TIntIntIterator;
@@ -441,7 +443,9 @@ public final class FullSeqAssembler {
 
             if (range.getTo() < nLeftDummies + lengthV) {
                 boolean floatingLeftBound =
-                        i == 0 && alignerParameters.getVAlignerParameters().getParameters().isFloatingLeftBound();
+                        !parameters.alignedRegionsOnly
+                                && i == 0
+                                && alignerParameters.getVAlignerParameters().getParameters().isFloatingLeftBound();
 
                 // Can be reduced to a single statement
                 if (range.getFrom() < nLeftDummies)
@@ -474,7 +478,9 @@ public final class FullSeqAssembler {
                  */
 
                 boolean vFloatingLeftBound =
-                        i == 0 && alignerParameters.getVAlignerParameters().getParameters().isFloatingLeftBound();
+                        !parameters.alignedRegionsOnly
+                                && i == 0
+                                && alignerParameters.getVAlignerParameters().getParameters().isFloatingLeftBound();
 
                 // Can be reduced to a single statement
                 if (range.getFrom() < nLeftDummies)
@@ -507,7 +513,9 @@ public final class FullSeqAssembler {
                  */
 
                 boolean jFloatingRightBound =
-                        i == targets.ranges.length - 1 && alignerParameters.getJAlignerParameters().getParameters().isFloatingRightBound();
+                        !parameters.alignedRegionsOnly
+                                && i == targets.ranges.length - 1
+                                && alignerParameters.getJAlignerParameters().getParameters().isFloatingRightBound();
 
                 if (range.getTo() >= rightAssemblingFeatureBound + jLength)
                     // This target contain extra non-J nucleotides on the right
@@ -535,7 +543,9 @@ public final class FullSeqAssembler {
                             targets.assemblingFeatureOffset + assemblingFeatureLength, sequence.size() - (targets.assemblingFeatureOffset + assemblingFeatureLength));
             } else if (range.getFrom() > rightAssemblingFeatureBound) {
                 boolean floatingRightBound =
-                        i == targets.ranges.length - 1 && alignerParameters.getJAlignerParameters().getParameters().isFloatingRightBound();
+                        !parameters.alignedRegionsOnly
+                                && i == targets.ranges.length - 1
+                                && alignerParameters.getJAlignerParameters().getParameters().isFloatingRightBound();
 
                 if (range.getTo() >= rightAssemblingFeatureBound + jLength)
                     // This target contain extra non-J nucleotides on the right
@@ -942,39 +952,53 @@ public final class FullSeqAssembler {
 
         List<PointSequence> points = new ArrayList<>();
         if (target.getPartitioning().isAvailable(assemblingFeature.getFirstPoint())) {
+            // This target contains left edge of the assembling feature
             int leftStop = target.getPartitioning().getPosition(assemblingFeature.getFirstPoint());
             if (hasV) {
                 if (vAlignment != null)
                     toPointSequencesByAlignments(points,
                             vAlignment,
                             targetSeq,
-                            new Range(0, leftStop),
+                            new Range(
+                                    parameters.alignedRegionsOnly ? vAlignment.getSequence2Range().getFrom() : 0,
+                                    leftStop),
                             nLeftDummies);
-            } else
+            } else if (!parameters.alignedRegionsOnly)
                 toPointSequencesNoAlignments(points, targetSeq, new Range(0, leftStop), nLeftDummies - leftStop);
         } else if (hasV && vAlignment != null)
+            // This target ends before beginning (left edge) of the assembling feature
             toPointSequencesByAlignments(points,
                     vAlignment,
                     targetSeq,
-                    new Range(0, vAlignment.getSequence2Range().getTo()),
+                    new Range(
+                            parameters.alignedRegionsOnly ? vAlignment.getSequence2Range().getFrom() : 0,
+                            vAlignment.getSequence2Range().getTo()),
                     nLeftDummies);
 
         if (target.getPartitioning().isAvailable(assemblingFeature.getLastPoint())) {
+            // This target contains right edge of the assembling feature
             int rightStart = target.getPartitioning().getPosition(assemblingFeature.getLastPoint());
             if (hasJ) {
                 if (jAlignment != null)
                     toPointSequencesByAlignments(points,
                             jAlignment,
                             targetSeq,
-                            new Range(rightStart, targetSeq.size()),
+                            new Range(rightStart,
+                                    parameters.alignedRegionsOnly
+                                            ? jAlignment.getSequence2Range().getTo()
+                                            : targetSeq.size()),
                             nLeftDummies + lengthV + assemblingFeatureLength - jOffset);
             } else
                 toPointSequencesNoAlignments(points, targetSeq, new Range(rightStart, targetSeq.size()), nLeftDummies + lengthV + assemblingFeatureLength - rightStart);
         } else if (hasJ && jAlignment != null)
+            // This target starts after the end (right edge) of the assembling feature
             toPointSequencesByAlignments(points,
                     jAlignment,
                     targetSeq,
-                    new Range(jAlignment.getSequence2Range().getFrom(), targetSeq.size()),
+                    new Range(jAlignment.getSequence2Range().getFrom(),
+                            parameters.alignedRegionsOnly
+                                    ? jAlignment.getSequence2Range().getTo()
+                                    : targetSeq.size()),
                     nLeftDummies + lengthV + assemblingFeatureLength - jOffset);
 
         return points;
@@ -986,8 +1010,8 @@ public final class FullSeqAssembler {
                                       Range seq2Range,
                                       int offset) {
 
-//        if (seq2Range.length() == 0)
-//            return;
+        // if (seq2Range.length() == 0)
+        //     return;
 
         alignment = AlignmentUtils.shiftIndelsAtHomopolymers(alignment);
 
