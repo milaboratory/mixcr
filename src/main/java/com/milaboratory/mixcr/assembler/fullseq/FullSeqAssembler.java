@@ -6,6 +6,7 @@ import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.*;
 import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.sequence.*;
+import com.milaboratory.mixcr.assembler.CloneFactory;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
@@ -15,12 +16,10 @@ import gnu.trove.impl.Constants;
 import gnu.trove.iterator.TIntIntIterator;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
+import gnu.trove.map.hash.TObjectFloatHashMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 import gnu.trove.set.hash.TIntHashSet;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
-import io.repseq.core.ReferencePoint;
-import io.repseq.core.VDJCGene;
+import io.repseq.core.*;
 import io.repseq.gen.VDJCGenes;
 
 import java.util.*;
@@ -38,8 +37,12 @@ public final class FullSeqAssembler {
     private static int ABSENT_PACKED_VARIANT_INFO = -1;
     /** number of letters to the left of reference V gene in the global coordinate grid */
     private static final int N_LEFT_DUMMIES = 1024; // fixme
+    /** clone factory */
+    final CloneFactory cloneFactory;
     /** initial clone */
     final Clone clone;
+    /** clone gene scores */
+    final EnumMap<GeneType, TObjectFloatHashMap<VDJCGeneId>> geneScores;
     /** clone assembled feature (must cover CDR3) */
     final GeneFeature assemblingFeature;
     /** top hit genes */
@@ -70,13 +73,22 @@ public final class FullSeqAssembler {
     /** integer index -> nucleotide sequence */
     final TIntObjectHashMap<NucleotideSequence> variantIdToSequence = new TIntObjectHashMap<>();
 
-    public FullSeqAssembler(FullSeqAssemblerParameters parameters, Clone clone, VDJCAlignerParameters alignerParameters) {
+    public FullSeqAssembler(CloneFactory cloneFactory,
+                            FullSeqAssemblerParameters parameters, Clone clone, VDJCAlignerParameters alignerParameters) {
         if (alignerParameters.getVAlignerParameters().getScoring() instanceof AffineGapAlignmentScoring
                 || alignerParameters.getJAlignerParameters().getScoring() instanceof AffineGapAlignmentScoring)
             throw new IllegalArgumentException("Do not support Affine Gap Alignment Scoring.");
 
+        this.cloneFactory = cloneFactory;
         this.parameters = parameters;
         this.clone = clone;
+        this.geneScores = new EnumMap<>(GeneType.class);
+        for (GeneType gt : GeneType.VDJC_REFERENCE) {
+            TObjectFloatHashMap<VDJCGeneId> scores = new TObjectFloatHashMap<>();
+            for (VDJCHit hit : clone.getHits(gt))
+                scores.put(hit.getGene().getId(), hit.getScore());
+            geneScores.put(gt, scores);
+        }
         this.alignerParameters = alignerParameters;
         GeneFeature[] assemblingFeatures = clone.getAssemblingFeatures();
         if (assemblingFeatures.length != 1)
@@ -298,6 +310,9 @@ public final class FullSeqAssembler {
         List<Range> ranges = new ArrayList<>();
         NSequenceWithQualityBuilder sequenceBuilder = new NSequenceWithQualityBuilder();
         int blockStartPosition = -1;
+        int assemblingFeatureTargetId = -1;
+        int assemblingFeatureOffset = -1;
+        int assemblingFeatureLength = -1;
         for (int i = 0; i < positionedStates.length; ++i) {
             if (isAbsent(positionedStates[i]))
                 continue;
@@ -305,6 +320,7 @@ public final class FullSeqAssembler {
                 blockStartPosition = extractPosition(positionedStates[i]);
 
             int currentPosition = extractPosition(positionedStates[i]);
+
             int nextPosition = i == positionedStates.length - 1
                     ? Integer.MAX_VALUE
                     : isAbsent(positionedStates[i + 1])
@@ -313,10 +329,18 @@ public final class FullSeqAssembler {
 
             assert currentPosition != nextPosition;
 
-            sequenceBuilder.append(
-                    new NSequenceWithQuality(
-                            variantIdToSequence.get(((int) (positionedStates[i] >>> 8)) & 0xFFFFFF),
-                            (byte) positionedStates[i]));
+            NSequenceWithQuality seq = new NSequenceWithQuality(
+                    variantIdToSequence.get(((int) (positionedStates[i] >>> 8)) & 0xFFFFFF),
+                    (byte) positionedStates[i]);
+
+            if (currentPosition == positionOfAssemblingFeature) {
+                assert assemblingFeatureTargetId == -1;
+                assemblingFeatureTargetId = ranges.size();
+                assemblingFeatureOffset = sequenceBuilder.size();
+                assemblingFeatureLength = seq.size();
+            }
+
+            sequenceBuilder.append(seq);
 
             if (currentPosition != nextPosition - 1) {
                 sequences.add(sequenceBuilder.createAndDestroy());
@@ -327,58 +351,12 @@ public final class FullSeqAssembler {
         }
 
         assert blockStartPosition != -1;
-
-        int assemblingFeatureTargetId = -1;
-        int assemblingFeatureOffset = -1;
-        for (int i = 0; i < ranges.size(); i++) {
-            if (ranges.get(i).getTo() == N_LEFT_DUMMIES + lengthV) {
-                assemblingFeatureOffset = sequences.get(i).size();
-                if (i < ranges.size() - 1
-                        && ranges.get(i + 1).getFrom() == N_LEFT_DUMMIES + lengthV + assemblingFeatureLength) {
-                    // seq[i]-AssemblingFeature-seq[i+1]
-                    ranges.set(i, new Range(ranges.get(i).getFrom(), ranges.get(i + 1).getTo()));
-                    ranges.remove(i + 1);
-                    sequences.set(i, sequences.get(i).concatenate(clone.getTarget(0)).concatenate(sequences.get(i + 1)));
-                    sequences.remove(i + 1);
-                } else {
-                    // seq[i]-AssemblingFeature
-                    ranges.set(i, new Range(ranges.get(i).getFrom(), N_LEFT_DUMMIES + lengthV + assemblingFeatureLength));
-                    sequences.set(i, sequences.get(i).concatenate(clone.getTarget(0)));
-                }
-                assemblingFeatureTargetId = i;
-                break;
-            }
-
-            if (ranges.get(i).getFrom() == N_LEFT_DUMMIES + lengthV + assemblingFeatureLength) {
-                // AssemblingFeature-seq[i]
-                ranges.set(i, new Range(N_LEFT_DUMMIES + lengthV, ranges.get(i).getTo()));
-                sequences.set(i, clone.getTarget(0).concatenate(sequences.get(i)));
-                assemblingFeatureOffset = 0;
-                assemblingFeatureTargetId = i;
-                break;
-            }
-
-            if (ranges.get(i).getFrom() > N_LEFT_DUMMIES + lengthV + assemblingFeatureLength) {
-                // seq[i-1]    AssemblingFeature    seq[i]
-                ranges.add(i, new Range(N_LEFT_DUMMIES + lengthV, N_LEFT_DUMMIES + lengthV + assemblingFeatureLength));
-                sequences.add(i, clone.getTarget(0));
-                assemblingFeatureOffset = 0;
-                assemblingFeatureTargetId = i;
-                break;
-            }
-        }
-
-        if (assemblingFeatureTargetId == -1) {
-            // seq[last]   AssemblingFeature
-            ranges.add(new Range(N_LEFT_DUMMIES + lengthV, N_LEFT_DUMMIES + lengthV + assemblingFeatureLength));
-            sequences.add(clone.getTarget(0));
-            assemblingFeatureOffset = 0;
-            assemblingFeatureTargetId = ranges.size() - 1;
-        }
+        assert assemblingFeatureTargetId != -1;
 
         return new BranchSequences(
                 assemblingFeatureTargetId,
                 assemblingFeatureOffset,
+                assemblingFeatureLength,
                 ranges.toArray(new Range[ranges.size()]),
                 sequences.toArray(new NSequenceWithQuality[sequences.size()]));
     }
@@ -394,12 +372,15 @@ public final class FullSeqAssembler {
     private final class BranchSequences {
         final int assemblingFeatureTargetId;
         final int assemblingFeatureOffset;
+        final int assemblingFeatureLength;
         final Range[] ranges;
         final NSequenceWithQuality[] sequences;
 
-        BranchSequences(int assemblingFeatureTargetId, int assemblingFeatureOffset, Range[] ranges, NSequenceWithQuality[] sequences) {
+        BranchSequences(int assemblingFeatureTargetId, int assemblingFeatureOffset, int assemblingFeatureLength,
+                        Range[] ranges, NSequenceWithQuality[] sequences) {
             this.assemblingFeatureTargetId = assemblingFeatureTargetId;
             this.assemblingFeatureOffset = assemblingFeatureOffset;
+            this.assemblingFeatureLength = assemblingFeatureLength;
             this.ranges = ranges;
             this.sequences = sequences;
         }
@@ -422,6 +403,7 @@ public final class FullSeqAssembler {
         // Excessive optimization
         CachedIntArray cachedIntArray = new CachedIntArray();
 
+        int assemblingFeatureLength = targets.assemblingFeatureLength;
         for (int i = 0; i < targets.ranges.length; i++) {
             Range range = targets.ranges[i];
             NucleotideSequence sequence = targets.sequences[i].getSequence();
@@ -578,7 +560,9 @@ public final class FullSeqAssembler {
                 throw new RuntimeException();
         }
 
-        //
+        NSequenceWithQuality assemblingFeatureSeq = targets.sequences[targets.assemblingFeatureTargetId]
+                .getRange(targets.assemblingFeatureOffset, targets.assemblingFeatureOffset + targets.assemblingFeatureLength);
+        Clone clone = cloneFactory.create(0, count, geneScores, new NSequenceWithQuality[]{assemblingFeatureSeq});
 
         vTopHitAlignments[targets.assemblingFeatureTargetId] =
                 mergeTwoAlignments(
@@ -920,8 +904,8 @@ public final class FullSeqAssembler {
     PointSequence[] toPointSequences(VDJCAlignments alignments) {
         NSequenceWithQuality assemblingFeature = alignments.getFeature(this.assemblingFeature);
         byte quality = assemblingFeature.getQuality().minValue();
-        if (!inSplitRegion(positionOfAssemblingFeature))
-            quality |= 0x80;
+        //if (!inSplitRegion(positionOfAssemblingFeature))
+        quality |= 0x80;
         return Stream.concat(
                 Stream.of(new PointSequence(positionOfAssemblingFeature, assemblingFeature, quality)),
                 IntStream.range(0, alignments.numberOfTargets())

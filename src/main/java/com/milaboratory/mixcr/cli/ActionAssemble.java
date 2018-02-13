@@ -127,7 +127,7 @@ public class ActionAssemble implements Action {
                     // writer will supply current stage and completion percent to the progress reporter
                     SmartProgressReporter.startProgressReport(writer);
                     // Writing clone block
-                    writer.writeClones(cloneSet, alignerParameters);
+                    writer.writeClones(cloneSet, alignerParameters, assemblerParameters);
                     // Pre-soring alignments
                     try (AlignmentsMappingMerger merged = new AlignmentsMappingMerger(alignmentsProvider.create(),
                             assembler.getAssembledReadsPort())) {
