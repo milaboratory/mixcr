@@ -6,6 +6,7 @@
     "alignedSequenceEdgeDelta": 3,
     "alignmentEdgeRegionSize": 7,
     "minimalNonEdgePointsFraction": 0.25,
-    "subCloningRegion": "CDR3"
+    "subCloningRegion": "CDR3",
+    "alignedRegionsOnly": false
   }
 }

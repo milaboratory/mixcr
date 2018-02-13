@@ -13,7 +13,6 @@ import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter;
 import com.milaboratory.mixcr.cli.ActionExportClonesPretty;
-import com.milaboratory.mixcr.cli.Main;
 import com.milaboratory.mixcr.util.RunMiXCR;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
 import gnu.trove.set.hash.TIntHashSet;
@@ -35,7 +34,8 @@ import java.util.stream.StreamSupport;
 public class FullSeqAssemblerTest {
     static final FullSeqAssemblerParameters DEFAULT_PARAMETERS =
             new FullSeqAssemblerParameters(0.1, 80, 120,
-                    3, 7, 0.25, GeneFeature.VDJRegion);
+                    3, 7, 0.25, GeneFeature.VDJRegion,
+                    false);
 
     static final class MasterSequence {
         final int vPart, cdr3Part, jPart, cPart;

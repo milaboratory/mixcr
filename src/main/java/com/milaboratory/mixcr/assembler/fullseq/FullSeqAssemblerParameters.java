@@ -51,6 +51,10 @@ public class FullSeqAssemblerParameters {
      * Region where variants are allowed
      */
     GeneFeature subCloningRegion = GeneFeature.VDJRegion;
+    /**
+     * Assemble only parts of sequences covered by alignments
+     */
+    boolean alignedRegionsOnly = false;
 
     @JsonCreator
     public FullSeqAssemblerParameters(
@@ -60,7 +64,8 @@ public class FullSeqAssemblerParameters {
             @JsonProperty("alignedSequenceEdgeDelta") int alignedSequenceEdgeDelta,
             @JsonProperty("alignmentEdgeRegionSize") int alignmentEdgeRegionSize,
             @JsonProperty("minimalNonEdgePointsFraction") double minimalNonEdgePointsFraction,
-            @JsonProperty("subCloningRegion") GeneFeature subCloningRegion) {
+            @JsonProperty("subCloningRegion") GeneFeature subCloningRegion,
+            @JsonProperty("alignedRegionsOnly") boolean alignedRegionsOnly) {
         this.minimalQualityShare = minimalQualityShare;
         this.minimalSumQuality = minimalSumQuality;
         this.decisiveSumQualityThreshold = decisiveSumQualityThreshold;
@@ -68,7 +73,7 @@ public class FullSeqAssemblerParameters {
         this.alignmentEdgeRegionSize = alignmentEdgeRegionSize;
         this.minimalNonEdgePointsFraction = minimalNonEdgePointsFraction;
         this.subCloningRegion = subCloningRegion;
-
+        this.alignedRegionsOnly = alignedRegionsOnly;
     }
 
     public double getMinimalQualityShare() {
@@ -119,10 +124,19 @@ public class FullSeqAssemblerParameters {
         this.minimalNonEdgePointsFraction = minimalNonEdgePointsFraction;
     }
 
+    public boolean isAlignedRegionsOnly() {
+        return alignedRegionsOnly;
+    }
+
+    public void setAlignedRegionsOnly(boolean alignedRegionsOnly) {
+        this.alignedRegionsOnly = alignedRegionsOnly;
+    }
+
     @Override
     public FullSeqAssemblerParameters clone() {
         return new FullSeqAssemblerParameters(minimalQualityShare, minimalSumQuality, decisiveSumQualityThreshold,
-                alignedSequenceEdgeDelta, alignmentEdgeRegionSize, minimalNonEdgePointsFraction, subCloningRegion);
+                alignedSequenceEdgeDelta, alignmentEdgeRegionSize, minimalNonEdgePointsFraction, subCloningRegion,
+                alignedRegionsOnly);
     }
 
     private static Map<String, FullSeqAssemblerParameters> knownParameters;
