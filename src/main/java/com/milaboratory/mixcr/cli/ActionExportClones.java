@@ -55,8 +55,8 @@ public class ActionExportClones extends ActionExport<Clone> {
     @Override
     public void go0() throws Exception {
         CloneExportParameters parameters = (CloneExportParameters) this.parameters;
-        try(InputStream inputStream = IOUtil.createIS(parameters.getInputFile());
-            InfoWriter<Clone> writer = new InfoWriter<>(parameters.getOutputFile())) {
+        try (InputStream inputStream = IOUtil.createIS(parameters.getInputFile());
+             InfoWriter<Clone> writer = new InfoWriter<>(parameters.getOutputFile())) {
             CloneSet set = CloneSetIO.readClns(inputStream, VDJCLibraryRegistry.getDefault());
 
             set = CloneSet.transform(set, parameters.getFilter());
@@ -99,14 +99,21 @@ public class ActionExportClones extends ActionExport<Clone> {
             }
 
             if (filterStopCodons) {
-                for (int i = 0; i < clone.numberOfTargets(); i++) {
-                    GeneFeature codingFeature = GeneFeature.getCodingGeneFeature(clone.getAssemblingFeatures()[i]);
+                for (GeneFeature assemblingFeature : clone.getAssemblingFeatures()) {
+                    GeneFeature codingFeature = GeneFeature.getCodingGeneFeature(assemblingFeature);
                     if (codingFeature == null)
                         continue;
-                    TranslationParameters tr = clone.getPartitionedTarget(i).getPartitioning().getTranslationParameters(codingFeature);
-                    if (tr == null || AminoAcidSequence.translate(
-                            clone.getPartitionedTarget(i).getFeature(codingFeature).getSequence(), tr).containStops())
-                        return false;
+
+                    for (int i = 0; i < clone.numberOfTargets(); ++i) {
+                        NSequenceWithQuality codingSeq = clone.getPartitionedTarget(i).getFeature(codingFeature);
+                        if (codingSeq == null)
+                            continue;
+                        TranslationParameters tr = clone.getPartitionedTarget(i).getPartitioning().getTranslationParameters(codingFeature);
+                        if (tr == null)
+                            return false;
+                        if (AminoAcidSequence.translate(codingSeq.getSequence(), tr).containStops())
+                            return false;
+                    }
                 }
             }
 
