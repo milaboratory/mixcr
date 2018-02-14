@@ -111,6 +111,7 @@
         "allowPartialAlignments": false,
         "allowNoCDR3PartAlignments": false,
         "allowChimeras": false,
+        "alignmentBoundaryTolerance": 5,
         "vjOverlapWindow": 3,
         "readsLayout": "Opposite"
     },
@@ -240,6 +241,7 @@
         "allowPartialAlignments": false,
         "allowNoCDR3PartAlignments": false,
         "allowChimeras": false,
+        "alignmentBoundaryTolerance": 5,
         "vjOverlapWindow": 3,
         "readsLayout": "Opposite"
     },
@@ -355,6 +357,7 @@
         "allowPartialAlignments": false,
         "allowNoCDR3PartAlignments": false,
         "allowChimeras": false,
+        "alignmentBoundaryTolerance": 5,
         "vjOverlapWindow": 3,
         "readsLayout": "Opposite"
     }

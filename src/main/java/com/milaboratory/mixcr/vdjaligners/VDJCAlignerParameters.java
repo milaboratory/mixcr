@@ -58,6 +58,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
     protected PairedEndReadsLayout readsLayout;
     protected MergerParameters mergerParameters;
     protected boolean fixSeed;
+    protected int alignmentBoundaryTolerance;
     protected int vjOverlapWindow;
 
     @JsonCreator
@@ -77,6 +78,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
                                  @JsonProperty("readsLayout") PairedEndReadsLayout readsLayout,
                                  @JsonProperty("mergerParameters") MergerParameters mergerParameters,
                                  @JsonProperty("fixSeed") boolean fixSeed,
+                                 @JsonProperty("alignmentBoundaryTolerance") int alignmentBoundaryTolerance,
                                  @JsonProperty("vjOverlapWindow") int vjOverlapWindow) {
         this.alignmentParameters = new EnumMap<>(GeneType.class);
         setGeneAlignerParameters(GeneType.Variable, vParameters);
@@ -95,6 +97,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         this.readsLayout = readsLayout;
         this.mergerParameters = mergerParameters;
         this.fixSeed = fixSeed;
+        this.alignmentBoundaryTolerance = alignmentBoundaryTolerance;
         this.vjOverlapWindow = vjOverlapWindow;
     }
 
@@ -289,6 +292,15 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         return this;
     }
 
+    public int getAlignmentBoundaryTolerance() {
+        return alignmentBoundaryTolerance;
+    }
+
+    public VDJCAlignerParameters setAlignmentBoundaryTolerance(int alignmentBoundaryTolerance) {
+        this.alignmentBoundaryTolerance = alignmentBoundaryTolerance;
+        return this;
+    }
+
     public PairedEndReadsLayout getReadsLayout() {
         return readsLayout;
     }
@@ -375,6 +387,6 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         return new VDJCAlignerParameters(getVAlignerParameters(), getDAlignerParameters(), getJAlignerParameters(),
                 getCAlignerParameters(), vjAlignmentOrder, includeDScore, includeCScore, minSumScore, maxHits,
                 relativeMinVFR3CDR3Score, allowPartialAlignments, allowNoCDR3PartAlignments,
-                allowChimeras, readsLayout, mergerParameters, fixSeed, vjOverlapWindow);
+                allowChimeras, readsLayout, mergerParameters, fixSeed, alignmentBoundaryTolerance, vjOverlapWindow);
     }
 }
