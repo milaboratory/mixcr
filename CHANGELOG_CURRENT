@@ -1,2 +1,4 @@
+V/J chimera detection and elimination mechanism; new parameter `minChimeraDetectionScore` both alignments in R1 and R2 should be greater than this value
+Smarter second fine alignment step, new parameter `alignmentBoundaryTolerance`, now this mechanism is triggered even if alignment boundary not perfectly matches read boundary in the opposite mate-pair; minor bug fixes
 Fixed `NPE` in VDJCHit#getIdentity. Commands like `mixcr exportClones ... -cBestIdentityPercent ...` affected
 Enable asserts for non-release builds, increases chance of detecting subtile error conditions, by trading-off some performance; has no effect on release builds

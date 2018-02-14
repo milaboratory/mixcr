@@ -3,7 +3,7 @@
         "fixSeed" : true,
         "vParameters": {
             "geneFeatureToAlign": "VRegionWithP",
-            "minSumScore" : 40,
+            "minSumScore" : 50,
             "relativeMinScore" : 0.87,
             "parameters": {
                 "mapperKValue": 5,
@@ -112,6 +112,7 @@
         "allowNoCDR3PartAlignments": false,
         "allowChimeras": false,
         "alignmentBoundaryTolerance": 5,
+        "minChimeraDetectionScore": 120,
         "vjOverlapWindow": 3,
         "readsLayout": "Opposite"
     },
@@ -242,6 +243,7 @@
         "allowNoCDR3PartAlignments": false,
         "allowChimeras": false,
         "alignmentBoundaryTolerance": 5,
+        "minChimeraDetectionScore": 120,
         "vjOverlapWindow": 3,
         "readsLayout": "Opposite"
     },
@@ -358,6 +360,7 @@
         "allowNoCDR3PartAlignments": false,
         "allowChimeras": false,
         "alignmentBoundaryTolerance": 5,
+        "minChimeraDetectionScore": 120,
         "vjOverlapWindow": 3,
         "readsLayout": "Opposite"
     }

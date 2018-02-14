@@ -41,6 +41,7 @@ import io.repseq.core.VDJCGene;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Objects;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
@@ -59,6 +60,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
     protected MergerParameters mergerParameters;
     protected boolean fixSeed;
     protected int alignmentBoundaryTolerance;
+    protected int minChimeraDetectionScore;
     protected int vjOverlapWindow;
 
     @JsonCreator
@@ -79,6 +81,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
                                  @JsonProperty("mergerParameters") MergerParameters mergerParameters,
                                  @JsonProperty("fixSeed") boolean fixSeed,
                                  @JsonProperty("alignmentBoundaryTolerance") int alignmentBoundaryTolerance,
+                                 @JsonProperty("minChimeraDetectionScore") int minChimeraDetectionScore,
                                  @JsonProperty("vjOverlapWindow") int vjOverlapWindow) {
         this.alignmentParameters = new EnumMap<>(GeneType.class);
         setGeneAlignerParameters(GeneType.Variable, vParameters);
@@ -98,6 +101,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         this.mergerParameters = mergerParameters;
         this.fixSeed = fixSeed;
         this.alignmentBoundaryTolerance = alignmentBoundaryTolerance;
+        this.minChimeraDetectionScore = minChimeraDetectionScore;
         this.vjOverlapWindow = vjOverlapWindow;
     }
 
@@ -310,6 +314,15 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         return this;
     }
 
+    public int getMinChimeraDetectionScore() {
+        return minChimeraDetectionScore;
+    }
+
+    public VDJCAlignerParameters setMinChimeraDetectionScore(int minChimeraDetectionScore) {
+        this.minChimeraDetectionScore = minChimeraDetectionScore;
+        return this;
+    }
+
     public void setMergerParameters(MergerParameters mergerParameters) {
         this.mergerParameters = mergerParameters;
     }
@@ -334,6 +347,8 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
                 ", readsLayout=" + readsLayout +
                 ", mergerParameters=" + mergerParameters +
                 ", fixSeed=" + fixSeed +
+                ", alignmentBoundaryTolerance=" + alignmentBoundaryTolerance +
+                ", minChimeraDetectionScore=" + minChimeraDetectionScore +
                 ", vjOverlapWindow=" + vjOverlapWindow +
                 '}';
     }
@@ -341,45 +356,31 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
+        if (!(o instanceof VDJCAlignerParameters)) return false;
         VDJCAlignerParameters that = (VDJCAlignerParameters) o;
-
-        if (includeDScore != that.includeDScore) return false;
-        if (includeCScore != that.includeCScore) return false;
-        if (Float.compare(that.minSumScore, minSumScore) != 0) return false;
-        if (maxHits != that.maxHits) return false;
-        if (Float.compare(that.relativeMinVFR3CDR3Score, relativeMinVFR3CDR3Score) != 0) return false;
-        if (allowPartialAlignments != that.allowPartialAlignments) return false;
-        if (allowNoCDR3PartAlignments != that.allowNoCDR3PartAlignments) return false;
-        if (allowChimeras != that.allowChimeras) return false;
-        if (fixSeed != that.fixSeed) return false;
-        if (vjOverlapWindow != that.vjOverlapWindow) return false;
-        if (alignmentParameters != null ? !alignmentParameters.equals(that.alignmentParameters) : that.alignmentParameters != null)
-            return false;
-        if (vjAlignmentOrder != that.vjAlignmentOrder) return false;
-        if (readsLayout != that.readsLayout) return false;
-        return !(mergerParameters != null ? !mergerParameters.equals(that.mergerParameters) : that.mergerParameters != null);
-
+        return includeDScore == that.includeDScore &&
+                includeCScore == that.includeCScore &&
+                Float.compare(that.minSumScore, minSumScore) == 0 &&
+                maxHits == that.maxHits &&
+                Float.compare(that.relativeMinVFR3CDR3Score, relativeMinVFR3CDR3Score) == 0 &&
+                allowPartialAlignments == that.allowPartialAlignments &&
+                allowNoCDR3PartAlignments == that.allowNoCDR3PartAlignments &&
+                allowChimeras == that.allowChimeras &&
+                fixSeed == that.fixSeed &&
+                alignmentBoundaryTolerance == that.alignmentBoundaryTolerance &&
+                minChimeraDetectionScore == that.minChimeraDetectionScore &&
+                vjOverlapWindow == that.vjOverlapWindow &&
+                Objects.equals(alignmentParameters, that.alignmentParameters) &&
+                vjAlignmentOrder == that.vjAlignmentOrder &&
+                readsLayout == that.readsLayout &&
+                Objects.equals(mergerParameters, that.mergerParameters);
     }
 
     @Override
     public int hashCode() {
-        int result = alignmentParameters != null ? alignmentParameters.hashCode() : 0;
-        result = 31 * result + (vjAlignmentOrder != null ? vjAlignmentOrder.hashCode() : 0);
-        result = 31 * result + (includeDScore ? 1 : 0);
-        result = 31 * result + (includeCScore ? 1 : 0);
-        result = 31 * result + (minSumScore != +0.0f ? Float.floatToIntBits(minSumScore) : 0);
-        result = 31 * result + maxHits;
-        result = 31 * result + (relativeMinVFR3CDR3Score != +0.0f ? Float.floatToIntBits(relativeMinVFR3CDR3Score) : 0);
-        result = 31 * result + (allowPartialAlignments ? 1 : 0);
-        result = 31 * result + (allowNoCDR3PartAlignments ? 1 : 0);
-        result = 31 * result + (allowChimeras ? 1 : 0);
-        result = 31 * result + (readsLayout != null ? readsLayout.hashCode() : 0);
-        result = 31 * result + (mergerParameters != null ? mergerParameters.hashCode() : 0);
-        result = 31 * result + (fixSeed ? 1 : 0);
-        result = 31 * result + vjOverlapWindow;
-        return result;
+        return Objects.hash(alignmentParameters, vjAlignmentOrder, includeDScore, includeCScore, minSumScore, maxHits,
+                relativeMinVFR3CDR3Score, allowPartialAlignments, allowNoCDR3PartAlignments, allowChimeras, readsLayout,
+                mergerParameters, fixSeed, alignmentBoundaryTolerance, minChimeraDetectionScore, vjOverlapWindow);
     }
 
     @Override
@@ -387,6 +388,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         return new VDJCAlignerParameters(getVAlignerParameters(), getDAlignerParameters(), getJAlignerParameters(),
                 getCAlignerParameters(), vjAlignmentOrder, includeDScore, includeCScore, minSumScore, maxHits,
                 relativeMinVFR3CDR3Score, allowPartialAlignments, allowNoCDR3PartAlignments,
-                allowChimeras, readsLayout, mergerParameters, fixSeed, alignmentBoundaryTolerance, vjOverlapWindow);
+                allowChimeras, readsLayout, mergerParameters, fixSeed, alignmentBoundaryTolerance,
+                minChimeraDetectionScore, vjOverlapWindow);
     }
 }

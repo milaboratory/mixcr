@@ -182,9 +182,9 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         // Read successfully aligned
 
         onSuccessfulAlignment(input, alignments);
-        if(bestHelper.vChimera)
+        if (bestHelper.vChimera)
             onSegmentChimeraDetected(GeneType.Variable, input, alignments);
-        if(bestHelper.jChimera)
+        if (bestHelper.jChimera)
             onSegmentChimeraDetected(GeneType.Joining, input, alignments);
 
         return new VDJCAlignmentResult<>(input, alignments);
@@ -232,9 +232,9 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         VDJCAlignments alignments = bestHelper.createResult(input.getId(), this);
 
         onSuccessfulAlignment(input, alignments);
-        if(bestHelper.vChimera)
+        if (bestHelper.vChimera)
             onSegmentChimeraDetected(GeneType.Variable, input, alignments);
-        if(bestHelper.jChimera)
+        if (bestHelper.jChimera)
             onSegmentChimeraDetected(GeneType.Joining, input, alignments);
 
         return new VDJCAlignmentResult<>(input, alignments);
@@ -299,7 +299,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         for (List<AlignmentHit<NucleotideSequence, VDJCGene>> all : new List[]{al1, al2}) {
             boolean scoreOk = false;
             for (AlignmentHit<NucleotideSequence, VDJCGene> al : all)
-                if (al.getAlignment().getScore() > parameters.getVJCGeneAlignerParameters(gt).getMinSumScore()) {
+                if (al.getAlignment().getScore() > parameters.getMinChimeraDetectionScore()) {
                     scoreOk = true;
                     break;
                 }
@@ -322,16 +322,41 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
 
         // Comparing top hit positions
         if (gt == GeneType.Variable)
-            if (al1.get(0).getAlignment().getSequence1Range().getTo() > al2.get(0).getAlignment().getSequence1Range().getTo())
+            if (al1.get(0).getAlignment().getSequence1Range().getTo() > al2.get(0).getAlignment().getSequence1Range().getTo()) {
+                // printAls1(al1, al2, "V");
                 al2.clear();
-            else
+            } else {
+                // printAls1(al2, al1, "V");
                 al1.clear();
-        else if (al1.get(0).getAlignment().getSequence1Range().getFrom() > al2.get(0).getAlignment().getSequence1Range().getFrom())
+            }
+        else if (al1.get(0).getAlignment().getSequence1Range().getFrom() > al2.get(0).getAlignment().getSequence1Range().getFrom()) {
+            // printAls1(al2, al1, "J");
             al1.clear();
-        else
+        } else {
+            // printAls1(al1, al2, "J");
             al2.clear();
+        }
 
         return true;
+    }
+
+    void printAls1(List<AlignmentHit<NucleotideSequence, VDJCGene>> alsGood, List<AlignmentHit<NucleotideSequence, VDJCGene>> alsBad, String gene) {
+        if (alsGood.get(0).getAlignment().getScore() > alsBad.get(0).getAlignment().getScore())
+            return;
+        System.out.println("##################################################");
+        System.out.println(gene);
+        System.out.println("================  Good  ==================");
+        printAls(alsGood);
+        System.out.println("================  Bad   ==================");
+        printAls(alsBad);
+    }
+
+    void printAls(List<AlignmentHit<NucleotideSequence, VDJCGene>> als) {
+        for (AlignmentHit<NucleotideSequence, VDJCGene> al : als) {
+            System.out.println(al.getRecordPayload().getId());
+            System.out.println(al.getAlignment().getScore());
+            System.out.println(al.getAlignment().getAlignmentHelper());
+        }
     }
 
     @SuppressWarnings("unchecked")
