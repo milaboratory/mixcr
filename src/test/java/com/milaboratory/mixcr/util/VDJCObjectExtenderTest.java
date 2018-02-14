@@ -42,7 +42,7 @@ import org.apache.commons.math3.random.Well44497b;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class VDJCExtenderTest {
+public class VDJCObjectExtenderTest {
     @Test
     public void testTripleRead() throws Exception {
         final boolean print = true;
@@ -77,7 +77,7 @@ public class VDJCExtenderTest {
                 VDJCAlignments al = alignment.alignment;
                 Assert.assertNotNull(al);
 
-                VDJCExtender extender = new VDJCExtender(Chains.TCR, (byte) 35,
+                VDJCObjectExtender<VDJCAlignments> extender = new VDJCObjectExtender<>(Chains.TCR, (byte) 35,
                         rnaSeqParams.getVAlignerParameters().getParameters().getScoring(),
                         rnaSeqParams.getJAlignerParameters().getParameters().getScoring(),
                         100, 70,

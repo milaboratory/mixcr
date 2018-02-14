@@ -29,6 +29,8 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.primitives.Filter;
+import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
@@ -41,6 +43,8 @@ import java.util.*;
  */
 public final class CloneSet implements Iterable<Clone> {
     String versionInfo;
+    CloneAssemblerParameters assemblerParameters;
+    VDJCAlignerParameters alignmentParameters;
     final GeneFeature[] assemblingFeatures;
     final EnumMap<GeneType, GeneFeature> alignedFeatures;
     final List<VDJCGene> usedGenes;

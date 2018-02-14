@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * @author Stanislav Poslavsky
  */
-public final class VDJCExtender<T extends VDJCObject> implements Processor<T, T>, Report {
+public final class VDJCObjectExtender<T extends VDJCObject> implements Processor<T, T>, Report {
     final Chains chains;
     final byte extensionQuality;
     final AlignmentScoring<NucleotideSequence> vScoring, jScoring;
@@ -41,10 +41,10 @@ public final class VDJCExtender<T extends VDJCObject> implements Processor<T, T>
             vExtensionLength = new AtomicLong(0),
             jExtensionLength = new AtomicLong(0);
 
-    public VDJCExtender(Chains chains, byte extensionQuality,
-                        AlignmentScoring<NucleotideSequence> vScoring, AlignmentScoring<NucleotideSequence> jScoring,
-                        int minimalVScore, int minimalJScore,
-                        ReferencePoint vLeftExtensionRefPoint, ReferencePoint jRightExtensionRefPoint) {
+    public VDJCObjectExtender(Chains chains, byte extensionQuality,
+                              AlignmentScoring<NucleotideSequence> vScoring, AlignmentScoring<NucleotideSequence> jScoring,
+                              int minimalVScore, int minimalJScore,
+                              ReferencePoint vLeftExtensionRefPoint, ReferencePoint jRightExtensionRefPoint) {
         this.chains = chains;
         this.extensionQuality = extensionQuality;
         this.vScoring = vScoring;
@@ -409,7 +409,7 @@ public final class VDJCExtender<T extends VDJCObject> implements Processor<T, T>
      * @return result or null is something went wrong
      */
     static VDJCObject transform(VDJCObject input,
-                                VDJCExtender<?>.Extender transformer) {
+                                VDJCObjectExtender<?>.Extender transformer) {
         NSequenceWithQuality[] originalTargets = input.getTargets();
         EnumMap<GeneType, VDJCHit[]> newHitsMap = new EnumMap<>(GeneType.class);
         for (GeneType gt : GeneType.VDJC_REFERENCE) {
@@ -437,14 +437,14 @@ public final class VDJCExtender<T extends VDJCObject> implements Processor<T, T>
     }
 
     static Clone doTransformClone(Clone clone,
-                                  VDJCExtender<?>.Extender transformer,
+                                  VDJCObjectExtender<?>.Extender transformer,
                                   EnumMap<GeneType, VDJCHit[]> newHitsMap) {
         return new Clone(transformer.transform(clone.getTargets()),
                 newHitsMap, clone.getAssemblingFeatures(), clone.getCount(), clone.getId());
     }
 
     static VDJCAlignments doTransformAlignment(VDJCAlignments alignment,
-                                               VDJCExtender<?>.Extender transformer,
+                                               VDJCObjectExtender<?>.Extender transformer,
                                                EnumMap<GeneType, VDJCHit[]> newHitsMap) {
         return new VDJCAlignments(
                 newHitsMap,
@@ -607,7 +607,7 @@ public final class VDJCExtender<T extends VDJCObject> implements Processor<T, T>
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (!(o instanceof VDJCExtender.Extender)) return false;
+            if (!(o instanceof VDJCObjectExtender.Extender)) return false;
             Extender extender = (Extender) o;
             return leftTargetId == extender.leftTargetId &&
                     rightTargetId == extender.rightTargetId &&

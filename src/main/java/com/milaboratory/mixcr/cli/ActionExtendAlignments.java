@@ -1,23 +1,26 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
+import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.blocks.ParallelProcessor;
 import cc.redberry.pipe.util.Indexer;
 import cc.redberry.pipe.util.OrderedOutputPort;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.cli.ActionParametersWithOutput;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
-import com.milaboratory.mixcr.util.VDJCExtender;
+import com.milaboratory.core.alignment.AlignmentScoring;
+import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.util.VDJCObjectExtender;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.Chains;
 import io.repseq.core.ReferencePoint;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -28,26 +31,50 @@ public class ActionExtendAlignments implements Action {
 
     @Override
     public void go(ActionHelper helper) throws Exception {
-        long beginTimestamp = System.currentTimeMillis();
+        IOUtil.MiXCRFileType fileType = IOUtil.detectFilType(parameters.getInput());
+
+        switch (fileType) {
+            case VDJCA:
+                processVDJCA(helper);
+                break;
+            case Clns:
+                processClns(helper);
+                break;
+            case ClnA:
+                System.out.println("Operation is not supported for ClnA files.");
+                System.exit(1);
+                break;
+            default:
+                System.out.println("Not supported file type.");
+                System.exit(1);
+
+        }
+    }
+
+    void processClns(ActionHelper helper) throws IOException {
+        // CloneSet cloneSet = CloneSetIO.read(parameters.getInput());
+        //
+        // OutputPort<Clone> outputPort = CUtils.asOutputPort(cloneSet);
+        // ProcessWrapper<Clone> process = new ProcessWrapper<>(outputPort,
+        //         reader.getParameters().getVAlignerParameters().getParameters().getScoring(),
+        //         reader.getParameters().getJAlignerParameters().getParameters().getScoring(),
+        //         helper);
+    }
+
+    @SuppressWarnings("unchecked")
+    void processVDJCA(ActionHelper helper) throws IOException {
         try (final VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parameters.getInput());
              final VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(parameters.getOutput())) {
             SmartProgressReporter.startProgressReport("Processing", reader);
 
             writer.header(reader.getParameters(), reader.getUsedGenes());
-            VDJCExtender extender = new VDJCExtender(parameters.getChains(), parameters.extensionQuality,
+
+            ProcessWrapper<VDJCAlignments> process = new ProcessWrapper<>(reader,
                     reader.getParameters().getVAlignerParameters().getParameters().getScoring(),
                     reader.getParameters().getJAlignerParameters().getParameters().getScoring(),
-                    parameters.minimalVScore, parameters.minimalJScore,
-                    ReferencePoint.parse(parameters.vAnchorPoint),
-                    ReferencePoint.parse(parameters.jAnchorPoint));
-            ReportWrapper report = new ReportWrapper(command(), extender);
-            report.setStartMillis(beginTimestamp);
-            report.setInputFiles(parameters.getInput());
-            report.setOutputFiles(parameters.getOutput());
-            report.setCommandLine(helper.getCommandLineArguments());
+                    helper);
 
-            ParallelProcessor<VDJCAlignments, VDJCAlignments> pp = new ParallelProcessor<>(reader, extender, 2);
-            for (VDJCAlignments alignments : CUtils.it(new OrderedOutputPort<>(pp,
+            for (VDJCAlignments alignments : CUtils.it(new OrderedOutputPort<>(process.getOutput(),
                     new Indexer<VDJCAlignments>() {
                         @Override
                         public long getIndex(VDJCAlignments o) {
@@ -57,6 +84,35 @@ public class ActionExtendAlignments implements Action {
                 writer.write(alignments);
             writer.setNumberOfProcessedReads(reader.getNumberOfReads());
 
+            process.finish();
+        }
+    }
+
+    final class ProcessWrapper<T extends VDJCObject> {
+        final ReportWrapper report;
+        final ParallelProcessor<T, T> output;
+
+        public ProcessWrapper(OutputPort<T> input,
+                              AlignmentScoring<NucleotideSequence> vScoring, AlignmentScoring<NucleotideSequence> jScoring,
+                              ActionHelper helper) {
+            VDJCObjectExtender<T> extender = new VDJCObjectExtender<>(parameters.getChains(), parameters.extensionQuality,
+                    vScoring, jScoring,
+                    parameters.minimalVScore, parameters.minimalJScore,
+                    ReferencePoint.parse(parameters.vAnchorPoint),
+                    ReferencePoint.parse(parameters.jAnchorPoint));
+            this.output = new ParallelProcessor<>(input, extender, 2);
+            this.report = new ReportWrapper(command(), extender);
+            report.setStartMillis(System.currentTimeMillis());
+            report.setInputFiles(parameters.getInput());
+            report.setOutputFiles(parameters.getOutput());
+            report.setCommandLine(helper.getCommandLineArguments());
+        }
+
+        public OutputPort<T> getOutput() {
+            return output;
+        }
+
+        public void finish() throws JsonProcessingException {
             report.setFinishMillis(System.currentTimeMillis());
 
             // Writing report to stout
@@ -83,7 +139,7 @@ public class ActionExtendAlignments implements Action {
 
     @Parameters(commandDescription = "Extend corresponding entity (clone or alignment) using germline sequence.")
     private static final class ExtendActionParameters extends ActionParametersWithOutput {
-        @Parameter(description = "input.vdjca[.gz] output.vdjca[.gz]")
+        @Parameter(description = "input.vdjca[.gz]|.clns output.vdjca[.gz].clns")
         public List<String> parameters;
 
         @Parameter(description = "Apply procedure only to alignments with specific immunological-receptor chains.",
