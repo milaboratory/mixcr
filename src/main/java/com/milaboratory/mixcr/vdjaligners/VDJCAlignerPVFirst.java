@@ -223,7 +223,15 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
 
         // If hits for V or J are missing after filtration
         if (!bestHelper.isGoodVJ()) {
-            onFailedAlignment(input, VDJCAlignmentFailCause.LowTotalScore);
+            if (!bestHelper.hasVHits())
+                onFailedAlignment(input, VDJCAlignmentFailCause.NoVHits);
+            else if (!bestHelper.hasJHits())
+                onFailedAlignment(input, VDJCAlignmentFailCause.NoJHits);
+            else if (!bestHelper.hasVJOnTheSameTarget())
+                onFailedAlignment(input, VDJCAlignmentFailCause.VAndJOnDifferentTargets);
+            else
+                onFailedAlignment(input, VDJCAlignmentFailCause.LowTotalScore);
+
             return new VDJCAlignmentResult<>(input);
         }
 
@@ -677,6 +685,10 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
 
         boolean hasVHits() {
             return vHits.length > 0;
+        }
+
+        boolean hasJHits() {
+            return jHits.length > 0;
         }
 
         boolean hasVOrJHits() {
