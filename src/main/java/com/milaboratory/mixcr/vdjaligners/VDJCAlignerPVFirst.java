@@ -330,41 +330,16 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
 
         // Comparing top hit positions
         if (gt == GeneType.Variable)
-            if (al1.get(0).getAlignment().getSequence1Range().getTo() > al2.get(0).getAlignment().getSequence1Range().getTo()) {
-                // printAls1(al1, al2, "V");
+            if (al1.get(0).getAlignment().getSequence1Range().getTo() > al2.get(0).getAlignment().getSequence1Range().getTo())
                 al2.clear();
-            } else {
-                // printAls1(al2, al1, "V");
+            else
                 al1.clear();
-            }
-        else if (al1.get(0).getAlignment().getSequence1Range().getFrom() > al2.get(0).getAlignment().getSequence1Range().getFrom()) {
-            // printAls1(al2, al1, "J");
+        else if (al1.get(0).getAlignment().getSequence1Range().getFrom() > al2.get(0).getAlignment().getSequence1Range().getFrom())
             al1.clear();
-        } else {
-            // printAls1(al1, al2, "J");
+        else
             al2.clear();
-        }
 
         return true;
-    }
-
-    void printAls1(List<AlignmentHit<NucleotideSequence, VDJCGene>> alsGood, List<AlignmentHit<NucleotideSequence, VDJCGene>> alsBad, String gene) {
-        if (alsGood.get(0).getAlignment().getScore() > alsBad.get(0).getAlignment().getScore())
-            return;
-        System.out.println("##################################################");
-        System.out.println(gene);
-        System.out.println("================  Good  ==================");
-        printAls(alsGood);
-        System.out.println("================  Bad   ==================");
-        printAls(alsBad);
-    }
-
-    void printAls(List<AlignmentHit<NucleotideSequence, VDJCGene>> als) {
-        for (AlignmentHit<NucleotideSequence, VDJCGene> al : als) {
-            System.out.println(al.getRecordPayload().getId());
-            System.out.println(al.getAlignment().getScore());
-            System.out.println(al.getAlignment().getAlignmentHelper());
-        }
     }
 
     @SuppressWarnings("unchecked")
@@ -635,53 +610,6 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
             this.vChimera = vChimera;
             this.jChimera = jChimera;
         }
-
-//        void sortAndFilterBasedOnVEndScore() {
-//            // Calculating vEndScores
-//            for (PairedHit hit : vHits)
-//                hit.calculateVEndScore(VDJCAlignerPVFirst.this);
-//
-//            // Sorting based on v-end score (score of alignment of FR3 and CDR3
-//            Arrays.sort(vHits, V_END_SCORE_COMPARATOR);
-//
-//            // Retrieving maximal value
-//            float maxVEndScore = vHits[0].vEndScore;
-//
-//            // Calculating threshold
-//            float threshold = maxVEndScore * parameters.getRelativeMinVFR3CDR3Score();
-//
-//            // Filtering
-//            for (int i = 0; i < vHits.length; ++i)
-//                if (vHits[i].vEndScore < threshold) {
-//                    vHits = Arrays.copyOfRange(vHits, 0, i);
-//                    break;
-//                }
-//
-//            // Calculate normal score for each read for further processing
-//            // and sort according to this score
-//            calculateScoreAndSort(vHits);
-//        }
-
-        ///**
-        // * Calculates best V hits for each read
-        // */
-        //void updateBestV() {
-        //    AlignmentHit<NucleotideSequence, VDJCGene> hit0 = null, hit1 = null;
-        //
-        //    for (PairedHit hit : vHits) {
-        //        if (hit.hit0 != null &&
-        //                (hit0 == null ||
-        //                        hit0.getAlignment().getScore() > hit.hit0.getAlignment().getScore()))
-        //            hit0 = hit.hit0;
-        //        if (hit.hit1 != null &&
-        //                (hit1 == null ||
-        //                        hit1.getAlignment().getScore() > hit.hit1.getAlignment().getScore()))
-        //            hit1 = hit.hit1;
-        //    }
-        //
-        //    // Setting best hits for current array of hits (after filtration)
-        //    bestVHits = new PairedHit(hit0, hit1, true);
-        //}
 
         boolean hasVHits() {
             return vHits.length > 0;
