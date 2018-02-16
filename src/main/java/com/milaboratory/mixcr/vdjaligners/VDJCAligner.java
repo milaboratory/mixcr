@@ -103,6 +103,11 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
             listener.onSuccessfulAlignment(read, alignment);
     }
 
+    protected final void onSegmentChimeraDetected(GeneType geneType, SequenceRead read, VDJCAlignments alignment) {
+        if (listener != null)
+            listener.onSegmentChimeraDetected(geneType, read, alignment);
+    }
+
     public boolean isInitialized() {
         return initialized;
     }
