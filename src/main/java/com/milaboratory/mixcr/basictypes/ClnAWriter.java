@@ -32,6 +32,7 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.CountingOutputPort;
+import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PipeDataInputReader;
@@ -102,7 +103,9 @@ public final class ClnAWriter implements AutoCloseable, CanReportProgressAndStag
     /**
      * Step 1
      */
-    public synchronized void writeClones(CloneSet cloneSet, VDJCAlignerParameters alignerParameters) {
+    public synchronized void writeClones(CloneSet cloneSet,
+                                         VDJCAlignerParameters alignerParameters,
+                                         CloneAssemblerParameters assemblerParameters) {
         // Checking state
         if (clonesBlockFinished)
             throw new IllegalArgumentException("Clone block was already written.");
@@ -121,8 +124,9 @@ public final class ClnAWriter implements AutoCloseable, CanReportProgressAndStag
         output.writeUTF(MiXCRVersionInfo.get()
                 .getVersionString(MiXCRVersionInfo.OutputType.ToFile));
 
-        // Writing aligner parameters
+        // Writing aligner & assembler parameters
         output.writeObject(alignerParameters);
+        output.writeObject(assemblerParameters);
 
         // Saving assembling features
         GeneFeature[] assemblingFeatures = cloneSet.getAssemblingFeatures();

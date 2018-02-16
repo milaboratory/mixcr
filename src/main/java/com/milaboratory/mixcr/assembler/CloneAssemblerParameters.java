@@ -34,6 +34,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.core.sequence.quality.QualityAggregationType;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
+import com.milaboratory.primitivio.annotations.Serializable;
 import io.repseq.core.GeneFeature;
 
 import java.util.Arrays;
@@ -42,6 +43,7 @@ import java.util.regex.Pattern;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
+@Serializable(asJson = true)
 public final class CloneAssemblerParameters implements java.io.Serializable {
     private static final int MAX_MAPPING_REGION = 1000;
     GeneFeature[] assemblingFeatures;

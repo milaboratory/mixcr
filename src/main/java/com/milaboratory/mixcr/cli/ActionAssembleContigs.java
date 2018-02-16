@@ -12,6 +12,7 @@ import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParametersWithOutput;
 import com.milaboratory.cli.ProcessException;
+import com.milaboratory.mixcr.assembler.CloneFactory;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerReport;
@@ -59,6 +60,9 @@ public class ActionAssembleContigs implements Action {
         try (ClnAReader reader = new ClnAReader(parameters.getInputFileName(), VDJCLibraryRegistry.getDefault());
              PrimitivO tmpOut = new PrimitivO(new BufferedOutputStream(new FileOutputStream(parameters.getOutputFileName())))) {
 
+            final CloneFactory cloneFactory = new CloneFactory(reader.getAssemblerParameters().getCloneFactoryParameters(),
+                    reader.getAssemblingFeatures(), reader.getGenes(), reader.getAlignerParameters().getFeaturesToAlignMap());
+
             alignerParameters = reader.getAlignerParameters();
             genes = reader.getGenes();
             IOUtil.registerGeneReferences(tmpOut, genes, alignerParameters);
@@ -68,7 +72,7 @@ public class ActionAssembleContigs implements Action {
             SmartProgressReporter.startProgressReport("Assembling", cloneAlignmentsPort);
 
             OutputPort<Clone[]> parallelProcessor = new ParallelProcessor<>(cloneAlignmentsPort, cloneAlignments -> {
-                FullSeqAssembler fullSeqAssembler = new FullSeqAssembler(assemblerParameters, cloneAlignments.clone, alignerParameters);
+                FullSeqAssembler fullSeqAssembler = new FullSeqAssembler(cloneFactory, assemblerParameters, cloneAlignments.clone, alignerParameters);
                 fullSeqAssembler.setReport(report);
 
                 FullSeqAssembler.RawVariantsData rawVariantsData = fullSeqAssembler.calculateRawData(() -> {

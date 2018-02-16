@@ -29,6 +29,7 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPort;
+import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PipeDataInputReader;
 import com.milaboratory.primitivio.PrimitivI;
@@ -79,6 +80,7 @@ public final class ClnAReader implements AutoCloseable {
     // Read form file header
 
     final VDJCAlignerParameters alignerParameters;
+    final CloneAssemblerParameters assemblerParameters;
     final GeneFeature[] assemblingFeatures;
     final CloneSetIO.GT2GFAdapter alignedFeatures;
     final List<VDJCGene> genes;
@@ -141,6 +143,7 @@ public final class ClnAReader implements AutoCloseable {
         input = new PrimitivI(new InputDataStream(ClnAWriter.MAGIC_LENGTH + 4, firstClonePosition));
         this.versionInfo = input.readUTF();
         this.alignerParameters = input.readObject(VDJCAlignerParameters.class);
+        this.assemblerParameters = input.readObject(CloneAssemblerParameters.class);
         this.assemblingFeatures = input.readObject(GeneFeature[].class);
         this.alignedFeatures = new CloneSetIO.GT2GFAdapter(IO.readGF2GTMap(input));
         this.genes = IOUtil.readGeneReferences(input, libraryRegistry);
@@ -159,6 +162,10 @@ public final class ClnAReader implements AutoCloseable {
      */
     public VDJCAlignerParameters getAlignerParameters() {
         return alignerParameters;
+    }
+
+    public CloneAssemblerParameters getAssemblerParameters() {
+        return assemblerParameters;
     }
 
     public GeneFeature[] getAssemblingFeatures() {

@@ -95,7 +95,7 @@ public class ActionSliceClnA implements Action {
                 return al.setAlignmentsIndex(idGen.getAndIncrement());
             };
 
-            writer.writeClones(newCloneSet, reader.getAlignerParameters());
+            writer.writeClones(newCloneSet, reader.getAlignerParameters(), reader.getAssemblerParameters());
 
             writer.sortAlignments(allAlignmentsPort, newNumberOfAlignments);
 

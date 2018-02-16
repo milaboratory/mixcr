@@ -30,7 +30,7 @@ public class ClnAReaderTest {
 
         File file = TempFileManager.getTempFile();
         ClnAWriter writer = new ClnAWriter(file);
-        writer.writeClones(assemble.cloneSet, align.parameters.alignerParameters);
+        writer.writeClones(assemble.cloneSet, align.parameters.alignerParameters, align.parameters.cloneAssemblerParameters);
         writer.sortAlignments(merged, align.alignments.size());
         writer.writeAlignmentsAndIndex();
 
