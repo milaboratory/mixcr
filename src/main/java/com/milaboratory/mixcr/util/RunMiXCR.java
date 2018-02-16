@@ -203,11 +203,13 @@ public final class RunMiXCR {
                 else
                     reader = new SingleFastqReader(inputFiles[0], true);
             }
+            cloneAssemblerParameters.updateFrom(alignerParameters);
         }
 
         public RunMiXCRAnalysis(SequenceReaderCloseable<? extends SequenceRead> reader, boolean isInputPaired) {
             this.reader = reader;
             this.isInputPaired = isInputPaired;
+            cloneAssemblerParameters.updateFrom(alignerParameters);
         }
 
         public RunMiXCRAnalysis(final SequenceRead... input) {
@@ -230,6 +232,7 @@ public final class RunMiXCR {
                 }
             };
             this.isInputPaired = input.length > 0 && input[0] instanceof PairedRead;
+            cloneAssemblerParameters.updateFrom(alignerParameters);
         }
 
         public boolean isInputPaired() {

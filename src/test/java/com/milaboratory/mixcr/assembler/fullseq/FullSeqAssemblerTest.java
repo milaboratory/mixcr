@@ -308,6 +308,7 @@ public class FullSeqAssemblerTest {
         // [-60, -20] = 40
         params.alignerParameters = VDJCParametersPresets.getByName("rna-seq");
         params.alignerParameters.setSaveOriginalReads(true);
+        params.cloneAssemblerParameters.updateFrom(params.alignerParameters);
 
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
 //        for (VDJCAlignments al : align.alignments) {
@@ -325,11 +326,11 @@ public class FullSeqAssemblerTest {
 
         PointSequence[] r2s = agg.toPointSequences(align.alignments.get(1));
         TIntHashSet p2 = new TIntHashSet(Arrays.stream(r2s).mapToInt(s -> s.point).toArray());
-        Assert.assertEquals(260 - masterSeq1WT.cdr3Part, p2.size());
+        Assert.assertEquals(261 - masterSeq1WT.cdr3Part, p2.size());
 
         PointSequence[] r1s = agg.toPointSequences(align.alignments.get(0));
         TIntHashSet p1 = new TIntHashSet(Arrays.stream(r1s).mapToInt(s -> s.point).toArray());
-        Assert.assertEquals(280 - masterSeq1WT.cdr3Part, p1.size());
+        Assert.assertEquals(281 - masterSeq1WT.cdr3Part, p1.size());
 
         FullSeqAssembler.RawVariantsData prep = agg.calculateRawData(() -> CUtils.asOutputPort(align.alignments));
 
