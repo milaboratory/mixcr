@@ -48,6 +48,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -287,6 +288,7 @@ public final class ClnAReader implements AutoCloseable {
             implements OutputPort<CloneAlignments>, CanReportProgress {
         private final AtomicInteger cloneIndex = new AtomicInteger();
         private final AtomicLong processedAlignments = new AtomicLong();
+        private final CloneSet fakeCloneSet;
         private final PipeDataInputReader<Clone> clones;
         volatile boolean isFinished = false;
 
@@ -295,6 +297,9 @@ public final class ClnAReader implements AutoCloseable {
             PrimitivI input = new PrimitivI(new InputDataStream(firstClonePosition, index[0]));
             IOUtil.registerGeneReferences(input, genes, alignedFeatures);
             this.clones = new PipeDataInputReader<>(Clone.class, input, numberOfClones);
+            this.fakeCloneSet = new CloneSet(Collections.EMPTY_LIST,
+                    genes, alignedFeatures.map,
+                    alignerParameters, assemblerParameters);
         }
 
         @Override
@@ -304,6 +309,7 @@ public final class ClnAReader implements AutoCloseable {
                 isFinished = true;
                 return null;
             }
+            clone.setParentCloneSet(fakeCloneSet);
             CloneAlignments result = new CloneAlignments(clone, cloneIndex.getAndIncrement());
             processedAlignments.addAndGet(result.alignmentsCount);
             return result;

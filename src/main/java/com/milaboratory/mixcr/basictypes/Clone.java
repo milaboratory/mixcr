@@ -68,10 +68,6 @@ public final class Clone extends VDJCObject {
         return parent;
     }
 
-    public void setParent(CloneSet parent) {
-        this.parent = parent;
-    }
-
     public double getFraction() {
         if (parent == null)
             return Double.NaN;
