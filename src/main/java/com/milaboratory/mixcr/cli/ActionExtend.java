@@ -22,6 +22,7 @@ import io.repseq.core.ReferencePoint;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -64,6 +65,8 @@ public class ActionExtend implements Action {
         List<Clone> clones = new ArrayList<>(cloneSet.getClones().size());
         for (Clone clone : CUtils.it(process.getOutput()))
             clones.add(clone.resetParentCloneSet());
+
+        clones.sort(Comparator.comparing(Clone::getId));
 
         CloneSet newCloneSet = new CloneSet(clones, cloneSet.getUsedGenes(), cloneSet.getAlignedFeatures(),
                 cloneSet.getAlignmentParameters(), cloneSet.getAssemblerParameters());
