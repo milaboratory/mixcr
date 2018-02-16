@@ -84,7 +84,7 @@ public class ActionSliceClnA implements Action {
             }
 
             CloneSet newCloneSet = new CloneSet(clones, cloneSet.getUsedGenes(),
-                    cloneSet.getAlignedFeatures(), cloneSet.getAssemblingFeatures());
+                    cloneSet.getAlignedFeatures(), cloneSet.getAlignmentParameters(), cloneSet.getAssemblerParameters());
 
             OutputPort<VDJCAlignments> allAlignmentsPortRaw = new FlatteningOutputPort<>(CUtils.asOutputPort(allAlignmentsList));
             AtomicLong idGen = new AtomicLong();
@@ -95,7 +95,7 @@ public class ActionSliceClnA implements Action {
                 return al.setAlignmentsIndex(idGen.getAndIncrement());
             };
 
-            writer.writeClones(newCloneSet, reader.getAlignerParameters(), reader.getAssemblerParameters());
+            writer.writeClones(newCloneSet);
 
             writer.sortAlignments(allAlignmentsPort, newNumberOfAlignments);
 

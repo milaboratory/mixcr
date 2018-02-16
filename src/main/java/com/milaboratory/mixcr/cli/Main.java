@@ -74,6 +74,7 @@ public class Main {
                 VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(libraries);
             initialized = true;
         }
+
         // Setting up main helper
         JCommanderBasedMain main = new JCommanderBasedMain(command,
                 new ActionAlign(),
@@ -94,7 +95,7 @@ public class Main {
                 new ActionClonesDiff(),
                 new ActionFilterAlignments(),
                 new ActionListLibraries(),
-                new ActionExtendAlignments(),
+                new ActionExtend(),
                 new ActionSortAlignments(),
                 new ActionSliceClnA());
 
@@ -112,6 +113,12 @@ public class Main {
                         printVersion(true);
                     }
                 });
+
+        // Deprecation
+        if (args[0].equals("extendAlignments")) {
+            System.out.println("WARNING: `extendAlignments` action is deprecated, please use `extend`");
+            args[0] = "extend";
+        }
 
         // Executing main method
         JCommanderBasedMain.ProcessResult processResult = main.main(args);

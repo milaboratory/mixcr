@@ -21,12 +21,13 @@ import io.repseq.core.Chains;
 import io.repseq.core.ReferencePoint;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author Stanislav Poslavsky
  */
-public class ActionExtendAlignments implements Action {
+public class ActionExtend implements Action {
     private final ExtendActionParameters parameters = new ExtendActionParameters();
 
     @Override
@@ -52,13 +53,22 @@ public class ActionExtendAlignments implements Action {
     }
 
     void processClns(ActionHelper helper) throws IOException {
-        // CloneSet cloneSet = CloneSetIO.read(parameters.getInput());
-        //
-        // OutputPort<Clone> outputPort = CUtils.asOutputPort(cloneSet);
-        // ProcessWrapper<Clone> process = new ProcessWrapper<>(outputPort,
-        //         reader.getParameters().getVAlignerParameters().getParameters().getScoring(),
-        //         reader.getParameters().getJAlignerParameters().getParameters().getScoring(),
-        //         helper);
+        CloneSet cloneSet = CloneSetIO.read(parameters.getInput());
+
+        OutputPort<Clone> outputPort = CUtils.asOutputPort(cloneSet);
+        ProcessWrapper<Clone> process = new ProcessWrapper<>(outputPort,
+                cloneSet.getAlignmentParameters().getVAlignerParameters().getParameters().getScoring(),
+                cloneSet.getAlignmentParameters().getJAlignerParameters().getParameters().getScoring(),
+                helper);
+
+        List<Clone> clones = new ArrayList<>(cloneSet.getClones().size());
+        for (Clone clone : CUtils.it(process.getOutput()))
+            clones.add(clone.resetParentCloneSet());
+
+        CloneSet newCloneSet = new CloneSet(clones, cloneSet.getUsedGenes(), cloneSet.getAlignedFeatures(),
+                cloneSet.getAlignmentParameters(), cloneSet.getAssemblerParameters());
+
+        CloneSetIO.write(newCloneSet, parameters.getOutput());
     }
 
     @SuppressWarnings("unchecked")
@@ -129,7 +139,7 @@ public class ActionExtendAlignments implements Action {
 
     @Override
     public String command() {
-        return "extendAlignments";
+        return "extend";
     }
 
     @Override
@@ -139,7 +149,7 @@ public class ActionExtendAlignments implements Action {
 
     @Parameters(commandDescription = "Extend corresponding entity (clone or alignment) using germline sequence.")
     private static final class ExtendActionParameters extends ActionParametersWithOutput {
-        @Parameter(description = "input.vdjca[.gz]|.clns output.vdjca[.gz].clns")
+        @Parameter(description = "input.vdjca[.gz]|.clns output.vdjca[.gz]|.clns")
         public List<String> parameters;
 
         @Parameter(description = "Apply procedure only to alignments with specific immunological-receptor chains.",
@@ -166,11 +176,11 @@ public class ActionExtendAlignments implements Action {
                 names = {"--j-anchor"})
         public String jAnchorPoint = "CDR3End";
 
-        @Parameter(description = "Minimal score of V alignment to perform left extension.",
+        @Parameter(description = "Minimal V hit score to perform left extension.",
                 names = {"--min-v-score"})
         public int minimalVScore = 100;
 
-        @Parameter(description = "Minimal score of J alignment to perform right extension.",
+        @Parameter(description = "Minimal J hit score alignment to perform right extension.",
                 names = {"--min-j-score"})
         public int minimalJScore = 70;
 

@@ -34,7 +34,6 @@ import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.CountingOutputPort;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PipeDataInputReader;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
@@ -42,7 +41,6 @@ import com.milaboratory.util.CanReportProgressAndStage;
 import com.milaboratory.util.ObjectSerializer;
 import com.milaboratory.util.Sorter;
 import gnu.trove.list.array.TLongArrayList;
-import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
 import org.apache.commons.io.output.CountingOutputStream;
@@ -103,9 +101,7 @@ public final class ClnAWriter implements AutoCloseable, CanReportProgressAndStag
     /**
      * Step 1
      */
-    public synchronized void writeClones(CloneSet cloneSet,
-                                         VDJCAlignerParameters alignerParameters,
-                                         CloneAssemblerParameters assemblerParameters) {
+    public synchronized void writeClones(CloneSet cloneSet) {
         // Checking state
         if (clonesBlockFinished)
             throw new IllegalArgumentException("Clone block was already written.");
@@ -124,13 +120,11 @@ public final class ClnAWriter implements AutoCloseable, CanReportProgressAndStag
         output.writeUTF(MiXCRVersionInfo.get()
                 .getVersionString(MiXCRVersionInfo.OutputType.ToFile));
 
-        // Writing aligner & assembler parameters
-        output.writeObject(alignerParameters);
-        output.writeObject(assemblerParameters);
+        // Writing aligner parameters
+        output.writeObject(cloneSet.alignmentParameters);
 
-        // Saving assembling features
-        GeneFeature[] assemblingFeatures = cloneSet.getAssemblingFeatures();
-        output.writeObject(assemblingFeatures);
+        // Writing assembler parameters
+        output.writeObject(cloneSet.assemblerParameters);
 
         // Writing aligned gene features for each gene type
         IO.writeGT2GFMap(output, cloneSet.alignedFeatures);

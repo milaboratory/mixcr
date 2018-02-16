@@ -81,7 +81,6 @@ public final class ClnAReader implements AutoCloseable {
 
     final VDJCAlignerParameters alignerParameters;
     final CloneAssemblerParameters assemblerParameters;
-    final GeneFeature[] assemblingFeatures;
     final CloneSetIO.GT2GFAdapter alignedFeatures;
     final List<VDJCGene> genes;
     final int numberOfClones;
@@ -144,7 +143,6 @@ public final class ClnAReader implements AutoCloseable {
         this.versionInfo = input.readUTF();
         this.alignerParameters = input.readObject(VDJCAlignerParameters.class);
         this.assemblerParameters = input.readObject(CloneAssemblerParameters.class);
-        this.assemblingFeatures = input.readObject(GeneFeature[].class);
         this.alignedFeatures = new CloneSetIO.GT2GFAdapter(IO.readGF2GTMap(input));
         this.genes = IOUtil.readGeneReferences(input, libraryRegistry);
     }
@@ -164,12 +162,15 @@ public final class ClnAReader implements AutoCloseable {
         return alignerParameters;
     }
 
+    /**
+     * Clone assembler parameters
+     */
     public CloneAssemblerParameters getAssemblerParameters() {
         return assemblerParameters;
     }
 
     public GeneFeature[] getAssemblingFeatures() {
-        return assemblingFeatures;
+        return assemblerParameters.getAssemblingFeatures();
     }
 
     /**
@@ -222,7 +223,7 @@ public final class ClnAReader implements AutoCloseable {
         for (int i = 0; i < count; i++)
             clones.add(input.readObject(Clone.class));
 
-        return new CloneSet(clones, genes, alignedFeatures.map, assemblingFeatures);
+        return new CloneSet(clones, genes, alignedFeatures.map, alignerParameters, assemblerParameters);
     }
 
     /**

@@ -58,8 +58,9 @@ public final class CompatibilityIO {
             }
             double count = input.readLong();
             int id = input.readInt();
-            GeneFeature[] assemblingFeatures = input.readObject(GeneFeature[].class);
-            return new Clone(targets, hits, assemblingFeatures, count, id);
+            // Skipping the field
+            input.readObject(GeneFeature[].class);
+            return new Clone(targets, hits, count, id);
         }
 
         @Override
