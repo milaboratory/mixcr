@@ -7,6 +7,7 @@ import cc.redberry.pipe.util.Indexer;
 import cc.redberry.pipe.util.OrderedOutputPort;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.beust.jcommander.validators.PositiveInteger;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
@@ -113,7 +114,7 @@ public class ActionExtend implements Action {
                     parameters.minimalVScore, parameters.minimalJScore,
                     ReferencePoint.parse(parameters.vAnchorPoint),
                     ReferencePoint.parse(parameters.jAnchorPoint));
-            this.output = new ParallelProcessor<>(input, extender, 2);
+            this.output = new ParallelProcessor<>(input, extender, parameters.threads);
             this.report = new ReportWrapper(command(), extender);
             report.setStartMillis(System.currentTimeMillis());
             report.setInputFiles(parameters.getInput());
@@ -170,6 +171,10 @@ public class ActionExtend implements Action {
         @Parameter(description = "Quality score of extended sequence.",
                 names = {"-q", "--quality"})
         public byte extensionQuality = 30;
+
+        @Parameter(description = "Processing threads", names = {"-t", "--threads"},
+                validateWith = PositiveInteger.class)
+        public int threads = 2;
 
         @Parameter(description = "V extension anchor point.",
                 names = {"--v-anchor"})

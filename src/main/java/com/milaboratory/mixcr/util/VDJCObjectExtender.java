@@ -16,6 +16,7 @@ import com.milaboratory.mixcr.cli.Report;
 import com.milaboratory.mixcr.cli.ReportHelper;
 import io.repseq.core.*;
 
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
@@ -423,7 +424,13 @@ public final class VDJCObjectExtender<T extends VDJCObject> implements Processor
                 if (transformed == null)
                     return null;
 
-                newHits[i] = new VDJCHit(gene, transformed, inputHits[i].getAlignedFeature());
+                float sumScore = (float) Arrays.stream(transformed)
+                        .filter(Objects::nonNull)
+                        .mapToDouble(Alignment::getScore)
+                        .sum();
+
+                newHits[i] = new VDJCHit(gene, transformed, inputHits[i].getAlignedFeature(),
+                        Math.max(sumScore, inputHits[i].getScore()));
             }
             newHitsMap.put(gt, newHits);
         }
