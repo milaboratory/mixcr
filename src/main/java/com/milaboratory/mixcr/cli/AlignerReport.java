@@ -158,6 +158,7 @@ public final class AlignerReport extends AbstractActionReport implements VDJCAli
     @Override
     public void onSuccessfulAlignment(SequenceRead read, VDJCAlignments alignment) {
         successes.incrementAndGet();
+        chainStats.increment(alignment);
     }
 
     @Override
