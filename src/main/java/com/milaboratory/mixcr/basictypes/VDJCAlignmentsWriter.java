@@ -75,6 +75,10 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
         this.numberOfProcessedReads = numberOfProcessedReads;
     }
 
+    public void header(VDJCAlignmentsReader reader) {
+        header(reader.getParameters(), reader.getUsedGenes());
+    }
+
     public void header(VDJCAligner aligner) {
         header(aligner.getParameters(), aligner.getUsedGenes());
     }

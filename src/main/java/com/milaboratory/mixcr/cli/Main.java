@@ -97,7 +97,7 @@ public class Main {
                 new ActionListLibraries(),
                 new ActionExtend(),
                 new ActionSortAlignments(),
-                new ActionSliceClnA());
+                new ActionSlice());
 
         // Adding version info callback
         main.setVersionInfoCallback(
@@ -115,7 +115,7 @@ public class Main {
                 });
 
         // Deprecation
-        if (args[0].equals("extendAlignments")) {
+        if (args.length > 0 && args[0].equals("extendAlignments")) {
             System.out.println("WARNING: `extendAlignments` action is deprecated, please use `extend`");
             args[0] = "extend";
         }

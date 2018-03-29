@@ -34,10 +34,11 @@ import cc.redberry.pipe.util.FlatteningOutputPort;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
-import com.beust.jcommander.converters.IntegerConverter;
+import com.beust.jcommander.converters.LongConverter;
 import com.milaboratory.cli.*;
 import com.milaboratory.mixcr.basictypes.*;
 import gnu.trove.map.hash.TIntIntHashMap;
+import gnu.trove.set.hash.TLongHashSet;
 import io.repseq.core.VDJCLibraryRegistry;
 
 import java.util.ArrayList;
@@ -45,13 +46,49 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class ActionSliceClnA implements Action {
+public class ActionSlice implements Action {
     final Params params = new Params();
 
     @Override
     public void go(ActionHelper helper) throws Exception {
-        Collections.sort(params.cloneIds);
+        Collections.sort(params.ids);
 
+        IOUtil.MiXCRFileType fileType = IOUtil.detectFilType(params.getInputFileName());
+
+        switch (fileType) {
+            case VDJCA:
+                sliceVDJCA(helper);
+                break;
+            case Clns:
+                System.out.println("Operation is not yet supported for Clns files.");
+                System.exit(1);
+                break;
+            case ClnA:
+                sliceClnA(helper);
+                break;
+            default:
+                System.out.println("Not supported file type.");
+                System.exit(1);
+
+        }
+    }
+
+    void sliceVDJCA(ActionHelper helper) throws Exception {
+        TLongHashSet set = new TLongHashSet(params.ids);
+
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(params.getInputFileName());
+             VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(params.getOutputFileName())) {
+            writer.header(reader);
+            for (VDJCAlignments alignments : CUtils.it(reader)) {
+                if (set.removeAll(alignments.getReadIds()))
+                    writer.write(alignments);
+                if (set.isEmpty())
+                    break;
+            }
+        }
+    }
+
+    void sliceClnA(ActionHelper helper) throws Exception {
         try (ClnAReader reader = new ClnAReader(params.getInputFileName(), VDJCLibraryRegistry.getDefault());
              ClnAWriter writer = new ClnAWriter(params.getOutputFileName())) {
 
@@ -67,7 +104,8 @@ public class ActionSliceClnA implements Action {
             List<Clone> clones = new ArrayList<>();
             int i = 0;
             List<OutputPort<VDJCAlignments>> allAlignmentsList = new ArrayList<>();
-            for (Integer cloneId : params.cloneIds) {
+            for (Long cloneId_ : params.ids) {
+                int cloneId = (int) ((long) cloneId_);
                 newNumberOfAlignments += reader.numberOfAlignmentsInClone(cloneId);
                 Clone clone = cloneSet.get(cloneId);
                 idMapping.put(clone.getId(), i);
@@ -105,7 +143,7 @@ public class ActionSliceClnA implements Action {
 
     @Override
     public String command() {
-        return "sliceClnA";
+        return "slice";
     }
 
     @Override
@@ -116,13 +154,12 @@ public class ActionSliceClnA implements Action {
     @Parameters(commandDescription = "Slice ClnA file.")
     @HiddenAction
     public static final class Params extends ActionParametersWithOutput {
-        @Parameter(description = "[input_file1.vdjca[.gz] [input_file2.vdjca[.gz] ....]] output_file.vdjca[.gz]")
+        @Parameter(description = "[input_file1.(vdjca|clns|clna)[.gz] output_file.(vdjca|clns|clna)[.gz]")
         List<String> parameters;
 
-        @Parameter(description = "List of read ids to export",
-                names = {"-i", "--clone-id"},
-                converter = IntegerConverter.class)
-        List<Integer> cloneIds = new ArrayList<>();
+        @Parameter(description = "List of read (for .vdjca) / clone (for .clns/.clna) ids to export.",
+                names = {"-i", "--id"}, converter = LongConverter.class)
+        List<Long> ids = new ArrayList<>();
 
         String getInputFileName() {
             return parameters.get(0);
