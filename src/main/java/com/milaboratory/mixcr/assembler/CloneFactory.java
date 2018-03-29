@@ -245,7 +245,7 @@ public final class CloneFactory {
         else
             hits.put(GeneType.Diversity, new VDJCHit[0]);
 
-        return new Clone(targets, hits, assemblingFeatures, count, id);
+        return new Clone(targets, hits, count, id);
     }
 
     public Clone create(int id, CloneAccumulator accumulator) {

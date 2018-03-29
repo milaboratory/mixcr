@@ -90,7 +90,7 @@ public final class FullSeqAssembler {
             geneScores.put(gt, scores);
         }
         this.alignerParameters = alignerParameters;
-        GeneFeature[] assemblingFeatures = clone.getAssemblingFeatures();
+        GeneFeature[] assemblingFeatures = clone.getParentCloneSet().getAssemblingFeatures();
         if (assemblingFeatures.length != 1)
             throw new IllegalArgumentException();
 
@@ -586,7 +586,7 @@ public final class FullSeqAssembler {
         tmp = hits.get(Joining);
         tmp[0] = substituteAlignments(tmp[0], jTopHitAlignments);
 
-        return new Clone(targets.sequences, hits, clone.getAssemblingFeatures(), count, 0);
+        return new Clone(targets.sequences, hits, count, 0);
     }
 
     //fixme write docs
@@ -893,7 +893,8 @@ public final class FullSeqAssembler {
         // array[readId] = (variantId << 8) | minQuality
         abstract OutputPort<int[]> createPort();
 
-        void destroy() {}
+        void destroy() {
+        }
     }
 
     static final class VariantAggregator {

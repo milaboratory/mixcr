@@ -169,7 +169,6 @@ class IO {
             }
             output.writeDouble(object.count);
             output.writeInt(object.id);
-            output.writeObject(object.assemblingFeatures);
         }
 
         @Override
@@ -183,8 +182,7 @@ class IO {
             }
             double count = input.readDouble();
             int id = input.readInt();
-            GeneFeature[] assemblingFeatures = input.readObject(GeneFeature[].class);
-            return new Clone(targets, hits, assemblingFeatures, count, id);
+            return new Clone(targets, hits, count, id);
         }
 
         @Override

@@ -11,20 +11,20 @@ import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceQuality;
-import com.milaboratory.mixcr.basictypes.SequenceHistory;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.cli.Report;
 import com.milaboratory.mixcr.cli.ReportHelper;
 import io.repseq.core.*;
 
+import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author Stanislav Poslavsky
  */
-public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAlignments>, Report {
+public final class VDJCObjectExtender<T extends VDJCObject> implements Processor<T, T>, Report {
     final Chains chains;
     final byte extensionQuality;
     final AlignmentScoring<NucleotideSequence> vScoring, jScoring;
@@ -42,10 +42,10 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
             vExtensionLength = new AtomicLong(0),
             jExtensionLength = new AtomicLong(0);
 
-    public AlignmentExtender(Chains chains, byte extensionQuality,
-                             AlignmentScoring<NucleotideSequence> vScoring, AlignmentScoring<NucleotideSequence> jScoring,
-                             int minimalVScore, int minimalJScore,
-                             ReferencePoint vLeftExtensionRefPoint, ReferencePoint jRightExtensionRefPoint) {
+    public VDJCObjectExtender(Chains chains, byte extensionQuality,
+                              AlignmentScoring<NucleotideSequence> vScoring, AlignmentScoring<NucleotideSequence> jScoring,
+                              int minimalVScore, int minimalJScore,
+                              ReferencePoint vLeftExtensionRefPoint, ReferencePoint jRightExtensionRefPoint) {
         this.chains = chains;
         this.extensionQuality = extensionQuality;
         this.vScoring = vScoring;
@@ -57,8 +57,8 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
     }
 
     @Override
-    public VDJCAlignments process(VDJCAlignments input) {
-        VDJCAlignments originalInput = input;
+    public T process(T input) {
+        T originalInput = input;
 
         total.incrementAndGet();
 
@@ -183,7 +183,7 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
                     break OUTER;
 
                 // extend
-                VDJCAlignments transformed = transform(input, vExtension);
+                T transformed = (T) transform(input, vExtension);
 
                 if (transformed == null)
                     // Something went wrong
@@ -317,7 +317,7 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
                     break OUTER;
 
                 // extend
-                VDJCAlignments transformed = transform(input, jExtension);
+                T transformed = (T) transform(input, jExtension);
 
                 if (transformed == null)
                     // Something went wrong
@@ -409,9 +409,8 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
     /**
      * @return result or null is something went wrong
      */
-    static VDJCAlignments transform(VDJCAlignments input,
-                                    Extender transformer) {
-
+    static VDJCObject transform(VDJCObject input,
+                                VDJCObjectExtender<?>.Extender transformer) {
         NSequenceWithQuality[] originalTargets = input.getTargets();
         EnumMap<GeneType, VDJCHit[]> newHitsMap = new EnumMap<>(GeneType.class);
         for (GeneType gt : GeneType.VDJC_REFERENCE) {
@@ -425,17 +424,43 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
                 if (transformed == null)
                     return null;
 
-                newHits[i] = new VDJCHit(gene, transformed, inputHits[i].getAlignedFeature());
+                float sumScore = (float) Arrays.stream(transformed)
+                        .filter(Objects::nonNull)
+                        .mapToDouble(Alignment::getScore)
+                        .sum();
+
+                newHits[i] = new VDJCHit(gene, transformed, inputHits[i].getAlignedFeature(),
+                        Math.max(sumScore, inputHits[i].getScore()));
             }
             newHitsMap.put(gt, newHits);
         }
 
+        if (input instanceof VDJCAlignments)
+            return doTransformAlignment((VDJCAlignments) input, transformer, newHitsMap);
+        else if (input instanceof Clone)
+            return doTransformClone((Clone) input, transformer, newHitsMap);
+        else
+            throw new IllegalArgumentException("Object type not supported: " + input);
+    }
+
+    static Clone doTransformClone(Clone clone,
+                                  VDJCObjectExtender<?>.Extender transformer,
+                                  EnumMap<GeneType, VDJCHit[]> newHitsMap) {
+        return new Clone(transformer.transform(clone.getTargets()),
+                newHitsMap, clone.getCount(), clone.getId());
+    }
+
+    static VDJCAlignments doTransformAlignment(VDJCAlignments alignment,
+                                               VDJCObjectExtender<?>.Extender transformer,
+                                               EnumMap<GeneType, VDJCHit[]> newHitsMap) {
         return new VDJCAlignments(
                 newHitsMap,
-                transformer.transform(originalTargets),
-                transformer.transform(input.getHistory()),
-                input.getOriginalReads() == null ? null : input.getOriginalReads().toArray(new SequenceRead[0]))
-                .setAlignmentsIndex(input.getAlignmentsIndex());
+                transformer.transform(alignment.getTargets()),
+                transformer.transform(alignment.getHistory()),
+                alignment.getOriginalReads() == null
+                        ? null
+                        : alignment.getOriginalReads().toArray(new SequenceRead[alignment.getOriginalReads().size()]))
+                .setAlignmentsIndex(alignment.getAlignmentsIndex());
     }
 
     static <T> void shrinkArray0(T[] src, T[] dest, int leftTargetId, int rightTargetId) {
@@ -589,26 +614,44 @@ public final class AlignmentExtender implements Processor<VDJCAlignments, VDJCAl
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (!(o instanceof Extender)) return false;
-
-            Extender extender1 = (Extender) o;
-
-            if (leftTargetId != extender1.leftTargetId) return false;
-            if (rightTargetId != extender1.rightTargetId) return false;
-            if (!extension.equals(extender1.extension)) return false;
-            if (!scoring.equals(extender1.scoring)) return false;
-            return extensionGeneType == extender1.extensionGeneType;
+            if (!(o instanceof VDJCObjectExtender.Extender)) return false;
+            Extender extender = (Extender) o;
+            return leftTargetId == extender.leftTargetId &&
+                    rightTargetId == extender.rightTargetId &&
+                    Objects.equals(extension, extender.extension) &&
+                    Objects.equals(scoring, extender.scoring) &&
+                    extensionGeneType == extender.extensionGeneType;
         }
 
         @Override
         public int hashCode() {
-            int result = leftTargetId;
-            result = 31 * result + rightTargetId;
-            result = 31 * result + extension.hashCode();
-            result = 31 * result + scoring.hashCode();
-            result = 31 * result + extensionGeneType.hashCode();
-            return result;
+            return Objects.hash(leftTargetId, rightTargetId, extension, scoring, extensionGeneType);
         }
+
+
+        // @Override
+        // public boolean equals(Object o) {
+        //     if (this == o) return true;
+        //     if (!(o instanceof Extender)) return false;
+        //
+        //     Extender extender1 = (Extender) o;
+        //
+        //     if (leftTargetId != extender1.leftTargetId) return false;
+        //     if (rightTargetId != extender1.rightTargetId) return false;
+        //     if (!extension.equals(extender1.extension)) return false;
+        //     if (!scoring.equals(extender1.scoring)) return false;
+        //     return extensionGeneType == extender1.extensionGeneType;
+        // }
+        //
+        // @Override
+        // public int hashCode() {
+        //     int result = leftTargetId;
+        //     result = 31 * result + rightTargetId;
+        //     result = 31 * result + extension.hashCode();
+        //     result = 31 * result + scoring.hashCode();
+        //     result = 31 * result + extensionGeneType.hashCode();
+        //     return result;
+        // }
         //
         //@Override
         //public String[] transform(String[] targets) {

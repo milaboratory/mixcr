@@ -99,7 +99,7 @@ public class ActionExportClones extends ActionExport<Clone> {
             }
 
             if (filterStopCodons) {
-                for (GeneFeature assemblingFeature : clone.getAssemblingFeatures()) {
+                for (GeneFeature assemblingFeature : clone.getParentCloneSet().getAssemblingFeatures()) {
                     GeneFeature codingFeature = GeneFeature.getCodingGeneFeature(assemblingFeature);
                     if (codingFeature == null)
                         continue;

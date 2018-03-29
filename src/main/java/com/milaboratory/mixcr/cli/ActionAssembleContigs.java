@@ -12,6 +12,7 @@ import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParametersWithOutput;
 import com.milaboratory.cli.ProcessException;
+import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.assembler.CloneFactory;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters;
@@ -22,7 +23,6 @@ import com.milaboratory.primitivio.PipeDataInputReader;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.util.SmartProgressReporter;
-import io.repseq.core.GeneFeature;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
 
@@ -56,7 +56,7 @@ public class ActionAssembleContigs implements Action {
         int totalClonesCount = 0;
         List<VDJCGene> genes;
         VDJCAlignerParameters alignerParameters;
-        GeneFeature[] assemblingFeatures;
+        CloneAssemblerParameters cloneAssemblerParameters;
         try (ClnAReader reader = new ClnAReader(parameters.getInputFileName(), VDJCLibraryRegistry.getDefault());
              PrimitivO tmpOut = new PrimitivO(new BufferedOutputStream(new FileOutputStream(parameters.getOutputFileName())))) {
 
@@ -64,10 +64,10 @@ public class ActionAssembleContigs implements Action {
                     reader.getAssemblingFeatures(), reader.getGenes(), reader.getAlignerParameters().getFeaturesToAlignMap());
 
             alignerParameters = reader.getAlignerParameters();
+            cloneAssemblerParameters = reader.getAssemblerParameters();
             genes = reader.getGenes();
             IOUtil.registerGeneReferences(tmpOut, genes, alignerParameters);
 
-            assemblingFeatures = reader.getAssemblingFeatures();
             ClnAReader.CloneAlignmentsPort cloneAlignmentsPort = reader.clonesAndAlignments();
             SmartProgressReporter.startProgressReport("Assembling", cloneAlignmentsPort);
 
@@ -108,7 +108,8 @@ public class ActionAssembleContigs implements Action {
         Arrays.sort(clones, Comparator.comparingDouble(c -> -c.getCount()));
         for (int i = 0; i < clones.length; i++)
             clones[i] = clones[i].setId(i);
-        CloneSet cloneSet = new CloneSet(Arrays.asList(clones), genes, alignerParameters.getFeaturesToAlignMap(), assemblingFeatures);
+        CloneSet cloneSet = new CloneSet(Arrays.asList(clones), genes, alignerParameters.getFeaturesToAlignMap(),
+                alignerParameters, cloneAssemblerParameters);
 
         try (CloneSetIO.CloneSetWriter writer = new CloneSetIO.CloneSetWriter(cloneSet, parameters.getOutputFileName())) {
             SmartProgressReporter.startProgressReport(writer);

@@ -33,6 +33,7 @@ import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.blocks.FilteringPort;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.CanReportProgressAndStage;
 
@@ -122,7 +123,7 @@ public class CloneAssemblerRunner implements CanReportProgressAndStage {
         isFinished = true;
     }
 
-    public CloneSet getCloneSet() {
-        return assembler.getCloneSet();
+    public CloneSet getCloneSet(VDJCAlignerParameters alignerParameters) {
+        return assembler.getCloneSet(alignerParameters);
     }
 }

@@ -143,16 +143,24 @@ public class IOUtil {
         Clns, ClnA, VDJCA
     }
 
+    public static MiXCRFileType detectFilType(String file) {
+        return detectFilType(new File(file));
+    }
+
     public static MiXCRFileType detectFilType(File file) {
+        CompressionType ct = CompressionType.detectCompressionType(file);
         try {
-            try (FileInputStream reader = new FileInputStream(file)) {
+            try (InputStream reader = ct.createInputStream(new FileInputStream(file))) {
                 byte[] data = new byte[10];
                 reader.read(data);
                 String magic = new String(data, StandardCharsets.US_ASCII);
                 switch (magic) {
-                    case "MiXCR.VDJC": return MiXCRFileType.VDJCA;
-                    case "MiXCR.CLNS": return MiXCRFileType.Clns;
-                    case "MiXCR.CLNA": return MiXCRFileType.ClnA;
+                    case "MiXCR.VDJC":
+                        return MiXCRFileType.VDJCA;
+                    case "MiXCR.CLNS":
+                        return MiXCRFileType.Clns;
+                    case "MiXCR.CLNA":
+                        return MiXCRFileType.ClnA;
                     default:
                         throw new IllegalArgumentException("Not a MiXCR file");
                 }

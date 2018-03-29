@@ -116,7 +116,7 @@ public class ActionAssemble implements Action {
             assemblerRunner.run();
 
             // Getting results
-            final CloneSet cloneSet = assemblerRunner.getCloneSet();
+            final CloneSet cloneSet = assemblerRunner.getCloneSet(alignerParameters);
 
             // Passing final cloneset to assemble last pieces of statistics for report
             report.onClonesetFinished(cloneSet);
@@ -127,7 +127,8 @@ public class ActionAssemble implements Action {
                     // writer will supply current stage and completion percent to the progress reporter
                     SmartProgressReporter.startProgressReport(writer);
                     // Writing clone block
-                    writer.writeClones(cloneSet, alignerParameters, assemblerParameters);
+
+                    writer.writeClones(cloneSet);
                     // Pre-soring alignments
                     try (AlignmentsMappingMerger merged = new AlignmentsMappingMerger(alignmentsProvider.create(),
                             assembler.getAssembledReadsPort())) {
