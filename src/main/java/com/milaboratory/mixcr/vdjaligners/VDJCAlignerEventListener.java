@@ -58,4 +58,6 @@ public interface VDJCAlignerEventListener {
      * Rather technical event, used for algorithm performance monitoring
      */
     void onTopHitSequenceConflict(SequenceRead read, VDJCAlignments alignments, GeneType geneType);
+
+    void onSegmentChimeraDetected(GeneType geneType, SequenceRead read, VDJCAlignments alignments);
 }

@@ -125,6 +125,8 @@ public final class VDJCHit implements Comparable<VDJCHit>, HasGene {
         float identity = 0;
         int tSize = 0;
         for (Alignment<NucleotideSequence> alignment : alignments) {
+            if (alignment == null)
+                continue;
             AlignmentHelper h = alignment.getAlignmentHelper();
             identity += h.identity() * h.size();
             tSize += h.size();

@@ -32,7 +32,7 @@
 
     <groupId>com.milaboratory</groupId>
     <artifactId>mixcr</artifactId>
-    <version>2.1.9</version>
+    <version>2.1.10</version>
     <packaging>jar</packaging>
     <name>MiXCR</name>
 
@@ -44,7 +44,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <milib.version>1.8.2</milib.version>
+        <milib.version>1.8.3</milib.version>
     </properties>
 
     <dependencies>
@@ -52,6 +52,18 @@
             <groupId>io.repseq</groupId>
             <artifactId>repseqio</artifactId>
             <version>1.2.11</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.milaboratory</groupId>
+                    <artifactId>milib</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.milaboratory</groupId>
+            <artifactId>milib</artifactId>
+            <version>${milib.version}</version>
         </dependency>
 
         <dependency>
