@@ -7,6 +7,11 @@
 Processing RNA-seq data
 =======================
 
+.. note::
+  
+  The procedure described here applies to analysis of sequencing data from non-enriched and/or randomly-shred (c)DNA libraries, like `RNA-Seq <https://en.wikipedia.org/wiki/RNA-Seq>`_. For analysis of targeted RepSeq data, please see :ref:`examples <ref-examples>`  from quick start.
+
+
 Overview
 --------
 

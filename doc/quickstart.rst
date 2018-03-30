@@ -46,6 +46,8 @@ The following sections describes common use cases
 Examples
 --------
 
+.. _ref-examples:
+
 Default workflow
 ^^^^^^^^^^^^^^^^
 

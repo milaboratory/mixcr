@@ -59,10 +59,10 @@ public class VDJCAlignerParametersTest {
                         new KAlignerParameters(5, false, false,
                                 1.5f, 0.75f, 1.0f, -0.1f, -0.3f, 4, 10, 15, 2, -10, 40.0f, 0.87f, 7,
                                 LinearGapAlignmentScoring.getNucleotideBLASTScoring())),
-                VJAlignmentOrder.JThenV,
+                VJAlgnmentOrder.JThenV,
                 false, false,
                 120.0f, 5, 0.7f, false, false, false, PairedEndReadsLayout.Opposite, new MergerParameters(
-                QualityMergingAlgorithm.SumSubtraction, null, 12, null, 0.12, Unweighted), false, 10, true);
+                QualityMergingAlgorithm.SumSubtraction, null, 12, null, 0.12, Unweighted), false, 5, 120, 10, true);
 
         String str = GlobalObjectMappers.PRETTY.writeValueAsString(paramentrs);
         VDJCAlignerParameters deser = GlobalObjectMappers.PRETTY.readValue(str, VDJCAlignerParameters.class);

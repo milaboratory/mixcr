@@ -31,6 +31,7 @@ package com.milaboratory.mixcr.cli;
 import com.milaboratory.cli.JCommanderBasedMain;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.util.TempFileManager;
+import com.milaboratory.util.VersionInfo;
 import io.repseq.core.VDJCLibraryRegistry;
 import io.repseq.seqbase.SequenceResolvers;
 
@@ -46,6 +47,11 @@ public class Main {
         String command = System.getProperty("mixcr.command", "java -jar mixcr.jar");
 
         if (!initialized) {
+            // Checking whether we are running a snapshot version
+            if (VersionInfo.getVersionInfoForArtifact("mixcr").getVersion().contains("SNAPSHOT"))
+                // If so, enable asserts
+                ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(true);
+
             TempFileManager.setPrefix("mixcr_");
 
             Path cachePath = Paths.get(System.getProperty("user.home"), ".mixcr", "cache");
@@ -72,6 +78,7 @@ public class Main {
 
             if (Files.exists(libraries))
                 VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(libraries);
+
             initialized = true;
         }
 
