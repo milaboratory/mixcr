@@ -14,6 +14,7 @@ import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import gnu.trove.impl.Constants;
 import gnu.trove.iterator.TIntIntIterator;
+import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.map.hash.TObjectFloatHashMap;
@@ -308,7 +309,9 @@ public final class FullSeqAssembler {
 
         List<NSequenceWithQuality> sequences = new ArrayList<>();
         List<Range> ranges = new ArrayList<>();
+        List<TIntArrayList> positionsMaps = new ArrayList<>();
         NSequenceWithQualityBuilder sequenceBuilder = new NSequenceWithQualityBuilder();
+        TIntArrayList positionMap = new TIntArrayList();
         int blockStartPosition = -1;
         int assemblingFeatureTargetId = -1;
         int assemblingFeatureOffset = -1;
@@ -316,6 +319,7 @@ public final class FullSeqAssembler {
         for (int i = 0; i < positionedStates.length; ++i) {
             if (isAbsent(positionedStates[i]))
                 continue;
+
             if (blockStartPosition == -1)
                 blockStartPosition = extractPosition(positionedStates[i]);
 
@@ -341,6 +345,8 @@ public final class FullSeqAssembler {
             }
 
             sequenceBuilder.append(seq);
+            for (int pp = 0; pp < seq.size(); pp++)
+                positionMap.add(currentPosition);
 
             if (currentPosition != nextPosition - 1) {
                 sequences.add(sequenceBuilder.createAndDestroy());
@@ -358,6 +364,7 @@ public final class FullSeqAssembler {
                 assemblingFeatureOffset,
                 assemblingFeatureLength,
                 ranges.toArray(new Range[ranges.size()]),
+                positionsMaps.toArray(new TIntArrayList[positionsMaps.size()]),
                 sequences.toArray(new NSequenceWithQuality[sequences.size()]));
     }
 
@@ -374,14 +381,16 @@ public final class FullSeqAssembler {
         final int assemblingFeatureOffset;
         final int assemblingFeatureLength;
         final Range[] ranges;
+        final TIntArrayList[] positionMaps;
         final NSequenceWithQuality[] sequences;
 
         BranchSequences(int assemblingFeatureTargetId, int assemblingFeatureOffset, int assemblingFeatureLength,
-                        Range[] ranges, NSequenceWithQuality[] sequences) {
+                        Range[] ranges, TIntArrayList[] positionMaps, NSequenceWithQuality[] sequences) {
             this.assemblingFeatureTargetId = assemblingFeatureTargetId;
             this.assemblingFeatureOffset = assemblingFeatureOffset;
             this.assemblingFeatureLength = assemblingFeatureLength;
             this.ranges = ranges;
+            this.positionMaps = positionMaps;
             this.sequences = sequences;
         }
     }

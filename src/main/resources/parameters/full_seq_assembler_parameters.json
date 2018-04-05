@@ -7,6 +7,10 @@
     "alignmentEdgeRegionSize": 7,
     "minimalNonEdgePointsFraction": 0.25,
     "subCloningRegion": "CDR3",
+    "trimmingParameters": {
+      "averageQualityThreshold": 20.0,
+      "windowSize": 8
+    },
     "alignedRegionsOnly": false
   }
 }

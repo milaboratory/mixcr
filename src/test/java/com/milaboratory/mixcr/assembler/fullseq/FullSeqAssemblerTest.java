@@ -8,13 +8,13 @@ import com.milaboratory.core.io.sequence.SingleReadImpl;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceQuality;
+import com.milaboratory.core.sequence.quality.QualityTrimmerParameters;
 import com.milaboratory.mixcr.assembler.CloneFactory;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter;
 import com.milaboratory.mixcr.cli.ActionExportClonesPretty;
-import com.milaboratory.mixcr.cli.Main;
 import com.milaboratory.mixcr.util.RunMiXCR;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
 import gnu.trove.set.hash.TIntHashSet;
@@ -37,7 +37,7 @@ public class FullSeqAssemblerTest {
     static final FullSeqAssemblerParameters DEFAULT_PARAMETERS =
             new FullSeqAssemblerParameters(0.1, 80, 120,
                     3, 7, 0.25, GeneFeature.VDJRegion,
-                    false);
+                    new QualityTrimmerParameters(20.0f, 8), false);
 
     static final class MasterSequence {
         final int vPart, cdr3Part, jPart, cPart;
@@ -389,23 +389,31 @@ public class FullSeqAssemblerTest {
 
 
         RunMiXCR.RunMiXCRAnalysis params = new RunMiXCR.RunMiXCRAnalysis(slicedReads);
-//        params.alignerParameters = VDJCParametersPresets.getByName("rna-seq");
+        // params.alignerParameters = VDJCParametersPresets.getByName("rna-seq");
 
         params.alignerParameters.setSaveOriginalReads(true);
 
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
         RunMiXCR.AssembleResult assemble = RunMiXCR.assemble(align);
 
-//        for (VDJCAlignments al : align.alignments) {
-//            for (int i = 0; i < al.numberOfTargets(); i++) {
-//                System.out.println(VDJCAlignmentsFormatter.getTargetAsMultiAlignment(al, i));
-//                System.out.println();
-//            }
-//            System.out.println();
-//            System.out.println(" ================================================ ");
-//            System.out.println();
-//        }
+        for (VDJCAlignments al : align.alignments) {
+            if (al.getFeature(GeneFeature.CDR3) == null)
+                continue;
+            if (!new NucleotideSequence("TACGGGTTTGACTACTGG").equals(al.getFeature(GeneFeature.CDR3).getSequence()))
+                continue;
 
+            for (int i = 0; i < al.numberOfTargets(); i++) {
+                System.out.println(VDJCAlignmentsFormatter.getTargetAsMultiAlignment(al, i));
+                System.out.println();
+            }
+            System.out.println();
+            System.out.println(" ================================================ ");
+            System.out.println();
+        }
+
+        for (Clone clone : assemble.cloneSet) {
+            ActionExportClonesPretty.outputCompact(System.out, clone);
+        }
 
         Assert.assertEquals(1, assemble.cloneSet.size());
 

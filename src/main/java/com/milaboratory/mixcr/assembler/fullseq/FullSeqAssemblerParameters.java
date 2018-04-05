@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.milaboratory.core.sequence.quality.QualityTrimmerParameters;
 import com.milaboratory.util.GlobalObjectMappers;
 import io.repseq.core.GeneFeature;
 
@@ -23,38 +24,42 @@ public class FullSeqAssemblerParameters {
      * Minimal quality fraction (variant may be marked significant if {@code variantQuality > totalSumQuality *
      * minimalQualityShare}
      */
-    double minimalQualityShare = 0.1;
+    double minimalQualityShare;
     /**
      * Minimal variant quality threshold (variant may be marked significant if {@code variantQuality >
      * minimalSumQuality}
      */
-    long minimalSumQuality = 80;
+    long minimalSumQuality;
     /**
      * Variant quality that guaranties that variant will be marked significant (even if other criteria are not
      * satisfied)
      */
-    long decisiveSumQualityThreshold = 120;
+    long decisiveSumQualityThreshold;
     /**
      * Maximal number of not aligned nucleotides at the edge of sequence so that sequence is still considered aligned
      * "to the end"
      */
-    int alignedSequenceEdgeDelta = 3;
+    int alignedSequenceEdgeDelta;
     /**
      * Number of nucleotides at the edges of alignments (with almost fully aligned seq2) that are "not trusted"
      */
-    int alignmentEdgeRegionSize = 7;
+    int alignmentEdgeRegionSize;
     /**
      * Minimal fraction of non edge points in variant that should be reached to consider variant as significant
      */
-    double minimalNonEdgePointsFraction = 0.25;
+    double minimalNonEdgePointsFraction;
     /**
      * Region where variants are allowed
      */
-    GeneFeature subCloningRegion = GeneFeature.VDJRegion;
+    GeneFeature subCloningRegion;
+    /**
+     * Parameters of trimmer, that performs final processing of the output contigs
+     */
+    QualityTrimmerParameters trimmingParameters;
     /**
      * Assemble only parts of sequences covered by alignments
      */
-    boolean alignedRegionsOnly = false;
+    boolean alignedRegionsOnly;
 
     @JsonCreator
     public FullSeqAssemblerParameters(
@@ -65,6 +70,7 @@ public class FullSeqAssemblerParameters {
             @JsonProperty("alignmentEdgeRegionSize") int alignmentEdgeRegionSize,
             @JsonProperty("minimalNonEdgePointsFraction") double minimalNonEdgePointsFraction,
             @JsonProperty("subCloningRegion") GeneFeature subCloningRegion,
+            @JsonProperty("trimmingParameters") QualityTrimmerParameters trimmingParameters,
             @JsonProperty("alignedRegionsOnly") boolean alignedRegionsOnly) {
         this.minimalQualityShare = minimalQualityShare;
         this.minimalSumQuality = minimalSumQuality;
@@ -73,6 +79,7 @@ public class FullSeqAssemblerParameters {
         this.alignmentEdgeRegionSize = alignmentEdgeRegionSize;
         this.minimalNonEdgePointsFraction = minimalNonEdgePointsFraction;
         this.subCloningRegion = subCloningRegion;
+        this.trimmingParameters = trimmingParameters;
         this.alignedRegionsOnly = alignedRegionsOnly;
     }
 
@@ -132,11 +139,19 @@ public class FullSeqAssemblerParameters {
         this.alignedRegionsOnly = alignedRegionsOnly;
     }
 
+    public QualityTrimmerParameters getTrimmingParameters() {
+        return trimmingParameters;
+    }
+
+    public void setTrimmingParameters(QualityTrimmerParameters trimmingParameters) {
+        this.trimmingParameters = trimmingParameters;
+    }
+
     @Override
     public FullSeqAssemblerParameters clone() {
         return new FullSeqAssemblerParameters(minimalQualityShare, minimalSumQuality, decisiveSumQualityThreshold,
                 alignedSequenceEdgeDelta, alignmentEdgeRegionSize, minimalNonEdgePointsFraction, subCloningRegion,
-                alignedRegionsOnly);
+                trimmingParameters, alignedRegionsOnly);
     }
 
     private static Map<String, FullSeqAssemblerParameters> knownParameters;
