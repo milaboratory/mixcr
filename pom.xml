@@ -44,20 +44,14 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <milib.version>1.8.3</milib.version>
+        <milib.version>1.8.4-SNAPSHOT</milib.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>io.repseq</groupId>
             <artifactId>repseqio</artifactId>
-            <version>1.2.11</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.milaboratory</groupId>
-                    <artifactId>milib</artifactId>
-                </exclusion>
-            </exclusions>
+            <version>1.2.12-SNAPSHOT</version>
         </dependency>
 
         <dependency>
