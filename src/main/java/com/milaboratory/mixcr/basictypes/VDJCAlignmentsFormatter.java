@@ -137,7 +137,7 @@ public class VDJCAlignmentsFormatter {
                 ++aaPosition;
             }
             while (aaPosition < aa.size() &&
-                    aa.codeAt(aaPosition) != AminoAcidAlphabet.INCOMPLETE_CODON) {
+                    (aaPosition < aa.size() - 1 || aa.codeAt(aaPosition) != AminoAcidAlphabet.INCOMPLETE_CODON)) {
                 ntPosition = trParam.range.getFrom()
                         + AminoAcidSequence.convertAAPositionToNt(aaPosition, mainSequence.size(),
                         trParam.translationParameters);
@@ -145,7 +145,8 @@ public class VDJCAlignmentsFormatter {
                         AminoAcidSequence.ALPHABET.codeToSymbol(aa.codeAt(aaPosition));
                 ++aaPosition;
             }
-            if (aaPosition < aa.size() && aa.codeAt(aaPosition) == AminoAcidAlphabet.INCOMPLETE_CODON) {
+            if (aaPosition < aa.size() &&
+                    (aaPosition < aa.size() - 1 || aa.codeAt(aaPosition) != AminoAcidAlphabet.INCOMPLETE_CODON)) {
                 ntPosition = trParam.range.getFrom()
                         + AminoAcidSequence.convertAAPositionToNt(aaPosition, mainSequence.size(),
                         trParam.translationParameters);

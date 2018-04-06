@@ -90,9 +90,16 @@ public final class VDJCAlignerWithMerge extends VDJCAligner<PairedRead> {
                         new SequenceHistory[]{
                                 new SequenceHistory.Merge(
                                         SequenceHistory.OverlapType.SequenceOverlap,
-                                        new SequenceHistory.RawSequence(read.getId(), (byte) (isRC ? 1 : 0), false, read.getR1().getData().size()),
-                                        new SequenceHistory.RawSequence(read.getId(), (byte) (isRC ? 0 : 1), merged.isReversed(), read.getR2().getData().size()),
-                                        merged.getOffset(), merged.getErrors())
+                                        new SequenceHistory.RawSequence(read.getId(),
+                                                (byte) (isRC ? 1 : 0), false,
+                                                (isRC ? read.getR2().getData().size() : read.getR1().getData().size())),
+                                        new SequenceHistory.RawSequence(read.getId(),
+                                                (byte) (isRC ? 0 : 1), merged.isReversed(),
+                                                (isRC ? read.getR1().getData().size() : read.getR2().getData().size())),
+                                        isRC
+                                                ? merged.getOffset() + read.getR2().getData().size() - read.getR1().getData().size()
+                                                : merged.getOffset(),
+                                        merged.getErrors())
                         },
                         new SequenceRead[]{read});
             }
