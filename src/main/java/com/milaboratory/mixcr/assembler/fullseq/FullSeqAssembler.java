@@ -309,7 +309,7 @@ public final class FullSeqAssembler {
 
         List<NSequenceWithQuality> sequences = new ArrayList<>();
         List<Range> ranges = new ArrayList<>();
-        List<TIntArrayList> positionsMaps = new ArrayList<>();
+        List<TIntArrayList> positionMaps = new ArrayList<>();
         NSequenceWithQualityBuilder sequenceBuilder = new NSequenceWithQualityBuilder();
         TIntArrayList positionMap = new TIntArrayList();
         int blockStartPosition = -1;
@@ -350,8 +350,10 @@ public final class FullSeqAssembler {
 
             if (currentPosition != nextPosition - 1) {
                 sequences.add(sequenceBuilder.createAndDestroy());
+                positionMaps.add(positionMap);
                 ranges.add(new Range(blockStartPosition, currentPosition + 1));
                 sequenceBuilder = new NSequenceWithQualityBuilder();
+                positionMap = new TIntArrayList();
                 blockStartPosition = nextPosition;
             }
         }
@@ -364,7 +366,7 @@ public final class FullSeqAssembler {
                 assemblingFeatureOffset,
                 assemblingFeatureLength,
                 ranges.toArray(new Range[ranges.size()]),
-                positionsMaps.toArray(new TIntArrayList[positionsMaps.size()]),
+                positionMaps.toArray(new TIntArrayList[positionMaps.size()]),
                 sequences.toArray(new NSequenceWithQuality[sequences.size()]));
     }
 
