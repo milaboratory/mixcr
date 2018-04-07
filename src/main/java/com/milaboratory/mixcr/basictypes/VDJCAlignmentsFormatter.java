@@ -131,22 +131,39 @@ public class VDJCAlignmentsFormatter {
             int ntPosition = trParam.range.getFrom()
                     + AminoAcidSequence.convertAAPositionToNt(aaPosition, mainSequence.size(),
                     trParam.translationParameters);
+
             if (aa.codeAt(aaPosition) == AminoAcidAlphabet.INCOMPLETE_CODON) {
                 line[helper.subjectToAlignmentPosition(ntPosition)] =
                         AminoAcidSequence.ALPHABET.codeToSymbol(aa.codeAt(aaPosition)); // '_'
                 ++aaPosition;
             }
+
             while (aaPosition < aa.size() &&
                     (aaPosition < aa.size() - 1 || aa.codeAt(aaPosition) != AminoAcidAlphabet.INCOMPLETE_CODON)) {
+
                 ntPosition = trParam.range.getFrom()
-                        + AminoAcidSequence.convertAAPositionToNt(aaPosition, mainSequence.size(),
+                        + AminoAcidSequence.convertAAPositionToNt(aaPosition, bigSeq.size(),
                         trParam.translationParameters);
-                line[helper.subjectToAlignmentPosition(ntPosition + 1)] =
-                        AminoAcidSequence.ALPHABET.codeToSymbol(aa.codeAt(aaPosition));
+
+                if (leftover != null && trParam.leftIncompleteCodonRange() != null)
+                    ntPosition -= trParam.leftIncompleteCodonRange().length();
+                boolean isLeftover = false;
+                if (leftover != null) {
+                    if (trParam.leftIncompleteCodonRange() != null)
+                        isLeftover = (aaPosition == 0);
+                    else
+                        isLeftover = (aaPosition == aa.size() - 1);
+                }
+
+                if (aa.codeAt(aaPosition) != AminoAcidAlphabet.INCOMPLETE_CODON)
+                    ++ntPosition;
+                char c = AminoAcidSequence.ALPHABET.codeToSymbol(aa.codeAt(aaPosition));
+                if (isLeftover)
+                    c = Character.toLowerCase(c);
+                line[helper.subjectToAlignmentPosition(ntPosition)] = c;
                 ++aaPosition;
             }
-            if (aaPosition < aa.size() &&
-                    (aaPosition < aa.size() - 1 || aa.codeAt(aaPosition) != AminoAcidAlphabet.INCOMPLETE_CODON)) {
+            if (aaPosition < aa.size() && (aaPosition < aa.size() - 1 || aa.codeAt(aaPosition) == AminoAcidAlphabet.INCOMPLETE_CODON)) {
                 ntPosition = trParam.range.getFrom()
                         + AminoAcidSequence.convertAAPositionToNt(aaPosition, mainSequence.size(),
                         trParam.translationParameters);
