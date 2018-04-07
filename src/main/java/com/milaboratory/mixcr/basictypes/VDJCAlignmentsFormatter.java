@@ -145,7 +145,7 @@ public class VDJCAlignmentsFormatter {
                         + AminoAcidSequence.convertAAPositionToNt(aaPosition, bigSeq.size(),
                         trParam.translationParameters);
 
-                if (trParam.leftIncompleteCodonRange() != null)
+                if (leftover != null && trParam.leftIncompleteCodonRange() != null)
                     ntPosition -= trParam.leftIncompleteCodonRange().length();
                 boolean isLeftover = false;
                 if (leftover != null) {
