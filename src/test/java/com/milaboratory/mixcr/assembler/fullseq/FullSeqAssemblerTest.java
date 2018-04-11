@@ -37,7 +37,7 @@ public class FullSeqAssemblerTest {
     static final FullSeqAssemblerParameters DEFAULT_PARAMETERS =
             new FullSeqAssemblerParameters(0.1, 80, 120,
                     3, 7, 0.25, GeneFeature.VDJRegion,
-                    new QualityTrimmerParameters(20.0f, 8), false);
+                    new QualityTrimmerParameters(20.0f, 8),20,  false);
 
     static final class MasterSequence {
         final int vPart, cdr3Part, jPart, cPart;

@@ -11,6 +11,7 @@
       "averageQualityThreshold": 20.0,
       "windowSize": 8
     },
+    "minimalContigLength": 20,
     "alignedRegionsOnly": false
   }
 }

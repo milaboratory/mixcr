@@ -57,6 +57,10 @@ public class FullSeqAssemblerParameters {
      */
     QualityTrimmerParameters trimmingParameters;
     /**
+     * Minimal contiguous sequence length
+     */
+    int minimalContigLength;
+    /**
      * Assemble only parts of sequences covered by alignments
      */
     boolean alignedRegionsOnly;
@@ -71,6 +75,7 @@ public class FullSeqAssemblerParameters {
             @JsonProperty("minimalNonEdgePointsFraction") double minimalNonEdgePointsFraction,
             @JsonProperty("subCloningRegion") GeneFeature subCloningRegion,
             @JsonProperty("trimmingParameters") QualityTrimmerParameters trimmingParameters,
+            @JsonProperty("minimalContigLength") int minimalContigLength,
             @JsonProperty("alignedRegionsOnly") boolean alignedRegionsOnly) {
         this.minimalQualityShare = minimalQualityShare;
         this.minimalSumQuality = minimalSumQuality;
@@ -80,6 +85,7 @@ public class FullSeqAssemblerParameters {
         this.minimalNonEdgePointsFraction = minimalNonEdgePointsFraction;
         this.subCloningRegion = subCloningRegion;
         this.trimmingParameters = trimmingParameters;
+        this.minimalContigLength = minimalContigLength;
         this.alignedRegionsOnly = alignedRegionsOnly;
     }
 
@@ -147,11 +153,19 @@ public class FullSeqAssemblerParameters {
         this.trimmingParameters = trimmingParameters;
     }
 
+    public int getMinimalContigLength() {
+        return minimalContigLength;
+    }
+
+    public void setMinimalContigLength(int minimalContigLength) {
+        this.minimalContigLength = minimalContigLength;
+    }
+
     @Override
     public FullSeqAssemblerParameters clone() {
         return new FullSeqAssemblerParameters(minimalQualityShare, minimalSumQuality, decisiveSumQualityThreshold,
                 alignedSequenceEdgeDelta, alignmentEdgeRegionSize, minimalNonEdgePointsFraction, subCloningRegion,
-                trimmingParameters, alignedRegionsOnly);
+                trimmingParameters, minimalContigLength, alignedRegionsOnly);
     }
 
     private static Map<String, FullSeqAssemblerParameters> knownParameters;
