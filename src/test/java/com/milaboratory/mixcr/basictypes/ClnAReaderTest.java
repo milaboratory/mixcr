@@ -3,6 +3,7 @@ package com.milaboratory.mixcr.basictypes;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import com.milaboratory.mixcr.assembler.AlignmentsMappingMerger;
+import com.milaboratory.mixcr.assembler.CloneAssemblerParametersPresets;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.util.RunMiXCR;
@@ -12,6 +13,7 @@ import io.repseq.core.VDJCLibraryRegistry;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 
@@ -36,12 +38,49 @@ public class ClnAReaderTest {
 
         writer.close();
 
-        ClnAReader reader = new ClnAReader(file.toPath(), VDJCLibraryRegistry.createDefaultRegistry(), 17);
+        ClnAReader reader = new ClnAReader(file.toPath(), VDJCLibraryRegistry.getDefault(), 17);
 
         assertEquals(MiXCRVersionInfo.get().getVersionString(MiXCRVersionInfo.OutputType.ToFile), reader.getVersionInfo());
 
         assertEquals(align.alignments.size(), reader.numberOfAlignments());
         assertEquals(assemble.cloneSet.size(), reader.numberOfClones());
+
+        for (ClnAReader.CloneAlignments c : CUtils.it(reader.clonesAndAlignments())) {
+            assertEquals("" + c.cloneId, c.clone.count, count(c.alignments()), 0.01);
+            assertEquals(c.cloneId, c.clone.id);
+            CUtils.it(c.alignments()).forEach(a -> {
+                assertEquals(c.cloneId, a.getCloneIndex());
+                if (a.getMappingType() == ReadToCloneMapping.MappingType.Core)
+                    assertEquals(c.clone.getFeature(GeneFeature.CDR3), a.getFeature(GeneFeature.CDR3));
+            });
+        }
+    }
+
+    @Test
+    public void test2Empty() throws Exception {
+        RunMiXCR.RunMiXCRAnalysis params = new RunMiXCR.RunMiXCRAnalysis(
+                RunMiXCR.class.getResource("/sequences/test_R1.fastq").getFile(),
+                RunMiXCR.class.getResource("/sequences/test_R2.fastq").getFile());
+
+        RunMiXCR.AlignResult align = RunMiXCR.align(params);
+
+        File file = TempFileManager.getTempFile();
+        ClnAWriter writer = new ClnAWriter(file);
+        writer.writeClones(new CloneSet(Collections.EMPTY_LIST, align.usedGenes,
+                align.parameters.alignerParameters.getFeaturesToAlignMap(),
+                align.parameters.alignerParameters,
+                CloneAssemblerParametersPresets.getByName("default")));
+        writer.sortAlignments(CUtils.asOutputPort(align.alignments), align.alignments.size());
+        writer.writeAlignmentsAndIndex();
+
+        writer.close();
+
+        ClnAReader reader = new ClnAReader(file.toPath(), VDJCLibraryRegistry.getDefault(), 17);
+
+        assertEquals(MiXCRVersionInfo.get().getVersionString(MiXCRVersionInfo.OutputType.ToFile), reader.getVersionInfo());
+
+        assertEquals(align.alignments.size(), reader.numberOfAlignments());
+        assertEquals(0, reader.numberOfClones());
 
         for (ClnAReader.CloneAlignments c : CUtils.it(reader.clonesAndAlignments())) {
             assertEquals("" + c.cloneId, c.clone.count, count(c.alignments()), 0.01);

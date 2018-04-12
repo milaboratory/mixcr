@@ -91,6 +91,9 @@ public final class ClnAReader implements AutoCloseable {
     final String versionInfo;
 
     public ClnAReader(Path path, VDJCLibraryRegistry libraryRegistry, int chunkSize) throws IOException {
+        if (chunkSize == 0)
+            throw new IllegalArgumentException();
+
         this.chunkSize = chunkSize;
         this.channel = FileChannel.open(path, StandardOpenOption.READ);
         this.libraryRegistry = libraryRegistry;
@@ -377,7 +380,8 @@ public final class ClnAReader implements AutoCloseable {
             this.buffer.limit(0);
 
             // Filling first chunk of data
-            fillBuffer();
+            if (from < to)
+                fillBuffer();
         }
 
         void fillBuffer() throws IOException {
