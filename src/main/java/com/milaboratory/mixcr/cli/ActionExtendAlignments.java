@@ -18,13 +18,22 @@ import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.Chains;
 import io.repseq.core.ReferencePoint;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author Stanislav Poslavsky
  */
 public class ActionExtendAlignments implements Action {
-    private final ExtendCD3Parameters parameters = new ExtendCD3Parameters();
+    private final ExtendCD3Parameters parameters;
+
+    public ActionExtendAlignments(ExtendCD3Parameters parameters) {
+        this.parameters = parameters;
+    }
+
+    public ActionExtendAlignments() {
+        this(new ExtendCD3Parameters());
+    }
 
     @Override
     public void go(ActionHelper helper) throws Exception {
@@ -82,9 +91,9 @@ public class ActionExtendAlignments implements Action {
     }
 
     @Parameters(commandDescription = "Extend alignment using germline sequence.")
-    private static final class ExtendCD3Parameters extends ActionParametersWithOutput {
+    public static class ExtendCD3Parameters extends ActionParametersWithOutput {
         @Parameter(description = "input.vdjca[.gz] output.vdjca[.gz]")
-        public List<String> parameters;
+        public List<String> parameters = new ArrayList<>();
 
         @Parameter(description = "Apply procedure only to alignments with specific immunological-receptor chains.",
                 names = {"-c", "--chains"})

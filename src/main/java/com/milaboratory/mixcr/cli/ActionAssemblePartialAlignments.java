@@ -13,17 +13,24 @@ import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssembler;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParameters;
 import com.milaboratory.util.SmartProgressReporter;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
 public final class ActionAssemblePartialAlignments implements Action {
-    private final AssemblePartialAlignmentsParameters parameters = new AssemblePartialAlignmentsParameters();
+    private final AssemblePartialAlignmentsParameters parameters;
+
+    public ActionAssemblePartialAlignments(AssemblePartialAlignmentsParameters parameters) {
+        this.parameters = parameters;
+    }
+
+    public ActionAssemblePartialAlignments() {
+        this(new AssemblePartialAlignmentsParameters());
+    }
+
+    public PartialAlignmentsAssembler report;
 
     @Override
     public void go(ActionHelper helper) throws Exception {
@@ -47,6 +54,7 @@ public final class ActionAssemblePartialAlignments implements Action {
         try (PartialAlignmentsAssembler assembler = new PartialAlignmentsAssembler(assemblerParameters,
                 parameters.getOutputFileName(), !parameters.doDropPartial(),
                 parameters.getOverlappedOnly())) {
+            this.report = assembler;
             ReportWrapper report = new ReportWrapper(command(), assembler);
             report.setStartMillis(beginTimestamp);
             report.setInputFiles(parameters.getInputFileName());
@@ -87,9 +95,9 @@ public final class ActionAssemblePartialAlignments implements Action {
     }
 
     @Parameters(commandDescription = "Assemble clones")
-    private static class AssemblePartialAlignmentsParameters extends ActionParametersWithOutput {
+    public static class AssemblePartialAlignmentsParameters extends ActionParametersWithOutput {
         @Parameter(description = "input_file output_file")
-        public List<String> parameters;
+        public List<String> parameters = new ArrayList<>();
 
         @DynamicParameter(names = "-O", description = "Overrides default parameter values.")
         public Map<String, String> overrides = new HashMap<>();

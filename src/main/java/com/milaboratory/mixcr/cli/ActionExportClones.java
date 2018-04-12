@@ -82,7 +82,7 @@ public class ActionExportClones extends ActionExport<Clone> {
         return "exportClones";
     }
 
-    private static final class CFilter implements Filter<Clone> {
+    public static final class CFilter implements Filter<Clone> {
         final boolean filterOutOfFrames, filterStopCodons;
 
         public CFilter(boolean filterOutOfFrames, boolean filterStopCodons) {
