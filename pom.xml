@@ -47,6 +47,13 @@
         <milib.version>1.8.4-SNAPSHOT</milib.version>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>io.repseq</groupId>
@@ -54,11 +61,25 @@
             <version>1.2.12-SNAPSHOT</version>
         </dependency>
 
+        <!--<dependency>
+            <groupId>com.github.milaboratory</groupId>
+            <artifactId>milib</artifactId>
+            <version>c69d93e</version>
+        </dependency>
+
         <dependency>
+            <groupId>com.github.milaboratory</groupId>
+            <artifactId>milib</artifactId>
+            <version>c69d93e</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>-->
+
+        <!--<dependency>
             <groupId>com.milaboratory</groupId>
             <artifactId>milib</artifactId>
             <version>${milib.version}</version>
-        </dependency>
+        </dependency> -->
 
         <dependency>
             <groupId>com.milaboratory</groupId>

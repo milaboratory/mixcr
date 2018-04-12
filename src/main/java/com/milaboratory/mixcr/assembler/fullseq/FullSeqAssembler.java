@@ -6,6 +6,7 @@ import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.*;
 import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.sequence.*;
+import com.milaboratory.core.sequence.quality.QualityTrimmer;
 import com.milaboratory.mixcr.assembler.CloneFactory;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
@@ -14,6 +15,7 @@ import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import gnu.trove.impl.Constants;
 import gnu.trove.iterator.TIntIntIterator;
+import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.map.hash.TObjectFloatHashMap;
@@ -212,7 +214,7 @@ public final class FullSeqAssembler {
         clusterizeBranches(data.points, branches);
 
         Clone[] result = branches.stream()
-                .map(branch -> buildClone(branch.count, assembleBranchSequences(data.points, branch)))
+                .map(branch -> buildClone(branch.count, clean(assembleBranchSequences(data.points, branch))))
                 .toArray(Clone[]::new);
 
         assert result.length >= 1;
@@ -300,15 +302,46 @@ public final class FullSeqAssembler {
         }
     }
 
+    /**
+     * Performs final sequence cleanup. Removes very short sub-targets, performes quality trimming.
+     */
+    BranchSequences clean(BranchSequences seq) {
+        for (int i = seq.ranges.length - 1; i >= 0; --i) {
+            if (parameters.trimmingParameters != null)
+                if (i == seq.assemblingFeatureTargetId) {
+                    Range trimRange = QualityTrimmer.extendRange(seq.sequences[i].getQuality(), parameters.trimmingParameters,
+                            new Range(seq.assemblingFeatureOffset, seq.assemblingFeatureOffset + seq.assemblingFeatureLength));
+                    seq = seq.cut(i, trimRange);
+                } else {
+                    Range trimRange = QualityTrimmer.trim(seq.sequences[i].getQuality(), parameters.trimmingParameters);
+                    seq = seq.cut(i, trimRange);
+                }
+            if (seq.sequences[i].size() < parameters.minimalContigLength && i != seq.assemblingFeatureTargetId)
+                seq = seq.without(i);
+        }
+        return seq;
+    }
+
+    /**
+     * Assemble branch sequence (intermediate object with the sequence and meta information on the positions of the
+     * assembled targets in global coordinates)
+     *
+     * @param points positions
+     * @param branch variant branch
+     */
     BranchSequences assembleBranchSequences(int[] points, VariantBranch branch) {
+        // Co-sorting branch data with position (restoring original nucleotides order)
         long[] positionedStates = new long[points.length];
         for (int i = 0; i < points.length; i++)
             positionedStates[i] = ((long) points[i]) << 32 | branch.pointStates[i];
         Arrays.sort(positionedStates);
 
+        // Building sequences
         List<NSequenceWithQuality> sequences = new ArrayList<>();
         List<Range> ranges = new ArrayList<>();
+        List<TIntArrayList> positionMaps = new ArrayList<>();
         NSequenceWithQualityBuilder sequenceBuilder = new NSequenceWithQualityBuilder();
+        TIntArrayList positionMap = new TIntArrayList();
         int blockStartPosition = -1;
         int assemblingFeatureTargetId = -1;
         int assemblingFeatureOffset = -1;
@@ -316,6 +349,7 @@ public final class FullSeqAssembler {
         for (int i = 0; i < positionedStates.length; ++i) {
             if (isAbsent(positionedStates[i]))
                 continue;
+
             if (blockStartPosition == -1)
                 blockStartPosition = extractPosition(positionedStates[i]);
 
@@ -341,11 +375,18 @@ public final class FullSeqAssembler {
             }
 
             sequenceBuilder.append(seq);
+            for (int pp = 0; pp < seq.size(); pp++)
+                positionMap.add(currentPosition);
 
+            // Condition met when:
+            //   - contiguous sequence region break (not assembled gap)
+            //   - last position (nextPosition == Integer.MAX_VALUE)
             if (currentPosition != nextPosition - 1) {
                 sequences.add(sequenceBuilder.createAndDestroy());
+                positionMaps.add(positionMap);
                 ranges.add(new Range(blockStartPosition, currentPosition + 1));
                 sequenceBuilder = new NSequenceWithQualityBuilder();
+                positionMap = new TIntArrayList();
                 blockStartPosition = nextPosition;
             }
         }
@@ -358,6 +399,7 @@ public final class FullSeqAssembler {
                 assemblingFeatureOffset,
                 assemblingFeatureLength,
                 ranges.toArray(new Range[ranges.size()]),
+                positionMaps.toArray(new TIntArrayList[positionMaps.size()]),
                 sequences.toArray(new NSequenceWithQuality[sequences.size()]));
     }
 
@@ -370,19 +412,113 @@ public final class FullSeqAssembler {
     }
 
     private final class BranchSequences {
+        /**
+         * Id of the target containing assemblingFeature
+         */
         final int assemblingFeatureTargetId;
+        /**
+         * Offset of the assembling feature inside assemblingFeatureTargetId
+         */
         final int assemblingFeatureOffset;
+        /**
+         * Length of an assembling feature inside assemblingFeatureTargetId, may be different from the original
+         * assemblingFeatureLength as a result of assembly
+         */
         final int assemblingFeatureLength;
+        /**
+         * Ranges of assembled contigs in global coordinates
+         */
         final Range[] ranges;
+        /**
+         * Position maps for the assembled contigs (from contig position -> to global position).
+         * Used in trimming, to correctly adjust ranges.
+         */
+        final TIntArrayList[] positionMaps;
+        /**
+         * Contigs
+         */
         final NSequenceWithQuality[] sequences;
 
         BranchSequences(int assemblingFeatureTargetId, int assemblingFeatureOffset, int assemblingFeatureLength,
-                        Range[] ranges, NSequenceWithQuality[] sequences) {
+                        Range[] ranges, TIntArrayList[] positionMaps, NSequenceWithQuality[] sequences) {
             this.assemblingFeatureTargetId = assemblingFeatureTargetId;
             this.assemblingFeatureOffset = assemblingFeatureOffset;
             this.assemblingFeatureLength = assemblingFeatureLength;
             this.ranges = ranges;
+            this.positionMaps = positionMaps;
             this.sequences = sequences;
+            assert check();
+        }
+
+        boolean check() {
+            if (sequences[assemblingFeatureTargetId].size() < assemblingFeatureOffset + assemblingFeatureLength)
+                throw new IllegalArgumentException();
+            if (ranges.length != positionMaps.length && ranges.length != sequences.length)
+                throw new IllegalArgumentException();
+            for (int i = 0; i < ranges.length; i++) {
+                if (positionMaps[i].get(0) != ranges[i].getFrom() || positionMaps[i].get(positionMaps[i].size() - 1) != ranges[i].getTo() - 1)
+                    throw new IllegalArgumentException();
+                if (positionMaps[i].size() != sequences[i].size())
+                    throw new IllegalArgumentException();
+            }
+            return true;
+        }
+
+        /**
+         * Returns BranchSequences without i-th contig.
+         */
+        BranchSequences without(int i) {
+            if (i == assemblingFeatureTargetId)
+                throw new IllegalArgumentException();
+            int newLength = ranges.length - 1;
+            Range[] newRanges = new Range[newLength];
+            System.arraycopy(ranges, 0, newRanges, 0, i);
+            System.arraycopy(ranges, i + 1, newRanges, i, newLength - i);
+            TIntArrayList[] newPositionMaps = new TIntArrayList[newLength];
+            System.arraycopy(positionMaps, 0, newPositionMaps, 0, i);
+            System.arraycopy(positionMaps, i + 1, newPositionMaps, i, newLength - i);
+            NSequenceWithQuality[] newSequences = new NSequenceWithQuality[newLength];
+            System.arraycopy(sequences, 0, newSequences, 0, i);
+            System.arraycopy(sequences, i + 1, newSequences, i, newLength - i);
+            return new BranchSequences(
+                    i < assemblingFeatureTargetId ? assemblingFeatureTargetId - 1 : assemblingFeatureTargetId,
+                    assemblingFeatureOffset,
+                    assemblingFeatureLength,
+                    newRanges,
+                    newPositionMaps,
+                    newSequences);
+        }
+
+        /**
+         * Returns new BranchSequences with i-th target cut according to the rangeToCut.
+         *
+         * @param i          target id
+         * @param rangeToCut range in local taget coordinates (not global)
+         */
+        BranchSequences cut(int i, Range rangeToCut) {
+            if (rangeToCut.getLower() == 0 && rangeToCut.length() == sequences[i].size())
+                return this;
+
+            Range[] newRanges = ranges.clone();
+            TIntArrayList[] newPositionMaps = positionMaps.clone();
+            NSequenceWithQuality[] newSequences = sequences.clone();
+            if (i == assemblingFeatureTargetId) {
+                if (!rangeToCut.contains(new Range(assemblingFeatureOffset, assemblingFeatureOffset + assemblingFeatureLength)))
+                    throw new IllegalArgumentException();
+                newRanges[i] = new Range(newPositionMaps[i].get(rangeToCut.getLower()), newPositionMaps[i].get(rangeToCut.getUpper() - 1) + 1);
+                newPositionMaps[i] = (TIntArrayList) newPositionMaps[i].subList(rangeToCut.getLower(), rangeToCut.getUpper());
+                newSequences[i] = newSequences[i].getRange(rangeToCut);
+                return new BranchSequences(assemblingFeatureTargetId,
+                        assemblingFeatureOffset - rangeToCut.getLower(), assemblingFeatureLength,
+                        newRanges, newPositionMaps, newSequences);
+            } else {
+                newRanges[i] = new Range(newPositionMaps[i].get(rangeToCut.getLower()), newPositionMaps[i].get(rangeToCut.getUpper() - 1) + 1);
+                newPositionMaps[i] = (TIntArrayList) newPositionMaps[i].subList(rangeToCut.getLower(), rangeToCut.getUpper());
+                newSequences[i] = newSequences[i].getRange(rangeToCut);
+                return new BranchSequences(assemblingFeatureTargetId, assemblingFeatureOffset, assemblingFeatureLength,
+                        newRanges, newPositionMaps, newSequences);
+            }
+
         }
     }
 
@@ -672,6 +808,9 @@ public final class FullSeqAssembler {
 
     /* ================================= Computing variants for single point ====================================== */
 
+    /**
+     * Call variants for a single position
+     */
     private List<Variant> callVariantsForPoint(int[] pointVariantInfos, BitSet targetReads) {
         // Pre-calculating number of present variants
         int count = 0;
@@ -802,10 +941,18 @@ public final class FullSeqAssembler {
         return seqIndex;
     }
 
+    /**
+     * Aggregates information about position states in all the provided alignments, and returns the object
+     * that allows to iterate from one position to another (sorted by coverage, from most covered to less covered)
+     * and see states across all the alignments for each of the positions.
+     *
+     * @param alignments supplier of alignments iterators. Will be invoked twice.
+     */
     public RawVariantsData calculateRawData(Supplier<OutputPort<VDJCAlignments>> alignments) {
         if (!sequenceToVariantId.isEmpty())
             throw new IllegalStateException();
 
+        // Setting common sequences states with well-defined ids upfront
         for (byte letter = 0; letter < NucleotideSequence.ALPHABET.basicSize(); letter++) {
             NucleotideSequence seq = new NucleotideSequence(new byte[]{letter});
             sequenceToVariantId.put(seq, letter);
@@ -817,6 +964,7 @@ public final class FullSeqAssembler {
         TIntIntHashMap coverage = new TIntIntHashMap();
         TIntObjectHashMap<TIntObjectHashMap<VariantAggregator>> variants = new TIntObjectHashMap<>();
 
+        // Collecting coverage and VariantAggregators
         int nAlignments = 0;
         for (VDJCAlignments al : CUtils.it(alignments.get())) {
             ++nAlignments;
@@ -840,6 +988,9 @@ public final class FullSeqAssembler {
 
         assert nAlignments > 0;
 
+        // Pre-allocating arrays
+
+        // Co-sorting positions according to coverage
         long[] forSort = new long[coverage.size()];
         TIntIntIterator iterator = coverage.iterator();
         int i = 0;
@@ -856,10 +1007,12 @@ public final class FullSeqAssembler {
 
         int[] coverageArray = Arrays.stream(forSort).mapToInt(l -> (int) ((-l) >> 32)).toArray();
 
+        // Allocating packed data
         int[][] packedData = new int[pointsArray.length][nAlignments];
         for (int[] aPackedData : packedData)
             Arrays.fill(aPackedData, -1);
 
+        // Main data collection loop
         i = 0;
         for (VDJCAlignments al : CUtils.it(alignments.get())) {
             for (PointSequence point : toPointSequences(al)) {
@@ -871,6 +1024,7 @@ public final class FullSeqAssembler {
             i++;
         }
 
+        // Returning prepared data
         return new RawVariantsData(nAlignments, pointsArray, coverageArray) {
             @Override
             OutputPort<int[]> createPort() {
@@ -879,7 +1033,14 @@ public final class FullSeqAssembler {
         };
     }
 
+    /**
+     * Represents aggregated information about nucleotide states for all positions in all reads aggregated with
+     * {@link #calculateRawData(Supplier)}.
+     */
     public static abstract class RawVariantsData {
+        /**
+         * Total number of reads
+         */
         final int nReads;
         final int[] points;
         final int[] coverage;
@@ -890,14 +1051,22 @@ public final class FullSeqAssembler {
             this.coverage = coverage;
         }
 
-        // array[readId] = (variantId << 8) | minQuality
+        /**
+         * Returns output port, that iterates over positions in global coordinates, and returns variant-array for each
+         * of the positions ( array[readId] = (variantId << 8) | minQuality ). Arrays are returned in the sequences
+         * determined by {@link #points}, e.g. firs array will correspond to point[0] position, the second to
+         * point[1] position etc. Positions are sorted according to their coverage.
+         */
         abstract OutputPort<int[]> createPort();
 
+        /**
+         * To be used with file-based storage media
+         */
         void destroy() {
         }
     }
 
-    static final class VariantAggregator {
+    private static final class VariantAggregator {
         long sumQuality = 0;
         int count = 0;
     }
