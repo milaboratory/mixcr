@@ -66,7 +66,7 @@ public final class FullSeqAssembler {
     /** splitting region in global coordinates */
     final Range splitRegion;
     /** parameters */
-    FullSeqAssemblerParameters parameters;
+    final FullSeqAssemblerParameters parameters;
     /** aligner parameters */
     final VDJCAlignerParameters alignerParameters;
     /** nucleotide sequence -> its integer index */
@@ -80,6 +80,10 @@ public final class FullSeqAssembler {
         if (alignerParameters.getVAlignerParameters().getScoring() instanceof AffineGapAlignmentScoring
                 || alignerParameters.getJAlignerParameters().getScoring() instanceof AffineGapAlignmentScoring)
             throw new IllegalArgumentException("Do not support Affine Gap Alignment Scoring.");
+
+        // Checking parameters
+        if (parameters.outputMinimalSumQuality > parameters.branchingMinimalSumQuality)
+            throw new IllegalArgumentException("Wrong parameters. (branchingMinimalSumQuality must be greater than outputMinimalSumQuality)");
 
         this.cloneFactory = cloneFactory;
         this.parameters = parameters;
@@ -192,7 +196,7 @@ public final class FullSeqAssembler {
             int[] variantInfos = port.take();
             List<VariantBranch> newBranches = new ArrayList<>();
             for (VariantBranch branch : branches) {
-                List<Variant> variants = callVariantsForPoint(variantInfos, branch.reads);
+                List<Variant> variants = callVariantsForPoint(variantInfos, branch.reads, data.points[i] == positionOfAssemblingFeature);
                 if (variants.size() == 1 && variants.get(0).variantInfo == ABSENT_PACKED_VARIANT_INFO)
                     newBranches.add(branch.addAbsentVariant());
                 else {
@@ -314,7 +318,10 @@ public final class FullSeqAssembler {
                     seq = seq.cut(i, trimRange);
                 } else {
                     Range trimRange = QualityTrimmer.trim(seq.sequences[i].getQuality(), parameters.trimmingParameters);
-                    seq = seq.cut(i, trimRange);
+                    if (trimRange == null)
+                        seq.without(i);
+                    else
+                        seq = seq.cut(i, trimRange);
                 }
             if (seq.sequences[i].size() < parameters.minimalContigLength && i != seq.assemblingFeatureTargetId)
                 seq = seq.without(i);
@@ -811,7 +818,7 @@ public final class FullSeqAssembler {
     /**
      * Call variants for a single position
      */
-    private List<Variant> callVariantsForPoint(int[] pointVariantInfos, BitSet targetReads) {
+    private List<Variant> callVariantsForPoint(int[] pointVariantInfos, BitSet targetReads, boolean isAssemblingFeature) {
         // Pre-calculating number of present variants
         int count = 0;
         for (int readId = targetReads.nextSetBit(0); readId >= 0; readId = targetReads.nextSetBit(readId + 1))
@@ -858,9 +865,9 @@ public final class FullSeqAssembler {
             if (currentIndex == count || currentVariant != (int) (targets[currentIndex] >>> 40)) {
                 // Checking significance conditions
                 if ((1.0 * nonEdgePoints / (currentIndex - blockBegin) >= parameters.minimalNonEdgePointsFraction)
-                        && ((variantSumQuality >= parameters.minimalSumQuality
-                        && variantSumQuality >= parameters.minimalQualityShare * totalSumQuality)
-                        || variantSumQuality >= parameters.decisiveSumQualityThreshold)) {
+                        && ((variantSumQuality >= parameters.branchingMinimalSumQuality
+                        && variantSumQuality >= parameters.branchingMinimalQualityShare * totalSumQuality)
+                        || variantSumQuality >= parameters.decisiveBranchingSumQualityThreshold)) {
                     // Variant is significant
                     BitSet reads = new BitSet();
                     for (int j = currentIndex - 1; j >= blockBegin; --j)
@@ -873,7 +880,7 @@ public final class FullSeqAssembler {
                         unassignedVariants.set((int) targets[j]);
                     if (variantSumQuality > bestVariantSumQuality) {
                         bestVariant = currentVariant;
-                        // totalSumQuality is definitely less than Long because variantSumQuality < decisiveSumQualityThreshold
+                        // totalSumQuality is definitely less than Long because variantSumQuality < decisiveBranchingSumQualityThreshold
                         bestVariantSumQuality = variantSumQuality;
                     }
                 }
@@ -895,18 +902,26 @@ public final class FullSeqAssembler {
         } while (++currentIndex <= count);
 
         if (variants.isEmpty()) {
-            // no significant variants
-            assert bestVariant != -1;
-            BitSet reads = new BitSet();
-            for (long target : targets)
-                reads.set((int) target);
-            reads.or(unassignedVariants);
-            double p = 1 - 1.0 * bestVariantSumQuality / totalSumQuality;
-            long phredQuality = p == 0 ? bestVariantSumQuality : Math.min((long) (-10 * Math.log10(p)), bestVariantSumQuality);
-            // nSignificant = 1 (will not be practically used, only one variant, don't care)
-            return Collections.singletonList(
-                    new Variant(bestVariant << 8 | (int) Math.min((long) SequenceQuality.MAX_QUALITY_VALUE, phredQuality),
-                            reads, 1));
+            // Checking best variant to meet output criteria
+            // Always assemble assembling feature
+            if (isAssemblingFeature ||
+                    (bestVariantSumQuality >= parameters.outputMinimalQualityShare * totalSumQuality &&
+                            bestVariantSumQuality >= parameters.outputMinimalSumQuality)) {
+                // no significant variants
+                assert bestVariant != -1;
+                BitSet reads = new BitSet();
+                for (long target : targets)
+                    reads.set((int) target);
+                reads.or(unassignedVariants);
+                double p = 1 - 1.0 * bestVariantSumQuality / totalSumQuality;
+                long phredQuality = p == 0 ? bestVariantSumQuality : Math.min((long) (-10 * Math.log10(p)), bestVariantSumQuality);
+                // nSignificant = 1 (will not be practically used, only one variant, don't care)
+                return Collections.singletonList(
+                        new Variant(bestVariant << 8 | (int) Math.min((long) SequenceQuality.MAX_QUALITY_VALUE, phredQuality),
+                                reads, 1));
+            } else
+                // No variants to output (poorly covered or controversial position)
+                return Collections.singletonList(new Variant(ABSENT_PACKED_VARIANT_INFO, targetReads, 0));
         } else {
             for (Variant variant : variants)
                 variant.reads.or(unassignedVariants);
@@ -1100,6 +1115,19 @@ public final class FullSeqAssembler {
             for (char[] line : result)
                 Arrays.fill(line, ' ');
 
+            char[] positionStrokes = new char[maxLength];
+            char[] positionValues = new char[maxLength + 10];
+            Arrays.fill(positionStrokes, ' ');
+            Arrays.fill(positionValues, ' ');
+            for (int i = 0; i < len.length; i++) {
+                positionStrokes[positionMap[i]] = '|';
+                if (i % 10 == 0) {
+                    String val = "" + (i + minPosition);
+                    for (int j = 0; j < val.length(); j++)
+                        positionValues[positionMap[i] + j] = val.charAt(j);
+                }
+            }
+
             port = createPort();
             for (int position : points) {
                 int[] states = port.take();
@@ -1119,9 +1147,12 @@ public final class FullSeqAssembler {
             }
             assert port.take() == null;
 
-            return Arrays.stream(result)
-                    .map(String::new)
-                    .collect(Collectors.joining("\n"));
+
+            return new String(positionValues) + "\n" +
+                    new String(positionStrokes) + "\n" +
+                    Arrays.stream(result)
+                            .map(String::new)
+                            .collect(Collectors.joining("\n"));
         }
 
         /**
