@@ -307,11 +307,16 @@ public final class FullSeqAssembler {
      */
     BranchSequences clean(BranchSequences seq) {
         for (int i = seq.ranges.length - 1; i >= 0; --i) {
-            if (parameters.trimmingParameters != null) {
-                Range trimRange = QualityTrimmer.trim(seq.sequences[i].getQuality(), parameters.trimmingParameters);
-                seq = seq.cut(i, trimRange);
-            }
-            if (seq.ranges[i].length() < parameters.minimalContigLength)
+            if (parameters.trimmingParameters != null)
+                if (i == seq.assemblingFeatureTargetId) {
+                    Range trimRange = QualityTrimmer.extendRange(seq.sequences[i].getQuality(), parameters.trimmingParameters,
+                            new Range(seq.assemblingFeatureOffset, seq.assemblingFeatureOffset + seq.assemblingFeatureLength));
+                    seq = seq.cut(i, trimRange);
+                } else {
+                    Range trimRange = QualityTrimmer.trim(seq.sequences[i].getQuality(), parameters.trimmingParameters);
+                    seq = seq.cut(i, trimRange);
+                }
+            if (seq.sequences[i].size() < parameters.minimalContigLength && i != seq.assemblingFeatureTargetId)
                 seq = seq.without(i);
         }
         return seq;
