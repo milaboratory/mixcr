@@ -58,7 +58,8 @@ public class ActionAssembleContigs implements Action {
         VDJCAlignerParameters alignerParameters;
         CloneAssemblerParameters cloneAssemblerParameters;
         try (ClnAReader reader = new ClnAReader(parameters.getInputFileName(), VDJCLibraryRegistry.getDefault());
-             PrimitivO tmpOut = new PrimitivO(new BufferedOutputStream(new FileOutputStream(parameters.getOutputFileName())))) {
+             PrimitivO tmpOut = new PrimitivO(new BufferedOutputStream(new FileOutputStream(parameters.getOutputFileName())));
+             BufferedWriter debugReport = parameters.debugReport == null ? null : new BufferedWriter(new OutputStreamWriter(new FileOutputStream(parameters.debugReport)))) {
 
             final CloneFactory cloneFactory = new CloneFactory(reader.getAssemblerParameters().getCloneFactoryParameters(),
                     reader.getAssemblingFeatures(), reader.getGenes(), reader.getAlignerParameters().getFeaturesToAlignMap());
@@ -82,6 +83,24 @@ public class ActionAssembleContigs implements Action {
                         throw new RuntimeException(e);
                     }
                 });
+
+                if (debugReport != null) {
+                    synchronized (debugReport) {
+                        try {
+                            debugReport.write("Clone: " + cloneAlignments.clone.getId());
+                            debugReport.newLine();
+                            debugReport.write(rawVariantsData.toString());
+                            debugReport.newLine();
+                            debugReport.newLine();
+                            debugReport.write("==========================================");
+                            debugReport.newLine();
+                            debugReport.newLine();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+
                 return fullSeqAssembler.callVariants(rawVariantsData);
             }, parameters.threads);
 
@@ -160,6 +179,10 @@ public class ActionAssembleContigs implements Action {
         @Parameter(description = "Report file.",
                 names = {"-r", "--report"})
         public String report;
+
+        @Parameter(description = "Report file.",
+                names = {"--debug-report"}, hidden = true)
+        public String debugReport;
 
         @Parameter(description = "JSON report file.",
                 names = {"--json-report"})

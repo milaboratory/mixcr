@@ -1037,7 +1037,7 @@ public final class FullSeqAssembler {
      * Represents aggregated information about nucleotide states for all positions in all reads aggregated with
      * {@link #calculateRawData(Supplier)}.
      */
-    public static abstract class RawVariantsData {
+    public abstract class RawVariantsData {
         /**
          * Total number of reads
          */
@@ -1063,6 +1063,81 @@ public final class FullSeqAssembler {
          * To be used with file-based storage media
          */
         void destroy() {
+        }
+
+        /**
+         * String representation of this state matrix
+         *
+         * @param qualityThreshold quality threshold (positions with quality lower then this value, wil be printed in lower case)
+         * @param readsFrom        range of read ids to print (beginning; inclusive)
+         * @param readsTo          range of read ids to print (end; exclusive)
+         */
+        public String toString(byte qualityThreshold, int readsFrom, int readsTo) {
+            int minPosition = Arrays.stream(points).min().getAsInt();
+            int maxPosition = Arrays.stream(points).max().getAsInt() + 1;
+
+            // Calculating maximal observed sequence length for each of the positions
+            int[] len = new int[maxPosition - minPosition];
+            OutputPort<int[]> port = createPort();
+            for (int position : points) {
+                int[] states = port.take();
+                for (int j = readsFrom; j < readsTo; j++) {
+                    int state = states[j];
+                    if (state != ABSENT_PACKED_VARIANT_INFO)
+                        len[position - minPosition] = Math.max(len[position - minPosition], variantIdToSequence.get(state >>> 8).size());
+                }
+            }
+            assert port.take() == null;
+
+            // Calculating position projection
+            int[] positionMap = new int[len.length];
+            for (int i = 1; i < len.length; i++)
+                positionMap[i] = positionMap[i - 1] + len[i - 1];
+            int maxLength = positionMap[len.length - 1] + len[len.length - 1];
+
+            // Allocating main array
+            char[][] result = new char[readsTo - readsFrom][maxLength];
+            for (char[] line : result)
+                Arrays.fill(line, ' ');
+
+            port = createPort();
+            for (int position : points) {
+                int[] states = port.take();
+                for (int j = readsFrom; j < readsTo; j++) {
+                    int state = states[j];
+                    if (state == ABSENT_PACKED_VARIANT_INFO)
+                        continue;
+                    String seq = variantIdToSequence.get(state >>> 8).toString();
+                    if ((state & 0x7F) < qualityThreshold)
+                        seq = seq.toLowerCase();
+                    for (int k = 0; k < len[position - minPosition]; k++)
+                        if (k < seq.length())
+                            result[j + readsFrom][positionMap[position - minPosition] + k] = seq.charAt(k);
+                        else
+                            result[j + readsFrom][positionMap[position - minPosition] + k] = '.';
+                }
+            }
+            assert port.take() == null;
+
+            return Arrays.stream(result)
+                    .map(String::new)
+                    .collect(Collectors.joining("\n"));
+        }
+
+        /**
+         * String representation of this state matrix
+         *
+         * @param qualityThreshold quality threshold (positions with quality lower then this value, wil be printed in lower case)
+         */
+        public String toString(byte qualityThreshold) {
+            return toString(qualityThreshold, 0, nReads);
+        }
+
+        /**
+         * String representation of this state matrix
+         */
+        public String toString() {
+            return toString((byte) 10);
         }
     }
 

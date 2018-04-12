@@ -37,7 +37,7 @@ public class FullSeqAssemblerTest {
     static final FullSeqAssemblerParameters DEFAULT_PARAMETERS =
             new FullSeqAssemblerParameters(0.1, 80, 120,
                     3, 7, 0.25, GeneFeature.VDJRegion,
-                    new QualityTrimmerParameters(20.0f, 8),20,  false);
+                    new QualityTrimmerParameters(20.0f, 8), 20, false);
 
     static final class MasterSequence {
         final int vPart, cdr3Part, jPart, cPart;
@@ -445,6 +445,7 @@ public class FullSeqAssemblerTest {
                 align.usedGenes, align.parameters.alignerParameters.getFeaturesToAlignMap());
         FullSeqAssembler agg = new FullSeqAssembler(cloneFactory, DEFAULT_PARAMETERS, initialClone, align.parameters.alignerParameters);
         FullSeqAssembler.RawVariantsData prep = agg.calculateRawData(() -> CUtils.asOutputPort(alignments));
+        // System.out.println(prep);
         List<Clone> clones = new ArrayList<>(new CloneSet(Arrays.asList(agg.callVariants(prep))).getClones());
         clones.sort(Comparator.comparingDouble(Clone::getCount).reversed());
         for (Clone clone : clones) {
