@@ -575,6 +575,10 @@ public final class FullSeqAssembler {
             // ...V  -  VVVV  -  V+CDR3+J  -  J...
 
             if (range.getTo() < N_LEFT_DUMMIES + lengthV) {
+                if (range.getTo() <= N_LEFT_DUMMIES)
+                    // Target outside V region (to the left of V region)
+                    continue;
+
                 boolean floatingLeftBound =
                         !parameters.alignedRegionsOnly
                                 && i == 0
@@ -675,6 +679,10 @@ public final class FullSeqAssembler {
                             jOffset, range.getTo() - rightAssemblingFeatureBound,
                             targets.assemblingFeatureOffset + assemblingFeatureLength, sequence.size() - (targets.assemblingFeatureOffset + assemblingFeatureLength));
             } else if (range.getFrom() > rightAssemblingFeatureBound) {
+                if (range.getFrom() >= rightAssemblingFeatureBound + jLength)
+                    // Target outside J region (to the right of J region)
+                    continue;
+
                 boolean floatingRightBound =
                         !parameters.alignedRegionsOnly
                                 && i == targets.ranges.length - 1
