@@ -395,7 +395,10 @@ public final class FullSeqAssembler {
                 // Naive:
                 //   ranges.add(new Range(blockStartPosition, currentPosition + 1));
                 // Eliminate edge deletions:
-                ranges.add(new Range(positionMap.get(0), positionMap.get(positionMap.size() - 1) + 1));
+                ranges.add(
+                        positionMap.isEmpty()
+                                ? new Range(blockStartPosition, currentPosition + 1)
+                                : new Range(positionMap.get(0), positionMap.get(positionMap.size() - 1) + 1));
 
                 sequenceBuilder = new NSequenceWithQualityBuilder();
                 positionMap = new TIntArrayList();
@@ -468,6 +471,8 @@ public final class FullSeqAssembler {
             if (ranges.length != positionMaps.length && ranges.length != sequences.length)
                 throw new IllegalArgumentException();
             for (int i = 0; i < ranges.length; i++) {
+                if (positionMaps[i].isEmpty())
+                    continue;
                 if (positionMaps[i].get(0) != ranges[i].getFrom() || positionMaps[i].get(positionMaps[i].size() - 1) != ranges[i].getTo() - 1)
                     throw new IllegalArgumentException();
                 if (positionMaps[i].size() != sequences[i].size())
