@@ -391,7 +391,12 @@ public final class FullSeqAssembler {
             if (currentPosition != nextPosition - 1) {
                 sequences.add(sequenceBuilder.createAndDestroy());
                 positionMaps.add(positionMap);
-                ranges.add(new Range(blockStartPosition, currentPosition + 1));
+
+                // Naive:
+                //   ranges.add(new Range(blockStartPosition, currentPosition + 1));
+                // Eliminate edge deletions:
+                ranges.add(new Range(positionMap.get(0), positionMap.get(positionMap.size() - 1) + 1));
+
                 sequenceBuilder = new NSequenceWithQualityBuilder();
                 positionMap = new TIntArrayList();
                 blockStartPosition = nextPosition;

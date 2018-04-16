@@ -73,35 +73,39 @@ public class ActionAssembleContigs implements Action {
             SmartProgressReporter.startProgressReport("Assembling", cloneAlignmentsPort);
 
             OutputPort<Clone[]> parallelProcessor = new ParallelProcessor<>(cloneAlignmentsPort, cloneAlignments -> {
-                FullSeqAssembler fullSeqAssembler = new FullSeqAssembler(cloneFactory, assemblerParameters, cloneAlignments.clone, alignerParameters);
-                fullSeqAssembler.setReport(report);
+                try {
+                    FullSeqAssembler fullSeqAssembler = new FullSeqAssembler(cloneFactory, assemblerParameters, cloneAlignments.clone, alignerParameters);
+                    fullSeqAssembler.setReport(report);
 
-                FullSeqAssembler.RawVariantsData rawVariantsData = fullSeqAssembler.calculateRawData(() -> {
-                    try {
-                        return cloneAlignments.alignments();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-
-                if (debugReport != null) {
-                    synchronized (debugReport) {
+                    FullSeqAssembler.RawVariantsData rawVariantsData = fullSeqAssembler.calculateRawData(() -> {
                         try {
-                            debugReport.write("Clone: " + cloneAlignments.clone.getId());
-                            debugReport.newLine();
-                            debugReport.write(rawVariantsData.toString());
-                            debugReport.newLine();
-                            debugReport.newLine();
-                            debugReport.write("==========================================");
-                            debugReport.newLine();
-                            debugReport.newLine();
+                            return cloneAlignments.alignments();
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
-                    }
-                }
+                    });
 
-                return fullSeqAssembler.callVariants(rawVariantsData);
+                    if (debugReport != null) {
+                        synchronized (debugReport) {
+                            try {
+                                debugReport.write("Clone: " + cloneAlignments.clone.getId());
+                                debugReport.newLine();
+                                debugReport.write(rawVariantsData.toString());
+                                debugReport.newLine();
+                                debugReport.newLine();
+                                debugReport.write("==========================================");
+                                debugReport.newLine();
+                                debugReport.newLine();
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    }
+
+                    return fullSeqAssembler.callVariants(rawVariantsData);
+                } catch (Throwable re) {
+                    throw new RuntimeException("While processing clone #" + cloneAlignments.clone.getId(), re);
+                }
             }, parameters.threads);
 
             for (Clone[] clones : CUtils.it(parallelProcessor)) {
