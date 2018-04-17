@@ -110,7 +110,7 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
             GeneFeature feature = parameters.getFeatureToAlign(gt);
             output.writeObject(feature);
             if (feature != null)
-                output.putKnownReference(feature);
+                output.putKnownObject(feature);
         }
 
         header = true;
