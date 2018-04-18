@@ -40,37 +40,4 @@ import java.util.EnumMap;
 public final class CompatibilityIO {
     private CompatibilityIO() {
     }
-
-    public static class CloneSerializerV5 implements Serializer<Clone> {
-        @Override
-        public void write(PrimitivO output, Clone object) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Clone read(PrimitivI input) {
-            NSequenceWithQuality[] targets = input.readObject(NSequenceWithQuality[].class);
-            int size = input.readByte();
-            EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
-            for (int i = 0; i < size; i++) {
-                GeneType key = input.readObject(GeneType.class);
-                hits.put(key, input.readObject(VDJCHit[].class));
-            }
-            double count = input.readLong();
-            int id = input.readInt();
-            // Skipping the field
-            input.readObject(GeneFeature[].class);
-            return new Clone(targets, hits, count, id);
-        }
-
-        @Override
-        public boolean isReference() {
-            return true;
-        }
-
-        @Override
-        public boolean handlesReference() {
-            return false;
-        }
-    }
 }

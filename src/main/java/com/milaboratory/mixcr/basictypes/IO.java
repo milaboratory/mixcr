@@ -125,39 +125,6 @@ class IO {
         }
     }
 
-    public static class VDJCAlignmentsSerializer21 implements Serializer<VDJCAlignments> {
-        @Override
-        public void write(PrimitivO output, VDJCAlignments object) {
-            throw new RuntimeException("Backward compatibility reader! Write not implemented.");
-        }
-
-        @Override
-        public VDJCAlignments read(PrimitivI input) {
-            NSequenceWithQuality[] targets = input.readObject(NSequenceWithQuality[].class);
-            input.readObject(String[].class);
-            input.readObject(NSequenceWithQuality[].class);
-            input.readObject(String[].class);
-            int size = input.readByte();
-            EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
-            for (int i = 0; i < size; i++) {
-                GeneType key = input.readObject(GeneType.class);
-                hits.put(key, input.readObject(VDJCHit[].class));
-            }
-            return new VDJCAlignments(input.readLong(), hits, targets,
-                    new SequenceHistory[0], new SequenceRead[0]);
-        }
-
-        @Override
-        public boolean isReference() {
-            return true;
-        }
-
-        @Override
-        public boolean handlesReference() {
-            return false;
-        }
-    }
-
     public static class CloneSerializer implements Serializer<Clone> {
         @Override
         public void write(PrimitivO output, Clone object) {

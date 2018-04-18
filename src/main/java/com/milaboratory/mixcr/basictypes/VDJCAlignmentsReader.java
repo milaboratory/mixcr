@@ -32,7 +32,6 @@ import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.core.io.CompressionType;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
-import com.milaboratory.primitivio.SerializersManager;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.CountingInputStream;
 import gnu.trove.list.array.TLongArrayList;
@@ -138,10 +137,8 @@ public final class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlign
         String magicString = new String(magic);
         this.magic = magicString;
 
-        SerializersManager serializersManager = input.getSerializersManager();
+        // SerializersManager serializersManager = input.getSerializersManager();
         switch (magicString) {
-            case MAGIC_V9:
-                serializersManager.registerCustomSerializer(VDJCAlignments.class, new IO.VDJCAlignmentsSerializer21());
             case MAGIC:
                 break;
             default:
