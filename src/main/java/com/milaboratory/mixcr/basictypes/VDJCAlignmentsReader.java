@@ -171,7 +171,7 @@ public final class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlign
 //            parameters.getGeneAlignerParameters(gt).setGeneFeatureToAlign(featureParams);
 
             if (featureDeserialized != null)
-                input.putKnownReference(featureParams);
+                input.putKnownObject(featureParams);
         }
     }
 
