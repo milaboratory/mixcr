@@ -46,6 +46,7 @@ import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.Objects;
 
 public class ActionExportClones extends ActionExport<Clone> {
     public ActionExportClones() {
@@ -55,8 +56,8 @@ public class ActionExportClones extends ActionExport<Clone> {
     @Override
     public void go0() throws Exception {
         CloneExportParameters parameters = (CloneExportParameters) this.parameters;
-        try(InputStream inputStream = IOUtil.createIS(parameters.getInputFile());
-            InfoWriter<Clone> writer = new InfoWriter<>(parameters.getOutputFile())) {
+        try (InputStream inputStream = IOUtil.createIS(parameters.getInputFile());
+             InfoWriter<Clone> writer = new InfoWriter<>(parameters.getOutputFile())) {
             CloneSet set = CloneSetIO.read(inputStream, VDJCLibraryRegistry.getDefault());
 
             set = CloneSet.transform(set, parameters.getFilter());
@@ -111,6 +112,20 @@ public class ActionExportClones extends ActionExport<Clone> {
             }
 
             return true;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof CFilter)) return false;
+            CFilter cFilter = (CFilter) o;
+            return filterOutOfFrames == cFilter.filterOutOfFrames &&
+                    filterStopCodons == cFilter.filterStopCodons;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(filterOutOfFrames, filterStopCodons);
         }
     }
 
