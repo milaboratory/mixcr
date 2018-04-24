@@ -2,17 +2,25 @@
 
 java="java"
 
-sedString="s/.*1\.\(.*\)\..*/\1/"
-jVersion=$($java -version 2>&1 | grep version | awk '{ print $3 }' | sed $sedString)
-if [[ $jVersion -lt 7 ]];
-then
+sedString1="s/\s*\([^.]*\)\..*/\1/"
+sedString2="s/.*1\.\(.*\)\..*/\1/"
+jVersion=$($java -version 2>&1 | grep version | awk '{ print $3 }' | sed 's:"::g')
+jVersion1=$(echo "$jVersion" | sed $sedString1)
+if [[ jVersion1 -eq 1 ]]; then
+    jVersion2=$(echo "$jVersion" | sed $sedString2)
+    if [[ $jVersion2 -lt 7 ]];
+    then
+        echo "Wrong version of java. Please use Java 7 or higher."
+        exit 1
+    fi
+
+    if [[ $jVersion2 -lt 8 ]];
+    then
+        echo "WARNING: Several issues have been detected while using Java 7. Please consider updateing to Java 8 or higher."
+    fi
+elif [[ jVersion1 -lt 9 ]]; then
     echo "Wrong version of java. Please use Java 7 or higher."
     exit 1
-fi
-
-if [[ $jVersion -lt 8 ]];
-then
-    echo "WARNING: Several issues have been detected while using Java 7. Please consider updateing to Java 8 or higher."
 fi
 
 # Linux readlink -f alternative for Mac OS X
