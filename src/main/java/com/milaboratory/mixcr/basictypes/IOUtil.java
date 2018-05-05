@@ -57,6 +57,7 @@ public class IOUtil {
                                               HasFeatureToAlign featuresToAlign) {
         // Putting genes references and feature sequences to be serialized/deserialized as references
         for (VDJCGene gene : genes) {
+            // Each gene is singleton
             output.putKnownReference(gene);
             // Also put sequences of certain gene features of genes as known references if required
             if (featuresToAlign != null) {
@@ -66,6 +67,8 @@ public class IOUtil {
                 NucleotideSequence featureSequence = gene.getFeature(featureToAlign);
                 if (featureSequence == null)
                     continue;
+                // Relies on the fact that sequences of gene features are cached,
+                // the same instance will be used everywhere (including alignments)
                 output.putKnownReference(gene.getFeature(featuresToAlign.getFeatureToAlign(gene.getGeneType())));
             }
         }

@@ -44,7 +44,7 @@ public final class ActionExportCloneReads implements Action {
 
     @Override
     public void go(ActionHelper helper) throws Exception {
-        try (ClnAReader clna = new ClnAReader(parameters.getInputFileName(), VDJCLibraryRegistry.createDefaultRegistry())) {
+        try (ClnAReader clna = new ClnAReader(parameters.getInputFileName(), VDJCLibraryRegistry.getDefault())) {
             VDJCAlignments firstAlignment = clna.readAllAlignments().take();
             if (firstAlignment == null)
                 return;

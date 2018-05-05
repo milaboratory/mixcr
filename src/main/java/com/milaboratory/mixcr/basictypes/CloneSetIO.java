@@ -33,7 +33,6 @@ import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
-import com.milaboratory.primitivio.SerializersManager;
 import com.milaboratory.util.CanReportProgressAndStage;
 import io.repseq.core.*;
 
@@ -44,9 +43,8 @@ import java.util.EnumMap;
 import java.util.List;
 
 public final class CloneSetIO {
-    static final String MAGIC_V5 = "MiXCR.CLNS.V05";
-    static final String MAGIC_V6 = "MiXCR.CLNS.V06";
-    static final String MAGIC = MAGIC_V6;
+    static final String MAGIC_V7 = "MiXCR.CLNS.V07";
+    static final String MAGIC = MAGIC_V7;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
 
@@ -179,12 +177,9 @@ public final class CloneSetIO {
 
         String magicString = new String(magicBytes);
 
-        SerializersManager serializersManager = input.getSerializersManager();
+        // SerializersManager serializersManager = input.getSerializersManager();
 
         switch (magicString) {
-            case MAGIC_V5:
-                serializersManager.registerCustomSerializer(Clone.class, new CompatibilityIO.CloneSerializerV5());
-                break;
             case MAGIC:
                 break;
             default:
@@ -194,19 +189,10 @@ public final class CloneSetIO {
 
         String versionInfo = input.readUTF();
 
-        if (!magicString.equals(MAGIC))
-            // Dropping this field for v5 files
-            input.readObject(GeneFeature[].class);
-
         VDJCAlignerParameters alignerParameters;
         CloneAssemblerParameters assemblerParameters;
-        if (magicString.equals(MAGIC)) {
-            alignerParameters = input.readObject(VDJCAlignerParameters.class);
-            assemblerParameters = input.readObject(CloneAssemblerParameters.class);
-        } else {
-            alignerParameters = null;
-            assemblerParameters = null;
-        }
+        alignerParameters = input.readObject(VDJCAlignerParameters.class);
+        assemblerParameters = input.readObject(CloneAssemblerParameters.class);
 
         EnumMap<GeneType, GeneFeature> alignedFeatures = IO.readGF2GTMap(input);
         List<VDJCGene> genes = IOUtil.readAndRegisterGeneReferences(input, libraryRegistry, new GT2GFAdapter(alignedFeatures));

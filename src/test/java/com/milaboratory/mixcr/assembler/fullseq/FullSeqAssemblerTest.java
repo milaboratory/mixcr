@@ -445,7 +445,6 @@ public class FullSeqAssemblerTest {
                 align.usedGenes, align.parameters.alignerParameters.getFeaturesToAlignMap());
         FullSeqAssembler agg = new FullSeqAssembler(cloneFactory, DEFAULT_PARAMETERS, initialClone, align.parameters.alignerParameters);
         FullSeqAssembler.RawVariantsData prep = agg.calculateRawData(() -> CUtils.asOutputPort(alignments));
-        System.out.println(prep);
         List<Clone> clones = new ArrayList<>(new CloneSet(Arrays.asList(agg.callVariants(prep))).getClones());
         clones.sort(Comparator.comparingDouble(Clone::getCount).reversed());
         for (Clone clone : clones) {

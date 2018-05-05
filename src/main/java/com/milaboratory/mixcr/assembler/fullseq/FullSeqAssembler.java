@@ -391,7 +391,15 @@ public final class FullSeqAssembler {
             if (currentPosition != nextPosition - 1) {
                 sequences.add(sequenceBuilder.createAndDestroy());
                 positionMaps.add(positionMap);
-                ranges.add(new Range(blockStartPosition, currentPosition + 1));
+
+                // Naive:
+                //   ranges.add(new Range(blockStartPosition, currentPosition + 1));
+                // Eliminate edge deletions:
+                ranges.add(
+                        positionMap.isEmpty()
+                                ? new Range(blockStartPosition, currentPosition + 1)
+                                : new Range(positionMap.get(0), positionMap.get(positionMap.size() - 1) + 1));
+
                 sequenceBuilder = new NSequenceWithQualityBuilder();
                 positionMap = new TIntArrayList();
                 blockStartPosition = nextPosition;
@@ -463,6 +471,8 @@ public final class FullSeqAssembler {
             if (ranges.length != positionMaps.length && ranges.length != sequences.length)
                 throw new IllegalArgumentException();
             for (int i = 0; i < ranges.length; i++) {
+                if (positionMaps[i].isEmpty())
+                    continue;
                 if (positionMaps[i].get(0) != ranges[i].getFrom() || positionMaps[i].get(positionMaps[i].size() - 1) != ranges[i].getTo() - 1)
                     throw new IllegalArgumentException();
                 if (positionMaps[i].size() != sequences[i].size())
@@ -570,6 +580,10 @@ public final class FullSeqAssembler {
             // ...V  -  VVVV  -  V+CDR3+J  -  J...
 
             if (range.getTo() < N_LEFT_DUMMIES + lengthV) {
+                if (range.getTo() <= N_LEFT_DUMMIES)
+                    // Target outside V region (to the left of V region)
+                    continue;
+
                 boolean floatingLeftBound =
                         !parameters.alignedRegionsOnly
                                 && i == 0
@@ -670,6 +684,10 @@ public final class FullSeqAssembler {
                             jOffset, range.getTo() - rightAssemblingFeatureBound,
                             targets.assemblingFeatureOffset + assemblingFeatureLength, sequence.size() - (targets.assemblingFeatureOffset + assemblingFeatureLength));
             } else if (range.getFrom() > rightAssemblingFeatureBound) {
+                if (range.getFrom() >= rightAssemblingFeatureBound + jLength)
+                    // Target outside J region (to the right of J region)
+                    continue;
+
                 boolean floatingRightBound =
                         !parameters.alignedRegionsOnly
                                 && i == targets.ranges.length - 1
@@ -982,6 +1000,7 @@ public final class FullSeqAssembler {
         // Collecting coverage and VariantAggregators
         int nAlignments = 0;
         for (VDJCAlignments al : CUtils.it(alignments.get())) {
+            al = al.updateAlignments(AlignmentUtils::shiftIndelsAtHomopolymers);
             ++nAlignments;
             for (PointSequence point : toPointSequences(al)) {
                 int seqIndex = getVariantIndex(point.sequence.getSequence());
@@ -1030,6 +1049,7 @@ public final class FullSeqAssembler {
         // Main data collection loop
         i = 0;
         for (VDJCAlignments al : CUtils.it(alignments.get())) {
+            al = al.updateAlignments(AlignmentUtils::shiftIndelsAtHomopolymers);
             for (PointSequence point : toPointSequences(al)) {
                 int pointIndex = revIndex.get(point.point);
                 packedData[pointIndex][i] =
@@ -1285,7 +1305,7 @@ public final class FullSeqAssembler {
         // if (seq2Range.length() == 0)
         //     return;
 
-        alignment = AlignmentUtils.shiftIndelsAtHomopolymers(alignment);
+        // alignment = AlignmentUtils.shiftIndelsAtHomopolymers(alignment);
 
         Range
                 alSeq2Range = alignment.getSequence2Range(),

@@ -43,6 +43,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.function.Function;
 
 @Serializable(by = IO.VDJCAlignmentsSerializer.class)
 public final class VDJCAlignments extends VDJCObject {
@@ -138,6 +139,12 @@ public final class VDJCAlignments extends VDJCObject {
     public VDJCAlignments updateCloneIndex(int newCloneIndex) {
         return new VDJCAlignments(alignmentsIndex, hits, targets, history, originalReads,
                 mappingType, newCloneIndex);
+    }
+
+    public VDJCAlignments updateAlignments(Function<Alignment<NucleotideSequence>, Alignment<NucleotideSequence>> processor) {
+        EnumMap<GeneType, VDJCHit[]> newHits = this.hits.clone();
+        newHits.replaceAll((k, v) -> Arrays.stream(v).map(h -> h.updateAlignments(processor)).toArray(VDJCHit[]::new));
+        return new VDJCAlignments(alignmentsIndex, newHits, targets, history, originalReads, mappingType, cloneIndex);
     }
 
     public VDJCAlignments shiftReadId(long newAlignmentIndex, long shift) {
