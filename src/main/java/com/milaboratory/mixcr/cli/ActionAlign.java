@@ -40,10 +40,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.validators.PositiveInteger;
-import com.milaboratory.cli.Action;
-import com.milaboratory.cli.ActionHelper;
-import com.milaboratory.cli.ActionParametersWithOutput;
-import com.milaboratory.cli.ProcessException;
+import com.milaboratory.cli.*;
 import com.milaboratory.core.PairedEndReadsLayout;
 import com.milaboratory.core.Target;
 import com.milaboratory.core.io.sequence.SequenceRead;
@@ -359,6 +356,7 @@ public class ActionAlign implements Action {
                 required = true)
         public String species = "hs";
 
+        @DeprecatedParameter(value = "Use --chains in exportAlignments and exportClones", version = "2.2")
         @Parameter(description = "Specifies immunological chain gene(s) for alignment. If many, separate by comma ','. " +
                 "Available chains: IGH, IGL, IGK, TRA, TRB, TRG, TRD, etc...",
                 names = {"-c", "--chains"})
