@@ -93,9 +93,9 @@ function go_assemble {
 if [[ $create_standard_results == true ]]; then
   for s in sample_IGH test;
   do
-    mixcr align -r ${s}_paired.vdjca.report ${s}_R1.fastq ${s}_R2.fastq ${s}_paired.vdjca
+    mixcr align -s hs -r ${s}_paired.vdjca.report ${s}_R1.fastq ${s}_R2.fastq ${s}_paired.vdjca
     go_assemble ${s}_paired
-    mixcr align -r ${s}_single.vdjca.report ${s}_R1.fastq ${s}_single.vdjca
+    mixcr align -s hs -r ${s}_single.vdjca.report ${s}_R1.fastq ${s}_single.vdjca
     go_assemble ${s}_single
   done
 fi
@@ -104,6 +104,6 @@ fi
 
 if [[ $run_tests == true ]]; then
   echo "Running test case 1"
-  mixcr align -OvParameters.geneFeatureToAlign=VGeneWithP test_R1.fastq test_R2.fastq case1.vdjca
+  mixcr align -s hs -OvParameters.geneFeatureToAlign=VGeneWithP test_R1.fastq test_R2.fastq case1.vdjca
   mixcr assemble case1.vdjca case1.clns
 fi

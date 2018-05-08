@@ -78,11 +78,6 @@ public class ActionAlign implements Action {
     @Override
     @SuppressWarnings("unchecked")
     public void go(ActionHelper helper) throws Exception {
-        // FIXME remove in 2.2
-        if (actionParameters.printNonFunctionalWarnings())
-            System.out.println("WARNING: -wf / --non-functional-warnings option is deprecated, will be removed in 2.2 " +
-                    "release. Use --verbose instead.");
-
         // Saving initial timestamp
         long beginTimestamp = System.currentTimeMillis();
 
@@ -90,30 +85,14 @@ public class ActionAlign implements Action {
         VDJCAlignerParameters alignerParameters = actionParameters.getAlignerParameters();
 
         // FIXME remove in 2.3
-        if (actionParameters.getSaveOriginalReads()) {
-            System.out.println("WARNING: -g / --save-reads option is deprecated, will be removed in 2.3 " +
-                    "release. Use -OsaveOriginalReads=true.");
+        if (actionParameters.getSaveOriginalReads() || actionParameters.getSaveReadDescription())
             alignerParameters.setSaveOriginalReads(true);
-        }
-
-        // FIXME remove in 2.3
-        if (actionParameters.getSaveReadDescription()) {
-            System.out.println("WARNING: -a / --save-description option is deprecated, will be removed in 2.3 " +
-                    "release. Use -OsaveOriginalReads=true.");
-            alignerParameters.setSaveOriginalReads(true);
-        }
 
         if (!actionParameters.overrides.isEmpty()) {
             // Perform parameters overriding
             alignerParameters = JsonOverrider.override(alignerParameters, VDJCAlignerParameters.class, actionParameters.overrides);
             if (alignerParameters == null)
                 throw new ProcessException("Failed to override some parameter.");
-        }
-
-        // FIXME remove in 2.2
-        if (actionParameters.allowDifferentVJLoci != null && actionParameters.allowDifferentVJLoci) {
-            System.out.println("Warning: usage of --diff-loci is deprecated. Use -OallowChimeras=true instead.");
-            alignerParameters.setAllowChimeras(true);
         }
 
         // Creating aligner
@@ -325,11 +304,6 @@ public class ActionAlign implements Action {
                 names = {"-b", "--library"})
         public String library = "default";
 
-        // TODO remove in 2.2 release
-        @Parameter(description = "Print warnings for non-functional V/D/J/C genes",
-                names = {"-wf", "--non-functional-warnings"})
-        public Boolean nonFunctionalWarnings = null;
-
         @Parameter(description = "Verbose warning messages.",
                 names = {"--verbose"})
         public Boolean verbose = null;
@@ -356,11 +330,12 @@ public class ActionAlign implements Action {
                 required = true)
         public String species = "hs";
 
+        @Deprecated
         @DeprecatedParameter(value = "Use --chains only for exportAlignments and exportClones", version = "2.2")
         @Parameter(description = "Specifies immunological chain gene(s) for alignment. If many, separate by comma ','. " +
                 "Available chains: IGH, IGL, IGK, TRA, TRB, TRG, TRD, etc...",
                 names = {"-c", "--chains"})
-        public String chains = "ALL";
+        public String chains = "ALL"; //FIXME remove in 2.3
 
         @Parameter(description = "Processing threads",
                 names = {"-t", "--threads"}, validateWith = PositiveInteger.class)
@@ -375,20 +350,21 @@ public class ActionAlign implements Action {
         public Boolean noMerge;
 
         @Deprecated
+        @DeprecatedParameter("Use -OsaveOriginalReads=true.")
         @Parameter(description = "Copy read(s) description line from .fastq or .fasta to .vdjca file (can then be " +
                 "exported with -descrR1 and -descrR2 options in exportAlignments action).",
                 names = {"-a", "--save-description"})
-        public Boolean saveReadDescription;
+        public Boolean saveReadDescription; //FIXME remove in 2.3
 
-        //TODO delete -v in 2.2
         @Parameter(description = "Write alignment results for all input reads (even if alignment has failed).",
-                names = {"-v", "--write-all"})
+                names = {"--write-all"})
         public Boolean writeAllResults;
 
         @Deprecated
+        @DeprecatedParameter("Use -OsaveOriginalReads=true")
         @Parameter(description = "Copy original reads (sequences + qualities + descriptions) to .vdjca file.",
                 names = {"-g", "--save-reads"})
-        public Boolean saveOriginalReads;
+        public Boolean saveOriginalReads; //FIXME remove in 2.3
 
         @Parameter(description = "Write not aligned reads (R1).",
                 names = {"--not-aligned-R1"})
@@ -397,11 +373,6 @@ public class ActionAlign implements Action {
         @Parameter(description = "Write not aligned reads (R2).",
                 names = {"--not-aligned-R2"})
         public String failedReadsR2 = null;
-
-        @Parameter(description = "Allow alignments with different chains of V and J hits.",
-                names = {"-i", "--diff-loci"}, hidden = true)
-        public Boolean allowDifferentVJLoci = null;
-
 
         public String getSpecies() {
             return species;
@@ -436,15 +407,8 @@ public class ActionAlign implements Action {
             return saveOriginalReads != null && saveOriginalReads;
         }
 
-        @Deprecated
-        public boolean printNonFunctionalWarnings() {
-            return nonFunctionalWarnings != null && nonFunctionalWarnings;
-        }
-
         public boolean verbose() {
-            return (verbose != null && verbose) ||
-                    // FIXME remove in 2.2
-                    (nonFunctionalWarnings != null && nonFunctionalWarnings);
+            return verbose != null && verbose;
         }
 
         public boolean printWarnings() {
