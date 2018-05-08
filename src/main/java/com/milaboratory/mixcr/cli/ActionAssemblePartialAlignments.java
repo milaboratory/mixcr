@@ -76,6 +76,9 @@ public final class ActionAssemblePartialAlignments implements Action {
             System.out.println("============= Report ==============");
             Util.writeReportToStdout(report);
 
+            if(assembler.leftPartsLimitReached())
+                System.out.println("WARNING: too many partial alignments detected, consider skipping assemblePartial (enriched library?).");
+
             if (parameters.report != null)
                 Util.writeReport(parameters.report, report);
 

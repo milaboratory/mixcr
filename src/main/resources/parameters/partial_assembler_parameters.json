@@ -11,5 +11,6 @@
     "maxQuality": 45,
     "minimalIdentity": 0.95,
     "identityType": "Unweighted"
-  }
+  },
+  "maxLeftParts": 256000
 }
