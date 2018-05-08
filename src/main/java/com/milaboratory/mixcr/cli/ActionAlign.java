@@ -356,7 +356,7 @@ public class ActionAlign implements Action {
                 required = true)
         public String species = "hs";
 
-        @DeprecatedParameter(value = "Use --chains in exportAlignments and exportClones", version = "2.2")
+        @DeprecatedParameter(value = "Use --chains only for exportAlignments and exportClones", version = "2.2")
         @Parameter(description = "Specifies immunological chain gene(s) for alignment. If many, separate by comma ','. " +
                 "Available chains: IGH, IGL, IGK, TRA, TRB, TRG, TRD, etc...",
                 names = {"-c", "--chains"})
