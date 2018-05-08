@@ -44,7 +44,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <milib.version>1.8.3</milib.version>
+        <milib.version>1.8.4-SNAPSHOT</milib.version>
     </properties>
 
     <dependencies>
@@ -71,7 +71,6 @@
             <artifactId>milib</artifactId>
             <version>${milib.version}</version>
             <type>test-jar</type>
-            <scope>test</scope>
         </dependency>
 
         <dependency>

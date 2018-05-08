@@ -13,6 +13,7 @@ before_install:
   - cd repseqio/milib && mvn clean install -DskipTests -B && cd ..
   - mvn clean install -DskipTests -B && cd ..
   - mv ./repseqio/.cache .cache
+  - cd milib && mvn clean install -DskipTests -B && cd ..
 
 script:
   - mvn test -B && ./itests.sh test
