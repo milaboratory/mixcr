@@ -27,10 +27,6 @@ public final class ActionAssemblePartialAlignments implements Action {
 
     @Override
     public void go(ActionHelper helper) throws Exception {
-        if (parameters.writePartial != null)
-            System.err.println("'-p' option is deprecated and will be removed in 2.2. " +
-                    "Use '-d' option to drop not-overlapped partial reads.");
-
         // Saving initial timestamp
         long beginTimestamp = System.currentTimeMillis();
         PartialAlignmentsAssemblerParameters assemblerParameters = PartialAlignmentsAssemblerParameters.getDefault();
@@ -105,10 +101,6 @@ public final class ActionAssemblePartialAlignments implements Action {
         @Parameter(description = "Write only overlapped sequences (needed for testing).",
                 names = {"-o", "--overlapped-only"})
         public Boolean overlappedOnly;
-
-        @Parameter(description = "[Deprecated, enabled by default] Write partial sequences (for recurrent overlapping).",
-                names = {"-p", "--write-partial"})
-        public Boolean writePartial;
 
         @Parameter(description = "Drop partial sequences which were not assembled. Can be used to reduce output file " +
                 "size if no additional rounds of 'assemblePartial' are required.",
