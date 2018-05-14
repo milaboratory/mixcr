@@ -61,6 +61,8 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
     final boolean writePartial, overlappedOnly;
     final TargetMerger targetMerger;
     final long maxLeftParts;
+    final int maxLeftMatches;
+
     public final AtomicLong leftParts = new AtomicLong(),
             rightParts = new AtomicLong(),
             noKMer = new AtomicLong(),
@@ -86,6 +88,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
         this.minimalNOverlap = params.getMinimalNOverlap();
         this.targetMerger = new TargetMerger(params.getMergerParameters(), params.getMinimalAlignmentMergeIdentity());
         this.maxLeftParts = params.getMaxLeftParts();
+        this.maxLeftMatches = params.getMaxLeftMatches();
         this.writePartial = writePartial;
         this.overlappedOnly = overlappedOnly;
         this.writer = writer;
@@ -307,7 +310,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
                     continue;
 
                 out:
-                for (int i = 0; i < match.size(); i++) {
+                for (int i = 0, size = Math.min(maxLeftMatches, match.size()); i < size; i++) {
                     boolean isOverOverlapped = false;
                     final VDJCAlignments leftAl = match.get(i).getAlignments();
 

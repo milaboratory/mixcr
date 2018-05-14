@@ -12,5 +12,6 @@
     "minimalIdentity": 0.95,
     "identityType": "Unweighted"
   },
-  "maxLeftParts": 256000
+  "maxLeftParts": 256000,
+  "maxLeftMatches": 6144
 }

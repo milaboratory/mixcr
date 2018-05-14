@@ -44,6 +44,7 @@ public class PartialAlignmentsAssemblerParameters {
     private float minimalAlignmentMergeIdentity;
     private MergerParameters mergerParameters;
     private long maxLeftParts;
+    private int maxLeftMatches;
 
     @JsonCreator
     public PartialAlignmentsAssemblerParameters(
@@ -53,7 +54,8 @@ public class PartialAlignmentsAssemblerParameters {
             @JsonProperty("minimalNOverlap") int minimalNOverlap,
             @JsonProperty("minimalAlignmentMergeIdentity") int minimalAlignmentMergeIdentity,
             @JsonProperty("mergerParameters") MergerParameters mergerParameters,
-            @JsonProperty("maxLeftParts") long maxLeftParts) {
+            @JsonProperty("maxLeftParts") long maxLeftParts,
+            @JsonProperty("maxLeftMatches") int maxLeftMatches) {
         this.kValue = kValue;
         this.kOffset = kOffset;
         this.minimalAssembleOverlap = minimalAssembleOverlap;
@@ -61,6 +63,15 @@ public class PartialAlignmentsAssemblerParameters {
         this.minimalAlignmentMergeIdentity = minimalAlignmentMergeIdentity;
         this.mergerParameters = mergerParameters;
         this.maxLeftParts = maxLeftParts;
+        this.maxLeftMatches = maxLeftMatches;
+    }
+
+    public int getMaxLeftMatches() {
+        return maxLeftMatches;
+    }
+
+    public void setMaxLeftMatches(int maxLeftMatches) {
+        this.maxLeftMatches = maxLeftMatches;
     }
 
     public MergerParameters getMergerParameters() {
