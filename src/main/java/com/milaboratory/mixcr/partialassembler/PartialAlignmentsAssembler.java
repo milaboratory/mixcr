@@ -99,8 +99,14 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
         this(params, new VDJCAlignmentsWriter(output), writePartial, overlappedOnly);
     }
 
-    public boolean leftPartsLimitReached(){
+    public boolean leftPartsLimitReached() {
         return maxLeftParts <= leftParts.get();
+    }
+
+    private boolean maxRightMatchesLimitReached = false;
+
+    public boolean maxRightMatchesLimitReached() {
+        return maxRightMatchesLimitReached;
     }
 
     public void buildLeftPartsIndex(VDJCAlignmentsReader reader) {
@@ -308,6 +314,9 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
                 List<KMerInfo> match = kToIndexLeft.get(kMer);
                 if (match == null)
                     continue;
+
+                if (match.size() > maxLeftMatches)
+                    maxRightMatchesLimitReached = true;
 
                 out:
                 for (int i = 0, size = Math.min(maxLeftMatches, match.size()); i < size; i++) {

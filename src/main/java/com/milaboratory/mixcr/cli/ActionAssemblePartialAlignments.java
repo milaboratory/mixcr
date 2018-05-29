@@ -32,6 +32,8 @@ public final class ActionAssemblePartialAlignments implements Action {
 
     public PartialAlignmentsAssembler report;
 
+    public boolean leftPartsLimitReached, maxRightMatchesLimitReached;
+
     @Override
     public void go(ActionHelper helper) throws Exception {
         if (parameters.writePartial != null)
@@ -76,8 +78,15 @@ public final class ActionAssemblePartialAlignments implements Action {
             System.out.println("============= Report ==============");
             Util.writeReportToStdout(report);
 
-            if(assembler.leftPartsLimitReached())
-                System.out.println("WARNING: too many partial alignments detected, consider skipping assemblePartial (enriched library?).");
+            if (assembler.leftPartsLimitReached()) {
+                System.out.println("WARNING: too many partial alignments detected, consider skipping assemblePartial (enriched library?). /leftPartsLimitReached/");
+                leftPartsLimitReached = true;
+            }
+
+            if (assembler.maxRightMatchesLimitReached()) {
+                System.out.println("WARNING: too many partial alignments detected, consider skipping assemblePartial (enriched library?). /maxRightMatchesLimitReached/");
+                maxRightMatchesLimitReached = true;
+            }
 
             if (parameters.report != null)
                 Util.writeReport(parameters.report, report);
