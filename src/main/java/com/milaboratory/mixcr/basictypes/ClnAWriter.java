@@ -33,7 +33,6 @@ import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.CountingOutputPort;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PipeDataInputReader;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
@@ -41,7 +40,6 @@ import com.milaboratory.util.CanReportProgressAndStage;
 import com.milaboratory.util.ObjectSerializer;
 import com.milaboratory.util.Sorter;
 import gnu.trove.list.array.TLongArrayList;
-import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
 import org.apache.commons.io.output.CountingOutputStream;
@@ -60,8 +58,8 @@ import java.util.Optional;
  * writeAlignmentsAndIndex() 5. close()
  */
 public final class ClnAWriter implements AutoCloseable, CanReportProgressAndStage {
-    static final String MAGIC_V1 = "MiXCR.CLNA.V01";
-    static final String MAGIC = MAGIC_V1;
+    static final String MAGIC_V2 = "MiXCR.CLNA.V02";
+    static final String MAGIC = MAGIC_V2;
     static final int MAGIC_LENGTH = MAGIC.length();
 
     /**
@@ -102,7 +100,7 @@ public final class ClnAWriter implements AutoCloseable, CanReportProgressAndStag
     /**
      * Step 1
      */
-    public synchronized void writeClones(CloneSet cloneSet, VDJCAlignerParameters alignerParameters) {
+    public synchronized void writeClones(CloneSet cloneSet) {
         // Checking state
         if (clonesBlockFinished)
             throw new IllegalArgumentException("Clone block was already written.");
@@ -122,11 +120,10 @@ public final class ClnAWriter implements AutoCloseable, CanReportProgressAndStag
                 .getVersionString(MiXCRVersionInfo.OutputType.ToFile));
 
         // Writing aligner parameters
-        output.writeObject(alignerParameters);
+        output.writeObject(cloneSet.alignmentParameters);
 
-        // Saving assembling features
-        GeneFeature[] assemblingFeatures = cloneSet.getAssemblingFeatures();
-        output.writeObject(assemblingFeatures);
+        // Writing assembler parameters
+        output.writeObject(cloneSet.assemblerParameters);
 
         // Writing aligned gene features for each gene type
         IO.writeGT2GFMap(output, cloneSet.alignedFeatures);
@@ -177,8 +174,9 @@ public final class ClnAWriter implements AutoCloseable, CanReportProgressAndStag
 
         // Sorting alignments by cloneId and then by mapping type (core alignments will be written before all others)
         // and saving sorting output port
-        sortedAlignments = Sorter.sort(
-                toSorter = new CountingOutputPort<>(alignments),
+        this.toSorter = new CountingOutputPort<>(alignments);
+        this.sortedAlignments = Sorter.sort(
+                toSorter,
                 (o1, o2) -> {
                     int i = Integer.compare(o1.cloneIndex, o2.cloneIndex);
                     if (i != 0)
@@ -311,7 +309,6 @@ public final class ClnAWriter implements AutoCloseable, CanReportProgressAndStag
                 return 1.0 * toSorter.getCount() / numberOfAlignments;
         } else
             return 1.0 * numberOfAlignmentsWritten / numberOfAlignments;
-
     }
 
     @Override

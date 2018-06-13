@@ -93,7 +93,7 @@ public class CloneAssemblerRunnerTest {
 
         //write alignments to byte array
         ByteArrayOutputStream alignmentsSerialized = new ByteArrayOutputStream();
-        try(VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(alignmentsSerialized)) {
+        try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(alignmentsSerialized)) {
             writer.header(aligner);
             for (Object read : CUtils.it(reader)) {
                 VDJCAlignmentResult result = (VDJCAlignmentResult) aligner.process((SequenceRead) read);
@@ -129,7 +129,7 @@ public class CloneAssemblerRunnerTest {
         SmartProgressReporter.startProgressReport(assemblerRunner);
         assemblerRunner.run();
 
-        CloneSet cloneSet = assemblerRunner.getCloneSet();
+        CloneSet cloneSet = assemblerRunner.getCloneSet(null);
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         CloneSetIO.write(cloneSet, bos);

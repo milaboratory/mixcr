@@ -38,6 +38,7 @@ import io.repseq.core.ReferencePoint;
 import io.repseq.core.VDJCGene;
 
 import java.util.Arrays;
+import java.util.function.Function;
 
 @Serializable(by = IO.VDJCHitSerializer.class)
 public final class VDJCHit implements Comparable<VDJCHit>, HasGene {
@@ -77,6 +78,16 @@ public final class VDJCHit implements Comparable<VDJCHit>, HasGene {
         Alignment<NucleotideSequence>[] newAlignments = alignments.clone();
         newAlignments[target] = alignment;
         return new VDJCHit(gene, newAlignments, alignedFeature);
+    }
+
+    @SuppressWarnings("unchecked")
+    public VDJCHit updateAlignments(Function<Alignment<NucleotideSequence>, Alignment<NucleotideSequence>> processor) {
+        return new VDJCHit(gene,
+                Arrays
+                        .stream(alignments)
+                        .map(al -> al == null ? null : processor.apply(al))
+                        .toArray(Alignment[]::new),
+                alignedFeature, score);
     }
 
     public int getPosition(int target, ReferencePoint referencePoint) {
@@ -125,6 +136,8 @@ public final class VDJCHit implements Comparable<VDJCHit>, HasGene {
         float identity = 0;
         int tSize = 0;
         for (Alignment<NucleotideSequence> alignment : alignments) {
+            if (alignment == null)
+                continue;
             AlignmentHelper h = alignment.getAlignmentHelper();
             identity += h.identity() * h.size();
             tSize += h.size();

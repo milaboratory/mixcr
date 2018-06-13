@@ -8,12 +8,13 @@ import com.milaboratory.core.io.sequence.SingleReadImpl;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceQuality;
+import com.milaboratory.core.sequence.quality.QualityTrimmerParameters;
+import com.milaboratory.mixcr.assembler.CloneFactory;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter;
 import com.milaboratory.mixcr.cli.ActionExportClonesPretty;
-import com.milaboratory.mixcr.cli.Main;
 import com.milaboratory.mixcr.util.RunMiXCR;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
 import gnu.trove.set.hash.TIntHashSet;
@@ -35,7 +36,8 @@ import java.util.stream.StreamSupport;
 public class FullSeqAssemblerTest {
     static final FullSeqAssemblerParameters DEFAULT_PARAMETERS =
             new FullSeqAssemblerParameters(0.1, 80, 120,
-                    3, 7, 0.25, GeneFeature.VDJRegion);
+                    3, 7, 0.25, 0.5, 50, GeneFeature.VDJRegion,
+                    new QualityTrimmerParameters(20.0f, 8), 20, false);
 
     static final class MasterSequence {
         final int vPart, cdr3Part, jPart, cPart;
@@ -250,7 +252,10 @@ public class FullSeqAssemblerTest {
         RunMiXCR.AssembleResult assemble = RunMiXCR.assemble(align);
         Assert.assertEquals(1, assemble.cloneSet.size());
 
-        FullSeqAssembler agg = new FullSeqAssembler(DEFAULT_PARAMETERS, assemble.cloneSet.get(0), align.parameters.alignerParameters);
+        CloneFactory cloneFactory = new CloneFactory(align.parameters.cloneAssemblerParameters.getCloneFactoryParameters(),
+                align.parameters.cloneAssemblerParameters.getAssemblingFeatures(),
+                align.usedGenes, align.parameters.alignerParameters.getFeaturesToAlignMap());
+        FullSeqAssembler agg = new FullSeqAssembler(cloneFactory, DEFAULT_PARAMETERS, assemble.cloneSet.get(0), align.parameters.alignerParameters);
 
         FullSeqAssembler.RawVariantsData prep = agg.calculateRawData(() -> CUtils.asOutputPort(
                 align.alignments.stream().filter(a -> a.getFeature(GeneFeature.CDR3) != null).collect(Collectors.toList())
@@ -303,6 +308,7 @@ public class FullSeqAssemblerTest {
         // [-60, -20] = 40
         params.alignerParameters = VDJCParametersPresets.getByName("rna-seq");
         params.alignerParameters.setSaveOriginalReads(true);
+        params.cloneAssemblerParameters.updateFrom(params.alignerParameters);
 
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
 //        for (VDJCAlignments al : align.alignments) {
@@ -313,15 +319,18 @@ public class FullSeqAssemblerTest {
 
         RunMiXCR.AssembleResult assemble = RunMiXCR.assemble(align);
 
-        FullSeqAssembler agg = new FullSeqAssembler(DEFAULT_PARAMETERS, assemble.cloneSet.get(0), align.parameters.alignerParameters);
+        CloneFactory cloneFactory = new CloneFactory(align.parameters.cloneAssemblerParameters.getCloneFactoryParameters(),
+                align.parameters.cloneAssemblerParameters.getAssemblingFeatures(),
+                align.usedGenes, align.parameters.alignerParameters.getFeaturesToAlignMap());
+        FullSeqAssembler agg = new FullSeqAssembler(cloneFactory, DEFAULT_PARAMETERS, assemble.cloneSet.get(0), align.parameters.alignerParameters);
 
         PointSequence[] r2s = agg.toPointSequences(align.alignments.get(1));
         TIntHashSet p2 = new TIntHashSet(Arrays.stream(r2s).mapToInt(s -> s.point).toArray());
-        Assert.assertEquals(260 - masterSeq1WT.cdr3Part, p2.size());
+        Assert.assertEquals(261 - masterSeq1WT.cdr3Part, p2.size());
 
         PointSequence[] r1s = agg.toPointSequences(align.alignments.get(0));
         TIntHashSet p1 = new TIntHashSet(Arrays.stream(r1s).mapToInt(s -> s.point).toArray());
-        Assert.assertEquals(280 - masterSeq1WT.cdr3Part, p1.size());
+        Assert.assertEquals(281 - masterSeq1WT.cdr3Part, p1.size());
 
         FullSeqAssembler.RawVariantsData prep = agg.calculateRawData(() -> CUtils.asOutputPort(align.alignments));
 
@@ -380,25 +389,33 @@ public class FullSeqAssemblerTest {
 
 
         RunMiXCR.RunMiXCRAnalysis params = new RunMiXCR.RunMiXCRAnalysis(slicedReads);
-//        params.alignerParameters = VDJCParametersPresets.getByName("rna-seq");
+        // params.alignerParameters = VDJCParametersPresets.getByName("rna-seq");
 
         params.alignerParameters.setSaveOriginalReads(true);
 
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
         RunMiXCR.AssembleResult assemble = RunMiXCR.assemble(align);
 
-//        for (VDJCAlignments al : align.alignments) {
-//            for (int i = 0; i < al.numberOfTargets(); i++) {
-//                System.out.println(VDJCAlignmentsFormatter.getTargetAsMultiAlignment(al, i));
-//                System.out.println();
-//            }
-//            System.out.println();
-//            System.out.println(" ================================================ ");
-//            System.out.println();
-//        }
+        for (VDJCAlignments al : align.alignments) {
+            if (al.getFeature(GeneFeature.CDR3) == null)
+                continue;
+            if (!new NucleotideSequence("TACGGGTTTGACTACTGG").equals(al.getFeature(GeneFeature.CDR3).getSequence()))
+                continue;
 
+            for (int i = 0; i < al.numberOfTargets(); i++) {
+                System.out.println(VDJCAlignmentsFormatter.getTargetAsMultiAlignment(al, i));
+                System.out.println();
+            }
+            System.out.println();
+            System.out.println(" ================================================ ");
+            System.out.println();
+        }
 
-        Assert.assertEquals(1, assemble.cloneSet.size());
+        for (Clone clone : assemble.cloneSet) {
+            ActionExportClonesPretty.outputCompact(System.out, clone);
+        }
+
+        //Assert.assertEquals(1, assemble.cloneSet.size());
 
         Clone initialClone = assemble.cloneSet.get(0);
         NSequenceWithQuality cdr3 = initialClone.getFeature(GeneFeature.CDR3);
@@ -423,7 +440,10 @@ public class FullSeqAssemblerTest {
 
 //        System.exit(0);
         System.out.println("=> Agg");
-        FullSeqAssembler agg = new FullSeqAssembler(DEFAULT_PARAMETERS, initialClone, align.parameters.alignerParameters);
+        CloneFactory cloneFactory = new CloneFactory(align.parameters.cloneAssemblerParameters.getCloneFactoryParameters(),
+                align.parameters.cloneAssemblerParameters.getAssemblingFeatures(),
+                align.usedGenes, align.parameters.alignerParameters.getFeaturesToAlignMap());
+        FullSeqAssembler agg = new FullSeqAssembler(cloneFactory, DEFAULT_PARAMETERS, initialClone, align.parameters.alignerParameters);
         FullSeqAssembler.RawVariantsData prep = agg.calculateRawData(() -> CUtils.asOutputPort(alignments));
         List<Clone> clones = new ArrayList<>(new CloneSet(Arrays.asList(agg.callVariants(prep))).getClones());
         clones.sort(Comparator.comparingDouble(Clone::getCount).reversed());

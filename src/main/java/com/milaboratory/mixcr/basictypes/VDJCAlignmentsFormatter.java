@@ -113,46 +113,65 @@ public class VDJCAlignmentsFormatter {
 
     public static void drawAASequence(MultiAlignmentHelper helper, SequencePartitioning partitioning,
                                       NucleotideSequence target) {
-        // List<RangeTranslationParameters> trParams = partitioning.getTranslationParameters(target.size());
-        // char[] line = new char[helper.size()];
-        // Arrays.fill(line, ' ');
-        // for (RangeTranslationParameters trParam : trParams) {
-        //     NucleotideSequence mainSequence = target.getRange(trParam.range);
-        //     NucleotideSequence leftover = trParam.codonLeftoverRange == null
-        //             ? null
-        //             : target.getRange(trParam.codonLeftoverRange);
-        //     NucleotideSequence bigSeq = leftover == null ? mainSequence :
-        //             trParam.leftIncompleteCodonRange() != null
-        //                     ? leftover.concatenate(mainSequence)
-        //                     : mainSequence.concatenate(leftover);
-        //     AminoAcidSequence aa = AminoAcidSequence.translate(bigSeq,
-        //             trParam.translationParameters);
-        //     int aaPosition = 0;
-        //     int ntPosition = trParam.range.getFrom()
-        //             + AminoAcidSequence.convertAAPositionToNt(aaPosition, mainSequence.size(),
-        //             trParam.translationParameters);
-        //     if (aa.codeAt(aaPosition) == AminoAcidAlphabet.INCOMPLETE_CODON) {
-        //         line[helper.subjectToAlignmentPosition(ntPosition)] =
-        //                 AminoAcidSequence.ALPHABET.codeToSymbol(aa.codeAt(aaPosition));
-        //         ++aaPosition;
-        //     }
-        //     do {
-        //         ntPosition = trParam.range.getFrom()
-        //                 + AminoAcidSequence.convertAAPositionToNt(aaPosition, mainSequence.size(),
-        //                 trParam.translationParameters);
-        //         line[helper.subjectToAlignmentPosition(ntPosition + 1)] =
-        //                 AminoAcidSequence.ALPHABET.codeToSymbol(aa.codeAt(aaPosition));
-        //     } while (++aaPosition < aa.size() &&
-        //             aa.codeAt(aaPosition) != AminoAcidAlphabet.INCOMPLETE_CODON);
-        //     if (aaPosition < aa.size() && aa.codeAt(aaPosition) == AminoAcidAlphabet.INCOMPLETE_CODON) {
-        //         ntPosition = trParam.range.getFrom()
-        //                 + AminoAcidSequence.convertAAPositionToNt(aaPosition, mainSequence.size(),
-        //                 trParam.translationParameters);
-        //         line[helper.subjectToAlignmentPosition(ntPosition)] =
-        //                 AminoAcidSequence.ALPHABET.codeToSymbol(aa.codeAt(aaPosition));
-        //     }
-        // }
-        // helper.addAnnotationString("", new String(line));
+        List<RangeTranslationParameters> trParams = partitioning.getTranslationParameters(target.size());
+        char[] line = new char[helper.size()];
+        Arrays.fill(line, ' ');
+        for (RangeTranslationParameters trParam : trParams) {
+            NucleotideSequence mainSequence = target.getRange(trParam.range);
+            NucleotideSequence leftover = trParam.codonLeftoverRange == null
+                    ? null
+                    : target.getRange(trParam.codonLeftoverRange);
+            NucleotideSequence bigSeq = leftover == null ? mainSequence :
+                    trParam.leftIncompleteCodonRange() != null
+                            ? leftover.concatenate(mainSequence)
+                            : mainSequence.concatenate(leftover);
+            AminoAcidSequence aa = AminoAcidSequence.translate(bigSeq,
+                    trParam.translationParameters);
+            int aaPosition = 0;
+            int ntPosition = trParam.range.getFrom()
+                    + AminoAcidSequence.convertAAPositionToNt(aaPosition, mainSequence.size(),
+                    trParam.translationParameters);
+
+            if (aa.codeAt(aaPosition) == AminoAcidAlphabet.INCOMPLETE_CODON) {
+                line[helper.subjectToAlignmentPosition(ntPosition)] =
+                        AminoAcidSequence.ALPHABET.codeToSymbol(aa.codeAt(aaPosition)); // '_'
+                ++aaPosition;
+            }
+
+            while (aaPosition < aa.size() &&
+                    (aaPosition < aa.size() - 1 || aa.codeAt(aaPosition) != AminoAcidAlphabet.INCOMPLETE_CODON)) {
+
+                ntPosition = trParam.range.getFrom()
+                        + AminoAcidSequence.convertAAPositionToNt(aaPosition, bigSeq.size(),
+                        trParam.translationParameters);
+
+                if (leftover != null && trParam.leftIncompleteCodonRange() != null)
+                    ntPosition -= trParam.leftIncompleteCodonRange().length();
+                boolean isLeftover = false;
+                if (leftover != null) {
+                    if (trParam.leftIncompleteCodonRange() != null)
+                        isLeftover = (aaPosition == 0);
+                    else
+                        isLeftover = (aaPosition == aa.size() - 1);
+                }
+
+                if (aa.codeAt(aaPosition) != AminoAcidAlphabet.INCOMPLETE_CODON)
+                    ++ntPosition;
+                char c = AminoAcidSequence.ALPHABET.codeToSymbol(aa.codeAt(aaPosition));
+                if (isLeftover)
+                    c = Character.toLowerCase(c);
+                line[helper.subjectToAlignmentPosition(ntPosition)] = c;
+                ++aaPosition;
+            }
+            if (aaPosition < aa.size() && (aaPosition < aa.size() - 1 || aa.codeAt(aaPosition) == AminoAcidAlphabet.INCOMPLETE_CODON)) {
+                ntPosition = trParam.range.getFrom()
+                        + AminoAcidSequence.convertAAPositionToNt(aaPosition, mainSequence.size(),
+                        trParam.translationParameters);
+                line[helper.subjectToAlignmentPosition(ntPosition)] =
+                        AminoAcidSequence.ALPHABET.codeToSymbol(aa.codeAt(aaPosition));
+            }
+        }
+        helper.addAnnotationString("", new String(line));
     }
 
     public static void drawPoints(MultiAlignmentHelper helper, SequencePartitioning partitioning,

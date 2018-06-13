@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.milaboratory.core.sequence.quality.QualityTrimmerParameters;
 import com.milaboratory.util.GlobalObjectMappers;
 import io.repseq.core.GeneFeature;
 
@@ -21,78 +22,107 @@ import java.util.Set;
 public class FullSeqAssemblerParameters {
     /**
      * Minimal quality fraction (variant may be marked significant if {@code variantQuality > totalSumQuality *
-     * minimalQualityShare}
+     * branchingMinimalQualityShare}
      */
-    double minimalQualityShare = 0.1;
+    double branchingMinimalQualityShare;
     /**
      * Minimal variant quality threshold (variant may be marked significant if {@code variantQuality >
-     * minimalSumQuality}
+     * branchingMinimalSumQuality}
      */
-    long minimalSumQuality = 80;
+    long branchingMinimalSumQuality;
     /**
      * Variant quality that guaranties that variant will be marked significant (even if other criteria are not
      * satisfied)
      */
-    long decisiveSumQualityThreshold = 120;
+    long decisiveBranchingSumQualityThreshold;
     /**
      * Maximal number of not aligned nucleotides at the edge of sequence so that sequence is still considered aligned
      * "to the end"
      */
-    int alignedSequenceEdgeDelta = 3;
+    int alignedSequenceEdgeDelta;
     /**
      * Number of nucleotides at the edges of alignments (with almost fully aligned seq2) that are "not trusted"
      */
-    int alignmentEdgeRegionSize = 7;
+    int alignmentEdgeRegionSize;
     /**
-     * Minimal fraction of non edge points in variant that should be reached to consider variant as significant
+     * Minimal fraction of non edge points in variant that must be reached to consider the variant significant
      */
-    double minimalNonEdgePointsFraction = 0.25;
+    double minimalNonEdgePointsFraction;
+    /**
+     * Positions having quality share less then this value, will not be represented in the output
+     */
+    double outputMinimalQualityShare;
+    /**
+     * Positions having sum quality less then this value, will not be represented in the output
+     */
+    long outputMinimalSumQuality;
     /**
      * Region where variants are allowed
      */
-    GeneFeature subCloningRegion = GeneFeature.VDJRegion;
+    GeneFeature subCloningRegion;
+    /**
+     * Parameters of trimmer, that performs final processing of the output contigs
+     */
+    QualityTrimmerParameters trimmingParameters;
+    /**
+     * Minimal contiguous sequence length
+     */
+    int minimalContigLength;
+    /**
+     * Assemble only parts of sequences covered by alignments
+     */
+    boolean alignedRegionsOnly;
 
     @JsonCreator
     public FullSeqAssemblerParameters(
-            @JsonProperty("minimalQualityShare") double minimalQualityShare,
-            @JsonProperty("minimalSumQuality") long minimalSumQuality,
-            @JsonProperty("decisiveSumQualityThreshold") long decisiveSumQualityThreshold,
+            @JsonProperty("branchingMinimalQualityShare") double branchingMinimalQualityShare,
+            @JsonProperty("branchingMinimalSumQuality") long branchingMinimalSumQuality,
+            @JsonProperty("decisiveBranchingSumQualityThreshold") long decisiveBranchingSumQualityThreshold,
             @JsonProperty("alignedSequenceEdgeDelta") int alignedSequenceEdgeDelta,
             @JsonProperty("alignmentEdgeRegionSize") int alignmentEdgeRegionSize,
             @JsonProperty("minimalNonEdgePointsFraction") double minimalNonEdgePointsFraction,
-            @JsonProperty("subCloningRegion") GeneFeature subCloningRegion) {
-        this.minimalQualityShare = minimalQualityShare;
-        this.minimalSumQuality = minimalSumQuality;
-        this.decisiveSumQualityThreshold = decisiveSumQualityThreshold;
+            @JsonProperty("outputMinimalQualityShare") double outputMinimalQualityShare,
+            @JsonProperty("outputMinimalSumQuality") long outputMinimalSumQuality,
+            @JsonProperty("subCloningRegion") GeneFeature subCloningRegion,
+            @JsonProperty("trimmingParameters") QualityTrimmerParameters trimmingParameters,
+            @JsonProperty("minimalContigLength") int minimalContigLength,
+            @JsonProperty("alignedRegionsOnly") boolean alignedRegionsOnly) {
+        this.branchingMinimalQualityShare = branchingMinimalQualityShare;
+        this.branchingMinimalSumQuality = branchingMinimalSumQuality;
+        this.decisiveBranchingSumQualityThreshold = decisiveBranchingSumQualityThreshold;
         this.alignedSequenceEdgeDelta = alignedSequenceEdgeDelta;
         this.alignmentEdgeRegionSize = alignmentEdgeRegionSize;
         this.minimalNonEdgePointsFraction = minimalNonEdgePointsFraction;
+        this.outputMinimalQualityShare = outputMinimalQualityShare;
+        this.outputMinimalSumQuality = outputMinimalSumQuality;
         this.subCloningRegion = subCloningRegion;
-
+        this.trimmingParameters = trimmingParameters;
+        this.minimalContigLength = minimalContigLength;
+        this.alignedRegionsOnly = alignedRegionsOnly;
     }
 
-    public double getMinimalQualityShare() {
-        return minimalQualityShare;
+    public double getBranchingMinimalQualityShare() {
+        return branchingMinimalQualityShare;
     }
 
-    public void setMinimalQualityShare(double minimalQualityShare) {
-        this.minimalQualityShare = minimalQualityShare;
+    public void setBranchingMinimalQualityShare(double branchingMinimalQualityShare) {
+        this.branchingMinimalQualityShare = branchingMinimalQualityShare;
     }
 
-    public long getMinimalSumQuality() {
-        return minimalSumQuality;
+    public long getBranchingMinimalSumQuality() {
+        return branchingMinimalSumQuality;
     }
 
-    public void setMinimalSumQuality(long minimalSumQuality) {
-        this.minimalSumQuality = minimalSumQuality;
+    public void setBranchingMinimalSumQuality(long branchingMinimalSumQuality) {
+        this.branchingMinimalSumQuality = branchingMinimalSumQuality;
     }
 
-    public long getDecisiveSumQualityThreshold() {
-        return decisiveSumQualityThreshold;
+    public long getDecisiveBranchingSumQualityThreshold() {
+        return decisiveBranchingSumQualityThreshold;
     }
 
-    public void setDecisiveSumQualityThreshold(long decisiveSumQualityThreshold) {
-        this.decisiveSumQualityThreshold = decisiveSumQualityThreshold;
+    public void setDecisiveBranchingSumQualityThreshold(long decisiveBranchingSumQualityThreshold) {
+        this.decisiveBranchingSumQualityThreshold = decisiveBranchingSumQualityThreshold;
     }
 
     public int getAlignedSequenceEdgeDelta() {
@@ -119,10 +149,52 @@ public class FullSeqAssemblerParameters {
         this.minimalNonEdgePointsFraction = minimalNonEdgePointsFraction;
     }
 
+    public double getOutputMinimalQualityShare() {
+        return outputMinimalQualityShare;
+    }
+
+    public void setOutputMinimalQualityShare(double outputMinimalQualityShare) {
+        this.outputMinimalQualityShare = outputMinimalQualityShare;
+    }
+
+    public long getOutputMinimalSumQuality() {
+        return outputMinimalSumQuality;
+    }
+
+    public void setOutputMinimalSumQuality(long outputMinimalSumQuality) {
+        this.outputMinimalSumQuality = outputMinimalSumQuality;
+    }
+
+    public boolean isAlignedRegionsOnly() {
+        return alignedRegionsOnly;
+    }
+
+    public void setAlignedRegionsOnly(boolean alignedRegionsOnly) {
+        this.alignedRegionsOnly = alignedRegionsOnly;
+    }
+
+    public QualityTrimmerParameters getTrimmingParameters() {
+        return trimmingParameters;
+    }
+
+    public void setTrimmingParameters(QualityTrimmerParameters trimmingParameters) {
+        this.trimmingParameters = trimmingParameters;
+    }
+
+    public int getMinimalContigLength() {
+        return minimalContigLength;
+    }
+
+    public void setMinimalContigLength(int minimalContigLength) {
+        this.minimalContigLength = minimalContigLength;
+    }
+
     @Override
     public FullSeqAssemblerParameters clone() {
-        return new FullSeqAssemblerParameters(minimalQualityShare, minimalSumQuality, decisiveSumQualityThreshold,
-                alignedSequenceEdgeDelta, alignmentEdgeRegionSize, minimalNonEdgePointsFraction, subCloningRegion);
+        return new FullSeqAssemblerParameters(branchingMinimalQualityShare, branchingMinimalSumQuality, decisiveBranchingSumQualityThreshold,
+                alignedSequenceEdgeDelta, alignmentEdgeRegionSize, minimalNonEdgePointsFraction,
+                outputMinimalQualityShare, outputMinimalSumQuality, subCloningRegion,
+                trimmingParameters, minimalContigLength, alignedRegionsOnly);
     }
 
     private static Map<String, FullSeqAssemblerParameters> knownParameters;

@@ -12,6 +12,8 @@ import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParametersWithOutput;
 import com.milaboratory.cli.ProcessException;
+import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
+import com.milaboratory.mixcr.assembler.CloneFactory;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerReport;
@@ -21,7 +23,6 @@ import com.milaboratory.primitivio.PipeDataInputReader;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.util.SmartProgressReporter;
-import io.repseq.core.GeneFeature;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
 
@@ -55,30 +56,56 @@ public class ActionAssembleContigs implements Action {
         int totalClonesCount = 0;
         List<VDJCGene> genes;
         VDJCAlignerParameters alignerParameters;
-        GeneFeature[] assemblingFeatures;
+        CloneAssemblerParameters cloneAssemblerParameters;
         try (ClnAReader reader = new ClnAReader(parameters.getInputFileName(), VDJCLibraryRegistry.getDefault());
-             PrimitivO tmpOut = new PrimitivO(new BufferedOutputStream(new FileOutputStream(parameters.getOutputFileName())))) {
+             PrimitivO tmpOut = new PrimitivO(new BufferedOutputStream(new FileOutputStream(parameters.getOutputFileName())));
+             BufferedWriter debugReport = parameters.debugReport == null ? null : new BufferedWriter(new OutputStreamWriter(new FileOutputStream(parameters.debugReport)))) {
+
+            final CloneFactory cloneFactory = new CloneFactory(reader.getAssemblerParameters().getCloneFactoryParameters(),
+                    reader.getAssemblingFeatures(), reader.getGenes(), reader.getAlignerParameters().getFeaturesToAlignMap());
 
             alignerParameters = reader.getAlignerParameters();
+            cloneAssemblerParameters = reader.getAssemblerParameters();
             genes = reader.getGenes();
             IOUtil.registerGeneReferences(tmpOut, genes, alignerParameters);
 
-            assemblingFeatures = reader.getAssemblingFeatures();
             ClnAReader.CloneAlignmentsPort cloneAlignmentsPort = reader.clonesAndAlignments();
             SmartProgressReporter.startProgressReport("Assembling", cloneAlignmentsPort);
 
             OutputPort<Clone[]> parallelProcessor = new ParallelProcessor<>(cloneAlignmentsPort, cloneAlignments -> {
-                FullSeqAssembler fullSeqAssembler = new FullSeqAssembler(assemblerParameters, cloneAlignments.clone, alignerParameters);
-                fullSeqAssembler.setReport(report);
+                try {
+                    FullSeqAssembler fullSeqAssembler = new FullSeqAssembler(cloneFactory, assemblerParameters, cloneAlignments.clone, alignerParameters);
+                    fullSeqAssembler.setReport(report);
 
-                FullSeqAssembler.RawVariantsData rawVariantsData = fullSeqAssembler.calculateRawData(() -> {
-                    try {
-                        return cloneAlignments.alignments();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+                    FullSeqAssembler.RawVariantsData rawVariantsData = fullSeqAssembler.calculateRawData(() -> {
+                        try {
+                            return cloneAlignments.alignments();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+
+                    if (debugReport != null) {
+                        synchronized (debugReport) {
+                            try {
+                                debugReport.write("Clone: " + cloneAlignments.clone.getId());
+                                debugReport.newLine();
+                                debugReport.write(rawVariantsData.toString());
+                                debugReport.newLine();
+                                debugReport.newLine();
+                                debugReport.write("==========================================");
+                                debugReport.newLine();
+                                debugReport.newLine();
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
                     }
-                });
-                return fullSeqAssembler.callVariants(rawVariantsData);
+
+                    return fullSeqAssembler.callVariants(rawVariantsData);
+                } catch (Throwable re) {
+                    throw new RuntimeException("While processing clone #" + cloneAlignments.clone.getId(), re);
+                }
             }, parameters.threads);
 
             for (Clone[] clones : CUtils.it(parallelProcessor)) {
@@ -104,7 +131,8 @@ public class ActionAssembleContigs implements Action {
         Arrays.sort(clones, Comparator.comparingDouble(c -> -c.getCount()));
         for (int i = 0; i < clones.length; i++)
             clones[i] = clones[i].setId(i);
-        CloneSet cloneSet = new CloneSet(Arrays.asList(clones), genes, alignerParameters.getFeaturesToAlignMap(), assemblingFeatures);
+        CloneSet cloneSet = new CloneSet(Arrays.asList(clones), genes, alignerParameters.getFeaturesToAlignMap(),
+                alignerParameters, cloneAssemblerParameters);
 
         try (CloneSetIO.CloneSetWriter writer = new CloneSetIO.CloneSetWriter(cloneSet, parameters.getOutputFileName())) {
             SmartProgressReporter.startProgressReport(writer);
@@ -155,6 +183,10 @@ public class ActionAssembleContigs implements Action {
         @Parameter(description = "Report file.",
                 names = {"-r", "--report"})
         public String report;
+
+        @Parameter(description = "Report file.",
+                names = {"--debug-report"}, hidden = true)
+        public String debugReport;
 
         @Parameter(description = "JSON report file.",
                 names = {"--json-report"})

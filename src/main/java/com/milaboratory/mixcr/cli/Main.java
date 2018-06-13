@@ -31,6 +31,7 @@ package com.milaboratory.mixcr.cli;
 import com.milaboratory.cli.JCommanderBasedMain;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.util.TempFileManager;
+import com.milaboratory.util.VersionInfo;
 import io.repseq.core.VDJCLibraryRegistry;
 import io.repseq.seqbase.SequenceResolvers;
 
@@ -46,6 +47,11 @@ public class Main {
         String command = System.getProperty("mixcr.command", "java -jar mixcr.jar");
 
         if (!initialized) {
+            // Checking whether we are running a snapshot version
+            if (VersionInfo.getVersionInfoForArtifact("mixcr").getVersion().contains("SNAPSHOT"))
+                // If so, enable asserts
+                ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(true);
+
             TempFileManager.setPrefix("mixcr_");
 
             Path cachePath = Paths.get(System.getProperty("user.home"), ".mixcr", "cache");
@@ -72,8 +78,10 @@ public class Main {
 
             if (Files.exists(libraries))
                 VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(libraries);
+
             initialized = true;
         }
+
         // Setting up main helper
         JCommanderBasedMain main = new JCommanderBasedMain(command,
                 new ActionAlign(),
@@ -94,9 +102,9 @@ public class Main {
                 new ActionClonesDiff(),
                 new ActionFilterAlignments(),
                 new ActionListLibraries(),
-                new ActionExtendAlignments(),
+                new ActionExtend(),
                 new ActionSortAlignments(),
-                new ActionSliceClnA());
+                new ActionSlice());
 
         // Adding version info callback
         main.setVersionInfoCallback(
@@ -112,6 +120,12 @@ public class Main {
                         printVersion(true);
                     }
                 });
+
+        // Deprecation
+        if (args.length > 0 && args[0].equals("extendAlignments")) {
+            System.out.println("WARNING: `extendAlignments` action is deprecated, please use `extend`");
+            args[0] = "extend";
+        }
 
         // Executing main method
         JCommanderBasedMain.ProcessResult processResult = main.main(args);

@@ -33,6 +33,7 @@ public enum VDJCAlignmentFailCause {
     NoCDR3Parts("Alignment failed because of absence of CDR3 parts"),
     NoVHits("Alignment failed because of absence of V hits"),
     NoJHits("Alignment failed because of absence of J hits"),
+    VAndJOnDifferentTargets("No target with both V and J alignments"),
     LowTotalScore("Alignment failed because of low total score");
     public final String reportLine;
 

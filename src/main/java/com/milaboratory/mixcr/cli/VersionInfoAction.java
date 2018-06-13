@@ -59,7 +59,7 @@ public class VersionInfoAction implements Action {
             CloneSet cs = CloneSetIO.read(inputFile);
             System.out.println(cs.getVersionInfo());
         } else if (i.endsWith(".clna")) {
-            try (ClnAReader reader = new ClnAReader(inputFile, VDJCLibraryRegistry.createDefaultRegistry())) {
+            try (ClnAReader reader = new ClnAReader(inputFile, VDJCLibraryRegistry.getDefault())) {
                 System.out.println(reader.getVersionInfo());
             }
         } else

@@ -29,9 +29,7 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.sequence.NSequenceWithQuality;
-import com.milaboratory.core.sequence.SequencesUtils;
 import com.milaboratory.primitivio.annotations.Serializable;
-import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 
 import java.util.EnumMap;
@@ -39,33 +37,35 @@ import java.util.Objects;
 
 @Serializable(by = IO.CloneSerializer.class)
 public final class Clone extends VDJCObject {
-    final GeneFeature[] assemblingFeatures;
     final double count;
     final int id;
     CloneSet parent = null;
 
-    public Clone(NSequenceWithQuality[] targets, EnumMap<GeneType, VDJCHit[]> hits, GeneFeature[] assemblingFeatures, double count, int id) {
+    public Clone(NSequenceWithQuality[] targets, EnumMap<GeneType, VDJCHit[]> hits, double count, int id) {
         super(hits, targets);
-        this.assemblingFeatures = assemblingFeatures;
         this.count = count;
         this.id = id;
     }
 
     public Clone setId(int id) {
-        Clone r = new Clone(targets, hits, assemblingFeatures, count, id);
+        Clone r = new Clone(targets, hits, count, id);
         r.setParentCloneSet(parent);
         return r;
     }
 
     /** Returns new instance with parent clone set set to null */
     public Clone resetParentCloneSet() {
-        return new Clone(targets, hits, assemblingFeatures, count, id);
+        return new Clone(targets, hits, count, id);
     }
 
     public void setParentCloneSet(CloneSet set) {
         if (this.parent != null)
             throw new IllegalStateException("Parent is already set.");
         this.parent = set;
+    }
+
+    public CloneSet getParentCloneSet() {
+        return parent;
     }
 
     public double getFraction() {
@@ -78,19 +78,8 @@ public final class Clone extends VDJCObject {
         return 1.0 * count / totalCount;
     }
 
-    public GeneFeature[] getAssemblingFeatures() {
-        return assemblingFeatures;
-    }
-
     public double getCount() {
         return count;
-    }
-
-    public NSequenceWithQuality getConcatenatedClonalSequence() {
-        NSequenceWithQuality[] seqs = new NSequenceWithQuality[assemblingFeatures.length];
-        for (int i = 0; i < assemblingFeatures.length; i++)
-            seqs[i] = getFeature(assemblingFeatures[i]);
-        return SequencesUtils.concatenate(seqs);
     }
 
     public int getId() {

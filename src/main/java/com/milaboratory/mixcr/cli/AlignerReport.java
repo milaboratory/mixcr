@@ -49,6 +49,8 @@ public final class AlignerReport extends AbstractActionReport implements VDJCAli
     private final AtomicLong alignedAlignmentOverlap = new AtomicLong(0);
     private final AtomicLong nonAlignedOverlap = new AtomicLong(0);
     private final AtomicLong topHitConflict = new AtomicLong(0);
+    private final AtomicLong vChimeras = new AtomicLong(0);
+    private final AtomicLong jChimeras = new AtomicLong(0);
 
     public AlignerReport() {
     }
@@ -138,6 +140,16 @@ public final class AlignerReport extends AbstractActionReport implements VDJCAli
         return topHitConflict.get();
     }
 
+    @JsonProperty("vChimeras")
+    public long getVChimeras() {
+        return vChimeras.get();
+    }
+
+    @JsonProperty("jChimeras")
+    public long getJChimeras() {
+        return jChimeras.get();
+    }
+
     @Override
     public void onFailedAlignment(SequenceRead read, VDJCAlignmentFailCause cause) {
         fails.incrementAndGet(cause.ordinal());
@@ -146,6 +158,7 @@ public final class AlignerReport extends AbstractActionReport implements VDJCAli
     @Override
     public void onSuccessfulAlignment(SequenceRead read, VDJCAlignments alignment) {
         successes.incrementAndGet();
+        chainStats.increment(alignment);
     }
 
     @Override
@@ -166,6 +179,20 @@ public final class AlignerReport extends AbstractActionReport implements VDJCAli
     @Override
     public void onTopHitSequenceConflict(SequenceRead read, VDJCAlignments alignments, GeneType geneType) {
         topHitConflict.incrementAndGet();
+    }
+
+    @Override
+    public void onSegmentChimeraDetected(GeneType geneType, SequenceRead read, VDJCAlignments alignments) {
+        switch (geneType) {
+            case Variable:
+                vChimeras.incrementAndGet();
+                return;
+            case Joining:
+                jChimeras.incrementAndGet();
+                return;
+            default:
+                throw new IllegalArgumentException(geneType.toString());
+        }
     }
 
     public void onChimera() {
@@ -196,6 +223,12 @@ public final class AlignerReport extends AbstractActionReport implements VDJCAli
         helper.writePercentAndAbsoluteField("Overlapped and aligned", getAlignedOverlaps(), total);
         helper.writePercentAndAbsoluteField("Alignment-aided overlaps", getAlignmentOverlaps(), getAlignedOverlaps());
         helper.writePercentAndAbsoluteField("Overlapped and not aligned", getNonAlignedOverlaps(), total);
+
+        if (getVChimeras() != 0)
+            helper.writePercentAndAbsoluteField("V gene chimeras", getVChimeras(), total);
+
+        if (getJChimeras() != 0)
+            helper.writePercentAndAbsoluteField("J gene chimeras", getJChimeras(), total);
 
         // Writing distribution by chains
         chainStats.writeReport(helper);

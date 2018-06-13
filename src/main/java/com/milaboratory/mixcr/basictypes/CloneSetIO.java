@@ -28,10 +28,11 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
+import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
-import com.milaboratory.primitivio.SerializersManager;
 import com.milaboratory.util.CanReportProgressAndStage;
 import io.repseq.core.*;
 
@@ -42,9 +43,8 @@ import java.util.EnumMap;
 import java.util.List;
 
 public final class CloneSetIO {
-    static final String MAGIC_V5 = "MiXCR.CLNS.V05";
-    static final String MAGIC_V6 = "MiXCR.CLNS.V06";
-    static final String MAGIC = MAGIC_V6;
+    static final String MAGIC_V7 = "MiXCR.CLNS.V07";
+    static final String MAGIC = MAGIC_V7;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
 
@@ -96,10 +96,11 @@ public final class CloneSetIO {
                     MiXCRVersionInfo.get().getVersionString(
                             MiXCRVersionInfo.OutputType.ToFile));
 
-            GeneFeature[] assemblingFeatures = cloneSet.getAssemblingFeatures();
-            output.writeObject(assemblingFeatures);
-            IO.writeGT2GFMap(output, cloneSet.alignedFeatures);
+            // Writing analysis meta-information
+            output.writeObject(cloneSet.alignmentParameters);
+            output.writeObject(cloneSet.assemblerParameters);
 
+            IO.writeGT2GFMap(output, cloneSet.alignedFeatures);
             IOUtil.writeAndRegisterGeneReferences(output, cloneSet.getUsedGenes(), new GT2GFAdapter(cloneSet.alignedFeatures));
 
             output.writeInt(cloneSet.getClones().size());
@@ -156,7 +157,8 @@ public final class CloneSetIO {
                 try (InputStream inputStream = IOUtil.createIS(file)) {
                     return readClns(inputStream, libraryRegistry);
                 }
-            default: throw new RuntimeException("Unsupported file type");
+            default:
+                throw new RuntimeException("Unsupported file type");
         }
     }
 
@@ -175,12 +177,9 @@ public final class CloneSetIO {
 
         String magicString = new String(magicBytes);
 
-        SerializersManager serializersManager = input.getSerializersManager();
+        // SerializersManager serializersManager = input.getSerializersManager();
 
         switch (magicString) {
-            case MAGIC_V5:
-                serializersManager.registerCustomSerializer(Clone.class, new CompatibilityIO.CloneSerializerV5());
-                break;
             case MAGIC:
                 break;
             default:
@@ -190,7 +189,11 @@ public final class CloneSetIO {
 
         String versionInfo = input.readUTF();
 
-        GeneFeature[] assemblingFeatures = input.readObject(GeneFeature[].class);
+        VDJCAlignerParameters alignerParameters;
+        CloneAssemblerParameters assemblerParameters;
+        alignerParameters = input.readObject(VDJCAlignerParameters.class);
+        assemblerParameters = input.readObject(CloneAssemblerParameters.class);
+
         EnumMap<GeneType, GeneFeature> alignedFeatures = IO.readGF2GTMap(input);
         List<VDJCGene> genes = IOUtil.readAndRegisterGeneReferences(input, libraryRegistry, new GT2GFAdapter(alignedFeatures));
 
@@ -199,7 +202,7 @@ public final class CloneSetIO {
         for (int i = 0; i < count; i++)
             clones.add(input.readObject(Clone.class));
 
-        CloneSet cloneSet = new CloneSet(clones, genes, alignedFeatures, assemblingFeatures);
+        CloneSet cloneSet = new CloneSet(clones, genes, alignedFeatures, alignerParameters, assemblerParameters);
         cloneSet.versionInfo = versionInfo;
 
         return cloneSet;
