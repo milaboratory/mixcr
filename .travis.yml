@@ -1,3 +1,4 @@
+ 
 language: java
 
 sudo: false
@@ -8,19 +9,18 @@ git:
 before_install:
   - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
   - git submodule update --init --recursive
+  - cd milib && mvn clean install -DskipTests -B && cd ..
   - rm -rf ./repseqio/.cache
   - mv .cache ./repseqio/.cache
-  - cd repseqio/milib && mvn clean install -DskipTests -B && cd ..
-  - mvn clean install -DskipTests -B && cd ..
+  - cd repseqio && mvn clean install -DskipTests -B && cd ..
   - mv ./repseqio/.cache .cache
-  - ./ensure-test-data.sh
-  - cd milib && mvn clean install -DskipTests -B && cd ..
+  
 
 script:
   - mvn test -B && ./itests.sh test
 
 jdk:
-  - openjdk8
+  - openjdk7
 
 before_cache:
   - rm -f $HOME/.m2/repository/io/repseqio/
@@ -30,4 +30,3 @@ cache:
   directories:
   - $HOME/.m2
   - .cache
-  - src/test/resources/sequences/big
