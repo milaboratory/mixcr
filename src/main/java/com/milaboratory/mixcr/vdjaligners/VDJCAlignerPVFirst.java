@@ -288,6 +288,13 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         }
     };
 
+    private final ThreadLocal<AlignerCustom.AffineMatrixCache> affineMatrixCache = new ThreadLocal<AlignerCustom.AffineMatrixCache>() {
+        @Override
+        protected AlignerCustom.AffineMatrixCache initialValue() {
+            return new AlignerCustom.AffineMatrixCache();
+        }
+    };
+
     //TODO delete when KAlignerParameters abstraction finished
     private static int getAbsoluteMinScore(AbstractKAlignerParameters p) {
         if (p instanceof KAlignerParameters)
@@ -382,14 +389,26 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                 final int beginFR3 = leftHit.getRecordPayload().getPartitioning().getRelativePosition(parameters.getFeatureToAlign(GeneType.Variable), ReferencePoint.FR3Begin);
                 if (beginFR3 == -1)
                     continue;
-                final Alignment alignment = AlignerCustom.alignLinearSemiLocalLeft0(
-                        (LinearGapAlignmentScoring) scoring,
-                        sequence1, sequence2,
-                        beginFR3, sequence1.size() - beginFR3,
-                        0, sequence2.size(),
-                        false, true,
-                        NucleotideSequence.ALPHABET,
-                        linearMatrixCache.get());
+                Alignment alignment;
+                if (scoring instanceof LinearGapAlignmentScoring)
+                    alignment = AlignerCustom.alignLinearSemiLocalLeft0(
+                            (LinearGapAlignmentScoring) scoring,
+                            sequence1, sequence2,
+                            beginFR3, sequence1.size() - beginFR3,
+                            0, sequence2.size(),
+                            false, true,
+                            NucleotideSequence.ALPHABET,
+                            linearMatrixCache.get());
+                else
+                    alignment = AlignerCustom.alignAffineSemiLocalLeft0(
+                            (AffineGapAlignmentScoring) scoring,
+                            sequence1, sequence2,
+                            beginFR3, sequence1.size() - beginFR3,
+                            0, sequence2.size(),
+                            false, true,
+                            NucleotideSequence.ALPHABET,
+                            affineMatrixCache.get());
+
                 if (alignment.getScore() < getAbsoluteMinScore(parameters.getVAlignerParameters().getParameters()))
                     continue;
 
@@ -437,14 +456,26 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                         begin = 0;
                 }
 
-                final Alignment alignment = AlignerCustom.alignLinearSemiLocalRight0(
-                        (LinearGapAlignmentScoring) scoring,
-                        sequence1, sequence2,
-                        0, sequence1.size(),
-                        begin, sequence2.size() - begin,
-                        false, true,
-                        NucleotideSequence.ALPHABET,
-                        linearMatrixCache.get());
+                Alignment alignment;
+                if (scoring instanceof LinearGapAlignmentScoring)
+                    alignment = AlignerCustom.alignLinearSemiLocalRight0(
+                            (LinearGapAlignmentScoring) scoring,
+                            sequence1, sequence2,
+                            0, sequence1.size(),
+                            begin, sequence2.size() - begin,
+                            false, true,
+                            NucleotideSequence.ALPHABET,
+                            linearMatrixCache.get());
+                else
+                    alignment = AlignerCustom.alignAffineSemiLocalRight0(
+                            (AffineGapAlignmentScoring) scoring,
+                            sequence1, sequence2,
+                            0, sequence1.size(),
+                            begin, sequence2.size() - begin,
+                            false, true,
+                            NucleotideSequence.ALPHABET,
+                            affineMatrixCache.get());
+
                 if (alignment.getScore() < getAbsoluteMinScore(parameters.getJAlignerParameters().getParameters()))
                     continue;
 

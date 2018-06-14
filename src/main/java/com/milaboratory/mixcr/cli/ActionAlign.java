@@ -64,21 +64,30 @@ import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
 import com.milaboratory.util.CanReportProgress;
-import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.*;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.*;
 
 import static cc.redberry.pipe.CUtils.chunked;
 import static cc.redberry.pipe.CUtils.unchunked;
 
 public class ActionAlign implements Action {
-    private final AlignParameters actionParameters = new AlignParameters();
+    private final AlignParameters actionParameters;
+
+    public ActionAlign(AlignParameters actionParameters) {
+        this.actionParameters = actionParameters;
+    }
+
+    public ActionAlign() {
+        this(new AlignParameters());
+    }
+
+    /**
+     * Alignment report
+     */
+    public final AlignerReport report = new AlignerReport();
 
     @Override
     @SuppressWarnings("unchecked")
@@ -180,7 +189,7 @@ public class ActionAlign implements Action {
             throw new ProcessException("No J genes to align. Aborting execution. See warnings for more info " +
                     "(turn on verbose warnings by adding --verbose option).");
 
-        AlignerReport report = new AlignerReport();
+
         report.setStartMillis(beginTimestamp);
         report.setInputFiles(actionParameters.getInputsForReport());
         report.setOutputFiles(actionParameters.getOutputsForReport());
