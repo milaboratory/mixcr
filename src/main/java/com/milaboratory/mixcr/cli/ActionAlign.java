@@ -76,7 +76,20 @@ import static cc.redberry.pipe.CUtils.chunked;
 import static cc.redberry.pipe.CUtils.unchunked;
 
 public class ActionAlign implements Action {
-    private final AlignParameters actionParameters = new AlignParameters();
+    private final AlignParameters actionParameters;
+
+    public ActionAlign(AlignParameters actionParameters) {
+        this.actionParameters = actionParameters;
+    }
+
+    public ActionAlign() {
+        this(new AlignParameters());
+    }
+
+    /**
+     * Alignment report
+     */
+    public final AlignerReport report = new AlignerReport();
 
     @Override
     @SuppressWarnings("unchecked")
@@ -206,7 +219,7 @@ public class ActionAlign implements Action {
             throw new ProcessException("No J genes to align. Aborting execution. See warnings for more info " +
                     "(turn on verbose warnings by adding --verbose option).");
 
-        AlignerReport report = new AlignerReport();
+
         report.setStartMillis(beginTimestamp);
         report.setInputFiles(actionParameters.getInputsForReport());
         report.setOutputFiles(actionParameters.getOutputsForReport());

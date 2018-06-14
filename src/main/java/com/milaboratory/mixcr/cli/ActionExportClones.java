@@ -46,6 +46,7 @@ import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.Objects;
 
 public class ActionExportClones extends ActionExport<Clone> {
     public ActionExportClones() {
@@ -82,7 +83,7 @@ public class ActionExportClones extends ActionExport<Clone> {
         return "exportClones";
     }
 
-    private static final class CFilter implements Filter<Clone> {
+    public static final class CFilter implements Filter<Clone> {
         final boolean filterOutOfFrames, filterStopCodons;
 
         public CFilter(boolean filterOutOfFrames, boolean filterStopCodons) {
@@ -118,6 +119,20 @@ public class ActionExportClones extends ActionExport<Clone> {
             }
 
             return true;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof CFilter)) return false;
+            CFilter cFilter = (CFilter) o;
+            return filterOutOfFrames == cFilter.filterOutOfFrames &&
+                    filterStopCodons == cFilter.filterStopCodons;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(filterOutOfFrames, filterStopCodons);
         }
     }
 

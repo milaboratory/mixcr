@@ -43,6 +43,8 @@ public class PartialAlignmentsAssemblerParameters {
     private int kValue, kOffset, minimalAssembleOverlap, minimalNOverlap;
     private float minimalAlignmentMergeIdentity;
     private MergerParameters mergerParameters;
+    private long maxLeftParts;
+    private int maxLeftMatches;
 
     @JsonCreator
     public PartialAlignmentsAssemblerParameters(
@@ -51,13 +53,25 @@ public class PartialAlignmentsAssemblerParameters {
             @JsonProperty("minimalAssembleOverlap") int minimalAssembleOverlap,
             @JsonProperty("minimalNOverlap") int minimalNOverlap,
             @JsonProperty("minimalAlignmentMergeIdentity") int minimalAlignmentMergeIdentity,
-            @JsonProperty("mergerParameters") MergerParameters mergerParameters) {
+            @JsonProperty("mergerParameters") MergerParameters mergerParameters,
+            @JsonProperty("maxLeftParts") long maxLeftParts,
+            @JsonProperty("maxLeftMatches") int maxLeftMatches) {
         this.kValue = kValue;
         this.kOffset = kOffset;
         this.minimalAssembleOverlap = minimalAssembleOverlap;
         this.minimalNOverlap = minimalNOverlap;
         this.minimalAlignmentMergeIdentity = minimalAlignmentMergeIdentity;
         this.mergerParameters = mergerParameters;
+        this.maxLeftParts = maxLeftParts;
+        this.maxLeftMatches = maxLeftMatches;
+    }
+
+    public int getMaxLeftMatches() {
+        return maxLeftMatches;
+    }
+
+    public void setMaxLeftMatches(int maxLeftMatches) {
+        this.maxLeftMatches = maxLeftMatches;
     }
 
     public MergerParameters getMergerParameters() {
@@ -66,6 +80,14 @@ public class PartialAlignmentsAssemblerParameters {
 
     public void setMergerParameters(MergerParameters mergerParameters) {
         this.mergerParameters = mergerParameters;
+    }
+
+    public long getMaxLeftParts() {
+        return maxLeftParts;
+    }
+
+    public void setMaxLeftParts(long maxLeftParts) {
+        this.maxLeftParts = maxLeftParts;
     }
 
     public int getKValue() {

@@ -35,8 +35,8 @@ import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.cli.ReportHelper;
 import com.milaboratory.mixcr.cli.Report;
+import com.milaboratory.mixcr.cli.ReportHelper;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.hash.TLongHashSet;
@@ -60,6 +60,9 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
     final int minimalNOverlap;
     final boolean writePartial, overlappedOnly;
     final TargetMerger targetMerger;
+    final long maxLeftParts;
+    final int maxLeftMatches;
+
     public final AtomicLong leftParts = new AtomicLong(),
             rightParts = new AtomicLong(),
             noKMer = new AtomicLong(),
@@ -78,10 +81,14 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
     public PartialAlignmentsAssembler(PartialAlignmentsAssemblerParameters params, VDJCAlignmentsWriter writer,
                                       boolean writePartial, boolean overlappedOnly) {
         this.kValue = params.getKValue();
+        if (kValue >= 32)
+            throw new IllegalArgumentException("kValue should be less than 32");
         this.kOffset = params.getKOffset();
         this.minimalAssembleOverlap = params.getMinimalAssembleOverlap();
         this.minimalNOverlap = params.getMinimalNOverlap();
         this.targetMerger = new TargetMerger(params.getMergerParameters(), params.getMinimalAlignmentMergeIdentity());
+        this.maxLeftParts = params.getMaxLeftParts();
+        this.maxLeftMatches = params.getMaxLeftMatches();
         this.writePartial = writePartial;
         this.overlappedOnly = overlappedOnly;
         this.writer = writer;
@@ -92,6 +99,16 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
         this(params, new VDJCAlignmentsWriter(output), writePartial, overlappedOnly);
     }
 
+    public boolean leftPartsLimitReached() {
+        return maxLeftParts <= leftParts.get();
+    }
+
+    private boolean maxRightMatchesLimitReached = false;
+
+    public boolean maxRightMatchesLimitReached() {
+        return maxRightMatchesLimitReached;
+    }
+
     public void buildLeftPartsIndex(VDJCAlignmentsReader reader) {
         writer.header(reader.getParameters(), reader.getUsedGenes());
         for (VDJCAlignments alignment : CUtils.it(reader)) {
@@ -99,6 +116,8 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
                 continue;
             if (!addLeftToIndex(alignment))
                 notInLeftIndexIds.add(alignment.getAlignmentsIndex());
+            if (leftParts.get() == maxLeftParts)
+                break;
         }
     }
 
@@ -292,8 +311,11 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
                 if (match == null)
                     continue;
 
+                if (match.size() > maxLeftMatches)
+                    maxRightMatchesLimitReached = true;
+
                 out:
-                for (int i = 0; i < match.size(); i++) {
+                for (int i = 0, size = Math.min(maxLeftMatches, match.size()); i < size; i++) {
                     boolean isOverOverlapped = false;
                     final VDJCAlignments leftAl = match.get(i).getAlignments();
 

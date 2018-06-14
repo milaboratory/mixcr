@@ -54,7 +54,20 @@ import java.util.List;
 import java.util.Map;
 
 public class ActionAssemble implements Action {
-    private final AssembleParameters actionParameters = new AssembleParameters();
+    private final AssembleParameters actionParameters;
+
+    public ActionAssemble(AssembleParameters actionParameters) {
+        this.actionParameters = actionParameters;
+    }
+
+    public ActionAssemble() {
+        this(new AssembleParameters());
+    }
+
+    /**
+     * Assemble report
+     */
+    public final CloneAssemblerReport report = new CloneAssemblerReport();
 
     @Override
     public void go(ActionHelper helper) throws Exception {
@@ -100,7 +113,6 @@ public class ActionAssemble implements Action {
                 actionParameters.doWriteClnA() || actionParameters.events != null,
                 genes, alignerParameters.getFeaturesToAlignMap())) {
             // Creating event listener to collect run statistics
-            CloneAssemblerReport report = new CloneAssemblerReport();
             report.setStartMillis(beginTimestamp);
             report.setInputFiles(new String[]{actionParameters.getInputFileName()});
             report.setOutputFiles(new String[]{actionParameters.getOutputFileName()});
@@ -179,9 +191,9 @@ public class ActionAssemble implements Action {
     }
 
     @Parameters(commandDescription = "Assemble clones")
-    public static final class AssembleParameters extends ActionParametersWithOutput {
+    public static class AssembleParameters extends ActionParametersWithOutput {
         @Parameter(description = "input_file output_file")
-        public List<String> parameters;
+        public List<String> parameters = new ArrayList<>();
 
         @Parameter(description = "Clone assembling parameters",
                 names = {"-p", "--parameters"})

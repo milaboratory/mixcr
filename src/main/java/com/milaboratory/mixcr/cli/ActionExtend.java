@@ -30,7 +30,15 @@ import java.util.List;
  * @author Stanislav Poslavsky
  */
 public class ActionExtend implements Action {
-    private final ExtendActionParameters parameters = new ExtendActionParameters();
+    private final ExtendActionParameters parameters;
+
+    public ActionExtend(ExtendActionParameters parameters) {
+        this.parameters = parameters;
+    }
+
+    public ActionExtend() {
+        this(new ExtendActionParameters());
+    }
 
     @Override
     public void go(ActionHelper helper) throws Exception {
@@ -152,7 +160,7 @@ public class ActionExtend implements Action {
     }
 
     @Parameters(commandDescription = "Extend corresponding entity (clone or alignment) using germline sequence.")
-    private static final class ExtendActionParameters extends ActionParametersWithOutput {
+    public static class ExtendActionParameters extends ActionParametersWithOutput {
         @Parameter(description = "input.vdjca[.gz]|.clns output.vdjca[.gz]|.clns")
         public List<String> parameters;
 
