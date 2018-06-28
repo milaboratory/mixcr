@@ -40,11 +40,6 @@ public class ActionExportParameters<T extends VDJCObject> extends ActionParamete
             names = {"-c", "--chains"})
     public String chains = "ALL";
 
-    @Deprecated
-    @Parameter(description = "Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)",
-            names = {"-l", "--loci"}, hidden = true)
-    public String chains_legacy = null;
-
     @Parameter(description = "Specify preset of export fields (possible values: 'full', 'min'; 'full' by default)",
             names = {"-p", "--preset"})
     public String preset;
@@ -98,12 +93,6 @@ public class ActionExportParameters<T extends VDJCObject> extends ActionParamete
     }
 
     public Chains getChains() {
-        if (chains_legacy != null) {
-            if (!chains.equals("ALL"))
-                throw new ParameterException("Use -c without -l parameter.");
-            System.out.println("WARNING: using of -l (--loci) option is deprecated; use -c (--chains) instead.");
-            return Chains.parse(chains_legacy);
-        }
         return Chains.parse(chains);
     }
 
