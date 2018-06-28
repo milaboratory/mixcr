@@ -104,22 +104,14 @@ public class Main {
                 new ActionListLibraries(),
                 new ActionExtend(),
                 new ActionSortAlignments(),
-                new ActionSlice());
+                new ActionSlice(),
+                new UberAction.UberAssembleRepSeq()
+        );
 
         // Adding version info callback
         main.setVersionInfoCallback(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        printVersion(false);
-                    }
-                },
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        printVersion(true);
-                    }
-                });
+                () -> printVersion(false),
+                () -> printVersion(true));
 
         // Deprecation
         if (args.length > 0 && args[0].equals("extendAlignments")) {

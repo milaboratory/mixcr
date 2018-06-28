@@ -162,7 +162,7 @@ public class ActionExtend implements Action {
     @Parameters(commandDescription = "Extend corresponding entity (clone or alignment) using germline sequence.")
     public static class ExtendActionParameters extends ActionParametersWithOutput {
         @Parameter(description = "input.vdjca[.gz]|.clns output.vdjca[.gz]|.clns")
-        public List<String> parameters;
+        public List<String> parameters = new ArrayList<>();
 
         @Parameter(description = "Apply procedure only to alignments with specific immunological-receptor chains.",
                 names = {"-c", "--chains"})
