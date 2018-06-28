@@ -1,4 +1,14 @@
 
+MiXCR 2.1.11 (15 Jun 2018)
+========================
+
+-- Major review of affine alignment algorithms
+-- minor: Fix for MiXCR script for Java 9
+-- minor: Fix for exception with no D hits in `-dIdentityPercent` in `exportAlignments` (#386)
+-- minor: Adds warning and fix for performance issue when `assemblePartial` misused for enriched 
+   library
+
+
 MiXCR 2.1.10 (30 Mar 2018)
 ========================
 

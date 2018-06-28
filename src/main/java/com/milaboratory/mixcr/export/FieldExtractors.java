@@ -605,7 +605,7 @@ public final class FieldExtractors {
                     @Override
                     protected String extract(VDJCObject object) {
                         VDJCHit[] hits = object.getHits(type);
-                        if (hits == null)
+                        if (hits == null || hits.length == 0)
                             return NULL;
                         StringBuilder sb = new StringBuilder();
                         sb.append("");

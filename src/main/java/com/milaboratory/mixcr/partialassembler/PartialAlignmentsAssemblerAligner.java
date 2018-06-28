@@ -36,6 +36,13 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
         }
     };
 
+    private final ThreadLocal<AlignerCustom.AffineMatrixCache> affineMatrixCache = new ThreadLocal<AlignerCustom.AffineMatrixCache>() {
+        @Override
+        protected AlignerCustom.AffineMatrixCache initialValue() {
+            return new AlignerCustom.AffineMatrixCache();
+        }
+    };
+
     public PartialAlignmentsAssemblerAligner(VDJCAlignerParameters parameters) {
         super(parameters);
     }
@@ -108,7 +115,7 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
 
         VDJCHit[] vHits = vdjcHits.get(GeneType.Variable);
         final AlignmentScoring<NucleotideSequence> vScoring = parameters.getVAlignerParameters().getParameters().getScoring();
-        if (vHits != null && vHits.length > 0 && !(vScoring instanceof AffineGapAlignmentScoring) && // TODO implement AffineGapAlignmentScoring
+        if (vHits != null && vHits.length > 0 &&
                 vdjcHits.get(GeneType.Joining) != null && vdjcHits.get(GeneType.Joining).length > 0) {
             int minimalVSpace = getAbsoluteMinScore(parameters.getVAlignerParameters().getParameters()) /
                     vScoring.getMaximalMatchScore();
@@ -140,14 +147,25 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
                         if (beginFR3 == -1)
                             continue;
 
-                        final Alignment alignment = AlignerCustom.alignLinearSemiLocalLeft0(
-                                (LinearGapAlignmentScoring<NucleotideSequence>) vScoring,
-                                sequence1, sequence2,
-                                beginFR3, sequence1.size() - beginFR3,
-                                0, vSpace,
-                                false, true,
-                                NucleotideSequence.ALPHABET,
-                                linearMatrixCache.get());
+                        Alignment alignment;
+                        if (vScoring instanceof LinearGapAlignmentScoring)
+                            alignment = AlignerCustom.alignLinearSemiLocalLeft0(
+                                    (LinearGapAlignmentScoring<NucleotideSequence>) vScoring,
+                                    sequence1, sequence2,
+                                    beginFR3, sequence1.size() - beginFR3,
+                                    0, vSpace,
+                                    false, true,
+                                    NucleotideSequence.ALPHABET,
+                                    linearMatrixCache.get());
+                        else
+                            alignment = AlignerCustom.alignAffineSemiLocalLeft0(
+                                    (AffineGapAlignmentScoring<NucleotideSequence>) vScoring,
+                                    sequence1, sequence2,
+                                    beginFR3, sequence1.size() - beginFR3,
+                                    0, vSpace,
+                                    false, true,
+                                    NucleotideSequence.ALPHABET,
+                                    affineMatrixCache.get());
 
                         if (alignment.getScore() < getAbsoluteMinScore(parameters.getVAlignerParameters().getParameters()))
                             continue;
@@ -166,7 +184,7 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
 
         VDJCHit[] jHits = vdjcHits.get(GeneType.Joining);
         final AlignmentScoring<NucleotideSequence> jScoring = parameters.getJAlignerParameters().getParameters().getScoring();
-        if (jHits != null && jHits.length > 0 && !(jScoring instanceof AffineGapAlignmentScoring) && // TODO implement AffineGapAlignmentScoring
+        if (jHits != null && jHits.length > 0 &&
                 vdjcHits.get(GeneType.Variable) != null && vdjcHits.get(GeneType.Variable).length > 0) {
             int minimalJSpace = getAbsoluteMinScore(parameters.getJAlignerParameters().getParameters()) /
                     jScoring.getMaximalMatchScore();
@@ -194,14 +212,25 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
 
                         final NucleotideSequence sequence1 = rightAlignment.getSequence1();
 
-                        final Alignment alignment = AlignerCustom.alignLinearSemiLocalRight0(
-                                (LinearGapAlignmentScoring) jScoring,
-                                sequence1, sequence2,
-                                0, sequence1.size(),
-                                jSpaceBegin, sequence2.size() - jSpaceBegin,
-                                false, true,
-                                NucleotideSequence.ALPHABET,
-                                linearMatrixCache.get());
+                        Alignment alignment;
+                        if (jScoring instanceof LinearGapAlignmentScoring)
+                            alignment = AlignerCustom.alignLinearSemiLocalRight0(
+                                    (LinearGapAlignmentScoring) jScoring,
+                                    sequence1, sequence2,
+                                    0, sequence1.size(),
+                                    jSpaceBegin, sequence2.size() - jSpaceBegin,
+                                    false, true,
+                                    NucleotideSequence.ALPHABET,
+                                    linearMatrixCache.get());
+                        else
+                            alignment = AlignerCustom.alignAffineSemiLocalRight0(
+                                    (AffineGapAlignmentScoring) jScoring,
+                                    sequence1, sequence2,
+                                    0, sequence1.size(),
+                                    jSpaceBegin, sequence2.size() - jSpaceBegin,
+                                    false, true,
+                                    NucleotideSequence.ALPHABET,
+                                    affineMatrixCache.get());
 
                         if (alignment.getScore() < getAbsoluteMinScore(parameters.getJAlignerParameters().getParameters()))
                             continue;

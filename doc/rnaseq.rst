@@ -4,7 +4,7 @@
 
 .. _ref-rna-seq:
 
-Processing RNA-seq data
+Processing RNA-seq and non-targeted  genomic data
 =======================
 
 .. note::
@@ -46,7 +46,7 @@ There are only two things you must tell MiXCR for a successfull analysis. Both o
 
 1. **Species.** Using ``-s ...`` parameter. See :ref:`here <ref-align-cli-params>`.
 
-2. **Data source origin**. Genomic or transcriptomic. This affects which part of reference V gene seqeucnes will be used for alignment, with or without intron. By default transcriptomic source is assumed, so no additional parameters have to be specified for an analysis of RNA-Seq data. If your data has a genomic DNA origin add the following option to the ``align`` command:
+2. **Data source origin**. Genomic or transcriptomic. This affects which part of reference V gene seqeucnes will be used for alignment, with or without intron. By default transcriptomic source is assumed, so no additional parameters have to be specified for an analysis of RNA-Seq data. If your data has a genomic DNA origin - e.g.  whole genome sequencing (WGS) or whole exome sequencing (WES) - add the following option to the ``align`` command:
 
   ::
 
