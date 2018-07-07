@@ -105,7 +105,8 @@ public class Main {
                 new ActionExtend(),
                 new ActionSortAlignments(),
                 new ActionSlice(),
-                new UberAction.UberAssembleRepSeq()
+                new UberAction.UberRepSeq(),
+                new UberAction.UberRnaSeq()
         );
 
         // Adding version info callback

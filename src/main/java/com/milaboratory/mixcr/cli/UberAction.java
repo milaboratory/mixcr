@@ -2,6 +2,7 @@ package com.milaboratory.mixcr.cli;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
@@ -27,18 +28,15 @@ import java.util.List;
  *
  */
 public abstract class UberAction implements Action {
-    public static class UberAssembleRepSeq extends UberAction {
-        @Override
-        public String command() {
-            return "ass";
-        }
-    }
+    /** the main parameters */
+    public final UberActionParameters uberParameters;
 
-    public UberActionParameters uberParameters = new UberActionParameters();
+    public UberAction(UberActionParameters uberParameters) {
+        this.uberParameters = uberParameters;
+    }
 
     @Override
     public void go(ActionHelper helper) throws Exception {
-
         // --- Running alignments
         AlignParameters alignParameters = uberParameters.mkAlignerParameters();
 
@@ -49,7 +47,7 @@ public abstract class UberAction implements Action {
             try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(uberParameters.vdjcaFileName())) {
                 VDJCAlignerParameters parameters = reader.getParameters();
                 if (parameters.equals(alignParameters.getAlignerParameters())) {
-                    System.out.println("SKippiiiiii ALIGNMENT");
+                    System.out.println("TODO"); // FIXME
                     alignmentsFile = uberParameters.vdjcaFileName();
                 }
             }
@@ -77,7 +75,7 @@ public abstract class UberAction implements Action {
                     try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parAlignmentsFile)) {
                         VDJCAlignerParameters parameters = reader.getParameters();
                         if (parameters.equals(alignParameters.getAlignerParameters())) {
-                            System.out.println("SKippiiiiii ALIGNMENT");
+                            System.out.println("TODO"); // FIXME
                             alignmentsFile = parAlignmentsFile;
                             continue;
                         }
@@ -103,7 +101,7 @@ public abstract class UberAction implements Action {
                 try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(uberParameters.extendedFileName())) {
                     VDJCAlignerParameters parameters = reader.getParameters();
                     if (parameters.equals(alignParameters.getAlignerParameters())) {
-                        System.out.println("SKippiiiiii ALIGNMENT");
+                        System.out.println("TODO"); // FIXME
                         extAlignmentsFile = uberParameters.extendedFileName();
                     }
                 }
@@ -147,7 +145,7 @@ public abstract class UberAction implements Action {
         ArrayList<String> epArgs = new ArrayList<>(uberParameters.exportParameters);
         // add in & out
         epArgs.add(clnaFile);
-        epArgs.add(uberParameters.clnsTxtFileName());
+        epArgs.add(uberParameters.exportClonesFileName());
 
         export.parseParameters(epArgs
                 .stream()
@@ -170,12 +168,11 @@ public abstract class UberAction implements Action {
                 required = true)
         public String species = "hs";
 
-        @Parameter(description = "Resume execution", names = {"--resume"})
+        @Parameter(description = "Resume execution.", names = {"--resume"})
         public boolean resume = false;
 
-        @Parameter(description = "Report file.",
-                names = {"-r", "--report"})
-        public String report = "report.txt";
+        @Parameter(description = "Report file.", names = {"-r", "--report"})
+        public String report;
 
         @Parameter(names = "--align", description = "Align parameters", variableArity = true)
         public List<String> alignParameters = new ArrayList<>();
@@ -328,43 +325,88 @@ public abstract class UberAction implements Action {
             return ep;
         }
 
+        /** number of rounds for assemblePartial */
+        @Parameter(names = "--assemble-partial-rounds", description = "Number of rounds of assemblePartial")
+        public int nAssemblePartialRounds;
+
+        /** whether to perform TCR alignments extension */
+        @Parameter(names = "--do-extend-alignments", description = "Specified whether to perform TCR alignments extension")
+        public boolean doExtendAlignments;
+
+        UberActionParameters() {}
+
+        /** input raw sequencing data files */
         List<String> getInputFiles() {
             return files.subList(0, files.size() - 1);
         }
 
-        String outputName() {
+        /** the pattern of output file name ("myOutput" will produce "myOutput.vdjca", "myOutput.clns" etc files) */
+        String outputNamePattern() {
             return files.get(files.size() - 1);
         }
 
         public String vdjcaFileName() {
-            return outputName() + ".vdjca";
+            return outputNamePattern() + ".vdjca";
         }
 
         public String partialAlignmentsFileName(int round) {
-            return outputName() + ".rescued_" + round + ".vdjca";
+            return outputNamePattern() + ".rescued_" + round + ".vdjca";
         }
 
         public String extendedFileName() {
-            return outputName() + ".extended.vdjca";
+            return outputNamePattern() + ".extended.vdjca";
         }
 
         public String clnaFileName() {
-            return outputName() + ".clna";
+            return outputNamePattern() + ".clna";
         }
 
-        public String clnsTxtFileName() {
-            return outputName() + ".clones.txt";
+        public String exportClonesFileName() {
+            return outputNamePattern() + ".clones.txt";
         }
-
-        /** number of rounds for assemblePartial */
-        public int nAssemblePartialRounds = 2;
-
-        /** whether to perform TCR alignments extension */
-        public boolean doExtendAlignments  = true;
 
         @Override
         protected List<String> getOutputFiles() {
-            return Collections.singletonList(files.get(files.size() - 1));
+            return Collections.singletonList(exportClonesFileName());
         }
+    }
+
+    ////////////////////////////////////////////////// Implementation //////////////////////////////////////////////////
+
+    @Parameters(commandDescription = "Analyze RepSeq data")
+    public static class RepSeqParameters extends UberActionParameters {
+        @Override
+        public List<String> forceHideParameters() {
+            return Arrays.asList("--assemblePartial", "--extend", "--assemble-partial-rounds", "--do-extend-alignments");
+        }
+    }
+
+    /** Default pipeline for processing RepSeq type data */
+    public static class UberRepSeq extends UberAction {
+        public UberRepSeq() {
+            super(new RepSeqParameters());
+            uberParameters.nAssemblePartialRounds = 0;
+            uberParameters.doExtendAlignments = false;
+        }
+
+        @Override
+        public String command() {
+            return "analyze-rep-seq";
+        }
+    }
+
+    @Parameters(commandDescription = "Analyze RNA-Seq data")
+    public static class RnaSeqParameters extends UberActionParameters {}
+
+    /** Default pipeline for processing RnaSeq type data */
+    public static class UberRnaSeq extends UberAction {
+        public UberRnaSeq() {
+            super(new RnaSeqParameters());
+            uberParameters.alignParameters.add("-p");
+            uberParameters.alignParameters.add("rna-seq");
+        }
+
+        @Override
+        public String command() { return "analyze-rna-seq"; }
     }
 }
