@@ -46,7 +46,9 @@ public class RunMiXCRTest {
         RunMiXCR.AssembleResult assemble = RunMiXCR.assemble(align);
 
         File tempFile = TempFileManager.getTempFile();
-        CloneSetIO.write(assemble.cloneSet, tempFile);
+        try(ClnsWriter writer = new ClnsWriter(null, assemble.cloneSet, tempFile)){
+            writer.write();
+        }
         CloneSet read = CloneSetIO.read(tempFile);
 
         System.out.println("Clns file size: " + tempFile.length());

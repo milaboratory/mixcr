@@ -46,10 +46,7 @@ import org.apache.commons.io.output.CountingOutputStream;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Writer for CLNA file format.
@@ -57,7 +54,9 @@ import java.util.Optional;
  * Usage: 1. Constructor (opens the output file, buffered) 2. writeClones() 3. sortAlignments() 4.
  * writeAlignmentsAndIndex() 5. close()
  */
-public final class ClnAWriter implements AutoCloseable, CanReportProgressAndStage {
+public final class ClnAWriter implements PipelineConfigurationWriter,
+                                         AutoCloseable,
+                                         CanReportProgressAndStage {
     static final String MAGIC_V2 = "MiXCR.CLNA.V02";
     static final String MAGIC = MAGIC_V2;
     static final int MAGIC_LENGTH = MAGIC.length();
@@ -71,6 +70,8 @@ public final class ClnAWriter implements AutoCloseable, CanReportProgressAndStag
      */
     private final CountingOutputStream outputStream;
     private final PrimitivO output;
+    private final PipelineConfiguration configuration;
+
     /**
      * Counter OP used to report progress during stage 2
      */
@@ -80,11 +81,12 @@ public final class ClnAWriter implements AutoCloseable, CanReportProgressAndStag
     private volatile long numberOfAlignments = -1, numberOfAlignmentsWritten = 0;
     private volatile boolean clonesBlockFinished = false, finished = false;
 
-    public ClnAWriter(String fileName) throws IOException {
-        this(new File(fileName));
+    public ClnAWriter(PipelineConfiguration configuration, String fileName) throws IOException {
+        this(configuration, new File(fileName));
     }
 
-    public ClnAWriter(File file) throws IOException {
+    public ClnAWriter(PipelineConfiguration configuration, File file) throws IOException {
+        this.configuration = configuration;
         this.tempFile = new File(file.getAbsolutePath() + ".presorted");
         this.outputStream = new CountingOutputStream(new BufferedOutputStream(
                 new FileOutputStream(file), 131072));
@@ -96,6 +98,12 @@ public final class ClnAWriter implements AutoCloseable, CanReportProgressAndStag
 
     private List<VDJCGene> usedGenes = null;
     private HasFeatureToAlign featureToAlign = null;
+
+    @Override
+    public void writeConfiguration(PipelineConfiguration configuration) {
+        if (!Objects.equals(this.configuration, configuration))
+            throw new IllegalStateException();
+    }
 
     /**
      * Step 1
@@ -109,7 +117,7 @@ public final class ClnAWriter implements AutoCloseable, CanReportProgressAndStag
         this.usedGenes = cloneSet.getUsedGenes();
 
         // Saving features to align
-        this.featureToAlign = new CloneSetIO.GT2GFAdapter(cloneSet.alignedFeatures);
+        this.featureToAlign = new ClnsReader.GT2GFAdapter(cloneSet.alignedFeatures);
 
         // Writing number of clones ahead of any other content to make it available
         // in known file position (MAGIC_LENGTH)
@@ -118,6 +126,9 @@ public final class ClnAWriter implements AutoCloseable, CanReportProgressAndStag
         // Writing version information
         output.writeUTF(MiXCRVersionInfo.get()
                 .getVersionString(MiXCRVersionInfo.OutputType.ToFile));
+
+        // Writing full pipeline configuration
+        output.writeObject(configuration);
 
         // Writing aligner parameters
         output.writeObject(cloneSet.alignmentParameters);

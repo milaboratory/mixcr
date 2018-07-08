@@ -28,123 +28,23 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
-import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
-import com.milaboratory.mixcr.util.MiXCRVersionInfo;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
-import com.milaboratory.primitivio.PrimitivI;
-import com.milaboratory.primitivio.PrimitivO;
-import com.milaboratory.util.CanReportProgressAndStage;
-import io.repseq.core.*;
+import io.repseq.core.VDJCLibraryRegistry;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.List;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 
 public final class CloneSetIO {
-    static final String MAGIC_V7 = "MiXCR.CLNS.V07";
-    static final String MAGIC = MAGIC_V7;
-    static final int MAGIC_LENGTH = 14;
-    static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
-
-    public static class CloneSetWriter implements CanReportProgressAndStage, Closeable {
-        final String stage = "Writing clones";
-        final PrimitivO output;
-        final CloneSet cloneSet;
-        final int size;
-        volatile int current;
-
-        public CloneSetWriter(CloneSet cloneSet, String fileName) throws IOException {
-            this(cloneSet, new File(fileName));
-        }
-
-        public CloneSetWriter(CloneSet cloneSet, File file) throws IOException {
-            this(cloneSet, IOUtil.createOS(file));
-        }
-
-        public CloneSetWriter(CloneSet cloneSet, OutputStream outputStream) {
-            this.output = new PrimitivO(outputStream);
-            this.cloneSet = cloneSet;
-            this.size = cloneSet.size();
-        }
-
-        @Override
-        public String getStage() {
-            return stage;
-        }
-
-        @Override
-        public double getProgress() {
-            return (1.0 * current) / size;
-        }
-
-        @Override
-        public boolean isFinished() {
-            return current == size;
-        }
-
-        public void write() {
-            // Registering custom serializer
-            output.getSerializersManager().registerCustomSerializer(GeneFeature.class, new GeneFeatureSerializer(true));
-
-            // Writing magic bytes
-            output.write(MAGIC_BYTES);
-
-            // Writing version information
-            output.writeUTF(
-                    MiXCRVersionInfo.get().getVersionString(
-                            MiXCRVersionInfo.OutputType.ToFile));
-
-            // Writing analysis meta-information
-            output.writeObject(cloneSet.alignmentParameters);
-            output.writeObject(cloneSet.assemblerParameters);
-
-            IO.writeGT2GFMap(output, cloneSet.alignedFeatures);
-            IOUtil.writeAndRegisterGeneReferences(output, cloneSet.getUsedGenes(), new GT2GFAdapter(cloneSet.alignedFeatures));
-
-            output.writeInt(cloneSet.getClones().size());
-
-            for (Clone clone : cloneSet) {
-                output.writeObject(clone);
-                ++current;
-            }
-        }
-
-        @Override
-        public void close() {
-            output.close();
-        }
-    }
-
-    public static void write(CloneSet cloneSet, File file) throws IOException {
-        try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file), 32768)) {
-            write(cloneSet, os);
-        }
-    }
-
-    public static void write(CloneSet cloneSet, String fileName) throws IOException {
-        try (OutputStream os = new BufferedOutputStream(new FileOutputStream(fileName), 32768)) {
-            write(cloneSet, os);
-        }
-    }
-
-    public static void write(CloneSet cloneSet, OutputStream outputStream) {
-        try (CloneSetWriter writer = new CloneSetWriter(cloneSet, outputStream)) {
-            writer.write();
-        }
-    }
-
-    public static CloneSet read(String fileName) throws IOException {
-        return read(new File(fileName), VDJCLibraryRegistry.getDefault());
-    }
-
-    public static CloneSet read(String fileName, VDJCLibraryRegistry libraryRegistry) throws IOException {
-        return read(new File(fileName), libraryRegistry);
+    public static CloneSet read(String file) throws IOException {
+        return read(file, VDJCLibraryRegistry.getDefault());
     }
 
     public static CloneSet read(File file) throws IOException {
         return read(file, VDJCLibraryRegistry.getDefault());
+    }
+
+    public static CloneSet read(String file, VDJCLibraryRegistry libraryRegistry) throws IOException {
+        return read(new File(file), libraryRegistry);
     }
 
     public static CloneSet read(File file, VDJCLibraryRegistry libraryRegistry) throws IOException {
@@ -154,8 +54,8 @@ public final class CloneSetIO {
                     return r.readCloneSet();
                 }
             case Clns:
-                try (InputStream inputStream = IOUtil.createIS(file)) {
-                    return readClns(inputStream, libraryRegistry);
+                try (ClnsReader r = new ClnsReader(file, libraryRegistry)) {
+                    return r.getCloneSet();
                 }
             default:
                 throw new RuntimeException("Unsupported file type");
@@ -167,57 +67,6 @@ public final class CloneSetIO {
     }
 
     public static CloneSet readClns(InputStream inputStream, VDJCLibraryRegistry libraryRegistry) {
-        PrimitivI input = new PrimitivI(inputStream);
-
-        // Registering custom serializer
-        input.getSerializersManager().registerCustomSerializer(GeneFeature.class, new GeneFeatureSerializer(true));
-
-        byte[] magicBytes = new byte[MAGIC_LENGTH];
-        input.readFully(magicBytes);
-
-        String magicString = new String(magicBytes);
-
-        // SerializersManager serializersManager = input.getSerializersManager();
-
-        switch (magicString) {
-            case MAGIC:
-                break;
-            default:
-                throw new RuntimeException("Unsupported file format; .clns file of version " + magicString +
-                        " while you are running MiXCR " + MAGIC);
-        }
-
-        String versionInfo = input.readUTF();
-
-        VDJCAlignerParameters alignerParameters;
-        CloneAssemblerParameters assemblerParameters;
-        alignerParameters = input.readObject(VDJCAlignerParameters.class);
-        assemblerParameters = input.readObject(CloneAssemblerParameters.class);
-
-        EnumMap<GeneType, GeneFeature> alignedFeatures = IO.readGF2GTMap(input);
-        List<VDJCGene> genes = IOUtil.readAndRegisterGeneReferences(input, libraryRegistry, new GT2GFAdapter(alignedFeatures));
-
-        int count = input.readInt();
-        List<Clone> clones = new ArrayList<>(count);
-        for (int i = 0; i < count; i++)
-            clones.add(input.readObject(Clone.class));
-
-        CloneSet cloneSet = new CloneSet(clones, genes, alignedFeatures, alignerParameters, assemblerParameters);
-        cloneSet.versionInfo = versionInfo;
-
-        return cloneSet;
-    }
-
-    public static class GT2GFAdapter implements HasFeatureToAlign {
-        public final EnumMap<GeneType, GeneFeature> map;
-
-        public GT2GFAdapter(EnumMap<GeneType, GeneFeature> map) {
-            this.map = map;
-        }
-
-        @Override
-        public GeneFeature getFeatureToAlign(GeneType geneType) {
-            return map.get(geneType);
-        }
+        return new ClnsReader(inputStream, libraryRegistry).getCloneSet();
     }
 }

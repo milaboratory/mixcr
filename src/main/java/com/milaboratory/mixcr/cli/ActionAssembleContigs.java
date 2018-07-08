@@ -134,7 +134,7 @@ public class ActionAssembleContigs implements Action {
         CloneSet cloneSet = new CloneSet(Arrays.asList(clones), genes, alignerParameters.getFeaturesToAlignMap(),
                 alignerParameters, cloneAssemblerParameters);
 
-        try (CloneSetIO.CloneSetWriter writer = new CloneSetIO.CloneSetWriter(cloneSet, parameters.getOutputFileName())) {
+        try (ClnsWriter writer = new ClnsWriter(null, cloneSet, parameters.getOutputFileName())) {
             SmartProgressReporter.startProgressReport(writer);
             writer.write();
         }

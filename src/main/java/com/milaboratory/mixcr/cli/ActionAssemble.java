@@ -34,24 +34,21 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.validators.PositiveInteger;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
-import com.milaboratory.cli.ActionParametersWithOutput;
 import com.milaboratory.mixcr.assembler.*;
-import com.milaboratory.mixcr.basictypes.ClnAWriter;
-import com.milaboratory.mixcr.basictypes.CloneSet;
-import com.milaboratory.mixcr.basictypes.CloneSetIO;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
+import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.cli.ActionParametersWithResume.ActionParametersWithResumeWithBinaryInput;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PipeWriter;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.util.*;
 
 public class ActionAssemble implements Action {
     private final AssembleParameters actionParameters;
@@ -80,33 +77,14 @@ public class ActionAssemble implements Action {
             System.out.println("WARNING: Unexpected file extension, use .clns extension for clones-only (normal) output and\n" +
                     ".clna if -a / --write-alignments options specified.");
 
-        // Extracting V/D/J/C gene list from input vdjca file
-        final List<VDJCGene> genes;
-        final VDJCAlignerParameters alignerParameters;
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(actionParameters.getInputFileName(),
-                VDJCLibraryRegistry.getDefault())) {
-            genes = reader.getUsedGenes();
-            // Saving aligner parameters to correct assembler parameters
-            alignerParameters = reader.getParameters();
-        }
 
         AlignmentsProvider alignmentsProvider = AlignmentsProvider.Util.createProvider(
                 actionParameters.getInputFileName(),
                 VDJCLibraryRegistry.getDefault());
 
         CloneAssemblerParameters assemblerParameters = actionParameters.getCloneAssemblerParameters();
-        //set aligner parameters
-        assemblerParameters.updateFrom(alignerParameters);
-
-        // Overriding JSON parameters
-        if (!actionParameters.overrides.isEmpty()) {
-            assemblerParameters = JsonOverrider.override(assemblerParameters, CloneAssemblerParameters.class,
-                    actionParameters.overrides);
-            if (assemblerParameters == null) {
-                System.err.println("Failed to override some parameter.");
-                System.exit(1);
-            }
-        }
+        List<VDJCGene> genes = actionParameters.getGenes();
+        VDJCAlignerParameters alignerParameters = actionParameters.getAlignerParameters();
 
         // Performing assembly
         try (CloneAssembler assembler = new CloneAssembler(assemblerParameters,
@@ -134,8 +112,9 @@ public class ActionAssemble implements Action {
             report.onClonesetFinished(cloneSet);
 
             // Writing results
+            PipelineConfiguration pipelineConfiguration = actionParameters.getFullPipelineConfiguration();
             if (actionParameters.doWriteClnA())
-                try (ClnAWriter writer = new ClnAWriter(actionParameters.getOutputFileName())) {
+                try (ClnAWriter writer = new ClnAWriter(pipelineConfiguration, actionParameters.getOutputFileName())) {
                     // writer will supply current stage and completion percent to the progress reporter
                     SmartProgressReporter.startProgressReport(writer);
                     // Writing clone block
@@ -149,7 +128,7 @@ public class ActionAssemble implements Action {
                     writer.writeAlignmentsAndIndex();
                 }
             else
-                try (CloneSetIO.CloneSetWriter writer = new CloneSetIO.CloneSetWriter(cloneSet, actionParameters.getOutputFileName())) {
+                try (ClnsWriter writer = new ClnsWriter(pipelineConfiguration, cloneSet, actionParameters.getOutputFileName())) {
                     SmartProgressReporter.startProgressReport(writer);
                     writer.write();
                 }
@@ -190,8 +169,30 @@ public class ActionAssemble implements Action {
         return actionParameters;
     }
 
+    public static class AssembleConfiguration implements ActionConfiguration {
+        public final CloneAssemblerParameters assemblerParameters;
+
+        @JsonCreator
+        public AssembleConfiguration(@JsonProperty("assemblerParameters") CloneAssemblerParameters assemblerParameters) {
+            this.assemblerParameters = assemblerParameters;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            AssembleConfiguration that = (AssembleConfiguration) o;
+            return Objects.equals(assemblerParameters, that.assemblerParameters);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(assemblerParameters);
+        }
+    }
+
     @Parameters(commandDescription = "Assemble clones")
-    public static class AssembleParameters extends ActionParametersWithOutput {
+    public static class AssembleParameters extends ActionParametersWithResumeWithBinaryInput {
         @Parameter(description = "input_file output_file")
         public List<String> parameters = new ArrayList<>();
 
@@ -237,9 +238,6 @@ public class ActionAssemble implements Action {
             return clna != null && clna;
         }
 
-        public CloneAssemblerParameters getCloneAssemblerParameters() {
-            return CloneAssemblerParametersPresets.getByName(assemblerParametersName);
-        }
 
         @Override
         protected List<String> getOutputFiles() {
@@ -255,6 +253,68 @@ public class ActionAssemble implements Action {
             if (parameters.size() != 2)
                 throw new ParameterException("Wrong number of parameters.");
             super.validate();
+        }
+
+        @Override
+        public List<String> getInputFiles() {
+            return parameters.subList(0, 1);
+        }
+
+        @Override
+        public ActionConfiguration getConfiguration() {
+            return new AssembleConfiguration(getCloneAssemblerParameters());
+        }
+
+
+        // Extracting V/D/J/C gene list from input vdjca file
+        private List<VDJCGene> genes = null;
+        private VDJCAlignerParameters alignerParameters = null;
+        private CloneAssemblerParameters assemblerParameters = null;
+
+        private void initializeParameters() {
+            if (assemblerParameters != null)
+                return;
+
+            try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(getInputFileName(),
+                    VDJCLibraryRegistry.getDefault())) {
+                genes = reader.getUsedGenes();
+                // Saving aligner parameters to correct assembler parameters
+                alignerParameters = reader.getParameters();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            assert alignerParameters != null;
+
+            //set aligner parameters
+            assemblerParameters = CloneAssemblerParametersPresets.getByName(assemblerParametersName);
+            if (assemblerParameters == null)
+                throw new ParameterException("Unknown parameters: " + assemblerParametersName);
+            assemblerParameters = assemblerParameters.updateFrom(alignerParameters);
+
+            // Overriding JSON parameters
+            if (!overrides.isEmpty()) {
+                assemblerParameters = JsonOverrider.override(assemblerParameters, CloneAssemblerParameters.class,
+                        overrides);
+                if (assemblerParameters == null) {
+                    System.err.println("Failed to override some parameter.");
+                    System.exit(1);
+                }
+            }
+        }
+
+        public CloneAssemblerParameters getCloneAssemblerParameters() {
+            initializeParameters();
+            return assemblerParameters;
+        }
+
+        public List<VDJCGene> getGenes() {
+            initializeParameters();
+            return genes;
+        }
+
+        public VDJCAlignerParameters getAlignerParameters() {
+            initializeParameters();
+            return alignerParameters;
         }
     }
 }

@@ -60,7 +60,6 @@ import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
@@ -99,17 +98,6 @@ public class ActionAlign implements Action {
 
         // Getting aligner parameters
         VDJCAlignerParameters alignerParameters = actionParameters.getAlignerParameters();
-
-        // FIXME remove in 2.3
-        if (actionParameters.getSaveOriginalReads() || actionParameters.getSaveReadDescription())
-            alignerParameters.setSaveOriginalReads(true);
-
-        if (!actionParameters.overrides.isEmpty()) {
-            // Perform parameters overriding
-            alignerParameters = JsonOverrider.override(alignerParameters, VDJCAlignerParameters.class, actionParameters.overrides);
-            if (alignerParameters == null)
-                throw new ProcessException("Failed to override some parameter.");
-        }
 
         // Creating aligner
         VDJCAligner aligner = VDJCAligner.createAligner(alignerParameters,
@@ -218,7 +206,7 @@ public class ActionAlign implements Action {
                      : new SingleFastqWriter(actionParameters.failedReadsR1));
         ) {
             if (writer != null)
-                writer.header(aligner, AnalysisHistory.mkInitial(params().getInputFiles(), params().getConfiguration()));
+                writer.header(aligner, params().getFullPipelineConfiguration());
 
             OutputPort<? extends SequenceRead> sReads = reader;
             CanReportProgress progress = (CanReportProgress) reader;
@@ -324,14 +312,20 @@ public class ActionAlign implements Action {
          * VDJC library ID
          */
         public final VDJCLibraryId libraryId;
+        /**
+         * Limit number of reads
+         */
+        public final long limit;
 
         @JsonCreator
         public AlignConfiguration(@JsonProperty("alignerParameters") VDJCAlignerParameters alignerParameters,
                                   @JsonProperty("mergeReads") boolean mergeReads,
-                                  @JsonProperty("libraryId") VDJCLibraryId libraryId) {
+                                  @JsonProperty("libraryId") VDJCLibraryId libraryId,
+                                  @JsonProperty("limit") long limit) {
             this.alignerParameters = alignerParameters;
             this.mergeReads = mergeReads;
             this.libraryId = libraryId;
+            this.limit = limit;
         }
 
         @Override
@@ -340,13 +334,14 @@ public class ActionAlign implements Action {
             if (o == null || getClass() != o.getClass()) return false;
             AlignConfiguration that = (AlignConfiguration) o;
             return mergeReads == that.mergeReads &&
+                    limit == that.limit &&
                     Objects.equals(alignerParameters, that.alignerParameters) &&
                     Objects.equals(libraryId, that.libraryId);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(alignerParameters, mergeReads, libraryId);
+            return Objects.hash(alignerParameters, mergeReads, libraryId, limit);
         }
     }
 
@@ -442,10 +437,22 @@ public class ActionAlign implements Action {
             if (vdjcAlignerParameters != null)
                 return vdjcAlignerParameters;
 
-            VDJCAlignerParameters params = VDJCParametersPresets.getByName(alignerParametersName);
-            if (params == null)
+            VDJCAlignerParameters alignerParameters = VDJCParametersPresets.getByName(alignerParametersName);
+            if (alignerParameters == null)
                 throw new ParameterException("Unknown aligner parameters: " + alignerParametersName);
-            return vdjcAlignerParameters = params;
+
+            // FIXME remove in 2.3
+            if (getSaveOriginalReads() || getSaveReadDescription())
+                alignerParameters.setSaveOriginalReads(true);
+
+            if (!overrides.isEmpty()) {
+                // Perform parameters overriding
+                alignerParameters = JsonOverrider.override(alignerParameters, VDJCAlignerParameters.class, overrides);
+                if (alignerParameters == null)
+                    throw new ProcessException("Failed to override some parameter.");
+            }
+
+            return vdjcAlignerParameters = alignerParameters;
         }
 
         public String[] getInputsForReport() {
@@ -547,34 +554,13 @@ public class ActionAlign implements Action {
             return new AlignConfiguration(
                     getAlignerParameters(),
                     !getNoMerge(),
-                    getLibrary().getLibraryId());
+                    getLibrary().getLibraryId(),
+                    limit);
         }
 
         @Override
-        public void handleExistenceOfOutputFile(String outFileName) {
-            // analysis supposed to be performed now
-            AnalysisHistory thisHistory = AnalysisHistory.mkInitial(getInputFiles(), getConfiguration());
-            // history written in existing vdjca file
-            AnalysisHistory thatHistory = null;
-            try {
-                thatHistory = new VDJCAlignmentsReader(outFileName).getAnalysisHistory();
-            } catch (Throwable ignored) { }
-
-            if (Objects.equals(thatHistory, thisHistory)) {
-                String exists = "File " + outFileName + " already exists and contain correct " +
-                        "alignments of the specified raw sequencing data obtained with the current " +
-                        "version of MiXCR (" + MiXCRVersionInfo.get().getShortestVersionString() + "). ";
-                if (!resume())
-                    throw new ParameterException(exists +
-                            "Use --resume option to skip align step (output file will remain unchanged) or use -f option " +
-                            "to force overwrite it.");
-                else {
-                    System.out.println("Skipping align (--resume option specified). " + exists);
-                    System.exit(0); // nothing to do, just exit
-                    return;
-                }
-            }
-            super.handleExistenceOfOutputFile(outFileName);
+        public PipelineConfiguration getFullPipelineConfiguration() {
+            return PipelineConfiguration.mkInitial(getInputFiles(), getConfiguration());
         }
     }
 }

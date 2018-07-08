@@ -38,10 +38,7 @@ import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.quality.QualityAggregationType;
 import com.milaboratory.core.tree.TreeSearchParameters;
-import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.basictypes.CloneSet;
-import com.milaboratory.mixcr.basictypes.CloneSetIO;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
+import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.vdjaligners.*;
 import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.SmartProgressReporter;
@@ -132,7 +129,9 @@ public class CloneAssemblerRunnerTest {
         CloneSet cloneSet = assemblerRunner.getCloneSet(null);
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        CloneSetIO.write(cloneSet, bos);
+        try(ClnsWriter writer = new ClnsWriter(null, cloneSet, bos)){
+            writer.write();
+        }
 
         CloneSet cloneSetDeserialized = CloneSetIO.readClns(new ByteArrayInputStream(bos.toByteArray()));
 

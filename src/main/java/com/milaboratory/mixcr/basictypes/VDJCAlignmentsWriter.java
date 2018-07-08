@@ -68,25 +68,25 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
         this.numberOfProcessedReads = numberOfProcessedReads;
     }
 
-    public void header(VDJCAlignmentsReader reader) {
-        header(reader.getParameters(), reader.getUsedGenes(), reader.getAnalysisHistory());
+    public void header(VDJCAlignmentsReader reader, PipelineConfiguration pipelineConfiguration) {
+        header(reader.getParameters(), reader.getUsedGenes(), pipelineConfiguration);
     }
 
-    public void header(VDJCAligner aligner, AnalysisHistory history) {
-        header(aligner.getParameters(), aligner.getUsedGenes(), history);
+    public void header(VDJCAligner aligner, PipelineConfiguration pipelineConfiguration) {
+        header(aligner.getParameters(), aligner.getUsedGenes(), pipelineConfiguration);
     }
 
     /** History to write in the header */
-    private AnalysisHistory history = null;
+    private PipelineConfiguration history = null;
 
     @Override
-    public synchronized void writeHistory(AnalysisHistory history) {
-        if (!history.equals(this.history))
+    public synchronized void writeConfiguration(PipelineConfiguration configuration) {
+        if (!configuration.equals(this.history))
             throw new IllegalStateException();
     }
 
     @Override
-    public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes, AnalysisHistory history) {
+    public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes, PipelineConfiguration pipelineConfiguration) {
         if (parameters == null || genes == null)
             throw new IllegalArgumentException();
 
@@ -106,8 +106,8 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
         output.writeObject(parameters);
 
         // Writing history
-        this.history = history;
-        output.writeObject(history);
+        this.history = pipelineConfiguration;
+        output.writeObject(pipelineConfiguration);
 
         IOUtil.writeAndRegisterGeneReferences(output, genes, parameters);
 
