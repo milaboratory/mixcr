@@ -33,6 +33,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.milaboratory.core.merger.MergerParameters;
+import com.milaboratory.mixcr.basictypes.ActionConfiguration;
+import com.milaboratory.primitivio.annotations.Serializable;
 import com.milaboratory.util.GlobalObjectMappers;
 
 import java.io.IOException;

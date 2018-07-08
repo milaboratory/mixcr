@@ -48,9 +48,13 @@ import java.util.Objects;
 
 import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.*;
 
-public final class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlignments>, CanReportProgress {
+public final class VDJCAlignmentsReader implements
+                                        AnalysisHistoryReader,
+                                        OutputPortCloseable<VDJCAlignments>,
+                                        CanReportProgress {
     private static final int DEFAULT_BUFFER_SIZE = 1048576; // 1 MB
     VDJCAlignerParameters parameters;
+    AnalysisHistory history;
     List<VDJCGene> usedGenes;
     final PrimitivI input;
     final VDJCLibraryRegistry vdjcRegistry;
@@ -148,6 +152,7 @@ public final class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlign
         versionInfo = input.readUTF();
 
         parameters = input.readObject(VDJCAlignerParameters.class);
+        history = input.readObject(AnalysisHistory.class);
 
         this.usedGenes = IOUtil.readAndRegisterGeneReferences(input, vdjcRegistry, parameters);
 
@@ -180,6 +185,12 @@ public final class VDJCAlignmentsReader implements OutputPortCloseable<VDJCAlign
     public synchronized List<VDJCGene> getUsedGenes() {
         init();
         return usedGenes;
+    }
+
+    @Override
+    public synchronized AnalysisHistory getAnalysisHistory() {
+        init();
+        return history;
     }
 
     /**

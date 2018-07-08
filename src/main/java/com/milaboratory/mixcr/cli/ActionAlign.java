@@ -40,7 +40,12 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.validators.PositiveInteger;
-import com.milaboratory.cli.*;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.milaboratory.cli.Action;
+import com.milaboratory.cli.ActionHelper;
+import com.milaboratory.cli.DeprecatedParameter;
+import com.milaboratory.cli.ProcessException;
 import com.milaboratory.core.PairedEndReadsLayout;
 import com.milaboratory.core.Target;
 import com.milaboratory.core.io.sequence.SequenceRead;
@@ -54,10 +59,8 @@ import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.basictypes.SequenceHistory;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
-import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
@@ -118,7 +121,7 @@ public class ActionAlign implements Action {
                 GeneFeature.VRegionWithP :
                 GeneFeature.VRegion;
 
-        VDJCLibrary library = VDJCLibraryRegistry.getDefault().getLibrary(actionParameters.library, actionParameters.species);
+        VDJCLibrary library = actionParameters.getLibrary();
 
         System.out.println("Reference library: " + library.getLibraryId());
 
@@ -214,7 +217,9 @@ public class ActionAlign implements Action {
                      ? new PairedFastqWriter(actionParameters.failedReadsR1, actionParameters.failedReadsR2)
                      : new SingleFastqWriter(actionParameters.failedReadsR1));
         ) {
-            if (writer != null) writer.header(aligner);
+            if (writer != null)
+                writer.header(aligner, AnalysisHistory.mkInitial(params().getInputFiles(), params().getConfiguration()));
+
             OutputPort<? extends SequenceRead> sReads = reader;
             CanReportProgress progress = (CanReportProgress) reader;
             if (actionParameters.limit != 0) {
@@ -305,8 +310,48 @@ public class ActionAlign implements Action {
         return actionParameters;
     }
 
+    /** Set of parameters that completely (uniquely) determine align action */
+    public static class AlignConfiguration implements ActionConfiguration {
+        /**
+         * Aligner parameters
+         */
+        public final VDJCAlignerParameters alignerParameters;
+        /**
+         * Whether reads were merged
+         */
+        public final boolean mergeReads;
+        /**
+         * VDJC library ID
+         */
+        public final VDJCLibraryId libraryId;
+
+        @JsonCreator
+        public AlignConfiguration(@JsonProperty("alignerParameters") VDJCAlignerParameters alignerParameters,
+                                  @JsonProperty("mergeReads") boolean mergeReads,
+                                  @JsonProperty("libraryId") VDJCLibraryId libraryId) {
+            this.alignerParameters = alignerParameters;
+            this.mergeReads = mergeReads;
+            this.libraryId = libraryId;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            AlignConfiguration that = (AlignConfiguration) o;
+            return mergeReads == that.mergeReads &&
+                    Objects.equals(alignerParameters, that.alignerParameters) &&
+                    Objects.equals(libraryId, that.libraryId);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(alignerParameters, mergeReads, libraryId);
+        }
+    }
+
     @Parameters(commandDescription = "Builds alignments with V,D,J and C genes for input sequencing reads.")
-    public static class AlignParameters extends ActionParametersWithOutput {
+    public static class AlignParameters extends ActionParametersWithResume {
         @Parameter(description = "input_file1 [input_file2] output_file.vdjca", variableArity = true)
         public List<String> parameters = new ArrayList<>();
 
@@ -391,15 +436,20 @@ public class ActionAlign implements Action {
             return species;
         }
 
+        private VDJCAlignerParameters vdjcAlignerParameters = null;
+
         public VDJCAlignerParameters getAlignerParameters() {
+            if (vdjcAlignerParameters != null)
+                return vdjcAlignerParameters;
+
             VDJCAlignerParameters params = VDJCParametersPresets.getByName(alignerParametersName);
             if (params == null)
                 throw new ParameterException("Unknown aligner parameters: " + alignerParametersName);
-            return params;
+            return vdjcAlignerParameters = params;
         }
 
         public String[] getInputsForReport() {
-            return parameters.subList(0, parameters.size() - 1).toArray(new String[parameters.size() - 1]);
+            return getInputFiles().toArray(new String[parameters.size() - 1]);
         }
 
         public String[] getOutputsForReport() {
@@ -430,6 +480,14 @@ public class ActionAlign implements Action {
 
         public Chains getChains() {
             return Chains.parse(chains);
+        }
+
+        private VDJCLibrary vdjcLibrary = null;
+
+        public VDJCLibrary getLibrary() {
+            return vdjcLibrary != null
+                    ? vdjcLibrary
+                    : (vdjcLibrary = VDJCLibraryRegistry.getDefault().getLibrary(library, species));
         }
 
         public boolean getWriteAllResults() {
@@ -477,6 +535,46 @@ public class ActionAlign implements Action {
             if (!printWarnings() && verbose())
                 throw new ParameterException("-nw/--no-warnings and --verbose options are not compatible.");
             super.validate();
+        }
+
+        @Override
+        public List<String> getInputFiles() {
+            return parameters.subList(0, parameters.size() - 1);
+        }
+
+        @Override
+        public ActionConfiguration getConfiguration() {
+            return new AlignConfiguration(
+                    getAlignerParameters(),
+                    !getNoMerge(),
+                    getLibrary().getLibraryId());
+        }
+
+        @Override
+        public void handleExistenceOfOutputFile(String outFileName) {
+            // analysis supposed to be performed now
+            AnalysisHistory thisHistory = AnalysisHistory.mkInitial(getInputFiles(), getConfiguration());
+            // history written in existing vdjca file
+            AnalysisHistory thatHistory = null;
+            try {
+                thatHistory = new VDJCAlignmentsReader(outFileName).getAnalysisHistory();
+            } catch (Throwable ignored) { }
+
+            if (Objects.equals(thatHistory, thisHistory)) {
+                String exists = "File " + outFileName + " already exists and contain correct " +
+                        "alignments of the specified raw sequencing data obtained with the current " +
+                        "version of MiXCR (" + MiXCRVersionInfo.get().getShortestVersionString() + "). ";
+                if (!resume())
+                    throw new ParameterException(exists +
+                            "Use --resume option to skip align step (output file will remain unchanged) or use -f option " +
+                            "to force overwrite it.");
+                else {
+                    System.out.println("Skipping align (--resume option specified). " + exists);
+                    System.exit(0); // nothing to do, just exit
+                    return;
+                }
+            }
+            super.handleExistenceOfOutputFile(outFileName);
         }
     }
 }

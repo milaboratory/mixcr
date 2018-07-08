@@ -69,15 +69,24 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     }
 
     public void header(VDJCAlignmentsReader reader) {
-        header(reader.getParameters(), reader.getUsedGenes());
+        header(reader.getParameters(), reader.getUsedGenes(), reader.getAnalysisHistory());
     }
 
-    public void header(VDJCAligner aligner) {
-        header(aligner.getParameters(), aligner.getUsedGenes());
+    public void header(VDJCAligner aligner, AnalysisHistory history) {
+        header(aligner.getParameters(), aligner.getUsedGenes(), history);
+    }
+
+    /** History to write in the header */
+    private AnalysisHistory history = null;
+
+    @Override
+    public synchronized void writeHistory(AnalysisHistory history) {
+        if (!history.equals(this.history))
+            throw new IllegalStateException();
     }
 
     @Override
-    public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes) {
+    public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes, AnalysisHistory history) {
         if (parameters == null || genes == null)
             throw new IllegalArgumentException();
 
@@ -95,6 +104,10 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
 
         // Writing parameters
         output.writeObject(parameters);
+
+        // Writing history
+        this.history = history;
+        output.writeObject(history);
 
         IOUtil.writeAndRegisterGeneReferences(output, genes, parameters);
 

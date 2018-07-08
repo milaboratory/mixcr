@@ -48,7 +48,7 @@ public final class ActionFilterAlignments implements Action {
                 sReads = new CountLimitingOutputPort<>(sReads, parameters.limit);
                 progress = SmartProgressReporter.extractProgress((CountLimitingOutputPort<?>) sReads);
             }
-            writer.header(reader.getParameters(), reader.getUsedGenes());
+            writer.header(reader.getParameters(), reader.getUsedGenes(), null);
             SmartProgressReporter.startProgressReport("Filtering", progress);
             int total = 0, passed = 0;
             final AlignmentsFilter filter = parameters.getFilter();

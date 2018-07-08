@@ -168,7 +168,7 @@ public final class RunMiXCR {
             if (serializedAlignments == null) {
                 final ByteArrayOutputStream data = new ByteArrayOutputStream();
                 try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(data)) {
-                    writer.header(aligner);
+                    writer.header(aligner, null);
                     for (VDJCAlignments alignment : alignments)
                         writer.write(alignment);
                     writer.setNumberOfProcessedReads(totalNumberOfReads);

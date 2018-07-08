@@ -51,10 +51,10 @@ public final class ActionAlignmentsDiff implements Action {
             long same = 0, onlyIn1 = 0, onlyIn2 = 0, diffFeature = 0, justDiff = 0;
             long[] diffHits = new long[GeneType.NUMBER_OF_TYPES];
 
-            only1.header(reader1.getParameters(), reader1.getUsedGenes());
-            diff1.header(reader1.getParameters(), reader1.getUsedGenes());
-            only2.header(reader2.getParameters(), reader2.getUsedGenes());
-            diff2.header(reader2.getParameters(), reader2.getUsedGenes());
+            only1.header(reader1.getParameters(), reader1.getUsedGenes(), null);
+            diff1.header(reader1.getParameters(), reader1.getUsedGenes(), null);
+            only2.header(reader2.getParameters(), reader2.getUsedGenes(), null);
+            diff2.header(reader2.getParameters(), reader2.getUsedGenes(), null);
 
             VDJCAlignmentsDifferenceReader diffReader = new VDJCAlignmentsDifferenceReader(reader1, reader2,
                     parameters.getFeature(), parameters.hitsCompareLevel);

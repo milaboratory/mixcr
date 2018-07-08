@@ -97,7 +97,7 @@ public class RunMiXCRTest {
 
         File tempFile = TempFileManager.getTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
-            writer.header(align.aligner);
+            writer.header(align.aligner, null);
             for (VDJCAlignments alignment : align.alignments)
                 writer.write(alignment);
         }
@@ -134,7 +134,7 @@ public class RunMiXCRTest {
 
         File tempFile = TempFileManager.getTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
-            writer.header(align.aligner);
+            writer.header(align.aligner, null);
             for (VDJCAlignments alignment : align.alignments)
                 writer.write(alignment);
         }

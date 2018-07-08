@@ -94,7 +94,7 @@ public class CloneAssemblerRunnerTest {
         //write alignments to byte array
         ByteArrayOutputStream alignmentsSerialized = new ByteArrayOutputStream();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(alignmentsSerialized)) {
-            writer.header(aligner);
+            writer.header(aligner, null);
             for (Object read : CUtils.it(reader)) {
                 VDJCAlignmentResult result = (VDJCAlignmentResult) aligner.process((SequenceRead) read);
                 if (result.alignment != null)

@@ -89,7 +89,7 @@ public class ActionExtend implements Action {
              final VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(parameters.getOutput())) {
             SmartProgressReporter.startProgressReport("Processing", reader);
 
-            writer.header(reader.getParameters(), reader.getUsedGenes());
+            writer.header(reader.getParameters(), reader.getUsedGenes(), null);
 
             ProcessWrapper<VDJCAlignments> process = new ProcessWrapper<>(reader,
                     reader.getParameters().getVAlignerParameters().getParameters().getScoring(),

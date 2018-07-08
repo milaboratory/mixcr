@@ -69,7 +69,7 @@ public class VDJCAlignerSTest {
                 if (parameters.containsRequiredFeature(gene))
                     aligner.addGene(gene);
             try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(bos)) {
-                writer.header(aligner);
+                writer.header(aligner, null);
                 header = bos.size();
                 for (SingleRead read : CUtils.it(reader)) {
                     VDJCAlignmentResult<SingleRead> result = aligner.process(read);

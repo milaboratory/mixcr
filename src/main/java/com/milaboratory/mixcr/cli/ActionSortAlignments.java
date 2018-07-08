@@ -42,7 +42,7 @@ public final class ActionSortAlignments implements Action {
                          Sorter.sort(reader, idComparator, 1024 * 512, new VDJCAlignmentsSerializer(reader), TempFileManager.getTempFile());
                  VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(parameters.getOutputFile())) {
 
-                writer.header(reader.getParameters(), reader.getUsedGenes());
+                writer.header(reader.getParameters(), reader.getUsedGenes(), null);
 
                 final long nReads = reader.getNumberOfReads();
                 final CountingOutputPort<VDJCAlignments> counter = new CountingOutputPort<>(sorted);
@@ -83,7 +83,7 @@ public final class ActionSortAlignments implements Action {
         @Override
         public void write(Collection<VDJCAlignments> data, OutputStream stream) {
             try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(stream)) {
-                writer.header(parameters, usedAlleles);
+                writer.header(parameters, usedAlleles, null);
                 for (VDJCAlignments datum : data)
                     writer.write(datum);
             }
