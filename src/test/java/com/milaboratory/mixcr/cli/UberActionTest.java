@@ -43,7 +43,7 @@ public class UberActionTest {
         Assert.assertFalse(str.contains("--assemblePartial"));
         Assert.assertFalse(str.contains("--extend"));
         Assert.assertFalse(str.contains("--assemble-partial-rounds"));
-        Assert.assertFalse(str.contains("----do-extend-alignments"));
+        Assert.assertFalse(str.contains("--do-extend-alignments"));
     }
 
     @Test
@@ -57,6 +57,6 @@ public class UberActionTest {
         Assert.assertTrue(str.contains("--assemblePartial"));
         Assert.assertTrue(str.contains("--extend"));
         Assert.assertTrue(str.contains("--assemble-partial-rounds"));
-        Assert.assertTrue(str.contains("----do-extend-alignments"));
+        Assert.assertTrue(str.contains("--do-extend-alignments"));
     }
 }
