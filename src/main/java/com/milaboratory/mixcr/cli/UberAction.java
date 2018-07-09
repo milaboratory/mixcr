@@ -172,7 +172,7 @@ public abstract class UberAction implements Action {
         public boolean resume = false;
 
         @Parameter(description = "Report file.", names = {"-r", "--report"})
-        public String report;
+        public String report = "report.txt";
 
         @Parameter(names = "--align", description = "Align parameters", variableArity = true)
         public List<String> alignParameters = new ArrayList<>();
@@ -396,7 +396,12 @@ public abstract class UberAction implements Action {
     }
 
     @Parameters(commandDescription = "Analyze RNA-Seq data")
-    public static class RnaSeqParameters extends UberActionParameters {}
+    public static class RnaSeqParameters extends UberActionParameters {
+        {
+            nAssemblePartialRounds = 2;
+            doExtendAlignments = true;
+        }
+    }
 
     /** Default pipeline for processing RnaSeq type data */
     public static class UberRnaSeq extends UberAction {

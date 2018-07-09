@@ -14,6 +14,8 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -138,7 +140,6 @@ public final class PipelineConfiguration {
 
         @Override
         public int hashCode() {
-
             int result = Objects.hash(configuration);
             result = 31 * result + Arrays.hashCode(inputFilesDescriptors);
             return result;

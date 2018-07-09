@@ -96,6 +96,11 @@ public final class ActionSortAlignments implements Action {
 
     public static class SortConfiguration implements ActionConfiguration {
         @Override
+        public String actionName() {
+            return "sortAlignments";
+        }
+
+        @Override
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;

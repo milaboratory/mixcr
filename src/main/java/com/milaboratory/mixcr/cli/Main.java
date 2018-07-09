@@ -105,6 +105,7 @@ public class Main {
                 new ActionExtend(),
                 new ActionSortAlignments(),
                 new ActionSlice(),
+                new ActionPipelineInfo(),
                 new UberAction.UberRepSeq(),
                 new UberAction.UberRnaSeq()
         );

@@ -83,6 +83,11 @@ public class ActionMergeAlignments implements Action {
         }
 
         @Override
+        public String actionName() {
+            return "merge";
+        }
+
+        @Override
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;

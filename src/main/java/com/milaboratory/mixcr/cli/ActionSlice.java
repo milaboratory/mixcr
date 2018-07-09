@@ -37,7 +37,10 @@ import com.beust.jcommander.Parameters;
 import com.beust.jcommander.converters.LongConverter;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.cli.*;
+import com.milaboratory.cli.Action;
+import com.milaboratory.cli.ActionHelper;
+import com.milaboratory.cli.ActionParameters;
+import com.milaboratory.cli.HiddenAction;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.cli.ActionParametersWithResume.ActionParametersWithResumeWithBinaryInput;
 import gnu.trove.map.hash.TIntIntHashMap;
@@ -165,6 +168,11 @@ public class ActionSlice implements Action {
         }
 
         @Override
+        public String actionName() {
+            return "slice";
+        }
+
+        @Override
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -177,6 +185,7 @@ public class ActionSlice implements Action {
             return Arrays.hashCode(ids);
         }
     }
+
     @Parameters(commandDescription = "Slice ClnA file.")
     @HiddenAction
     public static final class Params extends ActionParametersWithResumeWithBinaryInput {

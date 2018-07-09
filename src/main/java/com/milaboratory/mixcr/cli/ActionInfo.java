@@ -36,16 +36,22 @@ import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.cli.HiddenAction;
+import com.milaboratory.mixcr.basictypes.PipelineConfiguration;
+import com.milaboratory.mixcr.basictypes.PipelineConfigurationReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.util.PrintStreamTableAdapter;
+import com.milaboratory.util.LightFileDescriptor;
 import com.milaboratory.util.SmartProgressReporter;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @HiddenAction
 public class ActionInfo implements Action {

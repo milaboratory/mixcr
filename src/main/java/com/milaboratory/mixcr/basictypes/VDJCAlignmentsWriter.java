@@ -77,16 +77,18 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     }
 
     /** History to write in the header */
-    private PipelineConfiguration history = null;
+    private PipelineConfiguration pipelineConfiguration = null;
 
     @Override
     public synchronized void writeConfiguration(PipelineConfiguration configuration) {
-        if (!configuration.equals(this.history))
+        if (pipelineConfiguration == null)
+            pipelineConfiguration = configuration;
+        else if (!configuration.equals(this.pipelineConfiguration))
             throw new IllegalStateException();
     }
 
     @Override
-    public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes, PipelineConfiguration pipelineConfiguration) {
+    public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes, PipelineConfiguration ppConfiguration) {
         if (parameters == null || genes == null)
             throw new IllegalArgumentException();
 
@@ -106,7 +108,8 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
         output.writeObject(parameters);
 
         // Writing history
-        this.history = pipelineConfiguration;
+        if (ppConfiguration != null)
+            this.pipelineConfiguration = ppConfiguration;
         output.writeObject(pipelineConfiguration);
 
         IOUtil.writeAndRegisterGeneReferences(output, genes, parameters);

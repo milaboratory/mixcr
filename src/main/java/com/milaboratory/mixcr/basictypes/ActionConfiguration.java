@@ -27,4 +27,6 @@ import com.milaboratory.primitivio.annotations.Serializable;
         @JsonSubTypes.Type(value = ActionSortAlignments.SortConfiguration.class, name = "sort-configuration"),
         @JsonSubTypes.Type(value = ActionSlice.SliceConfiguration.class, name = "slice-configuration")})
 @Serializable(asJson = true)
-public interface ActionConfiguration {}
+public interface ActionConfiguration {
+    default String actionName() { return "-"; }
+}

@@ -11,6 +11,7 @@ import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.mixcr.basictypes.ActionConfiguration;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssembler;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParameters;
 import com.milaboratory.util.SmartProgressReporter;
@@ -42,9 +43,10 @@ public final class ActionAssemblePartialAlignments implements Action {
         long beginTimestamp = System.currentTimeMillis();
 
         PartialAlignmentsAssemblerParameters assemblerParameters = parameters.getPartialAlignmentsAssemblerParameters();
+        VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(parameters.getOutputFileName());
+        writer.writeConfiguration(parameters.getFullPipelineConfiguration());
         try (PartialAlignmentsAssembler assembler = new PartialAlignmentsAssembler(assemblerParameters,
-                parameters.getOutputFileName(), !parameters.doDropPartial(),
-                parameters.getOverlappedOnly())) {
+                writer, !parameters.doDropPartial(), parameters.getOverlappedOnly())) {
             this.report = assembler;
             ReportWrapper report = new ReportWrapper(command(), assembler);
             report.setStartMillis(beginTimestamp);
@@ -107,6 +109,11 @@ public final class ActionAssemblePartialAlignments implements Action {
             this.parameters = parameters;
             this.dropPartial = dropPartial;
             this.overlappedOnly = overlappedOnly;
+        }
+
+        @Override
+        public String actionName() {
+            return "assemblePartial";
         }
 
         @Override
