@@ -61,7 +61,7 @@ public abstract class ActionParametersWithResumeOption extends ActionParametersW
                     "version of MiXCR (" + MiXCRVersionInfo.get().getShortestVersionString() + "). ";
             if (!resume())
                 throw new ParameterException(exists +
-                        "Use --resume option to skip align step (output file will remain unchanged) or use -f option " +
+                        "Use --resume option to skip execution (output file will remain unchanged) or use -f option " +
                         "to force overwrite it.");
             else {
                 System.out.println("Skipping " + expectedPipeline.lastConfiguration().actionName() + " (--resume option specified). " + exists);
