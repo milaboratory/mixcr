@@ -114,7 +114,7 @@ public final class ActionSortAlignments implements Action {
     }
 
     @Parameters(commandDescription = "Sort alignments in vdjca file")
-    private static final class AParameters extends ActionParametersWithResume.ActionParametersWithResumeWithBinaryInput {
+    private static final class AParameters extends ActionParametersWithResumeOption.ActionParametersWithResumeWithBinaryInput {
         @Parameter(description = "input.vdjca output.vdjca")
         public List<String> parameters;
 

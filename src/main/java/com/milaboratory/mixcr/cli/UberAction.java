@@ -2,22 +2,18 @@ package com.milaboratory.mixcr.cli;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.cli.ActionParametersWithOutput;
-import com.milaboratory.mixcr.basictypes.ClnAReader;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.cli.ActionAlign.AlignParameters;
 import com.milaboratory.mixcr.cli.ActionAssemble.AssembleParameters;
 import com.milaboratory.mixcr.cli.ActionAssemblePartialAlignments.AssemblePartialAlignmentsParameters;
 import com.milaboratory.mixcr.cli.ActionExportClones.CloneExportParameters;
-import com.milaboratory.mixcr.cli.ActionExtend.ExtendActionParameters;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
-import io.repseq.core.VDJCLibraryRegistry;
+import com.milaboratory.mixcr.cli.ActionExtend.ExtendParameters;
 
-import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,118 +34,31 @@ public abstract class UberAction implements Action {
     @Override
     public void go(ActionHelper helper) throws Exception {
         // --- Running alignments
-        AlignParameters alignParameters = uberParameters.mkAlignerParameters();
-
-        // Actual alignments file
-        String alignmentsFile = null;
-        // first check that the align file is already exist
-        if (uberParameters.resume && new File(uberParameters.vdjcaFileName()).exists()) {
-            try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(uberParameters.vdjcaFileName())) {
-                VDJCAlignerParameters parameters = reader.getParameters();
-                if (parameters.equals(alignParameters.getAlignerParameters())) {
-                    System.out.println("TODO"); // FIXME
-                    alignmentsFile = uberParameters.vdjcaFileName();
-                }
-            }
-        }
-
-        if (alignmentsFile == null) {
-            // need to run align
-
-            assert alignParameters.report.equals(uberParameters.report);
-            assert alignParameters.getOutputName().equals(uberParameters.vdjcaFileName());
-
-            new ActionAlign(alignParameters).go(helper);
-            alignmentsFile = uberParameters.vdjcaFileName();
-        }
-
+        new ActionAlign(uberParameters.mkAlignerParameters()).go(helper);
+        String fileWithAlignments = uberParameters.fNameForAlignments();
 
         // --- Running partial alignments
-        int nAssemblePartialRounds = uberParameters.nAssemblePartialRounds;
-        if (nAssemblePartialRounds > 0) {
-            AssemblePartialAlignmentsParameters assemblePartialParameters = uberParameters.mkAssemblePartialParameters();
-            for (int round = 0; round < nAssemblePartialRounds; ++round) {
-                String parAlignmentsFile = uberParameters.partialAlignmentsFileName(round);
-                // check whether file is already there
-                if (uberParameters.resume && new File(parAlignmentsFile).exists()) {
-                    try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(parAlignmentsFile)) {
-                        VDJCAlignerParameters parameters = reader.getParameters();
-                        if (parameters.equals(alignParameters.getAlignerParameters())) {
-                            System.out.println("TODO"); // FIXME
-                            alignmentsFile = parAlignmentsFile;
-                            continue;
-                        }
-                    }
-                }
-
-                // add input and output files
-                assemblePartialParameters.parameters.clear();
-                assemblePartialParameters.parameters.add(alignmentsFile);
-                assemblePartialParameters.parameters.add(parAlignmentsFile);
-                alignmentsFile = parAlignmentsFile;
-
-                new ActionAssemblePartialAlignments(assemblePartialParameters).go(helper);
-            }
+        for (int round = 0; round < uberParameters.nAssemblePartialRounds; ++round) {
+            String fileWithParAlignments = uberParameters.fNameForParAlignments(round);
+            new ActionAssemblePartialAlignments(uberParameters.mkAssemblePartialParameters(fileWithAlignments, fileWithParAlignments)).go(helper);
+            fileWithAlignments = fileWithParAlignments;
         }
 
         // --- Running alignments extender
         if (uberParameters.doExtendAlignments) {
-            ExtendActionParameters extendParameters = uberParameters.mkExtendParameters();
-            String extAlignmentsFile = null;
-            // check whether file is already there
-            if (uberParameters.resume && new File(uberParameters.extendedFileName()).exists()) {
-                try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(uberParameters.extendedFileName())) {
-                    VDJCAlignerParameters parameters = reader.getParameters();
-                    if (parameters.equals(alignParameters.getAlignerParameters())) {
-                        System.out.println("TODO"); // FIXME
-                        extAlignmentsFile = uberParameters.extendedFileName();
-                    }
-                }
-            }
-
-            if (extAlignmentsFile == null) {
-                // need to run extend
-                extAlignmentsFile = uberParameters.extendedFileName();
-                // add input & output
-                extendParameters.parameters.add(alignmentsFile);
-                extendParameters.parameters.add(extAlignmentsFile);
-                alignmentsFile = extAlignmentsFile;
-                new ActionExtend(extendParameters).go(helper);
-            }
+            String fileWithExtAlignments = uberParameters.fNameForExtenedAlignments();
+            new ActionExtend(uberParameters.mkExtendParameters(fileWithAlignments, fileWithExtAlignments)).go(helper);
+            fileWithAlignments = fileWithExtAlignments;
         }
 
         // --- Running assembler
-        AssembleParameters assembleParameters = uberParameters.mkAssembleParameters();
-        String clnaFile = null;
-        // check whether file is already there
-        if (uberParameters.resume && new File(uberParameters.clnaFileName()).exists()) {
-            try (ClnAReader reader = new ClnAReader(uberParameters.clnaFileName(), VDJCLibraryRegistry.getDefault())) {
-                if (reader.getAssemblerParameters().equals(assembleParameters.getCloneAssemblerParameters()))
-                    clnaFile = uberParameters.clnaFileName();
-            }
-        }
-        if (clnaFile == null) {
-            // need to run extend
-            clnaFile = uberParameters.clnaFileName();
-            // add input & output
-            assembleParameters.parameters.add(alignmentsFile);
-            assembleParameters.parameters.add(clnaFile);
-
-            new ActionAssemble(assembleParameters).go(helper);
-        }
+        String fileWithClones = uberParameters.fNameForClones();
+        new ActionAssemble(uberParameters.mkAssembleParameters(fileWithAlignments, fileWithClones)).go(helper);
 
         // --- Running export
-        CloneExportParameters exportParameters = uberParameters.mkExportParameters();
-        ActionExportClones export = new ActionExportClones(exportParameters);
-
-        ArrayList<String> epArgs = new ArrayList<>(uberParameters.exportParameters);
-        // add in & out
-        epArgs.add(clnaFile);
-        epArgs.add(uberParameters.exportClonesFileName());
-
-        export.parseParameters(epArgs
-                .stream()
-                .flatMap(s -> Arrays.stream(s.split(" "))).toArray(String[]::new));
+        String[] exportParameters = uberParameters.mkExportParametersArray(fileWithClones, uberParameters.fNameForExportClones());
+        ActionExportClones export = new ActionExportClones(uberParameters.mkExportParameters(exportParameters));
+        export.parseParameters(exportParameters);
         export.go(helper);
     }
 
@@ -177,12 +86,18 @@ public abstract class UberAction implements Action {
         @Parameter(names = "--align", description = "Align parameters", variableArity = true)
         public List<String> alignParameters = new ArrayList<>();
 
+        private <T extends ActionParametersWithOutput> T inheritOptionsAndValidate(T parameters) {
+            if (resume && parameters instanceof ActionParametersWithResumeOption)
+                ((ActionParametersWithResumeOption) parameters).resume = true;
+            if (isForceOverwrite())
+                parameters.force = true;
+            parameters.validate();
+            return parameters;
+        }
+
         /** Prepare parameters for align */
         public AlignParameters mkAlignerParameters() {
-            AlignParameters ap = new AlignParameters() {
-                @Override
-                public void validate() { } // discard validation
-            };
+            AlignParameters ap = new AlignParameters();
 
             // align parameters
             List<String> alignParameters = new ArrayList<>();
@@ -204,7 +119,7 @@ public abstract class UberAction implements Action {
 
             // put input fastq files & output vdjca
             alignParameters.addAll(getInputFiles());
-            alignParameters.add(vdjcaFileName());
+            alignParameters.add(fNameForAlignments());
 
             // parse parameters
             new JCommander(ap).parse(
@@ -212,19 +127,14 @@ public abstract class UberAction implements Action {
                             .stream()
                             .flatMap(s -> Arrays.stream(s.split(" ")))
                             .toArray(String[]::new));
-            return ap;
+            return inheritOptionsAndValidate(ap);
         }
 
         @Parameter(names = "--assemblePartial", description = "Partial assembler parameters", variableArity = true)
         public List<String> assemblePartialParameters = new ArrayList<>();
 
-        /** Build parameters for assemble partial (no output specified) */
-        public AssemblePartialAlignmentsParameters mkAssemblePartialParameters() {
-            AssemblePartialAlignmentsParameters ap = new AssemblePartialAlignmentsParameters() {
-                @Override
-                public void validate() { }
-            };
-
+        /** Build parameters for assemble partial */
+        public AssemblePartialAlignmentsParameters mkAssemblePartialParameters(String input, String output) {
             List<String> assemblePartialParameters = new ArrayList<>();
 
             // add report file
@@ -234,25 +144,24 @@ public abstract class UberAction implements Action {
             // add all override parameters
             assemblePartialParameters.addAll(this.assemblePartialParameters);
 
+            assemblePartialParameters.add(input);
+            assemblePartialParameters.add(output);
+
             // parse parameters
+            AssemblePartialAlignmentsParameters ap = new AssemblePartialAlignmentsParameters();
             new JCommander(ap).parse(
                     assemblePartialParameters
                             .stream()
                             .flatMap(s -> Arrays.stream(s.split(" ")))
                             .toArray(String[]::new));
-            return ap;
+            return inheritOptionsAndValidate(ap);
         }
 
         @Parameter(names = "--extend", description = "Extend alignments parameters", variableArity = true)
         public List<String> extendAlignmentsParameters = new ArrayList<>();
 
-        /** Build parameters for extender (no output specified) */
-        public ExtendActionParameters mkExtendParameters() {
-            ExtendActionParameters ap = new ExtendActionParameters() {
-                @Override
-                public void validate() { }
-            };
-
+        /** Build parameters for extender */
+        public ExtendParameters mkExtendParameters(String input, String output) {
             List<String> extendParameters = new ArrayList<>();
 
             // add report file
@@ -262,24 +171,24 @@ public abstract class UberAction implements Action {
             // add all override parameters
             extendParameters.addAll(this.extendAlignmentsParameters);
 
+            extendParameters.add(input);
+            extendParameters.add(output);
+
             // parse parameters
+            ExtendParameters ap = new ExtendParameters();
             new JCommander(ap).parse(
                     extendParameters
                             .stream()
                             .flatMap(s -> Arrays.stream(s.split(" ")))
                             .toArray(String[]::new));
-            return ap;
+            return inheritOptionsAndValidate(ap);
         }
 
         @Parameter(names = "--assemble", description = "Assemble parameters", variableArity = true)
         public List<String> assembleParameters = new ArrayList<>();
 
-        /** Build parameters for assemble (no output specified) */
-        public AssembleParameters mkAssembleParameters() {
-            AssembleParameters ap = new AssembleParameters() {
-                @Override
-                public void validate() { }
-            };
+        /** Build parameters for assemble */
+        public AssembleParameters mkAssembleParameters(String input, String output) {
 
             List<String> assembleParameters = new ArrayList<>();
 
@@ -293,36 +202,41 @@ public abstract class UberAction implements Action {
             // add all override parameters
             assembleParameters.addAll(this.assembleParameters);
 
+            assembleParameters.add(input);
+            assembleParameters.add(output);
+
             // parse parameters
+            AssembleParameters ap = new AssembleParameters();
             new JCommander(ap).parse(
                     assembleParameters
                             .stream()
                             .flatMap(s -> Arrays.stream(s.split(" ")))
                             .toArray(String[]::new));
-            return ap;
+            return inheritOptionsAndValidate(ap);
         }
 
         @Parameter(names = "--export", description = "Export clones parameters", variableArity = true)
         public List<String> exportParameters = new ArrayList<>();
 
-        /** Build parameters for export */
-        public CloneExportParameters mkExportParameters() {
-            CloneExportParameters ep = new CloneExportParameters() {
-                @Override
-                public void validate() { }
-            };
-
+        public String[] mkExportParametersArray(String input, String output) {
             List<String> exportParameters = new ArrayList<>();
             // add all override parameters
             exportParameters.addAll(this.exportParameters);
 
+            exportParameters.add(input);
+            exportParameters.add(output);
+
+            return exportParameters.stream()
+                    .flatMap(s -> Arrays.stream(s.split(" ")))
+                    .toArray(String[]::new);
+        }
+
+        /** Build parameters for export */
+        public CloneExportParameters mkExportParameters(String[] array) {
             // parse parameters
-            new JCommander(ep).parse(
-                    exportParameters
-                            .stream()
-                            .flatMap(s -> Arrays.stream(s.split(" ")))
-                            .toArray(String[]::new));
-            return ep;
+            CloneExportParameters ep = new CloneExportParameters();
+            new JCommander(ep).parse(array);
+            return inheritOptionsAndValidate(ep);
         }
 
         /** number of rounds for assemblePartial */
@@ -345,29 +259,37 @@ public abstract class UberAction implements Action {
             return files.get(files.size() - 1);
         }
 
-        public String vdjcaFileName() {
+        public String fNameForAlignments() {
             return outputNamePattern() + ".vdjca";
         }
 
-        public String partialAlignmentsFileName(int round) {
+        public String fNameForParAlignments(int round) {
             return outputNamePattern() + ".rescued_" + round + ".vdjca";
         }
 
-        public String extendedFileName() {
+        public String fNameForExtenedAlignments() {
             return outputNamePattern() + ".extended.vdjca";
         }
 
-        public String clnaFileName() {
+        public String fNameForClones() {
             return outputNamePattern() + ".clna";
         }
 
-        public String exportClonesFileName() {
+        public String fNameForExportClones() {
             return outputNamePattern() + ".clones.txt";
         }
 
         @Override
         protected List<String> getOutputFiles() {
-            return Collections.singletonList(exportClonesFileName());
+            return Collections.singletonList(fNameForExportClones());
+        }
+
+        @Override
+        public void handleExistenceOfOutputFile(String outFileName) {
+            if (!isForceOverwrite())
+                throw new ParameterException("The destination file " + outFileName +
+                        " already exists. Either remove it or use -f option to overwrite it (in this case you can also" +
+                        " specify --resume option to prevent re-analyzing of intermediate files). ");
         }
     }
 

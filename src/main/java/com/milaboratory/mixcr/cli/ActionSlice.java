@@ -37,12 +37,10 @@ import com.beust.jcommander.Parameters;
 import com.beust.jcommander.converters.LongConverter;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
-import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.cli.HiddenAction;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.cli.ActionParametersWithResume.ActionParametersWithResumeWithBinaryInput;
+import com.milaboratory.mixcr.cli.ActionParametersWithResumeOption.ActionParametersWithResumeWithBinaryInput;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 import io.repseq.core.VDJCLibraryRegistry;
@@ -53,11 +51,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class ActionSlice implements Action {
-    final Params params = new Params();
+public class ActionSlice extends AbstractActionWithResumeOption {
+    final SliceParameters params = new SliceParameters();
 
     @Override
-    public void go(ActionHelper helper) throws Exception {
+    public void go0(ActionHelper helper) throws Exception {
         Collections.sort(params.ids);
 
         IOUtil.MiXCRFileType fileType = IOUtil.detectFilType(params.getInputFileName());
@@ -154,7 +152,7 @@ public class ActionSlice implements Action {
     }
 
     @Override
-    public ActionParameters params() {
+    public SliceParameters params() {
         return params;
     }
 
@@ -188,7 +186,7 @@ public class ActionSlice implements Action {
 
     @Parameters(commandDescription = "Slice ClnA file.")
     @HiddenAction
-    public static final class Params extends ActionParametersWithResumeWithBinaryInput {
+    public static final class SliceParameters extends ActionParametersWithResumeWithBinaryInput {
         @Parameter(description = "[input_file1.(vdjca|clns|clna)[.gz] output_file.(vdjca|clns|clna)[.gz]")
         List<String> parameters;
 

@@ -10,9 +10,7 @@ import com.beust.jcommander.converters.LongConverter;
 import com.beust.jcommander.validators.PositiveInteger;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
-import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.*;
@@ -30,11 +28,11 @@ import java.util.*;
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public final class ActionFilterAlignments implements Action {
-    public final FilterAlignmentsFilterParameters parameters = new FilterAlignmentsFilterParameters();
+public final class ActionFilterAlignments extends AbstractActionWithResumeOption {
+    public final FilterAlignmentsParameters parameters = new FilterAlignmentsParameters();
 
     @Override
-    public void go(ActionHelper helper) throws Exception {
+    public void go0(ActionHelper helper) throws Exception {
         try (VDJCAlignmentsReader reader = parameters.getInput();
              VDJCAlignmentsWriter writer = parameters.getOutput()) {
             CanReportProgress progress = reader;
@@ -66,7 +64,7 @@ public final class ActionFilterAlignments implements Action {
     }
 
     @Override
-    public ActionParameters params() {
+    public FilterAlignmentsParameters params() {
         return parameters;
     }
 
@@ -179,7 +177,7 @@ public final class ActionFilterAlignments implements Action {
     }
 
     @Parameters(commandDescription = "Filter alignments.")
-    public static final class FilterAlignmentsFilterParameters extends ActionParametersWithResume.ActionParametersWithResumeWithBinaryInput {
+    public static final class FilterAlignmentsParameters extends ActionParametersWithResumeOption.ActionParametersWithResumeWithBinaryInput {
         @Parameter(description = "input_file.vdjca output_file.vdjca", variableArity = true)
         public List<String> parameters = new ArrayList<>();
 

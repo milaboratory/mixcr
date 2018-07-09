@@ -6,12 +6,11 @@ import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
-import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.mixcr.basictypes.ActionConfiguration;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
+import com.milaboratory.mixcr.cli.ActionParametersWithResumeOption.ActionParametersWithResumeWithBinaryInput;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssembler;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParameters;
 import com.milaboratory.util.SmartProgressReporter;
@@ -22,7 +21,7 @@ import java.util.*;
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public final class ActionAssemblePartialAlignments implements Action {
+public final class ActionAssemblePartialAlignments extends AbstractActionWithResumeOption {
     private final AssemblePartialAlignmentsParameters parameters;
 
     public ActionAssemblePartialAlignments(AssemblePartialAlignmentsParameters parameters) {
@@ -38,7 +37,7 @@ public final class ActionAssemblePartialAlignments implements Action {
     public boolean leftPartsLimitReached, maxRightMatchesLimitReached;
 
     @Override
-    public void go(ActionHelper helper) throws Exception {
+    public void go0(ActionHelper helper) throws Exception {
         // Saving initial timestamp
         long beginTimestamp = System.currentTimeMillis();
 
@@ -93,7 +92,7 @@ public final class ActionAssemblePartialAlignments implements Action {
     }
 
     @Override
-    public ActionParameters params() {
+    public AssemblePartialAlignmentsParameters params() {
         return parameters;
     }
 
@@ -133,7 +132,7 @@ public final class ActionAssemblePartialAlignments implements Action {
     }
 
     @Parameters(commandDescription = "Assemble clones")
-    public static class AssemblePartialAlignmentsParameters extends ActionParametersWithResume.ActionParametersWithResumeWithBinaryInput {
+    public static class AssemblePartialAlignmentsParameters extends ActionParametersWithResumeWithBinaryInput {
         @Parameter(description = "input_file output_file")
         public List<String> parameters = new ArrayList<>();
 

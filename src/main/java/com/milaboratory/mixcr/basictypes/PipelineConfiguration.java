@@ -14,8 +14,6 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -53,6 +51,11 @@ public final class PipelineConfiguration {
         this.versionOfMiXCR = versionOfMiXCR;
         this.initialFileDescriptors = initialFileDescriptors;
         this.pipelineSteps = pipelineSteps;
+    }
+
+    /** Returns the last written action */
+    public ActionConfiguration lastConfiguration() {
+        return pipelineSteps[pipelineSteps.length - 1].configuration;
     }
 
     @Override

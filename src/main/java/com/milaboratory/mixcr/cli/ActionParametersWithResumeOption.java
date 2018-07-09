@@ -15,7 +15,7 @@ import java.util.Objects;
  * Action parameters which define a unique run configuration that allows to resume or even skip the execution of already
  * processed file
  */
-public abstract class ActionParametersWithResume extends ActionParametersWithOutput {
+public abstract class ActionParametersWithResumeOption extends ActionParametersWithOutput {
     @Parameter(names = "--resume", description = "try to resume aborted execution")
     public Boolean resume;
 
@@ -39,6 +39,12 @@ public abstract class ActionParametersWithResume extends ActionParametersWithOut
             throw new ParameterException("single output file expected");
     }
 
+    private boolean skipExecution = false;
+
+    public boolean skipExecution() {
+        return skipExecution;
+    }
+
     @Override
     public void handleExistenceOfOutputFile(String outFileName) {
         // analysis supposed to be performed now
@@ -50,23 +56,23 @@ public abstract class ActionParametersWithResume extends ActionParametersWithOut
         } catch (Throwable ignored) { }
 
         if (Objects.equals(actualPipeline, expectedPipeline)) {
-            String exists = "File " + outFileName + " already exists and contain correct " +
-                    "alignments of the specified raw sequencing data obtained with the current " +
+            String exists = "File " + outFileName + " already exists and contains correct " +
+                    "binary data obtained from the specified input file with the current " +
                     "version of MiXCR (" + MiXCRVersionInfo.get().getShortestVersionString() + "). ";
             if (!resume())
                 throw new ParameterException(exists +
                         "Use --resume option to skip align step (output file will remain unchanged) or use -f option " +
                         "to force overwrite it.");
             else {
-                System.out.println("Skipping align (--resume option specified). " + exists);
-                System.exit(0); // nothing to do, just exit
+                System.out.println("Skipping " + expectedPipeline.lastConfiguration().actionName() + " (--resume option specified). " + exists);
+                skipExecution = true; // nothing to do, just exit
                 return;
             }
         }
         super.handleExistenceOfOutputFile(outFileName);
     }
 
-    public static abstract class ActionParametersWithResumeWithBinaryInput extends ActionParametersWithResume {
+    public static abstract class ActionParametersWithResumeWithBinaryInput extends ActionParametersWithResumeOption {
         @Override
         public PipelineConfiguration getFullPipelineConfiguration() {
             return PipelineConfiguration.appendStep(PipelineConfigurationReader.fromFile(getInputFiles().get(0)), getInputFiles(), getConfiguration());

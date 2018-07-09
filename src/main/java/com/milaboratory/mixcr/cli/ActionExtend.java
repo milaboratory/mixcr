@@ -11,13 +11,11 @@ import com.beust.jcommander.validators.PositiveInteger;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
-import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.cli.ActionParametersWithResume.ActionParametersWithResumeWithBinaryInput;
+import com.milaboratory.mixcr.cli.ActionParametersWithResumeOption.ActionParametersWithResumeWithBinaryInput;
 import com.milaboratory.mixcr.util.VDJCObjectExtender;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.Chains;
@@ -32,19 +30,19 @@ import java.util.Objects;
 /**
  * @author Stanislav Poslavsky
  */
-public class ActionExtend implements Action {
-    private final ExtendActionParameters parameters;
+public class ActionExtend extends AbstractActionWithResumeOption {
+    private final ExtendParameters parameters;
 
-    public ActionExtend(ExtendActionParameters parameters) {
+    public ActionExtend(ExtendParameters parameters) {
         this.parameters = parameters;
     }
 
     public ActionExtend() {
-        this(new ExtendActionParameters());
+        this(new ExtendParameters());
     }
 
     @Override
-    public void go(ActionHelper helper) throws Exception {
+    public void go0(ActionHelper helper) throws Exception {
         IOUtil.MiXCRFileType fileType = IOUtil.detectFilType(parameters.getInput());
 
         switch (fileType) {
@@ -160,7 +158,7 @@ public class ActionExtend implements Action {
     }
 
     @Override
-    public ActionParameters params() {
+    public ExtendParameters params() {
         return parameters;
     }
 
@@ -211,7 +209,7 @@ public class ActionExtend implements Action {
     }
 
     @Parameters(commandDescription = "Extend corresponding entity (clone or alignment) using germline sequence.")
-    public static class ExtendActionParameters extends ActionParametersWithResumeWithBinaryInput {
+    public static class ExtendParameters extends ActionParametersWithResumeWithBinaryInput {
         @Parameter(description = "input.vdjca[.gz]|.clns output.vdjca[.gz]|.clns")
         public List<String> parameters = new ArrayList<>();
 

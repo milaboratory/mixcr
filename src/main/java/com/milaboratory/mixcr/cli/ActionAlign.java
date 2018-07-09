@@ -42,7 +42,6 @@ import com.beust.jcommander.Parameters;
 import com.beust.jcommander.validators.PositiveInteger;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.DeprecatedParameter;
 import com.milaboratory.cli.ProcessException;
@@ -74,7 +73,7 @@ import java.util.*;
 import static cc.redberry.pipe.CUtils.chunked;
 import static cc.redberry.pipe.CUtils.unchunked;
 
-public class ActionAlign implements Action {
+public class ActionAlign extends AbstractActionWithResumeOption {
     private final AlignParameters actionParameters;
 
     public ActionAlign(AlignParameters actionParameters) {
@@ -92,7 +91,7 @@ public class ActionAlign implements Action {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void go(ActionHelper helper) throws Exception {
+    public void go0(ActionHelper helper) throws Exception {
         // Saving initial timestamp
         long beginTimestamp = System.currentTimeMillis();
 
@@ -351,7 +350,7 @@ public class ActionAlign implements Action {
     }
 
     @Parameters(commandDescription = "Builds alignments with V,D,J and C genes for input sequencing reads.")
-    public static class AlignParameters extends ActionParametersWithResume {
+    public static class AlignParameters extends ActionParametersWithResumeOption {
         @Parameter(description = "input_file1 [input_file2] output_file.vdjca", variableArity = true)
         public List<String> parameters = new ArrayList<>();
 

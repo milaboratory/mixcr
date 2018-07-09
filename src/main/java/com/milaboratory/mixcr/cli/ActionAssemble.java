@@ -36,11 +36,10 @@ import com.beust.jcommander.Parameters;
 import com.beust.jcommander.validators.PositiveInteger;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.mixcr.assembler.*;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.cli.ActionParametersWithResume.ActionParametersWithResumeWithBinaryInput;
+import com.milaboratory.mixcr.cli.ActionParametersWithResumeOption.ActionParametersWithResumeWithBinaryInput;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PipeWriter;
 import com.milaboratory.util.SmartProgressReporter;
@@ -50,7 +49,7 @@ import io.repseq.core.VDJCLibraryRegistry;
 import java.io.IOException;
 import java.util.*;
 
-public class ActionAssemble implements Action {
+public class ActionAssemble extends AbstractActionWithResumeOption {
     private final AssembleParameters actionParameters;
 
     public ActionAssemble(AssembleParameters actionParameters) {
@@ -67,7 +66,7 @@ public class ActionAssemble implements Action {
     public final CloneAssemblerReport report = new CloneAssemblerReport();
 
     @Override
-    public void go(ActionHelper helper) throws Exception {
+    public void go0(ActionHelper helper) throws Exception {
         // Saving initial timestamp
         long beginTimestamp = System.currentTimeMillis();
 

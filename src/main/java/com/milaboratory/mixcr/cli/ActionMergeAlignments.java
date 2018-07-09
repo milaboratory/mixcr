@@ -34,9 +34,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
-import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.SmartProgressReporter;
@@ -48,11 +46,11 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class ActionMergeAlignments implements Action {
-    final MergeParameters parameters = new MergeParameters();
+public class ActionMergeAlignments extends AbstractActionWithResumeOption {
+    final MergeAlignmentsParameters parameters = new MergeAlignmentsParameters();
 
     @Override
-    public void go(ActionHelper helper) throws Exception {
+    public void go0(ActionHelper helper) throws Exception {
         try (MultiReader reader = new MultiReader(parameters.getInputFiles());
              VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(parameters.getOutputFileName())) {
             reader.initNextReader();
@@ -70,7 +68,7 @@ public class ActionMergeAlignments implements Action {
     }
 
     @Override
-    public ActionParameters params() {
+    public MergeAlignmentsParameters params() {
         return parameters;
     }
 
@@ -102,7 +100,7 @@ public class ActionMergeAlignments implements Action {
     }
 
     @Parameters(commandDescription = "Merge several *.vdjca[.gz] files with alignments into a single alignments file.")
-    public static final class MergeParameters extends ActionParametersWithResume {
+    public static final class MergeAlignmentsParameters extends ActionParametersWithResumeOption {
         @Parameter(description = "[input_file1.vdjca[.gz] [input_file2.vdjca[.gz] ....]] output_file.vdjca[.gz]")
         public List<String> parameters;
 
