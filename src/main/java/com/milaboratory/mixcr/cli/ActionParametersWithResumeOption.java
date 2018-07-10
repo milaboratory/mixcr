@@ -17,10 +17,10 @@ import java.util.Objects;
  */
 public abstract class ActionParametersWithResumeOption extends ActionParametersWithOutput {
     @Parameter(names = "--resume", description = "try to resume aborted execution")
-    public Boolean resume;
+    public boolean resume = false;
 
     public boolean resume() {
-        return resume != null && resume;
+        return resume;
     }
 
     /** returns the input files */

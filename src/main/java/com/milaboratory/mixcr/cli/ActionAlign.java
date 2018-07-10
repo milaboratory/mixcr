@@ -363,11 +363,11 @@ public class ActionAlign extends AbstractActionWithResumeOption {
 
         @Parameter(description = "Verbose warning messages.",
                 names = {"--verbose"})
-        public Boolean verbose = null;
+        public boolean verbose = false;
 
         @Parameter(description = "Don't print warnings",
                 names = {"-nw", "--no-warnings"})
-        public Boolean noWarnings = null;
+        public boolean noWarnings = false;
 
         @Parameter(description = "Parameters",
                 names = {"-p", "--parameters"})
@@ -404,24 +404,24 @@ public class ActionAlign extends AbstractActionWithResumeOption {
 
         @Parameter(description = "Do not merge paired reads.",
                 names = {"-d", "--no-merge"})
-        public Boolean noMerge;
+        public boolean noMerge = false;
 
         @Deprecated
         @DeprecatedParameter("Use -OsaveOriginalReads=true.")
         @Parameter(description = "Copy read(s) description line from .fastq or .fasta to .vdjca file (can then be " +
                 "exported with -descrR1 and -descrR2 options in exportAlignments action).",
                 names = {"-a", "--save-description"})
-        public Boolean saveReadDescription; //FIXME remove in 2.3
+        public boolean saveReadDescription = false; //FIXME remove in 2.3
 
         @Parameter(description = "Write alignment results for all input reads (even if alignment has failed).",
                 names = {"--write-all"})
-        public Boolean writeAllResults;
+        public boolean writeAllResults = false;
 
         @Deprecated
         @DeprecatedParameter("Use -OsaveOriginalReads=true")
         @Parameter(description = "Copy original reads (sequences + qualities + descriptions) to .vdjca file.",
                 names = {"-g", "--save-reads"})
-        public Boolean saveOriginalReads; //FIXME remove in 2.3
+        public boolean saveOriginalReads = false; //FIXME remove in 2.3
 
         @Parameter(description = "Write not aligned reads (R1).",
                 names = {"--not-aligned-R1"})
@@ -467,26 +467,26 @@ public class ActionAlign extends AbstractActionWithResumeOption {
             return new String[]{getOutputName()};
         }
 
-        public Boolean getNoMerge() {
-            return noMerge != null && noMerge;
+        public boolean getNoMerge() {
+            return noMerge;
         }
 
         @Deprecated
-        public Boolean getSaveReadDescription() {
-            return saveReadDescription != null && saveReadDescription;
+        public boolean getSaveReadDescription() {
+            return saveReadDescription;
         }
 
         @Deprecated
-        public Boolean getSaveOriginalReads() {
-            return saveOriginalReads != null && saveOriginalReads;
+        public boolean getSaveOriginalReads() {
+            return saveOriginalReads;
         }
 
         public boolean verbose() {
-            return verbose != null && verbose;
+            return verbose;
         }
 
         public boolean printWarnings() {
-            return noWarnings == null || !noWarnings;
+            return !noWarnings;
         }
 
         public Chains getChains() {
@@ -502,7 +502,7 @@ public class ActionAlign extends AbstractActionWithResumeOption {
         }
 
         public boolean getWriteAllResults() {
-            return writeAllResults != null && writeAllResults;
+            return writeAllResults;
         }
 
         public boolean isInputPaired() {

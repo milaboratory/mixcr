@@ -181,11 +181,11 @@ public class ActionExportClones extends ActionExport<Clone> {
     public static class CloneExportParameters extends ActionExportParameters<Clone> {
         @Parameter(description = "Exclude clones with out-of-frame clone sequences (fractions will be recalculated)",
                 names = {"-o", "--filter-out-of-frames"})
-        public Boolean filterOutOfFrames;
+        public boolean filterOutOfFrames = false;
 
         @Parameter(description = "Exclude sequences containing stop codons (fractions will be recalculated)",
                 names = {"-t", "--filter-stops"})
-        public Boolean filterStops;
+        public boolean filterStops = false;
 
         @Parameter(description = "Filter clones by minimal clone fraction",
                 names = {"-q", "--minimal-clone-fraction"})
@@ -196,11 +196,11 @@ public class ActionExportClones extends ActionExport<Clone> {
         public long minCount = 0;
 
         public boolean getFilterOutOfFrames() {
-            return filterOutOfFrames != null && filterOutOfFrames;
+            return filterOutOfFrames;
         }
 
         public boolean getFilterStops() {
-            return filterStops != null && filterStops;
+            return filterStops;
         }
 
         @Override

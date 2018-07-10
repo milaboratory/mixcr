@@ -196,7 +196,7 @@ public final class ActionFilterAlignments extends AbstractActionWithResumeOption
 
         @Parameter(description = "Output only chimeric alignments.",
                 names = {"-x", "--chimeras-only"})
-        public Boolean chimerasOnly = null;
+        public boolean chimerasOnly = false;
 
         @Parameter(description = "Maximal number of reads to process",
                 names = {"-n", "--limit"}, validateWith = PositiveInteger.class)
@@ -243,7 +243,7 @@ public final class ActionFilterAlignments extends AbstractActionWithResumeOption
 
         public AlignmentsFilter getFilter() {
             return new AlignmentsFilter(getContainFeature(), getCdr3Equals(), getChains(),
-                    getReadIds(), chimerasOnly == null ? false : chimerasOnly);
+                    getReadIds(), chimerasOnly);
         }
 
         @Override
@@ -254,7 +254,7 @@ public final class ActionFilterAlignments extends AbstractActionWithResumeOption
         @Override
         public ActionConfiguration getConfiguration() {
             return new FilterConfiguration(getChains(),
-                    chimerasOnly != null && chimerasOnly.booleanValue(),
+                    chimerasOnly,
                     limit, getReadIds().toArray(), getContainFeature(), getCdr3Equals());
         }
     }

@@ -134,10 +134,10 @@ public final class ActionExportCloneReads implements Action {
 
         @Parameter(description = "Create separate files for each clone. _clnN, where N is clone index will be added to the file name.",
                 names = {"-s", "--separate"})
-        public Boolean separate = null;
+        public boolean separate = false;
 
         public boolean doSeparate() {
-            return separate != null && separate;
+            return separate;
         }
 
         public String getInputFileName() {

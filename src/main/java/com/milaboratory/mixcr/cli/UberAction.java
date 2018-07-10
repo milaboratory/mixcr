@@ -68,7 +68,7 @@ public abstract class UberAction implements Action {
     }
 
     public static class UberActionParameters extends ActionParametersWithOutput implements Serializable {
-        @Parameter(description = "input_file1 [input_file2] output_file", variableArity = true)
+        @Parameter(description = "input_file1 [input_file2] analysisTitle")
         public List<String> files = new ArrayList<>();
 
         @Parameter(description = "Species (organism), as specified in library file or taxon id. " +
@@ -81,10 +81,7 @@ public abstract class UberAction implements Action {
         public boolean resume = false;
 
         @Parameter(description = "Report file.", names = {"-r", "--report"})
-        public String report = "report.txt";
-
-        @Parameter(names = "--align", description = "Align parameters", variableArity = true)
-        public List<String> alignParameters = new ArrayList<>();
+        public String report = "mixcr_report_" + System.nanoTime() + ".txt";
 
         private <T extends ActionParametersWithOutput> T inheritOptionsAndValidate(T parameters) {
             if (resume && parameters instanceof ActionParametersWithResumeOption)
@@ -94,6 +91,9 @@ public abstract class UberAction implements Action {
             parameters.validate();
             return parameters;
         }
+
+        @Parameter(names = "--align", description = "Additional parameters for align step specified with double quotes (e.g --align \"--limit 1000\" --align \"-OminSumScore=100\" etc.", variableArity = true)
+        public List<String> alignParameters = new ArrayList<>();
 
         /** Prepare parameters for align */
         public AlignParameters mkAlignerParameters() {
@@ -130,7 +130,7 @@ public abstract class UberAction implements Action {
             return inheritOptionsAndValidate(ap);
         }
 
-        @Parameter(names = "--assemblePartial", description = "Partial assembler parameters", variableArity = true)
+        @Parameter(names = "--assemblePartial", description = "Additional parameters for assemblePartial step specified with double quotes (e.g --assemblePartial \"--overlappedOnly\" --assemblePartial \"-OkOffset=0\" etc.", variableArity = true)
         public List<String> assemblePartialParameters = new ArrayList<>();
 
         /** Build parameters for assemble partial */
@@ -157,7 +157,7 @@ public abstract class UberAction implements Action {
             return inheritOptionsAndValidate(ap);
         }
 
-        @Parameter(names = "--extend", description = "Extend alignments parameters", variableArity = true)
+        @Parameter(names = "--extend", description = "Additional parameters for extend step specified with double quotes (e.g --extend \"--chains TRB\" --extend \"--quality 0\" etc.", variableArity = true)
         public List<String> extendAlignmentsParameters = new ArrayList<>();
 
         /** Build parameters for extender */
@@ -184,7 +184,7 @@ public abstract class UberAction implements Action {
             return inheritOptionsAndValidate(ap);
         }
 
-        @Parameter(names = "--assemble", description = "Assemble parameters", variableArity = true)
+        @Parameter(names = "--assemble", description = "Additional parameters for assemble step specified with double quotes (e.g --assemble \"-OassemblingFeatures=[V5UTR+L1+L2+FR1,FR3+CDR3]\" --assemble \"-ObadQualityThreshold=0\" etc.", variableArity = true)
         public List<String> assembleParameters = new ArrayList<>();
 
         /** Build parameters for assemble */
@@ -215,7 +215,7 @@ public abstract class UberAction implements Action {
             return inheritOptionsAndValidate(ap);
         }
 
-        @Parameter(names = "--export", description = "Export clones parameters", variableArity = true)
+        @Parameter(names = "--export", description = "Additional parameters for exportClones step specified with double quotes (e.g --export \"-p full\" --export \"-cloneId\" etc.", variableArity = true)
         public List<String> exportParameters = new ArrayList<>();
 
         public String[] mkExportParametersArray(String input, String output) {

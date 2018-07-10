@@ -149,12 +149,12 @@ public final class ActionAssemblePartialAlignments extends AbstractActionWithRes
 
         @Parameter(description = "Write only overlapped sequences (needed for testing).",
                 names = {"-o", "--overlapped-only"})
-        public Boolean overlappedOnly;
+        public boolean overlappedOnly = false;
 
         @Parameter(description = "Drop partial sequences which were not assembled. Can be used to reduce output file " +
                 "size if no additional rounds of 'assemblePartial' are required.",
                 names = {"-d", "--drop-partial"})
-        public Boolean dropPartial;
+        public boolean dropPartial = false;
 
         public String getInputFileName() {
             return parameters.get(0);
@@ -164,12 +164,12 @@ public final class ActionAssemblePartialAlignments extends AbstractActionWithRes
             return parameters.get(1);
         }
 
-        public Boolean getOverlappedOnly() {
-            return overlappedOnly != null && overlappedOnly;
+        public boolean getOverlappedOnly() {
+            return overlappedOnly;
         }
 
-        public Boolean doDropPartial() {
-            return dropPartial != null && dropPartial;
+        public boolean doDropPartial() {
+            return dropPartial;
         }
 
         @Override

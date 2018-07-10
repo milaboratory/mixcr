@@ -1,6 +1,5 @@
 package com.milaboratory.mixcr.cli;
 
-import com.beust.jcommander.JCommander;
 import org.junit.Assert;
 import org.junit.Test;
 

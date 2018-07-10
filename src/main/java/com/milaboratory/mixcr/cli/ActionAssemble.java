@@ -225,7 +225,7 @@ public class ActionAssemble extends AbstractActionWithResumeOption {
                 "This file then can be used to build wider contigs for clonal sequence and extract original " +
                 "reads for each clone (if -OsaveOriginalReads=true was use on 'align' stage).",
                 names = {"-a", "--write-alignments"})
-        public Boolean clna;
+        public boolean clna = false;
 
         @DynamicParameter(names = "-O", description = "Overrides default parameter values.")
         private Map<String, String> overrides = new HashMap<>();
@@ -239,9 +239,8 @@ public class ActionAssemble extends AbstractActionWithResumeOption {
         }
 
         public boolean doWriteClnA() {
-            return clna != null && clna;
+            return clna;
         }
-
 
         @Override
         protected List<String> getOutputFiles() {

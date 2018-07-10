@@ -29,7 +29,6 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
-import cc.redberry.pipe.OutputPort;
 import cc.redberry.primitives.Filter;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
@@ -240,11 +239,11 @@ public class ActionExportAlignmentsPretty implements Action {
 
         @Parameter(description = "Output only top number of clones",
                 names = {"-t", "--top"})
-        public Boolean onlyTop = null;
+        public boolean onlyTop = false;
 
         @Parameter(description = "Output full gene sequence",
                 names = {"-a", "--gene"})
-        public Boolean geneSequence = null;
+        public boolean geneSequence = false;
 
         @Parameter(description = "Limit number of alignments before filtering",
                 names = {"-b", "--limit-before"})
@@ -281,11 +280,11 @@ public class ActionExportAlignmentsPretty implements Action {
 
         @Parameter(description = "Verbose output (old)",
                 names = {"-v", "--verbose"})
-        public Boolean verbose = null;
+        public boolean verbose = false;
 
         @Parameter(description = "Print descriptions",
                 names = {"-d", "--descriptions"})
-        public Boolean descr = null;
+        public boolean descr = false;
 
         @Parameter(description = "List of read ids to export",
                 names = {"-i", "--read-ids"},
@@ -374,19 +373,19 @@ public class ActionExportAlignmentsPretty implements Action {
         }
 
         public boolean printDescriptions() {
-            return descr != null && descr;
+            return descr;
         }
 
         public boolean isVerbose() {
-            return verbose != null && verbose;
+            return verbose;
         }
 
         public boolean isOnlyTop() {
-            return onlyTop == null ? false : onlyTop;
+            return onlyTop;
         }
 
         public boolean printGeneSequence() {
-            return geneSequence == null ? false : geneSequence;
+            return geneSequence;
         }
 
         public String getInputFileName() {
