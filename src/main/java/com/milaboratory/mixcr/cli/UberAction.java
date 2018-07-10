@@ -15,10 +15,8 @@ import com.milaboratory.mixcr.cli.ActionExportClones.CloneExportParameters;
 import com.milaboratory.mixcr.cli.ActionExtend.ExtendParameters;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  *
@@ -80,8 +78,10 @@ public abstract class UberAction implements Action {
         @Parameter(description = "Resume execution.", names = {"--resume"})
         public boolean resume = false;
 
+        public static String defaultReport = "mixcr_report_" + new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss.SSS").format(new Date()) + ".txt";
+
         @Parameter(description = "Report file.", names = {"-r", "--report"})
-        public String report = "mixcr_report_" + System.nanoTime() + ".txt";
+        public String report = defaultReport;
 
         private <T extends ActionParametersWithOutput> T inheritOptionsAndValidate(T parameters) {
             if (resume && parameters instanceof ActionParametersWithResumeOption)
@@ -291,6 +291,13 @@ public abstract class UberAction implements Action {
                         " already exists. Either remove it or use -f option to overwrite it (in this case you can also" +
                         " specify --resume option to prevent re-analyzing of intermediate files). ");
         }
+
+        @Override
+        public void validate() {
+            super.validate();
+            if (report.equals(defaultReport))
+                System.err.println("NOTE: report file is not specified, using " + defaultReport + " to write report.");
+        }
     }
 
     ////////////////////////////////////////////////// Implementation //////////////////////////////////////////////////
@@ -300,6 +307,16 @@ public abstract class UberAction implements Action {
         @Override
         public List<String> forceHideParameters() {
             return Arrays.asList("--assemblePartial", "--extend", "--assemble-partial-rounds", "--do-extend-alignments");
+        }
+
+        @Parameter(names = "--b-cells", description = "Use algorithms better optimized for B-cell data")
+        public boolean bCellSpecific = false;
+
+        @Override
+        public AlignParameters mkAlignerParameters() {
+            if (bCellSpecific)
+                alignParameters.addAll(Arrays.asList("-p", "kaligner2"));
+            return super.mkAlignerParameters();
         }
     }
 

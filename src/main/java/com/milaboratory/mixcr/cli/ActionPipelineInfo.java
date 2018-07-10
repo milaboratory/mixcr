@@ -76,10 +76,10 @@ public class ActionPipelineInfo implements Action {
 
         @Parameter(description = "Print pipeline info in JSON format.",
                 names = {"--json"})
-        public Boolean json;
+        public boolean json = false;
 
         public boolean json() {
-            return json != null && json;
+            return json;
         }
 
         @Override
