@@ -41,10 +41,6 @@ public interface VDJCAlignmentsWriterI extends PipelineConfigurationWriter, Auto
         @Override
         public void close() {
         }
-
-        @Override
-        public void writeConfiguration(PipelineConfiguration configuration) {
-        }
     }
 
     final class ArrayWriter implements VDJCAlignmentsWriterI {
@@ -77,11 +73,6 @@ public interface VDJCAlignmentsWriterI extends PipelineConfigurationWriter, Auto
         @Override
         public synchronized void write(VDJCAlignments alignment) {
             data.add(alignment);
-        }
-
-        @Override
-        public void writeConfiguration(PipelineConfiguration configuration) {
-            this.pipelineConfiguration = configuration;
         }
 
         @Override

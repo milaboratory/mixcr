@@ -99,12 +99,6 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
     private List<VDJCGene> usedGenes = null;
     private HasFeatureToAlign featureToAlign = null;
 
-    @Override
-    public void writeConfiguration(PipelineConfiguration configuration) {
-        if (!Objects.equals(this.configuration, configuration))
-            throw new IllegalStateException();
-    }
-
     /**
      * Step 1
      */

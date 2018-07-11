@@ -27,29 +27,15 @@ import java.util.stream.Stream;
         getterVisibility = JsonAutoDetect.Visibility.NONE)
 public final class PipelineConfiguration {
     /**
-     * Version of MiXCR used
-     */
-    public final String versionOfMiXCR;
-    /**
-     * Hash sum of the very initial (fastq/fasta) files
-     */
-    public final LightFileDescriptor[] initialFileDescriptors;
-    /**
      * A sequence of analysis steps performed on the input file
      */
     public final PipelineStep[] pipelineSteps;
 
     /**
-     * @param versionOfMiXCR         MiXCR version
-     * @param initialFileDescriptors hash sums of the initial raw sequencing data
-     * @param pipelineSteps          pipeline steps
+     * @param pipelineSteps pipeline steps
      */
     @JsonCreator
-    public PipelineConfiguration(@JsonProperty("versionOfMiXCR") String versionOfMiXCR,
-                                 @JsonProperty("initialFileDescriptors") LightFileDescriptor[] initialFileDescriptors,
-                                 @JsonProperty("pipelineSteps") PipelineStep[] pipelineSteps) {
-        this.versionOfMiXCR = versionOfMiXCR;
-        this.initialFileDescriptors = initialFileDescriptors;
+    public PipelineConfiguration(@JsonProperty("pipelineSteps") PipelineStep[] pipelineSteps) {
         this.pipelineSteps = pipelineSteps;
     }
 
@@ -63,17 +49,12 @@ public final class PipelineConfiguration {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PipelineConfiguration that = (PipelineConfiguration) o;
-        return Objects.equals(versionOfMiXCR, that.versionOfMiXCR) &&
-                Arrays.equals(initialFileDescriptors, that.initialFileDescriptors) &&
-                Arrays.equals(pipelineSteps, that.pipelineSteps);
+        return Arrays.equals(pipelineSteps, that.pipelineSteps);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(versionOfMiXCR);
-        result = 31 * result + Arrays.hashCode(initialFileDescriptors);
-        result = 31 * result + Arrays.hashCode(pipelineSteps);
-        return result;
+        return Arrays.hashCode(pipelineSteps);
     }
 
     /** Appends a new pipeline step */
@@ -82,17 +63,17 @@ public final class PipelineConfiguration {
                List<String> inputFiles,
                ActionConfiguration configuration) {
 
+        String versionString = MiXCRVersionInfo.get().getVersionString(MiXCRVersionInfo.OutputType.ToFile);
+
         LightFileDescriptor[] inputDescriptors = inputFiles
                 .stream()
                 .map(f -> LightFileDescriptor.calculate(Paths.get(f)))
                 .toArray(LightFileDescriptor[]::new);
 
         return new PipelineConfiguration(
-                history.versionOfMiXCR,
-                history.initialFileDescriptors,
                 Stream.concat(
                         Stream.of(history.pipelineSteps),
-                        Stream.of(new PipelineStep(inputDescriptors, configuration))
+                        Stream.of(new PipelineStep(versionString, inputDescriptors, configuration))
                 ).toArray(PipelineStep[]::new));
     }
 
@@ -103,9 +84,7 @@ public final class PipelineConfiguration {
         String versionString = MiXCRVersionInfo.get().getVersionString(MiXCRVersionInfo.OutputType.ToFile);
         LightFileDescriptor[] inputDescriptors = inputFiles.stream().map(f -> LightFileDescriptor.calculate(Paths.get(f))).toArray(LightFileDescriptor[]::new);
         return new PipelineConfiguration(
-                versionString,
-                inputDescriptors,
-                new PipelineStep[]{new PipelineStep(inputDescriptors, configuration)});
+                new PipelineStep[]{new PipelineStep(versionString, inputDescriptors, configuration)});
     }
 
     /** A single step in the analysis pipeline */
@@ -115,6 +94,10 @@ public final class PipelineConfiguration {
             isGetterVisibility = JsonAutoDetect.Visibility.NONE,
             getterVisibility = JsonAutoDetect.Visibility.NONE)
     public static final class PipelineStep {
+        /**
+         * Version of MiXCR used
+         */
+        public final String versionOfMiXCR;
         /**
          * Hash sum of the input file (not exactly fastq, it may be e.g. vdjca input file for the assemblePartial step)
          */
@@ -126,8 +109,10 @@ public final class PipelineConfiguration {
 
         @JsonCreator
         public PipelineStep(
+                @JsonProperty("versionOfMiXCR") String versionOfMiXCR,
                 @JsonProperty("inputFilesDescriptors") LightFileDescriptor[] inputFilesDescriptors,
                 @JsonProperty("configuration") ActionConfiguration configuration) {
+            this.versionOfMiXCR = versionOfMiXCR;
             this.inputFilesDescriptors = inputFilesDescriptors;
             this.configuration = configuration;
         }
@@ -137,13 +122,14 @@ public final class PipelineConfiguration {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             PipelineStep that = (PipelineStep) o;
-            return Arrays.equals(inputFilesDescriptors, that.inputFilesDescriptors) &&
+            return Objects.equals(versionOfMiXCR, that.versionOfMiXCR) &&
+                    Arrays.equals(inputFilesDescriptors, that.inputFilesDescriptors) &&
                     Objects.equals(configuration, that.configuration);
         }
 
         @Override
         public int hashCode() {
-            int result = Objects.hash(configuration);
+            int result = Objects.hash(versionOfMiXCR, configuration);
             result = 31 * result + Arrays.hashCode(inputFilesDescriptors);
             return result;
         }
@@ -151,15 +137,17 @@ public final class PipelineConfiguration {
         public static final class IO implements Serializer<PipelineStep> {
             @Override
             public void write(PrimitivO output, PipelineStep object) {
+                output.writeObject(object.versionOfMiXCR);
                 output.writeObject(object.inputFilesDescriptors);
                 output.writeObject(object.configuration);
             }
 
             @Override
             public PipelineStep read(PrimitivI input) {
+                String versionOfMiXCR = input.readObject(String.class);
                 LightFileDescriptor[] inputFilesDescriptors = input.readObject(LightFileDescriptor[].class);
                 ActionConfiguration configuration = input.readObject(ActionConfiguration.class);
-                return new PipelineStep(inputFilesDescriptors, configuration);
+                return new PipelineStep(versionOfMiXCR, inputFilesDescriptors, configuration);
             }
 
             @Override
@@ -177,17 +165,13 @@ public final class PipelineConfiguration {
     public static final class IO implements Serializer<PipelineConfiguration> {
         @Override
         public void write(PrimitivO output, PipelineConfiguration object) {
-            output.writeUTF(object.versionOfMiXCR);
-            output.writeObject(object.initialFileDescriptors);
             output.writeObject(object.pipelineSteps);
         }
 
         @Override
         public PipelineConfiguration read(PrimitivI input) {
-            String versionOfMiXCR = input.readUTF();
-            LightFileDescriptor[] initialFileDescriptors = input.readObject(LightFileDescriptor[].class);
             PipelineStep[] pipelineSteps = input.readObject(PipelineStep[].class);
-            return new PipelineConfiguration(versionOfMiXCR, initialFileDescriptors, pipelineSteps);
+            return new PipelineConfiguration(pipelineSteps);
         }
 
         @Override

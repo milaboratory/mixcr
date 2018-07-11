@@ -43,7 +43,7 @@ public final class ActionAssemblePartialAlignments extends AbstractActionWithRes
 
         PartialAlignmentsAssemblerParameters assemblerParameters = parameters.getPartialAlignmentsAssemblerParameters();
         VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(parameters.getOutputFileName());
-        writer.writeConfiguration(parameters.getFullPipelineConfiguration());
+        writer.setPipelineConfiguration(parameters.getFullPipelineConfiguration());
         try (PartialAlignmentsAssembler assembler = new PartialAlignmentsAssembler(assemblerParameters,
                 writer, !parameters.doDropPartial(), parameters.getOverlappedOnly())) {
             this.report = assembler;

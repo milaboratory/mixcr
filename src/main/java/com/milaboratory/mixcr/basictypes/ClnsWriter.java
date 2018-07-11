@@ -61,12 +61,6 @@ public class ClnsWriter implements PipelineConfigurationWriter,
         return current == size;
     }
 
-    @Override
-    public void writeConfiguration(PipelineConfiguration configuration) {
-        if (!this.configuration.equals(configuration))
-            throw new IllegalStateException();
-    }
-
     public void write() {
         // Registering custom serializer
         output.getSerializersManager().registerCustomSerializer(GeneFeature.class, new GeneFeatureSerializer(true));

@@ -48,7 +48,6 @@ public class ActionPipelineInfo implements Action {
 
     public static void analysisPipelineInfo(String file) {
         PipelineConfiguration pipeline = PipelineConfigurationReader.fromFile(file);
-        System.out.println(pipeline.versionOfMiXCR);
         System.out.println("Pipeline:");
         final PrintStreamTableAdapter tableAdapter = new PrintStreamTableAdapter(System.out);
         for (int i = 0; i < pipeline.pipelineSteps.length; ++i) {

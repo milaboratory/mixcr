@@ -79,8 +79,7 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     /** History to write in the header */
     private PipelineConfiguration pipelineConfiguration = null;
 
-    @Override
-    public synchronized void writeConfiguration(PipelineConfiguration configuration) {
+    public synchronized void setPipelineConfiguration(PipelineConfiguration configuration) {
         if (pipelineConfiguration == null)
             pipelineConfiguration = configuration;
         else if (!configuration.equals(this.pipelineConfiguration))

@@ -66,21 +66,21 @@ public abstract class UberAction implements Action {
     }
 
     public static class UberActionParameters extends ActionParametersWithOutput implements Serializable {
-        @Parameter(description = "input_file1 [input_file2] analysisTitle")
+        @Parameter(description = "input_file1 [input_file2] analysisOutputName")
         public List<String> files = new ArrayList<>();
 
-        @Parameter(description = "Species (organism), as specified in library file or taxon id. " +
-                "Possible values: hs, HomoSapiens, musmusculus, mmu, hsa, 9606, 10090 etc.",
-                names = {"-s", "--species"},
+        @Parameter(names = {"-s", "--species"},
+                description = "Species (organism), as specified in library file or taxon id. " +
+                        "Possible values: hs, HomoSapiens, musmusculus, mmu, hsa, 9606, 10090 etc.",
                 required = true)
         public String species = "hs";
 
-        @Parameter(description = "Resume execution.", names = {"--resume"})
+        @Parameter(names = {"--resume"}, description = "Try to resume aborted execution")
         public boolean resume = false;
 
-        public static String defaultReport = "mixcr_report_" + new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss.SSS").format(new Date()) + ".txt";
+        static String defaultReport = "mixcr_report_" + new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss.SSS").format(new Date()) + "." + (System.nanoTime() % 1000L) + ".txt";
 
-        @Parameter(description = "Report file.", names = {"-r", "--report"})
+        @Parameter(names = {"-r", "--report"}, description = "Report file.")
         public String report = defaultReport;
 
         private <T extends ActionParametersWithOutput> T inheritOptionsAndValidate(T parameters) {
@@ -94,15 +94,15 @@ public abstract class UberAction implements Action {
 
         @Parameter(names = "--align", description = "Additional parameters for align step specified with double quotes (e.g --align \"--limit 1000\" --align \"-OminSumScore=100\" etc.", variableArity = true)
         public List<String> alignParameters = new ArrayList<>();
+        /** pre-defined (hidden from the user) parameters */
+        protected List<String> initialAlignParameters = new ArrayList<>();
 
         /** Prepare parameters for align */
         public AlignParameters mkAlignerParameters() {
-            AlignParameters ap = new AlignParameters();
-
             // align parameters
-            List<String> alignParameters = new ArrayList<>();
-            // add pre-defined parameters first (may be overriden)
+            List<String> alignParameters = new ArrayList<>(initialAlignParameters);
 
+            // add pre-defined parameters first (may be overriden)
             if (nAssemblePartialRounds > 0)
                 alignParameters.add("-OallowPartialAlignments=true");
 
@@ -122,6 +122,7 @@ public abstract class UberAction implements Action {
             alignParameters.add(fNameForAlignments());
 
             // parse parameters
+            AlignParameters ap = new AlignParameters();
             new JCommander(ap).parse(
                     alignParameters
                             .stream()
@@ -189,7 +190,6 @@ public abstract class UberAction implements Action {
 
         /** Build parameters for assemble */
         public AssembleParameters mkAssembleParameters(String input, String output) {
-
             List<String> assembleParameters = new ArrayList<>();
 
             // add report file
@@ -304,6 +304,11 @@ public abstract class UberAction implements Action {
 
     @Parameters(commandDescription = "Analyze RepSeq data")
     public static class RepSeqParameters extends UberActionParameters {
+        {
+            nAssemblePartialRounds = 0;
+            doExtendAlignments = false;
+        }
+
         @Override
         public List<String> forceHideParameters() {
             return Arrays.asList("--assemblePartial", "--extend", "--assemble-partial-rounds", "--do-extend-alignments");
@@ -315,7 +320,7 @@ public abstract class UberAction implements Action {
         @Override
         public AlignParameters mkAlignerParameters() {
             if (bCellSpecific)
-                alignParameters.addAll(Arrays.asList("-p", "kaligner2"));
+                initialAlignParameters.addAll(Arrays.asList("-p", "kaligner2"));
             return super.mkAlignerParameters();
         }
     }
@@ -324,8 +329,6 @@ public abstract class UberAction implements Action {
     public static class UberRepSeq extends UberAction {
         public UberRepSeq() {
             super(new RepSeqParameters());
-            uberParameters.nAssemblePartialRounds = 0;
-            uberParameters.doExtendAlignments = false;
         }
 
         @Override
@@ -339,6 +342,8 @@ public abstract class UberAction implements Action {
         {
             nAssemblePartialRounds = 2;
             doExtendAlignments = true;
+            initialAlignParameters.add("-p");
+            initialAlignParameters.add("rna-seq");
         }
     }
 
@@ -346,8 +351,6 @@ public abstract class UberAction implements Action {
     public static class UberRnaSeq extends UberAction {
         public UberRnaSeq() {
             super(new RnaSeqParameters());
-            uberParameters.alignParameters.add("-p");
-            uberParameters.alignParameters.add("rna-seq");
         }
 
         @Override

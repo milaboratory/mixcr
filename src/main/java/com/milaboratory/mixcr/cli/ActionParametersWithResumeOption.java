@@ -50,10 +50,7 @@ public abstract class ActionParametersWithResumeOption extends ActionParametersW
         // analysis supposed to be performed now
         PipelineConfiguration expectedPipeline = getFullPipelineConfiguration();
         // history written in existing file
-        PipelineConfiguration actualPipeline = null;
-        try {
-            actualPipeline = PipelineConfigurationReader.fromFile(outFileName);
-        } catch (Throwable ignored) { }
+        PipelineConfiguration actualPipeline = PipelineConfigurationReader.fromFileOrNull(outFileName);
 
         if (Objects.equals(actualPipeline, expectedPipeline)) {
             String exists = "File " + outFileName + " already exists and contains correct " +
