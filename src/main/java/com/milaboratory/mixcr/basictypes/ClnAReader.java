@@ -289,7 +289,6 @@ public final class ClnAReader implements AutoCloseable {
 
     public final class CloneAlignmentsPort
             implements OutputPort<CloneAlignments>, CanReportProgress {
-        private final AtomicInteger cloneIndex = new AtomicInteger();
         private final AtomicLong processedAlignments = new AtomicLong();
         private final CloneSet fakeCloneSet;
         private final PipeDataInputReader<Clone> clones;
@@ -313,7 +312,7 @@ public final class ClnAReader implements AutoCloseable {
                 return null;
             }
             clone.setParentCloneSet(fakeCloneSet);
-            CloneAlignments result = new CloneAlignments(clone, cloneIndex.getAndIncrement());
+            CloneAlignments result = new CloneAlignments(clone, clone.id);
             processedAlignments.addAndGet(result.alignmentsCount);
             return result;
         }

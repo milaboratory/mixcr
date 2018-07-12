@@ -37,10 +37,6 @@ public class ActionAssembleContigs implements Action {
 
     @Override
     public void go(ActionHelper helper) throws Exception {
-        //TODO FIX!!!!!!!!!!!!!
-        if (parameters.threads > 1)
-            throw new ParameterException("Multithreaded processing is not supported yet.");
-
         long beginTimestamp = System.currentTimeMillis();
         FullSeqAssemblerParameters p = FullSeqAssemblerParameters.getByName("default");
         if (!parameters.overrides.isEmpty()) {
