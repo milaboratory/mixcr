@@ -125,7 +125,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                                                 result.alignment.getHistory(1),
                                                 mergeResult.getOffset(),
                                                 mergeResult.getMismatched())},
-                                new SequenceRead[]{input}
+                                parameters.isSaveOriginalReads() ? new SequenceRead[]{input} : null
                         );
                 if (listener != null)
                     listener.onSuccessfulAlignmentOverlap(input, sAlignment);

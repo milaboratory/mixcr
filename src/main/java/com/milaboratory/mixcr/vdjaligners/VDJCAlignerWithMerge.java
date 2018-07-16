@@ -101,7 +101,7 @@ public final class VDJCAlignerWithMerge extends VDJCAligner<PairedRead> {
                                                 : merged.getOffset(),
                                         merged.getErrors())
                         },
-                        new SequenceRead[]{read});
+                        parameters.isSaveOriginalReads() ? new SequenceRead[]{read} : null);
             }
             return new VDJCAlignmentResult<>(read, alignment);
         } else
