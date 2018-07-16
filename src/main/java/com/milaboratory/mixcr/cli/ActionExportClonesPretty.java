@@ -32,6 +32,7 @@ import cc.redberry.primitives.Filter;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
+import com.beust.jcommander.converters.LongConverter;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
@@ -39,6 +40,7 @@ import com.milaboratory.core.alignment.MultiAlignmentHelper;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.*;
+import gnu.trove.set.hash.TLongHashSet;
 import io.repseq.core.Chains;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
@@ -133,6 +135,11 @@ public class ActionExportClonesPretty implements Action {
                 names = {"-n", "--limit"})
         public Integer limitAfter = null;
 
+        @Parameter(description = "List of clone ids to export",
+                names = {"-i", "--clone-ids"},
+                converter = LongConverter.class)
+        public List<Long> ids = new ArrayList<>();
+
         @Parameter(description = "Number of output alignments to skip",
                 names = {"-s", "--skip"})
         public Integer skipAfter = null;
@@ -153,10 +160,20 @@ public class ActionExportClonesPretty implements Action {
             return Chains.parse(chain);
         }
 
+        TLongHashSet getCloneIds() {
+            if (ids.isEmpty())
+                return null;
+            return new TLongHashSet(ids);
+        }
+
         public Filter<Clone> getFilter() {
             final Chains chains = getChain();
 
             List<Filter<Clone>> filters = new ArrayList<>();
+
+            final TLongHashSet cloneIds = getCloneIds();
+            if (cloneIds != null)
+                filters.add(object -> cloneIds.contains(object.getId()));
 
             filters.add(new Filter<Clone>() {
                 @Override
