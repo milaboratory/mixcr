@@ -10,7 +10,7 @@ import com.beust.jcommander.Parameters;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
-import com.milaboratory.cli.ActionParametersWithOutput;
+import com.milaboratory.mixcr.basictypes.ActionConfiguration;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
@@ -23,10 +23,7 @@ import io.repseq.core.VDJCGene;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by poslavsky on 28/02/2017.
@@ -42,7 +39,7 @@ public final class ActionSortAlignments implements Action {
                          Sorter.sort(reader, idComparator, 1024 * 512, new VDJCAlignmentsSerializer(reader), TempFileManager.getTempFile());
                  VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(parameters.getOutputFile())) {
 
-                writer.header(reader.getParameters(), reader.getUsedGenes());
+                writer.header(reader.getParameters(), reader.getUsedGenes(), parameters.getFullPipelineConfiguration());
 
                 final long nReads = reader.getNumberOfReads();
                 final CountingOutputPort<VDJCAlignments> counter = new CountingOutputPort<>(sorted);
@@ -83,7 +80,7 @@ public final class ActionSortAlignments implements Action {
         @Override
         public void write(Collection<VDJCAlignments> data, OutputStream stream) {
             try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(stream)) {
-                writer.header(parameters, usedAlleles);
+                writer.header(parameters, usedAlleles, null);
                 for (VDJCAlignments datum : data)
                     writer.write(datum);
             }
@@ -97,8 +94,27 @@ public final class ActionSortAlignments implements Action {
         }
     }
 
+    public static class SortConfiguration implements ActionConfiguration {
+        @Override
+        public String actionName() {
+            return "sortAlignments";
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(SortConfiguration.class);
+        }
+    }
+
     @Parameters(commandDescription = "Sort alignments in vdjca file")
-    private static final class AParameters extends ActionParametersWithOutput {
+    private static final class AParameters extends ActionParametersWithResumeOption.ActionParametersWithResumeWithBinaryInput {
         @Parameter(description = "input.vdjca output.vdjca")
         public List<String> parameters;
 
@@ -114,6 +130,16 @@ public final class ActionSortAlignments implements Action {
         @Override
         protected List<String> getOutputFiles() {
             return Arrays.asList(getOutputFile());
+        }
+
+        @Override
+        public List<String> getInputFiles() {
+            return parameters.subList(0, 1);
+        }
+
+        @Override
+        public ActionConfiguration getConfiguration() {
+            return new SortConfiguration();
         }
 
         @Override

@@ -10,10 +10,10 @@ import java.util.List;
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public interface VDJCAlignmentsWriterI extends AutoCloseable {
+public interface VDJCAlignmentsWriterI extends PipelineConfigurationWriter, AutoCloseable {
     void setNumberOfProcessedReads(long numberOfProcessedReads);
 
-    void header(VDJCAlignerParameters parameters, List<VDJCGene> genes);
+    void header(VDJCAlignerParameters parameters, List<VDJCGene> genes, PipelineConfiguration pipelineConfiguration);
 
     void write(VDJCAlignments alignment);
 
@@ -31,7 +31,7 @@ public interface VDJCAlignmentsWriterI extends AutoCloseable {
         }
 
         @Override
-        public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes) {
+        public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes, PipelineConfiguration pipelineConfiguration) {
         }
 
         @Override
@@ -47,6 +47,7 @@ public interface VDJCAlignmentsWriterI extends AutoCloseable {
         public long numberOfProcessedReads;
         public VDJCAlignerParameters parameters;
         public List<VDJCGene> genes;
+        public PipelineConfiguration pipelineConfiguration;
         public final ArrayList<VDJCAlignments> data;
 
         public ArrayWriter(int capacity) {
@@ -63,9 +64,10 @@ public interface VDJCAlignmentsWriterI extends AutoCloseable {
         }
 
         @Override
-        public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes) {
+        public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes, PipelineConfiguration pipelineConfiguration) {
             this.parameters = parameters;
             this.genes = genes;
+            this.pipelineConfiguration = pipelineConfiguration;
         }
 
         @Override

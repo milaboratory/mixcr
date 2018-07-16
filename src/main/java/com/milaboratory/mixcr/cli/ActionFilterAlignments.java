@@ -8,17 +8,12 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.converters.LongConverter;
 import com.beust.jcommander.validators.PositiveInteger;
-import com.milaboratory.cli.Action;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.cli.ActionHelper;
-import com.milaboratory.cli.ActionParameters;
-import com.milaboratory.cli.ActionParametersWithOutput;
-import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
-import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.SmartProgressReporter;
 import gnu.trove.set.hash.TLongHashSet;
@@ -27,19 +22,17 @@ import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public final class ActionFilterAlignments implements Action {
-    public final FilterAlignmentsFilterParameters parameters = new FilterAlignmentsFilterParameters();
+public final class ActionFilterAlignments extends AbstractActionWithResumeOption {
+    public final FilterAlignmentsParameters parameters = new FilterAlignmentsParameters();
 
     @Override
-    public void go(ActionHelper helper) throws Exception {
+    public void go0(ActionHelper helper) throws Exception {
         try (VDJCAlignmentsReader reader = parameters.getInput();
              VDJCAlignmentsWriter writer = parameters.getOutput()) {
             CanReportProgress progress = reader;
@@ -48,7 +41,7 @@ public final class ActionFilterAlignments implements Action {
                 sReads = new CountLimitingOutputPort<>(sReads, parameters.limit);
                 progress = SmartProgressReporter.extractProgress((CountLimitingOutputPort<?>) sReads);
             }
-            writer.header(reader.getParameters(), reader.getUsedGenes());
+            writer.header(reader.getParameters(), reader.getUsedGenes(), null);
             SmartProgressReporter.startProgressReport("Filtering", progress);
             int total = 0, passed = 0;
             final AlignmentsFilter filter = parameters.getFilter();
@@ -71,7 +64,7 @@ public final class ActionFilterAlignments implements Action {
     }
 
     @Override
-    public ActionParameters params() {
+    public FilterAlignmentsParameters params() {
         return parameters;
     }
 
@@ -134,8 +127,57 @@ public final class ActionFilterAlignments implements Action {
         }
     }
 
+    public static class FilterConfiguration implements ActionConfiguration {
+        public final Chains chains;
+        public final boolean chimerasOnly;
+        public final long limit;
+        public final long[] ids;
+        public final GeneFeature containFeature;
+        public final NucleotideSequence cdr3Equals;
+
+        @JsonCreator
+        public FilterConfiguration(@JsonProperty("chains") Chains chains,
+                                   @JsonProperty("chimerasOnly") boolean chimerasOnly,
+                                   @JsonProperty("limit") long limit,
+                                   @JsonProperty("ids") long[] ids,
+                                   @JsonProperty("containFeature") GeneFeature containFeature,
+                                   @JsonProperty("cdr3Equals") NucleotideSequence cdr3Equals) {
+            this.chains = chains;
+            this.chimerasOnly = chimerasOnly;
+            this.limit = limit;
+            this.ids = ids;
+            this.containFeature = containFeature;
+            this.cdr3Equals = cdr3Equals;
+        }
+
+        @Override
+        public String actionName() {
+            return "filter";
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            FilterConfiguration that = (FilterConfiguration) o;
+            return chimerasOnly == that.chimerasOnly &&
+                    limit == that.limit &&
+                    Objects.equals(chains, that.chains) &&
+                    Arrays.equals(ids, that.ids) &&
+                    Objects.equals(containFeature, that.containFeature) &&
+                    Objects.equals(cdr3Equals, that.cdr3Equals);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = Objects.hash(chains, chimerasOnly, limit, containFeature, cdr3Equals);
+            result = 31 * result + Arrays.hashCode(ids);
+            return result;
+        }
+    }
+
     @Parameters(commandDescription = "Filter alignments.")
-    public static final class FilterAlignmentsFilterParameters extends ActionParametersWithOutput {
+    public static final class FilterAlignmentsParameters extends ActionParametersWithResumeOption.ActionParametersWithResumeWithBinaryInput {
         @Parameter(description = "input_file.vdjca output_file.vdjca", variableArity = true)
         public List<String> parameters = new ArrayList<>();
 
@@ -154,7 +196,7 @@ public final class ActionFilterAlignments implements Action {
 
         @Parameter(description = "Output only chimeric alignments.",
                 names = {"-x", "--chimeras-only"})
-        public Boolean chimerasOnly = null;
+        public boolean chimerasOnly = false;
 
         @Parameter(description = "Maximal number of reads to process",
                 names = {"-n", "--limit"}, validateWith = PositiveInteger.class)
@@ -201,7 +243,19 @@ public final class ActionFilterAlignments implements Action {
 
         public AlignmentsFilter getFilter() {
             return new AlignmentsFilter(getContainFeature(), getCdr3Equals(), getChains(),
-                    getReadIds(), chimerasOnly == null ? false : chimerasOnly);
+                    getReadIds(), chimerasOnly);
+        }
+
+        @Override
+        public List<String> getInputFiles() {
+            return parameters.subList(0, 1);
+        }
+
+        @Override
+        public ActionConfiguration getConfiguration() {
+            return new FilterConfiguration(getChains(),
+                    chimerasOnly,
+                    limit, getReadIds().toArray(), getContainFeature(), getCdr3Equals());
         }
     }
 }

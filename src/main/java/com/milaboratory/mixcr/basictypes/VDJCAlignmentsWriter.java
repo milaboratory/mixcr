@@ -68,16 +68,26 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
         this.numberOfProcessedReads = numberOfProcessedReads;
     }
 
-    public void header(VDJCAlignmentsReader reader) {
-        header(reader.getParameters(), reader.getUsedGenes());
+    public void header(VDJCAlignmentsReader reader, PipelineConfiguration pipelineConfiguration) {
+        header(reader.getParameters(), reader.getUsedGenes(), pipelineConfiguration);
     }
 
-    public void header(VDJCAligner aligner) {
-        header(aligner.getParameters(), aligner.getUsedGenes());
+    public void header(VDJCAligner aligner, PipelineConfiguration pipelineConfiguration) {
+        header(aligner.getParameters(), aligner.getUsedGenes(), pipelineConfiguration);
+    }
+
+    /** History to write in the header */
+    private PipelineConfiguration pipelineConfiguration = null;
+
+    public synchronized void setPipelineConfiguration(PipelineConfiguration configuration) {
+        if (pipelineConfiguration == null)
+            pipelineConfiguration = configuration;
+        else if (!configuration.equals(this.pipelineConfiguration))
+            throw new IllegalStateException();
     }
 
     @Override
-    public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes) {
+    public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes, PipelineConfiguration ppConfiguration) {
         if (parameters == null || genes == null)
             throw new IllegalArgumentException();
 
@@ -95,6 +105,11 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
 
         // Writing parameters
         output.writeObject(parameters);
+
+        // Writing history
+        if (ppConfiguration != null)
+            this.pipelineConfiguration = ppConfiguration;
+        output.writeObject(pipelineConfiguration);
 
         IOUtil.writeAndRegisterGeneReferences(output, genes, parameters);
 

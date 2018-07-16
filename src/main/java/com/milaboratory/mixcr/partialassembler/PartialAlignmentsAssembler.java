@@ -110,7 +110,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
     }
 
     public void buildLeftPartsIndex(VDJCAlignmentsReader reader) {
-        writer.header(reader.getParameters(), reader.getUsedGenes());
+        writer.header(reader.getParameters(), reader.getUsedGenes(), null);
         for (VDJCAlignments alignment : CUtils.it(reader)) {
             if (alignment.getFeature(GeneFeature.CDR3) != null)
                 continue;

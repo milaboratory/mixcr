@@ -197,26 +197,26 @@ public class ActionClonesDiff implements Action {
 
         @Parameter(names = {"-v"}, description = "Use V gene in clone comparison (include it as a clone key along " +
                 "with a clone sequence).")
-        public Boolean v;
+        public boolean v = false;
 
         @Parameter(names = {"-j"}, description = "Use J gene in clone comparison (include it as a clone key along " +
                 "with a clone sequence).")
-        public Boolean j;
+        public boolean j = false;
 
         @Parameter(names = {"-c"}, description = "Use C gene in clone comparison (include it as a clone key along " +
                 "with a clone sequence).")
-        public Boolean c;
+        public boolean c = false;
 
         public boolean useV() {
-            return v != null && v;
+            return v;
         }
 
         public boolean useJ() {
-            return j != null && j;
+            return j;
         }
 
         public boolean useC() {
-            return c != null && c;
+            return c;
         }
 
         //@Parameter(names = {"-o1", "--only-in-first"}, description = "output for alignments contained only " +

@@ -50,16 +50,16 @@ public class ActionExportParameters<T extends VDJCObject> extends ActionParamete
 
     @Parameter(description = "List available export fields",
             names = {"-lf", "--list-fields"})
-    public Boolean listFields = false;
+    public boolean listFields = false;
 
     @Deprecated
     @Parameter(description = "Output short versions of column headers which facilitates analysis with Pandas, R/DataFrames or other data tables processing library.",
             names = {"-s", "--no-spaces"})
-    public Boolean noSpaces;
+    public boolean noSpaces = false;
 
     @Parameter(description = "Output column headers with spaces.",
             names = {"-v", "--with-spaces"})
-    public Boolean humanReadable;
+    public boolean humanReadable = false;
 
     @Parameter(description = "Output only first N records",
             names = {"-n", "--limit"}, validateWith = PositiveInteger.class)
@@ -77,7 +77,7 @@ public class ActionExportParameters<T extends VDJCObject> extends ActionParamete
     }
 
     public boolean isHumanReadableParameters() {
-        return humanReadable != null && humanReadable;
+        return humanReadable;
     }
 
     public String getOutputFile() {
@@ -132,7 +132,7 @@ public class ActionExportParameters<T extends VDJCObject> extends ActionParamete
     }
 
     public static void parse(Class clazz, final String[] args, ActionExportParameters parameters) {
-        if (parameters.noSpaces != null)
+        if (parameters.noSpaces)
             System.out.println("\"-s\" / \"--no-spaces\" option is deprecated.\nScripting friendly output format now used " +
                     "by default.\nUse \"-v\" / \"--with-spaces\" to switch back to human readable format.");
 

@@ -35,22 +35,27 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.converters.LongConverter;
-import com.milaboratory.cli.*;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.milaboratory.cli.ActionHelper;
+import com.milaboratory.cli.HiddenAction;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.cli.ActionParametersWithResumeOption.ActionParametersWithResumeWithBinaryInput;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 import io.repseq.core.VDJCLibraryRegistry;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class ActionSlice implements Action {
-    final Params params = new Params();
+public class ActionSlice extends AbstractActionWithResumeOption {
+    final SliceParameters params = new SliceParameters();
 
     @Override
-    public void go(ActionHelper helper) throws Exception {
+    public void go0(ActionHelper helper) throws Exception {
         Collections.sort(params.ids);
 
         IOUtil.MiXCRFileType fileType = IOUtil.detectFilType(params.getInputFileName());
@@ -78,7 +83,7 @@ public class ActionSlice implements Action {
 
         try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(params.getInputFileName());
              VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(params.getOutputFileName())) {
-            writer.header(reader);
+            writer.header(reader, params.getFullPipelineConfiguration());
             for (VDJCAlignments alignments : CUtils.it(reader)) {
                 if (set.removeAll(alignments.getReadIds()))
                     writer.write(alignments);
@@ -90,7 +95,7 @@ public class ActionSlice implements Action {
 
     void sliceClnA(ActionHelper helper) throws Exception {
         try (ClnAReader reader = new ClnAReader(params.getInputFileName(), VDJCLibraryRegistry.getDefault());
-             ClnAWriter writer = new ClnAWriter(params.getOutputFileName())) {
+             ClnAWriter writer = new ClnAWriter(params.getFullPipelineConfiguration(), params.getOutputFileName())) {
 
             // Getting full clone set
             CloneSet cloneSet = reader.readCloneSet();
@@ -147,13 +152,41 @@ public class ActionSlice implements Action {
     }
 
     @Override
-    public ActionParameters params() {
+    public SliceParameters params() {
         return params;
+    }
+
+    public static class SliceConfiguration implements ActionConfiguration {
+        final long[] ids;
+
+        @JsonCreator
+        public SliceConfiguration(@JsonProperty("ids") long[] ids) {
+            this.ids = ids;
+            Arrays.sort(ids);
+        }
+
+        @Override
+        public String actionName() {
+            return "slice";
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            SliceConfiguration that = (SliceConfiguration) o;
+            return Arrays.equals(ids, that.ids);
+        }
+
+        @Override
+        public int hashCode() {
+            return Arrays.hashCode(ids);
+        }
     }
 
     @Parameters(commandDescription = "Slice ClnA file.")
     @HiddenAction
-    public static final class Params extends ActionParametersWithOutput {
+    public static final class SliceParameters extends ActionParametersWithResumeWithBinaryInput {
         @Parameter(description = "[input_file1.(vdjca|clns|clna)[.gz] output_file.(vdjca|clns|clna)[.gz]")
         List<String> parameters;
 
@@ -175,7 +208,18 @@ public class ActionSlice implements Action {
         }
 
         @Override
+        public List<String> getInputFiles() {
+            return parameters.subList(0, 1);
+        }
+
+        @Override
+        public ActionConfiguration getConfiguration() {
+            return new SliceConfiguration(ids.stream().mapToLong(Long::longValue).toArray());
+        }
+
+        @Override
         public void validate() {
+            super.validate();
             if (parameters.size() != 2)
                 throw new ParameterException("Wrong number of parameters.");
         }

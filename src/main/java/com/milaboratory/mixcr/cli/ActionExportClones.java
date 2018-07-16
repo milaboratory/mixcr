@@ -37,28 +37,29 @@ import com.milaboratory.core.sequence.TranslationParameters;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
-import com.milaboratory.mixcr.basictypes.IOUtil;
 import com.milaboratory.mixcr.export.InfoWriter;
 import com.milaboratory.util.CanReportProgressAndStage;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.VDJCLibraryRegistry;
 
-import java.io.InputStream;
 import java.util.List;
 import java.util.Objects;
 
 public class ActionExportClones extends ActionExport<Clone> {
+    public ActionExportClones(CloneExportParameters parameters) {
+        super(parameters, Clone.class);
+    }
+
     public ActionExportClones() {
-        super(new CloneExportParameters(), Clone.class);
+        this(new CloneExportParameters());
     }
 
     @Override
     public void go0() throws Exception {
         CloneExportParameters parameters = (CloneExportParameters) this.parameters;
-        try (InputStream inputStream = IOUtil.createIS(parameters.getInputFile());
-             InfoWriter<Clone> writer = new InfoWriter<>(parameters.getOutputFile())) {
-            CloneSet set = CloneSetIO.readClns(inputStream, VDJCLibraryRegistry.getDefault());
+        try (InfoWriter<Clone> writer = new InfoWriter<>(parameters.getOutputFile())) {
+            CloneSet set = CloneSetIO.read(parameters.getInputFile(), VDJCLibraryRegistry.getDefault());
 
             set = CloneSet.transform(set, parameters.getFilter());
 
@@ -180,11 +181,11 @@ public class ActionExportClones extends ActionExport<Clone> {
     public static class CloneExportParameters extends ActionExportParameters<Clone> {
         @Parameter(description = "Exclude clones with out-of-frame clone sequences (fractions will be recalculated)",
                 names = {"-o", "--filter-out-of-frames"})
-        public Boolean filterOutOfFrames;
+        public boolean filterOutOfFrames = false;
 
         @Parameter(description = "Exclude sequences containing stop codons (fractions will be recalculated)",
                 names = {"-t", "--filter-stops"})
-        public Boolean filterStops;
+        public boolean filterStops = false;
 
         @Parameter(description = "Filter clones by minimal clone fraction",
                 names = {"-q", "--minimal-clone-fraction"})
@@ -195,11 +196,11 @@ public class ActionExportClones extends ActionExport<Clone> {
         public long minCount = 0;
 
         public boolean getFilterOutOfFrames() {
-            return filterOutOfFrames != null && filterOutOfFrames;
+            return filterOutOfFrames;
         }
 
         public boolean getFilterStops() {
-            return filterStops != null && filterStops;
+            return filterStops;
         }
 
         @Override

@@ -32,31 +32,30 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.milaboratory.cli.Action;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.cli.ActionHelper;
-import com.milaboratory.cli.ActionParameters;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
+import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class ActionMergeAlignments implements Action {
-    final MergeParameters parameters = new MergeParameters();
+public class ActionMergeAlignments extends AbstractActionWithResumeOption {
+    final MergeAlignmentsParameters parameters = new MergeAlignmentsParameters();
 
     @Override
-    public void go(ActionHelper helper) throws Exception {
-        try (MultiReader reader = new MultiReader(parameters.getInputFileNames());
+    public void go0(ActionHelper helper) throws Exception {
+        try (MultiReader reader = new MultiReader(parameters.getInputFiles());
              VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(parameters.getOutputFileName())) {
             reader.initNextReader();
             SmartProgressReporter.startProgressReport("Merging", reader);
-            writer.header(reader.currentInnerReader.getParameters(), reader.currentInnerReader.getUsedGenes());
+            writer.header(reader.currentInnerReader.getParameters(), reader.currentInnerReader.getUsedGenes(), parameters.getFullPipelineConfiguration());
             for (VDJCAlignments record : CUtils.it(reader))
                 writer.write(record);
             writer.setNumberOfProcessedReads(reader.readIdOffset.get());
@@ -69,21 +68,68 @@ public class ActionMergeAlignments implements Action {
     }
 
     @Override
-    public ActionParameters params() {
+    public MergeAlignmentsParameters params() {
         return parameters;
     }
 
+    public static class MergeConfiguration implements ActionConfiguration {
+        final PipelineConfiguration[] sources;
+
+        @JsonCreator
+        public MergeConfiguration(@JsonProperty("sources") PipelineConfiguration[] sources) {
+            this.sources = sources;
+        }
+
+        @Override
+        public String actionName() {
+            return "merge";
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            MergeConfiguration that = (MergeConfiguration) o;
+            return Arrays.equals(sources, that.sources);
+        }
+
+        @Override
+        public int hashCode() {
+            return Arrays.hashCode(sources);
+        }
+    }
+
     @Parameters(commandDescription = "Merge several *.vdjca[.gz] files with alignments into a single alignments file.")
-    public static final class MergeParameters extends ActionParameters {
+    public static final class MergeAlignmentsParameters extends ActionParametersWithResumeOption {
         @Parameter(description = "[input_file1.vdjca[.gz] [input_file2.vdjca[.gz] ....]] output_file.vdjca[.gz]")
         public List<String> parameters;
 
-        public List<String> getInputFileNames() {
+        public String getOutputFileName() {
+            return parameters.get(parameters.size() - 1);
+        }
+
+        @Override
+        public List<String> getInputFiles() {
             return parameters.subList(0, parameters.size() - 1);
         }
 
-        public String getOutputFileName() {
-            return parameters.get(parameters.size() - 1);
+        private MergeConfiguration configuration = null;
+
+        @Override
+        public ActionConfiguration getConfiguration() {
+            return configuration != null
+                    ? configuration
+                    : (configuration = new MergeConfiguration(getInputFiles().stream().map(PipelineConfigurationReader::fromFile).toArray(PipelineConfiguration[]::new)));
+        }
+
+        @Override
+        public PipelineConfiguration getFullPipelineConfiguration() {
+            return PipelineConfiguration.mkInitial(getInputFiles(), getConfiguration());
+        }
+
+        @Override
+        protected List<String> getOutputFiles() {
+            return parameters.subList(parameters.size() - 1, parameters.size());
         }
     }
 

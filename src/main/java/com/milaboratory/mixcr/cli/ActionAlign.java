@@ -40,7 +40,11 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.validators.PositiveInteger;
-import com.milaboratory.cli.*;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.milaboratory.cli.ActionHelper;
+import com.milaboratory.cli.DeprecatedParameter;
+import com.milaboratory.cli.ProcessException;
 import com.milaboratory.core.PairedEndReadsLayout;
 import com.milaboratory.core.Target;
 import com.milaboratory.core.io.sequence.SequenceRead;
@@ -54,10 +58,7 @@ import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.basictypes.SequenceHistory;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
-import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
@@ -72,7 +73,7 @@ import java.util.*;
 import static cc.redberry.pipe.CUtils.chunked;
 import static cc.redberry.pipe.CUtils.unchunked;
 
-public class ActionAlign implements Action {
+public class ActionAlign extends AbstractActionWithResumeOption {
     private final AlignParameters actionParameters;
 
     public ActionAlign(AlignParameters actionParameters) {
@@ -90,23 +91,12 @@ public class ActionAlign implements Action {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void go(ActionHelper helper) throws Exception {
+    public void go0(ActionHelper helper) throws Exception {
         // Saving initial timestamp
         long beginTimestamp = System.currentTimeMillis();
 
         // Getting aligner parameters
         VDJCAlignerParameters alignerParameters = actionParameters.getAlignerParameters();
-
-        // FIXME remove in 2.3
-        if (actionParameters.getSaveOriginalReads() || actionParameters.getSaveReadDescription())
-            alignerParameters.setSaveOriginalReads(true);
-
-        if (!actionParameters.overrides.isEmpty()) {
-            // Perform parameters overriding
-            alignerParameters = JsonOverrider.override(alignerParameters, VDJCAlignerParameters.class, actionParameters.overrides);
-            if (alignerParameters == null)
-                throw new ProcessException("Failed to override some parameter.");
-        }
 
         // Creating aligner
         VDJCAligner aligner = VDJCAligner.createAligner(alignerParameters,
@@ -118,7 +108,7 @@ public class ActionAlign implements Action {
                 GeneFeature.VRegionWithP :
                 GeneFeature.VRegion;
 
-        VDJCLibrary library = VDJCLibraryRegistry.getDefault().getLibrary(actionParameters.library, actionParameters.species);
+        VDJCLibrary library = actionParameters.getLibrary();
 
         System.out.println("Reference library: " + library.getLibraryId());
 
@@ -214,7 +204,9 @@ public class ActionAlign implements Action {
                      ? new PairedFastqWriter(actionParameters.failedReadsR1, actionParameters.failedReadsR2)
                      : new SingleFastqWriter(actionParameters.failedReadsR1));
         ) {
-            if (writer != null) writer.header(aligner);
+            if (writer != null)
+                writer.header(aligner, params().getFullPipelineConfiguration());
+
             OutputPort<? extends SequenceRead> sReads = reader;
             CanReportProgress progress = (CanReportProgress) reader;
             if (actionParameters.limit != 0) {
@@ -305,8 +297,60 @@ public class ActionAlign implements Action {
         return actionParameters;
     }
 
+    /** Set of parameters that completely (uniquely) determine align action */
+    public static class AlignConfiguration implements ActionConfiguration {
+        /**
+         * Aligner parameters
+         */
+        public final VDJCAlignerParameters alignerParameters;
+        /**
+         * Whether reads were merged
+         */
+        public final boolean mergeReads;
+        /**
+         * VDJC library ID
+         */
+        public final VDJCLibraryId libraryId;
+        /**
+         * Limit number of reads
+         */
+        public final long limit;
+
+        @JsonCreator
+        public AlignConfiguration(@JsonProperty("alignerParameters") VDJCAlignerParameters alignerParameters,
+                                  @JsonProperty("mergeReads") boolean mergeReads,
+                                  @JsonProperty("libraryId") VDJCLibraryId libraryId,
+                                  @JsonProperty("limit") long limit) {
+            this.alignerParameters = alignerParameters;
+            this.mergeReads = mergeReads;
+            this.libraryId = libraryId;
+            this.limit = limit;
+        }
+
+        @Override
+        public String actionName() {
+            return "align";
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            AlignConfiguration that = (AlignConfiguration) o;
+            return mergeReads == that.mergeReads &&
+                    limit == that.limit &&
+                    Objects.equals(alignerParameters, that.alignerParameters) &&
+                    Objects.equals(libraryId, that.libraryId);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(alignerParameters, mergeReads, libraryId, limit);
+        }
+    }
+
     @Parameters(commandDescription = "Builds alignments with V,D,J and C genes for input sequencing reads.")
-    public static class AlignParameters extends ActionParametersWithOutput {
+    public static class AlignParameters extends ActionParametersWithResumeOption {
         @Parameter(description = "input_file1 [input_file2] output_file.vdjca", variableArity = true)
         public List<String> parameters = new ArrayList<>();
 
@@ -319,11 +363,11 @@ public class ActionAlign implements Action {
 
         @Parameter(description = "Verbose warning messages.",
                 names = {"--verbose"})
-        public Boolean verbose = null;
+        public boolean verbose = false;
 
         @Parameter(description = "Don't print warnings",
                 names = {"-nw", "--no-warnings"})
-        public Boolean noWarnings = null;
+        public boolean noWarnings = false;
 
         @Parameter(description = "Parameters",
                 names = {"-p", "--parameters"})
@@ -360,24 +404,24 @@ public class ActionAlign implements Action {
 
         @Parameter(description = "Do not merge paired reads.",
                 names = {"-d", "--no-merge"})
-        public Boolean noMerge;
+        public boolean noMerge = false;
 
         @Deprecated
         @DeprecatedParameter("Use -OsaveOriginalReads=true.")
         @Parameter(description = "Copy read(s) description line from .fastq or .fasta to .vdjca file (can then be " +
                 "exported with -descrR1 and -descrR2 options in exportAlignments action).",
                 names = {"-a", "--save-description"})
-        public Boolean saveReadDescription; //FIXME remove in 2.3
+        public boolean saveReadDescription = false; //FIXME remove in 2.3
 
         @Parameter(description = "Write alignment results for all input reads (even if alignment has failed).",
                 names = {"--write-all"})
-        public Boolean writeAllResults;
+        public boolean writeAllResults = false;
 
         @Deprecated
         @DeprecatedParameter("Use -OsaveOriginalReads=true")
         @Parameter(description = "Copy original reads (sequences + qualities + descriptions) to .vdjca file.",
                 names = {"-g", "--save-reads"})
-        public Boolean saveOriginalReads; //FIXME remove in 2.3
+        public boolean saveOriginalReads = false; //FIXME remove in 2.3
 
         @Parameter(description = "Write not aligned reads (R1).",
                 names = {"--not-aligned-R1"})
@@ -391,49 +435,74 @@ public class ActionAlign implements Action {
             return species;
         }
 
+        private VDJCAlignerParameters vdjcAlignerParameters = null;
+
         public VDJCAlignerParameters getAlignerParameters() {
-            VDJCAlignerParameters params = VDJCParametersPresets.getByName(alignerParametersName);
-            if (params == null)
+            if (vdjcAlignerParameters != null)
+                return vdjcAlignerParameters;
+
+            VDJCAlignerParameters alignerParameters = VDJCParametersPresets.getByName(alignerParametersName);
+            if (alignerParameters == null)
                 throw new ParameterException("Unknown aligner parameters: " + alignerParametersName);
-            return params;
+
+            // FIXME remove in 2.3
+            if (getSaveOriginalReads() || getSaveReadDescription())
+                alignerParameters.setSaveOriginalReads(true);
+
+            if (!overrides.isEmpty()) {
+                // Perform parameters overriding
+                alignerParameters = JsonOverrider.override(alignerParameters, VDJCAlignerParameters.class, overrides);
+                if (alignerParameters == null)
+                    throw new ProcessException("Failed to override some parameter.");
+            }
+
+            return vdjcAlignerParameters = alignerParameters;
         }
 
         public String[] getInputsForReport() {
-            return parameters.subList(0, parameters.size() - 1).toArray(new String[parameters.size() - 1]);
+            return getInputFiles().toArray(new String[parameters.size() - 1]);
         }
 
         public String[] getOutputsForReport() {
             return new String[]{getOutputName()};
         }
 
-        public Boolean getNoMerge() {
-            return noMerge != null && noMerge;
+        public boolean getNoMerge() {
+            return noMerge;
         }
 
         @Deprecated
-        public Boolean getSaveReadDescription() {
-            return saveReadDescription != null && saveReadDescription;
+        public boolean getSaveReadDescription() {
+            return saveReadDescription;
         }
 
         @Deprecated
-        public Boolean getSaveOriginalReads() {
-            return saveOriginalReads != null && saveOriginalReads;
+        public boolean getSaveOriginalReads() {
+            return saveOriginalReads;
         }
 
         public boolean verbose() {
-            return verbose != null && verbose;
+            return verbose;
         }
 
         public boolean printWarnings() {
-            return noWarnings == null || !noWarnings;
+            return !noWarnings;
         }
 
         public Chains getChains() {
             return Chains.parse(chains);
         }
 
+        private VDJCLibrary vdjcLibrary = null;
+
+        public VDJCLibrary getLibrary() {
+            return vdjcLibrary != null
+                    ? vdjcLibrary
+                    : (vdjcLibrary = VDJCLibraryRegistry.getDefault().getLibrary(library, species));
+        }
+
         public boolean getWriteAllResults() {
-            return writeAllResults != null && writeAllResults;
+            return writeAllResults;
         }
 
         public boolean isInputPaired() {
@@ -477,6 +546,25 @@ public class ActionAlign implements Action {
             if (!printWarnings() && verbose())
                 throw new ParameterException("-nw/--no-warnings and --verbose options are not compatible.");
             super.validate();
+        }
+
+        @Override
+        public List<String> getInputFiles() {
+            return parameters.subList(0, parameters.size() - 1);
+        }
+
+        @Override
+        public ActionConfiguration getConfiguration() {
+            return new AlignConfiguration(
+                    getAlignerParameters(),
+                    !getNoMerge(),
+                    getLibrary().getLibraryId(),
+                    limit);
+        }
+
+        @Override
+        public PipelineConfiguration getFullPipelineConfiguration() {
+            return PipelineConfiguration.mkInitial(getInputFiles(), getConfiguration());
         }
     }
 }

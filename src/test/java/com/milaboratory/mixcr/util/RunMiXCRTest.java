@@ -46,7 +46,9 @@ public class RunMiXCRTest {
         RunMiXCR.AssembleResult assemble = RunMiXCR.assemble(align);
 
         File tempFile = TempFileManager.getTempFile();
-        CloneSetIO.write(assemble.cloneSet, tempFile);
+        try(ClnsWriter writer = new ClnsWriter(null, assemble.cloneSet, tempFile)){
+            writer.write();
+        }
         CloneSet read = CloneSetIO.read(tempFile);
 
         System.out.println("Clns file size: " + tempFile.length());
@@ -97,7 +99,7 @@ public class RunMiXCRTest {
 
         File tempFile = TempFileManager.getTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
-            writer.header(align.aligner);
+            writer.header(align.aligner, null);
             for (VDJCAlignments alignment : align.alignments)
                 writer.write(alignment);
         }
@@ -134,7 +136,7 @@ public class RunMiXCRTest {
 
         File tempFile = TempFileManager.getTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
-            writer.header(align.aligner);
+            writer.header(align.aligner, null);
             for (VDJCAlignments alignment : align.alignments)
                 writer.write(alignment);
         }

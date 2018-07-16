@@ -117,10 +117,10 @@ public class ActionInfo implements Action {
 
         @Parameter(description = "Output information as table.",
                 names = {"-t", "--table"})
-        public Boolean tableView = null;
+        public boolean tableView = false;
 
         public boolean isTableView() {
-            return tableView != null && tableView;
+            return tableView;
         }
 
         public FilesType getType() {

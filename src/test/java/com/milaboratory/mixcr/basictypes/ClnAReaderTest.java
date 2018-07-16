@@ -31,7 +31,7 @@ public class ClnAReaderTest {
         AlignmentsMappingMerger merged = new AlignmentsMappingMerger(align.resultReader(), assemble.cloneAssembler.getAssembledReadsPort());
 
         File file = TempFileManager.getTempFile();
-        ClnAWriter writer = new ClnAWriter(file);
+        ClnAWriter writer = new ClnAWriter(null, file);
         writer.writeClones(assemble.cloneSet);
         writer.sortAlignments(merged, align.alignments.size());
         writer.writeAlignmentsAndIndex();
@@ -65,7 +65,7 @@ public class ClnAReaderTest {
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
 
         File file = TempFileManager.getTempFile();
-        ClnAWriter writer = new ClnAWriter(file);
+        ClnAWriter writer = new ClnAWriter(null, file);
         writer.writeClones(new CloneSet(Collections.EMPTY_LIST, align.usedGenes,
                 align.parameters.alignerParameters.getFeaturesToAlignMap(),
                 align.parameters.alignerParameters,
