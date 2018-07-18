@@ -68,13 +68,16 @@ import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.*;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import static cc.redberry.pipe.CUtils.chunked;
 import static cc.redberry.pipe.CUtils.unchunked;
 
 public class ActionAlign extends AbstractActionWithResumeOption {
     private final AlignParameters actionParameters;
+    static final Pattern libraryNameEnding = Pattern.compile("\\.json(?:\\.gz|)$");
 
     public ActionAlign(AlignParameters actionParameters) {
         this.actionParameters = actionParameters;
@@ -495,10 +498,14 @@ public class ActionAlign extends AbstractActionWithResumeOption {
 
         private VDJCLibrary vdjcLibrary = null;
 
+        public String getLibraryName() {
+            return libraryNameEnding.matcher(library).replaceAll("");
+        }
+
         public VDJCLibrary getLibrary() {
             return vdjcLibrary != null
                     ? vdjcLibrary
-                    : (vdjcLibrary = VDJCLibraryRegistry.getDefault().getLibrary(library, species));
+                    : (vdjcLibrary = VDJCLibraryRegistry.getDefault().getLibrary(getLibraryName(), species));
         }
 
         public boolean getWriteAllResults() {
@@ -543,6 +550,10 @@ public class ActionAlign extends AbstractActionWithResumeOption {
                 throw new ParameterException("Wrong input for --not-aligned-R1,2");
             if (failedReadsR1 != null && (failedReadsR2 != null) != isInputPaired())
                 throw new ParameterException("Option --not-aligned-R2 is not set.");
+            if(library.contains("/") || library.contains("\\"))
+                throw new ParameterException("Library name can't be a path. Place your library to one of the " +
+                        "library search locations (e.g. '" + Paths.get(System.getProperty("user.home"), ".mixcr", "libraries", "mylibrary.json").toString() +
+                        "', and put just a library name as -b / --library option value (e.g. '--library mylibrary').");
             if (!printWarnings() && verbose())
                 throw new ParameterException("-nw/--no-warnings and --verbose options are not compatible.");
             super.validate();
