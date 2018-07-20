@@ -50,6 +50,15 @@ MiXCR is free for academic and non-profit use (see :ref:`License <license>`).
    importSegments
    newAligner
 
+.. _cloud:
+
+.. toctree::
+   :hidden:
+   :caption: Cloud
+   :maxdepth: 1
+
+   BaseSpaceApp
+
 .. _in-depth-topics:
 
 .. toctree::

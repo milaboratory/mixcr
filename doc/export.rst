@@ -616,7 +616,7 @@ This will add a column with a full enumeration of all reads that were clustered 
 |   ...    |             | ...            | ... | ...                            |
 +----------+-------------+----------------+-----+--------------------------------+
 
-Note, the resulting txt file may be _very large_ since all read numbers that were successfully assembled will be printed.
+Note, the resulting txt file may be _ very large _ since all read numbers that were successfully assembled will be printed.
 
 
 Finally, you can export reads aggregated by clone into separate ``.fastq`` files. To support this behaviour the :ref:`align <ref-align>` command needs to be run with the additional ``-g`` option:
