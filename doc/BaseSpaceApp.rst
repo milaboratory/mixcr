@@ -7,12 +7,12 @@
 MiXCR Immune Repertoire Analyzer @ BaseSpace®
 =============================================
 
-If your data is deposited at the BaseSpace cloud platform you can perform repertoire extraction and calculate common analysis metrics like V/J usage, without leaving BaseSpace, with the use of MiXCR Immune Repertoire Analyzer app (this `link <https://basespace.illumina.com/apps/5538533/MiXCR-Immune-Repertoire-Analyzer>`_ works if you are logged in into base space, and `this one <https://www.illumina.com/products/by-type/informatics-products/basespace-sequence-hub/apps/milaboratory-mixcr-immune-repertoire-analyzer.html>`_ points to the overview page available without authentication).
+If your data is deposited at the BaseSpace cloud platform you can perform repertoire extraction and calculate common analysis metrics like V/J usage, without leaving BaseSpace UI. MiXCR Immune Repertoire Analyzer app is available for all BaseSpace users (this `link <https://basespace.illumina.com/apps/5538533/MiXCR-Immune-Repertoire-Analyzer>`_ works if you are logged in into base space, and `this one <https://www.illumina.com/products/by-type/informatics-products/basespace-sequence-hub/apps/milaboratory-mixcr-immune-repertoire-analyzer.html>`_ points to the overview page available without authentication).
 
 Input
 -----
 
-User interface of MiXCR Immune Repertoire Analyzer was specifically optimized to set up best possible analysis pipeline with the minimal possible set of parameters, covering most part of the sequencing data types TCR/IG repertoires can be extracted from.
+User interface of MiXCR Immune Repertoire Analyzer was specifically optimized to set up best possible analysis pipeline with the minimal possible set of parameters, covering majority of the sequencing data types, TCR/IG repertoires can be extracted from.
 
 The list of possible sequencing material sources include, but is not limited to:
 
@@ -27,21 +27,21 @@ Parameters
 Starting material
 ^^^^^^^^^^^^^^^^^
 
-Sets the type of starting material (RNA or Genomic DNA) of the library. This determines whether MiXCR will look for V intron.
+Sets the type of starting material (RNA or Genomic DNA) of the library. This determines whether MiXCR will look for V introns.
 
 Library type
 ^^^^^^^^^^^^
 
-This option determines whether the data will be treated as amplicon library with the same relative sequence architecture across all reads, where CDR3 is fully covered by each reads. Or, randomly shred library like RNA-Seq or WGS, so MiXCR will perform assembly of target molecules from several reads.
+This option determines whether the data will be treated as amplicon library with the same relative sequence architecture across all reads, where CDR3 is fully covered by each read. Or, randomly shred library like RNA-Seq or WGS, so MiXCR will perform assembly of target molecules from several reads.
 
-"Random fragments" option works well for shallow libraries like RNA-Seq of solid tissue or sorted cell population, but if the library is too reach with the target molecules (e.g. library was additionally enriched using bait probes), using this option may drastically degrade both computational and "analytical" performance. In this case, select "Targeted TCR/IG library", no partial CDR3 assembly will be performed, still sequences extracted from reads with full coverage of CDR3, should be enough for the analysis.
+"Random fragments" option works well for shallow libraries like RNA-Seq of solid tissue or sorted cell populations, but if the library is too reach with the target molecules (e.g. library was additionally enriched using bait probes), using this option may drastically degrade both computational and "analytical" performance. In this case, select "Targeted TCR/IG library", no partial CDR3 assembly will be performed, still, sequences extracted from reads with full CDR3 coverage, should be enough for the analysis.
 
 Targeted Library Parameters: 5’-end of the library
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you specify the library may contain V primer sequence on the 5' end, and it was not trimmed (see "Presence of PCR primers and/or adapter sequences"), alignment of V genes will not be forcefully extended to the left side, and clonotypes with the same clonal sequence (specified in "Target region") but different V gene will not be separated into individual records.
+If you specify the library may contain V primer sequence on the 5' end, and it was not trimmed (see "Presence of PCR primers and/or adapter sequences"), alignment of V genes will not be forcefully extended to the left side and clonotypes with the same clonal sequence (specified in "Target region") but different V gene will not be separated into individual records.
 
-Primers for some segments if accidentally annealed to non-target region may introduce chimeric sequences, and prevent exact V gene assignment, thus generating artificial clonotypes differing by only V gene assigned. Splitting by V gene is turned of to prevent this.
+Primers for some segments if accidentally annealed to non-target region may introduce chimeric sequences, and prevent exact V gene assignment, thus generating artificial clonotypes differing by only V gene assigned. Clonotype splitting by V gene is turned off to prevent generation of this type of artificial diversity.
 
 Targeted Library Parameters: 3’-end of the library
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -90,5 +90,15 @@ MiXCR Immune Repertoire Analyzer produces tab separated tables containing compre
   - Assigned V/D/J/C genes, among with corresponding aggregated alignment scoring
   - Encoded alignments of V/J/C genes inside clonal sequence
 
-MiXCR Immune Repertoire Analyzer also contains useful statistics and corresponding charts for the clonesets produced with VDJTools.
+MiXCR Immune Repertoire Analyzer also contains useful statistics and corresponding charts for the clonesets produced with `VDJTools <https://github.com/mikessh/vdjtools>`_ .
+
+Graphical output is available for:
+
+  - Overall analysis statistics: total number of processed sequence, successfully aligned sequences, and number of sequences passed different clonotype assembling stages
+  - V and J usage
+  - Spectratype, marked with major clonotypes
+  - Spectratype, marked with V gene usage
+  - Quantile statistics
+  - And the table of top clonotypes marked wit V, D and J genes
+
 
