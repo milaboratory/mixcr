@@ -36,6 +36,8 @@ import com.milaboratory.primitivio.PrimitivO;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
+import net.jpountz.lz4.LZ4BlockOutputStream;
+import net.jpountz.lz4.LZ4Factory;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,11 +46,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
-    static final String MAGIC_V11 = "MiXCR.VDJC.V11";
-    static final String MAGIC = MAGIC_V11;
+    static final int COMPRESSION_BLOCK_SIZE = 1048576; // 1MB
+    static final String MAGIC_V12 = "MiXCR.VDJC.V12";
+    static final String MAGIC = MAGIC_V12;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
-    final PrimitivO output;
+    final OutputStream rawOutput;
+    PrimitivO mainOutput = null;
     long numberOfProcessedReads = -1;
     boolean header = false, closed = false;
 
@@ -61,7 +65,7 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     }
 
     public VDJCAlignmentsWriter(OutputStream output) {
-        this.output = new PrimitivO(output);
+        this.rawOutput = output;
     }
 
     @Override
@@ -88,38 +92,48 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     }
 
     @Override
-    public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes, PipelineConfiguration ppConfiguration) {
+    public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes,
+                       PipelineConfiguration ppConfiguration) {
         if (parameters == null || genes == null)
             throw new IllegalArgumentException();
 
         if (header)
-            throw new IllegalStateException();
+            throw new IllegalStateException("Header already written.");
+
+        PrimitivO outputNotCompressed = new PrimitivO(rawOutput);
+
+        // Writing meta data using raw stream for easy reconstruction with simple tools like hex viewers
 
         // Writing magic bytes
         assert MAGIC_BYTES.length == MAGIC_LENGTH;
-        output.write(MAGIC_BYTES);
+        outputNotCompressed.write(MAGIC_BYTES);
 
         // Writing version information
-        output.writeUTF(
+        outputNotCompressed.writeUTF(
                 MiXCRVersionInfo.get().getVersionString(
                         MiXCRVersionInfo.OutputType.ToFile));
 
         // Writing parameters
-        output.writeObject(parameters);
+        outputNotCompressed.writeObject(parameters);
 
         // Writing history
         if (ppConfiguration != null)
             this.pipelineConfiguration = ppConfiguration;
-        output.writeObject(pipelineConfiguration);
+        outputNotCompressed.writeObject(pipelineConfiguration);
 
-        IOUtil.writeAndRegisterGeneReferences(output, genes, parameters);
+        // Initialization of main stream, compressed with LZ4 algorithm
+
+        mainOutput = new PrimitivO(new LZ4BlockOutputStream(rawOutput, COMPRESSION_BLOCK_SIZE,
+                LZ4Factory.fastestInstance().fastCompressor()));
+
+        IOUtil.writeAndRegisterGeneReferences(mainOutput, genes, parameters);
 
         // Registering links to features to align
         for (GeneType gt : GeneType.VDJC_REFERENCE) {
             GeneFeature feature = parameters.getFeatureToAlign(gt);
-            output.writeObject(feature);
+            mainOutput.writeObject(feature);
             if (feature != null)
-                output.putKnownObject(feature);
+                mainOutput.putKnownObject(feature);
         }
 
         header = true;
@@ -133,15 +147,19 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
         if (alignment == null)
             throw new NullPointerException();
 
-        output.writeObject(alignment);
+        mainOutput.writeObject(alignment);
     }
 
     @Override
     public void close() {
         if (!closed) {
-            output.writeObject(null);
-            output.writeLong(numberOfProcessedReads);
-            output.close();
+            // Sign of stream termination
+            mainOutput.writeObject(null);
+            // Number of processed reads is known only in the end of analysis
+            // Writing it as last piece of information in the stream
+            mainOutput.writeLong(numberOfProcessedReads);
+            // This will also finish LZ4 stream
+            mainOutput.close();
             closed = true;
         }
     }

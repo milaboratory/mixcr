@@ -30,12 +30,10 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPortCloseable;
-import com.milaboratory.core.io.CompressionType;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.CountingInputStream;
-import gnu.trove.list.array.TLongArrayList;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
@@ -50,9 +48,9 @@ import java.util.Objects;
 import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.*;
 
 public final class VDJCAlignmentsReader implements
-                                        PipelineConfigurationReader,
-                                        OutputPortCloseable<VDJCAlignments>,
-                                        CanReportProgress {
+        PipelineConfigurationReader,
+        OutputPortCloseable<VDJCAlignments>,
+        CanReportProgress {
     private static final int DEFAULT_BUFFER_SIZE = 1048576; // 1 MB
     VDJCAlignerParameters parameters;
     PipelineConfiguration pipelineConfiguration;
@@ -66,8 +64,6 @@ public final class VDJCAlignmentsReader implements
     long counter = 0;
     final long size;
     final CountingInputStream countingInputStream;
-    final CountingInputStream indexingStream;
-    volatile TLongArrayList index = null;
 
     public VDJCAlignmentsReader(String fileName) throws IOException {
         this(new File(fileName), VDJCLibraryRegistry.getDefault());
@@ -82,17 +78,8 @@ public final class VDJCAlignmentsReader implements
     }
 
     public VDJCAlignmentsReader(File file, VDJCLibraryRegistry vdjcRegistry) throws IOException {
-        CompressionType ct = CompressionType.detectCompressionType(file);
-        this.countingInputStream = new CountingInputStream(new FileInputStream(file));
-        if (ct == CompressionType.None)
-            this.input = new PrimitivI(indexingStream = new CountingInputStream(
-                    new BufferedInputStream(countingInputStream, DEFAULT_BUFFER_SIZE)));
-        else {
-            this.input = new PrimitivI(ct.createInputStream(countingInputStream, DEFAULT_BUFFER_SIZE));
-            indexingStream = null;
-        }
-        this.vdjcRegistry = vdjcRegistry;
-        this.size = file.length();
+        this(new BufferedInputStream(new FileInputStream(file), DEFAULT_BUFFER_SIZE),
+                vdjcRegistry, file.length());
     }
 
     public VDJCAlignmentsReader(InputStream input) {
@@ -108,8 +95,7 @@ public final class VDJCAlignmentsReader implements
     }
 
     public VDJCAlignmentsReader(InputStream input, VDJCLibraryRegistry vdjcRegistry, long size) {
-        this.input = new PrimitivI(indexingStream = countingInputStream =
-                new CountingInputStream(input));
+        this.input = new PrimitivI(countingInputStream = new CountingInputStream(input));
         this.vdjcRegistry = vdjcRegistry;
         this.size = size;
     }
@@ -118,14 +104,7 @@ public final class VDJCAlignmentsReader implements
         this.input = new PrimitivI(input);
         this.vdjcRegistry = vdjcRegistry;
         this.countingInputStream = null;
-        this.indexingStream = null;
         this.size = 0;
-    }
-
-    public void setIndexer(TLongArrayList index) {
-        if (indexingStream == null)
-            throw new IllegalStateException("Can't index compressed file.");
-        this.index = index;
     }
 
     public void init() {
@@ -256,16 +235,11 @@ public final class VDJCAlignmentsReader implements
 
         init();
 
-        if (index != null)
-            index.add(indexingStream.getBytesRead());
-
         VDJCAlignments alignments = input.readObject(VDJCAlignments.class);
 
-        if (alignments == null) {
-            if (index != null)
-                index.removeAt(index.size() - 1);
+        if (alignments == null)
             close(true);
-        } else
+        else
             alignments.setAlignmentsIndex(counter++);
 
         return alignments;
