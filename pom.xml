@@ -248,6 +248,12 @@
                                     </includes>
                                 </filter>
                                 <filter>
+                                    <artifact>org.lz4:lz4-java</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
                                     <artifact>log4j:log4j</artifact>
                                     <includes>
                                         <include>**</include>
