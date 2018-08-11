@@ -33,27 +33,36 @@ import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivO;
+import com.milaboratory.primitivio.PrimitivOState;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
-import net.jpountz.lz4.LZ4BlockOutputStream;
-import net.jpountz.lz4.LZ4Factory;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
 public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
-    static final int COMPRESSION_BLOCK_SIZE = 1048576; // 1MB
+    static final int DEFAULT_ALIGNMENTS_IN_BLOCK = 1024; // 1024 alignments * 805 bytes per alignment ~  824 kB per block
     static final String MAGIC_V12 = "MiXCR.VDJC.V12";
     static final String MAGIC = MAGIC_V12;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
+
+    /**
+     * Raw underlying output stream
+     */
     final OutputStream rawOutput;
-    PrimitivO mainOutput = null;
+
+    // Alignments are buffered before writing to the stream
+    final ArrayList<VDJCAlignments> buffer = new ArrayList<>(DEFAULT_ALIGNMENTS_IN_BLOCK);
+
     long numberOfProcessedReads = -1;
+
+    PrimitivOState mainOutputState;
     boolean header = false, closed = false;
 
     public VDJCAlignmentsWriter(String fileName) throws IOException {
@@ -100,52 +109,62 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
         if (header)
             throw new IllegalStateException("Header already written.");
 
-        PrimitivO outputNotCompressed = new PrimitivO(rawOutput);
+        PrimitivO output = new PrimitivO(rawOutput);
 
         // Writing meta data using raw stream for easy reconstruction with simple tools like hex viewers
 
         // Writing magic bytes
         assert MAGIC_BYTES.length == MAGIC_LENGTH;
-        outputNotCompressed.write(MAGIC_BYTES);
+        output.write(MAGIC_BYTES);
 
         // Writing version information
-        outputNotCompressed.writeUTF(
+        output.writeUTF(
                 MiXCRVersionInfo.get().getVersionString(
                         MiXCRVersionInfo.OutputType.ToFile));
 
         // Writing parameters
-        outputNotCompressed.writeObject(parameters);
+        output.writeObject(parameters);
 
         // Writing history
         if (ppConfiguration != null)
             this.pipelineConfiguration = ppConfiguration;
-        outputNotCompressed.writeObject(pipelineConfiguration);
+        output.writeObject(pipelineConfiguration);
 
         // Initialization of main stream, compressed with LZ4 algorithm
 
-        mainOutput = new PrimitivO(new LZ4BlockOutputStream(rawOutput, COMPRESSION_BLOCK_SIZE,
-                LZ4Factory.fastestInstance().fastCompressor()));
+        // LZ4Compressor compressor = LZ4Factory.fastestInstance().highCompressor();
+        // compressor.compress()
+        // mainOutput = new PrimitivO(new LZ4BlockOutputStream(rawOutput, DEFAULT_ALIGNMENTS_IN_BLOCK,
+        //         compressor));
 
-        IOUtil.writeAndRegisterGeneReferences(mainOutput, genes, parameters);
+        IOUtil.writeAndRegisterGeneReferences(output, genes, parameters);
 
         // Registering links to features to align
         for (GeneType gt : GeneType.VDJC_REFERENCE) {
             GeneFeature feature = parameters.getFeatureToAlign(gt);
-            mainOutput.writeObject(feature);
+            output.writeObject(feature);
             if (feature != null)
-                mainOutput.putKnownObject(feature);
+                output.putKnownObject(feature);
         }
 
+        // Saving output state
+        mainOutputState = output.getState();
         header = true;
     }
 
     @Override
-    public void write(VDJCAlignments alignment) {
+    public synchronized void write(VDJCAlignments alignment) {
         if (!header)
-            throw new IllegalStateException();
+            throw new IllegalStateException("Header not initialized.");
 
         if (alignment == null)
             throw new NullPointerException();
+
+        buffer.add(alignment);
+
+        if (buffer.size() == DEFAULT_ALIGNMENTS_IN_BLOCK) {
+
+        }
 
         mainOutput.writeObject(alignment);
     }

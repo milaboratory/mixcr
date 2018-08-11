@@ -31,11 +31,9 @@ package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
+import cc.redberry.pipe.blocks.Merger;
 import cc.redberry.pipe.blocks.ParallelProcessor;
-import cc.redberry.pipe.util.Chunk;
-import cc.redberry.pipe.util.CountLimitingOutputPort;
-import cc.redberry.pipe.util.Indexer;
-import cc.redberry.pipe.util.OrderedOutputPort;
+import cc.redberry.pipe.util.*;
 import com.beust.jcommander.DynamicParameter;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
@@ -226,8 +224,15 @@ public class ActionAlign extends AbstractActionWithResumeOption {
             final PairedEndReadsLayout readsLayout = alignerParameters.getReadsLayout();
 
             SmartProgressReporter.startProgressReport("Alignment", progress);
-            OutputPort<Chunk<? extends SequenceRead>> mainInputReads = CUtils.buffered((OutputPort) chunked(sReads, 64), 16);
-            OutputPort<VDJCAlignmentResult> alignments = unchunked(new ParallelProcessor(mainInputReads, chunked(aligner), actionParameters.threads));
+            Merger<Chunk<? extends SequenceRead>> mainInputReads = CUtils.buffered((OutputPort) chunked(sReads, 64), 16);
+            ParallelProcessor alignedChunks = new ParallelProcessor(mainInputReads, chunked(aligner), actionParameters.threads);
+            if (actionParameters.reportBuffers) {
+                BufferStatusReporter reporter = new BufferStatusReporter();
+                reporter.addBuffer("Input (chunked; chunk size = 64)", mainInputReads.getBufferStatusProvider());
+                reporter.addBuffer("Alignment result (chunked; chunk size = 64)", alignedChunks.getOutputBufferStatusProvider());
+                reporter.start();
+            }
+            OutputPort<VDJCAlignmentResult> alignments = unchunked(alignedChunks);
             for (VDJCAlignmentResult result : CUtils.it(
                     new OrderedOutputPort<>(alignments,
                             new Indexer<VDJCAlignmentResult>() {
@@ -434,6 +439,10 @@ public class ActionAlign extends AbstractActionWithResumeOption {
         @Parameter(description = "Write not aligned reads (R2).",
                 names = {"--not-aligned-R2"})
         public String failedReadsR2 = null;
+
+        @Parameter(description = "Buffers.",
+                names = {"--buffers"}, hidden = true)
+        public boolean reportBuffers;
 
         public String getSpecies() {
             return species;
