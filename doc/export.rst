@@ -124,6 +124,8 @@ The following fields are specific for clones:
 
 .. include:: ExportFieldsClone.rst
 
+See :ref:`this chapter <ref-translation>` for the translation rules used for options like: ``-aaFeature``.
+
 
 
 Default anchor point positions

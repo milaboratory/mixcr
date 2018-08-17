@@ -1,6 +1,8 @@
 Appendix
 ========
 
+.. _ref-translation:
+
 Translation rules
 -----------------
 
