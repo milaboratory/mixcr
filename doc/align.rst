@@ -50,7 +50,7 @@ The following table contains description of command line options for ``align``:
 
     * - ``-r {file}`` |br| ``--report ...``
       -
-      - Report file name. If this option is not specified, no report file be produced. See below for detailed description of report fields.
+      - Report file name. If this option is not specified, no report file be produced. See :ref:`below <ref-align-report>` for detailed description of report fields.
 
     * - ``-с {chain}`` |br| ``--chains ...``
       - ``ALL``

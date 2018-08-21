@@ -90,7 +90,8 @@ The command line options of ``assemble`` are the following:
 | ``-h``, ``--help``                  |                               | Print help message.                                                            |
 +-------------------------------------+-------------------------------+--------------------------------------------------------------------------------+
 | ``-r {file}`` |br|                  |                               | Report file name. If this option is not specified, no report file be produced. |
-| ``--report ...``                    |                               |                                                                                |
+| ``--report ...``                    |                               | See :ref:`below <ref-assemble-report>` for detailed description of report      |
+|                                     |                               | fields.                                                                        |
 +-------------------------------------+-------------------------------+--------------------------------------------------------------------------------+
 | ``-t {numberOfProcessors}`` |br|    | number of available CPU cores | Number of processing threads.                                                  |
 | ``--threads ...``                   |                               |                                                                                |
@@ -307,6 +308,8 @@ In order to turn off clustering one should use the following parameters:
 
 ..     mixcr assemble -OcloneFactoryParameters.vParameters.alignmentParameters.scoring.gapPenalty=-5 \
 ..                    alignments.vdjca output.clns
+
+.. _ref-assemble-report:
 
 Report
 ------
