@@ -1,1 +1,0 @@
-Fixes rare inconsistency in behaviour between paired-end and single-end aligners, clone assembler and partial sequence assembler in respect to target D gene set selection based on the chains on V, J and C genes (#408)
