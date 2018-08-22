@@ -59,14 +59,14 @@ public abstract class VDJCAlignerAbstract<R extends SequenceRead> extends VDJCAl
     }
 
     VDJCAlignerAbstract(boolean initialized,
-                               VDJCAlignerParameters parameters,
-                               EnumMap<GeneType, List<VDJCGene>> genesToAlign,
-                               List<VDJCGene> usedGenes,
-                               SingleDAligner singleDAligner,
-                               EnumMap<GeneType, HashMap<String, BitArray>> filters,
-                               BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> vAligner,
-                               BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> jAligner,
-                               BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> cAligner) {
+                        VDJCAlignerParameters parameters,
+                        EnumMap<GeneType, List<VDJCGene>> genesToAlign,
+                        List<VDJCGene> usedGenes,
+                        SingleDAligner singleDAligner,
+                        EnumMap<GeneType, HashMap<String, BitArray>> filters,
+                        BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> vAligner,
+                        BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> jAligner,
+                        BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>> cAligner) {
         super(initialized, parameters, genesToAlign, usedGenes);
         this.singleDAligner = singleDAligner;
         this.filters = filters;
