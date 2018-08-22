@@ -297,7 +297,7 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
             if (vAl == null || jAl == null || singleDAligner == null)
                 dResult = new VDJCHit[0];
             else
-                dResult = singleDAligner.align(targets[dGeneTarget].getSequence(), getPossibleDLoci(vResult, jResult),
+                dResult = singleDAligner.align(targets[dGeneTarget].getSequence(), getPossibleDLoci(vResult, jResult, null),
                         vAl.getSequence2Range().getTo(),
                         jAl.getSequence2Range().getFrom(),
                         dGeneTarget, nReads);

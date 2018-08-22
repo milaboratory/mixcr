@@ -1,4 +1,12 @@
 
+MiXCR 2.1.12 (22 Aug 2018)
+========================
+
+-- Fixes rare inconsistency in behaviour between paired-end and single-end aligners, clone 
+   assembler and partial sequence assembler in respect to target D gene set selection based on the 
+   chains on V, J and C genes (#408)
+
+
 MiXCR 2.1.11 (15 Jun 2018)
 ========================
 

@@ -32,6 +32,7 @@ package com.milaboratory.mixcr.assembler;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.milaboratory.mixcr.basictypes.ClonalUpdatableParameters;
@@ -93,25 +94,25 @@ public final class CloneFactoryParameters implements java.io.Serializable {
     }
 
     @JsonProperty("vParameters")
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public VJCClonalAlignerParameters getVParameters() {
         return vdcParameters.get(GeneType.Variable);
     }
 
     @JsonProperty("jParameters")
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public VJCClonalAlignerParameters getJParameters() {
         return vdcParameters.get(GeneType.Joining);
     }
 
     @JsonProperty("cParameters")
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public VJCClonalAlignerParameters getCParameters() {
         return vdcParameters.get(GeneType.Constant);
     }
 
     @JsonProperty("dParameters")
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public DClonalAlignerParameters getDParameters() {
         return dParameters;
     }
