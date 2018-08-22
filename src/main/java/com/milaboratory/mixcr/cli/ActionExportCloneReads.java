@@ -156,9 +156,11 @@ public final class ActionExportCloneReads implements Action {
     }
 
     @Parameters(commandDescription = "Export reads for particular clones from \"clones & alignments\" file. " +
-            "Output file name will be modified to '_R1'/'_R2' in case of paired end reads.")
+            "Output file name will be modified to '_R1'/'_R2' in case of paired end reads. Use cloneId = -1 to " +
+            "export alignments not assigned to any clone. If no clone ids are specified (only input and output " +
+            "filenames are specified) all reads assigned to clonotypes will be exported.")
     public static final class ExtractCloneParameters extends ActionParameters {
-        @Parameter(description = "clonesAndAlignments.clna [clone1 [clone2 [clone3]]] ... output[.fastq[.gz]|.fasta]")
+        @Parameter(description = "clonesAndAlignments.clna [cloneId1 [cloneId2 [cloneId3]]] ... output[.fastq[.gz]|.fasta]")
         public List<String> parameters;
 
         @Parameter(description = "Create separate files for each clone. _clnN, where N is clone index will be added to the file name.",
