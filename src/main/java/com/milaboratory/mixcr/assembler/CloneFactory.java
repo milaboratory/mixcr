@@ -229,7 +229,8 @@ class CloneFactory {
         if (from < to)
             hits.put(GeneType.Diversity,
                     dAligner.align(sequenceToAlign,
-                            VDJCAligner.getPossibleDLoci(hits.get(GeneType.Variable), hits.get(GeneType.Joining)),
+                            VDJCAligner.getPossibleDLoci(hits.get(GeneType.Variable), hits.get(GeneType.Joining),
+                                    null),
                             from, to, indexOfAssemblingFeatureWithD,
                             assemblingFeatures.length));
         else

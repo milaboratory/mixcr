@@ -338,17 +338,6 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
         public void alignDC() {
             NucleotideSequence sequence = target.targets[0].getSequence();
 
-            if (singleDAligner != null && hasKVAndJHits()) {
-                //Alignment of D gene
-                int from = vResult.get(0).getAlignment().getSequence2Range().getTo(),
-                        to = jResult.get(0).getAlignment().getSequence2Range().getFrom();
-                List<PreVDJCHit> dResult = from > to ?
-                        Collections.<PreVDJCHit>emptyList() :
-                        singleDAligner.align0(sequence, getPossibleDLoci(), from, to);
-                dHits = PreVDJCHit.convert(getDGenesToAlign(),
-                        parameters.getFeatureToAlign(GeneType.Diversity), dResult);
-            }
-
             boolean doCAlignment = cAligner != null;
 
             if (parameters.getAllowNoCDR3PartAlignments())
@@ -367,6 +356,21 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
                 cHits = createHits(res.getHits(), parameters.getFeatureToAlign(GeneType.Constant));
             } else
                 cHits = new VDJCHit[0];
+
+            if (singleDAligner != null && hasKVAndJHits()) {
+                //Alignment of D gene
+                int from = vResult.get(0).getAlignment().getSequence2Range().getTo(),
+                        to = jResult.get(0).getAlignment().getSequence2Range().getFrom();
+                List<PreVDJCHit> dResult = from > to ?
+                        Collections.<PreVDJCHit>emptyList() :
+                        singleDAligner.align0(sequence, getPossibleDLoci(
+                                wrapAlignmentHits(vHits),
+                                wrapAlignmentHits(jHits), cHits),
+                                from, to);
+                dHits = PreVDJCHit.convert(getDGenesToAlign(),
+                        parameters.getFeatureToAlign(GeneType.Diversity), dResult);
+            }
+
         }
 
         public boolean hasNoKVNorKJHits() {
@@ -409,15 +413,6 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
             if (parameters.doIncludeCScore() && cHits != null && cHits.length > 0)
                 score += cHits[0].getScore();
             return score;
-        }
-
-        public Chains getPossibleDLoci() {
-            Chains chains = new Chains();
-            for (AlignmentHit<NucleotideSequence, VDJCGene> vHit : vResult)
-                chains = chains.merge(vHit.getRecordPayload().getChains());
-            for (AlignmentHit<NucleotideSequence, VDJCGene> jHit : jResult)
-                chains = chains.merge(jHit.getRecordPayload().getChains());
-            return chains;
         }
 
         public VDJCAlignments toVDJCAlignments(long inputId) {

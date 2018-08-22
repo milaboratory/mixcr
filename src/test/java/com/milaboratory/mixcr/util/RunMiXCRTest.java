@@ -60,7 +60,8 @@ public class RunMiXCRTest {
         RunMiXCR.AssembleResult assemble = RunMiXCR.assemble(align);
 
         for (Clone clone : assemble.cloneSet.getClones()) {
-            Chains vjLoci = VDJCAligner.getPossibleDLoci(clone.getHits(GeneType.Variable), clone.getHits(GeneType.Joining));
+            Chains vjLoci = VDJCAligner.getPossibleDLoci(clone.getHits(GeneType.Variable), clone.getHits(GeneType.Joining),
+                    null);
             for (VDJCHit dHit : clone.getHits(GeneType.Diversity))
                 Assert.assertTrue(vjLoci.intersects(dHit.getGene().getChains()));
         }
@@ -117,7 +118,7 @@ public class RunMiXCRTest {
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
 
         List<PairedRead> reads = new ArrayList<>();
-        try(PairedFastqReader fReader = new PairedFastqReader(
+        try (PairedFastqReader fReader = new PairedFastqReader(
                 RunMiXCR.class.getResource("/sequences/test_R1.fastq").getFile(),
                 RunMiXCR.class.getResource("/sequences/test_R2.fastq").getFile())) {
             for (PairedRead s : CUtils.it(fReader))
@@ -125,13 +126,13 @@ public class RunMiXCRTest {
         }
 
         File tempFile = TempFileManager.getTempFile();
-        try(VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
+        try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
             writer.header(align.aligner);
             for (VDJCAlignments alignment : align.alignments)
                 writer.write(alignment);
         }
 
-        try(VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile)) {
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile)) {
             int tr = 0;
             for (VDJCAlignments alignment : CUtils.it(reader)) {
                 PairedRead actual = reads.get((int) alignment.getReadId());
@@ -154,7 +155,7 @@ public class RunMiXCRTest {
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
 
         List<PairedRead> reads = new ArrayList<>();
-        try(PairedFastqReader fReader = new PairedFastqReader(
+        try (PairedFastqReader fReader = new PairedFastqReader(
                 "/Users/poslavsky/Projects/milab/temp/R1_part.fastq.gz",
                 "/Users/poslavsky/Projects/milab/temp/R2_part.fastq.gz", true)) {
             for (PairedRead s : CUtils.it(fReader))
@@ -162,13 +163,13 @@ public class RunMiXCRTest {
         }
 
         File tempFile = TempFileManager.getTempFile();
-        try(VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
+        try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
             writer.header(align.aligner);
             for (VDJCAlignments alignment : align.alignments)
                 writer.write(alignment);
         }
 
-        try(VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile)) {
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile)) {
             int tr = 0;
             for (VDJCAlignments alignment : CUtils.it(reader)) {
                 PairedRead actual = reads.get((int) alignment.getReadId());
