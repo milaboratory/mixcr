@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * Copyright (c) 2014-2018, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
  * (here and after addressed as Inventors)
  * All Rights Reserved
  *
@@ -10,8 +10,9 @@
  * three paragraphs appear in all copies.
  *
  * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact the Inventors using one of the following
- * email addresses: chudakovdm@mail.ru, chudakovdm@gmail.com
+ * commercial purposes should contact MiLaboratory LLC, which owns exclusive
+ * rights for distribution of this program for commercial purposes, using the
+ * following email address: licensing@milaboratory.com.
  *
  * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
  * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
@@ -378,7 +379,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
 
         boolean vChimera = checkAndEliminateChimera(vAl1, vAl2, GeneType.Variable);
 
-        PairedHit[] vHits = extractDoubleHits(vAl1, vAl2);
+        PairedHit[] vHits = createPairedHits(vAl1, vAl2);
 
         /*
          * Step 2: of round of V gene alignment with more precise algorithm
@@ -445,7 +446,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
 
         boolean jChimera = checkAndEliminateChimera(jAl1, jAl2, GeneType.Joining);
 
-        PairedHit[] jHits = extractDoubleHits(jAl1, jAl2);
+        PairedHit[] jHits = createPairedHits(jAl1, jAl2);
 
         for (PairedHit jHit : jHits) {
             if (jHit.hit0 == null) {
@@ -596,7 +597,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     /**
      * Converts two AlignmentResults to an array of paired hits (each paired hit for a particular V of J gene)
      */
-    static PairedHit[] extractDoubleHits(List<AlignmentHit<NucleotideSequence, VDJCGene>>... results) {
+    static PairedHit[] createPairedHits(List<AlignmentHit<NucleotideSequence, VDJCGene>>... results) {
         Map<VDJCGeneId, PairedHit> hits = new HashMap<>();
         addHits(hits, results[0], 0);
         addHits(hits, results[1], 1);
@@ -622,28 +623,6 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
 
             val.set(index, hit);
         }
-    }
-
-    static Chains getVJCommonChains(final PairedHit[] vHits, final PairedHit[] jHits) {
-        return getChains(vHits).intersection(getChains(jHits));
-    }
-
-    static Chains getChains(final PairedHit[] hits) {
-        if (hits.length == 0)
-            return Chains.ALL;
-        Chains chains = hits[0].getGene().getChains();
-        for (int i = 1; i < hits.length; i++)
-            chains = chains.merge(hits[i].getGene().getChains());
-        return chains;
-    }
-
-    static Chains getChains(final VDJCHit[] hits) {
-        if (hits.length == 0)
-            return Chains.ALL;
-        Chains chains = hits[0].getGene().getChains();
-        for (int i = 1; i < hits.length; i++)
-            chains = chains.merge(hits[i].getGene().getChains());
-        return chains;
     }
 
     static final PreVDJCHit[] zeroArray = new PreVDJCHit[0];
@@ -831,39 +810,6 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
             }
         }
     }
-
-    public static Chains getPossibleDLoci(PairedHit[] vHits, PairedHit[] jHits, VDJCHit[] cHits) {
-        Chains intersection = getChains(vHits)
-                .intersection(getChains(jHits))
-                .intersection(getChains(cHits));
-
-        if (!intersection.isEmpty())
-            return intersection;
-
-        // If intersection is empty, we are working with chimer
-        // lets calculate all possible D loci
-        Chains chains = new Chains();
-        for (PairedHit h : vHits)
-            chains = chains.merge(h.getGene().getChains());
-        for (PairedHit h : jHits)
-            chains = chains.merge(h.getGene().getChains());
-        for (VDJCHit h : cHits)
-            chains = chains.merge(h.getGene().getChains());
-
-        return chains;
-    }
-
-    ///**
-    // * Converts array of "internal" PairedHits to a double array of KAlignmentHits to pass this value to a VDJAlignment
-    // * constructor (VDJAlignmentImmediate).
-    // */
-    //@SuppressWarnings("unchecked")
-    //static AlignmentHit<NucleotideSequence, Allele>[][] toArray(PairedHit[] hits) {
-    //    AlignmentHit<NucleotideSequence, Allele>[][] hitsArray = new AlignmentHit[hits.length][];
-    //    for (int i = 0; i < hits.length; ++i)
-    //        hitsArray[i] = new AlignmentHit[]{hits[i].hit0, hits[i].hit1};
-    //    return hitsArray;
-    //}
 
     /**
      * Calculates normal "sum" score for each hit and sort hits according to this score.

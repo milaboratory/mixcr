@@ -45,13 +45,13 @@ Currently there is no execution script or installer for Windows. Still MiXCR can
 - unzip the archive
 - use ``mixcr.jar`` from the archive in the following way:
 
-  .. code-block:: powershell
+  .. code-block:: console
 
     > java -Xmx4g -Xms3g -jar path_to_mixcr\jar\mixcr.jar ...
 
 For example:
 
-  .. code-block:: powershell
+  .. code-block:: console
 
     > java -Xmx4g -Xms3g -jar C:\path_to_mixcr\jar\mixcr.jar align input.fastq.gz output.vdjca
 

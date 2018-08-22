@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * Copyright (c) 2014-2018, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
  * (here and after addressed as Inventors)
  * All Rights Reserved
  *
@@ -10,8 +10,9 @@
  * three paragraphs appear in all copies.
  *
  * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact the Inventors using one of the following
- * email addresses: chudakovdm@mail.ru, chudakovdm@gmail.com
+ * commercial purposes should contact MiLaboratory LLC, which owns exclusive
+ * rights for distribution of this program for commercial purposes, using the
+ * following email address: licensing@milaboratory.com.
  *
  * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
  * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
@@ -339,17 +340,6 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
         public void alignDC() {
             NucleotideSequence sequence = target.targets[0].getSequence();
 
-            if (singleDAligner != null && hasKVAndJHits()) {
-                //Alignment of D gene
-                int from = vResult.get(0).getAlignment().getSequence2Range().getTo(),
-                        to = jResult.get(0).getAlignment().getSequence2Range().getFrom();
-                List<PreVDJCHit> dResult = from > to ?
-                        Collections.<PreVDJCHit>emptyList() :
-                        singleDAligner.align0(sequence, getPossibleDLoci(), from, to);
-                dHits = PreVDJCHit.convert(getDGenesToAlign(),
-                        parameters.getFeatureToAlign(GeneType.Diversity), dResult);
-            }
-
             boolean doCAlignment = cAligner != null;
 
             if (parameters.getAllowNoCDR3PartAlignments())
@@ -368,6 +358,21 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
                 cHits = createHits(res.getHits(), parameters.getFeatureToAlign(GeneType.Constant));
             } else
                 cHits = new VDJCHit[0];
+
+            if (singleDAligner != null && hasKVAndJHits()) {
+                //Alignment of D gene
+                int from = vResult.get(0).getAlignment().getSequence2Range().getTo(),
+                        to = jResult.get(0).getAlignment().getSequence2Range().getFrom();
+                List<PreVDJCHit> dResult = from > to ?
+                        Collections.<PreVDJCHit>emptyList() :
+                        singleDAligner.align0(sequence, getPossibleDLoci(
+                                wrapAlignmentHits(vHits),
+                                wrapAlignmentHits(jHits), cHits),
+                                from, to);
+                dHits = PreVDJCHit.convert(getDGenesToAlign(),
+                        parameters.getFeatureToAlign(GeneType.Diversity), dResult);
+            }
+
         }
 
         public boolean hasNoKVNorKJHits() {
@@ -410,15 +415,6 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
             if (parameters.doIncludeCScore() && cHits != null && cHits.length > 0)
                 score += cHits[0].getScore();
             return score;
-        }
-
-        public Chains getPossibleDLoci() {
-            Chains chains = new Chains();
-            for (AlignmentHit<NucleotideSequence, VDJCGene> vHit : vResult)
-                chains = chains.merge(vHit.getRecordPayload().getChains());
-            for (AlignmentHit<NucleotideSequence, VDJCGene> jHit : jResult)
-                chains = chains.merge(jHit.getRecordPayload().getChains());
-            return chains;
         }
 
         public VDJCAlignments toVDJCAlignments(long inputId, SequenceRead input) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * Copyright (c) 2014-2018, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
  * (here and after addressed as Inventors)
  * All Rights Reserved
  *
@@ -10,8 +10,9 @@
  * three paragraphs appear in all copies.
  *
  * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact the Inventors using one of the following
- * email addresses: chudakovdm@mail.ru, chudakovdm@gmail.com
+ * commercial purposes should contact MiLaboratory LLC, which owns exclusive
+ * rights for distribution of this program for commercial purposes, using the
+ * following email address: licensing@milaboratory.com.
  *
  * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
  * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
@@ -192,25 +193,25 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
     }
 
     @JsonProperty("vParameters")
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public KGeneAlignmentParameters getVAlignerParameters() {
         return getVJCGeneAlignerParameters(GeneType.Variable);
     }
 
     @JsonProperty("dParameters")
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public DAlignerParameters getDAlignerParameters() {
         return (DAlignerParameters) getGeneAlignerParameters(GeneType.Diversity);
     }
 
     @JsonProperty("jParameters")
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public KGeneAlignmentParameters getJAlignerParameters() {
         return getVJCGeneAlignerParameters(GeneType.Joining);
     }
 
     @JsonProperty("cParameters")
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public KGeneAlignmentParameters getCAlignerParameters() {
         return getVJCGeneAlignerParameters(GeneType.Constant);
     }

@@ -33,63 +33,60 @@ MiXCR supports ``fasta``, ``fastq``, ``fastq.gz`` and paired-end ``fastq`` and `
 Command line parameters
 -----------------------
 
+
 The following table contains description of command line options for ``align``:
 
-+-------------------------------------+----------------------------+------------------------------------------------------------+
-| Option                              | Default value              | Description                                                |
-+=====================================+============================+============================================================+
-| ``-h``, ``--help``                  |                            | Print help message.                                        |
-+-------------------------------------+----------------------------+------------------------------------------------------------+
-| ``-r {file}`` |br|                  |                            | Report file name. If this option is not                    |
-| ``--report ...``                    |                            | specified, no report file be produced.                     |
-+-------------------------------------+----------------------------+------------------------------------------------------------+
-| ``-с {chain}`` |br|                 | ``ALL``                    | Target immunological chain list separated by "``,``".      |
-| ``--chains ...``                    |                            | Available values: ``IGH``, ``IGL``, ``IGK``, ``TRA``,      |
-|                                     |                            | ``TRB``, ``TRG``, ``TRD``, ``IG`` (for all immunoglobulin  |
-|                                     |                            | chains), ``TCR`` (for all T-cell receptor chains), ``ALL`` |
-|                                     |                            | (for all chains) . It is highly recomended to use          |
-|                                     |                            | the default value for this parameter in most cases         |
-|                                     |                            | at the align step. Filltering is also possible at the      |
-|                                     |                            | export step.                                               |
-+-------------------------------------+----------------------------+------------------------------------------------------------+
-| ``-s {speciesName}`` |br|           | ``HomoSapiens``            | Species (organism). Possible values: ``hsa`` (or           |
-| ``--species ...``                   |                            | ``HomoSapiens``), ``mmu`` (or ``MusMusculus``), ``rat``    |
-|                                     |                            | (currently only ``TRB``, ``TRA`` and ``TRD`` are           |
-|                                     |                            | supported), or any species from imported IMGT |reg|        |
-|                                     |                            | library import as described here                           |
-|                                     |                            | :ref:`import segments <ref-importSegments>`                |
-+-------------------------------------+----------------------------+------------------------------------------------------------+
-| ``-p {parameterName}`` |br|         | ``default``                | Preset of parameters. Possible values: ``default`` and     |
-| ``--parameters ...``                |                            | ``rna-seq``. The ``rna-seq`` preset are specifically       |
-|                                     |                            | optimized for analysis of Rna-Seq data                     |
-|                                     |                            | :ref:`(see below) <ref-alignRNASeq>`                       |
-+-------------------------------------+----------------------------+------------------------------------------------------------+
-| ``-t {numberOfThreads}`` |br|       | number of                  | Number of processing threads.                              |
-| ``--threads ...``                   | available CPU cores        |                                                            |
-+-------------------------------------+----------------------------+------------------------------------------------------------+
-| ``-n {numberOfReads}`` |br|         |                            | Limit number of sequences that will be analysed (only      |
-| ``--limit ...``                     |                            | first ``-n`` sequences will be processed from input        |
-|                                     |                            | file(s)).                                                  |
-+-------------------------------------+----------------------------+------------------------------------------------------------+
-| ``-a``, ``--save-description``      |                            | Copy read(s) description line from ``.fastq`` or           |
-|                                     |                            | ``.fasta`` to ``.vdjca`` file (can be then exported with   |
-|                                     |                            | ``-descrR1`` and ``-descrR2`` options in                   |
-|                                     |                            | :ref:`exportAlignments <ref-export>` action).              |
-+-------------------------------------+----------------------------+------------------------------------------------------------+
-| ``-v``, ``--write-all``             |                            | Write alignment results for all input reads: including     |
-|                                     |                            | empty results for non-aligned reads.                       |
-+-------------------------------------+----------------------------+------------------------------------------------------------+
-| ``-g``, ``--save-reads``            |                            | Copy read(s) from ``.fastq`` or ``.fasta`` to ``.vdjca``   |
-|                                     |                            | file (this is required for exporting reads aggregated by   |
-|                                     |                            | clones; see :ref:`this section <ref-exporting-reads>`).    |
-+-------------------------------------+----------------------------+------------------------------------------------------------+
-| ``--not-aligned-R1``                |                            | Write all not aligned reads (R1) to the specified file.    |
-+-------------------------------------+----------------------------+------------------------------------------------------------+
-| ``--not-aligned-R2``                |                            | Write all not aligned reads (R) to the specified file.     |
-+-------------------------------------+----------------------------+------------------------------------------------------------+
-| ``-Oparameter=value``               |                            | Overrides default value of aligner ``parameter``           |
-|                                     |                            | (see next subsection).                                     |
-+-------------------------------------+----------------------------+------------------------------------------------------------+
+.. list-table::
+    :widths: 15 10 30
+    :header-rows: 1
+
+    * - Option
+      - Default value
+      - Description
+
+    * - ``-h``, ``--help``
+      -
+      - Print help message.
+
+    * - ``-r {file}`` |br| ``--report ...``
+      -
+      - Report file name. If this option is not specified, no report file be produced. See :ref:`below <ref-align-report>` for detailed description of report fields.
+
+    * - ``-с {chain}`` |br| ``--chains ...``
+      - ``ALL``
+      - Available values: ``IGH``, ``IGL``, ``IGK``, ``TRA``, ``TRB``, ``TRG``, ``TRD``, ``IG`` (for all immunoglobulin  chains), ``TCR`` (for all T-cell receptor chains), ``ALL`` (for all chains) . It is highly recommended to use the default value for this parameter. Filtering is also possible at the export step.
+
+    * - ``-s {speciesName}`` |br| ``--species ...``
+      - ``HomoSapiens``
+      - Species (organism). Possible values: ``hsa`` (or ``HomoSapiens``), ``mmu`` (or ``MusMusculus``), ``rat`` (currently only ``TRB``, ``TRA`` and ``TRD`` are supported), or any species from IMGT |reg| library, if it is used (see here :ref:`import segments <ref-importSegments>`)
+
+    * - ``-p {parameterName}`` |br| ``--parameters ...``
+      - ``default``
+      - Preset of parameters. Possible values: ``default`` and ``rna-seq``. The ``rna-seq`` preset are specifically optimized for analysis of Rna-Seq data :ref:`(see below) <ref-alignRNASeq>`
+
+    * - ``-t {numberOfThreads}`` |br| ``--threads ...``
+      - number of CPU cores in the system
+      - number of alignment threads
+
+    * - ``-n {numberOfReads}`` |br| ``--limit ...``
+      -
+      - Limit number of input sequences (only first ``-n`` sequences will be processed; useful for testing).
+
+    * - ``-b`` |br| ``--library``
+      - ``default``
+      - V/D/J/C segment library name (see :ref:`using external library <ref-importSegments>` fro details)
+
+    * - ``-g`` |br| ``--save-reads``
+      -
+      - Copy original reads from ``.fastq`` or ``.fasta`` to ``.vdjca`` file (this option is required for further export of original reads, e.g. to export reads aggregated into a clone; see :ref:`this section <ref-exporting-reads>` for details).
+
+    * - ``--not-aligned-R1`` |br| ``--not-aligned-R2``
+      -
+      - Write all reads that were not aligned (R1 / R2 correspondingly) to the specific file.
+
+    * - ``-Oparameter=value``
+      -
+      - Overrides default value of aligner ``parameter`` (see next subsection).
 
 All parameters are optional.
 
@@ -296,4 +293,67 @@ These parameters can be overridden in the following way:
 
 
 
-.. _ref-alignRNASeq:
+.. _ref-align-overlap:
+
+Paired-end reads overlap
+------------------------
+
+MiXCR tries to overlap paired-end (PE) reads if it is possible (overlap here is used in the same sense as in e.g. PEAR software). There are two stages when MiXCR decides to merge R1 and R2 reads:
+
+
+    1. Before PE-read alignment.
+
+        Using algorithm similar to PEAR an other software. The following thresholds are used (not listed above):
+
+        ``-OmergerParameters.minimalOverlap=17`` (minimal number of nucleotides to overlap)
+
+        ``-OmergerParameters.minimalIdentity=0.9`` (minimal identity, minimal fraction of matching nucleotides between sequences)
+
+    2. After PE-read alignment.
+
+        If two reads were aligned against the same V gene (which is the most common case; while the same algorithm is applied to J alignments), and MiXCR detects that the same nucleotides (positions in the reference sequence) were aligned in both mates - this is a strong evidence that paired-end reads actually overlap. In this case MiXCR merges them into a single sequence using this new information. Overlap offset is determined by alignment ranges in reference sequence. This helps to merge PE-reads which overlap even by a single nucleotide. ``Alignment-aided overlaps`` field from report file, shows the number of such overlaps.
+
+        During this procedure, performs a check on sequence equality in the overlapping region, if it fails merge is aborted (sequences are too different; the same ``-OmergerParameters.minimalIdentity`` value is used here as threshold). Another piece of the information MiXCR gains from this event, is that certain paradoxical condition is found, this may be a sign of false-positive alignment in one of the PE reads. In this case MiXCR drops one of the alignments (one that have smaller score). Number of such evens is shown in ``Paired-end alignment conflicts eliminated`` field in report.
+
+.. _ref-align-report:
+
+Report
+------
+
+Summary of alignment procedure can be exported with ``-r``/``--report`` option. Report is appended to the end of the file if it already exist, the same file name can be used in several analysis runs.
+
+Report contains the following lines:
+
+.. list-table::
+    :widths: 5 10
+    :header-rows: 1
+
+    * - Report line
+      - Description
+
+    * - Total sequencing reads
+      - Total number of analysed sequencing
+
+    * - Successfully aligned reads
+      - Number of successful alignments. Number of alignments written to the output file. |br| Without ``-OallowPartialAlignments=true`` (default behaviour): number of reads with both V and J alignments, that passed all alignment thresholds. |br| With ``-OallowPartialAlignments=true`` (see :ref:`here <ref-rna-seq>` for details): number of reads with at least one of V or J alignments, that passed all alignment thresholds and cover at least one nucleotide of CDR3.
+
+    * - Chimeras
+      - Number of detected chimeras. This option will not be added to the report if no chimeric alignments were detected (e.g. by default MiXCR drops all chimeric alignments; to allow chimeras, add ``-OallowChimeras=true`` option to the command line). Chimeric alignment is defined as as having V, J or C genes from the incompatible chains, e.g. TRBV / TRAJ or IGHV / TRBC, etc...)
+
+    * - Paired-end alignment conflicts eliminated
+      - (see :ref:`above descriptions <ref-align-overlap>` for details of PE merging procedure)
+
+    * - Overlapped
+      - Total number of overlapped paired-end reads (see :ref:`above <ref-align-overlap>` for more details)
+
+    * - Overlapped and aligned
+      - Total number of reads that were overlapped and aligned (in any order) (see :ref:`above <ref-align-overlap>` for more details)
+
+    * - Alignment-aided overlaps
+      - (see :ref:`above descriptions <ref-align-overlap>` for details of PE merging procedure). High value, may indicate problems with the sequencing data being analysed (any data pre-processing step may be the source of this problem or this may be a sign of invitro chimerization). Small number of such events is ok, especially for RNA-Seq and similar data, that contains unspliced or wrongly spliced sequences (see this `comment <https://github.com/milaboratory/mixcr/issues/332#issuecomment-366035395>`_ for an illustration of this problem)
+
+    * - V gene chimeras / J gene chimeras
+      - Number of events where different V or J genes correspondingly were aligned in different paired-end reads. This type of chimerization is different from one mentioned for "Chimeras" report line. High number of such events for V genes is a strong evidence of sample preparation problems, raw data should be manually inspected to verify expected library structure.
+
+    * - ... chains
+      - Number of reads aligned with this type of immunological chain. E.g. TRB for TRBV+TRBJ[+TRBC]. Empty chain name is for chimeras.

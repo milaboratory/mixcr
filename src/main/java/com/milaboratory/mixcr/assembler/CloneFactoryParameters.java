@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * Copyright (c) 2014-2018, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
  * (here and after addressed as Inventors)
  * All Rights Reserved
  *
@@ -10,8 +10,9 @@
  * three paragraphs appear in all copies.
  *
  * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact the Inventors using one of the following
- * email addresses: chudakovdm@mail.ru, chudakovdm@gmail.com
+ * commercial purposes should contact MiLaboratory LLC, which owns exclusive
+ * rights for distribution of this program for commercial purposes, using the
+ * following email address: licensing@milaboratory.com.
  *
  * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
  * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
@@ -31,6 +32,7 @@ package com.milaboratory.mixcr.assembler;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.milaboratory.mixcr.basictypes.ClonalUpdatableParameters;
@@ -92,25 +94,25 @@ public final class CloneFactoryParameters implements java.io.Serializable {
     }
 
     @JsonProperty("vParameters")
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public VJCClonalAlignerParameters getVParameters() {
         return vdcParameters.get(GeneType.Variable);
     }
 
     @JsonProperty("jParameters")
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public VJCClonalAlignerParameters getJParameters() {
         return vdcParameters.get(GeneType.Joining);
     }
 
     @JsonProperty("cParameters")
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public VJCClonalAlignerParameters getCParameters() {
         return vdcParameters.get(GeneType.Constant);
     }
 
     @JsonProperty("dParameters")
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public DClonalAlignerParameters getDParameters() {
         return dParameters;
     }

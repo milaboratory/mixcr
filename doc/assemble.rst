@@ -97,7 +97,8 @@ The command line options of ``assemble`` are the following:
 | ``-h``, ``--help``                  |                               | Print help message.                                                            |
 +-------------------------------------+-------------------------------+--------------------------------------------------------------------------------+
 | ``-r {file}`` |br|                  |                               | Report file name. If this option is not specified, no report file be produced. |
-| ``--report ...``                    |                               |                                                                                |
+| ``--report ...``                    |                               | See :ref:`below <ref-assemble-report>` for detailed description of report      |
+|                                     |                               | fields.                                                                        |
 +-------------------------------------+-------------------------------+--------------------------------------------------------------------------------+
 | ``-t {numberOfProcessors}`` |br|    | number of available CPU cores | Number of processing threads.                                                  |
 | ``--threads ...``                   |                               |                                                                                |
@@ -314,3 +315,64 @@ In order to turn off clustering one should use the following parameters:
 
 ..     mixcr assemble -OcloneFactoryParameters.vParameters.alignmentParameters.scoring.gapPenalty=-5 \
 ..                    alignments.vdjca output.clns
+
+.. _ref-assemble-report:
+
+Report
+------
+
+Summary of assemble procedure can be exported with ``-r``/``--report`` option. Report is appended to the end of the file if it already exist, the same file name can be used in several analysis runs.
+
+Report contains the following lines:
+
+.. list-table::
+    :widths: 5 10
+    :header-rows: 1
+
+    * - Report line
+      - Description
+
+    * - Final clonotype count
+      - Number of clonotypes after all error correction steps
+
+    * - Average number of reads per clonotype
+      -
+
+    * - Reads used in clonotypes, percent of total
+      - Sum of all clonotype abundances. Percent is calculated from the initial number of reads processed on the ``align`` step.
+
+    * - Reads used in clonotypes before clustering, percent of total
+      - The same as above, but before clustering step. If ``-OaddReadsCountOnClustering=true`` this value should be the same as "Reads used in clonotypes". Percent is calculated from the initial number of reads processed on the ``align`` step.
+
+    * - Number of reads used as a core, percent of used
+      - Number of reads with clonal sequence (e.g. CDR3) having all positions quality scores above ``-ObadQualityThreshold``. Those reads were used to form core clonotypes. All clonal sequences present in the output files derive from at least one such sequencing read. Percent of "Reads used in clonotypes".
+
+    * - Mapped low quality reads, percent of used
+      - Number of reads mapped during low quality reads mapping. See above for details. Percent of "Reads used in clonotypes".
+
+    * - Reads clustered in PCR error correction, percent of used
+      - Number of reads in clonotypes that were clustered during clustering step.
+
+    * - Reads pre-clustered due to the similar VJC-lists, percent of used
+      - Reads in clonotypes with the same clonal sequence, that were merged into more reliable clonotypes during clonotype splitting by V/J/C genes. This value will be zero if all ``-OseparateByV``/``...J``/``...C`` options are ``false``. See also "Clonotypes pre-clustered due to the similar VJC-lists".
+
+    * - Reads dropped due to the lack of a clone sequence
+      - Reads where MiXCR failed to extract clonal sequence. Each read should fully cover clonal sequence (specified by ``-OassemblingFeatures`` option). If some part of the clonal sequence is absent, read is discarded. Percent is calculated from the initial number of reads processed on the ``align`` step.
+
+    * - Reads dropped due to low quality
+      - Reads having too many positions with low quality score. Percent is calculated from the initial number of reads processed on the ``align`` step.
+
+    * - Reads dropped due to failed mapping
+      - Reads with at least one low quality score position in the clonal sequence, that were not mapped to any clonotype during mapping step. Percent is calculated from the initial number of reads processed on the ``align`` step.
+
+    * - Reads dropped with low quality clones
+      - Number of reads in clonotypes having at least one position with aggregated quality score less than ``-OminimalQuality``. Such clonotypes are dropped on the very final step of clonotype assembly. See also "Clonotypes dropped as low quality".
+
+    * - Clonotypes eliminated by PCR error correction
+      - Number of clonotypes eliminated on the clustering step
+
+    * - Clonotypes dropped as low quality
+      - Number of clonotypes having at least one position with aggregated quality score less than ``-OminimalQuality``. Such clonotypes are dropped on the very final step of clonotype assembly. See also "Reads dropped with low quality clones".
+
+    * - Clonotypes pre-clustered due to the similar VJC-lists
+      - Number of clonotypes with the same clonal sequence, that were merged into more reliable clonotypes during clonotype splitting by V/J/C genes. This value will be zero if all ``-OseparateByV``/``...J``/``...C`` options are ``false``. See also "Reads pre-clustered due to the similar VJC-lists".

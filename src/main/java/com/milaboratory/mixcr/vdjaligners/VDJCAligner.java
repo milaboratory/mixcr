@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * Copyright (c) 2014-2018, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
  * (here and after addressed as Inventors)
  * All Rights Reserved
  *
@@ -10,8 +10,9 @@
  * three paragraphs appear in all copies.
  *
  * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact the Inventors using one of the following
- * email addresses: chudakovdm@mail.ru, chudakovdm@gmail.com
+ * commercial purposes should contact MiLaboratory LLC, which owns exclusive
+ * rights for distribution of this program for commercial purposes, using the
+ * following email address: licensing@milaboratory.com.
  *
  * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
  * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
@@ -29,10 +30,11 @@
 package com.milaboratory.mixcr.vdjaligners;
 
 import cc.redberry.pipe.Processor;
+import com.milaboratory.core.alignment.batch.AlignmentHit;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SingleRead;
+import com.milaboratory.mixcr.basictypes.HasGene;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.util.HashFunctions;
 import com.milaboratory.util.RandomUtil;
 import io.repseq.core.Chains;
@@ -171,12 +173,81 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
                 : new VDJCAlignerS(alignerParameters);
     }
 
-    public static Chains getPossibleDLoci(VDJCHit[] vHits, VDJCHit[] jHits) {
-        Chains chains = new Chains();
-        for (VDJCHit h : vHits)
-            chains = chains.merge(h.getGene().getChains());
-        for (VDJCHit h : jHits)
-            chains = chains.merge(h.getGene().getChains());
+    // public static Chains getPossibleDLoci(VDJCHit[] vHits, VDJCHit[] jHits) {
+    //     Chains chains = new Chains();
+    //     for (VDJCHit h : vHits)
+    //         chains = chains.merge(h.getGene().getChains());
+    //     for (VDJCHit h : jHits)
+    //         chains = chains.merge(h.getGene().getChains());
+    //     return chains;
+    // }
+
+    /*
+     *  Common utility methods
+     */
+
+    static Chains getVJCommonChains(final HasGene[] vHits, final HasGene[] jHits) {
+        return getChains(vHits).intersection(getChains(jHits));
+    }
+
+    /**
+     * Merge chains of all V/D/J/C hits.
+     *
+     * Allows null as input.
+     */
+    public static Chains getChains(final HasGene[] hits) {
+        if (hits == null || hits.length == 0)
+            return Chains.ALL;
+        Chains chains = hits[0].getGene().getChains();
+        for (int i = 1; i < hits.length; i++)
+            chains = chains.merge(hits[i].getGene().getChains());
         return chains;
+    }
+
+    /**
+     * Calculates possible chains for D gene alignment, in the presence of following V, J and C genes.
+     *
+     * Allows nulls as input.
+     */
+    public static Chains getPossibleDLoci(HasGene[] vHits, HasGene[] jHits, HasGene[] cHits) {
+        Chains intersection = getChains(vHits)
+                .intersection(getChains(jHits))
+                .intersection(getChains(cHits));
+
+        if (!intersection.isEmpty())
+            return intersection;
+
+        // If intersection is empty, we are working with chimera
+        // lets calculate all possible D loci by merging
+        Chains chains = Chains.EMPTY;
+        if (vHits != null)
+            for (HasGene h : vHits)
+                chains = chains.merge(h.getGene().getChains());
+        if (jHits != null)
+            for (HasGene h : jHits)
+                chains = chains.merge(h.getGene().getChains());
+        if (cHits != null)
+            for (HasGene h : cHits)
+                chains = chains.merge(h.getGene().getChains());
+
+        return chains;
+    }
+
+    static HasGene[] wrapAlignmentHits(final AlignmentHit<?, VDJCGene>[] hits) {
+        if (hits == null)
+            return null;
+        HasGene[] res = new HasGene[hits.length];
+        for (int i = 0; i < hits.length; i++)
+            res[i] = wrapAlignmentHit(hits[i]);
+        return res;
+    }
+
+    static HasGene wrapAlignmentHit(final AlignmentHit<?, VDJCGene> hit) {
+        return new HasGene() {
+            @Override
+            public VDJCGene getGene() {
+                return hit.getRecordPayload();
+            }
+        };
     }
 }
