@@ -190,25 +190,25 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
     }
 
     @JsonProperty("vParameters")
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public KGeneAlignmentParameters getVAlignerParameters() {
         return getVJCGeneAlignerParameters(GeneType.Variable);
     }
 
     @JsonProperty("dParameters")
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public DAlignerParameters getDAlignerParameters() {
         return (DAlignerParameters) getGeneAlignerParameters(GeneType.Diversity);
     }
 
     @JsonProperty("jParameters")
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public KGeneAlignmentParameters getJAlignerParameters() {
         return getVJCGeneAlignerParameters(GeneType.Joining);
     }
 
     @JsonProperty("cParameters")
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public KGeneAlignmentParameters getCAlignerParameters() {
         return getVJCGeneAlignerParameters(GeneType.Constant);
     }
