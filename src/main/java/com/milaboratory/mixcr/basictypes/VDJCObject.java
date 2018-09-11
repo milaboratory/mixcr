@@ -30,10 +30,11 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.Range;
+import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
+import com.milaboratory.core.sequence.NucleotideSequence;
 import io.repseq.core.*;
 import io.repseq.gen.VDJCGenes;
-
 
 import java.util.*;
 
@@ -234,7 +235,7 @@ public class VDJCObject {
 //            if (bestVHit == null)
 //                return null;
 //
-//            //TODO check for V feature compatibility
+//            //TODO check for V featunre compatibility
 //            Alignment<NucleotideSequence>
 //                    lAlignment = bestVHit.getAlignment(0),
 //                    rAlignment = bestVHit.getAlignment(1);
@@ -284,6 +285,353 @@ public class VDJCObject {
 //                            .createAndDestroy();
 //        }
         return feature;
+    }
+
+//    public CaseSensitiveNucleotideSequence getIncompleteFeature(GeneFeature geneFeature) {
+//        NSequenceWithQuality result = getFeature(geneFeature);
+//        if (result != null)
+//            return new CaseSensitiveNucleotideSequence(result.getSequence(), false);
+//
+//        List<NucleotideSequence> sequences = new ArrayList<>();
+//        BitSet lowerCase = new BitSet();
+//
+//        // iterate over primitive features that constitute the given `geneFeature`
+//        for (GeneFeature.ReferenceRange rr : geneFeature) {
+//            ReferencePoint left = rr.begin, right = rr.end;
+//
+//            GeneFeature primitiveFeature = new GeneFeature(left, right);
+//            // check whether primitive feature is already available
+//            NSequenceWithQuality seq = getFeature(primitiveFeature);
+//            if (seq != null) {
+//                lowerCase.set(sequences.size(), false);
+//                sequences.add(seq.getSequence());
+//            }
+//
+//            VDJCHit[]
+//                    lHits = hits.get(left.getGeneType()),
+//                    rHits = hits.get(right.getGeneType());
+//            if (lHits == null || lHits.length == 0 || rHits == null || rHits.length == 0)
+//                return null;
+//
+//            // left and right top hits
+//            VDJCHit
+//                    lHit = lHits[0],
+//                    rHit = rHits[0];
+//
+//            int
+//                    lPositionInRef = lHit.getGene().getPartitioning().getPosition(left),
+//                    rPositionInRef = rHit.getGene().getPartitioning().getPosition(left);
+//
+//            if (lPositionInRef < 0 || rPositionInRef < 0)
+//                return null;
+//
+//            if (lPositionInRef >= rPositionInRef)
+//                return null; // bad case
+//
+//            int
+//                    iLeftTarget = -1,   // target that contains the left ref point
+//                    iRightTarget = -1,  // target that contains the right ref point
+//                    lPositionInTarget = -1,  // position of left point in target
+//                    rPositionInTarget = -1; // position of right point in target
+//            for (int i = 0; i < numberOfTargets(); ++i) {
+//                VDJCPartitionedSequence target = getPartitionedTarget(i);
+//                if (lPositionInTarget < 0) {
+//                    lPositionInTarget = target.getPartitioning().getPosition(left);
+//                    if (lPositionInTarget >= 0)
+//                        iLeftTarget = i;
+//                }
+//                if (rPositionInTarget < 0) {
+//                    rPositionInTarget = target.getPartitioning().getPosition(right);
+//                    if (rPositionInTarget >= 0)
+//                        iRightTarget = i;
+//                }
+//            }
+//
+//            if (iLeftTarget == -1) {
+//                // find the closest target to the right of left point
+//                for (int i = 0; i < numberOfTargets(); ++i) {
+//                    Alignment<NucleotideSequence> al = lHit.getAlignment(i);
+//                    if (al == null)
+//                        continue;
+//
+//                    if (al.getSequence1Range().getTo() >= lPositionInRef
+//                            && (iLeftTarget == -1
+//                            || al.getSequence1Range().getFrom() <
+//                            lHit.getAlignment(iLeftTarget).getSequence1Range().getFrom()))
+//                        iLeftTarget = i;
+//                }
+//
+//                if (iLeftTarget != -1
+//                        && lHit == rHit
+//                        && lHit.getAlignment(iLeftTarget).getSequence1Range().getFrom() > rPositionInRef)
+//                    iLeftTarget = -1;
+//
+//                if (iLeftTarget != -1) {
+//                    assert lHit.getAlignment(iLeftTarget).getSequence1Range().getFrom() > lPositionInRef;
+//
+//                    // add lowercase piece of germline to the left of first target
+//                    NucleotideSequence germline = lHit.getGene()
+//                            .getSequenceProvider()
+//                            .getRegion(new Range(lPositionInRef,
+//                                    lHit.getAlignment(iLeftTarget).getSequence1Range().getFrom()));
+//
+//                    lowerCase.set(sequences.size(), true);
+//                    sequences.add(germline);
+//
+//                    lPositionInTarget = 0;
+//                }
+//            }
+//
+//            if (iRightTarget == -1) {
+//                // find the closest target to the right of left point
+//                for (int i = 0; i < numberOfTargets(); ++i) {
+//                    Alignment<NucleotideSequence> al = rHit.getAlignment(i);
+//                    if (al == null)
+//                        continue;
+//
+//                    if (al.getSequence1Range().getFrom() <= rPositionInRef
+//                            && (iRightTarget == -1
+//                            || al.getSequence1Range().getTo() >
+//                            rHit.getAlignment(iRightTarget).getSequence1Range().getTo()))
+//                        iRightTarget = i;
+//                }
+//
+//                if (iRightTarget != -1
+//                        && lHit == rHit
+//                        && rHit.getAlignment(iRightTarget).getSequence1Range().getTo() < lPositionInRef)
+//                    iLeftTarget = -1;
+//
+//                if (iRightTarget != -1) {
+//                    assert rHit.getAlignment(iRightTarget).getSequence1Range().getTo() < rPositionInRef;
+//
+//                    // add lowercase piece of germline to the left of first target
+//                    NucleotideSequence germline = rHit.getGene()
+//                            .getSequenceProvider()
+//                            .getRegion(new Range(rHit.getAlignment(iRightTarget).getSequence1Range().getTo(),
+//                                    rPositionInRef));
+//
+//                    lowerCase.set(sequences.size(), true);
+//                    sequences.add(germline);
+//
+//                    rPositionInTarget = getTarget(iRightTarget).size();
+//                }
+//            }
+//
+//            // both left & right points are outside the target
+//            if (iLeftTarget == -1 && iRightTarget == -1) {
+//                if (lHit != rHit)
+//                    return null;
+//
+//                NucleotideSequence germline = lHit.getGene().getSequenceProvider().getRegion(new Range(lPositionInRef, rPositionInRef));
+//                if (germline == null)
+//                    return null;
+//                lowerCase.set(sequences.size(), true);
+//                sequences.add(germline);
+//            }
+//
+//
+//        }
+//    }
+
+    public CaseSensitiveNucleotideSequence getIncompleteFeature(GeneFeature geneFeature) {
+        NSequenceWithQuality result = getFeature(geneFeature);
+        if (result != null)
+            return new CaseSensitiveNucleotideSequence(result.getSequence(), false);
+
+        List<NucleotideSequence> sequences = new ArrayList<>();
+        BitSet lowerCase = new BitSet();
+
+        // iterate over primitive features that constitute the given `geneFeature`
+        for (GeneFeature.ReferenceRange rr : geneFeature) {
+            ReferencePoint left = rr.begin, right = rr.end;
+
+            GeneFeature primitiveFeature = new GeneFeature(left, right);
+            // check whether primitive feature is already available
+            NSequenceWithQuality seq = getFeature(primitiveFeature);
+            if (seq != null) {
+                lowerCase.set(sequences.size(), false);
+                sequences.add(seq.getSequence());
+                continue;
+            }
+
+            VDJCHit[]
+                    lHits = hits.get(left.getGeneType()),
+                    rHits = hits.get(right.getGeneType());
+            if (lHits == null || lHits.length == 0 || rHits == null || rHits.length == 0)
+                return null;
+
+            // left and right top hits
+            VDJCHit
+                    lHit = lHits[0],
+                    rHit = rHits[0];
+
+            int
+                    lPositionInRef = lHit.getGene().getPartitioning().getRelativePosition(lHit.getAlignedFeature(), left),
+                    rPositionInRef = rHit.getGene().getPartitioning().getRelativePosition(rHit.getAlignedFeature(), right);
+
+            if (lPositionInRef < 0 || rPositionInRef < 0)
+                return null;
+
+            int
+                    iLeftTarget,   // target that contains the left ref point
+                    iRightTarget;  // target that contains the right ref point
+
+            main:
+            do {
+                assert lHit != rHit || lPositionInRef < rPositionInRef;
+                iLeftTarget = -1; iRightTarget = -1;
+
+                // find the closest targets to the right and left points
+                Alignment<NucleotideSequence> lAl, rAl;
+                for (int i = 0; i < numberOfTargets(); ++i) {
+
+                    lAl = lHit.getAlignment(i);
+                    // check that there is no any unaligned piece
+                    if (lAl != null
+                            && lAl.getSequence1Range().getFrom() > lPositionInRef
+                            && lAl.getSequence2Range().getFrom() != 0)
+                        return null;
+
+                    // select the closest target to the right of left point
+                    if (lAl != null
+                            && lAl.getSequence1Range().getTo() > lPositionInRef
+                            && (lHit != rHit || lAl.getSequence1Range().getFrom() <= rPositionInRef)) {
+                        if (iLeftTarget == -1
+                                || lAl.getSequence1Range().getFrom() < lHit.getAlignment(iLeftTarget).getSequence1Range().getFrom())
+                            iLeftTarget = i;
+                    }
+
+
+                    rAl = rHit.getAlignment(i);
+                    // check that there is no any unaligned piece
+                    if (rAl != null
+                            && rAl.getSequence1Range().getTo() < rPositionInRef
+                            && rAl.getSequence2Range().getTo() != getTarget(i).size())
+                        return null;
+
+                    // select the closest target to the left of right point
+                    if (rAl != null
+                            && rAl.getSequence1Range().getFrom() <= rPositionInRef
+                            && (lHit != rHit || rAl.getSequence1Range().getTo() > lPositionInRef)) {
+                        if (iRightTarget == -1 || rAl.getSequence1Range().getTo() > rHit.getAlignment(iRightTarget).getSequence1Range().getTo())
+                            iRightTarget = i;
+                    }
+                }
+
+                if (iLeftTarget == -1 && iRightTarget == -1) {
+                    if (lHit != rHit)
+                        return null;
+
+                    // the feature is not covered by any target and
+                    // there are no targets in between :=> take everything from germline
+                    int
+                            lAbs = lHit.getGene().getPartitioning().getAbsolutePosition(lHit.getAlignedFeature(), lPositionInRef),
+                            rAbs = lHit.getGene().getPartitioning().getAbsolutePosition(lHit.getAlignedFeature(), rPositionInRef);
+                    // the only correct case
+                    NucleotideSequence germline = lHit
+                            .getGene()
+                            .getSequenceProvider()
+                            .getRegion(new Range(lAbs, rAbs));
+                    if (germline == null)
+                        return null;
+                    lowerCase.set(sequences.size(), true);
+                    sequences.add(germline);
+                    break main;
+                }
+
+                if (iLeftTarget == -1 || iRightTarget == -1)
+                    return null;
+
+                lAl = lHit.getAlignment(iLeftTarget);
+                rAl = rHit.getAlignment(iRightTarget);
+
+                if (!lAl.getSequence1Range().contains(lPositionInRef)) {
+                    // add lowercase piece of germline
+                    assert lAl.getSequence1Range().getFrom() > lPositionInRef;
+
+                    NucleotideSequence germline = lHit
+                            .getAlignment(iLeftTarget)
+                            .getSequence1()
+                            .getRange(new Range(lPositionInRef, lAl.getSequence1Range().getFrom()));
+
+                    lowerCase.set(sequences.size(), true);
+                    sequences.add(germline);
+                    lPositionInRef = lAl.getSequence1Range().getFrom();
+                }
+
+                assert lAl.getSequence1Range().containsBoundary(lPositionInRef);
+
+                if (iLeftTarget == iRightTarget) {
+                    int to = lHit == rHit
+                            ? Math.min(rPositionInRef, lAl.getSequence1Range().getTo())
+                            : rPositionInRef;
+                    NucleotideSequence target =
+                            getTarget(iLeftTarget).getSequence().getRange(
+                                    lAl.convertToSeq2Position(lPositionInRef),
+                                    rAl.convertToSeq2Position(to));
+                    lowerCase.set(sequences.size(), false);
+                    sequences.add(target);
+                    lPositionInRef = to;
+                } else {
+                    int to = lHit == rHit
+                            ? Math.min(rPositionInRef, lAl.getSequence1Range().getTo())
+                            : lAl.getSequence1Range().getTo();
+                    NucleotideSequence target = getTarget(iLeftTarget).getSequence().getRange(
+                            lAl.convertToSeq2Position(lPositionInRef),
+                            lAl.convertToSeq2Position(to));
+                    lowerCase.set(sequences.size(), false);
+                    sequences.add(target);
+                    lPositionInRef = to;
+                }
+
+                if (iLeftTarget == iRightTarget && !rAl.getSequence1Range().contains(rPositionInRef)) {
+                    // add lowercase piece of germline
+                    assert rAl.getSequence1Range().getFrom() < rPositionInRef;
+
+                    NucleotideSequence germline = rHit
+                            .getAlignment(iRightTarget)
+                            .getSequence1()
+                            .getRange(new Range(rAl.getSequence1Range().getTo(), rPositionInRef));
+
+                    lowerCase.set(sequences.size(), true);
+                    sequences.add(germline);
+                    rPositionInRef = rAl.getSequence1Range().getTo();
+                }
+
+            } while (iLeftTarget != iRightTarget);
+        }
+        return new CaseSensitiveNucleotideSequence(sequences.toArray(new NucleotideSequence[sequences.size()]), lowerCase);
+    }
+
+    public static class CaseSensitiveNucleotideSequence {
+        // sequences
+        final NucleotideSequence[] seq;
+        // upper or lower case
+        final BitSet lowerCase;
+
+        CaseSensitiveNucleotideSequence(NucleotideSequence[] seq, BitSet lowerCase) {
+            this.seq = seq;
+            this.lowerCase = lowerCase;
+        }
+
+        CaseSensitiveNucleotideSequence(NucleotideSequence seq, boolean lowerCase) {
+            this(new NucleotideSequence[]{seq}, new BitSet());
+            this.lowerCase.set(0, lowerCase);
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < seq.length; ++i) {
+                String s = seq[i].toString();
+                if (lowerCase.get(i))
+                    s = s.toLowerCase();
+                else
+                    s = s.toUpperCase();
+                sb.append(s);
+            }
+            return sb.toString();
+        }
     }
 
     private static int aabs(int position) {
