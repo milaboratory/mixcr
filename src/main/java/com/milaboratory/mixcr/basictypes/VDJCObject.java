@@ -562,9 +562,7 @@ public class VDJCObject {
                 assert lAl.getSequence1Range().containsBoundary(lPositionInRef);
 
                 if (iLeftTarget == iRightTarget) {
-                    int to = lHit == rHit
-                            ? Math.min(rPositionInRef, lAl.getSequence1Range().getTo())
-                            : rPositionInRef;
+                    int to = Math.min(rPositionInRef, rAl.getSequence1Range().getTo());
                     NucleotideSequence target =
                             getTarget(iLeftTarget).getSequence().getRange(
                                     lAl.convertToSeq2Position(lPositionInRef),
