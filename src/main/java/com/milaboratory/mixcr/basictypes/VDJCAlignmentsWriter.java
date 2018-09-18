@@ -39,13 +39,14 @@ import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
 import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
+import net.jpountz.xxhash.XXHash32;
+import net.jpountz.xxhash.XXHashFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
@@ -54,6 +55,11 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     static final String MAGIC = MAGIC_V12;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
+
+    /**
+     * Number of alignments in block. Larger number allows for better compression while consume more memory.
+     */
+    final int alignmentsInBlock;
 
     /**
      * Raw underlying output stream
@@ -66,10 +72,15 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     final LZ4Compressor compressor = LZ4Factory.fastestInstance().highCompressor();
 
     /**
+     * LZ4 hash function
+     */
+    final XXHash32 xxHash32 = XXHashFactory.fastestInstance().hash32();
+
+    /**
      * Buffer for accumulation of alignments written with write(VDJCAlignments) method. Buffer is flushed if
      * number of accumulated alignments is DEFAULT_ALIGNMENTS_IN_BLOCK or close() method was invoked.
      */
-    final ArrayList<VDJCAlignments> buffer = new ArrayList<>(DEFAULT_ALIGNMENTS_IN_BLOCK);
+    final ArrayList<VDJCAlignments> buffer;
 
     /**
      * This number will be added to the end of the file to report number of processed read to the following processing
@@ -93,7 +104,13 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     }
 
     public VDJCAlignmentsWriter(OutputStream output) {
+        this(output, DEFAULT_ALIGNMENTS_IN_BLOCK);
+    }
+
+    public VDJCAlignmentsWriter(OutputStream output, int alignmentsInBlock) {
         this.rawOutput = output;
+        this.alignmentsInBlock = alignmentsInBlock;
+        this.buffer = new ArrayList<>(alignmentsInBlock);
     }
 
     @Override
@@ -165,37 +182,44 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
 
     @Override
     public synchronized void write(VDJCAlignments alignment) {
-        try {
-            if (mainOutputState == null)
-                throw new IllegalStateException("Header not initialized.");
 
-            if (alignment == null)
-                throw new NullPointerException();
+        if (mainOutputState == null)
+            throw new IllegalStateException("Header not initialized.");
 
-            buffer.add(alignment);
+        if (alignment == null)
+            throw new NullPointerException();
 
-            if (buffer.size() == DEFAULT_ALIGNMENTS_IN_BLOCK) {
+        buffer.add(alignment);
 
-                // TODO more efficient buffer manipulation required
-                AlignmentsIO.BlockBuffers bufs = new AlignmentsIO.BlockBuffers();
-                AlignmentsIO.writeBlock(buffer, mainOutputState, compressor, bufs);
-
-                bufs.writeTo(rawOutput);
-
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        if (buffer.size() == alignmentsInBlock)
+            flushBlock();
     }
 
-    public synchronized void write(Collection<VDJCAlignments> alignments) {
+    /**
+     * Flush alignment buffer
+     */
+    private void flushBlock() {
+        if (buffer.isEmpty())
+            return;
 
+        try {
+            // TODO more efficient buffer manipulation required
+            AlignmentsIO.BlockBuffers bufs = new AlignmentsIO.BlockBuffers();
+            AlignmentsIO.writeBlock(buffer, mainOutputState, compressor, xxHash32, bufs);
+
+            bufs.writeTo(rawOutput);
+
+            buffer.clear();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public void close() {
         try {
             if (!closed) {
+                flushBlock();
                 // [ 0 : byte ] + [ numberOfProcessedReads : long ]
                 byte[] footer = new byte[9];
                 // Sign of stream termination

@@ -39,12 +39,13 @@ import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
+import net.jpountz.lz4.LZ4Factory;
+import net.jpountz.lz4.LZ4FastDecompressor;
+import net.jpountz.xxhash.XXHash32;
+import net.jpountz.xxhash.XXHashFactory;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.*;
 
@@ -53,6 +54,7 @@ public final class VDJCAlignmentsReader implements
         OutputPortCloseable<VDJCAlignments>,
         CanReportProgress {
     private static final int DEFAULT_BUFFER_SIZE = 1048576; // 1 MB
+    final LZ4FastDecompressor decompressor = LZ4Factory.fastestInstance().fastDecompressor();
     VDJCAlignerParameters parameters;
     PipelineConfiguration pipelineConfiguration;
     List<VDJCGene> usedGenes;
@@ -66,6 +68,13 @@ public final class VDJCAlignmentsReader implements
     long counter = 0;
     final long size;
     final CountingInputStream countingInputStream;
+    final AlignmentsIO.BlockBuffers buffers = new AlignmentsIO.BlockBuffers();
+    Iterator<VDJCAlignments> alignmentsIterator = null;
+
+    /**
+     * LZ4 hash function
+     */
+    final XXHash32 xxHash32 = XXHashFactory.fastestInstance().hash32();
 
     public VDJCAlignmentsReader(String fileName) throws IOException {
         this(new File(fileName), VDJCLibraryRegistry.getDefault());
@@ -147,8 +156,6 @@ public final class VDJCAlignmentsReader implements
                     throw new RuntimeException("Absent record for " + featureDeserialized + " in geneFeatureRefs map.");
             }
 
-//            parameters.getGeneAlignerParameters(gt).setGeneFeatureToAlign(featureParams);
-
             if (featureDeserialized != null)
                 input.putKnownObject(featureParams);
         }
@@ -220,8 +227,10 @@ public final class VDJCAlignmentsReader implements
             // footer with number of reads processed to produce this
             // file can be read form the stream.
             if (onEnd)
-                numberOfReads = inputStream.readLong();
+                numberOfReads = new PrimitivI(inputStream).readLong();
             inputStream.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         } finally {
             closed = true;
         }
@@ -234,14 +243,25 @@ public final class VDJCAlignmentsReader implements
 
         init();
 
-        VDJCAlignments alignments = inputStream.readObject(VDJCAlignments.class);
+        try {
+            if (alignmentsIterator == null || !alignmentsIterator.hasNext()) {
+                // Reloading buffers
+                List<VDJCAlignments> als = AlignmentsIO.readBlock(inputStream, inputState, decompressor, xxHash32, buffers);
 
-        if (alignments == null)
-            close(true);
-        else
-            alignments.setAlignmentsIndex(counter++);
+                if (als == null) {
+                    close(true);
+                    return null;
+                } else
+                    alignmentsIterator = als.iterator();
+            }
 
-        return alignments;
+            assert alignmentsIterator.hasNext();
+
+            return alignmentsIterator.next();
+
+        } catch (IOException e) {
+            throw new RuntimeException();
+        }
     }
 
     /**

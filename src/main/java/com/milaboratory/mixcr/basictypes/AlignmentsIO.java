@@ -37,6 +37,7 @@ import com.milaboratory.util.ByteArrayDataOutput;
 import com.milaboratory.util.ByteBufferDataInputAdapter;
 import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4FastDecompressor;
+import net.jpountz.xxhash.XXHash32;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -52,23 +53,26 @@ import java.util.List;
  *
  * Block:
  *
- * Header (13 bytes total):
+ * Header (17 bytes total):
  * [ 1 byte : bit0 = (0 = last block; 1 = data block); bit1 = (1 = compressed ; 0 = raw) ]
  * [ 4 bytes : int : number of alignments ]
  * [ 4 bytes : int : rawDataSize ]
  * [ 4 bytes : int : compressedDataSize ]
+ * [ 4 bytes : int : checksum for raw data ]
  *
  * Data:
  * [ dataSize bytes ] (compressed, if bit1 of header is 1; uncompressed, if bit1 is 0 )
  */
 public final class AlignmentsIO {
+    public static final int HASH_SEED = 0xD5D20F71;
     public static final byte LAST_BYTE = 0; // kB
     public static final int AVERAGE_ALIGNMENT_SIZE = 1024; // kB
 
     private AlignmentsIO() {
+
     }
 
-    static final int BLOCK_HEADER_SIZE = 13;
+    static final int BLOCK_HEADER_SIZE = 17;
 
     public static void writeIntBE(int val, byte[] buffer, int offset) {
         buffer[offset++] = (byte) (val >>> 24);
@@ -128,7 +132,7 @@ public final class AlignmentsIO {
      * Output date can be written to the output stream with buffers.writeTo(...) .
      */
     public static void writeBlock(Collection<VDJCAlignments> alignments, PrimitivOState outputState,
-                                  LZ4Compressor compressor, BlockBuffers buffers) {
+                                  LZ4Compressor compressor, XXHash32 xxHash32, BlockBuffers buffers) {
         buffers.ensureRawBufferSize(alignments.size() * AVERAGE_ALIGNMENT_SIZE);
         ByteArrayDataOutput dataOutput = new ByteArrayDataOutput(buffers.rawBuffer);
 
@@ -137,6 +141,8 @@ public final class AlignmentsIO {
         // Writing alignments to memory buffer
         for (VDJCAlignments al : alignments)
             output.writeObject(al);
+
+        int checksum = xxHash32.hash(dataOutput.getBuffer(), 0, dataOutput.size(), HASH_SEED);
 
         buffers.ensureCompressedBufferSize(compressor.maxCompressedLength(dataOutput.size()) + BLOCK_HEADER_SIZE);
 
@@ -160,12 +166,16 @@ public final class AlignmentsIO {
             buffers.compressedSize = BLOCK_HEADER_SIZE + compressedLength;
         }
 
+        // Writing checksum
+        writeIntBE(checksum, block, 13);
+
         // Saving raw buffer if it was further enlarged by internal ByteArrayDataOutput logic
         buffers.rawBuffer = dataOutput.getBuffer();
     }
 
     public static List<VDJCAlignments> readBlock(InputStream stream, PrimitivIState inputState,
-                                                 LZ4FastDecompressor decompressor, BlockBuffers buffers) throws IOException {
+                                                 LZ4FastDecompressor decompressor, XXHash32 xxHash32,
+                                                 BlockBuffers buffers) throws IOException {
         // Used for the readFully() method
         DataInputStream dis = new DataInputStream(stream);
 
@@ -181,6 +191,7 @@ public final class AlignmentsIO {
         int numberOfAlignments = readIntBE(header1, 0);
         int rawSize = readIntBE(header1, 4);
         int compressedSize = readIntBE(header1, 8);
+        int checksum = readIntBE(header1, 12);
 
         if ((h0 & 2) == 0) { // Not compressed block
             buffers.ensureRawBufferSize(rawSize);
@@ -193,6 +204,9 @@ public final class AlignmentsIO {
             decompressor.decompress(buffers.compressedBuffer, 0,
                     buffers.rawBuffer, 0, rawSize);
         }
+
+        if (checksum != xxHash32.hash(buffers.rawBuffer, 0, rawSize, HASH_SEED))
+            throw new RuntimeException("Checksum verification failed. Malformed file.");
 
         PrimitivI input = inputState.createPrimitivI(new ByteBufferDataInputAdapter(
                 ByteBuffer.wrap(buffers.rawBuffer, 0, rawSize)));
