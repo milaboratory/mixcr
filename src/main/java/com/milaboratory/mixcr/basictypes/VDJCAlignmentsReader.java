@@ -32,6 +32,7 @@ package com.milaboratory.mixcr.basictypes;
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
+import com.milaboratory.primitivio.PrimitivIState;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.CountingInputStream;
 import io.repseq.core.GeneFeature;
@@ -55,7 +56,8 @@ public final class VDJCAlignmentsReader implements
     VDJCAlignerParameters parameters;
     PipelineConfiguration pipelineConfiguration;
     List<VDJCGene> usedGenes;
-    final PrimitivI input;
+    final InputStream inputStream;
+    PrimitivIState inputState;
     final VDJCLibraryRegistry vdjcRegistry;
     String versionInfo;
     String magic;
@@ -82,29 +84,22 @@ public final class VDJCAlignmentsReader implements
                 vdjcRegistry, file.length());
     }
 
-    public VDJCAlignmentsReader(InputStream input) {
-        this(input, VDJCLibraryRegistry.getDefault(), 0);
+    public VDJCAlignmentsReader(InputStream inputStream) {
+        this(inputStream, VDJCLibraryRegistry.getDefault(), 0);
     }
 
-    public VDJCAlignmentsReader(InputStream input, VDJCLibraryRegistry vdjcRegistry) {
-        this(input, vdjcRegistry, 0);
+    public VDJCAlignmentsReader(InputStream inputStream, VDJCLibraryRegistry vdjcRegistry) {
+        this(inputStream, vdjcRegistry, 0);
     }
 
-    public VDJCAlignmentsReader(InputStream input, long size) {
-        this(input, VDJCLibraryRegistry.getDefault(), size);
+    public VDJCAlignmentsReader(InputStream inputStream, long size) {
+        this(inputStream, VDJCLibraryRegistry.getDefault(), size);
     }
 
-    public VDJCAlignmentsReader(InputStream input, VDJCLibraryRegistry vdjcRegistry, long size) {
-        this.input = new PrimitivI(countingInputStream = new CountingInputStream(input));
+    public VDJCAlignmentsReader(InputStream inputStream, VDJCLibraryRegistry vdjcRegistry, long size) {
+        this.inputStream = countingInputStream = new CountingInputStream(inputStream);
         this.vdjcRegistry = vdjcRegistry;
         this.size = size;
-    }
-
-    public VDJCAlignmentsReader(DataInput input, VDJCLibraryRegistry vdjcRegistry) {
-        this.input = new PrimitivI(input);
-        this.vdjcRegistry = vdjcRegistry;
-        this.countingInputStream = null;
-        this.size = 0;
     }
 
     public void init() {
@@ -112,8 +107,10 @@ public final class VDJCAlignmentsReader implements
     }
 
     void init(Map<GeneFeature, GeneFeature> geneFeatureRefs) {
-        if (usedGenes != null)
+        if (inputState != null)
             return;
+
+        PrimitivI input = new PrimitivI(inputStream);
 
         assert MAGIC_BYTES.length == MAGIC_LENGTH;
         byte[] magic = new byte[MAGIC_LENGTH];
@@ -155,6 +152,8 @@ public final class VDJCAlignmentsReader implements
             if (featureDeserialized != null)
                 input.putKnownObject(featureParams);
         }
+
+        this.inputState = input.getState();
     }
 
     public synchronized VDJCAlignerParameters getParameters() {
@@ -221,8 +220,8 @@ public final class VDJCAlignmentsReader implements
             // footer with number of reads processed to produce this
             // file can be read form the stream.
             if (onEnd)
-                numberOfReads = input.readLong();
-            input.close();
+                numberOfReads = inputStream.readLong();
+            inputStream.close();
         } finally {
             closed = true;
         }
@@ -235,7 +234,7 @@ public final class VDJCAlignmentsReader implements
 
         init();
 
-        VDJCAlignments alignments = input.readObject(VDJCAlignments.class);
+        VDJCAlignments alignments = inputStream.readObject(VDJCAlignments.class);
 
         if (alignments == null)
             close(true);

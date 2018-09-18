@@ -37,16 +37,19 @@ import com.milaboratory.primitivio.PrimitivOState;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
+import net.jpountz.lz4.LZ4Compressor;
+import net.jpountz.lz4.LZ4Factory;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
-    static final int DEFAULT_ALIGNMENTS_IN_BLOCK = 1024; // 1024 alignments * 805 bytes per alignment ~  824 kB per block
+    static final int DEFAULT_ALIGNMENTS_IN_BLOCK = 1024; // 1024 alignments * 805-1024 bytes per alignment ~  824 kB - 1MB per block
     static final String MAGIC_V12 = "MiXCR.VDJC.V12";
     static final String MAGIC = MAGIC_V12;
     static final int MAGIC_LENGTH = 14;
@@ -57,13 +60,29 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
      */
     final OutputStream rawOutput;
 
-    // Alignments are buffered before writing to the stream
+    /**
+     * LZ4 compressor to compress data blocks
+     */
+    final LZ4Compressor compressor = LZ4Factory.fastestInstance().highCompressor();
+
+    /**
+     * Buffer for accumulation of alignments written with write(VDJCAlignments) method. Buffer is flushed if
+     * number of accumulated alignments is DEFAULT_ALIGNMENTS_IN_BLOCK or close() method was invoked.
+     */
     final ArrayList<VDJCAlignments> buffer = new ArrayList<>(DEFAULT_ALIGNMENTS_IN_BLOCK);
 
+    /**
+     * This number will be added to the end of the file to report number of processed read to the following processing
+     * steps. Mainly for informative statistics reporting.
+     */
     long numberOfProcessedReads = -1;
 
-    PrimitivOState mainOutputState;
-    boolean header = false, closed = false;
+    /**
+     * State to create PrimitivO streams form.
+     */
+    PrimitivOState mainOutputState = null;
+
+    boolean closed = false;
 
     public VDJCAlignmentsWriter(String fileName) throws IOException {
         this(new File(fileName));
@@ -106,7 +125,7 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
         if (parameters == null || genes == null)
             throw new IllegalArgumentException();
 
-        if (header)
+        if (mainOutputState != null)
             throw new IllegalStateException("Header already written.");
 
         PrimitivO output = new PrimitivO(rawOutput);
@@ -130,13 +149,6 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
             this.pipelineConfiguration = ppConfiguration;
         output.writeObject(pipelineConfiguration);
 
-        // Initialization of main stream, compressed with LZ4 algorithm
-
-        // LZ4Compressor compressor = LZ4Factory.fastestInstance().highCompressor();
-        // compressor.compress()
-        // mainOutput = new PrimitivO(new LZ4BlockOutputStream(rawOutput, DEFAULT_ALIGNMENTS_IN_BLOCK,
-        //         compressor));
-
         IOUtil.writeAndRegisterGeneReferences(output, genes, parameters);
 
         // Registering links to features to align
@@ -149,37 +161,54 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
 
         // Saving output state
         mainOutputState = output.getState();
-        header = true;
     }
 
     @Override
     public synchronized void write(VDJCAlignments alignment) {
-        if (!header)
-            throw new IllegalStateException("Header not initialized.");
+        try {
+            if (mainOutputState == null)
+                throw new IllegalStateException("Header not initialized.");
 
-        if (alignment == null)
-            throw new NullPointerException();
+            if (alignment == null)
+                throw new NullPointerException();
 
-        buffer.add(alignment);
+            buffer.add(alignment);
 
-        if (buffer.size() == DEFAULT_ALIGNMENTS_IN_BLOCK) {
+            if (buffer.size() == DEFAULT_ALIGNMENTS_IN_BLOCK) {
 
+                // TODO more efficient buffer manipulation required
+                AlignmentsIO.BlockBuffers bufs = new AlignmentsIO.BlockBuffers();
+                AlignmentsIO.writeBlock(buffer, mainOutputState, compressor, bufs);
+
+                bufs.writeTo(rawOutput);
+
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+    }
 
-        mainOutput.writeObject(alignment);
+    public synchronized void write(Collection<VDJCAlignments> alignments) {
+
     }
 
     @Override
     public void close() {
-        if (!closed) {
-            // Sign of stream termination
-            mainOutput.writeObject(null);
-            // Number of processed reads is known only in the end of analysis
-            // Writing it as last piece of information in the stream
-            mainOutput.writeLong(numberOfProcessedReads);
-            // This will also finish LZ4 stream
-            mainOutput.close();
-            closed = true;
+        try {
+            if (!closed) {
+                // [ 0 : byte ] + [ numberOfProcessedReads : long ]
+                byte[] footer = new byte[9];
+                // Sign of stream termination
+                footer[0] = 0;
+                // Number of processed reads is known only in the end of analysis
+                // Writing it as last piece of information in the stream
+                AlignmentsIO.writeLongBE(numberOfProcessedReads, footer, 1);
+                rawOutput.write(footer);
+                rawOutput.close();
+                closed = true;
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }

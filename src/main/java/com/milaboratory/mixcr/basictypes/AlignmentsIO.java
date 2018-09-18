@@ -1,0 +1,229 @@
+/*
+ * Copyright (c) 2014-2018, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * (here and after addressed as Inventors)
+ * All Rights Reserved
+ *
+ * Permission to use, copy, modify and distribute any part of this program for
+ * educational, research and non-profit purposes, by non-profit institutions
+ * only, without fee, and without a written agreement is hereby granted,
+ * provided that the above copyright notice, this paragraph and the following
+ * three paragraphs appear in all copies.
+ *
+ * Those desiring to incorporate this work into commercial products or use for
+ * commercial purposes should contact MiLaboratory LLC, which owns exclusive
+ * rights for distribution of this program for commercial purposes, using the
+ * following email address: licensing@milaboratory.com.
+ *
+ * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
+ * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
+ * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
+ * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
+ * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
+ * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
+ * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
+ * PATENT, TRADEMARK OR OTHER RIGHTS.
+ */
+package com.milaboratory.mixcr.basictypes;
+
+import com.milaboratory.primitivio.PrimitivI;
+import com.milaboratory.primitivio.PrimitivIState;
+import com.milaboratory.primitivio.PrimitivO;
+import com.milaboratory.primitivio.PrimitivOState;
+import com.milaboratory.util.ByteArrayDataOutput;
+import com.milaboratory.util.ByteBufferDataInputAdapter;
+import net.jpountz.lz4.LZ4Compressor;
+import net.jpountz.lz4.LZ4FastDecompressor;
+
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+/**
+ * Utility methods for block-compressed alignment objects IO.
+ *
+ * Block:
+ *
+ * Header (13 bytes total):
+ * [ 1 byte : bit0 = (0 = last block; 1 = data block); bit1 = (1 = compressed ; 0 = raw) ]
+ * [ 4 bytes : int : number of alignments ]
+ * [ 4 bytes : int : rawDataSize ]
+ * [ 4 bytes : int : compressedDataSize ]
+ *
+ * Data:
+ * [ dataSize bytes ] (compressed, if bit1 of header is 1; uncompressed, if bit1 is 0 )
+ */
+public final class AlignmentsIO {
+    public static final byte LAST_BYTE = 0; // kB
+    public static final int AVERAGE_ALIGNMENT_SIZE = 1024; // kB
+
+    private AlignmentsIO() {
+    }
+
+    static final int BLOCK_HEADER_SIZE = 13;
+
+    public static void writeIntBE(int val, byte[] buffer, int offset) {
+        buffer[offset++] = (byte) (val >>> 24);
+        buffer[offset++] = (byte) (val >>> 16);
+        buffer[offset++] = (byte) (val >>> 8);
+        buffer[offset] = (byte) val;
+    }
+
+    public static void writeLongBE(long val, byte[] buffer, int offset) {
+        buffer[offset++] = (byte) (val >>> 56);
+        buffer[offset++] = (byte) (val >>> 48);
+        buffer[offset++] = (byte) (val >>> 40);
+        buffer[offset++] = (byte) (val >>> 32);
+        buffer[offset++] = (byte) (val >>> 24);
+        buffer[offset++] = (byte) (val >>> 16);
+        buffer[offset++] = (byte) (val >>> 8);
+        buffer[offset] = (byte) val;
+    }
+
+    public static int readIntBE(byte[] buffer, int offset) {
+        int value = 0;
+        for (int i = 0; i < 4; ++i) {
+            value <<= 8;
+            value |= 0xFF & buffer[offset++];
+        }
+        return value;
+    }
+
+    public static int readIntBE(ByteBuffer buffer) {
+        int value = 0;
+        for (int i = 0; i < 4; ++i) {
+            value <<= 8;
+            value |= 0xFF & buffer.get();
+        }
+        return value;
+    }
+
+    public static long readLongBE(byte[] buffer, int offset) {
+        long value = 0;
+        for (int i = 0; i < 8; ++i) {
+            value <<= 8;
+            value |= 0xFF & buffer[offset++];
+        }
+        return value;
+    }
+
+    public static long readLongBE(ByteBuffer buffer) {
+        long value = 0;
+        for (int i = 0; i < 8; ++i) {
+            value <<= 8;
+            value |= 0xFF & buffer.get();
+        }
+        return value;
+    }
+
+    /**
+     * Output date can be written to the output stream with buffers.writeTo(...) .
+     */
+    public static void writeBlock(Collection<VDJCAlignments> alignments, PrimitivOState outputState,
+                                  LZ4Compressor compressor, BlockBuffers buffers) {
+        buffers.ensureRawBufferSize(alignments.size() * AVERAGE_ALIGNMENT_SIZE);
+        ByteArrayDataOutput dataOutput = new ByteArrayDataOutput(buffers.rawBuffer);
+
+        PrimitivO output = outputState.createPrimitivO(dataOutput);
+
+        // Writing alignments to memory buffer
+        for (VDJCAlignments al : alignments)
+            output.writeObject(al);
+
+        buffers.ensureCompressedBufferSize(compressor.maxCompressedLength(dataOutput.size()) + BLOCK_HEADER_SIZE);
+
+        byte[] block = buffers.compressedBuffer;
+        int compressedLength = compressor.compress(dataOutput.getBuffer(), 0, dataOutput.size(),
+                block, BLOCK_HEADER_SIZE);
+
+        writeIntBE(alignments.size(), block, 1);
+
+        if (compressedLength > dataOutput.size()) {
+            // Compression increased data size, writing raw block
+            System.arraycopy(dataOutput.getBuffer(), 0, block, BLOCK_HEADER_SIZE, dataOutput.size());
+            block[0] = 0x1; // bit0 = 1, bit0 = 0
+            writeIntBE(dataOutput.size(), block, 5);
+            writeIntBE(dataOutput.size(), block, 9);
+            buffers.compressedSize = BLOCK_HEADER_SIZE + dataOutput.size();
+        } else {
+            block[0] = 0x3; // bit0 = 1, bit0 = 1
+            writeIntBE(dataOutput.size(), block, 5);
+            writeIntBE(compressedLength, block, 9);
+            buffers.compressedSize = BLOCK_HEADER_SIZE + compressedLength;
+        }
+
+        // Saving raw buffer if it was further enlarged by internal ByteArrayDataOutput logic
+        buffers.rawBuffer = dataOutput.getBuffer();
+    }
+
+    public static List<VDJCAlignments> readBlock(InputStream stream, PrimitivIState inputState,
+                                                 LZ4FastDecompressor decompressor, BlockBuffers buffers) throws IOException {
+        // Used for the readFully() method
+        DataInputStream dis = new DataInputStream(stream);
+
+        // Reading header
+
+        // First byte
+        byte h0 = dis.readByte();
+        if (h0 == 0)
+            return null;
+
+        byte[] header1 = new byte[BLOCK_HEADER_SIZE - 1];
+        dis.readFully(header1);
+        int numberOfAlignments = readIntBE(header1, 0);
+        int rawSize = readIntBE(header1, 4);
+        int compressedSize = readIntBE(header1, 8);
+
+        if ((h0 & 2) == 0) { // Not compressed block
+            buffers.ensureRawBufferSize(rawSize);
+            assert rawSize == compressedSize;
+            dis.readFully(buffers.rawBuffer, 0, rawSize);
+        } else { // Compressed
+            buffers.ensureRawBufferSize(rawSize);
+            buffers.ensureCompressedBufferSize(compressedSize);
+            dis.readFully(buffers.compressedBuffer, 0, compressedSize);
+            decompressor.decompress(buffers.compressedBuffer, 0,
+                    buffers.rawBuffer, 0, rawSize);
+        }
+
+        PrimitivI input = inputState.createPrimitivI(new ByteBufferDataInputAdapter(
+                ByteBuffer.wrap(buffers.rawBuffer, 0, rawSize)));
+
+        ArrayList<VDJCAlignments> alignments = new ArrayList<>(numberOfAlignments);
+        for (int i = 0; i < numberOfAlignments; i++)
+            alignments.add(input.readObject(VDJCAlignments.class));
+
+        return alignments;
+    }
+
+    public static final class BlockBuffers {
+        public byte[] rawBuffer, compressedBuffer;
+        /**
+         * HEADER + data
+         */
+        public int compressedSize;
+
+        public void ensureRawBufferSize(int size) {
+            if (rawBuffer == null || rawBuffer.length < size)
+                rawBuffer = new byte[size];
+        }
+
+        public void ensureCompressedBufferSize(int size) {
+            if (compressedBuffer == null || compressedBuffer.length < size)
+                compressedBuffer = new byte[size];
+        }
+
+        public void writeTo(OutputStream stream) throws IOException {
+            stream.write(compressedBuffer, 0, compressedSize);
+        }
+    }
+}
+
