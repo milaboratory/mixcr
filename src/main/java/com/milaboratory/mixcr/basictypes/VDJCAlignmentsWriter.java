@@ -48,13 +48,42 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.SynchronousQueue;
 
 public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     static final int DEFAULT_ALIGNMENTS_IN_BLOCK = 1024; // 1024 alignments * 805-1024 bytes per alignment ~  824 kB - 1MB per block
+    static final int DEFAULT_ENCODER_THREADS = 3;
     static final String MAGIC_V12 = "MiXCR.VDJC.V12";
     static final String MAGIC = MAGIC_V12;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
+
+    /**
+     * Signal to the main thread form encoder about exceptional case
+     */
+    volatile boolean error = false;
+
+    /**
+     * Buffer for accumulation of alignments written with write(VDJCAlignments) method. Buffer is flushed if
+     * number of accumulated alignments is alignmentsInBlock or close() method was invoked.
+     */
+    volatile ArrayList<VDJCAlignments> currentBuffer;
+
+    /**
+     * Next encoder will await for this latch before writing content to the output stream
+     */
+    volatile CountDownLatch lastBlockWriteLatch = new CountDownLatch(0); // Initialized with opened latch
+
+    /**
+     * Encoder threads
+     */
+    final List<Encoder> encoders;
+
+    /**
+     * "Exchanger" with encoder threads
+     */
+    final SynchronousQueue<BlockToEncode> toEncoders = new SynchronousQueue<>();
 
     /**
      * Number of alignments in block. Larger number allows for better compression while consume more memory.
@@ -75,12 +104,6 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
      * LZ4 hash function
      */
     final XXHash32 xxHash32 = XXHashFactory.fastestInstance().hash32();
-
-    /**
-     * Buffer for accumulation of alignments written with write(VDJCAlignments) method. Buffer is flushed if
-     * number of accumulated alignments is DEFAULT_ALIGNMENTS_IN_BLOCK or close() method was invoked.
-     */
-    final ArrayList<VDJCAlignments> buffer;
 
     /**
      * This number will be added to the end of the file to report number of processed read to the following processing
@@ -104,13 +127,19 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     }
 
     public VDJCAlignmentsWriter(OutputStream output) {
-        this(output, DEFAULT_ALIGNMENTS_IN_BLOCK);
+        this(output, DEFAULT_ENCODER_THREADS, DEFAULT_ALIGNMENTS_IN_BLOCK);
     }
 
-    public VDJCAlignmentsWriter(OutputStream output, int alignmentsInBlock) {
+    public VDJCAlignmentsWriter(OutputStream output, int encoderThreads, int alignmentsInBlock) {
         this.rawOutput = output;
         this.alignmentsInBlock = alignmentsInBlock;
-        this.buffer = new ArrayList<>(alignmentsInBlock);
+        this.encoders = new ArrayList<>(encoderThreads);
+        for (int i = 0; i < encoderThreads; i++) {
+            Encoder e = new Encoder();
+            e.start();
+            encoders.add(e);
+        }
+        this.currentBuffer = new ArrayList<>(alignmentsInBlock);
     }
 
     @Override
@@ -182,16 +211,18 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
 
     @Override
     public synchronized void write(VDJCAlignments alignment) {
-
         if (mainOutputState == null)
             throw new IllegalStateException("Header not initialized.");
+
+        if (error)
+            throw new RuntimeException("One of the encoders terminated with error.");
 
         if (alignment == null)
             throw new NullPointerException();
 
-        buffer.add(alignment);
+        currentBuffer.add(alignment);
 
-        if (buffer.size() == alignmentsInBlock)
+        if (currentBuffer.size() == alignmentsInBlock)
             flushBlock();
     }
 
@@ -199,27 +230,33 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
      * Flush alignment buffer
      */
     private void flushBlock() {
-        if (buffer.isEmpty())
+        if (error)
+            throw new RuntimeException("One of the encoders terminated with error.");
+
+        if (currentBuffer.isEmpty())
             return;
 
         try {
-            // TODO more efficient buffer manipulation required
-            AlignmentsIO.BlockBuffers bufs = new AlignmentsIO.BlockBuffers();
-            AlignmentsIO.writeBlock(buffer, mainOutputState, compressor, xxHash32, bufs);
-
-            bufs.writeTo(rawOutput);
-
-            buffer.clear();
-        } catch (IOException e) {
+            BlockToEncode block = new BlockToEncode(currentBuffer, lastBlockWriteLatch);
+            lastBlockWriteLatch = block.currentBlockWriteLatch;
+            toEncoders.put(block);
+            currentBuffer = new ArrayList<>(alignmentsInBlock);
+        } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
         try {
             if (!closed) {
                 flushBlock();
+                // Terminating Encoder threads
+                for (int i = 0; i < encoders.size(); i++)
+                    toEncoders.put(new BlockToEncode());
+                for (Encoder encoder : encoders)
+                    encoder.join();
+
                 // [ 0 : byte ] + [ numberOfProcessedReads : long ]
                 byte[] footer = new byte[9];
                 // Sign of stream termination
@@ -231,8 +268,73 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
                 rawOutput.close();
                 closed = true;
             }
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private final static class BlockToEncode {
+        /**
+         * Will be opened when this thread completes write to the output stream
+         */
+        final CountDownLatch currentBlockWriteLatch = new CountDownLatch(1);
+        /**
+         * Encoder will await for this latch before writing content to the output stream
+         */
+        final CountDownLatch previousBlockWriteLatch;
+        /**
+         * Alignments to encode
+         */
+        final List<VDJCAlignments> content;
+
+        /**
+         * Construct end-signal block
+         */
+        BlockToEncode() {
+            this(null, null);
+        }
+
+        BlockToEncode(List<VDJCAlignments> content,
+                      CountDownLatch previousBlockWriteLatch) {
+            this.content = content;
+            this.previousBlockWriteLatch = previousBlockWriteLatch;
+        }
+
+        boolean isEndSignal() {
+            return content == null;
+        }
+    }
+
+    private final class Encoder extends Thread {
+        @Override
+        public void run() {
+            // The same buffers will be used for all blocks processed by this thread
+            AlignmentsIO.BlockBuffers bufs = new AlignmentsIO.BlockBuffers();
+
+            try {
+                while (true) {
+                    BlockToEncode block = toEncoders.take();
+
+                    // Is end signal
+                    if (block.isEndSignal())
+                        return;
+
+                    // CPU intensive task (serialize + compress)
+                    AlignmentsIO.writeBlock(block.content, mainOutputState, compressor, xxHash32, bufs);
+
+                    // Awaiting previous block to be written to the stream
+                    block.previousBlockWriteLatch.await();
+
+                    // Writing the data (because of the latch mechanism only one encoder at a time will use the stream
+                    bufs.writeTo(rawOutput);
+
+                    // Allowing next block to be written
+                    block.currentBlockWriteLatch.countDown();
+                }
+            } catch (InterruptedException | IOException e) {
+                error = true;
+                throw new RuntimeException(e);
+            }
         }
     }
 }

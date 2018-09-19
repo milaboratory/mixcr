@@ -76,7 +76,7 @@ public class IOTest {
             }
 
 
-            try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(bos, 21)) {
+            try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(bos, 4, 21)) {
                 writer.header(aligner, null);
 
                 header = bos.size();
