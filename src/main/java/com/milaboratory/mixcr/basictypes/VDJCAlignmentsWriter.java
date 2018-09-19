@@ -50,10 +50,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.TimeUnit;
 
 public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
-    static final int DEFAULT_ALIGNMENTS_IN_BLOCK = 1024; // 1024 alignments * 805-1024 bytes per alignment ~  824 kB - 1MB per block
-    static final int DEFAULT_ENCODER_THREADS = 3;
+    public static final int DEFAULT_ALIGNMENTS_IN_BLOCK = 1024; // 1024 alignments * 805-1024 bytes per alignment ~  824 kB - 1MB per block
+    public static final int DEFAULT_ENCODER_THREADS = 3;
     static final String MAGIC_V12 = "MiXCR.VDJC.V12";
     static final String MAGIC = MAGIC_V12;
     static final int MAGIC_LENGTH = 14;
@@ -119,11 +120,19 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     boolean closed = false;
 
     public VDJCAlignmentsWriter(String fileName) throws IOException {
-        this(new File(fileName));
+        this(fileName, DEFAULT_ENCODER_THREADS, DEFAULT_ALIGNMENTS_IN_BLOCK);
+    }
+
+    public VDJCAlignmentsWriter(String fileName, int encoderThreads, int alignmentsInBlock) throws IOException {
+        this(new File(fileName), encoderThreads, alignmentsInBlock);
     }
 
     public VDJCAlignmentsWriter(File file) throws IOException {
-        this(IOUtil.createOS(file));
+        this(file, DEFAULT_ENCODER_THREADS, DEFAULT_ALIGNMENTS_IN_BLOCK);
+    }
+
+    public VDJCAlignmentsWriter(File file, int encoderThreads, int alignmentsInBlock) throws IOException {
+        this(IOUtil.createOS(file), encoderThreads, alignmentsInBlock);
     }
 
     public VDJCAlignmentsWriter(OutputStream output) {
@@ -252,10 +261,17 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
             if (!closed) {
                 flushBlock();
                 // Terminating Encoder threads
-                for (int i = 0; i < encoders.size(); i++)
-                    toEncoders.put(new BlockToEncode());
-                for (Encoder encoder : encoders)
-                    encoder.join();
+                boolean threadsAlive;
+                do {
+                    for (int i = 0; i < encoders.size(); i++)
+                        toEncoders.offer(new BlockToEncode(), 100, TimeUnit.MILLISECONDS);
+                    threadsAlive = false;
+                    for (Encoder encoder : encoders) {
+                        encoder.join(100);
+                        if (encoder.isAlive())
+                            threadsAlive = true;
+                    }
+                } while (threadsAlive);
 
                 // [ 0 : byte ] + [ numberOfProcessedReads : long ]
                 byte[] footer = new byte[9];
@@ -325,13 +341,14 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
                     // Awaiting previous block to be written to the stream
                     block.previousBlockWriteLatch.await();
 
-                    // Writing the data (because of the latch mechanism only one encoder at a time will use the stream
+                    // Writing the data (because of the latch mechanism only one encoder at a time will use the stream)
                     bufs.writeTo(rawOutput);
 
                     // Allowing next block to be written
                     block.currentBlockWriteLatch.countDown();
                 }
             } catch (InterruptedException | IOException e) {
+                // THe error will rise exception in main thread and initiate auto
                 error = true;
                 throw new RuntimeException(e);
             }

@@ -198,7 +198,10 @@ public class ActionAlign extends AbstractActionWithResumeOption {
 
         try (SequenceReaderCloseable<? extends SequenceRead> reader = actionParameters.createReader();
 
-             VDJCAlignmentsWriter writer = actionParameters.getOutputName().equals(".") ? null : new VDJCAlignmentsWriter(actionParameters.getOutputName());
+             VDJCAlignmentsWriter writer = actionParameters.getOutputName().equals(".")
+                     ? null
+                     : new VDJCAlignmentsWriter(actionParameters.getOutputName(), Math.max(1, actionParameters.threads / 12),
+                     VDJCAlignmentsWriter.DEFAULT_ALIGNMENTS_IN_BLOCK);
 
              SequenceWriter notAlignedWriter = actionParameters.failedReadsR1 == null
                      ? null
@@ -224,8 +227,8 @@ public class ActionAlign extends AbstractActionWithResumeOption {
             final PairedEndReadsLayout readsLayout = alignerParameters.getReadsLayout();
 
             SmartProgressReporter.startProgressReport("Alignment", progress);
-            Merger<Chunk<? extends SequenceRead>> mainInputReads = CUtils.buffered((OutputPort) chunked(sReads, 64), 16);
-            ParallelProcessor alignedChunks = new ParallelProcessor(mainInputReads, chunked(aligner), actionParameters.threads);
+            Merger<Chunk<? extends SequenceRead>> mainInputReads = CUtils.buffered((OutputPort) chunked(sReads, 64), Math.max(16, actionParameters.threads));
+            ParallelProcessor alignedChunks = new ParallelProcessor(mainInputReads, chunked(aligner), Math.max(16, actionParameters.threads), actionParameters.threads);
             if (actionParameters.reportBuffers) {
                 BufferStatusReporter reporter = new BufferStatusReporter();
                 reporter.addBuffer("Input (chunked; chunk size = 64)", mainInputReads.getBufferStatusProvider());
@@ -560,7 +563,7 @@ public class ActionAlign extends AbstractActionWithResumeOption {
                 throw new ParameterException("Wrong input for --not-aligned-R1,2");
             if (failedReadsR1 != null && (failedReadsR2 != null) != isInputPaired())
                 throw new ParameterException("Option --not-aligned-R2 is not set.");
-            if(library.contains("/") || library.contains("\\"))
+            if (library.contains("/") || library.contains("\\"))
                 throw new ParameterException("Library name can't be a path. Place your library to one of the " +
                         "library search locations (e.g. '" + Paths.get(System.getProperty("user.home"), ".mixcr", "libraries", "mylibrary.json").toString() +
                         "', and put just a library name as -b / --library option value (e.g. '--library mylibrary').");
