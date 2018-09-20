@@ -200,7 +200,7 @@ public class ActionAlign extends AbstractActionWithResumeOption {
 
              VDJCAlignmentsWriter writer = actionParameters.getOutputName().equals(".")
                      ? null
-                     : new VDJCAlignmentsWriter(actionParameters.getOutputName(), Math.max(1, actionParameters.threads / 12),
+                     : new VDJCAlignmentsWriter(actionParameters.getOutputName(), Math.max(1, actionParameters.threads / 8),
                      VDJCAlignmentsWriter.DEFAULT_ALIGNMENTS_IN_BLOCK);
 
              SequenceWriter notAlignedWriter = actionParameters.failedReadsR1 == null
@@ -230,9 +230,29 @@ public class ActionAlign extends AbstractActionWithResumeOption {
             Merger<Chunk<? extends SequenceRead>> mainInputReads = CUtils.buffered((OutputPort) chunked(sReads, 64), Math.max(16, actionParameters.threads));
             ParallelProcessor alignedChunks = new ParallelProcessor(mainInputReads, chunked(aligner), Math.max(16, actionParameters.threads), actionParameters.threads);
             if (actionParameters.reportBuffers) {
-                BufferStatusReporter reporter = new BufferStatusReporter();
+                StatusReporter reporter = new StatusReporter();
                 reporter.addBuffer("Input (chunked; chunk size = 64)", mainInputReads.getBufferStatusProvider());
                 reporter.addBuffer("Alignment result (chunked; chunk size = 64)", alignedChunks.getOutputBufferStatusProvider());
+                reporter.addCustomProvider(new StatusReporter.StatusProvider() {
+                    volatile String status;
+                    volatile boolean isClosed = false;
+
+                    @Override
+                    public void updateStatus() {
+                        status = "Busy encoders: " + writer.getBusyEncoders() + " / " + writer.getEncodersCount();
+                        isClosed = writer.isClosed();
+                    }
+
+                    @Override
+                    public boolean isFinished() {
+                        return isClosed;
+                    }
+
+                    @Override
+                    public String getStatus() {
+                        return status;
+                    }
+                });
                 reporter.start();
             }
             OutputPort<VDJCAlignmentResult> alignments = unchunked(alignedChunks);

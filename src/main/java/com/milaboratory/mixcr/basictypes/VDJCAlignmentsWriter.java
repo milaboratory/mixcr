@@ -51,6 +51,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     public static final int DEFAULT_ALIGNMENTS_IN_BLOCK = 1024; // 1024 alignments * 805-1024 bytes per alignment ~  824 kB - 1MB per block
@@ -99,12 +100,12 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     /**
      * LZ4 compressor to compress data blocks
      */
-    final LZ4Compressor compressor = LZ4Factory.fastestInstance().highCompressor();
+    final LZ4Compressor compressor = LZ4Factory.fastestJavaInstance().highCompressor(); //fastestInstance().highCompressor();
 
     /**
      * LZ4 hash function
      */
-    final XXHash32 xxHash32 = XXHashFactory.fastestInstance().hash32();
+    final XXHash32 xxHash32 = XXHashFactory.fastestJavaInstance().hash32(); //fastestInstance().hash32();
 
     /**
      * This number will be added to the end of the file to report number of processed read to the following processing
@@ -116,6 +117,8 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
      * State to create PrimitivO streams form.
      */
     PrimitivOState mainOutputState = null;
+
+    final AtomicInteger busyEncoders = new AtomicInteger(0);
 
     boolean closed = false;
 
@@ -289,6 +292,18 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
         }
     }
 
+    public boolean isClosed() {
+        return closed;
+    }
+
+    public int getEncodersCount() {
+        return encoders.size();
+    }
+
+    public int getBusyEncoders() {
+        return busyEncoders.get();
+    }
+
     private final static class BlockToEncode {
         /**
          * Will be opened when this thread completes write to the output stream
@@ -321,7 +336,13 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
         }
     }
 
+    final AtomicInteger encoderCounter = new AtomicInteger();
+
     private final class Encoder extends Thread {
+        public Encoder() {
+            super("AlignmentEncoder-" + encoderCounter.incrementAndGet());
+        }
+
         @Override
         public void run() {
             // The same buffers will be used for all blocks processed by this thread
@@ -335,6 +356,9 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
                     if (block.isEndSignal())
                         return;
 
+                    // For stats
+                    busyEncoders.incrementAndGet();
+
                     // CPU intensive task (serialize + compress)
                     AlignmentsIO.writeBlock(block.content, mainOutputState, compressor, xxHash32, bufs);
 
@@ -346,6 +370,9 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
 
                     // Allowing next block to be written
                     block.currentBlockWriteLatch.countDown();
+
+                    // For stats
+                    busyEncoders.decrementAndGet();
                 }
             } catch (InterruptedException | IOException e) {
                 // THe error will rise exception in main thread and initiate auto
