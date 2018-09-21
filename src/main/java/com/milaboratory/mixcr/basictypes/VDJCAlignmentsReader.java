@@ -54,7 +54,7 @@ public final class VDJCAlignmentsReader implements
         OutputPortCloseable<VDJCAlignments>,
         CanReportProgress {
     private static final int DEFAULT_BUFFER_SIZE = 1048576; // 1 MB
-    final LZ4FastDecompressor decompressor = LZ4Factory.fastestInstance().fastDecompressor();
+    final LZ4FastDecompressor decompressor = LZ4Factory.fastestJavaInstance().fastDecompressor();
     VDJCAlignerParameters parameters;
     PipelineConfiguration pipelineConfiguration;
     List<VDJCGene> usedGenes;

@@ -33,14 +33,9 @@ import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivO;
-import com.milaboratory.primitivio.PrimitivOState;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
-import net.jpountz.lz4.LZ4Compressor;
-import net.jpountz.lz4.LZ4Factory;
-import net.jpountz.xxhash.XXHash32;
-import net.jpountz.xxhash.XXHashFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,10 +43,6 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     public static final int DEFAULT_ALIGNMENTS_IN_BLOCK = 1024; // 1024 alignments * 805-1024 bytes per alignment ~  824 kB - 1MB per block
@@ -62,30 +53,10 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
 
     /**
-     * Signal to the main thread form encoder about exceptional case
-     */
-    volatile boolean error = false;
-
-    /**
      * Buffer for accumulation of alignments written with write(VDJCAlignments) method. Buffer is flushed if
      * number of accumulated alignments is alignmentsInBlock or close() method was invoked.
      */
     volatile ArrayList<VDJCAlignments> currentBuffer;
-
-    /**
-     * Next encoder will await for this latch before writing content to the output stream
-     */
-    volatile CountDownLatch lastBlockWriteLatch = new CountDownLatch(0); // Initialized with opened latch
-
-    /**
-     * Encoder threads
-     */
-    final List<Encoder> encoders;
-
-    /**
-     * "Exchanger" with encoder threads
-     */
-    final SynchronousQueue<BlockToEncode> toEncoders = new SynchronousQueue<>();
 
     /**
      * Number of alignments in block. Larger number allows for better compression while consume more memory.
@@ -98,27 +69,20 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     final OutputStream rawOutput;
 
     /**
-     * LZ4 compressor to compress data blocks
-     */
-    final LZ4Compressor compressor = LZ4Factory.fastestJavaInstance().highCompressor(); //fastestInstance().highCompressor();
-
-    /**
-     * LZ4 hash function
-     */
-    final XXHash32 xxHash32 = XXHashFactory.fastestJavaInstance().hash32(); //fastestInstance().hash32();
-
-    /**
      * This number will be added to the end of the file to report number of processed read to the following processing
      * steps. Mainly for informative statistics reporting.
      */
     long numberOfProcessedReads = -1;
 
     /**
-     * State to create PrimitivO streams form.
+     * Pool of encoders
      */
-    PrimitivOState mainOutputState = null;
+    final BasicVDJCAlignmentWriterFactory writerFactory;
 
-    final AtomicInteger busyEncoders = new AtomicInteger(0);
+    /**
+     * Initialized after header, implements all internal encoding logic.
+     */
+    volatile BasicVDJCAlignmentWriterFactory.Writer writer = null;
 
     boolean closed = false;
 
@@ -145,13 +109,8 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     public VDJCAlignmentsWriter(OutputStream output, int encoderThreads, int alignmentsInBlock) {
         this.rawOutput = output;
         this.alignmentsInBlock = alignmentsInBlock;
-        this.encoders = new ArrayList<>(encoderThreads);
-        for (int i = 0; i < encoderThreads; i++) {
-            Encoder e = new Encoder();
-            e.start();
-            encoders.add(e);
-        }
         this.currentBuffer = new ArrayList<>(alignmentsInBlock);
+        this.writerFactory = new BasicVDJCAlignmentWriterFactory(encoderThreads);
     }
 
     @Override
@@ -183,7 +142,7 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
         if (parameters == null || genes == null)
             throw new IllegalArgumentException();
 
-        if (mainOutputState != null)
+        if (writer != null)
             throw new IllegalStateException("Header already written.");
 
         PrimitivO output = new PrimitivO(rawOutput);
@@ -218,16 +177,21 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
         }
 
         // Saving output state
-        mainOutputState = output.getState();
+        writer = writerFactory.createWriter(output.getState(), rawOutput, false);
+    }
+
+    public int getEncodersCount() {
+        return writerFactory.getEncodersCount();
+    }
+
+    public int getBusyEncoders() {
+        return writerFactory.getBusyEncoders();
     }
 
     @Override
     public synchronized void write(VDJCAlignments alignment) {
-        if (mainOutputState == null)
+        if (writer == null)
             throw new IllegalStateException("Header not initialized.");
-
-        if (error)
-            throw new RuntimeException("One of the encoders terminated with error.");
 
         if (alignment == null)
             throw new NullPointerException();
@@ -242,20 +206,12 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
      * Flush alignment buffer
      */
     private void flushBlock() {
-        if (error)
-            throw new RuntimeException("One of the encoders terminated with error.");
-
         if (currentBuffer.isEmpty())
             return;
 
-        try {
-            BlockToEncode block = new BlockToEncode(currentBuffer, lastBlockWriteLatch);
-            lastBlockWriteLatch = block.currentBlockWriteLatch;
-            toEncoders.put(block);
-            currentBuffer = new ArrayList<>(alignmentsInBlock);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        // Enqueue block for async encoding and compression
+        writer.writeAsync(currentBuffer);
+        currentBuffer = new ArrayList<>(alignmentsInBlock);
     }
 
     @Override
@@ -263,122 +219,25 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
         try {
             if (!closed) {
                 flushBlock();
-                // Terminating Encoder threads
-                boolean threadsAlive;
-                do {
-                    for (int i = 0; i < encoders.size(); i++)
-                        toEncoders.offer(new BlockToEncode(), 100, TimeUnit.MILLISECONDS);
-                    threadsAlive = false;
-                    for (Encoder encoder : encoders) {
-                        encoder.join(100);
-                        if (encoder.isAlive())
-                            threadsAlive = true;
-                    }
-                } while (threadsAlive);
 
-                // [ 0 : byte ] + [ numberOfProcessedReads : long ]
-                byte[] footer = new byte[9];
-                // Sign of stream termination
-                footer[0] = 0;
+                writer.close(); // This will also write stream termination symbol/block to the stream
+                writerFactory.close();
+
+                // [ numberOfProcessedReads : long ]
+                byte[] footer = new byte[8];
                 // Number of processed reads is known only in the end of analysis
                 // Writing it as last piece of information in the stream
-                AlignmentsIO.writeLongBE(numberOfProcessedReads, footer, 1);
+                AlignmentsIO.writeLongBE(numberOfProcessedReads, footer, 0);
                 rawOutput.write(footer);
                 rawOutput.close();
                 closed = true;
             }
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     public boolean isClosed() {
         return closed;
-    }
-
-    public int getEncodersCount() {
-        return encoders.size();
-    }
-
-    public int getBusyEncoders() {
-        return busyEncoders.get();
-    }
-
-    private final static class BlockToEncode {
-        /**
-         * Will be opened when this thread completes write to the output stream
-         */
-        final CountDownLatch currentBlockWriteLatch = new CountDownLatch(1);
-        /**
-         * Encoder will await for this latch before writing content to the output stream
-         */
-        final CountDownLatch previousBlockWriteLatch;
-        /**
-         * Alignments to encode
-         */
-        final List<VDJCAlignments> content;
-
-        /**
-         * Construct end-signal block
-         */
-        BlockToEncode() {
-            this(null, null);
-        }
-
-        BlockToEncode(List<VDJCAlignments> content,
-                      CountDownLatch previousBlockWriteLatch) {
-            this.content = content;
-            this.previousBlockWriteLatch = previousBlockWriteLatch;
-        }
-
-        boolean isEndSignal() {
-            return content == null;
-        }
-    }
-
-    final AtomicInteger encoderCounter = new AtomicInteger();
-
-    private final class Encoder extends Thread {
-        public Encoder() {
-            super("AlignmentEncoder-" + encoderCounter.incrementAndGet());
-        }
-
-        @Override
-        public void run() {
-            // The same buffers will be used for all blocks processed by this thread
-            AlignmentsIO.BlockBuffers bufs = new AlignmentsIO.BlockBuffers();
-
-            try {
-                while (true) {
-                    BlockToEncode block = toEncoders.take();
-
-                    // Is end signal
-                    if (block.isEndSignal())
-                        return;
-
-                    // For stats
-                    busyEncoders.incrementAndGet();
-
-                    // CPU intensive task (serialize + compress)
-                    AlignmentsIO.writeBlock(block.content, mainOutputState, compressor, xxHash32, bufs);
-
-                    // Awaiting previous block to be written to the stream
-                    block.previousBlockWriteLatch.await();
-
-                    // Writing the data (because of the latch mechanism only one encoder at a time will use the stream)
-                    bufs.writeTo(rawOutput);
-
-                    // Allowing next block to be written
-                    block.currentBlockWriteLatch.countDown();
-
-                    // For stats
-                    busyEncoders.decrementAndGet();
-                }
-            } catch (InterruptedException | IOException e) {
-                // THe error will rise exception in main thread and initiate auto
-                error = true;
-                throw new RuntimeException(e);
-            }
-        }
     }
 }
