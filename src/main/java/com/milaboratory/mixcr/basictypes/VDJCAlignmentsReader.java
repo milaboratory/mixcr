@@ -32,20 +32,18 @@ package com.milaboratory.mixcr.basictypes;
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
-import com.milaboratory.primitivio.PrimitivIState;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.CountingInputStream;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
-import net.jpountz.lz4.LZ4Factory;
-import net.jpountz.lz4.LZ4FastDecompressor;
-import net.jpountz.xxhash.XXHash32;
-import net.jpountz.xxhash.XXHashFactory;
 
 import java.io.*;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.*;
 
@@ -54,27 +52,19 @@ public final class VDJCAlignmentsReader implements
         OutputPortCloseable<VDJCAlignments>,
         CanReportProgress {
     private static final int DEFAULT_BUFFER_SIZE = 1048576; // 1 MB
-    final LZ4FastDecompressor decompressor = LZ4Factory.fastestJavaInstance().fastDecompressor();
+
     VDJCAlignerParameters parameters;
     PipelineConfiguration pipelineConfiguration;
     List<VDJCGene> usedGenes;
     final InputStream inputStream;
-    PrimitivIState inputState;
+    final CountingInputStream countingInputStream;
     final VDJCLibraryRegistry vdjcRegistry;
     String versionInfo;
     String magic;
     long numberOfReads = -1;
     boolean closed = false;
-    long counter = 0;
     final long size;
-    final CountingInputStream countingInputStream;
-    final AlignmentsIO.BlockBuffers buffers = new AlignmentsIO.BlockBuffers();
-    Iterator<VDJCAlignments> alignmentsIterator = null;
-
-    /**
-     * LZ4 hash function
-     */
-    final XXHash32 xxHash32 = XXHashFactory.fastestInstance().hash32();
+    volatile BasicVDJCAlignmentReader reader = null;
 
     public VDJCAlignmentsReader(String fileName) throws IOException {
         this(new File(fileName), VDJCLibraryRegistry.getDefault());
@@ -116,7 +106,7 @@ public final class VDJCAlignmentsReader implements
     }
 
     void init(Map<GeneFeature, GeneFeature> geneFeatureRefs) {
-        if (inputState != null)
+        if (reader != null)
             return;
 
         PrimitivI input = new PrimitivI(inputStream);
@@ -160,7 +150,7 @@ public final class VDJCAlignmentsReader implements
                 input.putKnownObject(featureParams);
         }
 
-        this.inputState = input.getState();
+        this.reader = new BasicVDJCAlignmentReader(inputStream, input.getState(), false);
     }
 
     public synchronized VDJCAlignerParameters getParameters() {
@@ -243,25 +233,14 @@ public final class VDJCAlignmentsReader implements
 
         init();
 
-        try {
-            if (alignmentsIterator == null || !alignmentsIterator.hasNext()) {
-                // Reloading buffers
-                List<VDJCAlignments> als = AlignmentsIO.readBlock(inputStream, inputState, decompressor, xxHash32, buffers);
+        VDJCAlignments al = reader.take();
 
-                if (als == null) {
-                    close(true);
-                    return null;
-                } else
-                    alignmentsIterator = als.iterator();
-            }
-
-            assert alignmentsIterator.hasNext();
-
-            return alignmentsIterator.next();
-
-        } catch (IOException e) {
-            throw new RuntimeException();
+        if (al == null) {
+            close(true);
+            return null;
         }
+
+        return al;
     }
 
     /**
