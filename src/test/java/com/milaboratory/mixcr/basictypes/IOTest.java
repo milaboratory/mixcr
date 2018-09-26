@@ -99,10 +99,12 @@ public class IOTest {
 
         System.out.println("Bytes per alignment: " + (bos.size() - header) / alignemntsList.size());
 
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(new ByteArrayInputStream(bos.toByteArray()))) {
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(new ByteArrayInputStream(bos.toByteArray()), true)) {
             int i = 0;
-            for (VDJCAlignments alignments : CUtils.it(reader))
+            for (VDJCAlignments alignments : CUtils.it(reader)) {
+                Assert.assertEquals(alignments.getAlignmentsIndex(), i);
                 assertEquals(alignemntsList.get(i++), alignments);
+            }
             Assert.assertEquals(numberOfAlignments, i);
             Assert.assertEquals(numberOfReads, reader.getNumberOfReads());
         }

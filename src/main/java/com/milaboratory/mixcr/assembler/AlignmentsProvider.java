@@ -36,9 +36,7 @@ import com.milaboratory.util.Factory;
 import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 
 public interface AlignmentsProvider {
     OutputPortCloseable<VDJCAlignments> create();
@@ -55,7 +53,7 @@ public interface AlignmentsProvider {
             return new VDJCAlignmentsReaderWrapper(new Factory<VDJCAlignmentsReader>() {
                 @Override
                 public VDJCAlignmentsReader create() {
-                    return new VDJCAlignmentsReader(new ByteArrayInputStream(rawData), geneResolver);
+                    return new VDJCAlignmentsReader(new ByteArrayInputStream(rawData), geneResolver, rawData.length, true);
                 }
             });
         }
@@ -65,7 +63,7 @@ public interface AlignmentsProvider {
                 @Override
                 public VDJCAlignmentsReader create() {
                     try {
-                        return new VDJCAlignmentsReader(file, geneResolver);
+                        return new VDJCAlignmentsReader(file, geneResolver, true);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -73,27 +71,27 @@ public interface AlignmentsProvider {
             });
         }
 
-        public static AlignmentsProvider createProvider(final File file, final VDJCLibraryRegistry geneResolver) {
-            return new VDJCAlignmentsReaderWrapper(new Factory<VDJCAlignmentsReader>() {
-                @Override
-                public VDJCAlignmentsReader create() {
-                    try {
-                        return new VDJCAlignmentsReader(file, geneResolver);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            });
-        }
-
-        public static AlignmentsProvider createProvider(final InputStream file, final VDJCLibraryRegistry geneResolver) {
-            return new VDJCAlignmentsReaderWrapper(new Factory<VDJCAlignmentsReader>() {
-                @Override
-                public VDJCAlignmentsReader create() {
-                    return new VDJCAlignmentsReader(file, geneResolver);
-                }
-            });
-        }
+        // public static AlignmentsProvider createProvider(final File file, final VDJCLibraryRegistry geneResolver) {
+        //     return new VDJCAlignmentsReaderWrapper(new Factory<VDJCAlignmentsReader>() {
+        //         @Override
+        //         public VDJCAlignmentsReader create() {
+        //             try {
+        //                 return new VDJCAlignmentsReader(file, geneResolver);
+        //             } catch (IOException e) {
+        //                 throw new RuntimeException(e);
+        //             }
+        //         }
+        //     });
+        // }
+        //
+        // public static AlignmentsProvider createProvider(final InputStream file, final VDJCLibraryRegistry geneResolver) {
+        //     return new VDJCAlignmentsReaderWrapper(new Factory<VDJCAlignmentsReader>() {
+        //         @Override
+        //         public VDJCAlignmentsReader create() {
+        //             return new VDJCAlignmentsReader(file, geneResolver);
+        //         }
+        //     });
+        // }
 
     }
 }

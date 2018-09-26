@@ -32,10 +32,12 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.CountingOutputPort;
+import cc.redberry.pipe.util.StatusReporter;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.primitivio.PipeDataInputReader;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
+import com.milaboratory.primitivio.PrimitivOState;
 import com.milaboratory.util.CanReportProgressAndStage;
 import com.milaboratory.util.ObjectSerializer;
 import com.milaboratory.util.Sorter;
@@ -55,8 +57,8 @@ import java.util.*;
  * writeAlignmentsAndIndex() 5. close()
  */
 public final class ClnAWriter implements PipelineConfigurationWriter,
-                                         AutoCloseable,
-                                         CanReportProgressAndStage {
+        AutoCloseable,
+        CanReportProgressAndStage {
     static final String MAGIC_V2 = "MiXCR.CLNA.V02";
     static final String MAGIC = MAGIC_V2;
     static final int MAGIC_LENGTH = MAGIC.length();
@@ -248,23 +250,66 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
         // Position of alignments with cloneIndex = -1 (not aligned alignments)
         aBlockOffset.add(outputStream.getByteCount());
 
+        PrimitivOState outputState = output.getState();
+
         long previousAlsCount = 0;
         int currentCloneIndex = -1;
 
-        // Writing alignments and writing indices
-        for (VDJCAlignments alignments : CUtils.it(sortedAlignments)) {
-            if (currentCloneIndex != alignments.cloneIndex) {
-                ++currentCloneIndex;
-                if (currentCloneIndex != alignments.cloneIndex)
-                    throw new IllegalArgumentException("No alignments for clone number " + currentCloneIndex);
-                if (alignments.cloneIndex >= numberOfClones)
-                    throw new IllegalArgumentException("Out of range clone Index in alignment: " + currentCloneIndex);
-                aBlockOffset.add(outputStream.getByteCount());
-                aBlockCount.add(numberOfAlignmentsWritten - previousAlsCount);
-                previousAlsCount = numberOfAlignmentsWritten;
+        // Writer
+        try (// TODO parametrise
+             BasicVDJCAlignmentWriterFactory writerFactory = new BasicVDJCAlignmentWriterFactory(
+                     Math.min(16, Runtime.getRuntime().availableProcessors()),
+                     true);
+             // Writer
+             BasicVDJCAlignmentWriterFactory.Writer writer =
+                     writerFactory.createWriter(outputState, outputStream, false)) {
+
+            StatusReporter reporter = new StatusReporter();
+            reporter.addCustomProvider(new StatusReporter.StatusProvider() {
+                volatile String status;
+                volatile boolean isClosed = false;
+
+                @Override
+                public void updateStatus() {
+                    status = "Busy encoders: " + writerFactory.getBusyEncoders() + " / " + writerFactory.getEncodersCount();
+                    isClosed = writerFactory.isClosed();
+                }
+
+                @Override
+                public boolean isFinished() {
+                    return isClosed;
+                }
+
+                @Override
+                public String getStatus() {
+                    return status;
+                }
+            });
+            reporter.start();
+
+            List<VDJCAlignments> block = new ArrayList<>();
+            // Writing alignments and writing indices
+            for (VDJCAlignments alignments : CUtils.it(sortedAlignments)) {
+                // Block full or end of clone
+                if (currentCloneIndex != alignments.cloneIndex || block.size() == AlignmentsIO.DEFAULT_ALIGNMENTS_IN_BLOCK) {
+                    writer.writeAsync(block);
+                    block = new ArrayList<>();
+                }
+                // End of clone
+                if (currentCloneIndex != alignments.cloneIndex) {
+                    ++currentCloneIndex;
+                    if (currentCloneIndex != alignments.cloneIndex)
+                        throw new IllegalArgumentException("No alignments for clone number " + currentCloneIndex);
+                    if (alignments.cloneIndex >= numberOfClones)
+                        throw new IllegalArgumentException("Out of range clone Index in alignment: " + currentCloneIndex);
+                    aBlockOffset.add(outputStream.getByteCount());
+                    aBlockCount.add(numberOfAlignmentsWritten - previousAlsCount);
+                    previousAlsCount = numberOfAlignmentsWritten;
+                }
+
+                block.add(alignments);
+                ++numberOfAlignmentsWritten;
             }
-            output.writeObject(alignments);
-            ++numberOfAlignmentsWritten;
         }
         // Closing sorted output port, this will delete presorted file
         sortedAlignments.close();

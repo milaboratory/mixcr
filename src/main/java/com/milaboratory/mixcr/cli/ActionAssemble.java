@@ -30,6 +30,7 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
+import cc.redberry.pipe.util.StatusReporter;
 import com.beust.jcommander.DynamicParameter;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
@@ -92,8 +93,8 @@ public class ActionAssemble extends AbstractActionWithResumeOption {
                 genes, alignerParameters.getFeaturesToAlignMap())) {
             // Creating event listener to collect run statistics
             report.setStartMillis(beginTimestamp);
-            report.setInputFiles(new String[]{actionParameters.getInputFileName()});
-            report.setOutputFiles(new String[]{actionParameters.getOutputFileName()});
+            report.setInputFiles(actionParameters.getInputFileName());
+            report.setOutputFiles(actionParameters.getOutputFileName());
             report.setCommandLine(helper.getCommandLineArguments());
 
             assembler.setListener(report);
@@ -103,6 +104,15 @@ public class ActionAssemble extends AbstractActionWithResumeOption {
                     alignmentsProvider,
                     assembler, actionParameters.threads);
             SmartProgressReporter.startProgressReport(assemblerRunner);
+
+            if (actionParameters.reportBuffers) {
+                StatusReporter reporter = new StatusReporter();
+                reporter.addCustomProviderFromLambda(() ->
+                        new StatusReporter.Status(
+                                "Reader buffer: " + assemblerRunner.getQueueSize(),
+                                assemblerRunner.isFinished()));
+                reporter.start();
+            }
             assemblerRunner.run();
 
             // Getting results
@@ -222,6 +232,10 @@ public class ActionAssemble extends AbstractActionWithResumeOption {
         @Parameter(description = "JSON report file.",
                 names = {"--json-report"})
         public String jsonReport = null;
+
+        @Parameter(description = "Buffers.",
+                names = {"--buffers"}, hidden = true)
+        public boolean reportBuffers;
 
         @Parameter(description = ".",
                 names = {"-e", "--events"}, hidden = true)

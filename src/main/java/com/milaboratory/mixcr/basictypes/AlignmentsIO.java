@@ -68,8 +68,9 @@ public final class AlignmentsIO {
     public static final byte LAST_BYTE = 0; // kB
     public static final int AVERAGE_ALIGNMENT_SIZE = 1024; // kB
 
-    private AlignmentsIO() {
+    public static final int DEFAULT_ALIGNMENTS_IN_BLOCK = 1024; // 1024 alignments * 805-1024 bytes per alignment ~  824 kB - 1MB per block
 
+    private AlignmentsIO() {
     }
 
     static final int BLOCK_HEADER_SIZE = 17;

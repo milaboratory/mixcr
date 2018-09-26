@@ -73,6 +73,7 @@ import java.util.regex.Pattern;
 
 import static cc.redberry.pipe.CUtils.chunked;
 import static cc.redberry.pipe.CUtils.unchunked;
+import static com.milaboratory.mixcr.basictypes.AlignmentsIO.DEFAULT_ALIGNMENTS_IN_BLOCK;
 
 public class ActionAlign extends AbstractActionWithResumeOption {
     private final AlignParameters actionParameters;
@@ -201,7 +202,7 @@ public class ActionAlign extends AbstractActionWithResumeOption {
              VDJCAlignmentsWriter writer = actionParameters.getOutputName().equals(".")
                      ? null
                      : new VDJCAlignmentsWriter(actionParameters.getOutputName(), Math.max(1, actionParameters.threads / 8),
-                     VDJCAlignmentsWriter.DEFAULT_ALIGNMENTS_IN_BLOCK);
+                     DEFAULT_ALIGNMENTS_IN_BLOCK);
 
              SequenceWriter notAlignedWriter = actionParameters.failedReadsR1 == null
                      ? null

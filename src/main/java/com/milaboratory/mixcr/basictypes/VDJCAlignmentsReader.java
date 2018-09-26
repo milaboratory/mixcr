@@ -61,9 +61,11 @@ public final class VDJCAlignmentsReader implements
     final VDJCLibraryRegistry vdjcRegistry;
     String versionInfo;
     String magic;
+    long counter = 0;
     long numberOfReads = -1;
     boolean closed = false;
     final long size;
+    final boolean useSeparateDecoderThread;
     volatile BasicVDJCAlignmentReader reader = null;
 
     public VDJCAlignmentsReader(String fileName) throws IOException {
@@ -74,31 +76,46 @@ public final class VDJCAlignmentsReader implements
         this(new File(fileName), vdjcRegistry);
     }
 
+    public VDJCAlignmentsReader(String fileName, VDJCLibraryRegistry vdjcRegistry, boolean useSeparateDecoderThread) throws IOException {
+        this(new File(fileName), vdjcRegistry, useSeparateDecoderThread);
+    }
+
     public VDJCAlignmentsReader(File file) throws IOException {
         this(file, VDJCLibraryRegistry.getDefault());
     }
 
     public VDJCAlignmentsReader(File file, VDJCLibraryRegistry vdjcRegistry) throws IOException {
         this(new BufferedInputStream(new FileInputStream(file), DEFAULT_BUFFER_SIZE),
-                vdjcRegistry, file.length());
+                vdjcRegistry, file.length(), false);
+    }
+
+    public VDJCAlignmentsReader(File file, VDJCLibraryRegistry vdjcRegistry, boolean useSeparateDecoderThread) throws IOException {
+        this(new BufferedInputStream(new FileInputStream(file), DEFAULT_BUFFER_SIZE),
+                vdjcRegistry, file.length(), useSeparateDecoderThread);
     }
 
     public VDJCAlignmentsReader(InputStream inputStream) {
-        this(inputStream, VDJCLibraryRegistry.getDefault(), 0);
+        this(inputStream, VDJCLibraryRegistry.getDefault(), 0, false);
+    }
+
+    public VDJCAlignmentsReader(InputStream inputStream, boolean useSeparateDecoderThread) {
+        this(inputStream, VDJCLibraryRegistry.getDefault(), 0, useSeparateDecoderThread);
     }
 
     public VDJCAlignmentsReader(InputStream inputStream, VDJCLibraryRegistry vdjcRegistry) {
-        this(inputStream, vdjcRegistry, 0);
+        this(inputStream, vdjcRegistry, 0, false);
     }
 
     public VDJCAlignmentsReader(InputStream inputStream, long size) {
-        this(inputStream, VDJCLibraryRegistry.getDefault(), size);
+        this(inputStream, VDJCLibraryRegistry.getDefault(), size, false);
     }
 
-    public VDJCAlignmentsReader(InputStream inputStream, VDJCLibraryRegistry vdjcRegistry, long size) {
+    public VDJCAlignmentsReader(InputStream inputStream, VDJCLibraryRegistry vdjcRegistry,
+                                long size, boolean useSeparateDecoderThread) {
         this.inputStream = countingInputStream = new CountingInputStream(inputStream);
         this.vdjcRegistry = vdjcRegistry;
         this.size = size;
+        this.useSeparateDecoderThread = useSeparateDecoderThread;
     }
 
     public void init() {
@@ -150,7 +167,13 @@ public final class VDJCAlignmentsReader implements
                 input.putKnownObject(featureParams);
         }
 
-        this.reader = new BasicVDJCAlignmentReader(inputStream, input.getState(), false);
+        this.reader = new BasicVDJCAlignmentReader(inputStream, input.getState(), false, useSeparateDecoderThread);
+    }
+
+    public int getQueueSize() {
+        if (reader == null)
+            return -1;
+        return reader.getQueueSize();
     }
 
     public synchronized VDJCAlignerParameters getParameters() {
@@ -240,7 +263,7 @@ public final class VDJCAlignmentsReader implements
             return null;
         }
 
-        return al;
+        return al.setAlignmentsIndex(counter++);
     }
 
     /**

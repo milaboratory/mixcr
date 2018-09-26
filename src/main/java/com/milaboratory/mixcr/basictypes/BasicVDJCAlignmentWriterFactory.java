@@ -138,6 +138,10 @@ public final class BasicVDJCAlignmentWriterFactory implements AutoCloseable {
         }
     }
 
+    public boolean isClosed() {
+        return closed;
+    }
+
     public final class Writer implements AutoCloseable {
         /**
          * Buffers for synchronous write
@@ -223,7 +227,7 @@ public final class BasicVDJCAlignmentWriterFactory implements AutoCloseable {
         }
 
         @Override
-        public void close() throws IOException {
+        public void close() {
             try {
 
                 waitPreviousBlock();
@@ -233,7 +237,7 @@ public final class BasicVDJCAlignmentWriterFactory implements AutoCloseable {
                     outputStream.close();
 
                 closed.countDown();
-            } catch (InterruptedException e) {
+            } catch (InterruptedException | IOException e) {
                 throw new RuntimeException(e);
             }
         }

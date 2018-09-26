@@ -40,53 +40,89 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * This class implements basic single-thread decoding of block-compressed VDJCAlignments stream
  */
 public final class BasicVDJCAlignmentReader implements OutputPortCloseable<VDJCAlignments> {
     // Make static?
-    final LZ4FastDecompressor decompressor = LZ4Factory.fastestJavaInstance().fastDecompressor();
+    private final LZ4FastDecompressor decompressor = LZ4Factory.fastestJavaInstance().fastDecompressor();
     // Make static?
-    final XXHash32 xxHash32 = XXHashFactory.fastestInstance().hash32();
+    private final XXHash32 xxHash32 = XXHashFactory.fastestInstance().hash32();
 
     /**
      * IO buffers
      */
-    final AlignmentsIO.BlockBuffers buffers = new AlignmentsIO.BlockBuffers();
+    private final AlignmentsIO.BlockBuffers buffers = new AlignmentsIO.BlockBuffers();
     /**
      * Underlying stream
      */
-    final InputStream inputStream;
+    private final InputStream inputStream;
     /**
      * PrimitivI stream to create object streams from
      */
-    final PrimitivIState inputState;
+    private final PrimitivIState inputState;
     /**
      * If true stream will be closed on this object close
      */
-    final boolean closeUnderlyingStream;
+    private final boolean closeUnderlyingStream;
     /**
      * Block content
      */
-    Iterator<VDJCAlignments> alignmentsIterator = null;
+    private Iterator<VDJCAlignments> alignmentsIterator = null;
+    /**
+     * "Exchanger" with decoder threads
+     */
+    private final BlockingQueue<Block> fromDecoder;
+    /**
+     * Decoder thread
+     */
+    private final DecoderThread decoderThread;
 
     public BasicVDJCAlignmentReader(InputStream inputStream, PrimitivIState inputState) {
         this(inputStream, inputState, true);
     }
 
     public BasicVDJCAlignmentReader(InputStream inputStream, PrimitivIState inputState, boolean closeUnderlyingStream) {
+        this(inputStream, inputState, closeUnderlyingStream, false);
+    }
+
+    public BasicVDJCAlignmentReader(InputStream inputStream, PrimitivIState inputState,
+                                    boolean closeUnderlyingStream, boolean separateDecoderThread) {
         this.inputStream = inputStream;
         this.inputState = inputState;
         this.closeUnderlyingStream = closeUnderlyingStream;
+        if (separateDecoderThread) {
+            this.fromDecoder = new ArrayBlockingQueue<>(2);
+            this.decoderThread = new DecoderThread();
+            this.decoderThread.start();
+        } else {
+            this.fromDecoder = null;
+            this.decoderThread = null;
+        }
     }
 
     @Override
     public synchronized VDJCAlignments take() {
         try {
             if (alignmentsIterator == null || !alignmentsIterator.hasNext()) {
-                // Reloading buffers
-                List<VDJCAlignments> als = AlignmentsIO.readBlock(inputStream, inputState, decompressor, xxHash32, buffers);
+                // Reloading buffer
+                List<VDJCAlignments> als;
+                if (fromDecoder == null) {
+                    als = AlignmentsIO.readBlock(inputStream, inputState, decompressor, xxHash32, buffers);
+                } else {
+                    try {
+                        Block take = fromDecoder.take();
+                        if (take.error)
+                            throw new RuntimeException("Decoder thread died with error.");
+                        als = take.alignments;
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
 
                 if (als == null) {
                     close();
@@ -110,6 +146,53 @@ public final class BasicVDJCAlignmentReader implements OutputPortCloseable<VDJCA
                 inputStream.close();
             } catch (IOException e) {
                 throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public int getQueueSize() {
+        if (fromDecoder == null)
+            return -1;
+        return fromDecoder.size();
+    }
+
+    private static final AtomicInteger readerThreadCounter = new AtomicInteger(0);
+
+    private static final class Block {
+        final List<VDJCAlignments> alignments;
+        final boolean error;
+
+        Block(List<VDJCAlignments> alignments, boolean error) {
+            this.alignments = alignments;
+            this.error = error;
+        }
+    }
+
+    private final class DecoderThread extends Thread {
+        DecoderThread() {
+            super("BasicVDJCAlignmentReaderThread-" + readerThreadCounter.getAndIncrement());
+        }
+
+        @Override
+        public void run() {
+            try {
+                try {
+                    List<VDJCAlignments> vdjcAlignments;
+                    do {
+                        // Reading blocks
+                        vdjcAlignments = AlignmentsIO.readBlock(inputStream, inputState, decompressor, xxHash32, buffers);
+                        // And piping them to the queue
+                        fromDecoder.put(new Block(vdjcAlignments, false));
+                    } while (vdjcAlignments != null);
+                    // End of stream sign
+                    fromDecoder.put(new Block(null, false));
+                } catch (IOException e) {
+                    // Signal main thread about exception
+                    fromDecoder.put(new Block(null, true));
+                    throw new RuntimeException(e);
+                }
+            } catch (InterruptedException e1) {
+                throw new RuntimeException(e1);
             }
         }
     }

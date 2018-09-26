@@ -44,8 +44,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.milaboratory.mixcr.basictypes.AlignmentsIO.DEFAULT_ALIGNMENTS_IN_BLOCK;
+
 public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
-    public static final int DEFAULT_ALIGNMENTS_IN_BLOCK = 1024; // 1024 alignments * 805-1024 bytes per alignment ~  824 kB - 1MB per block
     public static final int DEFAULT_ENCODER_THREADS = 3;
     static final String MAGIC_V12 = "MiXCR.VDJC.V12";
     static final String MAGIC = MAGIC_V12;
