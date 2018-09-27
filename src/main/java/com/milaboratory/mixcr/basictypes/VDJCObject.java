@@ -483,17 +483,17 @@ public class VDJCObject {
                     if (lLast.begin > rLast.end)
                         return null;
 
-                    assert lHit.getGene().getGeneType() == GeneType.Variable;
-                    if (!lHit
-                            .getPartitioningForTarget(lLast.iTarget)
-                            .isAvailable(ReferencePoint.CDR3Begin))
-                        return null;
-
-                    assert rHit.getGene().getGeneType() == GeneType.Joining;
-                    if (!rHit
-                            .getPartitioningForTarget(rLast.iTarget)
-                            .isAvailable(ReferencePoint.CDR3End))
-                        return null;
+//                    assert lHit.getGene().getGeneType() == GeneType.Variable;
+//                    if (!lHit
+//                            .getPartitioningForTarget(lLast.iTarget)
+//                            .isAvailable(ReferencePoint.CDR3Begin))
+//                        return null;
+//
+//                    assert rHit.getGene().getGeneType() == GeneType.Joining;
+//                    if (!rHit
+//                            .getPartitioningForTarget(rLast.iTarget)
+//                            .isAvailable(ReferencePoint.CDR3End))
+//                        return null;
 
                     IncompleteSequencePart
                             merged = new IncompleteSequencePart(lHit, false, lLast.iTarget, lLast.begin, rLast.end);

@@ -49,7 +49,7 @@ public class VDJCObjectTest {
             for (GeneFeature feature : incompleteFeatures) {
                 for (Iterable<? extends VDJCObject> it : Arrays.asList(
                         align.alignments,
-                        assembleFullSeq.cloneSet,
+                        assemble.cloneSet,
                         assembleFullSeq.cloneSet)) {
                     for (VDJCObject o : it) {
                         VDJCObject.CaseSensitiveNucleotideSequence seq = o.getIncompleteFeature(feature);
@@ -59,8 +59,8 @@ public class VDJCObjectTest {
                         if (feature.contains(CDR3)) {
                             assertTrue(seq.containsUpperCase());
                             NSequenceWithQuality cdr3 = o.getFeature(CDR3);
-                            assertNotNull(feature.toString(), cdr3);
-                            assertTrue(seq.toString().contains(cdr3.getSequence().toString().toUpperCase()));
+                            if (cdr3 != null)
+                                assertTrue(seq.toString().contains(cdr3.getSequence().toString().toUpperCase()));
                         }
                     }
                 }
@@ -106,7 +106,7 @@ public class VDJCObjectTest {
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
         VDJCAlignments al = align.alignments.get(43);
         //new ActionExportAlignmentsPretty().outputCompact(System.out, al);
-        assertNull(al.getIncompleteFeature(VDJRegion));
+        assertNotNull(al.getIncompleteFeature(VDJRegion));
         assertNull(al.getFeature(CDR3));
         assertNull(al.getIncompleteFeature(CDR3));
     }
@@ -128,9 +128,8 @@ public class VDJCObjectTest {
                                 || al.getBestHit(GeneType.Joining).getAlignment(1).getSequence2Range().getTo() != al.getTarget(1).size());
                 continue;
             }
-            assertTrue((cdr3 == null) == (seq == null));
-            if (seq != null)
-                assertTrue(seq.toString().contains(al.getFeature(CDR3).getSequence().toString().toUpperCase()));
+            if (seq != null && cdr3 != null)
+                assertTrue(seq.toString().contains(cdr3.getSequence().toString().toUpperCase()));
         }
     }
 }
