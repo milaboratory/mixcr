@@ -234,7 +234,7 @@ public class VDJCObject {
 //            if (bestVHit == null)
 //                return null;
 //
-//            //TODO check for V featunre compatibility
+//            //TODO check for V feature compatibility
 //            Alignment<NucleotideSequence>
 //                    lAlignment = bestVHit.getAlignment(0),
 //                    rAlignment = bestVHit.getAlignment(1);
