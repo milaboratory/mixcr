@@ -167,7 +167,8 @@ public final class VDJCAlignmentsReader implements
                 input.putKnownObject(featureParams);
         }
 
-        this.reader = new BasicVDJCAlignmentReader(inputStream, input.getState(), false, useSeparateDecoderThread);
+        this.reader = new BasicVDJCAlignmentReader(new AlignmentsIO.InputStreamBufferReader(inputStream),
+                input.getState(), useSeparateDecoderThread);
     }
 
     public int getQueueSize() {

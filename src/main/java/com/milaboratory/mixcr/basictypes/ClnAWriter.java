@@ -256,13 +256,13 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
         int currentCloneIndex = -1;
 
         // Writer
-        try (// TODO parametrise
-             BasicVDJCAlignmentWriterFactory writerFactory = new BasicVDJCAlignmentWriterFactory(
-                     Math.min(16, Runtime.getRuntime().availableProcessors()),
-                     true);
-             // Writer
-             BasicVDJCAlignmentWriterFactory.Writer writer =
-                     writerFactory.createWriter(outputState, outputStream, false)) {
+        try ( // TODO parametrise
+              BasicVDJCAlignmentWriterFactory writerFactory = new BasicVDJCAlignmentWriterFactory(
+                      Math.min(16, Runtime.getRuntime().availableProcessors()),
+                      true);
+              // Writer
+              BasicVDJCAlignmentWriterFactory.Writer writer =
+                      writerFactory.createWriter(outputState, outputStream, false)) {
 
             StatusReporter reporter = new StatusReporter();
             reporter.addCustomProvider(new StatusReporter.StatusProvider() {
@@ -290,13 +290,19 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
             List<VDJCAlignments> block = new ArrayList<>();
             // Writing alignments and writing indices
             for (VDJCAlignments alignments : CUtils.it(sortedAlignments)) {
-                // Block full or end of clone
-                if (currentCloneIndex != alignments.cloneIndex || block.size() == AlignmentsIO.DEFAULT_ALIGNMENTS_IN_BLOCK) {
+                // Block is full
+                if (block.size() == AlignmentsIO.DEFAULT_ALIGNMENTS_IN_BLOCK) {
                     writer.writeAsync(block);
                     block = new ArrayList<>();
                 }
+
                 // End of clone
                 if (currentCloneIndex != alignments.cloneIndex) {
+
+                    // This will also wait for the previous block (if async write was issued) to be flushed to the stream
+                    writer.writeSync(block);
+                    block = new ArrayList<>();
+
                     ++currentCloneIndex;
                     if (currentCloneIndex != alignments.cloneIndex)
                         throw new IllegalArgumentException("No alignments for clone number " + currentCloneIndex);
@@ -310,6 +316,9 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
                 block.add(alignments);
                 ++numberOfAlignmentsWritten;
             }
+
+            // Writing last block, and waiting for all the data to be flushed
+            writer.writeSync(block);
         }
         // Closing sorted output port, this will delete presorted file
         sortedAlignments.close();

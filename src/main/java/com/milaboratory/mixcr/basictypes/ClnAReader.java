@@ -29,13 +29,16 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPort;
+import cc.redberry.pipe.util.CountLimitingOutputPort;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.ClnsReader.GT2GFAdapter;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PipeDataInputReader;
 import com.milaboratory.primitivio.PrimitivI;
+import com.milaboratory.primitivio.PrimitivIState;
 import com.milaboratory.util.CanReportProgress;
 import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
 
@@ -50,16 +53,16 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Reader of CLNA file format.
  */
 public final class ClnAReader implements
-                              PipelineConfigurationReader,
-                              AutoCloseable {
+        PipelineConfigurationReader,
+        AutoCloseable {
     public static final int DEFAULT_CHUNK_SIZE = 262144;
     final int chunkSize;
     /**
@@ -86,8 +89,12 @@ public final class ClnAReader implements
     final PipelineConfiguration configuration;
     final VDJCAlignerParameters alignerParameters;
     final CloneAssemblerParameters assemblerParameters;
-    final GT2GFAdapter alignedFeatures;
+
+    final EnumMap<GeneType, GeneFeature> alignedFeatures;
     final List<VDJCGene> genes;
+
+    final PrimitivIState inputState;
+
     final int numberOfClones;
 
     // Meta data
@@ -152,8 +159,9 @@ public final class ClnAReader implements
         this.configuration = input.readObject(PipelineConfiguration.class);
         this.alignerParameters = input.readObject(VDJCAlignerParameters.class);
         this.assemblerParameters = input.readObject(CloneAssemblerParameters.class);
-        this.alignedFeatures = new GT2GFAdapter(IO.readGF2GTMap(input));
-        this.genes = IOUtil.readGeneReferences(input, libraryRegistry);
+        this.alignedFeatures = IO.readGF2GTMap(input);
+        this.genes = IOUtil.readAndRegisterGeneReferences(input, libraryRegistry, new GT2GFAdapter(alignedFeatures));
+        this.inputState = input.getState();
     }
 
     public ClnAReader(Path path, VDJCLibraryRegistry libraryRegistry) throws IOException {
@@ -226,10 +234,7 @@ public final class ClnAReader implements
      * Read clone set completely
      */
     public CloneSet readCloneSet() throws IOException {
-        PrimitivI input = new PrimitivI(new InputDataStream(firstClonePosition, index[0]));
-        // Initializing PrimitivI object
-        // (see big comment block in ClnAWriter.writeClones())
-        IOUtil.registerGeneReferences(input, genes, alignedFeatures);
+        PrimitivI input = inputState.createPrimitivI(new InputDataStream(firstClonePosition, index[0]));
 
         // Reading clones
         int count = numberOfClones();
@@ -237,15 +242,14 @@ public final class ClnAReader implements
         for (int i = 0; i < count; i++)
             clones.add(input.readObject(Clone.class));
 
-        return new CloneSet(clones, genes, alignedFeatures.map, alignerParameters, assemblerParameters);
+        return new CloneSet(clones, genes, alignedFeatures, alignerParameters, assemblerParameters);
     }
 
     /**
      * Constructs output port to read clones one by one as a stream
      */
     public OutputPort<Clone> readClones() throws IOException {
-        PrimitivI input = new PrimitivI(new InputDataStream(firstClonePosition, index[0]));
-        IOUtil.registerGeneReferences(input, genes, alignedFeatures);
+        PrimitivI input = inputState.createPrimitivI(new InputDataStream(firstClonePosition, index[0]));
 
         return new PipeDataInputReader<>(Clone.class, input, numberOfClones());
     }
@@ -255,28 +259,28 @@ public final class ClnAReader implements
      *
      * @param cloneIndex index of clone; -1 to read unassembled alignments
      */
-    public OutputPort<VDJCAlignments> readAlignmentsOfClone(int cloneIndex) throws IOException {
-        PrimitivI input = new PrimitivI(new InputDataStream(index[cloneIndex + 1], index[cloneIndex + 2]));
-        IOUtil.registerGeneReferences(input, genes, alignedFeatures);
-        return new PipeDataInputReader<>(VDJCAlignments.class, input, counts[cloneIndex + 1]);
+    public OutputPort<VDJCAlignments> readAlignmentsOfClone(int cloneIndex) {
+        return new CountLimitingOutputPort<>(new BasicVDJCAlignmentReader(
+                new AlignmentsIO.FileChannelBufferReader(channel, index[cloneIndex + 1], index[cloneIndex + 2]),
+                inputState, false), counts[cloneIndex + 1]);
     }
 
     /**
      * Constructs output port to read all alignments form the file. Alignments are sorted by cloneIndex.
      */
-    public OutputPort<VDJCAlignments> readAllAlignments() throws IOException {
-        PrimitivI input = new PrimitivI(new InputDataStream(index[0], index[index.length - 1]));
-        IOUtil.registerGeneReferences(input, genes, alignedFeatures);
-        return new PipeDataInputReader<>(VDJCAlignments.class, input, totalAlignmentsCount);
+    public OutputPort<VDJCAlignments> readAllAlignments() {
+        return new CountLimitingOutputPort<>(new BasicVDJCAlignmentReader(
+                new AlignmentsIO.FileChannelBufferReader(channel, index[0], index[index.length - 1]),
+                inputState, false), totalAlignmentsCount);
     }
 
     /**
      * Constructs output port to read all alignments that are attached to a clone. Alignments are sorted by cloneIndex.
      */
-    public OutputPort<VDJCAlignments> readAssembledAlignments() throws IOException {
-        PrimitivI input = new PrimitivI(new InputDataStream(index[1], index[index.length - 1]));
-        IOUtil.registerGeneReferences(input, genes, alignedFeatures);
-        return new PipeDataInputReader<>(VDJCAlignments.class, input, totalAlignmentsCount - counts[0]);
+    public OutputPort<VDJCAlignments> readAssembledAlignments() {
+        return new CountLimitingOutputPort<>(new BasicVDJCAlignmentReader(
+                new AlignmentsIO.FileChannelBufferReader(channel, index[1], index[index.length - 1]),
+                inputState, false), totalAlignmentsCount - counts[0]);
     }
 
     /**
@@ -285,7 +289,7 @@ public final class ClnAReader implements
      *
      * Returns: readAlignmentsOfClone(-1)
      */
-    public OutputPort<VDJCAlignments> readNotAssembledAlignments() throws IOException {
+    public OutputPort<VDJCAlignments> readNotAssembledAlignments() {
         return readAlignmentsOfClone(-1);
     }
 
@@ -306,11 +310,10 @@ public final class ClnAReader implements
 
 
         CloneAlignmentsPort() throws IOException {
-            PrimitivI input = new PrimitivI(new InputDataStream(firstClonePosition, index[0]));
-            IOUtil.registerGeneReferences(input, genes, alignedFeatures);
+            PrimitivI input = inputState.createPrimitivI(new InputDataStream(firstClonePosition, index[0]));
             this.clones = new PipeDataInputReader<>(Clone.class, input, numberOfClones);
             this.fakeCloneSet = new CloneSet(Collections.EMPTY_LIST,
-                    genes, alignedFeatures.map,
+                    genes, alignedFeatures,
                     alignerParameters, assemblerParameters);
         }
 
@@ -358,7 +361,7 @@ public final class ClnAReader implements
         /**
          * Alignments
          */
-        public OutputPort<VDJCAlignments> alignments() throws IOException {
+        public OutputPort<VDJCAlignments> alignments() {
             return readAlignmentsOfClone(cloneId);
         }
     }

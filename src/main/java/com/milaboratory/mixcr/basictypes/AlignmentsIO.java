@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -174,21 +175,91 @@ public final class AlignmentsIO {
         buffers.rawBuffer = dataOutput.getBuffer();
     }
 
+    public static final class InputStreamBufferReader implements BufferReader {
+        final DataInputStream dis;
+
+        public InputStreamBufferReader(InputStream stream) {
+            this.dis = new DataInputStream(stream);
+        }
+
+        @Override
+        public void readFully(byte[] b) throws IOException {
+            dis.readFully(b);
+        }
+
+        @Override
+        public void readFully(byte[] b, int off, int len) throws IOException {
+            dis.readFully(b, off, len);
+        }
+
+        @Override
+        public byte readByte() throws IOException {
+            return dis.readByte();
+        }
+    }
+
+    public static final class FileChannelBufferReader implements BufferReader {
+        private final FileChannel fileChannel;
+        private long position;
+        private long to;
+
+        public FileChannelBufferReader(FileChannel fileChannel, long position) {
+            this(fileChannel, position, -1);
+
+        }
+
+        public FileChannelBufferReader(FileChannel fileChannel, long position, long to) {
+            this.fileChannel = fileChannel;
+            this.position = position;
+            this.to = to;
+        }
+
+        @Override
+        public void readFully(byte[] b) throws IOException {
+            if(position + b.length > to)
+                throw new IOException("No more bytes. Stream limit reached. This is a sign of malformed input file.");
+            fileChannel.read(ByteBuffer.wrap(b), position);
+            position += b.length;
+        }
+
+        @Override
+        public void readFully(byte[] b, int off, int len) throws IOException {
+            if(position + len > to)
+                throw new IOException("No more bytes. Stream limit reached. This is a sign of malformed input file.");
+            fileChannel.read(ByteBuffer.wrap(b, off, len), position);
+            position += b.length;
+        }
+
+        @Override
+        public byte readByte() throws IOException {
+            if(position + 1 > to)
+                throw new IOException("No more bytes. Stream limit reached. This is a sign of malformed input file.");
+            byte[] b = new byte[1];
+            fileChannel.read(ByteBuffer.wrap(b), position);
+            position += 1;
+            return b[0];
+        }
+    }
+
     public static List<VDJCAlignments> readBlock(InputStream stream, PrimitivIState inputState,
                                                  LZ4FastDecompressor decompressor, XXHash32 xxHash32,
                                                  BlockBuffers buffers) throws IOException {
-        // Used for the readFully() method
-        DataInputStream dis = new DataInputStream(stream);
 
+        return readBlock(new InputStreamBufferReader(stream), inputState, decompressor, xxHash32, buffers);
+    }
+
+    public static List<VDJCAlignments> readBlock(BufferReader reader, PrimitivIState inputState,
+                                                 LZ4FastDecompressor decompressor, XXHash32 xxHash32,
+                                                 BlockBuffers buffers) throws IOException {
         // Reading header
 
-        // First byte
-        byte h0 = dis.readByte();
+        // First byte
+        byte h0 = reader.readByte();
         if (h0 == 0)
             return null;
 
         byte[] header1 = new byte[BLOCK_HEADER_SIZE - 1];
-        dis.readFully(header1);
+        reader.readFully(header1);
         int numberOfAlignments = readIntBE(header1, 0);
         int rawSize = readIntBE(header1, 4);
         int compressedSize = readIntBE(header1, 8);
@@ -197,11 +268,11 @@ public final class AlignmentsIO {
         if ((h0 & 2) == 0) { // Not compressed block
             buffers.ensureRawBufferSize(rawSize);
             assert rawSize == compressedSize;
-            dis.readFully(buffers.rawBuffer, 0, rawSize);
+            reader.readFully(buffers.rawBuffer, 0, rawSize);
         } else { // Compressed
             buffers.ensureRawBufferSize(rawSize);
             buffers.ensureCompressedBufferSize(compressedSize);
-            dis.readFully(buffers.compressedBuffer, 0, compressedSize);
+            reader.readFully(buffers.compressedBuffer, 0, compressedSize);
             decompressor.decompress(buffers.compressedBuffer, 0,
                     buffers.rawBuffer, 0, rawSize);
         }
@@ -217,6 +288,16 @@ public final class AlignmentsIO {
             alignments.add(input.readObject(VDJCAlignments.class));
 
         return alignments;
+    }
+
+    public interface BufferReader {
+        default void readFully(byte b[]) throws IOException {
+            readFully(b, 0, b.length);
+        }
+
+        void readFully(byte b[], int off, int len) throws IOException;
+
+        byte readByte() throws IOException;
     }
 
     public static final class BlockBuffers {
