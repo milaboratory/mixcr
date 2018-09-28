@@ -34,6 +34,7 @@ import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.blocks.FilteringPort;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.CanReportProgressAndStage;
@@ -44,6 +45,7 @@ public class CloneAssemblerRunner implements CanReportProgressAndStage {
     final int threads;
     volatile String stage = "Initialization";
     volatile CanReportProgress innerProgress;
+    volatile VDJCAlignmentsReader alignmentReader = null;
     volatile boolean isFinished = false;
 
     public CloneAssemblerRunner(AlignmentsProvider alignmentsProvider, CloneAssembler assembler, int threads) {
@@ -72,6 +74,8 @@ public class CloneAssemblerRunner implements CanReportProgressAndStage {
     public void run() {
         //run initial assembler
         try (OutputPortCloseable<VDJCAlignments> alignmentsPort = alignmentsProvider.create()) {
+            if (alignmentsPort instanceof VDJCAlignmentsReaderWrapper.OP)
+                alignmentReader = ((VDJCAlignmentsReaderWrapper.OP) alignmentsPort).reader;
             synchronized (this) {
                 stage = "Assembling initial clonotypes";
                 if (alignmentsPort instanceof CanReportProgress)
@@ -82,6 +86,7 @@ public class CloneAssemblerRunner implements CanReportProgressAndStage {
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
+            alignmentReader = null;
         }
         // run mapping if required
         if (assembler.beginMapping()) {
@@ -90,6 +95,8 @@ public class CloneAssemblerRunner implements CanReportProgressAndStage {
                 innerProgress = null;
             }
             try (OutputPortCloseable<VDJCAlignments> alignmentsPort = alignmentsProvider.create()) {
+                if (alignmentsPort instanceof VDJCAlignmentsReaderWrapper.OP)
+                    alignmentReader = ((VDJCAlignmentsReaderWrapper.OP) alignmentsPort).reader;
                 synchronized (this) {
                     stage = "Mapping low quality reads";
                     if (alignmentsPort instanceof CanReportProgress)
@@ -104,6 +111,7 @@ public class CloneAssemblerRunner implements CanReportProgressAndStage {
                     throw new RuntimeException(e);
                 }
             }
+            alignmentReader = null;
             assembler.endMapping();
         }
         assembler.preClustering();
@@ -122,6 +130,12 @@ public class CloneAssemblerRunner implements CanReportProgressAndStage {
         }
         assembler.buildClones();
         isFinished = true;
+    }
+
+    public int getQueueSize() {
+        if (alignmentReader == null)
+            return -1;
+        return alignmentReader.getQueueSize();
     }
 
     public CloneSet getCloneSet(VDJCAlignerParameters alignerParameters) {

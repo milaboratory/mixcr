@@ -62,6 +62,7 @@ public class IOTest {
         int header;
 
         long numberOfReads;
+        long numberOfAlignments = 0;
         try (SingleFastqReader reader =
                      new SingleFastqReader(
                              IOTest.class.getClassLoader()
@@ -75,7 +76,7 @@ public class IOTest {
             }
 
 
-            try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(bos)) {
+            try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(bos, 4, 21)) {
                 writer.header(aligner, null);
 
                 header = bos.size();
@@ -83,6 +84,7 @@ public class IOTest {
                 for (SingleRead read : CUtils.it(reader)) {
                     VDJCAlignmentResult<SingleRead> result = aligner.process(read);
                     if (result.alignment != null) {
+                        numberOfAlignments++;
                         writer.write(result.alignment);
                         alignemntsList.add(result.alignment);
                     }
@@ -97,10 +99,13 @@ public class IOTest {
 
         System.out.println("Bytes per alignment: " + (bos.size() - header) / alignemntsList.size());
 
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(new ByteArrayInputStream(bos.toByteArray()))) {
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(new ByteArrayInputStream(bos.toByteArray()), true)) {
             int i = 0;
-            for (VDJCAlignments alignments : CUtils.it(reader))
+            for (VDJCAlignments alignments : CUtils.it(reader)) {
+                Assert.assertEquals(alignments.getAlignmentsIndex(), i);
                 assertEquals(alignemntsList.get(i++), alignments);
+            }
+            Assert.assertEquals(numberOfAlignments, i);
             Assert.assertEquals(numberOfReads, reader.getNumberOfReads());
         }
     }

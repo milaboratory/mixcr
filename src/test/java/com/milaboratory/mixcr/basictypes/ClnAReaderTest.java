@@ -46,7 +46,7 @@ public class ClnAReaderTest {
         assertEquals(assemble.cloneSet.size(), reader.numberOfClones());
 
         for (ClnAReader.CloneAlignments c : CUtils.it(reader.clonesAndAlignments())) {
-            assertEquals("" + c.cloneId, c.clone.count, count(c.alignments()), 0.01);
+            assertEquals("cloneId = " + c.cloneId, c.clone.count, count(c.alignments()), 0.01);
             assertEquals(c.cloneId, c.clone.id);
             CUtils.it(c.alignments()).forEach(a -> {
                 assertEquals(c.cloneId, a.getCloneIndex());

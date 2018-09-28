@@ -74,11 +74,7 @@ public class ActionAssembleContigs implements Action {
                     fullSeqAssembler.setReport(report);
 
                     FullSeqAssembler.RawVariantsData rawVariantsData = fullSeqAssembler.calculateRawData(() -> {
-                        try {
-                            return cloneAlignments.alignments();
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
+                        return cloneAlignments.alignments();
                     });
 
                     if (debugReport != null) {

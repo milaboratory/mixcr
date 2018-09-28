@@ -31,11 +31,9 @@ package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
+import cc.redberry.pipe.blocks.Merger;
 import cc.redberry.pipe.blocks.ParallelProcessor;
-import cc.redberry.pipe.util.Chunk;
-import cc.redberry.pipe.util.CountLimitingOutputPort;
-import cc.redberry.pipe.util.Indexer;
-import cc.redberry.pipe.util.OrderedOutputPort;
+import cc.redberry.pipe.util.*;
 import com.beust.jcommander.DynamicParameter;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
@@ -75,6 +73,7 @@ import java.util.regex.Pattern;
 
 import static cc.redberry.pipe.CUtils.chunked;
 import static cc.redberry.pipe.CUtils.unchunked;
+import static com.milaboratory.mixcr.basictypes.AlignmentsIO.DEFAULT_ALIGNMENTS_IN_BLOCK;
 
 public class ActionAlign extends AbstractActionWithResumeOption {
     private final AlignParameters actionParameters;
@@ -200,7 +199,10 @@ public class ActionAlign extends AbstractActionWithResumeOption {
 
         try (SequenceReaderCloseable<? extends SequenceRead> reader = actionParameters.createReader();
 
-             VDJCAlignmentsWriter writer = actionParameters.getOutputName().equals(".") ? null : new VDJCAlignmentsWriter(actionParameters.getOutputName());
+             VDJCAlignmentsWriter writer = actionParameters.getOutputName().equals(".")
+                     ? null
+                     : new VDJCAlignmentsWriter(actionParameters.getOutputName(), Math.max(1, actionParameters.threads / 8),
+                     DEFAULT_ALIGNMENTS_IN_BLOCK);
 
              SequenceWriter notAlignedWriter = actionParameters.failedReadsR1 == null
                      ? null
@@ -226,8 +228,35 @@ public class ActionAlign extends AbstractActionWithResumeOption {
             final PairedEndReadsLayout readsLayout = alignerParameters.getReadsLayout();
 
             SmartProgressReporter.startProgressReport("Alignment", progress);
-            OutputPort<Chunk<? extends SequenceRead>> mainInputReads = CUtils.buffered((OutputPort) chunked(sReads, 64), 16);
-            OutputPort<VDJCAlignmentResult> alignments = unchunked(new ParallelProcessor(mainInputReads, chunked(aligner), actionParameters.threads));
+            Merger<Chunk<? extends SequenceRead>> mainInputReads = CUtils.buffered((OutputPort) chunked(sReads, 64), Math.max(16, actionParameters.threads));
+            ParallelProcessor alignedChunks = new ParallelProcessor(mainInputReads, chunked(aligner), Math.max(16, actionParameters.threads), actionParameters.threads);
+            if (actionParameters.reportBuffers) {
+                StatusReporter reporter = new StatusReporter();
+                reporter.addBuffer("Input (chunked; chunk size = 64)", mainInputReads.getBufferStatusProvider());
+                reporter.addBuffer("Alignment result (chunked; chunk size = 64)", alignedChunks.getOutputBufferStatusProvider());
+                reporter.addCustomProvider(new StatusReporter.StatusProvider() {
+                    volatile String status;
+                    volatile boolean isClosed = false;
+
+                    @Override
+                    public void updateStatus() {
+                        status = "Busy encoders: " + writer.getBusyEncoders() + " / " + writer.getEncodersCount();
+                        isClosed = writer.isClosed();
+                    }
+
+                    @Override
+                    public boolean isFinished() {
+                        return isClosed;
+                    }
+
+                    @Override
+                    public String getStatus() {
+                        return status;
+                    }
+                });
+                reporter.start();
+            }
+            OutputPort<VDJCAlignmentResult> alignments = unchunked(alignedChunks);
             for (VDJCAlignmentResult result : CUtils.it(
                     new OrderedOutputPort<>(alignments,
                             new Indexer<VDJCAlignmentResult>() {
@@ -435,6 +464,10 @@ public class ActionAlign extends AbstractActionWithResumeOption {
                 names = {"--not-aligned-R2"})
         public String failedReadsR2 = null;
 
+        @Parameter(description = "Buffers.",
+                names = {"--buffers"}, hidden = true)
+        public boolean reportBuffers;
+
         public String getSpecies() {
             return species;
         }
@@ -551,7 +584,7 @@ public class ActionAlign extends AbstractActionWithResumeOption {
                 throw new ParameterException("Wrong input for --not-aligned-R1,2");
             if (failedReadsR1 != null && (failedReadsR2 != null) != isInputPaired())
                 throw new ParameterException("Option --not-aligned-R2 is not set.");
-            if(library.contains("/") || library.contains("\\"))
+            if (library.contains("/") || library.contains("\\"))
                 throw new ParameterException("Library name can't be a path. Place your library to one of the " +
                         "library search locations (e.g. '" + Paths.get(System.getProperty("user.home"), ".mixcr", "libraries", "mylibrary.json").toString() +
                         "', and put just a library name as -b / --library option value (e.g. '--library mylibrary').");

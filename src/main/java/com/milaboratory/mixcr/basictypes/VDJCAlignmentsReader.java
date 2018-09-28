@@ -30,12 +30,10 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPortCloseable;
-import com.milaboratory.core.io.CompressionType;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.CountingInputStream;
-import gnu.trove.list.array.TLongArrayList;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
@@ -50,24 +48,25 @@ import java.util.Objects;
 import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.*;
 
 public final class VDJCAlignmentsReader implements
-                                        PipelineConfigurationReader,
-                                        OutputPortCloseable<VDJCAlignments>,
-                                        CanReportProgress {
+        PipelineConfigurationReader,
+        OutputPortCloseable<VDJCAlignments>,
+        CanReportProgress {
     private static final int DEFAULT_BUFFER_SIZE = 1048576; // 1 MB
+
     VDJCAlignerParameters parameters;
     PipelineConfiguration pipelineConfiguration;
     List<VDJCGene> usedGenes;
-    final PrimitivI input;
+    final InputStream inputStream;
+    final CountingInputStream countingInputStream;
     final VDJCLibraryRegistry vdjcRegistry;
     String versionInfo;
     String magic;
+    long counter = 0;
     long numberOfReads = -1;
     boolean closed = false;
-    long counter = 0;
     final long size;
-    final CountingInputStream countingInputStream;
-    final CountingInputStream indexingStream;
-    volatile TLongArrayList index = null;
+    final boolean useSeparateDecoderThread;
+    volatile BasicVDJCAlignmentReader reader = null;
 
     public VDJCAlignmentsReader(String fileName) throws IOException {
         this(new File(fileName), VDJCLibraryRegistry.getDefault());
@@ -77,55 +76,46 @@ public final class VDJCAlignmentsReader implements
         this(new File(fileName), vdjcRegistry);
     }
 
+    public VDJCAlignmentsReader(String fileName, VDJCLibraryRegistry vdjcRegistry, boolean useSeparateDecoderThread) throws IOException {
+        this(new File(fileName), vdjcRegistry, useSeparateDecoderThread);
+    }
+
     public VDJCAlignmentsReader(File file) throws IOException {
         this(file, VDJCLibraryRegistry.getDefault());
     }
 
     public VDJCAlignmentsReader(File file, VDJCLibraryRegistry vdjcRegistry) throws IOException {
-        CompressionType ct = CompressionType.detectCompressionType(file);
-        this.countingInputStream = new CountingInputStream(new FileInputStream(file));
-        if (ct == CompressionType.None)
-            this.input = new PrimitivI(indexingStream = new CountingInputStream(
-                    new BufferedInputStream(countingInputStream, DEFAULT_BUFFER_SIZE)));
-        else {
-            this.input = new PrimitivI(ct.createInputStream(countingInputStream, DEFAULT_BUFFER_SIZE));
-            indexingStream = null;
-        }
-        this.vdjcRegistry = vdjcRegistry;
-        this.size = file.length();
+        this(new BufferedInputStream(new FileInputStream(file), DEFAULT_BUFFER_SIZE),
+                vdjcRegistry, file.length(), false);
     }
 
-    public VDJCAlignmentsReader(InputStream input) {
-        this(input, VDJCLibraryRegistry.getDefault(), 0);
+    public VDJCAlignmentsReader(File file, VDJCLibraryRegistry vdjcRegistry, boolean useSeparateDecoderThread) throws IOException {
+        this(new BufferedInputStream(new FileInputStream(file), DEFAULT_BUFFER_SIZE),
+                vdjcRegistry, file.length(), useSeparateDecoderThread);
     }
 
-    public VDJCAlignmentsReader(InputStream input, VDJCLibraryRegistry vdjcRegistry) {
-        this(input, vdjcRegistry, 0);
+    public VDJCAlignmentsReader(InputStream inputStream) {
+        this(inputStream, VDJCLibraryRegistry.getDefault(), 0, false);
     }
 
-    public VDJCAlignmentsReader(InputStream input, long size) {
-        this(input, VDJCLibraryRegistry.getDefault(), size);
+    public VDJCAlignmentsReader(InputStream inputStream, boolean useSeparateDecoderThread) {
+        this(inputStream, VDJCLibraryRegistry.getDefault(), 0, useSeparateDecoderThread);
     }
 
-    public VDJCAlignmentsReader(InputStream input, VDJCLibraryRegistry vdjcRegistry, long size) {
-        this.input = new PrimitivI(indexingStream = countingInputStream =
-                new CountingInputStream(input));
+    public VDJCAlignmentsReader(InputStream inputStream, VDJCLibraryRegistry vdjcRegistry) {
+        this(inputStream, vdjcRegistry, 0, false);
+    }
+
+    public VDJCAlignmentsReader(InputStream inputStream, long size) {
+        this(inputStream, VDJCLibraryRegistry.getDefault(), size, false);
+    }
+
+    public VDJCAlignmentsReader(InputStream inputStream, VDJCLibraryRegistry vdjcRegistry,
+                                long size, boolean useSeparateDecoderThread) {
+        this.inputStream = countingInputStream = new CountingInputStream(inputStream);
         this.vdjcRegistry = vdjcRegistry;
         this.size = size;
-    }
-
-    public VDJCAlignmentsReader(DataInput input, VDJCLibraryRegistry vdjcRegistry) {
-        this.input = new PrimitivI(input);
-        this.vdjcRegistry = vdjcRegistry;
-        this.countingInputStream = null;
-        this.indexingStream = null;
-        this.size = 0;
-    }
-
-    public void setIndexer(TLongArrayList index) {
-        if (indexingStream == null)
-            throw new IllegalStateException("Can't index compressed file.");
-        this.index = index;
+        this.useSeparateDecoderThread = useSeparateDecoderThread;
     }
 
     public void init() {
@@ -133,8 +123,10 @@ public final class VDJCAlignmentsReader implements
     }
 
     void init(Map<GeneFeature, GeneFeature> geneFeatureRefs) {
-        if (usedGenes != null)
+        if (reader != null)
             return;
+
+        PrimitivI input = new PrimitivI(inputStream);
 
         assert MAGIC_BYTES.length == MAGIC_LENGTH;
         byte[] magic = new byte[MAGIC_LENGTH];
@@ -171,11 +163,18 @@ public final class VDJCAlignmentsReader implements
                     throw new RuntimeException("Absent record for " + featureDeserialized + " in geneFeatureRefs map.");
             }
 
-//            parameters.getGeneAlignerParameters(gt).setGeneFeatureToAlign(featureParams);
-
             if (featureDeserialized != null)
                 input.putKnownObject(featureParams);
         }
+
+        this.reader = new BasicVDJCAlignmentReader(new AlignmentsIO.InputStreamBufferReader(inputStream),
+                input.getState(), useSeparateDecoderThread);
+    }
+
+    public int getQueueSize() {
+        if (reader == null)
+            return -1;
+        return reader.getQueueSize();
     }
 
     public synchronized VDJCAlignerParameters getParameters() {
@@ -242,8 +241,10 @@ public final class VDJCAlignmentsReader implements
             // footer with number of reads processed to produce this
             // file can be read form the stream.
             if (onEnd)
-                numberOfReads = input.readLong();
-            input.close();
+                numberOfReads = new PrimitivI(inputStream).readLong();
+            inputStream.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         } finally {
             closed = true;
         }
@@ -256,19 +257,14 @@ public final class VDJCAlignmentsReader implements
 
         init();
 
-        if (index != null)
-            index.add(indexingStream.getBytesRead());
+        VDJCAlignments al = reader.take();
 
-        VDJCAlignments alignments = input.readObject(VDJCAlignments.class);
-
-        if (alignments == null) {
-            if (index != null)
-                index.removeAt(index.size() - 1);
+        if (al == null) {
             close(true);
-        } else
-            alignments.setAlignmentsIndex(counter++);
+            return null;
+        }
 
-        return alignments;
+        return al.setAlignmentsIndex(counter++);
     }
 
     /**

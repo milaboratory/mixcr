@@ -55,8 +55,8 @@ class VDJCAlignmentsReaderWrapper implements AlignmentsProvider {
         return totalNumberOfReads.get();
     }
 
-    private class OP implements OutputPortCloseable<VDJCAlignments>, CanReportProgress {
-        final VDJCAlignmentsReader reader;
+    public class OP implements OutputPortCloseable<VDJCAlignments>, CanReportProgress {
+        public final VDJCAlignmentsReader reader;
 
         private OP(VDJCAlignmentsReader reader) {
             this.reader = reader;
