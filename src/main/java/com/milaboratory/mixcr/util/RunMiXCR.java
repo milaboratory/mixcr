@@ -154,15 +154,11 @@ public final class RunMiXCR {
 
             OutputPort<Clone[]> parallelProcessor = new ParallelProcessor<>(cloneAlignmentsPort, cloneAlignments -> {
                 try {
-                    FullSeqAssembler fullSeqAssembler = new FullSeqAssembler(cloneFactory, align.parameters.fullSeqAssemblerParameters, cloneAlignments.clone, align.parameters.alignerParameters);
-
-                    FullSeqAssembler.RawVariantsData rawVariantsData = fullSeqAssembler.calculateRawData(() -> {
-                        try {
-                            return cloneAlignments.alignments();
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
+                    FullSeqAssembler fullSeqAssembler = new FullSeqAssembler(cloneFactory,
+                            align.parameters.fullSeqAssemblerParameters, cloneAlignments.clone,
+                            align.parameters.alignerParameters);
+                    FullSeqAssembler.RawVariantsData rawVariantsData =
+                            fullSeqAssembler.calculateRawData(cloneAlignments::alignments);
 
                     return fullSeqAssembler.callVariants(rawVariantsData);
                 } catch (Throwable re) {
