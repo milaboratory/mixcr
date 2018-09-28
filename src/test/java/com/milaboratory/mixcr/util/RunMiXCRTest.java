@@ -76,7 +76,7 @@ public class RunMiXCRTest {
         RunMiXCR.AssembleResult assemble = RunMiXCR.assemble(align);
 
         File tempFile = TempFileManager.getTempFile();
-        try(ClnsWriter writer = new ClnsWriter(null, assemble.cloneSet, tempFile)){
+        try (ClnsWriter writer = new ClnsWriter(null, assemble.cloneSet, tempFile)) {
             writer.write();
         }
         CloneSet read = CloneSetIO.read(tempFile);
@@ -181,6 +181,26 @@ public class RunMiXCRTest {
             }
 
             System.out.println(tr);
+        }
+    }
+
+    @Test
+    public void test4() throws Exception {
+        RunMiXCR.RunMiXCRAnalysis params = new RunMiXCR.RunMiXCRAnalysis(
+                RunMiXCR.class.getResource("/sequences/sample_IGH_R1.fastq").getFile(),
+                RunMiXCR.class.getResource("/sequences/sample_IGH_R2.fastq").getFile());
+
+        RunMiXCR.AlignResult align = RunMiXCR.align(params);
+        RunMiXCR.AssembleResult assemble0 = RunMiXCR.assemble(align, false);
+        RunMiXCR.FullSeqAssembleResult assemble = RunMiXCR.assembleContigs(assemble0);
+
+        for (Clone clone : assemble.cloneSet.getClones()) {
+            Chains vjLoci = VDJCAligner.getPossibleDLoci(clone.getHits(GeneType.Variable), clone.getHits(GeneType.Joining),
+                    null);
+            for (VDJCHit dHit : clone.getHits(GeneType.Diversity))
+                Assert.assertTrue(vjLoci.intersects(dHit.getGene().getChains()));
+
+            //ActionExportClonesPretty.outputCompact(System.out, clone);
         }
     }
 }

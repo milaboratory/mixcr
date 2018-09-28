@@ -29,8 +29,6 @@
  */
 package com.milaboratory.mixcr.export;
 
-import cc.redberry.pipe.CUtils;
-import cc.redberry.pipe.OutputPort;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
@@ -41,7 +39,6 @@ import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.TranslationParameters;
-import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
@@ -54,15 +51,10 @@ import io.repseq.core.GeneType;
 import io.repseq.core.ReferencePoint;
 import io.repseq.core.SequencePartitioning;
 
-import java.io.Closeable;
-import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
-
-import static com.milaboratory.mixcr.assembler.ReadToCloneMapping.MappingType.Dropped;
 
 public final class FieldExtractors {
     static final String NULL = "";
@@ -300,6 +292,36 @@ public final class FieldExtractors {
                     return AminoAcidSequence.translate(feature.getSequence(), tr).toString();
                 }
             });
+
+            descriptorsList.add(new FeatureExtractors.WithHeader("-nIncompleteFeature",
+                    "Export nucleotide sequence of specified gene feature using letters from germline (marked lowercase) for unaligned regions",
+                    1, new String[]{"N. Inc. Seq. "}, new String[]{"nIncompleteSeq"}) {
+                @Override
+                protected String extractValue(VDJCObject object, GeneFeature[] parameters) {
+                    GeneFeature geneFeature = parameters[parameters.length - 1];
+                    VDJCObject.CaseSensitiveNucleotideSequence feature = object.getIncompleteFeature(geneFeature);
+                    if (feature == null)
+                        return NULL;
+                    return feature.toString();
+                }
+            });
+
+            descriptorsList.add(new FeatureExtractors.WithHeader("-aaIncompleteFeature",
+                    "Export amino acid sequence of specified gene feature using letters from germline (marked lowercase) for unaligned regions",
+                    1, new String[]{"AA. Inc. Seq. "}, new String[]{"aaIncompleteSeq"}) {
+                @Override
+                protected String extractValue(VDJCObject object, GeneFeature[] parameters) {
+                    GeneFeature geneFeature = parameters[parameters.length - 1];
+                    VDJCObject.CaseSensitiveNucleotideSequence feature = object.getIncompleteFeature(geneFeature);
+                    if (feature == null)
+                        return NULL;
+                    String aaStr = feature.toAminoAcidString();
+                    if (aaStr == null)
+                        return NULL;
+                    return aaStr;
+                }
+            });
+
 
 //            descriptorsList.add(new FeatureExtractorDescriptor("-aaFeatureFromLeft", "Export amino acid sequence of " +
 //                    "specified gene feature starting from the leftmost nucleotide (differs from -aaFeature only for " +
