@@ -146,7 +146,7 @@ public final class FieldExtractors {
             for (final GeneType type : GeneType.values()) {
                 char l = type.getLetter();
                 descriptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "HitsWithScore",
-                        "Export all " + l + " hits with score", "All " + l + " hits", "all" + l + "HitsWithScore") {
+                        "Export all " + l + " hits with score", "All " + l + " hits with score", "all" + l + "HitsWithScore") {
                     @Override
                     protected String extract(VDJCObject object) {
                         VDJCHit[] hits = object.getHits(type);
