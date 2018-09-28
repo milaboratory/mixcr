@@ -171,10 +171,14 @@ public class ActionAssemble extends AbstractActionWithResumeOption {
 
     public static class AssembleConfiguration implements ActionConfiguration {
         public final CloneAssemblerParameters assemblerParameters;
+        public final boolean clna;
 
         @JsonCreator
-        public AssembleConfiguration(@JsonProperty("assemblerParameters") CloneAssemblerParameters assemblerParameters) {
+        public AssembleConfiguration(
+                @JsonProperty("assemblerParameters") CloneAssemblerParameters assemblerParameters,
+                @JsonProperty("clna") boolean clna) {
             this.assemblerParameters = assemblerParameters;
+            this.clna = clna;
         }
 
         @Override
@@ -187,12 +191,14 @@ public class ActionAssemble extends AbstractActionWithResumeOption {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             AssembleConfiguration that = (AssembleConfiguration) o;
-            return Objects.equals(assemblerParameters, that.assemblerParameters);
+            return clna == that.clna &&
+                    Objects.equals(assemblerParameters, that.assemblerParameters);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(assemblerParameters);
+
+            return Objects.hash(assemblerParameters, clna);
         }
     }
 
@@ -266,7 +272,7 @@ public class ActionAssemble extends AbstractActionWithResumeOption {
 
         @Override
         public ActionConfiguration getConfiguration() {
-            return new AssembleConfiguration(getCloneAssemblerParameters());
+            return new AssembleConfiguration(getCloneAssemblerParameters(), clna);
         }
 
 
