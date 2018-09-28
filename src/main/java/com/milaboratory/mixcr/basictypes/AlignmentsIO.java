@@ -77,28 +77,28 @@ public final class AlignmentsIO {
     static final int BLOCK_HEADER_SIZE = 17;
 
     public static void writeIntBE(int val, byte[] buffer, int offset) {
-        buffer[offset++] = (byte) (val >>> 24);
-        buffer[offset++] = (byte) (val >>> 16);
-        buffer[offset++] = (byte) (val >>> 8);
-        buffer[offset] = (byte) val;
+        buffer[offset] = (byte) (val >>> 24);
+        buffer[offset + 1] = (byte) (val >>> 16);
+        buffer[offset + 2] = (byte) (val >>> 8);
+        buffer[offset + 3] = (byte) val;
     }
 
     public static void writeLongBE(long val, byte[] buffer, int offset) {
-        buffer[offset++] = (byte) (val >>> 56);
-        buffer[offset++] = (byte) (val >>> 48);
-        buffer[offset++] = (byte) (val >>> 40);
-        buffer[offset++] = (byte) (val >>> 32);
-        buffer[offset++] = (byte) (val >>> 24);
-        buffer[offset++] = (byte) (val >>> 16);
-        buffer[offset++] = (byte) (val >>> 8);
-        buffer[offset] = (byte) val;
+        buffer[offset] = (byte) (val >>> 56);
+        buffer[offset + 1] = (byte) (val >>> 48);
+        buffer[offset + 2] = (byte) (val >>> 40);
+        buffer[offset + 3] = (byte) (val >>> 32);
+        buffer[offset + 4] = (byte) (val >>> 24);
+        buffer[offset + 5] = (byte) (val >>> 16);
+        buffer[offset + 6] = (byte) (val >>> 8);
+        buffer[offset + 7] = (byte) val;
     }
 
     public static int readIntBE(byte[] buffer, int offset) {
         int value = 0;
         for (int i = 0; i < 4; ++i) {
             value <<= 8;
-            value |= 0xFF & buffer[offset++];
+            value |= 0xFF & buffer[offset + i];
         }
         return value;
     }
@@ -216,7 +216,7 @@ public final class AlignmentsIO {
 
         @Override
         public void readFully(byte[] b) throws IOException {
-            if(position + b.length > to)
+            if (position + b.length > to)
                 throw new IOException("No more bytes. Stream limit reached. This is a sign of malformed input file.");
             fileChannel.read(ByteBuffer.wrap(b), position);
             position += b.length;
@@ -224,7 +224,7 @@ public final class AlignmentsIO {
 
         @Override
         public void readFully(byte[] b, int off, int len) throws IOException {
-            if(position + len > to)
+            if (position + len > to)
                 throw new IOException("No more bytes. Stream limit reached. This is a sign of malformed input file.");
             fileChannel.read(ByteBuffer.wrap(b, off, len), position);
             position += b.length;
@@ -232,7 +232,7 @@ public final class AlignmentsIO {
 
         @Override
         public byte readByte() throws IOException {
-            if(position + 1 > to)
+            if (position + 1 > to)
                 throw new IOException("No more bytes. Stream limit reached. This is a sign of malformed input file.");
             byte[] b = new byte[1];
             fileChannel.read(ByteBuffer.wrap(b), position);
