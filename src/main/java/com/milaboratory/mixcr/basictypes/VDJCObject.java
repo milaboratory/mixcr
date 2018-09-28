@@ -37,6 +37,8 @@ import io.repseq.gen.VDJCGenes;
 
 import java.util.*;
 
+import static com.milaboratory.core.alignment.Alignment.aabs;
+
 public class VDJCObject {
     protected final NSequenceWithQuality[] targets;
     protected final EnumMap<GeneType, VDJCHit[]> hits;
@@ -288,11 +290,14 @@ public class VDJCObject {
 
     public CaseSensitiveNucleotideSequence getIncompleteFeature(GeneFeature geneFeature) {
         NSequenceWithQuality feature = getFeature(geneFeature);
-        if (feature != null)
+        if (feature != null) {
+            int iTarget = getTargetContainingFeature(geneFeature);
             return new CaseSensitiveNucleotideSequence(
                     feature.getSequence(),
                     false,
-                    null);
+                    getPartitionedTarget(iTarget).getPartitioning(),
+                    getPartitionedTarget(iTarget).getPartitioning().getTranslationParameters(geneFeature));
+        }
 
         CaseSensitiveNucleotideSequenceBuilder builder = new CaseSensitiveNucleotideSequenceBuilder(new ArrayList<>(), new BitSet());
         // reference points for resulting sequence
@@ -315,7 +320,7 @@ public class VDJCObject {
             if (seq != null) {
                 builder.add(seq.getSequence(), false);
                 if (right.hasNoOffset())
-                    partitioningBuilder.setPosition(right, builder.size() - 1);
+                    partitioningBuilder.setPosition(right, builder.size());
                 continue;
             }
 
@@ -348,13 +353,13 @@ public class VDJCObject {
                     Alignment<NucleotideSequence> lAl = lHit.getAlignment(i);
                     // check that there is no any unaligned piece
                     if (lAl != null
-                            && lAl.getSequence1Range().getFrom() > positionInRef
+                            && positionInRef < lAl.getSequence1Range().getFrom()
                             && lAl.getSequence2Range().getFrom() != 0)
                         return null;
 
                     // select the closest target to the right of left point
                     if (lAl != null
-                            && lAl.getSequence1Range().getTo() > positionInRef // getTo is exclusive
+                            && positionInRef < lAl.getSequence1Range().getTo() // getTo is exclusive
                             && (lHit != rHit || lAl.getSequence1Range().getFrom() <= rPositionInRef))
                         if (iLeftTarget == -1
                                 || lAl.getSequence1Range().getFrom() < lHit.getAlignment(iLeftTarget).getSequence1Range().getFrom())
@@ -374,7 +379,7 @@ public class VDJCObject {
                 assert lAl.getSequence1Range().containsBoundary(positionInRef);
 
                 leftParts.add(new IncompleteSequencePart(lHit, false, iLeftTarget,
-                        lAl.convertToSeq2Position(positionInRef),
+                        aabs(lAl.convertToSeq2Position(positionInRef)),
                         lAl.getSequence2Range().getTo()));
 
                 positionInRef = lAl.getSequence1Range().getTo();
@@ -419,7 +424,7 @@ public class VDJCObject {
 
                 rightParts.add(new IncompleteSequencePart(rHit, false, iRightTarget,
                         rAl.getSequence2Range().getFrom(),
-                        rAl.convertToSeq2Position(positionInRef)));
+                        aabs(rAl.convertToSeq2Position(positionInRef))));
 
                 positionInRef = rAl.getSequence1Range().getFrom();
             }
@@ -455,7 +460,8 @@ public class VDJCObject {
                     Alignment<NucleotideSequence> lAl = lHit.getAlignment(lLast.iTarget);
                     if (lAl.getSequence1Range().contains(rPositionInRef))
                         leftParts.set(leftParts.size() - 1,
-                                new IncompleteSequencePart(lHit, false, lLast.iTarget, lLast.begin, lAl.convertToSeq2Position(rPositionInRef)));
+                                new IncompleteSequencePart(lHit, false, lLast.iTarget, lLast.begin,
+                                        aabs(lAl.convertToSeq2Position(rPositionInRef))));
                     else {
                         assert rPositionInRef > lAl.getSequence1Range().getTo();
                         leftParts.add(new IncompleteSequencePart(lHit, true,
@@ -466,7 +472,8 @@ public class VDJCObject {
                     Alignment<NucleotideSequence> rAl = lHit.getAlignment(rLast.iTarget);
                     if (rAl.getSequence1Range().contains(lPositionInRef))
                         rightParts.set(0,
-                                new IncompleteSequencePart(rHit, false, rLast.iTarget, rAl.convertToSeq2Position(lPositionInRef), rLast.end));
+                                new IncompleteSequencePart(rHit, false, rLast.iTarget,
+                                        aabs(rAl.convertToSeq2Position(lPositionInRef)), rLast.end));
                     else {
                         assert lPositionInRef < rAl.getSequence1Range().getFrom();
                         rightParts.add(0, new IncompleteSequencePart(rHit, true,
@@ -512,12 +519,13 @@ public class VDJCObject {
             }
 
             if (right.hasNoOffset())
-                partitioningBuilder.setPosition(right, builder.size() - 1);
+                partitioningBuilder.setPosition(right, builder.size());
         }
+        ExtendedReferencePoints partition = partitioningBuilder.build();
         return new CaseSensitiveNucleotideSequence(
                 builder.sequences.toArray(new NucleotideSequence[builder.sequences.size()]),
                 builder.lowerCase,
-                partitioningBuilder.build());
+                partition, partition.getTranslationParameters(geneFeature));
     }
 
     private static final class IncompleteSequencePart {
@@ -585,19 +593,23 @@ public class VDJCObject {
         final BitSet lowerCase;
         // sequence partitioning
         public final SequencePartitioning partitioning;
+        // translation parameters
+        public final TranslationParameters tr;
 
         CaseSensitiveNucleotideSequence(NucleotideSequence[] seq,
                                         BitSet lowerCase,
-                                        SequencePartitioning partitioning) {
+                                        SequencePartitioning partitioning,
+                                        TranslationParameters tr) {
             this.seq = seq;
             this.lowerCase = lowerCase;
             this.partitioning = partitioning;
+            this.tr = tr;
         }
 
         CaseSensitiveNucleotideSequence(NucleotideSequence seq,
                                         boolean lowerCase,
-                                        SequencePartitioning partitioning) {
-            this(new NucleotideSequence[]{seq}, new BitSet(), partitioning);
+                                        SequencePartitioning partitioning, TranslationParameters tr) {
+            this(new NucleotideSequence[]{seq}, new BitSet(), partitioning, tr);
             this.lowerCase.set(0, lowerCase);
         }
 
@@ -629,31 +641,40 @@ public class VDJCObject {
             return sb.toString();
         }
 
-        public String toAminoAcidString(TranslationParameters tr) {
-            AminoAcidSequence aaSeq = AminoAcidSequence.translate(SequencesUtils.concatenate(seq), tr);
-            StringBuilder sb = new StringBuilder();
-            int aaBegin = 0;
-            for (int i = 0; i < seq.length; ++i) {
-                int aaLen = seq[i].size() / 3;
-                int aaEnd = Math.min(aaBegin + aaLen, aaSeq.size());
-                String s = aaSeq.getRange(aaBegin, aaEnd).toString();
-                if (lowerCase.get(i))
-                    s = s.toLowerCase();
-                else
-                    s = s.toUpperCase();
-                sb.append(s);
-                aaBegin = aaEnd;
-            }
-            return sb.toString();
-        }
-    }
+        public String toAminoAcidString() {
+            if (tr == null)
+                return null;
 
-    private static int aabs(int position) {
-        if (position == -1)
-            return -1;
-        if (position < 0)
-            return -2 - position;
-        return position;
+            NucleotideSequence concatenated = SequencesUtils.concatenate(seq);
+            String aaSeq = AminoAcidSequence.translate(concatenated, tr).toString();
+            int ntBegin = 0;
+            for (int i = 0; i < seq.length; ++i) {
+                AminoAcidSequence.AminoAcidSequencePosition aap;
+
+                aap = AminoAcidSequence.convertNtPositionToAA(ntBegin, concatenated.size(), tr);
+                int aaBegin;
+                if (aap == null)
+                    throw new RuntimeException();
+                else
+                    aaBegin = aap.aminoAcidPosition;
+
+                ntBegin += seq[i].size();
+
+                aap = AminoAcidSequence.convertNtPositionToAA(ntBegin, concatenated.size(), tr);
+                int aaEnd;
+                if (aap == null)
+                    throw new RuntimeException();
+                else
+                    aaEnd = aap.aminoAcidPosition;
+
+                if (lowerCase.get(i))
+                    aaSeq = aaSeq.substring(0, aaBegin)
+                            + aaSeq.substring(aaBegin, aaEnd).toLowerCase()
+                            + aaSeq.substring(aaEnd, aaSeq.length());
+
+            }
+            return aaSeq;
+        }
     }
 
     @Override

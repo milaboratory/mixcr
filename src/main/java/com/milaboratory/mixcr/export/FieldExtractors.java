@@ -315,10 +315,10 @@ public final class FieldExtractors {
                     VDJCObject.CaseSensitiveNucleotideSequence feature = object.getIncompleteFeature(geneFeature);
                     if (feature == null)
                         return NULL;
-                    TranslationParameters tr = feature.partitioning.getTranslationParameters(geneFeature);
-                    if (tr == null)
+                    String aaStr = feature.toAminoAcidString();
+                    if (aaStr == null)
                         return NULL;
-                    return feature.toAminoAcidString(tr);
+                    return aaStr;
                 }
             });
 
