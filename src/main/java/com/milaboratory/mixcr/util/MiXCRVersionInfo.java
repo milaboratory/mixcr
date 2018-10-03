@@ -29,6 +29,9 @@
  */
 package com.milaboratory.mixcr.util;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.milaboratory.primitivio.annotations.Serializable;
 import com.milaboratory.util.VersionInfo;
 import io.repseq.core.VDJCLibraryRegistry;
 import org.apache.commons.io.IOUtils;
@@ -36,16 +39,41 @@ import org.apache.commons.io.IOUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
+@JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.ANY,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE)
+@Serializable(asJson = true)
 public final class MiXCRVersionInfo {
     private final VersionInfo mixcr, milib, repseqio;
     private final String builtInLibrary;
 
-    private MiXCRVersionInfo(VersionInfo mixcr, VersionInfo milib, VersionInfo repseqio, String builtInLibrary) {
+    private MiXCRVersionInfo(@JsonProperty("mixcr") VersionInfo mixcr,
+                             @JsonProperty("milib") VersionInfo milib,
+                             @JsonProperty("repseqio") VersionInfo repseqio,
+                             @JsonProperty("builtInLibrary") String builtInLibrary) {
         this.mixcr = mixcr;
         this.milib = milib;
         this.repseqio = repseqio;
         this.builtInLibrary = builtInLibrary;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MiXCRVersionInfo that = (MiXCRVersionInfo) o;
+        return Objects.equals(mixcr, that.mixcr) &&
+                Objects.equals(milib, that.milib) &&
+                Objects.equals(repseqio, that.repseqio) &&
+                Objects.equals(builtInLibrary, that.builtInLibrary);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mixcr, milib, repseqio, builtInLibrary);
     }
 
     private static volatile MiXCRVersionInfo instance = null;

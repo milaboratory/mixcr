@@ -44,6 +44,18 @@ public final class PipelineConfiguration {
         return pipelineSteps[pipelineSteps.length - 1].configuration;
     }
 
+    /** Whether configurations are fully compatible */
+    public boolean compatibleWith(PipelineConfiguration oth) {
+        if (oth == null)
+            return false;
+        if (pipelineSteps.length != oth.pipelineSteps.length)
+            return false;
+        for (int i = 0; i < pipelineSteps.length; ++i)
+            if (!pipelineSteps[i].compatibleWith(oth.pipelineSteps[i]))
+                return false;
+        return true;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -63,7 +75,7 @@ public final class PipelineConfiguration {
                List<String> inputFiles,
                ActionConfiguration configuration) {
 
-        String versionString = MiXCRVersionInfo.get().getVersionString(MiXCRVersionInfo.OutputType.ToFile);
+        MiXCRVersionInfo versionString = MiXCRVersionInfo.get();
 
         LightFileDescriptor[] inputDescriptors = inputFiles
                 .stream()
@@ -81,7 +93,7 @@ public final class PipelineConfiguration {
     public static PipelineConfiguration
     mkInitial(List<String> inputFiles,
               ActionConfiguration configuration) {
-        String versionString = MiXCRVersionInfo.get().getVersionString(MiXCRVersionInfo.OutputType.ToFile);
+        MiXCRVersionInfo versionString = MiXCRVersionInfo.get();
         LightFileDescriptor[] inputDescriptors = inputFiles.stream().map(f -> LightFileDescriptor.calculate(Paths.get(f))).toArray(LightFileDescriptor[]::new);
         return new PipelineConfiguration(
                 new PipelineStep[]{new PipelineStep(versionString, inputDescriptors, configuration)});
@@ -97,7 +109,7 @@ public final class PipelineConfiguration {
         /**
          * Version of MiXCR used
          */
-        public final String versionOfMiXCR;
+        public final MiXCRVersionInfo versionOfMiXCR;
         /**
          * Hash sum of the input file (not exactly fastq, it may be e.g. vdjca input file for the assemblePartial step)
          */
@@ -109,12 +121,20 @@ public final class PipelineConfiguration {
 
         @JsonCreator
         public PipelineStep(
-                @JsonProperty("versionOfMiXCR") String versionOfMiXCR,
+                @JsonProperty("versionOfMiXCR") MiXCRVersionInfo versionOfMiXCR,
                 @JsonProperty("inputFilesDescriptors") LightFileDescriptor[] inputFilesDescriptors,
                 @JsonProperty("configuration") ActionConfiguration configuration) {
             this.versionOfMiXCR = versionOfMiXCR;
             this.inputFilesDescriptors = inputFilesDescriptors;
             this.configuration = configuration;
+        }
+
+        /** Compatible with other configuration */
+        public boolean compatibleWith(PipelineStep other) {
+            return other != null
+                    && Arrays.equals(inputFilesDescriptors, other.inputFilesDescriptors)
+                    && configuration.getClass().equals(other.configuration.getClass())
+                    && configuration.compatibleWith(other.configuration);
         }
 
         @Override
@@ -144,7 +164,7 @@ public final class PipelineConfiguration {
 
             @Override
             public PipelineStep read(PrimitivI input) {
-                String versionOfMiXCR = input.readObject(String.class);
+                MiXCRVersionInfo versionOfMiXCR = input.readObject(MiXCRVersionInfo.class);
                 LightFileDescriptor[] inputFilesDescriptors = input.readObject(LightFileDescriptor[].class);
                 ActionConfiguration configuration = input.readObject(ActionConfiguration.class);
                 return new PipelineStep(versionOfMiXCR, inputFilesDescriptors, configuration);

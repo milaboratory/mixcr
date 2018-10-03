@@ -34,6 +34,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.util.TimeUtils;
 
+import java.util.Collection;
 import java.util.Date;
 
 public abstract class AbstractActionReport implements ActionReport {
@@ -79,6 +80,10 @@ public abstract class AbstractActionReport implements ActionReport {
 
     public void setInputFiles(String... inputFiles) {
         this.inputFiles = inputFiles;
+    }
+
+    public void setInputFiles(Collection<String> inputFiles) {
+        this.inputFiles = inputFiles.toArray(new String[inputFiles.size()]);
     }
 
     public void setOutputFiles(String... outputFiles) {
