@@ -42,7 +42,7 @@ public final class InfoWriter<T> implements InputPort<T>, AutoCloseable {
     boolean initialized;
 
     public InfoWriter(String file) throws FileNotFoundException {
-        this(".".equals(file) ? new CloseShieldOutputStream(System.out) :
+        this(file == null ? new CloseShieldOutputStream(System.out) :
                 new BufferedOutputStream(new FileOutputStream(new File(file)), 65536));
     }
 

@@ -1,0 +1,85 @@
+package com.milaboratory.mixcr.cli.newcli;
+
+import cc.redberry.pipe.CUtils;
+import com.beust.jcommander.ParameterException;
+import com.milaboratory.core.io.sequence.SequenceRead;
+import com.milaboratory.core.io.sequence.SequenceWriter;
+import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter;
+import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter;
+import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
+import com.milaboratory.util.SmartProgressReporter;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+@Command(name = "exportReads",
+        sortOptions = true,
+        separator = " ",
+        description = "Export original reads from vdjca file.")
+public class CommandExportReads extends ACommandWithOutput {
+
+    @Parameters(description = "input.vdjca[.gz] [output_R1.fastq[.gz] [output_R2.fastq[.gz]]]", arity = "1..3")
+    public List<String> parameters;
+
+    @Override
+    protected List<String> getInputFiles() {
+        return Collections.singletonList(parameters.get(0));
+    }
+
+    @Override
+    public List<String> getOutputFiles() {
+        if (parameters.size() == 1)
+            return Collections.emptyList();
+
+        if (parameters.size() == 2)
+            return Collections.singletonList(parameters.get(1));
+
+        if (parameters.size() == 3)
+            return Arrays.asList(parameters.get(1), parameters.get(2));
+
+        throw new ParameterException("Required parameters missing.");
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public void run0() throws Exception {
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(getInputFiles().get(0));
+             SequenceWriter writer = createWriter()) {
+            SmartProgressReporter.startProgressReport("Extracting reads", reader, System.err);
+
+            for (VDJCAlignments alignments : CUtils.it(reader)) {
+                List<SequenceRead> reads = alignments.getOriginalReads();
+                if (reads == null)
+                    throwExecutionException("VDJCA file doesn't contain original reads (perform align action with -g / --save-reads option).");
+
+                for (SequenceRead read : reads) {
+                    if (read.numberOfReads() == 1 && (writer instanceof PairedFastqWriter))
+                        throwExecutionException("VDJCA file contains single-end reads, but two output files are specified.");
+
+                    if (read.numberOfReads() == 2 && (writer instanceof SingleFastqWriter))
+                        throwExecutionException("VDJCA file contains paired-end reads, but only one / no output file is specified.");
+
+                    writer.write(read);
+                }
+            }
+        }
+    }
+
+    public SequenceWriter<?> createWriter() throws IOException {
+        List<String> outputFiles = getOutputFiles();
+        switch (outputFiles.size()) {
+            case 0:
+                return new SingleFastqWriter(System.out);
+            case 1:
+                return new SingleFastqWriter(outputFiles.get(0));
+            case 2:
+                return new PairedFastqWriter(outputFiles.get(0), outputFiles.get(1));
+        }
+        throw new RuntimeException();
+    }
+}

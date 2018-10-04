@@ -37,7 +37,7 @@ public class MainTest {
     @Test
     public void asdasdas() {
         System.out.println(Main.parse("exportAlignments",
-                "-jHit", "-vHit",  "-c", "IGH", "-p", "min",
+                "-jHit", "-vHit", "-c", "IGH", "-p", "min", "-nMutationsRelative", "CDR1", "FR1+CDR1",
                 "/Users/poslavskysv/Projects/milab/temp/als.vdjca", "."));
     }
 

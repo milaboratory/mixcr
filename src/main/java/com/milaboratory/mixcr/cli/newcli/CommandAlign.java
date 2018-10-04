@@ -45,15 +45,18 @@ import java.util.regex.Pattern;
 import static cc.redberry.pipe.CUtils.chunked;
 import static cc.redberry.pipe.CUtils.unchunked;
 import static com.milaboratory.mixcr.basictypes.AlignmentsIO.DEFAULT_ALIGNMENTS_IN_BLOCK;
+import static com.milaboratory.mixcr.cli.newcli.CommandAlign.ALIGN_COMMAND_NAME;
 
 /**
  *
  */
-@Command(name = "align",
-        // sortOptions = false,
+@Command(name = ALIGN_COMMAND_NAME,
+        sortOptions = true,
         separator = " ",
         description = "Builds alignments with V,D,J and C genes for input sequencing reads.")
 public class CommandAlign extends ACommandWithResume {
+    static final String ALIGN_COMMAND_NAME = "align";
+
     @Parameters(
             hidden = true,
             arity = "2..3",
@@ -269,7 +272,7 @@ public class CommandAlign extends ACommandWithResume {
 
         @Override
         public String actionName() {
-            return "align";
+            return ALIGN_COMMAND_NAME;
         }
 
         @Override

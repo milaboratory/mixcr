@@ -30,30 +30,14 @@ import java.util.stream.Collectors;
 import static cc.redberry.primitives.FilterUtil.ACCEPT_ALL;
 import static cc.redberry.primitives.FilterUtil.and;
 
-@Command(sortOptions = false,
-        separator = " ",
-        description = "Builds alignments with V,D,J and C genes for input sequencing reads.")
-public abstract class CommandExport<T extends VDJCObject> extends ACommandWithOutput {
+
+public abstract class CommandExport<T extends VDJCObject> extends ACommandSimpleExport{
+    public static String EXPORT_TO_STDOUT = "-";
+
     /** type class */
     private final Class<T> clazz;
 
     private CommandExport(Class<T> clazz) { this.clazz = clazz; }
-
-    @Parameters(index = "0", description = "input file")
-    public String in;
-
-    @Parameters(index = "1", description = "output file")
-    public String out;
-
-    @Override
-    public List<String> getInputFiles() {
-        return Collections.singletonList(in);
-    }
-
-    @Override
-    protected List<String> getOutputFiles() {
-        return Collections.singletonList(out);
-    }
 
     public static final String DEFAULT_PRESET = "full";
 
@@ -124,13 +108,6 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandWithOu
         return and(filters.toArray(new Filter[filters.size()]));
     }
 
-    @Override
-    public void handleExistenceOfOutputFile(String outFileName) {
-        if (outFileName.equals("."))
-            return;
-        super.handleExistenceOfOutputFile(outFileName);
-    }
-
     /** auto-generated opts (exporters) injected manually */
     private CommandSpec spec;
 
@@ -164,6 +141,10 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandWithOu
 
     abstract void run1(List<FieldExtractor<? super T>> extractors) throws Exception;
 
+    @Command(name = "exportAlignments",
+            separator = " ",
+            sortOptions = true,
+            description = "Export V/D/J/C alignments into tab delimited file.")
     public static class CommandExportAlignments extends CommandExport<VDJCAlignments> {
         public CommandExportAlignments() {
             super(VDJCAlignments.class);
@@ -187,6 +168,10 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandWithOu
         }
     }
 
+    @Command(name = "exportClones",
+            separator = " ",
+            sortOptions = true,
+            description = "Export assembled clones into tab delimited file.")
     public static class CommandExportClones extends CommandExport<Clone> {
         @Option(description = "Exclude clones with out-of-frame clone sequences (fractions will be recalculated)",
                 names = {"-o", "--filter-out-of-frames"})
