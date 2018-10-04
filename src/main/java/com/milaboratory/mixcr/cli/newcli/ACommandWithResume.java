@@ -5,8 +5,6 @@ import com.milaboratory.mixcr.basictypes.PipelineConfiguration;
 import com.milaboratory.mixcr.basictypes.PipelineConfigurationReader;
 import picocli.CommandLine;
 
-import java.util.List;
-
 /** A command which allows resuming execution */
 public abstract class ACommandWithResume extends ACommandWithOutput {
     @CommandLine.Option(
@@ -78,7 +76,7 @@ public abstract class ACommandWithResume extends ACommandWithOutput {
     }
 
     @Override
-    public void run0() throws Exception {
+    public final void run0() throws Exception {
         if (skipExecution)
             return;
         run1();
