@@ -29,7 +29,8 @@ import java.util.Arrays;
                 CommandMergeAlignments.class,
                 CommandSlice.class,
                 CommandSortAlignments.class,
-                CommandVersionInfo.class})
+                CommandVersionInfo.class,
+                CommandAnalyze.CommandAnalyzeMain.class})
 public class CommandMain {
     @CommandLine.Option(
             names = {"-v", "--version"},

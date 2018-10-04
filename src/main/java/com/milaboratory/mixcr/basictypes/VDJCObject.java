@@ -481,7 +481,7 @@ public class VDJCObject {
                                 lPositionInRef, rAl.getSequence1Range().getFrom()));
                     }
 
-                    assert leftParts.equals(rightParts) : "\n" + leftParts + "\n" + rightParts;
+                    assert same(leftParts, rightParts) : "\n" + leftParts + "\n" + rightParts;
                     pieces = leftParts;
                 } else {
                     if (lLast.iTarget != rLast.iTarget)
@@ -526,6 +526,23 @@ public class VDJCObject {
                 builder.sequences.toArray(new NucleotideSequence[builder.sequences.size()]),
                 builder.lowerCase,
                 partition, partition.getTranslationParameters(geneFeature));
+    }
+
+    private boolean same(IncompleteSequencePart a, IncompleteSequencePart b) {
+        return a.hit == b.hit &&
+                a.germline == b.germline &&
+                (a.iTarget == b.iTarget || a.germline) &&
+                a.begin == b.begin &&
+                a.end == b.end;
+    }
+
+    private boolean same(List<IncompleteSequencePart> a, List<IncompleteSequencePart> b) {
+        if (a.size() != b.size())
+            return false;
+        for (int i = 0; i < a.size(); ++i)
+            if (!same(a.get(i), b.get(i)))
+                return false;
+        return true;
     }
 
     private static final class IncompleteSequencePart {

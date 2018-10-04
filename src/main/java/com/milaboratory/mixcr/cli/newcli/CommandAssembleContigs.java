@@ -3,8 +3,6 @@ package com.milaboratory.mixcr.cli.newcli;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.blocks.ParallelProcessor;
-import com.beust.jcommander.DynamicParameter;
-import com.beust.jcommander.Parameter;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
@@ -23,8 +21,8 @@ import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
-import picocli.CommandLine;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 
 import java.io.*;
 import java.util.*;
@@ -40,7 +38,7 @@ public class CommandAssembleContigs extends ACommandWithResumeWithSingleInput {
 
     public int threads = Runtime.getRuntime().availableProcessors();
 
-    @CommandLine.Option(description = "Processing threads",
+    @Option(description = "Processing threads",
             names = {"-t", "--threads"})
     public void setThreads(int threads) {
         if (threads <= 0)
@@ -48,18 +46,18 @@ public class CommandAssembleContigs extends ACommandWithResumeWithSingleInput {
         this.threads = threads;
     }
 
-    @DynamicParameter(names = "-O", description = "Overrides default parameter values.")
+    @Option(names = "-O", description = "Overrides default parameter values.")
     public Map<String, String> overrides = new HashMap<>();
 
-    @Parameter(description = "Report file.",
+    @Option(description = "Report file.",
             names = {"-r", "--report"})
     public String reportFile;
 
-    @Parameter(description = "Report file.",
+    @Option(description = "Report file.",
             names = {"--debug-report"}, hidden = true)
     public String debugReportFile;
 
-    @Parameter(description = "JSON report file.",
+    @Option(description = "JSON report file.",
             names = {"--json-report"})
     public String jsonReport = null;
 

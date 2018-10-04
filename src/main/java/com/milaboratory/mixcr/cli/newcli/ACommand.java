@@ -62,7 +62,7 @@ public abstract class ACommand implements Runnable {
 
     private void printWarn(String message) {
         if (!quiet)
-            System.err.print(message);
+            System.err.println(message);
     }
 
     /** list of intput files */
