@@ -13,7 +13,23 @@ import java.util.Arrays;
         separator = " ",
         subcommands = {
                 CommandLine.HelpCommand.class,
-                CommandAlign.class})
+                CommandAlign.class,
+                CommandAssemblePartialAlignments.class,
+                CommandAssemble.class,
+                CommandAssembleContigs.class,
+                CommandClonesDiff.class,
+                CommandExportAlignmentsPretty.class,
+                CommandExportClonesPretty.class,
+                CommandExportClonesReads.class,
+                CommandExportReads.class,
+                CommandExtend.class,
+                CommandFilterAlignments.class,
+                CommandInfo.class,
+                CommandListLibraries.class,
+                CommandMergeAlignments.class,
+                CommandSlice.class,
+                CommandSortAlignments.class,
+                CommandVersionInfo.class})
 public class CommandMain {
     @CommandLine.Option(
             names = {"-v", "--version"},

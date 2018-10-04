@@ -70,12 +70,8 @@ public class CommandExportAlignmentsPretty extends ACommandSimpleExport {
     public String readContains = null;
 
     @Option(description = "Custom filter",
-            names = {"-f", "--filter"})
+            names = {"--filter"})
     public String filter = null;
-
-    @Option(description = "Verbose output (old)",
-            names = {"-v", "--verbose"})
-    public boolean verbose = false;
 
     @Option(description = "Print descriptions",
             names = {"-d", "--descriptions"})

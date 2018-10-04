@@ -17,7 +17,11 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.*;
 
- public class CommandClonesDiff extends ACommandWithOutput {
+@Command(name = "clonesDiff",
+        separator = " ",
+        sortOptions = true,
+        description = "Calculates the difference between two .clns files.")
+public class CommandClonesDiff extends ACommandWithOutput {
     @Parameters(description = "input1.clns")
     public String in1;
 

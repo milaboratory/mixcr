@@ -22,25 +22,24 @@ import java.util.List;
         separator = " ",
         description = "Export original reads from vdjca file.")
 public class CommandExportReads extends ACommandWithOutput {
-
     @Parameters(description = "input.vdjca[.gz] [output_R1.fastq[.gz] [output_R2.fastq[.gz]]]", arity = "1..3")
-    public List<String> parameters;
+    public List<String> inOut;
 
     @Override
     protected List<String> getInputFiles() {
-        return Collections.singletonList(parameters.get(0));
+        return Collections.singletonList(inOut.get(0));
     }
 
     @Override
     public List<String> getOutputFiles() {
-        if (parameters.size() == 1)
+        if (inOut.size() == 1)
             return Collections.emptyList();
 
-        if (parameters.size() == 2)
-            return Collections.singletonList(parameters.get(1));
+        if (inOut.size() == 2)
+            return Collections.singletonList(inOut.get(1));
 
-        if (parameters.size() == 3)
-            return Arrays.asList(parameters.get(1), parameters.get(2));
+        if (inOut.size() == 3)
+            return Arrays.asList(inOut.get(1), inOut.get(2));
 
         throw new ParameterException("Required parameters missing.");
     }
