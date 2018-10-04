@@ -11,10 +11,10 @@ import java.util.List;
  *
  */
 public abstract class ACommandWithResumeWithSingleInput extends ACommandWithResume {
-    @Parameters(description = "input file")
+    @Parameters(index = "0", description = "input file")
     public String in;
 
-    @Parameters(description = "output file")
+    @Parameters(index = "1", description = "output file")
     public String out;
 
     @Override

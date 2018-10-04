@@ -18,7 +18,6 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Model.OptionSpec;
 import picocli.CommandLine.Option;
-import picocli.CommandLine.Parameters;
 import picocli.CommandLine.ParseResult;
 
 import java.io.BufferedReader;
@@ -31,7 +30,7 @@ import static cc.redberry.primitives.FilterUtil.ACCEPT_ALL;
 import static cc.redberry.primitives.FilterUtil.and;
 
 
-public abstract class CommandExport<T extends VDJCObject> extends ACommandSimpleExport{
+public abstract class CommandExport<T extends VDJCObject> extends ACommandSimpleExport {
     public static String EXPORT_TO_STDOUT = "-";
 
     /** type class */
@@ -412,6 +411,14 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                 FieldData.mk("-aaFeature", "FR4"),
                 FieldData.mk("-defaultAnchorPoints")));
 
+        alignments.put("fullImputed", alignments.get("full").stream().map(p -> {
+            switch (p.field) {
+                case "-nFeature": return new FieldData("-nFeatureImputed", p.args);
+                case "-aaFeature": return new FieldData("-aaFeatureImputed", p.args);
+                default: return p;
+            }
+        }).collect(Collectors.toList()));
+
         presets.put(VDJCAlignments.class, alignments);
 
         Map<String, List<FieldData>> clones = new HashMap<>();
@@ -429,7 +436,16 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
             add(1, FieldData.mk("-fraction"));
         }});
 
+        clones.put("fullNoIdImputed", new ArrayList<FieldData>(alignments.get("fullImputed")) {{
+            add(0, FieldData.mk("-count"));
+            add(1, FieldData.mk("-fraction"));
+        }});
+
         clones.put("full", new ArrayList<FieldData>(clones.get("fullNoId")) {{
+            add(0, FieldData.mk("-cloneId"));
+        }});
+
+        clones.put("fullImputed", new ArrayList<FieldData>(clones.get("fullNoIdImputed")) {{
             add(0, FieldData.mk("-cloneId"));
         }});
         presets.put(Clone.class, clones);

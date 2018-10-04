@@ -47,9 +47,6 @@ import static cc.redberry.pipe.CUtils.unchunked;
 import static com.milaboratory.mixcr.basictypes.AlignmentsIO.DEFAULT_ALIGNMENTS_IN_BLOCK;
 import static com.milaboratory.mixcr.cli.newcli.CommandAlign.ALIGN_COMMAND_NAME;
 
-/**
- *
- */
 @Command(name = ALIGN_COMMAND_NAME,
         sortOptions = true,
         separator = " ",
@@ -166,7 +163,7 @@ public class CommandAlign extends ACommandWithResume {
 
     @Option(description = "Buffers.",
             names = {"--buffers"}, hidden = true)
-    public boolean reportBuffers;
+    public boolean reportBuffers = false;
 
     private VDJCAlignerParameters vdjcAlignerParameters = null;
 

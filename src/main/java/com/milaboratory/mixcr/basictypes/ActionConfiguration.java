@@ -3,7 +3,7 @@ package com.milaboratory.mixcr.basictypes;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.milaboratory.mixcr.cli.*;
+import com.milaboratory.mixcr.cli.newcli.*;
 import com.milaboratory.primitivio.annotations.Serializable;
 
 /**
@@ -18,14 +18,16 @@ import com.milaboratory.primitivio.annotations.Serializable;
         include = JsonTypeInfo.As.PROPERTY,
         property = "type")
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = ActionAlign.AlignConfiguration.class, name = "align-configuration"),
-        @JsonSubTypes.Type(value = ActionAssemble.AssembleConfiguration.class, name = "assemble-configuration"),
-        @JsonSubTypes.Type(value = ActionAssemblePartialAlignments.AssemblePartialConfiguration.class, name = "assemble-partial-configuration"),
-        @JsonSubTypes.Type(value = ActionExtend.ExtendConfiguration.class, name = "extend-configuration"),
-        @JsonSubTypes.Type(value = ActionMergeAlignments.MergeConfiguration.class, name = "merge-configuration"),
-        @JsonSubTypes.Type(value = ActionFilterAlignments.FilterConfiguration.class, name = "filter-configuration"),
-        @JsonSubTypes.Type(value = ActionSortAlignments.SortConfiguration.class, name = "sort-configuration"),
-        @JsonSubTypes.Type(value = ActionSlice.SliceConfiguration.class, name = "slice-configuration")})
+        @JsonSubTypes.Type(value = CommandAlign.AlignConfiguration.class, name = "align-configuration"),
+        @JsonSubTypes.Type(value = CommandAssemble.AssembleConfiguration.class, name = "assemble-configuration"),
+        @JsonSubTypes.Type(value = CommandAssembleContigs.AssembleContigsConfiguration.class, name = "assemble-contig-configuration"),
+        @JsonSubTypes.Type(value = CommandAssemblePartialAlignments.AssemblePartialConfiguration.class, name = "assemble-partial-configuration"),
+        @JsonSubTypes.Type(value = CommandExtend.ExtendConfiguration.class, name = "extend-configuration"),
+        @JsonSubTypes.Type(value = CommandMergeAlignments.MergeConfiguration.class, name = "merge-configuration"),
+        @JsonSubTypes.Type(value = CommandFilterAlignments.FilterConfiguration.class, name = "filter-configuration"),
+        @JsonSubTypes.Type(value = CommandSortAlignments.SortConfiguration.class, name = "sort-configuration"),
+        @JsonSubTypes.Type(value = CommandSlice.SliceConfiguration.class, name = "slice-configuration")
+})
 @Serializable(asJson = true)
 public interface ActionConfiguration<Conf extends ActionConfiguration<Conf>> {
     String actionName();

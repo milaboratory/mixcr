@@ -73,7 +73,6 @@ public class CommandAssemble extends ACommandWithResumeWithSingleInput {
     @Option(names = "-O", description = "Overrides default parameter values.")
     private Map<String, String> overrides = new HashMap<>();
 
-
     @Override
     public ActionConfiguration getConfiguration() {
         return new AssembleConfiguration(getCloneAssemblerParameters(), clna);

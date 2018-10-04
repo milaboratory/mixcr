@@ -10,6 +10,8 @@ public abstract class ACommandWithOutput extends ACommand {
             description = "Force overwrite of output file(s).")
     public boolean force = false;
 
+    public boolean isForceOverwrite() {return force;}
+
     @Override
     public void validate() {
         super.validate();
