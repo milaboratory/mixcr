@@ -40,6 +40,11 @@ public abstract class FieldParameterless<T> extends AbstractField<T> {
         this.sHeader = sHeader;
     }
 
+    @Override
+    public int nArguments() {
+        return 0;
+    }
+
     protected abstract String extract(T object);
 
     public String getHeader(OutputMode outputMode) {

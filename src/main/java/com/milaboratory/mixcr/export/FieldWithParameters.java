@@ -30,8 +30,16 @@
 package com.milaboratory.mixcr.export;
 
 public abstract class FieldWithParameters<T, P> extends AbstractField<T> {
-    public FieldWithParameters(Class targetType, String command, String description) {
+    final int nArguments;
+
+    public FieldWithParameters(Class targetType, String command, String description, int nArguments) {
         super(targetType, command, description);
+        this.nArguments = nArguments;
+    }
+
+    @Override
+    public int nArguments() {
+        return nArguments;
     }
 
     protected abstract P getParameters(String[] string);

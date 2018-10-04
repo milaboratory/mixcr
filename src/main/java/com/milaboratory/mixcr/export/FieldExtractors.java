@@ -675,6 +675,13 @@ public final class FieldExtractors {
         return descriptors;
     }
 
+    public static boolean hasField(String name) {
+        for (Field field : getFields())
+            if (name.equalsIgnoreCase(field.getCommand()))
+                return true;
+        return false;
+    }
+
     public static FieldExtractor parse(OutputMode outputMode, Class clazz, String[] args) {
         for (Field field : getFields())
             if (field.canExtractFrom(clazz) && args[0].equalsIgnoreCase(field.getCommand()))
@@ -742,8 +749,8 @@ public final class FieldExtractors {
     }
 
     static abstract class WP_O<P> extends FieldWithParameters<VDJCObject, P> {
-        protected WP_O(String command, String description) {
-            super(VDJCObject.class, command, description);
+        protected WP_O(String command, String description, int nArguments) {
+            super(VDJCObject.class, command, description, nArguments);
         }
     }
 
@@ -788,7 +795,7 @@ public final class FieldExtractors {
         protected ExtractReferencePointPosition() {
             super("-positionOf",
                     "Exports position of specified reference point inside target sequences " +
-                            "(clonal sequence / read sequence).");
+                            "(clonal sequence / read sequence).", 1);
         }
 
         @Override
