@@ -279,7 +279,7 @@
                                     <addHeader>false</addHeader>
                                 </transformer>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.milaboratory.mixcr.cli.Main</mainClass>
+                                    <mainClass>com.milaboratory.mixcr.cli.newcli.Main</mainClass>
                                 </transformer>
                             </transformers>
                             <shadedArtifactAttached>true</shadedArtifactAttached>

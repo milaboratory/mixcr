@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.mixcr.basictypes.ActionConfiguration;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
-import com.milaboratory.mixcr.cli.ActionAssemblePartialAlignments;
 import com.milaboratory.mixcr.cli.JsonOverrider;
 import com.milaboratory.mixcr.cli.ReportWrapper;
 import com.milaboratory.mixcr.cli.Util;
@@ -149,7 +148,7 @@ public class CommandAssemblePartialAlignments extends ACommandWithResumeWithSing
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            ActionAssemblePartialAlignments.AssemblePartialConfiguration that = (ActionAssemblePartialAlignments.AssemblePartialConfiguration) o;
+            AssemblePartialConfiguration that = (AssemblePartialConfiguration) o;
             return dropPartial == that.dropPartial &&
                     overlappedOnly == that.overlappedOnly &&
                     Objects.equals(parameters, that.parameters);

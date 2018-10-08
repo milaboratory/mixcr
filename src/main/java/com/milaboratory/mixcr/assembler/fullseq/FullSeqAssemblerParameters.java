@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 @JsonAutoDetect(
@@ -195,6 +196,30 @@ public class FullSeqAssemblerParameters {
                 alignedSequenceEdgeDelta, alignmentEdgeRegionSize, minimalNonEdgePointsFraction,
                 outputMinimalQualityShare, outputMinimalSumQuality, subCloningRegion,
                 trimmingParameters, minimalContigLength, alignedRegionsOnly);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FullSeqAssemblerParameters that = (FullSeqAssemblerParameters) o;
+        return Double.compare(that.branchingMinimalQualityShare, branchingMinimalQualityShare) == 0 &&
+                branchingMinimalSumQuality == that.branchingMinimalSumQuality &&
+                decisiveBranchingSumQualityThreshold == that.decisiveBranchingSumQualityThreshold &&
+                alignedSequenceEdgeDelta == that.alignedSequenceEdgeDelta &&
+                alignmentEdgeRegionSize == that.alignmentEdgeRegionSize &&
+                Double.compare(that.minimalNonEdgePointsFraction, minimalNonEdgePointsFraction) == 0 &&
+                Double.compare(that.outputMinimalQualityShare, outputMinimalQualityShare) == 0 &&
+                outputMinimalSumQuality == that.outputMinimalSumQuality &&
+                minimalContigLength == that.minimalContigLength &&
+                alignedRegionsOnly == that.alignedRegionsOnly &&
+                Objects.equals(subCloningRegion, that.subCloningRegion) &&
+                Objects.equals(trimmingParameters, that.trimmingParameters);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(branchingMinimalQualityShare, branchingMinimalSumQuality, decisiveBranchingSumQualityThreshold, alignedSequenceEdgeDelta, alignmentEdgeRegionSize, minimalNonEdgePointsFraction, outputMinimalQualityShare, outputMinimalSumQuality, subCloningRegion, trimmingParameters, minimalContigLength, alignedRegionsOnly);
     }
 
     private static Map<String, FullSeqAssemblerParameters> knownParameters;
