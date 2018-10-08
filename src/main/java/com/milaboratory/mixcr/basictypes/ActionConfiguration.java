@@ -3,7 +3,7 @@ package com.milaboratory.mixcr.basictypes;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.milaboratory.mixcr.cli.newcli.*;
+import com.milaboratory.mixcr.cli.*;
 import com.milaboratory.primitivio.annotations.Serializable;
 
 /**

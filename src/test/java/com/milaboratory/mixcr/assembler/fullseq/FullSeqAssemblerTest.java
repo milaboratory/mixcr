@@ -14,7 +14,7 @@ import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter;
-import com.milaboratory.mixcr.cli.ActionExportClonesPretty;
+import com.milaboratory.mixcr.cli.CommandExportClonesPretty;
 import com.milaboratory.mixcr.util.RunMiXCR;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
 import gnu.trove.set.hash.TIntHashSet;
@@ -345,7 +345,7 @@ public class FullSeqAssemblerTest {
         Assert.assertEquals(60, uniq2);
 
         for (Clone clone : new CloneSet(Arrays.asList(agg.callVariants(prep))).getClones()) {
-            ActionExportClonesPretty.outputCompact(System.out, clone);
+            CommandExportClonesPretty.outputCompact(System.out, clone);
             System.out.println();
             System.out.println(" ================================================ ");
             System.out.println();
@@ -412,7 +412,7 @@ public class FullSeqAssemblerTest {
         }
 
         for (Clone clone : assemble.cloneSet) {
-            ActionExportClonesPretty.outputCompact(System.out, clone);
+            CommandExportClonesPretty.outputCompact(System.out, clone);
         }
 
         //Assert.assertEquals(1, assemble.cloneSet.size());
@@ -448,7 +448,7 @@ public class FullSeqAssemblerTest {
         List<Clone> clones = new ArrayList<>(new CloneSet(Arrays.asList(agg.callVariants(prep))).getClones());
         clones.sort(Comparator.comparingDouble(Clone::getCount).reversed());
         for (Clone clone : clones) {
-            ActionExportClonesPretty.outputCompact(System.out, clone);
+            CommandExportClonesPretty.outputCompact(System.out, clone);
             System.out.println();
             System.out.println(" ================================================ ");
             System.out.println();
