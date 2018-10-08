@@ -15,6 +15,10 @@ public final class Main {
 
     public static CommandLine parse(String... args) {
         CommandLine cmd = new CommandLine(new CommandMain());
+
+        cmd.getSubcommands().get("analyze").addSubcommand("amplicon", CommandAnalyze.mkAmplicon());
+        cmd.getSubcommands().get("analyze").addSubcommand("shotgun", CommandAnalyze.mkShotgun());
+
         cmd.addSubcommand("exportAlignments", CommandExport.mkAlignmentsSpec());
         cmd.addSubcommand("exportClones", CommandExport.mkClonesSpec());
         cmd.parseWithHandlers(
@@ -24,7 +28,7 @@ public final class Main {
                         List<CommandLine> parsedCommands = parseResult.asCommandLineList();
                         CommandLine commandLine = parsedCommands.get(parsedCommands.size() - 1);
                         Object command = commandLine.getCommand();
-                        if (command instanceof CommandSpec && ((CommandSpec) command).userObject() instanceof CommandExport) {
+                        if (command instanceof CommandSpec && ((CommandSpec) command).userObject() instanceof Runnable) {
                             try {
                                 ((Runnable) ((CommandSpec) command).userObject()).run();
                                 return new ArrayList<>();

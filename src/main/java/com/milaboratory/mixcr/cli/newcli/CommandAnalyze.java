@@ -1,19 +1,174 @@
 package com.milaboratory.mixcr.cli.newcli;
 
+import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
+import io.repseq.core.Chains;
 import io.repseq.core.GeneFeature;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Model.CommandSpec;
+import picocli.CommandLine.Model.OptionSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.stream.Collectors;
 
-public class CommandAnalyze extends ACommandWithOutput {
+public abstract class CommandAnalyze extends ACommandWithOutput {
+    private static <T extends WithNameWithDescription> T parse0(Class<? extends T> clazz, String v) {
+        T[] ts = clazz.getEnumConstants();
+        for (T t : ts)
+            if (t.key().equals(v))
+                return t;
+        return null;
+    }
+
+    interface WithNameWithDescription {
+        String key();
+
+        String description();
+    }
+
+    enum _StartingMaterial implements WithNameWithDescription {
+        rna("RNA"),
+        dna("Genomic DNA");
+        final String key, description;
+
+        _StartingMaterial(String description) {
+            this.key = this.toString();
+            this.description = description;
+        }
+
+        @Override
+        public String key() { return key; }
+
+        @Override
+        public String description() { return description; }
+    }
+
+
+    enum _Chains implements WithNameWithDescription {
+        tcr("All T-cell receptor types (TRA/TRB/TRG/TRD)"),
+        bcr("All B-cell receptor types (IGH/IGK/IGL/TRD)"),
+        xcr("All T- and B-cell receptor types"),
+        tra("TRA chain"),
+        trb("TRB chain"),
+        trd("TRD chain"),
+        trg("TRG chain"),
+        igh("IGH chain"),
+        igk("IGK chain"),
+        igl("IGL chain");
+        final String key, description;
+
+        _Chains(String description) {
+            this.key = this.toString();
+            this.description = description;
+        }
+
+        @Override
+        public String key() { return key; }
+
+        @Override
+        public String description() { return description; }
+    }
+
+
+    enum _5EndPrimers implements WithNameWithDescription {
+        noVPrimers("no-v-primers", "No V gene primers (e.g. 5’RACE with template switch oligo or a like)"),
+        vPrimers("v-primers", "V gene single primer / multiplex");
+        final String key, description;
+
+        _5EndPrimers(String key, String description) {
+            this.key = key;
+            this.description = description;
+        }
+
+        @Override
+        public String key() { return key; }
+
+        @Override
+        public String description() { return description; }
+
+        static _5EndPrimers parse(String v) {
+            return parse0(_5EndPrimers.class, v);
+        }
+    }
+
+    enum _3EndPrimers implements WithNameWithDescription {
+        jPrimers("j-primers", "J gene single primer / multiplex"),
+        jcPrimers("j-c-intron-primers", "J-C intron single primer / multiplex"),
+        cPrimers("c-primers", "C gene single primer / multiplex (e.g. IGHC primers specific to different immunoglobulin isotypes)");
+        final String key, description;
+
+        _3EndPrimers(String key, String description) {
+            this.key = key;
+            this.description = description;
+        }
+
+        @Override
+        public String key() { return key; }
+
+        @Override
+        public String description() { return description; }
+
+        static _3EndPrimers parse(String v) {
+            return parse0(_3EndPrimers.class, v);
+        }
+    }
+
+    enum _Adapters implements WithNameWithDescription {
+        adaptersPresent("adapters-present", "May be present"),
+        noAdapters("no-adapters", "Absent / nearly absent / trimmed");
+        final String key, description;
+
+        _Adapters(String key, String description) {
+            this.key = key;
+            this.description = description;
+        }
+
+        @Override
+        public String key() { return key; }
+
+        @Override
+        public String description() { return description; }
+
+        static _Adapters parse(String v) {
+            return parse0(_Adapters.class, v);
+        }
+    }
+
+    private static abstract class EnumCandidates extends ArrayList<String> {
+        EnumCandidates(Class<? extends WithNameWithDescription> _enum) {
+            super(Arrays.stream(_enum.getEnumConstants()).map(WithNameWithDescription::key).collect(Collectors.toList()));
+        }
+    }
+
+    static class _StartingMaterialCandidates extends EnumCandidates {
+        _StartingMaterialCandidates() { super(_Chains.class); }
+    }
+
+    static class _ChainsCandidates extends EnumCandidates {
+        _ChainsCandidates() { super(_Chains.class); }
+    }
+
+    static class _5EndCandidates extends EnumCandidates {
+        _5EndCandidates() { super(_5EndPrimers.class); }
+    }
+
+    static class _3EndCandidates extends EnumCandidates {
+        _3EndCandidates() { super(_3EndPrimers.class); }
+    }
+
+    static class _AdaptersCandidates extends EnumCandidates {
+        _AdaptersCandidates() { super(_Adapters.class); }
+    }
+
+
+    ///////////////////////////////////////////// Common options /////////////////////////////////////////////
+
     @Parameters(description = "input_file1 [input_file2] analysisOutputName")
-    public List<String> files = new ArrayList<>();
+    public List<String> inOut = new ArrayList<>();
 
     @Option(names = {"-s", "--species"},
             description = "Species (organism), as specified in library file or taxon id. " +
@@ -21,25 +176,69 @@ public class CommandAnalyze extends ACommandWithOutput {
             required = true)
     public String species = "hs";
 
-    @Option(names = {"--resume"}, description = "Try to resume aborted execution")
-    public boolean resume = false;
+    public Chains chains = Chains.ALL;
 
-    enum SourceType {rna, dna}
+    @Option(names = "--receptor-type",
+            completionCandidates = _ChainsCandidates.class,
+            description = "Receptor type. Possible values: ${COMPLETION-CANDIDATES}",
+            required = false /* This will be overriden for amplicon */)
+    public void setChains(_Chains chains) {
+        switch (chains) {
+            case tcr:
+                this.chains = Chains.TCR;
+                break;
+            case bcr:
+                this.chains = Chains.IG;
+                break;
+            case xcr:
+                this.chains = Chains.ALL;
+                break;
+            case tra:
+                this.chains = Chains.TRA;
+                break;
+            case trb:
+                this.chains = Chains.TRB;
+                break;
+            case trg:
+                this.chains = Chains.TRG;
+                break;
+            case trd:
+                this.chains = Chains.TRD;
+                break;
+            case igh:
+                this.chains = Chains.IGH;
+                break;
+            case igk:
+                this.chains = Chains.IGK;
+                break;
+            case igl:
+                this.chains = Chains.IGL;
+                break;
+            default:
+                throwValidationException("Unknown chains option: " + chains);
+        }
+    }
 
-    @Option(names = "--source-type", descriptionKey = "Source type", required = true)
-    public SourceType sourceType;
+    @Option(names = "--starting-material",
+            completionCandidates = _StartingMaterialCandidates.class,
+            description = "Starting material. Possible values: ${COMPLETION-CANDIDATES}",
+            required = true)
+    public _StartingMaterial startingMaterial;
 
-    @Option(names = "--export-germline", descriptionKey = "Export germline segments")
+    @Option(names = "--export-germline", description = "Export germline segments")
     public boolean exportGermline = false;
 
-    @Option(names = "--only-productive", descriptionKey = "Filter out-of-frame and stop-codons in export")
+    @Option(names = "--only-productive", description = "Filter out-of-frame and stop-codons in export")
     public boolean onlyProductive = false;
 
-    @Option(names = "--contig-assembly", descriptionKey = "Assemble full-length sequences. NOTE: this will take additional time.")
+    @Option(names = "--contig-assembly", description = "Assemble full-length sequences. NOTE: this will take additional time.")
     public boolean contigAssembly = false;
 
     @Option(names = {"-r", "--report"}, description = "Report file.")
     public String report = null;
+
+    @Option(names = {"--resume"}, description = "Try to resume aborted execution")
+    public boolean resume = false;
 
     public String getReport() {
         if (report == null)
@@ -51,7 +250,7 @@ public class CommandAnalyze extends ACommandWithOutput {
     private <T extends ACommandWithOutput> T inheritOptionsAndValidate(T parameters) {
         if (resume && parameters instanceof ACommandWithResume)
             ((ACommandWithResume) parameters).resume = true;
-        if (isForceOverwrite() && !resume)
+        if (isForceOverwrite())
             parameters.force = true;
         parameters.validate();
         return parameters;
@@ -64,8 +263,16 @@ public class CommandAnalyze extends ACommandWithOutput {
     /** pre-defined (hidden from the user) parameters */
     protected List<String> initialAlignParameters = new ArrayList<>();
 
+    private CommandAlign cmdAlign = null;
+
     /** Prepare parameters for align */
-    public CommandAlign mkAlign() {
+    public final CommandAlign getAlign() {
+        if (cmdAlign != null)
+            return cmdAlign;
+        return cmdAlign = inheritOptionsAndValidate(mkAlign());
+    }
+
+    CommandAlign mkAlign() {
         // align parameters
         List<String> alignParameters = new ArrayList<>(initialAlignParameters);
 
@@ -80,6 +287,9 @@ public class CommandAnalyze extends ACommandWithOutput {
         // add report file
         alignParameters.add("--report");
         alignParameters.add(getReport());
+
+        if (!chains.intersects(Chains.TCR))
+            alignParameters.add("-p kAligner2");
 
         // add all override parameters
         alignParameters.addAll(this.alignParameters);
@@ -96,22 +306,21 @@ public class CommandAnalyze extends ACommandWithOutput {
                         .stream()
                         .flatMap(s -> Arrays.stream(s.split(" ")))
                         .toArray(String[]::new));
-        CommandAlign al = inheritOptionsAndValidate(ap);
 
-        switch (sourceType) {
+        switch (startingMaterial) {
             case rna:
-                al.getAlignerParameters()
+                ap.getAlignerParameters()
                         .getVAlignerParameters()
                         .setGeneFeatureToAlign(GeneFeature.VTranscriptWithout5UTRWithP);
                 break;
             case dna:
-                al.getAlignerParameters()
+                ap.getAlignerParameters()
                         .getVAlignerParameters()
                         .setGeneFeatureToAlign(GeneFeature.VGeneWithP);
                 break;
         }
 
-        return al;
+        return ap;
     }
 
     @Option(names = "--assemblePartial",
@@ -120,7 +329,7 @@ public class CommandAnalyze extends ACommandWithOutput {
     public List<String> assemblePartialParameters = new ArrayList<>();
 
     /** Build parameters for assemble partial */
-    public CommandAssemblePartialAlignments mkAssemblePartial(String input, String output) {
+    public final CommandAssemblePartialAlignments mkAssemblePartial(String input, String output) {
         List<String> assemblePartialParameters = new ArrayList<>();
 
         // add report file
@@ -149,7 +358,7 @@ public class CommandAnalyze extends ACommandWithOutput {
     public List<String> extendAlignmentsParameters = new ArrayList<>();
 
     /** Build parameters for extender */
-    public CommandExtend mkExtend(String input, String output) {
+    public final CommandExtend mkExtend(String input, String output) {
         List<String> extendParameters = new ArrayList<>();
 
         // add report file
@@ -178,7 +387,12 @@ public class CommandAnalyze extends ACommandWithOutput {
     public List<String> assembleParameters = new ArrayList<>();
 
     /** Build parameters for assemble */
-    public CommandAssemble mkAssemble(String input, String output) {
+    public CommandAssemble getAssemble(String input, String output) {
+        return inheritOptionsAndValidate(mkAssemble(input, output));
+    }
+
+    /** Build parameters for assemble */
+    CommandAssemble mkAssemble(String input, String output) {
         List<String> assembleParameters = new ArrayList<>();
 
         // add report file
@@ -201,7 +415,10 @@ public class CommandAnalyze extends ACommandWithOutput {
                         .stream()
                         .flatMap(s -> Arrays.stream(s.split(" ")))
                         .toArray(String[]::new));
-        return inheritOptionsAndValidate(ap);
+
+        ap.getCloneAssemblerParameters().updateFrom(mkAlign().getAlignerParameters());
+
+        return ap;
     }
 
     @Option(names = "--assembleContigs",
@@ -210,7 +427,7 @@ public class CommandAnalyze extends ACommandWithOutput {
     public List<String> assembleContigParameters = new ArrayList<>();
 
     /** Build parameters for assemble */
-    public CommandAssembleContigs mkAssembleContigs(String input, String output) {
+    public final CommandAssembleContigs mkAssembleContigs(String input, String output) {
         List<String> assembleContigParameters = new ArrayList<>();
 
         // add report file
@@ -239,16 +456,24 @@ public class CommandAnalyze extends ACommandWithOutput {
     public List<String> exportParameters = new ArrayList<>();
 
     /** Build parameters for export */
-    public CommandExport.CommandExportClones mkExport(String input, String output) {
+    public final CommandExport.CommandExportClones mkExport(String input, String output) {
         List<String> exportParameters = new ArrayList<>();
         // add all override parameters
         exportParameters.addAll(this.exportParameters);
+
         if (exportGermline)
             exportParameters.add("-p fullImputed");
         if (onlyProductive) {
             exportParameters.add("--filter-out-of-frames");
             exportParameters.add("--filter-stops");
         }
+
+        // logic with uber --resume and --force
+        if (resume || force)
+            exportParameters.add("-f");
+
+        exportParameters.add("--chains");
+        exportParameters.add(chains.toString());
 
         exportParameters.add(input);
         exportParameters.add(output);
@@ -274,12 +499,17 @@ public class CommandAnalyze extends ACommandWithOutput {
     /** input raw sequencing data files */
     @Override
     public List<String> getInputFiles() {
-        return files.subList(0, files.size() - 1);
+        return inOut.subList(0, inOut.size() - 1);
+    }
+
+    @Override
+    public List<String> getOutputFiles() {
+        return Collections.emptyList();
     }
 
     /** the pattern of output file name ("myOutput" will produce "myOutput.vdjca", "myOutput.clns" etc files) */
     String outputNamePattern() {
-        return files.get(files.size() - 1);
+        return inOut.get(inOut.size() - 1);
     }
 
     public String fNameForReport() {
@@ -303,16 +533,11 @@ public class CommandAnalyze extends ACommandWithOutput {
     }
 
     public String fNameForContigs() {
-        return outputNamePattern() + "_contigs.clna";
+        return outputNamePattern() + ".contigs.clns";
     }
 
-    public String fNameForExportClones() {
-        return outputNamePattern() + ".clones.txt";
-    }
-
-    @Override
-    public List<String> getOutputFiles() {
-        return Collections.singletonList(fNameForExportClones());
+    public String fNameForExportClones(String chains) {
+        return outputNamePattern() + ".clonotypes." + chains + ".txt";
     }
 
     @Override
@@ -333,7 +558,7 @@ public class CommandAnalyze extends ACommandWithOutput {
     @Override
     public void run0() throws Exception {
         // --- Running alignments
-        mkAlign().run();
+        getAlign().run();
         String fileWithAlignments = fNameForAlignments();
 
         // --- Running partial alignments
@@ -352,7 +577,7 @@ public class CommandAnalyze extends ACommandWithOutput {
 
         // --- Running assembler
         String fileWithClones = fNameForClones();
-        mkAssemble(fileWithAlignments, fileWithClones).run();
+        getAssemble(fileWithAlignments, fileWithClones).run();
 
         if (contigAssembly) {
             String fileWithContigs = fNameForContigs();
@@ -361,28 +586,180 @@ public class CommandAnalyze extends ACommandWithOutput {
         }
 
         // --- Running export
-        mkExport(fileWithClones, fNameForExportClones()).run();
+        if (!chains.equals(Chains.ALL))
+            for (String chain : chains)
+                mkExport(fileWithClones, fNameForExportClones(chain)).run();
+        else
+            mkExport(fileWithClones, fNameForExportClones(chains.toString())).run();
     }
 
 
-    @Command(name = "analyze",
-            sortOptions = true,
-            separator = " ",
-            description = "Uber analysis.",
-            subcommands = {CommandShotgun.class})
-    public static class CommandAnalyzeMain {}
+    ///////////////////////////////////////////// Amplicon /////////////////////////////////////////////
 
-    enum Chains {tcr, bcr, xcr, tra, trb, trd, trg}
+    @Command(name = "amplicon",
+            sortOptions = false,
+            separator = " ",
+            description = "Analyze targeted TCR/IG library amplification (5'RACE, Amplicon, Multiplex, etc).")
+    public static class CommandAmplicon extends CommandAnalyze {
+        public CommandAmplicon() {
+            doExtendAlignments = false;
+            nAssemblePartialRounds = 0;
+        }
+
+        private _5EndPrimers vPrimers;
+
+        @Option(names = "--5-end",
+                completionCandidates = _5EndCandidates.class,
+                description = "5'-end of the library. Possible values: ${COMPLETION-CANDIDATES}",
+                required = true)
+        public void set5End(String value) {
+            vPrimers = _5EndPrimers.parse(value);
+            if (vPrimers == null)
+                throwValidationException("Illegal value for --5-end parameter: " + value);
+        }
+
+        private _3EndPrimers jcPrimers;
+
+        @Option(names = "--3-end",
+                completionCandidates = _3EndCandidates.class,
+                description = "3'-end of the library. Possible values: ${COMPLETION-CANDIDATES}",
+                required = true)
+        public void set3End(String value) {
+            jcPrimers = _3EndPrimers.parse(value);
+            if (jcPrimers == null)
+                throwValidationException("Illegal value for --3-end parameter: " + value);
+        }
+
+        private _Adapters adapters;
+
+        @Option(names = "--adapters",
+                completionCandidates = _AdaptersCandidates.class,
+                description = "Presence of PCR primers and/or adapter sequences. If sequences of primers used for PCR or adapters are present in sequencing data, it may influence the accuracy of V, J and C gene segments identification and CDR3 mapping. Possible values: ${COMPLETION-CANDIDATES}",
+                required = true)
+        public void setAdapters(String value) {
+            adapters = _Adapters.parse(value);
+            if (adapters == null)
+                throwValidationException("Illegal value for --adapters parameter: " + value);
+        }
+
+        private GeneFeature assemblingFeature = GeneFeature.CDR3;
+
+        @Option(names = "--region-of-interest",
+                description = "MiXCR will use only reads covering the whole target region; reads which partially cover selected region will be dropped during clonotype assembly. All non-CDR3 options require long high-quality paired-end data. See https://mixcr.readthedocs.io/en/master/geneFeatures.html for details.",
+                required = false)
+        private void setRegionOfInterest(String v) {
+            try {
+                assemblingFeature = GeneFeature.parse(v);
+            } catch (Exception e) {
+                throwValidationException("Illegal gene feature: " + v);
+            }
+        }
+
+        @Override
+        CommandAlign mkAlign() {
+            CommandAlign align = super.mkAlign();
+
+            VDJCAlignerParameters alignmentParameters = align.getAlignerParameters();
+            alignmentParameters.getVAlignerParameters().getParameters().setFloatingLeftBound(
+                    vPrimers == _5EndPrimers.vPrimers && adapters == _Adapters.adaptersPresent
+            );
+
+            alignmentParameters.getJAlignerParameters().getParameters().setFloatingRightBound(
+                    jcPrimers == _3EndPrimers.jPrimers && adapters == _Adapters.adaptersPresent
+            );
+
+            alignmentParameters.getCAlignerParameters().getParameters().setFloatingRightBound(
+                    jcPrimers == _3EndPrimers.cPrimers && adapters == _Adapters.adaptersPresent
+            );
+
+            return align;
+        }
+
+        @Override
+        public CommandAssemble mkAssemble(String input, String output) {
+            CommandAssemble assemble = super.mkAssemble(input, output);
+            CloneAssemblerParameters cloneAssemblyParameters = assemble.getCloneAssemblerParameters();
+            cloneAssemblyParameters.setAssemblingFeatures(new GeneFeature[]{assemblingFeature});
+            cloneAssemblyParameters.updateFrom(getAlign().getAlignerParameters());
+            return assemble;
+        }
+    }
+
+    public static CommandSpec mkAmplicon() {
+        CommandSpec spec = CommandSpec.forAnnotatedObject(CommandAmplicon.class);
+        for (OptionSpec option : spec.options()) {
+            String name = option.names()[0];
+            if (name.equals("--assemblePartial")
+                    || name.equals("--extend")
+                    || name.equals("--assemble-partial-rounds")
+                    || name.equals("--do-extend-alignments")) {
+
+                try {
+                    Field hidden = OptionSpec.class.getSuperclass().getDeclaredField("hidden");
+                    hidden.setAccessible(true);
+                    hidden.setBoolean(option, true);
+                } catch (NoSuchFieldException | IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            if (name.equals("--chains")) {
+                try {
+                    Field hidden = OptionSpec.class.getSuperclass().getDeclaredField("required");
+                    hidden.setAccessible(true);
+                    hidden.setBoolean(option, true);
+                } catch (NoSuchFieldException | IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        return spec;
+    }
+
+    ///////////////////////////////////////////// Shotgun /////////////////////////////////////////////
 
     @Command(name = "shotgun",
-            sortOptions = true,
+            sortOptions = false,
             separator = " ",
-            description = "Shotgun anaysis.")
+            description = "Analyze random fragments (RNA-Seq, Exome-Seq, etc).")
     public static class CommandShotgun extends CommandAnalyze {
+        public CommandShotgun() {
+            chains = Chains.ALL;
+            nAssemblePartialRounds = 2;
+            doExtendAlignments = true;
+        }
 
-        @Option(names = "--receptor-type", descriptionKey = "Receptor type", required = false)
-        public Chains chains;
+        @Override
+        CommandAlign mkAlign() {
+            CommandAlign align = super.mkAlign();
+            VDJCAlignerParameters alignmentParameters = align.getAlignerParameters();
+            alignmentParameters.getVAlignerParameters().getParameters().setFloatingLeftBound(false);
+            alignmentParameters.getJAlignerParameters().getParameters().setFloatingRightBound(false);
+            alignmentParameters.getCAlignerParameters().getParameters().setFloatingRightBound(false);
+            return align;
+        }
 
-
+        @Override
+        public CommandAssemble mkAssemble(String input, String output) {
+            CommandAssemble assemble = super.mkAssemble(input, output);
+            CloneAssemblerParameters cloneAssemblyParameters = assemble.getCloneAssemblerParameters();
+            cloneAssemblyParameters.setAssemblingFeatures(new GeneFeature[]{GeneFeature.CDR3});
+            cloneAssemblyParameters.updateFrom(getAlign().getAlignerParameters());
+            return assemble;
+        }
     }
+
+    public static CommandSpec mkShotgun() {
+        return CommandSpec.forAnnotatedObject(CommandShotgun.class);
+    }
+
+    @Command(name = "analyze",
+            separator = " ",
+            description = "Uber analysis.",
+            subcommands = {
+                    CommandLine.HelpCommand.class,
+                    //CommandAmplicon.class, // will be added programmatically in Main
+                    //CommandShotgun.class   // will be added programmatically in Main
+            })
+    public static class CommandAnalyzeMain {}
 }

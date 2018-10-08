@@ -24,7 +24,7 @@ public class MainTest {
 
     @Test
     public void asd() {
-        System.out.println(Main.parse("help", "analyze"));
+        Main.parse("analyze", "help", "amplicon");
     }
 
     @Test
