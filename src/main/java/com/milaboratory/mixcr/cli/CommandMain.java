@@ -14,16 +14,16 @@ import java.util.Arrays;
         subcommands = {
                 CommandLine.HelpCommand.class,
                 CommandAlign.class,
-                CommandAlignmentsStats.class,
                 CommandAssemblePartialAlignments.class,
                 CommandAssemble.class,
+                CommandExtend.class,
                 CommandAssembleContigs.class,
-                CommandClonesDiff.class,
                 CommandExportAlignmentsPretty.class,
                 CommandExportClonesPretty.class,
                 CommandExportClonesReads.class,
                 CommandExportReads.class,
-                CommandExtend.class,
+                CommandAlignmentsStats.class,
+                CommandClonesDiff.class,
                 CommandFilterAlignments.class,
                 CommandInfo.class,
                 CommandListLibraries.class,
@@ -39,7 +39,7 @@ public class CommandMain {
             names = {"-v", "--version"},
             versionHelp = true,
             description = "print version information and exit")
-    boolean version;
+    boolean versionRequested;
 
     static final class VersionProvider implements CommandLine.IVersionProvider {
         @Override

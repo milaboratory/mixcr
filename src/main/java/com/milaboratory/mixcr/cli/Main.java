@@ -6,6 +6,8 @@ import io.repseq.core.VDJCLibraryRegistry;
 import io.repseq.seqbase.SequenceResolvers;
 import picocli.CommandLine;
 import picocli.CommandLine.Model.CommandSpec;
+import picocli.CommandLine.ParameterException;
+import picocli.CommandLine.ParseResult;
 import picocli.CommandLine.RunLast;
 
 import java.nio.file.Files;
@@ -16,13 +18,51 @@ import java.util.List;
 
 
 public final class Main {
-    public static void main(String[] args) {
-        parse(args);
-    }
 
     private static boolean initialized = false;
 
-    public static CommandLine parse(String... args) {
+    public static void main(String[] args) {
+        handleParseResult(parseArgs(args).getParseResult(), args);
+    }
+
+    public static void handleParseResult(ParseResult parseResult, String[] args) {
+        ExceptionHandler<Object> exHandler = new ExceptionHandler<>();
+        RunLast runLast = new RunLast() {
+            @Override
+            protected List<Object> handle(ParseResult parseResult) throws CommandLine.ExecutionException {
+                List<CommandLine> parsedCommands = parseResult.asCommandLineList();
+                CommandLine commandLine = parsedCommands.get(parsedCommands.size() - 1);
+                Object command = commandLine.getCommand();
+                if (command instanceof CommandSpec && ((CommandSpec) command).userObject() instanceof Runnable) {
+                    try {
+                        ((Runnable) ((CommandSpec) command).userObject()).run();
+                        return new ArrayList<>();
+                    } catch (ParameterException ex) {
+                        throw ex;
+                    } catch (CommandLine.ExecutionException ex) {
+                        throw ex;
+                    } catch (Exception ex) {
+                        throw new CommandLine.ExecutionException(commandLine,
+                                "Error while running command (" + command + "): " + ex, ex);
+                    }
+                }
+                return super.handle(parseResult);
+            }
+        };
+
+        try {
+            runLast.handleParseResult(parseResult);
+        } catch (ParameterException ex) {
+            exHandler.handleParseException(ex, args);
+        } catch (CommandLine.ExecutionException ex) {
+            exHandler.handleExecutionException(ex, parseResult);
+        }
+    }
+
+    public static CommandLine parseArgs(String... args) {
+        if (args.length == 0)
+            args = new String[]{"help"};
+
         // Getting command string if executed from script
         String command = System.getProperty("mixcr.command", "java -jar mixcr.jar");
 
@@ -70,37 +110,13 @@ public final class Main {
 
         cmd.addSubcommand("exportAlignments", CommandExport.mkAlignmentsSpec());
         cmd.addSubcommand("exportClones", CommandExport.mkClonesSpec());
-        cmd.parseWithHandlers(
-                new RunLast() {
-                    @Override
-                    protected List<Object> handle(CommandLine.ParseResult parseResult) throws CommandLine.ExecutionException {
-                        List<CommandLine> parsedCommands = parseResult.asCommandLineList();
-                        CommandLine commandLine = parsedCommands.get(parsedCommands.size() - 1);
-                        Object command = commandLine.getCommand();
-                        if (command instanceof CommandSpec && ((CommandSpec) command).userObject() instanceof Runnable) {
-                            try {
-                                ((Runnable) ((CommandSpec) command).userObject()).run();
-                                return new ArrayList<>();
-                            } catch (CommandLine.ParameterException ex) {
-                                throw ex;
-                            } catch (CommandLine.ExecutionException ex) {
-                                throw ex;
-                            } catch (Exception ex) {
-                                throw new CommandLine.ExecutionException(commandLine,
-                                        "Error while running command (" + command + "): " + ex, ex);
-                            }
-                        }
-                        return super.handle(parseResult);
-                    }
-                },
-                new ExceptionHandler<>(),
-                args);
+        cmd.parseArgs(args);
         return cmd;
     }
 
     public static class ExceptionHandler<R> extends CommandLine.DefaultExceptionHandler<R> {
         @Override
-        public R handleParseException(CommandLine.ParameterException ex, String[] args) {
+        public R handleParseException(ParameterException ex, String[] args) {
             if (ex instanceof ValidationException && !((ValidationException) ex).printHelp) {
                 System.err.println(ex.getMessage());
                 return returnResultOrExit(null);

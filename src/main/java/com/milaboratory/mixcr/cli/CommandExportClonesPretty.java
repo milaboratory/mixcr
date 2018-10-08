@@ -24,7 +24,7 @@ import static cc.redberry.primitives.FilterUtil.and;
 @Command(name = "exportClonesPretty",
         sortOptions = true,
         separator = " ",
-        description = "Export verbose clone information.")
+        description = "Export verbose information about clones.")
 public class CommandExportClonesPretty extends ACommandSimpleExport {
     public static final int LINE_LENGTH = 80;
     public static final int LINE_OFFSET = 7;

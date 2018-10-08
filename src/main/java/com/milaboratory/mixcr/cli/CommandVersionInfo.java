@@ -9,9 +9,8 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
 @Command(name = "versionInfo",
-        sortOptions = true,
         separator = " ",
-        description = "Outputs information about MiXCR version which generated the file.")
+        description = "Output information about MiXCR version which generated the file.")
 public class CommandVersionInfo extends ACommand {
     @Parameters(description = "input_file")
     public String inputFile;
