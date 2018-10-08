@@ -29,7 +29,7 @@ import static com.milaboratory.mixcr.cli.CommandAssembleContigs.ASSEMBLE_CONTIGS
 @Command(name = ASSEMBLE_CONTIGS_COMMAND_NAME,
         sortOptions = true,
         separator = " ",
-        description = "Assembles full sequence.")
+        description = "Assemble full sequences.")
 public class CommandAssembleContigs extends ACommandWithResumeWithSingleInput {
     static final String ASSEMBLE_CONTIGS_COMMAND_NAME = "assembleContigs";
 

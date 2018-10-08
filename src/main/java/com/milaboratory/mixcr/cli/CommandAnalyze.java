@@ -755,7 +755,7 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
 
     @Command(name = "analyze",
             separator = " ",
-            description = "Uber analysis.",
+            description = "Run full MiXCR pipeline for specific input.",
             subcommands = {
                     CommandLine.HelpCommand.class,
                     //CommandAmplicon.class, // will be added programmatically in Main

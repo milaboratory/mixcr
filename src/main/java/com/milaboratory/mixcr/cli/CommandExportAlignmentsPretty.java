@@ -30,7 +30,7 @@ import static cc.redberry.primitives.FilterUtil.and;
 @Command(name = "exportAlignmentsPretty",
         sortOptions = true,
         separator = " ",
-        description = "Export detailed information on full alignments.")
+        description = "Export verbose information about alignments.")
 public class CommandExportAlignmentsPretty extends ACommandSimpleExport {
     @Option(description = "Output only top number of clones",
             names = {"-t", "--top"})

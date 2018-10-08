@@ -45,17 +45,14 @@ import static com.milaboratory.mixcr.basictypes.AlignmentsIO.DEFAULT_ALIGNMENTS_
 import static com.milaboratory.mixcr.cli.CommandAlign.ALIGN_COMMAND_NAME;
 
 @Command(name = ALIGN_COMMAND_NAME,
-        sortOptions = true,
+        sortOptions = false,
         separator = " ",
         description = "Builds alignments with V,D,J and C genes for input sequencing reads.")
 public class CommandAlign extends ACommandWithResume {
     static final String ALIGN_COMMAND_NAME = "align";
-
-    @Parameters(
-            hidden = true,
-            arity = "2..3",
-            hideParamSyntax = true,
-            description = "File(s) to process.")
+    @Parameters(arity = "2..3",
+            descriptionKey = "file",
+            description = "file_R1.[fastq[.gz]|fasta] [file_R2.[fastq[.gz]|fasta]] alignments.vdjca")
     private List<String> inOut = new ArrayList<>();
 
     @Override
