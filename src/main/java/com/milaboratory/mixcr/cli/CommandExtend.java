@@ -4,7 +4,6 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.blocks.ParallelProcessor;
 import cc.redberry.pipe.util.OrderedOutputPort;
-import com.beust.jcommander.Parameter;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -58,19 +57,19 @@ public class CommandExtend extends ACommandWithResumeWithSingleInput {
         this.threads = threads;
     }
 
-    @Parameter(description = "V extension anchor point.",
+    @Option(description = "V extension anchor point.",
             names = {"--v-anchor"})
     public String vAnchorPoint = "CDR3Begin";
 
-    @Parameter(description = "J extension anchor point.",
+    @Option(description = "J extension anchor point.",
             names = {"--j-anchor"})
     public String jAnchorPoint = "CDR3End";
 
-    @Parameter(description = "Minimal V hit score to perform left extension.",
+    @Option(description = "Minimal V hit score to perform left extension.",
             names = {"--min-v-score"})
     public int minimalVScore = 100;
 
-    @Parameter(description = "Minimal J hit score alignment to perform right extension.",
+    @Option(description = "Minimal J hit score alignment to perform right extension.",
             names = {"--min-j-score"})
     public int minimalJScore = 70;
 

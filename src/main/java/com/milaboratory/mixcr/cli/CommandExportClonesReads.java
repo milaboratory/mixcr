@@ -1,7 +1,6 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
-import com.beust.jcommander.ParameterException;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SequenceWriter;
 import com.milaboratory.core.io.sequence.fasta.FastaSequenceWriterWrapper;
@@ -68,7 +67,7 @@ public class CommandExportClonesReads extends ACommandWithOutput {
                 return;
 
             if (firstAlignment.getOriginalReads() == null)
-                throw new ParameterException("Error: original reads were not saved in the .vdjca file: " +
+                throwValidationException("Error: original reads were not saved in the .vdjca file: " +
                         "re-run align with '-g' option.");
 
             int[] cid = getCloneIds();

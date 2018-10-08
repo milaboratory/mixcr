@@ -1,7 +1,6 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
-import com.beust.jcommander.ParameterException;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SequenceWriter;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter;
@@ -41,7 +40,8 @@ public class CommandExportReads extends ACommandWithOutput {
         if (inOut.size() == 3)
             return Arrays.asList(inOut.get(1), inOut.get(2));
 
-        throw new ParameterException("Required parameters missing.");
+        throwValidationException("Required parameters missing.");
+        return null;
     }
 
     @Override

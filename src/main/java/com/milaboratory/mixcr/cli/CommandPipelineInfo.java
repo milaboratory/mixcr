@@ -1,14 +1,14 @@
 package com.milaboratory.mixcr.cli;
 
-import com.beust.jcommander.Parameter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.milaboratory.mixcr.basictypes.PipelineConfiguration;
 import com.milaboratory.mixcr.basictypes.PipelineConfigurationReader;
 import com.milaboratory.mixcr.util.PrintStreamTableAdapter;
 import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.LightFileDescriptor;
-import picocli.CommandLine;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
 
 import java.io.File;
 import java.util.Arrays;
@@ -19,10 +19,10 @@ import java.util.stream.Collectors;
         separator = " ",
         description = "List all available library by scanning all library search paths.")
 public class CommandPipelineInfo extends ACommand {
-    @CommandLine.Parameters(description = "binary_file{.vdjca|.clns|.clna}[.gz]...")
+    @Parameters(description = "binary_file{.vdjca|.clns|.clna}[.gz]...")
     public String input;
 
-    @Parameter(description = "Print pipeline info in JSON format.",
+    @Option(description = "Print pipeline info in JSON format.",
             names = {"--json"})
     public boolean json = false;
 

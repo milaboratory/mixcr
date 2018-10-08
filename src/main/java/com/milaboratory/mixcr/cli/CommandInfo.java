@@ -1,7 +1,6 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
-import com.beust.jcommander.ParameterException;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.util.PrintStreamTableAdapter;
@@ -116,7 +115,7 @@ public class CommandInfo extends ACommand {
             for (FilesType filesType : values())
                 if (filesType.isOfType(fileName))
                     return filesType;
-            throw new ParameterException("Unknown file type: " + fileName);
+            return null;
         }
     }
 
