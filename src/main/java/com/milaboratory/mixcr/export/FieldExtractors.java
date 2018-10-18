@@ -440,7 +440,8 @@ public final class FieldExtractors {
                     "Detailed list of nucleotide and corresponding amino acid mutations written, positions relative to specified gene feature. " + detailedMutationsFormat, 2,
                     new String[]{"Detailed mutations in ", " relative to "}, new String[]{"mutationsDetailedIn", "Relative"}));
 
-            descriptorsList.add(new ExtractReferencePointPosition());
+            descriptorsList.add(new ExtractReferencePointPosition(true));
+            descriptorsList.add(new ExtractReferencePointPosition(false));
 
             descriptorsList.add(new ExtractDefaultReferencePointsPositions());
 
@@ -792,10 +793,13 @@ public final class FieldExtractors {
     }
 
     private static class ExtractReferencePointPosition extends WP_O<ReferencePoint> {
-        protected ExtractReferencePointPosition() {
-            super("-positionOf",
-                    "Exports position of specified reference point inside target sequences " +
+        private final boolean inReference;
+
+        protected ExtractReferencePointPosition(boolean inReference) {
+            super(inReference ? "-positionInReferenceOf" : "-positionOf",
+                    "Exports position of specified reference point inside " + (inReference ? "reference" : "target") + "sequences " +
                             "(clonal sequence / read sequence).", 1);
+            this.inReference = inReference;
         }
 
         @Override
@@ -807,15 +811,26 @@ public final class FieldExtractors {
 
         @Override
         protected String getHeader(OutputMode outputMode, ReferencePoint parameters) {
-            return choose(outputMode, "Position of ", "positionOf") +
+            return choose(outputMode, "Position " + (inReference ? "in reference" : "") + " of ",
+                    inReference ? "-positionInReferenceOf" : "-positionOf") +
                     ReferencePoint.encode(parameters, true);
         }
 
         @Override
-        protected String extractValue(VDJCObject object, ReferencePoint parameters) {
+        protected String extractValue(VDJCObject object, ReferencePoint refPoint) {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; ; i++) {
-                sb.append(object.getPartitionedTarget(i).getPartitioning().getPosition(parameters));
+                int positionInTarget = object.getPartitionedTarget(i).getPartitioning().getPosition(refPoint);
+                if (inReference) {
+                    VDJCHit hit = object.getBestHit(refPoint.getGeneType());
+                    if (hit != null) {
+                        Alignment<NucleotideSequence> al = hit.getAlignment(i);
+                        if (al != null)
+                            positionInTarget = al.convertToSeq1Position(positionInTarget);
+                    }
+                }
+
+                sb.append(positionInTarget);
                 if (i == object.numberOfTargets() - 1)
                     break;
                 sb.append(",");
