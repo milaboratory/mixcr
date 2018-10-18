@@ -8,6 +8,7 @@ import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.TranslationParameters;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.export.*;
+import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.CanReportProgressAndStage;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.Chains;
@@ -21,6 +22,7 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.ParseResult;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
@@ -151,19 +153,37 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
 
         @Override
         void run1(List<FieldExtractor<? super VDJCAlignments>> exporters) throws Exception {
-            try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(in, VDJCLibraryRegistry.getDefault());
-                 InfoWriter<VDJCAlignments> writer = new InfoWriter<>(out)) {
-                SmartProgressReporter.startProgressReport("Exporting alignments", reader, System.err);
+            OutputPort<VDJCAlignments> source = null;
+            try {
+                source = new VDJCAlignmentsReader(in, VDJCLibraryRegistry.getDefault());
+                ((VDJCAlignmentsReader) source).init(); // this will verify file format
+            } catch (Exception e) {}
+
+            try {
+                source = new ClnAReader(in, VDJCLibraryRegistry.getDefault()).readAllAlignments();
+            } catch (Exception e) {}
+
+            if (source == null)
+                throwExecutionException("Unknown file type: " + in);
+
+            try (InfoWriter<VDJCAlignments> writer = new InfoWriter<>(out)) {
+                if (source instanceof CanReportProgress)
+                    SmartProgressReporter.startProgressReport("Exporting alignments", (CanReportProgress) source, System.err);
                 writer.attachInfoProviders(exporters);
                 writer.ensureHeader();
                 VDJCAlignments alignments;
                 long count = 0;
-                OutputPort<VDJCAlignments> alignmentsPort = new FilteringPort<>(reader, mkFilter());
+                OutputPort<VDJCAlignments> alignmentsPort = new FilteringPort<>(source, mkFilter());
                 while ((alignments = alignmentsPort.take()) != null && count < limit) {
                     writer.put(alignments);
                     ++count;
                 }
             }
+
+            if (source instanceof Closeable)
+                ((Closeable) source).close();
+            else if (source instanceof AutoCloseable)
+                ((AutoCloseable) source).close();
         }
     }
 
