@@ -33,8 +33,6 @@ import static cc.redberry.primitives.FilterUtil.and;
 
 
 public abstract class CommandExport<T extends VDJCObject> extends ACommandSimpleExport {
-    public static String EXPORT_TO_STDOUT = "-";
-
     /** type class */
     private final Class<T> clazz;
 
@@ -60,7 +58,6 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
         throwExecutionException("-lf / --list-fields is removed in version 3.0: use help <exportCommand> for help");
     }
 
-    @Deprecated
     @Option(description = "Output short versions of column headers which facilitates analysis with Pandas, R/DataFrames or other data tables processing library.",
             names = {"-s", "--no-spaces"}, hidden = true)
     public void setNoSpaces(boolean b) {
