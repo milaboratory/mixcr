@@ -202,9 +202,8 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
         @Override
         void run1(List<FieldExtractor<? super Clone>> exporters) throws Exception {
             try (InfoWriter<Clone> writer = new InfoWriter<>(out)) {
-                CloneSet set = CloneSetIO.read(in, VDJCLibraryRegistry.getDefault());
-
-                set = CloneSet.transform(set, mkFilter());
+                CloneSet initialSet = CloneSetIO.read(in, VDJCLibraryRegistry.getDefault());
+                CloneSet set = CloneSet.transform(initialSet, mkFilter());
 
                 writer.attachInfoProviders(exporters);
                 writer.ensureHeader();
@@ -218,6 +217,10 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                 ExportClones exportClones = new ExportClones(set, writer, limit);
                 SmartProgressReporter.startProgressReport(exportClones, System.err);
                 exportClones.run();
+                if (initialSet.size() > set.size() && (filterStops || filterOutOfFrames)) {
+                    int di = initialSet.size() - set.size();
+                    warn("Filtered " + di + " clones (" + Util.PERCENT_FORMAT.format(100.0 * di / initialSet.size()) + "%).");
+                }
             }
         }
 

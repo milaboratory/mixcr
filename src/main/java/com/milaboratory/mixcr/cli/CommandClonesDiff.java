@@ -28,7 +28,7 @@ public class CommandClonesDiff extends ACommandWithOutput {
     public String in2;
 
     @Parameters(description = "[report]", arity = "0..1")
-    public String report = ".";
+    public String report = null;
 
     @Option(names = {"-v"}, description = "Use V gene in clone comparison (include it as a clone key along " +
             "with a clone sequence).")
@@ -68,14 +68,14 @@ public class CommandClonesDiff extends ACommandWithOutput {
 
     @Override
     protected List<String> getOutputFiles() {
-        return ".".equals(report) ? Collections.emptyList() : Collections.singletonList(report);
+        return report == null ? Collections.emptyList() : Collections.singletonList(report);
     }
 
     @Override
     public void run0() throws Exception {
         try (InputStream is1 = IOUtil.createIS(in1);
              InputStream is2 = IOUtil.createIS(in2);
-             PrintStream report = ".".equals(this.report) ? System.out : new PrintStream(new FileOutputStream(this.report))) {
+             PrintStream report = this.report == null ? System.out : new PrintStream(new FileOutputStream(this.report))) {
 
             CloneSet cs1 = CloneSetIO.readClns(is1);
             CloneSet cs2 = CloneSetIO.readClns(is2);

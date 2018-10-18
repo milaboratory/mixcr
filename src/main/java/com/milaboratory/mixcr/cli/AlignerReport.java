@@ -41,7 +41,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 
-public final class AlignerReport extends AbstractActionReport implements VDJCAlignerEventListener {
+public final class AlignerReport extends AbstractCommandReport implements VDJCAlignerEventListener {
     private final ChainUsageStats chainStats = new ChainUsageStats();
     private final AtomicLongArray fails = new AtomicLongArray(VDJCAlignmentFailCause.values().length);
     private final AtomicLong successes = new AtomicLong(0);
@@ -57,7 +57,7 @@ public final class AlignerReport extends AbstractActionReport implements VDJCAli
     }
 
     @Override
-    public String getAction() {
+    public String getCommand() {
         return "align";
     }
 
