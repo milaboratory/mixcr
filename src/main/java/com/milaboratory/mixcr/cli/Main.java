@@ -59,10 +59,7 @@ public final class Main {
         }
     }
 
-    public static CommandLine parseArgs(String... args) {
-        if (args.length == 0)
-            args = new String[]{"help"};
-
+    public static CommandLine mkCmd() {
         // Getting command string if executed from script
         String command = System.getProperty("mixcr.command", "java -jar mixcr.jar");
 
@@ -140,7 +137,13 @@ public final class Main {
                 .get("analyze")
                 .addSubcommand("amplicon", CommandAnalyze.mkAmplicon())
                 .addSubcommand("shotgun", CommandAnalyze.mkShotgun());
+        return cmd;
+    }
 
+    public static CommandLine parseArgs(String... args) {
+        if (args.length == 0)
+            args = new String[]{"help"};
+        CommandLine cmd = mkCmd();
         cmd.parseArgs(args);
         return cmd;
     }
