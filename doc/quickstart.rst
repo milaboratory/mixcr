@@ -59,7 +59,7 @@ the following sequence of commands:
 
 .. code-block:: console
 
-  > mixcr align input_R1.fastq input_R2.fastq alignments.vdjca
+  > mixcr align -s hs input_R1.fastq input_R2.fastq alignments.vdjca
 
   ... Building alignments
 
@@ -92,7 +92,7 @@ sequenced cDNA library of IGH gene prepared using 5'RACE-based protocol
 
   ::
 
-    > mixcr align -OvParameters.geneFeatureToAlign=VTranscript \
+    > mixcr align -s hs -OvParameters.geneFeatureToAlign=VTranscript \
       --report alignmentReport.log input_R1.fastq input_R2.fastq alignments.vdjca
 
   Here we specified non-default value for gene feature used to align V genes (``-OvParameters.geneFeatureToAlign=VTranscript``) in order to utilize information from both reads, more specifically to let MiXCR align V gene's 5'UTRS and parts of coding sequence on 5'-end with sequence from read opposite to CDR3. MiXCR can also produce report file (specified by optional parameter ``--report``) containing run statistics which looks like this:
@@ -176,7 +176,7 @@ For the full length cDNA-based immunoglobulin repertoire analysis we generally r
 
   ::
   
-    > mixcr align -p kaligner2 -s hsa -r alignmentReport.txt -OreadsLayout=Collinear \
+    > mixcr align -p kaligner2 -s hs -r alignmentReport.txt -OreadsLayout=Collinear \
       -OvParameters.geneFeatureToAlign=VTranscript read_R1.fastq.gz read_R2.fastq.gz \
       alignments.vdjca
      
@@ -223,7 +223,7 @@ MiXCR allows to extract TCR and BCR CDR3 repertoires from RNA-Seq data. Extracti
 
   .. code-block:: console
 
-    > mixcr align -p rna-seq -OallowPartialAlignments=true data_R1.fastq.gz data_R2.fastq.gz alignments.vdjca
+    > mixcr align -s hs -p rna-seq -OallowPartialAlignments=true data_R1.fastq.gz data_R2.fastq.gz alignments.vdjca
   
   All ``mixcr align`` parameters can also be used here (e.g. ``-s`` to specify organism). 
 
@@ -300,7 +300,7 @@ In this example we demonstrate how to extract initial read headers for assembled
 
 .. code-block:: console
 
-  > mixcr align --save-description input_R1.fastq input_R2.fastq alignments.vdjca
+  > mixcr align -s hs --save-description input_R1.fastq input_R2.fastq alignments.vdjca
 
 On the ``assemble`` stage it is necessary to specify file for the index (which stores mapping from reads to clonotypes):
 
