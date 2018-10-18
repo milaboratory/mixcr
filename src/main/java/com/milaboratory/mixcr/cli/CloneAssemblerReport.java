@@ -39,7 +39,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-public final class CloneAssemblerReport extends AbstractActionReport implements CloneAssemblerListener {
+public final class CloneAssemblerReport extends AbstractCommandReport implements CloneAssemblerListener {
     private final ChainUsageStats chainStats = new ChainUsageStats();
     long totalReads = -1;
     final AtomicInteger clonesCreated = new AtomicInteger();
@@ -58,7 +58,7 @@ public final class CloneAssemblerReport extends AbstractActionReport implements 
     final AtomicLong readsClustered = new AtomicLong();
 
     @Override
-    public String getAction() {
+    public String getCommand() {
         return "assemble";
     }
 

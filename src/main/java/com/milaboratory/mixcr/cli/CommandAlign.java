@@ -52,6 +52,8 @@ public class CommandAlign extends ACommandWithResume {
     static final String ALIGN_COMMAND_NAME = "align";
     @Parameters(arity = "2..3",
             descriptionKey = "file",
+            paramLabel = "files",
+            hideParamSyntax = true,
             description = "file_R1.[fastq[.gz]|fasta] [file_R2.[fastq[.gz]|fasta]] alignments.vdjca")
     private List<String> inOut = new ArrayList<>();
 
@@ -65,16 +67,11 @@ public class CommandAlign extends ACommandWithResume {
         return inOut.subList(inOut.size() - 1, inOut.size());
     }
 
-    @Option(names = {"-O"}, description = "Overrides default parameter values")
-    public Map<String, String> overrides = new HashMap<>();
-
-    @Option(description = "Specifies segments library for alignment",
-            names = {"-b", "--library"})
-    public String library = "default";
-
-    @Option(description = "Parameters",
-            names = {"-p", "--parameters"})
-    public String alignerParametersName = "default";
+    @Option(description = "Species (organism), as specified in library file or taxon id. " +
+            "Possible values: hs, HomoSapiens, musmusculus, mmu, hsa, 9606, 10090 etc.",
+            names = {"-s", "--species"},
+            required = true)
+    public String species = null;
 
     @Option(description = "Report file.",
             names = {"-r", "--report"})
@@ -84,23 +81,9 @@ public class CommandAlign extends ACommandWithResume {
             names = {"--json-report"})
     public String jsonReport = null;
 
-    @Option(description = "Species (organism), as specified in library file or taxon id. " +
-            "Possible values: hs, HomoSapiens, musmusculus, mmu, hsa, 9606, 10090 etc.",
-            names = {"-s", "--species"},
-            required = true)
-    public String species = null;
-
-    public String chains = "ALL";
-
-    @Option(description =
-            "Specifies immunological chain gene(s) for alignment. If many, separate by comma ','. " +
-                    "%nAvailable chains: IGH, IGL, IGK, TRA, TRB, TRG, TRD, etc...",
-            names = {"-c", "--chains"},
-            hidden = true)
-    public void setChains(String chains) {
-        warn("Use --chains only for exportAlignments and exportClones");
-        this.chains = chains;
-    }
+    @Option(description = "Specifies segments library for alignment",
+            names = {"-b", "--library"})
+    public String library = "default";
 
     public int threads = Runtime.getRuntime().availableProcessors();
 
@@ -120,6 +103,24 @@ public class CommandAlign extends ACommandWithResume {
         if (limit <= 0)
             throwValidationException("ERROR: -n / --limit must be positive", false);
         this.limit = limit;
+    }
+    
+    @Option(description = "Parameters preset.",
+            names = {"-p", "--parameters"})
+    public String alignerParametersName = "default";
+
+    @Option(names = {"-O"}, description = "Overrides default parameter values")
+    public Map<String, String> overrides = new HashMap<>();
+
+    public String chains = "ALL";
+
+    @Option(description = "Specifies immunological chain gene(s) for alignment. If many, separate by comma ','. " +
+            "%nAvailable chains: IGH, IGL, IGK, TRA, TRB, TRG, TRD, etc...",
+            names = {"-c", "--chains"},
+            hidden = true)
+    public void setChains(String chains) {
+        warn("Use --chains only for exportAlignments and exportClones");
+        this.chains = chains;
     }
 
     @Option(description = "Do not merge paired reads.",

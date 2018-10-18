@@ -21,7 +21,7 @@ public final class Main {
 
     private static boolean initialized = false;
 
-    public static void main(String[] args) {
+    public static void main(String... args) {
         handleParseResult(parseArgs(args).getParseResult(), args);
     }
 
@@ -102,14 +102,45 @@ public final class Main {
             initialized = true;
         }
 
-        CommandLine cmd = new CommandLine(new CommandMain());
-        cmd.setCommandName(command);
+        CommandLine cmd = new CommandLine(new CommandMain())
+                .setCommandName(command)
+                .addSubcommand("help", CommandLine.HelpCommand.class)
+                .addSubcommand("analyze", CommandAnalyze.CommandAnalyzeMain.class)
 
-        cmd.getSubcommands().get("analyze").addSubcommand("amplicon", CommandAnalyze.mkAmplicon());
-        cmd.getSubcommands().get("analyze").addSubcommand("shotgun", CommandAnalyze.mkShotgun());
+                .addSubcommand("align", CommandAlign.class)
+                .addSubcommand("assemble", CommandAssemble.class)
+                .addSubcommand("assembleContigs", CommandAssembleContigs.class)
+                .addSubcommand("exportClones", CommandExport.mkClonesSpec())
 
-        cmd.addSubcommand("exportAlignments", CommandExport.mkAlignmentsSpec());
-        cmd.addSubcommand("exportClones", CommandExport.mkClonesSpec());
+                .addSubcommand("assemblePartial", CommandAssemblePartialAlignments.class)
+                .addSubcommand("extend", CommandExtend.class)
+
+                .addSubcommand("exportAlignments", CommandExport.mkAlignmentsSpec())
+                .addSubcommand("exportAlignmentsPretty", CommandExportAlignmentsPretty.class)
+                .addSubcommand("exportClonesPretty", CommandExportClonesPretty.class)
+
+                .addSubcommand("exportReadsForClones", CommandExportClonesReads.class)
+                .addSubcommand("exportReads", CommandExportReads.class)
+
+                .addSubcommand("mergeAlignments", CommandMergeAlignments.class)
+                .addSubcommand("filterAlignments", CommandFilterAlignments.class)
+                .addSubcommand("sortAlignments", CommandSortAlignments.class)
+
+                .addSubcommand("alignmentsDiff", CommandAlignmentsDiff.class)
+                .addSubcommand("clonesDiff", CommandClonesDiff.class)
+
+                .addSubcommand("alignmentsStat", CommandAlignmentsStats.class)
+                .addSubcommand("listLibraries", CommandListLibraries.class)
+                .addSubcommand("versionInfo", CommandVersionInfo.class)
+                .addSubcommand("pipelineInfo", CommandPipelineInfo.class)
+                .addSubcommand("slice", CommandSlice.class)
+                .addSubcommand("info", CommandInfo.class);
+
+        cmd.getSubcommands()
+                .get("analyze")
+                .addSubcommand("amplicon", CommandAnalyze.mkAmplicon())
+                .addSubcommand("shotgun", CommandAnalyze.mkShotgun());
+
         cmd.parseArgs(args);
         return cmd;
     }

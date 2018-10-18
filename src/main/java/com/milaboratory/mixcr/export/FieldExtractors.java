@@ -643,7 +643,7 @@ public final class FieldExtractors {
             }
             for (final GeneType type : GeneType.values()) {
                 String c = Character.toLowerCase(type.getLetter()) + "BestIdentityPercent";
-                descriptorsList.add(new PL_O("-" + c, type.getLetter() + "best alignment identity percent",
+                descriptorsList.add(new PL_O("-" + c, type.getLetter() + " best alignment identity percent",
                         type.getLetter() + "best alignment identity percent", c) {
                     @Override
                     protected String extract(VDJCObject object) {

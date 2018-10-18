@@ -31,10 +31,10 @@ package com.milaboratory.mixcr.cli;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public interface ActionReport extends Report {
+public interface CommandReport extends Report {
     /**
-     * Action (e.g. align, assemble, etc.) that produced this report.
+     * Command (e.g. align, assemble, etc.) that produced this report.
      */
     @JsonProperty("action")
-    String getAction();
+    String getCommand();
 }

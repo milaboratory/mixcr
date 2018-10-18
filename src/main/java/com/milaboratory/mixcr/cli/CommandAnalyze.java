@@ -221,7 +221,7 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
 
     @Option(names = "--starting-material",
             completionCandidates = _StartingMaterialCandidates.class,
-            description = "Starting material. Possible values: ${COMPLETION-CANDIDATES}",
+            description = "Starting material. @|bold Possible values: ${COMPLETION-CANDIDATES}|@",
             required = true)
     public _StartingMaterial startingMaterial;
 
@@ -610,7 +610,7 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
 
         @Option(names = "--5-end",
                 completionCandidates = _5EndCandidates.class,
-                description = "5'-end of the library. Possible values: ${COMPLETION-CANDIDATES}",
+                description = "5'-end of the library. @|bold Possible values: ${COMPLETION-CANDIDATES}|@",
                 required = true)
         public void set5End(String value) {
             vPrimers = _5EndPrimers.parse(value);
@@ -622,7 +622,7 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
 
         @Option(names = "--3-end",
                 completionCandidates = _3EndCandidates.class,
-                description = "3'-end of the library. Possible values: ${COMPLETION-CANDIDATES}",
+                description = "3'-end of the library. @|bold Possible values: ${COMPLETION-CANDIDATES}|@",
                 required = true)
         public void set3End(String value) {
             jcPrimers = _3EndPrimers.parse(value);
@@ -634,7 +634,7 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
 
         @Option(names = "--adapters",
                 completionCandidates = _AdaptersCandidates.class,
-                description = "Presence of PCR primers and/or adapter sequences. If sequences of primers used for PCR or adapters are present in sequencing data, it may influence the accuracy of V, J and C gene segments identification and CDR3 mapping. Possible values: ${COMPLETION-CANDIDATES}",
+                description = "Presence of PCR primers and/or adapter sequences. If sequences of primers used for PCR or adapters are present in sequencing data, it may influence the accuracy of V, J and C gene segments identification and CDR3 mapping. @|bold Possible values: ${COMPLETION-CANDIDATES}|@",
                 required = true)
         public void setAdapters(String value) {
             adapters = _Adapters.parse(value);

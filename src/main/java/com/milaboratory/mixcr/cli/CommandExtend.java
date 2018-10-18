@@ -28,7 +28,7 @@ import static com.milaboratory.mixcr.cli.CommandExtend.EXTEND_COMMAND_NAME;
 @Command(name = EXTEND_COMMAND_NAME,
         sortOptions = true,
         separator = " ",
-        description = "Extend corresponding entity (clone or alignment) using germline sequence.")
+        description = "Impute alignments or clones with germline sequences.")
 public class CommandExtend extends ACommandWithResumeWithSingleInput {
     static final String EXTEND_COMMAND_NAME = "extend";
 
@@ -89,7 +89,6 @@ public class CommandExtend extends ACommandWithResumeWithSingleInput {
     public ActionConfiguration getConfiguration() {
         return new ExtendConfiguration(getChains(), extensionQuality, getVAnchorPoint(), getJAnchorPoint(), minimalVScore, minimalJScore);
     }
-
 
     @Override
     public void run1() throws Exception {

@@ -10,30 +10,7 @@ import java.util.Arrays;
 @CommandLine.Command(
         name = "mixcr",
         versionProvider = CommandMain.VersionProvider.class,
-        separator = " ",
-        subcommands = {
-                CommandLine.HelpCommand.class,
-                CommandAlign.class,
-                CommandAssemblePartialAlignments.class,
-                CommandAssemble.class,
-                CommandExtend.class,
-                CommandAssembleContigs.class,
-                CommandExportAlignmentsPretty.class,
-                CommandExportClonesPretty.class,
-                CommandExportClonesReads.class,
-                CommandExportReads.class,
-                CommandAlignmentsStats.class,
-                CommandClonesDiff.class,
-                CommandFilterAlignments.class,
-                CommandInfo.class,
-                CommandListLibraries.class,
-                CommandMergeAlignments.class,
-                CommandSlice.class,
-                CommandSortAlignments.class,
-                CommandVersionInfo.class,
-                CommandAnalyze.CommandAnalyzeMain.class,
-                CommandPipelineInfo.class
-        })
+        separator = " ")
 public class CommandMain {
     @CommandLine.Option(
             names = {"-v", "--version"},
