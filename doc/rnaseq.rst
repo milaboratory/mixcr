@@ -29,7 +29,7 @@ There are two main challenges of repertoire extraction from non-enriched and ran
 
 .. _ref-rna-seq-extend-description:
 
-In case of short reads input, even after ``assemblePartial`` many contigs/reads still only partially cover CDR3. A substantial fraction of such contigs needs only several nucleotides on the 5' or the 3' end to fill up the sequence up to a complete CDR3. These sequence parts can be taken from the germline, if corresponding V or J gene for the contig is uniquely determined (e.g. from second mate of a read pair). Such procedure is not safe for IGs, because of hypermutations, but for TCRs which have relatively conservative sequence near conserved ``Cys`` and ``Phe``/``Trp``, it can reconstruct additional clonotypes with relatively small chance to introduce false ones. Described procedure is implemented in the action `extendAlignments`, by default it acts only on TCR sequences.
+In case of short reads input, even after ``assemblePartial`` many contigs/reads still only partially cover CDR3. A substantial fraction of such contigs needs only several nucleotides on the 5' or the 3' end to fill up the sequence up to a complete CDR3. These sequence parts can be taken from the germline, if corresponding V or J gene for the contig is uniquely determined (e.g. from second mate of a read pair). Such procedure is not safe for IGs, because of hypermutations, but for TCRs which have relatively conservative sequence near conserved ``Cys`` and ``Phe``/``Trp``, it can reconstruct additional clonotypes with relatively small chance to introduce false ones. Described procedure is implemented in the action `extend`, by default it acts only on TCR sequences.
 
 
 Analysis pipeline
@@ -87,7 +87,7 @@ Typical analysis workflow
 
   ::
 
-     mixcr extendAlignments alignments_rescued_2.vdjca alignments_rescued_2_extended.vdjca
+     mixcr extend alignments_rescued_2.vdjca alignments_rescued_2_extended.vdjca
 
 4. Assemble (see :ref:`here <ref-assemble>` for details) clonotypes
 
@@ -163,4 +163,14 @@ The above parameters can be specified in e.g. the following way:
 .. The above parameters can be specified in e.g. the following way:
 
 ..     mixcr assemblePartial -OmergerParameters.minimalOverlap=15 alignments.vdjca alignmentsRescued.vdjca
+
+
+.. _ref-extend:
+
+``extend`` action
+-----------------
+
+
+TODO
+
 
