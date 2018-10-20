@@ -68,9 +68,16 @@ public final class VDJCParametersPresets {
 
     public static VDJCAlignerParameters getByName(String name) {
         ensureInitialized();
-        VDJCAlignerParameters params = knownParameters.get(name);
-        if (params == null)
-            return null;
-        return params.clone();
+        VDJCAlignerParameters params;
+
+        params = knownParameters.get(name);
+        if (params != null)
+            return params.clone();
+
+        params = knownParameters.get(name.toLowerCase());
+        if (params != null)
+            return params.clone();
+
+        return null;
     }
 }

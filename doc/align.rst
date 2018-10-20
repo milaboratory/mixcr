@@ -90,6 +90,8 @@ The following table contains description of command line options for ``align``:
 
 All parameters are optional.
 
+.. _ref-aligner-parameters:
+
 Aligner parameters
 ------------------
 
@@ -160,6 +162,9 @@ One can override these parameters in the following way:
 ::
 
     mixcr align -OmaxHits=3 input_file1 [input_file2] output_file.vdjca
+
+
+.. _ref-vdjc-aligners-parameters:
 
 V, J and C aligners parameters
 ------------------------------
