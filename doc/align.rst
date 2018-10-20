@@ -62,7 +62,7 @@ The following table contains description of command line options for ``align``:
 
     * - ``-p {parameterName}`` |br| ``--parameters ...``
       - ``default``
-      - Preset of parameters. Possible values: ``default`` and ``rna-seq``. The ``rna-seq`` preset are specifically optimized for analysis of Rna-Seq data :ref:`(see below) <ref-alignRNASeq>`
+      - Preset of parameters. Possible values: ``default`` and ``rna-seq``. The ``rna-seq`` preset are specifically optimized for analysis of Rna-Seq data :ref:`(see below) <ref-rna-seq>`
 
     * - ``-t {numberOfThreads}`` |br| ``--threads ...``
       - number of CPU cores in the system
