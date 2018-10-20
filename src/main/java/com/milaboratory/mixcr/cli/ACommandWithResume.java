@@ -32,9 +32,11 @@ public abstract class ACommandWithResume extends ACommandWithOutput {
     /** whether to skip execution or not */
     private boolean skipExecution = false;
 
+    protected boolean doOverwrite = true;
+
     @Override
     public void handleExistenceOfOutputFile(String outFileName) {
-        if (force)
+        if (doOverwrite && force)
             // rewrite anyway
             return;
 
