@@ -12,7 +12,10 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public abstract class CommandAnalyze extends ACommandWithOutput {
@@ -248,17 +251,21 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
     }
 
     private <T extends ACommandWithOutput> T inheritOptionsAndValidate(T parameters) {
-        if (resume && parameters instanceof ACommandWithResume)
+        if (resume && parameters instanceof ACommandWithResume) {
             ((ACommandWithResume) parameters).resume = true;
-        if (isForceOverwrite())
+            ((ACommandWithResume) parameters).doOverwrite = false;
+        }
+        if (!resume && isForceOverwrite())
             parameters.force = true;
+        parameters.quiet = true;
         parameters.validate();
+        parameters.quiet = false;
         return parameters;
     }
 
     @Option(names = "--align",
             description = "Additional parameters for align step specified with double quotes (e.g --align \"--limit 1000\" --align \"-OminSumScore=100\" etc.",
-            arity = "0..*")
+            arity = "1")
     public List<String> alignParameters = new ArrayList<>();
     /** pre-defined (hidden from the user) parameters */
     protected List<String> initialAlignParameters = new ArrayList<>();
@@ -325,7 +332,7 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
 
     @Option(names = "--assemblePartial",
             description = "Additional parameters for assemblePartial step specified with double quotes (e.g --assemblePartial \"--overlappedOnly\" --assemblePartial \"-OkOffset=0\" etc.",
-            arity = "0..*")
+            arity = "1")
     public List<String> assemblePartialParameters = new ArrayList<>();
 
     /** Build parameters for assemble partial */
@@ -354,7 +361,7 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
 
     @Option(names = "--extend",
             description = "Additional parameters for extend step specified with double quotes (e.g --extend \"--chains TRB\" --extend \"--quality 0\" etc.",
-            arity = "0..*")
+            arity = "1")
     public List<String> extendAlignmentsParameters = new ArrayList<>();
 
     /** Build parameters for extender */
@@ -383,7 +390,7 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
 
     @Option(names = "--assemble",
             description = "Additional parameters for assemble step specified with double quotes (e.g --assemble \"-OassemblingFeatures=[V5UTR+L1+L2+FR1,FR3+CDR3]\" --assemble \"-ObadQualityThreshold=0\" etc.",
-            arity = "0..*")
+            arity = "1")
     public List<String> assembleParameters = new ArrayList<>();
 
     /** Build parameters for assemble */
@@ -423,7 +430,7 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
 
     @Option(names = "--assembleContigs",
             description = "Additional parameters for assemble contigs step specified with double quotes",
-            arity = "0..*")
+            arity = "1")
     public List<String> assembleContigParameters = new ArrayList<>();
 
     /** Build parameters for assemble */
@@ -452,7 +459,7 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
 
     @Option(names = "--export",
             description = "Additional parameters for exportClones step specified with double quotes (e.g --export \"-p full\" --export \"-cloneId\" etc.",
-            arity = "0..*")
+            arity = "1")
     public List<String> exportParameters = new ArrayList<>();
 
     /** Build parameters for export */
@@ -493,8 +500,8 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
     public int nAssemblePartialRounds;
 
     /** whether to perform TCR alignments extension */
-    @Option(names = "--do-extend-alignments", description = "Specified whether to perform TCR alignments extension")
-    public boolean doExtendAlignments;
+    @Option(names = "--do-not-extend-alignments", description = "Skip TCR alignments extension")
+    public boolean doNotExtendAlignments;
 
     /** input raw sequencing data files */
     @Override
@@ -569,7 +576,7 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
         }
 
         // --- Running alignments extender
-        if (doExtendAlignments) {
+        if (!doNotExtendAlignments) {
             String fileWithExtAlignments = fNameForExtenedAlignments();
             mkExtend(fileWithAlignments, fileWithExtAlignments).run();
             fileWithAlignments = fileWithExtAlignments;
@@ -602,7 +609,7 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
             description = "Analyze targeted TCR/IG library amplification (5'RACE, Amplicon, Multiplex, etc).")
     public static class CommandAmplicon extends CommandAnalyze {
         public CommandAmplicon() {
-            doExtendAlignments = false;
+            doNotExtendAlignments = true;
             nAssemblePartialRounds = 0;
         }
 
@@ -726,7 +733,7 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
         public CommandShotgun() {
             chains = Chains.ALL;
             nAssemblePartialRounds = 2;
-            doExtendAlignments = true;
+            doNotExtendAlignments = false;
         }
 
         @Override

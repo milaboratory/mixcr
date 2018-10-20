@@ -52,6 +52,9 @@ public abstract class ACommand implements Runnable {
 
     /** Warning message */
     public void warn(String message) {
+        if (quiet)
+            return;
+
         if (!running)
             // add to a queue
             warningsQueue.add(message);
