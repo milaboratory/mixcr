@@ -4,8 +4,8 @@
 
 .. _ref-rna-seq:
 
-Processing RNA-seq and non-targeted  genomic data
-=================================================
+Processing RNA-seq and non-targeted genomic data
+================================================
 
 .. note::
   

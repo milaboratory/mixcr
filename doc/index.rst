@@ -28,6 +28,7 @@ MiXCR is free for academic and non-profit use (see :ref:`License <license>`).
    install
    quickstart
    analyze
+   quickstart1x
 
 
 .. _main-actions:

@@ -22,7 +22,7 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
     private static <T extends WithNameWithDescription> T parse0(Class<? extends T> clazz, String v) {
         T[] ts = clazz.getEnumConstants();
         for (T t : ts)
-            if (t.key().equals(v))
+            if (t.key().equalsIgnoreCase(v))
                 return t;
         return null;
     }
@@ -185,40 +185,14 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
             completionCandidates = _ChainsCandidates.class,
             description = "Receptor type. Possible values: ${COMPLETION-CANDIDATES}",
             required = false /* This will be overriden for amplicon */)
-    public void setChains(_Chains chains) {
-        switch (chains) {
-            case tcr:
-                this.chains = Chains.TCR;
-                break;
-            case bcr:
-                this.chains = Chains.IG;
-                break;
-            case xcr:
-                this.chains = Chains.ALL;
-                break;
-            case tra:
-                this.chains = Chains.TRA;
-                break;
-            case trb:
-                this.chains = Chains.TRB;
-                break;
-            case trg:
-                this.chains = Chains.TRG;
-                break;
-            case trd:
-                this.chains = Chains.TRD;
-                break;
-            case igh:
-                this.chains = Chains.IGH;
-                break;
-            case igk:
-                this.chains = Chains.IGK;
-                break;
-            case igl:
-                this.chains = Chains.IGL;
-                break;
-            default:
-                throwValidationException("Unknown chains option: " + chains);
+    public void setChains(String chains) {
+        if (chains.equalsIgnoreCase("xcr"))
+            this.chains = Chains.ALL;
+        else {
+            Chains c = Chains.parse(chains);
+            if (c == null)
+                throwValidationException("Illegal value " + chains + " for --receptor-type option.");
+            this.chains = c;
         }
     }
 
@@ -597,7 +571,8 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
             for (String chain : chains)
                 mkExport(fileWithClones, fNameForExportClones(chain)).run();
         else
-            mkExport(fileWithClones, fNameForExportClones(chains.toString())).run();
+            for (String chain : new String[]{"ALL", "TRA", "TRB", "TRG", "TRD", "IGH", "IGK", "IGL"})
+                mkExport(fileWithClones, fNameForExportClones(chain)).run();
     }
 
 
