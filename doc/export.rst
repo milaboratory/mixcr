@@ -10,11 +10,18 @@ syntax for these commands is:
 
 ::
 
+    # export alignments from .vdjca file
     mixcr exportAlignments [options] alignments.vdjca alignments.txt
+    # export alignments from .clna file
+    mixcr exportAlignments [options] clonesAndAlignments.clna alignments.txt
 
 ::
 
+    # export clones from .clns file
     mixcr exportClones [options] clones.clns clones.txt
+
+    # export clones from .clna file
+    mixcr exportClones [options] clonesAndAlignments.clna clones.txt
 
 The resulting tab-delimited text file will contain columns with
 different types of information. If no options are specified, the default set
@@ -52,7 +59,7 @@ One can add additional columns to the preset in the following way:
 
     mixcr exportClones --preset min -qFeature CDR2 clones.clns clones.txt
 
-One can also put all specify export fields in a seperate file:
+One can also put all specify export fields in a separate file:
 
 ::
 
@@ -67,35 +74,39 @@ and pass this file to the export command:
 
     mixcr exportClones --preset-file myFields.txt clones.clns clones.txt
 
+
+To get command line help on ``export`` action one can use
+
+::
+
+    mixcr help exportAlignments
+    mixcr help exportClones
+
+
 Command line parameters
 -----------------------
 
 The following is a list of command line parameters for both ``exportAlignments`` and
 ``exportClones``:
 
-+-----------------------------+-------------------------------------------------------------------+
-| Option                      | Description                                                       |
-+=============================+===================================================================+
-| ``-h``, ``--help``          | print help message                                                |
-+-----------------------------+-------------------------------------------------------------------+
-| ``-f``, ``--fields``        | list available fields that can be exported                        |
-+-----------------------------+-------------------------------------------------------------------+
-| ``-p``, ``--preset``        | select a predefined set of fields to export (``full`` or ``min``) |
-+-----------------------------+-------------------------------------------------------------------+
-| ``-pf``, ``--preset-file``  | load a file with a list of fields to export                       |
-+-----------------------------+-------------------------------------------------------------------+
-| ``-lf``, ``--list-fields``  | list available fields that can be exported                        |
-+-----------------------------+-------------------------------------------------------------------+
-| ``-s``, ``--no-spaces``     | output short versions of column headers to assist with analysis   |
-|                             | using Pandas, R/DataFrames or another data tables processing      |
-|                             | library                                                           |
-+-----------------------------+-------------------------------------------------------------------+
++----------------------------+-------------------------------------------------------------------+
+| Option                     | Description                                                       |
++============================+===================================================================+
+| ``-c``, ``--chains``       | Limit output to specific chain(s) (e.g. TRA or IGH). When using   |
+|                            | with ``exportClones``, clone fractions will be recalculated       |
+|                            | accordingly.                                                      |
++----------------------------+-------------------------------------------------------------------+
+| ``-p``, ``--preset``       | select a predefined set of fields to export (``full`` or ``min``) |
++----------------------------+-------------------------------------------------------------------+
+| ``-pf``, ``--preset-file`` | load a file with a list of fields to export                       |
++----------------------------+-------------------------------------------------------------------+
+| ``-v``, ``--with-spaces``  | output in more human-readable format.                             |
++----------------------------+-------------------------------------------------------------------+
+| ``-n``, ``--limit``        | output only first ``n`` records.                                  |
++----------------------------+-------------------------------------------------------------------+
 
 The following parameters only apply to ``exportClones``:
 
-+--------------------------------------+-------------------------------------------------------------------+
-| ``-c``, ``--chains``                 | Limit output to specific locus (e.g. TRA or IGH). Clone fractions |
-|                                      | will be recalculated accordingly.                                 |
 +--------------------------------------+-------------------------------------------------------------------+
 | ``-o``, ``--filter-out-of-frames``   | Exclude out of frames (fractions will be recalculated)            |
 +--------------------------------------+-------------------------------------------------------------------+
@@ -559,9 +570,9 @@ Or one can extract reads for a buch of clones into a single output:
 
 ::
 
-    mixcr exportReadsForClones clonesAndAlignments.clna 2 12 45 reads_of_my_clones.fastq.gz
+    mixcr exportReadsForClones --id 2 12 45 clonesAndAlignments.clna reads_of_my_clones.fastq.gz
 
-See ``mixcr exportReadsForClones -h`` for more information.
+See ``mixcr help exportReadsForClones`` for more information.
 
 .. MiXCR can preserve the mapping between initial reads and final clonotypes. There are several options for accessing this information. 
 

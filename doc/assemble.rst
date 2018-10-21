@@ -21,7 +21,7 @@ or
 
     mixcr assemble [options] -a alignments.vdjca output.clna
 
-the latter command outputs result in a "clones & alignments" format, allowing subsequent :ref:`contig assembly <ref-assembleContigs>` and other actions requiring clone to alignment mapping (e.g. ).
+the latter command outputs result in a "clones & alignments" format, allowing subsequent :ref:`contig assembly <ref-assembleContigs>` and other actions requiring clone to alignment mapping.
 
 The following flowchart shows the pipeline of ``assemble``:
 
@@ -83,7 +83,7 @@ This pipeline consists of the following steps:
     all hits are known in advance); thus, better alignments will be built
     for each clonal sequence.
 
-6.  The result is written to the binary output file (``.clns``) with a
+6.  The result is written to the binary output file (``.clns`` or ``.clna``) with a
     comprehensive information about clones.
 
 Command line parameters
@@ -103,8 +103,8 @@ The command line options of ``assemble`` are the following:
 | ``-t {numberOfProcessors}`` |br|    | number of available CPU cores | Number of processing threads.                                                  |
 | ``--threads ...``                   |                               |                                                                                |
 +-------------------------------------+-------------------------------+--------------------------------------------------------------------------------+
-| ``-i {indexFile}`` |br|             |                               | Specify file which will store information about particular reads aggreagated   |
-| ``--index ...``                     |                               | by each clone (mapping readId -> cloneId).                                     |
+| ``-a``, ``--write-alignments``      |                               | Save initial alignments and alignments <> clones mapping in the resulting      |
+|                                     |                               | ``.clna`` file.                                                                |
 +-------------------------------------+-------------------------------+--------------------------------------------------------------------------------+
 | ``-Oparameter=value``               |                               | Overrides default value of assembler ``parameter`` (see next subsection).      |
 +-------------------------------------+-------------------------------+--------------------------------------------------------------------------------+
