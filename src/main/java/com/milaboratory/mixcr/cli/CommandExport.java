@@ -178,9 +178,9 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                     writer.put(alignments);
                     ++count;
                 }
+            } finally {
+                reader.close();
             }
-
-            reader.close();
         }
     }
 
