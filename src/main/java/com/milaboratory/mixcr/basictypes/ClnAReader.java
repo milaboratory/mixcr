@@ -29,6 +29,7 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPort;
+import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.CountLimitingOutputPort;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.ClnsReader.GT2GFAdapter;
@@ -61,8 +62,8 @@ import java.util.concurrent.atomic.AtomicLong;
  * Reader of CLNA file format.
  */
 public final class ClnAReader implements
-        PipelineConfigurationReader,
-        AutoCloseable {
+                              PipelineConfigurationReader,
+                              AutoCloseable {
     public static final int DEFAULT_CHUNK_SIZE = 262144;
     final int chunkSize;
     /**
@@ -248,7 +249,7 @@ public final class ClnAReader implements
     /**
      * Constructs output port to read clones one by one as a stream
      */
-    public OutputPort<Clone> readClones() throws IOException {
+    public OutputPortCloseable<Clone> readClones() throws IOException {
         PrimitivI input = inputState.createPrimitivI(new InputDataStream(firstClonePosition, index[0]));
 
         return new PipeDataInputReader<>(Clone.class, input, numberOfClones());
@@ -259,7 +260,7 @@ public final class ClnAReader implements
      *
      * @param cloneIndex index of clone; -1 to read unassembled alignments
      */
-    public OutputPort<VDJCAlignments> readAlignmentsOfClone(int cloneIndex) {
+    public OutputPortCloseable<VDJCAlignments> readAlignmentsOfClone(int cloneIndex) {
         return new CountLimitingOutputPort<>(new BasicVDJCAlignmentReader(
                 new AlignmentsIO.FileChannelBufferReader(channel, index[cloneIndex + 1], index[cloneIndex + 2]),
                 inputState, false), counts[cloneIndex + 1]);
@@ -268,7 +269,7 @@ public final class ClnAReader implements
     /**
      * Constructs output port to read all alignments form the file. Alignments are sorted by cloneIndex.
      */
-    public OutputPort<VDJCAlignments> readAllAlignments() {
+    public OutputPortCloseable<VDJCAlignments> readAllAlignments() {
         return new CountLimitingOutputPort<>(new BasicVDJCAlignmentReader(
                 new AlignmentsIO.FileChannelBufferReader(channel, index[0], index[index.length - 1]),
                 inputState, false), totalAlignmentsCount);
@@ -277,7 +278,7 @@ public final class ClnAReader implements
     /**
      * Constructs output port to read all alignments that are attached to a clone. Alignments are sorted by cloneIndex.
      */
-    public OutputPort<VDJCAlignments> readAssembledAlignments() {
+    public OutputPortCloseable<VDJCAlignments> readAssembledAlignments() {
         return new CountLimitingOutputPort<>(new BasicVDJCAlignmentReader(
                 new AlignmentsIO.FileChannelBufferReader(channel, index[1], index[index.length - 1]),
                 inputState, false), totalAlignmentsCount - counts[0]);
@@ -289,7 +290,7 @@ public final class ClnAReader implements
      *
      * Returns: readAlignmentsOfClone(-1)
      */
-    public OutputPort<VDJCAlignments> readNotAssembledAlignments() {
+    public OutputPortCloseable<VDJCAlignments> readNotAssembledAlignments() {
         return readAlignmentsOfClone(-1);
     }
 

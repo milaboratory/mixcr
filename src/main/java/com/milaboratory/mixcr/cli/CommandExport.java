@@ -157,7 +157,8 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
             } catch (Exception e) {}
 
             try {
-                source = new ClnAReader(in, VDJCLibraryRegistry.getDefault()).readAllAlignments();
+                ClnAReader reader = new ClnAReader(in, VDJCLibraryRegistry.getDefault());
+                source = reader.readAllAlignments();
             } catch (Exception e) {}
 
             if (source == null)

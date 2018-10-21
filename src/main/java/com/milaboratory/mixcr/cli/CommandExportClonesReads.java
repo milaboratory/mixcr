@@ -1,6 +1,7 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
+import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SequenceWriter;
 import com.milaboratory.core.io.sequence.fasta.FastaSequenceWriterWrapper;
@@ -35,11 +36,11 @@ public class CommandExportClonesReads extends ACommandWithOutput {
     @Parameters(index = "0", description = "input_file")
     public String in;
 
-    @Parameters(index = "1", description = "[cloneId1 [cloneId2 [cloneId3]]]", arity = "0..*")
-    public List<Integer> ids = new ArrayList<>();
-
-    @Parameters(index = "2", description = "[output_file]")
+    @Parameters(index = "1", description = "[output_file]")
     public String out;
+
+    @Option(names = "--id", description = "[cloneId1 [cloneId2 [cloneId3]]]", arity = "0..*")
+    public List<Integer> ids = new ArrayList<>();
 
     @Override
     public List<String> getInputFiles() {
@@ -62,13 +63,17 @@ public class CommandExportClonesReads extends ACommandWithOutput {
     @Override
     public void run0() throws Exception {
         try (ClnAReader clna = new ClnAReader(in, VDJCLibraryRegistry.getDefault())) {
-            VDJCAlignments firstAlignment = clna.readAllAlignments().take();
+            VDJCAlignments firstAlignment;
+            try (OutputPortCloseable<VDJCAlignments> dummyP = clna.readAllAlignments()) {
+                firstAlignment = dummyP.take();
+            }
+
             if (firstAlignment == null)
                 return;
 
             if (firstAlignment.getOriginalReads() == null)
                 throwValidationException("Error: original reads were not saved in the .vdjca file: " +
-                        "re-run align with '-g' option.");
+                        "re-run align with '-OsaveOriginalReads=true' option.");
 
             int[] cid = getCloneIds();
             Supplier<IntStream> cloneIds;

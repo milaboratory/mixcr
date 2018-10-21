@@ -39,6 +39,7 @@ import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.TranslationParameters;
+import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
@@ -605,6 +606,23 @@ public final class FieldExtractors {
                     } catch (JsonProcessingException ex) {
                         throw new RuntimeException(ex);
                     }
+                }
+            });
+
+            descriptorsList.add(new PL_A("-cloneId", "To which clone alignment was attached.", "Clone ID", "cloneId") {
+                @Override
+                protected String extract(VDJCAlignments object) {
+                    return "" + object.getCloneIndex();
+                }
+            });
+
+            descriptorsList.add(new PL_A("-cloneIdWithMappingType", "To which clone alignment was attached with additional info on mapping type", "Clone mapping", "cloneMapping") {
+                @Override
+                protected String extract(VDJCAlignments object) {
+                    int ci = object.getCloneIndex();
+                    ReadToCloneMapping.MappingType mt = object.getMappingType();
+                    return "" + ci + ":" + mt;
+
                 }
             });
 
