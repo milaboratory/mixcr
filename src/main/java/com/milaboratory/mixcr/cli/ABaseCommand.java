@@ -1,6 +1,7 @@
 package com.milaboratory.mixcr.cli;
 
 import picocli.CommandLine;
+import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 
@@ -11,7 +12,7 @@ import java.util.stream.Collectors;
  */
 public class ABaseCommand {
     @Spec
-    public CommandLine.Model.CommandSpec spec; // injected by picocli
+    public CommandSpec spec; // injected by picocli
 
     @Option(names = {"-h", "--help"},
             hidden = true)
