@@ -16,7 +16,7 @@ public class ABaseCommand {
     @Option(names = {"-h", "--help"},
             hidden = true)
     public void requestHelp(boolean b) {
-        throwValidationException("ERROR: -h / --help is not supported: use `mixcr [command] help` for command usage.");
+        throwValidationException("ERROR: -h / --help is not supported: use `mixcr help [command]` for command usage.");
     }
 
     /** Throws validation exception */
