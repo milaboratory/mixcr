@@ -35,7 +35,9 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
     /** type class */
     private final Class<T> clazz;
 
-    private CommandExport(Class<T> clazz) { this.clazz = clazz; }
+    private CommandExport(Class<T> clazz) {
+        this.clazz = clazz;
+    }
 
     public static final String DEFAULT_PRESET = "full";
 
@@ -151,6 +153,7 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
         void run1(List<FieldExtractor<? super VDJCAlignments>> exporters) throws Exception {
             AutoCloseable reader = null;
             OutputPort<VDJCAlignments> source = null;
+
             switch (IOUtil.detectFilType(in)) {
                 case VDJCA:
                     VDJCAlignmentsReader vdjcaReader = new VDJCAlignmentsReader(in, VDJCLibraryRegistry.getDefault());
@@ -433,9 +436,12 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
 
         alignments.put("fullImputed", alignments.get("full").stream().map(p -> {
             switch (p.field) {
-                case "-nFeature": return new FieldData("-nFeatureImputed", p.args);
-                case "-aaFeature": return new FieldData("-aaFeatureImputed", p.args);
-                default: return p;
+                case "-nFeature":
+                    return new FieldData("-nFeatureImputed", p.args);
+                case "-aaFeature":
+                    return new FieldData("-aaFeatureImputed", p.args);
+                default:
+                    return p;
             }
         }).collect(Collectors.toList()));
 
