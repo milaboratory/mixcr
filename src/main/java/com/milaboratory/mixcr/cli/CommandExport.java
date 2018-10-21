@@ -22,7 +22,6 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.ParseResult;
 
 import java.io.BufferedReader;
-import java.io.Closeable;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
@@ -150,19 +149,22 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
 
         @Override
         void run1(List<FieldExtractor<? super VDJCAlignments>> exporters) throws Exception {
+            AutoCloseable reader = null;
             OutputPort<VDJCAlignments> source = null;
-            try {
-                source = new VDJCAlignmentsReader(in, VDJCLibraryRegistry.getDefault());
-                ((VDJCAlignmentsReader) source).init(); // this will verify file format
-            } catch (Exception e) {}
-
-            try {
-                ClnAReader reader = new ClnAReader(in, VDJCLibraryRegistry.getDefault());
-                source = reader.readAllAlignments();
-            } catch (Exception e) {}
-
-            if (source == null)
-                throwExecutionException("Unknown file type: " + in);
+            switch (IOUtil.detectFilType(in)) {
+                case VDJCA:
+                    VDJCAlignmentsReader vdjcaReader = new VDJCAlignmentsReader(in, VDJCLibraryRegistry.getDefault());
+                    reader = vdjcaReader;
+                    source = vdjcaReader;
+                    break;
+                case ClnA:
+                    ClnAReader clnaReader = new ClnAReader(in, VDJCLibraryRegistry.getDefault());
+                    reader = clnaReader;
+                    source = clnaReader.readAllAlignments();
+                    break;
+                default:
+                    throwExecutionException("Unknown file type: " + in);
+            }
 
             try (InfoWriter<VDJCAlignments> writer = new InfoWriter<>(out)) {
                 if (source instanceof CanReportProgress)
@@ -178,10 +180,7 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                 }
             }
 
-            if (source instanceof Closeable)
-                ((Closeable) source).close();
-            else if (source instanceof AutoCloseable)
-                ((AutoCloseable) source).close();
+            reader.close();
         }
     }
 
