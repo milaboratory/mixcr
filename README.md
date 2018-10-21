@@ -29,6 +29,8 @@ MiXCR is a universal software for fast and accurate analysis of raw T- or B- cel
 
 - Clonotypes can be assembled based on CDR3 sequence (default) as well as any other region, including *full-length* variable sequence (from beginning of FR1 to the end of FR4)
 
+- Assemble full TCR/Ig receptor sequences 
+
 - Provides exhaustive output information for clonotypes and per-read alignments:
   - nucleotide and amino acid sequences of all immunologically relevant regions (FR1, CDR1, ..., CDR3, etc..)
   - identified V, D, J, C genes
@@ -66,28 +68,7 @@ to upgrade already installed MiXCR to the newest version:
  
 ## Usage
 
-#### Enriched RepSeq Data
-
-Here is a very simple usage example that will extract repertoire data (in the form of clonotypes list) from raw sequencing data of enriched RepSeq library:
-
-    mixcr align -r log.txt input_R1.fastq.gz input_R2.fastq.gz alignments.vdjca
-    mixcr assemble -r log.txt alignments.vdjca clones.clns
-    mixcr exportClones clones.clns clones.txt
-  
-this will produce a tab-delimited list of clones (`clones.txt`) assembled by their CDR3 sequences with extensive information on their abundances, V, D and J genes, mutations in germline regions, topology of VDJ junction etc.
-
-#### Repertoire extraction from RNA-Seq
-
-MiXCR is equally effective in extraction of repertoire information from non-enriched data, like RNA-Seq or WGS. This example illustrates usage for RNA-Seq:
-
-    mixcr align -p rna-seq -r log.txt input_R1.fastq.gz input_R2.fastq.gz alignments.vdjca
-    mixcr assemblePartial alignments.vdjca alignment_contigs.vdjca
-    mixcr assemble -r log.txt alignment_contigs.vdjca clones.clns
-    mixcr exportClones clones.clns clones.txt
-
-#### Further reading
-
-MiXCR pipeline is very flexible, and can be applied to raw data from broad spectrum of experimental setups. For detailed description of MiXCR features and options please see documentation.
+See usage examples in the official documentation https://mixcr.readthedocs.io/en/master/quickstart.html
 
 ## Documentation
 
@@ -97,7 +78,7 @@ If you haven't found the answer to your question in the docs, or have any sugges
 
 ## Build
 
-Dependancy:
+Requirements:
 
 - Maven 3 (https://maven.apache.org/)
 

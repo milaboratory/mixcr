@@ -40,7 +40,7 @@ Installation on Windows
 
 Currently there is no execution script or installer for Windows. Still MiXCR can easily be used by direct execution from the jar file.
 
-- check that you have Java **1.7+** installed on your system by typing ``java -version``
+- check that you have Java **1.8+** installed on your system by typing ``java -version``
 - download latest binary distributaion of MiXCR from the `release page <https://github.com/milaboratory/mixcr/releases>`_ on GitHub
 - unzip the archive
 - use ``mixcr.jar`` from the archive in the following way:
