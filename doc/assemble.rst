@@ -7,6 +7,10 @@
 Assemble clones
 ===============
 
+.. tip:: 
+
+  MiXCR provides :ref:`analyze <ref-analyze>` command that packs a complicated execution pipelines (alignment, assembly, exporting etc.) into a single command. We recommend to use :ref:`analyze <ref-analyze>` for most types of input libraries instead of manual execution of all MiXCR analysis steps. Assembly options described in this section may be directly passed in :ref:`analyze <ref-analyze>` command using ``--assemble <option>`` option.
+
 The ``assemble`` command builds clonotypes from alignments obtained with :ref:`align <ref-align>`. Clonotypes assembly is performed for a chosen assembling feature (e.g. ``CDR3`` by default).
 
 The syntax is the following:

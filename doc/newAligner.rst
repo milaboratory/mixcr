@@ -3,11 +3,7 @@
 KAligner2: New aligner with big gaps support
 ===================================================
 
-.. danger::
-
-    This feature is provided for beta testing, and not recommended for production use!
-
-To process data using new aligner, apply special parameter pre-sets as follows:
+KAligner2 is specifically suited for analysis of data which contain big gaps (e.g. B-cell data). To use kAligner2 one should do:
 
 ::
 

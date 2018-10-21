@@ -89,21 +89,24 @@ Command line parameters
 The following is a list of command line parameters for both ``exportAlignments`` and
 ``exportClones``:
 
-+----------------------------+-------------------------------------------------------------------+
-| Option                     | Description                                                       |
-+============================+===================================================================+
-| ``-c``, ``--chains``       | Limit output to specific chain(s) (e.g. TRA or IGH). When using   |
-|                            | with ``exportClones``, clone fractions will be recalculated       |
-|                            | accordingly.                                                      |
-+----------------------------+-------------------------------------------------------------------+
-| ``-p``, ``--preset``       | select a predefined set of fields to export (``full`` or ``min``) |
-+----------------------------+-------------------------------------------------------------------+
-| ``-pf``, ``--preset-file`` | load a file with a list of fields to export                       |
-+----------------------------+-------------------------------------------------------------------+
-| ``-v``, ``--with-spaces``  | output in more human-readable format.                             |
-+----------------------------+-------------------------------------------------------------------+
-| ``-n``, ``--limit``        | output only first ``n`` records.                                  |
-+----------------------------+-------------------------------------------------------------------+
++----------------------------+-------------------------------------------------------------------------------+
+| Option                     | Description                                                                   |
++============================+===============================================================================+
+| ``-c``, ``--chains``       | Limit output to specific chain(s) (e.g. TRA or IGH). When using               |
+|                            | with ``exportClones``, clone fractions will be recalculated                   |
+|                            | accordingly.                                                                  |
++----------------------------+-------------------------------------------------------------------------------+
+| ``-p``, ``--preset``       | Select a predefined set of fields to export (``full``, ``min``,               |
+|                            | ``fullImputed`` and ``minImputed``, the last two use ``-nFeatureImputed`` and |
+|                            | ``-aaFeatureImputed`` instead of   ``-nFeature`` and ``-aaFeature``;          |
+|                            | this will use germline sequences (marked lowercase) for unaligned regions.)   |
++----------------------------+-------------------------------------------------------------------------------+
+| ``-pf``, ``--preset-file`` | Load a file with a list of fields to export                                   |
++----------------------------+-------------------------------------------------------------------------------+
+| ``-v``, ``--with-spaces``  | Output in more human-readable format.                                         |
++----------------------------+-------------------------------------------------------------------------------+
+| ``-n``, ``--limit``        | Output only first ``n`` records.                                              |
++----------------------------+-------------------------------------------------------------------------------+
 
 The following parameters only apply to ``exportClones``:
 
