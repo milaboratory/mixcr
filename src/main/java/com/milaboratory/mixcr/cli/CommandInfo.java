@@ -1,6 +1,7 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.util.PrintStreamTableAdapter;
@@ -14,6 +15,8 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+
+import static com.milaboratory.mixcr.basictypes.IOUtil.detectFilType;
 
 @Command(name = "info",
         sortOptions = true,
@@ -32,16 +35,16 @@ public class CommandInfo extends ACommand {
         return tableView;
     }
 
-    public FilesType getType() {
-        return FilesType.getType(input.get(0));
+    public MiXCRFileType getType() {
+        return detectFilType(input.get(0));
     }
 
     @Override
     public void validate() {
         super.validate();
-        FilesType type = getType();
+        MiXCRFileType type = getType();
         for (String fileName : input)
-            if (FilesType.getType(fileName) != type)
+            if (detectFilType(fileName) != type)
                 throwValidationException("Mixed file types: " + fileName);
     }
 
@@ -52,12 +55,14 @@ public class CommandInfo extends ACommand {
     public void run0() throws Exception {
         if (!tableView)
             throw new RuntimeException("Only table output is supported. Use -t option.");
-        switch (getType()) {
-            case Alignments:
-                processAlignments();
-                break;
-            case Cloneset:
+
+        switch (detectFilType(input.get(0))) {
+            case ClnA:
+            case Clns:
                 processClones();
+                break;
+            case VDJCA:
+                processAlignments();
                 break;
         }
     }
@@ -80,9 +85,8 @@ public class CommandInfo extends ACommand {
                 SmartProgressReporter.startProgressReport("Processing " + name, reader, System.err);
             else
                 System.err.println("Processing " + name + "...");
-            for (VDJCAlignments alignments : CUtils.it(reader)) {
+            for (VDJCAlignments __ : CUtils.it(reader))
                 numberOfAlignedReads++;
-            }
             tableAdapter.row(name, reader.getNumberOfReads(), numberOfAlignedReads);
         }
     }
@@ -93,30 +97,6 @@ public class CommandInfo extends ACommand {
 
     public void processClones() {
         throw new RuntimeException("CLNS files not supported yet.");
-    }
-
-    public enum FilesType {
-        Cloneset(".clns", ".clns.gz"),
-        Alignments(".vdjca", ".vdjca.gz");
-        final String[] extensions;
-
-        FilesType(String... extensions) {
-            this.extensions = extensions;
-        }
-
-        public boolean isOfType(String fileName) {
-            for (String extension : extensions)
-                if (fileName.endsWith(extension))
-                    return true;
-            return false;
-        }
-
-        public static FilesType getType(String fileName) {
-            for (FilesType filesType : values())
-                if (filesType.isOfType(fileName))
-                    return filesType;
-            return null;
-        }
     }
 
     public interface AlignmentInfoProvider {

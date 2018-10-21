@@ -6,7 +6,7 @@ Quick start for MiXCR prior v3
 
 .. note::
 
-  This page is legacy. This Quick Start is for MiXCR before version 3.0. See :ref:`actual documentation <ref-quickstart>` for the latest MiXCR versions.
+  This page is legacy: it contains Quick Start for MiXCR prior version 3.0. See :ref:`actual documentation <ref-quickstart>` for the latest MiXCR versions.
 
 
 Overview
