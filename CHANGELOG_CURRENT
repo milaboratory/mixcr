@@ -1,4 +1,16 @@
+New command ``assembleContigs`` for assembling full TCR/IG receptor sequences
+New command ``analyze`` for running complicated pipelines with one single command. Two pipelines which cover most practical cases are implemented ``analyze amplicon`` and ``analyze shotgun``
+New file format ``.clna`` for storing clones with alignments including alignments <> clones mapping
+Replace ``extendAlignments`` with ``extend`` command which works both with alignments and clones
+Complete refactoring of command line interface
+New option ``--resume`` for resuming aborted / partially completed execution
+Implemented ``-nFeatureImputed`` and ``-aaFeatureImputed`` export fields which use germline sequences (marked lowercase) for uncovered receptor regions
+Implementation of compressed `.vdjca` files
+Species option ``--species`` is now mandatory #342
+Removed ``--chains`` option for align #292
+Added export field ``-positionInReference``
 Now export fields like `-nMutationsRelative` supports alignment-attached gene features (e.g. this allows to export all mutations of V gene inside CDR3 region: `-nMutationsRelative VCDR3Part VRegionWithP`)
 Now `align` action prints library-level warnings and citation notice
 Refactored command line interface of `exportReadsForClones`
+minor: fixes for #292 #280 #279 #208 #203 #421
 minor: `--noMerge` option renamed to `--no-merge` in assemble action
