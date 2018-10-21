@@ -395,13 +395,13 @@ On the ``assemble`` stage it is necessary to specify that the alignments should 
 
 .. code-block:: console
 
-  > mixcr assemble --index indexFile alignments.vdjca clones.clns
+  > mixcr assemble --write-alignments alignments.vdjca clones.clna
 
 Having this, it is possible to export original read headers with corresponding clone IDs:
 
 .. code-block:: console
 
-  > mixcr exportAlignments -cloneId indexFile -descrR1 -descrR2 alignments.vdjca alignments.txt
+  > mixcr exportAlignments -cloneId -descrR1 -descrR2 clones.clna alignments.txt
 
 The resulting file ``alignments.txt`` will looks like:
 
