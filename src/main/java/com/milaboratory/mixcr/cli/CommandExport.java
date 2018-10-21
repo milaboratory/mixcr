@@ -31,6 +31,7 @@ import static cc.redberry.primitives.FilterUtil.ACCEPT_ALL;
 import static cc.redberry.primitives.FilterUtil.and;
 
 
+@Command(separator = " ")
 public abstract class CommandExport<T extends VDJCObject> extends ACommandSimpleExport {
     /** type class */
     private final Class<T> clazz;

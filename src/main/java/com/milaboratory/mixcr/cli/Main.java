@@ -136,6 +136,8 @@ public final class Main {
                 .get("analyze")
                 .addSubcommand("amplicon", CommandAnalyze.mkAmplicon())
                 .addSubcommand("shotgun", CommandAnalyze.mkShotgun());
+
+        cmd.setSeparator(" ");
         return cmd;
     }
 

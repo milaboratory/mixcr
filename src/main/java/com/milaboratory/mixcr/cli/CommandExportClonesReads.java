@@ -77,7 +77,7 @@ public class CommandExportClonesReads extends ACommandWithOutput {
 
             int[] cid = getCloneIds();
             Supplier<IntStream> cloneIds;
-            if (cid == null)
+            if (cid.length == 0)
                 cloneIds = () -> IntStream.range(0, clna.numberOfClones());
             else
                 cloneIds = () -> IntStream.of(cid);
@@ -100,20 +100,20 @@ public class CommandExportClonesReads extends ACommandWithOutput {
 
             boolean paired = firstAlignment.getOriginalReads().get(0).numberOfReads() == 2;
 
-            SequenceWriter globalWriter = separate ? null : createWriter(paired, out);
-
-            cloneIds.get().forEach(cloneId -> {
-                try (SequenceWriter individualWriter = globalWriter == null ? createWriter(paired, cloneFile(out, cloneId)) : null) {
-                    SequenceWriter actualWriter = globalWriter == null ? individualWriter : globalWriter;
-                    for (VDJCAlignments alignments : CUtils.it(clna.readAlignmentsOfClone(cloneId))) {
-                        for (SequenceRead read : alignments.getOriginalReads())
-                            actualWriter.write(read);
-                        alignmentsWritten.incrementAndGet();
+            try (SequenceWriter globalWriter = separate ? null : createWriter(paired, out)) {
+                cloneIds.get().forEach(cloneId -> {
+                    try (SequenceWriter individualWriter = globalWriter == null ? createWriter(paired, cloneFile(out, cloneId)) : null) {
+                        SequenceWriter actualWriter = globalWriter == null ? individualWriter : globalWriter;
+                        for (VDJCAlignments alignments : CUtils.it(clna.readAlignmentsOfClone(cloneId))) {
+                            for (SequenceRead read : alignments.getOriginalReads())
+                                actualWriter.write(read);
+                            alignmentsWritten.incrementAndGet();
+                        }
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
                     }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+                });
+            }
         }
     }
 

@@ -356,7 +356,7 @@ public final class FieldExtractors {
                 }
             });
 
-            descriptorsList.add(new FeatureExtractors.NSeqExtractor("-lengthOf", "Exports length of specified gene feature.", "Length of ", "lengthOf") {
+            descriptorsList.add(new FeatureExtractors.NSeqExtractor("-lengthOf", "Export length of specified gene feature.", "Length of ", "lengthOf") {
                 @Override
                 public String convert(NSequenceWithQuality seq) {
                     return "" + seq.size();
@@ -446,7 +446,7 @@ public final class FieldExtractors {
 
             descriptorsList.add(new ExtractDefaultReferencePointsPositions());
 
-            descriptorsList.add(new PL_A("-readId", "Export id of read corresponding to alignment", "Read id", "readId") {
+            descriptorsList.add(new PL_A("-readId", "Export id of read corresponding to alignment (deprecated)", "Read id", "readId") {
                 @Override
                 protected String extract(VDJCAlignments object) {
                     return "" + object.getMinReadId();
@@ -459,7 +459,7 @@ public final class FieldExtractors {
                 }
             });
 
-            descriptorsList.add(new PL_A("-readIds", "Export id of read corresponding to alignment", "Read id", "readId") {
+            descriptorsList.add(new PL_A("-readIds", "Export id(s) of read(s) corresponding to alignment", "Read id", "readId") {
                 @Override
                 protected String extract(VDJCAlignments object) {
                     long[] readIds = object.getReadIds();
@@ -510,8 +510,7 @@ public final class FieldExtractors {
                     "Export initial read quality, or 2 qualities in case of paired-end reads",
                     "Clonal sequence quality(s)", "clonalSequenceQuality"));
 
-            descriptorsList.add(new PL_A("-descrR1", "Export description line from initial .fasta or .fastq file " +
-                    "of the first read (only available if --save-description was used in align command)", "Description R1", "descrR1") {
+            descriptorsList.add(new PL_A("-descrR1", "Export description line from initial .fasta or .fastq file (deprecated)", "Description R1", "descrR1") {
                 @Override
                 protected String extract(VDJCAlignments object) {
                     List<SequenceRead> reads = object.getOriginalReads();
@@ -530,8 +529,7 @@ public final class FieldExtractors {
                 }
             });
 
-            descriptorsList.add(new PL_A("-descrR2", "Export description line from initial .fasta or .fastq file " +
-                    "of the second read (only available if --save-description was used in align command)", "Description R2", "descrR2") {
+            descriptorsList.add(new PL_A("-descrR2", "Export description line from initial .fasta or .fastq file (deprecated)", "Description R2", "descrR2") {
                 @Override
                 protected String extract(VDJCAlignments object) {
                     List<SequenceRead> reads = object.getOriginalReads();
@@ -555,7 +553,7 @@ public final class FieldExtractors {
 
 
             descriptorsList.add(new PL_A("-descrsR1", "Export description lines from initial .fasta or .fastq file " +
-                    "of the first reads (only available if -OsaveOriginalReads=true was used in align command)", "Descriptions R1", "descrsR1") {
+                    "for R1 reads (only available if -OsaveOriginalReads=true was used in align command)", "Descriptions R1", "descrsR1") {
                 @Override
                 protected String extract(VDJCAlignments object) {
                     List<SequenceRead> reads = object.getOriginalReads();
@@ -574,8 +572,8 @@ public final class FieldExtractors {
                 }
             });
 
-            descriptorsList.add(new PL_A("-descrsR2", "Export description lines from initial .fasta or .fastq file " +
-                    "of the second reads (only available if -OsaveOriginalReads=true was used in align command)", "Descriptions R2", "descrsR2") {
+            descriptorsList.add(new PL_A("-descrsR2", "Export description lines from initial .fastq file " +
+                    "for R2 reads (only available if -OsaveOriginalReads=true was used in align command)", "Descriptions R2", "descrsR2") {
                 @Override
                 protected String extract(VDJCAlignments object) {
                     List<SequenceRead> reads = object.getOriginalReads();
@@ -609,14 +607,14 @@ public final class FieldExtractors {
                 }
             });
 
-            descriptorsList.add(new PL_A("-cloneId", "To which clone alignment was attached.", "Clone ID", "cloneId") {
+            descriptorsList.add(new PL_A("-cloneId", "To which clone alignment was attached (make sure using .clna file as input for exportAlignments)", "Clone ID", "cloneId") {
                 @Override
                 protected String extract(VDJCAlignments object) {
                     return "" + object.getCloneIndex();
                 }
             });
 
-            descriptorsList.add(new PL_A("-cloneIdWithMappingType", "To which clone alignment was attached with additional info on mapping type", "Clone mapping", "cloneMapping") {
+            descriptorsList.add(new PL_A("-cloneIdWithMappingType", "To which clone alignment was attached with additional info on mapping type (make sure using .clna file as input for exportAlignments)", "Clone mapping", "cloneMapping") {
                 @Override
                 protected String extract(VDJCAlignments object) {
                     int ci = object.getCloneIndex();
@@ -815,7 +813,7 @@ public final class FieldExtractors {
 
         protected ExtractReferencePointPosition(boolean inReference) {
             super(inReference ? "-positionInReferenceOf" : "-positionOf",
-                    "Exports position of specified reference point inside " + (inReference ? "reference" : "target") + "sequences " +
+                    "Export position of specified reference point inside " + (inReference ? "reference" : "target") + "sequences " +
                             "(clonal sequence / read sequence).", 1);
             this.inReference = inReference;
         }
