@@ -227,7 +227,7 @@ public final class AlignmentsIO {
             if (position + len > to)
                 throw new IOException("No more bytes. Stream limit reached. This is a sign of malformed input file.");
             fileChannel.read(ByteBuffer.wrap(b, off, len), position);
-            position += b.length;
+            position += len;
         }
 
         @Override
@@ -253,7 +253,7 @@ public final class AlignmentsIO {
                                                  BlockBuffers buffers) throws IOException {
         // Reading header
 
-        // First byte
+        // First byte
         byte h0 = reader.readByte();
         if (h0 == 0)
             return null;
