@@ -98,8 +98,6 @@ The command line options of ``assemble`` are the following:
 +-------------------------------------+-------------------------------+--------------------------------------------------------------------------------+
 | Option                              | Default value                 | Description                                                                    |
 +=====================================+===============================+================================================================================+
-| ``-h``, ``--help``                  |                               | Print help message.                                                            |
-+-------------------------------------+-------------------------------+--------------------------------------------------------------------------------+
 | ``-r {file}`` |br|                  |                               | Report file name. If this option is not specified, no report file be produced. |
 | ``--report ...``                    |                               | See :ref:`below <ref-assemble-report>` for detailed description of report      |
 |                                     |                               | fields.                                                                        |
