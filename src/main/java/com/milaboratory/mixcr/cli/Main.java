@@ -27,6 +27,7 @@ public final class Main {
 
     public static void handleParseResult(ParseResult parseResult, String[] args) {
         ExceptionHandler<Object> exHandler = new ExceptionHandler<>();
+        exHandler.andExit(1);
         RunLast runLast = new RunLast() {
             @Override
             protected List<Object> handle(ParseResult parseResult) throws CommandLine.ExecutionException {
@@ -37,9 +38,7 @@ public final class Main {
                     try {
                         ((Runnable) ((CommandSpec) command).userObject()).run();
                         return new ArrayList<>();
-                    } catch (ParameterException ex) {
-                        throw ex;
-                    } catch (CommandLine.ExecutionException ex) {
+                    } catch (ParameterException | CommandLine.ExecutionException ex) {
                         throw ex;
                     } catch (Exception ex) {
                         throw new CommandLine.ExecutionException(commandLine,
@@ -143,8 +142,14 @@ public final class Main {
     public static CommandLine parseArgs(String... args) {
         if (args.length == 0)
             args = new String[]{"help"};
+        ExceptionHandler exHandler = new ExceptionHandler();
+        exHandler.andExit(1);
         CommandLine cmd = mkCmd();
-        cmd.parseArgs(args);
+        try {
+            cmd.parseArgs(args);
+        } catch (ParameterException ex) {
+            exHandler.handleParseException(ex, args);
+        }
         return cmd;
     }
 
