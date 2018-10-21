@@ -382,9 +382,6 @@ The above command executes to the following pipeline:
 Saving links between initial reads and clones
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-FIXME: broken
-
-
 In this example we demonstrate how to extract initial read headers for assembled clonotypes. On the ``align`` step additional ``--save-reads`` option should be specified in order to store initial reads in the resulting ``.vdjca`` file: 
 
 .. code-block:: console
@@ -401,7 +398,7 @@ Having this, it is possible to export original read headers with corresponding c
 
 .. code-block:: console
 
-  > mixcr exportAlignments -cloneId -descrR1 -descrR2 clones.clna alignments.txt
+  > mixcr exportAlignments -cloneId 10 2313 88142 -descrR1 -descrR2 clones.clna alignments.txt
 
 The resulting file ``alignments.txt`` will looks like:
 
