@@ -14,14 +14,11 @@ import java.util.stream.Collectors;
 /**
  *
  */
-public abstract class ACommand implements Runnable {
+public abstract class ACommand extends ABaseCommand implements Runnable {
     /** queue of warning messages */
     private List<String> warningsQueue = new ArrayList<>();
     /** flag that signals we are entered the run method */
     private boolean running;
-
-    @Spec
-    public CommandSpec spec; // injected by picocli
 
     @Option(names = {"-nw", "--no-warnings"},
             description = "suppress all warning messages")
@@ -30,25 +27,6 @@ public abstract class ACommand implements Runnable {
     @Option(description = "Verbose warning messages.",
             names = {"--verbose"})
     public boolean verbose = false;
-
-    /** Throws validation exception */
-    public void throwValidationException(String message, boolean printHelp) {
-        throw new ValidationException(spec.commandLine(), message, printHelp);
-    }
-
-    /** Throws validation exception */
-    public void throwValidationException(String message) {
-        throwValidationException(message, true);
-    }
-
-    /** Throws execution exception */
-    public void throwExecutionException(String message) {
-        throw new ExecutionException(spec.commandLine(), message);
-    }
-
-    public String getCommandLineArguments() {
-        return spec.commandLine().getParseResult().originalArgs().stream().collect(Collectors.joining(" "));
-    }
 
     /** Warning message */
     public void warn(String message) {
