@@ -42,8 +42,17 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class IOUtil {
+    public static final String MAGIC_FILE_END = "#MiXCR.File.End#";
+    private static final byte[] MAGIC_FILE_END_BYTES = MAGIC_FILE_END.getBytes(StandardCharsets.US_ASCII);
+    public static final int MAGIC_FILE_END_BYTES_SIZE = MAGIC_FILE_END_BYTES.length;
+
+    public static byte[] getMagicFileEndBytes() {
+        return MAGIC_FILE_END_BYTES.clone();
+    }
+
     public static void writeAndRegisterGeneReferences(PrimitivO output, List<VDJCGene> genes,
                                                       HasFeatureToAlign featuresToAlign) {
         // Writing gene ids
@@ -171,6 +180,47 @@ public class IOUtil {
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     *
+     */
+    public static final class MiXCRFileInfo {
+        /**
+         * MiXCR file type, or null if not a MiXCR file format.
+         */
+        final MiXCRFileType fileType;
+
+        /**
+         * Full magic bytes string.
+         */
+        final String fullMagic;
+
+        /**
+         * True if file integrity check succeeded. The command generated the file was not prematurely interrupted.
+         */
+        final boolean complete;
+
+        public MiXCRFileInfo(MiXCRFileType fileType, String fullMagic, boolean complete) {
+            this.fileType = fileType;
+            this.fullMagic = fullMagic;
+            this.complete = complete;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof MiXCRFileInfo)) return false;
+            MiXCRFileInfo that = (MiXCRFileInfo) o;
+            return complete == that.complete &&
+                    fileType == that.fileType &&
+                    Objects.equals(fullMagic, that.fullMagic);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(fileType, fullMagic, complete);
         }
     }
 }
