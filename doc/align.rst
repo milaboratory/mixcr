@@ -8,6 +8,9 @@
 Alignment
 =========
 
+.. tip:: 
+
+  MiXCR provides :ref:`analyze <ref-analyze>` command that packs a complicated execution pipelines (alignment, assembly, exporting etc.) into a single command. We recommend to use :ref:`analyze <ref-analyze>` for most types of input libraries instead of manual execution of all MiXCR analysis steps. Alignment options described in this section may be directly passed in :ref:`analyze <ref-analyze>` command using ``--align <option>`` option.
 
 The ``align`` command aligns raw sequencing reads to reference V, D, J and C genes of T- and B- cell receptors. It has the following syntax:
 
@@ -50,7 +53,7 @@ The following table describes command line options for ``align``:
 
     * - ``-p {parameterName}`` |br| ``--parameters ...``
       - ``default``
-      - Preset of parameters. Possible values: ``default`` and ``rna-seq``. The ``rna-seq`` preset are specifically optimized for analysis of Rna-Seq data :ref:`(see below) <ref-rna-seq>`
+      - Preset of parameters. Possible values: ``default``, ``kAligner2`` (B-cell analysis with long gaps) and ``rna-seq``. The ``kAligner2`` preset are specifically optimized for analysis of BCR data. The ``rna-seq`` preset are specifically optimized for analysis of Rna-Seq data :ref:`(see below) <ref-rna-seq>`
 
     * - ``-t {numberOfThreads}`` |br| ``--threads ...``
       - number of CPU cores in the system

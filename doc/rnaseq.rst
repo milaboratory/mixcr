@@ -7,15 +7,15 @@
 Processing RNA-seq and non-targeted genomic data
 ================================================
 
-.. note::
-  
-  The procedure described here applies to analysis of sequencing data from non-enriched and/or randomly-shred (c)DNA libraries, like `RNA-Seq <https://en.wikipedia.org/wiki/RNA-Seq>`_. For analysis of targeted RepSeq data, please see :ref:`examples <ref-examples>`  from quick start.
+.. tip:: 
+
+  MiXCR provides :ref:`analyze <ref-analyze>` command that packs a complicated execution pipelines (alignment, assembly, exporting etc.) into a single command. We recommend to use :ref:`analyze shotgun <ref-analyze-shotgun>` for processing `shotgun <https://en.wikipedia.org/wiki/Shotgun_sequencing>`_ / `RNA-Seq <https://en.wikipedia.org/wiki/RNA-Seq>`_ / non-targeted / randomly-shred libraries. For analysis of targeted RepSeq data, please see :ref:`examples <ref-examples>`  from quick start.
 
 
 Overview
 --------
 
-Analysis method and quirks described here will also be useful for users who want to extract TCR or Ig repertoire from sequencing data of any other type of non-enriched or randomly shred cDNA / gDNA library.
+Analysis method described here will be useful for users who want to extract TCR or Ig repertoire from sequencing data of any other type of non-enriched or randomly shred cDNA / gDNA library.
 
 There are two main challenges of repertoire extraction from non-enriched and randomly-shred libraries:
 
@@ -170,7 +170,22 @@ The above parameters can be specified in e.g. the following way:
 ``extend`` action
 -----------------
 
+Command `extend` performed imputing of germline sequences to the uncovered edges of TCR alignments.
 
-TODO
+The following options are available for ``extend``:
+
++-------------------------+---------------+-----------------------------------------------------------+
+| Parameter               | Default value | Description                                               |
++=========================+===============+===========================================================+
+| ``"-q``, ``--quality"`` | ``30``        | Quality score of extended sequence.                       |
++-------------------------+---------------+-----------------------------------------------------------+
+| ``--v-anchor``          | ``CDR3Begin`` | V extension anchor point.                                 |
++-------------------------+---------------+-----------------------------------------------------------+
+| ``--j-anchor``          | ``CDR3End``   | J extension anchor point.                                 |
++-------------------------+---------------+-----------------------------------------------------------+
+| ``--min-v-score``       | ``100``       | Minimal V hit score to perform left extension.            |
++-------------------------+---------------+-----------------------------------------------------------+
+| ``--min-j-score``       | ``70``        | Minimal J hit score alignment to perform right extension. |
++-------------------------+---------------+-----------------------------------------------------------+
 
 

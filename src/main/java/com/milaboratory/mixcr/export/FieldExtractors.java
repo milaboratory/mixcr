@@ -295,8 +295,8 @@ public final class FieldExtractors {
             });
 
             descriptorsList.add(new FeatureExtractors.WithHeader("-nFeatureImputed",
-                    "Export nucleotide sequence of specified gene feature using letters from germline (marked lowercase) for unaligned regions",
-                    1, new String[]{"N. Inc. Seq. "}, new String[]{"nIncompleteSeq"}) {
+                    "Export nucleotide sequence of specified gene feature using letters from germline (marked lowercase) for uncovered regions",
+                    1, new String[]{"N. Inc. Seq. "}, new String[]{"nSeqImputed"}) {
                 @Override
                 protected String extractValue(VDJCObject object, GeneFeature[] parameters) {
                     GeneFeature geneFeature = parameters[parameters.length - 1];
@@ -308,8 +308,8 @@ public final class FieldExtractors {
             });
 
             descriptorsList.add(new FeatureExtractors.WithHeader("-aaFeatureImputed",
-                    "Export amino acid sequence of specified gene feature using letters from germline (marked lowercase) for unaligned regions",
-                    1, new String[]{"AA. Inc. Seq. "}, new String[]{"aaIncompleteSeq"}) {
+                    "Export amino acid sequence of specified gene feature using letters from germline (marked lowercase) for uncovered regions",
+                    1, new String[]{"AA. Inc. Seq. "}, new String[]{"aaSeqImputed"}) {
                 @Override
                 protected String extractValue(VDJCObject object, GeneFeature[] parameters) {
                     GeneFeature geneFeature = parameters[parameters.length - 1];
