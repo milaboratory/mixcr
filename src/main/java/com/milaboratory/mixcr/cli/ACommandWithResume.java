@@ -9,7 +9,7 @@ import picocli.CommandLine;
 public abstract class ACommandWithResume extends ACommandWithOutput {
     @CommandLine.Option(
             names = "--resume",
-            description = "try to resume the aborted execution")
+            description = "Try to resume interrupted execution")
     public boolean resume = false;
 
     /** returns the unique run configuration */

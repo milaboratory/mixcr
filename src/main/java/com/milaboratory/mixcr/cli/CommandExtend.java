@@ -36,21 +36,22 @@ public class CommandExtend extends ACommandWithResumeWithSingleInput {
             names = {"-c", "--chains"})
     public String chains = "TCR";
 
-    @Option(description = "Report file.",
+    @Option(description = CommonDescriptions.REPORT,
             names = {"-r", "--report"})
     public String reportFile;
 
-    @Option(description = "JSON report file.",
+    @Option(description = CommonDescriptions.JSON_REPORT,
             names = {"--json-report"})
     public String jsonReport = null;
 
-    @Option(description = "Quality score of extended sequence.",
+    @Option(description = "Quality score value to assign imputed sequences",
             names = {"-q", "--quality"})
     public byte extensionQuality = 30;
 
     public int threads = 2;
 
-    @Option(description = "Processing threads", names = {"-t", "--threads"})
+    @Option(description = "Processing threads",
+            names = {"-t", "--threads"})
     public void setThreads(int threads) {
         if (threads < 0)
             throwValidationException("-t / --threads must be positive");

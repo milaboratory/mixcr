@@ -27,11 +27,11 @@ public class CommandAssemblePartialAlignments extends ACommandWithResumeWithSing
     @Option(names = "-O", description = "Overrides default parameter values.")
     public Map<String, String> overrides = new HashMap<>();
 
-    @Option(description = "Report file.",
+    @Option(description = CommonDescriptions.REPORT,
             names = {"-r", "--report"})
     public String reportFile;
 
-    @Option(description = "JSON report file.",
+    @Option(description = CommonDescriptions.JSON_REPORT,
             names = {"--json-report"})
     public String jsonReport = null;
 

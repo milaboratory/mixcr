@@ -1,20 +1,17 @@
 package com.milaboratory.mixcr.cli;
 
-import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.util.StatusReporter;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.mixcr.assembler.*;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
-import com.milaboratory.primitivio.PipeWriter;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -44,21 +41,17 @@ public class CommandAssemble extends ACommandWithResumeWithSingleInput {
         this.threads = threads;
     }
 
-    @Option(description = "Report file",
+    @Option(description = CommonDescriptions.REPORT,
             names = {"-r", "--report"})
     public String reportFile;
 
-    @Option(description = "JSON report file.",
+    @Option(description = CommonDescriptions.JSON_REPORT,
             names = {"--json-report"})
     public String jsonReport;
 
-    @Option(description = "Buffers.",
+    @Option(description = "Show buffer statistics.",
             names = {"--buffers"}, hidden = true)
     public boolean reportBuffers;
-
-    @Option(description = ".",
-            names = {"-e", "--events"}, hidden = true)
-    public String events;
 
     @Option(description = "If this option is specified, output file will be written in \"Clones & " +
             "Alignments\" format (*.clna), containing clones and all corresponding alignments. " +
@@ -124,13 +117,6 @@ public class CommandAssemble extends ACommandWithResumeWithSingleInput {
         return alignerParameters;
     }
 
-    @Override
-    public void validate() {
-        super.validate();
-        if (events != null && new File(events).exists())
-            handleExistenceOfOutputFile(events);
-    }
-
     /**
      * Assemble report
      */
@@ -157,7 +143,7 @@ public class CommandAssemble extends ACommandWithResumeWithSingleInput {
 
         // Performing assembly
         try (CloneAssembler assembler = new CloneAssembler(assemblerParameters,
-                clna || events != null,
+                clna,
                 genes, alignerParameters.getFeaturesToAlignMap())) {
             // Creating event listener to collect run statistics
             report.setStartMillis(beginTimestamp);
@@ -228,12 +214,6 @@ public class CommandAssemble extends ACommandWithResumeWithSingleInput {
 
             if (jsonReport != null)
                 Util.writeJsonReport(jsonReport, report);
-
-            // Writing raw events (not documented feature)
-            if (events != null)
-                try (PipeWriter<ReadToCloneMapping> writer = new PipeWriter<>(events)) {
-                    CUtils.drain(assembler.getAssembledReadsPort(), writer);
-                }
         }
     }
 

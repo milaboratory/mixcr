@@ -82,7 +82,7 @@ The following parameters are optional:
       - ``false``
       - Whether to assemble full receptor sequences (:ref:`assembleContigs <ref-assembleContigs>`). This option may slow down the computation.
 
-    * - ``--export-germline``
+    * - ``--impute-germline-on-export``
       - ``false``
       - Use germline segments (printed with lowercase letters) for uncovered gene features.
       
@@ -207,7 +207,7 @@ The following parameters are optional:
       - ``false``
       - Whether to assemble full receptor sequences (:ref:`assembleContigs <ref-assembleContigs>`). This option may slow down the computation.
 
-    * - ``--export-germline``
+    * - ``--impute-germline-on-export``
       - ``false``
       - Use germline segments (printed with lowercase letters) for uncovered gene features.
   

@@ -32,7 +32,7 @@ import static cc.redberry.primitives.FilterUtil.and;
         separator = " ",
         description = "Export verbose information about alignments.")
 public class CommandExportAlignmentsPretty extends ACommandSimpleExport {
-    @Option(description = "Output only top number of clones",
+    @Option(description = "Output only top hits",
             names = {"-t", "--top"})
     public boolean onlyTop = false;
 
@@ -57,15 +57,15 @@ public class CommandExportAlignmentsPretty extends ACommandSimpleExport {
             names = {"-s", "--skip"})
     public Integer skipAfter = null;
 
-    @Option(description = "Only output alignments where CDR3 exactly equals to given sequence",
+    @Option(description = "Output only alignments where CDR3 exactly equals to given sequence",
             names = {"-e", "--cdr3-equals"})
     public String cdr3Equals = null;
 
-    @Option(description = "Only output alignments which contain a corresponding gene feature",
+    @Option(description = "Output only alignments which contain a corresponding gene feature",
             names = {"-g", "--feature"})
     public String feature = null;
 
-    @Option(description = "Only output alignments where target read contains a given substring",
+    @Option(description = "Output only alignments where target read contains a given substring",
             names = {"-r", "--read-contains"})
     public String readContains = null;
 

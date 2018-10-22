@@ -54,7 +54,7 @@ public class CommandAlign extends ACommandWithResume {
             descriptionKey = "file",
             paramLabel = "files",
             hideParamSyntax = true,
-            description = "file_R1.[fastq[.gz]|fasta] [file_R2.[fastq[.gz]|fasta]] alignments.vdjca")
+            description = "file_R1.(fastq[.gz]|fasta) [file_R2.fastq[.gz]] alignments.vdjca")
     private List<String> inOut = new ArrayList<>();
 
     @Override
@@ -67,21 +67,20 @@ public class CommandAlign extends ACommandWithResume {
         return inOut.subList(inOut.size() - 1, inOut.size());
     }
 
-    @Option(description = "Species (organism), as specified in library file or taxon id. " +
-            "Possible values: hs, HomoSapiens, musmusculus, mmu, hsa, 9606, 10090 etc.",
+    @Option(description = CommonDescriptions.SPECIES,
             names = {"-s", "--species"},
             required = true)
     public String species = null;
 
-    @Option(description = "Report file.",
+    @Option(description = CommonDescriptions.REPORT,
             names = {"-r", "--report"})
     public String reportFile = null;
 
-    @Option(description = "JSON report file.",
+    @Option(description = CommonDescriptions.JSON_REPORT,
             names = {"--json-report"})
     public String jsonReport = null;
 
-    @Option(description = "Specifies segments library for alignment",
+    @Option(description = "V/D/J/C gene library",
             names = {"-b", "--library"})
     public String library = "default";
 
@@ -104,27 +103,29 @@ public class CommandAlign extends ACommandWithResume {
             throwValidationException("ERROR: -n / --limit must be positive", false);
         this.limit = limit;
     }
-    
+
     @Option(description = "Parameters preset.",
             names = {"-p", "--parameters"})
     public String alignerParametersName = "default";
 
-    @Option(names = {"-O"}, description = "Overrides default parameter values")
+    @Option(names = {"-O"}, description = "Overrides default aligner parameter values")
     public Map<String, String> overrides = new HashMap<>();
 
     public String chains = "ALL";
 
-    @Option(description = "Specifies immunological chain gene(s) for alignment. If many, separate by comma ','. " +
+    @Option(description = "Specifies immunological chain / gene(s) for alignment. If many, separate by comma ','. " +
             "%nAvailable chains: IGH, IGL, IGK, TRA, TRB, TRG, TRD, etc...",
             names = {"-c", "--chains"},
             hidden = true)
     public void setChains(String chains) {
-        warn("Use --chains only for exportAlignments and exportClones");
+        warn("Don't use --chains option on the alignment step. See --chains parameter in exportAlignments and " +
+                "exportClones actions to limit output to a subset of receptor chains.");
         this.chains = chains;
     }
 
     @Option(description = "Do not merge paired reads.",
-            names = {"-d", "--no-merge"})
+            names = {"-d", "--no-merge"},
+            hidden = true)
     public boolean noMerge = false;
 
     @Deprecated
@@ -136,7 +137,7 @@ public class CommandAlign extends ACommandWithResume {
         throwValidationException("--save-description was removed in 3.0: use -OsaveOriginalReads=true instead");
     }
 
-    @Option(description = "Write alignment results for all input reads (even if alignment has failed).",
+    @Option(description = "Write alignment results for all input reads (even if alignment failed).",
             names = {"--write-all"})
     public boolean writeAllResults = false;
 
@@ -148,15 +149,15 @@ public class CommandAlign extends ACommandWithResume {
         throwValidationException("--save-reads was removed in 3.0: use -OsaveOriginalReads=true instead");
     }
 
-    @Option(description = "Write not aligned reads (R1).",
+    @Option(description = "Pipe not aligned R1 reads into separate file.",
             names = {"--not-aligned-R1"})
     public String failedReadsR1 = null;
 
-    @Option(description = "Write not aligned reads (R2).",
+    @Option(description = "Pipe not aligned R2 reads into separate file.",
             names = {"--not-aligned-R2"})
     public String failedReadsR2 = null;
 
-    @Option(description = "Buffers.",
+    @Option(description = "Show runtime buffer load.",
             names = {"--buffers"}, hidden = true)
     public boolean reportBuffers = false;
 

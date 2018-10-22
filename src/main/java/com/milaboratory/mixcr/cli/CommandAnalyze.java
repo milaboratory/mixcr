@@ -44,10 +44,14 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
         }
 
         @Override
-        public String key() { return key; }
+        public String key() {
+            return key;
+        }
 
         @Override
-        public String description() { return description; }
+        public String description() {
+            return description;
+        }
     }
 
 
@@ -70,10 +74,14 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
         }
 
         @Override
-        public String key() { return key; }
+        public String key() {
+            return key;
+        }
 
         @Override
-        public String description() { return description; }
+        public String description() {
+            return description;
+        }
     }
 
 
@@ -88,10 +96,14 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
         }
 
         @Override
-        public String key() { return key; }
+        public String key() {
+            return key;
+        }
 
         @Override
-        public String description() { return description; }
+        public String description() {
+            return description;
+        }
 
         static _5EndPrimers parse(String v) {
             return parse0(_5EndPrimers.class, v);
@@ -110,10 +122,14 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
         }
 
         @Override
-        public String key() { return key; }
+        public String key() {
+            return key;
+        }
 
         @Override
-        public String description() { return description; }
+        public String description() {
+            return description;
+        }
 
         static _3EndPrimers parse(String v) {
             return parse0(_3EndPrimers.class, v);
@@ -131,10 +147,14 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
         }
 
         @Override
-        public String key() { return key; }
+        public String key() {
+            return key;
+        }
 
         @Override
-        public String description() { return description; }
+        public String description() {
+            return description;
+        }
 
         static _Adapters parse(String v) {
             return parse0(_Adapters.class, v);
@@ -148,23 +168,33 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
     }
 
     static class _StartingMaterialCandidates extends EnumCandidates {
-        _StartingMaterialCandidates() { super(_Chains.class); }
+        _StartingMaterialCandidates() {
+            super(_Chains.class);
+        }
     }
 
     static class _ChainsCandidates extends EnumCandidates {
-        _ChainsCandidates() { super(_Chains.class); }
+        _ChainsCandidates() {
+            super(_Chains.class);
+        }
     }
 
     static class _5EndCandidates extends EnumCandidates {
-        _5EndCandidates() { super(_5EndPrimers.class); }
+        _5EndCandidates() {
+            super(_5EndPrimers.class);
+        }
     }
 
     static class _3EndCandidates extends EnumCandidates {
-        _3EndCandidates() { super(_3EndPrimers.class); }
+        _3EndCandidates() {
+            super(_3EndPrimers.class);
+        }
     }
 
     static class _AdaptersCandidates extends EnumCandidates {
-        _AdaptersCandidates() { super(_Adapters.class); }
+        _AdaptersCandidates() {
+            super(_Adapters.class);
+        }
     }
 
 
@@ -173,9 +203,8 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
     @Parameters(description = "input_file1 [input_file2] analysisOutputName")
     public List<String> inOut = new ArrayList<>();
 
-    @Option(names = {"-s", "--species"},
-            description = "Species (organism), as specified in library file or taxon id. " +
-                    "Possible values: hs, HomoSapiens, musmusculus, mmu, hsa, 9606, 10090 etc.",
+    @Option(description = CommonDescriptions.SPECIES,
+            names = {"-s", "--species"},
             required = true)
     public String species = "hs";
 
@@ -184,7 +213,7 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
     @Option(names = "--receptor-type",
             completionCandidates = _ChainsCandidates.class,
             description = "Receptor type. Possible values: ${COMPLETION-CANDIDATES}",
-            required = false /* This will be overriden for amplicon */)
+            required = false /* This will be overridden for amplicon */)
     public void setChains(String chains) {
         if (chains.equalsIgnoreCase("xcr"))
             this.chains = Chains.ALL;
@@ -202,16 +231,19 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
             required = true)
     public _StartingMaterial startingMaterial;
 
-    @Option(names = "--export-germline", description = "Export germline segments")
+    @Option(names = "--impute-germline-on-export", description = "Export germline segments")
     public boolean exportGermline = false;
 
-    @Option(names = "--only-productive", description = "Filter out-of-frame and stop-codons in export")
+    @Option(names = "--only-productive", description = "Filter out-of-frame sequences and clonotypes with stop-codons in " +
+            "clonal sequence export")
     public boolean onlyProductive = false;
 
-    @Option(names = "--contig-assembly", description = "Assemble full-length sequences. NOTE: this will take additional time.")
+    @Option(names = "--contig-assembly", description = "Assemble longest possible sequences from input data. " +
+            "Useful for shotgun-like data." +
+            "%nNOTE: this will substantially increase analysis time.")
     public boolean contigAssembly = false;
 
-    @Option(names = {"-r", "--report"}, description = "Report file.")
+    @Option(names = {"-r", "--report"}, description = "Report file path")
     public String report = null;
 
     @Option(names = {"--resume"}, description = "Try to resume aborted execution")
@@ -743,5 +775,6 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
                     //CommandAmplicon.class, // will be added programmatically in Main
                     //CommandShotgun.class   // will be added programmatically in Main
             })
-    public static class CommandAnalyzeMain {}
+    public static class CommandAnalyzeMain {
+    }
 }

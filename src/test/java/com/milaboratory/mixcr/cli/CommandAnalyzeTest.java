@@ -22,7 +22,7 @@ public class CommandAnalyzeTest {
             String out = TempFileManager.getTempFile().getAbsolutePath();
             CommandLine.ParseResult p = Main.parseArgs("analyze", "shotgun",
                     "--starting-material", "rna",
-                    "--export-germline",
+                    "--impute-germline-on-export",
                     "--contig-assembly",
                     "-s", "hs", "-f",
                     "--report", report,
@@ -48,7 +48,7 @@ public class CommandAnalyzeTest {
                     "--5-end", "v-primers",
                     "--3-end", "j-primers",
                     "--adapters", "no-adapters",
-                    "--export-germline",
+                    "--impute-germline-on-export",
                     "--contig-assembly",
                     "-s", "hs", "-f",
                     "--report", report,

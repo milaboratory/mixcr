@@ -14,6 +14,11 @@ public class MainTest {
         Main.main("analyze", "help", "amplicon");
     }
 
+    @Test
+    public void test2() {
+        Main.main("align", "help");
+    }
+
     @Ignore
     @Test
     public void test2_completion() {

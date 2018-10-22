@@ -963,7 +963,7 @@ function _picocli_mixcr_analyze_amplicon() {
   PREV_WORD=${COMP_WORDS[COMP_CWORD-1]}
 
   COMMANDS=""
-  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force --export-germline --only-productive --contig-assembly --resume --do-not-extend-alignments"
+  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force --impute-germline-on-export --only-productive --contig-assembly --resume --do-not-extend-alignments"
   ARG_OPTS="-s --species --starting-material -r --report --align --assemblePartial --extend --assemble --assembleContigs --export --assemble-partial-rounds --receptor-type --5-end --3-end --adapters --region-of-interest"
   startingMaterial_OPTION_ARGS="rna dna" # _StartingMaterial values
   chains_OPTION_ARGS="tcr bcr xcr tra trb trd trg igh igk igl" # --receptor-type values
@@ -1040,7 +1040,7 @@ function _picocli_mixcr_analyze_shotgun() {
   PREV_WORD=${COMP_WORDS[COMP_CWORD-1]}
 
   COMMANDS=""
-  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force --export-germline --only-productive --contig-assembly --resume --do-not-extend-alignments"
+  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force --impute-germline-on-export --only-productive --contig-assembly --resume --do-not-extend-alignments"
   ARG_OPTS="-s --species --starting-material -r --report --align --assemblePartial --extend --assemble --assembleContigs --export --assemble-partial-rounds --receptor-type"
   startingMaterial_OPTION_ARGS="rna dna" # _StartingMaterial values
   chains_OPTION_ARGS="tcr bcr xcr tra trb trd trg igh igk igl" # --receptor-type values

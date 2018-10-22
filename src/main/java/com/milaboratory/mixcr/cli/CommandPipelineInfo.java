@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
         separator = " ",
         description = "List all available library by scanning all library search paths.")
 public class CommandPipelineInfo extends ACommand {
-    @Parameters(description = "binary_file{.vdjca|.clns|.clna}[.gz]...")
+    @Parameters(description = "binary_file{.vdjca|.clns|.clna}...")
     public String input;
 
     @Option(description = "Print pipeline info in JSON format.",
