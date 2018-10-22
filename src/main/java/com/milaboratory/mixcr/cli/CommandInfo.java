@@ -24,7 +24,7 @@ import static com.milaboratory.mixcr.basictypes.IOUtil.detectFilType;
         separator = " ",
         description = "Outputs information about mixcr binary file.")
 public class CommandInfo extends ACommand {
-    @Parameters(description = "binary_file{.vdjca|.clns}[.gz]...", arity = "1..*")
+    @Parameters(description = "binary_file{.vdjca|.clns}...", arity = "1..*")
     public List<String> input;
 
     @Option(description = "Output information as table.",

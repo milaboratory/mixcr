@@ -21,7 +21,7 @@ import java.util.List;
         separator = " ",
         description = "Export original reads from vdjca file.")
 public class CommandExportReads extends ACommandWithOutput {
-    @Parameters(description = "input.vdjca[.gz] [output_R1.fastq[.gz] [output_R2.fastq[.gz]]]", arity = "1..3")
+    @Parameters(description = "input.vdjca [output_R1.fastq[.gz] [output_R2.fastq[.gz]]]", arity = "1..3")
     public List<String> inOut;
 
     @Override
