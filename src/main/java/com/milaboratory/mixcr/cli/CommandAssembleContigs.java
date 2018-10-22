@@ -46,7 +46,7 @@ public class CommandAssembleContigs extends ACommandWithResumeWithSingleInput {
     @Option(names = "-O", description = "Overrides default parameter values.")
     public Map<String, String> overrides = new HashMap<>();
 
-    @Option(description = "Report file.",
+    @Option(description = CommonDescriptions.REPORT,
             names = {"-r", "--report"})
     public String reportFile;
 
@@ -54,7 +54,7 @@ public class CommandAssembleContigs extends ACommandWithResumeWithSingleInput {
             names = {"--debug-report"}, hidden = true)
     public String debugReportFile;
 
-    @Option(description = "JSON report file.",
+    @Option(description = CommonDescriptions.JSON_REPORT,
             names = {"--json-report"})
     public String jsonReport = null;
 

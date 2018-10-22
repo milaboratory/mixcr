@@ -28,7 +28,7 @@ import static com.milaboratory.mixcr.cli.CommandSortAlignments.SORT_ALIGNMENTS_C
 @Command(name = SORT_ALIGNMENTS_COMMAND_NAME,
         sortOptions = true,
         separator = " ",
-        description = "Sort alignments in vdjca file.")
+        description = "Sort alignments in vdjca file by read id.")
 public class CommandSortAlignments extends ACommandWithResumeWithSingleInput {
     static final String SORT_ALIGNMENTS_COMMAND_NAME = "sortAlignments";
 

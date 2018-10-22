@@ -28,15 +28,15 @@ import java.util.stream.IntStream;
 @Command(name = "exportReadsForClones",
         sortOptions = true,
         separator = " ",
-        description = "Export reads for particular clones from \"clones & alignments\" file. " +
-                "Output file name will be modified to '_R1'/'_R2' in case of paired end reads. Use cloneId = -1 to " +
-                "export alignments not assigned to any clone. If no clone ids are specified (only input and output " +
-                "filenames are specified) all reads assigned to clonotypes will be exported.")
+        description = "Export reads for particular clones from \"clones & alignments\" (*.clna) file. " +
+                "Output file name will be transformed into '_R1'/'_R2' pair in case of paired end reads. Use cloneId = -1 to " +
+                "export alignments not assigned to any clone (not assembled). If no clone ids are specified (only input " +
+                "and output filenames are specified) all reads assigned to clonotypes will be exported.")
 public class CommandExportClonesReads extends ACommandWithOutput {
-    @Parameters(index = "0", description = "input_file")
+    @Parameters(index = "0", description = "input_file.clna")
     public String in;
 
-    @Parameters(index = "1", description = "[output_file]")
+    @Parameters(index = "1", description = "[output_file(.fastq[.gz]|fasta)]")
     public String out;
 
     @Option(names = "--id", description = "[cloneId1 [cloneId2 [cloneId3]]]", arity = "0..*")
@@ -52,7 +52,8 @@ public class CommandExportClonesReads extends ACommandWithOutput {
         return Collections.singletonList(out);
     }
 
-    @Option(description = "Create separate files for each clone. _clnN, where N is clone index will be added to the file name.",
+    @Option(description = "Create separate files for each clone. File or pair of '_R1'/'_R2' files, with '_clnN' suffix, " +
+            "where N is clone index, will be created for each clone index.",
             names = {"-s", "--separate"})
     public boolean separate = false;
 
@@ -72,8 +73,8 @@ public class CommandExportClonesReads extends ACommandWithOutput {
                 return;
 
             if (firstAlignment.getOriginalReads() == null)
-                throwValidationException("Error: original reads were not saved in the .vdjca file: " +
-                        "re-run align with '-OsaveOriginalReads=true' option.");
+                throwValidationException("Error: original reads were not saved in original .vdjca file: " +
+                        "re-run 'align' with '-OsaveOriginalReads=true' option.");
 
             int[] cid = getCloneIds();
             Supplier<IntStream> cloneIds;

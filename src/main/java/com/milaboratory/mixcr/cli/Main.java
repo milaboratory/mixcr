@@ -59,6 +59,8 @@ public final class Main {
     }
 
     public static CommandLine mkCmd() {
+        System.setProperty("picocli.usage.width", "100");
+
         // Getting command string if executed from script
         String command = System.getProperty("mixcr.command", "java -jar mixcr.jar");
 
