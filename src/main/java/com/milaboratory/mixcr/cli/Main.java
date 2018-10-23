@@ -108,13 +108,13 @@ public final class Main {
                 .addSubcommand("align", CommandAlign.class)
                 .addSubcommand("assemble", CommandAssemble.class)
                 .addSubcommand("assembleContigs", CommandAssembleContigs.class)
-                .addSubcommand("exportClones", CommandExport.mkClonesSpec())
 
                 .addSubcommand("assemblePartial", CommandAssemblePartialAlignments.class)
                 .addSubcommand("extend", CommandExtend.class)
 
                 .addSubcommand("exportAlignments", CommandExport.mkAlignmentsSpec())
                 .addSubcommand("exportAlignmentsPretty", CommandExportAlignmentsPretty.class)
+                .addSubcommand("exportClones", CommandExport.mkClonesSpec())
                 .addSubcommand("exportClonesPretty", CommandExportClonesPretty.class)
 
                 .addSubcommand("exportReadsForClones", CommandExportClonesReads.class)

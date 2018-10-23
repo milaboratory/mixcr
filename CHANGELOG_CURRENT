@@ -1,15 +1,14 @@
-New command ``assembleContigs`` for assembling full TCR/IG receptor sequences
-New command ``analyze`` for running complicated pipelines with one single command. Two pipelines which cover most practical cases are implemented ``analyze amplicon`` and ``analyze shotgun``
+New command ``assembleContigs`` for assembling longest possible contig TCR/IG receptor sequences from several intersecting sequences containing clonal sequence. E.g. assemble all possible sequence information outside CDR3.
+New command ``analyze`` for running optimized mixcr pipelines with one single command. Two pipelines which cover most practical cases are implemented ``analyze amplicon`` and ``analyze shotgun``.
 New file format ``.clna`` for storing clones with alignments including alignments <> clones mapping
-Replace ``extendAlignments`` with ``extend`` command which works both with alignments and clones
 Complete refactoring of command line interface
 New option ``--resume`` for resuming aborted / partially completed execution
-Implemented ``-nFeatureImputed`` and ``-aaFeatureImputed`` export fields which use germline sequences (marked lowercase) for uncovered receptor regions
-Implementation of compressed `.vdjca` files
+Implemented ``-nFeatureImputed`` and ``-aaFeatureImputed`` to export gene feature sequences imputing unavailable regions from germline sequences up to the full feature sequecn (marking imputed regions lowercase)
+LZ4 based compression `.vdjca`/`.clna` files, 3 ~ 4 fold file size reduction (built into file formats, enabled by default)
 Species option ``--species`` is now mandatory #342
-Removed ``--chains`` option for align #292
+Removed ``--chains`` option for `align` action #292
 Added export field ``-positionInReference``
-Now export fields like `-nMutationsRelative` supports alignment-attached gene features (e.g. this allows to export all mutations of V gene inside CDR3 region: `-nMutationsRelative VCDR3Part VRegionWithP`)
+Now export fields like `-nMutationsRelative` supports alignment-attached gene features (e.g. this allows to export all mutations of V gene inside CDR3 sub-regions: `-nMutationsRelative VCDR3Part VRegionWithP`)
 Now `align` action prints library-level warnings and citation notice
 Refactored command line interface of `exportReadsForClones`
 minor: fixes for #292 #280 #279 #208 #203 #421
