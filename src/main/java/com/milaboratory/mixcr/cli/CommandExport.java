@@ -133,7 +133,7 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
         OutputMode oMode = humanReadable ? OutputMode.HumanFriendly : OutputMode.ScriptingFriendly;
         List<FieldExtractor<? super T>> extractors = fields
                 .stream()
-                .map(f -> extractor(f, clazz, oMode))
+                .flatMap(f -> extractor(f, clazz, oMode).stream())
                 .collect(Collectors.toList());
 
         run1(extractors);
@@ -340,10 +340,23 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
     }
 
     @SuppressWarnings("unchecked")
-    FieldExtractor<T> extractor(FieldData fd, Class clazz, OutputMode m) {
+    <E> List<FieldExtractor<E>> extractor(FieldData fd, Class<E> clazz, OutputMode m) {
         for (Field f : FieldExtractors.getFields()) {
-            if (fd.field.equalsIgnoreCase(f.getCommand()) && f.canExtractFrom(clazz))
-                return f.create(m, fd.args);
+            if (fd.field.equalsIgnoreCase(f.getCommand()) && f.canExtractFrom(clazz)) {
+                if (f.nArguments() == 0) {
+                    if (fd.args.length != 1)
+                        throw new RuntimeException();
+                    return Collections.singletonList(f.create(m, new String[0]));
+                } else {
+                    int i = 0;
+                    ArrayList<FieldExtractor<E>> extractors = new ArrayList<>();
+                    while (i < fd.args.length) {
+                        extractors.add(f.create(m, Arrays.copyOfRange(fd.args, i, i + f.nArguments())));
+                        i += f.nArguments();
+                    }
+                    return extractors;
+                }
+            }
         }
         throwValidationException("illegal field: " + fd.field);
         return null;
@@ -491,6 +504,7 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                     .builder(field.getCommand())
                     .description(field.getDescription())
                     .required(false)
+                    .type(field.nArguments() > 0 ? String[].class : boolean.class)
                     .arity(String.valueOf(field.nArguments()))
                     .descriptionKey(field.getCommand() + " " + field.metaVars())
                     .build());
