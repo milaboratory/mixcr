@@ -11,5 +11,6 @@ Added export field ``-positionInReference``
 Now export fields like `-nMutationsRelative` supports alignment-attached gene features (e.g. this allows to export all mutations of V gene inside CDR3 sub-regions: `-nMutationsRelative VCDR3Part VRegionWithP`)
 Now `align` action prints library-level warnings and citation notice
 Refactored command line interface of `exportReadsForClones`
+Dropped support for Java 7
 minor: fixes for #292 #280 #279 #208 #203 #421
 minor: `--noMerge` option renamed to `--no-merge` in assemble action
