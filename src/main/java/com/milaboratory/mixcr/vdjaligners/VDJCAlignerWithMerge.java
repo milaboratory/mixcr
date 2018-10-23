@@ -30,9 +30,11 @@
 package com.milaboratory.mixcr.vdjaligners;
 
 import com.milaboratory.core.io.sequence.PairedRead;
+import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SingleReadImpl;
 import com.milaboratory.core.merger.MismatchOnlyPairedReadMerger;
 import com.milaboratory.core.merger.PairedReadMergingResult;
+import com.milaboratory.mixcr.basictypes.SequenceHistory;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import io.repseq.core.VDJCGene;
 
@@ -83,8 +85,25 @@ public final class VDJCAlignerWithMerge extends VDJCAligner<PairedRead> {
                     new SingleReadImpl(read.getId(), merged.getOverlappedSequence(), "")).alignment;
             if (listener != null)
                 listener.onSuccessfulSequenceOverlap(read, alignment);
-            if (alignment != null)
-                alignment.setTargetDescriptions(new String[]{"MOverlapped(" + getMMDescr(merged) + ")"});
+            if (alignment != null) {
+                boolean isRC = ((SequenceHistory.RawSequence) alignment.getHistory(0)).index.isReverseComplement;
+                alignment = alignment.setHistory(
+                        new SequenceHistory[]{
+                                new SequenceHistory.Merge(
+                                        SequenceHistory.OverlapType.SequenceOverlap,
+                                        new SequenceHistory.RawSequence(read.getId(),
+                                                (byte) (isRC ? 1 : 0), false,
+                                                (isRC ? read.getR2().getData().size() : read.getR1().getData().size())),
+                                        new SequenceHistory.RawSequence(read.getId(),
+                                                (byte) (isRC ? 0 : 1), merged.isReversed(),
+                                                (isRC ? read.getR1().getData().size() : read.getR2().getData().size())),
+                                        isRC
+                                                ? merged.getOffset() + read.getR2().getData().size() - read.getR1().getData().size()
+                                                : merged.getOffset(),
+                                        merged.getErrors())
+                        },
+                        parameters.isSaveOriginalReads() ? new SequenceRead[]{read} : null);
+            }
             return new VDJCAlignmentResult<>(read, alignment);
         } else
             return pairedAligner.process(read);

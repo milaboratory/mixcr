@@ -7,14 +7,25 @@
 Assemble clones
 ===============
 
-The ``assemble`` command builds a set of clones using alignments
-obtained with :ref:`align <ref-align>` command in order to extract
-specific gene regions (e.g. CDR3). The syntax of ``assemble`` is the
-following:
+.. tip:: 
+
+  MiXCR provides :ref:`analyze <ref-analyze>` command that packs a complicated execution pipelines (alignment, assembly, exporting etc.) into a single command. We recommend to use :ref:`analyze <ref-analyze>` for most types of input libraries instead of manual execution of all MiXCR analysis steps. Assembly options described in this section may be directly passed in :ref:`analyze <ref-analyze>` command using ``--assemble <option>`` option.
+
+The ``assemble`` command builds clonotypes from alignments obtained with :ref:`align <ref-align>`. Clonotypes assembly is performed for a chosen assembling feature (e.g. ``CDR3`` by default).
+
+The syntax is the following:
 
 ::
 
     mixcr assemble [options] alignments.vdjca output.clns
+
+or
+
+::
+
+    mixcr assemble [options] -a alignments.vdjca output.clna
+
+the latter command outputs result in a "clones & alignments" format, allowing subsequent :ref:`contig assembly <ref-assembleContigs>` and other actions requiring clone to alignment mapping.
 
 The following flowchart shows the pipeline of ``assemble``:
 
@@ -76,7 +87,7 @@ This pipeline consists of the following steps:
     all hits are known in advance); thus, better alignments will be built
     for each clonal sequence.
 
-6.  The result is written to the binary output file (``.clns``) with a
+6.  The result is written to the binary output file (``.clns`` or ``.clna``) with a
     comprehensive information about clones.
 
 Command line parameters
@@ -87,8 +98,6 @@ The command line options of ``assemble`` are the following:
 +-------------------------------------+-------------------------------+--------------------------------------------------------------------------------+
 | Option                              | Default value                 | Description                                                                    |
 +=====================================+===============================+================================================================================+
-| ``-h``, ``--help``                  |                               | Print help message.                                                            |
-+-------------------------------------+-------------------------------+--------------------------------------------------------------------------------+
 | ``-r {file}`` |br|                  |                               | Report file name. If this option is not specified, no report file be produced. |
 | ``--report ...``                    |                               | See :ref:`below <ref-assemble-report>` for detailed description of report      |
 |                                     |                               | fields.                                                                        |
@@ -96,8 +105,8 @@ The command line options of ``assemble`` are the following:
 | ``-t {numberOfProcessors}`` |br|    | number of available CPU cores | Number of processing threads.                                                  |
 | ``--threads ...``                   |                               |                                                                                |
 +-------------------------------------+-------------------------------+--------------------------------------------------------------------------------+
-| ``-i {indexFile}`` |br|             |                               | Specify file which will store information about particular reads aggreagated   |
-| ``--index ...``                     |                               | by each clone (mapping readId -> cloneId).                                     |
+| ``-a``, ``--write-alignments``      |                               | Save initial alignments and alignments <> clones mapping in the resulting      |
+|                                     |                               | ``.clna`` file.                                                                |
 +-------------------------------------+-------------------------------+--------------------------------------------------------------------------------+
 | ``-Oparameter=value``               |                               | Overrides default value of assembler ``parameter`` (see next subsection).      |
 +-------------------------------------+-------------------------------+--------------------------------------------------------------------------------+

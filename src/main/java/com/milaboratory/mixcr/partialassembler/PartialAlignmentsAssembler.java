@@ -111,7 +111,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
     }
 
     public void buildLeftPartsIndex(VDJCAlignmentsReader reader) {
-        writer.header(reader.getParameters(), reader.getUsedGenes());
+        writer.header(reader.getParameters(), reader.getUsedGenes(), null);
         for (VDJCAlignments alignment : CUtils.it(reader)) {
             if (alignment.getFeature(GeneFeature.CDR3) != null)
                 continue;
@@ -167,7 +167,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
                 continue;
             }
             List<AlignedTarget> mergedTargets = searchResult.result;
-            VDJCMultiRead mRead = new VDJCMultiRead(alignment.getReadId(), mergedTargets);
+            VDJCMultiRead mRead = new VDJCMultiRead(mergedTargets);
 
             final VDJCAlignments mAlignment = aligner.process(mRead).alignment;
 
@@ -239,10 +239,6 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
             }
 
             overlapped.incrementAndGet();
-            String[] descriptions = new String[mRead.numberOfReads()];
-            for (int i = 0; i < mRead.numberOfReads(); i++)
-                descriptions[i] = mRead.getRead(i).getDescription();
-            mAlignment.setTargetDescriptions(descriptions);
             totalWritten.incrementAndGet();
             writer.write(mAlignment);
 
@@ -324,7 +320,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
                     boolean isOverOverlapped = false;
                     final VDJCAlignments leftAl = match.get(i).getAlignments();
 
-                    if (blackList.contains(leftAl.getReadId()))
+                    if (blackList.contains(leftAl.getAlignmentsIndex()))
                         continue;
 
                     if (leftAl.getAlignmentsIndex() == rightAl.getAlignmentsIndex() || // You shall not merge with yourself
@@ -345,13 +341,14 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
                             .getSequence().getSequence();
                     int lFrom = match.get(i).kMerPositionFrom;
 
+                    // begin and end in the coordinates of left
                     int delta, begin = delta = lFrom - rFrom;
                     if (begin < 0) {
                         begin = 0;
                         isOverOverlapped = true;
                     }
                     int end = leftSeq.size();
-                    if (end - delta >= rightSeq.size()) {
+                    if (end >= rightSeq.size() + delta) {
                         end = rightSeq.size() + delta;
                         isOverOverlapped = true;
                     }
@@ -382,16 +379,15 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
             final KMerInfo left = maxOverlapList.remove(maxOverlapIndexInList);
             VDJCAlignments leftAl = left.alignments;
 
-            final long readId = rightAl.getReadId();
+            //final long readId = rightAl.getReadId();
 
-            ArrayList<AlignedTarget> leftTargets = extractAlignedTargets(leftAl, true);
-            ArrayList<AlignedTarget> rightTargets = extractAlignedTargets(rightAl, false);
+            ArrayList<AlignedTarget> leftTargets = extractAlignedTargets(leftAl);
+            ArrayList<AlignedTarget> rightTargets = extractAlignedTargets(rightAl);
 
             AlignedTarget leftCentral = leftTargets.get(left.targetId);
             AlignedTarget rightCentral = rightTargets.get(rightTargetId);
 
-            AlignedTarget central = targetMerger.merge(readId, leftCentral, rightCentral, maxDelta)
-                    .overrideDescription("VJOverlap(" + maxOverlap + ") = " + leftCentral.getDescription() + " + " + rightCentral.getDescription());
+            AlignedTarget central = targetMerger.merge(leftCentral, rightCentral, maxDelta, SequenceHistory.OverlapType.CDR3Overlap, 0);
 
             // Setting overlap position
             central = AlignedTarget.setOverlapRange(central, maxBegin, maxEnd);
@@ -419,10 +415,10 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
                 do {
                     bestI = -1;
                     for (int i = 0; i < descriptors.size(); i++) {
-                        TargetMerger.TargetMergingResult result = targetMerger.merge(readId, descriptors.get(i), central);
+                        TargetMerger.TargetMergingResult result = targetMerger.merge(descriptors.get(i), central);
                         if (result.failedDueInconsistentAlignments()) {
                             // Inconsistent alignments -> retry
-                            blackList.add(leftAl.getReadId());
+                            blackList.add(leftAl.getAlignmentsIndex());
                             continue SEARCH_LEFT_PARTS;
                         }
                         if (bestResult.getScore() < result.getScore()) {
@@ -433,11 +429,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
 
                     if (bestI != -1) {
                         assert bestResult != TargetMerger.FAILED_RESULT;
-                        central = bestResult.getResult().overrideDescription(
-                                central.getDescription() + " / " + mergeTypePrefix(bestResult.isUsingAlignments()) + "MergedFrom" +
-                                        (descriptors == leftDescriptors ? "Left" : "Right") +
-                                        "(" + getMMDescr(bestResult.getMatched(), bestResult.getMismatched()) + ") = " +
-                                        descriptors.get(bestI).getDescription());
+                        central = bestResult.getResult();
                         descriptors.remove(bestI);
                     }
                 } while (bestI != -1);
@@ -449,17 +441,14 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
                 List<AlignedTarget> descriptors = allDescriptors[d];
                 for (int i = 0; i < descriptors.size(); i++)
                     for (int j = i + 1; j < descriptors.size(); j++) {
-                        TargetMerger.TargetMergingResult result = targetMerger.merge(readId, descriptors.get(i), descriptors.get(j));
+                        TargetMerger.TargetMergingResult result = targetMerger.merge(descriptors.get(i), descriptors.get(j));
                         if (result.failedDueInconsistentAlignments()) {
                             // Inconsistent alignments -> retry
-                            blackList.add(leftAl.getReadId());
+                            blackList.add(leftAl.getAlignmentsIndex());
                             continue SEARCH_LEFT_PARTS;
                         }
                         if (result.isSuccessful()) {
-                            descriptors.set(i, result.getResult().overrideDescription(
-                                    mergeTypePrefix(result.isUsingAlignments()) +
-                                            "Merged(" + getMMDescr(result.getMatched(), result.getMismatched()) + ") = " + descriptors.get(i).getDescription() +
-                                            " + " + descriptors.get(j).getDescription()));
+                            descriptors.set(i, result.getResult());
                             descriptors.remove(j);
                             --d;
                             continue outer;
@@ -685,21 +674,12 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
         public VDJCAlignments getAlignments() {
             return alignments;
         }
-
     }
 
-    private static AlignedTarget overrideDescription(AlignedTarget target, boolean isLeft) {
-        String descr = (isLeft ? "L" : "R") + target.getAlignments().getReadId() + "." + target.getTargetId();
-        String oldDescr = target.getDescription();
-        if (oldDescr != null)
-            descr += "[" + oldDescr + "]";
-        return target.overrideDescription(descr);
-    }
-
-    public static ArrayList<AlignedTarget> extractAlignedTargets(VDJCAlignments alignments, boolean isLeft) {
+    public static ArrayList<AlignedTarget> extractAlignedTargets(VDJCAlignments alignments) {
         ArrayList<AlignedTarget> targets = new ArrayList<>(alignments.numberOfTargets());
         for (int i = 0; i < alignments.numberOfTargets(); i++)
-            targets.add(overrideDescription(new AlignedTarget(alignments, i), isLeft));
+            targets.add(new AlignedTarget(alignments, i));
         return targets;
     }
 

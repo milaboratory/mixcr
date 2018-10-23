@@ -8,25 +8,24 @@
 Alignment
 =========
 
+.. tip:: 
+
+  MiXCR provides :ref:`analyze <ref-analyze>` command that packs a complicated execution pipelines (alignment, assembly, exporting etc.) into a single command. We recommend to use :ref:`analyze <ref-analyze>` for most types of input libraries instead of manual execution of all MiXCR analysis steps. Alignment options described in this section may be directly passed in :ref:`analyze <ref-analyze>` command using ``--align <option>`` option.
 
 The ``align`` command aligns raw sequencing reads to reference V, D, J and C genes of T- and B- cell receptors. It has the following syntax:
 
 ::
 
-    mixcr align [options] input_file1 [input_file2] output_file.vdjca
+    mixcr align --species <species> [options] input_file1 [input_file2] output_file.vdjca
 
 MiXCR supports ``fasta``, ``fastq``, ``fastq.gz`` and paired-end ``fastq`` and ``fastq.gz`` input. In case of paired-end reads two input files should be specified.
 
-.. raw:: html
+To print help use:
 
-   <!-- 
+::
 
-   MiXCR uses the following algorithms in case of single and paired-end reads: 
+    mixcr help align
 
-    * In case of single reads it <span style="color: red;">WRITE DESCRIPTION</span>
-    * in case of paired-end reads it <span style="color: red;">WRITE DESCRIPTION</span>
-
-   -->
 
 .. _ref-align-cli-params:
 
@@ -34,7 +33,7 @@ Command line parameters
 -----------------------
 
 
-The following table contains description of command line options for ``align``:
+The following table describes command line options for ``align``:
 
 .. list-table::
     :widths: 15 10 30
@@ -44,25 +43,17 @@ The following table contains description of command line options for ``align``:
       - Default value
       - Description
 
-    * - ``-h``, ``--help``
-      -
-      - Print help message.
-
     * - ``-r {file}`` |br| ``--report ...``
       -
       - Report file name. If this option is not specified, no report file be produced. See :ref:`below <ref-align-report>` for detailed description of report fields.
 
-    * - ``-с {chain}`` |br| ``--chains ...``
-      - ``ALL``
-      - Available values: ``IGH``, ``IGL``, ``IGK``, ``TRA``, ``TRB``, ``TRG``, ``TRD``, ``IG`` (for all immunoglobulin  chains), ``TCR`` (for all T-cell receptor chains), ``ALL`` (for all chains) . It is highly recommended to use the default value for this parameter. Filtering is also possible at the export step.
-
     * - ``-s {speciesName}`` |br| ``--species ...``
-      - ``HomoSapiens``
-      - Species (organism). Possible values: ``hsa`` (or ``HomoSapiens``), ``mmu`` (or ``MusMusculus``), ``rat`` (currently only ``TRB``, ``TRA`` and ``TRD`` are supported), or any species from IMGT |reg| library, if it is used (see here :ref:`import segments <ref-importSegments>`)
+      - 
+      - Species (organism). This option is required. Possible values: ``hsa`` (or ``HomoSapiens``), ``mmu`` (or ``MusMusculus``), ``rat`` (currently only ``TRB``, ``TRA`` and ``TRD`` are supported), or any species from IMGT |reg| library, if it is used (see here :ref:`import segments <ref-importSegments>`)
 
     * - ``-p {parameterName}`` |br| ``--parameters ...``
       - ``default``
-      - Preset of parameters. Possible values: ``default`` and ``rna-seq``. The ``rna-seq`` preset are specifically optimized for analysis of Rna-Seq data :ref:`(see below) <ref-alignRNASeq>`
+      - Preset of parameters. Possible values: ``default``, ``kAligner2`` (B-cell analysis with long gaps) and ``rna-seq``. The ``kAligner2`` preset are specifically optimized for analysis of BCR data. The ``rna-seq`` preset are specifically optimized for analysis of Rna-Seq data :ref:`(see below) <ref-rna-seq>`
 
     * - ``-t {numberOfThreads}`` |br| ``--threads ...``
       - number of CPU cores in the system
@@ -80,6 +71,10 @@ The following table contains description of command line options for ``align``:
       -
       - Copy original reads from ``.fastq`` or ``.fasta`` to ``.vdjca`` file (this option is required for further export of original reads, e.g. to export reads aggregated into a clone; see :ref:`this section <ref-exporting-reads>` for details).
 
+    * - ``--no-merge``
+      -
+      - Do not try to merge paired reads.
+
     * - ``--not-aligned-R1`` |br| ``--not-aligned-R2``
       -
       - Write all reads that were not aligned (R1 / R2 correspondingly) to the specific file.
@@ -88,12 +83,14 @@ The following table contains description of command line options for ``align``:
       -
       - Overrides default value of aligner ``parameter`` (see next subsection).
 
-All parameters are optional.
+All parameters are optional except ``--species``.
+
+.. _ref-aligner-parameters:
 
 Aligner parameters
 ------------------
 
-MiXCR uses a wide range of parameters that controls aligner behaviour. There are some global parameters and gene-specific parameters organized in groups: ``vParameters``, ``dParameters``, ``jParameters`` and ``cParameters``. Each group of parameters may contain further subgroups of parameters etc. In order to override some parameter value one can use ``-O`` followed by fully qualified parameter name and parameter value (e.g. ``-Ogroup1.group2.parameter=value``).
+MiXCR uses a wide range of parameters that controls aligner behaviour. There are some global parameters and gene-specific parameters organized in groups: ``vParameters``, ``dParameters``, ``jParameters`` and ``cParameters``. Each group of parameters may contains further subgroups of parameters etc. In order to override some parameter value one can use ``-O`` followed by fully qualified parameter name and parameter value (e.g. ``-Ogroup1.group2.parameter=value``).
 
 One of the key MiXCR features is ability to specify particular :ref:`gene regions <ref-geneFeatures>` which will be extracted from reference and used as a targets for alignments. Thus, each sequencing read will be aligned to these extracted reference regions. Parameters responsible for target gene regions are:
 
@@ -119,9 +116,14 @@ One can override default gene regions in the following way:
 
 Other global aligner parameters are:
 
+
 +------------------------------------+---------------+---------------------------------------------------------------------------------------+
 | Parameter                          | Default value | Description                                                                           |
 +====================================+===============+=======================================================================================+
+|  ``saveOriginalReads``             | ``false``     | Save original sequencing reads in ``.vdjca`` file.                                    |
++------------------------------------+---------------+---------------------------------------------------------------------------------------+
+|  ``allowPartialAlignments``        | ``false``     | Save incomplete alignments (e.g. only V / only J) in ``.vdjca`` file                  |
++------------------------------------+---------------+---------------------------------------------------------------------------------------+
 |  ``allowChimeras``                 | ``false``     | Accept alignments with different loci of V and J genes (by default such alignments    |
 |                                    |               | are dropped).                                                                         |
 +------------------------------------+---------------+---------------------------------------------------------------------------------------+
@@ -159,7 +161,10 @@ One can override these parameters in the following way:
 
 ::
 
-    mixcr align -OmaxHits=3 input_file1 [input_file2] output_file.vdjca
+    mixcr align --species hs -OmaxHits=3 input_file1 [input_file2] output_file.vdjca
+
+
+.. _ref-vdjc-aligners-parameters:
 
 V, J and C aligners parameters
 ------------------------------
@@ -203,7 +208,8 @@ These parameters can be overridden like in the following example:
 
 ::
 
-    mixcr align -OvParameters.parameters.minAlignmentLength=30 \
+    mixcr align --species hs  \
+                -OvParameters.parameters.minAlignmentLength=30 \
                 -OjParameters.parameters.relativeMinScore=0.7 \ 
                 input_file1 [input_file2] output_file.vdjca
 
@@ -229,11 +235,11 @@ Scoring parameters can be overridden in the following way:
 
 ::
 
-    mixcr align -OvParameters.parameters.scoring.gapPenalty=-20 input_file1 [input_file2] output_file.vdjca
+    mixcr align --species hs -OvParameters.parameters.scoring.gapPenalty=-20 input_file1 [input_file2] output_file.vdjca
 
 ::
 
-    mixcr align -OvParameters.parameters.scoring.subsMatrix=simple(match=4,mismatch=-11) \
+    mixcr align --species hs -OvParameters.parameters.scoring.subsMatrix=simple(match=4,mismatch=-11) \
                  input_file1 [input_file2] output_file.vdjca
 
 .. _ref-dAlignerParameters:
@@ -260,11 +266,9 @@ One can override these parameters like in the following example:
 
 ::
 
-    mixcr align -OdParameters.absoluteMinScore=10 input_file1 [input_file2] output_file.vdjca
+    mixcr align --species hs -OdParameters.absoluteMinScore=10 input_file1 [input_file2] output_file.vdjca
 
 Scoring parameters for D aligner are the following:
-
-   |
 
 +-------------------------+----------------------------------------+--------------------------------------------------------------------+
 | Parameter               | Default value                          | Description                                                        |
@@ -289,7 +293,7 @@ These parameters can be overridden in the following way:
 
 ::
 
-    mixcr align -OdParameters.scoring.gapExtensionPenalty=-5 input_file1 [input_file2] output_file.vdjca
+    mixcr align --species hs -OdParameters.scoring.gapExtensionPenalty=-5 input_file1 [input_file2] output_file.vdjca
 
 
 

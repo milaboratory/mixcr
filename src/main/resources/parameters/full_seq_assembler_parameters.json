@@ -1,0 +1,19 @@
+{
+  "default": {
+    "branchingMinimalQualityShare": 0.1,
+    "branchingMinimalSumQuality": 80,
+    "decisiveBranchingSumQualityThreshold": 120,
+    "outputMinimalQualityShare": 0.5,
+    "outputMinimalSumQuality": 50,
+    "alignedSequenceEdgeDelta": 3,
+    "alignmentEdgeRegionSize": 7,
+    "minimalNonEdgePointsFraction": 0.25,
+    "subCloningRegion": "CDR3",
+    "trimmingParameters": {
+      "averageQualityThreshold": 20.0,
+      "windowSize": 8
+    },
+    "minimalContigLength": 20,
+    "alignedRegionsOnly": false
+  }
+}

@@ -30,13 +30,15 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.alignment.Alignment;
+import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
+import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.Serializer;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
 
 import java.util.EnumMap;
@@ -81,34 +83,36 @@ class IO {
         @Override
         public void write(PrimitivO output, VDJCAlignments object) {
             output.writeObject(object.targets);
-            output.writeObject(object.targetDescriptions);
-            output.writeObject(object.originalSequences);
-            output.writeObject(object.originalDescriptions);
+            output.writeObject(object.originalReads);
+            output.writeObject(object.history);
             output.writeByte(object.hits.size());
             for (Map.Entry<GeneType, VDJCHit[]> entry : object.hits.entrySet()) {
                 output.writeObject(entry.getKey());
                 output.writeObject(entry.getValue());
             }
-            output.writeLong(object.readId);
+            output.writeByte(object.mappingType);
+            if (!ReadToCloneMapping.isDropped(object.mappingType))
+                output.writeVarInt(object.cloneIndex);
         }
 
         @Override
         public VDJCAlignments read(PrimitivI input) {
             NSequenceWithQuality[] targets = input.readObject(NSequenceWithQuality[].class);
-            String[] targetDescriptions = input.readObject(String[].class);
-            NSequenceWithQuality[] originalSequences = input.readObject(NSequenceWithQuality[].class);
-            String[] originalDescriptions = input.readObject(String[].class);
+            SequenceRead[] originalReads = input.readObject(SequenceRead[].class);
+            SequenceHistory[] history = input.readObject(SequenceHistory[].class);
             int size = input.readByte();
             EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
             for (int i = 0; i < size; i++) {
                 GeneType key = input.readObject(GeneType.class);
+                if (key == null)
+                    throw new RuntimeException("Illegal file format.");
                 hits.put(key, input.readObject(VDJCHit[].class));
             }
-            VDJCAlignments vdjcAlignments = new VDJCAlignments(input.readLong(), hits, targets);
-            vdjcAlignments.setTargetDescriptions(targetDescriptions);
-            vdjcAlignments.setOriginalSequences(originalSequences);
-            vdjcAlignments.setOriginalDescriptions(originalDescriptions);
-            return vdjcAlignments;
+            byte mappingType = input.readByte();
+            int cloneIndex = -1;
+            if (!ReadToCloneMapping.isDropped(mappingType))
+                cloneIndex = input.readVarInt();
+            return new VDJCAlignments(hits, targets, history, originalReads, mappingType, cloneIndex);
         }
 
         @Override
@@ -131,9 +135,8 @@ class IO {
                 output.writeObject(entry.getKey());
                 output.writeObject(entry.getValue());
             }
-            output.writeLong(object.count);
+            output.writeDouble(object.count);
             output.writeInt(object.id);
-            output.writeObject(object.assemblingFeatures);
         }
 
         @Override
@@ -145,10 +148,9 @@ class IO {
                 GeneType key = input.readObject(GeneType.class);
                 hits.put(key, input.readObject(VDJCHit[].class));
             }
-            long count = input.readLong();
+            double count = input.readDouble();
             int id = input.readInt();
-            GeneFeature[] assemblingFeatures = input.readObject(GeneFeature[].class);
-            return new Clone(targets, hits, assemblingFeatures, count, id);
+            return new Clone(targets, hits, count, id);
         }
 
         @Override

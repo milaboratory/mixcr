@@ -33,7 +33,6 @@ import cc.redberry.pipe.CUtils;
 import com.milaboratory.core.io.sequence.PairedRead;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.cli.ActionAlign;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.util.TempFileManager;
 import io.repseq.core.Chains;
@@ -77,7 +76,9 @@ public class RunMiXCRTest {
         RunMiXCR.AssembleResult assemble = RunMiXCR.assemble(align);
 
         File tempFile = TempFileManager.getTempFile();
-        CloneSetIO.write(assemble.cloneSet, tempFile);
+        try (ClnsWriter writer = new ClnsWriter(null, assemble.cloneSet, tempFile)) {
+            writer.write();
+        }
         CloneSet read = CloneSetIO.read(tempFile);
 
         System.out.println("Clns file size: " + tempFile.length());
@@ -112,6 +113,7 @@ public class RunMiXCRTest {
                 RunMiXCR.class.getResource("/sequences/test_R1.fastq").getFile(),
                 RunMiXCR.class.getResource("/sequences/test_R2.fastq").getFile());
 
+        params.alignerParameters.setSaveOriginalReads(true);
         //params.library = "human_TR";
         //params.species = "hs";
 
@@ -127,7 +129,7 @@ public class RunMiXCRTest {
 
         File tempFile = TempFileManager.getTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
-            writer.header(align.aligner);
+            writer.header(align.aligner, null);
             for (VDJCAlignments alignment : align.alignments)
                 writer.write(alignment);
         }
@@ -135,10 +137,10 @@ public class RunMiXCRTest {
         try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile)) {
             int tr = 0;
             for (VDJCAlignments alignment : CUtils.it(reader)) {
-                PairedRead actual = reads.get((int) alignment.getReadId());
+                PairedRead actual = reads.get((int) alignment.getMinReadId());
                 ++tr;
 
-                Assert.assertArrayEquals(ActionAlign.extractSequences(actual), alignment.getOriginalSequences());
+                Assert.assertEquals(actual, alignment.getOriginalReads().get(0));
             }
 
             System.out.println(tr);
@@ -164,7 +166,7 @@ public class RunMiXCRTest {
 
         File tempFile = TempFileManager.getTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
-            writer.header(align.aligner);
+            writer.header(align.aligner, null);
             for (VDJCAlignments alignment : align.alignments)
                 writer.write(alignment);
         }
@@ -172,13 +174,33 @@ public class RunMiXCRTest {
         try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile)) {
             int tr = 0;
             for (VDJCAlignments alignment : CUtils.it(reader)) {
-                PairedRead actual = reads.get((int) alignment.getReadId());
+                PairedRead actual = reads.get((int) alignment.getMinReadId());
                 ++tr;
 
-                Assert.assertArrayEquals(ActionAlign.extractSequences(actual), alignment.getOriginalSequences());
+                Assert.assertEquals(actual, alignment.getOriginalReads().get(0));
             }
 
             System.out.println(tr);
+        }
+    }
+
+    @Test
+    public void test4() throws Exception {
+        RunMiXCR.RunMiXCRAnalysis params = new RunMiXCR.RunMiXCRAnalysis(
+                RunMiXCR.class.getResource("/sequences/sample_IGH_R1.fastq").getFile(),
+                RunMiXCR.class.getResource("/sequences/sample_IGH_R2.fastq").getFile());
+
+        RunMiXCR.AlignResult align = RunMiXCR.align(params);
+        RunMiXCR.AssembleResult assemble0 = RunMiXCR.assemble(align, false);
+        RunMiXCR.FullSeqAssembleResult assemble = RunMiXCR.assembleContigs(assemble0);
+
+        for (Clone clone : assemble.cloneSet.getClones()) {
+            Chains vjLoci = VDJCAligner.getPossibleDLoci(clone.getHits(GeneType.Variable), clone.getHits(GeneType.Joining),
+                    null);
+            for (VDJCHit dHit : clone.getHits(GeneType.Diversity))
+                Assert.assertTrue(vjLoci.intersects(dHit.getGene().getChains()));
+
+            //ActionExportClonesPretty.outputCompact(System.out, clone);
         }
     }
 }

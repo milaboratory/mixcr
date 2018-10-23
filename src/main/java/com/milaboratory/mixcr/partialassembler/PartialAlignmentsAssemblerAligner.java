@@ -303,12 +303,14 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
                         dGeneTarget, nReads);
         }
 
-        final VDJCAlignments alignment = new VDJCAlignments(input.getId(),
+        final VDJCAlignments alignment = new VDJCAlignments(
                 vResult,
                 dResult,
                 jResult,
                 cutRelativeScore(vdjcHits.get(GeneType.Constant), parameters.getCAlignerParameters().getRelativeMinScore(), parameters.getMaxHits()),
-                targets
+                targets,
+                input.getHistory(),
+                input.getOriginalReads()
         );
         return new VDJCAlignmentResult<>(input, alignment);
     }

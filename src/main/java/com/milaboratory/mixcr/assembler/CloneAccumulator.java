@@ -167,7 +167,7 @@ public final class CloneAccumulator {
 
     public synchronized void accumulate(ClonalSequence data, VDJCAlignments alignment, boolean mapped) {
         if (!mapped) { // Core sequence accumulation
-            ++coreCount;
+            coreCount += alignment.getNumberOfReads();
 
             // Accumulate information about V-D-J alignments only for strictly clustered reads
             // (only for core clonotypes members)
@@ -189,19 +189,7 @@ public final class CloneAccumulator {
             }
 
             aggregator.aggregate(data.getConcatenated().getQuality());
-            //int pointer = 0;
-            //for (NSequenceWithQuality p : data) {
-            //    for (int i = 0; i < p.size(); ++i) {
-            //        final SequenceQuality q = p.getQuality();
-            //        if (quality[pointer] != MergerParameters.DEFAULT_MAX_QUALITY_VALUE)
-            //            if (quality[pointer] + q.value(i) > MergerParameters.DEFAULT_MAX_QUALITY_VALUE)
-            //                quality[pointer] = MergerParameters.DEFAULT_MAX_QUALITY_VALUE;
-            //            else
-            //                quality[pointer] += q.value(i);
-            //        ++pointer;
-            //    }
-            //}
         } else // Mapped sequence accumulation
-            ++mappedCount;
+            mappedCount += alignment.getNumberOfReads();
     }
 }

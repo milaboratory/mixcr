@@ -31,6 +31,7 @@ package com.milaboratory.mixcr.assembler;
 
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.*;
+import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
@@ -41,17 +42,25 @@ import gnu.trove.map.hash.TObjectFloatHashMap;
 import io.repseq.core.*;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
-class CloneFactory {
+public final class CloneFactory {
     final SingleDAligner dAligner;
     final CloneFactoryParameters parameters;
-    final HashMap<VDJCGeneId, VDJCGene> usedGenes;
+    final Map<VDJCGeneId, VDJCGene> usedGenes;
     final GeneFeature[] assemblingFeatures;
     final int indexOfAssemblingFeatureWithD;
     final EnumMap<GeneType, GeneFeature> featuresToAlign;
 
-    CloneFactory(CloneFactoryParameters parameters, GeneFeature[] assemblingFeatures,
-                 HashMap<VDJCGeneId, VDJCGene> usedGenes, EnumMap<GeneType, GeneFeature> featuresToAlign) {
+    public CloneFactory(CloneFactoryParameters parameters, GeneFeature[] assemblingFeatures,
+                        List<VDJCGene> usedGenes, EnumMap<GeneType, GeneFeature> featuresToAlign) {
+        this(parameters, assemblingFeatures,
+                usedGenes.stream().collect(Collectors.toMap(VDJCGene::getId, Function.identity())), featuresToAlign);
+    }
+
+    public CloneFactory(CloneFactoryParameters parameters, GeneFeature[] assemblingFeatures,
+                        Map<VDJCGeneId, VDJCGene> usedGenes, EnumMap<GeneType, GeneFeature> featuresToAlign) {
         this.parameters = parameters.clone();
         this.assemblingFeatures = assemblingFeatures.clone();
         this.usedGenes = usedGenes;
@@ -72,7 +81,9 @@ class CloneFactory {
         this.indexOfAssemblingFeatureWithD = indexOfAssemblingFeatureWithD;
     }
 
-    Clone create(int id, CloneAccumulator accumulator) {
+    public Clone create(int id, double count,
+                        EnumMap<GeneType, TObjectFloatHashMap<VDJCGeneId>> geneScores,
+                        NSequenceWithQuality[] targets) {
         EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
         for (GeneType geneType : GeneType.VJC_REFERENCE) {
             VJCClonalAlignerParameters vjcParameters = parameters.getVJCParameters(geneType);
@@ -81,8 +92,8 @@ class CloneFactory {
 
             GeneFeature featureToAlign = featuresToAlign.get(geneType);
 
-            TObjectFloatHashMap<VDJCGeneId> geneScores = accumulator.geneScores.get(geneType);
-            if (geneScores == null)
+            TObjectFloatHashMap<VDJCGeneId> gtGeneScores = geneScores.get(geneType);
+            if (gtGeneScores == null)
                 continue;
 
             GeneFeature[] intersectingFeatures = new GeneFeature[assemblingFeatures.length];
@@ -102,9 +113,9 @@ class CloneFactory {
                     }
             }
 
-            VDJCHit[] result = new VDJCHit[geneScores.size()];
+            VDJCHit[] result = new VDJCHit[gtGeneScores.size()];
             int pointer = 0;
-            TObjectFloatIterator<VDJCGeneId> iterator = geneScores.iterator();
+            TObjectFloatIterator<VDJCGeneId> iterator = gtGeneScores.iterator();
             while (iterator.hasNext()) {
                 iterator.advance();
                 VDJCGene gene = usedGenes.get(iterator.key());
@@ -135,7 +146,7 @@ class CloneFactory {
 
                     BandedAlignerParameters<NucleotideSequence> alignmentParameters = vjcParameters.getAlignmentParameters();
                     int referenceLength = rangeInReference.length();
-                    NucleotideSequence target = accumulator.getSequence().get(i).getSequence();
+                    NucleotideSequence target = targets[i].getSequence();
                     if (alignmentParameters.getScoring() instanceof LinearGapAlignmentScoring) {
                         if (leftSide == null) {
                             alignments[i] = BandedLinearAligner.align(
@@ -200,7 +211,7 @@ class CloneFactory {
 
         // D
 
-        NucleotideSequence sequenceToAlign = accumulator.getSequence().get(indexOfAssemblingFeatureWithD).getSequence();
+        NucleotideSequence sequenceToAlign = targets[indexOfAssemblingFeatureWithD].getSequence();
         int from = 0;
         int to = sequenceToAlign.size();
 
@@ -236,7 +247,11 @@ class CloneFactory {
         else
             hits.put(GeneType.Diversity, new VDJCHit[0]);
 
-        return new Clone(accumulator.getSequence().sequences, hits, assemblingFeatures, accumulator.getCount(), id);
+        return new Clone(targets, hits, count, id);
+    }
+
+    public Clone create(int id, CloneAccumulator accumulator) {
+        return create(id, accumulator.getCount(), accumulator.geneScores, accumulator.getSequence().sequences);
     }
 
     private static boolean containsD(GeneFeature feature) {

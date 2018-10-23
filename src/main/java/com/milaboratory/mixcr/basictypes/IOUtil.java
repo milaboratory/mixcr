@@ -39,19 +39,26 @@ import io.repseq.core.VDJCGeneId;
 import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
 public class IOUtil {
-    public static void writeGeneReferences(PrimitivO output, List<VDJCGene> genes,
-                                           HasFeatureToAlign featuresToAlign) {
+    public static void writeAndRegisterGeneReferences(PrimitivO output, List<VDJCGene> genes,
+                                                      HasFeatureToAlign featuresToAlign) {
         // Writing gene ids
         output.writeInt(genes.size());
         for (VDJCGene gene : genes)
             output.writeObject(gene.getId());
 
+        registerGeneReferences(output, genes, featuresToAlign);
+    }
+
+    public static void registerGeneReferences(PrimitivO output, List<VDJCGene> genes,
+                                              HasFeatureToAlign featuresToAlign) {
         // Putting genes references and feature sequences to be serialized/deserialized as references
         for (VDJCGene gene : genes) {
+            // Each gene is singleton
             output.putKnownReference(gene);
             // Also put sequences of certain gene features of genes as known references if required
             if (featuresToAlign != null) {
@@ -61,13 +68,14 @@ public class IOUtil {
                 NucleotideSequence featureSequence = gene.getFeature(featureToAlign);
                 if (featureSequence == null)
                     continue;
+                // Relies on the fact that sequences of gene features are cached,
+                // the same instance will be used everywhere (including alignments)
                 output.putKnownReference(gene.getFeature(featuresToAlign.getFeatureToAlign(gene.getGeneType())));
             }
         }
     }
 
-    public static List<VDJCGene> readGeneReferences(PrimitivI input, VDJCLibraryRegistry registry,
-                                                    HasFeatureToAlign featuresToAlign) {
+    public static List<VDJCGene> readGeneReferences(PrimitivI input, VDJCLibraryRegistry registry) {
         // Reading gene ids
         int count = input.readInt();
         List<VDJCGene> genes = new ArrayList<>(count);
@@ -79,6 +87,18 @@ public class IOUtil {
             genes.add(gene);
         }
 
+        return genes;
+    }
+
+    public static List<VDJCGene> readAndRegisterGeneReferences(PrimitivI input, VDJCLibraryRegistry registry,
+                                                               HasFeatureToAlign featuresToAlign) {
+        List<VDJCGene> genes = readGeneReferences(input, registry);
+        registerGeneReferences(input, genes, featuresToAlign);
+        return genes;
+    }
+
+    public static void registerGeneReferences(PrimitivI input, List<VDJCGene> genes,
+                                              HasFeatureToAlign featuresToAlign) {
         // Putting genes references and feature sequences to be serialized/deserialized as references
         for (VDJCGene gene : genes) {
             input.putKnownReference(gene);
@@ -93,8 +113,6 @@ public class IOUtil {
                 input.putKnownReference(featureSequence);
             }
         }
-
-        return genes;
     }
 
     public static InputStream createIS(String file) throws IOException {
@@ -123,5 +141,36 @@ public class IOUtil {
         if (ct == CompressionType.None)
             return new BufferedOutputStream(os, 65536);
         else return ct.createOutputStream(os, 65536);
+    }
+
+    public enum MiXCRFileType {
+        Clns, ClnA, VDJCA
+    }
+
+    public static MiXCRFileType detectFilType(String file) {
+        return detectFilType(new File(file));
+    }
+
+    public static MiXCRFileType detectFilType(File file) {
+        CompressionType ct = CompressionType.detectCompressionType(file);
+        try {
+            try (InputStream reader = ct.createInputStream(new FileInputStream(file))) {
+                byte[] data = new byte[10];
+                reader.read(data);
+                String magic = new String(data, StandardCharsets.US_ASCII);
+                switch (magic) {
+                    case "MiXCR.VDJC":
+                        return MiXCRFileType.VDJCA;
+                    case "MiXCR.CLNS":
+                        return MiXCRFileType.Clns;
+                    case "MiXCR.CLNA":
+                        return MiXCRFileType.ClnA;
+                    default:
+                        throw new IllegalArgumentException("Not a MiXCR file");
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

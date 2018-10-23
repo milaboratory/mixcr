@@ -50,19 +50,20 @@ import java.util.Objects;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.Serializable {
     @JsonIgnore
-    protected final EnumMap<GeneType, GeneAlignmentParameters> alignmentParameters;
-    protected VJAlignmentOrder vjAlignmentOrder;
-    protected boolean includeDScore, includeCScore;
-    protected float minSumScore;
-    protected int maxHits;
-    protected float relativeMinVFR3CDR3Score;
-    protected boolean allowPartialAlignments, allowNoCDR3PartAlignments, allowChimeras;
-    protected PairedEndReadsLayout readsLayout;
-    protected MergerParameters mergerParameters;
-    protected boolean fixSeed;
-    protected int alignmentBoundaryTolerance;
-    protected int minChimeraDetectionScore;
-    protected int vjOverlapWindow;
+    private final EnumMap<GeneType, GeneAlignmentParameters> alignmentParameters;
+    private VJAlignmentOrder vjAlignmentOrder;
+    private boolean includeDScore, includeCScore;
+    private float minSumScore;
+    private int maxHits;
+    private float relativeMinVFR3CDR3Score;
+    private boolean allowPartialAlignments, allowNoCDR3PartAlignments, allowChimeras;
+    private PairedEndReadsLayout readsLayout;
+    private MergerParameters mergerParameters;
+    private boolean fixSeed;
+    private int alignmentBoundaryTolerance;
+    private int minChimeraDetectionScore;
+    private int vjOverlapWindow;
+    private boolean saveOriginalReads;
 
     @JsonCreator
     public VDJCAlignerParameters(@JsonProperty("vParameters") KGeneAlignmentParameters vParameters,
@@ -83,7 +84,8 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
                                  @JsonProperty("fixSeed") boolean fixSeed,
                                  @JsonProperty("alignmentBoundaryTolerance") int alignmentBoundaryTolerance,
                                  @JsonProperty("minChimeraDetectionScore") int minChimeraDetectionScore,
-                                 @JsonProperty("vjOverlapWindow") int vjOverlapWindow) {
+                                 @JsonProperty("vjOverlapWindow") int vjOverlapWindow,
+                                 @JsonProperty("saveOriginalReads") boolean saveOriginalReads) {
         this.alignmentParameters = new EnumMap<>(GeneType.class);
         setGeneAlignerParameters(GeneType.Variable, vParameters);
         setGeneAlignerParameters(GeneType.Diversity, dParameters);
@@ -104,6 +106,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         this.alignmentBoundaryTolerance = alignmentBoundaryTolerance;
         this.minChimeraDetectionScore = minChimeraDetectionScore;
         this.vjOverlapWindow = vjOverlapWindow;
+        this.saveOriginalReads = saveOriginalReads;
     }
 
     public int getVJOverlapWindow() {
@@ -332,6 +335,15 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         return mergerParameters;
     }
 
+    public boolean isSaveOriginalReads() {
+        return saveOriginalReads;
+    }
+
+    public VDJCAlignerParameters setSaveOriginalReads(boolean saveOriginalReads) {
+        this.saveOriginalReads = saveOriginalReads;
+        return this;
+    }
+
     @Override
     public String toString() {
         return "VDJCAlignerParameters{" +
@@ -351,6 +363,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
                 ", alignmentBoundaryTolerance=" + alignmentBoundaryTolerance +
                 ", minChimeraDetectionScore=" + minChimeraDetectionScore +
                 ", vjOverlapWindow=" + vjOverlapWindow +
+                ", saveOriginalReads=" + saveOriginalReads +
                 '}';
     }
 
@@ -371,6 +384,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
                 alignmentBoundaryTolerance == that.alignmentBoundaryTolerance &&
                 minChimeraDetectionScore == that.minChimeraDetectionScore &&
                 vjOverlapWindow == that.vjOverlapWindow &&
+                saveOriginalReads == that.saveOriginalReads &&
                 Objects.equals(alignmentParameters, that.alignmentParameters) &&
                 vjAlignmentOrder == that.vjAlignmentOrder &&
                 readsLayout == that.readsLayout &&
@@ -379,9 +393,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
 
     @Override
     public int hashCode() {
-        return Objects.hash(alignmentParameters, vjAlignmentOrder, includeDScore, includeCScore, minSumScore, maxHits,
-                relativeMinVFR3CDR3Score, allowPartialAlignments, allowNoCDR3PartAlignments, allowChimeras, readsLayout,
-                mergerParameters, fixSeed, alignmentBoundaryTolerance, minChimeraDetectionScore, vjOverlapWindow);
+        return Objects.hash(alignmentParameters, vjAlignmentOrder, includeDScore, includeCScore, minSumScore, maxHits, relativeMinVFR3CDR3Score, allowPartialAlignments, allowNoCDR3PartAlignments, allowChimeras, readsLayout, mergerParameters, fixSeed, alignmentBoundaryTolerance, minChimeraDetectionScore, vjOverlapWindow, saveOriginalReads);
     }
 
     @Override
@@ -390,6 +402,6 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
                 getCAlignerParameters(), vjAlignmentOrder, includeDScore, includeCScore, minSumScore, maxHits,
                 relativeMinVFR3CDR3Score, allowPartialAlignments, allowNoCDR3PartAlignments,
                 allowChimeras, readsLayout, mergerParameters, fixSeed, alignmentBoundaryTolerance,
-                minChimeraDetectionScore, vjOverlapWindow);
+                minChimeraDetectionScore, vjOverlapWindow, saveOriginalReads);
     }
 }

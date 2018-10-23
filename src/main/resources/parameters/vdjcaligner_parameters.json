@@ -6,6 +6,7 @@
             "minSumScore" : 50,
             "relativeMinScore" : 0.87,
             "parameters": {
+                "type": "kaligner",
                 "mapperKValue": 5,
                 "floatingLeftBound": true,
                 "floatingRightBound": true,
@@ -45,6 +46,7 @@
             "minSumScore" : 40,
             "relativeMinScore" : 0.87,
             "parameters": {
+                "type": "kaligner",
                 "mapperKValue": 5,
                 "floatingLeftBound": true,
                 "floatingRightBound": false,
@@ -73,6 +75,7 @@
             "minSumScore" : 40,
             "relativeMinScore" : 0.87,
             "parameters": {
+                "type": "kaligner",
                 "mapperKValue": 5,
                 "floatingLeftBound": false,
                 "floatingRightBound": false,
@@ -114,7 +117,8 @@
         "alignmentBoundaryTolerance": 5,
         "minChimeraDetectionScore": 120,
         "vjOverlapWindow": 3,
-        "readsLayout": "Opposite"
+        "readsLayout": "Opposite",
+        "saveOriginalReads": false
     },
     "kaligner2": {
         "fixSeed" : true,
@@ -204,6 +208,7 @@
             "minSumScore" : 40,
             "relativeMinScore" : 0.8,
             "parameters": {
+                "type": "kaligner",
                 "mapperKValue": 5,
                 "floatingLeftBound": false,
                 "floatingRightBound": false,
@@ -245,7 +250,8 @@
         "alignmentBoundaryTolerance": 5,
         "minChimeraDetectionScore": 120,
         "vjOverlapWindow": 3,
-        "readsLayout": "Opposite"
+        "readsLayout": "Opposite",
+        "saveOriginalReads": false
     },
     "rna-seq": {
         "fixSeed" : true,
@@ -254,6 +260,7 @@
             "minSumScore" : 80,
             "relativeMinScore" : 0.87,
             "parameters": {
+                "type": "kaligner",
                 "mapperKValue": 5,
                 "floatingLeftBound": false,
                 "floatingRightBound": true,
@@ -293,6 +300,7 @@
             "minSumScore" : 60,
             "relativeMinScore" : 0.87,
             "parameters": {
+                "type": "kaligner",
                 "mapperKValue": 5,
                 "floatingLeftBound": true,
                 "floatingRightBound": false,
@@ -321,6 +329,7 @@
             "minSumScore" : 40,
             "relativeMinScore" : 0.87,
             "parameters": {
+                "type": "kaligner",
                 "mapperKValue": 5,
                 "floatingLeftBound": false,
                 "floatingRightBound": false,
@@ -362,6 +371,7 @@
         "alignmentBoundaryTolerance": 5,
         "minChimeraDetectionScore": 120,
         "vjOverlapWindow": 3,
-        "readsLayout": "Opposite"
+        "readsLayout": "Opposite",
+        "saveOriginalReads": false
     }
 }

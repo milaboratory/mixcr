@@ -46,12 +46,10 @@ final class FeatureExtractors {
     }
 
     static abstract class WithHeader extends FieldWithParameters<VDJCObject, GeneFeature[]> {
-        final int nArgs;
         final String[] hPrefix, sPrefix;
 
         WithHeader(String command, String description, int nArgs, String[] hPrefix, String[] sPrefix) {
-            super(VDJCObject.class, command, description);
-            this.nArgs = nArgs;
+            super(VDJCObject.class, command, description, nArgs);
             this.hPrefix = hPrefix;
             this.sPrefix = sPrefix;
         }
@@ -73,7 +71,7 @@ final class FeatureExtractors {
 
         @Override
         protected GeneFeature[] getParameters(String[] strings) {
-            if (strings.length != nArgs)
+            if (strings.length != nArguments)
                 throw new IllegalArgumentException("Wrong number of parameters for " + command);
             GeneFeature[] features = new GeneFeature[strings.length];
             for (int i = 0; i < strings.length; i++)
@@ -89,7 +87,7 @@ final class FeatureExtractors {
 
         @Override
         public String metaVars() {
-            if (nArgs == 1)
+            if (nArguments == 1)
                 return "<gene_feature>";
             else
                 return "<gene_feature> <relative_to_gene_feature>";
@@ -148,7 +146,10 @@ final class FeatureExtractors {
             if (!germlinePartitioning.isAvailable(bigGeneFeature))
                 return "-";
 
-            Range smallTargetRage = germlinePartitioning.getRelativeRange(alignedFeature, smallGeneFeature);
+            Range smallTargetRage =
+                    smallGeneFeature.isAlignmentAttached() ?
+                            null :
+                            germlinePartitioning.getRelativeRange(alignedFeature, smallGeneFeature);
             if (smallTargetRage == null)
                 for (int i = 0; i < object.numberOfTargets(); i++) {
                     SequencePartitioning pt = object.getPartitionedTarget(i).getPartitioning();

@@ -32,7 +32,7 @@ package com.milaboratory.mixcr.assembler;
 import cc.redberry.pipe.OutputPortCloseable;
 import gnu.trove.map.hash.TIntIntHashMap;
 
-public class AssembledReadsPort implements OutputPortCloseable<ReadToCloneMapping> {
+public final class AssembledReadsPort implements OutputPortCloseable<ReadToCloneMapping> {
     final OutputPortCloseable<AssemblerEvent> initialEvents, mappingEvents;
     final TIntIntHashMap idMapping;
     final TIntIntHashMap preClustered;
@@ -80,7 +80,7 @@ public class AssembledReadsPort implements OutputPortCloseable<ReadToCloneMappin
         }
 
         if (cloneIndex < 0)
-            return new ReadToCloneMapping(event.alignmentsIndex, event.readId, cloneIndex, false, false, false, false);
+            return new ReadToCloneMapping(event.alignmentsIndex, cloneIndex, false, false, false, false);
 
         boolean preCl = false;
         if (preClustered.containsKey(cloneIndex)) {
@@ -89,7 +89,7 @@ public class AssembledReadsPort implements OutputPortCloseable<ReadToCloneMappin
         }
 
         if (!idMapping.containsKey(cloneIndex))
-            return new ReadToCloneMapping(event.alignmentsIndex, event.readId, Integer.MIN_VALUE, false, false, true, preCl);
+            return new ReadToCloneMapping(event.alignmentsIndex, Integer.MIN_VALUE, false, false, true, preCl);
 
         cloneIndex = idMapping.get(cloneIndex);
 
@@ -99,7 +99,7 @@ public class AssembledReadsPort implements OutputPortCloseable<ReadToCloneMappin
             cloneIndex = -1 - cloneIndex;
         }
 
-        return new ReadToCloneMapping(event.alignmentsIndex, event.readId, cloneIndex, clustered, mapped, false, preCl);
+        return new ReadToCloneMapping(event.alignmentsIndex, cloneIndex, clustered, mapped, false, preCl);
     }
 
     @Override

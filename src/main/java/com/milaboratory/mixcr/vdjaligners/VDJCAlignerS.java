@@ -36,8 +36,10 @@ import com.milaboratory.core.alignment.batch.BatchAlignerWithBaseParameters;
 import com.milaboratory.core.alignment.batch.BatchAlignerWithBaseWithFilter;
 import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.core.alignment.kaligner2.KAlignerParameters2;
+import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.basictypes.SequenceHistory;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.util.BitArray;
@@ -135,7 +137,7 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
         // Filtering hits basing on minSumScore
         topResult.calculateHits(parameters.getMinSumScore(), parameters.getMaxHits());
 
-        VDJCAlignments alignment = topResult.toVDJCAlignments(input.getId());
+        VDJCAlignments alignment = topResult.toVDJCAlignments(input.getId(), input);
 
         // Final check
         if (!parameters.getAllowNoCDR3PartAlignments()) {
@@ -210,7 +212,7 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
         topResult.calculateHits(parameters.getMinSumScore(), parameters.getMaxHits());
 
         if (topResult.hasVAndJHits()) {
-            VDJCAlignments alignment = topResult.toVDJCAlignments(input.getId());
+            VDJCAlignments alignment = topResult.toVDJCAlignments(input.getId(), input);
 
             onSuccessfulAlignment(input, alignment);
             return new VDJCAlignmentResult<>(input, alignment);
@@ -415,7 +417,7 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
             return score;
         }
 
-        public VDJCAlignments toVDJCAlignments(long inputId) {
+        public VDJCAlignments toVDJCAlignments(long inputId, SequenceRead input) {
             EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
 
             hits.put(GeneType.Variable, getVHits(parameters.getFeatureToAlign(GeneType.Variable)));
@@ -427,7 +429,10 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
             if (cHits != null)
                 hits.put(GeneType.Constant, cHits);
 
-            return new VDJCAlignments(inputId, hits, target.targets[0]);
+            return new VDJCAlignments(hits, target.targets,
+                    new SequenceHistory[]{
+                            new SequenceHistory.RawSequence(inputId, (byte) 0, target.getRCStateOfTarget(0), target.targets[0].size())},
+                    parameters.isSaveOriginalReads() ? new SequenceRead[]{input} : null);
         }
     }
 

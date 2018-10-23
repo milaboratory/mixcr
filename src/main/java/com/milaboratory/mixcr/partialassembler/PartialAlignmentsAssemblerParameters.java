@@ -34,9 +34,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.milaboratory.core.merger.MergerParameters;
+import com.milaboratory.mixcr.basictypes.ActionConfiguration;
+import com.milaboratory.primitivio.annotations.Serializable;
 import com.milaboratory.util.GlobalObjectMappers;
 
 import java.io.IOException;
+import java.util.Objects;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
@@ -129,6 +132,27 @@ public class PartialAlignmentsAssemblerParameters {
 
     public void setMinimalAssembleOverlap(int minimalAssembleOverlap) {
         this.minimalAssembleOverlap = minimalAssembleOverlap;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PartialAlignmentsAssemblerParameters that = (PartialAlignmentsAssemblerParameters) o;
+        return kValue == that.kValue &&
+                kOffset == that.kOffset &&
+                minimalAssembleOverlap == that.minimalAssembleOverlap &&
+                minimalNOverlap == that.minimalNOverlap &&
+                Float.compare(that.minimalAlignmentMergeIdentity, minimalAlignmentMergeIdentity) == 0 &&
+                maxLeftParts == that.maxLeftParts &&
+                maxLeftMatches == that.maxLeftMatches &&
+                Objects.equals(mergerParameters, that.mergerParameters);
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(kValue, kOffset, minimalAssembleOverlap, minimalNOverlap, minimalAlignmentMergeIdentity, mergerParameters, maxLeftParts, maxLeftMatches);
     }
 
     @Override

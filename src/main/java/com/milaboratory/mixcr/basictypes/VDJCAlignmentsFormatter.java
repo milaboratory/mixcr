@@ -32,11 +32,16 @@ package com.milaboratory.mixcr.basictypes;
 import cc.redberry.primitives.Filter;
 import cc.redberry.primitives.FilterUtil;
 import com.milaboratory.core.Range;
+import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
+import com.milaboratory.core.alignment.Aligner;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.MultiAlignmentHelper;
+import com.milaboratory.core.sequence.AminoAcidAlphabet;
+import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import io.repseq.core.GeneType;
+import io.repseq.core.RangeTranslationParameters;
 import io.repseq.core.ReferencePoint;
 import io.repseq.core.SequencePartitioning;
 
@@ -46,10 +51,15 @@ import java.util.List;
 
 public class VDJCAlignmentsFormatter {
     public static MultiAlignmentHelper getTargetAsMultiAlignment(VDJCObject vdjcObject, int targetId) {
-        return getTargetAsMultiAlignment(vdjcObject, targetId, false);
+        return getTargetAsMultiAlignment(vdjcObject, targetId, false,
+                vdjcObject instanceof VDJCAlignments && ((VDJCAlignments) vdjcObject).getOriginalReads() != null);
     }
 
-    public static MultiAlignmentHelper getTargetAsMultiAlignment(VDJCObject vdjcObject, int targetId, boolean addHitScore) {
+    public static MultiAlignmentHelper getTargetAsMultiAlignment(VDJCObject vdjcObject, int targetId,
+                                                                 boolean addHitScore, boolean addReads) {
+        if (addReads && !(vdjcObject instanceof VDJCAlignments))
+            throw new IllegalArgumentException("Read alignments supported only for VDJCAlignments.");
+
         NSequenceWithQuality target = vdjcObject.getTarget(targetId);
         NucleotideSequence targetSeq = target.getSequence();
         SequencePartitioning partitioning = vdjcObject.getPartitionedTarget(targetId).getPartitioning();
@@ -68,11 +78,29 @@ public class VDJCAlignmentsFormatter {
                 alignmentRightComments.add(" " + (int) (hit.getAlignment(targetId).getScore()) + (addHitScore ? " (" + (int) (hit.getScore()) + ")" : ""));
             }
 
+        // Adding read information
+        if (addReads) {
+            VDJCAlignments vdjcAlignments = (VDJCAlignments) vdjcObject;
+            SequenceHistory history = vdjcAlignments.getHistory(targetId);
+            List<SequenceHistory.RawSequence> reads = history.rawReads();
+            for (SequenceHistory.RawSequence read : reads) {
+                NucleotideSequence seq = vdjcAlignments.getOriginalSequence(read.index).getSequence();
+                int offset = history.offset(read.index);
+                Alignment<NucleotideSequence> alignment = Aligner.alignOnlySubstitutions(targetSeq, seq, offset, seq.size(), 0, seq.size(),
+                        AffineGapAlignmentScoring.IGBLAST_NUCLEOTIDE_SCORING);
+                alignments.add(alignment);
+                alignmentLeftComments.add(read.index.toString());
+                alignmentRightComments.add("");
+            }
+        }
+
         MultiAlignmentHelper helper = MultiAlignmentHelper.build(MultiAlignmentHelper.DEFAULT_SETTINGS,
                 new Range(0, target.size()), targetSeq, alignments.toArray(new Alignment[alignments.size()]));
 
         if (!alignments.isEmpty())
             drawPoints(helper, partitioning, POINTS_FOR_REARRANGED);
+
+        drawAASequence(helper, partitioning, targetSeq);
 
         helper.addSubjectQuality("Quality", target.getQuality());
         helper.setSubjectLeftTitle("Target" + targetId);
@@ -82,6 +110,69 @@ public class VDJCAlignmentsFormatter {
             helper.setQueryRightTitle(i, alignmentRightComments.get(i));
         }
         return helper;
+    }
+
+    public static void drawAASequence(MultiAlignmentHelper helper, SequencePartitioning partitioning,
+                                      NucleotideSequence target) {
+        List<RangeTranslationParameters> trParams = partitioning.getTranslationParameters(target.size());
+        char[] line = new char[helper.size()];
+        Arrays.fill(line, ' ');
+        for (RangeTranslationParameters trParam : trParams) {
+            NucleotideSequence mainSequence = target.getRange(trParam.range);
+            NucleotideSequence leftover = trParam.codonLeftoverRange == null
+                    ? null
+                    : target.getRange(trParam.codonLeftoverRange);
+            NucleotideSequence bigSeq = leftover == null ? mainSequence :
+                    trParam.leftIncompleteCodonRange() != null
+                            ? leftover.concatenate(mainSequence)
+                            : mainSequence.concatenate(leftover);
+            AminoAcidSequence aa = AminoAcidSequence.translate(bigSeq,
+                    trParam.translationParameters);
+            int aaPosition = 0;
+            int ntPosition = trParam.range.getFrom()
+                    + AminoAcidSequence.convertAAPositionToNt(aaPosition, mainSequence.size(),
+                    trParam.translationParameters);
+
+            if (aa.codeAt(aaPosition) == AminoAcidAlphabet.INCOMPLETE_CODON) {
+                line[helper.subjectToAlignmentPosition(ntPosition)] =
+                        AminoAcidSequence.ALPHABET.codeToSymbol(aa.codeAt(aaPosition)); // '_'
+                ++aaPosition;
+            }
+
+            while (aaPosition < aa.size() &&
+                    (aaPosition < aa.size() - 1 || aa.codeAt(aaPosition) != AminoAcidAlphabet.INCOMPLETE_CODON)) {
+
+                ntPosition = trParam.range.getFrom()
+                        + AminoAcidSequence.convertAAPositionToNt(aaPosition, bigSeq.size(),
+                        trParam.translationParameters);
+
+                if (leftover != null && trParam.leftIncompleteCodonRange() != null)
+                    ntPosition -= trParam.leftIncompleteCodonRange().length();
+                boolean isLeftover = false;
+                if (leftover != null) {
+                    if (trParam.leftIncompleteCodonRange() != null)
+                        isLeftover = (aaPosition == 0);
+                    else
+                        isLeftover = (aaPosition == aa.size() - 1);
+                }
+
+                if (aa.codeAt(aaPosition) != AminoAcidAlphabet.INCOMPLETE_CODON)
+                    ++ntPosition;
+                char c = AminoAcidSequence.ALPHABET.codeToSymbol(aa.codeAt(aaPosition));
+                if (isLeftover)
+                    c = Character.toLowerCase(c);
+                line[helper.subjectToAlignmentPosition(ntPosition)] = c;
+                ++aaPosition;
+            }
+            if (aaPosition < aa.size() && (aaPosition < aa.size() - 1 || aa.codeAt(aaPosition) == AminoAcidAlphabet.INCOMPLETE_CODON)) {
+                ntPosition = trParam.range.getFrom()
+                        + AminoAcidSequence.convertAAPositionToNt(aaPosition, mainSequence.size(),
+                        trParam.translationParameters);
+                line[helper.subjectToAlignmentPosition(ntPosition)] =
+                        AminoAcidSequence.ALPHABET.codeToSymbol(aa.codeAt(aaPosition));
+            }
+        }
+        helper.addAnnotationString("", new String(line));
     }
 
     public static void drawPoints(MultiAlignmentHelper helper, SequencePartitioning partitioning,

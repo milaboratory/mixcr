@@ -29,22 +29,22 @@
  */
 package com.milaboratory.mixcr.export;
 
-import cc.redberry.pipe.CUtils;
-import cc.redberry.pipe.OutputPort;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
+import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.mutations.MutationsUtil;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.TranslationParameters;
-import com.milaboratory.mixcr.assembler.AlignmentsToClonesMappingContainer;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.VDJCObject;
+import com.milaboratory.util.GlobalObjectMappers;
 import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.map.hash.TObjectFloatHashMap;
 import io.repseq.core.GeneFeature;
@@ -52,15 +52,10 @@ import io.repseq.core.GeneType;
 import io.repseq.core.ReferencePoint;
 import io.repseq.core.SequencePartitioning;
 
-import java.io.Closeable;
-import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
-
-import static com.milaboratory.mixcr.assembler.ReadToCloneMapping.MappingType.Dropped;
 
 public final class FieldExtractors {
     static final String NULL = "";
@@ -144,7 +139,7 @@ public final class FieldExtractors {
             for (final GeneType type : GeneType.values()) {
                 char l = type.getLetter();
                 descriptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "HitsWithScore",
-                        "Export all " + l + " hits with score", "All " + l + " hits", "all" + l + "HitsWithScore") {
+                        "Export all " + l + " hits with score", "All " + l + " hits with score", "all" + l + "HitsWithScore") {
                     @Override
                     protected String extract(VDJCObject object) {
                         VDJCHit[] hits = object.getHits(type);
@@ -299,6 +294,36 @@ public final class FieldExtractors {
                 }
             });
 
+            descriptorsList.add(new FeatureExtractors.WithHeader("-nFeatureImputed",
+                    "Export nucleotide sequence of specified gene feature using letters from germline (marked lowercase) for uncovered regions",
+                    1, new String[]{"N. Inc. Seq. "}, new String[]{"nSeqImputed"}) {
+                @Override
+                protected String extractValue(VDJCObject object, GeneFeature[] parameters) {
+                    GeneFeature geneFeature = parameters[parameters.length - 1];
+                    VDJCObject.CaseSensitiveNucleotideSequence feature = object.getIncompleteFeature(geneFeature);
+                    if (feature == null)
+                        return NULL;
+                    return feature.toString();
+                }
+            });
+
+            descriptorsList.add(new FeatureExtractors.WithHeader("-aaFeatureImputed",
+                    "Export amino acid sequence of specified gene feature using letters from germline (marked lowercase) for uncovered regions",
+                    1, new String[]{"AA. Inc. Seq. "}, new String[]{"aaSeqImputed"}) {
+                @Override
+                protected String extractValue(VDJCObject object, GeneFeature[] parameters) {
+                    GeneFeature geneFeature = parameters[parameters.length - 1];
+                    VDJCObject.CaseSensitiveNucleotideSequence feature = object.getIncompleteFeature(geneFeature);
+                    if (feature == null)
+                        return NULL;
+                    String aaStr = feature.toAminoAcidString();
+                    if (aaStr == null)
+                        return NULL;
+                    return aaStr;
+                }
+            });
+
+
 //            descriptorsList.add(new FeatureExtractorDescriptor("-aaFeatureFromLeft", "Export amino acid sequence of " +
 //                    "specified gene feature starting from the leftmost nucleotide (differs from -aaFeature only for " +
 //                    "sequences which length are not multiple of 3)", "AA. Seq.", "aaSeq") {
@@ -331,7 +356,7 @@ public final class FieldExtractors {
                 }
             });
 
-            descriptorsList.add(new FeatureExtractors.NSeqExtractor("-lengthOf", "Exports length of specified gene feature.", "Length of ", "lengthOf") {
+            descriptorsList.add(new FeatureExtractors.NSeqExtractor("-lengthOf", "Export length of specified gene feature.", "Length of ", "lengthOf") {
                 @Override
                 public String convert(NSequenceWithQuality seq) {
                     return "" + seq.size();
@@ -416,14 +441,35 @@ public final class FieldExtractors {
                     "Detailed list of nucleotide and corresponding amino acid mutations written, positions relative to specified gene feature. " + detailedMutationsFormat, 2,
                     new String[]{"Detailed mutations in ", " relative to "}, new String[]{"mutationsDetailedIn", "Relative"}));
 
-            descriptorsList.add(new ExtractReferencePointPosition());
+            descriptorsList.add(new ExtractReferencePointPosition(true));
+            descriptorsList.add(new ExtractReferencePointPosition(false));
 
             descriptorsList.add(new ExtractDefaultReferencePointsPositions());
 
-            descriptorsList.add(new PL_A("-readId", "Export id of read corresponding to alignment", "Read id", "readId") {
+            descriptorsList.add(new PL_A("-readId", "Export id of read corresponding to alignment (deprecated)", "Read id", "readId") {
                 @Override
                 protected String extract(VDJCAlignments object) {
-                    return "" + object.getReadId();
+                    return "" + object.getMinReadId();
+                }
+
+                @Override
+                public FieldExtractor<VDJCAlignments> create(OutputMode outputMode, String[] args) {
+                    System.out.println("WARNING: -readId is deprecated. Use -readIds");
+                    return super.create(outputMode, args);
+                }
+            });
+
+            descriptorsList.add(new PL_A("-readIds", "Export id(s) of read(s) corresponding to alignment", "Read id", "readId") {
+                @Override
+                protected String extract(VDJCAlignments object) {
+                    long[] readIds = object.getReadIds();
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; ; i++) {
+                        sb.append(readIds[i]);
+                        if (i == readIds.length - 1)
+                            return sb.toString();
+                        sb.append(",");
+                    }
                 }
             });
 
@@ -464,65 +510,133 @@ public final class FieldExtractors {
                     "Export initial read quality, or 2 qualities in case of paired-end reads",
                     "Clonal sequence quality(s)", "clonalSequenceQuality"));
 
-            descriptorsList.add(new PL_A("-descrR1", "Export description line from initial .fasta or .fastq file " +
-                    "of the first read (only available if --save-description was used in align command)", "Description R1", "descrR1") {
+            descriptorsList.add(new PL_A("-descrR1", "Export description line from initial .fasta or .fastq file (deprecated)", "Description R1", "descrR1") {
                 @Override
                 protected String extract(VDJCAlignments object) {
-                    String[] ds = object.getOriginalDescriptions();
-                    if (ds == null || ds.length == 0)
+                    List<SequenceRead> reads = object.getOriginalReads();
+                    if (reads == null)
                         throw new IllegalArgumentException("Error for option \'-descrR1\':\n" +
-                                "No description available for read: either re-run align action with --save-description option " +
+                                "No description available for read: either re-run align action with -OsaveOriginalReads=true option " +
                                 "or don't use \'-descrR1\' in exportAlignments");
-                    return ds[0];
+
+                    return reads.get(0).getRead(0).getDescription();
+                }
+
+                @Override
+                public FieldExtractor<VDJCAlignments> create(OutputMode outputMode, String[] args) {
+                    System.out.println("WARNING: -descrR1 is deprecated. Use -descrsR1");
+                    return super.create(outputMode, args);
                 }
             });
 
-            descriptorsList.add(new PL_A("-descrR2", "Export description line from initial .fasta or .fastq file " +
-                    "of the second read (only available if --save-description was used in align command)", "Description R2", "descrR2") {
+            descriptorsList.add(new PL_A("-descrR2", "Export description line from initial .fasta or .fastq file (deprecated)", "Description R2", "descrR2") {
                 @Override
                 protected String extract(VDJCAlignments object) {
-                    String[] ds = object.getOriginalDescriptions();
-                    if (ds == null || ds.length < 2)
+                    List<SequenceRead> reads = object.getOriginalReads();
+                    if (reads == null)
+                        throw new IllegalArgumentException("Error for option \'-descrR1\':\n" +
+                                "No description available for read: either re-run align action with -OsaveOriginalReads=true option " +
+                                "or don't use \'-descrR1\' in exportAlignments");
+                    SequenceRead read = reads.get(0);
+                    if (read.numberOfReads() < 2)
                         throw new IllegalArgumentException("Error for option \'-descrR2\':\n" +
-                                "No description available for second read: either re-run align action with --save-description option " +
-                                "or don't use \'-descrR2\' in exportAlignments");
-                    return ds[1];
+                                "No description available for second read: your input data was single-end");
+                    return read.getRead(1).getDescription();
+                }
+
+                @Override
+                public FieldExtractor<VDJCAlignments> create(OutputMode outputMode, String[] args) {
+                    System.out.println("WARNING: -descrR2 is deprecated. Use -descrsR2");
+                    return super.create(outputMode, args);
                 }
             });
 
-            descriptorsList.add(new PL_A("-targetDescriptions", "Export target descriptions", "Target descriptions", "targetDescriptions") {
+
+            descriptorsList.add(new PL_A("-descrsR1", "Export description lines from initial .fasta or .fastq file " +
+                    "for R1 reads (only available if -OsaveOriginalReads=true was used in align command)", "Descriptions R1", "descrsR1") {
                 @Override
                 protected String extract(VDJCAlignments object) {
-                    String[] ds = object.getTargetDescriptions();
-                    if (ds == null || ds.length == 0) {
-                        char[] commas = new char[object.numberOfTargets() - 1];
-                        Arrays.fill(commas, ',');
-                        return new String(commas);
-                    }
+                    List<SequenceRead> reads = object.getOriginalReads();
+                    if (reads == null)
+                        throw new IllegalArgumentException("Error for option \'-descrR1\':\n" +
+                                "No description available for read: either re-run align action with -OsaveOriginalReads option " +
+                                "or don't use \'-descrR1\' in exportAlignments");
+
                     StringBuilder sb = new StringBuilder();
                     for (int i = 0; ; i++) {
-                        sb.append(ds[i]);
-                        if (i == ds.length - 1)
-                            break;
-                        sb.append(',');
+                        sb.append(reads.get(i).getRead(0).getDescription());
+                        if (i == reads.size() - 1)
+                            return sb.toString();
+                        sb.append(",");
                     }
-                    return sb.toString();
                 }
             });
 
-            descriptorsList.add(alignmentsToClone("-cloneId", "To which clone alignment was attached.", false));
-            descriptorsList.add(alignmentsToClone("-cloneIdWithMappingType", "To which clone alignment was attached with additional info on mapping type.", true));
-            descriptorsList.add(new AbstractField<Clone>(Clone.class, "-readIds", "Read IDs aggregated by clone.") {
+            descriptorsList.add(new PL_A("-descrsR2", "Export description lines from initial .fastq file " +
+                    "for R2 reads (only available if -OsaveOriginalReads=true was used in align command)", "Descriptions R2", "descrsR2") {
                 @Override
-                public FieldExtractor<Clone> create(OutputMode outputMode, String[] args) {
-                    return new CloneToReadsExtractor(outputMode, args[0]);
-                }
+                protected String extract(VDJCAlignments object) {
+                    List<SequenceRead> reads = object.getOriginalReads();
+                    if (reads == null)
+                        throw new IllegalArgumentException("Error for option \'-descrR1\':\n" +
+                                "No description available for read: either re-run align action with -OsaveOriginalReads option " +
+                                "or don't use \'-descrR1\' in exportAlignments");
 
-                @Override
-                public String metaVars() {
-                    return "<index_file>";
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; ; i++) {
+                        SequenceRead read = reads.get(i);
+                        if (read.numberOfReads() < 2)
+                            throw new IllegalArgumentException("Error for option \'-descrsR2\':\n" +
+                                    "No description available for second read: your input data was single-end");
+                        sb.append(read.getRead(1).getDescription());
+                        if (i == reads.size() - 1)
+                            return sb.toString();
+                        sb.append(",");
+                    }
                 }
             });
+
+            descriptorsList.add(new PL_A("-readHistory", "Export read history", "Read history", "readHistory") {
+                @Override
+                protected String extract(VDJCAlignments object) {
+                    try {
+                        return GlobalObjectMappers.toOneLine(object.getHistory());
+                    } catch (JsonProcessingException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            });
+
+            descriptorsList.add(new PL_A("-cloneId", "To which clone alignment was attached (make sure using .clna file as input for exportAlignments)", "Clone ID", "cloneId") {
+                @Override
+                protected String extract(VDJCAlignments object) {
+                    return "" + object.getCloneIndex();
+                }
+            });
+
+            descriptorsList.add(new PL_A("-cloneIdWithMappingType", "To which clone alignment was attached with additional info on mapping type (make sure using .clna file as input for exportAlignments)", "Clone mapping", "cloneMapping") {
+                @Override
+                protected String extract(VDJCAlignments object) {
+                    int ci = object.getCloneIndex();
+                    ReadToCloneMapping.MappingType mt = object.getMappingType();
+                    return "" + ci + ":" + mt;
+
+                }
+            });
+
+            // descriptorsList.add(alignmentsToClone("-cloneId", "To which clone alignment was attached.", false));
+            // descriptorsList.add(alignmentsToClone("-cloneIdWithMappingType", "To which clone alignment was attached with additional info on mapping type.", true));
+            // descriptorsList.add(new AbstractField<Clone>(Clone.class, "-readIds", "Read IDs aggregated by clone.") {
+            //     @Override
+            //     public FieldExtractor<Clone> create(OutputMode outputMode, String[] args) {
+            //         return new CloneToReadsExtractor(outputMode, args[0]);
+            //     }
+            //
+            //     @Override
+            //     public String metaVars() {
+            //         return "<index_file>";
+            //     }
+            // });
 
             for (final GeneType type : GeneType.values()) {
                 String c = Character.toLowerCase(type.getLetter()) + "IdentityPercents";
@@ -546,7 +660,7 @@ public final class FieldExtractors {
             }
             for (final GeneType type : GeneType.values()) {
                 String c = Character.toLowerCase(type.getLetter()) + "BestIdentityPercent";
-                descriptorsList.add(new PL_O("-" + c, type.getLetter() + "best alignment identity percent",
+                descriptorsList.add(new PL_O("-" + c, type.getLetter() + " best alignment identity percent",
                         type.getLetter() + "best alignment identity percent", c) {
                     @Override
                     protected String extract(VDJCObject object) {
@@ -576,6 +690,13 @@ public final class FieldExtractors {
         }
 
         return descriptors;
+    }
+
+    public static boolean hasField(String name) {
+        for (Field field : getFields())
+            if (name.equalsIgnoreCase(field.getCommand()))
+                return true;
+        return false;
     }
 
     public static FieldExtractor parse(OutputMode outputMode, Class clazz, String[] args) {
@@ -645,8 +766,8 @@ public final class FieldExtractors {
     }
 
     static abstract class WP_O<P> extends FieldWithParameters<VDJCObject, P> {
-        protected WP_O(String command, String description) {
-            super(VDJCObject.class, command, description);
+        protected WP_O(String command, String description, int nArguments) {
+            super(VDJCObject.class, command, description, nArguments);
         }
     }
 
@@ -688,10 +809,13 @@ public final class FieldExtractors {
     }
 
     private static class ExtractReferencePointPosition extends WP_O<ReferencePoint> {
-        protected ExtractReferencePointPosition() {
-            super("-positionOf",
-                    "Exports position of specified reference point inside target sequences " +
-                            "(clonal sequence / read sequence).");
+        private final boolean inReference;
+
+        protected ExtractReferencePointPosition(boolean inReference) {
+            super(inReference ? "-positionInReferenceOf" : "-positionOf",
+                    "Export position of specified reference point inside " + (inReference ? "reference" : "target") + "sequences " +
+                            "(clonal sequence / read sequence).", 1);
+            this.inReference = inReference;
         }
 
         @Override
@@ -703,15 +827,26 @@ public final class FieldExtractors {
 
         @Override
         protected String getHeader(OutputMode outputMode, ReferencePoint parameters) {
-            return choose(outputMode, "Position of ", "positionOf") +
+            return choose(outputMode, "Position " + (inReference ? "in reference" : "") + " of ",
+                    inReference ? "-positionInReferenceOf" : "-positionOf") +
                     ReferencePoint.encode(parameters, true);
         }
 
         @Override
-        protected String extractValue(VDJCObject object, ReferencePoint parameters) {
+        protected String extractValue(VDJCObject object, ReferencePoint refPoint) {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; ; i++) {
-                sb.append(object.getPartitionedTarget(i).getPartitioning().getPosition(parameters));
+                int positionInTarget = object.getPartitionedTarget(i).getPartitioning().getPosition(refPoint);
+                if (inReference) {
+                    VDJCHit hit = object.getBestHit(refPoint.getGeneType());
+                    if (hit != null) {
+                        Alignment<NucleotideSequence> al = hit.getAlignment(i);
+                        if (al != null)
+                            positionInTarget = al.convertToSeq1Position(positionInTarget);
+                    }
+                }
+
+                sb.append(positionInTarget);
                 if (i == object.numberOfTargets() - 1)
                     break;
                 sb.append(",");
@@ -809,131 +944,133 @@ public final class FieldExtractors {
     }
 
 
-    private static AbstractField<VDJCAlignments> alignmentsToClone(
-            final String command, final String description, final boolean printMapping) {
-        return new AbstractField<VDJCAlignments>(VDJCAlignments.class, command, description) {
-            @Override
-            public FieldExtractor<VDJCAlignments> create(OutputMode outputMode, String[] args) {
-                return new AlignmentToCloneExtractor(outputMode, args[0], printMapping);
-            }
+    // private static AbstractField<VDJCAlignments> alignmentsToClone(
+    //         final String command, final String description, final boolean printMapping) {
+    //     return new AbstractField<VDJCAlignments>(VDJCAlignments.class, command, description) {
+    //         @Override
+    //         public FieldExtractor<VDJCAlignments> create(OutputMode outputMode, String[] args) {
+    //             return new AlignmentToCloneExtractor(outputMode, args[0], printMapping);
+    //         }
+    //
+    //         @Override
+    //         public String metaVars() {
+    //             return "<index_file>";
+    //         }
+    //     };
+    // }
 
-            @Override
-            public String metaVars() {
-                return "<index_file>";
-            }
-        };
-    }
-
-    private static final class AlignmentToCloneExtractor
-            implements FieldExtractor<VDJCAlignments>, Closeable {
-        private final OutputMode outputMode;
-        private final AlignmentsToClonesMappingContainer container;
-        private final OutputPort<ReadToCloneMapping> byAls;
-        private final boolean printMapping;
-        private final Iterator<ReadToCloneMapping> mappingIterator;
-        private ReadToCloneMapping currentMapping = null;
-
-        public AlignmentToCloneExtractor(OutputMode outputMode, String indexFile, boolean printMapping) {
-            try {
-                this.outputMode = outputMode;
-                this.printMapping = printMapping;
-                this.container = AlignmentsToClonesMappingContainer.open(indexFile);
-                this.byAls = this.container.createPortByAlignments();
-                this.mappingIterator = CUtils.it(byAls).iterator();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        @Override
-        public String getHeader() {
-            if (printMapping)
-                return choose(outputMode, "Clone mapping", "cloneMapping");
-            else
-                return choose(outputMode, "Clone Id", "cloneId");
-        }
-
-        @Override
-        public String extractValue(VDJCAlignments object) {
-            if (currentMapping == null && mappingIterator.hasNext())
-                currentMapping = mappingIterator.next();
-
-            if (currentMapping == null)
-                throw new IllegalArgumentException("Wrong number of records in index.");
-
-            while (currentMapping.getAlignmentsId() < object.getAlignmentsIndex() && mappingIterator.hasNext())
-                currentMapping = mappingIterator.next();
-            if (currentMapping.getAlignmentsId() != object.getAlignmentsIndex())
-                return printMapping ? Dropped.toString().toLowerCase() : NULL;
-
-            int cloneIndex = currentMapping.getCloneIndex();
-            ReadToCloneMapping.MappingType mt = currentMapping.getMappingType();
-            if (currentMapping.isDropped())
-                return printMapping ? mt.toString().toLowerCase() : NULL;
-            return printMapping ? Integer.toString(cloneIndex) + ":" + mt.toString().toLowerCase() : Integer.toString(cloneIndex);
-        }
-
-        @Override
-        public void close() throws IOException {
-            container.close();
-        }
-    }
-
-    private static final class CloneToReadsExtractor
-            implements FieldExtractor<Clone>, Closeable {
-        private final OutputMode outputMode;
-        private final AlignmentsToClonesMappingContainer container;
-        private final Iterator<ReadToCloneMapping> mappingIterator;
-        private ReadToCloneMapping currentMapping;
-
-        public CloneToReadsExtractor(OutputMode outputMode, String file) {
-            try {
-                this.outputMode = outputMode;
-                this.container = AlignmentsToClonesMappingContainer.open(file);
-                this.mappingIterator = CUtils.it(this.container.createPortByClones()).iterator();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        @Override
-        public String getHeader() {
-            return choose(outputMode, "Reads", "reads");
-        }
-
-        @Override
-        public String extractValue(Clone clone) {
-            if (currentMapping == null && mappingIterator.hasNext())
-                currentMapping = mappingIterator.next();
-
-            if (currentMapping == null)
-                throw new IllegalArgumentException("Wrong number of records in index.");
-
-            while (currentMapping.getCloneIndex() < clone.getId() && mappingIterator.hasNext())
-                currentMapping = mappingIterator.next();
-
-            long count = 0;
-            StringBuilder sb = new StringBuilder();
-            while (currentMapping.getCloneIndex() == clone.getId()) {
-                ++count;
-                assert currentMapping.getCloneIndex() == currentMapping.getCloneIndex();
-                sb.append(currentMapping.getReadId()).append(",");
-                if (!mappingIterator.hasNext())
-                    break;
-                currentMapping = mappingIterator.next();
-            }
-            //count == object.getCount() only if addReadsCountOnClustering=true
-            assert count >= clone.getCount() : "Actual count: " + clone.getCount() + ", in mapping: " + count;
-            if (sb.length() != 0)
-                sb.deleteCharAt(sb.length() - 1);
-            return sb.toString();
-        }
-
-        @Override
-        public void close() throws IOException {
-            container.close();
-        }
-    }
+    // private static final class AlignmentToCloneExtractor
+    //         implements FieldExtractor<VDJCAlignments>, Closeable {
+    //     private final OutputMode outputMode;
+    //     private final AlignmentsToClonesMappingContainer container;
+    //     private final OutputPort<ReadToCloneMapping> byAls;
+    //     private final boolean printMapping;
+    //     private final Iterator<ReadToCloneMapping> mappingIterator;
+    //     private ReadToCloneMapping currentMapping = null;
+    //
+    //     public AlignmentToCloneExtractor(OutputMode outputMode, String indexFile, boolean printMapping) {
+    //         try {
+    //             this.outputMode = outputMode;
+    //             this.printMapping = printMapping;
+    //             this.container = AlignmentsToClonesMappingContainer.open(indexFile);
+    //             this.byAls = this.container.createPortByAlignments();
+    //             this.mappingIterator = CUtils.it(byAls).iterator();
+    //         } catch (IOException e) {
+    //             throw new RuntimeException(e);
+    //         }
+    //     }
+    //
+    //     @Override
+    //     public String getHeader() {
+    //         if (printMapping)
+    //             return choose(outputMode, "Clone mapping", "cloneMapping");
+    //         else
+    //             return choose(outputMode, "Clone Id", "cloneId");
+    //     }
+    //
+    //     @Override
+    //     public String extractValue(VDJCAlignments object) {
+    //         if (currentMapping == null && mappingIterator.hasNext())
+    //             currentMapping = mappingIterator.next();
+    //
+    //         if (currentMapping == null)
+    //             throw new IllegalArgumentException("Wrong number of records in index.");
+    //
+    //         while (currentMapping.getAlignmentsId() < object.getAlignmentsIndex() && mappingIterator.hasNext())
+    //             currentMapping = mappingIterator.next();
+    //         if (currentMapping.getAlignmentsId() != object.getAlignmentsIndex())
+    //             return printMapping ? Dropped.toString().toLowerCase() : NULL;
+    //
+    //         int cloneIndex = currentMapping.getCloneIndex();
+    //         ReadToCloneMapping.MappingType mt = currentMapping.getMappingType();
+    //         if (currentMapping.isDropped())
+    //             return printMapping ? mt.toString().toLowerCase() : NULL;
+    //         return printMapping ? Integer.toString(cloneIndex) + ":" + mt.toString().toLowerCase() : Integer.toString(cloneIndex);
+    //     }
+    //
+    //     @Override
+    //     public void close() throws IOException {
+    //         container.close();
+    //     }
+    // }
+    //
+    // private static final class CloneToReadsExtractor
+    //         implements FieldExtractor<Clone>, Closeable {
+    //     private final OutputMode outputMode;
+    //     private final AlignmentsToClonesMappingContainer container;
+    //     private final Iterator<ReadToCloneMapping> mappingIterator;
+    //     private ReadToCloneMapping currentMapping;
+    //
+    //     public CloneToReadsExtractor(OutputMode outputMode, String file) {
+    //         try {
+    //             this.outputMode = outputMode;
+    //             this.container = AlignmentsToClonesMappingContainer.open(file);
+    //             this.mappingIterator = CUtils.it(this.container.createPortByClones()).iterator();
+    //         } catch (IOException e) {
+    //             throw new RuntimeException(e);
+    //         }
+    //     }
+    //
+    //     @Override
+    //     public String getHeader() {
+    //         return choose(outputMode, "Reads", "reads");
+    //     }
+    //
+    //     @Override
+    //     public String extractValue(Clone clone) {
+    //         if (currentMapping == null && mappingIterator.hasNext())
+    //             currentMapping = mappingIterator.next();
+    //
+    //         if (currentMapping == null)
+    //             throw new IllegalArgumentException("Wrong number of records in index.");
+    //
+    //         while (currentMapping.getCloneIndex() < clone.getId() && mappingIterator.hasNext())
+    //             currentMapping = mappingIterator.next();
+    //
+    //         long count = 0;
+    //         StringBuilder sb = new StringBuilder();
+    //         while (currentMapping.getCloneIndex() == clone.getId()) {
+    //             ++count;
+    //             assert currentMapping.getCloneIndex() == currentMapping.getCloneIndex();
+    //             long[] readIds = currentMapping.getReadIds();
+    //             for (long readId : readIds)
+    //                 sb.append(readId).append(",");
+    //             if (!mappingIterator.hasNext())
+    //                 break;
+    //             currentMapping = mappingIterator.next();
+    //         }
+    //         //count == object.getCount() only if addReadsCountOnClustering=true
+    //         assert count >= clone.getCount() : "Actual count: " + clone.getCount() + ", in mapping: " + count;
+    //         if (sb.length() != 0)
+    //             sb.deleteCharAt(sb.length() - 1);
+    //         return sb.toString();
+    //     }
+    //
+    //     @Override
+    //     public void close() throws IOException {
+    //         container.close();
+    //     }
+    // }
 
     public static String choose(OutputMode outputMode, String hString, String sString) {
         switch (outputMode) {

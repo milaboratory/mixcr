@@ -4,18 +4,18 @@
 
 .. _ref-rna-seq:
 
-Processing RNA-seq and non-targeted  genomic data
-=================================================
+Processing RNA-seq and non-targeted genomic data
+================================================
 
-.. note::
-  
-  The procedure described here applies to analysis of sequencing data from non-enriched and/or randomly-shred (c)DNA libraries, like `RNA-Seq <https://en.wikipedia.org/wiki/RNA-Seq>`_. For analysis of targeted RepSeq data, please see :ref:`examples <ref-examples>`  from quick start.
+.. tip:: 
+
+  MiXCR provides :ref:`analyze <ref-analyze>` command that packs a complicated execution pipelines (alignment, assembly, exporting etc.) into a single command. We recommend to use :ref:`analyze shotgun <ref-analyze-shotgun>` for processing `shotgun <https://en.wikipedia.org/wiki/Shotgun_sequencing>`_ / `RNA-Seq <https://en.wikipedia.org/wiki/RNA-Seq>`_ / non-targeted / randomly-shred libraries. For analysis of targeted RepSeq data, please see :ref:`examples <ref-examples>`  from quick start.
 
 
 Overview
 --------
 
-Analysis method and quirks described here will also be useful for users who want to extract TCR or Ig repertoire from sequencing data of any other type of non-enriched or randomly shred cDNA / gDNA library.
+Analysis method described here will be useful for users who want to extract TCR or Ig repertoire from sequencing data of any other type of non-enriched or randomly shred cDNA / gDNA library.
 
 There are two main challenges of repertoire extraction from non-enriched and randomly-shred libraries:
 
@@ -29,7 +29,7 @@ There are two main challenges of repertoire extraction from non-enriched and ran
 
 .. _ref-rna-seq-extend-description:
 
-In case of short reads input, even after ``assemblePartial`` many contigs/reads still only partially cover CDR3. A substantial fraction of such contigs needs only several nucleotides on the 5' or the 3' end to fill up the sequence up to a complete CDR3. These sequence parts can be taken from the germline, if corresponding V or J gene for the contig is uniquely determined (e.g. from second mate of a read pair). Such procedure is not safe for IGs, because of hypermutations, but for TCRs which have relatively conservative sequence near conserved ``Cys`` and ``Phe``/``Trp``, it can reconstruct additional clonotypes with relatively small chance to introduce false ones. Described procedure is implemented in the action `extendAlignments`, by default it acts only on TCR sequences.
+In case of short reads input, even after ``assemblePartial`` many contigs/reads still only partially cover CDR3. A substantial fraction of such contigs needs only several nucleotides on the 5' or the 3' end to fill up the sequence up to a complete CDR3. These sequence parts can be taken from the germline, if corresponding V or J gene for the contig is uniquely determined (e.g. from second mate of a read pair). Such procedure is not safe for IGs, because of hypermutations, but for TCRs which have relatively conservative sequence near conserved ``Cys`` and ``Phe``/``Trp``, it can reconstruct additional clonotypes with relatively small chance to introduce false ones. Described procedure is implemented in the action `extend`, by default it acts only on TCR sequences.
 
 
 Analysis pipeline
@@ -87,7 +87,7 @@ Typical analysis workflow
 
   ::
 
-     mixcr extendAlignments alignments_rescued_2.vdjca alignments_rescued_2_extended.vdjca
+     mixcr extend alignments_rescued_2.vdjca alignments_rescued_2_extended.vdjca
 
 4. Assemble (see :ref:`here <ref-assemble>` for details) clonotypes
 
@@ -163,4 +163,29 @@ The above parameters can be specified in e.g. the following way:
 .. The above parameters can be specified in e.g. the following way:
 
 ..     mixcr assemblePartial -OmergerParameters.minimalOverlap=15 alignments.vdjca alignmentsRescued.vdjca
+
+
+.. _ref-extend:
+
+``extend`` action
+-----------------
+
+Command `extend` performed imputing of germline sequences to the uncovered edges of TCR alignments.
+
+The following options are available for ``extend``:
+
++-------------------------+---------------+-----------------------------------------------------------+
+| Parameter               | Default value | Description                                               |
++=========================+===============+===========================================================+
+| ``"-q``, ``--quality"`` | ``30``        | Quality score of extended sequence.                       |
++-------------------------+---------------+-----------------------------------------------------------+
+| ``--v-anchor``          | ``CDR3Begin`` | V extension anchor point.                                 |
++-------------------------+---------------+-----------------------------------------------------------+
+| ``--j-anchor``          | ``CDR3End``   | J extension anchor point.                                 |
++-------------------------+---------------+-----------------------------------------------------------+
+| ``--min-v-score``       | ``100``       | Minimal V hit score to perform left extension.            |
++-------------------------+---------------+-----------------------------------------------------------+
+| ``--min-j-score``       | ``70``        | Minimal J hit score alignment to perform right extension. |
++-------------------------+---------------+-----------------------------------------------------------+
+
 

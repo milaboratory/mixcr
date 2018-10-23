@@ -45,27 +45,29 @@ import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.assembler.*;
-import com.milaboratory.mixcr.basictypes.CloneSet;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
-import com.milaboratory.mixcr.cli.ActionAlign;
+import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler;
+import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters;
+import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.cli.AlignerReport;
 import com.milaboratory.mixcr.cli.CloneAssemblerReport;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
+import com.milaboratory.primitivio.PipeDataInputReader;
+import com.milaboratory.primitivio.PrimitivI;
+import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.SmartProgressReporter;
+import com.milaboratory.util.TempFileManager;
 import io.repseq.core.Chains;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import static cc.redberry.pipe.CUtils.chunked;
@@ -78,9 +80,15 @@ import static cc.redberry.pipe.CUtils.unchunked;
 public final class RunMiXCR {
 
     public static AssembleResult assemble(final AlignResult align) {
-        RunMiXCRAnalysis parameters = align.parameters;
-        try (CloneAssembler assembler = new CloneAssembler(parameters.cloneAssemblerParameters,
-                false, align.usedGenes, align.parameters.alignerParameters)) {
+        return assemble(align, true);
+    }
+
+    public static AssembleResult assemble(final AlignResult align, boolean close) {
+        CloneAssembler assembler = null;
+        try {
+            RunMiXCRAnalysis parameters = align.parameters;
+            assembler = new CloneAssembler(parameters.cloneAssemblerParameters,
+                    false, align.usedGenes, align.parameters.alignerParameters);
 
             CloneAssemblerReport report = new CloneAssemblerReport();
             assembler.setListener(report);
@@ -102,9 +110,90 @@ public final class RunMiXCR {
 
             assemblerRunner.run();
 
-            CloneSet cloneSet = assemblerRunner.getCloneSet();
-            return new AssembleResult(cloneSet, report);
+            CloneSet cloneSet = assemblerRunner.getCloneSet(align.parameters.alignerParameters);
+            return new AssembleResult(align, cloneSet, report, assembler);
+        } finally {
+            if (close)
+                assembler.close();
         }
+    }
+
+    public static FullSeqAssembleResult assembleContigs(final AssembleResult assemble) {
+        AlignResult align = assemble.alignResult;
+
+        File clnaFile = TempFileManager.getTempFile();
+        try (ClnAWriter writer = new ClnAWriter(null, clnaFile)) {
+            // writer will supply current stage and completion percent to the progress reporter
+            SmartProgressReporter.startProgressReport(writer);
+            // Writing clone block
+
+            writer.writeClones(assemble.cloneSet);
+            // Pre-soring alignments
+            try (AlignmentsMappingMerger merged = new AlignmentsMappingMerger(
+                    CUtils.asOutputPort(align.alignments),
+                    assemble.cloneAssembler.getAssembledReadsPort())) {
+                writer.sortAlignments(merged, assemble.cloneAssembler.getAlignmentsCount());
+            }
+            writer.writeAlignmentsAndIndex();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        int totalClonesCount = 0;
+        File tmpFile = TempFileManager.getTempFile();
+        try (ClnAReader reader = new ClnAReader(clnaFile.toPath(), VDJCLibraryRegistry.getDefault());
+             PrimitivO tmpOut = new PrimitivO(new BufferedOutputStream(new FileOutputStream(tmpFile)));) {
+
+            IOUtil.registerGeneReferences(tmpOut, align.usedGenes, align.parameters.alignerParameters);
+
+            final CloneFactory cloneFactory = new CloneFactory(reader.getAssemblerParameters().getCloneFactoryParameters(),
+                    reader.getAssemblingFeatures(), reader.getGenes(), reader.getAlignerParameters().getFeaturesToAlignMap());
+
+            ClnAReader.CloneAlignmentsPort cloneAlignmentsPort = reader.clonesAndAlignments();
+            SmartProgressReporter.startProgressReport("Assembling", cloneAlignmentsPort);
+
+            OutputPort<Clone[]> parallelProcessor = new ParallelProcessor<>(cloneAlignmentsPort, cloneAlignments -> {
+                try {
+                    FullSeqAssembler fullSeqAssembler = new FullSeqAssembler(cloneFactory,
+                            align.parameters.fullSeqAssemblerParameters, cloneAlignments.clone,
+                            align.parameters.alignerParameters);
+                    FullSeqAssembler.RawVariantsData rawVariantsData =
+                            fullSeqAssembler.calculateRawData(cloneAlignments::alignments);
+
+                    return fullSeqAssembler.callVariants(rawVariantsData);
+                } catch (Throwable re) {
+                    throw new RuntimeException("While processing clone #" + cloneAlignments.clone.getId(), re);
+                }
+            }, 1);
+
+
+            for (Clone[] clones : CUtils.it(parallelProcessor)) {
+                totalClonesCount += clones.length;
+                for (Clone cl : clones)
+                    tmpOut.writeObject(cl);
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        Clone[] clones = new Clone[totalClonesCount];
+        try (PrimitivI tmpIn = new PrimitivI(new BufferedInputStream(new FileInputStream(tmpFile)))) {
+            IOUtil.registerGeneReferences(tmpIn, align.usedGenes, align.parameters.alignerParameters);
+            int i = 0;
+            for (Clone clone : CUtils.it(new PipeDataInputReader<>(Clone.class, tmpIn, totalClonesCount)))
+                clones[i++] = clone;
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+        Arrays.sort(clones, Comparator.comparingDouble(c -> -c.getCount()));
+        for (int i = 0; i < clones.length; i++)
+            clones[i] = clones[i].setId(i);
+        CloneSet cloneSet = new CloneSet(Arrays.asList(clones), align.usedGenes, align.parameters.alignerParameters.getFeaturesToAlignMap(),
+                align.parameters.alignerParameters, align.parameters.cloneAssemblerParameters);
+
+        return new FullSeqAssembleResult(assemble, cloneSet);
     }
 
     public static AlignResult align(String... files) throws Exception {
@@ -146,8 +235,6 @@ public final class RunMiXCR {
             }))) {
                 if (t.alignment != null) {
                     t.alignment.setAlignmentsIndex(ind++);
-                    t.alignment.setOriginalDescriptions(ActionAlign.extractDescriptions(t.read));
-                    t.alignment.setOriginalSequences(ActionAlign.extractSequences(t.read));
                     als.add(t.alignment);
                 }
             }
@@ -155,13 +242,27 @@ public final class RunMiXCR {
         }
     }
 
-    public static final class AssembleResult {
-        final CloneSet cloneSet;
-        final CloneAssemblerReport report;
+    public static final class FullSeqAssembleResult {
+        public final AssembleResult assembleResult;
+        public final CloneSet cloneSet;
 
-        public AssembleResult(CloneSet cloneSet, CloneAssemblerReport report) {
+        public FullSeqAssembleResult(AssembleResult assembleResult, CloneSet cloneSet) {
+            this.assembleResult = assembleResult;
+            this.cloneSet = cloneSet;
+        }
+    }
+
+    public static final class AssembleResult {
+        public final AlignResult alignResult;
+        public final CloneSet cloneSet;
+        public final CloneAssemblerReport report;
+        public final CloneAssembler cloneAssembler;
+
+        public AssembleResult(AlignResult alignResult, CloneSet cloneSet, CloneAssemblerReport report, CloneAssembler cloneAssembler) {
+            this.alignResult = alignResult;
             this.cloneSet = cloneSet;
             this.report = report;
+            this.cloneAssembler = cloneAssembler;
         }
     }
 
@@ -189,7 +290,7 @@ public final class RunMiXCR {
             if (serializedAlignments == null) {
                 final ByteArrayOutputStream data = new ByteArrayOutputStream();
                 try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(data)) {
-                    writer.header(aligner);
+                    writer.header(aligner, null);
                     for (VDJCAlignments alignment : alignments)
                         writer.write(alignment);
                     writer.setNumberOfProcessedReads(totalNumberOfReads);
@@ -203,6 +304,7 @@ public final class RunMiXCR {
     public static final class RunMiXCRAnalysis {
         public VDJCAlignerParameters alignerParameters = VDJCParametersPresets.getByName("default");
         public CloneAssemblerParameters cloneAssemblerParameters = CloneAssemblerParametersPresets.getByName("default");
+        public FullSeqAssemblerParameters fullSeqAssemblerParameters = FullSeqAssemblerParameters.getByName("default");
         public String library = "default";
         public Chains chains = Chains.ALL;
         public String species = "hs";
@@ -224,11 +326,13 @@ public final class RunMiXCR {
                 else
                     reader = new SingleFastqReader(inputFiles[0], true);
             }
+            cloneAssemblerParameters.updateFrom(alignerParameters);
         }
 
         public RunMiXCRAnalysis(SequenceReaderCloseable<? extends SequenceRead> reader, boolean isInputPaired) {
             this.reader = reader;
             this.isInputPaired = isInputPaired;
+            cloneAssemblerParameters.updateFrom(alignerParameters);
         }
 
         public RunMiXCRAnalysis(final SequenceRead... input) {
@@ -241,7 +345,7 @@ public final class RunMiXCR {
 
                 @Override
                 public long getNumberOfReads() {
-                    return input.length;
+                    return counter;
                 }
 
                 @Override
@@ -252,6 +356,7 @@ public final class RunMiXCR {
                 }
             };
             this.isInputPaired = input.length > 0 && input[0] instanceof PairedRead;
+            cloneAssemblerParameters.updateFrom(alignerParameters);
         }
 
         public boolean isInputPaired() {

@@ -60,8 +60,9 @@ public class MiXCRTestUtils {
 
     public static void printAlignment(VDJCAlignments alignments) {
         for (int i = 0; i < alignments.numberOfTargets(); i++) {
-            if (alignments.getTargetDescriptions() != null)
-                System.out.println(">>> Description: " + alignments.getTargetDescriptions()[i] + "\n");
+//            fixme
+//            if (alignments.getTargetDescriptions() != null)
+//                System.out.println(">>> Description: " + alignments.getTargetDescriptions()[i] + "\n");
 
             MultiAlignmentHelper targetAsMultiAlignment = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, i);
             if (targetAsMultiAlignment == null)

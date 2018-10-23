@@ -42,6 +42,8 @@ import com.milaboratory.core.merger.PairedReadMergingResult;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequencesUtils;
+import com.milaboratory.mixcr.basictypes.SequenceHistory;
+import com.milaboratory.mixcr.basictypes.SequenceHistory.OverlapType;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.vdjaligners.KGeneAlignmentParameters;
@@ -70,9 +72,9 @@ public class TargetMerger {
     }
 
     @SuppressWarnings("unchecked")
-    public AlignedTarget merge(long readId, AlignedTarget targetLeft, AlignedTarget targetRight, int offset) {
+    public AlignedTarget merge(AlignedTarget targetLeft, AlignedTarget targetRight, int offset, OverlapType overlapType, int nMismatches) {
         if (offset < 0)
-            return merge(readId, targetRight, targetLeft, -offset);
+            return merge(targetRight, targetLeft, -offset, overlapType, nMismatches);
 
         final NSequenceWithQuality mergedTarget = merger.overlap(targetLeft.getTarget(), targetRight.getTarget(), offset);
 
@@ -107,7 +109,17 @@ public class TargetMerger {
             result.put(geneType, resultingHits.toArray(new VDJCHit[resultingHits.size()]));
         }
 
-        AlignedTarget resultTarget = new AlignedTarget(new VDJCAlignments(readId, result, mergedTarget), 0);
+
+        VDJCAlignments alignments = new VDJCAlignments(result,
+                new NSequenceWithQuality[]{mergedTarget},
+                new SequenceHistory[]{
+                        new SequenceHistory.Merge(overlapType, targetLeft.getHistory(), targetRight.getHistory(), offset, nMismatches)
+                },
+                VDJCAlignments.mergeOriginalReads(
+                        targetLeft.getAlignments(),
+                        targetRight.getAlignments())
+        );
+        AlignedTarget resultTarget = new AlignedTarget(alignments, 0);
         for (BPoint bPoint : BPoint.values()) {
             int leftPoint = targetLeft.getBPoint(bPoint);
             int rightPoint = targetRight.getBPoint(bPoint);
@@ -264,17 +276,16 @@ public class TargetMerger {
                 seq, seq1From, seq1To - seq1From, seq2From, seq2To - seq2From, bandedWidth);
     }
 
-    public TargetMergingResult merge(long readId, AlignedTarget targetLeft, AlignedTarget targetRight) {
-        return merge(readId, targetLeft, targetRight, true);
+    public TargetMergingResult merge(AlignedTarget targetLeft, AlignedTarget targetRight) {
+        return merge(targetLeft, targetRight, true);
     }
 
     /**
-     * @param readId           read id
      * @param targetLeft       left sequence
      * @param targetRight      right sequence
      * @param trySequenceMerge whether to try merging using sequence overlap (if alignment overlap failed)
      */
-    public TargetMergingResult merge(long readId, AlignedTarget targetLeft, AlignedTarget targetRight,
+    public TargetMergingResult merge(AlignedTarget targetLeft, AlignedTarget targetRight,
                                      boolean trySequenceMerge) {
         for (GeneType geneType : GeneType.VJC_REFERENCE) {
             if (!hasAlignments(targetLeft, geneType) || !hasAlignments(targetRight, geneType))
@@ -315,10 +326,10 @@ public class TargetMerger {
                 if (identity < minimalAlignmentMergeIdentity)
                     return new TargetMergingResult(geneType);
 
-                final AlignedTarget merge = merge(readId, targetLeft, targetRight, delta);
+                final AlignedTarget merge = merge(targetLeft, targetRight, delta, OverlapType.AlignmentOverlap, mismatches);
                 return new TargetMergingResult(true, null, merge,
                         PairedReadMergingResult.MATCH_SCORE * (overlap - mismatches) +
-                                PairedReadMergingResult.MISMATCH_SCORE * mismatches, overlap, mismatches);
+                                PairedReadMergingResult.MISMATCH_SCORE * mismatches, overlap, mismatches, delta);
             }
         }
 
@@ -329,8 +340,8 @@ public class TargetMerger {
         if (!merge.isSuccessful())
             return new TargetMergingResult();
         return new TargetMergingResult(false, null,
-                merge(readId, targetLeft, targetRight, merge.getOffset()),
-                merge.score(), merge.getOverlap(), merge.getErrors());
+                merge(targetLeft, targetRight, merge.getOffset(), OverlapType.SequenceOverlap, merge.getErrors()),
+                merge.score(), merge.getOverlap(), merge.getErrors(), merge.getOffset());
     }
 
     private static int sumScore(Alignment[] als) {
@@ -351,6 +362,7 @@ public class TargetMerger {
         private final AlignedTarget result;
         private final int score;
         private final int matched, mismatched;
+        private final int offset;
 
 //        public TargetMergingResult(AlignedTarget result, int score, boolean usingAlignments, int matched, int mismatched) {
 //            this.result = result;
@@ -361,20 +373,21 @@ public class TargetMerger {
 //        }
 
         private TargetMergingResult() {
-            this(false, null, null, 0, 0, 0);
+            this(false, null, null, 0, 0, 0, 0);
         }
 
         private TargetMergingResult(GeneType failedGeneType) {
-            this(true, failedGeneType, null, 0, 0, 0);
+            this(true, failedGeneType, null, 0, 0, 0, 0);
         }
 
-        private TargetMergingResult(boolean usingAlignments, GeneType failedMergedGeneType, AlignedTarget result, int score, int matched, int mismatched) {
+        private TargetMergingResult(boolean usingAlignments, GeneType failedMergedGeneType, AlignedTarget result, int score, int matched, int mismatched, int offset) {
             this.usingAlignments = usingAlignments;
             this.failedMergedGeneType = failedMergedGeneType;
             this.result = result;
             this.score = score;
             this.matched = matched;
             this.mismatched = mismatched;
+            this.offset = offset;
         }
 
         public boolean isSuccessful() {
@@ -414,6 +427,10 @@ public class TargetMerger {
         public int getMismatched() {
             checkSuccessful();
             return mismatched;
+        }
+
+        public int getOffset() {
+            return offset;
         }
     }
 }
