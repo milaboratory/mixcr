@@ -9,11 +9,13 @@ import picocli.AutoComplete;
  */
 public class MainTest {
 
+    @Ignore
     @Test
     public void test1() {
         Main.main("analyze", "help", "amplicon");
     }
 
+    @Ignore
     @Test
     public void test2() {
         Main.main("align", "help");
