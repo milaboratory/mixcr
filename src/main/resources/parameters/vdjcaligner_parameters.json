@@ -6,6 +6,7 @@
             "minSumScore" : 50,
             "relativeMinScore" : 0.87,
             "parameters": {
+                "type": "kaligner",
                 "mapperKValue": 5,
                 "floatingLeftBound": true,
                 "floatingRightBound": true,
@@ -45,6 +46,7 @@
             "minSumScore" : 40,
             "relativeMinScore" : 0.87,
             "parameters": {
+                "type": "kaligner",
                 "mapperKValue": 5,
                 "floatingLeftBound": true,
                 "floatingRightBound": false,
@@ -73,6 +75,7 @@
             "minSumScore" : 40,
             "relativeMinScore" : 0.87,
             "parameters": {
+                "type": "kaligner",
                 "mapperKValue": 5,
                 "floatingLeftBound": false,
                 "floatingRightBound": false,
@@ -205,6 +208,7 @@
             "minSumScore" : 40,
             "relativeMinScore" : 0.8,
             "parameters": {
+                "type": "kaligner",
                 "mapperKValue": 5,
                 "floatingLeftBound": false,
                 "floatingRightBound": false,
@@ -256,6 +260,7 @@
             "minSumScore" : 80,
             "relativeMinScore" : 0.87,
             "parameters": {
+                "type": "kaligner",
                 "mapperKValue": 5,
                 "floatingLeftBound": false,
                 "floatingRightBound": true,
@@ -295,6 +300,7 @@
             "minSumScore" : 60,
             "relativeMinScore" : 0.87,
             "parameters": {
+                "type": "kaligner",
                 "mapperKValue": 5,
                 "floatingLeftBound": true,
                 "floatingRightBound": false,
@@ -323,6 +329,7 @@
             "minSumScore" : 40,
             "relativeMinScore" : 0.87,
             "parameters": {
+                "type": "kaligner",
                 "mapperKValue": 5,
                 "floatingLeftBound": false,
                 "floatingRightBound": false,
