@@ -415,8 +415,8 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
         ));
 
         alignments.put("full", Arrays.asList(
-                FieldData.mk("-sequence"),
-                FieldData.mk("-quality"),
+                FieldData.mk("-targetSequences"),
+                FieldData.mk("-targetQualities"),
                 FieldData.mk("-vHitsWithScore"),
                 FieldData.mk("-dHitsWithScore"),
                 FieldData.mk("-jHitsWithScore"),
