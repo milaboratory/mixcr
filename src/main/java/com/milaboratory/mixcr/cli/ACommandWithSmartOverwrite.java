@@ -5,11 +5,11 @@ import com.milaboratory.mixcr.basictypes.IOUtil;
 import com.milaboratory.mixcr.basictypes.PipelineConfiguration;
 import com.milaboratory.mixcr.basictypes.PipelineConfigurationReader;
 import picocli.CommandLine;
+import picocli.CommandLine.Option;
 
 /** A command which allows resuming execution */
 public abstract class ACommandWithSmartOverwrite extends ACommandWithOutput {
-    @CommandLine.Option(
-            names = "--overwrite-if-required",
+    @Option(names = "--overwrite-if-required",
             description = "Overwrite output file if it is corrupted or if it was generated from different input file " +
                     "or with different parameters. -f / --force-overwrite overrides this option.")
     public boolean overwriteIfRequired = false;

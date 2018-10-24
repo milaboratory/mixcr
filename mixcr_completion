@@ -1,4 +1,3 @@
-
 #!/usr/bin/env bash
 #
 # mixcr Bash Completion
@@ -79,11 +78,11 @@ function _complete_mixcr() {
   CMDS2=(align)
   CMDS3=(assemble)
   CMDS4=(assembleContigs)
-  CMDS5=(exportClones)
-  CMDS6=(assemblePartial)
-  CMDS7=(extend)
-  CMDS8=(exportAlignments)
-  CMDS9=(exportAlignmentsPretty)
+  CMDS5=(assemblePartial)
+  CMDS6=(extend)
+  CMDS7=(exportAlignments)
+  CMDS8=(exportAlignmentsPretty)
+  CMDS9=(exportClones)
   CMDS10=(exportClonesPretty)
   CMDS11=(exportReadsForClones)
   CMDS12=(exportReads)
@@ -119,11 +118,11 @@ function _complete_mixcr() {
   ArrContains COMP_WORDS CMDS12 && { _picocli_mixcr_exportReads; return $?; }
   ArrContains COMP_WORDS CMDS11 && { _picocli_mixcr_exportReadsForClones; return $?; }
   ArrContains COMP_WORDS CMDS10 && { _picocli_mixcr_exportClonesPretty; return $?; }
-  ArrContains COMP_WORDS CMDS9 && { _picocli_mixcr_exportAlignmentsPretty; return $?; }
-  ArrContains COMP_WORDS CMDS8 && { _picocli_mixcr_exportAlignments; return $?; }
-  ArrContains COMP_WORDS CMDS7 && { _picocli_mixcr_extend; return $?; }
-  ArrContains COMP_WORDS CMDS6 && { _picocli_mixcr_assemblePartial; return $?; }
-  ArrContains COMP_WORDS CMDS5 && { _picocli_mixcr_exportClones; return $?; }
+  ArrContains COMP_WORDS CMDS9 && { _picocli_mixcr_exportClones; return $?; }
+  ArrContains COMP_WORDS CMDS8 && { _picocli_mixcr_exportAlignmentsPretty; return $?; }
+  ArrContains COMP_WORDS CMDS7 && { _picocli_mixcr_exportAlignments; return $?; }
+  ArrContains COMP_WORDS CMDS6 && { _picocli_mixcr_extend; return $?; }
+  ArrContains COMP_WORDS CMDS5 && { _picocli_mixcr_assemblePartial; return $?; }
   ArrContains COMP_WORDS CMDS4 && { _picocli_mixcr_assembleContigs; return $?; }
   ArrContains COMP_WORDS CMDS3 && { _picocli_mixcr_assemble; return $?; }
   ArrContains COMP_WORDS CMDS2 && { _picocli_mixcr_align; return $?; }
@@ -140,7 +139,7 @@ function _picocli_mixcr() {
   CURR_WORD=${COMP_WORDS[COMP_CWORD]}
   PREV_WORD=${COMP_WORDS[COMP_CWORD-1]}
 
-  COMMANDS="help analyze align assemble assembleContigs exportClones assemblePartial extend exportAlignments exportAlignmentsPretty exportClonesPretty exportReadsForClones exportReads mergeAlignments filterAlignments sortAlignments alignmentsDiff clonesDiff alignmentsStat listLibraries versionInfo pipelineInfo slice info"
+  COMMANDS="help analyze align assemble assembleContigs assemblePartial extend exportAlignments exportAlignmentsPretty exportClones exportClonesPretty exportReadsForClones exportReads mergeAlignments filterAlignments sortAlignments alignmentsDiff clonesDiff alignmentsStat listLibraries versionInfo pipelineInfo slice info"
   FLAG_OPTS="-h --help -v --version -h --help"
   ARG_OPTS=""
 
@@ -192,8 +191,8 @@ function _picocli_mixcr_align() {
   PREV_WORD=${COMP_WORDS[COMP_CWORD-1]}
 
   COMMANDS=""
-  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force --resume -d --no-merge --write-all --buffers -a --save-description -g --save-reads"
-  ARG_OPTS="-s --species -r --report --json-report -b --library -p --parameters -O --not-aligned-R1 --not-aligned-R2 -t --threads -c --chains -n --limit"
+  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force-overwrite --force --overwrite-if-required -d --no-merge --write-all --buffers -a --save-description -g --save-reads"
+  ARG_OPTS="-s --species -r --report --json-report -b --library -p --parameters -O --not-aligned-R1 --not-aligned-R2 -n --limit -t --threads -c --chains"
 
   compopt +o default
 
@@ -222,13 +221,13 @@ function _picocli_mixcr_align() {
     --not-aligned-R2)
       return
       ;;
+    -n|--limit)
+      return
+      ;;
     -t|--threads)
       return
       ;;
     -c|--chains)
-      return
-      ;;
-    -n|--limit)
       return
       ;;
   esac
@@ -247,8 +246,8 @@ function _picocli_mixcr_assemble() {
   PREV_WORD=${COMP_WORDS[COMP_CWORD-1]}
 
   COMMANDS=""
-  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force --resume --buffers -a --write-alignments"
-  ARG_OPTS="-p --parameters -r --report --json-report -e --events -O -t --threads"
+  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force-overwrite --force --overwrite-if-required --buffers -a --write-alignments"
+  ARG_OPTS="-p --parameters -r --report --json-report -O -t --threads"
 
   compopt +o default
 
@@ -260,9 +259,6 @@ function _picocli_mixcr_assemble() {
       return
       ;;
     --json-report)
-      return
-      ;;
-    -e|--events)
       return
       ;;
     -O)
@@ -287,7 +283,7 @@ function _picocli_mixcr_assembleContigs() {
   PREV_WORD=${COMP_WORDS[COMP_CWORD-1]}
 
   COMMANDS=""
-  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force --resume"
+  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force-overwrite --force --overwrite-if-required"
   ARG_OPTS="-O -r --report --debug-report --json-report -t --threads"
 
   compopt +o default
@@ -317,94 +313,6 @@ function _picocli_mixcr_assembleContigs() {
   fi
 }
 
-# Generates completions for the options and subcommands of the `exportClones` subcommand.
-function _picocli_mixcr_exportClones() {
-  # Get completion data
-  CURR_WORD=${COMP_WORDS[COMP_CWORD]}
-  PREV_WORD=${COMP_WORDS[COMP_CWORD-1]}
-
-  COMMANDS=""
-  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force -v --with-spaces -lf --list-fields -s --no-spaces -o --filter-out-of-frames -t --filter-stops -targets -vHit -dHit -jHit -cHit -vGene -dGene -jGene -cGene -vFamily -dFamily -jFamily -cFamily -vHitScore -dHitScore -jHitScore -cHitScore -vHitsWithScore -dHitsWithScore -jHitsWithScore -cHitsWithScore -vHits -dHits -jHits -cHits -vGenes -dGenes -jGenes -cGenes -vFamilies -dFamilies -jFamilies -cFamilies -vAlignment -dAlignment -jAlignment -cAlignment -vAlignments -dAlignments -jAlignments -cAlignments -defaultAnchorPoints -cloneId -count -fraction -sequence -quality -vIdentityPercents -dIdentityPercents -jIdentityPercents -cIdentityPercents -vBestIdentityPercent -dBestIdentityPercent -jBestIdentityPercent -cBestIdentityPercent -chains -topChains"
-  ARG_OPTS="-c --chains -p --preset -pf --preset-file -n --limit -q --minimal-clone-fraction -m --minimal-clone-count -nFeature -qFeature -aaFeature -nFeatureImputed -aaFeatureImputed -minFeatureQuality -avrgFeatureQuality -lengthOf -nMutations -nMutationsRelative -aaMutations -aaMutationsRelative -mutationsDetailed -mutationsDetailedRelative -positionInReferenceOf -positionOf"
-
-  compopt +o default
-
-  case ${PREV_WORD} in
-    -c|--chains)
-      return
-      ;;
-    -p|--preset)
-      return
-      ;;
-    -pf|--preset-file)
-      return
-      ;;
-    -n|--limit)
-      return
-      ;;
-    -q|--minimal-clone-fraction)
-      return
-      ;;
-    -m|--minimal-clone-count)
-      return
-      ;;
-    -nFeature)
-      return
-      ;;
-    -qFeature)
-      return
-      ;;
-    -aaFeature)
-      return
-      ;;
-    -nFeatureImputed)
-      return
-      ;;
-    -aaFeatureImputed)
-      return
-      ;;
-    -minFeatureQuality)
-      return
-      ;;
-    -avrgFeatureQuality)
-      return
-      ;;
-    -lengthOf)
-      return
-      ;;
-    -nMutations)
-      return
-      ;;
-    -nMutationsRelative)
-      return
-      ;;
-    -aaMutations)
-      return
-      ;;
-    -aaMutationsRelative)
-      return
-      ;;
-    -mutationsDetailed)
-      return
-      ;;
-    -mutationsDetailedRelative)
-      return
-      ;;
-    -positionInReferenceOf)
-      return
-      ;;
-    -positionOf)
-      return
-      ;;
-  esac
-
-  if [[ "${CURR_WORD}" == -* ]]; then
-    COMPREPLY=( $(compgen -W "${FLAG_OPTS} ${ARG_OPTS}" -- ${CURR_WORD}) )
-  else
-    COMPREPLY=( $(compgen -W "${COMMANDS}" -- ${CURR_WORD}) )
-  fi
-}
-
 # Generates completions for the options and subcommands of the `assemblePartial` subcommand.
 function _picocli_mixcr_assemblePartial() {
   # Get completion data
@@ -412,7 +320,7 @@ function _picocli_mixcr_assemblePartial() {
   PREV_WORD=${COMP_WORDS[COMP_CWORD-1]}
 
   COMMANDS=""
-  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force --resume -o --overlapped-only -d --drop-partial"
+  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force-overwrite --force --overwrite-if-required -o --overlapped-only -d --drop-partial"
   ARG_OPTS="-O -r --report --json-report"
 
   compopt +o default
@@ -443,7 +351,7 @@ function _picocli_mixcr_extend() {
   PREV_WORD=${COMP_WORDS[COMP_CWORD-1]}
 
   COMMANDS=""
-  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force --resume"
+  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force-overwrite --force --overwrite-if-required"
   ARG_OPTS="-c --chains -r --report --json-report -q --quality --v-anchor --j-anchor --min-v-score --min-j-score -t --threads"
 
   compopt +o default
@@ -492,7 +400,7 @@ function _picocli_mixcr_exportAlignments() {
   PREV_WORD=${COMP_WORDS[COMP_CWORD-1]}
 
   COMMANDS=""
-  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force -v --with-spaces -lf --list-fields -s --no-spaces -targets -vHit -dHit -jHit -cHit -vGene -dGene -jGene -cGene -vFamily -dFamily -jFamily -cFamily -vHitScore -dHitScore -jHitScore -cHitScore -vHitsWithScore -dHitsWithScore -jHitsWithScore -cHitsWithScore -vHits -dHits -jHits -cHits -vGenes -dGenes -jGenes -cGenes -vFamilies -dFamilies -jFamilies -cFamilies -vAlignment -dAlignment -jAlignment -cAlignment -vAlignments -dAlignments -jAlignments -cAlignments -defaultAnchorPoints -readId -readIds -sequence -quality -descrR1 -descrR2 -descrsR1 -descrsR2 -readHistory -cloneId -cloneIdWithMappingType -vIdentityPercents -dIdentityPercents -jIdentityPercents -cIdentityPercents -vBestIdentityPercent -dBestIdentityPercent -jBestIdentityPercent -cBestIdentityPercent -chains -topChains"
+  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force-overwrite --force -v --with-spaces -lf --list-fields -s --no-spaces -targets -vHit -dHit -jHit -cHit -vGene -dGene -jGene -cGene -vFamily -dFamily -jFamily -cFamily -vHitScore -dHitScore -jHitScore -cHitScore -vHitsWithScore -dHitsWithScore -jHitsWithScore -cHitsWithScore -vHits -dHits -jHits -cHits -vGenes -dGenes -jGenes -cGenes -vFamilies -dFamilies -jFamilies -cFamilies -vAlignment -dAlignment -jAlignment -cAlignment -vAlignments -dAlignments -jAlignments -cAlignments -defaultAnchorPoints -readId -readIds -sequence -quality -descrR1 -descrR2 -descrsR1 -descrsR2 -readHistory -cloneId -cloneIdWithMappingType -vIdentityPercents -dIdentityPercents -jIdentityPercents -cIdentityPercents -vBestIdentityPercent -dBestIdentityPercent -jBestIdentityPercent -cBestIdentityPercent -chains -topChains"
   ARG_OPTS="-c --chains -p --preset -pf --preset-file -n --limit -nFeature -qFeature -aaFeature -nFeatureImputed -aaFeatureImputed -minFeatureQuality -avrgFeatureQuality -lengthOf -nMutations -nMutationsRelative -aaMutations -aaMutationsRelative -mutationsDetailed -mutationsDetailedRelative -positionInReferenceOf -positionOf"
 
   compopt +o default
@@ -574,7 +482,7 @@ function _picocli_mixcr_exportAlignmentsPretty() {
   PREV_WORD=${COMP_WORDS[COMP_CWORD-1]}
 
   COMMANDS=""
-  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force -t --top -a --gene -d --descriptions"
+  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force-overwrite --force -t --top -a --gene -d --descriptions"
   ARG_OPTS="-b --limit-before -n --limit -c --chains -s --skip -e --cdr3-equals -g --feature -r --read-contains --filter -i --read-ids"
 
   compopt +o default
@@ -616,6 +524,94 @@ function _picocli_mixcr_exportAlignmentsPretty() {
   fi
 }
 
+# Generates completions for the options and subcommands of the `exportClones` subcommand.
+function _picocli_mixcr_exportClones() {
+  # Get completion data
+  CURR_WORD=${COMP_WORDS[COMP_CWORD]}
+  PREV_WORD=${COMP_WORDS[COMP_CWORD-1]}
+
+  COMMANDS=""
+  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force-overwrite --force -v --with-spaces -lf --list-fields -s --no-spaces -o --filter-out-of-frames -t --filter-stops -targets -vHit -dHit -jHit -cHit -vGene -dGene -jGene -cGene -vFamily -dFamily -jFamily -cFamily -vHitScore -dHitScore -jHitScore -cHitScore -vHitsWithScore -dHitsWithScore -jHitsWithScore -cHitsWithScore -vHits -dHits -jHits -cHits -vGenes -dGenes -jGenes -cGenes -vFamilies -dFamilies -jFamilies -cFamilies -vAlignment -dAlignment -jAlignment -cAlignment -vAlignments -dAlignments -jAlignments -cAlignments -defaultAnchorPoints -cloneId -count -fraction -sequence -quality -vIdentityPercents -dIdentityPercents -jIdentityPercents -cIdentityPercents -vBestIdentityPercent -dBestIdentityPercent -jBestIdentityPercent -cBestIdentityPercent -chains -topChains"
+  ARG_OPTS="-c --chains -p --preset -pf --preset-file -n --limit -q --minimal-clone-fraction -m --minimal-clone-count -nFeature -qFeature -aaFeature -nFeatureImputed -aaFeatureImputed -minFeatureQuality -avrgFeatureQuality -lengthOf -nMutations -nMutationsRelative -aaMutations -aaMutationsRelative -mutationsDetailed -mutationsDetailedRelative -positionInReferenceOf -positionOf"
+
+  compopt +o default
+
+  case ${PREV_WORD} in
+    -c|--chains)
+      return
+      ;;
+    -p|--preset)
+      return
+      ;;
+    -pf|--preset-file)
+      return
+      ;;
+    -n|--limit)
+      return
+      ;;
+    -q|--minimal-clone-fraction)
+      return
+      ;;
+    -m|--minimal-clone-count)
+      return
+      ;;
+    -nFeature)
+      return
+      ;;
+    -qFeature)
+      return
+      ;;
+    -aaFeature)
+      return
+      ;;
+    -nFeatureImputed)
+      return
+      ;;
+    -aaFeatureImputed)
+      return
+      ;;
+    -minFeatureQuality)
+      return
+      ;;
+    -avrgFeatureQuality)
+      return
+      ;;
+    -lengthOf)
+      return
+      ;;
+    -nMutations)
+      return
+      ;;
+    -nMutationsRelative)
+      return
+      ;;
+    -aaMutations)
+      return
+      ;;
+    -aaMutationsRelative)
+      return
+      ;;
+    -mutationsDetailed)
+      return
+      ;;
+    -mutationsDetailedRelative)
+      return
+      ;;
+    -positionInReferenceOf)
+      return
+      ;;
+    -positionOf)
+      return
+      ;;
+  esac
+
+  if [[ "${CURR_WORD}" == -* ]]; then
+    COMPREPLY=( $(compgen -W "${FLAG_OPTS} ${ARG_OPTS}" -- ${CURR_WORD}) )
+  else
+    COMPREPLY=( $(compgen -W "${COMMANDS}" -- ${CURR_WORD}) )
+  fi
+}
+
 # Generates completions for the options and subcommands of the `exportClonesPretty` subcommand.
 function _picocli_mixcr_exportClonesPretty() {
   # Get completion data
@@ -623,7 +619,7 @@ function _picocli_mixcr_exportClonesPretty() {
   PREV_WORD=${COMP_WORDS[COMP_CWORD-1]}
 
   COMMANDS=""
-  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force"
+  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force-overwrite --force"
   ARG_OPTS="-b --limitBefore -n --limit -i --clone-ids -s --skip -c --chains -e --cdr3-equals -r --clonal-sequence-contains"
 
   compopt +o default
@@ -666,7 +662,7 @@ function _picocli_mixcr_exportReadsForClones() {
   PREV_WORD=${COMP_WORDS[COMP_CWORD-1]}
 
   COMMANDS=""
-  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force -s --separate"
+  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force-overwrite --force -s --separate"
   ARG_OPTS="--id"
 
   compopt +o default
@@ -691,7 +687,7 @@ function _picocli_mixcr_exportReads() {
   PREV_WORD=${COMP_WORDS[COMP_CWORD-1]}
 
   COMMANDS=""
-  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force"
+  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force-overwrite --force"
   ARG_OPTS=""
 
   if [[ "${CURR_WORD}" == -* ]]; then
@@ -708,7 +704,7 @@ function _picocli_mixcr_mergeAlignments() {
   PREV_WORD=${COMP_WORDS[COMP_CWORD-1]}
 
   COMMANDS=""
-  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force --resume"
+  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force-overwrite --force --overwrite-if-required"
   ARG_OPTS=""
 
   if [[ "${CURR_WORD}" == -* ]]; then
@@ -725,7 +721,7 @@ function _picocli_mixcr_filterAlignments() {
   PREV_WORD=${COMP_WORDS[COMP_CWORD-1]}
 
   COMMANDS=""
-  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force --resume -x --chimeras-only"
+  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force-overwrite --force --overwrite-if-required -x --chimeras-only"
   ARG_OPTS="-c --chains -g --contains-feature -e --cdr3-equals -i --read-ids -n --limit"
 
   compopt +o default
@@ -762,7 +758,7 @@ function _picocli_mixcr_sortAlignments() {
   PREV_WORD=${COMP_WORDS[COMP_CWORD-1]}
 
   COMMANDS=""
-  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force --resume"
+  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force-overwrite --force --overwrite-if-required"
   ARG_OPTS=""
 
   if [[ "${CURR_WORD}" == -* ]]; then
@@ -779,7 +775,7 @@ function _picocli_mixcr_alignmentsDiff() {
   PREV_WORD=${COMP_WORDS[COMP_CWORD-1]}
 
   COMMANDS=""
-  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force"
+  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force-overwrite --force"
   ARG_OPTS="-o1 --only-in-first -o2 --only-in-second -d1 --diff-from-first -d2 --diff-from-second -g --gene-feature -l --top-hits-level"
 
   compopt +o default
@@ -819,7 +815,7 @@ function _picocli_mixcr_clonesDiff() {
   PREV_WORD=${COMP_WORDS[COMP_CWORD-1]}
 
   COMMANDS=""
-  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force -v -j -c"
+  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force-overwrite --force -v -j -c"
   ARG_OPTS=""
 
   if [[ "${CURR_WORD}" == -* ]]; then
@@ -904,7 +900,7 @@ function _picocli_mixcr_slice() {
   PREV_WORD=${COMP_WORDS[COMP_CWORD-1]}
 
   COMMANDS=""
-  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force --resume"
+  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force-overwrite --force --overwrite-if-required"
   ARG_OPTS="-i --id"
 
   compopt +o default
@@ -963,7 +959,7 @@ function _picocli_mixcr_analyze_amplicon() {
   PREV_WORD=${COMP_WORDS[COMP_CWORD-1]}
 
   COMMANDS=""
-  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force --impute-germline-on-export --only-productive --contig-assembly --resume --do-not-extend-alignments"
+  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force-overwrite --force --impute-germline-on-export --only-productive --contig-assembly --do-not-extend-alignments"
   ARG_OPTS="-s --species --starting-material -r --report --align --assemblePartial --extend --assemble --assembleContigs --export --assemble-partial-rounds --receptor-type --5-end --3-end --adapters --region-of-interest"
   startingMaterial_OPTION_ARGS="rna dna" # _StartingMaterial values
   chains_OPTION_ARGS="tcr bcr xcr tra trb trd trg igh igk igl" # --receptor-type values
@@ -1040,7 +1036,7 @@ function _picocli_mixcr_analyze_shotgun() {
   PREV_WORD=${COMP_WORDS[COMP_CWORD-1]}
 
   COMMANDS=""
-  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force --impute-germline-on-export --only-productive --contig-assembly --resume --do-not-extend-alignments"
+  FLAG_OPTS="-h --help -nw --no-warnings --verbose -f --force-overwrite --force --impute-germline-on-export --only-productive --contig-assembly --do-not-extend-alignments"
   ARG_OPTS="-s --species --starting-material -r --report --align --assemblePartial --extend --assemble --assembleContigs --export --assemble-partial-rounds --receptor-type"
   startingMaterial_OPTION_ARGS="rna dna" # _StartingMaterial values
   chains_OPTION_ARGS="tcr bcr xcr tra trb trd trg igh igk igl" # --receptor-type values
@@ -1100,3 +1096,6 @@ function _picocli_mixcr_analyze_shotgun() {
 # The `-o default` option means that if the function generated no matches, the
 # default Bash completions and the Readline default filename completions are performed.
 complete -F _complete_mixcr -o default mixcr mixcr.sh mixcr.bash
+
+
+Process finished with exit code 0
