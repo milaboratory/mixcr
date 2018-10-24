@@ -246,8 +246,8 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
     @Option(names = {"-r", "--report"}, description = "Report file path")
     public String report = null;
 
-    @Option(names = {"--resume"}, description = "Try to resume aborted execution")
-    public boolean resume = false;
+    // @Option(names = {"--resume"}, description = "Try to resume aborted execution")
+    // public boolean resume = false;
 
     public String getReport() {
         if (report == null)
@@ -257,12 +257,8 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
     }
 
     private <T extends ACommandWithOutput> T inheritOptionsAndValidate(T parameters) {
-        if (resume && parameters instanceof ACommandWithResume) {
-            ((ACommandWithResume) parameters).resume = true;
-            ((ACommandWithResume) parameters).doOverwrite = false;
-        }
-        if (!resume && isForceOverwrite())
-            parameters.force = true;
+        if (forceOverwrite)
+            parameters.forceOverwrite = true;
         parameters.quiet = true;
         parameters.validate();
         parameters.quiet = false;
@@ -482,7 +478,7 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
         }
 
         // logic with uber --resume and --force
-        if (resume || force)
+        if (forceOverwrite)
             exportParameters.add("-f");
 
         exportParameters.add("--chains");
@@ -555,10 +551,7 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
 
     @Override
     public void handleExistenceOfOutputFile(String outFileName) {
-        if (!isForceOverwrite())
-            throwValidationException("The destination file " + outFileName +
-                    " already exists. Either remove it or use -f option to overwrite it (in this case you can also" +
-                    " specify --resume option to prevent re-analyzing of intermediate files). ");
+        // Do nothing
     }
 
     @Override

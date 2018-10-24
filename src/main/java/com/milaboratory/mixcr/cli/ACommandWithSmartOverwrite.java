@@ -1,16 +1,18 @@
 package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.mixcr.basictypes.ActionConfiguration;
+import com.milaboratory.mixcr.basictypes.IOUtil;
 import com.milaboratory.mixcr.basictypes.PipelineConfiguration;
 import com.milaboratory.mixcr.basictypes.PipelineConfigurationReader;
 import picocli.CommandLine;
 
 /** A command which allows resuming execution */
-public abstract class ACommandWithResume extends ACommandWithOutput {
+public abstract class ACommandWithSmartOverwrite extends ACommandWithOutput {
     @CommandLine.Option(
-            names = "--resume",
-            description = "Try to resume interrupted execution")
-    public boolean resume = false;
+            names = "--overwrite-if-required",
+            description = "Overwrite output file if it is corrupted or if it was generated from different input file " +
+                    "or with different parameters. -f / --force-overwrite overrides this option.")
+    public boolean overwriteIfRequired = false;
 
     /** returns the unique run configuration */
     public abstract ActionConfiguration getConfiguration();
@@ -20,6 +22,18 @@ public abstract class ACommandWithResume extends ACommandWithOutput {
 
     public final String getOutput() {
         return getOutputFiles().get(0);
+    }
+
+    private boolean outputFileInfoInitialized = false;
+    private IOUtil.MiXCRFileInfo outputFileInfo = null;
+
+    public IOUtil.MiXCRFileInfo getOutputFileInfo() {
+        if (getOutputFiles().size() != 1) throw new RuntimeException();
+        if (!outputFileInfoInitialized) {
+            outputFileInfo = IOUtil.getFileInfo(getOutput());
+            outputFileInfoInitialized = true;
+        }
+        return outputFileInfo;
     }
 
     @Override
@@ -32,18 +46,16 @@ public abstract class ACommandWithResume extends ACommandWithOutput {
     /** whether to skip execution or not */
     private boolean skipExecution = false;
 
-    protected boolean doOverwrite = true;
-
     @Override
     public void handleExistenceOfOutputFile(String outFileName) {
-        if (doOverwrite && force)
+        if (forceOverwrite)
             // rewrite anyway
             return;
 
         // analysis supposed to be performed now
         PipelineConfiguration expectedPipeline = getFullPipelineConfiguration();
         // history written in existing file
-        PipelineConfiguration actualPipeline = PipelineConfigurationReader.fromFileOrNull(outFileName);
+        PipelineConfiguration actualPipeline = PipelineConfigurationReader.fromFileOrNull(outFileName, getOutputFileInfo());
 
         if (actualPipeline != null
                 && expectedPipeline != null
@@ -52,12 +64,12 @@ public abstract class ACommandWithResume extends ACommandWithOutput {
             String exists = "File " + outFileName + " already exists and contains correct " +
                     "binary data obtained from the specified input file. ";
 
-            if (!resume)
+            if (!overwriteIfRequired)
                 throwValidationException(exists +
-                        "Use --resume option to skip execution (output file will remain unchanged) or use -f option " +
-                        "to force overwrite it.", false);
+                        "Use --overwrite-if-required option to skip execution (output file will remain unchanged) or " +
+                        "use -f / --force-overwrite option to force overwrite it.", false);
             else {
-                warn("Skipping " + expectedPipeline.lastConfiguration().actionName() + " (--resume option specified). " + exists);
+                warn("Skipping " + expectedPipeline.lastConfiguration().actionName() + ". " + exists);
 
                 // print warns in case different MiXCR versions
                 for (int i = 0; i < expectedPipeline.pipelineSteps.length; i++) {
@@ -65,12 +77,13 @@ public abstract class ACommandWithResume extends ACommandWithOutput {
                             prev = actualPipeline.pipelineSteps[i].configuration,
                             curr = expectedPipeline.pipelineSteps[i].configuration;
                     if (!prev.versionId().equals(curr.versionId()))
-                        warn(String.format("WARNING (--resume): %s was performed with outdated MiXCR version (%s). Consider re-running analysis using --force option.",
+                        warn(String.format("WARNING (--overwrite-if-required): %s was performed with previous MiXCR version (%s). " +
+                                        "Consider re-running analysis using --force-overwrite option.",
                                 prev.actionName(),
                                 actualPipeline.pipelineSteps[i].versionOfMiXCR));
                 }
 
-                skipExecution = true; // nothing to do, just exit
+                skipExecution = true; // nothing to do in run0, just exit
                 return;
             }
         }
@@ -85,11 +98,4 @@ public abstract class ACommandWithResume extends ACommandWithOutput {
     }
 
     public abstract void run1() throws Exception;
-//
-//    public static abstract class ActionParametersWithResumeWithBinaryInput extends ActionParametersWithResumeOption {
-//        @Override
-//        public PipelineConfiguration getFullPipelineConfiguration() {
-//            return PipelineConfiguration.appendStep(PipelineConfigurationReader.fromFile(getInputFiles().get(0)), getInputFiles(), getConfiguration());
-//        }
-//    }
 }

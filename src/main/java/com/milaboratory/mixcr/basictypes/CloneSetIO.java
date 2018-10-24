@@ -34,6 +34,7 @@ import io.repseq.core.VDJCLibraryRegistry;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Objects;
 
 public final class CloneSetIO {
     public static CloneSet read(String file) throws IOException {
@@ -49,7 +50,7 @@ public final class CloneSetIO {
     }
 
     public static CloneSet read(File file, VDJCLibraryRegistry libraryRegistry) throws IOException {
-        switch (IOUtil.detectFilType(file)) {
+        switch (Objects.requireNonNull(IOUtil.getFileInfo(file)).fileType) {
             case ClnA:
                 try (ClnAReader r = new ClnAReader(file.toPath(), libraryRegistry)) {
                     return r.readCloneSet();

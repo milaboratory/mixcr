@@ -155,7 +155,7 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
             AutoCloseable reader = null;
             OutputPort<VDJCAlignments> source = null;
 
-            switch (IOUtil.detectFilType(in)) {
+            switch (IOUtil.getFileInfo(in).fileType) {
                 case VDJCA:
                     VDJCAlignmentsReader vdjcaReader = new VDJCAlignmentsReader(in, VDJCLibraryRegistry.getDefault());
                     reader = vdjcaReader;
@@ -166,6 +166,8 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                     reader = clnaReader;
                     source = clnaReader.readAllAlignments();
                     break;
+                case Clns:
+                    throwExecutionException("Can't export alignments from *.clns file: " + in);
                 default:
                     throwExecutionException("Unknown file type: " + in);
             }

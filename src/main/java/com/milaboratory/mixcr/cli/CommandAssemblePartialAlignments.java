@@ -21,7 +21,7 @@ import static com.milaboratory.mixcr.cli.CommandAssemblePartialAlignments.ASSEMB
         sortOptions = true,
         separator = " ",
         description = "Assembles partially aligned reads into longer sequences.")
-public class CommandAssemblePartialAlignments extends ACommandWithResumeWithSingleInput {
+public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwriteWithSingleInput {
     static final String ASSEMBLE_PARTIAL_COMMAND_NAME = "assemblePartial";
 
     @Option(names = "-O", description = "Overrides default parameter values.")

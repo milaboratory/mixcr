@@ -39,18 +39,27 @@ import io.repseq.core.VDJCGeneId;
 import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
 public class IOUtil {
-    public static final String MAGIC_FILE_END = "#MiXCR.File.End#";
-    private static final byte[] MAGIC_FILE_END_BYTES = MAGIC_FILE_END.getBytes(StandardCharsets.US_ASCII);
-    public static final int MAGIC_FILE_END_BYTES_SIZE = MAGIC_FILE_END_BYTES.length;
+    public static final int BEGIN_MAGIC_LENGTH = 14;
+    public static final int BEGIN_MAGIC_LENGTH_SHORT = 10;
 
-    public static byte[] getMagicFileEndBytes() {
-        return MAGIC_FILE_END_BYTES.clone();
+    public static final String END_MAGIC = "#MiXCR.File.End#";
+    private static final byte[] END_MAGIC_BYTES = END_MAGIC.getBytes(StandardCharsets.US_ASCII);
+    public static final int END_MAGIC_LENGTH = END_MAGIC_BYTES.length;
+
+    public static byte[] getEndMagicBytes() {
+        return END_MAGIC_BYTES.clone();
     }
 
     public static void writeAndRegisterGeneReferences(PrimitivO output, List<VDJCGene> genes,
@@ -152,60 +161,76 @@ public class IOUtil {
         else return ct.createOutputStream(os, 65536);
     }
 
-    public enum MiXCRFileType {
-        Clns, ClnA, VDJCA
+    public static MiXCRFileInfo getFileInfo(String fileName) {
+        return getFileInfo(new File(fileName));
     }
 
-    public static MiXCRFileType detectFilType(String file) {
-        return detectFilType(new File(file));
-    }
-
-    public static MiXCRFileType detectFilType(File file) {
-        CompressionType ct = CompressionType.detectCompressionType(file);
+    public static MiXCRFileInfo getFileInfo(File file) {
         try {
-            try (InputStream reader = ct.createInputStream(new FileInputStream(file))) {
-                byte[] data = new byte[10];
-                reader.read(data);
-                String magic = new String(data, StandardCharsets.US_ASCII);
-                switch (magic) {
+            Path path = file.toPath();
+
+            if (!Files.isRegularFile(path))
+                return null;
+            
+            try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
+                if (channel.size() < BEGIN_MAGIC_LENGTH + END_MAGIC_LENGTH)
+                    return null;
+
+                byte[] beginMagic = new byte[BEGIN_MAGIC_LENGTH];
+                channel.read(ByteBuffer.wrap(beginMagic));
+                String magicFull = new String(beginMagic, StandardCharsets.US_ASCII);
+                String magicShort = new String(beginMagic, 0, BEGIN_MAGIC_LENGTH_SHORT, StandardCharsets.US_ASCII);
+                MiXCRFileType type;
+                switch (magicShort) {
                     case "MiXCR.VDJC":
-                        return MiXCRFileType.VDJCA;
+                        type = MiXCRFileType.VDJCA;
+                        break;
                     case "MiXCR.CLNS":
-                        return MiXCRFileType.Clns;
+                        type = MiXCRFileType.Clns;
+                        break;
                     case "MiXCR.CLNA":
-                        return MiXCRFileType.ClnA;
+                        type = MiXCRFileType.ClnA;
+                        break;
                     default:
-                        throw new IllegalArgumentException("Not a MiXCR file");
+                        return null;
                 }
+
+                byte[] endMagic = new byte[END_MAGIC_LENGTH];
+                channel.read(ByteBuffer.wrap(endMagic), channel.position() - END_MAGIC_LENGTH);
+                return new MiXCRFileInfo(type, magicFull, Arrays.equals(endMagic, getEndMagicBytes()));
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
+    public enum MiXCRFileType {
+        Clns, ClnA, VDJCA
+    }
+
     /**
-     *
+     * Represent MiXCR binary file information (type, magic bytes, and whether it passes integrity test)
      */
     public static final class MiXCRFileInfo {
         /**
          * MiXCR file type, or null if not a MiXCR file format.
          */
-        final MiXCRFileType fileType;
+        public final MiXCRFileType fileType;
 
         /**
          * Full magic bytes string.
          */
-        final String fullMagic;
+        public final String fullMagic;
 
         /**
          * True if file integrity check succeeded. The command generated the file was not prematurely interrupted.
          */
-        final boolean complete;
+        public final boolean valid;
 
-        public MiXCRFileInfo(MiXCRFileType fileType, String fullMagic, boolean complete) {
+        public MiXCRFileInfo(MiXCRFileType fileType, String fullMagic, boolean valid) {
             this.fileType = fileType;
             this.fullMagic = fullMagic;
-            this.complete = complete;
+            this.valid = valid;
         }
 
         @Override
@@ -213,14 +238,14 @@ public class IOUtil {
             if (this == o) return true;
             if (!(o instanceof MiXCRFileInfo)) return false;
             MiXCRFileInfo that = (MiXCRFileInfo) o;
-            return complete == that.complete &&
+            return valid == that.valid &&
                     fileType == that.fileType &&
                     Objects.equals(fullMagic, that.fullMagic);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(fileType, fullMagic, complete);
+            return Objects.hash(fileType, fullMagic, valid);
         }
     }
 }
