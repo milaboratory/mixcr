@@ -62,8 +62,8 @@ import java.util.concurrent.atomic.AtomicLong;
  * Reader of CLNA file format.
  */
 public final class ClnAReader implements
-                              PipelineConfigurationReader,
-                              AutoCloseable {
+        PipelineConfigurationReader,
+        AutoCloseable {
     public static final int DEFAULT_CHUNK_SIZE = 262144;
     final int chunkSize;
     /**
@@ -134,7 +134,7 @@ public final class ClnAReader implements
 
         buf.flip();
         buf.limit(16);
-        long fSize = channel.size();
+        long fSize = channel.size() - IOUtil.END_MAGIC_LENGTH;
         channel.read(buf, fSize - 16);
         buf.flip();
         this.firstClonePosition = buf.getLong();

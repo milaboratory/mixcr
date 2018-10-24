@@ -24,7 +24,7 @@ import static com.milaboratory.mixcr.cli.CommandSlice.SLICE_COMMAND_NAME;
         sortOptions = true,
         separator = " ",
         description = "Slice ClnA file.")
-public class CommandSlice extends ACommandWithResumeWithSingleInput {
+public class CommandSlice extends ACommandWithSmartOverwriteWithSingleInput {
     static final String SLICE_COMMAND_NAME = "slice";
 
     @Option(description = "List of read (for .vdjca) / clone (for .clns/.clna) ids to export.",
@@ -40,9 +40,7 @@ public class CommandSlice extends ACommandWithResumeWithSingleInput {
     public void run1() throws Exception {
         Collections.sort(ids);
 
-        IOUtil.MiXCRFileType fileType = IOUtil.detectFilType(in);
-
-        switch (fileType) {
+        switch (getInputFileInfo().fileType) {
             case VDJCA:
                 sliceVDJCA();
                 break;

@@ -23,7 +23,7 @@ import static com.milaboratory.mixcr.cli.CommandMergeAlignments.MERGE_ALIGNMENTS
         sortOptions = true,
         separator = " ",
         description = "Merge several *.vdjca files with alignments into a single alignments file.")
-public class CommandMergeAlignments extends ACommandWithResume {
+public class CommandMergeAlignments extends ACommandWithSmartOverwrite {
     static final String MERGE_ALIGNMENTS_COMMAND_NAME = "mergeAlignments";
 
     @Parameters(description = "[input_file1.vdjca [input_file2.vdjca ....]] output_file.vdjca", arity = "2..*")

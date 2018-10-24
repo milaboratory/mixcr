@@ -11,19 +11,28 @@ public interface PipelineConfigurationReader {
     /**
      * Read pipeline configuration from file or return null
      */
-    static PipelineConfiguration fromFileOrNull(String fileName) {
+    static PipelineConfiguration fromFileOrNull(String fileName, IOUtil.MiXCRFileInfo fileInfo) {
+        if (!fileInfo.valid)
+            return null;
         try {
-            return fromFile(fileName);
+            return fromFile(fileName, fileInfo);
         } catch (Throwable ignored) {}
         return null;
+    }
+
+    static PipelineConfiguration fromFile(String fileName) {
+        IOUtil.MiXCRFileInfo fileInfo = IOUtil.getFileInfo(fileName);
+        if (!fileInfo.valid)
+            throw new RuntimeException("File " + fileName + " corrupted.");
+        return fromFile(fileName, fileInfo);
     }
 
     /**
      * Read pipeline configuration from file or throw exception
      */
-    static PipelineConfiguration fromFile(String fileName) {
+    static PipelineConfiguration fromFile(String fileName, IOUtil.MiXCRFileInfo fileInfo) {
         try {
-            switch (IOUtil.detectFilType(fileName)) {
+            switch (fileInfo.fileType) {
                 case VDJCA:
                     try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(fileName)) {
                         return reader.getPipelineConfiguration();

@@ -16,8 +16,8 @@ import java.nio.charset.StandardCharsets;
  *
  */
 public class ClnsWriter implements PipelineConfigurationWriter,
-                                   CanReportProgressAndStage,
-                                   Closeable {
+        CanReportProgressAndStage,
+        Closeable {
     static final String MAGIC_V7 = "MiXCR.CLNS.V07";
     static final String MAGIC = MAGIC_V7;
     static final int MAGIC_LENGTH = 14;
@@ -87,6 +87,9 @@ public class ClnsWriter implements PipelineConfigurationWriter,
             output.writeObject(clone);
             ++current;
         }
+
+        // Writing end-magic as a file integrity sign
+        output.write(IOUtil.getEndMagicBytes());
     }
 
     @Override

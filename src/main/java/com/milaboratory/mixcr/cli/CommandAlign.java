@@ -48,7 +48,7 @@ import static com.milaboratory.mixcr.cli.CommandAlign.ALIGN_COMMAND_NAME;
         sortOptions = false,
         separator = " ",
         description = "Builds alignments with V,D,J and C genes for input sequencing reads.")
-public class CommandAlign extends ACommandWithResume {
+public class CommandAlign extends ACommandWithSmartOverwrite {
     static final String ALIGN_COMMAND_NAME = "align";
     @Parameters(arity = "2..3",
             descriptionKey = "file",

@@ -218,7 +218,7 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
         if (chains.equalsIgnoreCase("xcr"))
             this.chains = Chains.ALL;
         else {
-            Chains c = Chains.parse(chains);
+            Chains c = Chains.parse(chains.toUpperCase());
             if (c == null)
                 throwValidationException("Illegal value " + chains + " for --receptor-type option.");
             this.chains = c;
@@ -246,8 +246,9 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
     @Option(names = {"-r", "--report"}, description = "Report file path")
     public String report = null;
 
-    @Option(names = {"--resume"}, description = "Try to resume aborted execution")
-    public boolean resume = false;
+//     @Option(names = {"--overwrite-if-required"}, description = "Overwrite output file if it is corrupted or if it was generated from different input file \" +\n" +
+//             "                    \"or with different parameters. -f / --force-overwrite overrides this option.")
+//     public boolean overwriteIfRequired = false;
 
     public String getReport() {
         if (report == null)
@@ -257,12 +258,11 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
     }
 
     private <T extends ACommandWithOutput> T inheritOptionsAndValidate(T parameters) {
-        if (resume && parameters instanceof ACommandWithResume) {
-            ((ACommandWithResume) parameters).resume = true;
-            ((ACommandWithResume) parameters).doOverwrite = false;
-        }
-        if (!resume && isForceOverwrite())
-            parameters.force = true;
+        if (forceOverwrite)
+            parameters.forceOverwrite = true;
+        if (parameters instanceof ACommandWithSmartOverwrite)
+            ((ACommandWithSmartOverwrite) parameters).overwriteIfRequired = true;
+
         parameters.quiet = true;
         parameters.validate();
         parameters.quiet = false;
@@ -481,10 +481,7 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
             exportParameters.add("--filter-stops");
         }
 
-        // logic with uber --resume and --force
-        if (resume || force)
-            exportParameters.add("-f");
-
+        exportParameters.add("--force-overwrite");
         exportParameters.add("--chains");
         exportParameters.add(chains.toString());
 
@@ -555,10 +552,7 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
 
     @Override
     public void handleExistenceOfOutputFile(String outFileName) {
-        if (!isForceOverwrite())
-            throwValidationException("The destination file " + outFileName +
-                    " already exists. Either remove it or use -f option to overwrite it (in this case you can also" +
-                    " specify --resume option to prevent re-analyzing of intermediate files). ");
+        // Do nothing
     }
 
     @Override

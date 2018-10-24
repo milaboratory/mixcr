@@ -1,6 +1,7 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
+import com.milaboratory.mixcr.basictypes.IOUtil;
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
@@ -15,8 +16,6 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
-
-import static com.milaboratory.mixcr.basictypes.IOUtil.detectFilType;
 
 @Command(name = "info",
         sortOptions = true,
@@ -35,8 +34,12 @@ public class CommandInfo extends ACommand {
         return tableView;
     }
 
+    private IOUtil.MiXCRFileInfo info0 = null;
+
     public MiXCRFileType getType() {
-        return detectFilType(input.get(0));
+        if (info0 == null)
+            info0 = IOUtil.getFileInfo(input.get(0));
+        return info0.fileType;
     }
 
     @Override
@@ -44,7 +47,7 @@ public class CommandInfo extends ACommand {
         super.validate();
         MiXCRFileType type = getType();
         for (String fileName : input)
-            if (detectFilType(fileName) != type)
+            if (IOUtil.getFileInfo(fileName).fileType != type)
                 throwValidationException("Mixed file types: " + fileName);
     }
 
@@ -56,7 +59,7 @@ public class CommandInfo extends ACommand {
         if (!tableView)
             throw new RuntimeException("Only table output is supported. Use -t option.");
 
-        switch (detectFilType(input.get(0))) {
+        switch (getType()) {
             case ClnA:
             case Clns:
                 processClones();

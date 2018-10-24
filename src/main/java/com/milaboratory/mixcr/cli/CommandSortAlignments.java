@@ -29,7 +29,7 @@ import static com.milaboratory.mixcr.cli.CommandSortAlignments.SORT_ALIGNMENTS_C
         sortOptions = true,
         separator = " ",
         description = "Sort alignments in vdjca file by read id.")
-public class CommandSortAlignments extends ACommandWithResumeWithSingleInput {
+public class CommandSortAlignments extends ACommandWithSmartOverwriteWithSingleInput {
     static final String SORT_ALIGNMENTS_COMMAND_NAME = "sortAlignments";
 
     @Override

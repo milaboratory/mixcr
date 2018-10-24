@@ -30,7 +30,7 @@ import static com.milaboratory.mixcr.cli.CommandAssembleContigs.ASSEMBLE_CONTIGS
         sortOptions = true,
         separator = " ",
         description = "Assemble full sequences.")
-public class CommandAssembleContigs extends ACommandWithResumeWithSingleInput {
+public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingleInput {
     static final String ASSEMBLE_CONTIGS_COMMAND_NAME = "assembleContigs";
 
     public int threads = Runtime.getRuntime().availableProcessors();
