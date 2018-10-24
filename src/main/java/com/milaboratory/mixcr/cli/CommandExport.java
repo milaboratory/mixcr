@@ -238,9 +238,14 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                 ExportClones exportClones = new ExportClones(set, writer, limit);
                 SmartProgressReporter.startProgressReport(exportClones, System.err);
                 exportClones.run();
-                if (initialSet.size() > set.size() && (filterStops || filterOutOfFrames)) {
+                if (initialSet.size() > set.size()) {
+                    double
+                            initialCount = initialSet.getClones().stream().mapToDouble(Clone::getCount).sum(),
+                            count = set.getClones().stream().mapToDouble(Clone::getCount).sum();
                     int di = initialSet.size() - set.size();
-                    warn("Filtered " + di + " clones (" + Util.PERCENT_FORMAT.format(100.0 * di / initialSet.size()) + "%).");
+                    double cdi = initialCount - count;
+                    warn("Filtered " + di + " of " + initialSet.size() + " clones (" + Util.PERCENT_FORMAT.format(100.0 * di / initialSet.size()) + "%).");
+                    warn("Filtered " + cdi + " of " + initialCount + " reads (" + Util.PERCENT_FORMAT.format(100.0 * cdi / initialCount) + "%).");
                 }
             }
         }
@@ -344,7 +349,7 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
         for (Field f : FieldExtractors.getFields()) {
             if (fd.field.equalsIgnoreCase(f.getCommand()) && f.canExtractFrom(clazz)) {
                 if (f.nArguments() == 0) {
-                    if (fd.args.length != 1)
+                    if (fd.args.length != 0)
                         throw new RuntimeException();
                     return Collections.singletonList(f.create(m, new String[0]));
                 } else {
