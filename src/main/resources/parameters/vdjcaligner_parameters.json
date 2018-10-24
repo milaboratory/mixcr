@@ -256,7 +256,7 @@
     "rna-seq": {
         "fixSeed" : true,
         "vParameters": {
-            "geneFeatureToAlign": "VTranscriptWithout5UTRWithP",
+            "geneFeatureToAlign": "VTranscriptWithP",
             "minSumScore" : 80,
             "relativeMinScore" : 0.87,
             "parameters": {
