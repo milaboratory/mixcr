@@ -1,0 +1,1 @@
+Rename `-sequence` to `-targetSequences` and `-quality` to `-targetQualities` in export #298
