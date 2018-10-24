@@ -196,7 +196,7 @@ public class IOUtil {
                 }
 
                 byte[] endMagic = new byte[END_MAGIC_LENGTH];
-                channel.read(ByteBuffer.wrap(endMagic), channel.position());
+                channel.read(ByteBuffer.wrap(endMagic), channel.size() - END_MAGIC_LENGTH);
                 return new MiXCRFileInfo(type, magicFull, Arrays.equals(endMagic, getEndMagicBytes()));
             }
         } catch (IOException e) {
