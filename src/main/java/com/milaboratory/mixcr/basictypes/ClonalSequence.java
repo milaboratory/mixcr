@@ -41,7 +41,7 @@ import java.util.Iterator;
 
 import static com.milaboratory.core.mutations.Mutation.*;
 
-public final class ClonalSequence implements Iterable<NSequenceWithQuality> {
+public final class ClonalSequence implements Iterable<NSequenceWithQuality>, Comparable<ClonalSequence> {
     public final NSequenceWithQuality[] sequences;
     protected final NSequenceWithQuality sequence;
     protected final int[] pointers;
@@ -191,6 +191,11 @@ public final class ClonalSequence implements Iterable<NSequenceWithQuality> {
     @Override
     public int hashCode() {
         return sequence.getSequence().hashCode();
+    }
+
+    @Override
+    public int compareTo(ClonalSequence o) {
+        return this.sequence.getSequence().compareTo(o.sequence.getSequence());
     }
 
     private static Stretch truncate(Mutations<NucleotideSequence> mutations, Stretch initial, int boundary) {
