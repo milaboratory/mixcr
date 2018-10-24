@@ -111,5 +111,5 @@ if [[ $run_tests == true ]]; then
   mixcr analyze shotgun -f --species hs --contig-assembly --impute-germline-on-export --starting-material rna test_R1.fastq test_R2.fastq case2
 
   echo "Running test case 3"
-  mixcr analyze amplicon --receptor-type tra --overwrite-if-required --impute-germline-on-export -s hs --starting-material rna --contig-assembly --5-end v-primers --3-end j-primers --adapters no-adapters test_R1.fastq test_R2.fastq case3
+  mixcr analyze amplicon --receptor-type tra --impute-germline-on-export -s hs --starting-material rna --contig-assembly --5-end v-primers --3-end j-primers --adapters no-adapters test_R1.fastq test_R2.fastq case3
 fi
