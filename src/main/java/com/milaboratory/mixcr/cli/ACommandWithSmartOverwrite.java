@@ -87,6 +87,8 @@ public abstract class ACommandWithSmartOverwrite extends ACommandWithOutput {
                 return;
             }
         }
+        if (overwriteIfRequired)
+            return;
         super.handleExistenceOfOutputFile(outFileName);
     }
 

@@ -218,7 +218,7 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
         if (chains.equalsIgnoreCase("xcr"))
             this.chains = Chains.ALL;
         else {
-            Chains c = Chains.parse(chains);
+            Chains c = Chains.parse(chains.toUpperCase());
             if (c == null)
                 throwValidationException("Illegal value " + chains + " for --receptor-type option.");
             this.chains = c;
