@@ -171,7 +171,7 @@ public class IOUtil {
 
             if (!Files.isRegularFile(path))
                 return null;
-            
+
             try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
                 if (channel.size() < BEGIN_MAGIC_LENGTH + END_MAGIC_LENGTH)
                     return null;
@@ -196,7 +196,7 @@ public class IOUtil {
                 }
 
                 byte[] endMagic = new byte[END_MAGIC_LENGTH];
-                channel.read(ByteBuffer.wrap(endMagic), channel.position() - END_MAGIC_LENGTH);
+                channel.read(ByteBuffer.wrap(endMagic), channel.position());
                 return new MiXCRFileInfo(type, magicFull, Arrays.equals(endMagic, getEndMagicBytes()));
             }
         } catch (IOException e) {
