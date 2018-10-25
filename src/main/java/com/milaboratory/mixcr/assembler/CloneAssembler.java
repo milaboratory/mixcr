@@ -782,6 +782,9 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             if ((c = compareByBestHists(o1, o2, GeneType.Constant)) != 0)
                 return c;
 
+            if ((c = o1.getSequence().compareTo(o2.getSequence())) != 0)
+                return c;
+
             return 0;
         }
     };

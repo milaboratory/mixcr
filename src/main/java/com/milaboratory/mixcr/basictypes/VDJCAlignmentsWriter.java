@@ -222,7 +222,7 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
                 flushBlock();
 
                 writer.close(); // This will also write stream termination symbol/block to the stream
-                writerFactory.close();
+                writerFactory.close(); // This blocks the thread until all workers flush their data to the underlying stream
 
                 // [ numberOfProcessedReads : long ]
                 byte[] footer = new byte[8];
@@ -230,6 +230,10 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
                 // Writing it as last piece of information in the stream
                 AlignmentsIO.writeLongBE(numberOfProcessedReads, footer, 0);
                 rawOutput.write(footer);
+
+                // Writing end-magic as a file integrity sign
+                rawOutput.write(IOUtil.getEndMagicBytes());
+
                 rawOutput.close();
                 closed = true;
             }

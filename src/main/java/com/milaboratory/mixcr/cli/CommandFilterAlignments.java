@@ -30,7 +30,7 @@ import static com.milaboratory.mixcr.cli.CommandFilterAlignments.FILTER_ALIGNMEN
         sortOptions = true,
         separator = " ",
         description = "Filter alignments.")
-public class CommandFilterAlignments extends ACommandWithResumeWithSingleInput {
+public class CommandFilterAlignments extends ACommandWithSmartOverwriteWithSingleInput {
     static final String FILTER_ALIGNMENTS_COMMAND_NAME = "filterAlignments";
 
     @Option(description = "Specifies immunological protein chain gene for an alignment. If many, " +

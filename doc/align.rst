@@ -94,17 +94,17 @@ MiXCR uses a wide range of parameters that controls aligner behaviour. There are
 
 One of the key MiXCR features is ability to specify particular :ref:`gene regions <ref-geneFeatures>` which will be extracted from reference and used as a targets for alignments. Thus, each sequencing read will be aligned to these extracted reference regions. Parameters responsible for target gene regions are:
 
-+--------------------------------------+-----------------+--------------------------------------------------------------+
-| Parameter                            | Default value   | Description                                                  |
-+======================================+=================+==============================================================+
-| ``vParameters.geneFeatureToAlign``   | ``VRegion``     | region in V gene which will be used as target in ``align``   |
-+--------------------------------------+-----------------+--------------------------------------------------------------+
-| ``dParameters.geneFeatureToAlign``   | ``DRegion``     | region in D gene which will be used as target in ``align``   |
-+--------------------------------------+-----------------+--------------------------------------------------------------+
-| ``jParameters.geneFeatureToAlign``   | ``JRegion``     | region in J gene which will be used as target in ``align``   |
-+--------------------------------------+-----------------+--------------------------------------------------------------+
-| ``cParameters.geneFeatureToAlign``   | ``CExon1``      | region in C gene which will be used as target in ``align``   |
-+--------------------------------------+-----------------+--------------------------------------------------------------+
++------------------------------------+------------------+------------------------------------------------------------+
+| Parameter                          | Default value    | Description                                                |
++====================================+==================+============================================================+
+| ``vParameters.geneFeatureToAlign`` | ``VRegionWithP`` | region in V gene which will be used as target in ``align`` |
++------------------------------------+------------------+------------------------------------------------------------+
+| ``dParameters.geneFeatureToAlign`` | ``DRegionWithP`` | region in D gene which will be used as target in ``align`` |
++------------------------------------+------------------+------------------------------------------------------------+
+| ``jParameters.geneFeatureToAlign`` | ``JRegionWithP`` | region in J gene which will be used as target in ``align`` |
++------------------------------------+------------------+------------------------------------------------------------+
+| ``cParameters.geneFeatureToAlign`` | ``CExon1``       | region in C gene which will be used as target in ``align`` |
++------------------------------------+------------------+------------------------------------------------------------+
 
 It is important to specify these gene regions such that they will fully cover target clonal gene region which will be used in :ref:`assemble <ref-assemble>` (e.g. CDR3).
 
@@ -131,9 +131,6 @@ Other global aligner parameters are:
 +------------------------------------+---------------+---------------------------------------------------------------------------------------+
 |  ``maxHits``                       | ``5``         | Maximal number of hits for each gene type: if input sequence align to more than       |
 |                                    |               | ``maxHits`` targets, then only  top ``maxHits`` hits will be kept.                    |
-+------------------------------------+---------------+---------------------------------------------------------------------------------------+
-|  ``minimalClonalSequenceLength``   | ``12``        | Minimal clonal sequence length (e.g. minimal sequence of CDR3 to be used for clone    |
-|                                    |               | assembly)                                                                             |
 +------------------------------------+---------------+---------------------------------------------------------------------------------------+
 |  ``vjAlignmentOrder``              | ``VThenJ``    | Order in which V and J genes aligned in target (possible values ``JThenV`` and        |
 |  (*only for single-end*            |               | ``VThenJ``). Parameter affects only *single-read* alignments and alignments of        |
@@ -171,38 +168,38 @@ V, J and C aligners parameters
 
 MiXCR uses same types of aligners to align V, J and C genes (``KAligner`` from `MiLib <https://github.com/milaboratory/milib>`_; the idea of ``KAligner`` is inspired by `this article <http://nar.oxfordjournals.org/content/41/10/e108>`_). These parameters are placed in ``parameters`` subgroup and can be overridden using e.g. ``-OjParameters.parameters.mapperKValue=7``. The following parameters for V, J and C aligners are available:
 
-+--------------------------+----------+----------+-----------+----------------------------------------------------------------------------+
-| Parameter                | Default  | Default  | Default   | Description                                                                |
-|                          | V value  | J value  | C value   |                                                                            |
-+==========================+==========+==========+===========+============================================================================+
-| ``mapperKValue``         | ``5``    | ``5``    | ``5``     | Length of seeds used in aligner.                                           |
-+--------------------------+----------+----------+-----------+----------------------------------------------------------------------------+
-| ``floatingLeftBound``    | ``true`` | ``true`` | ``false`` | Specifies whether left bound of  alignment is fixed or float: if           |
-|                          |          |          |           | ``floatingLeftBound`` set to false, the left bound of either target        |
-|                          |          |          |           | or query will be aligned. Default values are suitable in most cases.       |
-+--------------------------+----------+----------+-----------+----------------------------------------------------------------------------+
-| ``floatingRightBound``   | ``true`` | ``true`` | ``false`` | Specifies whether right bound of alignment is fixed or float:              |
-|                          |          |          |           | if ``floatingRightBound`` set to false, the right bound of either          |
-|                          |          |          |           | target or query will be aligned. Default values are suitable in most       | 
-|                          |          |          |           | cases. If your target molecules have no primer sequences in J Region       |
-|                          |          |          |           | (e.g. library was amplified using primer to the C region) you can          |
-|                          |          |          |           | change value of this parameter for J gene to ``false`` to increase         |
-|                          |          |          |           | J gene identification accuracy and overall specificity of alignments.      |
-+--------------------------+----------+----------+-----------+----------------------------------------------------------------------------+
-| ``minAlignmentLength``   | ``15``   | ``15``   | ``15``    | Minimal length of aligned region.                                          |
-+--------------------------+----------+----------+-----------+----------------------------------------------------------------------------+
-| ``maxAdjacentIndels``    | ``2``    | ``2``    | ``2``     | Maximum number of indels between two seeds.                                |
-+--------------------------+----------+----------+-----------+----------------------------------------------------------------------------+
-| ``absoluteMinScore``     | ``40.0`` | ``40.0`` | ``40.0``  | Minimal score of alignment: alignments with smaller score will be dropped. |
-+--------------------------+----------+----------+-----------+----------------------------------------------------------------------------+
-| ``relativeMinScore``     | ``0.87`` | ``0.87`` | ``0.87``  | Minimal relative score of  alignments: if alignment score is smaller than  |
-|                          |          |          |           | ``relativeMinScore * maxScore``,  where ``maxScore`` is the best score     |
-|                          |          |          |           | among all alignments for particular gene type (V, J or C) and input        |
-|                          |          |          |           | sequence, it will be dropped.                                              |
-+--------------------------+----------+----------+-----------+----------------------------------------------------------------------------+
-| ``maxHits``              | ``7``    | ``7``    | ``7``     | Maximal number of hits: if input sequence align with more than ``maxHits`` |
-|                          |          |          |           | queries, only top ``maxHits`` hits will be kept.                           |
-+--------------------------+----------+----------+-----------+----------------------------------------------------------------------------+
++------------------------+----------+-----------+-----------+----------------------------------------------------------------------------+
+| Parameter              | Default  | Default   | Default   | Description                                                                |
+|                        | V value  | J value   | C value   |                                                                            |
++========================+==========+===========+===========+============================================================================+
+| ``mapperKValue``       | ``5``    | ``5``     | ``5``     | Length of seeds used in aligner.                                           |
++------------------------+----------+-----------+-----------+----------------------------------------------------------------------------+
+| ``floatingLeftBound``  | ``true`` | ``true``  | ``false`` | Specifies whether left bound of  alignment is fixed or float: if           |
+|                        |          |           |           | ``floatingLeftBound`` set to false, the left bound of either target        |
+|                        |          |           |           | or query will be aligned. Default values are suitable in most cases.       |
++------------------------+----------+-----------+-----------+----------------------------------------------------------------------------+
+| ``floatingRightBound`` | ``true`` | ``false`` | ``false`` | Specifies whether right bound of alignment is fixed or float:              |
+|                        |          |           |           | if ``floatingRightBound`` set to false, the right bound of either          |
+|                        |          |           |           | target or query will be aligned. Default values are suitable in most       |
+|                        |          |           |           | cases. If your target molecules have no primer sequences in J Region       |
+|                        |          |           |           | (e.g. library was amplified using primer to the C region) you can          |
+|                        |          |           |           | change value of this parameter for J gene to ``false`` to increase         |
+|                        |          |           |           | J gene identification accuracy and overall specificity of alignments.      |
++------------------------+----------+-----------+-----------+----------------------------------------------------------------------------+
+| ``minAlignmentLength`` | ``15``   | ``15``    | ``15``    | Minimal length of aligned region.                                          |
++------------------------+----------+-----------+-----------+----------------------------------------------------------------------------+
+| ``maxAdjacentIndels``  | ``2``    | ``2``     | ``2``     | Maximum number of indels between two seeds.                                |
++------------------------+----------+-----------+-----------+----------------------------------------------------------------------------+
+| ``absoluteMinScore``   | ``40.0`` | ``40.0``  | ``40.0``  | Minimal score of alignment: alignments with smaller score will be dropped. |
++------------------------+----------+-----------+-----------+----------------------------------------------------------------------------+
+| ``relativeMinScore``   | ``0.87`` | ``0.87``  | ``0.87``  | Minimal relative score of  alignments: if alignment score is smaller than  |
+|                        |          |           |           | ``relativeMinScore * maxScore``,  where ``maxScore`` is the best score     |
+|                        |          |           |           | among all alignments for particular gene type (V, J or C) and input        |
+|                        |          |           |           | sequence, it will be dropped.                                              |
++------------------------+----------+-----------+-----------+----------------------------------------------------------------------------+
+| ``maxHits``            | ``7``    | ``7``     | ``7``     | Maximal number of hits: if input sequence align with more than ``maxHits`` |
+|                        |          |           |           | queries, only top ``maxHits`` hits will be kept.                           |
++------------------------+----------+-----------+-----------+----------------------------------------------------------------------------+
 
 These parameters can be overridden like in the following example:
 
@@ -252,7 +249,7 @@ The following parameters can be overridden for D aligner:
 +------------------------+-----------------+----------------------------------------------------------------------------------------------+
 | Parameter              | Default value   | Description                                                                                  |
 +========================+=================+==============================================================================================+
-| ``absoluteMinScore``   | ``30.0``        | Minimal score of alignment: alignments with smaller scores will be dropped.                  |
+| ``absoluteMinScore``   | ``25.0``        | Minimal score of alignment: alignments with smaller scores will be dropped.                  |
 +------------------------+-----------------+----------------------------------------------------------------------------------------------+
 | ``relativeMinScore``   | ``0.85``        | Minimal relative score of alignment: if alignment score is smaller than                      |
 |                        |                 | ``relativeMinScore * maxScore``, where ``maxScore`` is the best score among all alignments   |
@@ -270,24 +267,42 @@ One can override these parameters like in the following example:
 
 Scoring parameters for D aligner are the following:
 
-+-------------------------+----------------------------------------+--------------------------------------------------------------------+
-| Parameter               | Default value                          | Description                                                        |
-+=========================+========================================+====================================================================+
-| ``type``                | ``affine``                             | Type of scoring. Possible values: ``affine``, ``linear``.          |
-+-------------------------+----------------------------------------+--------------------------------------------------------------------+
-| ``subsMatrix``          | ``simple(match = 5,``                  | Substitution matrix. Available types:                              |
-|                         |  ``mismatch = -9)``                    |                                                                    |
-|                         |                                        |  - ``simple`` --- a matrix with diagonal elements equal to         |
-|                         |                                        |    ``match`` and other elements equal to ``mismatch``              |
-|                         |                                        |  - ``raw`` --- a complete set of 16 matrix elements should be      |
-|                         |                                        |    specified; for  example:                                        |
-|                         |                                        |    ``raw(5,-9,-9,-9,-9,5,-9,-9,-9,-9,5,-9,-9,-9,-9,5)``            |
-|                         |                                        |     (*equivalent to the default value*)                            |
-+-------------------------+----------------------------------------+--------------------------------------------------------------------+
-| ``gapOpenPenalty``      | ``-10``                                | Penalty for gap opening.                                           |
-+-------------------------+----------------------------------------+--------------------------------------------------------------------+
-| ``gapExtensionPenalty`` | ``-1``                                 | Penalty for gap extension.                                         |
-+-------------------------+----------------------------------------+--------------------------------------------------------------------+
++----------------+-----------------------+-------------------------------------------------------------------------+
+| Parameter      | Default value         | Description                                                             |
++================+=======================+=========================================================================+
+| ``type``       | ``linear``            | Type of scoring. Possible values: ``affine``, ``linear``.               |
++----------------+-----------------------+-------------------------------------------------------------------------+
+| ``subsMatrix`` | ``simple(match = 5,`` | Substitution matrix. Available types:                                   |
+|                | ``mismatch = -9)``    | - ``simple`` --- a matrix with diagonal elements equal to ``match`` and |
+|                |                       | other elements equal to ``mismatch``                                    |
+|                |                       | - ``raw`` --- a complete set of 16 matrix elements should be specified; |
+|                |                       | for  example:                                                           |
+|                |                       | ``raw(5,-9,-9,-9,-9,5,-9,-9,-9,-9,5,-9,-9,-9,-9,5)``                    |
+|                |                       | (*equivalent to the  default value*)                                    |
++----------------+-----------------------+-------------------------------------------------------------------------+
+| ``gapPenalty`` | ``-12``               | Penalty for gap.                                                        |
++----------------+-----------------------+-------------------------------------------------------------------------+
+
+
+
+.. +-------------------------+----------------------------------------+--------------------------------------------------------------------+
+.. | Parameter               | Default value                          | Description                                                        |
+.. +=========================+========================================+====================================================================+
+.. | ``type``                | ``affine``                             | Type of scoring. Possible values: ``affine``, ``linear``.          |
+.. +-------------------------+----------------------------------------+--------------------------------------------------------------------+
+.. | ``subsMatrix``          | ``simple(match = 5,``                  | Substitution matrix. Available types:                              |
+.. |                         |  ``mismatch = -9)``                    |                                                                    |
+.. |                         |                                        |  - ``simple`` --- a matrix with diagonal elements equal to         |
+.. |                         |                                        |    ``match`` and other elements equal to ``mismatch``              |
+.. |                         |                                        |  - ``raw`` --- a complete set of 16 matrix elements should be      |
+.. |                         |                                        |    specified; for  example:                                        |
+.. |                         |                                        |    ``raw(5,-9,-9,-9,-9,5,-9,-9,-9,-9,5,-9,-9,-9,-9,5)``            |
+.. |                         |                                        |     (*equivalent to the default value*)                            |
+.. +-------------------------+----------------------------------------+--------------------------------------------------------------------+
+.. | ``gapOpenPenalty``      | ``-10``                                | Penalty for gap opening.                                           |
+.. +-------------------------+----------------------------------------+--------------------------------------------------------------------+
+.. | ``gapExtensionPenalty`` | ``-1``                                 | Penalty for gap extension.                                         |
+.. +-------------------------+----------------------------------------+--------------------------------------------------------------------+
 
 These parameters can be overridden in the following way:
 

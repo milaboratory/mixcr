@@ -29,7 +29,7 @@ import static com.milaboratory.mixcr.cli.CommandExtend.EXTEND_COMMAND_NAME;
         sortOptions = true,
         separator = " ",
         description = "Impute alignments or clones with germline sequences.")
-public class CommandExtend extends ACommandWithResumeWithSingleInput {
+public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInput {
     static final String EXTEND_COMMAND_NAME = "extend";
 
     @Option(description = "Apply procedure only to alignments with specific immunological-receptor chains.",
@@ -93,9 +93,7 @@ public class CommandExtend extends ACommandWithResumeWithSingleInput {
 
     @Override
     public void run1() throws Exception {
-        IOUtil.MiXCRFileType fileType = IOUtil.detectFilType(in);
-
-        switch (fileType) {
+        switch (getInputFileInfo().fileType) {
             case VDJCA:
                 processVDJCA();
                 break;

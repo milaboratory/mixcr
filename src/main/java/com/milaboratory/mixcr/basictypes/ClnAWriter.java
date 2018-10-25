@@ -61,7 +61,7 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
         CanReportProgressAndStage {
     static final String MAGIC_V3 = "MiXCR.CLNA.V03";
     static final String MAGIC = MAGIC_V3;
-    static final int MAGIC_LENGTH = MAGIC.length();
+    static final int MAGIC_LENGTH = MAGIC.length(); //14
 
     /**
      * Will be used for alignments pre-sorting
@@ -349,6 +349,9 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
         // This values will be using during deserialization to find certain blocks
         output.writeLong(positionOfFirstClone);
         output.writeLong(indexBeginOffset);
+
+        // Writing end-magic as a file integrity sign
+        output.write(IOUtil.getEndMagicBytes());
 
         // Setting finished flag (will stop progress reporting)
         finished = true;

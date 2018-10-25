@@ -59,7 +59,7 @@ import java.util.List;
  * [ 4 bytes : int : number of alignments ]
  * [ 4 bytes : int : rawDataSize ]
  * [ 4 bytes : int : compressedDataSize ]
- * [ 4 bytes : int : checksum for raw data ]
+ * [ 4 bytes : int : checksum for the raw data ]
  *
  * Data:
  * [ dataSize bytes ] (compressed, if bit1 of header is 1; uncompressed, if bit1 is 0 )

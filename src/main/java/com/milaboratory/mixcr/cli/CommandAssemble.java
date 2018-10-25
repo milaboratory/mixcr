@@ -24,7 +24,7 @@ import static com.milaboratory.mixcr.cli.CommandAssemble.ASSEMBLE_COMMAND_NAME;
         sortOptions = true,
         separator = " ",
         description = "Assemble clones.")
-public class CommandAssemble extends ACommandWithResumeWithSingleInput {
+public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInput {
     static final String ASSEMBLE_COMMAND_NAME = "assemble";
 
     @Option(description = "Clone assembling parameters",

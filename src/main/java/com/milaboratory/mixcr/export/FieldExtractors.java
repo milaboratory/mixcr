@@ -473,14 +473,6 @@ public final class FieldExtractors {
                 }
             });
 
-            descriptorsList.add(new ExtractSequence(VDJCAlignments.class, "-sequence",
-                    "Export aligned sequence (initial read), or 2 sequences in case of paired-end reads",
-                    "Read(s) sequence", "readSequence"));
-
-            descriptorsList.add(new ExtractSequenceQuality(VDJCAlignments.class, "-quality",
-                    "Export initial read quality, or 2 qualities in case of paired-end reads",
-                    "Read(s) sequence qualities", "readQuality"));
-
             descriptorsList.add(new PL_C("-cloneId", "Unique clone identifier", "Clone ID", "cloneId") {
                 @Override
                 protected String extract(Clone object) {
@@ -502,13 +494,13 @@ public final class FieldExtractors {
                 }
             });
 
-            descriptorsList.add(new ExtractSequence(Clone.class, "-sequence",
-                    "Export aligned sequence (initial read), or 2 sequences in case of paired-end reads",
-                    "Clonal sequence(s)", "clonalSequence"));
+            descriptorsList.add(new ExtractSequence(VDJCObject.class, "-targetSequences",
+                    "Export aligned sequences (targets), separated with comma",
+                    "Target sequences", "targetSequences"));
 
-            descriptorsList.add(new ExtractSequenceQuality(Clone.class, "-quality",
-                    "Export initial read quality, or 2 qualities in case of paired-end reads",
-                    "Clonal sequence quality(s)", "clonalSequenceQuality"));
+            descriptorsList.add(new ExtractSequenceQuality(VDJCObject.class, "-targetQualities",
+                    "Export aligned sequence (target) qualities, separated with comma",
+                    "Target sequence qualities", "targetQualities"));
 
             descriptorsList.add(new PL_A("-descrR1", "Export description line from initial .fasta or .fastq file (deprecated)", "Description R1", "descrR1") {
                 @Override

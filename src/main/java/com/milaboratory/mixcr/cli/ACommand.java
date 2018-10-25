@@ -1,15 +1,12 @@
 package com.milaboratory.mixcr.cli;
 
-import picocli.CommandLine.ExecutionException;
-import picocli.CommandLine.Model.CommandSpec;
+import com.milaboratory.mixcr.basictypes.IOUtil;
 import picocli.CommandLine.Option;
-import picocli.CommandLine.Spec;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  *
@@ -54,9 +51,13 @@ public abstract class ACommand extends ABaseCommand implements Runnable {
 
     /** Validate injected parameters and options */
     public void validate() {
-        for (String in : getInputFiles())
+        for (String in : getInputFiles()) {
             if (!new File(in).exists())
                 throwValidationException("ERROR: input file \"" + in + "\" does not exist.", false);
+            IOUtil.MiXCRFileInfo info = IOUtil.getFileInfo(in);
+            if (info != null && !info.valid)
+                throwValidationException("ERROR: input file \"" + in + "\" is corrupted.", false);
+        }
     }
 
     @Override
