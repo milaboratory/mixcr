@@ -1,4 +1,14 @@
 
+MiXCR 3.0.1 (25 Oct 2018)
+========================
+
+-- This fixes problem with repeated CLI options in export
+-- `VRegionWithP` now is used as `featureToAlign` for V gene
+-- `VTranscriptWithP` instead of `VTranscriptWithout5UTRWithP` used for RNA-Seq parameters
+-- Rename `-sequence` to `-targetSequences` and `-quality` to `-targetQualities` in export #298
+-- Minor cosmetics for clone ordering #401
+
+
 MiXCR 3.0 (23 Oct 2018)
 ========================
 
