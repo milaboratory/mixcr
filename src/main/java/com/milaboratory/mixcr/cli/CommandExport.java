@@ -351,7 +351,8 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
         for (Field f : FieldExtractors.getFields()) {
             if (fd.field.equalsIgnoreCase(f.getCommand()) && f.canExtractFrom(clazz)) {
                 if (f.nArguments() == 0) {
-                    if (fd.args.length != 0)
+                    if (!(fd.args.length == 0 || (
+                            fd.args.length == 1 && (fd.args[0].equalsIgnoreCase("true") || fd.args[0].equalsIgnoreCase("false")))))
                         throw new RuntimeException();
                     return Collections.singletonList(f.create(m, new String[0]));
                 } else {

@@ -104,8 +104,10 @@ fi
 
 if [[ $run_tests == true ]]; then
   echo "Running test case 1"
-  mixcr align -s hs -OvParameters.geneFeatureToAlign=VGeneWithP test_R1.fastq test_R2.fastq case1.vdjca
+  mixcr align -s hs -OvParameters.geneFeatureToAlign=VGeneWithP -OsaveOriginalReads=true test_R1.fastq test_R2.fastq case1.vdjca
   mixcr assemble case1.vdjca case1.clns
+
+  mixcr exportAlignments -nFeatureImputed VDJRegion -descrsR1 -descrsR2 case1.vdjca case1.alignments.txt
 
   echo "Running test case 2"
   mixcr analyze shotgun -f --species hs --contig-assembly --impute-germline-on-export --starting-material rna test_R1.fastq test_R2.fastq case2

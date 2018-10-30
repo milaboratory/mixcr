@@ -12,6 +12,8 @@ public interface PipelineConfigurationReader {
      * Read pipeline configuration from file or return null
      */
     static PipelineConfiguration fromFileOrNull(String fileName, IOUtil.MiXCRFileInfo fileInfo) {
+        if (fileInfo == null)
+            return null;
         if (!fileInfo.valid)
             return null;
         try {

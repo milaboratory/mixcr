@@ -4,6 +4,7 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.*;
+import com.milaboratory.core.alignment.BandedAffineAligner.MatrixCache;
 import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.sequence.*;
 import com.milaboratory.core.sequence.quality.QualityTrimmer;
@@ -77,10 +78,6 @@ public final class FullSeqAssembler {
 
     public FullSeqAssembler(CloneFactory cloneFactory,
                             FullSeqAssemblerParameters parameters, Clone clone, VDJCAlignerParameters alignerParameters) {
-        if (alignerParameters.getVAlignerParameters().getScoring() instanceof AffineGapAlignmentScoring
-                || alignerParameters.getJAlignerParameters().getScoring() instanceof AffineGapAlignmentScoring)
-            throw new IllegalArgumentException("Do not support Affine Gap Alignment Scoring.");
-
         // Checking parameters
         if (parameters.outputMinimalSumQuality > parameters.branchingMinimalSumQuality)
             throw new IllegalArgumentException("Wrong parameters. (branchingMinimalSumQuality must be greater than outputMinimalSumQuality)");
@@ -445,8 +442,8 @@ public final class FullSeqAssembler {
          */
         final Range[] ranges;
         /**
-         * Position maps for the assembled contigs (from contig position -> to global position).
-         * Used in trimming, to correctly adjust ranges.
+         * Position maps for the assembled contigs (from contig position -> to global position). Used in trimming, to
+         * correctly adjust ranges.
          */
         final TIntArrayList[] positionMaps;
         /**
@@ -554,7 +551,7 @@ public final class FullSeqAssembler {
         NucleotideSequence jTopReferenceSequence = hit.getGene().getFeature(hit.getAlignedFeature());
 
         // Excessive optimization
-        CachedIntArray cachedIntArray = new CachedIntArray();
+        AlignersCache cache = new AlignersCache();
 
         int assemblingFeatureLength = targets.assemblingFeatureLength;
         for (int i = 0; i < targets.ranges.length; i++) {
@@ -592,21 +589,21 @@ public final class FullSeqAssembler {
                 // Can be reduced to a single statement
                 if (range.getFrom() < N_LEFT_DUMMIES)
                     // This target contain extra non-V nucleotides on the left
-                    vTopHitAlignments[i] = alignLinearSeq1FromRight(
-                            ((LinearGapAlignmentScoring<NucleotideSequence>) alignerParameters.getVAlignerParameters().getScoring()),
+                    vTopHitAlignments[i] = alignSeq1FromRight(
+                            alignerParameters.getVAlignerParameters().getScoring(),
                             vTopReferenceSequence, sequence.getSequence(),
                             0, range.getTo() - N_LEFT_DUMMIES,
                             0, sequence.size(),
                             !floatingLeftBound,
-                            cachedIntArray);
+                            cache);
                 else if (floatingLeftBound)
-                    vTopHitAlignments[i] = alignLinearSeq1FromRight(
-                            ((LinearGapAlignmentScoring<NucleotideSequence>) alignerParameters.getVAlignerParameters().getScoring()),
+                    vTopHitAlignments[i] = alignSeq1FromRight(
+                            alignerParameters.getVAlignerParameters().getScoring(),
                             vTopReferenceSequence, sequence.getSequence(),
                             range.getFrom() - N_LEFT_DUMMIES, range.length(),
                             0, sequence.size(),
                             false,
-                            cachedIntArray);
+                            cache);
                 else
                     vTopHitAlignments[i] = Aligner.alignGlobal(
                             alignerParameters.getVAlignerParameters().getScoring(),
@@ -627,21 +624,21 @@ public final class FullSeqAssembler {
                 // Can be reduced to a single statement
                 if (range.getFrom() < N_LEFT_DUMMIES)
                     // This target contain extra non-V nucleotides on the left
-                    vTopHitAlignments[i] = alignLinearSeq1FromRight(
-                            ((LinearGapAlignmentScoring<NucleotideSequence>) alignerParameters.getVAlignerParameters().getScoring()),
+                    vTopHitAlignments[i] = alignSeq1FromRight(
+                            alignerParameters.getVAlignerParameters().getScoring(),
                             vTopReferenceSequence, sequence.getSequence(),
                             0, lengthV,
                             0, targets.assemblingFeatureOffset,
                             !vFloatingLeftBound,
-                            cachedIntArray);
+                            cache);
                 else if (vFloatingLeftBound)
-                    vTopHitAlignments[i] = alignLinearSeq1FromRight(
-                            ((LinearGapAlignmentScoring<NucleotideSequence>) alignerParameters.getVAlignerParameters().getScoring()),
+                    vTopHitAlignments[i] = alignSeq1FromRight(
+                            alignerParameters.getVAlignerParameters().getScoring(),
                             vTopReferenceSequence, sequence.getSequence(),
                             range.getFrom() - N_LEFT_DUMMIES, lengthV - (range.getFrom() - N_LEFT_DUMMIES),
                             0, targets.assemblingFeatureOffset,
                             false,
-                            cachedIntArray);
+                            cache);
                 else
                     vTopHitAlignments[i] = Aligner.alignGlobal(
                             alignerParameters.getVAlignerParameters().getScoring(),
@@ -661,21 +658,21 @@ public final class FullSeqAssembler {
 
                 if (range.getTo() >= rightAssemblingFeatureBound + jLength)
                     // This target contain extra non-J nucleotides on the right
-                    jTopHitAlignments[i] = alignLinearSeq1FromLeft(
-                            ((LinearGapAlignmentScoring<NucleotideSequence>) alignerParameters.getJAlignerParameters().getScoring()),
+                    jTopHitAlignments[i] = alignSeq1FromLeft(
+                            alignerParameters.getJAlignerParameters().getScoring(),
                             jTopReferenceSequence, sequence.getSequence(),
                             jOffset, jLength,
                             targets.assemblingFeatureOffset + assemblingFeatureLength, sequence.size() - (targets.assemblingFeatureOffset + assemblingFeatureLength),
                             !jFloatingRightBound,
-                            cachedIntArray);
+                            cache);
                 else if (jFloatingRightBound)
-                    jTopHitAlignments[i] = alignLinearSeq1FromLeft(
-                            ((LinearGapAlignmentScoring<NucleotideSequence>) alignerParameters.getJAlignerParameters().getScoring()),
+                    jTopHitAlignments[i] = alignSeq1FromLeft(
+                            alignerParameters.getJAlignerParameters().getScoring(),
                             jTopReferenceSequence, sequence.getSequence(),
                             jOffset, range.getTo() - rightAssemblingFeatureBound,
                             targets.assemblingFeatureOffset + assemblingFeatureLength, sequence.size() - (targets.assemblingFeatureOffset + assemblingFeatureLength),
                             false,
-                            cachedIntArray);
+                            cache);
                 else
                     jTopHitAlignments[i] = Aligner.alignGlobal(
                             alignerParameters.getJAlignerParameters().getScoring(),
@@ -695,21 +692,21 @@ public final class FullSeqAssembler {
 
                 if (range.getTo() >= rightAssemblingFeatureBound + jLength)
                     // This target contain extra non-J nucleotides on the right
-                    jTopHitAlignments[i] = alignLinearSeq1FromLeft(
-                            ((LinearGapAlignmentScoring<NucleotideSequence>) alignerParameters.getJAlignerParameters().getScoring()),
+                    jTopHitAlignments[i] = alignSeq1FromLeft(
+                            alignerParameters.getJAlignerParameters().getScoring(),
                             jTopReferenceSequence, sequence.getSequence(),
                             jOffset + (range.getFrom() - rightAssemblingFeatureBound), jLength - (range.getFrom() - rightAssemblingFeatureBound),
                             0, sequence.size(),
                             !floatingRightBound,
-                            cachedIntArray);
+                            cache);
                 else if (floatingRightBound)
-                    jTopHitAlignments[i] = alignLinearSeq1FromLeft(
-                            ((LinearGapAlignmentScoring<NucleotideSequence>) alignerParameters.getJAlignerParameters().getScoring()),
+                    jTopHitAlignments[i] = alignSeq1FromLeft(
+                            alignerParameters.getJAlignerParameters().getScoring(),
                             jTopReferenceSequence, sequence.getSequence(),
                             jOffset + (range.getFrom() - rightAssemblingFeatureBound), range.length(),
                             0, sequence.size(),
                             false,
-                            cachedIntArray);
+                            cache);
                 else
                     jTopHitAlignments[i] = Aligner.alignGlobal(
                             alignerParameters.getJAlignerParameters().getScoring(),
@@ -750,6 +747,47 @@ public final class FullSeqAssembler {
         return new Clone(targets.sequences, hits, count, 0);
     }
 
+    static final class AlignersCache {
+        final CachedIntArray linearCache = new CachedIntArray();
+        final MatrixCache affineCache = new MatrixCache();
+    }
+
+    //fixme write docs
+    static Alignment<NucleotideSequence>
+    alignSeq1FromLeft(AlignmentScoring<NucleotideSequence> scoring,
+                      NucleotideSequence seq1, NucleotideSequence seq2,
+                      int offset1, int length1,
+                      int offset2, int length2,
+                      boolean global,
+                      AlignersCache cache) {
+        if (scoring instanceof LinearGapAlignmentScoring)
+            return alignLinearSeq1FromLeft(
+                    (LinearGapAlignmentScoring<NucleotideSequence>) scoring,
+                    seq1, seq2, offset1, length1, offset2, length2, global, cache.linearCache);
+        else
+            return alignAffineSeq1FromLeft(
+                    (AffineGapAlignmentScoring<NucleotideSequence>) scoring,
+                    seq1, seq2, offset1, length1, offset2, length2, global, cache.affineCache);
+    }
+
+    //fixme write docs
+    static Alignment<NucleotideSequence>
+    alignSeq1FromRight(AlignmentScoring<NucleotideSequence> scoring,
+                       NucleotideSequence seq1, NucleotideSequence seq2,
+                       int offset1, int length1,
+                       int offset2, int length2,
+                       boolean global,
+                       AlignersCache cache) {
+        if (scoring instanceof LinearGapAlignmentScoring)
+            return alignLinearSeq1FromRight(
+                    (LinearGapAlignmentScoring<NucleotideSequence>) scoring,
+                    seq1, seq2, offset1, length1, offset2, length2, global, cache.linearCache);
+        else
+            return alignAffineSeq1FromRight(
+                    (AffineGapAlignmentScoring<NucleotideSequence>) scoring,
+                    seq1, seq2, offset1, length1, offset2, length2, global, cache.affineCache);
+    }
+
     //fixme write docs
     static Alignment<NucleotideSequence>
     alignLinearSeq1FromLeft(LinearGapAlignmentScoring<NucleotideSequence> scoring,
@@ -776,6 +814,31 @@ public final class FullSeqAssembler {
                 result.score);
     }
 
+    static Alignment<NucleotideSequence>
+    alignAffineSeq1FromLeft(AffineGapAlignmentScoring<NucleotideSequence> scoring,
+                            NucleotideSequence seq1, NucleotideSequence seq2,
+                            int offset1, int length1,
+                            int offset2, int length2,
+                            boolean global,
+                            MatrixCache cache) {
+        MutationsBuilder<NucleotideSequence> mutations = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
+        BandedSemiLocalResult result;
+        int width = 2 * length1;
+        if (global) {
+            int seq2added = width;
+            if (length2 > length1) {
+                length2 = Math.min(length2, length1 + width);
+                seq2added = Math.min(length2, width + (length2 - length1));
+            }
+            result = BandedAffineAligner.semiGlobalRight0(scoring, seq1, seq2, offset1, length1, 0, offset2, length2, seq2added, width, mutations, cache);
+        } else
+            result = BandedAffineAligner.semiLocalRight0(scoring, seq1, seq2, offset1, length1, offset2, length2, width, mutations, cache);
+
+        return new Alignment<>(seq1, mutations.createAndDestroy(),
+                new Range(offset1, result.sequence1Stop + 1), new Range(offset2, result.sequence2Stop + 1),
+                result.score);
+    }
+
     //fixme write docs
     static Alignment<NucleotideSequence>
     alignLinearSeq1FromRight(LinearGapAlignmentScoring<NucleotideSequence> scoring,
@@ -796,6 +859,30 @@ public final class FullSeqAssembler {
             result = BandedLinearAligner.alignLeftAdded0(scoring, seq1, seq2, offset1, length1, 0, offset2, length2, seq2added, width, mutations, cache);
         } else
             result = BandedLinearAligner.alignSemiLocalRight0(scoring, seq1, seq2, offset1, length1, offset2, length2, width, Integer.MIN_VALUE, mutations, cache);
+        return new Alignment<>(seq1, mutations.createAndDestroy(),
+                new Range(result.sequence1Stop, offset1 + length1), new Range(result.sequence2Stop, offset2 + length2),
+                result.score);
+    }
+
+    static Alignment<NucleotideSequence>
+    alignAffineSeq1FromRight(AffineGapAlignmentScoring<NucleotideSequence> scoring,
+                             NucleotideSequence seq1, NucleotideSequence seq2,
+                             int offset1, int length1,
+                             int offset2, int length2,
+                             boolean global,
+                             MatrixCache cache) {
+        MutationsBuilder<NucleotideSequence> mutations = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
+        BandedSemiLocalResult result;
+        int width = 2 * length1;
+        if (global) {
+            int seq2added = width;
+            if (length2 > length1) {
+                length2 = Math.min(length2, length1 + width);
+                seq2added = Math.min(length2, width + (length2 - length1));
+            }
+            result = BandedAffineAligner.semiGlobalLeft0(scoring, seq1, seq2, offset1, length1, 0, offset2, length2, seq2added, width, mutations, cache);
+        } else
+            result = BandedAffineAligner.semiLocalLeft0(scoring, seq1, seq2, offset1, length1, offset2, length2, width, mutations, cache);
         return new Alignment<>(seq1, mutations.createAndDestroy(),
                 new Range(result.sequence1Stop, offset1 + length1), new Range(result.sequence2Stop, offset2 + length2),
                 result.score);
@@ -975,9 +1062,9 @@ public final class FullSeqAssembler {
     }
 
     /**
-     * Aggregates information about position states in all the provided alignments, and returns the object
-     * that allows to iterate from one position to another (sorted by coverage, from most covered to less covered)
-     * and see states across all the alignments for each of the positions.
+     * Aggregates information about position states in all the provided alignments, and returns the object that allows
+     * to iterate from one position to another (sorted by coverage, from most covered to less covered) and see states
+     * across all the alignments for each of the positions.
      *
      * @param alignments supplier of alignments iterators. Will be invoked twice.
      */
@@ -1069,8 +1156,8 @@ public final class FullSeqAssembler {
     }
 
     /**
-     * Represents aggregated information about nucleotide states for all positions in all reads aggregated with
-     * {@link #calculateRawData(Supplier)}.
+     * Represents aggregated information about nucleotide states for all positions in all reads aggregated with {@link
+     * #calculateRawData(Supplier)}.
      */
     public abstract class RawVariantsData {
         /**
@@ -1089,8 +1176,8 @@ public final class FullSeqAssembler {
         /**
          * Returns output port, that iterates over positions in global coordinates, and returns variant-array for each
          * of the positions ( array[readId] = (variantId << 8) | minQuality ). Arrays are returned in the sequences
-         * determined by {@link #points}, e.g. firs array will correspond to point[0] position, the second to
-         * point[1] position etc. Positions are sorted according to their coverage.
+         * determined by {@link #points}, e.g. firs array will correspond to point[0] position, the second to point[1]
+         * position etc. Positions are sorted according to their coverage.
          */
         abstract OutputPort<int[]> createPort();
 
@@ -1103,7 +1190,8 @@ public final class FullSeqAssembler {
         /**
          * String representation of this state matrix
          *
-         * @param qualityThreshold quality threshold (positions with quality lower then this value, wil be printed in lower case)
+         * @param qualityThreshold quality threshold (positions with quality lower then this value, wil be printed in
+         *                         lower case)
          * @param readsFrom        range of read ids to print (beginning; inclusive)
          * @param readsTo          range of read ids to print (end; exclusive)
          */
@@ -1178,7 +1266,8 @@ public final class FullSeqAssembler {
         /**
          * String representation of this state matrix
          *
-         * @param qualityThreshold quality threshold (positions with quality lower then this value, wil be printed in lower case)
+         * @param qualityThreshold quality threshold (positions with quality lower then this value, wil be printed in
+         *                         lower case)
          */
         public String toString(byte qualityThreshold) {
             return toString(qualityThreshold, 0, nReads);
