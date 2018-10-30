@@ -32,7 +32,6 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.CountingOutputPort;
-import cc.redberry.pipe.util.StatusReporter;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.primitivio.PipeDataInputReader;
 import com.milaboratory.primitivio.PrimitivI;
@@ -258,34 +257,34 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
         // Writer
         try ( // TODO parametrise
               BasicVDJCAlignmentWriterFactory writerFactory = new BasicVDJCAlignmentWriterFactory(
-                      Math.min(16, Runtime.getRuntime().availableProcessors()),
+                      Math.min(4, Runtime.getRuntime().availableProcessors()),
                       true);
               // Writer
               BasicVDJCAlignmentWriterFactory.Writer writer =
                       writerFactory.createWriter(outputState, outputStream, false)) {
 
-            StatusReporter reporter = new StatusReporter();
-            reporter.addCustomProvider(new StatusReporter.StatusProvider() {
-                volatile String status;
-                volatile boolean isClosed = false;
-
-                @Override
-                public void updateStatus() {
-                    status = "Busy encoders: " + writerFactory.getBusyEncoders() + " / " + writerFactory.getEncodersCount();
-                    isClosed = writerFactory.isClosed();
-                }
-
-                @Override
-                public boolean isFinished() {
-                    return isClosed;
-                }
-
-                @Override
-                public String getStatus() {
-                    return status;
-                }
-            });
-            reporter.start();
+            // StatusReporter reporter = new StatusReporter();
+            // reporter.addCustomProvider(new StatusReporter.StatusProvider() {
+            //     volatile String status;
+            //     volatile boolean isClosed = false;
+            //
+            //     @Override
+            //     public void updateStatus() {
+            //         status = "Busy encoders: " + writerFactory.getBusyEncoders() + " / " + writerFactory.getEncodersCount();
+            //         isClosed = writerFactory.isClosed();
+            //     }
+            //
+            //     @Override
+            //     public boolean isFinished() {
+            //         return isClosed;
+            //     }
+            //
+            //     @Override
+            //     public String getStatus() {
+            //         return status;
+            //     }
+            // });
+            // reporter.start();
 
             List<VDJCAlignments> block = new ArrayList<>();
             // Writing alignments and writing indices
