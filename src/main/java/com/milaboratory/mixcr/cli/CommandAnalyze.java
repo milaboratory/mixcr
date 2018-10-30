@@ -56,21 +56,23 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
 
 
     enum _Chains implements WithNameWithDescription {
-        tcr("All T-cell receptor types (TRA/TRB/TRG/TRD)"),
-        bcr("All B-cell receptor types (IGH/IGK/IGL/TRD)"),
-        xcr("All T- and B-cell receptor types"),
-        tra("TRA chain"),
-        trb("TRB chain"),
-        trd("TRD chain"),
-        trg("TRG chain"),
-        igh("IGH chain"),
-        igk("IGK chain"),
-        igl("IGL chain");
+        tcr("All T-cell receptor types (TRA/TRB/TRG/TRD)", Chains.TCR),
+        bcr("All B-cell receptor types (IGH/IGK/IGL/TRD)", Chains.IG),
+        xcr("All T- and B-cell receptor types", Chains.ALL),
+        tra("TRA chain", Chains.TRA),
+        trb("TRB chain", Chains.TRB),
+        trd("TRD chain", Chains.TRD),
+        trg("TRG chain", Chains.TRG),
+        igh("IGH chain", Chains.IGH),
+        igk("IGK chain", Chains.IGK),
+        igl("IGL chain", Chains.IGL);
         final String key, description;
+        final Chains chains;
 
-        _Chains(String description) {
+        _Chains(String description, Chains chains) {
             this.key = this.toString();
             this.description = description;
+            this.chains = chains;
         }
 
         @Override
@@ -215,14 +217,10 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
             description = "Receptor type. Possible values: ${COMPLETION-CANDIDATES}",
             required = false /* This will be overridden for amplicon */)
     public void setChains(String chains) {
-        if (chains.equalsIgnoreCase("xcr"))
-            this.chains = Chains.ALL;
-        else {
-            Chains c = Chains.parse(chains.toUpperCase());
-            if (c == null)
-                throwValidationException("Illegal value " + chains + " for --receptor-type option.");
-            this.chains = c;
-        }
+        _Chains c = parse0(_Chains.class, chains);
+        if (c == null)
+            throwValidationException("Illegal value " + chains + " for --receptor-type option.");
+        this.chains = c.chains;
     }
 
     @Option(names = "--starting-material",

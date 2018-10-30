@@ -832,7 +832,7 @@ public final class FullSeqAssembler {
             }
             result = BandedAffineAligner.semiGlobalRight0(scoring, seq1, seq2, offset1, length1, 0, offset2, length2, seq2added, width, mutations, cache);
         } else
-            result = BandedAffineAligner.semiLocalLeft0(scoring, seq1, seq2, offset1, length1, offset2, length2, width, mutations, cache);
+            result = BandedAffineAligner.semiLocalRight0(scoring, seq1, seq2, offset1, length1, offset2, length2, width, mutations, cache);
 
         return new Alignment<>(seq1, mutations.createAndDestroy(),
                 new Range(offset1, result.sequence1Stop + 1), new Range(offset2, result.sequence2Stop + 1),
@@ -882,7 +882,7 @@ public final class FullSeqAssembler {
             }
             result = BandedAffineAligner.semiGlobalLeft0(scoring, seq1, seq2, offset1, length1, 0, offset2, length2, seq2added, width, mutations, cache);
         } else
-            result = BandedAffineAligner.semiLocalRight0(scoring, seq1, seq2, offset1, length1, offset2, length2, width, mutations, cache);
+            result = BandedAffineAligner.semiLocalLeft0(scoring, seq1, seq2, offset1, length1, offset2, length2, width, mutations, cache);
         return new Alignment<>(seq1, mutations.createAndDestroy(),
                 new Range(result.sequence1Stop, offset1 + length1), new Range(result.sequence2Stop, offset2 + length2),
                 result.score);
