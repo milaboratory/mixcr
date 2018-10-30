@@ -1,0 +1,2 @@
+Additional fix for error in `exportAlignments` / `exportClones` with repeated non-parametrized options
+Added support for affine alignments in `assembleContigs`
