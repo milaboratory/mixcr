@@ -1,4 +1,12 @@
 
+MiXCR 3.0.2 (30 Oct 2018)
+========================
+
+-- Additional fix for error in `exportAlignments` / `exportClones` with repeated non-parametrized 
+   options
+-- Added support for affine alignments in `assembleContigs`
+
+
 MiXCR 3.0.1 (25 Oct 2018)
 ========================
 
