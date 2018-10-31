@@ -301,6 +301,8 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
 
         if (!chains.intersects(Chains.TCR))
             alignParameters.add("-p kAligner2");
+        else
+            alignParameters.add("-p rna-seq"); // use always rna-seq by default
 
         // add all override parameters
         alignParameters.addAll(this.alignParameters);
