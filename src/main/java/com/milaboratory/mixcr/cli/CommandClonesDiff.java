@@ -20,7 +20,7 @@ import java.util.*;
         separator = " ",
         sortOptions = true,
         description = "Calculates the difference between two .clns files.")
-public class CommandClonesDiff extends ACommandWithOutput {
+public class CommandClonesDiff extends ACommandWithOutputMiXCR {
     @Parameters(description = "input1.clns")
     public String in1;
 

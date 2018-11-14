@@ -31,6 +31,7 @@ package com.milaboratory.mixcr.basictypes;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.CountLimitingOutputPort;
+import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.ClnsReader.GT2GFAdapter;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
@@ -61,9 +62,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Reader of CLNA file format.
  */
-public final class ClnAReader implements
-        PipelineConfigurationReader,
-        AutoCloseable {
+public final class ClnAReader extends PipelineConfigurationReaderMiXCR implements AutoCloseable {
     public static final int DEFAULT_CHUNK_SIZE = 262144;
     final int chunkSize;
     /**

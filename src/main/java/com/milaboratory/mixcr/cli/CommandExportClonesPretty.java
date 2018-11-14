@@ -25,7 +25,7 @@ import static cc.redberry.primitives.FilterUtil.and;
         sortOptions = true,
         separator = " ",
         description = "Export verbose information about clones.")
-public class CommandExportClonesPretty extends ACommandSimpleExport {
+public class CommandExportClonesPretty extends ACommandSimpleExportMiXCR {
     public static final int LINE_LENGTH = 80;
     public static final int LINE_OFFSET = 7;
     public static final int MAX_LENGTH = 2 * LINE_OFFSET + LINE_LENGTH;

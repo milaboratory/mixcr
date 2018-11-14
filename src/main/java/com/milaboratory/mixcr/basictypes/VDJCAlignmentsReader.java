@@ -30,6 +30,7 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPortCloseable;
+import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.util.CanReportProgress;
@@ -47,8 +48,7 @@ import java.util.Objects;
 
 import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.*;
 
-public final class VDJCAlignmentsReader implements
-        PipelineConfigurationReader,
+public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR implements
         OutputPortCloseable<VDJCAlignments>,
         CanReportProgress {
     private static final int DEFAULT_BUFFER_SIZE = 1048576; // 1 MB

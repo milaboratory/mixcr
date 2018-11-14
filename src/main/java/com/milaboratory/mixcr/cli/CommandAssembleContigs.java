@@ -5,6 +5,7 @@ import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.blocks.ParallelProcessor;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.assembler.CloneFactory;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler;
@@ -30,7 +31,7 @@ import static com.milaboratory.mixcr.cli.CommandAssembleContigs.ASSEMBLE_CONTIGS
         sortOptions = true,
         separator = " ",
         description = "Assemble full sequences.")
-public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingleInput {
+public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
     static final String ASSEMBLE_CONTIGS_COMMAND_NAME = "assembleContigs";
 
     public int threads = Runtime.getRuntime().availableProcessors();

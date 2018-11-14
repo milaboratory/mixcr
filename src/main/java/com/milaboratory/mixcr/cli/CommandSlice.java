@@ -5,6 +5,7 @@ import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.util.FlatteningOutputPort;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.mixcr.basictypes.*;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.set.hash.TLongHashSet;
@@ -18,13 +19,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.milaboratory.mixcr.basictypes.IOUtil.*;
 import static com.milaboratory.mixcr.cli.CommandSlice.SLICE_COMMAND_NAME;
 
 @CommandLine.Command(name = SLICE_COMMAND_NAME,
         sortOptions = true,
         separator = " ",
         description = "Slice ClnA file.")
-public class CommandSlice extends ACommandWithSmartOverwriteWithSingleInput {
+public class CommandSlice extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
     static final String SLICE_COMMAND_NAME = "slice";
 
     @Option(description = "List of read (for .vdjca) / clone (for .clns/.clna) ids to export.",
@@ -41,18 +43,17 @@ public class CommandSlice extends ACommandWithSmartOverwriteWithSingleInput {
         Collections.sort(ids);
 
         switch (getInputFileInfo().fileType) {
-            case VDJCA:
+            case MAGIC_VDJC:
                 sliceVDJCA();
                 break;
-            case Clns:
+            case MAGIC_CLNS:
                 throwValidationException("Operation is not yet supported for Clns files.");
                 break;
-            case ClnA:
+            case MAGIC_CLNA:
                 sliceClnA();
                 break;
             default:
                 throwValidationException("Not supported file type.");
-
         }
     }
 

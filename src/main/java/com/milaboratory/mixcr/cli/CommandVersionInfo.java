@@ -11,7 +11,7 @@ import picocli.CommandLine.Parameters;
 @Command(name = "versionInfo",
         separator = " ",
         description = "Output information about MiXCR version which generated the file.")
-public class CommandVersionInfo extends ACommand {
+public class CommandVersionInfo extends ACommandMiXCR {
     @Parameters(description = "input_file")
     public String inputFile;
 

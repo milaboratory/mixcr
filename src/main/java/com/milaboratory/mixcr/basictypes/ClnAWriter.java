@@ -32,6 +32,8 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.CountingOutputPort;
+import com.milaboratory.cli.PipelineConfiguration;
+import com.milaboratory.cli.PipelineConfigurationWriter;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.primitivio.PipeDataInputReader;
 import com.milaboratory.primitivio.PrimitivI;

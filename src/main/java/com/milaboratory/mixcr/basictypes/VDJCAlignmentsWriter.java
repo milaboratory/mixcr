@@ -29,6 +29,7 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
+import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;

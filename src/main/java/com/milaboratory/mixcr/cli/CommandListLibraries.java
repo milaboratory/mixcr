@@ -13,7 +13,7 @@ import java.util.List;
         hidden = true,
         separator = " ",
         description = "List all available library by scanning all library search paths.")
-public class CommandListLibraries extends ACommand {
+public class CommandListLibraries extends ACommandMiXCR {
     @Override
     public void run0() {
         VDJCLibraryRegistry.getDefault().loadAllLibraries();

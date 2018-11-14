@@ -6,6 +6,7 @@ import cc.redberry.pipe.util.CountLimitingOutputPort;
 import cc.redberry.primitives.Filter;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.*;
@@ -30,7 +31,7 @@ import static com.milaboratory.mixcr.cli.CommandFilterAlignments.FILTER_ALIGNMEN
         sortOptions = true,
         separator = " ",
         description = "Filter alignments.")
-public class CommandFilterAlignments extends ACommandWithSmartOverwriteWithSingleInput {
+public class CommandFilterAlignments extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
     static final String FILTER_ALIGNMENTS_COMMAND_NAME = "filterAlignments";
 
     @Option(description = "Specifies immunological protein chain gene for an alignment. If many, " +

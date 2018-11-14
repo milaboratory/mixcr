@@ -29,6 +29,8 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
+import com.milaboratory.cli.PipelineConfiguration;
+import com.milaboratory.cli.PipelineConfigurationWriter;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import io.repseq.core.VDJCGene;
 

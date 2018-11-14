@@ -2,7 +2,7 @@ package com.milaboratory.mixcr.cli;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.mixcr.basictypes.ActionConfiguration;
+import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssembler;
@@ -21,7 +21,7 @@ import static com.milaboratory.mixcr.cli.CommandAssemblePartialAlignments.ASSEMB
         sortOptions = true,
         separator = " ",
         description = "Assembles partially aligned reads into longer sequences.")
-public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwriteWithSingleInput {
+public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
     static final String ASSEMBLE_PARTIAL_COMMAND_NAME = "assemblePartial";
 
     @Option(names = "-O", description = "Overrides default parameter values.")

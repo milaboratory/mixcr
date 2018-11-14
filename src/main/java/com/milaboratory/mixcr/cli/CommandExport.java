@@ -29,10 +29,11 @@ import java.util.stream.Collectors;
 
 import static cc.redberry.primitives.FilterUtil.ACCEPT_ALL;
 import static cc.redberry.primitives.FilterUtil.and;
+import static com.milaboratory.mixcr.basictypes.IOUtil.*;
 
 
 @Command(separator = " ")
-public abstract class CommandExport<T extends VDJCObject> extends ACommandSimpleExport {
+public abstract class CommandExport<T extends VDJCObject> extends ACommandSimpleExportMiXCR {
     /** type class */
     private final Class<T> clazz;
 
@@ -155,18 +156,18 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
             AutoCloseable reader = null;
             OutputPort<VDJCAlignments> source = null;
 
-            switch (IOUtil.getFileInfo(in).fileType) {
-                case VDJCA:
+            switch (fileInfoExtractorInstance.getFileInfo(in).fileType) {
+                case MAGIC_VDJC:
                     VDJCAlignmentsReader vdjcaReader = new VDJCAlignmentsReader(in, VDJCLibraryRegistry.getDefault());
                     reader = vdjcaReader;
                     source = vdjcaReader;
                     break;
-                case ClnA:
+                case MAGIC_CLNA:
                     ClnAReader clnaReader = new ClnAReader(in, VDJCLibraryRegistry.getDefault());
                     reader = clnaReader;
                     source = clnaReader.readAllAlignments();
                     break;
-                case Clns:
+                case MAGIC_CLNS:
                     throwExecutionException("Can't export alignments from *.clns file: " + in);
                 default:
                     throwExecutionException("Unknown file type: " + in);

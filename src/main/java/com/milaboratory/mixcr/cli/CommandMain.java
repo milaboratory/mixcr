@@ -1,5 +1,6 @@
 package com.milaboratory.mixcr.cli;
 
+import com.milaboratory.cli.ABaseCommand;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine;
@@ -13,6 +14,10 @@ import java.util.Arrays;
         versionProvider = CommandMain.VersionProvider.class,
         separator = " ")
 public class CommandMain extends ABaseCommand {
+    CommandMain() {
+        super("mixcr");
+    }
+
     @Option(names = {"-v", "--version"},
             versionHelp = true,
             description = "print version information and exit")

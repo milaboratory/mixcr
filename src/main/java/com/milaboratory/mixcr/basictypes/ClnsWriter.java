@@ -1,5 +1,7 @@
 package com.milaboratory.mixcr.basictypes;
 
+import com.milaboratory.cli.PipelineConfiguration;
+import com.milaboratory.cli.PipelineConfigurationWriter;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.util.CanReportProgressAndStage;

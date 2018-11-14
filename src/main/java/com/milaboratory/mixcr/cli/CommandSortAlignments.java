@@ -4,7 +4,7 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.CountingOutputPort;
-import com.milaboratory.mixcr.basictypes.ActionConfiguration;
+import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
@@ -29,7 +29,7 @@ import static com.milaboratory.mixcr.cli.CommandSortAlignments.SORT_ALIGNMENTS_C
         sortOptions = true,
         separator = " ",
         description = "Sort alignments in vdjca file by read id.")
-public class CommandSortAlignments extends ACommandWithSmartOverwriteWithSingleInput {
+public class CommandSortAlignments extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
     static final String SORT_ALIGNMENTS_COMMAND_NAME = "sortAlignments";
 
     @Override

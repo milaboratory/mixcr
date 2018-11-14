@@ -1,8 +1,8 @@
 package com.milaboratory.mixcr.cli;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.milaboratory.mixcr.basictypes.PipelineConfiguration;
-import com.milaboratory.mixcr.basictypes.PipelineConfigurationReader;
+import com.milaboratory.cli.PipelineConfiguration;
+import com.milaboratory.mixcr.basictypes.PipelineConfigurationReaderMiXCR;
 import com.milaboratory.mixcr.util.PrintStreamTableAdapter;
 import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.LightFileDescriptor;
@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
         hidden = true,
         separator = " ",
         description = "List all available library by scanning all library search paths.")
-public class CommandPipelineInfo extends ACommand {
+public class CommandPipelineInfo extends ACommandMiXCR {
     @Parameters(description = "binary_file{.vdjca|.clns|.clna}...")
     public String input;
 
@@ -35,11 +35,12 @@ public class CommandPipelineInfo extends ACommand {
     }
 
     public static void analysisPipelineInfoJson(String file) throws JsonProcessingException {
-        System.out.println(GlobalObjectMappers.PRETTY.writeValueAsString(PipelineConfigurationReader.fromFile(file)));
+        System.out.println(GlobalObjectMappers.PRETTY.writeValueAsString(PipelineConfigurationReaderMiXCR
+                .sFromFile(file)));
     }
 
     public static void analysisPipelineInfo(String file) {
-        PipelineConfiguration pipeline = PipelineConfigurationReader.fromFile(file);
+        PipelineConfiguration pipeline = PipelineConfigurationReaderMiXCR.sFromFile(file);
         System.out.println("Pipeline:");
         final PrintStreamTableAdapter tableAdapter = new PrintStreamTableAdapter(System.out);
         for (int i = 0; i < pipeline.pipelineSteps.length; ++i) {

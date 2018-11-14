@@ -1,5 +1,6 @@
 package com.milaboratory.mixcr.cli;
 
+import com.milaboratory.cli.ACommandWithOutput;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import io.repseq.core.Chains;
@@ -18,7 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public abstract class CommandAnalyze extends ACommandWithOutput {
+public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
     private static <T extends WithNameWithDescription> T parse0(Class<? extends T> clazz, String v) {
         T[] ts = clazz.getEnumConstants();
         for (T t : ts)
@@ -258,8 +259,8 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
     private <T extends ACommandWithOutput> T inheritOptionsAndValidate(T parameters) {
         if (forceOverwrite)
             parameters.forceOverwrite = true;
-        if (parameters instanceof ACommandWithSmartOverwrite)
-            ((ACommandWithSmartOverwrite) parameters).overwriteIfRequired = true;
+        if (parameters instanceof ACommandWithSmartOverwriteMiXCR)
+            ((ACommandWithSmartOverwriteMiXCR) parameters).overwriteIfRequired = true;
 
         parameters.quiet = true;
         parameters.validate();
