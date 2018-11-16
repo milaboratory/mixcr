@@ -241,6 +241,9 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
             "%nNOTE: this will substantially increase analysis time.")
     public boolean contigAssembly = false;
 
+    @Option(names = {"--no-export"}, description = "Do not export clonotypes to tab-delimited file.")
+    public boolean noExport = false;
+
     @Option(names = {"-r", "--report"}, description = "Report file path")
     public String report = null;
 
@@ -592,13 +595,17 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
             fileWithClones = fileWithContigs;
         }
 
-        // --- Running export
-        if (!chains.equals(Chains.ALL))
-            for (String chain : chains)
-                mkExport(fileWithClones, fNameForExportClones(chain)).run();
-        else
-            for (String chain : new String[]{"ALL", "TRA", "TRB", "TRG", "TRD", "IGH", "IGK", "IGL"})
-                mkExport(fileWithClones, fNameForExportClones(chain)).run();
+        if (!noExport)
+            // --- Running export
+            if (!chains.equals(Chains.ALL))
+                for (String chain : chains)
+                    mkExport(fileWithClones, fNameForExportClones(chain)).run();
+            else
+                for (String chain : new String[]{"ALL", "TRA", "TRB", "TRG", "TRD", "IGH", "IGK", "IGL"}) {
+                    CommandExport.CommandExportClones export = mkExport(fileWithClones, fNameForExportClones(chain));
+                    export.chains = chain;
+                    export.run();
+                }
     }
 
 
