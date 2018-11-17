@@ -306,6 +306,7 @@ public class CommandAlign extends ACommandWithSmartOverwrite {
     public final AlignerReport report = new AlignerReport();
 
     @Override
+    @SuppressWarnings("unchecked")
     public void run1() throws Exception {
         // Saving initial timestamp
         long beginTimestamp = System.currentTimeMillis();

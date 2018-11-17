@@ -286,6 +286,8 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
         return cmdAlign = inheritOptionsAndValidate(mkAlign());
     }
 
+    boolean forceUseShotgunOps() { return false; }
+
     CommandAlign mkAlign() {
         // align parameters
         List<String> alignParameters = new ArrayList<>(initialAlignParameters);
@@ -302,7 +304,7 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
         alignParameters.add("--report");
         alignParameters.add(getReport());
 
-        if (!chains.intersects(Chains.TCR))
+        if (!forceUseShotgunOps() && !chains.intersects(Chains.TCR))
             alignParameters.add("-p kAligner2");
         else
             alignParameters.add("-p rna-seq"); // use always rna-seq by default
@@ -742,6 +744,11 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
             chains = Chains.ALL;
             nAssemblePartialRounds = 2;
             doNotExtendAlignments = false;
+        }
+
+        @Override
+        boolean forceUseShotgunOps() {
+            return true;
         }
 
         @Override
