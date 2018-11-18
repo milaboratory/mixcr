@@ -12,10 +12,7 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public abstract class CommandAnalyze extends ACommandWithOutput {
@@ -290,6 +287,14 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
 
     boolean include5UTRInRNA() { return true; }
 
+    Collection<String> pipelineSpecificAlignParameters() {
+        return Collections.EMPTY_LIST;
+    }
+
+    Collection<String> pipelineSpecificAssembleParameters() {
+        return Collections.EMPTY_LIST;
+    }
+
     CommandAlign mkAlign() {
         // align parameters
         List<String> alignParameters = new ArrayList<>(initialAlignParameters);
@@ -311,6 +316,22 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
         else
             alignParameters.add("-p rna-seq"); // always use rna-seq by default
 
+        // add v feature to align
+        switch (startingMaterial) {
+            case rna:
+                alignParameters.add("-OvParameters.geneFeatureToAlign=" +
+                        (include5UTRInRNA()
+                                ? "VTranscriptWithP"
+                                : "VTranscriptWithout5UTRWithP"));
+                break;
+            case dna:
+                alignParameters.add("-OvParameters.geneFeatureToAlign=VGeneWithP");
+                break;
+        }
+
+        // pipeline specific parameters
+        alignParameters.addAll(this.pipelineSpecificAlignParameters());
+
         // add all override parameters
         alignParameters.addAll(this.alignParameters);
 
@@ -327,22 +348,6 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
                         .flatMap(s -> Arrays.stream(s.split(" ")))
                         .toArray(String[]::new));
 
-        switch (startingMaterial) {
-            case rna:
-                ap.getAlignerParameters()
-                        .getVAlignerParameters()
-                        .setGeneFeatureToAlign(
-                                include5UTRInRNA()
-                                        ? GeneFeature.VTranscriptWithP
-                                        : GeneFeature.VTranscriptWithout5UTRWithP
-                        );
-                break;
-            case dna:
-                ap.getAlignerParameters()
-                        .getVAlignerParameters()
-                        .setGeneFeatureToAlign(GeneFeature.VGeneWithP);
-                break;
-        }
 
         return ap;
     }
@@ -359,6 +364,9 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
         // add report file
         assemblePartialParameters.add("--report");
         assemblePartialParameters.add(getReport());
+
+        // pipeline specific parameters
+        alignParameters.addAll(this.pipelineSpecificAssembleParameters());
 
         // add all override parameters
         assemblePartialParameters.addAll(this.assemblePartialParameters);
@@ -707,27 +715,22 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
         }
 
         @Override
-        CommandAlign mkAlign() {
-            CommandAlign align = super.mkAlign();
-
-            VDJCAlignerParameters alignmentParameters = align.getAlignerParameters();
-            alignmentParameters.getVAlignerParameters().getParameters().setFloatingLeftBound(floatingV());
-            alignmentParameters.getJAlignerParameters().getParameters().setFloatingRightBound(floatingJ());
-            alignmentParameters.getCAlignerParameters().getParameters().setFloatingRightBound(floatingC());
-
-            return align;
+        Collection<String> pipelineSpecificAlignParameters() {
+            return Arrays.asList(
+                    "-OvParameters.parameters.floatingLeftBound=" + floatingV(),
+                    "-OjParameters.parameters.floatingLeftBound=" + floatingJ(),
+                    "-OcParameters.parameters.floatingLeftBound=" + floatingC()
+            );
         }
 
         @Override
-        public CommandAssemble mkAssemble(String input, String output) {
-            CommandAssemble assemble = super.mkAssemble(input, output);
-            CloneAssemblerParameters cloneAssemblyParameters = assemble.getCloneAssemblerParameters(); // this invokes initializeParameters()
-            cloneAssemblyParameters.setAssemblingFeatures(new GeneFeature[]{assemblingFeature});
-            cloneAssemblyParameters.setSeparateByV(cloneAssemblyParameters.getSeparateByV() || !floatingV());
-            cloneAssemblyParameters.setSeparateByJ(cloneAssemblyParameters.getSeparateByJ() || !floatingJ());
-            cloneAssemblyParameters.setSeparateByC(cloneAssemblyParameters.getSeparateByC() || !(floatingC() || floatingJ()));
-            cloneAssemblyParameters.updateFrom(getAlign().getAlignerParameters());
-            return assemble;
+        Collection<String> pipelineSpecificAssembleParameters() {
+            return Arrays.asList(
+                    "-OassemblingFeatures=\"[" + assemblingFeature + "]\"",
+                    "-OseparateByV=" + !floatingV(),
+                    "-OseparateByJ=" + !floatingJ(),
+                    "-OseparateByC=" + !(floatingC() || floatingJ())
+            );
         }
     }
 
@@ -797,6 +800,15 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
         }
 
         @Override
+        Collection<String> pipelineSpecificAssembleParameters() {
+            return Arrays.asList(
+                    "-OseparateByV=true",
+                    "-OseparateByJ=true",
+                    "-OseparateByC=true"
+            );
+        }
+
+        @Override
         public CommandAssemble mkAssemble(String input, String output) {
             CommandAssemble assemble = super.mkAssemble(input, output);
             CloneAssemblerParameters cloneAssemblyParameters = assemble.getCloneAssemblerParameters();
@@ -806,12 +818,6 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
                         "See --contig-assembly and --impute-germline-on-export options if you want to " +
                         "cover wider part of the receptor sequence.");
 
-            // shotgun pipeline assumes no adapter sequences
-            cloneAssemblyParameters.setSeparateByV(true);
-            cloneAssemblyParameters.setSeparateByJ(true);
-            cloneAssemblyParameters.setSeparateByC(true);
-
-            cloneAssemblyParameters.updateFrom(getAlign().getAlignerParameters());
             return assemble;
         }
     }
