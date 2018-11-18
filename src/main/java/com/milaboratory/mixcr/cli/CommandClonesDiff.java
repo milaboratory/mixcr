@@ -4,7 +4,6 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
-import com.milaboratory.mixcr.basictypes.IOUtil;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGeneId;
 import picocli.CommandLine.Command;
@@ -12,7 +11,6 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.*;
 
@@ -21,13 +19,13 @@ import java.util.*;
         sortOptions = true,
         description = "Calculates the difference between two .clns files.")
 public class CommandClonesDiff extends ACommandWithOutput {
-    @Parameters(description = "input1.clns")
+    @Parameters(description = "input1.clns", index = "0")
     public String in1;
 
-    @Parameters(description = "input2.clns")
+    @Parameters(description = "input2.clns", index = "1")
     public String in2;
 
-    @Parameters(description = "[report]", arity = "0..1")
+    @Parameters(description = "[report]", index = "2")
     public String report = null;
 
     @Option(names = {"-v"}, description = "Use V gene in clone comparison (include it as a clone key along " +
@@ -73,12 +71,10 @@ public class CommandClonesDiff extends ACommandWithOutput {
 
     @Override
     public void run0() throws Exception {
-        try (InputStream is1 = IOUtil.createIS(in1);
-             InputStream is2 = IOUtil.createIS(in2);
-             PrintStream report = this.report == null ? System.out : new PrintStream(new FileOutputStream(this.report))) {
+        try (PrintStream report = this.report == null ? System.out : new PrintStream(new FileOutputStream(this.report))) {
 
-            CloneSet cs1 = CloneSetIO.readClns(is1);
-            CloneSet cs2 = CloneSetIO.readClns(is2);
+            CloneSet cs1 = CloneSetIO.read(in1);
+            CloneSet cs2 = CloneSetIO.read(in2);
 
             HashMap<CKey, CRec> recs = new HashMap<>();
 

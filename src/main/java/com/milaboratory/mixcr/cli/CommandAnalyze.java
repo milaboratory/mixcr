@@ -701,11 +701,12 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
             //
             // In all other cases addition of 5'UTR to the reference may lead to false extension of V alignment
             // over adapter sequence.
-            return adapters == _Adapters.noAdapters || vPrimers == _5EndPrimers.vPrimers; // read as adapters == _Adapters.noAdapters || floatingV()
+            // return adapters == _Adapters.noAdapters || vPrimers == _5EndPrimers.vPrimers; // read as adapters == _Adapters.noAdapters || floatingV()
+            return true;
         }
 
         boolean floatingV() {
-            return vPrimers == _5EndPrimers.vPrimers && adapters == _Adapters.adaptersPresent;
+            return vPrimers == _5EndPrimers.vPrimers || adapters == _Adapters.adaptersPresent;
         }
 
         boolean floatingJ() {
