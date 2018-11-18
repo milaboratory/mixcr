@@ -365,9 +365,6 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
         assemblePartialParameters.add("--report");
         assemblePartialParameters.add(getReport());
 
-        // pipeline specific parameters
-        alignParameters.addAll(this.pipelineSpecificAssembleParameters());
-
         // add all override parameters
         assemblePartialParameters.addAll(this.assemblePartialParameters);
 
@@ -433,6 +430,9 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
 
         // we always write clna
         assembleParameters.add("--write-alignments");
+
+        // pipeline specific parameters
+        assembleParameters.addAll(this.pipelineSpecificAssembleParameters());
 
         // add all override parameters
         assembleParameters.addAll(this.assembleParameters);
@@ -582,7 +582,9 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
     }
 
     @Override
-    public void run0() throws Exception {
+    public void run0() {
+        JsonOverrider.suppressSameValueOverride = true;
+
         // --- Running alignments
         getAlign().run();
         String fileWithAlignments = fNameForAlignments();
@@ -718,15 +720,15 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
         Collection<String> pipelineSpecificAlignParameters() {
             return Arrays.asList(
                     "-OvParameters.parameters.floatingLeftBound=" + floatingV(),
-                    "-OjParameters.parameters.floatingLeftBound=" + floatingJ(),
-                    "-OcParameters.parameters.floatingLeftBound=" + floatingC()
+                    "-OjParameters.parameters.floatingRightBound=" + floatingJ(),
+                    "-OcParameters.parameters.floatingRightBound=" + floatingC()
             );
         }
 
         @Override
         Collection<String> pipelineSpecificAssembleParameters() {
             return Arrays.asList(
-                    "-OassemblingFeatures=\"[" + assemblingFeature + "]\"",
+                    "-OassemblingFeatures=\"[" + GeneFeature.encode(assemblingFeature).replaceAll(" ", "") + "]\"",
                     "-OseparateByV=" + !floatingV(),
                     "-OseparateByJ=" + !floatingJ(),
                     "-OseparateByC=" + !(floatingC() || floatingJ())
