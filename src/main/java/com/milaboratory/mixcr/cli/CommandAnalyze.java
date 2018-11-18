@@ -171,7 +171,7 @@ public abstract class CommandAnalyze extends ACommandWithOutput {
 
     static class _StartingMaterialCandidates extends EnumCandidates {
         _StartingMaterialCandidates() {
-            super(_Chains.class);
+            super(_StartingMaterial.class);
         }
     }
 
