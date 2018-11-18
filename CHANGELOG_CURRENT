@@ -1,5 +1,0 @@
-Major fix for `analyze` action (wrong aligner paramters were used before)
-Also several minor fixes to the overal logic of `analyze`
-Fix for exported clonotype tables for specific receptor chains in `analyze` (#454)
-`--no-export` option added to `analyze` action (#454)
-Minor fixes for `clonesDiff` and `alignmentsDiff` actions
