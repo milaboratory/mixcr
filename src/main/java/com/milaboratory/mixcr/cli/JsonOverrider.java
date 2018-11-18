@@ -43,6 +43,8 @@ import java.util.List;
 import java.util.Map;
 
 public class JsonOverrider {
+    static boolean suppressSameValueOverride = false;
+
     public static <T> T override(T object, Class<? super T> clazz, String... commands) {
         JsonNode node = GlobalObjectMappers.ONE_LINE.valueToTree(object);
         for (String command : commands)
@@ -97,7 +99,8 @@ public class JsonOverrider {
     }
 
     private static void overrideWarn(String fieldName, String newValue) {
-        System.out.printf("WARNING: unnecessary override -O%s=%s with the same value.\n", fieldName, newValue);
+        if (!suppressSameValueOverride)
+            System.out.printf("WARNING: unnecessary override -O%s=%s with the same value.\n", fieldName, newValue);
     }
 
     public static boolean override0(JsonNode node, String path, String value) {
