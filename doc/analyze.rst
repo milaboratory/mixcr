@@ -290,23 +290,3 @@ The pipeline is equivalent to execution of the following MiXCR actions:
 
 As in the case of ``analyze amplicon``, required option ``--starting-material`` affects the choice of V gene region which will be used as target in ``align`` step (``vParameters.geneFeatureToAlign``, see :ref:`align documentation <ref-aligner-parameters>`): ``rna`` corresponds to the ``VTranscriptWithout5UTRWithP`` and ``dna`` to ``VGeneWithP`` (see :ref:`ref-geneFeatures` for details).
 
-
-
-Resuming execution / re-analyzing
----------------------------------
-
-MiXCR allows to continue aborted execution or re-analyze existing data with updated parameters, without complete re-processing of each of pipeline steps. This is possible with ``--overwrite-if-required`` option. For example, suppose the analysis was performed with the default options:
-
-::
-    
-    mixcr analyze shotgun --species hs --starting-material rna data_R1.fastq data_R2.fastq analysis_name
-
-
-Now to re-analyze the data with updated options for :ref:`assemble <ref-assemble>`, one can pass ``--overwrite-if-required`` option in order to avoid unnecessary invocation of ``align``, ``assemblePartial`` and ``extend``:
-
-:: 
-
-    mixcr analyze shotgun --overwrite-if-required --species hs --starting-material rna --assemble "-ObadQualityThreshold=0" data_R1.fastq data_R2.fastq analysis_name
-
-This way, the previous results of :ref:`align <ref-align>`, :ref:`assemblePartial <ref-assemblePartial>` and :ref:`extend <ref-extend>` will be used, while :ref:`assembly step <ref-assemble>` will be re-executed.
-
