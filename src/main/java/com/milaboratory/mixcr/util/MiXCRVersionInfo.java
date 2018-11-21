@@ -52,7 +52,7 @@ public final class MiXCRVersionInfo extends AppVersionInfo {
                              @JsonProperty("milib") VersionInfo milib,
                              @JsonProperty("repseqio") VersionInfo repseqio,
                              @JsonProperty("builtInLibrary") String builtInLibrary) {
-        super(prepareComponentVersions(mixcr, milib, repseqio), builtInLibrary);
+        super(prepareComponentVersions(mixcr, milib, repseqio), prepareComponentStringVersions(builtInLibrary));
     }
 
     private static HashMap<String, VersionInfo> prepareComponentVersions(
@@ -62,6 +62,12 @@ public final class MiXCRVersionInfo extends AppVersionInfo {
         componentVersions.put("milib", milib);
         componentVersions.put("repseqio", repseqio);
         return componentVersions;
+    }
+
+    private static HashMap<String, String> prepareComponentStringVersions(String builtInLibrary) {
+        HashMap<String, String> componentStringVersions = new HashMap<>();
+        componentStringVersions.put("builtInLibrary", builtInLibrary);
+        return componentStringVersions;
     }
 
     public static MiXCRVersionInfo get() {
@@ -93,7 +99,7 @@ public final class MiXCRVersionInfo extends AppVersionInfo {
                 "; rev=" +
                 mixcr.getRevision() +
                 "; lib=" +
-                builtInLibrary;
+                componentStringVersions.get("builtInLibrary");
     }
 
     @Override
@@ -101,6 +107,8 @@ public final class MiXCRVersionInfo extends AppVersionInfo {
         VersionInfo mixcr = componentVersions.get("mixcr");
         VersionInfo milib = componentVersions.get("milib");
         VersionInfo repseqio = componentVersions.get("repseqio");
+        String builtInLibrary = componentStringVersions.get("builtInLibrary");
+
         StringBuilder builder = new StringBuilder();
 
         builder.append("MiXCR v")
