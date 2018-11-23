@@ -247,8 +247,8 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                             count = set.getClones().stream().mapToDouble(Clone::getCount).sum();
                     int di = initialSet.size() - set.size();
                     double cdi = initialCount - count;
-                    warn("Filtered " + di + " of " + initialSet.size() + " clones (" + Util.PERCENT_FORMAT.format(100.0 * di / initialSet.size()) + "%).");
-                    warn("Filtered " + cdi + " of " + initialCount + " reads (" + Util.PERCENT_FORMAT.format(100.0 * cdi / initialCount) + "%).");
+                    warn("Filtered " + set.size() + " of " + initialSet.size() + " clones (" + Util.PERCENT_FORMAT.format(100.0 * di / initialSet.size()) + "%).");
+                    warn("Filtered " + count + " of " + initialCount + " reads (" + Util.PERCENT_FORMAT.format(100.0 * cdi / initialCount) + "%).");
                 }
             }
         }

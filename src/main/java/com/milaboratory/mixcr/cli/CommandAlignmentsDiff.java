@@ -23,13 +23,13 @@ import java.util.Map;
         separator = " ",
         description = "Calculates the difference between two .vdjca files.")
 public class CommandAlignmentsDiff extends ACommandWithOutputMiXCR {
-    @Parameters(description = "input_file1")
+    @Parameters(description = "input_file1", index = "0")
     public String in1;
 
-    @Parameters(description = "input_file2")
+    @Parameters(description = "input_file2", index = "1")
     public String in2;
 
-    @Parameters(description = "report")
+    @Parameters(description = "report", index = "2")
     public String report;
 
     @Option(names = {"-o1", "--only-in-first"}, description = "output for alignments contained only " +
