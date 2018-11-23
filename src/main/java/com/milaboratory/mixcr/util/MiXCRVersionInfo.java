@@ -29,10 +29,8 @@
  */
 package com.milaboratory.mixcr.util;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import com.milaboratory.cli.AppVersionInfo;
-import com.milaboratory.primitivio.annotations.Serializable;
 import com.milaboratory.util.VersionInfo;
 import io.repseq.core.VDJCLibraryRegistry;
 import org.apache.commons.io.IOUtils;
@@ -46,7 +44,7 @@ import java.util.HashMap;
         fieldVisibility = JsonAutoDetect.Visibility.ANY,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
-@Serializable(asJson = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 public final class MiXCRVersionInfo extends AppVersionInfo {
     private MiXCRVersionInfo(@JsonProperty("mixcr") VersionInfo mixcr,
                              @JsonProperty("milib") VersionInfo milib,

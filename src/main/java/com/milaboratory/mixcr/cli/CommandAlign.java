@@ -8,8 +8,7 @@ import cc.redberry.pipe.util.Chunk;
 import cc.redberry.pipe.util.CountLimitingOutputPort;
 import cc.redberry.pipe.util.OrderedOutputPort;
 import cc.redberry.pipe.util.StatusReporter;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.core.PairedEndReadsLayout;
@@ -237,6 +236,11 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
     }
 
     /** Set of parameters that completely (uniquely) determine align action */
+    @JsonAutoDetect(
+            fieldVisibility = JsonAutoDetect.Visibility.ANY,
+            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+            getterVisibility = JsonAutoDetect.Visibility.NONE)
+    @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
     public static class AlignConfiguration implements ActionConfiguration {
         /**
          * Aligner parameters

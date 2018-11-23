@@ -3,8 +3,7 @@ package com.milaboratory.mixcr.cli;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.blocks.ParallelProcessor;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.assembler.CloneFactory;
@@ -179,6 +178,11 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
             Util.writeJsonReport(jsonReport, reportWrapper);
     }
 
+    @JsonAutoDetect(
+            fieldVisibility = JsonAutoDetect.Visibility.ANY,
+            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+            getterVisibility = JsonAutoDetect.Visibility.NONE)
+    @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
     public static class AssembleContigsConfiguration implements ActionConfiguration {
         public final FullSeqAssemblerParameters assemblerParameters;
 

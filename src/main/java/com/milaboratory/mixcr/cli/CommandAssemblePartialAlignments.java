@@ -1,7 +1,6 @@
 package com.milaboratory.mixcr.cli;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
@@ -122,6 +121,11 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
         }
     }
 
+    @JsonAutoDetect(
+            fieldVisibility = JsonAutoDetect.Visibility.ANY,
+            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+            getterVisibility = JsonAutoDetect.Visibility.NONE)
+    @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
     public static class AssemblePartialConfiguration implements ActionConfiguration {
         public final PartialAlignmentsAssemblerParameters parameters;
         public final boolean dropPartial;

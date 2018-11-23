@@ -1,8 +1,7 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.util.StatusReporter;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.*;
@@ -219,6 +218,11 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
         }
     }
 
+    @JsonAutoDetect(
+            fieldVisibility = JsonAutoDetect.Visibility.ANY,
+            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+            getterVisibility = JsonAutoDetect.Visibility.NONE)
+    @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
     public static class AssembleConfiguration implements ActionConfiguration {
         public final CloneAssemblerParameters assemblerParameters;
         public final boolean clna;

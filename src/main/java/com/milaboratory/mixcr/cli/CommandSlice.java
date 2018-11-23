@@ -3,26 +3,21 @@ package com.milaboratory.mixcr.cli;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.util.FlatteningOutputPort;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.mixcr.basictypes.*;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 import io.repseq.core.VDJCLibraryRegistry;
-import picocli.CommandLine;
-import picocli.CommandLine.Option;
+import picocli.CommandLine.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.milaboratory.mixcr.basictypes.IOUtil.*;
 import static com.milaboratory.mixcr.cli.CommandSlice.SLICE_COMMAND_NAME;
 
-@CommandLine.Command(name = SLICE_COMMAND_NAME,
+@Command(name = SLICE_COMMAND_NAME,
         sortOptions = true,
         separator = " ",
         description = "Slice ClnA file.")
@@ -125,6 +120,11 @@ public class CommandSlice extends ACommandWithSmartOverwriteWithSingleInputMiXCR
         }
     }
 
+    @JsonAutoDetect(
+            fieldVisibility = JsonAutoDetect.Visibility.ANY,
+            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+            getterVisibility = JsonAutoDetect.Visibility.NONE)
+    @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
     public static class SliceConfiguration implements ActionConfiguration {
         final long[] ids;
 
