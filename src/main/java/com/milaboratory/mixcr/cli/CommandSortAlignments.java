@@ -95,7 +95,10 @@ public class CommandSortAlignments extends ACommandWithSmartOverwriteWithSingleI
             fieldVisibility = JsonAutoDetect.Visibility.ANY,
             isGetterVisibility = JsonAutoDetect.Visibility.NONE,
             getterVisibility = JsonAutoDetect.Visibility.NONE)
-    @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
+    @JsonTypeInfo(
+            use = JsonTypeInfo.Id.CLASS,
+            include = JsonTypeInfo.As.PROPERTY,
+            property = "type")
     public static class SortConfiguration implements ActionConfiguration {
         @Override
         public String actionName() {

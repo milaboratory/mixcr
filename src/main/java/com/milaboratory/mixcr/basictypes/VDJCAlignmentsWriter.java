@@ -30,6 +30,7 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.cli.PipelineConfiguration;
+import com.milaboratory.mixcr.cli.SerializerCompatibilityOutput;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
@@ -147,7 +148,7 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
         if (writer != null)
             throw new IllegalStateException("Header already written.");
 
-        PrimitivO output = new PrimitivO(rawOutput);
+        PrimitivO output = new PrimitivO(new SerializerCompatibilityOutput(rawOutput));
 
         // Writing meta data using raw stream for easy reconstruction with simple tools like hex viewers
 

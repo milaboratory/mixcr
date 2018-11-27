@@ -125,7 +125,10 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
             fieldVisibility = JsonAutoDetect.Visibility.ANY,
             isGetterVisibility = JsonAutoDetect.Visibility.NONE,
             getterVisibility = JsonAutoDetect.Visibility.NONE)
-    @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
+    @JsonTypeInfo(
+            use = JsonTypeInfo.Id.CLASS,
+            include = JsonTypeInfo.As.PROPERTY,
+            property = "type")
     public static class AssemblePartialConfiguration implements ActionConfiguration {
         public final PartialAlignmentsAssemblerParameters parameters;
         public final boolean dropPartial;

@@ -2,6 +2,7 @@ package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
+import com.milaboratory.mixcr.cli.SerializerCompatibilityInput;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import io.repseq.core.*;
@@ -23,13 +24,13 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Auto
     private final PrimitivI input;
     private final VDJCLibraryRegistry libraryRegistry;
 
-    public ClnsReader(PrimitivI input, VDJCLibraryRegistry libraryRegistry) {
+    private ClnsReader(PrimitivI input, VDJCLibraryRegistry libraryRegistry) {
         this.input = input;
         this.libraryRegistry = libraryRegistry;
     }
 
     public ClnsReader(InputStream inputStream, VDJCLibraryRegistry libraryRegistry) {
-        this(new PrimitivI(inputStream), libraryRegistry);
+        this(new PrimitivI(new SerializerCompatibilityInput(inputStream)), libraryRegistry);
     }
 
     public ClnsReader(File file, VDJCLibraryRegistry libraryRegistry) throws IOException {

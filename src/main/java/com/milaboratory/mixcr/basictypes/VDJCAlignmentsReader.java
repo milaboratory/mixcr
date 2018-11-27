@@ -31,6 +31,7 @@ package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.cli.PipelineConfiguration;
+import com.milaboratory.mixcr.cli.SerializerCompatibilityInput;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.util.CanReportProgress;
@@ -126,7 +127,7 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
         if (reader != null)
             return;
 
-        PrimitivI input = new PrimitivI(inputStream);
+        PrimitivI input = new PrimitivI(new SerializerCompatibilityInput(inputStream));
 
         assert MAGIC_BYTES.length == MAGIC_LENGTH;
         byte[] magic = new byte[MAGIC_LENGTH];

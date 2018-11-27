@@ -2,6 +2,7 @@ package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.cli.PipelineConfigurationWriter;
+import com.milaboratory.mixcr.cli.SerializerCompatibilityOutput;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.util.CanReportProgressAndStage;
@@ -42,7 +43,7 @@ public class ClnsWriter implements PipelineConfigurationWriter,
     }
 
     public ClnsWriter(PipelineConfiguration configuration, CloneSet cloneSet, OutputStream outputStream) {
-        this.output = new PrimitivO(outputStream);
+        this.output = new PrimitivO(new SerializerCompatibilityOutput(outputStream));
         this.configuration = configuration;
         this.cloneSet = cloneSet;
         this.size = cloneSet.size();

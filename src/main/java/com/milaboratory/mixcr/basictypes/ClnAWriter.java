@@ -34,6 +34,7 @@ import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.CountingOutputPort;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.cli.PipelineConfigurationWriter;
+import com.milaboratory.mixcr.cli.SerializerCompatibilityOutput;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.primitivio.PipeDataInputReader;
 import com.milaboratory.primitivio.PrimitivI;
@@ -94,7 +95,7 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
         this.outputStream = new CountingOutputStream(new BufferedOutputStream(
                 new FileOutputStream(file), 131072));
         this.outputStream.write(MAGIC.getBytes(StandardCharsets.US_ASCII));
-        this.output = new PrimitivO(this.outputStream);
+        this.output = new PrimitivO(new SerializerCompatibilityOutput(this.outputStream));
     }
 
     private long positionOfFirstClone = -1;
@@ -207,7 +208,7 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
 
         @Override
         public void write(Collection<VDJCAlignments> data, OutputStream stream) {
-            PrimitivO primitivO = new PrimitivO(stream);
+            PrimitivO primitivO = new PrimitivO(new SerializerCompatibilityOutput(stream));
             // Initializing PrimitivO object (see big comment block in writeClones(...) method
             IOUtil.registerGeneReferences(primitivO, genes, featureToAlign);
             for (VDJCAlignments alignments : data) {
