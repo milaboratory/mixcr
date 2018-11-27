@@ -30,9 +30,10 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPortCloseable;
+import com.milaboratory.cli.AppVersionInfo;
 import com.milaboratory.cli.PipelineConfiguration;
-import com.milaboratory.mixcr.cli.SerializerCompatibilityInput;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
+import com.milaboratory.primitivio.JSONSerializer;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.CountingInputStream;
@@ -127,7 +128,7 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
         if (reader != null)
             return;
 
-        PrimitivI input = new PrimitivI(new SerializerCompatibilityInput(inputStream));
+        PrimitivI input = new PrimitivI(inputStream);
 
         assert MAGIC_BYTES.length == MAGIC_LENGTH;
         byte[] magic = new byte[MAGIC_LENGTH];
@@ -137,7 +138,13 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
 
         // SerializersManager serializersManager = input.getSerializersManager();
         switch (magicString) {
+            case MAGIC_V13:
+                input.getSerializersManager().registerCustomSerializer(AppVersionInfo.class,
+                        new JSONSerializer(AppVersionInfo.class, s -> s));
+                break;
             case MAGIC:
+                input.getSerializersManager().registerCustomSerializer(AppVersionInfo.class,
+                        new JSONSerializer(AppVersionInfo.class, s -> s));
                 break;
             default:
                 throw new RuntimeException("Unsupported file format; .vdjca file of version " + new String(magic) + " while you are running MiXCR " + MAGIC);

@@ -34,7 +34,6 @@ import cc.redberry.pipe.util.CountLimitingOutputPort;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.ClnsReader.GT2GFAdapter;
-import com.milaboratory.mixcr.cli.SerializerCompatibilityInput;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PipeDataInputReader;
 import com.milaboratory.primitivio.PrimitivI;
@@ -122,9 +121,16 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
         buf.get(magicBytes);
         String magicString = new String(magicBytes, StandardCharsets.US_ASCII);
 
-        if (!magicString.equals(ClnAWriter.MAGIC))
-            throw new IllegalArgumentException("Wrong file type. Magic = " + magicString +
-                    ", expected = " + ClnAWriter.MAGIC);
+        switch (magicString) {
+            case ClnAWriter.MAGIC_V3:
+                // Compatibility code
+                break;
+            case ClnAWriter.MAGIC:
+                break;
+            default:
+                throw new IllegalArgumentException("Wrong file type. Magic = " + magicString +
+                        ", expected = " + ClnAWriter.MAGIC);
+        }
 
         // Reading number of clones
 
@@ -142,7 +148,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
 
         // Reading index data
 
-        input = new PrimitivI(new SerializerCompatibilityInput(new InputDataStream(indexBegin, fSize - 8)));
+        input = new PrimitivI(new InputDataStream(indexBegin, fSize - 8));
         this.index = new long[numberOfClones + 2];
         this.counts = new long[numberOfClones + 2];
         long previousValue = 0;
@@ -155,8 +161,8 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
 
         // Reading gene features
 
-        input = new PrimitivI(new SerializerCompatibilityInput(new InputDataStream(ClnAWriter.MAGIC_LENGTH + 4,
-                firstClonePosition)));
+        input = new PrimitivI(new InputDataStream(ClnAWriter.MAGIC_LENGTH + 4,
+                firstClonePosition));
         this.versionInfo = input.readUTF();
         this.configuration = input.readObject(PipelineConfiguration.class);
         this.alignerParameters = input.readObject(VDJCAlignerParameters.class);
@@ -236,8 +242,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
      * Read clone set completely
      */
     public CloneSet readCloneSet() throws IOException {
-        PrimitivI input = inputState.createPrimitivI(new SerializerCompatibilityInput(new InputDataStream(
-                firstClonePosition, index[0])));
+        PrimitivI input = inputState.createPrimitivI(new InputDataStream(firstClonePosition, index[0]));
 
         // Reading clones
         int count = numberOfClones();

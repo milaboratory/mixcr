@@ -2,7 +2,6 @@ package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
-import com.milaboratory.mixcr.cli.SerializerCompatibilityInput;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import io.repseq.core.*;
@@ -14,8 +13,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 
-import static com.milaboratory.mixcr.basictypes.ClnsWriter.MAGIC;
-import static com.milaboratory.mixcr.basictypes.ClnsWriter.MAGIC_LENGTH;
+import static com.milaboratory.mixcr.basictypes.ClnsWriter.*;
 
 /**
  *
@@ -30,7 +28,7 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Auto
     }
 
     public ClnsReader(InputStream inputStream, VDJCLibraryRegistry libraryRegistry) {
-        this(new PrimitivI(new SerializerCompatibilityInput(inputStream)), libraryRegistry);
+        this(new PrimitivI(inputStream), libraryRegistry);
     }
 
     public ClnsReader(File file, VDJCLibraryRegistry libraryRegistry) throws IOException {
@@ -62,6 +60,9 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Auto
         // SerializersManager serializersManager = input.getSerializersManager();
 
         switch (magicString) {
+            case MAGIC_V7:
+                // Compatibility code
+                break;
             case MAGIC:
                 break;
             default:

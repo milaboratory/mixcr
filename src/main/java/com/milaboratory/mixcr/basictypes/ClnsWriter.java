@@ -2,7 +2,6 @@ package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.cli.PipelineConfigurationWriter;
-import com.milaboratory.mixcr.cli.SerializerCompatibilityOutput;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.util.CanReportProgressAndStage;
@@ -22,7 +21,8 @@ public class ClnsWriter implements PipelineConfigurationWriter,
         CanReportProgressAndStage,
         Closeable {
     static final String MAGIC_V7 = "MiXCR.CLNS.V07";
-    static final String MAGIC = MAGIC_V7;
+    static final String MAGIC_V8 = "MiXCR.CLNS.V08";
+    static final String MAGIC = MAGIC_V8;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
 
@@ -43,7 +43,7 @@ public class ClnsWriter implements PipelineConfigurationWriter,
     }
 
     public ClnsWriter(PipelineConfiguration configuration, CloneSet cloneSet, OutputStream outputStream) {
-        this.output = new PrimitivO(new SerializerCompatibilityOutput(outputStream));
+        this.output = new PrimitivO(outputStream);
         this.configuration = configuration;
         this.cloneSet = cloneSet;
         this.size = cloneSet.size();
