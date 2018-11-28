@@ -1,5 +1,6 @@
 package com.milaboratory.mixcr.basictypes;
 
+import com.milaboratory.cli.AppVersionInfo;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.cli.PipelineConfigurationWriter;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
@@ -74,7 +75,7 @@ public class ClnsWriter implements PipelineConfigurationWriter,
         // Writing version information
         output.writeUTF(
                 MiXCRVersionInfo.get().getVersionString(
-                        MiXCRVersionInfo.OutputType.ToFile));
+                        AppVersionInfo.OutputType.ToFile));
 
         // Writing analysis meta-information
         output.writeObject(configuration);

@@ -40,12 +40,8 @@ public final class SerializerCompatibilityUtil {
     static final Map<String, String> nameToClass = Collections.unmodifiableMap(nameToClassMutable);
 
     static {
-        classToNameMutable.put("\"com.milaboratory.cli.AppVersionInfo\"",
-                "\"AppVersionInfo\"");
         classToNameMutable.put("\"com.milaboratory.cli.ActionConfiguration\"",
                 "\"ActionConfiguration\"");
-        classToNameMutable.put("\"com.milaboratory.mixcr.util.MiXCRVersionInfo\"",
-                "\"MiXCRVersionInfo\"");
         classToNameMutable.put("\"com.milaboratory.mixcr.cli.CommandAlign$AlignConfiguration\"",
                 "\"CommandAlign$AlignConfiguration\"");
         classToNameMutable.put("\"com.milaboratory.mixcr.cli.CommandAssemble$AssembleConfiguration\"",

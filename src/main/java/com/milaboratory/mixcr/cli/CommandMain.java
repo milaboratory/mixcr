@@ -1,6 +1,7 @@
 package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.cli.ABaseCommand;
+import com.milaboratory.cli.AppVersionInfo;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine;
@@ -37,7 +38,7 @@ public class CommandMain extends ABaseCommand {
 
             lines.addAll(Arrays.asList(MiXCRVersionInfo
                     .get()
-                    .getVersionString(MiXCRVersionInfo.OutputType.ToConsole, true)
+                    .getVersionString(AppVersionInfo.OutputType.ToConsole, true)
                     .split("\n")));
 
             lines.add("");

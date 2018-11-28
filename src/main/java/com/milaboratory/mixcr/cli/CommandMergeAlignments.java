@@ -53,7 +53,8 @@ public class CommandMergeAlignments extends ACommandWithSmartOverwriteMiXCR {
 
     @Override
     public PipelineConfiguration getFullPipelineConfiguration() {
-        return PipelineConfiguration.mkInitial(getInputFiles(), getConfiguration(), MiXCRVersionInfo.get());
+        return PipelineConfiguration.mkInitial(getInputFiles(), getConfiguration(),
+                MiXCRVersionInfo.getAppVersionInfo());
     }
 
     @Override

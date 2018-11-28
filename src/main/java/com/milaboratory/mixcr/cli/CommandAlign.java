@@ -223,7 +223,8 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
 
     @Override
     public PipelineConfiguration getFullPipelineConfiguration() {
-        return PipelineConfiguration.mkInitial(getInputFiles(), getConfiguration(), MiXCRVersionInfo.get());
+        return PipelineConfiguration.mkInitial(getInputFiles(), getConfiguration(),
+                MiXCRVersionInfo.getAppVersionInfo());
     }
 
     @Override

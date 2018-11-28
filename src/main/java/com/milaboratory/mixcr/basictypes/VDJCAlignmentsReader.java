@@ -30,6 +30,9 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPortCloseable;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.milaboratory.cli.AppVersionInfo;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
@@ -37,6 +40,7 @@ import com.milaboratory.primitivio.JSONSerializer;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.CountingInputStream;
+import com.milaboratory.util.GlobalObjectMappers;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
@@ -140,11 +144,26 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
         switch (magicString) {
             case MAGIC_V13:
                 input.getSerializersManager().registerCustomSerializer(AppVersionInfo.class,
-                        new JSONSerializer(AppVersionInfo.class, s -> s));
+                        new JSONSerializer(AppVersionInfo.class, s -> {
+                            try {
+                                JsonNode jsonNode = GlobalObjectMappers.ONE_LINE.readTree(s);
+                                ObjectNode componentVersions = GlobalObjectMappers.ONE_LINE.createObjectNode();
+                                ((ObjectNode) jsonNode).set("componentVersions", componentVersions);
+                                componentVersions.set("mixcr", ((ObjectNode)jsonNode).remove("mixcr"));
+                                componentVersions.set("milib", ((ObjectNode)jsonNode).remove("milib"));
+                                componentVersions.set("repseqio", ((ObjectNode)jsonNode).remove("repseqio"));
+                                ObjectNode componentStringVersions = GlobalObjectMappers.ONE_LINE.createObjectNode();
+                                ((ObjectNode) jsonNode).set("componentStringVersions", componentStringVersions);
+                                componentStringVersions.set("builtInLibrary", ((ObjectNode)jsonNode)
+                                        .remove("builtInLibrary"));
+                                ((ObjectNode) jsonNode).set("type", new TextNode("AppVersionInfo"));
+                                return jsonNode.toString();
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }));
                 break;
             case MAGIC:
-                input.getSerializersManager().registerCustomSerializer(AppVersionInfo.class,
-                        new JSONSerializer(AppVersionInfo.class, s -> s));
                 break;
             default:
                 throw new RuntimeException("Unsupported file format; .vdjca file of version " + new String(magic) + " while you are running MiXCR " + MAGIC);

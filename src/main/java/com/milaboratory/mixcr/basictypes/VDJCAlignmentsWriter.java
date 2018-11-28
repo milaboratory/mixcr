@@ -29,6 +29,7 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
+import com.milaboratory.cli.AppVersionInfo;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
@@ -159,7 +160,7 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
         // Writing version information
         output.writeUTF(
                 MiXCRVersionInfo.get().getVersionString(
-                        MiXCRVersionInfo.OutputType.ToFile));
+                        AppVersionInfo.OutputType.ToFile));
 
         // Writing parameters
         output.writeObject(parameters);

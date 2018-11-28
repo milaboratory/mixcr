@@ -31,6 +31,7 @@ package com.milaboratory.mixcr.util;
 
 import com.fasterxml.jackson.annotation.*;
 import com.milaboratory.cli.AppVersionInfo;
+import com.milaboratory.cli.AppVersionInfo.OutputType;
 import com.milaboratory.util.VersionInfo;
 import io.repseq.core.VDJCLibraryRegistry;
 import org.apache.commons.io.IOUtils;
@@ -38,37 +39,30 @@ import org.apache.commons.io.IOUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
+import java.util.*;
 
 @JsonAutoDetect(
         fieldVisibility = JsonAutoDetect.Visibility.ANY,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(
-        use = JsonTypeInfo.Id.CLASS,
+        use = JsonTypeInfo.Id.NAME,
         include = JsonTypeInfo.As.PROPERTY,
         property = "type")
-public final class MiXCRVersionInfo extends AppVersionInfo {
+public final class MiXCRVersionInfo {
+    private static volatile MiXCRVersionInfo instance = null;
+
     private MiXCRVersionInfo(@JsonProperty("mixcr") VersionInfo mixcr,
                              @JsonProperty("milib") VersionInfo milib,
                              @JsonProperty("repseqio") VersionInfo repseqio,
                              @JsonProperty("builtInLibrary") String builtInLibrary) {
-        super(prepareComponentVersions(mixcr, milib, repseqio), prepareComponentStringVersions(builtInLibrary));
-    }
-
-    private static HashMap<String, VersionInfo> prepareComponentVersions(
-            VersionInfo mixcr, VersionInfo milib, VersionInfo repseqio) {
         HashMap<String, VersionInfo> componentVersions = new HashMap<>();
+        HashMap<String, String> componentStringVersions = new HashMap<>();
         componentVersions.put("mixcr", mixcr);
         componentVersions.put("milib", milib);
         componentVersions.put("repseqio", repseqio);
-        return componentVersions;
-    }
-
-    private static HashMap<String, String> prepareComponentStringVersions(String builtInLibrary) {
-        HashMap<String, String> componentStringVersions = new HashMap<>();
         componentStringVersions.put("builtInLibrary", builtInLibrary);
-        return componentStringVersions;
+        AppVersionInfo.init(componentVersions, componentStringVersions);
     }
 
     public static MiXCRVersionInfo get() {
@@ -88,23 +82,29 @@ public final class MiXCRVersionInfo extends AppVersionInfo {
                     instance = new MiXCRVersionInfo(mixcr, milib, repseqio, libName);
                 }
             }
-        return (MiXCRVersionInfo) instance;
+        return instance;
     }
 
-    @Override
+    public static AppVersionInfo getAppVersionInfo() {
+        get();  // initialize AppVersionInfo if not initialized
+        return AppVersionInfo.get();
+    }
+
     public String getShortestVersionString() {
-        VersionInfo mixcr = componentVersions.get("mixcr");
+        AppVersionInfo appVersionInfo = AppVersionInfo.get();
+        VersionInfo mixcr = appVersionInfo.getComponentVersions().get("mixcr");
         return mixcr.getVersion() +
                 "; built=" +
                 mixcr.getTimestamp() +
                 "; rev=" +
                 mixcr.getRevision() +
                 "; lib=" +
-                componentStringVersions.get("builtInLibrary");
+                appVersionInfo.getComponentStringVersions().get("builtInLibrary");
     }
 
-    @Override
     public String getVersionString(OutputType outputType, boolean full) {
+        Map<String, VersionInfo> componentVersions = AppVersionInfo.get().getComponentVersions();
+        Map<String, String> componentStringVersions = AppVersionInfo.get().getComponentStringVersions();
         VersionInfo mixcr = componentVersions.get("mixcr");
         VersionInfo milib = componentVersions.get("milib");
         VersionInfo repseqio = componentVersions.get("repseqio");
@@ -148,5 +148,9 @@ public final class MiXCRVersionInfo extends AppVersionInfo {
                     .append(outputType.delimiter);
 
         return builder.toString();
+    }
+
+    public String getVersionString(OutputType outputType) {
+        return getVersionString(outputType, false);
     }
 }

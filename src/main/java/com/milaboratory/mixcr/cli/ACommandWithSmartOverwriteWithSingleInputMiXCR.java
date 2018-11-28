@@ -24,6 +24,6 @@ public abstract class ACommandWithSmartOverwriteWithSingleInputMiXCR extends ACo
     @Override
     public PipelineConfiguration getFullPipelineConfiguration() {
         return PipelineConfiguration.appendStep(pipelineConfigurationReader.fromFile(in, getInputFileInfo()),
-                getInputFiles(), getConfiguration(), MiXCRVersionInfo.get());
+                getInputFiles(), getConfiguration(), MiXCRVersionInfo.getAppVersionInfo());
     }
 }

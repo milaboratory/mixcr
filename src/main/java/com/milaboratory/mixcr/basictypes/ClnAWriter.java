@@ -32,6 +32,7 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.CountingOutputPort;
+import com.milaboratory.cli.AppVersionInfo;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.cli.PipelineConfigurationWriter;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
@@ -123,7 +124,7 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
 
         // Writing version information
         output.writeUTF(MiXCRVersionInfo.get()
-                .getVersionString(MiXCRVersionInfo.OutputType.ToFile));
+                .getVersionString(AppVersionInfo.OutputType.ToFile));
 
         // Writing full pipeline configuration
         output.writeObject(configuration);
