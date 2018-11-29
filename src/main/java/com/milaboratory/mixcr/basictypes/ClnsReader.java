@@ -14,6 +14,7 @@ import java.util.EnumMap;
 import java.util.List;
 
 import static com.milaboratory.mixcr.basictypes.ClnsWriter.*;
+import static com.milaboratory.mixcr.cli.SerializerCompatibilityUtil.add_v3_0_3_CustomSerializers;
 
 /**
  *
@@ -61,7 +62,7 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Auto
 
         switch (magicString) {
             case MAGIC_V7:
-                // Compatibility code
+                add_v3_0_3_CustomSerializers(input);
                 break;
             case MAGIC:
                 break;

@@ -59,6 +59,8 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.milaboratory.mixcr.cli.SerializerCompatibilityUtil.add_v3_0_3_CustomSerializers;
+
 /**
  * Reader of CLNA file format.
  */
@@ -121,17 +123,6 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
         buf.get(magicBytes);
         String magicString = new String(magicBytes, StandardCharsets.US_ASCII);
 
-        switch (magicString) {
-            case ClnAWriter.MAGIC_V3:
-                // Compatibility code
-                break;
-            case ClnAWriter.MAGIC:
-                break;
-            default:
-                throw new IllegalArgumentException("Wrong file type. Magic = " + magicString +
-                        ", expected = " + ClnAWriter.MAGIC);
-        }
-
         // Reading number of clones
 
         this.numberOfClones = buf.getInt();
@@ -149,6 +140,17 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
         // Reading index data
 
         input = new PrimitivI(new InputDataStream(indexBegin, fSize - 8));
+        switch (magicString) {
+            case ClnAWriter.MAGIC_V3:
+                add_v3_0_3_CustomSerializers(input);
+                break;
+            case ClnAWriter.MAGIC:
+                break;
+            default:
+                throw new IllegalArgumentException("Wrong file type. Magic = " + magicString +
+                        ", expected = " + ClnAWriter.MAGIC);
+        }
+
         this.index = new long[numberOfClones + 2];
         this.counts = new long[numberOfClones + 2];
         long previousValue = 0;
@@ -163,6 +165,16 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
 
         input = new PrimitivI(new InputDataStream(ClnAWriter.MAGIC_LENGTH + 4,
                 firstClonePosition));
+        switch (magicString) {
+            case ClnAWriter.MAGIC_V3:
+                add_v3_0_3_CustomSerializers(input);
+                break;
+            case ClnAWriter.MAGIC:
+                break;
+            default:
+                throw new IllegalStateException();
+        }
+
         this.versionInfo = input.readUTF();
         this.configuration = input.readObject(PipelineConfiguration.class);
         this.alignerParameters = input.readObject(VDJCAlignerParameters.class);

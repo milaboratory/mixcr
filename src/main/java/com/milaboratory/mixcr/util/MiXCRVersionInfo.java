@@ -51,24 +51,18 @@ import java.util.*;
         property = "type")
 public final class MiXCRVersionInfo {
     private static volatile MiXCRVersionInfo instance = null;
+    private final AppVersionInfo appVersionInfo;
 
-    private MiXCRVersionInfo(@JsonProperty("mixcr") VersionInfo mixcr,
-                             @JsonProperty("milib") VersionInfo milib,
-                             @JsonProperty("repseqio") VersionInfo repseqio,
-                             @JsonProperty("builtInLibrary") String builtInLibrary) {
-        HashMap<String, VersionInfo> componentVersions = new HashMap<>();
-        HashMap<String, String> componentStringVersions = new HashMap<>();
-        componentVersions.put("mixcr", mixcr);
-        componentVersions.put("milib", milib);
-        componentVersions.put("repseqio", repseqio);
-        componentStringVersions.put("builtInLibrary", builtInLibrary);
-        AppVersionInfo.init(componentVersions, componentStringVersions);
+    private MiXCRVersionInfo(@JsonProperty("appVersionInfo") AppVersionInfo appVersionInfo) {
+        this.appVersionInfo = appVersionInfo;
     }
 
     public static MiXCRVersionInfo get() {
         if (instance == null)
             synchronized (MiXCRVersionInfo.class) {
                 if (instance == null) {
+                    HashMap<String, VersionInfo> componentVersions = new HashMap<>();
+                    HashMap<String, String> componentStringVersions = new HashMap<>();
                     String libName = "";
                     try (InputStream stream = VDJCLibraryRegistry.class
                             .getResourceAsStream("/libraries/default.alias")) {
@@ -76,10 +70,12 @@ public final class MiXCRVersionInfo {
                             libName = IOUtils.toString(stream, StandardCharsets.UTF_8);
                     } catch (IOException ignored) {
                     }
-                    VersionInfo mixcr = VersionInfo.getVersionInfoForArtifact("mixcr");
-                    VersionInfo milib = VersionInfo.getVersionInfoForArtifact("milib");
-                    VersionInfo repseqio = VersionInfo.getVersionInfoForArtifact("repseqio");
-                    instance = new MiXCRVersionInfo(mixcr, milib, repseqio, libName);
+                    componentVersions.put("mixcr", VersionInfo.getVersionInfoForArtifact("mixcr"));
+                    componentVersions.put("milib", VersionInfo.getVersionInfoForArtifact("milib"));
+                    componentVersions.put("repseqio", VersionInfo.getVersionInfoForArtifact("repseqio"));
+                    componentStringVersions.put("builtInLibrary", libName);
+                    AppVersionInfo.init(componentVersions, componentStringVersions);
+                    instance = new MiXCRVersionInfo(AppVersionInfo.get());
                 }
             }
         return instance;
@@ -91,7 +87,6 @@ public final class MiXCRVersionInfo {
     }
 
     public String getShortestVersionString() {
-        AppVersionInfo appVersionInfo = AppVersionInfo.get();
         VersionInfo mixcr = appVersionInfo.getComponentVersions().get("mixcr");
         return mixcr.getVersion() +
                 "; built=" +
@@ -103,8 +98,8 @@ public final class MiXCRVersionInfo {
     }
 
     public String getVersionString(OutputType outputType, boolean full) {
-        Map<String, VersionInfo> componentVersions = AppVersionInfo.get().getComponentVersions();
-        Map<String, String> componentStringVersions = AppVersionInfo.get().getComponentStringVersions();
+        Map<String, VersionInfo> componentVersions = appVersionInfo.getComponentVersions();
+        Map<String, String> componentStringVersions = appVersionInfo.getComponentStringVersions();
         VersionInfo mixcr = componentVersions.get("mixcr");
         VersionInfo milib = componentVersions.get("milib");
         VersionInfo repseqio = componentVersions.get("repseqio");
@@ -152,5 +147,18 @@ public final class MiXCRVersionInfo {
 
     public String getVersionString(OutputType outputType) {
         return getVersionString(outputType, false);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MiXCRVersionInfo that = (MiXCRVersionInfo)o;
+        return appVersionInfo.equals(that.appVersionInfo);
+    }
+
+    @Override
+    public int hashCode() {
+        return appVersionInfo.hashCode();
     }
 }
