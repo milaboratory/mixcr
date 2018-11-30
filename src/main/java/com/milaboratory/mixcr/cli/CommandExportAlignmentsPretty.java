@@ -31,7 +31,7 @@ import static cc.redberry.primitives.FilterUtil.and;
         sortOptions = true,
         separator = " ",
         description = "Export verbose information about alignments.")
-public class CommandExportAlignmentsPretty extends ACommandSimpleExport {
+public class CommandExportAlignmentsPretty extends ACommandSimpleExportMiXCR {
     @Option(description = "Output only top hits",
             names = {"-t", "--top"})
     public boolean onlyTop = false;

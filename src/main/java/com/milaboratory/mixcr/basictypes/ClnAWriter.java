@@ -32,6 +32,9 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.CountingOutputPort;
+import com.milaboratory.cli.AppVersionInfo;
+import com.milaboratory.cli.PipelineConfiguration;
+import com.milaboratory.cli.PipelineConfigurationWriter;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.primitivio.PipeDataInputReader;
 import com.milaboratory.primitivio.PrimitivI;
@@ -59,7 +62,8 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
         AutoCloseable,
         CanReportProgressAndStage {
     static final String MAGIC_V3 = "MiXCR.CLNA.V03";
-    static final String MAGIC = MAGIC_V3;
+    static final String MAGIC_V4 = "MiXCR.CLNA.V04";
+    static final String MAGIC = MAGIC_V4;
     static final int MAGIC_LENGTH = MAGIC.length(); //14
 
     /**
@@ -120,7 +124,7 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
 
         // Writing version information
         output.writeUTF(MiXCRVersionInfo.get()
-                .getVersionString(MiXCRVersionInfo.OutputType.ToFile));
+                .getVersionString(AppVersionInfo.OutputType.ToFile));
 
         // Writing full pipeline configuration
         output.writeObject(configuration);

@@ -1,5 +1,6 @@
 package com.milaboratory.mixcr.cli;
 
+import com.milaboratory.cli.ValidationException;
 import com.milaboratory.util.TempFileManager;
 import com.milaboratory.util.VersionInfo;
 import io.repseq.core.VDJCLibraryRegistry;

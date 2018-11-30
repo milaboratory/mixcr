@@ -1,8 +1,9 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.util.StatusReporter;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
+import com.milaboratory.cli.ActionConfiguration;
+import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.*;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
@@ -24,7 +25,7 @@ import static com.milaboratory.mixcr.cli.CommandAssemble.ASSEMBLE_COMMAND_NAME;
         sortOptions = true,
         separator = " ",
         description = "Assemble clones.")
-public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInput {
+public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
     static final String ASSEMBLE_COMMAND_NAME = "assemble";
 
     @Option(description = "Clone assembling parameters",
@@ -217,6 +218,14 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInput {
         }
     }
 
+    @JsonAutoDetect(
+            fieldVisibility = JsonAutoDetect.Visibility.ANY,
+            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+            getterVisibility = JsonAutoDetect.Visibility.NONE)
+    @JsonTypeInfo(
+            use = JsonTypeInfo.Id.CLASS,
+            include = JsonTypeInfo.As.PROPERTY,
+            property = "type")
     public static class AssembleConfiguration implements ActionConfiguration {
         public final CloneAssemblerParameters assemblerParameters;
         public final boolean clna;

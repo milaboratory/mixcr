@@ -4,7 +4,8 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.CountingOutputPort;
-import com.milaboratory.mixcr.basictypes.ActionConfiguration;
+import com.fasterxml.jackson.annotation.*;
+import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
@@ -29,7 +30,7 @@ import static com.milaboratory.mixcr.cli.CommandSortAlignments.SORT_ALIGNMENTS_C
         sortOptions = true,
         separator = " ",
         description = "Sort alignments in vdjca file by read id.")
-public class CommandSortAlignments extends ACommandWithSmartOverwriteWithSingleInput {
+public class CommandSortAlignments extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
     static final String SORT_ALIGNMENTS_COMMAND_NAME = "sortAlignments";
 
     @Override
@@ -90,6 +91,14 @@ public class CommandSortAlignments extends ACommandWithSmartOverwriteWithSingleI
         }
     }
 
+    @JsonAutoDetect(
+            fieldVisibility = JsonAutoDetect.Visibility.ANY,
+            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+            getterVisibility = JsonAutoDetect.Visibility.NONE)
+    @JsonTypeInfo(
+            use = JsonTypeInfo.Id.CLASS,
+            include = JsonTypeInfo.As.PROPERTY,
+            property = "type")
     public static class SortConfiguration implements ActionConfiguration {
         @Override
         public String actionName() {

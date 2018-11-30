@@ -4,9 +4,9 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.blocks.ParallelProcessor;
 import cc.redberry.pipe.util.OrderedOutputPort;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.*;
@@ -23,13 +23,14 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
+import static com.milaboratory.mixcr.basictypes.IOUtil.*;
 import static com.milaboratory.mixcr.cli.CommandExtend.EXTEND_COMMAND_NAME;
 
 @Command(name = EXTEND_COMMAND_NAME,
         sortOptions = true,
         separator = " ",
         description = "Impute alignments or clones with germline sequences.")
-public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInput {
+public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
     static final String EXTEND_COMMAND_NAME = "extend";
 
     @Option(description = "Apply procedure only to alignments with specific immunological-receptor chains.",
@@ -94,13 +95,13 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInput {
     @Override
     public void run1() throws Exception {
         switch (getInputFileInfo().fileType) {
-            case VDJCA:
+            case MAGIC_VDJC:
                 processVDJCA();
                 break;
-            case Clns:
+            case MAGIC_CLNS:
                 processClns();
                 break;
-            case ClnA:
+            case MAGIC_CLNA:
                 throwValidationException("Operation is not supported for ClnA files.");
                 break;
             default:
@@ -188,6 +189,14 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInput {
         }
     }
 
+    @JsonAutoDetect(
+            fieldVisibility = JsonAutoDetect.Visibility.ANY,
+            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+            getterVisibility = JsonAutoDetect.Visibility.NONE)
+    @JsonTypeInfo(
+            use = JsonTypeInfo.Id.CLASS,
+            include = JsonTypeInfo.As.PROPERTY,
+            property = "type")
     public static class ExtendConfiguration implements ActionConfiguration {
         final Chains chains;
         final byte extensionQuality;

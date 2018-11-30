@@ -3,8 +3,8 @@ package com.milaboratory.mixcr.cli;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.blocks.ParallelProcessor;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
+import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.assembler.CloneFactory;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler;
@@ -30,7 +30,7 @@ import static com.milaboratory.mixcr.cli.CommandAssembleContigs.ASSEMBLE_CONTIGS
         sortOptions = true,
         separator = " ",
         description = "Assemble full sequences.")
-public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingleInput {
+public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
     static final String ASSEMBLE_CONTIGS_COMMAND_NAME = "assembleContigs";
 
     public int threads = Runtime.getRuntime().availableProcessors();
@@ -178,6 +178,14 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
             Util.writeJsonReport(jsonReport, reportWrapper);
     }
 
+    @JsonAutoDetect(
+            fieldVisibility = JsonAutoDetect.Visibility.ANY,
+            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+            getterVisibility = JsonAutoDetect.Visibility.NONE)
+    @JsonTypeInfo(
+            use = JsonTypeInfo.Id.CLASS,
+            include = JsonTypeInfo.As.PROPERTY,
+            property = "type")
     public static class AssembleContigsConfiguration implements ActionConfiguration {
         public final FullSeqAssemblerParameters assemblerParameters;
 

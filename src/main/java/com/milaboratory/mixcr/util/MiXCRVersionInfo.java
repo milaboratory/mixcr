@@ -29,9 +29,9 @@
  */
 package com.milaboratory.mixcr.util;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.primitivio.annotations.Serializable;
+import com.fasterxml.jackson.annotation.*;
+import com.milaboratory.cli.AppVersionInfo;
+import com.milaboratory.cli.AppVersionInfo.OutputType;
 import com.milaboratory.util.VersionInfo;
 import io.repseq.core.VDJCLibraryRegistry;
 import org.apache.commons.io.IOUtils;
@@ -39,81 +39,72 @@ import org.apache.commons.io.IOUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Objects;
+import java.util.*;
 
 @JsonAutoDetect(
         fieldVisibility = JsonAutoDetect.Visibility.ANY,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
-@Serializable(asJson = true)
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.PROPERTY,
+        property = "type")
 public final class MiXCRVersionInfo {
-    private final VersionInfo mixcr, milib, repseqio;
-    private final String builtInLibrary;
-
-    private MiXCRVersionInfo(@JsonProperty("mixcr") VersionInfo mixcr,
-                             @JsonProperty("milib") VersionInfo milib,
-                             @JsonProperty("repseqio") VersionInfo repseqio,
-                             @JsonProperty("builtInLibrary") String builtInLibrary) {
-        this.mixcr = mixcr;
-        this.milib = milib;
-        this.repseqio = repseqio;
-        this.builtInLibrary = builtInLibrary;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        MiXCRVersionInfo that = (MiXCRVersionInfo) o;
-        return Objects.equals(mixcr, that.mixcr) &&
-                Objects.equals(milib, that.milib) &&
-                Objects.equals(repseqio, that.repseqio) &&
-                Objects.equals(builtInLibrary, that.builtInLibrary);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(mixcr, milib, repseqio, builtInLibrary);
-    }
-
     private static volatile MiXCRVersionInfo instance = null;
+    private final AppVersionInfo appVersionInfo;
+
+    private MiXCRVersionInfo(@JsonProperty("appVersionInfo") AppVersionInfo appVersionInfo) {
+        this.appVersionInfo = appVersionInfo;
+    }
 
     public static MiXCRVersionInfo get() {
         if (instance == null)
             synchronized (MiXCRVersionInfo.class) {
                 if (instance == null) {
+                    HashMap<String, VersionInfo> componentVersions = new HashMap<>();
+                    HashMap<String, String> componentStringVersions = new HashMap<>();
                     String libName = "";
-                    try (InputStream stream = VDJCLibraryRegistry.class.getResourceAsStream("/libraries/default.alias")) {
+                    try (InputStream stream = VDJCLibraryRegistry.class
+                            .getResourceAsStream("/libraries/default.alias")) {
                         if (stream != null)
                             libName = IOUtils.toString(stream, StandardCharsets.UTF_8);
-                    } catch (IOException e) {
+                    } catch (IOException ignored) {
                     }
-                    VersionInfo mixcr = VersionInfo.getVersionInfoForArtifact("mixcr");
-                    VersionInfo milib = VersionInfo.getVersionInfoForArtifact("milib");
-                    VersionInfo repseqio = VersionInfo.getVersionInfoForArtifact("repseqio");
-                    instance = new MiXCRVersionInfo(mixcr, milib, repseqio, libName);
+                    componentVersions.put("mixcr", VersionInfo.getVersionInfoForArtifact("mixcr"));
+                    componentVersions.put("milib", VersionInfo.getVersionInfoForArtifact("milib"));
+                    componentVersions.put("repseqio", VersionInfo.getVersionInfoForArtifact("repseqio"));
+                    componentStringVersions.put("builtInLibrary", libName);
+                    AppVersionInfo.init(componentVersions, componentStringVersions);
+                    instance = new MiXCRVersionInfo(AppVersionInfo.get());
                 }
             }
         return instance;
     }
 
+    public static AppVersionInfo getAppVersionInfo() {
+        get();  // initialize AppVersionInfo if not initialized
+        return AppVersionInfo.get();
+    }
+
     public String getShortestVersionString() {
-        String builder = mixcr.getVersion() +
+        VersionInfo mixcr = appVersionInfo.getComponentVersions().get("mixcr");
+        return mixcr.getVersion() +
                 "; built=" +
                 mixcr.getTimestamp() +
                 "; rev=" +
                 mixcr.getRevision() +
                 "; lib=" +
-                builtInLibrary;
-
-        return builder;
-    }
-
-    public String getVersionString(OutputType outputType) {
-        return getVersionString(outputType, false);
+                appVersionInfo.getComponentStringVersions().get("builtInLibrary");
     }
 
     public String getVersionString(OutputType outputType, boolean full) {
+        Map<String, VersionInfo> componentVersions = appVersionInfo.getComponentVersions();
+        Map<String, String> componentStringVersions = appVersionInfo.getComponentStringVersions();
+        VersionInfo mixcr = componentVersions.get("mixcr");
+        VersionInfo milib = componentVersions.get("milib");
+        VersionInfo repseqio = componentVersions.get("repseqio");
+        String builtInLibrary = componentStringVersions.get("builtInLibrary");
+
         StringBuilder builder = new StringBuilder();
 
         builder.append("MiXCR v")
@@ -154,14 +145,20 @@ public final class MiXCRVersionInfo {
         return builder.toString();
     }
 
-    public enum OutputType {
-        ToConsole("\n", true), ToFile("; ", false);
-        final String delimiter;
-        final boolean componentsWord;
+    public String getVersionString(OutputType outputType) {
+        return getVersionString(outputType, false);
+    }
 
-        OutputType(String delimiter, boolean componentsWord) {
-            this.delimiter = delimiter;
-            this.componentsWord = componentsWord;
-        }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MiXCRVersionInfo that = (MiXCRVersionInfo)o;
+        return appVersionInfo.equals(that.appVersionInfo);
+    }
+
+    @Override
+    public int hashCode() {
+        return appVersionInfo.hashCode();
     }
 }

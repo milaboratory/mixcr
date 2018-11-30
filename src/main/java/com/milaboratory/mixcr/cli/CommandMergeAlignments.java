@@ -2,9 +2,11 @@ package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
+import com.milaboratory.cli.ActionConfiguration;
+import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.VDJCLibraryRegistry;
@@ -23,7 +25,7 @@ import static com.milaboratory.mixcr.cli.CommandMergeAlignments.MERGE_ALIGNMENTS
         sortOptions = true,
         separator = " ",
         description = "Merge several *.vdjca files with alignments into a single alignments file.")
-public class CommandMergeAlignments extends ACommandWithSmartOverwrite {
+public class CommandMergeAlignments extends ACommandWithSmartOverwriteMiXCR {
     static final String MERGE_ALIGNMENTS_COMMAND_NAME = "mergeAlignments";
 
     @Parameters(description = "[input_file1.vdjca [input_file2.vdjca ....]] output_file.vdjca", arity = "2..*")
@@ -45,12 +47,14 @@ public class CommandMergeAlignments extends ACommandWithSmartOverwrite {
     public ActionConfiguration getConfiguration() {
         return configuration != null
                 ? configuration
-                : (configuration = new MergeConfiguration(getInputFiles().stream().map(PipelineConfigurationReader::fromFile).toArray(PipelineConfiguration[]::new)));
+                : (configuration = new MergeConfiguration(getInputFiles().stream()
+                .map(PipelineConfigurationReaderMiXCR::sFromFile).toArray(PipelineConfiguration[]::new)));
     }
 
     @Override
     public PipelineConfiguration getFullPipelineConfiguration() {
-        return PipelineConfiguration.mkInitial(getInputFiles(), getConfiguration());
+        return PipelineConfiguration.mkInitial(getInputFiles(), getConfiguration(),
+                MiXCRVersionInfo.getAppVersionInfo());
     }
 
     @Override
@@ -66,6 +70,14 @@ public class CommandMergeAlignments extends ACommandWithSmartOverwrite {
         }
     }
 
+    @JsonAutoDetect(
+            fieldVisibility = JsonAutoDetect.Visibility.ANY,
+            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+            getterVisibility = JsonAutoDetect.Visibility.NONE)
+    @JsonTypeInfo(
+            use = JsonTypeInfo.Id.CLASS,
+            include = JsonTypeInfo.As.PROPERTY,
+            property = "type")
     public static class MergeConfiguration implements ActionConfiguration {
         final PipelineConfiguration[] sources;
 

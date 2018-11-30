@@ -22,7 +22,7 @@ import java.util.Map;
         sortOptions = false,
         separator = " ",
         description = "Calculates the difference between two .vdjca files.")
-public class CommandAlignmentsDiff extends ACommandWithOutput {
+public class CommandAlignmentsDiff extends ACommandWithOutputMiXCR {
     @Parameters(description = "input_file1", index = "0")
     public String in1;
 

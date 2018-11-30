@@ -1,8 +1,7 @@
 package com.milaboratory.mixcr.cli;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.mixcr.basictypes.ActionConfiguration;
+import com.fasterxml.jackson.annotation.*;
+import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssembler;
@@ -21,7 +20,7 @@ import static com.milaboratory.mixcr.cli.CommandAssemblePartialAlignments.ASSEMB
         sortOptions = true,
         separator = " ",
         description = "Assembles partially aligned reads into longer sequences.")
-public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwriteWithSingleInput {
+public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
     static final String ASSEMBLE_PARTIAL_COMMAND_NAME = "assemblePartial";
 
     @Option(names = "-O", description = "Overrides default parameter values.")
@@ -122,6 +121,14 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
         }
     }
 
+    @JsonAutoDetect(
+            fieldVisibility = JsonAutoDetect.Visibility.ANY,
+            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+            getterVisibility = JsonAutoDetect.Visibility.NONE)
+    @JsonTypeInfo(
+            use = JsonTypeInfo.Id.CLASS,
+            include = JsonTypeInfo.As.PROPERTY,
+            property = "type")
     public static class AssemblePartialConfiguration implements ActionConfiguration {
         public final PartialAlignmentsAssemblerParameters parameters;
         public final boolean dropPartial;

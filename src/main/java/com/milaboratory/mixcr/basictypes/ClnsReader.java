@@ -1,5 +1,6 @@
 package com.milaboratory.mixcr.basictypes;
 
+import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
@@ -12,18 +13,17 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 
-import static com.milaboratory.mixcr.basictypes.ClnsWriter.MAGIC;
-import static com.milaboratory.mixcr.basictypes.ClnsWriter.MAGIC_LENGTH;
+import static com.milaboratory.mixcr.basictypes.ClnsWriter.*;
+import static com.milaboratory.mixcr.cli.SerializerCompatibilityUtil.add_v3_0_3_CustomSerializers;
 
 /**
  *
  */
-public class ClnsReader implements PipelineConfigurationReader,
-                                   AutoCloseable {
+public class ClnsReader extends PipelineConfigurationReaderMiXCR implements AutoCloseable {
     private final PrimitivI input;
     private final VDJCLibraryRegistry libraryRegistry;
 
-    public ClnsReader(PrimitivI input, VDJCLibraryRegistry libraryRegistry) {
+    private ClnsReader(PrimitivI input, VDJCLibraryRegistry libraryRegistry) {
         this.input = input;
         this.libraryRegistry = libraryRegistry;
     }
@@ -61,6 +61,9 @@ public class ClnsReader implements PipelineConfigurationReader,
         // SerializersManager serializersManager = input.getSerializersManager();
 
         switch (magicString) {
+            case MAGIC_V7:
+                add_v3_0_3_CustomSerializers(input);
+                break;
             case MAGIC:
                 break;
             default:

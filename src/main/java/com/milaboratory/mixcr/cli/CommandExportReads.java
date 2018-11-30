@@ -20,7 +20,7 @@ import java.util.List;
         sortOptions = true,
         separator = " ",
         description = "Export original reads from vdjca file.")
-public class CommandExportReads extends ACommandWithOutput {
+public class CommandExportReads extends ACommandWithOutputMiXCR {
     @Parameters(description = "input.vdjca [output_R1.fastq[.gz] [output_R2.fastq[.gz]]]", arity = "1..3")
     public List<String> inOut;
 

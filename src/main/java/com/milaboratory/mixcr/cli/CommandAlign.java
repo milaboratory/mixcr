@@ -8,8 +8,9 @@ import cc.redberry.pipe.util.Chunk;
 import cc.redberry.pipe.util.CountLimitingOutputPort;
 import cc.redberry.pipe.util.OrderedOutputPort;
 import cc.redberry.pipe.util.StatusReporter;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
+import com.milaboratory.cli.ActionConfiguration;
+import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.core.PairedEndReadsLayout;
 import com.milaboratory.core.Target;
 import com.milaboratory.core.io.sequence.SequenceRead;
@@ -23,6 +24,7 @@ import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
@@ -48,7 +50,7 @@ import static com.milaboratory.mixcr.cli.CommandAlign.ALIGN_COMMAND_NAME;
         sortOptions = false,
         separator = " ",
         description = "Builds alignments with V,D,J and C genes for input sequencing reads.")
-public class CommandAlign extends ACommandWithSmartOverwrite {
+public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
     static final String ALIGN_COMMAND_NAME = "align";
     @Parameters(arity = "2..3",
             descriptionKey = "file",
@@ -221,7 +223,8 @@ public class CommandAlign extends ACommandWithSmartOverwrite {
 
     @Override
     public PipelineConfiguration getFullPipelineConfiguration() {
-        return PipelineConfiguration.mkInitial(getInputFiles(), getConfiguration());
+        return PipelineConfiguration.mkInitial(getInputFiles(), getConfiguration(),
+                MiXCRVersionInfo.getAppVersionInfo());
     }
 
     @Override
@@ -234,6 +237,14 @@ public class CommandAlign extends ACommandWithSmartOverwrite {
     }
 
     /** Set of parameters that completely (uniquely) determine align action */
+    @JsonAutoDetect(
+            fieldVisibility = JsonAutoDetect.Visibility.ANY,
+            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+            getterVisibility = JsonAutoDetect.Visibility.NONE)
+    @JsonTypeInfo(
+            use = JsonTypeInfo.Id.CLASS,
+            include = JsonTypeInfo.As.PROPERTY,
+            property = "type")
     public static class AlignConfiguration implements ActionConfiguration {
         /**
          * Aligner parameters

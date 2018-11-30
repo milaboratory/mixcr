@@ -2,6 +2,7 @@ package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
+import com.milaboratory.cli.AppVersionInfo;
 import com.milaboratory.mixcr.assembler.AlignmentsMappingMerger;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParametersPresets;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
@@ -40,7 +41,8 @@ public class ClnAReaderTest {
 
         ClnAReader reader = new ClnAReader(file.toPath(), VDJCLibraryRegistry.getDefault(), 17);
 
-        assertEquals(MiXCRVersionInfo.get().getVersionString(MiXCRVersionInfo.OutputType.ToFile), reader.getVersionInfo());
+        assertEquals(MiXCRVersionInfo.get().getVersionString(AppVersionInfo.OutputType.ToFile),
+                reader.getVersionInfo());
 
         assertEquals(align.alignments.size(), reader.numberOfAlignments());
         assertEquals(assemble.cloneSet.size(), reader.numberOfClones());
@@ -77,7 +79,8 @@ public class ClnAReaderTest {
 
         ClnAReader reader = new ClnAReader(file.toPath(), VDJCLibraryRegistry.getDefault(), 17);
 
-        assertEquals(MiXCRVersionInfo.get().getVersionString(MiXCRVersionInfo.OutputType.ToFile), reader.getVersionInfo());
+        assertEquals(MiXCRVersionInfo.get().getVersionString(AppVersionInfo.OutputType.ToFile),
+                reader.getVersionInfo());
 
         assertEquals(align.alignments.size(), reader.numberOfAlignments());
         assertEquals(0, reader.numberOfClones());

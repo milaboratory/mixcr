@@ -31,6 +31,7 @@ package com.milaboratory.mixcr.basictypes;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.CountLimitingOutputPort;
+import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.ClnsReader.GT2GFAdapter;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
@@ -58,12 +59,12 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.milaboratory.mixcr.cli.SerializerCompatibilityUtil.add_v3_0_3_CustomSerializers;
+
 /**
  * Reader of CLNA file format.
  */
-public final class ClnAReader implements
-        PipelineConfigurationReader,
-        AutoCloseable {
+public final class ClnAReader extends PipelineConfigurationReaderMiXCR implements AutoCloseable {
     public static final int DEFAULT_CHUNK_SIZE = 262144;
     final int chunkSize;
     /**
@@ -122,10 +123,6 @@ public final class ClnAReader implements
         buf.get(magicBytes);
         String magicString = new String(magicBytes, StandardCharsets.US_ASCII);
 
-        if (!magicString.equals(ClnAWriter.MAGIC))
-            throw new IllegalArgumentException("Wrong file type. Magic = " + magicString +
-                    ", expected = " + ClnAWriter.MAGIC);
-
         // Reading number of clones
 
         this.numberOfClones = buf.getInt();
@@ -143,6 +140,17 @@ public final class ClnAReader implements
         // Reading index data
 
         input = new PrimitivI(new InputDataStream(indexBegin, fSize - 8));
+        switch (magicString) {
+            case ClnAWriter.MAGIC_V3:
+                add_v3_0_3_CustomSerializers(input);
+                break;
+            case ClnAWriter.MAGIC:
+                break;
+            default:
+                throw new IllegalArgumentException("Wrong file type. Magic = " + magicString +
+                        ", expected = " + ClnAWriter.MAGIC);
+        }
+
         this.index = new long[numberOfClones + 2];
         this.counts = new long[numberOfClones + 2];
         long previousValue = 0;
@@ -155,7 +163,18 @@ public final class ClnAReader implements
 
         // Reading gene features
 
-        input = new PrimitivI(new InputDataStream(ClnAWriter.MAGIC_LENGTH + 4, firstClonePosition));
+        input = new PrimitivI(new InputDataStream(ClnAWriter.MAGIC_LENGTH + 4,
+                firstClonePosition));
+        switch (magicString) {
+            case ClnAWriter.MAGIC_V3:
+                add_v3_0_3_CustomSerializers(input);
+                break;
+            case ClnAWriter.MAGIC:
+                break;
+            default:
+                throw new IllegalStateException();
+        }
+
         this.versionInfo = input.readUTF();
         this.configuration = input.readObject(PipelineConfiguration.class);
         this.alignerParameters = input.readObject(VDJCAlignerParameters.class);
