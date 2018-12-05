@@ -283,6 +283,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             });
             clusteredClonesAccumulators.add(head);
         }
+
         this.progressReporter = null;
     }
 
@@ -521,7 +522,10 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                     new CloneFactory(parameters.getCloneFactoryParameters(),
                             parameters.getAssemblingFeatures(), usedGenes, featuresToAlign);
             Collection<CloneAccumulator> source;
-            if (clusteredClonesAccumulators != null)
+            if (clusteredClonesAccumulators != null &&
+                    // addReadsCountOnClustering=true may change clone counts
+                    // This fixes #468
+                    !parameters.isAddReadsCountOnClustering())
                 source = clusteredClonesAccumulators;
             else {
                 idMapping = new TIntIntHashMap();
