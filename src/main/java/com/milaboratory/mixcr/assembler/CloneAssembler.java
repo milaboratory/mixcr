@@ -48,6 +48,7 @@ import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.Factory;
 import com.milaboratory.util.HashFunctions;
 import com.milaboratory.util.RandomUtil;
+import gnu.trove.iterator.TIntIntIterator;
 import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TObjectFloatHashMap;
@@ -74,6 +75,10 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     private final List<CloneAccumulator> cloneList = new ArrayList<>();
     final AssemblerEventLogger globalLogger;
     private AssemblerEventLogger deferredAlignmentsLogger;
+    /**
+     * Mapping between initial clonotype id (one that was written to globalLogger) and final clonotype id,
+     * to be used in alignment-to-clone mapping tracking
+     */
     private TIntIntHashMap idMapping;
     private volatile SequenceTreeMap<NucleotideSequence, ArrayList<CloneAccumulatorContainer>> mappingTree;
     private ArrayList<CloneAccumulator> clusteredClonesAccumulators;
@@ -269,7 +274,9 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             final Cluster<CloneAccumulator> cluster = clusters.get(i);
             final CloneAccumulator head = cluster.getHead();
             idMapping.put(head.getCloneIndex(), i);
+            // i - new index of head clone
             head.setCloneIndex(i);
+            // k - index to be set for all child clonotypes
             final int k = ~i;
             cluster.processAllChildren(new TObjectProcedure<Cluster<CloneAccumulator>>() {
                 @Override
@@ -528,13 +535,24 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                     !parameters.isAddReadsCountOnClustering())
                 source = clusteredClonesAccumulators;
             else {
-                idMapping = new TIntIntHashMap();
+                TIntIntHashMap newIdMapping = new TIntIntHashMap();
                 //sort clones by count (if not yet sorted by clustering)
-                CloneAccumulator[] sourceArray = cloneList.toArray(new CloneAccumulator[cloneList.size()]);
+                CloneAccumulator[] sourceArray = clusteredClonesAccumulators == null
+                        ? cloneList.toArray(new CloneAccumulator[cloneList.size()])
+                        : clusteredClonesAccumulators.toArray(new CloneAccumulator[cloneList.size()]);
                 Arrays.sort(sourceArray, CLONE_ACCUMULATOR_COMPARATOR);
                 for (int i = 0; i < sourceArray.length; i++) {
-                    idMapping.put(sourceArray[i].getCloneIndex(), i);
+                    newIdMapping.put(sourceArray[i].getCloneIndex(), i);
                     sourceArray[i].setCloneIndex(i);
+                }
+                if (idMapping == null)
+                    idMapping = newIdMapping;
+                else {
+                    for (TIntIntIterator it = idMapping.iterator(); it.hasNext(); ) {
+                        it.advance();
+                        if (newIdMapping.containsKey(it.value()))
+                            it.setValue(newIdMapping.get(it.value()));
+                    }
                 }
                 source = Arrays.asList(sourceArray);
             }
