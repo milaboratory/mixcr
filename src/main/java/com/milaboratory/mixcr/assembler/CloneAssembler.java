@@ -62,6 +62,31 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static io.repseq.core.GeneFeature.*;
 
+/**
+ * Clone assembly steps:
+ *
+ * - Initial clone assembly:
+ * Iteration over alignments to assemble clonotypes into {@link CloneAccumulatorContainer} (groups of clonotypes with the same
+ * clonal sequence). Each {@link CloneAccumulatorContainer} consists of a map {@link VJCSignature} -> {@link CloneAccumulator}.
+ * {@link CloneAccumulatorContainer} may be populated with several {@link CloneAccumulator} if one of the
+ * {@link CloneAssemblerParameters#separateByV} / J / C is true, otherwise each {@link CloneAccumulatorContainer}
+ * contains exactly one {@link CloneAccumulator}.
+ * Alignments having nucleotides with quality scores lower then the threshold, are deferred for processing in the mapping step,
+ * by saving their ids into special on-disk (to save memory) log structure, that will be used on the mapping step to pick only
+ * alignments, skipped on this step.
+ * Initial clone assembly is performed by pushing clonotypes into {@link InitialAssembler}.
+ *
+ * - Mapping low quality reads:
+ * Second iteration over alignments, only alignments deferred on the initial assemble step are taken into processing here.
+ * Clonal sequence are mapped with the algorithm implemented in {@link DeferredAlignmentsMapper}.
+ *
+ * - Pre-clustering. This step performs "clustering" between clonotypes with the same clonal sequence (clonotypes inside
+ * the same {@link CloneAccumulatorContainer}). To reduce artificial diversity due to the mis-identification of V/J/C genes,
+ * both because of experimental artifacts and alignment errors. This step do nothing if
+ *
+ * - Clustering. Grouping of clonotypes with similar clonal sequences, and high ratio between their counts, to eliminate the
+ * artificial diversity.
+ */
 public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     final CloneAssemblerParameters parameters;
     // Accumulators and generators (atomics)
@@ -425,9 +450,13 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         public void process(VDJCAlignments input) {
             final ClonalSequence clonalSequence = extractClonalSequence(input);
 
+            // The sequence was deferred on the initial step, so it must contain clonal sequence
+            assert clonalSequence != null;
+
             RandomUtil.reseedThreadLocal(HashFunctions.JenkinWang64shift(Arrays.hashCode(input.getReadIds())));
 
             int badPoints = numberOfBadPoints(clonalSequence);
+            // Implements the algorithm to control the number of possible matching sequences
             int threshold = thresholdCalculator.getThreshold(badPoints);
 
             NeighborhoodIterator<NucleotideSequence, ArrayList<CloneAccumulatorContainer>> iterator =
@@ -443,9 +472,9 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             long count = 0;
             while ((assembledClones = iterator.next()) != null)
                 for (CloneAccumulatorContainer container : assembledClones) {
+                    CloneAccumulator acc = container.accumulators.get(extractSignature(input));
                     // Version of isCompatible without mutations is used here because
                     // ony substitutions possible in this place
-                    CloneAccumulator acc = container.accumulators.get(extractSignature(input));
                     if (acc != null && clonalSequence.isCompatible(acc.getSequence())) {
                         if (minMismatches == -1)
                             minMismatches = iterator.getMismatches();
