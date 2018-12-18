@@ -373,14 +373,18 @@ public class VDJCObject {
                 if (!lAl.getSequence1Range().contains(positionInRef)) {
                     // add lowercase piece of germline
                     assert lAl.getSequence1Range().getFrom() > positionInRef;
-                    leftParts.add(new IncompleteSequencePart(lHit, true, iLeftTarget, positionInRef, lAl.getSequence1Range().getFrom()));
+                    IncompleteSequencePart part = new IncompleteSequencePart(lHit, true, iLeftTarget, positionInRef, lAl.getSequence1Range().getFrom());
+                    if (part.begin != part.end)
+                        leftParts.add(part);
                     positionInRef = lAl.getSequence1Range().getFrom();
                 }
                 assert lAl.getSequence1Range().containsBoundary(positionInRef);
 
-                leftParts.add(new IncompleteSequencePart(lHit, false, iLeftTarget,
+                IncompleteSequencePart part = new IncompleteSequencePart(lHit, false, iLeftTarget,
                         aabs(lAl.convertToSeq2Position(positionInRef)),
-                        lAl.getSequence2Range().getTo()));
+                        lAl.getSequence2Range().getTo());
+                if (part.begin != part.end)
+                    leftParts.add(part);
 
                 positionInRef = lAl.getSequence1Range().getTo();
             }
@@ -417,14 +421,18 @@ public class VDJCObject {
                 if (!rAl.getSequence1Range().contains(positionInRef)) {
                     // add lowercase piece of germline
                     assert rAl.getSequence1Range().getTo() <= positionInRef;
-                    rightParts.add(new IncompleteSequencePart(rHit, true, iRightTarget, rAl.getSequence1Range().getTo(), positionInRef)); // +1 to include positionInRef
+                    IncompleteSequencePart part = new IncompleteSequencePart(rHit, true, iRightTarget, rAl.getSequence1Range().getTo(), positionInRef); // +1 to include positionInRef
+                    if (part.begin != part.end)
+                        rightParts.add(part);
                     positionInRef = rAl.getSequence1Range().getTo();
                 }
                 assert rAl.getSequence1Range().containsBoundary(positionInRef);
 
-                rightParts.add(new IncompleteSequencePart(rHit, false, iRightTarget,
+                IncompleteSequencePart part = new IncompleteSequencePart(rHit, false, iRightTarget,
                         rAl.getSequence2Range().getFrom(),
-                        aabs(rAl.convertToSeq2Position(positionInRef))));
+                        aabs(rAl.convertToSeq2Position(positionInRef)));
+                if (part.begin != part.end)
+                    rightParts.add(part);
 
                 positionInRef = rAl.getSequence1Range().getFrom();
             }
@@ -458,27 +466,37 @@ public class VDJCObject {
 
                 if (lHit == rHit) {
                     Alignment<NucleotideSequence> lAl = lHit.getAlignment(lLast.iTarget);
-                    if (lAl.getSequence1Range().contains(rPositionInRef))
-                        leftParts.set(leftParts.size() - 1,
-                                new IncompleteSequencePart(lHit, false, lLast.iTarget, lLast.begin,
-                                        aabs(lAl.convertToSeq2Position(rPositionInRef))));
-                    else {
-                        assert rPositionInRef > lAl.getSequence1Range().getTo();
-                        leftParts.add(new IncompleteSequencePart(lHit, true,
+                    if (lAl.getSequence1Range().contains(rPositionInRef)) {
+                        IncompleteSequencePart part = new IncompleteSequencePart(lHit, false, lLast.iTarget, lLast.begin,
+                                aabs(lAl.convertToSeq2Position(rPositionInRef)));
+                        if (part.begin == part.end)
+                            leftParts.remove(leftParts.size() - 1);
+                        else
+                            leftParts.set(leftParts.size() - 1, part);
+                    } else {
+                        assert rPositionInRef >= lAl.getSequence1Range().getTo();
+                        IncompleteSequencePart part = new IncompleteSequencePart(lHit, true,
                                 lLast.iTarget,
-                                lAl.getSequence1Range().getTo(), rPositionInRef));
+                                lAl.getSequence1Range().getTo(), rPositionInRef);
+                        if (part.begin != part.end)
+                            leftParts.add(part);
                     }
 
                     Alignment<NucleotideSequence> rAl = lHit.getAlignment(rLast.iTarget);
-                    if (rAl.getSequence1Range().contains(lPositionInRef))
-                        rightParts.set(0,
-                                new IncompleteSequencePart(rHit, false, rLast.iTarget,
-                                        aabs(rAl.convertToSeq2Position(lPositionInRef)), rLast.end));
-                    else {
+                    if (rAl.getSequence1Range().contains(lPositionInRef)) {
+                        IncompleteSequencePart part = new IncompleteSequencePart(rHit, false, rLast.iTarget,
+                                aabs(rAl.convertToSeq2Position(lPositionInRef)), rLast.end);
+                        if (part.begin == part.end)
+                            rightParts.remove(0);
+                        else
+                            rightParts.set(0, part);
+                    } else {
                         assert lPositionInRef < rAl.getSequence1Range().getFrom();
-                        rightParts.add(0, new IncompleteSequencePart(rHit, true,
+                        IncompleteSequencePart part = new IncompleteSequencePart(rHit, true,
                                 rLast.iTarget,
-                                lPositionInRef, rAl.getSequence1Range().getFrom()));
+                                lPositionInRef, rAl.getSequence1Range().getFrom());
+                        if (part.begin != part.end)
+                            rightParts.add(0, part);
                     }
 
                     assert same(leftParts, rightParts) : "\n" + leftParts + "\n" + rightParts;
@@ -552,6 +570,7 @@ public class VDJCObject {
         final int begin, end;
 
         IncompleteSequencePart(VDJCHit hit, boolean germline, int iTarget, int begin, int end) {
+            assert begin <= end;
             this.hit = hit;
             this.germline = germline;
             this.iTarget = iTarget;
