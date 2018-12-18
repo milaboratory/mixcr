@@ -14,7 +14,7 @@ before_install:
   - mv .cache ./repseqio/.cache
   - cd repseqio && mvn clean install -DskipTests -B && cd ..
   - mv ./repseqio/.cache .cache
-  
+  - ./ensure-test-data.sh
 
 script:
   - mvn test -B && ./itests.sh test

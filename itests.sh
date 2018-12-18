@@ -75,6 +75,8 @@ mkdir ${dir}/test_target
 cp ${dir}/src/test/resources/sequences/*.fastq ${dir}/test_target/
 
 cd ${dir}/test_target/
+ln -s ../src/test/resources/sequences/big/CD4M1_test_R1.fastq.gz ${dir}/test_target/CD4M1_test_R1.fastq.gz
+ln -s ../src/test/resources/sequences/big/CD4M1_test_R2.fastq.gz ${dir}/test_target/CD4M1_test_R2.fastq.gz
 
 PATH=${dir}:${PATH}
 
@@ -86,7 +88,7 @@ function go_assemble {
   mixcr assemble -r $1.clns.report $1.vdjca $1.clns
   for c in TCR IG TRB TRA TRG TRD IGH IGL IGK ALL
   do
-    mixcr exportClones -c ${c} -s $1.clns $1.clns.${c}.txt
+    mixcr exportClones -c ${c} $1.clns $1.clns.${c}.txt
   done
 }
 
@@ -103,15 +105,23 @@ fi
 # UseCase 1
 
 if [[ $run_tests == true ]]; then
-  echo "Running test case 1"
-  mixcr align -s hs -OvParameters.geneFeatureToAlign=VGeneWithP -OsaveOriginalReads=true test_R1.fastq test_R2.fastq case1.vdjca
-  mixcr assemble case1.vdjca case1.clns
+#  echo "Running test case 1"
+#  mixcr align -s hs -OvParameters.geneFeatureToAlign=VGeneWithP -OsaveOriginalReads=true test_R1.fastq test_R2.fastq case1.vdjca
+#  mixcr assemble case1.vdjca case1.clns
+#
+#  mixcr exportAlignments -nFeatureImputed VDJRegion -descrsR1 -descrsR2 case1.vdjca case1.alignments.txt
+#
+#  echo "Running test case 2"
+#  mixcr analyze shotgun -f --species hs --contig-assembly --impute-germline-on-export --starting-material rna test_R1.fastq test_R2.fastq case2
+#
+#  echo "Running test case 3"
+#  mixcr analyze amplicon --receptor-type tra --impute-germline-on-export -s hs --starting-material rna --contig-assembly --5-end v-primers --3-end j-primers --adapters no-adapters test_R1.fastq test_R2.fastq case3
 
-  mixcr exportAlignments -nFeatureImputed VDJRegion -descrsR1 -descrsR2 case1.vdjca case1.alignments.txt
+  echo "Running test case 4"
+  mixcr analyze amplicon --receptor-type tra --impute-germline-on-export -s hs --starting-material rna --contig-assembly --5-end v-primers --3-end j-primers --adapters adapters-present CD4M1_test_R1.fastq.gz CD4M1_test_R2.fastq.gz case4
+  # Checking skip steps behaviour
+  mixcr analyze amplicon --receptor-type tra --impute-germline-on-export -s hs --starting-material rna --contig-assembly --5-end v-primers --3-end j-primers --adapters adapters-present CD4M1_test_R1.fastq.gz CD4M1_test_R2.fastq.gz case4
 
-  echo "Running test case 2"
-  mixcr analyze shotgun -f --species hs --contig-assembly --impute-germline-on-export --starting-material rna test_R1.fastq test_R2.fastq case2
-
-  echo "Running test case 3"
-  mixcr analyze amplicon --receptor-type tra --impute-germline-on-export -s hs --starting-material rna --contig-assembly --5-end v-primers --3-end j-primers --adapters no-adapters test_R1.fastq test_R2.fastq case3
+  echo "Running test case 5"
+  mixcr analyze amplicon --receptor-type tra --align '-OseparateByC=true' --align '-OseparateByV=true' --align '-OseparateByJ=true' --impute-germline-on-export -s hs --starting-material rna --contig-assembly --5-end v-primers --3-end j-primers --adapters adapters-present CD4M1_test_R1.fastq.gz CD4M1_test_R2.fastq.gz case4
 fi
