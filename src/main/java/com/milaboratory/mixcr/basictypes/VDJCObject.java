@@ -461,9 +461,6 @@ public class VDJCObject {
                         lLast = leftParts.get(leftParts.size() - 1),
                         rLast = rightParts.get(0);
 
-                assert !lLast.germline;
-                assert !rLast.germline;
-
                 if (lHit == rHit) {
                     Alignment<NucleotideSequence> lAl = lHit.getAlignment(lLast.iTarget);
                     if (lAl.getSequence1Range().contains(rPositionInRef)) {
