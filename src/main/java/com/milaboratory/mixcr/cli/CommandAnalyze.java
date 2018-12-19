@@ -50,6 +50,10 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         public String description() {
             return description;
         }
+
+        static _StartingMaterial parse(String v) {
+            return parse0(_StartingMaterial.class, v);
+        }
     }
 
 
@@ -221,11 +225,17 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         this.chains = c.chains;
     }
 
+    public _StartingMaterial startingMaterial;
+
     @Option(names = "--starting-material",
             completionCandidates = _StartingMaterialCandidates.class,
             description = "Starting material. @|bold Possible values: ${COMPLETION-CANDIDATES}|@",
             required = true)
-    public _StartingMaterial startingMaterial;
+    public void setStartingMaterial(String value) {
+        startingMaterial = _StartingMaterial.parse(value);
+        if (startingMaterial == null)
+            throwValidationException("Illegal value for --starting-material parameter: " + value);
+    }
 
     @Option(names = "--impute-germline-on-export", description = "Export germline segments")
     public boolean exportGermline = false;
