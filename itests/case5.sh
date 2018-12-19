@@ -10,7 +10,7 @@ mixcr analyze amplicon --assemble '-OseparateByC=true' --assemble '-OseparateByV
 
 mixcr exportAlignments -f -readIds -cloneIdWithMappingType case5.clna case5.als.txt
 
-sort --field-separator='\t' --key=1 -n case5.als.txt | tail -n +2 > case5.als.sorted.txt
+sort -t $'\t' --key=1 -n case5.als.txt | tail -n +2 > case5.als.sorted.txt
 
 lines=$(cat case5.als.sorted.txt | wc -l)
 
