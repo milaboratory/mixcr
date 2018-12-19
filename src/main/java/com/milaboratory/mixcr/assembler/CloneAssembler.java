@@ -48,6 +48,7 @@ import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.Factory;
 import com.milaboratory.util.HashFunctions;
 import com.milaboratory.util.RandomUtil;
+import gnu.trove.iterator.TIntIntIterator;
 import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TObjectFloatHashMap;
@@ -61,6 +62,31 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static io.repseq.core.GeneFeature.*;
 
+/**
+ * Clone assembly steps:
+ *
+ * - Initial clone assembly:
+ * Iteration over alignments to assemble clonotypes into {@link CloneAccumulatorContainer} (groups of clonotypes with the same
+ * clonal sequence). Each {@link CloneAccumulatorContainer} consists of a map {@link VJCSignature} -> {@link CloneAccumulator}.
+ * {@link CloneAccumulatorContainer} may be populated with several {@link CloneAccumulator} if one of the
+ * {@link CloneAssemblerParameters#separateByV} / J / C is true, otherwise each {@link CloneAccumulatorContainer}
+ * contains exactly one {@link CloneAccumulator}.
+ * Alignments having nucleotides with quality scores lower then the threshold, are deferred for processing in the mapping step,
+ * by saving their ids into special on-disk (to save memory) log structure, that will be used on the mapping step to pick only
+ * alignments, skipped on this step.
+ * Initial clone assembly is performed by pushing clonotypes into {@link InitialAssembler}.
+ *
+ * - Mapping low quality reads:
+ * Second iteration over alignments, only alignments deferred on the initial assemble step are taken into processing here.
+ * Clonal sequence are mapped with the algorithm implemented in {@link DeferredAlignmentsMapper}.
+ *
+ * - Pre-clustering. This step performs "clustering" between clonotypes with the same clonal sequence (clonotypes inside
+ * the same {@link CloneAccumulatorContainer}). To reduce artificial diversity due to the mis-identification of V/J/C genes,
+ * both because of experimental artifacts and alignment errors. This step do nothing if
+ *
+ * - Clustering. Grouping of clonotypes with similar clonal sequences, and high ratio between their counts, to eliminate the
+ * artificial diversity.
+ */
 public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     final CloneAssemblerParameters parameters;
     // Accumulators and generators (atomics)
@@ -74,6 +100,10 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     private final List<CloneAccumulator> cloneList = new ArrayList<>();
     final AssemblerEventLogger globalLogger;
     private AssemblerEventLogger deferredAlignmentsLogger;
+    /**
+     * Mapping between initial clonotype id (one that was written to globalLogger) and final clonotype id,
+     * to be used in alignment-to-clone mapping tracking
+     */
     private TIntIntHashMap idMapping;
     private volatile SequenceTreeMap<NucleotideSequence, ArrayList<CloneAccumulatorContainer>> mappingTree;
     private ArrayList<CloneAccumulator> clusteredClonesAccumulators;
@@ -269,7 +299,9 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             final Cluster<CloneAccumulator> cluster = clusters.get(i);
             final CloneAccumulator head = cluster.getHead();
             idMapping.put(head.getCloneIndex(), i);
+            // i - new index of head clone
             head.setCloneIndex(i);
+            // k - index to be set for all child clonotypes
             final int k = ~i;
             cluster.processAllChildren(new TObjectProcedure<Cluster<CloneAccumulator>>() {
                 @Override
@@ -283,6 +315,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             });
             clusteredClonesAccumulators.add(head);
         }
+
         this.progressReporter = null;
     }
 
@@ -417,9 +450,13 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         public void process(VDJCAlignments input) {
             final ClonalSequence clonalSequence = extractClonalSequence(input);
 
+            // The sequence was deferred on the initial step, so it must contain clonal sequence
+            assert clonalSequence != null;
+
             RandomUtil.reseedThreadLocal(HashFunctions.JenkinWang64shift(Arrays.hashCode(input.getReadIds())));
 
             int badPoints = numberOfBadPoints(clonalSequence);
+            // Implements the algorithm to control the number of possible matching sequences
             int threshold = thresholdCalculator.getThreshold(badPoints);
 
             NeighborhoodIterator<NucleotideSequence, ArrayList<CloneAccumulatorContainer>> iterator =
@@ -435,9 +472,9 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             long count = 0;
             while ((assembledClones = iterator.next()) != null)
                 for (CloneAccumulatorContainer container : assembledClones) {
+                    CloneAccumulator acc = container.accumulators.get(extractSignature(input));
                     // Version of isCompatible without mutations is used here because
                     // ony substitutions possible in this place
-                    CloneAccumulator acc = container.accumulators.get(extractSignature(input));
                     if (acc != null && clonalSequence.isCompatible(acc.getSequence())) {
                         if (minMismatches == -1)
                             minMismatches = iterator.getMismatches();
@@ -521,16 +558,31 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                     new CloneFactory(parameters.getCloneFactoryParameters(),
                             parameters.getAssemblingFeatures(), usedGenes, featuresToAlign);
             Collection<CloneAccumulator> source;
-            if (clusteredClonesAccumulators != null)
+            if (clusteredClonesAccumulators != null &&
+                    // addReadsCountOnClustering=true may change clone counts
+                    // This fixes #468
+                    // If AddReadsCountOnClustering is enabled resorting will be performed for the dataset
+                    !parameters.isAddReadsCountOnClustering())
                 source = clusteredClonesAccumulators;
             else {
-                idMapping = new TIntIntHashMap();
+                TIntIntHashMap newIdMapping = new TIntIntHashMap();
                 //sort clones by count (if not yet sorted by clustering)
-                CloneAccumulator[] sourceArray = cloneList.toArray(new CloneAccumulator[cloneList.size()]);
+                CloneAccumulator[] sourceArray = clusteredClonesAccumulators == null
+                        ? cloneList.toArray(new CloneAccumulator[cloneList.size()])
+                        : clusteredClonesAccumulators.toArray(new CloneAccumulator[clusteredClonesAccumulators.size()]);
                 Arrays.sort(sourceArray, CLONE_ACCUMULATOR_COMPARATOR);
                 for (int i = 0; i < sourceArray.length; i++) {
-                    idMapping.put(sourceArray[i].getCloneIndex(), i);
+                    newIdMapping.put(sourceArray[i].getCloneIndex(), i);
                     sourceArray[i].setCloneIndex(i);
+                }
+                if (idMapping == null)
+                    idMapping = newIdMapping;
+                else {
+                    for (TIntIntIterator it = idMapping.iterator(); it.hasNext(); ) {
+                        it.advance();
+                        if (newIdMapping.containsKey(it.value()))
+                            it.setValue(newIdMapping.get(it.value()));
+                    }
                 }
                 source = Arrays.asList(sourceArray);
             }

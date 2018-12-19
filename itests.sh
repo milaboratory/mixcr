@@ -48,6 +48,8 @@ case $os in
     ;;
 esac
 
+tests=("case1" "case2" "case3" "case4" "case5")
+
 create_standard_results=false
 run_tests=false
 while [[ $# > 0 ]]
@@ -60,6 +62,9 @@ do
         ;;
         test)
             run_tests=true
+        ;;
+        case*)
+            tests=("$key")
         ;;
         *)
             echo "Unknown option $key";
@@ -119,11 +124,9 @@ function run_test() {
 }
 
 if [[ $run_tests == true ]]; then
-  run_test case1.sh
-  run_test case2.sh
-  run_test case3.sh
-  run_test case4.sh
-  run_test case5.sh
+  for testName in ${tests[@]} ; do
+      run_test "${testName}.sh"
+  done
 
   if ls ${dir}/test_target/*.error 1> /dev/null 2>&1; then
     echo "There are tests with errors."
