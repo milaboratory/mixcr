@@ -561,6 +561,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             if (clusteredClonesAccumulators != null &&
                     // addReadsCountOnClustering=true may change clone counts
                     // This fixes #468
+                    // If AddReadsCountOnClustering is enabled resorting will be performed for the dataset
                     !parameters.isAddReadsCountOnClustering())
                 source = clusteredClonesAccumulators;
             else {
@@ -568,7 +569,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 //sort clones by count (if not yet sorted by clustering)
                 CloneAccumulator[] sourceArray = clusteredClonesAccumulators == null
                         ? cloneList.toArray(new CloneAccumulator[cloneList.size()])
-                        : clusteredClonesAccumulators.toArray(new CloneAccumulator[cloneList.size()]);
+                        : clusteredClonesAccumulators.toArray(new CloneAccumulator[clusteredClonesAccumulators.size()]);
                 Arrays.sort(sourceArray, CLONE_ACCUMULATOR_COMPARATOR);
                 for (int i = 0; i < sourceArray.length; i++) {
                     newIdMapping.put(sourceArray[i].getCloneIndex(), i);
