@@ -1,6 +1,7 @@
 package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.cli.ACommandWithOutput;
+import com.milaboratory.cli.ACommandWithSmartOverwrite;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import io.repseq.core.Chains;
@@ -269,8 +270,8 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
     private <T extends ACommandWithOutput> T inheritOptionsAndValidate(T parameters) {
         if (forceOverwrite)
             parameters.forceOverwrite = true;
-        if (parameters instanceof ACommandWithSmartOverwriteMiXCR)
-            ((ACommandWithSmartOverwriteMiXCR) parameters).overwriteIfRequired = true;
+        if (parameters instanceof ACommandWithSmartOverwrite)
+            ((ACommandWithSmartOverwrite) parameters).overwriteIfRequired = true;
 
         parameters.quiet = true;
         parameters.validate();
