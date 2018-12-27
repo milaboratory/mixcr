@@ -29,8 +29,8 @@ public class CommandAlignmentsDiff extends ACommandWithOutputMiXCR {
     @Parameters(description = "input_file2", index = "1")
     public String in2;
 
-    @Parameters(description = "report", index = "2")
-    public String report;
+    @Parameters(description = "report", index = "2", arity = "0..1")
+    public String report = null;
 
     @Option(names = {"-o1", "--only-in-first"}, description = "output for alignments contained only " +
             "in the first .vdjca file")

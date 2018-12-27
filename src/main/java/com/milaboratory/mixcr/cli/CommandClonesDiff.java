@@ -25,7 +25,7 @@ public class CommandClonesDiff extends ACommandWithOutputMiXCR {
     @Parameters(description = "input2.clns", index = "1")
     public String in2;
 
-    @Parameters(description = "[report]", index = "2")
+    @Parameters(description = "[report]", index = "2", arity = "0..1")
     public String report = null;
 
     @Option(names = {"-v"}, description = "Use V gene in clone comparison (include it as a clone key along " +
