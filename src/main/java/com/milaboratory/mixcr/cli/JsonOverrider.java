@@ -124,6 +124,14 @@ public class JsonOverrider {
                 overrideWarn(fieldName, value);
             return setToNull;
         }
+
+        JsonNode valueTree = null;
+        if (value.startsWith("{") && value.endsWith("}")) {
+            try {
+                valueTree = GlobalObjectMappers.ONE_LINE.readTree(value);
+            } catch (Throwable ignored) {}
+        }
+
         if (valueNode instanceof ArrayNode) {
             ArrayNode arrayNode = (ArrayNode) valueNode;
             List<String> oldValues = new ArrayList<>();
@@ -149,6 +157,9 @@ public class JsonOverrider {
             }
             if (settingTheSame)
                 overrideWarn(fieldName, value);
+            return true;
+        } else if (valueTree != null) {
+            oNode.set(fieldName, valueTree);
             return true;
         } else if (valueNode.isTextual()) {
             if (valueNode.asText().equals(value))
