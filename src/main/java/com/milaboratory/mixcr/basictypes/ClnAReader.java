@@ -156,7 +156,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
         long previousValue = 0;
         long totalAlignmentsCount = 0L;
         for (int i = 0; i < numberOfClones + 2; i++) {
-            previousValue = index[i] = previousValue + input.readVarInt();
+            previousValue = index[i] = previousValue + input.readVarLong();
             totalAlignmentsCount += counts[i] = input.readVarLong();
         }
         this.totalAlignmentsCount = totalAlignmentsCount;
