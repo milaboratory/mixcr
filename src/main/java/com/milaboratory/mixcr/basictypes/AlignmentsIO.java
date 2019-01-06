@@ -135,6 +135,8 @@ public final class AlignmentsIO {
      */
     public static void writeBlock(Collection<VDJCAlignments> alignments, PrimitivOState outputState,
                                   LZ4Compressor compressor, XXHash32 xxHash32, BlockBuffers buffers) {
+        if (alignments.size() == 0)
+            throw new IllegalArgumentException("Writing empty block.");
         buffers.ensureRawBufferSize(alignments.size() * AVERAGE_ALIGNMENT_SIZE);
         ByteArrayDataOutput dataOutput = new ByteArrayDataOutput(buffers.rawBuffer);
 
@@ -279,6 +281,9 @@ public final class AlignmentsIO {
 
         if (checksum != xxHash32.hash(buffers.rawBuffer, 0, rawSize, HASH_SEED))
             throw new RuntimeException("Checksum verification failed. Malformed file.");
+
+        if (numberOfAlignments == 0)
+            throw new IllegalArgumentException("Zero-alignments block.");
 
         PrimitivI input = inputState.createPrimitivI(new ByteBufferDataInputAdapter(
                 ByteBuffer.wrap(buffers.rawBuffer, 0, rawSize)));

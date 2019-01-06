@@ -198,8 +198,13 @@ public final class BasicVDJCAlignmentWriterFactory implements AutoCloseable {
             }
         }
 
-        private void waitPreviousBlock() throws InterruptedException {
-            lastBlockWriteLatch.await();
+        public void waitPreviousBlock() {
+            try {
+                lastBlockWriteLatch.await();
+            } catch (InterruptedException e) {
+                error = true;
+                throw new RuntimeException(e);
+            }
         }
 
         /**
@@ -220,7 +225,7 @@ public final class BasicVDJCAlignmentWriterFactory implements AutoCloseable {
 
                 // Write
                 buffers.writeTo(outputStream);
-            } catch (IOException | InterruptedException e) {
+            } catch (IOException e) {
                 error = true;
                 throw new RuntimeException(e);
             }
@@ -237,7 +242,7 @@ public final class BasicVDJCAlignmentWriterFactory implements AutoCloseable {
                     outputStream.close();
 
                 closed.countDown();
-            } catch (InterruptedException | IOException e) {
+            } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -277,6 +282,8 @@ public final class BasicVDJCAlignmentWriterFactory implements AutoCloseable {
 
         public BlockToEncode(List<VDJCAlignments> content, CountDownLatch previousBlockWriteLatch,
                              PrimitivOState outputState, OutputStream outputStream) {
+            if (content != null && content.size() == 0)
+                throw new IllegalArgumentException("Zero length block.");
             this.content = content;
             this.previousBlockWriteLatch = previousBlockWriteLatch;
             this.outputState = outputState;

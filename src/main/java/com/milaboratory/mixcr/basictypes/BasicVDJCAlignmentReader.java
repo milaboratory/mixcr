@@ -120,11 +120,11 @@ public final class BasicVDJCAlignmentReader implements OutputPort<VDJCAlignments
                 if (als == null) {
                     closed = true;
                     return null;
-                } else
+                } else {
                     alignmentsIterator = als.iterator();
+                    assert alignmentsIterator.hasNext();
+                }
             }
-
-            assert alignmentsIterator.hasNext();
 
             return alignmentsIterator.next();
         } catch (IOException e) {

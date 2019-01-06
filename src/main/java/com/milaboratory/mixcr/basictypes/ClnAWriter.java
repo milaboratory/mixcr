@@ -293,18 +293,24 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
             List<VDJCAlignments> block = new ArrayList<>();
             // Writing alignments and writing indices
             for (VDJCAlignments alignments : CUtils.it(sortedAlignments)) {
+                boolean blockFlushed = false;
+
                 // Block is full
                 if (block.size() == AlignmentsIO.DEFAULT_ALIGNMENTS_IN_BLOCK) {
                     writer.writeAsync(block);
                     block = new ArrayList<>();
+                    blockFlushed = true;
                 }
 
                 // End of clone
                 if (currentCloneIndex != alignments.cloneIndex) {
 
-                    // This will also wait for the previous block (if async write was issued) to be flushed to the stream
-                    writer.writeSync(block);
-                    block = new ArrayList<>();
+                    if (!blockFlushed) {
+                        // This will also wait for the previous block (if async write was issued) to be flushed to the stream
+                        writer.writeSync(block);
+                        block = new ArrayList<>();
+                    } else
+                        writer.waitPreviousBlock();
 
                     ++currentCloneIndex;
                     if (currentCloneIndex != alignments.cloneIndex)
