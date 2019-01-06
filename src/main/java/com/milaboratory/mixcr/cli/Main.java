@@ -118,7 +118,7 @@ public final class Main {
                 .addSubcommand("exportClones", CommandExport.mkClonesSpec())
                 .addSubcommand("exportClonesPretty", CommandExportClonesPretty.class)
 
-                .addSubcommand("exportReadsForClones", CommandExportClonesReads.class)
+                .addSubcommand("exportReadsForClones", CommandExportReadsForClones.class)
                 .addSubcommand("exportReads", CommandExportReads.class)
 
                 .addSubcommand("mergeAlignments", CommandMergeAlignments.class)
