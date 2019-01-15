@@ -249,5 +249,8 @@ public final class CloneAssemblerReport extends AbstractCommandReport implements
                 .writeField("Clonotypes eliminated by PCR error correction", clonesClustered.get())
                 .writeField("Clonotypes dropped as low quality", clonesDropped.get())
                 .writeField("Clonotypes pre-clustered due to the similar VJC-lists", clonesPreClustered.get());
+
+        // Writing distribution by chains
+        chainStats.writeReport(helper);
     }
 }
