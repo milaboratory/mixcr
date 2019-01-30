@@ -61,7 +61,7 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         String description();
     }
 
-    enum _StartingMaterial implements WithNameWithDescription {
+    public enum _StartingMaterial implements WithNameWithDescription {
         rna("RNA"),
         dna("Genomic DNA");
         final String key, description;
@@ -87,7 +87,7 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
     }
 
 
-    enum _Chains implements WithNameWithDescription {
+    public enum _Chains implements WithNameWithDescription {
         tcr("All T-cell receptor types (TRA/TRB/TRG/TRD)", Chains.TCR),
         bcr("All B-cell receptor types (IGH/IGK/IGL/TRD)", Chains.IG),
         xcr("All T- and B-cell receptor types", Chains.ALL),
@@ -119,7 +119,7 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
     }
 
 
-    enum _5EndPrimers implements WithNameWithDescription {
+    public enum _5EndPrimers implements WithNameWithDescription {
         noVPrimers("no-v-primers", "No V gene primers (e.g. 5’RACE with template switch oligo or a like)"),
         vPrimers("v-primers", "V gene single primer / multiplex");
         final String key, description;
@@ -144,7 +144,7 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         }
     }
 
-    enum _3EndPrimers implements WithNameWithDescription {
+    public enum _3EndPrimers implements WithNameWithDescription {
         jPrimers("j-primers", "J gene single primer / multiplex"),
         jcPrimers("j-c-intron-primers", "J-C intron single primer / multiplex"),
         cPrimers("c-primers", "C gene single primer / multiplex (e.g. IGHC primers specific to different immunoglobulin isotypes)");
@@ -170,7 +170,7 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         }
     }
 
-    enum _Adapters implements WithNameWithDescription {
+    public enum _Adapters implements WithNameWithDescription {
         adaptersPresent("adapters-present", "May be present"),
         noAdapters("no-adapters", "Absent / nearly absent / trimmed");
         final String key, description;
@@ -388,7 +388,6 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
                         .stream()
                         .flatMap(s -> Arrays.stream(s.split(" ")))
                         .toArray(String[]::new));
-
 
         return ap;
     }
@@ -716,17 +715,25 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
                 throwValidationException("Illegal value for --adapters parameter: " + value);
         }
 
+        public void setAdapters(_Adapters value) {
+            adapters = value;
+        }
+
         private GeneFeature assemblingFeature = GeneFeature.CDR3;
 
         @Option(names = "--region-of-interest",
                 description = "MiXCR will use only reads covering the whole target region; reads which partially cover selected region will be dropped during clonotype assembly. All non-CDR3 options require long high-quality paired-end data. See https://mixcr.readthedocs.io/en/master/geneFeatures.html for details.",
                 required = false)
-        private void setRegionOfInterest(String v) {
+        public void setRegionOfInterest(String v) {
             try {
                 assemblingFeature = GeneFeature.parse(v);
             } catch (Exception e) {
                 throwValidationException("Illegal gene feature: " + v);
             }
+        }
+
+        public void setRegionOfInterest(GeneFeature v) {
+            assemblingFeature = v;
         }
 
         @Override
