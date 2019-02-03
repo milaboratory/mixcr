@@ -31,7 +31,9 @@ package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.cli.ACommandWithOutput;
 import com.milaboratory.cli.ACommandWithSmartOverwrite;
+import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
+import com.milaboratory.mixcr.util.SequenceReaderFactory;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import io.repseq.core.Chains;
 import io.repseq.core.GeneFeature;
@@ -285,10 +287,6 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
     @Option(names = {"-r", "--report"}, description = "Report file path")
     public String report = null;
 
-//     @Option(names = {"--overwrite-if-required"}, description = "Overwrite output file if it is corrupted or if it was generated from different input file \" +\n" +
-//             "                    \"or with different parameters. -f / --force-overwrite overrides this option.")
-//     public boolean overwriteIfRequired = false;
-
     public String getReport() {
         if (report == null)
             return fNameForReport();
@@ -334,6 +332,15 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
 
     Collection<String> pipelineSpecificAssembleParameters() {
         return Collections.EMPTY_LIST;
+    }
+
+    private SequenceReaderFactory<? extends SequenceRead> customSequenceReaderFactory;
+
+    /**
+     * Override default fastq reader creation method (from input file names)
+     */
+    public void setCustomSequenceReaderFactory(SequenceReaderFactory<? extends SequenceRead> customSequenceReaderFactory) {
+        this.customSequenceReaderFactory = customSequenceReaderFactory;
     }
 
     CommandAlign mkAlign() {
@@ -388,6 +395,10 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
                         .stream()
                         .flatMap(s -> Arrays.stream(s.split(" ")))
                         .toArray(String[]::new));
+
+        // passing custom reader supplier to align action
+        if (customSequenceReaderFactory != null)
+            ap.setCustomSequenceReaderFactory(customSequenceReaderFactory);
 
         return ap;
     }

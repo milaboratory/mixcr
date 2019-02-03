@@ -37,7 +37,10 @@ import cc.redberry.pipe.util.Chunk;
 import cc.redberry.pipe.util.CountLimitingOutputPort;
 import cc.redberry.pipe.util.OrderedOutputPort;
 import cc.redberry.pipe.util.StatusReporter;
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.core.PairedEndReadsLayout;
@@ -52,8 +55,12 @@ import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.SequenceHistory;
+import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
+import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
+import com.milaboratory.mixcr.util.SequenceReaderFactory;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
@@ -90,6 +97,8 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
 
     @Override
     public List<String> getInputFiles() {
+        if (customSequenceReaderFactory != null && customSequenceReaderFactory.getInputFileNames() != null)
+            return customSequenceReaderFactory.getInputFileNames();
         return inOut.subList(0, inOut.size() - 1);
     }
 
@@ -230,11 +239,27 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                 : (vdjcLibrary = VDJCLibraryRegistry.getDefault().getLibrary(getLibraryName(), species));
     }
 
+    private SequenceReaderFactory<? extends SequenceRead> customSequenceReaderFactory;
+
+    /**
+     * Override default fastq reader creation method (from input file names)
+     */
+    public void setCustomSequenceReaderFactory(SequenceReaderFactory<? extends SequenceRead> customSequenceReaderFactory) {
+        this.customSequenceReaderFactory = customSequenceReaderFactory;
+    }
+
     public boolean isInputPaired() {
+        if (customSequenceReaderFactory != null)
+            return customSequenceReaderFactory.numberOfReads() == 2;
         return getInputFiles().size() == 2;
     }
 
     public SequenceReaderCloseable<? extends SequenceRead> createReader() throws IOException {
+        if (customSequenceReaderFactory != null)
+            // If override is activated (used only in MiXCR integration into other software)
+            return customSequenceReaderFactory.createReader();
+
+        // Normal reader creation
         if (isInputPaired())
             return new PairedFastqReader(getInputFiles().get(0), getInputFiles().get(1), true);
         else {
