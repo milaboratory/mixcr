@@ -72,9 +72,13 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
 
     public static final String DEFAULT_PRESET = "full";
 
+    public Chains chains = Chains.ALL;
+
     @Option(description = "Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)",
             names = {"-c", "--chains"})
-    public String chains = "ALL";
+    public void setChains(String chains) {
+        this.chains = Chains.parse(chains);
+    }
 
     @Option(description = "Specify preset of export fields (possible values: 'full', 'min'; 'full' by default)",
             names = {"-p", "--preset"})
@@ -111,15 +115,10 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
         this.limit = limit;
     }
 
-    public Chains getChains() {
-        return Chains.parse(chains);
-    }
-
     @SuppressWarnings("unchecked")
     public Filter<T> mkFilter() {
         List<Filter<T>> filters = new ArrayList<>();
 
-        final Chains chains = getChains();
         filters.add(object -> {
             for (GeneType gt : GeneType.VJC_REFERENCE) {
                 VDJCHit bestHit = object.getBestHit(gt);

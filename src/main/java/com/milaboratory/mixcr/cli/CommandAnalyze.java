@@ -36,6 +36,7 @@ import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.util.SequenceReaderFactory;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import io.repseq.core.Chains;
+import io.repseq.core.Chains.NamedChains;
 import io.repseq.core.GeneFeature;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -64,8 +65,8 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
     }
 
     public enum _StartingMaterial implements WithNameWithDescription {
-        rna("RNA"),
-        dna("Genomic DNA");
+        RNA("RNA"),
+        DNA("Genomic DNA");
         final String key, description;
 
         _StartingMaterial(String description) {
@@ -88,18 +89,31 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         }
     }
 
+    // For backward compatibility
+    @Deprecated()
+    // TODO remove in 3.1 branch
+    public static final NamedChains[] EXPORT_OPTIONS_30 = new NamedChains[]{
+            Chains.TRA_NAMED, Chains.TRB_NAMED, Chains.TRD_NAMED, Chains.TRG_NAMED,
+            Chains.IGH_NAMED, Chains.IGK_NAMED, Chains.IGL_NAMED
+    };
+
+    public static final NamedChains[] EXPORT_OPTIONS_31 = new NamedChains[]{
+            Chains.TRAD_NAMED, Chains.TRB_NAMED, Chains.TRG_NAMED,
+            Chains.IGH_NAMED, Chains.IGK_NAMED, Chains.IGL_NAMED
+    };
 
     public enum _Chains implements WithNameWithDescription {
-        tcr("All T-cell receptor types (TRA/TRB/TRG/TRD)", Chains.TCR),
-        bcr("All B-cell receptor types (IGH/IGK/IGL/TRD)", Chains.IG),
-        xcr("All T- and B-cell receptor types", Chains.ALL),
-        tra("TRA chain", Chains.TRA),
-        trb("TRB chain", Chains.TRB),
-        trd("TRD chain", Chains.TRD),
-        trg("TRG chain", Chains.TRG),
-        igh("IGH chain", Chains.IGH),
-        igk("IGK chain", Chains.IGK),
-        igl("IGL chain", Chains.IGL);
+        TCR("All T-cell receptor types (TRA/TRB/TRG/TRD)", Chains.TCR),
+        BCR("All B-cell receptor types (IGH/IGK/IGL/TRD)", Chains.IG),
+        XCR("All T- and B-cell receptor types", Chains.ALL),
+        TRA("TRA chain", Chains.TRA),
+        TRAD("TRA/TRD chain", Chains.TRAD),
+        TRB("TRB chain", Chains.TRB),
+        TRD("TRD chain", Chains.TRD),
+        TRG("TRG chain", Chains.TRG),
+        IGH("IGH chain", Chains.IGH),
+        IGK("IGK chain", Chains.IGK),
+        IGL("IGL chain", Chains.IGL);
         final String key, description;
         final Chains chains;
 
@@ -257,6 +271,12 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         this.chains = c.chains;
     }
 
+    public NamedChains[] exportOptions = EXPORT_OPTIONS_30;
+
+    public void setExportOptions(NamedChains[] exportOptions) {
+        this.exportOptions = exportOptions;
+    }
+
     public _StartingMaterial startingMaterial;
 
     @Option(names = "--starting-material",
@@ -270,7 +290,7 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
     }
 
     @Option(names = "--impute-germline-on-export", description = "Export germline segments")
-    public boolean exportGermline = false;
+    public boolean imputeGermlineOnExport = false;
 
     @Option(names = "--only-productive", description = "Filter out-of-frame sequences and clonotypes with stop-codons in " +
             "clonal sequence export")
@@ -334,13 +354,13 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         return Collections.EMPTY_LIST;
     }
 
-    private SequenceReaderFactory<? extends SequenceRead> customSequenceReaderFactory;
+    private SequenceReaderFactory<? extends SequenceRead> sequenceReaderFactoryOverride;
 
     /**
      * Override default fastq reader creation method (from input file names)
      */
-    public void setCustomSequenceReaderFactory(SequenceReaderFactory<? extends SequenceRead> customSequenceReaderFactory) {
-        this.customSequenceReaderFactory = customSequenceReaderFactory;
+    public void overrideSequenceReaderFactory(SequenceReaderFactory<? extends SequenceRead> customSequenceReaderFactory) {
+        this.sequenceReaderFactoryOverride = customSequenceReaderFactory;
     }
 
     CommandAlign mkAlign() {
@@ -366,13 +386,13 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
 
         // add v feature to align
         switch (startingMaterial) {
-            case rna:
+            case RNA:
                 alignParameters.add("-OvParameters.geneFeatureToAlign=" +
                         (include5UTRInRNA()
                                 ? "VTranscriptWithP"
                                 : "VTranscriptWithout5UTRWithP"));
                 break;
-            case dna:
+            case DNA:
                 alignParameters.add("-OvParameters.geneFeatureToAlign=VGeneWithP");
                 break;
         }
@@ -397,8 +417,8 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
                         .toArray(String[]::new));
 
         // passing custom reader supplier to align action
-        if (customSequenceReaderFactory != null)
-            ap.setCustomSequenceReaderFactory(customSequenceReaderFactory);
+        if (sequenceReaderFactoryOverride != null)
+            ap.setCustomSequenceReaderFactory(sequenceReaderFactoryOverride);
 
         return ap;
     }
@@ -544,7 +564,7 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         // add all override parameters
         exportParameters.addAll(this.exportParameters);
 
-        if (exportGermline)
+        if (imputeGermlineOnExport)
             exportParameters.add("-p fullImputed");
         if (onlyProductive) {
             exportParameters.add("--filter-out-of-frames");
@@ -587,7 +607,7 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         return Collections.emptyList();
     }
 
-    /** the pattern of output file name ("myOutput" will produce "myOutput.vdjca", "myOutput.clns" etc files) */
+    /** the pattern of output file name ("somefolder/myOutput" will produce "somefolder/myOutput.vdjca", "somefolder/myOutput.clns" etc files) */
     String outputNamePattern() {
         return inOut.get(inOut.size() - 1);
     }
@@ -616,8 +636,15 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         return outputNamePattern() + ".contigs.clns";
     }
 
+    String outputNamePatternForExportClones;
+
+    public void overrideOutputNamePatternForExportClones(String val) {
+        this.outputNamePatternForExportClones = val;
+    }
+
     public String fNameForExportClones(String chains) {
-        return outputNamePattern() + ".clonotypes." + chains + ".txt";
+        return (outputNamePatternForExportClones != null ? outputNamePatternForExportClones : outputNamePattern()) +
+                ".clonotypes." + chains + ".txt";
     }
 
     @Override
@@ -664,17 +691,23 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
             fileWithClones = fileWithContigs;
         }
 
-        if (!noExport)
+        if (!noExport) {
             // --- Running export
-            if (!chains.equals(Chains.ALL))
-                for (String chain : chains)
-                    mkExport(fileWithClones, fNameForExportClones(chain)).run();
-            else
-                for (String chain : new String[]{"ALL", "TRA", "TRB", "TRG", "TRD", "IGH", "IGK", "IGL"}) {
-                    CommandExport.CommandExportClones export = mkExport(fileWithClones, fNameForExportClones(chain));
-                    export.chains = chain;
-                    export.run();
-                }
+
+            // Creating list of export files
+            List<NamedChains> toExport = new ArrayList<>();
+            for (NamedChains eo : exportOptions)
+                if (chains.contains(eo.chains))
+                    toExport.add(eo);
+            if (toExport.isEmpty()) // Unknown chain (adding it as a sole export option)
+                toExport.add(new NamedChains(chains));
+
+            for (NamedChains nc : toExport) {
+                CommandExport.CommandExportClones export = mkExport(fileWithClones, fNameForExportClones(nc.name));
+                export.chains = nc.chains;
+                export.run();
+            }
+        }
     }
 
 
