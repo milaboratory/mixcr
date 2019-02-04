@@ -264,17 +264,30 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
             completionCandidates = _ChainsCandidates.class,
             description = "Receptor type. Possible values: ${COMPLETION-CANDIDATES}",
             required = false /* This will be overridden for amplicon */)
-    public void setChains(String chains) {
-        _Chains c = parse0(_Chains.class, chains);
+    public void setReceptorType(String receptorType) {
+        _Chains c = parse0(_Chains.class, receptorType);
         if (c == null)
-            throwValidationException("Illegal value " + chains + " for --receptor-type option.");
+            throwValidationException("Illegal value " + receptorType + " for --receptor-type option.");
         this.chains = c.chains;
     }
 
-    public NamedChains[] exportOptions = EXPORT_OPTIONS_30;
+    public List<NamedChains> exportOptionsOverride = null;
 
-    public void setExportOptions(NamedChains[] exportOptions) {
-        this.exportOptions = exportOptions;
+    public void overrideExportOptions(List<NamedChains> exportOptions) {
+        this.exportOptionsOverride = exportOptions;
+    }
+
+    public List<NamedChains> getExportOptions() {
+        if (exportOptionsOverride != null)
+            return exportOptionsOverride;
+
+        List<NamedChains> toExport = new ArrayList<>();
+        for (NamedChains eo : EXPORT_OPTIONS_30)
+            if (chains.contains(eo.chains))
+                toExport.add(eo);
+        if (toExport.isEmpty()) // Unknown chain (adding it as a sole export option)
+            toExport.add(new NamedChains(chains));
+        return toExport;
     }
 
     public _StartingMaterial startingMaterial;
@@ -695,14 +708,7 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
             // --- Running export
 
             // Creating list of export files
-            List<NamedChains> toExport = new ArrayList<>();
-            for (NamedChains eo : exportOptions)
-                if (chains.contains(eo.chains))
-                    toExport.add(eo);
-            if (toExport.isEmpty()) // Unknown chain (adding it as a sole export option)
-                toExport.add(new NamedChains(chains));
-
-            for (NamedChains nc : toExport) {
+            for (NamedChains nc : getExportOptions()) {
                 CommandExport.CommandExportClones export = mkExport(fileWithClones, fNameForExportClones(nc.name));
                 export.chains = nc.chains;
                 export.run();
