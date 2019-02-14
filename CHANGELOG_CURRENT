@@ -1,6 +1,0 @@
-Fixed problem with possibly incorrect clone-to-alignment mapping and clonotype sorting. The problem manifests itself in rare cercumstances, with `-OseparateByV/J/C=true` (special thanks to Victor Greiff @GreiffLab for finding the bug and helping with testing)
-Fixes exception while reading alignments from `clna` files (thanks to Dr. Ma @JohnMCMa for finding the bug and providing the data to reproduce it)
-Integration with new MiLib abstraction for CLI, to automatically infer when reanalysis is nedded and when not (this mechanism extracts paramteres from the target files, and checks if current command line sets the same options, if the options are the same, mixcr skips the step, otherwize restarts the analysis)
-Report for the `assemble` command now contains chain distribution statistics
-`analyze` command now is case-insensitive for all options like `--starting-material`
-Fixed exception arising in rare cases with sequence imputation on the export step
