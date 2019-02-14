@@ -1,5 +1,35 @@
+/*
+ * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * (here and after addressed as Inventors)
+ * All Rights Reserved
+ *
+ * Permission to use, copy, modify and distribute any part of this program for
+ * educational, research and non-profit purposes, by non-profit institutions
+ * only, without fee, and without a written agreement is hereby granted,
+ * provided that the above copyright notice, this paragraph and the following
+ * three paragraphs appear in all copies.
+ *
+ * Those desiring to incorporate this work into commercial products or use for
+ * commercial purposes should contact MiLaboratory LLC, which owns exclusive
+ * rights for distribution of this program for commercial purposes, using the
+ * following email address: licensing@milaboratory.com.
+ *
+ * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
+ * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
+ * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
+ * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
+ * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
+ * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
+ * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
+ * PATENT, TRADEMARK OR OTHER RIGHTS.
+ */
 package com.milaboratory.mixcr.basictypes;
 
+import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
@@ -12,18 +42,17 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 
-import static com.milaboratory.mixcr.basictypes.ClnsWriter.MAGIC;
-import static com.milaboratory.mixcr.basictypes.ClnsWriter.MAGIC_LENGTH;
+import static com.milaboratory.mixcr.basictypes.ClnsWriter.*;
+import static com.milaboratory.mixcr.cli.SerializerCompatibilityUtil.add_v3_0_3_CustomSerializers;
 
 /**
  *
  */
-public class ClnsReader implements PipelineConfigurationReader,
-                                   AutoCloseable {
+public class ClnsReader extends PipelineConfigurationReaderMiXCR implements AutoCloseable {
     private final PrimitivI input;
     private final VDJCLibraryRegistry libraryRegistry;
 
-    public ClnsReader(PrimitivI input, VDJCLibraryRegistry libraryRegistry) {
+    private ClnsReader(PrimitivI input, VDJCLibraryRegistry libraryRegistry) {
         this.input = input;
         this.libraryRegistry = libraryRegistry;
     }
@@ -61,6 +90,9 @@ public class ClnsReader implements PipelineConfigurationReader,
         // SerializersManager serializersManager = input.getSerializersManager();
 
         switch (magicString) {
+            case MAGIC_V7:
+                add_v3_0_3_CustomSerializers(input);
+                break;
             case MAGIC:
                 break;
             default:

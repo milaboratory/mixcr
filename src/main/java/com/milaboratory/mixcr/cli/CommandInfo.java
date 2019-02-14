@@ -1,8 +1,36 @@
+/*
+ * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * (here and after addressed as Inventors)
+ * All Rights Reserved
+ *
+ * Permission to use, copy, modify and distribute any part of this program for
+ * educational, research and non-profit purposes, by non-profit institutions
+ * only, without fee, and without a written agreement is hereby granted,
+ * provided that the above copyright notice, this paragraph and the following
+ * three paragraphs appear in all copies.
+ *
+ * Those desiring to incorporate this work into commercial products or use for
+ * commercial purposes should contact MiLaboratory LLC, which owns exclusive
+ * rights for distribution of this program for commercial purposes, using the
+ * following email address: licensing@milaboratory.com.
+ *
+ * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
+ * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
+ * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
+ * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
+ * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
+ * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
+ * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
+ * PATENT, TRADEMARK OR OTHER RIGHTS.
+ */
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
 import com.milaboratory.mixcr.basictypes.IOUtil;
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.util.PrintStreamTableAdapter;
@@ -17,12 +45,14 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
+import static com.milaboratory.mixcr.basictypes.IOUtil.*;
+
 @Command(name = "info",
         sortOptions = true,
         hidden = true,
         separator = " ",
         description = "Outputs information about mixcr binary file.")
-public class CommandInfo extends ACommand {
+public class CommandInfo extends ACommandMiXCR {
     @Parameters(description = "binary_file{.vdjca|.clns}...", arity = "1..*")
     public List<String> input;
 
@@ -36,18 +66,18 @@ public class CommandInfo extends ACommand {
 
     private IOUtil.MiXCRFileInfo info0 = null;
 
-    public MiXCRFileType getType() {
+    public String getType() {
         if (info0 == null)
-            info0 = IOUtil.getFileInfo(input.get(0));
+            info0 = (IOUtil.MiXCRFileInfo) fileInfoExtractorInstance.getFileInfo(input.get(0));
         return info0.fileType;
     }
 
     @Override
     public void validate() {
         super.validate();
-        MiXCRFileType type = getType();
+        String type = getType();
         for (String fileName : input)
-            if (IOUtil.getFileInfo(fileName).fileType != type)
+            if (!fileInfoExtractorInstance.getFileInfo(fileName).fileType.equals(type))
                 throwValidationException("Mixed file types: " + fileName);
     }
 
@@ -60,11 +90,11 @@ public class CommandInfo extends ACommand {
             throw new RuntimeException("Only table output is supported. Use -t option.");
 
         switch (getType()) {
-            case ClnA:
-            case Clns:
+            case MAGIC_CLNA:
+            case MAGIC_CLNS:
                 processClones();
                 break;
-            case VDJCA:
+            case MAGIC_VDJC:
                 processAlignments();
                 break;
         }

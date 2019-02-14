@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2017, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
  * (here and after addressed as Inventors)
  * All Rights Reserved
  *
@@ -10,8 +10,9 @@
  * three paragraphs appear in all copies.
  *
  * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact the Inventors using one of the following
- * email addresses: chudakovdm@mail.ru, chudakovdm@gmail.com
+ * commercial purposes should contact MiLaboratory LLC, which owns exclusive
+ * rights for distribution of this program for commercial purposes, using the
+ * following email address: licensing@milaboratory.com.
  *
  * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
  * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
@@ -31,6 +32,7 @@ package com.milaboratory.mixcr.basictypes;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.CountLimitingOutputPort;
+import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.ClnsReader.GT2GFAdapter;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
@@ -58,12 +60,12 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.milaboratory.mixcr.cli.SerializerCompatibilityUtil.add_v3_0_3_CustomSerializers;
+
 /**
  * Reader of CLNA file format.
  */
-public final class ClnAReader implements
-        PipelineConfigurationReader,
-        AutoCloseable {
+public final class ClnAReader extends PipelineConfigurationReaderMiXCR implements AutoCloseable {
     public static final int DEFAULT_CHUNK_SIZE = 262144;
     final int chunkSize;
     /**
@@ -122,10 +124,6 @@ public final class ClnAReader implements
         buf.get(magicBytes);
         String magicString = new String(magicBytes, StandardCharsets.US_ASCII);
 
-        if (!magicString.equals(ClnAWriter.MAGIC))
-            throw new IllegalArgumentException("Wrong file type. Magic = " + magicString +
-                    ", expected = " + ClnAWriter.MAGIC);
-
         // Reading number of clones
 
         this.numberOfClones = buf.getInt();
@@ -143,19 +141,41 @@ public final class ClnAReader implements
         // Reading index data
 
         input = new PrimitivI(new InputDataStream(indexBegin, fSize - 8));
+        switch (magicString) {
+            case ClnAWriter.MAGIC_V3:
+                add_v3_0_3_CustomSerializers(input);
+                break;
+            case ClnAWriter.MAGIC:
+                break;
+            default:
+                throw new IllegalArgumentException("Wrong file type. Magic = " + magicString +
+                        ", expected = " + ClnAWriter.MAGIC);
+        }
+
         this.index = new long[numberOfClones + 2];
         this.counts = new long[numberOfClones + 2];
         long previousValue = 0;
         long totalAlignmentsCount = 0L;
         for (int i = 0; i < numberOfClones + 2; i++) {
-            previousValue = index[i] = previousValue + input.readVarInt();
+            previousValue = index[i] = previousValue + input.readVarLong();
             totalAlignmentsCount += counts[i] = input.readVarLong();
         }
         this.totalAlignmentsCount = totalAlignmentsCount;
 
         // Reading gene features
 
-        input = new PrimitivI(new InputDataStream(ClnAWriter.MAGIC_LENGTH + 4, firstClonePosition));
+        input = new PrimitivI(new InputDataStream(ClnAWriter.MAGIC_LENGTH + 4,
+                firstClonePosition));
+        switch (magicString) {
+            case ClnAWriter.MAGIC_V3:
+                add_v3_0_3_CustomSerializers(input);
+                break;
+            case ClnAWriter.MAGIC:
+                break;
+            default:
+                throw new IllegalStateException();
+        }
+
         this.versionInfo = input.readUTF();
         this.configuration = input.readObject(PipelineConfiguration.class);
         this.alignerParameters = input.readObject(VDJCAlignerParameters.class);

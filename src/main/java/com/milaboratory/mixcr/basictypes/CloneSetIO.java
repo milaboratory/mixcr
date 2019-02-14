@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2018, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
  * (here and after addressed as Inventors)
  * All Rights Reserved
  *
@@ -36,6 +36,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 
+import static com.milaboratory.mixcr.basictypes.IOUtil.*;
+
 public final class CloneSetIO {
     public static CloneSet read(String file) throws IOException {
         return read(file, VDJCLibraryRegistry.getDefault());
@@ -50,12 +52,12 @@ public final class CloneSetIO {
     }
 
     public static CloneSet read(File file, VDJCLibraryRegistry libraryRegistry) throws IOException {
-        switch (Objects.requireNonNull(IOUtil.getFileInfo(file)).fileType) {
-            case ClnA:
+        switch (Objects.requireNonNull(fileInfoExtractorInstance.getFileInfo(file)).fileType) {
+            case MAGIC_CLNA:
                 try (ClnAReader r = new ClnAReader(file.toPath(), libraryRegistry)) {
                     return r.readCloneSet();
                 }
-            case Clns:
+            case MAGIC_CLNS:
                 try (ClnsReader r = new ClnsReader(file, libraryRegistry)) {
                     return r.getCloneSet();
                 }

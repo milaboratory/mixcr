@@ -1,7 +1,6 @@
 #!/bin/bash
 
-set -e
-set -o pipefail
+set -eo pipefail
 
 # "Integration" tests for MiXCR
 # Test standard analysis pipeline results
@@ -49,6 +48,8 @@ case $os in
     ;;
 esac
 
+tests=("case1" "case2" "case3" "case4" "case5")
+
 create_standard_results=false
 run_tests=false
 while [[ $# > 0 ]]
@@ -61,6 +62,9 @@ do
         ;;
         test)
             run_tests=true
+        ;;
+        case*)
+            tests=("$key")
         ;;
         *)
             echo "Unknown option $key";
@@ -75,6 +79,8 @@ mkdir ${dir}/test_target
 cp ${dir}/src/test/resources/sequences/*.fastq ${dir}/test_target/
 
 cd ${dir}/test_target/
+ln -s ../src/test/resources/sequences/big/CD4M1_test_R1.fastq.gz ${dir}/test_target/CD4M1_test_R1.fastq.gz
+ln -s ../src/test/resources/sequences/big/CD4M1_test_R2.fastq.gz ${dir}/test_target/CD4M1_test_R2.fastq.gz
 
 PATH=${dir}:${PATH}
 
@@ -86,7 +92,7 @@ function go_assemble {
   mixcr assemble -r $1.clns.report $1.vdjca $1.clns
   for c in TCR IG TRB TRA TRG TRD IGH IGL IGK ALL
   do
-    mixcr exportClones -c ${c} -s $1.clns $1.clns.${c}.txt
+    mixcr exportClones -c ${c} $1.clns $1.clns.${c}.txt
   done
 }
 
@@ -100,18 +106,33 @@ if [[ $create_standard_results == true ]]; then
   done
 fi
 
-# UseCase 1
+function run_test() {
+  cd ${dir}/test_target
+  echo "========================"
+  echo "Running: $1"
+  echo "========================"
+
+  if ../itests/${1}; then
+    echo "========================"
+    echo "$1 executed successfully"
+  else
+    echo "========================"
+    echo "$1 executed with error"
+    touch ${1}.error
+  fi
+  echo "========================"
+}
 
 if [[ $run_tests == true ]]; then
-  echo "Running test case 1"
-  mixcr align -s hs -OvParameters.geneFeatureToAlign=VGeneWithP -OsaveOriginalReads=true test_R1.fastq test_R2.fastq case1.vdjca
-  mixcr assemble case1.vdjca case1.clns
+  for testName in ${tests[@]} ; do
+      run_test "${testName}.sh"
+  done
 
-  mixcr exportAlignments -nFeatureImputed VDJRegion -descrsR1 -descrsR2 case1.vdjca case1.alignments.txt
-
-  echo "Running test case 2"
-  mixcr analyze shotgun -f --species hs --contig-assembly --impute-germline-on-export --starting-material rna test_R1.fastq test_R2.fastq case2
-
-  echo "Running test case 3"
-  mixcr analyze amplicon --receptor-type tra --impute-germline-on-export -s hs --starting-material rna --contig-assembly --5-end v-primers --3-end j-primers --adapters no-adapters test_R1.fastq test_R2.fastq case3
+  if ls ${dir}/test_target/*.error 1> /dev/null 2>&1; then
+    echo "There are tests with errors."
+    exit 1
+  else
+    echo "All tests finished successfully."
+    exit 0
+  fi
 fi

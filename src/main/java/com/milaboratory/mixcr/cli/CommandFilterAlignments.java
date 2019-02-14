@@ -1,11 +1,40 @@
+/*
+ * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * (here and after addressed as Inventors)
+ * All Rights Reserved
+ *
+ * Permission to use, copy, modify and distribute any part of this program for
+ * educational, research and non-profit purposes, by non-profit institutions
+ * only, without fee, and without a written agreement is hereby granted,
+ * provided that the above copyright notice, this paragraph and the following
+ * three paragraphs appear in all copies.
+ *
+ * Those desiring to incorporate this work into commercial products or use for
+ * commercial purposes should contact MiLaboratory LLC, which owns exclusive
+ * rights for distribution of this program for commercial purposes, using the
+ * following email address: licensing@milaboratory.com.
+ *
+ * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
+ * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
+ * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
+ * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
+ * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
+ * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
+ * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
+ * PATENT, TRADEMARK OR OTHER RIGHTS.
+ */
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.util.CountLimitingOutputPort;
 import cc.redberry.primitives.Filter;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
+import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.*;
@@ -30,7 +59,7 @@ import static com.milaboratory.mixcr.cli.CommandFilterAlignments.FILTER_ALIGNMEN
         sortOptions = true,
         separator = " ",
         description = "Filter alignments.")
-public class CommandFilterAlignments extends ACommandWithSmartOverwriteWithSingleInput {
+public class CommandFilterAlignments extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
     static final String FILTER_ALIGNMENTS_COMMAND_NAME = "filterAlignments";
 
     @Option(description = "Specifies immunological protein chain gene for an alignment. If many, " +
@@ -192,6 +221,14 @@ public class CommandFilterAlignments extends ACommandWithSmartOverwriteWithSingl
         }
     }
 
+    @JsonAutoDetect(
+            fieldVisibility = JsonAutoDetect.Visibility.ANY,
+            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+            getterVisibility = JsonAutoDetect.Visibility.NONE)
+    @JsonTypeInfo(
+            use = JsonTypeInfo.Id.CLASS,
+            include = JsonTypeInfo.As.PROPERTY,
+            property = "type")
     public static class FilterConfiguration implements ActionConfiguration {
         public final Chains chains;
         public final boolean chimerasOnly;

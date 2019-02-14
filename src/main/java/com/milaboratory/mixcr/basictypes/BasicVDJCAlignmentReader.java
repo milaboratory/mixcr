@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2018, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
  * (here and after addressed as Inventors)
  * All Rights Reserved
  *
@@ -120,11 +120,11 @@ public final class BasicVDJCAlignmentReader implements OutputPort<VDJCAlignments
                 if (als == null) {
                     closed = true;
                     return null;
-                } else
+                } else {
                     alignmentsIterator = als.iterator();
+                    assert alignmentsIterator.hasNext();
+                }
             }
-
-            assert alignmentsIterator.hasNext();
 
             return alignmentsIterator.next();
         } catch (IOException e) {

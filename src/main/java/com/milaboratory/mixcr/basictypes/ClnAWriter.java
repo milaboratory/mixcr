@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2017, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
  * (here and after addressed as Inventors)
  * All Rights Reserved
  *
@@ -10,8 +10,9 @@
  * three paragraphs appear in all copies.
  *
  * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact the Inventors using one of the following
- * email addresses: chudakovdm@mail.ru, chudakovdm@gmail.com
+ * commercial purposes should contact MiLaboratory LLC, which owns exclusive
+ * rights for distribution of this program for commercial purposes, using the
+ * following email address: licensing@milaboratory.com.
  *
  * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
  * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
@@ -32,6 +33,9 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.CountingOutputPort;
+import com.milaboratory.cli.AppVersionInfo;
+import com.milaboratory.cli.PipelineConfiguration;
+import com.milaboratory.cli.PipelineConfigurationWriter;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.primitivio.PipeDataInputReader;
 import com.milaboratory.primitivio.PrimitivI;
@@ -59,7 +63,8 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
         AutoCloseable,
         CanReportProgressAndStage {
     static final String MAGIC_V3 = "MiXCR.CLNA.V03";
-    static final String MAGIC = MAGIC_V3;
+    static final String MAGIC_V4 = "MiXCR.CLNA.V04";
+    static final String MAGIC = MAGIC_V4;
     static final int MAGIC_LENGTH = MAGIC.length(); //14
 
     /**
@@ -120,7 +125,7 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
 
         // Writing version information
         output.writeUTF(MiXCRVersionInfo.get()
-                .getVersionString(MiXCRVersionInfo.OutputType.ToFile));
+                .getVersionString(AppVersionInfo.OutputType.ToFile));
 
         // Writing full pipeline configuration
         output.writeObject(configuration);
@@ -289,18 +294,24 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
             List<VDJCAlignments> block = new ArrayList<>();
             // Writing alignments and writing indices
             for (VDJCAlignments alignments : CUtils.it(sortedAlignments)) {
+                boolean blockFlushed = false;
+
                 // Block is full
                 if (block.size() == AlignmentsIO.DEFAULT_ALIGNMENTS_IN_BLOCK) {
                     writer.writeAsync(block);
                     block = new ArrayList<>();
+                    blockFlushed = true;
                 }
 
                 // End of clone
                 if (currentCloneIndex != alignments.cloneIndex) {
 
-                    // This will also wait for the previous block (if async write was issued) to be flushed to the stream
-                    writer.writeSync(block);
-                    block = new ArrayList<>();
+                    if (!blockFlushed) {
+                        // This will also wait for the previous block (if async write was issued) to be flushed to the stream
+                        writer.writeSync(block);
+                        block = new ArrayList<>();
+                    } else
+                        writer.waitPreviousBlock();
 
                     ++currentCloneIndex;
                     if (currentCloneIndex != alignments.cloneIndex)

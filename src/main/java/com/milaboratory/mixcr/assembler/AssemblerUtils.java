@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2018, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
  * (here and after addressed as Inventors)
  * All Rights Reserved
  *
@@ -42,6 +42,17 @@ public class AssemblerUtils {
         return variants;
     }
 
+    /**
+     * Calculates maximal number of registered mismatches for the number of possible mismatch positions, to control the
+     * probability of non-specific mapping in cases with big number of low quality positions. Maximal probability of
+     * random mapping is defined through the numberOfVariants parameter.
+     *
+     * Basically, if the target read has only one low quality position and you found the clonotype with the different
+     * nucleotide in exactly this position, it is not the same as if the sequence had all low quality positions and you
+     * found the clonotype differing in one of them. In the first case you had only 3 possible sequences to match with,
+     * and in the second case - 3*L, where L is the length of the clonal sequence. To address for this effect, MiXCR
+     * controls the number of possible matching sequence, instead of a raw number of allowed mismatches.
+     */
     public static class MappingThresholdCalculator {
         final int[] values;
         final int oneThreshold;
@@ -61,6 +72,13 @@ public class AssemblerUtils {
             this.values = thresholds.toArray();
         }
 
+        /**
+         * Returns maximal number of allowed mismatches to keep the number of possible mapping variants lower then the
+         * value of numberOfVariants parameter, provided in constructor.
+         *
+         * @param N number of low quality positions
+         * @return
+         */
         public int getThreshold(int N) {
             if (N < values.length)
                 return values[N];

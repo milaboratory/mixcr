@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2018, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
  * (here and after addressed as Inventors)
  * All Rights Reserved
  *
@@ -29,6 +29,8 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
+import com.milaboratory.cli.BinaryFileInfo;
+import com.milaboratory.cli.BinaryFileInfoExtractor;
 import com.milaboratory.core.io.CompressionType;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.primitivio.PrimitivI;
@@ -48,15 +50,18 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 public class IOUtil {
     public static final int BEGIN_MAGIC_LENGTH = 14;
     public static final int BEGIN_MAGIC_LENGTH_SHORT = 10;
 
+    public static final String MAGIC_VDJC = "MiXCR.VDJC";
+    public static final String MAGIC_CLNS = "MiXCR.CLNS";
+    public static final String MAGIC_CLNA = "MiXCR.CLNA";
     public static final String END_MAGIC = "#MiXCR.File.End#";
     private static final byte[] END_MAGIC_BYTES = END_MAGIC.getBytes(StandardCharsets.US_ASCII);
     public static final int END_MAGIC_LENGTH = END_MAGIC_BYTES.length;
+    public static final MiXCRFileInfoExtractor fileInfoExtractorInstance = new MiXCRFileInfoExtractor();
 
     public static byte[] getEndMagicBytes() {
         return END_MAGIC_BYTES.clone();
@@ -161,91 +166,47 @@ public class IOUtil {
         else return ct.createOutputStream(os, 65536);
     }
 
-    public static MiXCRFileInfo getFileInfo(String fileName) {
-        return getFileInfo(new File(fileName));
-    }
+    public static final class MiXCRFileInfoExtractor implements BinaryFileInfoExtractor {
+        private MiXCRFileInfoExtractor() {}
 
-    public static MiXCRFileInfo getFileInfo(File file) {
-        try {
-            Path path = file.toPath();
+        @Override
+        public BinaryFileInfo getFileInfo(File file) {
+            try {
+                Path path = file.toPath();
 
-            if (!Files.isRegularFile(path))
-                return null;
-
-            try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
-                if (channel.size() < BEGIN_MAGIC_LENGTH + END_MAGIC_LENGTH)
+                if (!Files.isRegularFile(path))
                     return null;
 
-                byte[] beginMagic = new byte[BEGIN_MAGIC_LENGTH];
-                channel.read(ByteBuffer.wrap(beginMagic));
-                String magicFull = new String(beginMagic, StandardCharsets.US_ASCII);
-                String magicShort = new String(beginMagic, 0, BEGIN_MAGIC_LENGTH_SHORT, StandardCharsets.US_ASCII);
-                MiXCRFileType type;
-                switch (magicShort) {
-                    case "MiXCR.VDJC":
-                        type = MiXCRFileType.VDJCA;
-                        break;
-                    case "MiXCR.CLNS":
-                        type = MiXCRFileType.Clns;
-                        break;
-                    case "MiXCR.CLNA":
-                        type = MiXCRFileType.ClnA;
-                        break;
-                    default:
+                try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
+                    if (channel.size() < BEGIN_MAGIC_LENGTH + END_MAGIC_LENGTH)
                         return null;
+
+                    byte[] beginMagic = new byte[BEGIN_MAGIC_LENGTH];
+                    channel.read(ByteBuffer.wrap(beginMagic));
+                    String magicFull = new String(beginMagic, StandardCharsets.US_ASCII);
+                    String magicShort = new String(beginMagic, 0, BEGIN_MAGIC_LENGTH_SHORT,
+                            StandardCharsets.US_ASCII);
+
+                    if (!magicShort.equals(MAGIC_VDJC) && !magicShort.equals(MAGIC_CLNS)
+                            && !magicShort.equals(MAGIC_CLNA))
+                            return null;
+
+                    byte[] endMagic = new byte[END_MAGIC_LENGTH];
+                    channel.read(ByteBuffer.wrap(endMagic), channel.size() - END_MAGIC_LENGTH);
+                    return new MiXCRFileInfo(magicShort, magicFull, Arrays.equals(endMagic, getEndMagicBytes()));
                 }
-
-                byte[] endMagic = new byte[END_MAGIC_LENGTH];
-                channel.read(ByteBuffer.wrap(endMagic), channel.size() - END_MAGIC_LENGTH);
-                return new MiXCRFileInfo(type, magicFull, Arrays.equals(endMagic, getEndMagicBytes()));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
-    }
-
-    public enum MiXCRFileType {
-        Clns, ClnA, VDJCA
     }
 
     /**
      * Represent MiXCR binary file information (type, magic bytes, and whether it passes integrity test)
      */
-    public static final class MiXCRFileInfo {
-        /**
-         * MiXCR file type, or null if not a MiXCR file format.
-         */
-        public final MiXCRFileType fileType;
-
-        /**
-         * Full magic bytes string.
-         */
-        public final String fullMagic;
-
-        /**
-         * True if file integrity check succeeded. The command generated the file was not prematurely interrupted.
-         */
-        public final boolean valid;
-
-        public MiXCRFileInfo(MiXCRFileType fileType, String fullMagic, boolean valid) {
-            this.fileType = fileType;
-            this.fullMagic = fullMagic;
-            this.valid = valid;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof MiXCRFileInfo)) return false;
-            MiXCRFileInfo that = (MiXCRFileInfo) o;
-            return valid == that.valid &&
-                    fileType == that.fileType &&
-                    Objects.equals(fullMagic, that.fullMagic);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(fileType, fullMagic, valid);
+    public static final class MiXCRFileInfo extends BinaryFileInfo {
+        public MiXCRFileInfo(String fileType, String fullMagic, boolean valid) {
+            super(fileType, fullMagic, valid);
         }
     }
 }

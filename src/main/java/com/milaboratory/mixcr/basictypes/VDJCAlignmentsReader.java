@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2018, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
  * (here and after addressed as Inventors)
  * All Rights Reserved
  *
@@ -30,6 +30,7 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPortCloseable;
+import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.util.CanReportProgress;
@@ -46,9 +47,9 @@ import java.util.Map;
 import java.util.Objects;
 
 import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.*;
+import static com.milaboratory.mixcr.cli.SerializerCompatibilityUtil.add_v3_0_3_CustomSerializers;
 
-public final class VDJCAlignmentsReader implements
-        PipelineConfigurationReader,
+public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR implements
         OutputPortCloseable<VDJCAlignments>,
         CanReportProgress {
     private static final int DEFAULT_BUFFER_SIZE = 1048576; // 1 MB
@@ -136,10 +137,14 @@ public final class VDJCAlignmentsReader implements
 
         // SerializersManager serializersManager = input.getSerializersManager();
         switch (magicString) {
+            case MAGIC_V13:
+                add_v3_0_3_CustomSerializers(input);
+                break;
             case MAGIC:
                 break;
             default:
-                throw new RuntimeException("Unsupported file format; .vdjca file of version " + new String(magic) + " while you are running MiXCR " + MAGIC);
+                throw new RuntimeException("Unsupported file format; .vdjca file of version " + new String(magic)
+                        + " while you are running MiXCR " + MAGIC);
         }
 
         versionInfo = input.readUTF();
