@@ -17,13 +17,13 @@ To install MiXCR using Homebrew just type the following commands:
 ::
 
     brew tap milaboratory/all
-    brew install mixcr3
+    brew install mixcr
 
 To install the old MiXCR 2.x series you can use
 
 ::
 
-    brew install mixcr
+    brew install mixcr2
 
 
 Installation on Mac OS X / Linux / FreeBSD from zip distribution
