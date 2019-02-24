@@ -1,0 +1,1 @@
+Fixed `writing empty block` exception arising with empty input files and in several other situations
