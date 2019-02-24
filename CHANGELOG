@@ -1,4 +1,11 @@
 
+MiXCR 3.0.5 (25 Feb 2019)
+========================
+
+-- Fixed `writing empty block` exception arising with empty input files and in several other 
+   situations
+
+
 MiXCR 3.0.4 (15 Feb 2019)
 ========================
 
