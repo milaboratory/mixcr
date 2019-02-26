@@ -60,8 +60,8 @@ import java.util.*;
  * writeAlignmentsAndIndex() 5. close()
  */
 public final class ClnAWriter implements PipelineConfigurationWriter,
-                                         AutoCloseable,
-                                         CanReportProgressAndStage {
+        AutoCloseable,
+        CanReportProgressAndStage {
     static final String MAGIC_V3 = "MiXCR.CLNA.V03";
     static final String MAGIC_V4 = "MiXCR.CLNA.V04";
     static final String MAGIC = MAGIC_V4;
@@ -294,19 +294,17 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
             List<VDJCAlignments> block = new ArrayList<>();
             // Writing alignments and writing indices
             for (VDJCAlignments alignments : CUtils.it(sortedAlignments)) {
-                boolean blockFlushed = false;
 
                 // Block is full
                 if (block.size() == AlignmentsIO.DEFAULT_ALIGNMENTS_IN_BLOCK) {
                     writer.writeAsync(block);
                     block = new ArrayList<>();
-                    blockFlushed = true;
                 }
 
                 // End of clone
                 if (currentCloneIndex != alignments.cloneIndex) {
 
-                    if (!blockFlushed) {
+                    if (!block.isEmpty()) {
                         // This will also wait for the previous block (if async write was issued) to be flushed to the stream
                         writer.writeSync(block);
                         block = new ArrayList<>();
