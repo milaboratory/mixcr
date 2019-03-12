@@ -682,6 +682,13 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
 
         private _5EndPrimers vPrimers;
 
+        @Option(names = "--extend-alignments",
+                description = "Extend alignments",
+                required = false)
+        public void setDoExtendAlignments(boolean ignore) {
+            doNotExtendAlignments = false;
+        }
+
         @Option(names = "--5-end",
                 completionCandidates = _5EndCandidates.class,
                 description = "5'-end of the library. @|bold Possible values: ${COMPLETION-CANDIDATES}|@",
