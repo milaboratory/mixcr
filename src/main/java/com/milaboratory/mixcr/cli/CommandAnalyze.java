@@ -451,6 +451,9 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         return inheritOptionsAndValidate(ap);
     }
 
+    @Option(names = "--no-clna", description = "Use clns (moore compact) for storing clones. This option is not compatible with --contig-assembly.")
+    public boolean noClna = false;
+
     @Option(names = "--assemble",
             description = "Additional parameters for assemble step specified with double quotes (e.g --assemble \"-OassemblingFeatures=[V5UTR+L1+L2+FR1,FR3+CDR3]\" --assemble \"-ObadQualityThreshold=0\" etc.",
             arity = "1")
@@ -469,8 +472,10 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         assembleParameters.add("--report");
         assembleParameters.add(getReport());
 
-        // we always write clna
-        assembleParameters.add("--write-alignments");
+        if (!noClna)
+            assembleParameters.add("--write-alignments");
+        else if (contigAssembly)
+            throw new RuntimeException("--no-clna is not compatible with --contig-assembly");
 
         // pipeline specific parameters
         assembleParameters.addAll(this.pipelineSpecificAssembleParameters());
@@ -602,7 +607,10 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
     }
 
     public String fNameForClones() {
-        return outputNamePattern() + ".clna";
+        if (noClna)
+            return outputNamePattern() + ".clns";
+        else
+            return outputNamePattern() + ".clna";
     }
 
     public String fNameForContigs() {
