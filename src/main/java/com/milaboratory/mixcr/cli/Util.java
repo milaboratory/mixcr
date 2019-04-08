@@ -44,6 +44,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,7 +52,16 @@ public final class Util {
     private Util() {
     }
 
-    public static final DecimalFormat PERCENT_FORMAT = new DecimalFormat("#.##");
+    private static final DecimalFormatSymbols DFS;
+
+    public static final DecimalFormat PERCENT_FORMAT;
+
+    static {
+        DFS = new DecimalFormatSymbols();
+        DFS.setNaN("NaN");
+        DFS.setInfinity("Inf");
+        PERCENT_FORMAT = new DecimalFormat("#.##", DFS);
+    }
 
     public static void writeReportToStdout(Report report) {
         report.writeReport(new ReportHelper(System.out, true));

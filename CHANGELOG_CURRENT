@@ -1,0 +1,2 @@
+Additional fix for empty block exception in `assemble` action
+Special symbols for NaN in report now outputted as "NaN" string
