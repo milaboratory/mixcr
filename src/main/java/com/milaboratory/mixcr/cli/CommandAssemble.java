@@ -57,8 +57,8 @@ import static com.milaboratory.mixcr.cli.CommandAssemble.ASSEMBLE_COMMAND_NAME;
 public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
     static final String ASSEMBLE_COMMAND_NAME = "assemble";
 
-    @Option(description = "Clone assembling parameters",
-            names = {"-p", "--parameters"})
+    @Option(description = "Clone assembling parameters preset.",
+            names = {"-p", "--preset"})
     public String assemblerParametersName = "default";
 
     public int threads = Runtime.getRuntime().availableProcessors();

@@ -136,7 +136,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
     }
 
     @Option(description = "Parameters preset.",
-            names = {"-p", "--parameters"})
+            names = {"-p", "--preset"})
     public String alignerParametersName = "default";
 
     @Option(names = {"-O"}, description = "Overrides default aligner parameter values")
