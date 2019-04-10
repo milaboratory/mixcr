@@ -1,4 +1,0 @@
-Fixes V/J/C oversplitting issue in noizy data
-Additional fix for empty block exception in `assemble` action
-Fixed filtering by chain in export in analyze action with default settings
-Special symbols for NaN in report now outputted as "NaN" string
