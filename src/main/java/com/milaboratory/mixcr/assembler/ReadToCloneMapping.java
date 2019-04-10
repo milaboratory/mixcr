@@ -148,7 +148,9 @@ public final class ReadToCloneMapping {
     public static boolean isCorrect(byte mappingType) {
         return (mappingType & 0xE0) == 0
                 && (!isDropped(mappingType)
-                || mappingType == DROPPED_MASK);
+                || mappingType == DROPPED_MASK
+                || mappingType == (DROPPED_WITH_CLONE_MASK | DROPPED_MASK)
+                || mappingType == (DROPPED_WITH_CLONE_MASK | PRE_CLUSTERED_MASK | DROPPED_MASK));
     }
 
     public static MappingType getMappingType(byte mappingType) {

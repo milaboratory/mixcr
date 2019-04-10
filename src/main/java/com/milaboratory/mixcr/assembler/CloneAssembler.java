@@ -49,6 +49,7 @@ import com.milaboratory.util.Factory;
 import com.milaboratory.util.HashFunctions;
 import com.milaboratory.util.RandomUtil;
 import gnu.trove.iterator.TIntIntIterator;
+import gnu.trove.iterator.TIntIterator;
 import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntIntHashMap;
@@ -614,7 +615,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
          * Preforms pre-clustering and returns final list of clonotypes.
          */
         public List<CloneAccumulator> build() {
-            CloneAccumulator[] accs = accumulators.values().toArray(new CloneAccumulator[accumulators.size()]);
+            CloneAccumulator[] accs = accumulators.values().toArray(new CloneAccumulator[0]);
             for (CloneAccumulator acc : accs)
                 acc.calculateScores(parameters.cloneFactoryParameters);
 
@@ -638,14 +639,17 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                             vjcSignature.matchHits(accs[j])) {
                         accs[i].mergeCounts(accs[j]);
                         onPreClustered(accs[i], accs[j]);
-                        
-                        // TODO nested clusterization everywhere
+
                         preClustered.put(accs[j].getCloneIndex(), accs[i].getCloneIndex());
 
-                        TIntArrayList lst = reversePreClustered.get(accs[i].getCloneIndex());
-                        if (lst == null)
-                            reversePreClustered.put(accs[i].getCloneIndex(), lst = new TIntArrayList());
-                        lst.add(accs[j].getCloneIndex());
+                        TIntArrayList mappedClones = reversePreClustered.get(accs[i].getCloneIndex());
+                        if (mappedClones == null)
+                            reversePreClustered.put(accs[i].getCloneIndex(), mappedClones = new TIntArrayList());
+                        mappedClones.add(accs[j].getCloneIndex());
+                        // Also adding nested clones (clones that were previously clustered to current minor clone)
+                        TIntArrayList subClones = reversePreClustered.get(accs[j].getCloneIndex());
+                        if (subClones != null)
+                            mappedClones.addAll(subClones);
 
                         accs[j] = null;
                         ++deleted;
@@ -653,9 +657,14 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             }
 
             Consumer<CloneAccumulator> dropped = cloneAccumulator -> {
-
                 if (preClustered.containsKey(cloneAccumulator.getCloneIndex()))
                     preClustered.put(cloneAccumulator.getCloneIndex(), -1);
+                TIntArrayList subClones = reversePreClustered.get(cloneAccumulator.getCloneIndex());
+                if (subClones != null) {
+                    TIntIterator iterator = subClones.iterator();
+                    while (iterator.hasNext())
+                        preClustered.put(iterator.next(), -1);
+                }
                 onCloneDropped(cloneAccumulator);
             };
 
