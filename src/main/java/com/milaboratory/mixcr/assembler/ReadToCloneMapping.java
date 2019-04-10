@@ -33,7 +33,11 @@ package com.milaboratory.mixcr.assembler;
 import java.util.Comparator;
 
 public final class ReadToCloneMapping {
-    public static final byte DROPPED = 16;
+    public static final byte CLUSTERED_MASK = 1;
+    public static final byte ADDITIONAL_MAPPING_MASK = 1 << 1;
+    public static final byte DROPPED_WITH_CLONE_MASK = 1 << 2;
+    public static final byte PRE_CLUSTERED_MASK = 1 << 3;
+    public static final byte DROPPED_MASK = 1 << 4;
     final long alignmentsId;
     final int cloneIndex;
     final byte mappingType;
@@ -44,11 +48,11 @@ public final class ReadToCloneMapping {
         this.alignmentsId = alignmentsId;
         this.cloneIndex = cloneIndex;
         assert !droppedWithClone || cloneIndex < 0;
-        this.mappingType = (byte) ((clustered ? 1 : 0)
-                | (additionalMapping ? 2 : 0)
-                | (droppedWithClone ? 4 : 0)
-                | (preClustered ? 8 : 0)
-                | (cloneIndex < 0 ? 16 : 0));
+        this.mappingType = (byte) ((clustered ? CLUSTERED_MASK : 0)
+                | (additionalMapping ? ADDITIONAL_MAPPING_MASK : 0)
+                | (droppedWithClone ? DROPPED_WITH_CLONE_MASK : 0)
+                | (preClustered ? PRE_CLUSTERED_MASK : 0)
+                | (cloneIndex < 0 ? DROPPED_MASK : 0));
     }
 
     public int getCloneIndex() {
@@ -122,29 +126,31 @@ public final class ReadToCloneMapping {
     }
 
     public static boolean isClustered(byte mappingType) {
-        return (mappingType & 1) == 1;
+        return (mappingType & CLUSTERED_MASK) != 0;
     }
 
     public static boolean isMapped(byte mappingType) {
-        return (mappingType & 2) == 2;
+        return (mappingType & ADDITIONAL_MAPPING_MASK) != 0;
     }
 
     public static boolean isDroppedWithClone(byte mappingType) {
-        return (mappingType & 4) == 4;
+        return (mappingType & DROPPED_WITH_CLONE_MASK) != 0;
     }
 
     public static boolean isPreClustered(byte mappingType) {
-        return (mappingType & 8) == 8;
+        return (mappingType & PRE_CLUSTERED_MASK) != 0;
     }
 
     public static boolean isDropped(byte mappingType) {
-        return (mappingType & 16) == 16;
+        return (mappingType & DROPPED_MASK) != 0;
     }
 
     public static boolean isCorrect(byte mappingType) {
         return (mappingType & 0xE0) == 0
                 && (!isDropped(mappingType)
-                || mappingType == DROPPED);
+                || mappingType == DROPPED_MASK
+                || mappingType == (DROPPED_WITH_CLONE_MASK | DROPPED_MASK)
+                || mappingType == (DROPPED_WITH_CLONE_MASK | PRE_CLUSTERED_MASK | DROPPED_MASK));
     }
 
     public static MappingType getMappingType(byte mappingType) {
@@ -200,7 +206,7 @@ public final class ReadToCloneMapping {
             ALIGNMENTS_COMPARATOR = new AlignmentsComparator();
 
     private static final class CloneComparator implements Comparator<ReadToCloneMapping>,
-                                                          java.io.Serializable {
+            java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
         private CloneComparator() {
@@ -223,7 +229,7 @@ public final class ReadToCloneMapping {
     }
 
     private static final class AlignmentsComparator implements Comparator<ReadToCloneMapping>,
-                                                               java.io.Serializable {
+            java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
         private AlignmentsComparator() {

@@ -135,8 +135,14 @@ public final class AlignmentsIO {
      */
     public static void writeBlock(Collection<VDJCAlignments> alignments, PrimitivOState outputState,
                                   LZ4Compressor compressor, XXHash32 xxHash32, BlockBuffers buffers) {
-        if (alignments.size() == 0)
-            throw new IllegalArgumentException("Writing empty block.");
+        // Assert
+        assert alignments.size() != 0;
+        boolean assertOn = false;
+        assert assertOn = true;
+        //noinspection ConstantConditions
+        if (!assertOn && alignments.size() == 0)
+            System.err.println("Writing empty block in AlignmentsIO.");
+
         buffers.ensureRawBufferSize(alignments.size() * AVERAGE_ALIGNMENT_SIZE);
         ByteArrayDataOutput dataOutput = new ByteArrayDataOutput(buffers.rawBuffer);
 

@@ -115,8 +115,9 @@ provided that the above copyright notice, this paragraph and the following
 three paragraphs appear in all copies.
 
 Those desiring to incorporate this work into commercial products or use for
-commercial purposes should contact the Inventors using one of the following
-email addresses: chudakovdm@mail.ru, chudakovdm@gmail.com
+commercial purposes should contact MiLaboratory LLC, which owns exclusive
+rights for distribution of this program for commercial purposes, using the
+following email address: licensing@milaboratory.com.
 
 IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
 SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,

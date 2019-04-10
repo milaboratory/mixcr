@@ -529,21 +529,24 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
     public List<String> exportParameters = new ArrayList<>();
 
     /** Build parameters for export */
-    public final CommandExport.CommandExportClones mkExport(String input, String output) {
+    public final CommandExport.CommandExportClones mkExport(String input, String output, String chains) {
         List<String> exportParameters = new ArrayList<>();
-        // add all override parameters
-        exportParameters.addAll(this.exportParameters);
 
-        if (exportGermline)
-            exportParameters.add("-p fullImputed");
+        exportParameters.add("--force-overwrite");
+        exportParameters.add("--chains");
+        exportParameters.add(chains);
+
         if (onlyProductive) {
             exportParameters.add("--filter-out-of-frames");
             exportParameters.add("--filter-stops");
         }
 
-        exportParameters.add("--force-overwrite");
-        exportParameters.add("--chains");
-        exportParameters.add(chains.toString());
+        if (exportGermline)
+            exportParameters.add("-p fullImputed");
+        // TODO ? else exportParameters.add("-p full"); // for the consistent additional parameter behaviour
+
+        // add all override parameters
+        exportParameters.addAll(this.exportParameters);
 
         exportParameters.add(input);
         exportParameters.add(output);
@@ -658,13 +661,10 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
             // --- Running export
             if (!chains.equals(Chains.ALL))
                 for (String chain : chains)
-                    mkExport(fileWithClones, fNameForExportClones(chain)).run();
+                    mkExport(fileWithClones, fNameForExportClones(chain), chain).run();
             else
-                for (String chain : new String[]{"ALL", "TRA", "TRB", "TRG", "TRD", "IGH", "IGK", "IGL"}) {
-                    CommandExport.CommandExportClones export = mkExport(fileWithClones, fNameForExportClones(chain));
-                    export.chains = chain;
-                    export.run();
-                }
+                for (String chain : new String[]{"ALL", "TRA", "TRB", "TRG", "TRD", "IGH", "IGK", "IGL"})
+                    mkExport(fileWithClones, fNameForExportClones(chain), chain).run();
     }
 
 

@@ -49,8 +49,11 @@ import com.milaboratory.util.Factory;
 import com.milaboratory.util.HashFunctions;
 import com.milaboratory.util.RandomUtil;
 import gnu.trove.iterator.TIntIntIterator;
+import gnu.trove.iterator.TIntIterator;
 import gnu.trove.iterator.TObjectFloatIterator;
+import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntIntHashMap;
+import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.map.hash.TObjectFloatHashMap;
 import gnu.trove.procedure.TObjectProcedure;
 import io.repseq.core.*;
@@ -59,6 +62,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 
 import static io.repseq.core.GeneFeature.*;
 
@@ -393,31 +397,19 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             }
 
             if (badPoints > 0) {
-                // Has some number of bad points but not greater then maxBadPointsToMap
+                // Has number of bad points but not greater then maxBadPointsToMap
                 log(new AssemblerEvent(input.getAlignmentsIndex(), AssemblerEvent.DEFERRED));
                 onAlignmentDeferred(input);
                 return;
             }
 
-            //Getting or creating accumulator from map
-            CloneAccumulatorContainer container = clones.get(target);
-            if (container == null) {
-                //Creating accumulator
-                CloneAccumulatorContainer temp = new CloneAccumulatorContainer();
-                //Trying to put this new clone to map
-                container = clones.putIfAbsent(target, temp);
-                //Assign cloneIndex for the newly created clone only if it was successfully put into map
-                if (container == null) {
-                    //Executed only once for newly created clone
-                    container = temp;
-                }
-                //accumulator variable contains correct clone from map
-            }
-
+            // Getting or creating accumulator container for a given sequence
+            CloneAccumulatorContainer container = clones.computeIfAbsent(target, t -> new CloneAccumulatorContainer());
+            // Preforming alignment accumulation
             CloneAccumulator acc = container.accumulate(target, input, false);
-            //Logging assembler events for subsequent index creation and mapping filtering
+            // Logging assembler events for subsequent index creation and mapping filtering
             log(new AssemblerEvent(input.getAlignmentsIndex(), acc.getCloneIndex()));
-            //Incrementing corresponding counter
+            // Incrementing corresponding counter
             successfullyAssembledAlignments.incrementAndGet();
             onAlignmentAddedToClone(input, acc);
         }
@@ -623,11 +615,16 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
          * Preforms pre-clustering and returns final list of clonotypes.
          */
         public List<CloneAccumulator> build() {
-            CloneAccumulator[] accs = accumulators.values().toArray(new CloneAccumulator[accumulators.size()]);
+            CloneAccumulator[] accs = accumulators.values().toArray(new CloneAccumulator[0]);
             for (CloneAccumulator acc : accs)
                 acc.calculateScores(parameters.cloneFactoryParameters);
+
+            // Stores list of clonotypes clustered into specific clonotype
+            final TIntObjectHashMap<TIntArrayList> reversePreClustered = new TIntObjectHashMap<>();
+
             Arrays.sort(accs, CLONE_ACCUMULATOR_COMPARATOR);
             int deleted = 0;
+
             for (int i = 0; i < accs.length - 1; i++) {
                 // null marks clustered clonotypes
                 if (accs[i] == null)
@@ -642,10 +639,67 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                             vjcSignature.matchHits(accs[j])) {
                         accs[i].mergeCounts(accs[j]);
                         onPreClustered(accs[i], accs[j]);
+
                         preClustered.put(accs[j].getCloneIndex(), accs[i].getCloneIndex());
+
+                        TIntArrayList mappedClones = reversePreClustered.get(accs[i].getCloneIndex());
+                        if (mappedClones == null)
+                            reversePreClustered.put(accs[i].getCloneIndex(), mappedClones = new TIntArrayList());
+                        mappedClones.add(accs[j].getCloneIndex());
+                        // Also adding nested clones (clones that were previously clustered to current minor clone)
+                        TIntArrayList subClones = reversePreClustered.get(accs[j].getCloneIndex());
+                        if (subClones != null)
+                            mappedClones.addAll(subClones);
+
                         accs[j] = null;
                         ++deleted;
                     }
+            }
+
+            Consumer<CloneAccumulator> dropped = cloneAccumulator -> {
+                if (preClustered.containsKey(cloneAccumulator.getCloneIndex()))
+                    preClustered.put(cloneAccumulator.getCloneIndex(), -1);
+                TIntArrayList subClones = reversePreClustered.get(cloneAccumulator.getCloneIndex());
+                if (subClones != null) {
+                    TIntIterator iterator = subClones.iterator();
+                    while (iterator.hasNext())
+                        preClustered.put(iterator.next(), -1);
+                }
+                onCloneDropped(cloneAccumulator);
+            };
+
+            // Score filtering step
+
+            // Calculation
+            float[] maxScores = new float[3];
+            for (CloneAccumulator acc : accs) {
+                if (acc == null)
+                    continue;
+                for (int i = 0; i < 3; i++) {
+                    GeneType gt = GeneType.VJC_REFERENCE[i];
+                    maxScores[i] =
+                            parameters.getSeparateBy(gt)
+                                    ? Math.max(maxScores[i], acc.getBestScore(gt))
+                                    : 0;
+                }
+            }
+
+            for (int i = 0; i < 3; i++)
+                maxScores[i] /= parameters.preClusteringScoreFilteringRatio;
+
+            // Filtering low score clonotypes
+            for (int i = 0; i < accs.length - 1; i++) {
+                // null marks clustered clonotypes
+                if (accs[i] == null)
+                    continue;
+
+                for (int j = 0; j < 3; j++) {
+                    if (accs[i].getBestScore(GeneType.VJC_REFERENCE[j]) < maxScores[j]) {
+                        dropped.accept(accs[i]);
+                        accs[i] = null;
+                        break;
+                    }
+                }
             }
 
             // Filtering low quality clonotypes
@@ -661,7 +715,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
 
                 if (acc.getSequence().getConcatenated().getQuality().minValue() <
                         parameters.minimalQuality) {
-                    onCloneDropped(acc);
+                    dropped.accept(acc);
                     continue out;
                 }
 

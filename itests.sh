@@ -48,7 +48,7 @@ case $os in
     ;;
 esac
 
-tests=("case1" "case2" "case3" "case4" "case5" "case6")
+tests=("case1" "case2" "case3" "case4" "case5" "case6" "case7")
 
 create_standard_results=false
 run_tests=false

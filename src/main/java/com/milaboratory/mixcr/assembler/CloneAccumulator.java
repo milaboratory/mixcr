@@ -82,6 +82,20 @@ public final class CloneAccumulator {
         initialCoreCount = coreCount;
     }
 
+    public float getBestScore(GeneType geneType) {
+        TObjectFloatHashMap<VDJCGeneId> scores = geneScores.get(geneType);
+        if (scores == null)
+            return 0;
+        float maxScore = 0;
+        TObjectFloatIterator<VDJCGeneId> iterator = scores.iterator();
+        while (iterator.hasNext()) {
+            iterator.advance();
+            if (maxScore < iterator.value())
+                maxScore = iterator.value();
+        }
+        return maxScore;
+    }
+
     public VDJCGeneId getBestGene(GeneType geneType) {
         TObjectFloatHashMap<VDJCGeneId> scores = geneScores.get(geneType);
         if (scores == null)

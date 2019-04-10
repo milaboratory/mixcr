@@ -37,6 +37,7 @@ import com.milaboratory.core.sequence.quality.QualityAggregationType;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.annotations.Serializable;
 import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
 
 import java.util.Arrays;
 import java.util.regex.Matcher;
@@ -54,6 +55,7 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
     CloneFactoryParameters cloneFactoryParameters;
     boolean separateByV, separateByJ, separateByC;
     double maximalPreClusteringRatio;
+    double preClusteringScoreFilteringRatio;
     boolean addReadsCountOnClustering;
     byte badQualityThreshold;
     double maxBadPointsPercent;
@@ -72,6 +74,7 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
                                     @JsonProperty("separateByJ") boolean separateByJ,
                                     @JsonProperty("separateByC") boolean separateByC,
                                     @JsonProperty("maximalPreClusteringRatio") double maximalPreClusteringRatio,
+                                    @JsonProperty("preClusteringScoreFilteringRatio") double preClusteringScoreFilteringRatio,
                                     @JsonProperty("addReadsCountOnClustering") boolean addReadsCountOnClustering,
                                     @JsonProperty("badQualityThreshold") byte badQualityThreshold,
                                     @JsonProperty("maxBadPointsPercent") double maxBadPointsPercent,
@@ -86,6 +89,7 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
         this.separateByJ = separateByJ;
         this.separateByC = separateByC;
         this.maximalPreClusteringRatio = maximalPreClusteringRatio;
+        this.preClusteringScoreFilteringRatio = preClusteringScoreFilteringRatio;
         this.addReadsCountOnClustering = addReadsCountOnClustering;
         this.badQualityThreshold = badQualityThreshold;
         this.maxBadPointsPercent = maxBadPointsPercent;
@@ -169,6 +173,19 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
         return separateByC;
     }
 
+    public boolean getSeparateBy(GeneType gt) {
+        switch (gt) {
+            case Variable:
+                return getSeparateByV();
+            case Joining:
+                return getSeparateByJ();
+            case Constant:
+                return getSeparateByC();
+            default:
+                throw new IllegalArgumentException();
+        }
+    }
+
     public double getMaximalPreClusteringRatio() {
         return maximalPreClusteringRatio;
     }
@@ -242,6 +259,12 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
         return this;
     }
 
+    public CloneAssemblerParameters setPreClusteringScoreFilteringRatio(double preClusteringScoreFilteringRatio) {
+        this.preClusteringScoreFilteringRatio = preClusteringScoreFilteringRatio;
+        return this;
+    }
+
+
     public CloneAssemblerParameters setAddReadsCountOnClustering(boolean addReadsCountOnClustering) {
         this.addReadsCountOnClustering = addReadsCountOnClustering;
         return this;
@@ -266,7 +289,7 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
                 qualityAggregationType,
                 cloneClusteringParameters == null ? null : cloneClusteringParameters.clone(),
                 cloneFactoryParameters.clone(), separateByV, separateByJ, separateByC,
-                maximalPreClusteringRatio, addReadsCountOnClustering, badQualityThreshold, maxBadPointsPercent,
+                maximalPreClusteringRatio, preClusteringScoreFilteringRatio, addReadsCountOnClustering, badQualityThreshold, maxBadPointsPercent,
                 mappingThreshold, minimalQuality);
     }
 
@@ -283,6 +306,7 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
         if (separateByJ != that.separateByJ) return false;
         if (separateByC != that.separateByC) return false;
         if (Double.compare(that.maximalPreClusteringRatio, maximalPreClusteringRatio) != 0) return false;
+        if (Double.compare(that.preClusteringScoreFilteringRatio, preClusteringScoreFilteringRatio) != 0) return false;
         if (addReadsCountOnClustering != that.addReadsCountOnClustering) return false;
         if (badQualityThreshold != that.badQualityThreshold) return false;
         if (Double.compare(that.maxBadPointsPercent, maxBadPointsPercent) != 0) return false;
@@ -311,6 +335,8 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
         result = 31 * result + (separateByJ ? 1 : 0);
         result = 31 * result + (separateByC ? 1 : 0);
         temp = Double.doubleToLongBits(maximalPreClusteringRatio);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(preClusteringScoreFilteringRatio);
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         result = 31 * result + (addReadsCountOnClustering ? 1 : 0);
         result = 31 * result + (int) badQualityThreshold;
