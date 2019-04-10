@@ -79,7 +79,7 @@ public final class VDJCAlignments extends VDJCObject {
                           SequenceHistory[] history,
                           SequenceRead[] originalReads) {
         this(alignmentsIndex, hits, targets, history, originalReads,
-                ReadToCloneMapping.DROPPED, -1);
+                ReadToCloneMapping.DROPPED_MASK, -1);
     }
 
     public VDJCAlignments(EnumMap<GeneType, VDJCHit[]> hits,
