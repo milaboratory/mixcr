@@ -393,31 +393,19 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             }
 
             if (badPoints > 0) {
-                // Has some number of bad points but not greater then maxBadPointsToMap
+                // Has number of bad points but not greater then maxBadPointsToMap
                 log(new AssemblerEvent(input.getAlignmentsIndex(), AssemblerEvent.DEFERRED));
                 onAlignmentDeferred(input);
                 return;
             }
 
-            //Getting or creating accumulator from map
-            CloneAccumulatorContainer container = clones.get(target);
-            if (container == null) {
-                //Creating accumulator
-                CloneAccumulatorContainer temp = new CloneAccumulatorContainer();
-                //Trying to put this new clone to map
-                container = clones.putIfAbsent(target, temp);
-                //Assign cloneIndex for the newly created clone only if it was successfully put into map
-                if (container == null) {
-                    //Executed only once for newly created clone
-                    container = temp;
-                }
-                //accumulator variable contains correct clone from map
-            }
-
+            // Getting or creating accumulator container for a given sequence
+            CloneAccumulatorContainer container = clones.computeIfAbsent(target, t -> new CloneAccumulatorContainer());
+            // Preforming alignment accumulation
             CloneAccumulator acc = container.accumulate(target, input, false);
-            //Logging assembler events for subsequent index creation and mapping filtering
+            // Logging assembler events for subsequent index creation and mapping filtering
             log(new AssemblerEvent(input.getAlignmentsIndex(), acc.getCloneIndex()));
-            //Incrementing corresponding counter
+            // Incrementing corresponding counter
             successfullyAssembledAlignments.incrementAndGet();
             onAlignmentAddedToClone(input, acc);
         }
@@ -628,6 +616,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 acc.calculateScores(parameters.cloneFactoryParameters);
             Arrays.sort(accs, CLONE_ACCUMULATOR_COMPARATOR);
             int deleted = 0;
+
             for (int i = 0; i < accs.length - 1; i++) {
                 // null marks clustered clonotypes
                 if (accs[i] == null)
@@ -646,6 +635,41 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                         accs[j] = null;
                         ++deleted;
                     }
+            }
+
+            // Score filtering step
+
+            // Calculation
+            float[] maxScores = new float[3];
+            for (CloneAccumulator acc : accs) {
+                if (acc == null)
+                    continue;
+                for (int i = 0; i < 3; i++) {
+                    GeneType gt = GeneType.VJC_REFERENCE[i];
+                    maxScores[i] =
+                            parameters.getSeparateBy(gt)
+                                    ? Math.max(maxScores[i], acc.getBestScore(gt))
+                                    : 0;
+                }
+            }
+
+            for (int i = 0; i < 3; i++) {
+                maxScores[i] /= parameters.preClusteringScoreFilteringRatio;
+            }
+
+            // Filtering low score clonotypes
+            for (int i = 0; i < accs.length - 1; i++) {
+                // null marks clustered clonotypes
+                if (accs[i] == null)
+                    continue;
+
+                for (int j = 0; j < 3; j++) {
+                    if (accs[i].getBestScore(GeneType.VJC_REFERENCE[j]) < maxScores[j]) {
+                        onCloneDropped(accs[i]);
+                        accs[i] = null;
+                        break;
+                    }
+                }
             }
 
             // Filtering low quality clonotypes
