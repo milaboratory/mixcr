@@ -50,9 +50,8 @@ import static com.milaboratory.mixcr.basictypes.AlignmentsIO.DEFAULT_ALIGNMENTS_
 
 public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     public static final int DEFAULT_ENCODER_THREADS = 3;
-    static final String MAGIC_V13 = "MiXCR.VDJC.V13";
-    static final String MAGIC_V14 = "MiXCR.VDJC.V14";
-    static final String MAGIC = MAGIC_V14;
+    static final String MAGIC_V15 = "MiXCR.VDJC.V15";
+    static final String MAGIC = MAGIC_V15;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
 

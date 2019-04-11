@@ -62,9 +62,8 @@ import java.util.*;
 public final class ClnAWriter implements PipelineConfigurationWriter,
         AutoCloseable,
         CanReportProgressAndStage {
-    static final String MAGIC_V3 = "MiXCR.CLNA.V03";
-    static final String MAGIC_V4 = "MiXCR.CLNA.V04";
-    static final String MAGIC = MAGIC_V4;
+    static final String MAGIC_V5 = "MiXCR.CLNA.V05";
+    static final String MAGIC = MAGIC_V5;
     static final int MAGIC_LENGTH = MAGIC.length(); //14
 
     /**

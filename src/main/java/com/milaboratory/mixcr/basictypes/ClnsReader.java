@@ -90,9 +90,6 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Auto
         // SerializersManager serializersManager = input.getSerializersManager();
 
         switch (magicString) {
-            case MAGIC_V7:
-                add_v3_0_3_CustomSerializers(input);
-                break;
             case MAGIC:
                 break;
             default:

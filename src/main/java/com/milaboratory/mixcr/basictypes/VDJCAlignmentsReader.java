@@ -137,9 +137,6 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
 
         // SerializersManager serializersManager = input.getSerializersManager();
         switch (magicString) {
-            case MAGIC_V13:
-                add_v3_0_3_CustomSerializers(input);
-                break;
             case MAGIC:
                 break;
             default:

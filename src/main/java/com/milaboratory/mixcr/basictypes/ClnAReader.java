@@ -142,9 +142,6 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
 
         input = new PrimitivI(new InputDataStream(indexBegin, fSize - 8));
         switch (magicString) {
-            case ClnAWriter.MAGIC_V3:
-                add_v3_0_3_CustomSerializers(input);
-                break;
             case ClnAWriter.MAGIC:
                 break;
             default:
@@ -167,9 +164,6 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
         input = new PrimitivI(new InputDataStream(ClnAWriter.MAGIC_LENGTH + 4,
                 firstClonePosition));
         switch (magicString) {
-            case ClnAWriter.MAGIC_V3:
-                add_v3_0_3_CustomSerializers(input);
-                break;
             case ClnAWriter.MAGIC:
                 break;
             default:

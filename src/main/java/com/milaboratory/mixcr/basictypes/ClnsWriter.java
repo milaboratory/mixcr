@@ -50,9 +50,8 @@ import java.nio.charset.StandardCharsets;
 public class ClnsWriter implements PipelineConfigurationWriter,
         CanReportProgressAndStage,
         Closeable {
-    static final String MAGIC_V7 = "MiXCR.CLNS.V07";
-    static final String MAGIC_V8 = "MiXCR.CLNS.V08";
-    static final String MAGIC = MAGIC_V8;
+    static final String MAGIC_V9 = "MiXCR.CLNS.V09";
+    static final String MAGIC = MAGIC_V9;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
 
