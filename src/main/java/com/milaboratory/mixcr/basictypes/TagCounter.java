@@ -26,6 +26,11 @@ public final class TagCounter {
     }
 
     @Override
+    public String toString() {
+        return tags.toString();
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

@@ -349,7 +349,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
     public final AlignerReport report = new AlignerReport();
 
     public TagTuple tags(SequenceRead r) {
-        return TagTuple.EMPTY;
+        return new TagTuple(r.getRead(0).getDescription().substring(0, 5) + (r.hashCode() % 10));
     }
 
     @Override

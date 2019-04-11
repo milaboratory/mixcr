@@ -88,6 +88,7 @@ class IO {
             output.writeInt(object.tags.size());
             TObjectDoubleIterator<TagTuple> it = object.tags.iterator();
             while (it.hasNext()) {
+                it.advance();
                 output.writeObject(it.key().tags);
                 output.writeDouble(it.value());
             }

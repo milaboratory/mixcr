@@ -678,6 +678,13 @@ public final class FieldExtractors {
                 }
             });
 
+            descriptorsList.add(new PL_O("-tags", "All tags with counts", "All tags", "allTaqs") {
+                @Override
+                protected String extract(VDJCObject object) {
+                    return object.getTagCounter().toString();
+                }
+            });
+
             descriptors = descriptorsList.toArray(new Field[descriptorsList.size()]);
         }
 

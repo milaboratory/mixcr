@@ -10,7 +10,7 @@ public final class TagTuple {
     public final String[] tags;
     private transient final int hash;
 
-    public TagTuple(String[] tags) {
+    public TagTuple(String... tags) {
         this.tags = tags;
         this.hash = Arrays.hashCode(tags);
     }
@@ -26,5 +26,10 @@ public final class TagTuple {
     @Override
     public int hashCode() {
         return hash;
+    }
+
+    @Override
+    public String toString() {
+        return String.join("+", tags);
     }
 }
