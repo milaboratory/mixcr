@@ -40,6 +40,7 @@ import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.SequenceHistory;
+import com.milaboratory.mixcr.basictypes.TagCounter;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.util.BitArray;
@@ -429,7 +430,7 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
             if (cHits != null)
                 hits.put(GeneType.Constant, cHits);
 
-            return new VDJCAlignments(hits, target.targets,
+            return new VDJCAlignments(hits, TagCounter.EMPTY, target.targets,
                     new SequenceHistory[]{
                             new SequenceHistory.RawSequence(inputId, (byte) 0, target.getRCStateOfTarget(0), target.targets[0].size())},
                     parameters.isSaveOriginalReads() ? new SequenceRead[]{input} : null);

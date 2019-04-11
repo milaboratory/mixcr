@@ -44,14 +44,20 @@ public class VDJCObject {
     protected final EnumMap<GeneType, VDJCHit[]> hits;
     protected volatile EnumMap<GeneType, Chains> allChains;
     protected VDJCPartitionedSequence[] partitionedTargets;
+    protected final TagCounter tagCounter;
 
-    public VDJCObject(EnumMap<GeneType, VDJCHit[]> hits, NSequenceWithQuality... targets) {
+    public VDJCObject(EnumMap<GeneType, VDJCHit[]> hits, TagCounter tagCounter, NSequenceWithQuality... targets) {
         this.targets = targets;
         this.hits = hits;
+        this.tagCounter = tagCounter;
 
         // Sorting hits
         for (VDJCHit[] h : hits.values())
             Arrays.sort(h);
+    }
+
+    public TagCounter getTagCounter() {
+        return tagCounter;
     }
 
     protected static EnumMap<GeneType, VDJCHit[]> createHits(VDJCHit[] vHits, VDJCHit[] dHits,
@@ -725,6 +731,7 @@ public class VDJCObject {
                 return false;
         }
 
+        if (!tagCounter.equals(that.tagCounter)) return false;
         if (!Arrays.equals(targets, that.targets)) return false;
 
         return true;
@@ -734,6 +741,7 @@ public class VDJCObject {
     public int hashCode() {
         int result = Arrays.hashCode(targets);
         result = 31 * result + hits.hashCode();
+        result = 29 * result + tagCounter.hashCode();
         return result;
     }
 }

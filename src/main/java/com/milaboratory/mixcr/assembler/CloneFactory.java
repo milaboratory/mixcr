@@ -34,6 +34,7 @@ import com.milaboratory.core.alignment.*;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.basictypes.TagCounter;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.vdjaligners.SingleDAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
@@ -83,6 +84,7 @@ public final class CloneFactory {
 
     public Clone create(int id, double count,
                         EnumMap<GeneType, TObjectFloatHashMap<VDJCGeneId>> geneScores,
+                        TagCounter tagCounter,
                         NSequenceWithQuality[] targets) {
         EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
         for (GeneType geneType : GeneType.VJC_REFERENCE) {
@@ -247,11 +249,11 @@ public final class CloneFactory {
         else
             hits.put(GeneType.Diversity, new VDJCHit[0]);
 
-        return new Clone(targets, hits, count, id);
+        return new Clone(targets, hits, tagCounter, count, id);
     }
 
     public Clone create(int id, CloneAccumulator accumulator) {
-        return create(id, accumulator.getCount(), accumulator.geneScores, accumulator.getSequence().sequences);
+        return create(id, accumulator.getCount(), accumulator.geneScores, accumulator.tagBuilder.createAndDestroy(), accumulator.getSequence().sequences);
     }
 
     private static boolean containsD(GeneFeature feature) {

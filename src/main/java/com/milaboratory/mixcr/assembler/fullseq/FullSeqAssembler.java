@@ -64,6 +64,7 @@ import static io.repseq.core.GeneType.Joining;
 import static io.repseq.core.GeneType.Variable;
 
 /**
+ *
  */
 public final class FullSeqAssembler {
     private static int ABSENT_PACKED_VARIANT_INFO = -1;
@@ -749,7 +750,11 @@ public final class FullSeqAssembler {
 
         NSequenceWithQuality assemblingFeatureSeq = targets.sequences[targets.assemblingFeatureTargetId]
                 .getRange(targets.assemblingFeatureOffset, targets.assemblingFeatureOffset + targets.assemblingFeatureLength);
-        Clone clone = cloneFactory.create(0, count, geneScores, new NSequenceWithQuality[]{assemblingFeatureSeq});
+
+        if (this.clone.getCount() != count && !this.clone.getTagCounter().isEmpty())
+            throw new IllegalArgumentException("tagged data is not allowed in combination with non-null subCloningRegion"); // assert
+
+        Clone clone = cloneFactory.create(0, count, geneScores, this.clone.getTagCounter(), new NSequenceWithQuality[]{assemblingFeatureSeq});
 
         vTopHitAlignments[targets.assemblingFeatureTargetId] =
                 mergeTwoAlignments(
@@ -772,8 +777,7 @@ public final class FullSeqAssembler {
         tmp[0] = substituteAlignments(tmp[0], vTopHitAlignments);
         tmp = hits.get(Joining);
         tmp[0] = substituteAlignments(tmp[0], jTopHitAlignments);
-
-        return new Clone(targets.sequences, hits, count, 0);
+        return new Clone(targets.sequences, hits, this.clone.getTagCounter(), count, 0);
     }
 
     static final class AlignersCache {
@@ -1518,6 +1522,6 @@ public final class FullSeqAssembler {
     }
 
     private boolean inSplitRegion(int p) {
-        return splitRegion == null || splitRegion.contains(p);
+        return splitRegion != null && splitRegion.contains(p);
     }
 }

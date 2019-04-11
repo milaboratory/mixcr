@@ -44,10 +44,7 @@ import com.milaboratory.core.io.sequence.SingleReadImpl;
 import com.milaboratory.core.merger.MergerParameters;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.basictypes.HasGene;
-import com.milaboratory.mixcr.basictypes.SequenceHistory;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.partialassembler.AlignedTarget;
 import com.milaboratory.mixcr.partialassembler.TargetMerger;
 import com.milaboratory.util.BitArray;
@@ -701,7 +698,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
             VDJCHit[] vHits = convert(this.vHits, GeneType.Variable, aligner);
             VDJCHit[] jHits = convert(this.jHits, GeneType.Joining, aligner);
 
-            return new VDJCAlignments(vHits, dHits, jHits, cHits, target.targets,
+            return new VDJCAlignments(vHits, dHits, jHits, cHits, TagCounter.EMPTY, target.targets,
                     SequenceHistory.RawSequence.of(readId, target), aligner.parameters.isSaveOriginalReads() ? new SequenceRead[]{originalRead} : null);
         }
 

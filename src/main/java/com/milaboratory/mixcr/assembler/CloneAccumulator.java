@@ -37,6 +37,7 @@ import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.core.sequence.quality.QualityAggregationType;
 import com.milaboratory.core.sequence.quality.QualityAggregator;
 import com.milaboratory.mixcr.basictypes.ClonalSequence;
+import com.milaboratory.mixcr.basictypes.TagCounterBuilder;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import gnu.trove.iterator.TObjectFloatIterator;
@@ -53,6 +54,7 @@ public final class CloneAccumulator {
     private long coreCount = 0, mappedCount = 0, initialCoreCount = -1;
     private volatile int cloneIndex = -1;
     final Range[] nRegions;
+    final TagCounterBuilder tagBuilder = new TagCounterBuilder();
 
     public CloneAccumulator(ClonalSequence sequence, Range[] nRegions, QualityAggregationType qualityAggregationType) {
         this.sequence = sequence;
@@ -177,11 +179,14 @@ public final class CloneAccumulator {
     public void mergeCounts(CloneAccumulator acc) {
         coreCount += acc.coreCount;
         mappedCount += acc.mappedCount;
+        tagBuilder.add(acc.tagBuilder);
     }
 
     public synchronized void accumulate(ClonalSequence data, VDJCAlignments alignment, boolean mapped) {
         if (!mapped) { // Core sequence accumulation
             coreCount += alignment.getNumberOfReads();
+
+            tagBuilder.add(alignment.getTagCounter());
 
             // Accumulate information about V-D-J alignments only for strictly clustered reads
             // (only for core clonotypes members)

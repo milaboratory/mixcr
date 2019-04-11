@@ -42,21 +42,21 @@ public final class Clone extends VDJCObject {
     final int id;
     CloneSet parent = null;
 
-    public Clone(NSequenceWithQuality[] targets, EnumMap<GeneType, VDJCHit[]> hits, double count, int id) {
-        super(hits, targets);
+    public Clone(NSequenceWithQuality[] targets, EnumMap<GeneType, VDJCHit[]> hits, TagCounter tagCounter, double count, int id) {
+        super(hits, tagCounter, targets);
         this.count = count;
         this.id = id;
     }
 
     public Clone setId(int id) {
-        Clone r = new Clone(targets, hits, count, id);
+        Clone r = new Clone(targets, hits, tagCounter, count, id);
         r.setParentCloneSet(parent);
         return r;
     }
 
     /** Returns new instance with parent clone set set to null */
     public Clone resetParentCloneSet() {
-        return new Clone(targets, hits, count, id);
+        return new Clone(targets, hits, tagCounter, count, id);
     }
 
     public void setParentCloneSet(CloneSet set) {

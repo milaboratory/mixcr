@@ -44,6 +44,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequencesUtils;
 import com.milaboratory.mixcr.basictypes.SequenceHistory;
 import com.milaboratory.mixcr.basictypes.SequenceHistory.OverlapType;
+import com.milaboratory.mixcr.basictypes.TagCounterBuilder;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.vdjaligners.KGeneAlignmentParameters;
@@ -111,6 +112,7 @@ public class TargetMerger {
 
 
         VDJCAlignments alignments = new VDJCAlignments(result,
+                TagCounterBuilder.merge(targetLeft.getAlignments().getTagCounter(), targetRight.getAlignments().getTagCounter()),
                 new NSequenceWithQuality[]{mergedTarget},
                 new SequenceHistory[]{
                         new SequenceHistory.Merge(overlapType, targetLeft.getHistory(), targetRight.getHistory(), offset, nMismatches)

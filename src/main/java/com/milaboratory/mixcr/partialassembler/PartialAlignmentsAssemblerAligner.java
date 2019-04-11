@@ -38,6 +38,7 @@ import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.core.alignment.kaligner2.KAlignerParameters2;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.basictypes.TagCounter;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerAbstract;
@@ -77,7 +78,7 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "Duplicates"})
     protected VDJCAlignmentResult<VDJCMultiRead> process0(VDJCMultiRead input) {
         final int nReads = input.numberOfReads();
         EnumMap<GeneType, VDJCHit[]> vdjcHits = new EnumMap<>(GeneType.class);
@@ -308,6 +309,7 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
                 dResult,
                 jResult,
                 cutRelativeScore(vdjcHits.get(GeneType.Constant), parameters.getCAlignerParameters().getRelativeMinScore(), parameters.getMaxHits()),
+                TagCounter.EMPTY,
                 targets,
                 input.getHistory(),
                 input.getOriginalReads()

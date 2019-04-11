@@ -37,7 +37,10 @@ import cc.redberry.pipe.util.Chunk;
 import cc.redberry.pipe.util.CountLimitingOutputPort;
 import cc.redberry.pipe.util.OrderedOutputPort;
 import cc.redberry.pipe.util.StatusReporter;
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.core.PairedEndReadsLayout;
@@ -345,6 +348,10 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
     /** Alignment report */
     public final AlignerReport report = new AlignerReport();
 
+    public TagTuple tags(SequenceRead r) {
+        return TagTuple.EMPTY;
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     public void run1() throws Exception {
@@ -515,6 +522,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                     {
                         Target target = readsLayout.createTargets(read)[0];
                         alignment = new VDJCAlignments(emptyHits,
+                                TagCounter.EMPTY,
                                 target.targets,
                                 SequenceHistory.RawSequence.of(read.getId(), target),
                                 alignerParameters.isSaveOriginalReads() ? new SequenceRead[]{read} : null);
@@ -524,6 +532,8 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                         continue;
                     }
                 }
+
+                alignment = alignment.setTagCounter(new TagCounter(tags(read)));
 
                 if (alignment.isChimera())
                     report.onChimera();

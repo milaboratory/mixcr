@@ -37,6 +37,9 @@ import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.Serializer;
+import gnu.trove.impl.Constants;
+import gnu.trove.iterator.TObjectDoubleIterator;
+import gnu.trove.map.hash.TObjectDoubleHashMap;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
@@ -79,12 +82,47 @@ class IO {
         }
     }
 
+    public static class TagCounterSerializer implements Serializer<TagCounter> {
+        @Override
+        public void write(PrimitivO output, TagCounter object) {
+            output.writeInt(object.tags.size());
+            TObjectDoubleIterator<TagTuple> it = object.tags.iterator();
+            while (it.hasNext()) {
+                output.writeObject(it.key().tags);
+                output.writeDouble(it.value());
+            }
+        }
+
+        @Override
+        public TagCounter read(PrimitivI input) {
+            int len = input.readInt();
+            TObjectDoubleHashMap<TagTuple> r = new TObjectDoubleHashMap<>(len, Constants.DEFAULT_LOAD_FACTOR, 0.0);
+            for (int i = 0; i < len; ++i) {
+                String[] tags = input.readObject(String[].class);
+                double count = input.readDouble();
+                r.put(new TagTuple(tags), count);
+            }
+            return new TagCounter(r);
+        }
+
+        @Override
+        public boolean isReference() {
+            return true;
+        }
+
+        @Override
+        public boolean handlesReference() {
+            return false;
+        }
+    }
+
     public static class VDJCAlignmentsSerializer implements Serializer<VDJCAlignments> {
         @Override
         public void write(PrimitivO output, VDJCAlignments object) {
             output.writeObject(object.targets);
             output.writeObject(object.originalReads);
             output.writeObject(object.history);
+            output.writeObject(object.tagCounter);
             output.writeByte(object.hits.size());
             for (Map.Entry<GeneType, VDJCHit[]> entry : object.hits.entrySet()) {
                 output.writeObject(entry.getKey());
@@ -100,6 +138,7 @@ class IO {
             NSequenceWithQuality[] targets = input.readObject(NSequenceWithQuality[].class);
             SequenceRead[] originalReads = input.readObject(SequenceRead[].class);
             SequenceHistory[] history = input.readObject(SequenceHistory[].class);
+            TagCounter tagCounter = input.readObject(TagCounter.class);
             int size = input.readByte();
             EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
             for (int i = 0; i < size; i++) {
@@ -112,7 +151,7 @@ class IO {
             int cloneIndex = -1;
             if (!ReadToCloneMapping.isDropped(mappingType))
                 cloneIndex = input.readVarInt();
-            return new VDJCAlignments(hits, targets, history, originalReads, mappingType, cloneIndex);
+            return new VDJCAlignments(hits, tagCounter, targets, history, originalReads, mappingType, cloneIndex);
         }
 
         @Override
@@ -130,6 +169,7 @@ class IO {
         @Override
         public void write(PrimitivO output, Clone object) {
             output.writeObject(object.targets);
+            output.writeObject(object.tagCounter);
             output.writeByte(object.hits.size());
             for (Map.Entry<GeneType, VDJCHit[]> entry : object.hits.entrySet()) {
                 output.writeObject(entry.getKey());
@@ -142,6 +182,7 @@ class IO {
         @Override
         public Clone read(PrimitivI input) {
             NSequenceWithQuality[] targets = input.readObject(NSequenceWithQuality[].class);
+            TagCounter tagCounter = input.readObject(TagCounter.class);
             int size = input.readByte();
             EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
             for (int i = 0; i < size; i++) {
@@ -150,7 +191,7 @@ class IO {
             }
             double count = input.readDouble();
             int id = input.readInt();
-            return new Clone(targets, hits, count, id);
+            return new Clone(targets, hits, tagCounter, count, id);
         }
 
         @Override
