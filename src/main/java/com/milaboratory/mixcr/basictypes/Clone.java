@@ -31,6 +31,7 @@ package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.primitivio.annotations.Serializable;
+import gnu.trove.iterator.TObjectDoubleIterator;
 import io.repseq.core.GeneType;
 
 import java.util.EnumMap;
@@ -75,7 +76,23 @@ public final class Clone extends VDJCObject {
         return getFraction(parent.getTotalCount());
     }
 
-    public double getFraction(long totalCount) {
+    public TagCounter getTagFractions() {
+        if (parent == null)
+            return null;
+        TagCounter totalFractions = parent.getTotalTagCounts();
+
+        TagCounterBuilder result = new TagCounterBuilder();
+        TObjectDoubleIterator<TagTuple> it = tagCounter.iterator();
+        while (it.hasNext()) {
+            it.advance();
+            TagTuple tt = it.key();
+            result.add(tt, it.value() / totalFractions.get(tt));
+        }
+
+        return result.createAndDestroy();
+    }
+
+    public double getFraction(double totalCount) {
         return 1.0 * count / totalCount;
     }
 

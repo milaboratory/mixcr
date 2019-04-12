@@ -15,6 +15,10 @@ public class TagCounterBuilder {
         this.agg = new TObjectDoubleHashMap<>(Constants.DEFAULT_CAPACITY, Constants.DEFAULT_LOAD_FACTOR, 0.0);
     }
 
+    public TagCounterBuilder add(TagTuple tc, double count) {
+        return add(new TagCounter(tc, count));
+    }
+
     public TagCounterBuilder add(TagCounter tc) {
         return add(tc.tags);
     }

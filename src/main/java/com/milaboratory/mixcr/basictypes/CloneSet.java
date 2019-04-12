@@ -49,16 +49,20 @@ public final class CloneSet implements Iterable<Clone> {
     final EnumMap<GeneType, GeneFeature> alignedFeatures;
     final List<VDJCGene> usedGenes;
     final List<Clone> clones;
-    final long totalCount;
+    final double totalCount;
+    final TagCounter totalTagCounts;
 
     public CloneSet(List<Clone> clones, Collection<VDJCGene> usedGenes, EnumMap<GeneType, GeneFeature> alignedFeatures,
                     VDJCAlignerParameters alignmentParameters, CloneAssemblerParameters assemblerParameters) {
         this.clones = Collections.unmodifiableList(new ArrayList<>(clones));
         long totalCount = 0;
+        TagCounterBuilder tagCounterBuilder = new TagCounterBuilder();
         for (Clone clone : clones) {
             totalCount += clone.count;
             clone.setParentCloneSet(this);
+            tagCounterBuilder.add(clone.tagCounter);
         }
+        this.totalTagCounts = tagCounterBuilder.createAndDestroy();
         this.alignedFeatures = alignedFeatures.clone();
         this.alignmentParameters = alignmentParameters;
         this.assemblerParameters = assemblerParameters;
@@ -71,8 +75,10 @@ public final class CloneSet implements Iterable<Clone> {
         long totalCount = 0;
         HashMap<VDJCGeneId, VDJCGene> genes = new HashMap<>();
         EnumMap<GeneType, GeneFeature> alignedFeatures = new EnumMap<>(GeneType.class);
+        TagCounterBuilder tagCounterBuilder = new TagCounterBuilder();
         for (Clone clone : clones) {
             totalCount += clone.count;
+            tagCounterBuilder.add(clone.tagCounter);
             clone.setParentCloneSet(this);
             for (GeneType geneType : GeneType.values())
                 for (VDJCHit hit : clone.getHits(geneType)) {
@@ -84,6 +90,7 @@ public final class CloneSet implements Iterable<Clone> {
                         throw new IllegalArgumentException("Different aligned feature for clones.");
                 }
         }
+        this.totalTagCounts = tagCounterBuilder.createAndDestroy();
         this.alignedFeatures = alignedFeatures;
         this.assemblerParameters = null;
         this.alignmentParameters = null;
@@ -127,8 +134,12 @@ public final class CloneSet implements Iterable<Clone> {
         return alignedFeatures.get(geneType);
     }
 
-    public long getTotalCount() {
+    public double getTotalCount() {
         return totalCount;
+    }
+
+    public TagCounter getTotalTagCounts() {
+        return totalTagCounts;
     }
 
     public String getVersionInfo() {
