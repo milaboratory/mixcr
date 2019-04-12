@@ -72,6 +72,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static cc.redberry.pipe.CUtils.chunked;
 import static cc.redberry.pipe.CUtils.unchunked;
@@ -194,6 +195,10 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
     @Option(description = "Show runtime buffer load.",
             names = {"--buffers"}, hidden = true)
     public boolean reportBuffers = false;
+
+    @Option(description = "Names for groups that contain barcodes, for MiNNN FASTQ input file.",
+            names = {"--tag"})
+    public List<String> tags = new ArrayList<>();
 
     private VDJCAlignerParameters vdjcAlignerParameters = null;
 
@@ -349,7 +354,17 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
     public final AlignerReport report = new AlignerReport();
 
     public TagTuple tags(SequenceRead r) {
-        return new TagTuple(r.getRead(0).getDescription().substring(0, 5) + (r.hashCode() % 10));
+        String description = r.getRead(0).getDescription();
+        String descTrimmed = description.replaceAll("[|~]*$", "").replaceAll("\\{[^}]*}", "");
+        Map<String, String> matchedGroups = Arrays.stream(descTrimmed.split("\\|"))
+                .map(str -> str.split("~")).filter(tokens -> tokens.length >= 3)
+                .collect(Collectors.toMap(tokens -> tokens[tokens.length - 3], tokens -> tokens[tokens.length - 2]));
+        return new TagTuple(tags.stream().map(tag -> {
+            String tagSeq = matchedGroups.get(tag);
+            if (tagSeq == null)
+                throwExecutionException("Group " + tag + " not found in FASTQ description!");
+            return tagSeq;
+        }).toArray(String[]::new));
     }
 
     @Override
