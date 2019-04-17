@@ -694,7 +694,8 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                     continue;
 
                 for (int j = 0; j < 3; j++) {
-                    if (accs[i].getBestScore(GeneType.VJC_REFERENCE[j]) < maxScores[j]) {
+                    if (accs[i].getBestGene(GeneType.VJC_REFERENCE[j]) != null &&
+                            accs[i].getBestScore(GeneType.VJC_REFERENCE[j]) < maxScores[j]) {
                         dropped.accept(accs[i]);
                         accs[i] = null;
                         break;
