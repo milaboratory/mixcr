@@ -662,7 +662,7 @@ public final class FieldExtractors {
                 });
             }
 
-            descriptorsList.add(new PL_O("-chains", "Chains", "Chains", "Chains") {
+            descriptorsList.add(new PL_O("-chains", "Chains", "Chains", "chains") {
                 @Override
                 protected String extract(VDJCObject object) {
                     return object.commonChains().toString();
