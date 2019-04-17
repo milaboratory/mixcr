@@ -40,11 +40,9 @@ import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.TranslationParameters;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
-import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.basictypes.VDJCObject;
+import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.util.GlobalObjectMappers;
+import gnu.trove.iterator.TObjectDoubleIterator;
 import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.map.hash.TObjectFloatHashMap;
 import io.repseq.core.GeneFeature;
@@ -689,6 +687,39 @@ public final class FieldExtractors {
                 @Override
                 protected String extract(Clone object) {
                     return object.getTagFractions().toString();
+                }
+            });
+
+            descriptorsList.add(new WP_O<Integer>("-tag", "Tag value", 1) {
+                @Override
+                protected Integer getParameters(String[] string) {
+                    return Integer.parseInt(string[0]);
+                }
+
+                @Override
+                protected String getHeader(OutputMode outputMode, Integer index) {
+                    switch (outputMode) {
+                        case HumanFriendly: return "Tag" + index;
+                        case ScriptingFriendly: return "tag" + index;
+                    }
+                    throw new RuntimeException();
+                }
+
+                @Override
+                protected String extractValue(VDJCObject object, Integer index) {
+                    TagCounter tc = object.getTagCounter();
+                    if (tc.size() > 1)
+                        throw new IllegalArgumentException("object has multiple tag tuples: " + tc);
+                    if (tc.size() == 0)
+                        return NULL;
+                    TObjectDoubleIterator<TagTuple> it = tc.iterator();
+                    it.advance();
+                    return it.key().tags[index];
+                }
+
+                @Override
+                public String metaVars() {
+                    return "index";
                 }
             });
 

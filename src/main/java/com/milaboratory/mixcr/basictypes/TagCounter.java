@@ -33,6 +33,10 @@ public final class TagCounter {
             return tags.get(tt);
     }
 
+    public int size() {
+        return tags.size();
+    }
+
     public double get(TagTuple tt) {
         return getOrDefault(tt, Double.NaN);
     }

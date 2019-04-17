@@ -70,7 +70,22 @@ public final class Clone extends VDJCObject {
         return parent;
     }
 
+    public Clone setTagCounts(TagCounter tc) {
+        Clone c = new Clone(targets, hits, tc, count, id);
+        c.setParentCloneSet(getParentCloneSet());
+        return c;
+    }
+
+    private double fractionOverride = Double.NaN;
+
+    public void overrideFraction(double v) {
+        fractionOverride = v;
+    }
+
     public double getFraction() {
+        if (!Double.isNaN(fractionOverride))
+            return fractionOverride;
+
         if (parent == null)
             return Double.NaN;
         return getFraction(parent.getTotalCount());

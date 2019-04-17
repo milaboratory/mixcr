@@ -93,6 +93,10 @@ public class VDJCObject {
         return false;
     }
 
+    public EnumMap<GeneType, VDJCHit[]> getHits() {
+        return hits;
+    }
+
     public final VDJCHit[] getHits(GeneType type) {
         VDJCHit[] hits = this.hits.get(type);
         return hits == null ? new VDJCHit[0] : hits;

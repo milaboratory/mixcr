@@ -40,6 +40,7 @@ import com.milaboratory.mixcr.export.*;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.CanReportProgressAndStage;
 import com.milaboratory.util.SmartProgressReporter;
+import gnu.trove.iterator.TObjectDoubleIterator;
 import io.repseq.core.Chains;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
@@ -241,6 +242,10 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                 names = {"-m", "--minimal-clone-count"})
         public long minCount = 0;
 
+        @Option(description = "Split clones by tag values",
+                names = {"--split-by-tags"})
+        public boolean splitByTag = false;
+
         public CommandExportClones() {
             super(Clone.class);
         }
@@ -267,7 +272,7 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                         break;
                     }
                 }
-                ExportClones exportClones = new ExportClones(set, writer, limit);
+                ExportClones exportClones = new ExportClones(set, writer, limit, splitByTag);
                 SmartProgressReporter.startProgressReport(exportClones, System.err);
                 exportClones.run();
                 if (initialSet.size() > set.size()) {
@@ -342,12 +347,14 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
             final long size;
             volatile long current = 0;
             final long limit;
+            final boolean splitByTags;
 
-            private ExportClones(CloneSet clones, InfoWriter<Clone> writer, long limit) {
+            private ExportClones(CloneSet clones, InfoWriter<Clone> writer, long limit, boolean splitByTags) {
                 this.clones = clones;
                 this.writer = writer;
                 this.size = clones.size();
                 this.limit = limit;
+                this.splitByTags = splitByTags;
             }
 
             @Override
@@ -366,10 +373,28 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
             }
 
             void run() {
+                int id = 0;
                 for (Clone clone : clones.getClones()) {
                     if (current == limit)
                         break;
-                    writer.put(clone);
+                    if (splitByTags) {
+                        TagCounter ttc = clones.getTotalTagCounts();
+                        TObjectDoubleIterator<TagTuple> iterator = clone.getTagCounter().iterator();
+                        while (iterator.hasNext()) {
+                            iterator.advance();
+                            TagTuple key = iterator.key();
+
+                            double totalCount = ttc.getOrDefault(key, Double.NaN);
+                            if (Double.isNaN(totalCount))
+                                throw new IllegalArgumentException();
+                            double count = iterator.value();
+
+                            Clone c = new Clone(clone.getTargets(), clone.getHits(), new TagCounter(key), count, id++);
+                            c.overrideFraction(count / totalCount);
+                            writer.put(c);
+                        }
+                    } else
+                        writer.put(clone);
                     ++current;
                 }
             }
