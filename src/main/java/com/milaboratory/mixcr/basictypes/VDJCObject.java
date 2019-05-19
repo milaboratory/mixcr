@@ -464,8 +464,11 @@ public class VDJCObject {
                 if (lHit == rHit) {
                     Alignment<NucleotideSequence> lAl = lHit.getAlignment(lLast.iTarget);
                     if (lAl.getSequence1Range().contains(rPositionInRef)) {
-                        IncompleteSequencePart part = new IncompleteSequencePart(lHit, false, lLast.iTarget, lLast.begin,
-                                aabs(lAl.convertToSeq2Position(rPositionInRef)));
+                        int aabs = aabs(lAl.convertToSeq2Position(rPositionInRef));
+                        if (aabs < lLast.begin)
+                            return null;
+
+                        IncompleteSequencePart part = new IncompleteSequencePart(lHit, false, lLast.iTarget, lLast.begin, aabs);
                         if (part.begin == part.end)
                             leftParts.remove(leftParts.size() - 1);
                         else
@@ -481,8 +484,11 @@ public class VDJCObject {
 
                     Alignment<NucleotideSequence> rAl = lHit.getAlignment(rLast.iTarget);
                     if (rAl.getSequence1Range().contains(lPositionInRef)) {
-                        IncompleteSequencePart part = new IncompleteSequencePart(rHit, false, rLast.iTarget,
-                                aabs(rAl.convertToSeq2Position(lPositionInRef)), rLast.end);
+                        int aabs = aabs(rAl.convertToSeq2Position(lPositionInRef));
+                        if (aabs > rLast.end)
+                            return null;
+
+                        IncompleteSequencePart part = new IncompleteSequencePart(rHit, false, rLast.iTarget, aabs, rLast.end);
                         if (part.begin == part.end)
                             rightParts.remove(0);
                         else
@@ -567,7 +573,7 @@ public class VDJCObject {
         final int begin, end;
 
         IncompleteSequencePart(VDJCHit hit, boolean germline, int iTarget, int begin, int end) {
-            assert begin <= end;
+            assert begin <= end : "" + begin + " - " + end;
             this.hit = hit;
             this.germline = germline;
             this.iTarget = iTarget;

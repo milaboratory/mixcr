@@ -58,8 +58,6 @@ final class FeatureExtractors {
             if (features.length == 2 && !features[1].contains(features[0]))
                 throw new IllegalArgumentException(String.format("%s: Base feature %s does not contain relative feature %s",
                         command, GeneFeature.encode(features[1]), GeneFeature.encode(features[0])));
-
-            //todo bigfeature nofloating bounds
         }
 
         private String header0(String[] prefixes, GeneFeature[] features) {
@@ -122,6 +120,19 @@ final class FeatureExtractors {
                 if (feature.getGeneType() == null)
                     throw new IllegalArgumentException(String.format("%s: Gene feature %s covers several gene types " +
                             "(not possible to select corresponding alignment)", command, GeneFeature.encode(feature)));
+
+            if (features.length == 2 && features[1].isAlignmentAttached())
+                throw new IllegalArgumentException(
+                        String.format(
+                                "%s: Alignment attached base gene features not allowed (error in %s)",
+                                command, GeneFeature.encode(features[1])));
+
+            if (features.length == 1 && features[0].isAlignmentAttached())
+                throw new IllegalArgumentException(
+                        String.format(
+                                "%s: Please use %s option instead and specify base gene feature to extract mutations " +
+                                        "from alignment-attached gene feature %s",
+                                command, command + "Relative", GeneFeature.encode(features[0])));
         }
 
         @Override

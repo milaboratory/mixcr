@@ -64,6 +64,7 @@ import static io.repseq.core.GeneType.Joining;
 import static io.repseq.core.GeneType.Variable;
 
 /**
+ *
  */
 public final class FullSeqAssembler {
     private static int ABSENT_PACKED_VARIANT_INFO = -1;
@@ -1518,6 +1519,6 @@ public final class FullSeqAssembler {
     }
 
     private boolean inSplitRegion(int p) {
-        return splitRegion == null || splitRegion.contains(p);
+        return splitRegion != null && splitRegion.contains(p);
     }
 }
