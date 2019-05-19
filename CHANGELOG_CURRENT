@@ -1,2 +1,2 @@
-
-Fix rare bug in export of imputed gene features
+Fixes clone oversplitting in assembleContigs in noizy (e.g. single-cell) data with substanial fraction of sequences with errors in `CDR3`
+Fixes rare bug in export of imputed gene feature sequences
