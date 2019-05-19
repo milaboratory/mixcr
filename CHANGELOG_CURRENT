@@ -1,2 +1,4 @@
 Fixes clone oversplitting in assembleContigs in noizy (e.g. single-cell) data with substanial fraction of sequences with errors in `CDR3`
+Fixes wrong alignment-scoring-based filtering in pre-clustering procedure
 Fixes rare bug in export of imputed gene feature sequences
+minor: Better error message for mutation extraction from alignment-attached gene features
