@@ -1340,26 +1340,46 @@ public final class FullSeqAssembler {
         //        ↓              ↓              ↓
         //  0000000vvvvvvvvvvvvvvCDR3CDR3CDR3CDR3jjjjjjjjjjjjjjjjCCCCCCCCC
 
-        VDJCPartitionedSequence target = alignments.getPartitionedTarget(iTarget);
+        // VDJCHit vHit = alignments.getBestHit(Variable);
+        // Alignment<NucleotideSequence> vAlignment =
+        //         (vHit == null
+        //                 || vHit.getAlignment(iTarget) == null
+        //                 || !Objects.equals(genes.v, vHit.getGene())
+        //                 || vHit.getAlignment(iTarget).getSequence1Range().getFrom() > lengthV)
+        //                 ? null
+        //                 : vHit.getAlignment(iTarget);
+
+        final Optional<VDJCHit> vHit = Arrays.stream(alignments.getHits(Variable) == null ? new VDJCHit[0] : alignments.getHits(Variable))
+                .filter(hit -> hit != null && Objects.equals(genes.v, hit.getGene()))
+                .findFirst();
+        Alignment<NucleotideSequence> vAlignment = vHit
+                .map(hit -> hit.getAlignment(iTarget))
+                .filter(al -> al != null && al.getSequence1Range().getFrom() <= lengthV)
+                .orElse(null);
+
+        // VDJCHit jHit = alignments.getBestHit(Joining);
+        // Alignment<NucleotideSequence> jAlignment =
+        //         (jHit == null
+        //                 || jHit.getAlignment(iTarget) == null
+        //                 || !Objects.equals(genes.j, jHit.getGene())
+        //                 || jHit.getAlignment(iTarget).getSequence1Range().getTo() < jOffset)
+        //                 ? null
+        //                 : jHit.getAlignment(iTarget);
+
+        final Optional<VDJCHit> jHit = Arrays.stream(alignments.getHits(Joining) == null ? new VDJCHit[0] : alignments.getHits(Joining))
+                .filter(hit -> hit != null && Objects.equals(genes.j, hit.getGene()))
+                .findFirst();
+        Alignment<NucleotideSequence> jAlignment = jHit
+                .map(hit -> hit.getAlignment(iTarget))
+                .filter(al -> al != null && al.getSequence1Range().getTo() >= jOffset)
+                .orElse(null);
+
+        VDJCPartitionedSequence target = alignments.getPartitionedTarget(iTarget,
+                vHit.map(VDJCHit::getGene).orElse(null),
+                null,
+                jHit.map(VDJCHit::getGene).orElse(null),
+                null);
         NSequenceWithQuality targetSeq = alignments.getTarget(iTarget);
-
-        VDJCHit vHit = alignments.getBestHit(Variable);
-        Alignment<NucleotideSequence> vAlignment =
-                (vHit == null
-                        || vHit.getAlignment(iTarget) == null
-                        || !Objects.equals(genes.v, vHit.getGene())
-                        || vHit.getAlignment(iTarget).getSequence1Range().getFrom() > lengthV)
-                        ? null
-                        : vHit.getAlignment(iTarget);
-
-        VDJCHit jHit = alignments.getBestHit(Joining);
-        Alignment<NucleotideSequence> jAlignment =
-                (jHit == null
-                        || jHit.getAlignment(iTarget) == null
-                        || !Objects.equals(genes.j, jHit.getGene())
-                        || jHit.getAlignment(iTarget).getSequence1Range().getTo() < jOffset)
-                        ? null
-                        : jHit.getAlignment(iTarget);
 
         List<PointSequence> points = new ArrayList<>();
         if (target.getPartitioning().isAvailable(assemblingFeature.getFirstPoint())) {

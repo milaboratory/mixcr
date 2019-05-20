@@ -671,11 +671,11 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             // Score filtering step
 
             // Calculation
-            float[] maxScores = new float[3];
+            float[] maxScores = new float[2];
             for (CloneAccumulator acc : accs) {
                 if (acc == null)
                     continue;
-                for (int i = 0; i < 3; i++) {
+                for (int i = 0; i < 2; i++) {  // Only for V and J
                     GeneType gt = GeneType.VJC_REFERENCE[i];
                     maxScores[i] =
                             parameters.getSeparateBy(gt)
@@ -684,7 +684,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 }
             }
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 2; i++) // Only for V and J
                 maxScores[i] /= parameters.preClusteringScoreFilteringRatio;
 
             // Filtering low score clonotypes
@@ -693,7 +693,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 if (accs[i] == null)
                     continue;
 
-                for (int j = 0; j < 3; j++) {
+                for (int j = 0; j < 2; j++) { // Only for V and J
                     if (accs[i].getBestGene(GeneType.VJC_REFERENCE[j]) != null &&
                             accs[i].getBestScore(GeneType.VJC_REFERENCE[j]) < maxScores[j]) {
                         dropped.accept(accs[i]);

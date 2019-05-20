@@ -186,6 +186,35 @@ public class VDJCObject {
         return partitionedTargets[target];
     }
 
+    public final VDJCPartitionedSequence getPartitionedTarget(int target, VDJCGene vGene, VDJCGene dGene, VDJCGene jGene, VDJCGene cGene) {
+        EnumMap<GeneType, VDJCGene> genes = new EnumMap<>(GeneType.class);
+        if (vGene != null)
+            genes.put(GeneType.Variable, vGene);
+        if (dGene != null)
+            genes.put(GeneType.Diversity, dGene);
+        if (jGene != null)
+            genes.put(GeneType.Joining, jGene);
+        if (cGene != null)
+            genes.put(GeneType.Constant, cGene);
+        return getPartitionedTarget(target, genes);
+    }
+
+    public final VDJCPartitionedSequence getPartitionedTarget(int target, EnumMap<GeneType, VDJCGene> genes) {
+        EnumMap<GeneType, VDJCHit> topHits = new EnumMap<>(GeneType.class);
+        for (GeneType geneType : GeneType.values()) {
+            if (!genes.containsKey(geneType))
+                continue;
+            VDJCHit[] hits = this.hits.get(geneType);
+            if (hits == null)
+                continue;
+            Arrays.stream(hits)
+                    .filter(hit -> hit.getGene().equals(genes.get(geneType)))
+                    .findFirst()
+                    .ifPresent(vdjcHit -> topHits.put(geneType, vdjcHit));
+        }
+        return new VDJCPartitionedSequence(targets[target], new TargetPartitioning(target, topHits));
+    }
+
     public VDJCHit getBestHit(GeneType type) {
         VDJCHit[] hits = this.hits.get(type);
         if (hits == null || hits.length == 0)
