@@ -39,7 +39,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <milib.version>1.10</milib.version>
+        <milib.version>1.11-SNAPSHOT</milib.version>
     </properties>
 
     <dependencies>
