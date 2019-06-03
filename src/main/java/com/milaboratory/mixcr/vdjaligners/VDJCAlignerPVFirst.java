@@ -62,7 +62,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     // Used in case of AMerge
     private VDJCAlignerS sAligner = null;
     private final TargetMerger alignmentsMerger;
-    private final BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>>
+    private BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>>
             vAlignerNotFloatingLeft,
             vAlignerNotFloatingRight;
 
@@ -72,8 +72,6 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         MergerParameters mp = parameters.getMergerParameters().overrideReadsLayout(PairedEndReadsLayout.CollinearDirect);
         alignmentsMerger = new TargetMerger(mp, (float) parameters.getMergerParameters().getMinimalIdentity());
         alignmentsMerger.setAlignerParameters(parameters);
-        vAlignerNotFloatingLeft = vAligner.setFloatingLeftBound(false);
-        vAlignerNotFloatingRight = vAligner.setFloatingRightBound(false);
     }
 
     public void setSAligner(VDJCAlignerS sAligner) {
@@ -85,6 +83,8 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     @Override
     protected void init() {
         super.init();
+        vAlignerNotFloatingLeft = vAligner.setFloatingLeftBound(false);
+        vAlignerNotFloatingRight = vAligner.setFloatingRightBound(false);
     }
 
     @Override
