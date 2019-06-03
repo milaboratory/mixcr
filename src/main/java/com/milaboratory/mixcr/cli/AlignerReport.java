@@ -52,6 +52,9 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
     private final AtomicLong topHitConflict = new AtomicLong(0);
     private final AtomicLong vChimeras = new AtomicLong(0);
     private final AtomicLong jChimeras = new AtomicLong(0);
+    private final AtomicLong realignedWithForcedNonFloatingBound = new AtomicLong(0);
+    private final AtomicLong realignedWithForcedNonFloatingRightBoundInLeftRead = new AtomicLong(0);
+    private final AtomicLong realignedWithForcedNonFloatingLeftBoundInRightRead = new AtomicLong(0);
 
     public AlignerReport() {
     }
@@ -201,6 +204,15 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
     }
 
     @Override
+    public void onRealignmentWithForcedNonFloatingBound(boolean forceLeftEdgeInRight, boolean forceRightEdgeInLeft) {
+        realignedWithForcedNonFloatingBound.getAndIncrement();
+        if (forceRightEdgeInLeft)
+            realignedWithForcedNonFloatingRightBoundInLeftRead.incrementAndGet();
+        if (forceRightEdgeInLeft)
+            realignedWithForcedNonFloatingLeftBoundInRightRead.incrementAndGet();
+    }
+
+    @Override
     public void writeReport(ReportHelper helper) {
         // Writing common analysis information
         writeSuperReport(helper);
@@ -233,5 +245,9 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
 
         // Writing distribution by chains
         chainStats.writeReport(helper);
+
+        helper.writePercentAndAbsoluteField("Realigned with forced non-floating bound", realignedWithForcedNonFloatingBound, total);
+        helper.writePercentAndAbsoluteField("Realigned with forced non-floating right bound in left read", realignedWithForcedNonFloatingRightBoundInLeftRead, total);
+        helper.writePercentAndAbsoluteField("Realigned with forced non-floating left bound in right read", realignedWithForcedNonFloatingLeftBoundInRightRead, total);
     }
 }

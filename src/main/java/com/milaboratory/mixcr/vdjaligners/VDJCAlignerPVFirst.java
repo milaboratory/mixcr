@@ -90,7 +90,6 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     @Override
     protected VDJCAlignmentResult<PairedRead> process0(final PairedRead input) {
         Target[] targets = getTargets(input);
-
         // Creates helper classes for each PTarget
         PAlignmentHelper[] helpers = createInitialHelpers(targets);
 
@@ -407,6 +406,8 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                 vAl1 = vAlignerNotFloatingRight.align(target.targets[0].getSequence()).getHits();
             if (forceLeftEdgeInRight)
                 vAl2 = vAlignerNotFloatingLeft.align(target.targets[1].getSequence()).getHits();
+
+            this.listener.onRealignmentWithForcedNonFloatingBound(forceLeftEdgeInRight, forceRightEdgeInLeft);
         }
 
         /*
