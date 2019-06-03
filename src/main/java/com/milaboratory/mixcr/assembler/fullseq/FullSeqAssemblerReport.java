@@ -54,6 +54,8 @@ public class FullSeqAssemblerReport implements Report {
     private final AtomicDouble dividedReads = new AtomicDouble(0);
     private final AtomicInteger longestContigLength = new AtomicInteger(0);
     private final AtomicLong variantsBeforeClustering = new AtomicLong(0);
+    private final AtomicLong vHitsReorder = new AtomicLong(0);
+    private final AtomicLong jHitsReorder = new AtomicLong(0);
 
     public void onVariantClustered(VariantBranch minor) {
         totalClustered.incrementAndGet();
@@ -62,6 +64,14 @@ public class FullSeqAssemblerReport implements Report {
 
     public void onVariantsCreated(List<VariantBranch> branches) {
         variantsBeforeClustering.addAndGet(branches.size());
+    }
+
+    public void onVHitReorder() {
+        vHitsReorder.incrementAndGet();
+    }
+
+    public void onJHitReorder() {
+        jHitsReorder.incrementAndGet();
     }
 
     public void afterVariantsClustered(Clone initialClone, Clone[] branches) {

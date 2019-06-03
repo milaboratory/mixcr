@@ -36,8 +36,10 @@ import io.repseq.core.*;
 import io.repseq.gen.VDJCGenes;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.milaboratory.core.alignment.Alignment.aabs;
+import static com.milaboratory.util.StreamUtil.noMerge;
 
 public class VDJCObject {
     protected final NSequenceWithQuality[] targets;
@@ -90,6 +92,16 @@ public class VDJCObject {
     public final VDJCHit[] getHits(GeneType type) {
         VDJCHit[] hits = this.hits.get(type);
         return hits == null ? new VDJCHit[0] : hits;
+    }
+
+    public final EnumMap<GeneType, VDJCHit[]> getHitsMap() {
+        return hits.entrySet()
+                .stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> e.getValue().clone(),
+                        noMerge(),
+                        () -> new EnumMap<>(GeneType.class)));
     }
 
     public Chains getTopChain(GeneType gt) {
