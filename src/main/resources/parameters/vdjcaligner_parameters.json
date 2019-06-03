@@ -118,7 +118,8 @@
         "minChimeraDetectionScore": 120,
         "vjOverlapWindow": 3,
         "readsLayout": "Opposite",
-        "saveOriginalReads": false
+        "saveOriginalReads": false,
+        "smartForceEdgeAlignments": true
     },
     "kaligner2": {
         "fixSeed" : true,
@@ -251,7 +252,8 @@
         "minChimeraDetectionScore": 120,
         "vjOverlapWindow": 3,
         "readsLayout": "Opposite",
-        "saveOriginalReads": false
+        "saveOriginalReads": false,
+        "smartForceEdgeAlignments": true
     },
     "rna-seq": {
         "fixSeed" : true,
@@ -372,6 +374,7 @@
         "minChimeraDetectionScore": 120,
         "vjOverlapWindow": 3,
         "readsLayout": "Opposite",
-        "saveOriginalReads": false
+        "saveOriginalReads": false,
+        "smartForceEdgeAlignments": true
     }
 }

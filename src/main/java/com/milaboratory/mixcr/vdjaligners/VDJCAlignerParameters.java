@@ -64,6 +64,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
     private int minChimeraDetectionScore;
     private int vjOverlapWindow;
     private boolean saveOriginalReads;
+    private boolean smartForceEdgeAlignments;
 
     @JsonCreator
     public VDJCAlignerParameters(@JsonProperty("vParameters") KGeneAlignmentParameters vParameters,
@@ -85,7 +86,8 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
                                  @JsonProperty("alignmentBoundaryTolerance") int alignmentBoundaryTolerance,
                                  @JsonProperty("minChimeraDetectionScore") int minChimeraDetectionScore,
                                  @JsonProperty("vjOverlapWindow") int vjOverlapWindow,
-                                 @JsonProperty("saveOriginalReads") boolean saveOriginalReads) {
+                                 @JsonProperty("saveOriginalReads") boolean saveOriginalReads,
+                                 @JsonProperty("smartForceEdgeAlignments") boolean smartForceEdgeAlignments) {
         this.alignmentParameters = new EnumMap<>(GeneType.class);
         setGeneAlignerParameters(GeneType.Variable, vParameters);
         setGeneAlignerParameters(GeneType.Diversity, dParameters);
@@ -107,6 +109,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         this.minChimeraDetectionScore = minChimeraDetectionScore;
         this.vjOverlapWindow = vjOverlapWindow;
         this.saveOriginalReads = saveOriginalReads;
+        this.smartForceEdgeAlignments = smartForceEdgeAlignments;
     }
 
     public int getVJOverlapWindow() {
@@ -234,6 +237,15 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
     @JsonProperty("vjAlignmentOrder")
     public VJAlignmentOrder getVJAlignmentOrder() {
         return vjAlignmentOrder;
+    }
+
+    public void setSmartForceEdgeAlignments(boolean smartForceEdgeAlignments) {
+        this.smartForceEdgeAlignments = smartForceEdgeAlignments;
+    }
+
+    @JsonProperty("smartForceEdgeAlignments")
+    public boolean isSmartForceEdgeAlignments() {
+        return smartForceEdgeAlignments;
     }
 
     public void setVjAlignmentOrder(VJAlignmentOrder vjAlignmentOrder) {
@@ -388,7 +400,8 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
                 Objects.equals(alignmentParameters, that.alignmentParameters) &&
                 vjAlignmentOrder == that.vjAlignmentOrder &&
                 readsLayout == that.readsLayout &&
-                Objects.equals(mergerParameters, that.mergerParameters);
+                Objects.equals(mergerParameters, that.mergerParameters) &&
+                smartForceEdgeAlignments == that.smartForceEdgeAlignments;
     }
 
     @Override
@@ -402,6 +415,6 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
                 getCAlignerParameters(), vjAlignmentOrder, includeDScore, includeCScore, minSumScore, maxHits,
                 relativeMinVFR3CDR3Score, allowPartialAlignments, allowNoCDR3PartAlignments,
                 allowChimeras, readsLayout, mergerParameters, fixSeed, alignmentBoundaryTolerance,
-                minChimeraDetectionScore, vjOverlapWindow, saveOriginalReads);
+                minChimeraDetectionScore, vjOverlapWindow, saveOriginalReads, smartForceEdgeAlignments);
     }
 }
