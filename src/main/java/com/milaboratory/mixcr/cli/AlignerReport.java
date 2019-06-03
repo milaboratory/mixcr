@@ -154,6 +154,21 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
         return jChimeras.get();
     }
 
+    @JsonProperty("realignedWithForcedNonFloatingBound")
+    public long getRealignedWithForcedNonFloatingBound() {
+        return realignedWithForcedNonFloatingBound.get();
+    }
+
+    @JsonProperty("realignedWithForcedNonFloatingRightBoundInLeftRead")
+    public long getRealignedWithForcedNonFloatingRightBoundInLeftRead() {
+        return realignedWithForcedNonFloatingRightBoundInLeftRead.get();
+    }
+
+    @JsonProperty("realignedWithForcedNonFloatingLeftBoundInRightRead")
+    public long getRealignedWithForcedNonFloatingLeftBoundInRightRead() {
+        return realignedWithForcedNonFloatingLeftBoundInRightRead.get();
+    }
+
     @Override
     public void onFailedAlignment(SequenceRead read, VDJCAlignmentFailCause cause) {
         fails.incrementAndGet(cause.ordinal());
@@ -246,8 +261,8 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
         // Writing distribution by chains
         chainStats.writeReport(helper);
 
-        helper.writePercentAndAbsoluteField("Realigned with forced non-floating bound", realignedWithForcedNonFloatingBound, total);
-        helper.writePercentAndAbsoluteField("Realigned with forced non-floating right bound in left read", realignedWithForcedNonFloatingRightBoundInLeftRead, total);
-        helper.writePercentAndAbsoluteField("Realigned with forced non-floating left bound in right read", realignedWithForcedNonFloatingLeftBoundInRightRead, total);
+        helper.writePercentAndAbsoluteField("Realigned with forced non-floating bound", getRealignedWithForcedNonFloatingBound(), total);
+        helper.writePercentAndAbsoluteField("Realigned with forced non-floating right bound in left read", getRealignedWithForcedNonFloatingRightBoundInLeftRead(), total);
+        helper.writePercentAndAbsoluteField("Realigned with forced non-floating left bound in right read", getRealignedWithForcedNonFloatingLeftBoundInRightRead(), total);
     }
 }
