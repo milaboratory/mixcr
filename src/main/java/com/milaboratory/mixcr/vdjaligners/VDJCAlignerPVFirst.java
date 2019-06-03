@@ -386,6 +386,9 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         if (parameters.isSmartForceEdgeAlignments()) {
             boolean forceRightEdgeInLeft = false, forceLeftEdgeInRight = false;
             for (PairedHit vHit : sortAndFilterHits(createPairedHits(vAl1, vAl2), parameters.getVAlignerParameters())) {
+                if (vHit.hit0 == null || vHit.hit1 == null)
+                    continue;
+
                 Alignment<NucleotideSequence>
                         lAl = vHit.hit0.getAlignment(),
                         rAl = vHit.hit1.getAlignment();
