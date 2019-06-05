@@ -362,15 +362,14 @@ public final class FullSeqAssembler {
         for (int i = seq.ranges.length - 1; i >= 0; --i) {
             if (parameters.trimmingParameters != null)
                 if (i == seq.assemblingFeatureTargetId) {
-                    Range trimRange = QualityTrimmer.extendRange(seq.sequences[i].getQuality(), parameters.trimmingParameters,
+                    final Range[] ranges = QualityTrimmer.calculateIslandsFromInitialRange(seq.sequences[i].getQuality(),
+                            parameters.trimmingParameters,
                             new Range(seq.assemblingFeatureOffset, seq.assemblingFeatureOffset + seq.assemblingFeatureLength));
-                    seq = seq.cut(i, trimRange);
+                    seq = seq.splitCut(i, ranges);
                 } else {
-                    Range trimRange = QualityTrimmer.trim(seq.sequences[i].getQuality(), parameters.trimmingParameters);
-                    if (trimRange == null)
-                        seq.without(i);
-                    else
-                        seq = seq.cut(i, trimRange);
+                    final Range[] ranges = QualityTrimmer.calculateAllIslands(seq.sequences[i].getQuality(),
+                            parameters.trimmingParameters);
+                    seq = seq.splitCut(i, ranges);
                 }
             if (seq.sequences[i].size() < parameters.minimalContigLength && i != seq.assemblingFeatureTargetId)
                 seq = seq.without(i);
@@ -556,10 +555,77 @@ public final class FullSeqAssembler {
         }
 
         /**
+         * Returns new BranchSequences with i-th target splitted according to the rangesToCut.
+         *
+         * @param i           target id
+         * @param rangesToCut ranges in local target coordinates (not global)
+         */
+        BranchSequences splitCut(int i, Range... rangesToCut) {
+            if (rangesToCut.length == 0)
+                return without(i);
+
+            if (rangesToCut.length == 1 && rangesToCut[0].getLower() == 0 && rangesToCut[0].length() == sequences[i].size())
+                return this;
+
+            int newLength = ranges.length - 1 + rangesToCut.length;
+            int destPos = i + rangesToCut.length;
+            int rightCopyLen = ranges.length - i - 1;
+
+            Range[] newRanges = new Range[newLength];
+            System.arraycopy(ranges, 0, newRanges, 0, i);
+            System.arraycopy(ranges, i + 1, newRanges, destPos, rightCopyLen);
+
+            TIntArrayList[] newPositionMaps = new TIntArrayList[newLength];
+            System.arraycopy(positionMaps, 0, newPositionMaps, 0, i);
+            System.arraycopy(positionMaps, i + 1, newPositionMaps, destPos, rightCopyLen);
+
+            NSequenceWithQuality[] newSequences = new NSequenceWithQuality[newLength];
+            System.arraycopy(sequences, 0, newSequences, 0, i);
+            System.arraycopy(sequences, i + 1, newSequences, destPos, rightCopyLen);
+
+            Range assemblingFeatureRange = i == assemblingFeatureTargetId
+                    ? new Range(assemblingFeatureOffset, assemblingFeatureOffset + assemblingFeatureLength)
+                    : null;
+
+            int newAssemblingFeatureOffset = i == assemblingFeatureTargetId
+                    ? -1
+                    : assemblingFeatureOffset;
+            int newAssemblingFeatureTargetId = i == assemblingFeatureTargetId
+                    ? -1
+                    :
+                    i > assemblingFeatureTargetId
+                            ? i
+                            : assemblingFeatureTargetId - 1 + rangesToCut.length;
+
+            for (int j = 0; j < rangesToCut.length; j++) {
+                final Range rangeToCut = rangesToCut[j];
+                if (assemblingFeatureRange != null && assemblingFeatureRange.intersectsWith(rangeToCut)) {
+                    if (!rangeToCut.contains(new Range(assemblingFeatureOffset, assemblingFeatureOffset + assemblingFeatureLength)))
+                        throw new IllegalArgumentException();
+                    newRanges[i + j] = new Range(positionMaps[i].get(rangeToCut.getLower()), positionMaps[i].get(rangeToCut.getUpper() - 1) + 1);
+                    newPositionMaps[i + j] = (TIntArrayList) positionMaps[i].subList(rangeToCut.getLower(), rangeToCut.getUpper());
+                    newSequences[i + j] = sequences[i].getRange(rangeToCut);
+                    newAssemblingFeatureTargetId = i + j;
+                    newAssemblingFeatureOffset -= rangeToCut.getLower();
+                } else {
+                    newRanges[i + j] = new Range(positionMaps[i].get(rangeToCut.getLower()), positionMaps[i].get(rangeToCut.getUpper() - 1) + 1);
+                    newPositionMaps[i + j] = (TIntArrayList) positionMaps[i].subList(rangeToCut.getLower(), rangeToCut.getUpper());
+                    newSequences[i + j] = sequences[i].getRange(rangeToCut);
+                }
+            }
+
+            assert newAssemblingFeatureOffset != -1;
+            assert newAssemblingFeatureTargetId != -1;
+
+            return new BranchSequences(newAssemblingFeatureTargetId, newAssemblingFeatureOffset, assemblingFeatureLength,
+                    newRanges, newPositionMaps, newSequences);
+        }
+
+        /**
          * Returns new BranchSequences with i-th target cut according to the rangeToCut.
          *
          * @param i          target id
-         * @param rangeToCut range in local taget coordinates (not global)
+         * @param rangeToCut range in local target coordinates (not global)
          */
         BranchSequences cut(int i, Range rangeToCut) {
             if (rangeToCut.getLower() == 0 && rangeToCut.length() == sequences[i].size())
@@ -584,7 +650,6 @@ public final class FullSeqAssembler {
                 return new BranchSequences(assemblingFeatureTargetId, assemblingFeatureOffset, assemblingFeatureLength,
                         newRanges, newPositionMaps, newSequences);
             }
-
         }
     }
 
@@ -1334,6 +1399,56 @@ public final class FullSeqAssembler {
                     Arrays.stream(result)
                             .map(String::new)
                             .collect(Collectors.joining("\n"));
+        }
+
+        /**
+         * String representation of this state matrix
+         *
+         * @param qualityThreshold quality threshold (positions with quality lower then this value, wil be printed in
+         *                         lower case)
+         */
+        public String toCsv(byte qualityThreshold) {
+            int minPosition = Arrays.stream(points).min().getAsInt();
+            int maxPosition = Arrays.stream(points).max().getAsInt() + 1;
+
+            String[][] cells = new String[nReads][maxPosition - minPosition + 1];
+
+            OutputPort<int[]> port = createPort();
+            for (int position : points) {
+                int[] states = port.take();
+                for (int j = 0; j < nReads; j++) {
+                    int state = states[j];
+                    if (state != ABSENT_PACKED_VARIANT_INFO) {
+                        String seq = variantIdToSequence.get(state >>> 8).toString();
+                        if ((state & 0x7F) < qualityThreshold)
+                            seq = seq.toLowerCase();
+                        if (seq.equals(""))
+                            seq = "-";
+                        cells[j][position - minPosition] = seq;
+                    }
+                }
+            }
+            assert port.take() == null;
+
+            final String allLines = IntStream.range(0, nReads)
+                    .mapToObj(readIndex ->
+                            "a" + readIndex + "\t" +
+                                    IntStream
+                                            .range(0, maxPosition - minPosition + 1)
+                                            .mapToObj(positionOffset -> {
+                                                String cell = cells[readIndex][positionOffset];
+                                                return cell == null ? "" : cell;
+                                            })
+                                            .collect(Collectors.joining("\t"))
+                    ).collect(Collectors.joining("\n"));
+
+            StringBuilder header = new StringBuilder();
+            header.append("aIndex\t").append(IntStream
+                    .range(0, maxPosition - minPosition + 1)
+                    .mapToObj(positionOffset -> "" + (positionOffset + minPosition))
+                    .collect(Collectors.joining("\t")));
+
+            return header.toString() + "\n" + allLines;
         }
 
         /**

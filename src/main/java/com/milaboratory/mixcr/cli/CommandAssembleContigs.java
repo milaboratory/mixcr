@@ -187,6 +187,11 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
 
                     if (debugReport != null) {
                         synchronized (debugReport) {
+                            try (FileOutputStream fos = new FileOutputStream(debugReportFile + "." + cloneAlignments.clone.getId())) {
+                                final String content = rawVariantsData.toCsv((byte) 10);
+                                fos.write(content.getBytes());
+                            }
+
                             try {
                                 debugReport.write("Clone: " + cloneAlignments.clone.getId());
                                 debugReport.newLine();
