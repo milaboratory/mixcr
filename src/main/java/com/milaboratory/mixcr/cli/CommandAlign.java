@@ -37,7 +37,10 @@ import cc.redberry.pipe.util.Chunk;
 import cc.redberry.pipe.util.CountLimitingOutputPort;
 import cc.redberry.pipe.util.OrderedOutputPort;
 import cc.redberry.pipe.util.StatusReporter;
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.core.PairedEndReadsLayout;
@@ -52,7 +55,13 @@ import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.core.sequence.quality.QualityTrimmerParameters;
+import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor;
+import com.milaboratory.core.sequence.quality.ReadTrimmerReport;
+import com.milaboratory.mixcr.basictypes.SequenceHistory;
+import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
+import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
@@ -134,6 +143,14 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
             throwValidationException("ERROR: -n / --limit must be positive", false);
         this.limit = limit;
     }
+
+    @Option(description = "Read pre-processing: trimming quality threshold",
+            names = {"--trimming-quality-threshold"})
+    public byte trimmingQualityThreshold = 0;
+
+    @Option(description = "Read pre-processing: trimming window size",
+            names = {"--trimming-window-size"})
+    public byte trimmingWindowSize = 6;
 
     @Option(description = "Parameters preset.",
             names = {"-p", "--parameters"})
@@ -478,7 +495,19 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
 
             SmartProgressReporter.startProgressReport("Alignment", progress);
             Merger<Chunk<? extends SequenceRead>> mainInputReads = CUtils.buffered((OutputPort) chunked(sReads, 64), Math.max(16, threads));
-            ParallelProcessor alignedChunks = new ParallelProcessor(mainInputReads, chunked(aligner), Math.max(16, threads), threads);
+
+            OutputPort<Chunk<? extends SequenceRead>> mainInputReadsPreprocessed = mainInputReads;
+            if (trimmingQualityThreshold > 0) {
+                ReadTrimmerReport rep = new ReadTrimmerReport();
+                mainInputReadsPreprocessed = CUtils.wrap(
+                        mainInputReadsPreprocessed,
+                        CUtils.chunked(new ReadTrimmerProcessor(
+                                new QualityTrimmerParameters(trimmingQualityThreshold,
+                                        trimmingWindowSize), rep)));
+                report.setTrimmingReport(rep);
+            }
+
+            ParallelProcessor alignedChunks = new ParallelProcessor(mainInputReadsPreprocessed, chunked(aligner), Math.max(16, threads), threads);
             if (reportBuffers) {
                 StatusReporter reporter = new StatusReporter();
                 reporter.addBuffer("Input (chunked; chunk size = 64)", mainInputReads.getBufferStatusProvider());

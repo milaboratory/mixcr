@@ -31,6 +31,7 @@ package com.milaboratory.mixcr.cli;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.core.io.sequence.SequenceRead;
+import com.milaboratory.core.sequence.quality.ReadTrimmerReport;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerEventListener;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause;
@@ -55,6 +56,7 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
     private final AtomicLong realignedWithForcedNonFloatingBound = new AtomicLong(0);
     private final AtomicLong realignedWithForcedNonFloatingRightBoundInLeftRead = new AtomicLong(0);
     private final AtomicLong realignedWithForcedNonFloatingLeftBoundInRightRead = new AtomicLong(0);
+    private ReadTrimmerReport trimmingReport;
 
     public AlignerReport() {
     }
@@ -66,6 +68,15 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
 
     public long getFails(VDJCAlignmentFailCause cause) {
         return fails.get(cause.ordinal());
+    }
+
+    @JsonProperty("trimmingReport")
+    public ReadTrimmerReport getTrimmingReport() {
+        return trimmingReport;
+    }
+
+    public void setTrimmingReport(ReadTrimmerReport trimmingReport) {
+        this.trimmingReport = trimmingReport;
     }
 
     @JsonProperty("totalReadsProcessed")
@@ -264,5 +275,19 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
         helper.writePercentAndAbsoluteField("Realigned with forced non-floating bound", getRealignedWithForcedNonFloatingBound(), total);
         helper.writePercentAndAbsoluteField("Realigned with forced non-floating right bound in left read", getRealignedWithForcedNonFloatingRightBoundInLeftRead(), total);
         helper.writePercentAndAbsoluteField("Realigned with forced non-floating left bound in right read", getRealignedWithForcedNonFloatingLeftBoundInRightRead(), total);
+
+        if (trimmingReport != null) {
+            assert trimmingReport.getAlignments() == total;
+            helper.writePercentAndAbsoluteField("R1 Reads Trimmed Left", trimmingReport.getR1LeftTrimmedEvents(), total);
+            helper.writePercentAndAbsoluteField("R1 Reads Trimmed Right", trimmingReport.getR1RightTrimmedEvents(), total);
+            helper.writeField("Average R1 Nucleotides Trimmed Left", 1.0 * trimmingReport.getR1LeftTrimmedNucleotides() / total);
+            helper.writeField("Average R1 Nucleotides Trimmed Right", 1.0 * trimmingReport.getR1RightTrimmedNucleotides() / total);
+            if (trimmingReport.getR2LeftTrimmedEvents() > 0 || trimmingReport.getR2RightTrimmedEvents() > 0) {
+                helper.writePercentAndAbsoluteField("R2 Reads Trimmed Left", trimmingReport.getR2LeftTrimmedEvents(), total);
+                helper.writePercentAndAbsoluteField("R2 Reads Trimmed Right", trimmingReport.getR2RightTrimmedEvents(), total);
+                helper.writeField("Average R2 Nucleotides Trimmed Left", 1.0 * trimmingReport.getR2LeftTrimmedNucleotides() / total);
+                helper.writeField("Average R2 Nucleotides Trimmed Right", 1.0 * trimmingReport.getR2RightTrimmedNucleotides() / total);
+            }
+        }
     }
 }
