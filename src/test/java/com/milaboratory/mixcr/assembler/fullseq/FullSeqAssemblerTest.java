@@ -321,12 +321,12 @@ public class FullSeqAssemblerTest {
     public void test1() throws Exception {
         int len = 140;
         PairedRead read1 = new PairedRead(
-                new SingleReadImpl(0, new NSequenceWithQuality(masterSeq1WT.getRangeFromCDR3Begin(-20, len)), "R1"),
-                new SingleReadImpl(0, new NSequenceWithQuality(masterSeq1WT.getRangeFromCDR3Begin(-200, len).getReverseComplement()), "R2"));
+                new SingleReadImpl(0, new NSequenceWithQuality(masterSeq1WT.getRangeFromCDR3Begin(-200, len)), "R1"),
+                new SingleReadImpl(0, new NSequenceWithQuality(masterSeq1WT.getRangeFromCDR3Begin(-20, len).getReverseComplement()), "R2"));
 
         PairedRead read2 = new PairedRead(
-                new SingleReadImpl(1, new NSequenceWithQuality(masterSeq1WT.getRangeFromCDR3Begin(-30, len)), "R1"),
-                new SingleReadImpl(1, new NSequenceWithQuality(masterSeq1WT.getRangeFromCDR3Begin(-150, len).getReverseComplement()), "R2"));
+                new SingleReadImpl(1, new NSequenceWithQuality(masterSeq1WT.getRangeFromCDR3Begin(-150, len)), "R1"),
+                new SingleReadImpl(1, new NSequenceWithQuality(masterSeq1WT.getRangeFromCDR3Begin(-30, len).getReverseComplement()), "R2"));
 
         RunMiXCR.RunMiXCRAnalysis params = new RunMiXCR.RunMiXCRAnalysis(read1, read2);
 
