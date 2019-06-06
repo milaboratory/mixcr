@@ -436,9 +436,6 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                     continue;
 
                 final AlignmentScoring<NucleotideSequence> scoring = parameters.getVAlignerParameters().getParameters().getScoring();
-                if (scoring instanceof AffineGapAlignmentScoring)
-                    continue; //TODO IMPLEMENT
-
                 final NucleotideSequence sequence2 = target.targets[1].getSequence();
                 final NucleotideSequence sequence1 = leftHit.getAlignment().getSequence1();
                 final int beginFR3 = leftHit.getRecordPayload().getPartitioning().getRelativePosition(parameters.getFeatureToAlign(GeneType.Variable), ReferencePoint.FR3Begin);
@@ -498,9 +495,6 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                     continue;
 
                 final AlignmentScoring<NucleotideSequence> scoring = parameters.getJAlignerParameters().getParameters().getScoring();
-                if (scoring instanceof AffineGapAlignmentScoring)
-                    continue;//TODO IMPLEMENT
-
                 final NucleotideSequence sequence2 = target.targets[0].getSequence();
                 final NucleotideSequence sequence1 = rightHit.getAlignment().getSequence1();
 
