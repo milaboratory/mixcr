@@ -410,7 +410,8 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
             if (forceLeftEdgeInRight)
                 vAl2 = vAlignerNotFloatingLeft.align(target.targets[1].getSequence()).getHits();
 
-            this.listener.onRealignmentWithForcedNonFloatingBound(forceLeftEdgeInRight, forceRightEdgeInLeft);
+            if (this.listener != null)
+                this.listener.onRealignmentWithForcedNonFloatingBound(forceLeftEdgeInRight, forceRightEdgeInLeft);
         }
 
         /*
