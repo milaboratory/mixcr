@@ -359,21 +359,22 @@ public final class FullSeqAssembler {
      * Performs final sequence cleanup. Removes very short sub-targets, performes quality trimming.
      */
     BranchSequences clean(BranchSequences seq) {
-        for (int i = seq.ranges.length - 1; i >= 0; --i) {
-            if (parameters.trimmingParameters != null)
+        if (parameters.trimmingParameters != null)
+            for (int i = seq.ranges.length - 1; i >= 0; --i)
                 if (i == seq.assemblingFeatureTargetId) {
                     final Range[] ranges = QualityTrimmer.calculateIslandsFromInitialRange(seq.sequences[i].getQuality(),
                             parameters.trimmingParameters,
                             new Range(seq.assemblingFeatureOffset, seq.assemblingFeatureOffset + seq.assemblingFeatureLength));
                     seq = seq.splitCut(i, ranges);
                 } else {
+                    // This also completely removes regions with low quality
                     final Range[] ranges = QualityTrimmer.calculateAllIslands(seq.sequences[i].getQuality(),
                             parameters.trimmingParameters);
                     seq = seq.splitCut(i, ranges);
                 }
+        for (int i = seq.ranges.length - 1; i >= 0; --i)
             if (seq.sequences[i].size() < parameters.minimalContigLength && i != seq.assemblingFeatureTargetId)
                 seq = seq.without(i);
-        }
         return seq;
     }
 
@@ -593,8 +594,8 @@ public final class FullSeqAssembler {
             int newAssemblingFeatureTargetId = i == assemblingFeatureTargetId
                     ? -1
                     :
-                    i > assemblingFeatureTargetId
-                            ? i
+                    assemblingFeatureTargetId < i
+                            ? assemblingFeatureTargetId
                             : assemblingFeatureTargetId - 1 + rangesToCut.length;
 
             for (int j = 0; j < rangesToCut.length; j++) {
@@ -606,7 +607,7 @@ public final class FullSeqAssembler {
                     newPositionMaps[i + j] = (TIntArrayList) positionMaps[i].subList(rangeToCut.getLower(), rangeToCut.getUpper());
                     newSequences[i + j] = sequences[i].getRange(rangeToCut);
                     newAssemblingFeatureTargetId = i + j;
-                    newAssemblingFeatureOffset -= rangeToCut.getLower();
+                    newAssemblingFeatureOffset = assemblingFeatureOffset - rangeToCut.getLower();
                 } else {
                     newRanges[i + j] = new Range(positionMaps[i].get(rangeToCut.getLower()), positionMaps[i].get(rangeToCut.getUpper() - 1) + 1);
                     newPositionMaps[i + j] = (TIntArrayList) positionMaps[i].subList(rangeToCut.getLower(), rangeToCut.getUpper());
