@@ -1226,7 +1226,7 @@ public final class FullSeqAssembler {
         // Collecting coverage and VariantAggregators
         int nAlignments = 0;
         for (VDJCAlignments al : CUtils.it(alignments.get())) {
-            al = al.updateAlignments(AlignmentUtils::shiftIndelsAtHomopolymers);
+            // al = al.updateAlignments(AlignmentUtils::shiftIndelsAtHomopolymers); // FIXME
             ++nAlignments;
             for (PointSequence point : toPointSequences(al)) {
                 int seqIndex = getVariantIndex(point.sequence.getSequence());
@@ -1275,7 +1275,7 @@ public final class FullSeqAssembler {
         // Main data collection loop
         i = 0;
         for (VDJCAlignments al : CUtils.it(alignments.get())) {
-            al = al.updateAlignments(AlignmentUtils::shiftIndelsAtHomopolymers);
+            // al = al.updateAlignments(AlignmentUtils::shiftIndelsAtHomopolymers); // FIXME
             for (PointSequence point : toPointSequences(al)) {
                 int pointIndex = revIndex.get(point.point);
                 packedData[pointIndex][i] =
