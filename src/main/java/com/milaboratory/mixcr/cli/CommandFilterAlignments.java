@@ -132,7 +132,7 @@ public class CommandFilterAlignments extends ACommandWithSmartOverwriteWithSingl
     public ActionConfiguration getConfiguration() {
         return new FilterConfiguration(getChains(),
                 chimerasOnly,
-                limit, getReadIds().toArray(), getContainFeature(), getCdr3Equals());
+                limit, getReadIds() == null ? null : getReadIds().toArray(), getContainFeature(), getCdr3Equals());
     }
 
     @Override
@@ -145,7 +145,7 @@ public class CommandFilterAlignments extends ACommandWithSmartOverwriteWithSingl
                 sReads = new CountLimitingOutputPort<>(sReads, limit);
                 progress = SmartProgressReporter.extractProgress((CountLimitingOutputPort<?>) sReads);
             }
-            writer.header(reader.getParameters(), reader.getUsedGenes(), null);
+            writer.header(reader.getParameters(), reader.getUsedGenes(), getFullPipelineConfiguration());
             SmartProgressReporter.startProgressReport("Filtering", progress);
             int total = 0, passed = 0;
             final AlignmentsFilter filter = getFilter();
