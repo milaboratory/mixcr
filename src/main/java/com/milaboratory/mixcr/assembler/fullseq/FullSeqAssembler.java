@@ -988,7 +988,9 @@ public final class FullSeqAssembler {
         if (global) {
             int seq2added = width;
             if (length2 > length1) {
-                length2 = Math.min(length2, length1 + width);
+                int length2upd = Math.min(length2, length1 + width);
+                offset2 += length2 - length2upd;
+                length2 = length2upd;
                 seq2added = Math.min(length2, width + (length2 - length1));
             }
             result = BandedLinearAligner.alignLeftAdded0(scoring, seq1, seq2, offset1, length1, 0, offset2, length2, seq2added, width, mutations, cache);
@@ -1012,7 +1014,9 @@ public final class FullSeqAssembler {
         if (global) {
             int seq2added = width;
             if (length2 > length1) {
-                length2 = Math.min(length2, length1 + width);
+                int length2upd = Math.min(length2, length1 + width);
+                offset2 += length2 - length2upd;
+                length2 = length2upd;
                 seq2added = Math.min(length2, width + (length2 - length1));
             }
             result = BandedAffineAligner.semiGlobalLeft0(scoring, seq1, seq2, offset1, length1, 0, offset2, length2, seq2added, width, mutations, cache);
