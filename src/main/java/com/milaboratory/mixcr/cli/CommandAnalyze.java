@@ -847,8 +847,7 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         Collection<String> pipelineSpecificAssembleParameters() {
             return Arrays.asList(
                     "-OseparateByV=true",
-                    "-OseparateByJ=true",
-                    "-OseparateByC=true"
+                    "-OseparateByJ=true"
             );
         }
 
