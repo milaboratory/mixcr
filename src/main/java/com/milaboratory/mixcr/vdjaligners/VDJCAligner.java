@@ -243,11 +243,6 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
     }
 
     static HasGene wrapAlignmentHit(final AlignmentHit<?, VDJCGene> hit) {
-        return new HasGene() {
-            @Override
-            public VDJCGene getGene() {
-                return hit.getRecordPayload();
-            }
-        };
+        return hit::getRecordPayload;
     }
 }
