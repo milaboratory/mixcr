@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 import static com.milaboratory.core.alignment.Alignment.aabs;
 import static com.milaboratory.util.StreamUtil.noMerge;
 
-public class VDJCObject {
+public abstract class VDJCObject {
     protected final NSequenceWithQuality[] targets;
     protected final EnumMap<GeneType, VDJCHit[]> hits;
     protected volatile EnumMap<GeneType, Chains> allChains;

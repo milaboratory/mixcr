@@ -534,7 +534,9 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                 });
                 reporter.start();
             }
-            OutputPort<VDJCAlignmentResult> alignments = unchunked(alignedChunks);
+            OutputPort<VDJCAlignmentResult> alignments = unchunked(
+                    CUtils.wrap(alignedChunks,
+                            CUtils.<VDJCAlignmentResult, VDJCAlignmentResult>chunked(VDJCAlignmentResult::shiftIndelsAtHomopolymers)));
             for (VDJCAlignmentResult result : CUtils.it(new OrderedOutputPort<>(alignments, o -> o.read.getId()))) {
                 VDJCAlignments alignment = result.alignment;
                 SequenceRead read = result.read;
