@@ -86,6 +86,8 @@ public final class FullSeqAssembler {
     final int jLength;
     /** position of assembling feature in global grid (just "one letter") */
     final int positionOfAssemblingFeature;
+    /** variant id of assembling feature of the target clonotype */
+    final int clonalAssemblingFeatureVariantIndex;
     /** length of assembling feature in the clone */
     final int assemblingFeatureLength; // = 1
     /** begin of the aligned J part in the reference J gene */
@@ -141,6 +143,8 @@ public final class FullSeqAssembler {
 
         this.assemblingFeature = assemblingFeatures[0];
         this.genes = new VDJCGenes(baseVHit.getGene(), null, baseJHit.getGene(), null); // clone.getBestHitGenes();
+
+        this.clonalAssemblingFeatureVariantIndex = initVariantMappings(clone.getFeature(this.assemblingFeature).getSequence());
 
         ReferencePoint
                 start = assemblingFeature.getFirstPoint(),
@@ -267,10 +271,17 @@ public final class FullSeqAssembler {
         clusterizeBranches(data.points, branches);
 
         Clone[] result = branches.stream()
-                .map(branch -> buildClone(branch.count, clean(assembleBranchSequences(data.points, branch))))
+                .map(branch -> assembleBranchSequences(data.points, branch))
+                .filter(Objects::nonNull)
+                .map(branch -> buildClone(clean(branch)))
                 .toArray(Clone[]::new);
 
-        assert result.length >= 1;
+        if (result.length == 0) {
+            // In case assemble procedure failed to assemble even a single clonotype, returning original
+            // clonotype, to prevent diversity losses
+            report.onEmptyOutput(clone);
+            result = new Clone[]{clone};
+        }
 
         if (report != null)
             report.afterVariantsClustered(clone, result);
@@ -419,12 +430,21 @@ public final class FullSeqAssembler {
 
             assert currentPosition != nextPosition;
 
+            int variantId = ((int) (positionedStates[i] >>> 8)) & 0xFFFFFF;
+
             NSequenceWithQuality seq = new NSequenceWithQuality(
-                    variantIdToSequence.get(((int) (positionedStates[i] >>> 8)) & 0xFFFFFF),
+                    variantIdToSequence.get(variantId),
                     (byte) positionedStates[i]);
 
             if (currentPosition == positionOfAssemblingFeature) {
                 assert assemblingFeatureTargetId == -1;
+
+                // Current implementation can work only with variants having the sequence in the assemblingFeature
+                // region exactly equal to the clonal sequence
+                if (variantId != clonalAssemblingFeatureVariantIndex)
+                    // Terminating sequence assembling process, and returning null result
+                    return null;
+
                 assemblingFeatureTargetId = ranges.size();
                 assemblingFeatureOffset = sequenceBuilder.size();
                 assemblingFeatureLength = seq.size();
@@ -459,6 +479,7 @@ public final class FullSeqAssembler {
         assert assemblingFeatureTargetId != -1;
 
         return new BranchSequences(
+                branch.count,
                 assemblingFeatureTargetId,
                 assemblingFeatureOffset,
                 assemblingFeatureLength,
@@ -476,6 +497,10 @@ public final class FullSeqAssembler {
     }
 
     private final class BranchSequences {
+        /**
+         * Count from VariantBranch
+         */
+        final double count;
         /**
          * Id of the target containing assemblingFeature
          */
@@ -503,8 +528,10 @@ public final class FullSeqAssembler {
          */
         final NSequenceWithQuality[] sequences;
 
-        BranchSequences(int assemblingFeatureTargetId, int assemblingFeatureOffset, int assemblingFeatureLength,
+        BranchSequences(double count,
+                        int assemblingFeatureTargetId, int assemblingFeatureOffset, int assemblingFeatureLength,
                         Range[] ranges, TIntArrayList[] positionMaps, NSequenceWithQuality[] sequences) {
+            this.count = count;
             this.assemblingFeatureTargetId = assemblingFeatureTargetId;
             this.assemblingFeatureOffset = assemblingFeatureOffset;
             this.assemblingFeatureLength = assemblingFeatureLength;
@@ -547,6 +574,7 @@ public final class FullSeqAssembler {
             System.arraycopy(sequences, 0, newSequences, 0, i);
             System.arraycopy(sequences, i + 1, newSequences, i, newLength - i);
             return new BranchSequences(
+                    count,
                     i < assemblingFeatureTargetId ? assemblingFeatureTargetId - 1 : assemblingFeatureTargetId,
                     assemblingFeatureOffset,
                     assemblingFeatureLength,
@@ -618,7 +646,7 @@ public final class FullSeqAssembler {
             assert newAssemblingFeatureOffset != -1;
             assert newAssemblingFeatureTargetId != -1;
 
-            return new BranchSequences(newAssemblingFeatureTargetId, newAssemblingFeatureOffset, assemblingFeatureLength,
+            return new BranchSequences(count, newAssemblingFeatureTargetId, newAssemblingFeatureOffset, assemblingFeatureLength,
                     newRanges, newPositionMaps, newSequences);
         }
 
@@ -641,14 +669,14 @@ public final class FullSeqAssembler {
                 newRanges[i] = new Range(newPositionMaps[i].get(rangeToCut.getLower()), newPositionMaps[i].get(rangeToCut.getUpper() - 1) + 1);
                 newPositionMaps[i] = (TIntArrayList) newPositionMaps[i].subList(rangeToCut.getLower(), rangeToCut.getUpper());
                 newSequences[i] = newSequences[i].getRange(rangeToCut);
-                return new BranchSequences(assemblingFeatureTargetId,
+                return new BranchSequences(count, assemblingFeatureTargetId,
                         assemblingFeatureOffset - rangeToCut.getLower(), assemblingFeatureLength,
                         newRanges, newPositionMaps, newSequences);
             } else {
                 newRanges[i] = new Range(newPositionMaps[i].get(rangeToCut.getLower()), newPositionMaps[i].get(rangeToCut.getUpper() - 1) + 1);
                 newPositionMaps[i] = (TIntArrayList) newPositionMaps[i].subList(rangeToCut.getLower(), rangeToCut.getUpper());
                 newSequences[i] = newSequences[i].getRange(rangeToCut);
-                return new BranchSequences(assemblingFeatureTargetId, assemblingFeatureOffset, assemblingFeatureLength,
+                return new BranchSequences(count, assemblingFeatureTargetId, assemblingFeatureOffset, assemblingFeatureLength,
                         newRanges, newPositionMaps, newSequences);
             }
         }
@@ -656,7 +684,7 @@ public final class FullSeqAssembler {
 
     /* ================================= Re-align and build final clone ====================================== */
 
-    private Clone buildClone(double count, BranchSequences targets) {
+    private Clone buildClone(BranchSequences targets) {
         Alignment<NucleotideSequence>[] vHitAlignments = new Alignment[targets.ranges.length],
                 jHitAlignments = new Alignment[targets.ranges.length];
         if (vHit == null)
@@ -837,7 +865,7 @@ public final class FullSeqAssembler {
 
         NSequenceWithQuality assemblingFeatureSeq = targets.sequences[targets.assemblingFeatureTargetId]
                 .getRange(targets.assemblingFeatureOffset, targets.assemblingFeatureOffset + targets.assemblingFeatureLength);
-        Clone clone = cloneFactory.create(0, count, getOriginalGeneScores(), new NSequenceWithQuality[]{assemblingFeatureSeq});
+        Clone clone = cloneFactory.create(0, targets.count, getOriginalGeneScores(), new NSequenceWithQuality[]{assemblingFeatureSeq});
 
         vHitAlignments[targets.assemblingFeatureTargetId] =
                 mergeTwoAlignments(
@@ -872,7 +900,7 @@ public final class FullSeqAssembler {
         } else
             tmp[0] = substituteAlignments(tmp[0], jHitAlignments);
 
-        return new Clone(targets.sequences, hits, count, 0);
+        return new Clone(targets.sequences, hits, targets.count, 0);
     }
 
     static int indexOfGene(VDJCHit[] hits, VDJCGeneId gene) {
@@ -1205,6 +1233,32 @@ public final class FullSeqAssembler {
     }
 
     /**
+     * Sets common sequences states with well-defined ids. Returns assembling feature variant id.
+     */
+    private int initVariantMappings(NucleotideSequence clonalAssemblingFeatureSequence) {
+        assert sequenceToVariantId.isEmpty();
+        assert variantIdToSequence.isEmpty();
+
+        // Single letters
+        for (byte letter = 0; letter < NucleotideSequence.ALPHABET.basicSize(); letter++) {
+            NucleotideSequence seq = new NucleotideSequence(new byte[]{letter});
+            sequenceToVariantId.put(seq, letter);
+            variantIdToSequence.put(letter, seq);
+        }
+
+        // Empty sequence
+        sequenceToVariantId.put(NucleotideSequence.EMPTY, NucleotideSequence.ALPHABET.basicSize());
+        variantIdToSequence.put(NucleotideSequence.ALPHABET.basicSize(), NucleotideSequence.EMPTY);
+
+        // Assembling feature
+        int assemblingFeatureId = NucleotideSequence.ALPHABET.basicSize() + 1;
+        sequenceToVariantId.put(clonalAssemblingFeatureSequence, assemblingFeatureId);
+        variantIdToSequence.put(assemblingFeatureId, clonalAssemblingFeatureSequence);
+
+        return assemblingFeatureId;
+    }
+
+    /**
      * Aggregates information about position states in all the provided alignments, and returns the object that allows
      * to iterate from one position to another (sorted by coverage, from most covered to less covered) and see states
      * across all the alignments for each of the positions.
@@ -1212,18 +1266,6 @@ public final class FullSeqAssembler {
      * @param alignments supplier of alignments iterators. Will be invoked twice.
      */
     public RawVariantsData calculateRawData(Supplier<OutputPort<VDJCAlignments>> alignments) {
-        if (!sequenceToVariantId.isEmpty())
-            throw new IllegalStateException();
-
-        // Setting common sequences states with well-defined ids upfront
-        for (byte letter = 0; letter < NucleotideSequence.ALPHABET.basicSize(); letter++) {
-            NucleotideSequence seq = new NucleotideSequence(new byte[]{letter});
-            sequenceToVariantId.put(seq, letter);
-            variantIdToSequence.put(letter, seq);
-        }
-        sequenceToVariantId.put(NucleotideSequence.EMPTY, NucleotideSequence.ALPHABET.basicSize());
-        variantIdToSequence.put(NucleotideSequence.ALPHABET.basicSize(), NucleotideSequence.EMPTY);
-
         TIntIntHashMap coverage = new TIntIntHashMap();
         TIntObjectHashMap<TIntObjectHashMap<VariantAggregator>> variants = new TIntObjectHashMap<>();
 

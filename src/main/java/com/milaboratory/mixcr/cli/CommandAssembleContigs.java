@@ -138,7 +138,6 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
 
             OutputPort<Clone[]> parallelProcessor = new ParallelProcessor<>(cloneAlignmentsPort, cloneAlignments -> {
                 try {
-
                     // Collecting statistics
 
                     EnumMap<GeneType, Map<VDJCGeneId, CoverageAccumulator>> coverages = cloneAlignments.clone.getHitsMap()
