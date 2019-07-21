@@ -1,2 +1,11 @@
-Fixes exception in `-mutationsDetailed` and similar export options
+Alignments are forced to the corresponding edge if the same V/J gene is detected in the opposite PE read mate
+Average quality threshold (`-OaverageQualityThreshold=...`) in `assembleContigs` increased to `20`
 Added `exportAlignmentsForClones` action
+All indels in homopolimeric stretches are now shifted left in all alignment algorihtms
+Smarter base V/J/C hit selection in `assembleContigs`
+Read quality trimming (see help for `--trimming-window-size` and `--trimming-quality-threshold` options in `align`) (disabled by default until 3.1)
+Fix exception in `-mutationsDetailed` and similar export options
+Fixes in step skipping logic in `analyze` (additional automatic parameter adjustment for VDJC libraries covering only `VRegion`)
+Several more fixes for `assembleContigs`
+minor: Fixes incorrect numbers in `assemble` report
+minor: Fix for filterAlignmentsAction
