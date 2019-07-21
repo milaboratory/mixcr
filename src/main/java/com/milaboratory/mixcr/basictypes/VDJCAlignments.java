@@ -30,6 +30,7 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.alignment.Alignment;
+import com.milaboratory.core.alignment.AlignmentUtils;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SequenceReadUtil;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
@@ -40,10 +41,7 @@ import com.milaboratory.util.ArraysUtils;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import io.repseq.core.GeneType;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.List;
+import java.util.*;
 import java.util.function.Function;
 
 @Serializable(by = IO.VDJCAlignmentsSerializer.class)
@@ -104,6 +102,17 @@ public final class VDJCAlignments extends VDJCObject {
         this(-1, createHits(vHits, dHits, jHits, cHits), targets, history, originalReads);
     }
 
+    public VDJCAlignments shiftIndelsAtHomopolymers() {
+        return mapHits(h -> h.mapAlignments(AlignmentUtils::shiftIndelsAtHomopolymers));
+    }
+
+    public VDJCAlignments mapHits(Function<VDJCHit, VDJCHit> mapper) {
+        EnumMap<GeneType, VDJCHit[]> result = new EnumMap<>(GeneType.class);
+        for (Map.Entry<GeneType, VDJCHit[]> e : hits.entrySet())
+            result.put(e.getKey(), Arrays.stream(e.getValue()).map(mapper).toArray(VDJCHit[]::new));
+        return new VDJCAlignments(alignmentsIndex, result, targets, history, originalReads, mappingType, cloneIndex);
+    }
+
     public boolean isClustered() {
         return ReadToCloneMapping.isClustered(mappingType);
     }
@@ -144,7 +153,7 @@ public final class VDJCAlignments extends VDJCObject {
 
     public VDJCAlignments updateAlignments(Function<Alignment<NucleotideSequence>, Alignment<NucleotideSequence>> processor) {
         EnumMap<GeneType, VDJCHit[]> newHits = this.hits.clone();
-        newHits.replaceAll((k, v) -> Arrays.stream(v).map(h -> h.updateAlignments(processor)).toArray(VDJCHit[]::new));
+        newHits.replaceAll((k, v) -> Arrays.stream(v).map(h -> h.mapAlignments(processor)).toArray(VDJCHit[]::new));
         return new VDJCAlignments(alignmentsIndex, newHits, targets, history, originalReads, mappingType, cloneIndex);
     }
 
@@ -283,7 +292,7 @@ public final class VDJCAlignments extends VDJCObject {
      *
      * @param top numer of top hits to test
      * @return {@code true} if at least one V and one J hit among first {@code top} hits have same chain and false
-     * otherwise (first {@code top} V hits have different chain from those have first {@code top} J hits)
+     *         otherwise (first {@code top} V hits have different chain from those have first {@code top} J hits)
      */
     public final boolean hasSameVJLoci(final int top) {
         final VDJCHit[] vHits = hits.get(GeneType.Variable),

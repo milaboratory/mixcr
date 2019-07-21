@@ -10,7 +10,7 @@
     "minimalNonEdgePointsFraction": 0.25,
     "subCloningRegion": null,
     "trimmingParameters": {
-      "averageQualityThreshold": 20.0,
+      "averageQualityThreshold": 10.0,
       "windowSize": 8
     },
     "minimalContigLength": 20,

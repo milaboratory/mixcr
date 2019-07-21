@@ -150,6 +150,7 @@ public final class Main {
                 .addSubcommand("exportClonesPretty", CommandExportClonesPretty.class)
 
                 .addSubcommand("exportReadsForClones", CommandExportReadsForClones.class)
+                .addSubcommand("exportAlignmentsForClones", CommandExportAlignmentsForClones.class)
                 .addSubcommand("exportReads", CommandExportReads.class)
 
                 .addSubcommand("mergeAlignments", CommandMergeAlignments.class)

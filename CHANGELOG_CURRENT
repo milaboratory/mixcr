@@ -1,1 +1,2 @@
 Fixes exception in `-mutationsDetailed` and similar export options
+Added `exportAlignmentsForClones` action

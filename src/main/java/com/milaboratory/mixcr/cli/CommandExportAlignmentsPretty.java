@@ -219,6 +219,13 @@ public class CommandExportAlignmentsPretty extends ACommandSimpleExportMiXCR {
         output.println(">>> Read ids: " + Arrays.toString(alignments.getReadIds())
                 .replace("[", "")
                 .replace("]", ""));
+        if (alignments.getCloneIndex() != -1) {
+            output.print(">>> Clone mapping: ");
+            output.print(alignments.getCloneIndex());
+            output.print(" ");
+            output.println(alignments.getMappingType());
+        }
+        output.println();
         output.println();
         for (int i = 0; i < alignments.numberOfTargets(); i++) {
             if (printDescriptions) {
