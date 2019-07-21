@@ -226,6 +226,33 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                 throwValidationException("Failed to override some parameter: " + overrides);
         }
 
+        // Detect if automatic featureToAlign correction is required
+        VDJCLibrary library = getLibrary();
+
+        int totalV = 0, totalVErrors = 0, hasVRegion = 0;
+        GeneFeature correctingFeature = alignerParameters.getVAlignerParameters().getGeneFeatureToAlign().hasReversedRegions() ?
+                GeneFeature.VRegionWithP :
+                GeneFeature.VRegion;
+
+        for (VDJCGene gene : library.getGenes(getChains())) {
+            if (gene.getGeneType() == GeneType.Variable) {
+                totalV++;
+                if (!alignerParameters.containsRequiredFeature(gene)) {
+                    totalVErrors++;
+                    if (gene.getPartitioning().isAvailable(correctingFeature))
+                        hasVRegion++;
+                }
+            }
+        }
+
+        // Performing V featureToAlign correction if needed
+        if (totalVErrors > totalV * 0.9 && hasVRegion > totalVErrors * 0.8) {
+            warn("WARNING: forcing -OvParameters.geneFeatureToAlign=" + GeneFeature.encode(correctingFeature) +
+                    " since current gene feature (" + GeneFeature.encode(alignerParameters.getVAlignerParameters().getGeneFeatureToAlign()) + ") is absent in " +
+                    Util.PERCENT_FORMAT.format(100.0 * totalVErrors / totalV) + "% of V genes.");
+            alignerParameters.getVAlignerParameters().setGeneFeatureToAlign(correctingFeature);
+        }
+
         return vdjcAlignerParameters = alignerParameters;
     }
 
@@ -371,16 +398,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
         // Getting aligner parameters
         VDJCAlignerParameters alignerParameters = getAlignerParameters();
 
-        // Creating aligner
-        VDJCAligner aligner = VDJCAligner.createAligner(alignerParameters,
-                isInputPaired(), !noMerge);
-
         // Detect if automatic featureToAlign correction is required
-        int totalV = 0, totalVErrors = 0, hasVRegion = 0;
-        GeneFeature correctingFeature = alignerParameters.getVAlignerParameters().getGeneFeatureToAlign().hasReversedRegions() ?
-                GeneFeature.VRegionWithP :
-                GeneFeature.VRegion;
-
         VDJCLibrary library = getLibrary();
 
         // Printing library level warnings, if specified for the library
@@ -397,24 +415,9 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                 warn(l);
         }
 
-        for (VDJCGene gene : library.getGenes(getChains())) {
-            if (gene.getGeneType() == GeneType.Variable) {
-                totalV++;
-                if (!alignerParameters.containsRequiredFeature(gene)) {
-                    totalVErrors++;
-                    if (gene.getPartitioning().isAvailable(correctingFeature))
-                        hasVRegion++;
-                }
-            }
-        }
-
-        // Performing V featureToAlign correction if needed
-        if (totalVErrors > totalV * 0.9 && hasVRegion > totalVErrors * 0.8) {
-            warn("WARNING: forcing -OvParameters.geneFeatureToAlign=" + GeneFeature.encode(correctingFeature) +
-                    " since current gene feature (" + GeneFeature.encode(alignerParameters.getVAlignerParameters().getGeneFeatureToAlign()) + ") is absent in " +
-                    Util.PERCENT_FORMAT.format(100.0 * totalVErrors / totalV) + "% of V genes.");
-            alignerParameters.getVAlignerParameters().setGeneFeatureToAlign(correctingFeature);
-        }
+        // Creating aligner
+        VDJCAligner aligner = VDJCAligner.createAligner(alignerParameters,
+                isInputPaired(), !noMerge);
 
         int numberOfExcludedNFGenes = 0;
         int numberOfExcludedFGenes = 0;

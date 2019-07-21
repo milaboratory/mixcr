@@ -727,6 +727,8 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
             } catch (Exception e) {
                 throwValidationException("Illegal gene feature: " + v);
             }
+            if (!assemblingFeature.contains(GeneFeature.ShortCDR3))
+                throwValidationException("--region-of-interest must cover CDR3");
         }
 
         @Override
