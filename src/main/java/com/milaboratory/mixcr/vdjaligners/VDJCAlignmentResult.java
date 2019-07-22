@@ -45,4 +45,10 @@ public final class VDJCAlignmentResult<R extends SequenceRead> {
         this.read = read;
         this.alignment = null;
     }
+
+    public VDJCAlignmentResult<R> shiftIndelsAtHomopolymers() {
+        if (alignment == null)
+            return this;
+        return new VDJCAlignmentResult<>(read, alignment.shiftIndelsAtHomopolymers());
+    }
 }

@@ -173,7 +173,7 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
                     reader.getParameters().getJAlignerParameters().getParameters().getScoring());
 
             for (VDJCAlignments alignments : CUtils.it(new OrderedOutputPort<>(process.getOutput(), VDJCAlignments::getAlignmentsIndex)))
-                writer.write(alignments);
+                writer.write(alignments.shiftIndelsAtHomopolymers());
             writer.setNumberOfProcessedReads(reader.getNumberOfReads());
 
             process.finish();

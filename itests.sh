@@ -103,6 +103,11 @@ if [[ $create_standard_results == true ]]; then
     go_assemble ${s}_paired
     mixcr align -s hs -r ${s}_single.vdjca.report ${s}_R1.fastq ${s}_single.vdjca
     go_assemble ${s}_single
+
+    mixcr align -s hs -p kAligner2 -r ${s}_paired.vdjca.report ${s}_R1.fastq ${s}_R2.fastq ${s}_paired2.vdjca
+    go_assemble ${s}_paired2
+    mixcr align -s hs -p kAligner2 -r ${s}_single.vdjca.report ${s}_R1.fastq ${s}_single2.vdjca
+    go_assemble ${s}_single2
   done
 fi
 

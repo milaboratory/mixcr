@@ -39,8 +39,8 @@ public interface VDJCAlignerEventListener {
     void onSuccessfulAlignment(SequenceRead read, VDJCAlignments alignment);
 
     /**
-     * Fired on successful sequence-aided overlap (e.g. using PEAR-like algorithm,
-     * see {@link com.milaboratory.core.merger.MismatchOnlyPairedReadMerger})
+     * Fired on successful sequence-aided overlap (e.g. using PEAR-like algorithm, see {@link
+     * com.milaboratory.core.merger.MismatchOnlyPairedReadMerger})
      *
      * @param read       original read
      * @param alignments resulting alignment
@@ -61,4 +61,7 @@ public interface VDJCAlignerEventListener {
     void onTopHitSequenceConflict(SequenceRead read, VDJCAlignments alignments, GeneType geneType);
 
     void onSegmentChimeraDetected(GeneType geneType, SequenceRead read, VDJCAlignments alignments);
+
+    /** only for paired-end PV-first aligner */
+    void onRealignmentWithForcedNonFloatingBound(boolean forceLeftEdgeInRight, boolean forceRightEdgeInLeft);
 }

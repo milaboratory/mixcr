@@ -205,6 +205,9 @@ public class JsonOverrider {
                 overrideWarn(fieldName, value);
             oNode.set(fieldName, NullNode.getInstance());
             return true;
+        } else if (valueNode.isNull()) {
+            oNode.put(fieldName, value);
+            return true;
         }
         return false;
     }
