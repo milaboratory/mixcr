@@ -146,11 +146,11 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
 
     @Option(description = "Read pre-processing: trimming quality threshold",
             names = {"--trimming-quality-threshold"})
-    public byte trimmingQualityThreshold = 0;
+    public byte trimmingQualityThreshold = 0; // 17
 
     @Option(description = "Read pre-processing: trimming window size",
             names = {"--trimming-window-size"})
-    public byte trimmingWindowSize = 6;
+    public byte trimmingWindowSize = 6; // 3
 
     @Option(description = "Parameters preset.",
             names = {"-p", "--parameters"})
