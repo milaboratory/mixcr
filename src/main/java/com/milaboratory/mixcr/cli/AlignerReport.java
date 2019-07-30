@@ -165,6 +165,11 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
         return jChimeras.get();
     }
 
+    @JsonProperty("chainUsage")
+    public ChainUsageStats getChainUsage() {
+        return chainStats;
+    }
+
     @JsonProperty("realignedWithForcedNonFloatingBound")
     public long getRealignedWithForcedNonFloatingBound() {
         return realignedWithForcedNonFloatingBound.get();
