@@ -92,7 +92,7 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
     public String debugReportFile;
 
     @Option(description = CommonDescriptions.JSON_REPORT,
-            names = {"--json-report"})
+            names = {"-j", "--json-report"})
     public String jsonReport = null;
 
     public FullSeqAssemblerParameters getFullSeqAssemblerParameters() {

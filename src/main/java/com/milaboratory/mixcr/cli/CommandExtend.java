@@ -71,7 +71,7 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
     public String reportFile;
 
     @Option(description = CommonDescriptions.JSON_REPORT,
-            names = {"--json-report"})
+            names = {"-j", "--json-report"})
     public String jsonReport = null;
 
     @Option(description = "Quality score value to assign imputed sequences",

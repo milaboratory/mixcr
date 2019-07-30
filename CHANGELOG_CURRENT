@@ -1,0 +1,2 @@
+Chain usage statistics added to `align` and `assemble` JSON reports
+Added shortcut for `--json-report` = `-j`
