@@ -321,10 +321,11 @@ public final class FullSeqAssembler {
                 sumWeight += weights[j - i - 1];
             }
 
-            for (int j = i + 1; j < branches.size(); ++j) {
-                VariantBranch cluster = branches.get(j);
-                cluster.count += branch.count * weights[j - i - 1] / sumWeight;
-            }
+            if (sumWeight != 0.0)
+                for (int j = i + 1; j < branches.size(); ++j) {
+                    VariantBranch cluster = branches.get(j);
+                    cluster.count += branch.count * weights[j - i - 1] / sumWeight;
+                }
 
             if (report != null)
                 report.onVariantClustered(branch);
