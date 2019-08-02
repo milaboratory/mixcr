@@ -552,6 +552,9 @@ public abstract class VDJCObject {
                     if (lLast.begin > rLast.end)
                         return null;
 
+                    if (lLast.germline || rLast.germline)
+                        return null;
+
 //                    assert lHit.getGene().getGeneType() == GeneType.Variable;
 //                    if (!lHit
 //                            .getPartitioningForTarget(lLast.iTarget)
