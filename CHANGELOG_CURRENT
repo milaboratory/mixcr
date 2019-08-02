@@ -1,3 +1,4 @@
 Chain usage statistics added to `align` and `assemble` JSON reports
-This fixes rare IndexOutOfBounds exception in `-nFeatureImputed ...`
+Fixed wrong behaviour with score-based pre-filtering in `split-by-V/J=true` cases
+Fixed rare IndexOutOfBounds exception in `-nFeatureImputed ...`
 Added shortcut for `--json-report` = `-j`
