@@ -1,4 +1,14 @@
 
+MiXCR 3.0.9 ( 6 Aug 2019)
+========================
+
+-- Chain usage statistics added to `align` and `assemble` JSON reports
+-- Fixed wrong behaviour with score-based pre-filtering in `split-by-V/J=true` cases
+-- Fixed rare IndexOutOfBounds exception in `-nFeatureImputed ...`
+-- Added shortcut for `--json-report` = `-j`
+-- Sanity check for common mistake in `analyze` parameters
+
+
 MiXCR 3.0.8 (22 Jul 2019)
 ========================
 
