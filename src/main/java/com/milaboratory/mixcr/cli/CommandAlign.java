@@ -117,7 +117,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
     public String reportFile = null;
 
     @Option(description = CommonDescriptions.JSON_REPORT,
-            names = {"--json-report"})
+            names = {"-j", "--json-report"})
     public String jsonReport = null;
 
     @Option(description = "V/D/J/C gene library",

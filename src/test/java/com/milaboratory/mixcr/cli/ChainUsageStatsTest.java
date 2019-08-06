@@ -29,16 +29,19 @@
  */
 package com.milaboratory.mixcr.cli;
 
-public class CommonDescriptions {
-    private CommonDescriptions() {
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.milaboratory.util.GlobalObjectMappers;
+import io.repseq.core.Chains;
+import org.junit.Test;
+
+public class ChainUsageStatsTest {
+    @Test
+    public void serializationTest() throws JsonProcessingException {
+        ChainUsageStats stats = new ChainUsageStats();
+        stats.total.incrementAndGet();
+        stats.total.incrementAndGet();
+        stats.chimeras.incrementAndGet();
+        stats.getCounter(Chains.TRB).incrementAndGet();
+        System.out.println(GlobalObjectMappers.PRETTY.writeValueAsString(stats));
     }
-
-    public static final String SPECIES =
-            "Species (organism), as specified in library file or taxon id.%n" +
-                    "Possible values: hs, HomoSapiens, musmusculus, mmu, hsa, 9606, 10090 etc.";
-
-    public static final String REPORT = "Report file (human readable version, see -j / --json-report for machine readable report)";
-
-    public static final String JSON_REPORT = "JSON formatted report file";
-
 }

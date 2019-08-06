@@ -9,6 +9,7 @@
         "separateByC": false,
         "maximalPreClusteringRatio": 1.0,
         "preClusteringScoreFilteringRatio": 2.0,
+        "preClusteringCountFilteringRatio": 2.0,
         "cloneClusteringParameters": {
             "searchDepth": 2,
             "allowedMutationsInNRegions": 1,

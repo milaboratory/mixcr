@@ -60,7 +60,7 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
     public String reportFile;
 
     @Option(description = CommonDescriptions.JSON_REPORT,
-            names = {"--json-report"})
+            names = {"-j", "--json-report"})
     public String jsonReport = null;
 
     @Option(description = "Write only overlapped sequences (needed for testing).",

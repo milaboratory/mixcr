@@ -629,6 +629,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             final TIntObjectHashMap<TIntArrayList> reversePreClustered = new TIntObjectHashMap<>();
 
             Arrays.sort(accs, CLONE_ACCUMULATOR_COMPARATOR);
+            double minCountForMaxScore = accs[0].getCount() / parameters.preClusteringCountFilteringRatio;
             int deleted = 0;
 
             for (int i = 0; i < accs.length - 1; i++) {
@@ -677,9 +678,12 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             // Score filtering step
 
             // Calculation
+
             float[] maxScores = new float[2];
             for (CloneAccumulator acc : accs) {
                 if (acc == null)
+                    continue;
+                if (acc.getCount() < minCountForMaxScore)
                     continue;
                 for (int i = 0; i < 2; i++) {  // Only for V and J
                     GeneType gt = GeneType.VJC_REFERENCE[i];

@@ -146,6 +146,11 @@ public final class CloneAssemblerReport extends AbstractCommandReport implements
         return readsDroppedWithClones.get();
     }
 
+    @JsonProperty("clonalChainUsage")
+    public ChainUsageStats getClonalChainUsage() {
+        return chainStats;
+    }
+
     @Override
     public void onNewCloneCreated(CloneAccumulator accumulator) {
         clonesCreated.incrementAndGet();
