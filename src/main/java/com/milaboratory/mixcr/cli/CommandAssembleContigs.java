@@ -147,7 +147,9 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
                                     Map.Entry::getKey,
                                     e ->
                                             Arrays.stream(e.getValue())
-                                                    .filter(h -> FullSeqAssembler.checkGeneCompatibility(h, cloneAssemblerParameters.getAssemblingFeatures()[0]))
+                                                    .filter(h ->
+                                                            (h.getGeneType() != GeneType.Variable && h.getGeneType() != GeneType.Joining) ||
+                                                                    FullSeqAssembler.checkGeneCompatibility(h, cloneAssemblerParameters.getAssemblingFeatures()[0]))
                                                     .collect(
                                                             Collectors.toMap(
                                                                     h -> h.getGene().getId(),
