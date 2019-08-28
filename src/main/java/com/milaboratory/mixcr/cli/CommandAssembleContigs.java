@@ -146,12 +146,14 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
                             .collect(Collectors.toMap(
                                     Map.Entry::getKey,
                                     e ->
-                                            Arrays.stream(e.getValue()).collect(
-                                                    Collectors.toMap(
-                                                            h -> h.getGene().getId(),
-                                                            CoverageAccumulator::new
-                                                    )
-                                            ),
+                                            Arrays.stream(e.getValue())
+                                                    .filter(h -> FullSeqAssembler.checkGeneCompatibility(h, cloneAssemblerParameters.getAssemblingFeatures()[0]))
+                                                    .collect(
+                                                            Collectors.toMap(
+                                                                    h -> h.getGene().getId(),
+                                                                    CoverageAccumulator::new
+                                                            )
+                                                    ),
                                     noMerge(),
                                     () -> new EnumMap<>(GeneType.class)));
 
