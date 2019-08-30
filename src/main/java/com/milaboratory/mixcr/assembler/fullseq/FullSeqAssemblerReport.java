@@ -55,6 +55,7 @@ public class FullSeqAssemblerReport implements Report {
     private final AtomicDouble dividedReads = new AtomicDouble(0);
     private final AtomicInteger longestContigLength = new AtomicInteger(0);
     private final AtomicLong variantsBeforeClustering = new AtomicLong(0);
+    private final AtomicInteger canceledAssemblies = new AtomicInteger(0);
     private final AtomicLong vHitsReorder = new AtomicLong(0);
     private final AtomicLong jHitsReorder = new AtomicLong(0);
 
@@ -79,6 +80,13 @@ public class FullSeqAssemblerReport implements Report {
         jHitsReorder.incrementAndGet();
     }
 
+    public void onAssemblyCanceled(Clone initialClone) {
+        canceledAssemblies.incrementAndGet();
+        initialCloneCount.incrementAndGet();
+        finalCloneCount.incrementAndGet();
+        totalReads.addAndGet(initialClone.getCount());
+    }
+
     public void afterVariantsClustered(Clone initialClone, Clone[] branches) {
         initialCloneCount.incrementAndGet();
         finalCloneCount.addAndGet(branches.length);
@@ -94,6 +102,11 @@ public class FullSeqAssemblerReport implements Report {
     @JsonProperty("initialCloneCount")
     public int getInitialCloneCount() {
         return initialCloneCount.get();
+    }
+
+    @JsonProperty("canceledAssemblies")
+    public int getCanceledAssemblies() {
+        return canceledAssemblies.get();
     }
 
     @JsonProperty("finalCloneCount")
@@ -135,6 +148,7 @@ public class FullSeqAssemblerReport implements Report {
     public void writeReport(ReportHelper helper) {
         helper.writeField("Initial clonotype count", getInitialCloneCount())
                 .writePercentAndAbsoluteField("Final clonotype count", getFinalCloneCount(), getInitialCloneCount())
+                .writePercentAndAbsoluteField("Canceled assemblies", getCanceledAssemblies(), getInitialCloneCount())
                 .writePercentAndAbsoluteField("Number of premature termination assembly events, percent of number of initial clonotypes", getAssemblePrematureTerminationEvents(), getInitialCloneCount())
                 .writeField("Longest contig length", getLongestContigLength())
                 .writePercentAndAbsoluteField("Clustered variants", getClonesClustered(), getFinalCloneCount() + getClonesClustered())

@@ -159,6 +159,21 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
                                     noMerge(),
                                     () -> new EnumMap<>(GeneType.class)));
 
+                    // Filtering empty maps
+                    coverages = coverages.entrySet().stream()
+                            .filter(e -> !e.getValue().isEmpty())
+                            .collect(Collectors.toMap(
+                                    Map.Entry::getKey,
+                                    Map.Entry::getValue,
+                                    noMerge(),
+                                    () -> new EnumMap<>(GeneType.class)));
+
+                    if (!coverages.containsKey(GeneType.Variable) || !coverages.containsKey(GeneType.Joining)) {
+                        // Something went really wrong
+                        report.onAssemblyCanceled(cloneAlignments.clone);
+                        return new Clone[]{cloneAlignments.clone};
+                    }
+
                     for (VDJCAlignments alignments : CUtils.it(cloneAlignments.alignments()))
                         for (Map.Entry<GeneType, VDJCHit[]> e : alignments.getHitsMap().entrySet())
                             for (VDJCHit hit : e.getValue())
