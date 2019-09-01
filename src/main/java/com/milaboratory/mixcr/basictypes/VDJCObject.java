@@ -504,6 +504,9 @@ public abstract class VDJCObject {
 
                 if (lHit == rHit) {
                     Alignment<NucleotideSequence> lAl = lHit.getAlignment(lLast.iTarget);
+                    Alignment<NucleotideSequence> rAl = lHit.getAlignment(rLast.iTarget);
+                    if (lLast.iTarget > rLast.iTarget && lAl.getSequence1Range().getFrom() < rAl.getSequence1Range().getTo())
+                        return null;
                     if (lAl.getSequence1Range().contains(rPositionInRef)) {
                         int aabs = aabs(lAl.convertToSeq2Position(rPositionInRef));
                         if (aabs < lLast.begin)
@@ -523,7 +526,6 @@ public abstract class VDJCObject {
                             leftParts.add(part);
                     }
 
-                    Alignment<NucleotideSequence> rAl = lHit.getAlignment(rLast.iTarget);
                     if (rAl.getSequence1Range().contains(lPositionInRef)) {
                         int aabs = aabs(rAl.convertToSeq2Position(lPositionInRef));
                         if (aabs > rLast.end)
