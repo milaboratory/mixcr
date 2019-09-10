@@ -422,7 +422,7 @@ public abstract class VDJCObject {
                 assert lAl.getSequence1Range().containsBoundary(positionInRef);
 
                 IncompleteSequencePart part = new IncompleteSequencePart(lHit, false, iLeftTarget,
-                        aabs(lAl.convertToSeq2Position(positionInRef)),
+                        aabsLeft(positionInRef, lAl),
                         lAl.getSequence2Range().getTo());
                 if (part.begin != part.end)
                     leftParts.add(part);
@@ -471,7 +471,7 @@ public abstract class VDJCObject {
 
                 IncompleteSequencePart part = new IncompleteSequencePart(rHit, false, iRightTarget,
                         rAl.getSequence2Range().getFrom(),
-                        aabs(rAl.convertToSeq2Position(positionInRef)));
+                        aabsRight(positionInRef, rAl));
                 if (part.begin != part.end)
                     rightParts.add(part);
 
@@ -545,7 +545,10 @@ public abstract class VDJCObject {
                             rightParts.add(0, part);
                     }
 
-                    assert same(leftParts, rightParts) : "\n" + leftParts + "\n" + rightParts;
+                    assert same(leftParts, rightParts) :
+                            "\n" + leftParts
+                                    + "\n" + rightParts
+                                    + "\n" + (this instanceof Clone ? ((Clone) this).id : ((VDJCAlignments) this).getAlignmentsIndex());
                     pieces = leftParts;
                 } else {
                     if (lLast.iTarget != rLast.iTarget)
@@ -593,6 +596,18 @@ public abstract class VDJCObject {
                 builder.sequences.toArray(new NucleotideSequence[builder.sequences.size()]),
                 builder.lowerCase,
                 partition, partition.getTranslationParameters(geneFeature));
+    }
+
+    private static int aabsLeft(int positionInRef, Alignment<NucleotideSequence> lAl) {
+        if (lAl.getSequence1Range().getFrom() == positionInRef)
+            return lAl.getSequence2Range().getFrom();
+        return aabs(lAl.convertToSeq2Position(positionInRef));
+    }
+
+    private static int aabsRight(int positionInRef, Alignment<NucleotideSequence> rAl) {
+        if (rAl.getSequence1Range().getTo() == positionInRef)
+            return rAl.getSequence2Range().getTo();
+        return aabs(rAl.convertToSeq2Position(positionInRef));
     }
 
     private boolean same(IncompleteSequencePart a, IncompleteSequencePart b) {
