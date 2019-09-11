@@ -146,14 +146,33 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
                             .collect(Collectors.toMap(
                                     Map.Entry::getKey,
                                     e ->
-                                            Arrays.stream(e.getValue()).collect(
-                                                    Collectors.toMap(
-                                                            h -> h.getGene().getId(),
-                                                            CoverageAccumulator::new
-                                                    )
-                                            ),
+                                            Arrays.stream(e.getValue())
+                                                    .filter(h ->
+                                                            (h.getGeneType() != GeneType.Variable && h.getGeneType() != GeneType.Joining) ||
+                                                                    FullSeqAssembler.checkGeneCompatibility(h, cloneAssemblerParameters.getAssemblingFeatures()[0]))
+                                                    .collect(
+                                                            Collectors.toMap(
+                                                                    h -> h.getGene().getId(),
+                                                                    CoverageAccumulator::new
+                                                            )
+                                                    ),
                                     noMerge(),
                                     () -> new EnumMap<>(GeneType.class)));
+
+                    // Filtering empty maps
+                    coverages = coverages.entrySet().stream()
+                            .filter(e -> !e.getValue().isEmpty())
+                            .collect(Collectors.toMap(
+                                    Map.Entry::getKey,
+                                    Map.Entry::getValue,
+                                    noMerge(),
+                                    () -> new EnumMap<>(GeneType.class)));
+
+                    if (!coverages.containsKey(GeneType.Variable) || !coverages.containsKey(GeneType.Joining)) {
+                        // Something went really wrong
+                        report.onAssemblyCanceled(cloneAlignments.clone);
+                        return new Clone[]{cloneAlignments.clone};
+                    }
 
                     for (VDJCAlignments alignments : CUtils.it(cloneAlignments.alignments()))
                         for (Map.Entry<GeneType, VDJCHit[]> e : alignments.getHitsMap().entrySet())

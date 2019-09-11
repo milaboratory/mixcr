@@ -12,6 +12,7 @@ before_install:
   - cd milib && mvn clean install -DskipTests -B && cd ..
   - rm -rf ./repseqio/.cache
   - mv .cache ./repseqio/.cache
+  - ls -l ./repseqio/.cache
   - cd repseqio && mvn clean install -DskipTests -B && cd ..
   - mv ./repseqio/.cache .cache
   - ./ensure-test-data.sh

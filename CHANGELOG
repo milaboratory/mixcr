@@ -1,4 +1,12 @@
 
+MiXCR 3.0.10 (12 Sep 2019)
+========================
+
+-- Fixes `NPE` in very rare cases with incompatible V gene selection for `assembleContigs` in case 
+   of partially annotated gene libraries
+-- Several fixes for sequence imputation algorithm in `exportAlignments` / `exportClones`
+
+
 MiXCR 3.0.9 ( 6 Aug 2019)
 ========================
 

@@ -136,10 +136,10 @@ public final class FullSeqAssembler {
         this.alignerParameters = alignerParameters;
         GeneFeature[] assemblingFeatures = clone.getParentCloneSet().getAssemblingFeatures();
         if (assemblingFeatures.length != 1)
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Supports only singular assemblingFeature.");
 
         if (assemblingFeatures[0].isComposite())
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Supports only non-composite gene features as an assemblingFeature.");
 
         this.assemblingFeature = assemblingFeatures[0];
         this.genes = new VDJCGenes(baseVHit.getGene(), null, baseJHit.getGene(), null); // clone.getBestHitGenes();
@@ -1746,5 +1746,19 @@ public final class FullSeqAssembler {
 
     private boolean inSplitRegion(int p) {
         return splitRegion != null && splitRegion.contains(p);
+    }
+
+    /**
+     * Check that the V/J gene can be used for full sequence assembly algorithm. Basically it checks that is has required reference points defined.
+     *
+     * @param hit               hit to check
+     * @param assemblingFeature clonal assembling feature
+     * @return true if gene is compatible
+     */
+    public static boolean checkGeneCompatibility(VDJCHit hit, GeneFeature assemblingFeature) {
+        GeneFeature vFeature = hit.getAlignedFeature();
+        VDJCGene gene = hit.getGene();
+        GeneFeature targetFeature = GeneFeature.intersection(assemblingFeature, vFeature);
+        return gene.getPartitioning().isAvailable(targetFeature);
     }
 }
