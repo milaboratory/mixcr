@@ -1,0 +1,1 @@
+Fixes exception in `assemble` for multi-assembling-feature cases with zero length sequences
