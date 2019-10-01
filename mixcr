@@ -172,5 +172,5 @@ then
     exit 1
 fi
 
-$java -Dmixcr.path=$dir -Dmixcr.command=mixcr -XX:+AggressiveOpts "${javaArgs[@]}" -jar $jar "${mixcrArgs[@]}"
+$java -Dmixcr.path=$dir -Dmixcr.command=mixcr "${javaArgs[@]}" -jar $jar "${mixcrArgs[@]}"
 exit $?
