@@ -38,7 +38,7 @@ function readlinkUniversal() {
         targetFile=`basename $targetFile`
     done
 
-    # compute the canonicalized name by finding the physical path 
+    # compute the canonicalized name by finding the physical path
     # for the directory we're in and appending the target file.
     phys_dir=`pwd -P`
     result=$phys_dir/$targetFile
@@ -63,14 +63,14 @@ case $os in
     Linux)
         rFreeMb=$(free -m | grep Mem | awk '{ print $4 }')
         maxMb=$(($rFreeMb-$delta))
-        dir="$(dirname "$(readlink -f "$0")")"
+        dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
     ;;
     FreeBSD)
         freeBlocks=$(vmstat -s | grep -E 'free$' | awk '{ print $1 }')
         inactiveBlocks=$(vmstat -s | grep inactive | awk '{ print $1 }')
         freeMb=$(( ($freeBlocks+$inactiveBlocks)*4096/1048576 ))
         maxMb=$(($freeMb-$delta))
-        dir=$(dirname "$(readlinkUniversal "$0")")    
+        dir=$(dirname "$(readlinkUniversal "$0")")
     ;;
     *)
        echo "Unknown OS."
@@ -83,6 +83,12 @@ javaArgs=()
 
 needXmxXms=true
 otherJar=""
+
+inDocker=false
+
+if [[ -f /proc/1/cgroup ]] && grep docker /proc/1/cgroup -qa; then
+   inDocker=true
+fi
 
 while [[ $# > 0 ]]
 do
@@ -116,31 +122,28 @@ then
     mixcr="${mixcr} -V ${otherJar}"
 fi
 
-if [[ $(echo ${mixcrArgs[0]} | tr '[:upper:]' '[:lower:]') == "importfromimgt" ]]; then
-    echo "Starting importFromIMGT.sh script"
-    ${dir}/importFromIMGT.sh -mixcr "${mixcr}" || exit 1
-    exit 0
-fi
+if [[ ${needXmxXms} == true ]];then
+    if [[ ${inDocker} == true ]]; then
+        javaArgs+=("-XX:MaxRAMPercentage=95")
+    else
+        targetXmx=12000
 
-if [[ ${needXmxXms} == true ]]
-then
-    targetXmx=12000
+        if [[ $targetXmx -gt $maxMb ]];
+        then
+            targetXmx=$maxMb
+        fi
 
-    if [[ $targetXmx -gt $maxMb ]];
-    then
-        targetXmx=$maxMb
+        javaArgs+=("-Xmx${targetXmx}m")
+
+        targetXms=$((${targetXmx}*2/3))
+
+        if [[ $targetXms -lt 2000 ]];
+        then
+            targetXms=$targetXmx
+        fi
+
+        javaArgs+=("-Xms${targetXms}m")
     fi
-
-    javaArgs+=("-Xmx${targetXmx}m")
-
-    targetXms=$((${targetXmx}*2/3))
-
-    if [[ $targetXms -lt 2000 ]];
-    then
-        targetXms=$targetXmx
-    fi
-
-    javaArgs+=("-Xms${targetXms}m")
 fi
 
 jar=""
@@ -172,5 +175,7 @@ then
     exit 1
 fi
 
-$java -Dmixcr.path=$dir -Dmixcr.command=mixcr -XX:+AggressiveOpts "${javaArgs[@]}" -jar $jar "${mixcrArgs[@]}"
+$java -Dmixcr.path=$dir -Dmixcr.command=mixcr "${javaArgs[@]}" -jar $jar "${mixcrArgs[@]}"
+
 exit $?
+
