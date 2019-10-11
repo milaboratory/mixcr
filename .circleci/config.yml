@@ -1,6 +1,6 @@
 version: 2.1
 jobs:
-  build:
+  main:
     docker:
       - image: circleci/openjdk:8-jdk
 
@@ -31,7 +31,7 @@ jobs:
 
       - run:
           name: Building MiLib
-          working_directory: repseqio
+          working_directory: milib
           command: mvn clean install -DskipTests --batch-mode
 
       - run:
