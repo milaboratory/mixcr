@@ -1,10 +1,10 @@
-version: 2
+version: 2.1
 jobs:
   build:
     docker:
       - image: circleci/openjdk:8-jdk
 
-    working_directory: ~/repo
+    working_directory: ~/mixcr
 
     environment:
       MAVEN_OPTS: -Xmx1024m
@@ -14,24 +14,41 @@ jobs:
 
       - restore_cache:
           keys:
-          - dependencies-{{ checksum "pom.xml" }}
-          - dependencies-
+            - dependencies-{{ checksum "pom.xml" }}
+            - dependencies-
 
       - run:
+          name: Downloading git submodules
           command: |
-              git submodule sync --recursive
-              git submodule update --init --recursive
-              cd milib
-              mvn clean install -DskipTests
+            git submodule update --init --recursive
 
-      - run: mvn dependency:go-offline
+      - restore_cache:
+          key: repseqio-cache
+
+      - run:
+          name: Downloading test data
+          command: ./ensure-test-data.sh
+
+      - run:
+          name: Building MiLib
+          working_directory: repseqio
+          command: mvn clean install -DskipTests --batch-mode
+
+      - run:
+          name: Building RepseqIO
+          working_directory: repseqio
+          command: mvn clean install -DskipTests -batch-mode
+
+      - run:
+          name: Building and testing MiXCR
+          command: mvn clean install
 
       - save_cache:
           paths:
             - ~/.m2
           key: dependencies-{{ checksum "pom.xml" }}
 
-      - run: mvn package && ./build.sh && ./ensure-test-data.sh && ./itests.sh test
-
-      - store_test_results:
-          path: target/surefire-reports
+#      - run: mvn package && ./build.sh && ./ensure-test-data.sh && ./itests.sh test
+#
+#      - store_test_results:
+#          path: target/surefire-reports
