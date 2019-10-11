@@ -1,0 +1,37 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/openjdk:8-jdk
+
+    working_directory: ~/repo
+
+    environment:
+      MAVEN_OPTS: -Xmx1024m
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+          - dependencies-{{ checksum "pom.xml" }}
+          - dependencies-
+
+      - run:
+          command: |
+              git submodule sync --recursive
+              git submodule update --init --recursive
+              cd milib
+              mvn clean install -DskipTests
+
+      - run: mvn dependency:go-offline
+
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: dependencies-{{ checksum "pom.xml" }}
+
+      - run: mvn package && ./build.sh && ./ensure-test-data.sh && ./itests.sh test
+
+      - store_test_results:
+          path: target/surefire-reports
