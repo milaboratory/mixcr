@@ -40,9 +40,17 @@ jobs:
             - repseqio/.cache
           key: repseqio-cache
 
+      - restore_cache:
+          key: test-data
+
       - run:
           name: Downloading test data
           command: ./ensure-test-data.sh
+
+      - save_cache:
+          paths:
+            - src/test/resources/sequences/big/
+          key: test-data
 
 #      - run:
 #          name: Building and testing MiXCR
