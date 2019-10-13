@@ -30,7 +30,6 @@ jobs:
           keys:
             - v1-repseqio-cache-{{ checksum "repseqio/.gitmodules" }}
             - v1-repseqio-cache-
-            - repseqio-cache
 
       - run:
           name: Building RepseqIO
