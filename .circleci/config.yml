@@ -63,5 +63,5 @@ jobs:
       - save_cache:
           paths:
             - ~/.m2
-          key: dependencies-{{ checksum "pom.xml" }}-{{ checksum "milib/pom.xml" }}-{{ checksum "repseqio/pom.xml" }}
+          key: v1-dependencies-{{ checksum "pom.xml" }}-{{ checksum "milib/pom.xml" }}-{{ checksum "repseqio/pom.xml" }}
 
