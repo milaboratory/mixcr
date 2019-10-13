@@ -129,7 +129,7 @@ fi
 
 if [[ ${needXmxXms} == true ]]; then
   if [[ ${inDocker} == true ]] && [[ jVersion -ge 11 ]]; then
-    javaArgs+=("-XX:MaxRAMPercentage=95.0")
+    javaArgs+=("-XX:MaxRAMPercentage=85.0")
   else
     targetXmx=12000
 
