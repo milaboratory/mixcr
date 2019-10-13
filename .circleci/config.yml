@@ -52,9 +52,9 @@ jobs:
             - src/test/resources/sequences/big/
           key: test-data
 
-#      - run:
-#          name: Building and testing MiXCR
-#          command: mvn clean install
+      - run:
+          name: Building and testing MiXCR
+          command: mvn clean install
 
       - save_cache:
           paths:
