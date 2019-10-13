@@ -6,77 +6,84 @@ sedString1="s/\s*\([^.]*\)\..*/\1/"
 sedString2="s/.*1\.\(.*\)\..*/\1/"
 jVersion=$($java -version 2>&1 | grep version | awk '{ print $3 }' | sed 's:"::g')
 jVersion1=$(echo "$jVersion" | sed $sedString1)
-if [[ jVersion1 -eq 1 ]]; then
-    jVersion2=$(echo "$jVersion" | sed $sedString2)
-    if [[ $jVersion2 -lt 7 ]];
-    then
-        echo "Wrong version of java. Please use Java 7 or higher."
-        exit 1
-    fi
 
-    if [[ $jVersion2 -lt 8 ]];
-    then
-        echo "WARNING: Several issues have been detected while using Java 7. Please consider updateing to Java 8 or higher."
-    fi
-elif [[ jVersion1 -lt 9 ]]; then
+if [[ jVersion1 -eq 1 ]]; then
+  jVersion2=$(echo "$jVersion" | sed $sedString2)
+  if [[ $jVersion2 -lt 7 ]]; then
     echo "Wrong version of java. Please use Java 7 or higher."
     exit 1
+  fi
+
+  if [[ $jVersion2 -lt 8 ]]; then
+    echo "WARNING: Several issues have been detected while using Java 7. Please consider updateing to Java 8 or higher."
+  fi
+
+  jVersion="$jVersion2"
+
+elif [[ jVersion1 -lt 9 ]]; then
+  echo "Wrong version of java. Please use Java 7 or higher."
+  exit 1
+else
+  jVersion="$jVersion1"
 fi
 
 # Linux readlink -f alternative for Mac OS X
 function readlinkUniversal() {
-    targetFile=$1
+  targetFile=$1
 
-    cd `dirname $targetFile`
-    targetFile=`basename $targetFile`
+  cd $(dirname $targetFile)
+  targetFile=$(basename $targetFile)
 
-    # iterate down a (possible) chain of symlinks
-    while [ -L "$targetFile" ]
-    do
-        targetFile=`readlink $targetFile`
-        cd `dirname $targetFile`
-        targetFile=`basename $targetFile`
-    done
+  # iterate down a (possible) chain of symlinks
+  while [ -L "$targetFile" ]; do
+    targetFile=$(readlink $targetFile)
+    cd $(dirname $targetFile)
+    targetFile=$(basename $targetFile)
+  done
 
-    # compute the canonicalized name by finding the physical path
-    # for the directory we're in and appending the target file.
-    phys_dir=`pwd -P`
-    result=$phys_dir/$targetFile
-    echo $result
+  # compute the canonicalized name by finding the physical path
+  # for the directory we're in and appending the target file.
+  phys_dir=$(pwd -P)
+  result=$phys_dir/$targetFile
+  echo $result
 }
 
-os=`uname`
+os=$(uname)
 delta=100
 
 dir=""
 
 case $os in
-    Darwin)
-        freeBlocks=$(vm_stat | grep free | awk '{ print $3 }' | sed 's/\.//')
-        inactiveBlocks=$(vm_stat | grep inactive | awk '{ print $3 }' | sed 's/\.//')
-        speculativeBlocks=$(vm_stat | grep speculative | awk '{ print $3 }' | sed 's/\.//')
-        freeMb=$((($freeBlocks+$speculativeBlocks)*4096/1048576))
-        inactiveMb=$(($inactiveBlocks*4096/1048576))
-        maxMb=$((($freeMb+$inactiveMb-$delta)))
-        dir=$(dirname "$(readlinkUniversal "$0")")
-    ;;
-    Linux)
-        rFreeMb=$(free -m | grep Mem | awk '{ print $4 }')
-        maxMb=$(($rFreeMb-$delta))
-        dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
-    ;;
-    FreeBSD)
-        freeBlocks=$(vmstat -s | grep -E 'free$' | awk '{ print $1 }')
-        inactiveBlocks=$(vmstat -s | grep inactive | awk '{ print $1 }')
-        freeMb=$(( ($freeBlocks+$inactiveBlocks)*4096/1048576 ))
-        maxMb=$(($freeMb-$delta))
-        dir=$(dirname "$(readlinkUniversal "$0")")
-    ;;
-    *)
-       echo "Unknown OS."
-       exit 1
-    ;;
+Darwin)
+  freeBlocks=$(vm_stat | grep free | awk '{ print $3 }' | sed 's/\.//')
+  inactiveBlocks=$(vm_stat | grep inactive | awk '{ print $3 }' | sed 's/\.//')
+  speculativeBlocks=$(vm_stat | grep speculative | awk '{ print $3 }' | sed 's/\.//')
+  freeMb=$((($freeBlocks + $speculativeBlocks) * 4096 / 1048576))
+  inactiveMb=$(($inactiveBlocks * 4096 / 1048576))
+  maxMb=$((($freeMb + $inactiveMb - $delta)))
+  dir=$(dirname "$(readlinkUniversal "$0")")
+  ;;
+Linux)
+  rFreeMb=$(free -m | grep Mem | awk '{ print $4 }')
+  maxMb=$(($rFreeMb - $delta))
+  dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+  ;;
+FreeBSD)
+  freeBlocks=$(vmstat -s | grep -E 'free$' | awk '{ print $1 }')
+  inactiveBlocks=$(vmstat -s | grep inactive | awk '{ print $1 }')
+  freeMb=$((($freeBlocks + $inactiveBlocks) * 4096 / 1048576))
+  maxMb=$(($freeMb - $delta))
+  dir=$(dirname "$(readlinkUniversal "$0")")
+  ;;
+*)
+  echo "Unknown OS."
+  exit 1
+  ;;
 esac
+
+if [[ -n ${MAX_MEMORY_OVERRIDE+x} ]]; then
+  maxMb="${MAX_MEMORY_OVERRIDE}"
+fi
 
 mixcrArgs=()
 javaArgs=()
@@ -87,95 +94,84 @@ otherJar=""
 inDocker=false
 
 if [[ -f /proc/1/cgroup ]] && grep docker /proc/1/cgroup -qa; then
-   inDocker=true
+  inDocker=true
 fi
 
-while [[ $# > 0 ]]
-do
-    key="$1"
-    shift
+while [[ $# > 0 ]]; do
+  key="$1"
+  shift
+  case $key in
+  -D* | -X* | -ea | -agentlib*)
+    javaArgs+=(${key})
+
     case $key in
-        -D*|-X*|-ea|-agentlib*)
-            javaArgs+=(${key})
-
-            case $key in
-                -Xmx*|-Xms*)
-                    needXmxXms=false
-                    ;;
-            esac
-
-            ;;
-        -jar|-V)
-            otherJar="$1"
-            shift
-            ;;
-        *)
-            mixcrArgs+=("${key}")
-            ;;
+    -Xmx* | -Xms*)
+      needXmxXms=false
+      ;;
     esac
+
+    ;;
+  -jar | -V)
+    otherJar="$1"
+    shift
+    ;;
+  *)
+    mixcrArgs+=("${key}")
+    ;;
+  esac
 done
 
 mixcr=${dir}/mixcr
 
-if [[ ! -z ${otherJar} ]];
-then
-    mixcr="${mixcr} -V ${otherJar}"
+if [[ ! -z ${otherJar} ]]; then
+  mixcr="${mixcr} -V ${otherJar}"
 fi
 
-if [[ ${needXmxXms} == true ]];then
-    if [[ ${inDocker} == true ]]; then
-        javaArgs+=("-XX:MaxRAMPercentage=95")
-    else
-        targetXmx=12000
+if [[ ${needXmxXms} == true ]]; then
+  if [[ ${inDocker} == true ]] && [[ jVersion -ge 11 ]]; then
+    javaArgs+=("-XX:MaxRAMPercentage=85.0")
+  else
+    targetXmx=12000
 
-        if [[ $targetXmx -gt $maxMb ]];
-        then
-            targetXmx=$maxMb
-        fi
-
-        javaArgs+=("-Xmx${targetXmx}m")
-
-        targetXms=$((${targetXmx}*2/3))
-
-        if [[ $targetXms -lt 2000 ]];
-        then
-            targetXms=$targetXmx
-        fi
-
-        javaArgs+=("-Xms${targetXms}m")
+    if [[ $targetXmx -gt $maxMb ]]; then
+      targetXmx=$maxMb
     fi
+
+    javaArgs+=("-Xmx${targetXmx}m")
+
+    targetXms=$((${targetXmx} * 2 / 3))
+
+    if [[ $targetXms -lt 2000 ]]; then
+      targetXms=$targetXmx
+    fi
+
+    javaArgs+=("-Xms${targetXms}m")
+  fi
 fi
 
 jar=""
 
-if [[ -z "$otherJar" ]];
-then
-    for j in "$dir/../jar/mixcr.jar" "$dir/mixcr.jar" $(ls -d -1 $dir/target/* 2> /dev/null | grep distribution.jar)
-    do
-        if [[ -e "$j" ]];
-        then
-            jar=$j
-            break
-        fi
-    done
+if [[ -z "$otherJar" ]]; then
+  for j in "$dir/../jar/mixcr.jar" "$dir/mixcr.jar" $(ls -d -1 $dir/target/* 2>/dev/null | grep distribution.jar); do
+    if [[ -e "$j" ]]; then
+      jar=$j
+      break
+    fi
+  done
 else
-    for j in $(ls -1 ${dir}/* | grep "mixcr" | grep ".jar" | grep ${otherJar});
-    do
-        if [[ -e "$j" ]];
-        then
-            jar=$j
-            break
-        fi
-    done
+  for j in $(ls -1 ${dir}/* | grep "mixcr" | grep ".jar" | grep ${otherJar}); do
+    if [[ -e "$j" ]]; then
+      jar=$j
+      break
+    fi
+  done
 fi
 
-if [[ "$jar" == "" ]];
-then
-    echo "No jar."
-    exit 1
+if [[ "$jar" == "" ]]; then
+  echo "No jar."
+  exit 1
 fi
 
 $java -Dmixcr.path=$dir -Dmixcr.command=mixcr "${javaArgs[@]}" -jar $jar "${mixcrArgs[@]}"
 
 exit $?
-
