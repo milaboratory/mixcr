@@ -14,13 +14,12 @@ jobs:
 
       - restore_cache:
           keys:
-            - dependencies-{{ checksum "pom.xml" }}
-            - dependencies-
+            - v1-dependencies-{{ checksum "pom.xml" }}-{{ checksum "milib/pom.xml" }}-{{ checksum "repseqio/pom.xml" }}
+            - v1-dependencies-
 
       - run:
           name: Downloading git submodules
-          command: |
-            git submodule update --init --recursive
+          command: git submodule update --init --recursive
 
       - run:
           name: Building MiLib
@@ -28,7 +27,9 @@ jobs:
           command: mvn clean install -DskipTests --batch-mode
 
       - restore_cache:
-          key: repseqio-cache
+          keys:
+            - v1-repseqio-cache-{{ checksum repseqio/.gitmodules }}
+            - v1-repseqio-cache-
 
       - run:
           name: Building RepseqIO
@@ -38,10 +39,10 @@ jobs:
       - save_cache:
           paths:
             - repseqio/.cache
-          key: repseqio-cache
+          key: v1-repseqio-cache-{{ checksum repseqio/.gitmodules }}
 
       - restore_cache:
-          key: test-data
+          key: v1-test-data-{{ checksum ensure-test-data.sh }}
 
       - run:
           name: Downloading test data
@@ -50,18 +51,17 @@ jobs:
       - save_cache:
           paths:
             - src/test/resources/sequences/big/
-          key: test-data
+          key: v1-test-data-{{ checksum ensure-test-data.sh }}
 
       - run:
           name: Building and testing MiXCR
           command: mvn clean install
 
+      - store_test_results:
+          path: target/surefire-reports
+
       - save_cache:
           paths:
             - ~/.m2
-          key: dependencies-{{ checksum "pom.xml" }}
+          key: dependencies-{{ checksum "pom.xml" }}-{{ checksum "milib/pom.xml" }}-{{ checksum "repseqio/pom.xml" }}
 
-#      - run: mvn package && ./build.sh && ./ensure-test-data.sh && ./itests.sh test
-#
-#      - store_test_results:
-#          path: target/surefire-reports
