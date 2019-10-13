@@ -6,8 +6,8 @@ jobs:
 
     working_directory: ~/mixcr
 
-    environment:
-      MAVEN_OPTS: -Xmx1024m
+    #    environment:
+    #      MAVEN_OPTS: -Xmx1024m
 
     steps:
       - checkout
