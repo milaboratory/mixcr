@@ -28,7 +28,7 @@ jobs:
 
       - restore_cache:
           keys:
-            - v1-repseqio-cache-{{ checksum repseqio/.gitmodules }}
+            - v1-repseqio-cache-{{ checksum "repseqio/.gitmodules" }}
             - v1-repseqio-cache-
 
       - run:
@@ -39,10 +39,10 @@ jobs:
       - save_cache:
           paths:
             - repseqio/.cache
-          key: v1-repseqio-cache-{{ checksum repseqio/.gitmodules }}
+          key: v1-repseqio-cache-{{ checksum "repseqio/.gitmodules" }}
 
       - restore_cache:
-          key: v1-test-data-{{ checksum ensure-test-data.sh }}
+          key: v1-test-data-{{ checksum "ensure-test-data.sh" }}
 
       - run:
           name: Downloading test data
@@ -51,7 +51,7 @@ jobs:
       - save_cache:
           paths:
             - src/test/resources/sequences/big/
-          key: v1-test-data-{{ checksum ensure-test-data.sh }}
+          key: v1-test-data-{{ checksum "ensure-test-data.sh" }}
 
       - run:
           name: Building and testing MiXCR
