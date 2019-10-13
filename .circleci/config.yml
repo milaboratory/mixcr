@@ -12,14 +12,14 @@ jobs:
     steps:
       - checkout
 
+      - run:
+          name: Downloading git submodules
+          command: git submodule update --init --recursive
+
       - restore_cache:
           keys:
             - v1-dependencies-{{ checksum "pom.xml" }}-{{ checksum "milib/pom.xml" }}-{{ checksum "repseqio/pom.xml" }}
             - v1-dependencies-
-
-      - run:
-          name: Downloading git submodules
-          command: git submodule update --init --recursive
 
       - run:
           name: Building MiLib
