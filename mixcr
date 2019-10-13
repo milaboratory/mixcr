@@ -81,6 +81,10 @@ FreeBSD)
   ;;
 esac
 
+if [[ -n ${MAX_MEMORY_OVERRIDE+x} ]]; then
+  maxMb="${MAX_MEMORY_OVERRIDE}"
+fi
+
 mixcrArgs=()
 javaArgs=()
 
@@ -124,10 +128,7 @@ if [[ ! -z ${otherJar} ]]; then
 fi
 
 if [[ ${needXmxXms} == true ]]; then
-  if [[ ${inDocker} == true ]]; then
-    #    if [[ jVersion -le 10 ]]; then
-    #      javaArgs+=("-XX:+UseContainerSupport")
-    #    fi
+  if [[ ${inDocker} == true ]] && [[ jVersion -ge 11 ]]; then
     javaArgs+=("-XX:MaxRAMPercentage=95.0")
   else
     targetXmx=12000
