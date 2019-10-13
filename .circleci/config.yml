@@ -65,3 +65,6 @@ jobs:
             - ~/.m2
           key: v1-dependencies-{{ checksum "pom.xml" }}-{{ checksum "milib/pom.xml" }}-{{ checksum "repseqio/pom.xml" }}
 
+      - run:
+          name: Running MiXCR Integration tests
+          command: ./itests.sh test
