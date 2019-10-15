@@ -414,6 +414,8 @@ public abstract class VDJCObject {
                 if (!lAl.getSequence1Range().contains(positionInRef)) {
                     // add lowercase piece of germline
                     assert lAl.getSequence1Range().getFrom() > positionInRef;
+                    if (leftParts.isEmpty() && lAl.getSequence1Range().getFrom() == rPositionInRef)
+                        break;
                     IncompleteSequencePart part = new IncompleteSequencePart(lHit, true, iLeftTarget, positionInRef, lAl.getSequence1Range().getFrom());
                     if (part.begin != part.end)
                         leftParts.add(part);
@@ -462,6 +464,8 @@ public abstract class VDJCObject {
                 if (!rAl.getSequence1Range().contains(positionInRef)) {
                     // add lowercase piece of germline
                     assert rAl.getSequence1Range().getTo() <= positionInRef;
+                    if (rightParts.isEmpty() && rAl.getSequence1Range().getTo() == lPositionInRef)
+                        break;
                     IncompleteSequencePart part = new IncompleteSequencePart(rHit, true, iRightTarget, rAl.getSequence1Range().getTo(), positionInRef); // +1 to include positionInRef
                     if (part.begin != part.end)
                         rightParts.add(part);
