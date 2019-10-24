@@ -1,4 +1,15 @@
 
+MiXCR 3.0.11 (24 Oct 2019)
+========================
+
+-- Fixes exception in `assemble` for multi-assembling-feature cases with zero length sequences
+-- Fixes empty `FR3` imputed sequence in cases with zero assembled nucleotides on the 5' side of 
+   CDR3
+-- MiXCR execution script optimized for Docker (Java 11 is recommended for running MiXCR in 
+   container environment)
+-- Other fixes for MiXCR script
+
+
 MiXCR 3.0.10 (12 Sep 2019)
 ========================
 
