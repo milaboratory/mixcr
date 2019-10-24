@@ -272,60 +272,6 @@ public abstract class VDJCObject {
             if (tmp != null && (feature == null || feature.getQuality().minValue() < tmp.getQuality().minValue()))
                 feature = tmp;
         }
-//        if (feature == null && targets.length == 2) {
-//            VDJCHit bestVHit = getBestHit(GeneType.Variable);
-//            if (bestVHit == null)
-//                return null;
-//
-//            //TODO check for V feature compatibility
-//            Alignment<NucleotideSequence>
-//                    lAlignment = bestVHit.getAlignment(0),
-//                    rAlignment = bestVHit.getAlignment(1);
-//
-//            if (lAlignment == null || rAlignment == null)
-//                return null;
-//
-//            int lTargetIndex = 0;
-//
-//            int lFrom, rTo, f, t;
-//            if ((f = getPartitionedTarget(1).getPartitioning().getPosition(geneFeature.getFirstPoint())) >= 0 &&
-//                    (t = getPartitionedTarget(0).getPartitioning().getPosition(geneFeature.getLastPoint())) >= 0) {
-//                lAlignment = bestVHit.getAlignment(1);
-//                rAlignment = bestVHit.getAlignment(0);
-//                lFrom = f;
-//                rTo = t;
-//                lTargetIndex = 1;
-//            } else if ((f = getPartitionedTarget(0).getPartitioning().getPosition(geneFeature.getFirstPoint())) < 0 ||
-//                    (t = getPartitionedTarget(1).getPartitioning().getPosition(geneFeature.getLastPoint())) < 0)
-//                return null;
-//            else {
-//                lFrom = f;
-//                rTo = t;
-//            }
-//
-//            Range intersection = lAlignment.getSequence1Range().intersection(rAlignment.getSequence1Range());
-//            if (intersection == null)
-//                return null;
-//
-//            NSequenceWithQuality intersectionSequence = Merger.merge(intersection,
-//                    new Alignment[]{bestVHit.getAlignment(0), bestVHit.getAlignment(1)},
-//                    targets);
-//
-//            Range lRange = new Range(
-//                    lFrom,
-//                    aabs(lAlignment.convertToSeq2Position(intersection.getFrom())));
-//            Range rRange = new Range(
-//                    aabs(rAlignment.convertToSeq2Position(intersection.getTo())),
-//                    rTo);
-//
-//            feature =
-//                    new NSequenceWithQualityBuilder()
-//                            .ensureCapacity(lRange.length() + rRange.length() + intersectionSequence.size())
-//                            .append(targets[lTargetIndex].getRange(lRange))
-//                            .append(intersectionSequence)
-//                            .append(targets[1 - lTargetIndex].getRange(rRange))
-//                            .createAndDestroy();
-//        }
         return feature;
     }
 
