@@ -83,6 +83,15 @@ public final class ClonalSequence implements Iterable<NSequenceWithQuality>, Com
             for (int i = 1; i < sequences.length; ++i) {
                 NucleotideSequence left = sequences[i - 1].getSequence(),
                         right = sequences[i].getSequence();
+                if (left.size() == 0 || right.size() == 0) {
+                    stretches[i - 1] = new Stretch(left.size() != 0
+                            ? left.codeAt(left.size() - 1)
+                            : right.size() != 0
+                            ? right.codeAt(0)
+                            : 0
+                    );
+                    continue;
+                }
                 int leftSize = left.size(), rightSize = right.size();
                 byte code = left.codeAt(leftSize - 1);
                 if (code != right.codeAt(0)) {
