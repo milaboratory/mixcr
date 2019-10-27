@@ -64,18 +64,20 @@ public final class Main {
                 List<CommandLine> parsedCommands = parseResult.asCommandLineList();
                 CommandLine commandLine = parsedCommands.get(parsedCommands.size() - 1);
                 Object command = commandLine.getCommand();
-                if (command instanceof CommandSpec && ((CommandSpec) command).userObject() instanceof Runnable) {
-                    try {
+                try {
+                    if (command instanceof CommandSpec && ((CommandSpec) command).userObject() instanceof Runnable) {
                         ((Runnable) ((CommandSpec) command).userObject()).run();
                         return new ArrayList<>();
-                    } catch (ParameterException | CommandLine.ExecutionException ex) {
-                        throw ex;
-                    } catch (Exception ex) {
-                        throw new CommandLine.ExecutionException(commandLine,
-                                "Error while running command (" + command + "): " + ex, ex);
                     }
+                    return super.handle(parseResult);
+                } catch (ParameterException ex) {
+                    throw ex;
+                } catch (CommandLine.ExecutionException ex) {
+                    throw ex;
+                } catch (Exception ex) {
+                    throw new CommandLine.ExecutionException(commandLine,
+                            "Error while running command (" + command + "): " + ex, ex);
                 }
-                return super.handle(parseResult);
             }
         };
 
@@ -148,6 +150,7 @@ public final class Main {
                 .addSubcommand("exportClonesPretty", CommandExportClonesPretty.class)
 
                 .addSubcommand("exportReadsForClones", CommandExportReadsForClones.class)
+                .addSubcommand("exportAlignmentsForClones", CommandExportAlignmentsForClones.class)
                 .addSubcommand("exportReads", CommandExportReads.class)
 
                 .addSubcommand("mergeAlignments", CommandMergeAlignments.class)

@@ -118,7 +118,7 @@ public class CloneAssemblerRunnerTest {
                 new GeneFeature[]{GeneFeature.CDR3}, 12,
                 QualityAggregationType.Average,
                 new CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
-                factoryParameters, true, true, false, 0.4,2.0, true, (byte) 20, .8, "2 of 6", (byte) 15);
+                factoryParameters, true, true, false, 0.4, 2.0, 2.0, true, (byte) 20, .8, "2 of 6", (byte) 15);
 
         System.out.println(GlobalObjectMappers.toOneLine(assemblerParameters));
 
@@ -130,7 +130,7 @@ public class CloneAssemblerRunnerTest {
         CloneSet cloneSet = assemblerRunner.getCloneSet(null);
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        try(ClnsWriter writer = new ClnsWriter(null, cloneSet, bos)){
+        try (ClnsWriter writer = new ClnsWriter(null, cloneSet, bos)) {
             writer.write();
         }
 
@@ -148,7 +148,7 @@ public class CloneAssemblerRunnerTest {
 
     private static void assertCSEquals(CloneSet expected, CloneSet actual) {
         Assert.assertEquals(expected.getClones().size(), actual.getClones().size());
-        Assert.assertEquals(expected.getTotalCount(), actual.getTotalCount());
+        Assert.assertEquals(expected.getTotalCount(), actual.getTotalCount(), 0.1);
         Assert.assertArrayEquals(expected.getAssemblingFeatures(), actual.getAssemblingFeatures());
 
         for (GeneType geneType : GeneType.values())

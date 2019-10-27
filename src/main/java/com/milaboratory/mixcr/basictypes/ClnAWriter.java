@@ -187,12 +187,7 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
         this.toSorter = new CountingOutputPort<>(alignments);
         this.sortedAlignments = Sorter.sort(
                 toSorter,
-                (o1, o2) -> {
-                    int i = Integer.compare(o1.cloneIndex, o2.cloneIndex);
-                    if (i != 0)
-                        return i;
-                    return Byte.compare(o1.mappingType, o2.mappingType);
-                },
+                Comparator.comparingInt((VDJCAlignments o) -> o.cloneIndex).thenComparingInt(o -> o.mappingType),
                 chunkSize,
                 new VDJCAlignmentsSerializer(usedGenes, featureToAlign),
                 tempFile);
@@ -340,7 +335,7 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
         // To make counts index the same length as aBlockOffset
         aBlockCount.add(0);
 
-        // Saving index offset in file to write in the end of stream
+        // Saving index offset in file to write in the end of the stream
         long indexBeginOffset = outputStream.getByteCount();
         long previousValue = 0;
 

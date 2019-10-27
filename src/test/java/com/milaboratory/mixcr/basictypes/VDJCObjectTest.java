@@ -30,6 +30,7 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.sequence.NSequenceWithQuality;
+import com.milaboratory.mixcr.cli.CommandAlign;
 import com.milaboratory.mixcr.cli.CommandExportAlignmentsPretty;
 import com.milaboratory.mixcr.util.RunMiXCR;
 import io.repseq.core.GeneFeature;
@@ -104,9 +105,11 @@ public class VDJCObjectTest {
                 RunMiXCR.class.getResource("/sequences/test_R2.fastq").getFile());
 
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
+        //new CommandExportAlignmentsPretty().outputCompact(System.out, align.alignments.get(3));
+
         assertNotNull(align.alignments.get(0).getIncompleteFeature(new GeneFeature(new GeneFeature(FR3Begin, FR3End.move(-10)), CDR3)));
         assertNotNull(align.alignments.get(2).getIncompleteFeature(new GeneFeature(new GeneFeature(FR3Begin, FR3End.move(-10)), CDR3)));
-        assertNull(align.alignments.get(3).getIncompleteFeature(new GeneFeature(new GeneFeature(FR3Begin, FR3End.move(-10)), CDR3)));
+        assertNotNull(align.alignments.get(3).getIncompleteFeature(new GeneFeature(new GeneFeature(FR3Begin, FR3End.move(-10)), CDR3)));
         //new ActionExportAlignmentsPretty().outputCompact(System.out, al);
 
         new CommandExportAlignmentsPretty().outputCompact(System.out, align.alignments.get(0));

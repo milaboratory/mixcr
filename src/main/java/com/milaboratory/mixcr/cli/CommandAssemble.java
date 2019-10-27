@@ -76,7 +76,7 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
     public String reportFile;
 
     @Option(description = CommonDescriptions.JSON_REPORT,
-            names = {"--json-report"})
+            names = {"-j", "--json-report"})
     public String jsonReport;
 
     @Option(description = "Show buffer statistics.",

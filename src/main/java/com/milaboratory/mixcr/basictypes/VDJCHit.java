@@ -82,7 +82,7 @@ public final class VDJCHit implements Comparable<VDJCHit>, HasGene {
     }
 
     @SuppressWarnings("unchecked")
-    public VDJCHit updateAlignments(Function<Alignment<NucleotideSequence>, Alignment<NucleotideSequence>> processor) {
+    public VDJCHit mapAlignments(Function<Alignment<NucleotideSequence>, Alignment<NucleotideSequence>> processor) {
         return new VDJCHit(gene,
                 Arrays
                         .stream(alignments)

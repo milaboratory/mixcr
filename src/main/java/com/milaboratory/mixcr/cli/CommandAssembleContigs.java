@@ -32,10 +32,14 @@ package com.milaboratory.mixcr.cli;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.blocks.ParallelProcessor;
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.assembler.CloneFactory;
+import com.milaboratory.mixcr.assembler.fullseq.CoverageAccumulator;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerReport;
@@ -45,15 +49,19 @@ import com.milaboratory.primitivio.PipeDataInputReader;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.util.SmartProgressReporter;
+import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
+import io.repseq.core.VDJCGeneId;
 import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.milaboratory.mixcr.cli.CommandAssembleContigs.ASSEMBLE_CONTIGS_COMMAND_NAME;
+import static com.milaboratory.util.StreamUtil.noMerge;
 
 @Command(name = ASSEMBLE_CONTIGS_COMMAND_NAME,
         sortOptions = true,
@@ -84,7 +92,7 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
     public String debugReportFile;
 
     @Option(description = CommonDescriptions.JSON_REPORT,
-            names = {"--json-report"})
+            names = {"-j", "--json-report"})
     public String jsonReport = null;
 
     public FullSeqAssemblerParameters getFullSeqAssemblerParameters() {
@@ -130,13 +138,78 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
 
             OutputPort<Clone[]> parallelProcessor = new ParallelProcessor<>(cloneAlignmentsPort, cloneAlignments -> {
                 try {
-                    FullSeqAssembler fullSeqAssembler = new FullSeqAssembler(cloneFactory, assemblerParameters, cloneAlignments.clone, alignerParameters);
+                    // Collecting statistics
+
+                    EnumMap<GeneType, Map<VDJCGeneId, CoverageAccumulator>> coverages = cloneAlignments.clone.getHitsMap()
+                            .entrySet().stream()
+                            .filter(e -> e.getValue() != null && e.getValue().length > 0)
+                            .collect(Collectors.toMap(
+                                    Map.Entry::getKey,
+                                    e ->
+                                            Arrays.stream(e.getValue())
+                                                    .filter(h ->
+                                                            (h.getGeneType() != GeneType.Variable && h.getGeneType() != GeneType.Joining) ||
+                                                                    FullSeqAssembler.checkGeneCompatibility(h, cloneAssemblerParameters.getAssemblingFeatures()[0]))
+                                                    .collect(
+                                                            Collectors.toMap(
+                                                                    h -> h.getGene().getId(),
+                                                                    CoverageAccumulator::new
+                                                            )
+                                                    ),
+                                    noMerge(),
+                                    () -> new EnumMap<>(GeneType.class)));
+
+                    // Filtering empty maps
+                    coverages = coverages.entrySet().stream()
+                            .filter(e -> !e.getValue().isEmpty())
+                            .collect(Collectors.toMap(
+                                    Map.Entry::getKey,
+                                    Map.Entry::getValue,
+                                    noMerge(),
+                                    () -> new EnumMap<>(GeneType.class)));
+
+                    if (!coverages.containsKey(GeneType.Variable) || !coverages.containsKey(GeneType.Joining)) {
+                        // Something went really wrong
+                        report.onAssemblyCanceled(cloneAlignments.clone);
+                        return new Clone[]{cloneAlignments.clone};
+                    }
+
+                    for (VDJCAlignments alignments : CUtils.it(cloneAlignments.alignments()))
+                        for (Map.Entry<GeneType, VDJCHit[]> e : alignments.getHitsMap().entrySet())
+                            for (VDJCHit hit : e.getValue())
+                                Optional.ofNullable(coverages.get(e.getKey()))
+                                        .flatMap(m -> Optional.ofNullable(m.get(hit.getGene().getId())))
+                                        .ifPresent(acc -> acc.accumulate(hit));
+
+                    // Selecting best hits for clonal sequence assembly based in the coverage information
+                    final EnumMap<GeneType, VDJCHit> bestGenes = coverages.entrySet().stream()
+                            .collect(Collectors.toMap(
+                                    Map.Entry::getKey,
+                                    accs -> accs.getValue().entrySet().stream()
+                                            .max(Comparator.comparing(e -> -e.getValue().getNumberOfCoveredPoints(1)))
+                                            .map(e -> e.getValue().hit).get(),
+                                    noMerge(),
+                                    () -> new EnumMap<>(GeneType.class)));
+
+                    // Performing contig assembly
+
+                    FullSeqAssembler fullSeqAssembler = new FullSeqAssembler(
+                            cloneFactory, assemblerParameters,
+                            cloneAlignments.clone, alignerParameters,
+                            bestGenes.get(GeneType.Variable), bestGenes.get(GeneType.Joining)
+                    );
+
                     fullSeqAssembler.setReport(report);
 
                     FullSeqAssembler.RawVariantsData rawVariantsData = fullSeqAssembler.calculateRawData(cloneAlignments::alignments);
 
                     if (debugReport != null) {
                         synchronized (debugReport) {
+                            try (FileOutputStream fos = new FileOutputStream(debugReportFile + "." + cloneAlignments.clone.getId())) {
+                                final String content = rawVariantsData.toCsv((byte) 10);
+                                fos.write(content.getBytes());
+                            }
+
                             try {
                                 debugReport.write("Clone: " + cloneAlignments.clone.getId());
                                 debugReport.newLine();

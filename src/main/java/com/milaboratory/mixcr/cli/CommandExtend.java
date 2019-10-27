@@ -71,7 +71,7 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
     public String reportFile;
 
     @Option(description = CommonDescriptions.JSON_REPORT,
-            names = {"--json-report"})
+            names = {"-j", "--json-report"})
     public String jsonReport = null;
 
     @Option(description = "Quality score value to assign imputed sequences",
@@ -173,7 +173,7 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
                     reader.getParameters().getJAlignerParameters().getParameters().getScoring());
 
             for (VDJCAlignments alignments : CUtils.it(new OrderedOutputPort<>(process.getOutput(), VDJCAlignments::getAlignmentsIndex)))
-                writer.write(alignments);
+                writer.write(alignments.shiftIndelsAtHomopolymers());
             writer.setNumberOfProcessedReads(reader.getNumberOfReads());
 
             process.finish();

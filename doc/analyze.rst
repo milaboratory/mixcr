@@ -158,7 +158,7 @@ The presence or absence of primer and adapter sequences affects behavior of alig
 Analysis of non-enriched or random fragments
 --------------------------------------------
 
-The command ``analyze amplicon`` implements the pipeline for the analysis of non-enriched RNA-seq and non-targeted genomic data. The pipeline includes alignment of raw sequencing reads using :ref:`align <ref-align>`, assembly of overlapping fragmented reads using :ref:`assemblePartial <ref-assemblePartial>`, imputing good TCR alignments using :ref:`extend <ref-rna-seq>`,  assembly of aligned sequences into clonotypes using :ref:`assemble <ref-assemble>` and exporting the resulting clonotypes into tab-delimited file using :ref:`export <ref-export>`. Optionally, it also assembles full receptor sequences using :ref:`assembleContigs <ref-assembleContigs>`. It has the following syntax:
+The command ``analyze shotgun`` implements the pipeline for the analysis of non-enriched RNA-seq and non-targeted genomic data. The pipeline includes alignment of raw sequencing reads using :ref:`align <ref-align>`, assembly of overlapping fragmented reads using :ref:`assemblePartial <ref-assemblePartial>`, imputing good TCR alignments using :ref:`extend <ref-rna-seq>`,  assembly of aligned sequences into clonotypes using :ref:`assemble <ref-assemble>` and exporting the resulting clonotypes into tab-delimited file using :ref:`export <ref-export>`. Optionally, it also assembles full receptor sequences using :ref:`assembleContigs <ref-assembleContigs>`. It has the following syntax:
 
 .. code-block:: bash
 

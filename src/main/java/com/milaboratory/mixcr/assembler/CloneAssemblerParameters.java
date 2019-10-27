@@ -56,6 +56,7 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
     boolean separateByV, separateByJ, separateByC;
     double maximalPreClusteringRatio;
     double preClusteringScoreFilteringRatio;
+    double preClusteringCountFilteringRatio;
     boolean addReadsCountOnClustering;
     byte badQualityThreshold;
     double maxBadPointsPercent;
@@ -75,6 +76,7 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
                                     @JsonProperty("separateByC") boolean separateByC,
                                     @JsonProperty("maximalPreClusteringRatio") double maximalPreClusteringRatio,
                                     @JsonProperty("preClusteringScoreFilteringRatio") double preClusteringScoreFilteringRatio,
+                                    @JsonProperty("preClusteringCountFilteringRatio") double preClusteringCountFilteringRatio,
                                     @JsonProperty("addReadsCountOnClustering") boolean addReadsCountOnClustering,
                                     @JsonProperty("badQualityThreshold") byte badQualityThreshold,
                                     @JsonProperty("maxBadPointsPercent") double maxBadPointsPercent,
@@ -90,6 +92,7 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
         this.separateByC = separateByC;
         this.maximalPreClusteringRatio = maximalPreClusteringRatio;
         this.preClusteringScoreFilteringRatio = preClusteringScoreFilteringRatio;
+        this.preClusteringCountFilteringRatio = preClusteringCountFilteringRatio;
         this.addReadsCountOnClustering = addReadsCountOnClustering;
         this.badQualityThreshold = badQualityThreshold;
         this.maxBadPointsPercent = maxBadPointsPercent;
@@ -264,6 +267,11 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
         return this;
     }
 
+    public CloneAssemblerParameters setPreClusteringCountFilteringRatio(double preClusteringCountFilteringRatio) {
+        this.preClusteringCountFilteringRatio = preClusteringCountFilteringRatio;
+        return this;
+    }
+
 
     public CloneAssemblerParameters setAddReadsCountOnClustering(boolean addReadsCountOnClustering) {
         this.addReadsCountOnClustering = addReadsCountOnClustering;
@@ -289,7 +297,7 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
                 qualityAggregationType,
                 cloneClusteringParameters == null ? null : cloneClusteringParameters.clone(),
                 cloneFactoryParameters.clone(), separateByV, separateByJ, separateByC,
-                maximalPreClusteringRatio, preClusteringScoreFilteringRatio, addReadsCountOnClustering, badQualityThreshold, maxBadPointsPercent,
+                maximalPreClusteringRatio, preClusteringScoreFilteringRatio, preClusteringCountFilteringRatio, addReadsCountOnClustering, badQualityThreshold, maxBadPointsPercent,
                 mappingThreshold, minimalQuality);
     }
 
@@ -307,6 +315,7 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
         if (separateByC != that.separateByC) return false;
         if (Double.compare(that.maximalPreClusteringRatio, maximalPreClusteringRatio) != 0) return false;
         if (Double.compare(that.preClusteringScoreFilteringRatio, preClusteringScoreFilteringRatio) != 0) return false;
+        if (Double.compare(that.preClusteringCountFilteringRatio, preClusteringCountFilteringRatio) != 0) return false;
         if (addReadsCountOnClustering != that.addReadsCountOnClustering) return false;
         if (badQualityThreshold != that.badQualityThreshold) return false;
         if (Double.compare(that.maxBadPointsPercent, maxBadPointsPercent) != 0) return false;
@@ -337,6 +346,8 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
         temp = Double.doubleToLongBits(maximalPreClusteringRatio);
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         temp = Double.doubleToLongBits(preClusteringScoreFilteringRatio);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(preClusteringCountFilteringRatio);
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         result = 31 * result + (addReadsCountOnClustering ? 1 : 0);
         result = 31 * result + (int) badQualityThreshold;

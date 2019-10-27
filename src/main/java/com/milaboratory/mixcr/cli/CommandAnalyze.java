@@ -42,6 +42,7 @@ import picocli.CommandLine.Model.OptionSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -631,6 +632,9 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         super.validate();
         if (report == null)
             warn("NOTE: report file is not specified, using " + getReport() + " to write report.");
+        if (new File(outputNamePattern()).exists())
+            throwValidationException("Output file name prefix, matches the existing file name. Most probably you " +
+                    "specified paired-end file names but forgot to specify output file name prefix.", false);
     }
 
     @Override
@@ -742,6 +746,8 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
             } catch (Exception e) {
                 throwValidationException("Illegal gene feature: " + v);
             }
+            if (!assemblingFeature.contains(GeneFeature.ShortCDR3))
+                throwValidationException("--region-of-interest must cover CDR3");
         }
 
         @Override
@@ -862,8 +868,7 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         Collection<String> pipelineSpecificAssembleParameters() {
             return Arrays.asList(
                     "-OseparateByV=true",
-                    "-OseparateByJ=true",
-                    "-OseparateByC=true"
+                    "-OseparateByJ=true"
             );
         }
 

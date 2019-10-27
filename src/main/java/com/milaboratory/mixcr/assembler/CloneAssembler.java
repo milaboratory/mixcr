@@ -284,7 +284,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         if (clusteredClonesAccumulators != null)
             throw new IllegalStateException("Already clustered.");
         if (!preClusteringDone)
-            throw new IllegalStateException("No preclustering done.");
+            throw new IllegalStateException("No pre-clustering is done.");
 
         @SuppressWarnings("unchecked")
         Clustering clustering = new Clustering(cloneList,
@@ -329,7 +329,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
 
     public void buildClones() {
         if (!preClusteringDone)
-            throw new IllegalStateException("No preclustering done.");
+            throw new IllegalStateException("No pre-clustering is done.");
         ClonesBuilder builder = new ClonesBuilder();
         progressReporter = builder;
         builder.buildClones();
@@ -532,7 +532,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         volatile int progress;
 
         private ClonesBuilder() {
-            this.sourceSize = clusteredClonesAccumulators != null ? clusteredClonesAccumulators.size() : clones.size();
+            this.sourceSize = clusteredClonesAccumulators != null ? clusteredClonesAccumulators.size() : cloneList.size();
         }
 
         @Override
@@ -572,8 +572,14 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 else {
                     for (TIntIntIterator it = idMapping.iterator(); it.hasNext(); ) {
                         it.advance();
-                        if (newIdMapping.containsKey(it.value()))
-                            it.setValue(newIdMapping.get(it.value()));
+                        int val = it.value();
+                        if (val >= 0) { // "renaming" normal clonotypes
+                            // if (newIdMapping.containsKey(val))
+                            it.setValue(newIdMapping.get(val));
+                        } else { // "renaming" clustered clonotypes
+                            // if (newIdMapping.containsKey(~val))
+                            it.setValue(newIdMapping.get(~val));
+                        }
                     }
                 }
                 source = Arrays.asList(sourceArray);
@@ -623,6 +629,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             final TIntObjectHashMap<TIntArrayList> reversePreClustered = new TIntObjectHashMap<>();
 
             Arrays.sort(accs, CLONE_ACCUMULATOR_COMPARATOR);
+            double minCountForMaxScore = accs[0].getCount() / parameters.preClusteringCountFilteringRatio;
             int deleted = 0;
 
             for (int i = 0; i < accs.length - 1; i++) {
@@ -671,11 +678,14 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             // Score filtering step
 
             // Calculation
-            float[] maxScores = new float[3];
+
+            float[] maxScores = new float[2];
             for (CloneAccumulator acc : accs) {
                 if (acc == null)
                     continue;
-                for (int i = 0; i < 3; i++) {
+                if (acc.getCount() < minCountForMaxScore)
+                    continue;
+                for (int i = 0; i < 2; i++) {  // Only for V and J
                     GeneType gt = GeneType.VJC_REFERENCE[i];
                     maxScores[i] =
                             parameters.getSeparateBy(gt)
@@ -684,7 +694,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 }
             }
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 2; i++) // Only for V and J
                 maxScores[i] /= parameters.preClusteringScoreFilteringRatio;
 
             // Filtering low score clonotypes
@@ -693,11 +703,12 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 if (accs[i] == null)
                     continue;
 
-                for (int j = 0; j < 3; j++) {
+                for (int j = 0; j < 2; j++) { // Only for V and J
                     if (accs[i].getBestGene(GeneType.VJC_REFERENCE[j]) != null &&
                             accs[i].getBestScore(GeneType.VJC_REFERENCE[j]) < maxScores[j]) {
                         dropped.accept(accs[i]);
                         accs[i] = null;
+                        ++deleted;
                         break;
                     }
                 }
@@ -706,7 +717,6 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             // Filtering low quality clonotypes
             List<CloneAccumulator> result = new ArrayList<>(accs.length - deleted);
 
-            out:
             for (CloneAccumulator acc : accs) {
                 // null marks clustered clonotypes
                 if (acc == null)
@@ -714,14 +724,15 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
 
                 acc.rebuildClonalSequence();
 
-                if (acc.getSequence().getConcatenated().getQuality().minValue() <
-                        parameters.minimalQuality) {
+                if (acc.getSequence().getConcatenated().getQuality().minValue() < parameters.minimalQuality) {
                     dropped.accept(acc);
-                    continue out;
+                    continue;
                 }
 
                 result.add(acc);
             }
+
+            assert result.size() == accs.length - deleted;
 
             return result;
         }

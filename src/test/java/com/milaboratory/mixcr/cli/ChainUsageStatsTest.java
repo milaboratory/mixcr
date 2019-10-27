@@ -27,41 +27,21 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.vdjaligners;
+package com.milaboratory.mixcr.cli;
 
-import com.milaboratory.core.io.sequence.SequenceRead;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import io.repseq.core.GeneType;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.milaboratory.util.GlobalObjectMappers;
+import io.repseq.core.Chains;
+import org.junit.Test;
 
-public interface VDJCAlignerEventListener {
-    void onFailedAlignment(SequenceRead read, VDJCAlignmentFailCause cause);
-
-    void onSuccessfulAlignment(SequenceRead read, VDJCAlignments alignment);
-
-    /**
-     * Fired on successful sequence-aided overlap (e.g. using PEAR-like algorithm, see {@link
-     * com.milaboratory.core.merger.MismatchOnlyPairedReadMerger})
-     *
-     * @param read       original read
-     * @param alignments resulting alignment
-     */
-    void onSuccessfulSequenceOverlap(SequenceRead read, VDJCAlignments alignments);
-
-    /**
-     * Fired on successful alignment-aided overlap (see {@link VDJCAlignerWithMerge})
-     *
-     * @param read       original read
-     * @param alignments resulting alignment
-     */
-    void onSuccessfulAlignmentOverlap(SequenceRead read, VDJCAlignments alignments);
-
-    /**
-     * Rather technical event, used for algorithm performance monitoring
-     */
-    void onTopHitSequenceConflict(SequenceRead read, VDJCAlignments alignments, GeneType geneType);
-
-    void onSegmentChimeraDetected(GeneType geneType, SequenceRead read, VDJCAlignments alignments);
-
-    /** only for paired-end PV-first aligner */
-    void onRealignmentWithForcedNonFloatingBound(boolean forceLeftEdgeInRight, boolean forceRightEdgeInLeft);
+public class ChainUsageStatsTest {
+    @Test
+    public void serializationTest() throws JsonProcessingException {
+        ChainUsageStats stats = new ChainUsageStats();
+        stats.total.incrementAndGet();
+        stats.total.incrementAndGet();
+        stats.chimeras.incrementAndGet();
+        stats.getCounter(Chains.TRB).incrementAndGet();
+        System.out.println(GlobalObjectMappers.PRETTY.writeValueAsString(stats));
+    }
 }

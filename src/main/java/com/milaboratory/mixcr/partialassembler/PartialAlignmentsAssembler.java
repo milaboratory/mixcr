@@ -240,7 +240,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
 
             overlapped.incrementAndGet();
             totalWritten.incrementAndGet();
-            writer.write(mAlignment);
+            writer.write(mAlignment.shiftIndelsAtHomopolymers());
 
             // Saving alignment that where merge to prevent it's use as left part
             alreadyMergedIds.add(alignment.getAlignmentsIndex());

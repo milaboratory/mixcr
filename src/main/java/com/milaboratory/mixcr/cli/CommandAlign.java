@@ -55,6 +55,9 @@ import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.core.sequence.quality.QualityTrimmerParameters;
+import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor;
+import com.milaboratory.core.sequence.quality.ReadTrimmerReport;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
@@ -112,7 +115,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
     public String reportFile = null;
 
     @Option(description = CommonDescriptions.JSON_REPORT,
-            names = {"--json-report"})
+            names = {"-j", "--json-report"})
     public String jsonReport = null;
 
     @Option(description = "V/D/J/C gene library",
@@ -138,6 +141,14 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
             throwValidationException("ERROR: -n / --limit must be positive", false);
         this.limit = limit;
     }
+
+    @Option(description = "Read pre-processing: trimming quality threshold",
+            names = {"--trimming-quality-threshold"})
+    public byte trimmingQualityThreshold = 0; // 17
+
+    @Option(description = "Read pre-processing: trimming window size",
+            names = {"--trimming-window-size"})
+    public byte trimmingWindowSize = 6; // 3
 
     @Option(description = "Parameters preset.",
             names = {"-p", "--preset"})
@@ -215,6 +226,33 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
             alignerParameters = JsonOverrider.override(alignerParameters, VDJCAlignerParameters.class, overrides);
             if (alignerParameters == null)
                 throwValidationException("Failed to override some parameter: " + overrides);
+        }
+
+        // Detect if automatic featureToAlign correction is required
+        VDJCLibrary library = getLibrary();
+
+        int totalV = 0, totalVErrors = 0, hasVRegion = 0;
+        GeneFeature correctingFeature = alignerParameters.getVAlignerParameters().getGeneFeatureToAlign().hasReversedRegions() ?
+                GeneFeature.VRegionWithP :
+                GeneFeature.VRegion;
+
+        for (VDJCGene gene : library.getGenes(getChains())) {
+            if (gene.getGeneType() == GeneType.Variable) {
+                totalV++;
+                if (!alignerParameters.containsRequiredFeature(gene)) {
+                    totalVErrors++;
+                    if (gene.getPartitioning().isAvailable(correctingFeature))
+                        hasVRegion++;
+                }
+            }
+        }
+
+        // Performing V featureToAlign correction if needed
+        if (totalVErrors > totalV * 0.9 && hasVRegion > totalVErrors * 0.8) {
+            warn("WARNING: forcing -OvParameters.geneFeatureToAlign=" + GeneFeature.encode(correctingFeature) +
+                    " since current gene feature (" + GeneFeature.encode(alignerParameters.getVAlignerParameters().getGeneFeatureToAlign()) + ") is absent in " +
+                    Util.PERCENT_FORMAT.format(100.0 * totalVErrors / totalV) + "% of V genes.");
+            alignerParameters.getVAlignerParameters().setGeneFeatureToAlign(correctingFeature);
         }
 
         return vdjcAlignerParameters = alignerParameters;
@@ -376,16 +414,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
         // Getting aligner parameters
         VDJCAlignerParameters alignerParameters = getAlignerParameters();
 
-        // Creating aligner
-        VDJCAligner aligner = VDJCAligner.createAligner(alignerParameters,
-                isInputPaired(), !noMerge);
-
         // Detect if automatic featureToAlign correction is required
-        int totalV = 0, totalVErrors = 0, hasVRegion = 0;
-        GeneFeature correctingFeature = alignerParameters.getVAlignerParameters().getGeneFeatureToAlign().hasReversedRegions() ?
-                GeneFeature.VRegionWithP :
-                GeneFeature.VRegion;
-
         VDJCLibrary library = getLibrary();
 
         // Printing library level warnings, if specified for the library
@@ -402,24 +431,9 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                 warn(l);
         }
 
-        for (VDJCGene gene : library.getGenes(getChains())) {
-            if (gene.getGeneType() == GeneType.Variable) {
-                totalV++;
-                if (!alignerParameters.containsRequiredFeature(gene)) {
-                    totalVErrors++;
-                    if (gene.getPartitioning().isAvailable(correctingFeature))
-                        hasVRegion++;
-                }
-            }
-        }
-
-        // Performing V featureToAlign correction if needed
-        if (totalVErrors > totalV * 0.9 && hasVRegion > totalVErrors * 0.8) {
-            warn("WARNING: forcing -OvParameters.geneFeatureToAlign=" + GeneFeature.encode(correctingFeature) +
-                    " since current gene feature (" + GeneFeature.encode(alignerParameters.getVAlignerParameters().getGeneFeatureToAlign()) + ") is absent in " +
-                    Util.PERCENT_FORMAT.format(100.0 * totalVErrors / totalV) + "% of V genes.");
-            alignerParameters.getVAlignerParameters().setGeneFeatureToAlign(correctingFeature);
-        }
+        // Creating aligner
+        VDJCAligner aligner = VDJCAligner.createAligner(alignerParameters,
+                isInputPaired(), !noMerge);
 
         int numberOfExcludedNFGenes = 0;
         int numberOfExcludedFGenes = 0;
@@ -500,7 +514,19 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
 
             SmartProgressReporter.startProgressReport("Alignment", progress);
             Merger<Chunk<? extends SequenceRead>> mainInputReads = CUtils.buffered((OutputPort) chunked(sReads, 64), Math.max(16, threads));
-            ParallelProcessor alignedChunks = new ParallelProcessor(mainInputReads, chunked(aligner), Math.max(16, threads), threads);
+
+            OutputPort<Chunk<? extends SequenceRead>> mainInputReadsPreprocessed = mainInputReads;
+            if (trimmingQualityThreshold > 0) {
+                ReadTrimmerReport rep = new ReadTrimmerReport();
+                mainInputReadsPreprocessed = CUtils.wrap(
+                        mainInputReadsPreprocessed,
+                        CUtils.chunked(new ReadTrimmerProcessor(
+                                new QualityTrimmerParameters(trimmingQualityThreshold,
+                                        trimmingWindowSize), rep)));
+                report.setTrimmingReport(rep);
+            }
+
+            ParallelProcessor alignedChunks = new ParallelProcessor(mainInputReadsPreprocessed, chunked(aligner), Math.max(16, threads), threads);
             if (reportBuffers) {
                 StatusReporter reporter = new StatusReporter();
                 reporter.addBuffer("Input (chunked; chunk size = 64)", mainInputReads.getBufferStatusProvider());
@@ -527,7 +553,9 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                 });
                 reporter.start();
             }
-            OutputPort<VDJCAlignmentResult> alignments = unchunked(alignedChunks);
+            OutputPort<VDJCAlignmentResult> alignments = unchunked(
+                    CUtils.wrap(alignedChunks,
+                            CUtils.<VDJCAlignmentResult, VDJCAlignmentResult>chunked(VDJCAlignmentResult::shiftIndelsAtHomopolymers)));
             for (VDJCAlignmentResult result : CUtils.it(new OrderedOutputPort<>(alignments, o -> o.read.getId()))) {
                 VDJCAlignments alignment = result.alignment;
                 SequenceRead read = result.read;
