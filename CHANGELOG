@@ -1,4 +1,63 @@
 
+MiXCR 3.0.11 (24 Oct 2019)
+========================
+
+-- Fixes exception in `assemble` for multi-assembling-feature cases with zero length sequences
+-- Fixes empty `FR3` imputed sequence in cases with zero assembled nucleotides on the 5' side of 
+   CDR3
+-- MiXCR execution script optimized for Docker (Java 11 is recommended for running MiXCR in 
+   container environment)
+-- Other fixes for MiXCR script
+
+
+MiXCR 3.0.10 (12 Sep 2019)
+========================
+
+-- Fixes `NPE` in very rare cases with incompatible V gene selection for `assembleContigs` in case 
+   of partially annotated gene libraries
+-- Several fixes for sequence imputation algorithm in `exportAlignments` / `exportClones`
+
+
+MiXCR 3.0.9 ( 6 Aug 2019)
+========================
+
+-- Chain usage statistics added to `align` and `assemble` JSON reports
+-- Fixed wrong behaviour with score-based pre-filtering in `split-by-V/J=true` cases
+-- Fixed rare IndexOutOfBounds exception in `-nFeatureImputed ...`
+-- Added shortcut for `--json-report` = `-j`
+-- Sanity check for common mistake in `analyze` parameters
+
+
+MiXCR 3.0.8 (22 Jul 2019)
+========================
+
+-- Alignments are forced to the corresponding edge if the same V/J gene is detected in the opposite 
+   PE read mate
+-- Average quality threshold (`-OaverageQualityThreshold=...`) in `assembleContigs` increased to 
+   `20`
+-- Added `exportAlignmentsForClones` action
+-- All indels in homopolimeric stretches are now shifted left in all alignment algorihtms
+-- Smarter base V/J/C hit selection in `assembleContigs`
+-- Read quality trimming (see help for `--trimming-window-size` and `--trimming-quality-threshold` 
+   options in `align`) (disabled by default until 3.1)
+-- Fix exception in `-mutationsDetailed` and similar export options
+-- Fixes in step skipping logic in `analyze` (additional automatic parameter adjustment for VDJC 
+   libraries covering only `VRegion`)
+-- Several more fixes for `assembleContigs`
+-- minor: Fixes incorrect numbers in `assemble` report
+-- minor: Fix for filterAlignmentsAction
+
+
+MiXCR 3.0.7 (20 May 2019)
+========================
+
+-- Fixes clone oversplitting in assembleContigs in noizy (e.g. single-cell) data with substanial 
+   fraction of sequences with errors in `CDR3`
+-- Fixes wrong alignment-scoring-based filtering in pre-clustering procedure
+-- Fixes rare bug in export of imputed gene feature sequences
+-- minor: Better error message for mutation extraction from alignment-attached gene features
+
+
 MiXCR 3.0.6 (10 Apr 2019)
 ========================
 

@@ -34,6 +34,7 @@ import com.milaboratory.core.Target;
 import com.milaboratory.core.alignment.*;
 import com.milaboratory.core.alignment.batch.AlignmentHit;
 import com.milaboratory.core.alignment.batch.AlignmentHitImpl;
+import com.milaboratory.core.alignment.batch.BatchAlignerWithBaseWithFilter;
 import com.milaboratory.core.alignment.kaligner1.AbstractKAlignerParameters;
 import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.core.alignment.kaligner2.KAlignerParameters2;
@@ -61,6 +62,10 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     // Used in case of AMerge
     private VDJCAlignerS sAligner = null;
     private final TargetMerger alignmentsMerger;
+    private BatchAlignerWithBaseWithFilter<NucleotideSequence, VDJCGene, AlignmentHit<NucleotideSequence, VDJCGene>>
+            vAlignerNotFloatingLeft,
+            vAlignerNotFloatingRight;
+
 
     public VDJCAlignerPVFirst(VDJCAlignerParameters parameters) {
         super(parameters);
@@ -78,12 +83,13 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     @Override
     protected void init() {
         super.init();
+        vAlignerNotFloatingLeft = vAligner.setFloatingLeftBound(false);
+        vAlignerNotFloatingRight = vAligner.setFloatingRightBound(false);
     }
 
     @Override
     protected VDJCAlignmentResult<PairedRead> process0(final PairedRead input) {
         Target[] targets = getTargets(input);
-
         // Creates helper classes for each PTarget
         PAlignmentHelper[] helpers = createInitialHelpers(targets);
 
@@ -374,12 +380,48 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                 vAl2 = vAligner.align(target.targets[1].getSequence()).getHits();
 
         /*
+         * Step 1.4: force floating bounds = false for ---xxx> <---- and ---> <xxx---- topologies
+         */
+
+        if (parameters.isSmartForceEdgeAlignments()) {
+            boolean forceRightEdgeInLeft = false, forceLeftEdgeInRight = false;
+            for (PairedHit vHit : sortAndFilterHits(createPairedHits(vAl1, vAl2), parameters.getVAlignerParameters())) {
+                if (vHit.hit0 == null || vHit.hit1 == null)
+                    continue;
+
+                Alignment<NucleotideSequence>
+                        lAl = vHit.hit0.getAlignment(),
+                        rAl = vHit.hit1.getAlignment();
+
+                if (lAl == null || rAl == null)
+                    continue;
+
+                if (lAl.getSequence2Range().getTo() != target.targets[0].size() && rAl.getSequence2Range().getFrom() == 0) {
+                    //---xxx> <----
+                    forceRightEdgeInLeft = true;
+                } else if (lAl.getSequence2Range().getTo() == target.targets[0].size() && rAl.getSequence2Range().getFrom() != 0) {
+                    //---> <xxx----
+                    forceLeftEdgeInRight = true;
+                }
+            }
+
+            if (forceRightEdgeInLeft)
+                vAl1 = vAlignerNotFloatingRight.align(target.targets[0].getSequence()).getHits();
+            if (forceLeftEdgeInRight)
+                vAl2 = vAlignerNotFloatingLeft.align(target.targets[1].getSequence()).getHits();
+
+            if (this.listener != null)
+                this.listener.onRealignmentWithForcedNonFloatingBound(forceLeftEdgeInRight, forceRightEdgeInLeft);
+        }
+
+        /*
          * Step 1.5: eliminating conflicting alignments in favor of alignments covering CDR3 edge
          */
 
         boolean vChimera = checkAndEliminateChimera(vAl1, vAl2, GeneType.Variable);
 
         PairedHit[] vHits = createPairedHits(vAl1, vAl2);
+
 
         /*
          * Step 2: of round of V gene alignment with more precise algorithm
@@ -395,9 +437,6 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                     continue;
 
                 final AlignmentScoring<NucleotideSequence> scoring = parameters.getVAlignerParameters().getParameters().getScoring();
-                if (scoring instanceof AffineGapAlignmentScoring)
-                    continue; //TODO IMPLEMENT
-
                 final NucleotideSequence sequence2 = target.targets[1].getSequence();
                 final NucleotideSequence sequence1 = leftHit.getAlignment().getSequence1();
                 final int beginFR3 = leftHit.getRecordPayload().getPartitioning().getRelativePosition(parameters.getFeatureToAlign(GeneType.Variable), ReferencePoint.FR3Begin);
@@ -457,9 +496,6 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                     continue;
 
                 final AlignmentScoring<NucleotideSequence> scoring = parameters.getJAlignerParameters().getParameters().getScoring();
-                if (scoring instanceof AffineGapAlignmentScoring)
-                    continue;//TODO IMPLEMENT
-
                 final NucleotideSequence sequence2 = target.targets[0].getSequence();
                 final NucleotideSequence sequence1 = rightHit.getAlignment().getSequence1();
 

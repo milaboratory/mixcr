@@ -146,6 +146,11 @@ public final class CloneAssemblerReport extends AbstractCommandReport implements
         return readsDroppedWithClones.get();
     }
 
+    @JsonProperty("clonalChainUsage")
+    public ChainUsageStats getClonalChainUsage() {
+        return chainStats;
+    }
+
     @Override
     public void onNewCloneCreated(CloneAccumulator accumulator) {
         clonesCreated.incrementAndGet();
@@ -239,13 +244,13 @@ public final class CloneAssemblerReport extends AbstractCommandReport implements
                 .writePercentAndAbsoluteField("Mapped low quality reads, percent of used", deferredAlignmentsMapped.get(), clusterizationBase)
                 .writePercentAndAbsoluteField("Reads clustered in PCR error correction, percent of used", readsClustered.get(), clusterizationBase)
                 .writePercentAndAbsoluteField("Reads pre-clustered due to the similar VJC-lists, percent of used", readsPreClustered.get(), alignmentsInClones)
-                .writePercentAndAbsoluteField("Reads dropped due to the lack of a clone sequence",
+                .writePercentAndAbsoluteField("Reads dropped due to the lack of a clone sequence, percent of total",
                         failedToExtractTarget.get(), totalReads)
-                .writePercentAndAbsoluteField("Reads dropped due to low quality",
+                .writePercentAndAbsoluteField("Reads dropped due to low quality, percent of total",
                         droppedAsLowQuality.get(), totalReads)
-                .writePercentAndAbsoluteField("Reads dropped due to failed mapping",
+                .writePercentAndAbsoluteField("Reads dropped due to failed mapping, percent of total",
                         deferredAlignmentsDropped.get(), totalReads)
-                .writePercentAndAbsoluteField("Reads dropped with low quality clones", readsDroppedWithClones.get(), alignmentsInClones)
+                .writePercentAndAbsoluteField("Reads dropped with low quality clones, percent of total", readsDroppedWithClones.get(), totalReads)
                 .writeField("Clonotypes eliminated by PCR error correction", clonesClustered.get())
                 .writeField("Clonotypes dropped as low quality", clonesDropped.get())
                 .writeField("Clonotypes pre-clustered due to the similar VJC-lists", clonesPreClustered.get());

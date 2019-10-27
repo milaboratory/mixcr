@@ -36,10 +36,12 @@ import io.repseq.core.*;
 import io.repseq.gen.VDJCGenes;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.milaboratory.core.alignment.Alignment.aabs;
+import static com.milaboratory.util.StreamUtil.noMerge;
 
-public class VDJCObject {
+public abstract class VDJCObject {
     protected final NSequenceWithQuality[] targets;
     protected final EnumMap<GeneType, VDJCHit[]> hits;
     protected volatile EnumMap<GeneType, Chains> allChains;
@@ -90,6 +92,16 @@ public class VDJCObject {
     public final VDJCHit[] getHits(GeneType type) {
         VDJCHit[] hits = this.hits.get(type);
         return hits == null ? new VDJCHit[0] : hits;
+    }
+
+    public final EnumMap<GeneType, VDJCHit[]> getHitsMap() {
+        return hits.entrySet()
+                .stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> e.getValue().clone(),
+                        noMerge(),
+                        () -> new EnumMap<>(GeneType.class)));
     }
 
     public Chains getTopChain(GeneType gt) {
@@ -186,6 +198,35 @@ public class VDJCObject {
         return partitionedTargets[target];
     }
 
+    public final VDJCPartitionedSequence getPartitionedTarget(int target, VDJCGene vGene, VDJCGene dGene, VDJCGene jGene, VDJCGene cGene) {
+        EnumMap<GeneType, VDJCGene> genes = new EnumMap<>(GeneType.class);
+        if (vGene != null)
+            genes.put(GeneType.Variable, vGene);
+        if (dGene != null)
+            genes.put(GeneType.Diversity, dGene);
+        if (jGene != null)
+            genes.put(GeneType.Joining, jGene);
+        if (cGene != null)
+            genes.put(GeneType.Constant, cGene);
+        return getPartitionedTarget(target, genes);
+    }
+
+    public final VDJCPartitionedSequence getPartitionedTarget(int target, EnumMap<GeneType, VDJCGene> genes) {
+        EnumMap<GeneType, VDJCHit> topHits = new EnumMap<>(GeneType.class);
+        for (GeneType geneType : GeneType.values()) {
+            if (!genes.containsKey(geneType))
+                continue;
+            VDJCHit[] hits = this.hits.get(geneType);
+            if (hits == null)
+                continue;
+            Arrays.stream(hits)
+                    .filter(hit -> hit.getGene().equals(genes.get(geneType)))
+                    .findFirst()
+                    .ifPresent(vdjcHit -> topHits.put(geneType, vdjcHit));
+        }
+        return new VDJCPartitionedSequence(targets[target], new TargetPartitioning(target, topHits));
+    }
+
     public VDJCHit getBestHit(GeneType type) {
         VDJCHit[] hits = this.hits.get(type);
         if (hits == null || hits.length == 0)
@@ -231,60 +272,6 @@ public class VDJCObject {
             if (tmp != null && (feature == null || feature.getQuality().minValue() < tmp.getQuality().minValue()))
                 feature = tmp;
         }
-//        if (feature == null && targets.length == 2) {
-//            VDJCHit bestVHit = getBestHit(GeneType.Variable);
-//            if (bestVHit == null)
-//                return null;
-//
-//            //TODO check for V feature compatibility
-//            Alignment<NucleotideSequence>
-//                    lAlignment = bestVHit.getAlignment(0),
-//                    rAlignment = bestVHit.getAlignment(1);
-//
-//            if (lAlignment == null || rAlignment == null)
-//                return null;
-//
-//            int lTargetIndex = 0;
-//
-//            int lFrom, rTo, f, t;
-//            if ((f = getPartitionedTarget(1).getPartitioning().getPosition(geneFeature.getFirstPoint())) >= 0 &&
-//                    (t = getPartitionedTarget(0).getPartitioning().getPosition(geneFeature.getLastPoint())) >= 0) {
-//                lAlignment = bestVHit.getAlignment(1);
-//                rAlignment = bestVHit.getAlignment(0);
-//                lFrom = f;
-//                rTo = t;
-//                lTargetIndex = 1;
-//            } else if ((f = getPartitionedTarget(0).getPartitioning().getPosition(geneFeature.getFirstPoint())) < 0 ||
-//                    (t = getPartitionedTarget(1).getPartitioning().getPosition(geneFeature.getLastPoint())) < 0)
-//                return null;
-//            else {
-//                lFrom = f;
-//                rTo = t;
-//            }
-//
-//            Range intersection = lAlignment.getSequence1Range().intersection(rAlignment.getSequence1Range());
-//            if (intersection == null)
-//                return null;
-//
-//            NSequenceWithQuality intersectionSequence = Merger.merge(intersection,
-//                    new Alignment[]{bestVHit.getAlignment(0), bestVHit.getAlignment(1)},
-//                    targets);
-//
-//            Range lRange = new Range(
-//                    lFrom,
-//                    aabs(lAlignment.convertToSeq2Position(intersection.getFrom())));
-//            Range rRange = new Range(
-//                    aabs(rAlignment.convertToSeq2Position(intersection.getTo())),
-//                    rTo);
-//
-//            feature =
-//                    new NSequenceWithQualityBuilder()
-//                            .ensureCapacity(lRange.length() + rRange.length() + intersectionSequence.size())
-//                            .append(targets[lTargetIndex].getRange(lRange))
-//                            .append(intersectionSequence)
-//                            .append(targets[1 - lTargetIndex].getRange(rRange))
-//                            .createAndDestroy();
-//        }
         return feature;
     }
 
@@ -373,6 +360,8 @@ public class VDJCObject {
                 if (!lAl.getSequence1Range().contains(positionInRef)) {
                     // add lowercase piece of germline
                     assert lAl.getSequence1Range().getFrom() > positionInRef;
+                    if (leftParts.isEmpty() && lAl.getSequence1Range().getFrom() == rPositionInRef)
+                        break;
                     IncompleteSequencePart part = new IncompleteSequencePart(lHit, true, iLeftTarget, positionInRef, lAl.getSequence1Range().getFrom());
                     if (part.begin != part.end)
                         leftParts.add(part);
@@ -381,7 +370,7 @@ public class VDJCObject {
                 assert lAl.getSequence1Range().containsBoundary(positionInRef);
 
                 IncompleteSequencePart part = new IncompleteSequencePart(lHit, false, iLeftTarget,
-                        aabs(lAl.convertToSeq2Position(positionInRef)),
+                        aabsLeft(positionInRef, lAl),
                         lAl.getSequence2Range().getTo());
                 if (part.begin != part.end)
                     leftParts.add(part);
@@ -421,6 +410,8 @@ public class VDJCObject {
                 if (!rAl.getSequence1Range().contains(positionInRef)) {
                     // add lowercase piece of germline
                     assert rAl.getSequence1Range().getTo() <= positionInRef;
+                    if (rightParts.isEmpty() && rAl.getSequence1Range().getTo() == lPositionInRef)
+                        break;
                     IncompleteSequencePart part = new IncompleteSequencePart(rHit, true, iRightTarget, rAl.getSequence1Range().getTo(), positionInRef); // +1 to include positionInRef
                     if (part.begin != part.end)
                         rightParts.add(part);
@@ -430,7 +421,7 @@ public class VDJCObject {
 
                 IncompleteSequencePart part = new IncompleteSequencePart(rHit, false, iRightTarget,
                         rAl.getSequence2Range().getFrom(),
-                        aabs(rAl.convertToSeq2Position(positionInRef)));
+                        aabsRight(positionInRef, rAl));
                 if (part.begin != part.end)
                     rightParts.add(part);
 
@@ -463,9 +454,15 @@ public class VDJCObject {
 
                 if (lHit == rHit) {
                     Alignment<NucleotideSequence> lAl = lHit.getAlignment(lLast.iTarget);
+                    Alignment<NucleotideSequence> rAl = lHit.getAlignment(rLast.iTarget);
+                    if (lLast.iTarget > rLast.iTarget && lAl.getSequence1Range().getFrom() < rAl.getSequence1Range().getTo())
+                        return null;
                     if (lAl.getSequence1Range().contains(rPositionInRef)) {
-                        IncompleteSequencePart part = new IncompleteSequencePart(lHit, false, lLast.iTarget, lLast.begin,
-                                aabs(lAl.convertToSeq2Position(rPositionInRef)));
+                        int aabs = aabs(lAl.convertToSeq2Position(rPositionInRef));
+                        if (aabs < lLast.begin)
+                            return null;
+
+                        IncompleteSequencePart part = new IncompleteSequencePart(lHit, false, lLast.iTarget, lLast.begin, aabs);
                         if (part.begin == part.end)
                             leftParts.remove(leftParts.size() - 1);
                         else
@@ -479,10 +476,12 @@ public class VDJCObject {
                             leftParts.add(part);
                     }
 
-                    Alignment<NucleotideSequence> rAl = lHit.getAlignment(rLast.iTarget);
                     if (rAl.getSequence1Range().contains(lPositionInRef)) {
-                        IncompleteSequencePart part = new IncompleteSequencePart(rHit, false, rLast.iTarget,
-                                aabs(rAl.convertToSeq2Position(lPositionInRef)), rLast.end);
+                        int aabs = aabs(rAl.convertToSeq2Position(lPositionInRef));
+                        if (aabs > rLast.end)
+                            return null;
+
+                        IncompleteSequencePart part = new IncompleteSequencePart(rHit, false, rLast.iTarget, aabs, rLast.end);
                         if (part.begin == part.end)
                             rightParts.remove(0);
                         else
@@ -496,13 +495,19 @@ public class VDJCObject {
                             rightParts.add(0, part);
                     }
 
-                    assert same(leftParts, rightParts) : "\n" + leftParts + "\n" + rightParts;
+                    assert same(leftParts, rightParts) :
+                            "\n" + leftParts
+                                    + "\n" + rightParts
+                                    + "\n" + (this instanceof Clone ? ((Clone) this).id : ((VDJCAlignments) this).getAlignmentsIndex());
                     pieces = leftParts;
                 } else {
                     if (lLast.iTarget != rLast.iTarget)
                         return null;
 
                     if (lLast.begin > rLast.end)
+                        return null;
+
+                    if (lLast.germline || rLast.germline)
                         return null;
 
 //                    assert lHit.getGene().getGeneType() == GeneType.Variable;
@@ -543,6 +548,18 @@ public class VDJCObject {
                 partition, partition.getTranslationParameters(geneFeature));
     }
 
+    private static int aabsLeft(int positionInRef, Alignment<NucleotideSequence> lAl) {
+        if (lAl.getSequence1Range().getFrom() == positionInRef)
+            return lAl.getSequence2Range().getFrom();
+        return aabs(lAl.convertToSeq2Position(positionInRef));
+    }
+
+    private static int aabsRight(int positionInRef, Alignment<NucleotideSequence> rAl) {
+        if (rAl.getSequence1Range().getTo() == positionInRef)
+            return rAl.getSequence2Range().getTo();
+        return aabs(rAl.convertToSeq2Position(positionInRef));
+    }
+
     private boolean same(IncompleteSequencePart a, IncompleteSequencePart b) {
         return a.hit == b.hit &&
                 a.germline == b.germline &&
@@ -567,7 +584,7 @@ public class VDJCObject {
         final int begin, end;
 
         IncompleteSequencePart(VDJCHit hit, boolean germline, int iTarget, int begin, int end) {
-            assert begin <= end;
+            assert begin <= end : "" + begin + " - " + end;
             this.hit = hit;
             this.germline = germline;
             this.iTarget = iTarget;
