@@ -67,9 +67,8 @@ import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.*;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
-import picocli.CommandLine.Parameters;
+import picocli.CommandLine;
+import picocli.CommandLine.*;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -391,7 +390,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
     /** Alignment report */
     public final AlignerReport report = new AlignerReport();
 
-    public TagTuple tags(SequenceRead r) {
+    static TagTuple parseTags(CommandLine commandLine, List<String> tags, SequenceRead r) {
         String description = r.getRead(0).getDescription();
         String descTrimmed = description.replaceAll("[|~]*$", "").replaceAll("\\{[^}]*}", "");
         Map<String, String> matchedGroups = Arrays.stream(descTrimmed.split("\\|"))
@@ -400,7 +399,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
         return new TagTuple(tags.stream().map(tag -> {
             String tagSeq = matchedGroups.get(tag);
             if (tagSeq == null)
-                throwExecutionException("Group " + tag + " not found in FASTQ description!");
+                throw new ExecutionException(commandLine, "Group " + tag + " not found in FASTQ description!");
             return tagSeq;
         }).toArray(String[]::new));
     }
@@ -576,7 +575,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                     }
                 }
 
-                alignment = alignment.setTagCounter(new TagCounter(tags(read)));
+                alignment = alignment.setTagCounter(new TagCounter(parseTags(this.spec.commandLine(), tags, read)));
 
                 if (alignment.isChimera())
                     report.onChimera();
