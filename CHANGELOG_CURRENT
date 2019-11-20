@@ -1,0 +1,2 @@
+Built-in reference library upgraded to v1.6 (see [changelog](https://github.com/repseqio/library/releases/tag/v1.6))
+Additional `mixcr` script optimizations for docker
