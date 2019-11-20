@@ -53,6 +53,10 @@ to upgrade already installed MiXCR to the newest version:
     brew update
     brew upgrade mixcr
 
+#### Docker
+
+See [official Docker Image](https://hub.docker.com/r/milaboratory/mixcr).
+
 #### Manual install (any OS)
 
 * download latest stable MiXCR build from [release page](https://github.com/milaboratory/mixcr/releases/latest)
@@ -104,7 +108,7 @@ To build MiXCR from source:
 
 ## License
 
-Copyright (c) 2014-2018, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
 (here and after addressed as Inventors)
 All Rights Reserved
 
