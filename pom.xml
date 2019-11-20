@@ -33,7 +33,7 @@
 
     <groupId>com.milaboratory</groupId>
     <artifactId>mixcr</artifactId>
-    <version>3.0.12-SNAPSHOT</version>
+    <version>3.0.12</version>
     <packaging>jar</packaging>
     <name>MiXCR</name>
 
