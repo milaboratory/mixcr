@@ -52,6 +52,18 @@ public class MainTest {
 
     @Ignore
     @Test
+    public void test3() {
+        Main.main("exportClones",
+                "-nMutations",
+                "'{FR1Begin:FR3End}'",
+                "-count",
+                "-nMutations",
+                "FR4",
+                "/Users/dbolotin/tst");
+    }
+
+    @Ignore
+    @Test
     public void test2_completion() {
         System.out.println(AutoComplete.bash("mixcr", Main.mkCmd()));
     }

@@ -75,6 +75,12 @@ public class FullSeqAssemblerParameters {
      */
     int alignmentEdgeRegionSize;
     /**
+     * Positions having mean normalized quality
+     * (sum of quality scores for the variant / read count for the whole clonotype;
+     * position coverage not taken into account) less then this value, will not be used for sub-cloning
+     */
+    double minimalMeanNormalizedQuality;
+    /**
      * Minimal fraction of non edge points in variant that must be reached to consider the variant significant
      */
     double minimalNonEdgePointsFraction;
@@ -111,6 +117,7 @@ public class FullSeqAssemblerParameters {
             @JsonProperty("alignedSequenceEdgeDelta") int alignedSequenceEdgeDelta,
             @JsonProperty("alignmentEdgeRegionSize") int alignmentEdgeRegionSize,
             @JsonProperty("minimalNonEdgePointsFraction") double minimalNonEdgePointsFraction,
+            @JsonProperty("minimalMeanNormalizedQuality") double minimalMeanNormalizedQuality,
             @JsonProperty("outputMinimalQualityShare") double outputMinimalQualityShare,
             @JsonProperty("outputMinimalSumQuality") long outputMinimalSumQuality,
             @JsonProperty("subCloningRegion") GeneFeature subCloningRegion,
@@ -123,6 +130,7 @@ public class FullSeqAssemblerParameters {
         this.alignedSequenceEdgeDelta = alignedSequenceEdgeDelta;
         this.alignmentEdgeRegionSize = alignmentEdgeRegionSize;
         this.minimalNonEdgePointsFraction = minimalNonEdgePointsFraction;
+        this.minimalMeanNormalizedQuality = minimalMeanNormalizedQuality;
         this.outputMinimalQualityShare = outputMinimalQualityShare;
         this.outputMinimalSumQuality = outputMinimalSumQuality;
         this.subCloningRegion = subCloningRegion;
@@ -219,10 +227,18 @@ public class FullSeqAssemblerParameters {
         this.minimalContigLength = minimalContigLength;
     }
 
+    public double getMinimalMeanNormalizedQuality() {
+        return minimalMeanNormalizedQuality;
+    }
+
+    public void setMinimalMeanNormalizedQuality(double minimalMeanNormalizedQuality) {
+        this.minimalMeanNormalizedQuality = minimalMeanNormalizedQuality;
+    }
+
     @Override
     public FullSeqAssemblerParameters clone() {
         return new FullSeqAssemblerParameters(branchingMinimalQualityShare, branchingMinimalSumQuality, decisiveBranchingSumQualityThreshold,
-                alignedSequenceEdgeDelta, alignmentEdgeRegionSize, minimalNonEdgePointsFraction,
+                alignedSequenceEdgeDelta, alignmentEdgeRegionSize, minimalNonEdgePointsFraction, minimalMeanNormalizedQuality,
                 outputMinimalQualityShare, outputMinimalSumQuality, subCloningRegion,
                 trimmingParameters, minimalContigLength, alignedRegionsOnly);
     }
@@ -230,13 +246,14 @@ public class FullSeqAssemblerParameters {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof FullSeqAssemblerParameters)) return false;
         FullSeqAssemblerParameters that = (FullSeqAssemblerParameters) o;
         return Double.compare(that.branchingMinimalQualityShare, branchingMinimalQualityShare) == 0 &&
                 branchingMinimalSumQuality == that.branchingMinimalSumQuality &&
                 decisiveBranchingSumQualityThreshold == that.decisiveBranchingSumQualityThreshold &&
                 alignedSequenceEdgeDelta == that.alignedSequenceEdgeDelta &&
                 alignmentEdgeRegionSize == that.alignmentEdgeRegionSize &&
+                Double.compare(that.minimalMeanNormalizedQuality, minimalMeanNormalizedQuality) == 0 &&
                 Double.compare(that.minimalNonEdgePointsFraction, minimalNonEdgePointsFraction) == 0 &&
                 Double.compare(that.outputMinimalQualityShare, outputMinimalQualityShare) == 0 &&
                 outputMinimalSumQuality == that.outputMinimalSumQuality &&
@@ -248,7 +265,7 @@ public class FullSeqAssemblerParameters {
 
     @Override
     public int hashCode() {
-        return Objects.hash(branchingMinimalQualityShare, branchingMinimalSumQuality, decisiveBranchingSumQualityThreshold, alignedSequenceEdgeDelta, alignmentEdgeRegionSize, minimalNonEdgePointsFraction, outputMinimalQualityShare, outputMinimalSumQuality, subCloningRegion, trimmingParameters, minimalContigLength, alignedRegionsOnly);
+        return Objects.hash(branchingMinimalQualityShare, branchingMinimalSumQuality, decisiveBranchingSumQualityThreshold, alignedSequenceEdgeDelta, alignmentEdgeRegionSize, minimalMeanNormalizedQuality, minimalNonEdgePointsFraction, outputMinimalQualityShare, outputMinimalSumQuality, subCloningRegion, trimmingParameters, minimalContigLength, alignedRegionsOnly);
     }
 
     private static Map<String, FullSeqAssemblerParameters> knownParameters;

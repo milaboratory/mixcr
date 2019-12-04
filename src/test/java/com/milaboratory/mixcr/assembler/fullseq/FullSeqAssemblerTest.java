@@ -65,7 +65,7 @@ import java.util.stream.StreamSupport;
 public class FullSeqAssemblerTest {
     static final FullSeqAssemblerParameters DEFAULT_PARAMETERS =
             new FullSeqAssemblerParameters(0.1, 80, 120,
-                    3, 7, 0.25, 0.5, 50, GeneFeature.VDJRegion,
+                    3, 7, 0.25, 3.0, 0.5, 50, GeneFeature.VDJRegion,
                     new QualityTrimmerParameters(20.0f, 8), 20, false);
 
     static final class MasterSequence {

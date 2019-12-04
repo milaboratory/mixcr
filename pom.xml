@@ -33,13 +33,13 @@
 
     <groupId>com.milaboratory</groupId>
     <artifactId>mixcr</artifactId>
-    <version>3.0.3-SNAPSHOT</version>
+    <version>3.0.13-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>MiXCR</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <milib.version>1.12</milib.version>
+        <milib.version>1.13-SNAPSHOT</milib.version>
     </properties>
 
     <dependencies>
@@ -97,7 +97,7 @@
         <dependency>
             <groupId>info.picocli</groupId>
             <artifactId>picocli</artifactId>
-            <version>3.6.1</version>
+            <version>4.0.4</version>
         </dependency>
     </dependencies>
 

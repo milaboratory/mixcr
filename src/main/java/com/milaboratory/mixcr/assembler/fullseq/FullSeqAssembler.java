@@ -98,6 +98,8 @@ public final class FullSeqAssembler {
     final Range splitRegion;
     /** parameters */
     final FullSeqAssemblerParameters parameters;
+    /** minimal sum quality, even for decisive sum quality */
+    final long requiredMinimalSumQuality;
     /** aligner parameters */
     final VDJCAlignerParameters alignerParameters;
     /** nucleotide sequence -> its integer index */
@@ -145,6 +147,8 @@ public final class FullSeqAssembler {
         this.genes = new VDJCGenes(baseVHit.getGene(), null, baseJHit.getGene(), null); // clone.getBestHitGenes();
 
         this.clonalAssemblingFeatureVariantIndex = initVariantMappings(clone.getFeature(this.assemblingFeature).getSequence());
+
+        this.requiredMinimalSumQuality = Math.round(parameters.minimalMeanNormalizedQuality * clone.getCount());
 
         ReferencePoint
                 start = assemblingFeature.getFirstPoint(),
@@ -1142,6 +1146,7 @@ public final class FullSeqAssembler {
             if (currentIndex == count || currentVariant != (int) (targets[currentIndex] >>> 40)) {
                 // Checking significance conditions
                 if ((1.0 * nonEdgePoints / (currentIndex - blockBegin) >= parameters.minimalNonEdgePointsFraction)
+                        && variantSumQuality >= requiredMinimalSumQuality
                         && ((variantSumQuality >= parameters.branchingMinimalSumQuality
                         && variantSumQuality >= parameters.branchingMinimalQualityShare * totalSumQuality)
                         || variantSumQuality >= parameters.decisiveBranchingSumQualityThreshold)) {

@@ -431,7 +431,7 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
 
     public static List<FieldData> parseSpec(ParseResult parseResult) {
         List<FieldData> r = new ArrayList<>();
-        for (OptionSpec opt : parseResult.matchedOptions()) {
+        for (OptionSpec opt : parseResult.matchedOptionsSet()) {
             if (!FieldExtractors.hasField(opt.names()[0]))
                 continue;
             r.add(new FieldData(opt.names()[0], opt.originalStringValues().toArray(new String[opt.originalStringValues().size()])));
@@ -542,7 +542,7 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                     .builder(field.getCommand())
                     .description(field.getDescription())
                     .required(false)
-                    .type(field.nArguments() > 0 ? String[].class : boolean.class)
+                    .type(field.nArguments() > 0 ? String[][].class : boolean.class)
                     .arity(String.valueOf(field.nArguments()))
                     .descriptionKey(field.getCommand() + " " + field.metaVars())
                     .build());
