@@ -55,7 +55,7 @@ public class MainTest {
     public void test3() {
         Main.main("exportClones",
                 "-nMutations",
-                "'{FR1Begin:FR3End}'",
+                "{FR1Begin:FR3End}",
                 "-count",
                 "-nMutations",
                 "FR4",
