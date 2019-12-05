@@ -1,5 +1,6 @@
 package com.milaboratory.mixcr.cli;
 
+import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -59,15 +60,23 @@ public class CommandExportAlignmentsForClones extends ACommandWithSmartOverwrite
         try (ClnAReader clna = new ClnAReader(in, VDJCLibraryRegistry.getDefault());
              VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(getOutput())) {
             writer.header(clna.getAlignerParameters(), clna.getGenes(), getFullPipelineConfiguration());
+
             long count = 0;
-            for (int id : getCloneIds()) {
-                OutputPortCloseable<VDJCAlignments> reader = clna.readAlignmentsOfClone(id);
-                VDJCAlignments al;
-                while ((al = reader.take()) != null) {
+            if (getCloneIds().length == 0)
+                for (VDJCAlignments al : CUtils.it(clna.readAssembledAlignments())) {
                     writer.write(al);
                     ++count;
                 }
-            }
+            else
+                for (int id : getCloneIds()) {
+                    OutputPortCloseable<VDJCAlignments> reader = clna.readAlignmentsOfClone(id);
+                    VDJCAlignments al;
+                    while ((al = reader.take()) != null) {
+                        writer.write(al);
+                        ++count;
+                    }
+                }
+
             writer.setNumberOfProcessedReads(count);
         }
     }

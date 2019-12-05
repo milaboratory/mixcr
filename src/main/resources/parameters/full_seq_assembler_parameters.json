@@ -6,7 +6,7 @@
     "outputMinimalQualityShare": 0.5,
     "outputMinimalSumQuality": 50,
     "alignedSequenceEdgeDelta": 3,
-    "minimalMeanNormalizedQuality": 3.0,
+    "minimalMeanNormalizedQuality": 0.5,
     "alignmentEdgeRegionSize": 7,
     "minimalNonEdgePointsFraction": 0.25,
     "subCloningRegion": null,
