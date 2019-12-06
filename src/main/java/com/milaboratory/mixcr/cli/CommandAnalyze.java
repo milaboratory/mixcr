@@ -286,6 +286,9 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
     @Option(names = {"-r", "--report"}, description = "Report file path")
     public String report = null;
 
+    @Option(names = {"-b", "--library"}, description = "V/D/J/C gene library")
+    public String library = "default";
+
 //     @Option(names = {"--overwrite-if-required"}, description = "Overwrite output file if it is corrupted or if it was generated from different input file \" +\n" +
 //             "                    \"or with different parameters. -f / --force-overwrite overrides this option.")
 //     public boolean overwriteIfRequired = false;
@@ -348,6 +351,9 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         // add required parameters (for JCommander)
         alignParameters.add("--species");
         alignParameters.add(species);
+
+        alignParameters.add("--library");
+        alignParameters.add(library);
 
         // add report file
         alignParameters.add("--report");
