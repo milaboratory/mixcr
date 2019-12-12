@@ -85,7 +85,8 @@ public class FullSeqAssemblerParameters {
      */
     double minimalNonEdgePointsFraction;
     /**
-     * Positions having quality share less then this value, will not be represented in the output
+     * Positions having quality share less then this value, will not be represented in the output; used if no variants
+     * are detected with standard pipeline
      */
     double outputMinimalQualityShare;
     /**
