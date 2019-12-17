@@ -415,7 +415,7 @@ public final class FullSeqAssembler {
         // Co-sorting branch data with position (restoring original nucleotide order)
         long[] positionedStates = new long[points.length];
         for (int i = 0; i < points.length; i++)
-            positionedStates[i] = ((long) points[i]) << 32 | branch.pointStates[i];
+            positionedStates[i] = ((long) points[i]) << 32 | (branch.pointStates[i] & 0xFFFFFFFFL);
         Arrays.sort(positionedStates);
 
         // Building sequences
@@ -1349,7 +1349,7 @@ public final class FullSeqAssembler {
         // Allocating packed data
         int[][] packedData = new int[pointsArray.length][nAlignments];
         for (int[] aPackedData : packedData)
-            Arrays.fill(aPackedData, -1);
+            Arrays.fill(aPackedData, ABSENT_PACKED_VARIANT_INFO);
 
         // Main data collection loop
         i = 0;
