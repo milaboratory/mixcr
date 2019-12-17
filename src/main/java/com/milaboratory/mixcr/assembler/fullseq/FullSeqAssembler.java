@@ -68,6 +68,7 @@ import static io.repseq.core.GeneType.Variable;
  */
 public final class FullSeqAssembler {
     private static int ABSENT_PACKED_VARIANT_INFO = -1;
+    private static int CONTROVERSIAL_PACKED_VARIANT_INFO = -2;
     /** number of letters to the left of reference V gene in the global coordinate grid */
     private static final int N_LEFT_DUMMIES = 1024; // fixme
     /** clone factory */
@@ -256,6 +257,8 @@ public final class FullSeqAssembler {
                 List<Variant> variants = callVariantsForPoint(variantInfos, branch.reads, data.points[i] == positionOfAssemblingFeature);
                 if (variants.size() == 1 && variants.get(0).variantInfo == ABSENT_PACKED_VARIANT_INFO)
                     newBranches.add(branch.addAbsentVariant());
+                else if (variants.size() == 1 && variants.get(0).variantInfo == CONTROVERSIAL_PACKED_VARIANT_INFO)
+                    newBranches.add(branch.addControversialVariant());
                 else {
                     int sumSignificant = 0;
                     for (Variant variant : variants)
@@ -357,6 +360,12 @@ public final class FullSeqAssembler {
         VariantBranch addAbsentVariant() {
             int[] newStates = Arrays.copyOf(pointStates, pointStates.length + 1);
             newStates[newStates.length - 1] = ABSENT_PACKED_VARIANT_INFO;
+            return new VariantBranch(count, newStates, reads);
+        }
+
+        VariantBranch addControversialVariant() {
+            int[] newStates = Arrays.copyOf(pointStates, pointStates.length + 1);
+            newStates[newStates.length - 1] = CONTROVERSIAL_PACKED_VARIANT_INFO;
             return new VariantBranch(count, newStates, reads);
         }
 
@@ -1203,7 +1212,8 @@ public final class FullSeqAssembler {
                                 reads, 1));
             } else
                 // No variants to output (poorly covered or controversial position)
-                return Collections.singletonList(new Variant(ABSENT_PACKED_VARIANT_INFO, targetReads, 0));
+                // Should substitute 'N'
+                return Collections.singletonList(new Variant(CONTROVERSIAL_PACKED_VARIANT_INFO, targetReads, 0));
         } else {
             for (Variant variant : variants)
                 variant.reads.or(unassignedVariants);
