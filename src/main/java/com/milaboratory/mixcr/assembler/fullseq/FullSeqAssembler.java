@@ -67,8 +67,8 @@ import static io.repseq.core.GeneType.Variable;
  *
  */
 public final class FullSeqAssembler {
-    private static int ABSENT_PACKED_VARIANT_INFO = 0xFFFFFF00;
-    private static int AMBIGUOUS_PACKED_VARIANT_INFO = 0xFFFFFE00;
+    static int ABSENT_PACKED_VARIANT_INFO = 0xFFFFFF00;
+    static int AMBIGUOUS_PACKED_VARIANT_INFO = 0xFFFFFE00;
 
     // Special variant ids
     private static final int EMPTY_SEQUENCE_VARIANT_INDEX = NucleotideSequence.ALPHABET.basicSize();

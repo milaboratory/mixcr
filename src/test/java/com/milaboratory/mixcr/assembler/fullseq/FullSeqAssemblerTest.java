@@ -365,10 +365,10 @@ public class FullSeqAssemblerTest {
 
         long uniq1 = StreamSupport.stream(CUtils.it(prep.createPort()).spliterator(), false)
                 .mapToInt(l -> l[0])
-                .filter(c -> c == 0xFFFFFFFF).count();
+                .filter(c -> c == FullSeqAssembler.ABSENT_PACKED_VARIANT_INFO).count();
         long uniq2 = StreamSupport.stream(CUtils.it(prep.createPort()).spliterator(), false)
                 .mapToInt(l -> l[1])
-                .filter(c -> c == 0xFFFFFFFF).count();
+                .filter(c -> c == FullSeqAssembler.ABSENT_PACKED_VARIANT_INFO).count();
 
         Assert.assertEquals(40, uniq1);
         Assert.assertEquals(60, uniq2);
