@@ -1116,6 +1116,7 @@ public final class FullSeqAssembler {
                 ++count;
 
         if (count == 0)
+            // point is not covered at all
             return Collections.singletonList(new Variant(ABSENT_PACKED_VARIANT_INFO, targetReads, 0));
 
         // List of readIds of reads that either:
@@ -1283,28 +1284,15 @@ public final class FullSeqAssembler {
      */
     public RawVariantsData calculateRawData(Supplier<OutputPort<VDJCAlignments>> alignments) {
         TIntIntHashMap coverage = new TIntIntHashMap();
-        TIntObjectHashMap<TIntObjectHashMap<VariantAggregator>> variants = new TIntObjectHashMap<>();
 
         // Collecting coverage and VariantAggregators
         int nAlignments = 0;
         for (VDJCAlignments al : CUtils.it(alignments.get())) {
-            // al = al.mapAlignments(AlignmentUtils::shiftIndelsAtHomopolymers); // FIXME
             ++nAlignments;
             for (PointSequence point : toPointSequences(al)) {
-                int seqIndex = getVariantIndex(point.sequence.getSequence());
-
+                // update sequenceToVariantId
+                getVariantIndex(point.sequence.getSequence());
                 coverage.adjustOrPutValue(point.point, 1, 1);
-
-                TIntObjectHashMap<VariantAggregator> map = variants.get(point.point);
-                if (map == null)
-                    variants.put(point.point, map = new TIntObjectHashMap<>());
-
-                VariantAggregator var = map.get(seqIndex);
-                if (var == null)
-                    map.put(point.point, var = new VariantAggregator());
-
-                var.count += 1;
-                var.sumQuality += 0x7F & point.quality;
             }
         }
 
@@ -1337,7 +1325,6 @@ public final class FullSeqAssembler {
         // Main data collection loop
         i = 0;
         for (VDJCAlignments al : CUtils.it(alignments.get())) {
-            // al = al.mapAlignments(AlignmentUtils::shiftIndelsAtHomopolymers); // FIXME
             for (PointSequence point : toPointSequences(al)) {
                 int pointIndex = revIndex.get(point.point);
                 packedData[pointIndex][i] =
@@ -1530,11 +1517,6 @@ public final class FullSeqAssembler {
         public String toString() {
             return toString((byte) 10);
         }
-    }
-
-    private static final class VariantAggregator {
-        long sumQuality = 0;
-        int count = 0;
     }
 
     PointSequence[] toPointSequences(VDJCAlignments alignments) {
