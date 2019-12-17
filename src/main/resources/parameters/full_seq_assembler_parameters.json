@@ -1,12 +1,12 @@
 {
   "default": {
     "branchingMinimalQualityShare": 0.1,
-    "branchingMinimalSumQuality": 80,
+    "branchingMinimalSumQuality": 60,
     "decisiveBranchingSumQualityThreshold": 120,
-    "outputMinimalQualityShare": 0.5,
-    "outputMinimalSumQuality": 50,
+    "outputMinimalQualityShare": 0.8,
+    "outputMinimalSumQuality": 0,
     "alignedSequenceEdgeDelta": 3,
-    "minimalMeanNormalizedQuality": 0.5,
+    "minimalMeanNormalizedQuality": 5.0,
     "alignmentEdgeRegionSize": 7,
     "minimalNonEdgePointsFraction": 0.25,
     "subCloningRegion": null,
