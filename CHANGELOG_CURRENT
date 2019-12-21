@@ -1,0 +1,1 @@
+Fixed bug with wrong V gene selection in `assembleContigs`.
