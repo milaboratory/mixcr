@@ -120,7 +120,7 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
                         if (g == 0) // V
                             lastVTarget = targetId;
 
-                        if (g == 1) // J
+                        if (g == 1 && firstJTarget == -1) // J
                             firstJTarget = targetId;
 
                         alignmentHits[targetId] = als.getHits().toArray(new AlignmentHit[als.getHits().size()]);

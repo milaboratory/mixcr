@@ -286,6 +286,19 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
     @Option(names = {"-r", "--report"}, description = "Report file path")
     public String report = null;
 
+    @Option(names = {"-b", "--library"}, description = "V/D/J/C gene library")
+    public String library = "default";
+
+    public int threads = Runtime.getRuntime().availableProcessors();
+
+    @Option(description = "Processing threads",
+            names = {"-t", "--threads"})
+    public void setThreads(int threads) {
+        if (threads <= 0)
+            throwValidationException("ERROR: -t / --threads must be positive", false);
+        this.threads = threads;
+    }
+
 //     @Option(names = {"--overwrite-if-required"}, description = "Overwrite output file if it is corrupted or if it was generated from different input file \" +\n" +
 //             "                    \"or with different parameters. -f / --force-overwrite overrides this option.")
 //     public boolean overwriteIfRequired = false;
@@ -348,6 +361,12 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         // add required parameters (for JCommander)
         alignParameters.add("--species");
         alignParameters.add(species);
+
+        alignParameters.add("--library");
+        alignParameters.add(library);
+
+        alignParameters.add("--threads");
+        alignParameters.add(Integer.toString(threads));
 
         // add report file
         alignParameters.add("--report");
@@ -436,6 +455,9 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         extendParameters.add("--report");
         extendParameters.add(getReport());
 
+        extendParameters.add("--threads");
+        extendParameters.add(Integer.toString(threads));
+
         // add all override parameters
         extendParameters.addAll(this.extendAlignmentsParameters);
 
@@ -469,6 +491,9 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         // add report file
         assembleParameters.add("--report");
         assembleParameters.add(getReport());
+
+        assembleParameters.add("--threads");
+        assembleParameters.add(Integer.toString(threads));
 
         // we always write clna
         assembleParameters.add("--write-alignments");
@@ -507,6 +532,9 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         // add report file
         assembleContigParameters.add("--report");
         assembleContigParameters.add(getReport());
+
+        assembleContigParameters.add("--threads");
+        assembleContigParameters.add(Integer.toString(threads));
 
         // add all override parameters
         assembleContigParameters.addAll(this.assembleContigParameters);

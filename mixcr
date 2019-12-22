@@ -193,6 +193,6 @@ if [[ "$jar" == "" ]]; then
   exit 1
 fi
 
-$java -D${app}.path="$dir" -D${app}.command=scr "${javaArgs[@]}" -jar "$jar" "${appArgs[@]}"
+$java -D${app}.path="$dir" -D${app}.command=${app} "${javaArgs[@]}" -jar "$jar" "${appArgs[@]}"
 
 exit $?
