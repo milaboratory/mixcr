@@ -43,7 +43,7 @@ All anchor points in MiXCR (and RepSeq.io library) are either (a) triplet-bounda
 
 - if both anchor points are not triplet-boundary-attached, translation is performed starting from left side, like described in second case.
 
-TCR/BCR refenrece sequences library
+TCR/BCR reference sequences library
 -----------------------------------
 
 Default list and sequences of ``V``, ``D``, ``J`` and ``C`` genes used
