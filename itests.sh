@@ -27,7 +27,7 @@ function readlinkUniversal() {
     echo $result
 }
 
-os=`uname`
+os=$(uname)
 delta=100
 
 dir=""
