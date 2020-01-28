@@ -265,8 +265,10 @@ public final class FullSeqAssembler {
                     newBranches.add(branch.addExceptionalVariantInfo(variants.get(0).variantInfo));
                 else {
                     int sumSignificant = 0;
-                    for (Variant variant : variants)
+                    for (Variant variant : variants) {
+                        assert !isExceptionalPointVariantInfo(variant.variantInfo);
                         sumSignificant += variant.nSignificant;
+                    }
                     for (Variant variant : variants)
                         newBranches.add(branch.addVariant(variant, sumSignificant));
                 }
@@ -1169,9 +1171,13 @@ public final class FullSeqAssembler {
         int bestVariant = -1;
         long bestVariantSumQuality = -1;
 
+        long maxSplittingPointsCount = 0;
+
         ArrayList<Variant> variants = new ArrayList<>();
         do {
             if (currentIndex == count || currentVariant != (int) (targets[currentIndex] >>> 40)) {
+                maxSplittingPointsCount = Math.max(maxSplittingPointsCount, splittingPointsCount);
+
                 // Checking significance conditions
                 if ((1.0 * splittingPointsCount / (currentIndex - blockBegin) >= parameters.minimalNonEdgePointsFraction)
                         && variantSumQuality >= requiredMinimalSumQuality
