@@ -39,6 +39,7 @@ import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.cli.Report;
 import com.milaboratory.mixcr.cli.ReportHelper;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
+import gnu.trove.iterator.TObjectDoubleIterator;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 import io.repseq.core.*;
@@ -626,7 +627,9 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
             throw new IllegalArgumentException();
         if (tagCounter.size() == 0)
             return null;
-        return tagCounter.iterator().key();
+        final TObjectDoubleIterator<TagTuple> it = tagCounter.iterator();
+        it.advance();
+        return it.key();
     }
 
     private boolean addLeftToIndex(VDJCAlignments alignment) {

@@ -292,7 +292,9 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
 
                                 TagCounter tg = al.getTagCounter();
                                 assert tg.size() == 1;
-                                TagTuple tags = tg.iterator().key();
+                                TObjectDoubleIterator<TagTuple> it = tg.iterator();
+                                it.advance();
+                                TagTuple tags = it.key();
 
                                 VDJCHit hit;
 
