@@ -62,7 +62,7 @@ public final class AlignmentsMappingMerger implements OutputPortCloseable<VDJCAl
             if (readToCloneMappings instanceof AutoCloseable)
                 ((AutoCloseable) readToCloneMappings).close();
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 }

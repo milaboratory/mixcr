@@ -46,6 +46,7 @@ import io.repseq.core.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class PartialAlignmentsAssembler implements AutoCloseable, Report {
@@ -321,7 +322,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
                     boolean isOverOverlapped = false;
                     final VDJCAlignments leftAl = match.get(i).getAlignments();
 
-                    if (!extractTagTuple(leftAl).equals(tagTuple))
+                    if (!Objects.equals(extractTagTuple(leftAl), tagTuple))
                         continue;
 
                     if (blackList.contains(leftAl.getAlignmentsIndex()))
@@ -624,7 +625,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
         if (tagCounter.size() > 1)
             throw new IllegalArgumentException();
         if (tagCounter.size() == 0)
-            return TagTuple.EMPTY;
+            return null;
         return tagCounter.iterator().key();
     }
 

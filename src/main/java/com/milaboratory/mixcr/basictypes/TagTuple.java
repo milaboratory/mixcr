@@ -6,11 +6,12 @@ import java.util.Arrays;
  *
  */
 public final class TagTuple {
-    public static final TagTuple EMPTY = new TagTuple(new String[0]);
     public final String[] tags;
     private final int hash;
 
     public TagTuple(String... tags) {
+        if (tags.length == 0)
+            throw new IllegalArgumentException();
         this.tags = tags;
         this.hash = Arrays.hashCode(tags);
     }

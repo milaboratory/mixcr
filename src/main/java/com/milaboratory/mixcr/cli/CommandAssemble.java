@@ -29,15 +29,22 @@
  */
 package com.milaboratory.mixcr.cli;
 
+import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.util.StatusReporter;
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.*;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.SmartProgressReporter;
+import gnu.trove.iterator.TObjectDoubleIterator;
+import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
+import io.repseq.core.VDJCGeneId;
 import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -90,6 +97,12 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
             names = {"-a", "--write-alignments"})
     public boolean clna = false;
 
+    @Option(description = "Enable tag-based read to clone assignment",
+            names = {"--attach-reads-by-tags"})
+    public boolean attachReadsByTags = false;
+
+    private static final double DEFAULT_MINIMAL_TAG_SET_OVERLAP = 0.7;
+
     @Option(names = "-O", description = "Overrides default parameter values.")
     private Map<String, String> overrides = new HashMap<>();
 
@@ -122,6 +135,9 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
         if (assemblerParameters == null)
             throwValidationException("Unknown parameters: " + assemblerParametersName);
         assemblerParameters = assemblerParameters.updateFrom(alignerParameters);
+
+        if (attachReadsByTags)
+            assemblerParameters = assemblerParameters.setCloneClusteringParameters(assemblerParameters.getCloneClusteringParameters().setMinimalTagSetOverlap(DEFAULT_MINIMAL_TAG_SET_OVERLAP));
 
         // Overriding JSON parameters
         if (!overrides.isEmpty()) {
@@ -207,7 +223,31 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
 
             // Writing results
             PipelineConfiguration pipelineConfiguration = getFullPipelineConfiguration();
-            if (clna)
+            if (clna) {
+
+
+//
+//                    try (AlignmentsMappingMerger merged = new AlignmentsMappingMerger(alignmentsProvider.create(),
+//                            assembler.getAssembledReadsPort())) {
+//
+//                        VDJCAlignments al;
+//                        while ((al = merged.take()) != null) {
+//                            if (al.getCloneIndex() != -1)
+//                                continue;
+//
+//                            TagCounter tg = al.getTagCounter();
+//                            assert tg.size() == 1;
+//                            TagTuple tags = tg.iterator().key();
+//                            if (al.getBestHit(GeneType.Variable) != null) {
+//                                TagSignature sig = new TagSignature(tags, al.getBestHit(GeneType.Variable).getGene().getId());
+//                                Integer cloneId = tagsToClones.get(sig);
+//                                if (cloneId != null) {
+//
+//                                }
+//                            }
+//                        }
+//                    }
+
                 try (ClnAWriter writer = new ClnAWriter(pipelineConfiguration, out)) {
                     // writer will supply current stage and completion percent to the progress reporter
                     SmartProgressReporter.startProgressReport(writer);
@@ -217,11 +257,70 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
                     // Pre-soring alignments
                     try (AlignmentsMappingMerger merged = new AlignmentsMappingMerger(alignmentsProvider.create(),
                             assembler.getAssembledReadsPort())) {
-                        writer.sortAlignments(merged, assembler.getAlignmentsCount());
+                        OutputPort<VDJCAlignments> port = merged;
+                        if (attachReadsByTags) {
+                            Map<TagSignature, Integer> tagsToClones = new HashMap<>();
+                            int ambiguousAttachments = 0;
+                            for (int i = 0; i < cloneSet.size(); i++) {
+                                Clone clone = cloneSet.get(i);
+                                assert i == clone.getId();
+                                TagCounter tags = clone.getTagCounter();
+                                TObjectDoubleIterator<TagTuple> it = tags.iterator();
+                                while (it.hasNext()) {
+                                    it.advance();
+                                    TagTuple tag = it.key();
+                                    for (GeneType gt : new GeneType[]{GeneType.Variable, GeneType.Joining}) {
+                                        TagSignature sig = new TagSignature(tag, clone.getBestHit(gt).getGene().getId());
+                                        Integer id = tagsToClones.get(sig);
+                                        if (id != null) {
+                                            tagsToClones.put(sig, -1);
+                                            ++ambiguousAttachments;
+                                        } else
+                                            tagsToClones.put(sig, clone.getId());
+                                    }
+                                }
+                            }
+
+                            System.out.println("Ambiguous attachment: " + ambiguousAttachments);
+
+                            tagsToClones.entrySet().removeIf(e -> e.getValue() < 0);
+
+                            port = () -> {
+                                VDJCAlignments al = merged.take();
+                                if (al == null || al.getMappingType() != ReadToCloneMapping.MappingType.Dropped)
+                                    return al;
+
+                                TagCounter tg = al.getTagCounter();
+                                assert tg.size() == 1;
+                                TagTuple tags = tg.iterator().key();
+
+                                VDJCHit hit;
+
+                                int cloneMapping = -1; // -1 for not assigned, -2 for ambiguous
+                                for (GeneType gt : new GeneType[]{GeneType.Variable, GeneType.Joining}) {
+                                    if ((hit = al.getBestHit(gt)) != null) {
+                                        TagSignature sig = new TagSignature(tags, hit.getGene().getId());
+                                        Integer cloneId = tagsToClones.get(sig);
+                                        if (cloneId != null)
+                                            if (cloneMapping != -1 && cloneMapping != cloneId)
+                                                cloneMapping = -2;
+                                            else
+                                                cloneMapping = cloneId;
+                                    }
+                                }
+
+                                if (cloneMapping >= 0)
+                                    return setMappingCloneIndex(al, cloneMapping);
+
+                                return al;
+                            };
+                        }
+
+                        writer.sortAlignments(port, assembler.getAlignmentsCount());
                     }
                     writer.writeAlignmentsAndIndex();
                 }
-            else
+            } else
                 try (ClnsWriter writer = new ClnsWriter(pipelineConfiguration, cloneSet, out)) {
                     SmartProgressReporter.startProgressReport(writer);
                     writer.write();
@@ -244,6 +343,34 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
 
             if (jsonReport != null)
                 Util.writeJsonReport(jsonReport, report);
+        }
+    }
+
+    private static VDJCAlignments setMappingCloneIndex(VDJCAlignments al, int cloneIndex) {
+        return al.updateCloneIndexAndMappingType(cloneIndex, ReadToCloneMapping.ADDITIONAL_MAPPING_MASK);
+    }
+
+    private static final class TagSignature {
+        final TagTuple tags;
+        final VDJCGeneId gene;
+
+        public TagSignature(TagTuple tags, VDJCGeneId gene) {
+            this.tags = tags;
+            this.gene = gene;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            TagSignature that = (TagSignature) o;
+            return tags.equals(that.tags) &&
+                    gene.equals(that.gene);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(tags, gene);
         }
     }
 

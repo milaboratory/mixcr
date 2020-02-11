@@ -97,7 +97,7 @@ public class JsonOverriderTest {
 
         CloneAssemblerParameters params = new CloneAssemblerParameters(new GeneFeature[]{GeneFeature.FR1, GeneFeature.CDR3}, 12,
                 QualityAggregationType.Average,
-                new CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
+                new CloneClusteringParameters(2, 1, -1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
                 factoryParameters, true, true, false, 0.4, 2.0, 2.0, true, (byte) 20, .8, "2of6", (byte) 15);
 
         CloneAssemblerParameters override = JsonOverrider.override(
@@ -107,7 +107,7 @@ public class JsonOverriderTest {
 
         CloneAssemblerParameters expected = new CloneAssemblerParameters(new GeneFeature[]{new GeneFeature(GeneFeature.CDR1, -5, +6), GeneFeature.CDR2}, 12,
                 QualityAggregationType.Average,
-                new CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
+                new CloneClusteringParameters(2, 1, -1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
                 factoryParameters, true, true, false, 0.4, 2.0, 2.0, true, (byte) 20, .8, "2of6", (byte) 15);
 
 
@@ -126,7 +126,7 @@ public class JsonOverriderTest {
 
         CloneAssemblerParameters params = new CloneAssemblerParameters(new GeneFeature[]{GeneFeature.FR1, GeneFeature.CDR3}, 12,
                 QualityAggregationType.Average,
-                new CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
+                new CloneClusteringParameters(2, 1, -1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
                 factoryParameters, true, true, false, 0.4, 2.0, 2.0, true, (byte) 20, .8, "2of6", (byte) 15);
 
         CloneAssemblerParameters override = JsonOverrider.override(

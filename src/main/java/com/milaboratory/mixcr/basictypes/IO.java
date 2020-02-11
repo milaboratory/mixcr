@@ -97,6 +97,8 @@ class IO {
         @Override
         public TagCounter read(PrimitivI input) {
             int len = input.readInt();
+            if (len == 0)
+                return TagCounter.EMPTY;
             TObjectDoubleHashMap<TagTuple> r = new TObjectDoubleHashMap<>(len, Constants.DEFAULT_LOAD_FACTOR, 0.0);
             for (int i = 0; i < len; ++i) {
                 String[] tags = input.readObject(String[].class);

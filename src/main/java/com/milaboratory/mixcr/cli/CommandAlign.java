@@ -68,7 +68,10 @@ import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.*;
 import picocli.CommandLine;
-import picocli.CommandLine.*;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.ExecutionException;
+import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -575,7 +578,8 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                     }
                 }
 
-                alignment = alignment.setTagCounter(new TagCounter(parseTags(this.spec.commandLine(), tags, read)));
+                if (!tags.isEmpty())
+                    alignment = alignment.setTagCounter(new TagCounter(parseTags(this.spec.commandLine(), tags, read)));
 
                 if (alignment.isChimera())
                     report.onChimera();

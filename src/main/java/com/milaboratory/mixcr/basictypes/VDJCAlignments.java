@@ -160,6 +160,11 @@ public final class VDJCAlignments extends VDJCObject {
                 mappingType, newCloneIndex);
     }
 
+    public VDJCAlignments updateCloneIndexAndMappingType(int newCloneIndex, byte newMappingType) {
+        return new VDJCAlignments(alignmentsIndex, hits, tagCounter, targets, history, originalReads,
+                newMappingType, newCloneIndex);
+    }
+
     public VDJCAlignments updateAlignments(Function<Alignment<NucleotideSequence>, Alignment<NucleotideSequence>> processor) {
         EnumMap<GeneType, VDJCHit[]> newHits = this.hits.clone();
         newHits.replaceAll((k, v) -> Arrays.stream(v).map(h -> h.mapAlignments(processor)).toArray(VDJCHit[]::new));

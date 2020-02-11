@@ -36,6 +36,7 @@ import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.tree.NeighborhoodIterator;
 import com.milaboratory.core.tree.TreeSearchParameters;
+import com.milaboratory.mixcr.basictypes.TagCounterBuilder;
 
 public class CloneClusteringStrategy implements ClusteringStrategy<CloneAccumulator, NucleotideSequence> {
     final CloneClusteringParameters parameters;
@@ -54,6 +55,14 @@ public class CloneClusteringStrategy implements ClusteringStrategy<CloneAccumula
         Mutations<NucleotideSequence> currentMutations = iterator.getCurrentMutations();
         if (!cluster.getHead().getSequence().isCompatible(minorObject.getSequence(), currentMutations))
             return false;
+        double minimalTagSetOverlap = parameters.getMinimalTagSetOverlap();
+        if (minimalTagSetOverlap > 0) {
+            TagCounterBuilder headTags = cluster.getHead().tagBuilder;
+            TagCounterBuilder minorTags = minorObject.tagBuilder;
+            if (headTags.intersectionFractionOf(minorTags) >= minimalTagSetOverlap)
+                return true;
+        }
+
         Range[] nRegions = cluster.getHead().getNRegions();
         int nMismatches = parameters.getAllowedMutationsInNRegions();
         out:
