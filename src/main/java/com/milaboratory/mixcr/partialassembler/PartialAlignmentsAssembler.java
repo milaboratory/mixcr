@@ -48,8 +48,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.milaboratory.mixcr.vdjaligners.VDJCAlignerWithMerge.getMMDescr;
-
 public class PartialAlignmentsAssembler implements AutoCloseable, Report {
     final TLongObjectHashMap<List<KMerInfo>> kToIndexLeft = new TLongObjectHashMap<>();
     final TLongHashSet alreadyMergedIds = new TLongHashSet();
@@ -169,7 +167,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
             List<AlignedTarget> mergedTargets = searchResult.result;
             VDJCMultiRead mRead = new VDJCMultiRead(mergedTargets);
 
-            final VDJCAlignments mAlignment = aligner.process(mRead).alignment;
+            final VDJCAlignments mAlignment = aligner.process(mRead).alignment.setTagCounter(searchResult.tagCounter);
 
             // Checking number of overlapped non-template (NRegion) letters
             int overlapTargetId = -1;
@@ -264,11 +262,13 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
         final List<KMerInfo> originKMerList;
         final KMerInfo KMerInfo;
         final List<AlignedTarget> result;
+        final TagCounter tagCounter;
 
-        public OverlapSearchResult(List<KMerInfo> originKMerList, KMerInfo KMerInfo, List<AlignedTarget> result) {
+        public OverlapSearchResult(List<KMerInfo> originKMerList, KMerInfo KMerInfo, List<AlignedTarget> result, TagCounter tagCounter) {
             this.originKMerList = originKMerList;
             this.KMerInfo = KMerInfo;
             this.result = result;
+            this.tagCounter = tagCounter;
         }
 
         void cancel() {
@@ -297,6 +297,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
         else
             stop -= kOffset;
 
+        TagTuple tagTuple = extractTagTuple(rightAl);
         // black list of left parts failed due to inconsistent overlapped alignments (failed AMerge)
         TLongHashSet blackList = new TLongHashSet();
         SEARCH_LEFT_PARTS:
@@ -307,7 +308,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
             List<KMerInfo> maxOverlapList = null;
             boolean isMaxOverOverlapped = false;
             for (int rFrom = 0; rFrom < stop && rFrom + kValue < rightSeqQ.size(); rFrom++) {
-                long kMer = kMer(rightSeqQ.getSequence(), rFrom, kValue);
+                long kMer = kMer(tagTuple, rightSeqQ.getSequence(), rFrom, kValue);
                 List<KMerInfo> match = kToIndexLeft.get(kMer);
                 if (match == null)
                     continue;
@@ -319,6 +320,9 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
                 for (int i = 0, size = Math.min(maxLeftMatches, match.size()); i < size; i++) {
                     boolean isOverOverlapped = false;
                     final VDJCAlignments leftAl = match.get(i).getAlignments();
+
+                    if (!extractTagTuple(leftAl).equals(tagTuple))
+                        continue;
 
                     if (blackList.contains(leftAl.getAlignmentsIndex()))
                         continue;
@@ -466,7 +470,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
             result.addAll(rightDescriptors);
 
             // Ordering and filtering final targets
-            return new OverlapSearchResult(maxOverlapList, left, AlignedTarget.orderTargets(result));
+            return new OverlapSearchResult(maxOverlapList, left, AlignedTarget.orderTargets(result), central.getAlignments().getTagCounter());
         }
     }
 
@@ -615,12 +619,19 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
         return al.getSequence2Range().length();
     }
 
+    private static TagTuple extractTagTuple(VDJCAlignments alignments) {
+        TagCounter tagCounter = alignments.getTagCounter();
+        if (tagCounter.size() > 1)
+            throw new IllegalArgumentException();
+        if (tagCounter.size() == 0)
+            return TagTuple.EMPTY;
+        return tagCounter.iterator().key();
+    }
 
     private boolean addLeftToIndex(VDJCAlignments alignment) {
         int leftTargetId = getLeftPartitionedSequence(alignment);
         if (leftTargetId == -1)
             return false;
-
         VDJCPartitionedSequence left = alignment.getPartitionedTarget(leftTargetId);
         NSequenceWithQuality seq = left.getSequence();
 
@@ -629,9 +640,9 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
             noKMer.incrementAndGet();
             return false;
         }
-
+        TagTuple tagTuple = extractTagTuple(alignment);
         for (int kFrom = kFromFirst; kFrom < seq.size() - kValue; ++kFrom) {
-            long kmer = kMer(seq.getSequence(), kFrom, kValue);
+            long kmer = kMer(tagTuple, seq.getSequence(), kFrom, kValue);
             if (kmer == -1) {
                 wildcardsInKMer.incrementAndGet();
                 continue;
@@ -649,8 +660,8 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
         return true;
     }
 
-    private static long kMer(NucleotideSequence seq, int from, int length) {
-        long kmer = 0;
+    private static long kMer(TagTuple tagTuple, NucleotideSequence seq, int from, int length) {
+        long kmer = tagTuple == null ? 0 : tagTuple.hashCode();
         for (int j = from; j < from + length; ++j) {
             byte c = seq.codeAt(j);
             if (NucleotideSequence.ALPHABET.isWildcard(c))

@@ -8,7 +8,7 @@ import java.util.Arrays;
 public final class TagTuple {
     public static final TagTuple EMPTY = new TagTuple(new String[0]);
     public final String[] tags;
-    private transient final int hash;
+    private final int hash;
 
     public TagTuple(String... tags) {
         this.tags = tags;
