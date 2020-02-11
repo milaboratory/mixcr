@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+app="mixcr"
+defaultXmx=12000
+
 java="java"
 
 sedString1="s/\s*\([^.]*\)\..*/\1/"
@@ -31,13 +34,13 @@ fi
 function readlinkUniversal() {
   targetFile=$1
 
-  cd $(dirname $targetFile)
+  cd $(dirname "$targetFile")
   targetFile=$(basename $targetFile)
 
   # iterate down a (possible) chain of symlinks
   while [ -L "$targetFile" ]; do
     targetFile=$(readlink $targetFile)
-    cd $(dirname $targetFile)
+    cd $(dirname "$targetFile")
     targetFile=$(basename $targetFile)
   done
 
@@ -45,7 +48,7 @@ function readlinkUniversal() {
   # for the directory we're in and appending the target file.
   phys_dir=$(pwd -P)
   result=$phys_dir/$targetFile
-  echo $result
+  echo "$result"
 }
 
 os=$(uname)
@@ -53,26 +56,46 @@ delta=100
 
 dir=""
 
+maxMb="???"
+
+function calculateMaxMb() {
+  case $os in
+  Darwin)
+    freeBlocks=$(vm_stat | grep free | awk '{ print $3 }' | sed 's/\.//')
+    inactiveBlocks=$(vm_stat | grep inactive | awk '{ print $3 }' | sed 's/\.//')
+    speculativeBlocks=$(vm_stat | grep speculative | awk '{ print $3 }' | sed 's/\.//')
+    freeMb=$(((freeBlocks + speculativeBlocks) * 4096 / 1048576))
+    inactiveMb=$((inactiveBlocks * 4096 / 1048576))
+    maxMb=$(((freeMb + inactiveMb - delta)))
+    ;;
+  Linux)
+    rFreeMb=$(free -m | grep Mem | awk '{ print $4 }')
+    maxMb=$((rFreeMb - delta))
+    ;;
+  FreeBSD)
+    freeBlocks=$(vmstat -s | grep -E 'free$' | awk '{ print $1 }')
+    inactiveBlocks=$(vmstat -s | grep inactive | awk '{ print $1 }')
+    freeMb=$(((freeBlocks + inactiveBlocks) * 4096 / 1048576))
+    maxMb=$((freeMb - delta))
+    ;;
+  *)
+    echo "Unknown OS."
+    exit 1
+    ;;
+  esac
+  if [[ -n ${MAX_MEMORY_OVERRIDE+x} ]]; then
+    maxMb="${MAX_MEMORY_OVERRIDE}"
+  fi
+}
+
 case $os in
 Darwin)
-  freeBlocks=$(vm_stat | grep free | awk '{ print $3 }' | sed 's/\.//')
-  inactiveBlocks=$(vm_stat | grep inactive | awk '{ print $3 }' | sed 's/\.//')
-  speculativeBlocks=$(vm_stat | grep speculative | awk '{ print $3 }' | sed 's/\.//')
-  freeMb=$((($freeBlocks + $speculativeBlocks) * 4096 / 1048576))
-  inactiveMb=$(($inactiveBlocks * 4096 / 1048576))
-  maxMb=$((($freeMb + $inactiveMb - $delta)))
   dir=$(dirname "$(readlinkUniversal "$0")")
   ;;
 Linux)
-  rFreeMb=$(free -m | grep Mem | awk '{ print $4 }')
-  maxMb=$(($rFreeMb - $delta))
   dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
   ;;
 FreeBSD)
-  freeBlocks=$(vmstat -s | grep -E 'free$' | awk '{ print $1 }')
-  inactiveBlocks=$(vmstat -s | grep inactive | awk '{ print $1 }')
-  freeMb=$((($freeBlocks + $inactiveBlocks) * 4096 / 1048576))
-  maxMb=$(($freeMb - $delta))
   dir=$(dirname "$(readlinkUniversal "$0")")
   ;;
 *)
@@ -81,15 +104,11 @@ FreeBSD)
   ;;
 esac
 
-if [[ -n ${MAX_MEMORY_OVERRIDE+x} ]]; then
-  maxMb="${MAX_MEMORY_OVERRIDE}"
-fi
-
-mixcrArgs=()
+appArgs=()
 javaArgs=()
 
 needXmxXms=true
-otherJar=""
+altJar=""
 
 inDocker=false
 
@@ -97,12 +116,12 @@ if [[ -f /proc/1/cgroup ]] && grep docker /proc/1/cgroup -qa; then
   inDocker=true
 fi
 
-while [[ $# > 0 ]]; do
+while [[ $# -gt 0 ]]; do
   key="$1"
   shift
   case $key in
   -D* | -X* | -ea | -agentlib*)
-    javaArgs+=(${key})
+    javaArgs+=("${key}")
 
     case $key in
     -Xmx* | -Xms*)
@@ -112,26 +131,28 @@ while [[ $# > 0 ]]; do
 
     ;;
   -jar | -V)
-    otherJar="$1"
+    altJar="$1"
     shift
     ;;
   *)
-    mixcrArgs+=("${key}")
+    appArgs+=("${key}")
     ;;
   esac
 done
 
-mixcr=${dir}/mixcr
+scr=${dir}/scr
 
-if [[ ! -z ${otherJar} ]]; then
-  mixcr="${mixcr} -V ${otherJar}"
+if [[ -n ${altJar} ]]; then
+  scr="${scr} -V ${altJar}"
 fi
 
 if [[ ${needXmxXms} == true ]]; then
   if [[ ${inDocker} == true ]] && [[ jVersion -ge 11 ]]; then
     javaArgs+=("-XX:MaxRAMPercentage=85.0")
   else
-    targetXmx=12000
+    targetXmx=$defaultXmx
+
+    calculateMaxMb
 
     if [[ $targetXmx -gt $maxMb ]]; then
       targetXmx=$maxMb
@@ -139,7 +160,7 @@ if [[ ${needXmxXms} == true ]]; then
 
     javaArgs+=("-Xmx${targetXmx}m")
 
-    targetXms=$((${targetXmx} * 2 / 3))
+    targetXms=$((targetXmx * 2 / 3))
 
     if [[ $targetXms -lt 2000 ]]; then
       targetXms=$targetXmx
@@ -151,15 +172,15 @@ fi
 
 jar=""
 
-if [[ -z "$otherJar" ]]; then
-  for j in "$dir/../jar/mixcr.jar" "$dir/mixcr.jar" $(ls -d -1 $dir/target/* 2>/dev/null | grep distribution.jar); do
+if [[ -z "$altJar" ]]; then
+  for j in "$dir/../jar/${app}.jar" "$dir/${app}.jar" $(ls -d -1 "$dir"/target/* 2>/dev/null | grep "${app}" | grep distribution.jar); do
     if [[ -e "$j" ]]; then
       jar=$j
       break
     fi
   done
 else
-  for j in $(ls -1 ${dir}/* | grep "mixcr" | grep ".jar" | grep ${otherJar}); do
+  for j in $(ls -1 "${dir}"/* | grep "${app}" | grep ".jar" | grep "${altJar}"); do
     if [[ -e "$j" ]]; then
       jar=$j
       break
@@ -172,6 +193,6 @@ if [[ "$jar" == "" ]]; then
   exit 1
 fi
 
-$java -Dmixcr.path=$dir -Dmixcr.command=mixcr "${javaArgs[@]}" -jar $jar "${mixcrArgs[@]}"
+$java -D${app}.path="$dir" -D${app}.command=${app} "${javaArgs[@]}" -jar "$jar" "${appArgs[@]}"
 
 exit $?
