@@ -57,6 +57,7 @@ public final class CloneAssemblerReport extends AbstractCommandReport implements
     final AtomicLong readsPreClustered = new AtomicLong();
     final AtomicLong readsClustered = new AtomicLong();
     final AtomicLong readsAttachedByTags = new AtomicLong();
+    final AtomicLong readsFailedToAttachedByTags = new AtomicLong();
     final AtomicLong readsWithAmbiguousAttachmentsByTags = new AtomicLong();
 
     @Override
@@ -163,6 +164,11 @@ public final class CloneAssemblerReport extends AbstractCommandReport implements
         return readsWithAmbiguousAttachmentsByTags.get();
     }
 
+    @JsonProperty("readsFailedToAttachedByTags")
+    public long getReadsFailedToAttachedByTags() {
+        return readsFailedToAttachedByTags.get();
+    }
+
     @Override
     public void onNewCloneCreated(CloneAccumulator accumulator) {
         clonesCreated.incrementAndGet();
@@ -241,6 +247,10 @@ public final class CloneAssemblerReport extends AbstractCommandReport implements
         readsWithAmbiguousAttachmentsByTags.incrementAndGet();
     }
 
+    public void onReadsFailedToAttachedByTags() {
+        readsFailedToAttachedByTags.incrementAndGet();
+    }
+
     @Override
     public void writeReport(ReportHelper helper) {
         // Writing common analysis information
@@ -275,7 +285,9 @@ public final class CloneAssemblerReport extends AbstractCommandReport implements
                 .writeField("Clonotypes dropped as low quality", clonesDropped.get())
                 .writeField("Clonotypes pre-clustered due to the similar VJC-lists", clonesPreClustered.get())
                 .writePercentAndAbsoluteField("Partially aligned reads attached to clones by tags", readsAttachedByTags.get(), totalReads)
-                .writePercentAndAbsoluteField("Partially aligned reads with ambiguous clone attachments by tags", readsWithAmbiguousAttachmentsByTags.get(), totalReads);
+                .writePercentAndAbsoluteField("Partially aligned reads with ambiguous clone attachments by tags", readsWithAmbiguousAttachmentsByTags.get(), totalReads)
+                .writePercentAndAbsoluteField("Partially aligned reads failed to attach to clones by tags", readsFailedToAttachedByTags.get(), totalReads);
+        ;
 
         // Writing distribution by chains
         chainStats.writeReport(helper);

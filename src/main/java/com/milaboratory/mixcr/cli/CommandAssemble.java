@@ -311,6 +311,8 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
                                     return setMappingCloneIndex(al, cloneMapping);
                                 } else if (cloneMapping == -2)
                                     report.onReadWithAmbiguousAttachmentsByTags();
+                                else
+                                    report.onReadsFailedToAttachedByTags();
 
                                 return al;
                             };
