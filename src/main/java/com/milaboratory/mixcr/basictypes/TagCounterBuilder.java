@@ -22,6 +22,8 @@ public class TagCounterBuilder {
     }
 
     public TagCounterBuilder add(TagCounterBuilder tc) {
+        if (tc.agg == null)
+            return this;
         return add(tc.agg);
     }
 
