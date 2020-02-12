@@ -78,7 +78,7 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
             names = {"-q", "--quality"})
     public byte extensionQuality = 30;
 
-    public int threads = 2;
+    public int threads = Runtime.getRuntime().availableProcessors();;
 
     @Option(description = "Processing threads",
             names = {"-t", "--threads"})
