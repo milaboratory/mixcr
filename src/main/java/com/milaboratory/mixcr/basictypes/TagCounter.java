@@ -1,8 +1,15 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.primitivio.annotations.Serializable;
+import gnu.trove.TDoubleCollection;
+import gnu.trove.iterator.TDoubleIterator;
 import gnu.trove.iterator.TObjectDoubleIterator;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -96,5 +103,52 @@ public final class TagCounter {
     @Override
     public int hashCode() {
         return tags.hashCode();
+    }
+
+    public TagCounter[] splitBy(int index) {
+        Map<String, TagCounterBuilder> map = new HashMap<>();
+        TObjectDoubleIterator<TagTuple> it = iterator();
+        while (it.hasNext()) {
+            it.advance();
+
+            TagTuple t = it.key();
+            double count = it.value();
+
+            TagCounterBuilder tb = map.computeIfAbsent(t.tags[index], __ -> new TagCounterBuilder());
+            tb.add(t, count);
+        }
+        return map.values().stream().map(TagCounterBuilder::createAndDestroy).toArray(TagCounter[]::new);
+    }
+
+    public double sum() {
+        TDoubleCollection c = tags.valueCollection();
+        TDoubleIterator it = c.iterator();
+        double sum = 0;
+        while (it.hasNext())
+            sum += it.next();
+        return sum;
+    }
+
+    public TagCounter toFractions() {
+        double sum = sum();
+        if (sum == 0)
+            return this;
+        TObjectDoubleHashMap<TagTuple> result = new TObjectDoubleHashMap<>();
+        TObjectDoubleIterator<TagTuple> it = iterator();
+        while (it.hasNext()) {
+            it.advance();
+            result.put(it.key(), it.value() / sum);
+        }
+        return new TagCounter(result);
+    }
+
+    public Set<String> tags(int index) {
+        Set<String> set = new HashSet<>();
+        TObjectDoubleIterator<TagTuple> it = iterator();
+        while (it.hasNext()) {
+            it.advance();
+            set.add(it.key().tags[index]);
+        }
+        return set;
     }
 }

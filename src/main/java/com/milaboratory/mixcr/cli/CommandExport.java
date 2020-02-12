@@ -40,7 +40,6 @@ import com.milaboratory.mixcr.export.*;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.CanReportProgressAndStage;
 import com.milaboratory.util.SmartProgressReporter;
-import gnu.trove.iterator.TObjectDoubleIterator;
 import io.repseq.core.Chains;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
@@ -56,6 +55,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static cc.redberry.primitives.FilterUtil.ACCEPT_ALL;
 import static cc.redberry.primitives.FilterUtil.and;
@@ -243,8 +243,8 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
         public long minCount = 0;
 
         @Option(description = "Split clones by tag values",
-                names = {"--split-by-tags"})
-        public boolean splitByTag = false;
+                names = {"--split-by-tag"})
+        public List<Integer> splitByTag = new ArrayList<>();
 
         public CommandExportClones() {
             super(Clone.class);
@@ -272,7 +272,7 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                         break;
                     }
                 }
-                ExportClones exportClones = new ExportClones(set, writer, limit, splitByTag);
+                ExportClones exportClones = new ExportClones(set, writer, limit, splitByTag.stream().mapToInt(i -> i).toArray());
                 SmartProgressReporter.startProgressReport(exportClones, System.err);
                 exportClones.run();
                 if (initialSet.size() > set.size()) {
@@ -347,9 +347,9 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
             final long size;
             volatile long current = 0;
             final long limit;
-            final boolean splitByTags;
+            final int[] splitByTags;
 
-            private ExportClones(CloneSet clones, InfoWriter<Clone> writer, long limit, boolean splitByTags) {
+            private ExportClones(CloneSet clones, InfoWriter<Clone> writer, long limit, int[] splitByTags) {
                 this.clones = clones;
                 this.writer = writer;
                 this.size = clones.size();
@@ -373,28 +373,23 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
             }
 
             void run() {
-                int id = 0;
                 for (Clone clone : clones.getClones()) {
                     if (current == limit)
                         break;
-                    if (splitByTags) {
-                        TagCounter ttc = clones.getTotalTagCounts();
-                        TObjectDoubleIterator<TagTuple> iterator = clone.getTagCounter().iterator();
-                        while (iterator.hasNext()) {
-                            iterator.advance();
-                            TagTuple key = iterator.key();
 
-                            double totalCount = ttc.getOrDefault(key, Double.NaN);
-                            if (Double.isNaN(totalCount))
-                                throw new IllegalArgumentException();
-                            double count = iterator.value();
+                    Stream<Clone> stream = Stream.of(clone);
 
-                            Clone c = new Clone(clone.getTargets(), clone.getHits(), new TagCounter(key), count, id++);
-                            c.overrideFraction(count / totalCount);
-                            writer.put(c);
-                        }
-                    } else
-                        writer.put(clone);
+                    for (int tagIndex : splitByTags) {
+                        stream = stream.flatMap(cl -> {
+                            TagCounter tagCounter = cl.getTagCounter();
+                            double sum = tagCounter.sum();
+                            return Arrays.stream(tagCounter.splitBy(tagIndex))
+                                    .map(tc -> new Clone(clone.getTargets(), clone.getHits(),
+                                            tc, 1.0 * cl.getCount() * tc.sum() / sum, clone.getId()));
+                        });
+                    }
+                    stream.forEach(writer::put);
+
                     ++current;
                 }
             }

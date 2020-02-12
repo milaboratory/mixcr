@@ -51,9 +51,8 @@ import io.repseq.core.ReferencePoint;
 import io.repseq.core.SequencePartitioning;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public final class FieldExtractors {
     static final String NULL = "";
@@ -708,18 +707,55 @@ public final class FieldExtractors {
                 @Override
                 protected String extractValue(VDJCObject object, Integer index) {
                     TagCounter tc = object.getTagCounter();
-                    if (tc.size() > 1)
-                        throw new IllegalArgumentException("object has multiple tag tuples: " + tc);
-                    if (tc.size() == 0)
+                    Set<String> set = tc.tags(index);
+                    if (set.size() == 0)
                         return NULL;
-                    TObjectDoubleIterator<TagTuple> it = tc.iterator();
-                    it.advance();
-                    return it.key().tags[index];
+                    if (set.size() > 1)
+                        throw new IllegalArgumentException("object has multiple tag tuples: " + tc);
+                    return set.iterator().next();
                 }
 
                 @Override
                 public String metaVars() {
                     return "index";
+                }
+            });
+
+            descriptorsList.add(new WP_O<int[]>("-uniqueTagCount", "Unique tag count", 1) {
+                @Override
+                protected int[] getParameters(String[] string) {
+                    return Arrays.stream(string[0].split("\\+")).mapToInt(Integer::parseInt).toArray();
+                }
+
+                @Override
+                protected String getHeader(OutputMode outputMode, int[] index) {
+                    String str = Arrays.stream(index).mapToObj(Integer::toString).collect(Collectors.joining("+"));
+                    switch (outputMode) {
+                        case HumanFriendly: return "Unique Tag Count " + str;
+                        case ScriptingFriendly: return "uniqueTagCount" + str;
+                    }
+                    throw new RuntimeException();
+                }
+
+                @Override
+                protected String extractValue(VDJCObject object, int[] indices) {
+                    TagCounter tc = object.getTagCounter();
+                    Set<String> set = new HashSet<>();
+                    TObjectDoubleIterator<TagTuple> it = tc.iterator();
+                    while (it.hasNext()) {
+                        it.advance();
+                        StringBuilder sb = new StringBuilder();
+                        TagTuple t = it.key();
+                        for (int i : indices)
+                            sb.append(t.tags[i]).append("+");
+                        set.add(sb.toString());
+                    }
+                    return "" + set.size();
+                }
+
+                @Override
+                public String metaVars() {
+                    return "Tags";
                 }
             });
 
