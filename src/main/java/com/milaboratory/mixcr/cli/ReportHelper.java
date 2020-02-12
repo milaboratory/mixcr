@@ -78,6 +78,14 @@ public final class ReportHelper {
         return this;
     }
 
+    public ReportHelper writePercentAndAbsoluteFieldNonZero(String fieldName, long value, long total) {
+        if (value == 0)
+            return this;
+        double percent = 100.0 * value / total;
+        printStream.println(fieldName + ": " + value + " (" + Util.PERCENT_FORMAT.format(percent) + "%)");
+        return this;
+    }
+
     public ReportHelper writePercentAndAbsoluteField(String fieldName, double value, double total) {
         double percent = 100.0 * value / total;
         printStream.println(fieldName + ": " + value + " (" + Util.PERCENT_FORMAT.format(percent) + "%)");

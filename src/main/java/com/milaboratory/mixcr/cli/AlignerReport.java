@@ -49,6 +49,8 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
     private final AtomicLong chimeras = new AtomicLong(0);
     private final AtomicLong alignedSequenceOverlap = new AtomicLong(0);
     private final AtomicLong alignedAlignmentOverlap = new AtomicLong(0);
+    private final AtomicLong noCDR3PartsAlignments = new AtomicLong(0);
+    private final AtomicLong partialAlignments = new AtomicLong(0);
     private final AtomicLong nonAlignedOverlap = new AtomicLong(0);
     private final AtomicLong topHitConflict = new AtomicLong(0);
     private final AtomicLong vChimeras = new AtomicLong(0);
@@ -234,6 +236,26 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
         chimeras.incrementAndGet();
     }
 
+    @JsonProperty("noCDR3PartsAlignments")
+    public long getNoCDR3PartsAlignments() {
+        return noCDR3PartsAlignments.get();
+    }
+
+    @JsonProperty("partialAlignments")
+    public long getPartialAlignments() {
+        return partialAlignments.get();
+    }
+
+    @Override
+    public void onNoCDR3PartsAlignment() {
+        noCDR3PartsAlignments.incrementAndGet();
+    }
+
+    @Override
+    public void onPartialAlignment() {
+        partialAlignments.incrementAndGet();
+    }
+
     @Override
     public void onRealignmentWithForcedNonFloatingBound(boolean forceLeftEdgeInRight, boolean forceRightEdgeInLeft) {
         realignedWithForcedNonFloatingBound.getAndIncrement();
@@ -267,6 +289,8 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
         helper.writePercentAndAbsoluteField("Overlapped and aligned", getAlignedOverlaps(), total);
         helper.writePercentAndAbsoluteField("Alignment-aided overlaps", getAlignmentOverlaps(), getAlignedOverlaps());
         helper.writePercentAndAbsoluteField("Overlapped and not aligned", getNonAlignedOverlaps(), total);
+        helper.writePercentAndAbsoluteFieldNonZero("No CDR3 parts alignments, percent of successfully aligned", getNoCDR3PartsAlignments(), success);
+        helper.writePercentAndAbsoluteFieldNonZero("Partial aligned reads, percent of successfully aligned", getPartialAlignments(), success);
 
         if (getVChimeras() != 0)
             helper.writePercentAndAbsoluteField("V gene chimeras", getVChimeras(), total);

@@ -76,6 +76,20 @@ public abstract class VDJCObject {
         return hits;
     }
 
+    public boolean isAvailable(GeneFeature geneFeature) {
+        for (int i = 0; i < targets.length; ++i)
+            if (getPartitionedTarget(i).getPartitioning().isAvailable(geneFeature))
+                return true;
+        return false;
+    }
+
+    public boolean isAvailable(ReferencePoint referencePoint) {
+        for (int i = 0; i < targets.length; ++i)
+            if (getPartitionedTarget(i).getPartitioning().isAvailable(referencePoint))
+                return true;
+        return false;
+    }
+
     @SuppressWarnings("unchecked")
     private Set<VDJCGeneId> getGenes(GeneType gt) {
         VDJCHit[] hits = getHits(gt);

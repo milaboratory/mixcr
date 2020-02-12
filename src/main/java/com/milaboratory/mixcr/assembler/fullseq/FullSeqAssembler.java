@@ -1527,12 +1527,18 @@ public final class FullSeqAssembler {
     }
 
     PointSequence[] toPointSequences(VDJCAlignments alignments) {
+        Stream<PointSequence> assemblingFeaturePointSeq;
         NSequenceWithQuality assemblingFeature = alignments.getFeature(this.assemblingFeature);
-        byte quality = assemblingFeature.getQuality().minValue();
-        //if (!inSplitRegion(positionOfAssemblingFeature))
-        quality |= 0x80;
+        if (assemblingFeature != null) {
+            byte quality = assemblingFeature.getQuality().minValue();
+            //if (!inSplitRegion(positionOfAssemblingFeature))
+            quality |= 0x80;
+            assemblingFeaturePointSeq = Stream.of(new PointSequence(positionOfAssemblingFeature, assemblingFeature, quality));
+        } else
+            assemblingFeaturePointSeq = Stream.empty();
+
         return Stream.concat(
-                Stream.of(new PointSequence(positionOfAssemblingFeature, assemblingFeature, quality)),
+                assemblingFeaturePointSeq,
                 IntStream.range(0, alignments.numberOfTargets())
                         .mapToObj(i -> toPointSequences(alignments, i))
                         .flatMap(Collection::stream)
@@ -1753,7 +1759,8 @@ public final class FullSeqAssembler {
     }
 
     /**
-     * Check that the V/J gene can be used for full sequence assembly algorithm. Basically it checks that is has required reference points defined.
+     * Check that the V/J gene can be used for full sequence assembly algorithm. Basically it checks that is has
+     * required reference points defined.
      *
      * @param hit               hit to check
      * @param assemblingFeature clonal assembling feature

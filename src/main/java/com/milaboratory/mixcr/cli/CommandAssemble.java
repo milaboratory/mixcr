@@ -42,10 +42,7 @@ import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.SmartProgressReporter;
 import gnu.trove.iterator.TObjectDoubleIterator;
-import io.repseq.core.GeneType;
-import io.repseq.core.VDJCGene;
-import io.repseq.core.VDJCGeneId;
-import io.repseq.core.VDJCLibraryRegistry;
+import io.repseq.core.*;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
@@ -260,7 +257,6 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
                         OutputPort<VDJCAlignments> port = merged;
                         if (attachReadsByTags) {
                             Map<TagSignature, Integer> tagsToClones = new HashMap<>();
-                            int ambiguousAttachments = 0;
                             for (int i = 0; i < cloneSet.size(); i++) {
                                 Clone clone = cloneSet.get(i);
                                 assert i == clone.getId();
@@ -272,22 +268,21 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
                                     for (GeneType gt : new GeneType[]{GeneType.Variable, GeneType.Joining}) {
                                         TagSignature sig = new TagSignature(tag, clone.getBestHit(gt).getGene().getId());
                                         Integer id = tagsToClones.get(sig);
-                                        if (id != null) {
+                                        if (id != null)
                                             tagsToClones.put(sig, -1);
-                                            ++ambiguousAttachments;
-                                        } else
+                                        else
                                             tagsToClones.put(sig, clone.getId());
                                     }
                                 }
                             }
 
-                            System.out.println("Ambiguous attachment: " + ambiguousAttachments);
-
                             tagsToClones.entrySet().removeIf(e -> e.getValue() < 0);
 
                             port = () -> {
                                 VDJCAlignments al = merged.take();
-                                if (al == null || al.getMappingType() != ReadToCloneMapping.MappingType.Dropped)
+                                if (al == null
+                                        || al.getMappingType() != ReadToCloneMapping.MappingType.Dropped
+                                        || al.getFeature(new GeneFeature(assemblerParameters.getAssemblingFeatures())) != null)
                                     return al;
 
                                 TagCounter tg = al.getTagCounter();
@@ -311,8 +306,11 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
                                     }
                                 }
 
-                                if (cloneMapping >= 0)
+                                if (cloneMapping >= 0) {
+                                    report.onReadAttachedByTags();
                                     return setMappingCloneIndex(al, cloneMapping);
+                                } else if (cloneMapping == -2)
+                                    report.onReadWithAmbiguousAttachmentsByTags();
 
                                 return al;
                             };

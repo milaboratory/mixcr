@@ -37,9 +37,7 @@ import com.milaboratory.mixcr.basictypes.HasGene;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.util.HashFunctions;
 import com.milaboratory.util.RandomUtil;
-import io.repseq.core.Chains;
-import io.repseq.core.GeneType;
-import io.repseq.core.VDJCGene;
+import io.repseq.core.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -101,8 +99,13 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
     }
 
     protected final void onSuccessfulAlignment(SequenceRead read, VDJCAlignments alignment) {
-        if (listener != null)
+        if (listener != null) {
             listener.onSuccessfulAlignment(read, alignment);
+            if (!alignment.isAvailable(ReferencePoint.CDR3Begin) && !alignment.isAvailable(ReferencePoint.CDR3End))
+                listener.onNoCDR3PartsAlignment();
+            else if (!alignment.isAvailable(GeneFeature.CDR3))
+                listener.onPartialAlignment();
+        }
     }
 
     protected final void onSegmentChimeraDetected(GeneType geneType, SequenceRead read, VDJCAlignments alignment) {

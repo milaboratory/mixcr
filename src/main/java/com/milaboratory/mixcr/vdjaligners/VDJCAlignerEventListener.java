@@ -64,4 +64,8 @@ public interface VDJCAlignerEventListener {
 
     /** only for paired-end PV-first aligner */
     void onRealignmentWithForcedNonFloatingBound(boolean forceLeftEdgeInRight, boolean forceRightEdgeInLeft);
+
+    void onNoCDR3PartsAlignment();
+
+    void onPartialAlignment();
 }

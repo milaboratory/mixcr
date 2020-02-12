@@ -56,6 +56,8 @@ public final class CloneAssemblerReport extends AbstractCommandReport implements
     final AtomicInteger clonesPreClustered = new AtomicInteger();
     final AtomicLong readsPreClustered = new AtomicLong();
     final AtomicLong readsClustered = new AtomicLong();
+    final AtomicLong readsAttachedByTags = new AtomicLong();
+    final AtomicLong readsWithAmbiguousAttachmentsByTags = new AtomicLong();
 
     @Override
     public String getCommand() {
@@ -151,6 +153,16 @@ public final class CloneAssemblerReport extends AbstractCommandReport implements
         return chainStats;
     }
 
+    @JsonProperty("readsAttachedByTags")
+    public long getReadsAttachedByTags() {
+        return readsAttachedByTags.get();
+    }
+
+    @JsonProperty("readsWithAmbiguousAttachmentsByTags")
+    public long getReadsWithAmbiguousAttachmentsByTags() {
+        return readsWithAmbiguousAttachmentsByTags.get();
+    }
+
     @Override
     public void onNewCloneCreated(CloneAccumulator accumulator) {
         clonesCreated.incrementAndGet();
@@ -221,6 +233,14 @@ public final class CloneAssemblerReport extends AbstractCommandReport implements
         this.totalReads = totalReads;
     }
 
+    public void onReadAttachedByTags() {
+        readsAttachedByTags.incrementAndGet();
+    }
+
+    public void onReadWithAmbiguousAttachmentsByTags() {
+        readsWithAmbiguousAttachmentsByTags.incrementAndGet();
+    }
+
     @Override
     public void writeReport(ReportHelper helper) {
         // Writing common analysis information
@@ -253,7 +273,9 @@ public final class CloneAssemblerReport extends AbstractCommandReport implements
                 .writePercentAndAbsoluteField("Reads dropped with low quality clones, percent of total", readsDroppedWithClones.get(), totalReads)
                 .writeField("Clonotypes eliminated by PCR error correction", clonesClustered.get())
                 .writeField("Clonotypes dropped as low quality", clonesDropped.get())
-                .writeField("Clonotypes pre-clustered due to the similar VJC-lists", clonesPreClustered.get());
+                .writeField("Clonotypes pre-clustered due to the similar VJC-lists", clonesPreClustered.get())
+                .writePercentAndAbsoluteField("Partially aligned reads attached to clones by tags", readsAttachedByTags.get(), totalReads)
+                .writePercentAndAbsoluteField("Partially aligned reads with ambiguous clone attachments by tags", readsWithAmbiguousAttachmentsByTags.get(), totalReads);
 
         // Writing distribution by chains
         chainStats.writeReport(helper);
