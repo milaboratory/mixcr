@@ -297,7 +297,7 @@ public final class FullSeqAssembler {
         }
 
         if (report != null)
-            report.afterVariantsClustered(clone, result);
+            report.afterVariantsClustered(clone, result, parameters.subCloningRegion);
 
         return result;
     }

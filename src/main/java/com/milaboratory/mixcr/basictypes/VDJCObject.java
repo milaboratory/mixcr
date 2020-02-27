@@ -663,6 +663,25 @@ public abstract class VDJCObject {
             this.lowerCase.set(0, lowerCase);
         }
 
+        public int size() {
+            return seq.length;
+        }
+
+        public NucleotideSequence getSequence(int i) {
+            return seq[i];
+        }
+
+        public boolean isLowerCase(int i) {
+            return lowerCase.get(i);
+        }
+
+        public boolean containsWildcards() {
+            for (NucleotideSequence s : seq)
+                if (s.containsWildcards())
+                    return true;
+            return false;
+        }
+
         boolean containsLowerCase() {
             for (int i = 0; i < seq.length; ++i)
                 if (lowerCase.get(i))
