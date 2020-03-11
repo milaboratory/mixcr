@@ -31,10 +31,13 @@ package com.milaboratory.mixcr.assembler.fullseq;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.util.concurrent.AtomicDouble;
+import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler.VariantBranch;
 import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.basictypes.VDJCObject;
 import com.milaboratory.mixcr.cli.Report;
 import com.milaboratory.mixcr.cli.ReportHelper;
+import io.repseq.core.GeneFeature;
 
 import java.util.Arrays;
 import java.util.List;
@@ -58,6 +61,13 @@ public class FullSeqAssemblerReport implements Report {
     private final AtomicInteger canceledAssemblies = new AtomicInteger(0);
     private final AtomicLong vHitsReorder = new AtomicLong(0);
     private final AtomicLong jHitsReorder = new AtomicLong(0);
+
+    private final AtomicLong clonesWithAmbiguousLetters = new AtomicLong(0);
+    private final AtomicLong clonesWithAmbiguousLettersInSplittingRegion = new AtomicLong(0);
+    private final AtomicDouble readsWithAmbiguousLetters = new AtomicDouble(0);
+    private final AtomicDouble readsWithAmbiguousLettersInSplittingRegion = new AtomicDouble(0);
+    private final AtomicLong totalAmbiguousLettersInSplittingRegion = new AtomicLong(0);
+    private final AtomicLong totalAmbiguousLetters = new AtomicLong(0);
 
     public void onVariantClustered(VariantBranch minor) {
         totalClustered.incrementAndGet();
@@ -87,7 +97,7 @@ public class FullSeqAssemblerReport implements Report {
         totalReads.addAndGet(initialClone.getCount());
     }
 
-    public void afterVariantsClustered(Clone initialClone, Clone[] branches) {
+    public void afterVariantsClustered(Clone initialClone, Clone[] branches, GeneFeature subCloningRegion) {
         initialCloneCount.incrementAndGet();
         finalCloneCount.addAndGet(branches.length);
         totalReads.addAndGet(initialClone.getCount());
@@ -97,6 +107,69 @@ public class FullSeqAssemblerReport implements Report {
                 .mapToInt(clone -> IntStream.range(0, clone.numberOfTargets()).map(i -> clone.getTarget(i).size()).sum())
                 .max().orElse(0);
         longestContigLength.accumulateAndGet(maxLength, Math::max);
+
+        for (Clone branch : branches) {
+            int numberOfN = Arrays.stream(branch.getTargets()).mapToInt(t -> numberOfWildcards(t.getSequence())).sum();
+            if (numberOfN > 0) {
+                clonesWithAmbiguousLetters.incrementAndGet();
+                readsWithAmbiguousLetters.addAndGet(branch.getCount());
+                totalAmbiguousLetters.addAndGet(numberOfN);
+            }
+
+            if (subCloningRegion != null) {
+                int numberOfNInSplittingRegion = numberOfWildcards(branch.getIncompleteFeature(subCloningRegion));
+                if (numberOfNInSplittingRegion > 0) {
+                    clonesWithAmbiguousLettersInSplittingRegion.incrementAndGet();
+                    readsWithAmbiguousLettersInSplittingRegion.addAndGet(branch.getCount());
+                    totalAmbiguousLettersInSplittingRegion.addAndGet(numberOfNInSplittingRegion);
+                }
+            }
+        }
+    }
+
+    private static int numberOfWildcards(NucleotideSequence seq) {
+        int count = 0;
+        for (int i = 0; i < seq.size(); i++)
+            if (NucleotideSequence.ALPHABET.isWildcard(seq.codeAt(i)))
+                count++;
+        return count;
+    }
+
+    private static int numberOfWildcards(VDJCObject.CaseSensitiveNucleotideSequence csSeq) {
+        int count = 0;
+        for (int i = 0; i < csSeq.size(); i++)
+            count += numberOfWildcards(csSeq.getSequence(i));
+        return count;
+    }
+
+    @JsonProperty("clonesWithAmbiguousLetters")
+    public long getClonesWithAmbiguousLetters() {
+        return clonesWithAmbiguousLetters.get();
+    }
+
+    @JsonProperty("clonesWithAmbiguousLettersInSplittingRegion")
+    public long getClonesWithAmbiguousLettersInSplittingRegion() {
+        return clonesWithAmbiguousLettersInSplittingRegion.get();
+    }
+
+    @JsonProperty("readsWithAmbiguousLetters")
+    public double getReadsWithAmbiguousLetters() {
+        return readsWithAmbiguousLetters.get();
+    }
+
+    @JsonProperty("readsWithAmbiguousLettersInSplittingRegion")
+    public double getReadsWithAmbiguousLettersInSplittingRegion() {
+        return readsWithAmbiguousLettersInSplittingRegion.get();
+    }
+
+    @JsonProperty("totalAmbiguousLetters")
+    public long getTotalAmbiguousLetters() {
+        return totalAmbiguousLetters.get();
+    }
+
+    @JsonProperty("totalAmbiguousLettersInSplittingRegion")
+    public long getTotalAmbiguousLettersInSplittingRegion() {
+        return totalAmbiguousLettersInSplittingRegion.get();
     }
 
     @JsonProperty("initialCloneCount")
@@ -153,6 +226,12 @@ public class FullSeqAssemblerReport implements Report {
                 .writeField("Longest contig length", getLongestContigLength())
                 .writePercentAndAbsoluteField("Clustered variants", getClonesClustered(), getFinalCloneCount() + getClonesClustered())
                 .writePercentAndAbsoluteField("Reads in clustered variants", getReadsClustered(), getTotalReads())
-                .writePercentAndAbsoluteField("Reads in divided (newly created) clones", getTotalDividedVariantReads(), getTotalReads());
+                .writePercentAndAbsoluteField("Reads in divided (newly created) clones", getTotalDividedVariantReads(), getTotalReads())
+                // .writePercentAndAbsoluteField("Clones with ambiguous letters", getClonesWithAmbiguousLetters(), getFinalCloneCount())
+                .writePercentAndAbsoluteField("Clones with ambiguous letters in splitting region", getClonesWithAmbiguousLettersInSplittingRegion(), getFinalCloneCount())
+                // .writePercentAndAbsoluteField("Reads in clones with ambiguous letters", getReadsWithAmbiguousLetters(), getTotalReads())
+                .writePercentAndAbsoluteField("Reads in clones with ambiguous letters in splitting region", getReadsWithAmbiguousLettersInSplittingRegion(), getTotalReads())
+                // .writeField("Average number of ambiguous letters per clone with ambiguous letters", 1.0 * getTotalAmbiguousLetters() / getClonesWithAmbiguousLetters())
+                .writeField("Average number of ambiguous letters per clone with ambiguous letters in splitting region", 1.0 * getTotalAmbiguousLettersInSplittingRegion() / getClonesWithAmbiguousLettersInSplittingRegion());
     }
 }

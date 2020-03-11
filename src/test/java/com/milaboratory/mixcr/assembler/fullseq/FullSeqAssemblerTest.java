@@ -65,7 +65,7 @@ import java.util.stream.StreamSupport;
 public class FullSeqAssemblerTest {
     static final FullSeqAssemblerParameters DEFAULT_PARAMETERS =
             new FullSeqAssemblerParameters(0.1, 80, 120,
-                    3, 7, 0.25, 0.5, 50, GeneFeature.VDJRegion,
+                    3, 7, 0.25, 3.0, 0.5, 50, GeneFeature.VDJRegion,
                     new QualityTrimmerParameters(20.0f, 8), 20, false);
 
     static final class MasterSequence {
@@ -365,10 +365,10 @@ public class FullSeqAssemblerTest {
 
         long uniq1 = StreamSupport.stream(CUtils.it(prep.createPort()).spliterator(), false)
                 .mapToInt(l -> l[0])
-                .filter(c -> c == 0xFFFFFFFF).count();
+                .filter(c -> c == FullSeqAssembler.ABSENT_PACKED_VARIANT_INFO).count();
         long uniq2 = StreamSupport.stream(CUtils.it(prep.createPort()).spliterator(), false)
                 .mapToInt(l -> l[1])
-                .filter(c -> c == 0xFFFFFFFF).count();
+                .filter(c -> c == FullSeqAssembler.ABSENT_PACKED_VARIANT_INFO).count();
 
         Assert.assertEquals(40, uniq1);
         Assert.assertEquals(60, uniq2);

@@ -1,5 +1,6 @@
 package com.milaboratory.mixcr.cli;
 
+import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -10,33 +11,40 @@ import com.milaboratory.mixcr.basictypes.ClnAReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import io.repseq.core.VDJCLibraryRegistry;
-import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 
 import java.util.*;
 
 /**
  *
  */
-@CommandLine.Command(name = "exportAlignmentsForClones",
+@Command(name = "exportAlignmentsForClones",
         sortOptions = true,
         separator = " ",
         description = "Export alignments for particular clones from \"clones & alignments\" (*.clna) file.")
 public class CommandExportAlignmentsForClones extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
     static final String EXPORT_ALIGNMENTS_FOR_CLONES_COMMAND_NAME = "exportAlignmentsForClones";
 
-    @CommandLine.Parameters(index = "0", description = "input_file.clna")
-    public String in;
+    // @Override
+    // @Parameters(index = "0", description = "input_file.clna")
+    // public void setIn(String in) {
+    //     super.setIn(in);
+    // }
+    //
+    // @Override
+    // @Parameters(index = "1", description = "[output_file.vdjca[.gz]")
+    // public void setOut(String out) {
+    //     super.setOut(out);
+    // }
 
-    @CommandLine.Parameters(index = "1", description = "[output_file.vdjca[.gz]")
-    public String out;
-
-    @CommandLine.Option(names = "--id", description = "[cloneId1 [cloneId2 [cloneId3]]]", arity = "0..*")
+    @Option(names = "--id", description = "[cloneId1 [cloneId2 [cloneId3]]]", arity = "0..*")
     public List<Integer> ids = new ArrayList<>();
 
-//    @CommandLine.Option(description = "Create separate files for each clone. File with '_clnN' suffix, " +
-//            "where N is clone index, will be created for each clone index.",
-//            names = {"-s", "--separate"})
-//    public boolean separate = false;
+    //    @CommandLine.Option(description = "Create separate files for each clone. File with '_clnN' suffix, " +
+    //            "where N is clone index, will be created for each clone index.",
+    //            names = {"-s", "--separate"})
+    //    public boolean separate = false;
 
     @Override
     public ActionConfiguration getConfiguration() {
@@ -52,15 +60,23 @@ public class CommandExportAlignmentsForClones extends ACommandWithSmartOverwrite
         try (ClnAReader clna = new ClnAReader(in, VDJCLibraryRegistry.getDefault());
              VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(getOutput())) {
             writer.header(clna.getAlignerParameters(), clna.getGenes(), getFullPipelineConfiguration());
+
             long count = 0;
-            for (int id : getCloneIds()) {
-                OutputPortCloseable<VDJCAlignments> reader = clna.readAlignmentsOfClone(id);
-                VDJCAlignments al;
-                while ((al = reader.take()) != null) {
+            if (getCloneIds().length == 0)
+                for (VDJCAlignments al : CUtils.it(clna.readAssembledAlignments())) {
                     writer.write(al);
                     ++count;
                 }
-            }
+            else
+                for (int id : getCloneIds()) {
+                    OutputPortCloseable<VDJCAlignments> reader = clna.readAlignmentsOfClone(id);
+                    VDJCAlignments al;
+                    while ((al = reader.take()) != null) {
+                        writer.write(al);
+                        ++count;
+                    }
+                }
+
             writer.setNumberOfProcessedReads(count);
         }
     }

@@ -53,12 +53,12 @@ public class CommandMain extends ABaseCommand {
             description = "print version information and exit")
     boolean versionRequested;
 
-    @Option(names = {"-h", "--help"},
-            hidden = true)
-    @Override
-    public void requestHelp(boolean b) {
-        throwValidationException("ERROR: -h / --help is not supported: use `mixcr help` for usage.");
-    }
+    // @Option(names = {"-h", "--help"},
+    //         hidden = true)
+    // @Override
+    // public void requestHelp(boolean b) {
+    //     throwValidationException("ERROR: -h / --help is not supported: use `mixcr help` for usage.");
+    // }
 
     static final class VersionProvider implements CommandLine.IVersionProvider {
         @Override
