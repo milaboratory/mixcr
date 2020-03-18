@@ -119,26 +119,18 @@
             </plugin>
 
             <plugin>
-                <!-- Workaround maven not being able to set a property conditionally -->
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>1.8</version>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.1.0</version>
                 <executions>
                     <execution>
+                        <id>init-build-properties</id>
                         <phase>validate</phase>
                         <goals>
-                            <goal>run</goal>
+                            <goal>hostname</goal>
                         </goals>
                         <configuration>
-                            <exportAntProperties>true</exportAntProperties>
-                            <target>
-                                <exec executable="hostname" failonerror="false" outputproperty="hostname"/>
-                                <condition property="hostname" value="unknown">
-                                    <not>
-                                        <isset property="hostname"/>
-                                    </not>
-                                </condition>
-                            </target>
+                            <hostnameProperty>hostname</hostnameProperty>
                         </configuration>
                     </execution>
                 </executions>
