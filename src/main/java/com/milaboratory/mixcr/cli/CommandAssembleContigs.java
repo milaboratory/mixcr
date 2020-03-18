@@ -134,7 +134,7 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
             IOUtil.registerGeneReferences(tmpOut, genes, alignerParameters);
 
             ClnAReader.CloneAlignmentsPort cloneAlignmentsPort = reader.clonesAndAlignments();
-            SmartProgressReporter.startProgressReport("Assembling", cloneAlignmentsPort);
+            SmartProgressReporter.startProgressReport("Assembling contigs", cloneAlignmentsPort);
 
             OutputPort<Clone[]> parallelProcessor = new ParallelProcessor<>(cloneAlignmentsPort, cloneAlignments -> {
                 try {
