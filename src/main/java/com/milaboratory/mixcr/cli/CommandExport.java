@@ -32,9 +32,6 @@ package com.milaboratory.mixcr.cli;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.blocks.FilteringPort;
 import cc.redberry.primitives.Filter;
-import com.milaboratory.core.sequence.AminoAcidSequence;
-import com.milaboratory.core.sequence.NSequenceWithQuality;
-import com.milaboratory.core.sequence.TranslationParameters;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.export.*;
 import com.milaboratory.util.CanReportProgress;
@@ -298,29 +295,14 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
             @Override
             public boolean accept(Clone clone) {
                 if (filterOutOfFrames) {
-                    NSequenceWithQuality cdr3 = clone.getFeature(GeneFeature.CDR3);
-                    if (cdr3 == null || cdr3.size() % 3 != 0)
+                    if (clone.isOutOfFrame(GeneFeature.CDR3))
                         return false;
                 }
 
-                if (filterStopCodons) {
-                    for (GeneFeature assemblingFeature : clone.getParentCloneSet().getAssemblingFeatures()) {
-                        GeneFeature codingFeature = GeneFeature.getCodingGeneFeature(assemblingFeature);
-                        if (codingFeature == null)
-                            continue;
-
-                        for (int i = 0; i < clone.numberOfTargets(); ++i) {
-                            NSequenceWithQuality codingSeq = clone.getPartitionedTarget(i).getFeature(codingFeature);
-                            if (codingSeq == null)
-                                continue;
-                            TranslationParameters tr = clone.getPartitionedTarget(i).getPartitioning().getTranslationParameters(codingFeature);
-                            if (tr == null)
-                                return false;
-                            if (AminoAcidSequence.translate(codingSeq.getSequence(), tr).containStops())
-                                return false;
-                        }
-                    }
-                }
+                if (filterStopCodons)
+                    for (GeneFeature assemblingFeature : clone.getParentCloneSet().getAssemblingFeatures())
+                        if (clone.containsStops(assemblingFeature))
+                            return false;
 
                 return true;
             }

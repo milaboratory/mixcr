@@ -770,6 +770,32 @@ public abstract class VDJCObject {
         }
     }
 
+    public boolean containsStops(GeneFeature feature) {
+        GeneFeature codingFeature = GeneFeature.getCodingGeneFeature(feature);
+        if (codingFeature == null)
+            return true;
+
+        for (int i = 0; i < numberOfTargets(); ++i) {
+            NSequenceWithQuality codingSeq = getPartitionedTarget(i).getFeature(codingFeature);
+            if (codingSeq == null)
+                continue;
+            TranslationParameters tr = getPartitionedTarget(i).getPartitioning().getTranslationParameters(codingFeature);
+            if (tr == null)
+                return true;
+            if (AminoAcidSequence.translate(codingSeq.getSequence(), tr).containStops())
+                return true;
+        }
+
+        return false;
+    }
+
+    public boolean isOutOfFrame(GeneFeature feature) {
+        NSequenceWithQuality nt = getFeature(feature);
+        if (nt == null || nt.size() % 3 != 0)
+            return true;
+        return false;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
