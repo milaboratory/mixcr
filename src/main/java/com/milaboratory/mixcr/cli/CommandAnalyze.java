@@ -499,8 +499,8 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
 
         inheritThreads(assembleParameters, this.assembleParameters);
 
-        // we always write clna
-        assembleParameters.add("--write-alignments");
+        if (contigAssembly)
+            assembleParameters.add("--write-alignments");
 
         // pipeline specific parameters
         assembleParameters.addAll(this.pipelineSpecificAssembleParameters());
@@ -634,7 +634,7 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
     }
 
     public String fNameForClones() {
-        return outputNamePattern() + ".clna";
+        return outputNamePattern() + (contigAssembly ? ".clna" : ".clns");
     }
 
     public String fNameForContigs() {
