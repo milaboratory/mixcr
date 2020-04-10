@@ -242,6 +242,12 @@
                                     </includes>
                                 </filter>
                                 <filter>
+                                    <artifact>io.repseq:repseqio</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
                                     <artifact>org.lz4:lz4-java</artifact>
                                     <includes>
                                         <include>**</include>
