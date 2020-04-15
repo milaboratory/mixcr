@@ -52,6 +52,10 @@ public final class Main {
     private static boolean initialized = false;
 
     public static void main(String... args) {
+        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+            e.printStackTrace();
+            System.exit(2);
+        });
         handleParseResult(parseArgs(args).getParseResult(), args);
     }
 

@@ -286,6 +286,19 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
     @Option(names = {"-r", "--report"}, description = "Report file path")
     public String report = null;
 
+    @Option(names = {"-b", "--library"}, description = "V/D/J/C gene library")
+    public String library = "default";
+
+    public int threads = Runtime.getRuntime().availableProcessors();
+
+    @Option(description = "Processing threads",
+            names = {"-t", "--threads"})
+    public void setThreads(int threads) {
+        if (threads <= 0)
+            throwValidationException("ERROR: -t / --threads must be positive", false);
+        this.threads = threads;
+    }
+
 //     @Option(names = {"--overwrite-if-required"}, description = "Overwrite output file if it is corrupted or if it was generated from different input file \" +\n" +
 //             "                    \"or with different parameters. -f / --force-overwrite overrides this option.")
 //     public boolean overwriteIfRequired = false;
@@ -337,6 +350,13 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         return Collections.EMPTY_LIST;
     }
 
+    private void inheritThreads(List<String> args, List<String> specificArgs) {
+        if (specificArgs.stream().noneMatch(s -> s.contains("--threads ") || s.contains("-t "))) {
+            args.add("--threads");
+            args.add(Integer.toString(threads));
+        }
+    }
+
     CommandAlign mkAlign() {
         // align parameters
         List<String> alignParameters = new ArrayList<>(initialAlignParameters);
@@ -348,6 +368,11 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         // add required parameters (for JCommander)
         alignParameters.add("--species");
         alignParameters.add(species);
+
+        alignParameters.add("--library");
+        alignParameters.add(library);
+
+        inheritThreads(alignParameters, this.alignParameters);
 
         // add report file
         alignParameters.add("--report");
@@ -436,6 +461,8 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         extendParameters.add("--report");
         extendParameters.add(getReport());
 
+        inheritThreads(extendParameters, this.extendAlignmentsParameters);
+
         // add all override parameters
         extendParameters.addAll(this.extendAlignmentsParameters);
 
@@ -470,8 +497,10 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         assembleParameters.add("--report");
         assembleParameters.add(getReport());
 
-        // we always write clna
-        assembleParameters.add("--write-alignments");
+        inheritThreads(assembleParameters, this.assembleParameters);
+
+        if (contigAssembly)
+            assembleParameters.add("--write-alignments");
 
         // pipeline specific parameters
         assembleParameters.addAll(this.pipelineSpecificAssembleParameters());
@@ -507,6 +536,8 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         // add report file
         assembleContigParameters.add("--report");
         assembleContigParameters.add(getReport());
+
+        inheritThreads(assembleContigParameters, this.assembleContigParameters);
 
         // add all override parameters
         assembleContigParameters.addAll(this.assembleContigParameters);
@@ -603,7 +634,7 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
     }
 
     public String fNameForClones() {
-        return outputNamePattern() + ".clna";
+        return outputNamePattern() + (contigAssembly ? ".clna" : ".clns");
     }
 
     public String fNameForContigs() {

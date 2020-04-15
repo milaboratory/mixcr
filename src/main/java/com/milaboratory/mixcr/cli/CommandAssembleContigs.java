@@ -186,7 +186,7 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
                             .collect(Collectors.toMap(
                                     Map.Entry::getKey,
                                     accs -> accs.getValue().entrySet().stream()
-                                            .max(Comparator.comparing(e -> -e.getValue().getNumberOfCoveredPoints(1)))
+                                            .max(Comparator.comparing(e -> e.getValue().getNumberOfCoveredPoints(1)))
                                             .map(e -> e.getValue().hit).get(),
                                     noMerge(),
                                     () -> new EnumMap<>(GeneType.class)));
