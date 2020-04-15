@@ -350,6 +350,13 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         return Collections.EMPTY_LIST;
     }
 
+    private void inheritThreads(List<String> args, List<String> specificArgs) {
+        if (specificArgs.stream().noneMatch(s -> s.contains("--threads ") || s.contains("-t "))) {
+            args.add("--threads");
+            args.add(Integer.toString(threads));
+        }
+    }
+
     CommandAlign mkAlign() {
         // align parameters
         List<String> alignParameters = new ArrayList<>(initialAlignParameters);
@@ -365,8 +372,7 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         alignParameters.add("--library");
         alignParameters.add(library);
 
-        alignParameters.add("--threads");
-        alignParameters.add(Integer.toString(threads));
+        inheritThreads(alignParameters, this.alignParameters);
 
         // add report file
         alignParameters.add("--report");
@@ -455,8 +461,7 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         extendParameters.add("--report");
         extendParameters.add(getReport());
 
-        extendParameters.add("--threads");
-        extendParameters.add(Integer.toString(threads));
+        inheritThreads(extendParameters, this.extendAlignmentsParameters);
 
         // add all override parameters
         extendParameters.addAll(this.extendAlignmentsParameters);
@@ -500,8 +505,10 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         else if (contigAssembly)
             throw new RuntimeException("--no-clna is not compatible with --contig-assembly");
 
-        assembleParameters.add("--threads");
-        assembleParameters.add(Integer.toString(threads));
+        inheritThreads(assembleParameters, this.assembleParameters);
+
+        if (contigAssembly)
+            assembleParameters.add("--write-alignments");
 
         // pipeline specific parameters
         assembleParameters.addAll(this.pipelineSpecificAssembleParameters());
@@ -538,8 +545,7 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         assembleContigParameters.add("--report");
         assembleContigParameters.add(getReport());
 
-        assembleContigParameters.add("--threads");
-        assembleContigParameters.add(Integer.toString(threads));
+        inheritThreads(assembleContigParameters, this.assembleContigParameters);
 
         // add all override parameters
         assembleContigParameters.addAll(this.assembleContigParameters);
@@ -636,10 +642,7 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
     }
 
     public String fNameForClones() {
-        if (noClna)
-            return outputNamePattern() + ".clns";
-        else
-            return outputNamePattern() + ".clna";
+        return outputNamePattern() + (contigAssembly ? ".clna" : ".clns");
     }
 
     public String fNameForContigs() {

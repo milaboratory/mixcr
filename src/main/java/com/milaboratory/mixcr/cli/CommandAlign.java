@@ -310,7 +310,8 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                 getAlignerParameters(),
                 !noMerge,
                 getLibrary().getLibraryId(),
-                limit);
+                limit,
+                getQualityTrimmerParameters());
     }
 
     /** Set of parameters that completely (uniquely) determine align action */
@@ -339,16 +340,22 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
          * Limit number of reads
          */
         public final long limit;
+        /**
+         * Trimming parameters (null if trimming is not enabled)
+         */
+        public final QualityTrimmerParameters trimmerParameters;
 
         @JsonCreator
         public AlignConfiguration(@JsonProperty("alignerParameters") VDJCAlignerParameters alignerParameters,
                                   @JsonProperty("mergeReads") boolean mergeReads,
                                   @JsonProperty("libraryId") VDJCLibraryId libraryId,
-                                  @JsonProperty("limit") long limit) {
+                                  @JsonProperty("limit") long limit,
+                                  @JsonProperty("trimmerParameters") QualityTrimmerParameters trimmerParameters) {
             this.alignerParameters = alignerParameters;
             this.mergeReads = mergeReads;
             this.libraryId = libraryId;
             this.limit = limit;
+            this.trimmerParameters = trimmerParameters;
         }
 
         @Override
@@ -364,12 +371,13 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
             return mergeReads == that.mergeReads &&
                     limit == that.limit &&
                     Objects.equals(alignerParameters, that.alignerParameters) &&
-                    Objects.equals(libraryId, that.libraryId);
+                    Objects.equals(libraryId, that.libraryId) &&
+                    Objects.equals(trimmerParameters, that.trimmerParameters);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(alignerParameters, mergeReads, libraryId, limit);
+            return Objects.hash(alignerParameters, mergeReads, libraryId, limit, trimmerParameters);
         }
     }
 
@@ -405,6 +413,11 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                 throw new ExecutionException(commandLine, "Group " + tag + " not found in FASTQ description!");
             return tagSeq;
         }).toArray(String[]::new));
+    }
+
+    private QualityTrimmerParameters getQualityTrimmerParameters() {
+        return new QualityTrimmerParameters(trimmingQualityThreshold,
+                trimmingWindowSize);
     }
 
     @Override
@@ -522,9 +535,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                 ReadTrimmerReport rep = new ReadTrimmerReport();
                 mainInputReadsPreprocessed = CUtils.wrap(
                         mainInputReadsPreprocessed,
-                        CUtils.chunked(new ReadTrimmerProcessor(
-                                new QualityTrimmerParameters(trimmingQualityThreshold,
-                                        trimmingWindowSize), rep)));
+                        CUtils.chunked(new ReadTrimmerProcessor(getQualityTrimmerParameters(), rep)));
                 report.setTrimmingReport(rep);
             }
 
