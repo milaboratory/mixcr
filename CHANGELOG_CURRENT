@@ -1,6 +1,0 @@
-Fixed bug with wrong V gene selection in `assembleContigs`.
-`analyze` doesn't use `.clna` when contig assembly is not specified
-Fixed `AlignConfiguration` to account for trimming
-Added `--threads` option to `analyze`
-Added `--library` option to `analyze`
-Bug fix in partial assembler
