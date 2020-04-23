@@ -269,6 +269,7 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
                                         TagSignature sig = new TagSignature(tag, clone.getBestHit(gt).getGene().getId());
                                         Integer id = tagsToClones.get(sig);
                                         if (id != null)
+                                            // Ambiguity (two or more clones with the same tag+gene signature)
                                             tagsToClones.put(sig, -1);
                                         else
                                             tagsToClones.put(sig, clone.getId());
@@ -276,17 +277,20 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
                                 }
                             }
 
+                            // Remove ambiguous mappings
                             tagsToClones.entrySet().removeIf(e -> e.getValue() < 0);
 
                             port = () -> {
                                 VDJCAlignments al = merged.take();
                                 if (al == null
                                         || al.getMappingType() != ReadToCloneMapping.MappingType.Dropped
-                                        || al.getFeature(new GeneFeature(assemblerParameters.getAssemblingFeatures())) != null)
+                                        || al.getFeature(new GeneFeature(assemblerParameters.getAssemblingFeatures())) != null) // Dropped but has assembling feature
                                     return al;
 
+                                // <-- Only dropped alignments
+
                                 TagCounter tg = al.getTagCounter();
-                                assert tg.size() == 1;
+                                assert tg.size() == 1; // Both "align" and "assemblePartial" produces such alignments
                                 TObjectDoubleIterator<TagTuple> it = tg.iterator();
                                 it.advance();
                                 TagTuple tags = it.key();
@@ -300,7 +304,7 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
                                         Integer cloneId = tagsToClones.get(sig);
                                         if (cloneId != null)
                                             if (cloneMapping != -1 && cloneMapping != cloneId)
-                                                cloneMapping = -2;
+                                                cloneMapping = -2; // V+Tag has different mapping than J+Tag
                                             else
                                                 cloneMapping = cloneId;
                                     }

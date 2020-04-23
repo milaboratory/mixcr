@@ -266,6 +266,8 @@ public class CommandGroupCells extends ACommandWithSmartOverwriteWithSingleInput
                 assert Math.abs(sumTotal - clone.getTagCounter().sum()) < 0.1;
             }
 
+            // TODO if cloneGroups.size() == 1, ungroupedCounter can be added to the splitCounters[0]
+
             for (int i = 0; i < splitCounters.size(); ++i) {
                 TagCounter tc = splitCounters.get(i);
                 addClone.accept(clone

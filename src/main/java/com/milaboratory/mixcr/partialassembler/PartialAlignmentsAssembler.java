@@ -169,6 +169,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
             List<AlignedTarget> mergedTargets = searchResult.result;
             VDJCMultiRead mRead = new VDJCMultiRead(mergedTargets);
 
+            // Both parts have the same tag tuple
             final VDJCAlignments mAlignment = aligner.process(mRead).alignment.setTagCounter(searchResult.tagCounter);
 
             // Checking number of overlapped non-template (NRegion) letters
