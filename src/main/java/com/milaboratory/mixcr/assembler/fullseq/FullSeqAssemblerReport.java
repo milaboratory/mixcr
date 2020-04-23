@@ -136,6 +136,8 @@ public class FullSeqAssemblerReport implements Report {
     }
 
     private static int numberOfWildcards(VDJCObject.CaseSensitiveNucleotideSequence csSeq) {
+        if(csSeq == null)
+            return 0;
         int count = 0;
         for (int i = 0; i < csSeq.size(); i++)
             count += numberOfWildcards(csSeq.getSequence(i));

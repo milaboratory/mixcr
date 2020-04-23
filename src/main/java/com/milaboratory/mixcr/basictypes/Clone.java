@@ -85,6 +85,7 @@ public final class Clone extends VDJCObject {
     }
 
     public Clone setTagCounts(TagCounter tc) {
+        Objects.requireNonNull(tc);
         Clone c = new Clone(targets, hits, tc, count, id, group);
         c.setParentCloneSet(getParentCloneSet());
         return c;

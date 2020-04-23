@@ -87,6 +87,10 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
             names = {"-r", "--report"})
     public String reportFile;
 
+    @Option(description = "Ignore tags",
+            names = {"--ignore-tags"})
+    public boolean ignoreTags;
+
     @Option(description = "Report file.",
             names = {"--debug-report"}, hidden = true)
     public String debugReportFile;
@@ -137,10 +141,15 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
             SmartProgressReporter.startProgressReport("Assembling contigs", cloneAlignmentsPort);
 
             OutputPort<Clone[]> parallelProcessor = new ParallelProcessor<>(cloneAlignmentsPort, cloneAlignments -> {
+                Clone clone = cloneAlignments.clone;
+
+                if (ignoreTags)
+                    clone = clone.setTagCounts(TagCounter.EMPTY);
+
                 try {
                     // Collecting statistics
 
-                    EnumMap<GeneType, Map<VDJCGeneId, CoverageAccumulator>> coverages = cloneAlignments.clone.getHitsMap()
+                    EnumMap<GeneType, Map<VDJCGeneId, CoverageAccumulator>> coverages = clone.getHitsMap()
                             .entrySet().stream()
                             .filter(e -> e.getValue() != null && e.getValue().length > 0)
                             .collect(Collectors.toMap(
@@ -170,8 +179,8 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
 
                     if (!coverages.containsKey(GeneType.Variable) || !coverages.containsKey(GeneType.Joining)) {
                         // Something went really wrong
-                        report.onAssemblyCanceled(cloneAlignments.clone);
-                        return new Clone[]{cloneAlignments.clone};
+                        report.onAssemblyCanceled(clone);
+                        return new Clone[]{clone};
                     }
 
                     for (VDJCAlignments alignments : CUtils.it(cloneAlignments.alignments()))
@@ -195,7 +204,7 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
 
                     FullSeqAssembler fullSeqAssembler = new FullSeqAssembler(
                             cloneFactory, assemblerParameters,
-                            cloneAlignments.clone, alignerParameters,
+                            clone, alignerParameters,
                             bestGenes.get(GeneType.Variable), bestGenes.get(GeneType.Joining)
                     );
 
@@ -205,13 +214,13 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
 
                     if (debugReport != null) {
                         synchronized (debugReport) {
-                            try (FileOutputStream fos = new FileOutputStream(debugReportFile + "." + cloneAlignments.clone.getId())) {
+                            try (FileOutputStream fos = new FileOutputStream(debugReportFile + "." + clone.getId())) {
                                 final String content = rawVariantsData.toCsv((byte) 10);
                                 fos.write(content.getBytes());
                             }
 
                             try {
-                                debugReport.write("Clone: " + cloneAlignments.clone.getId());
+                                debugReport.write("Clone: " + clone.getId());
                                 debugReport.newLine();
                                 debugReport.write(rawVariantsData.toString());
                                 debugReport.newLine();
@@ -227,7 +236,7 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
 
                     return fullSeqAssembler.callVariants(rawVariantsData);
                 } catch (Throwable re) {
-                    throw new RuntimeException("While processing clone #" + cloneAlignments.clone.getId(), re);
+                    throw new RuntimeException("While processing clone #" + clone.getId(), re);
                 }
             }, threads);
 

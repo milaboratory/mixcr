@@ -144,7 +144,7 @@ public final class FullSeqAssembler {
         this.parameters = parameters;
         this.clone = clone;
 
-        if (clone.getTagCounter().isEmpty()) {
+        if (clone.getTagCounter() == null || clone.getTagCounter().isEmpty()) {
             this.tagTupleToGroup = null;
             this.groupToTagTuple = null;
         } else {
@@ -458,13 +458,16 @@ public final class FullSeqAssembler {
         int assemblingFeatureOffset = -1;
         int assemblingFeatureLength = -1;
         for (int i = 0; i < positionedStates.length; ++i) {
-            if (isAbsentPositionedState(positionedStates[i]))
+            int currentPosition = extractPosition(positionedStates[i]);
+
+            if (isAbsentPositionedState(positionedStates[i])) {
+                if (currentPosition == positionOfAssemblingFeature)
+                    return null;
                 continue;
+            }
 
             if (blockStartPosition == -1)
                 blockStartPosition = extractPosition(positionedStates[i]);
-
-            int currentPosition = extractPosition(positionedStates[i]);
 
             int nextPosition = i == positionedStates.length - 1
                     ? Integer.MAX_VALUE
