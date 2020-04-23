@@ -297,7 +297,7 @@ public final class FullSeqAssembler {
                 .map(branch -> assembleBranchSequences(data.points, data.groups, branch))
                 .filter(Objects::nonNull).collect(Collectors.toList());
 
-        assert checkNonIntersectingGroups(branchSequences);
+        // assert checkNonIntersectingGroups(branchSequences);
 
         Clone[] result = branchSequences.stream()
                 .map(branch -> buildClone(clean(branch)))
@@ -973,7 +973,7 @@ public final class FullSeqAssembler {
             tmp[0] = substituteAlignments(tmp[0], jHitAlignments);
 
         TagCounter tagCounter = this.clone.getTagCounter();
-        if(tagCounter != null && targets.groups != null) {
+        if (tagCounter != null && targets.groups != null) {
             Set<TagTuple> tagTuples = new HashSet<>();
             TIntIterator it = targets.groups.iterator();
             while (it.hasNext())
@@ -1514,7 +1514,8 @@ public final class FullSeqAssembler {
                             }
                         }
 
-                        assert bestVariant != -1;
+                        if (bestVariant == -1) // all points are exceptional (no coverage by the group)
+                            continue;
 
                         int totalSumQuality = 0, bestSumQuality = 0, bestCount = 0, numberOfExceptionalPoints = 0, bestSplittingPoints = 0;
                         for (int readIndex : readIndices) {
