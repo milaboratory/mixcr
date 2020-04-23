@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  *
@@ -33,11 +34,34 @@ public final class TagCounter {
         this(tags, 1.0);
     }
 
+    public TagTuple singleOrNull() {
+        if (size() > 1 || size() == 0)
+            return null;
+
+        TObjectDoubleIterator<TagTuple> it = iterator();
+        it.advance();
+        return it.key();
+    }
+
+    public Set<TagTuple> keys() {
+        return tags.keySet();
+    }
+
     public double getOrDefault(TagTuple tt, double d) {
         if (!tags.containsKey(tt))
             return d;
         else
             return tags.get(tt);
+    }
+
+    public TagCounter multiply(double factor) {
+        TagCounterBuilder tb = new TagCounterBuilder();
+        TObjectDoubleIterator<TagTuple> iterator = iterator();
+        while (iterator.hasNext()) {
+            iterator.advance();
+            tb.add(iterator.key(), iterator.value() * factor);
+        }
+        return tb.createAndDestroy();
     }
 
     public int size() {
@@ -103,6 +127,21 @@ public final class TagCounter {
     @Override
     public int hashCode() {
         return tags.hashCode();
+    }
+
+    public TagCounter filter(Predicate<TagTuple> predicate) {
+        TObjectDoubleIterator<TagTuple> it = iterator();
+        TagCounterBuilder tb = new TagCounterBuilder();
+        while (it.hasNext()) {
+            it.advance();
+
+            TagTuple t = it.key();
+            double count = it.value();
+            if (!predicate.test(t))
+                continue;
+            tb.add(t, count);
+        }
+        return tb.createAndDestroy();
     }
 
     public TagCounter[] splitBy(int index) {

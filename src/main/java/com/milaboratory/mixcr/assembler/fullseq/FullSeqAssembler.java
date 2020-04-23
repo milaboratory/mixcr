@@ -932,7 +932,7 @@ public final class FullSeqAssembler {
         } else
             tmp[0] = substituteAlignments(tmp[0], jHitAlignments);
 
-        return new Clone(targets.sequences, hits, this.clone.getTagCounter(), targets.count, 0);
+        return new Clone(targets.sequences, hits, this.clone.getTagCounter(), targets.count, 0, clone.getGroup());
     }
 
     static int indexOfGene(VDJCHit[] hits, VDJCGeneId gene) {

@@ -180,6 +180,7 @@ class IO {
             }
             output.writeDouble(object.count);
             output.writeInt(object.id);
+            output.writeObject(object.group);
         }
 
         @Override
@@ -194,7 +195,8 @@ class IO {
             }
             double count = input.readDouble();
             int id = input.readInt();
-            return new Clone(targets, hits, tagCounter, count, id);
+            Integer group = input.readObject(Integer.class);
+            return new Clone(targets, hits, tagCounter, count, id, group);
         }
 
         @Override

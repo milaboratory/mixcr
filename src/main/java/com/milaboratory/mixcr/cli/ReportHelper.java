@@ -35,6 +35,9 @@ import java.io.PrintStream;
 import java.util.concurrent.atomic.AtomicLong;
 
 public final class ReportHelper {
+    public static final ReportHelper STDOUT = new ReportHelper(System.out, true);
+    public static final ReportHelper STDERR = new ReportHelper(System.err, true);
+
     private final PrintStream printStream;
     private final boolean stdout;
 

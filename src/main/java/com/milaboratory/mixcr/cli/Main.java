@@ -144,6 +144,7 @@ public final class Main {
 
                 .addSubcommand("align", CommandAlign.class)
                 .addSubcommand("assemble", CommandAssemble.class)
+                .addSubcommand("groupCells", CommandGroupCells.class)
                 .addSubcommand("assembleContigs", CommandAssembleContigs.class)
 
                 .addSubcommand("assemblePartial", CommandAssemblePartialAlignments.class)

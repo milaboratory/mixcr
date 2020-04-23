@@ -759,6 +759,13 @@ public final class FieldExtractors {
                 }
             });
 
+            descriptorsList.add(new PL_C("-cellGroup", "Cell group", "Cell group", "cellGroup") {
+                @Override
+                protected String extract(Clone object) {
+                    return String.valueOf(object.getGroup());
+                }
+            });
+
             descriptors = descriptorsList.toArray(new Field[descriptorsList.size()]);
         }
 

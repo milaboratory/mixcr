@@ -476,7 +476,7 @@ public final class VDJCObjectExtender<T extends VDJCObject> implements Processor
                                   VDJCObjectExtender<?>.Extender transformer,
                                   EnumMap<GeneType, VDJCHit[]> newHitsMap) {
         return new Clone(transformer.transform(clone.getTargets()),
-                newHitsMap, clone.getTagCounter(), clone.getCount(), clone.getId());
+                newHitsMap, clone.getTagCounter(), clone.getCount(), clone.getId(), clone.getGroup());
     }
 
     static VDJCAlignments doTransformAlignment(VDJCAlignments alignment,

@@ -9,3 +9,4 @@ out
 test_target
 src/test/resources/sequences/big
 tmp
+pack

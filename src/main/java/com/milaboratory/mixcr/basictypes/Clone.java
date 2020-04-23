@@ -42,22 +42,36 @@ public final class Clone extends VDJCObject {
     final double count;
     final int id;
     CloneSet parent = null;
+    final Integer group;
 
-    public Clone(NSequenceWithQuality[] targets, EnumMap<GeneType, VDJCHit[]> hits, TagCounter tagCounter, double count, int id) {
+    public Clone(NSequenceWithQuality[] targets, EnumMap<GeneType, VDJCHit[]> hits, TagCounter tagCounter, double count, int id, Integer group) {
         super(hits, tagCounter, targets);
         this.count = count;
         this.id = id;
+        this.group = group;
+    }
+
+    public Clone setCount(double count) {
+        return new Clone(targets, hits, tagCounter, count, id, group);
+    }
+
+    public Clone setGroup(Integer group) {
+        return new Clone(targets, hits, tagCounter, count, id, group);
+    }
+
+    public Integer getGroup() {
+        return group;
     }
 
     public Clone setId(int id) {
-        Clone r = new Clone(targets, hits, tagCounter, count, id);
+        Clone r = new Clone(targets, hits, tagCounter, count, id, group);
         r.setParentCloneSet(parent);
         return r;
     }
 
     /** Returns new instance with parent clone set set to null */
     public Clone resetParentCloneSet() {
-        return new Clone(targets, hits, tagCounter, count, id);
+        return new Clone(targets, hits, tagCounter, count, id, group);
     }
 
     public void setParentCloneSet(CloneSet set) {
@@ -71,7 +85,7 @@ public final class Clone extends VDJCObject {
     }
 
     public Clone setTagCounts(TagCounter tc) {
-        Clone c = new Clone(targets, hits, tc, count, id);
+        Clone c = new Clone(targets, hits, tc, count, id, group);
         c.setParentCloneSet(getParentCloneSet());
         return c;
     }
@@ -131,11 +145,11 @@ public final class Clone extends VDJCObject {
         if (!super.equals(o)) return false;
         Clone clone = (Clone) o;
         return Double.compare(clone.count, count) == 0 &&
-                id == clone.id;
+                id == clone.id && group == clone.group;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), count, id);
+        return Objects.hash(super.hashCode(), count, id, group);
     }
 }

@@ -367,7 +367,7 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                             double sum = tagCounter.sum();
                             return Arrays.stream(tagCounter.splitBy(tagIndex))
                                     .map(tc -> new Clone(clone.getTargets(), clone.getHits(),
-                                            tc, 1.0 * cl.getCount() * tc.sum() / sum, clone.getId()));
+                                            tc, 1.0 * cl.getCount() * tc.sum() / sum, clone.getId(), clone.getGroup()));
                         });
                     }
                     stream.forEach(writer::put);
