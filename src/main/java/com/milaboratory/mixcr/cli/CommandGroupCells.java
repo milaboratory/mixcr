@@ -55,9 +55,9 @@ public class CommandGroupCells extends ACommandWithSmartOverwriteWithSingleInput
             names = {"--tag-mapping"})
     public String tagMappingFile;
 
-    @Option(description = "Minimal fraction of reads in clone that were not assigned to any group and will be separated into 'unassigned' clone",
+    @Option(description = "Minimal fraction of reads in clone that were not assigned to any group and will be separated into 'unassigned' clone (default is 0).",
             names = {"--minimal-ungrouped-fraction"})
-    public double minimalUngroupedFraction;
+    public double minimalUngroupedFraction = 0;
 
     @Option(names = {"-O"}, description = "Overrides default aligner parameter values")
     public Map<String, String> overrides = new HashMap<>();

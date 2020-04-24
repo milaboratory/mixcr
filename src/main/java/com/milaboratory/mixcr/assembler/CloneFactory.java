@@ -85,7 +85,8 @@ public final class CloneFactory {
     public Clone create(int id, double count,
                         EnumMap<GeneType, TObjectFloatHashMap<VDJCGeneId>> geneScores,
                         TagCounter tagCounter,
-                        NSequenceWithQuality[] targets) {
+                        NSequenceWithQuality[] targets,
+                        Integer group) {
         EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
         for (GeneType geneType : GeneType.VJC_REFERENCE) {
             VJCClonalAlignerParameters vjcParameters = parameters.getVJCParameters(geneType);
@@ -249,11 +250,11 @@ public final class CloneFactory {
         else
             hits.put(GeneType.Diversity, new VDJCHit[0]);
 
-        return new Clone(targets, hits, tagCounter, count, id, null);
+        return new Clone(targets, hits, tagCounter, count, id, group);
     }
 
     public Clone create(int id, CloneAccumulator accumulator) {
-        return create(id, accumulator.getCount(), accumulator.geneScores, accumulator.tagBuilder.createAndDestroy(), accumulator.getSequence().sequences);
+        return create(id, accumulator.getCount(), accumulator.geneScores, accumulator.tagBuilder.createAndDestroy(), accumulator.getSequence().sequences, null);
     }
 
     private static boolean containsD(GeneFeature feature) {

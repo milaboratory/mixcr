@@ -940,7 +940,7 @@ public final class FullSeqAssembler {
                 .getRange(targets.assemblingFeatureOffset, targets.assemblingFeatureOffset + targets.assemblingFeatureLength);
 
         Clone clone = cloneFactory.create(0, targets.count, getOriginalGeneScores(), this.clone.getTagCounter(),
-                new NSequenceWithQuality[]{assemblingFeatureSeq});
+                new NSequenceWithQuality[]{assemblingFeatureSeq}, this.clone.getGroup());
 
         vHitAlignments[targets.assemblingFeatureTargetId] =
                 mergeTwoAlignments(
