@@ -164,7 +164,7 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
     void processVDJCA() throws IOException {
         try (final VDJCAlignmentsReader reader = new VDJCAlignmentsReader(in);
              final VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)) {
-            SmartProgressReporter.startProgressReport("Processing", reader);
+            SmartProgressReporter.startProgressReport("Extending alignments", reader);
 
             writer.header(reader.getParameters(), reader.getUsedGenes(), getFullPipelineConfiguration());
 
