@@ -117,11 +117,14 @@ public class FullSeqAssemblerReport implements Report {
             }
 
             if (subCloningRegion != null) {
-                int numberOfNInSplittingRegion = numberOfWildcards(branch.getIncompleteFeature(subCloningRegion));
-                if (numberOfNInSplittingRegion > 0) {
-                    clonesWithAmbiguousLettersInSplittingRegion.incrementAndGet();
-                    readsWithAmbiguousLettersInSplittingRegion.addAndGet(branch.getCount());
-                    totalAmbiguousLettersInSplittingRegion.addAndGet(numberOfNInSplittingRegion);
+                VDJCObject.CaseSensitiveNucleotideSequence f = branch.getIncompleteFeature(subCloningRegion);
+                if (f != null) {
+                    int numberOfNInSplittingRegion = numberOfWildcards(f);
+                    if (numberOfNInSplittingRegion > 0) {
+                        clonesWithAmbiguousLettersInSplittingRegion.incrementAndGet();
+                        readsWithAmbiguousLettersInSplittingRegion.addAndGet(branch.getCount());
+                        totalAmbiguousLettersInSplittingRegion.addAndGet(numberOfNInSplittingRegion);
+                    }
                 }
             }
         }
