@@ -81,7 +81,7 @@ import java.util.stream.Collectors;
 
 import static cc.redberry.pipe.CUtils.chunked;
 import static cc.redberry.pipe.CUtils.unchunked;
-import static com.milaboratory.mixcr.basictypes.AlignmentsIO.DEFAULT_ALIGNMENTS_IN_BLOCK;
+import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.DEFAULT_ALIGNMENTS_IN_BLOCK;
 import static com.milaboratory.mixcr.cli.CommandAlign.ALIGN_COMMAND_NAME;
 
 @Command(name = ALIGN_COMMAND_NAME,

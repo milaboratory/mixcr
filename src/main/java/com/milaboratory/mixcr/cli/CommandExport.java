@@ -34,6 +34,7 @@ import cc.redberry.pipe.blocks.FilteringPort;
 import cc.redberry.primitives.Filter;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.export.*;
+import com.milaboratory.mixcr.util.Concurrency;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.CanReportProgressAndStage;
 import com.milaboratory.util.SmartProgressReporter;
@@ -190,7 +191,7 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                     source = vdjcaReader;
                     break;
                 case MAGIC_CLNA:
-                    ClnAReader clnaReader = new ClnAReader(in, VDJCLibraryRegistry.getDefault());
+                    ClnAReader clnaReader = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4));
                     reader = clnaReader;
                     source = clnaReader.readAllAlignments();
                     break;

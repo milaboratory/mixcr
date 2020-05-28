@@ -57,7 +57,7 @@ public class CommandVersionInfo extends ACommandMiXCR {
             CloneSet cs = CloneSetIO.read(inputFile);
             System.out.println(cs.getVersionInfo());
         } else if (i.endsWith(".clna")) {
-            try (ClnAReader reader = new ClnAReader(inputFile, VDJCLibraryRegistry.getDefault())) {
+            try (ClnAReader reader = new ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), 1)) {
                 System.out.println(reader.getVersionInfo());
             }
         } else

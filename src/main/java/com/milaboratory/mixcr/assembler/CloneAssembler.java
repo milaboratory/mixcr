@@ -345,13 +345,13 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     }
 
     public CloneSet getCloneSet(VDJCAlignerParameters alignerParameters) {
-        EnumMap<GeneType, GeneFeature> features = new EnumMap<>(GeneType.class);
-        for (GeneType geneType : GeneType.values()) {
-            GeneFeature gf = featuresToAlign.get(geneType);
-            if (gf != null)
-                features.put(geneType, gf);
-        }
-        return new CloneSet(Arrays.asList(realClones), usedGenes.values(), features, alignerParameters, parameters);
+        // EnumMap<GeneType, GeneFeature> features = new EnumMap<>(GeneType.class);
+        // for (GeneType geneType : GeneType.values()) {
+        //     GeneFeature gf = featuresToAlign.get(geneType);
+        //     if (gf != null)
+        //         features.put(geneType, gf);
+        // }
+        return new CloneSet(Arrays.asList(realClones), usedGenes.values(), alignerParameters, parameters);
     }
 
     public OutputPortCloseable<ReadToCloneMapping> getAssembledReadsPort() {

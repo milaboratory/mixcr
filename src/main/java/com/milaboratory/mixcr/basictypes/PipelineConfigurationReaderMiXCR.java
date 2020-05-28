@@ -96,7 +96,7 @@ public class PipelineConfigurationReaderMiXCR implements PipelineConfigurationRe
                         return reader.getPipelineConfiguration();
                     }
                 case MAGIC_CLNA:
-                    try (ClnAReader reader = new ClnAReader(fileName, VDJCLibraryRegistry.getDefault())) {
+                    try (ClnAReader reader = new ClnAReader(fileName, VDJCLibraryRegistry.getDefault(), 1)) {
                         return reader.getPipelineConfiguration();
                     }
                 default:

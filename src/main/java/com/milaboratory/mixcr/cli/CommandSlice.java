@@ -32,15 +32,23 @@ package com.milaboratory.mixcr.cli;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.util.FlatteningOutputPort;
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.util.Concurrency;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 import io.repseq.core.VDJCLibraryRegistry;
-import picocli.CommandLine.*;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.milaboratory.mixcr.basictypes.IOUtil.*;
@@ -97,7 +105,7 @@ public class CommandSlice extends ACommandWithSmartOverwriteWithSingleInputMiXCR
     }
 
     void sliceClnA() throws Exception {
-        try (ClnAReader reader = new ClnAReader(in, VDJCLibraryRegistry.getDefault());
+        try (ClnAReader reader = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4));
              ClnAWriter writer = new ClnAWriter(getFullPipelineConfiguration(), out)) {
 
             // Getting full clone set
@@ -129,8 +137,8 @@ public class CommandSlice extends ACommandWithSmartOverwriteWithSingleInputMiXCR
                 i++;
             }
 
-            CloneSet newCloneSet = new CloneSet(clones, cloneSet.getUsedGenes(),
-                    cloneSet.getAlignedFeatures(), cloneSet.getAlignmentParameters(), cloneSet.getAssemblerParameters());
+            CloneSet newCloneSet = new CloneSet(clones, cloneSet.getUsedGenes(), cloneSet.getAlignmentParameters(),
+                    cloneSet.getAssemblerParameters());
 
             OutputPort<VDJCAlignments> allAlignmentsPortRaw = new FlatteningOutputPort<>(CUtils.asOutputPort(allAlignmentsList));
             AtomicLong idGen = new AtomicLong();

@@ -98,7 +98,6 @@ public class ClnAReaderTest {
         File file = TempFileManager.getTempFile();
         ClnAWriter writer = new ClnAWriter(null, file);
         writer.writeClones(new CloneSet(Collections.EMPTY_LIST, align.usedGenes,
-                align.parameters.alignerParameters.getFeaturesToAlignMap(),
                 align.parameters.alignerParameters,
                 CloneAssemblerParametersPresets.getByName("default")));
         writer.sortAlignments(CUtils.asOutputPort(align.alignments), align.alignments.size());

@@ -35,13 +35,17 @@ import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceBuilder;
 import com.milaboratory.core.sequence.SequenceQuality;
-import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
+import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.tests.MiXCRTestUtils;
 import com.milaboratory.mixcr.util.RunMiXCR;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
 import com.milaboratory.test.TestUtil;
 import com.milaboratory.util.RandomUtil;
+import com.milaboratory.util.TempFileManager;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
@@ -50,8 +54,7 @@ import org.apache.commons.math3.random.RandomGenerator;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.EnumMap;
 
@@ -245,9 +248,8 @@ public class PartialAlignmentsAssemblerTest {
 //                Assert.assertTrue(input.VJJunction.toString().contains(al.getFeature(GeneFeature.VJJunction).getSequence().toString()));
         }
 
-
-        final ByteArrayOutputStream overlappedSerializedData = new ByteArrayOutputStream();
-        try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(overlappedSerializedData)) {
+        File overlappedAlignments = TempFileManager.getTempFile();
+        try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(overlappedAlignments)) {
             final PartialAlignmentsAssemblerParameters pParameters = PartialAlignmentsAssemblerParameters.getDefault();
             pParameters.setMergerParameters(pParameters.getMergerParameters().overrideMinimalIdentity(0.0));
             PartialAlignmentsAssembler assembler = new PartialAlignmentsAssembler(pParameters, writer, true, false);
@@ -262,13 +264,15 @@ public class PartialAlignmentsAssemblerTest {
             //System.out.println("\n");
         }
 
-
-        VDJCAlignmentsReader readResult = new VDJCAlignmentsReader(new ByteArrayInputStream(overlappedSerializedData.toByteArray()));
+        VDJCAlignmentsReader readResult = new VDJCAlignmentsReader(overlappedAlignments);
 
         final ArrayList<VDJCAlignments> overlapped = new ArrayList<>();
         VDJCAlignments al;
         while ((al = readResult.take()) != null)
             overlapped.add(al);
+
+        overlappedAlignments.delete();
+
         return new TestResult(data, inputAlignments, overlapped);
     }
 

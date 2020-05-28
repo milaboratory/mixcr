@@ -141,10 +141,10 @@ public final class RunMiXCR {
 
         int totalClonesCount = 0;
         File tmpFile = TempFileManager.getTempFile();
-        try (ClnAReader reader = new ClnAReader(clnaFile.toPath(), VDJCLibraryRegistry.getDefault());
+        try (ClnAReader reader = new ClnAReader(clnaFile.toPath(), VDJCLibraryRegistry.getDefault(), 2);  // TODO concurrency ???
              PrimitivO tmpOut = new PrimitivO(new BufferedOutputStream(new FileOutputStream(tmpFile)));) {
 
-            IOUtil.registerGeneReferences(tmpOut, align.usedGenes, align.parameters.alignerParameters);
+            IOUtil.registerGeneReferencesO(tmpOut, align.usedGenes, align.parameters.alignerParameters);
 
             final CloneFactory cloneFactory = new CloneFactory(reader.getAssemblerParameters().getCloneFactoryParameters(),
                     reader.getAssemblingFeatures(), reader.getGenes(), reader.getAlignerParameters().getFeaturesToAlignMap());
@@ -164,7 +164,7 @@ public final class RunMiXCR {
                 } catch (Throwable re) {
                     throw new RuntimeException("While processing clone #" + cloneAlignments.clone.getId(), re);
                 }
-            }, 1);
+            }, 1); // TODO why ony one ???
 
 
             for (Clone[] clones : CUtils.it(parallelProcessor)) {
@@ -179,7 +179,7 @@ public final class RunMiXCR {
 
         Clone[] clones = new Clone[totalClonesCount];
         try (PrimitivI tmpIn = new PrimitivI(new BufferedInputStream(new FileInputStream(tmpFile)))) {
-            IOUtil.registerGeneReferences(tmpIn, align.usedGenes, align.parameters.alignerParameters);
+            IOUtil.registerGeneReferencesI(tmpIn, align.usedGenes, align.parameters.alignerParameters);
             int i = 0;
             for (Clone clone : CUtils.it(new PipeDataInputReader<>(Clone.class, tmpIn, totalClonesCount)))
                 clones[i++] = clone;
@@ -190,8 +190,8 @@ public final class RunMiXCR {
         Arrays.sort(clones, Comparator.comparingDouble(c -> -c.getCount()));
         for (int i = 0; i < clones.length; i++)
             clones[i] = clones[i].setId(i);
-        CloneSet cloneSet = new CloneSet(Arrays.asList(clones), align.usedGenes, align.parameters.alignerParameters.getFeaturesToAlignMap(),
-                align.parameters.alignerParameters, align.parameters.cloneAssemblerParameters);
+        CloneSet cloneSet = new CloneSet(Arrays.asList(clones), align.usedGenes, align.parameters.alignerParameters,
+                align.parameters.cloneAssemblerParameters);
 
         return new FullSeqAssembleResult(assemble, cloneSet);
     }
@@ -284,20 +284,19 @@ public final class RunMiXCR {
             this.aligner = aligner;
         }
 
-        private byte[] serializedAlignments = null;
+        private File alignmentsFile = null;
 
-        public VDJCAlignmentsReader resultReader() {
-            if (serializedAlignments == null) {
-                final ByteArrayOutputStream data = new ByteArrayOutputStream();
-                try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(data)) {
+        public VDJCAlignmentsReader resultReader() throws IOException {
+            if (alignmentsFile == null) {
+                alignmentsFile = TempFileManager.getTempFile();
+                try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(alignmentsFile)) {
                     writer.header(aligner, null);
                     for (VDJCAlignments alignment : alignments)
                         writer.write(alignment);
                     writer.setNumberOfProcessedReads(totalNumberOfReads);
                 }
-                serializedAlignments = data.toByteArray();
             }
-            return new VDJCAlignmentsReader(new ByteArrayInputStream(serializedAlignments));
+            return new VDJCAlignmentsReader(alignmentsFile);
         }
     }
 

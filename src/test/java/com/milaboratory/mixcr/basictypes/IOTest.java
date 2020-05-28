@@ -36,14 +36,15 @@ import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerS;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
+import com.milaboratory.util.TempFileManager;
 import io.repseq.core.Chains;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,11 +56,11 @@ public class IOTest {
     public void testSerialization1() throws Exception {
         VDJCAlignerParameters parameters = VDJCParametersPresets.getByName("default");
 
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        File tmpFile = TempFileManager.getTempFile();
 
         List<VDJCAlignments> alignemntsList = new ArrayList<>();
 
-        int header;
+        long header;
 
         long numberOfReads;
         long numberOfAlignments = 0;
@@ -76,10 +77,10 @@ public class IOTest {
             }
 
 
-            try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(bos, 4, 21)) {
+            try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tmpFile)) {
                 writer.header(aligner, null);
 
-                header = bos.size();
+                header = writer.getPosition();
 
                 for (SingleRead read : CUtils.it(reader)) {
                     VDJCAlignmentResult<SingleRead> result = aligner.process(read);
@@ -97,9 +98,9 @@ public class IOTest {
         assertTrue(alignemntsList.size() > 10);
         assertTrue(numberOfReads > 10);
 
-        System.out.println("Bytes per alignment: " + (bos.size() - header) / alignemntsList.size());
+        System.out.println("Bytes per alignment: " + (Files.size(tmpFile.toPath()) - header) / alignemntsList.size());
 
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(new ByteArrayInputStream(bos.toByteArray()), true)) {
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tmpFile)) {
             int i = 0;
             for (VDJCAlignments alignments : CUtils.it(reader)) {
                 Assert.assertEquals(alignments.getAlignmentsIndex(), i);
@@ -108,5 +109,7 @@ public class IOTest {
             Assert.assertEquals(numberOfAlignments, i);
             Assert.assertEquals(numberOfReads, reader.getNumberOfReads());
         }
+
+        tmpFile.delete();
     }
 }

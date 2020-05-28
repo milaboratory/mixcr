@@ -151,7 +151,7 @@ public class CommandGroupCells extends ACommandWithSmartOverwriteWithSingleInput
     }
 
     private void runClna() throws Exception {
-        try (ClnAReader reader = new ClnAReader(in, VDJCLibraryRegistry.getDefault());
+        try (ClnAReader reader = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), 3);
              ClnAWriter writer = new ClnAWriter(getFullPipelineConfiguration(), out)) {
 
             CloneSet cloneSet = reader.readCloneSet();
@@ -297,7 +297,6 @@ public class CommandGroupCells extends ACommandWithSmartOverwriteWithSingleInput
 
         return new CloneSet(resultingClones,
                 cloneSet.getUsedGenes(),
-                cloneSet.getAlignedFeatures(),
                 cloneSet.getAlignmentParameters(),
                 cloneSet.getAssemblerParameters());
     }

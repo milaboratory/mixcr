@@ -132,11 +132,11 @@ public class CloneAssemblerRunner implements CanReportProgressAndStage {
         isFinished = true;
     }
 
-    public int getQueueSize() {
-        if (alignmentReader == null)
-            return -1;
-        return alignmentReader.getQueueSize();
-    }
+    // public int getQueueSize() {
+    //     if (alignmentReader == null)
+    //         return -1;
+    //     return alignmentReader.getQueueSize();
+    // }
 
     public CloneSet getCloneSet(VDJCAlignerParameters alignerParameters) {
         return assembler.getCloneSet(alignerParameters);

@@ -206,7 +206,7 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
                 StatusReporter reporter = new StatusReporter();
                 reporter.addCustomProviderFromLambda(() ->
                         new StatusReporter.Status(
-                                "Reader buffer: " + assemblerRunner.getQueueSize(),
+                                "Reader buffer: FIXME " /*+ assemblerRunner.getQueueSize()*/,
                                 assemblerRunner.isFinished()));
                 reporter.start();
             }

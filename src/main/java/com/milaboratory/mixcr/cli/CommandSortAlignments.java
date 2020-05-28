@@ -33,12 +33,16 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.CountingOutputPort;
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.milaboratory.cli.ActionConfiguration;
+import com.milaboratory.mixcr.basictypes.IOUtil;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
+import com.milaboratory.primitivio.PipeReader;
+import com.milaboratory.primitivio.PipeWriter;
 import com.milaboratory.util.ObjectSerializer;
 import com.milaboratory.util.SmartProgressReporter;
 import com.milaboratory.util.Sorter;
@@ -72,7 +76,8 @@ public class CommandSortAlignments extends ACommandWithSmartOverwriteWithSingleI
         try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(in)) {
             SmartProgressReporter.startProgressReport("Reading vdjca", reader);
             try (OutputPortCloseable<VDJCAlignments> sorted =
-                         Sorter.sort(reader, idComparator, 1024 * 512, new VDJCAlignmentsSerializer(reader), TempFileManager.getTempFile());
+                         Sorter.sort(reader, idComparator, 1024 * 512,
+                                 new VDJCAlignmentsSerializer(reader), TempFileManager.getTempFile());
                  VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)) {
 
                 writer.header(reader.getParameters(), reader.getUsedGenes(), getFullPipelineConfiguration());
@@ -105,18 +110,27 @@ public class CommandSortAlignments extends ACommandWithSmartOverwriteWithSingleI
 
         @Override
         public void write(Collection<VDJCAlignments> data, OutputStream stream) {
-            try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(stream)) {
-                writer.header(parameters, usedAlleles, null);
+            try (PipeWriter<VDJCAlignments> out =
+                         new PipeWriter<VDJCAlignments>(stream) {
+                             @Override
+                             protected void init() {
+                                 IOUtil.stdVDJCPrimitivOStateInit(output, usedAlleles, parameters);
+                             }
+                         }) {
                 for (VDJCAlignments datum : data)
-                    writer.write(datum);
+                    out.put(datum);
             }
         }
 
         @Override
         public OutputPort<VDJCAlignments> read(InputStream stream) {
-            VDJCAlignmentsReader reader = new VDJCAlignmentsReader(stream);
-            VDJCAlignmentsReader.initGeneFeatureReferencesFrom(reader, parameters);
-            return reader;
+            return new PipeReader<VDJCAlignments>(VDJCAlignments.class, stream) {
+                @Override
+                protected void init() {
+                    IOUtil.stdVDJCPrimitivIStateInit(input, parameters,
+                            usedAlleles.get(0).getParentLibrary().getParent());
+                }
+            };
         }
     }
 

@@ -22,7 +22,7 @@ public class DropletCloneGraphTest {
     @Test
     @Ignore
     public void test1() throws Exception {
-        try (ClnAReader reader = new ClnAReader(Paths.get("./tmp/b_analysis.clna"), VDJCLibraryRegistry.getDefault())) {
+        try (ClnAReader reader = new ClnAReader(Paths.get("./tmp/b_analysis.clna"), VDJCLibraryRegistry.getDefault(), 3)) {
             CloneSet clns = reader.readCloneSet();
             System.out.println("# clones " + clns.size());
             DropletCloneGraph.CloneTagTupleList links = DropletCloneGraph.calculateTuples(clns, 0);
@@ -37,7 +37,7 @@ public class DropletCloneGraphTest {
     @Test
     @Ignore
     public void test2() throws Exception {
-        try (ClnAReader reader = new ClnAReader(Paths.get("./tmp/t_analysis.clna"), VDJCLibraryRegistry.getDefault())) {
+        try (ClnAReader reader = new ClnAReader(Paths.get("./tmp/t_analysis.clna"), VDJCLibraryRegistry.getDefault(), 3)) {
             CloneSet clns = reader.readCloneSet();
             System.out.println("# clones " + clns.size());
             DropletCloneGraph.CloneTagTupleList links = DropletCloneGraph.calculateTuples(clns, 0);

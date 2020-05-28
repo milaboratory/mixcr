@@ -33,8 +33,8 @@ import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivIState;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.PrimitivOState;
-import com.milaboratory.util.ByteArrayDataOutput;
-import com.milaboratory.util.ByteBufferDataInputAdapter;
+import com.milaboratory.util.io.ByteArrayDataOutput;
+import com.milaboratory.util.io.ByteBufferDataInputAdapter;
 import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4FastDecompressor;
 import net.jpountz.xxhash.XXHash32;
@@ -68,8 +68,6 @@ public final class AlignmentsIO {
     public static final int HASH_SEED = 0xD5D20F71;
     public static final byte LAST_BYTE = 0; // kB
     public static final int AVERAGE_ALIGNMENT_SIZE = 1024; // kB
-
-    public static final int DEFAULT_ALIGNMENTS_IN_BLOCK = 1024; // 1024 alignments * 805-1024 bytes per alignment ~  824 kB - 1MB per block
 
     private AlignmentsIO() {
     }

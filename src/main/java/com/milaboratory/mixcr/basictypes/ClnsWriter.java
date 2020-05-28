@@ -47,6 +47,7 @@ import java.nio.charset.StandardCharsets;
 /**
  *
  */
+// TODO implement with blocks
 public class ClnsWriter implements PipelineConfigurationWriter,
         CanReportProgressAndStage,
         Closeable {
@@ -94,9 +95,6 @@ public class ClnsWriter implements PipelineConfigurationWriter,
     }
 
     public void write() {
-        // Registering custom serializer
-        output.getSerializersManager().registerCustomSerializer(GeneFeature.class, new GeneFeatureSerializer(true));
-
         // Writing magic bytes
         output.write(MAGIC_BYTES);
 
@@ -110,8 +108,9 @@ public class ClnsWriter implements PipelineConfigurationWriter,
         output.writeObject(cloneSet.alignmentParameters);
         output.writeObject(cloneSet.assemblerParameters);
 
-        IO.writeGT2GFMap(output, cloneSet.alignedFeatures);
-        IOUtil.writeAndRegisterGeneReferences(output, cloneSet.getUsedGenes(), new ClnsReader.GT2GFAdapter(cloneSet.alignedFeatures));
+        // IO.writeGT2GFMap(output, cloneSet.alignedFeatures);
+        // IOUtil.writeAndRegisterGeneReferences(output, cloneSet.getUsedGenes(), new ClnsReader.GT2GFAdapter(cloneSet.alignedFeatures));
+        IOUtil.stdVDJCPrimitivOStateInit(output, cloneSet.getUsedGenes(), cloneSet);
 
         output.writeInt(cloneSet.getClones().size());
 

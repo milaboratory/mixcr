@@ -34,7 +34,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import io.repseq.core.VDJCLibraryRegistry;
 
-import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 
 public interface AlignmentsProvider {
@@ -48,16 +48,20 @@ public interface AlignmentsProvider {
     long getTotalNumberOfReads();
 
     final class Util {
-        static AlignmentsProvider createProvider(final byte[] rawData, final VDJCLibraryRegistry geneResolver) {
-            return new VDJCAlignmentsReaderWrapper(() ->
-                    new VDJCAlignmentsReader(new ByteArrayInputStream(rawData), geneResolver, rawData.length, true)
-            );
-        }
-
-        public static AlignmentsProvider createProvider(final String file, final VDJCLibraryRegistry geneResolver) {
+        public static AlignmentsProvider createProvider(File file, final VDJCLibraryRegistry geneResolver) {
             return new VDJCAlignmentsReaderWrapper(() -> {
                 try {
-                    return new VDJCAlignmentsReader(file, geneResolver, true);
+                    return new VDJCAlignmentsReader(file, geneResolver);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        }
+
+        public static AlignmentsProvider createProvider(String file, final VDJCLibraryRegistry geneResolver) {
+            return new VDJCAlignmentsReaderWrapper(() -> {
+                try {
+                    return new VDJCAlignmentsReader(file, geneResolver);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
