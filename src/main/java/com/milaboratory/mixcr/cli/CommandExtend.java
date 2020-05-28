@@ -155,8 +155,8 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
         CloneSet newCloneSet = new CloneSet(clones, cloneSet.getUsedGenes(), cloneSet.getAlignmentParameters(),
                 cloneSet.getAssemblerParameters());
 
-        try (ClnsWriter writer = new ClnsWriter(getFullPipelineConfiguration(), newCloneSet, out)) {
-            writer.write();
+        try (ClnsWriter writer = new ClnsWriter(out)) {
+            writer.writeCloneSet(getFullPipelineConfiguration(), newCloneSet);
         }
     }
 

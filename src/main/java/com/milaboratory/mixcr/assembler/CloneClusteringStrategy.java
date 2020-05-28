@@ -79,7 +79,7 @@ public class CloneClusteringStrategy implements ClusteringStrategy<CloneAccumula
     }
 
     @Override
-    public TreeSearchParameters getSearchParameters() {
+    public TreeSearchParameters getSearchParameters(Cluster<CloneAccumulator> cluster) {
         return parameters.getSearchParameters();
     }
 

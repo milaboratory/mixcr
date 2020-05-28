@@ -55,7 +55,7 @@ import java.util.function.Function;
 /**
  * Reader of CLNA file format.
  */
-public final class ClnAReader extends PipelineConfigurationReaderMiXCR implements AutoCloseable {
+public final class ClnAReader extends PipelineConfigurationReaderMiXCR implements CloneReader, AutoCloseable {
     final PrimitivIHybrid input;
 
     // Index data
@@ -114,7 +114,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
             byte[] endMagic = new byte[IOUtil.END_MAGIC_LENGTH];
             pi.readFully(endMagic);
             if (!Arrays.equals(IOUtil.getEndMagicBytes(), endMagic))
-                throw new RuntimeException("File is corrupted.");
+                throw new RuntimeException("Corrupted file.");
         }
 
         // TODO move index deserialization to lazy initialization, there are use-cases which need only meta-information from the reader
@@ -231,6 +231,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
     /**
      * Constructs output port to read clones one by one as a stream
      */
+    @Override
     public OutputPortCloseable<Clone> readClones() {
         return input.beginPrimitivIBlocks(Clone.class);
     }
@@ -342,8 +343,10 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
         input.close();
     }
 
-    private static Function<PrimitivIOBlockHeader, PrimitivIHeaderAction<VDJCAlignments>> HEADER_ACTION_STOP_AT_ALIGNMENT_BLOCK_END =
-            h -> h.equals(ClnAWriter.ALIGNMENT_BLOCK_SEPARATOR) ? PrimitivIHeaderActions.stopReading() : PrimitivIHeaderActions.skip();
+    private static final Function<PrimitivIOBlockHeader, PrimitivIHeaderAction<VDJCAlignments>> HEADER_ACTION_STOP_AT_ALIGNMENT_BLOCK_END =
+            h -> h.equals(ClnAWriter.ALIGNMENT_BLOCK_SEPARATOR)
+                    ? PrimitivIHeaderActions.stopReading()
+                    : PrimitivIHeaderActions.skip();
 
     // private static Function<PrimitivIOBlockHeader, PrimitivIHeaderAction<VDJCAlignments>> HEADER_ACTION_STOP_AT_ALIGNMENTS_END =
     //         h -> h.equals(ClnAWriter.ALIGNMENTS_END) ? PrimitivIHeaderActions.stopReading() : PrimitivIHeaderActions.skip();

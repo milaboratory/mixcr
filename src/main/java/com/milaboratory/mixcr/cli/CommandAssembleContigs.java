@@ -257,9 +257,8 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
             clones[i] = clones[i].setId(i);
         CloneSet cloneSet = new CloneSet(Arrays.asList(clones), genes, alignerParameters, cloneAssemblerParameters);
 
-        try (ClnsWriter writer = new ClnsWriter(getFullPipelineConfiguration(), cloneSet, out)) {
-            SmartProgressReporter.startProgressReport(writer);
-            writer.write();
+        try (ClnsWriter writer = new ClnsWriter(out)) {
+            writer.writeCloneSet(getFullPipelineConfiguration(), cloneSet);
         }
 
         ReportWrapper reportWrapper = new ReportWrapper(ASSEMBLE_CONTIGS_COMMAND_NAME, report);

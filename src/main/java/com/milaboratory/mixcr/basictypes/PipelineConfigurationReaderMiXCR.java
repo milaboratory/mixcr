@@ -34,6 +34,8 @@ import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.cli.PipelineConfigurationReader;
 import io.repseq.core.VDJCLibraryRegistry;
 
+import java.nio.file.Paths;
+
 import static com.milaboratory.mixcr.basictypes.IOUtil.*;
 
 /**
@@ -92,7 +94,7 @@ public class PipelineConfigurationReaderMiXCR implements PipelineConfigurationRe
                         return reader.getPipelineConfiguration();
                     }
                 case MAGIC_CLNS:
-                    try (ClnsReader reader = new ClnsReader(fileName, VDJCLibraryRegistry.getDefault())) {
+                    try (ClnsReader reader = new ClnsReader(Paths.get(fileName), VDJCLibraryRegistry.getDefault())) {
                         return reader.getPipelineConfiguration();
                     }
                 case MAGIC_CLNA:

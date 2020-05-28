@@ -144,9 +144,8 @@ public class CommandGroupCells extends ACommandWithSmartOverwriteWithSingleInput
     private void runClns() throws Exception {
         CloneSet cloneSet = CloneSetIO.read(in);
         CloneSet resultCloneSet = doClustering(cloneSet, null);
-        try (ClnsWriter writer = new ClnsWriter(getFullPipelineConfiguration(), resultCloneSet, out)) {
-            SmartProgressReporter.startProgressReport(writer);
-            writer.write();
+        try (ClnsWriter writer = new ClnsWriter(out)) {
+            writer.writeCloneSet(getFullPipelineConfiguration(), resultCloneSet);
         }
     }
 

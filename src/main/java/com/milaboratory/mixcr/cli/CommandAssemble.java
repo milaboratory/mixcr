@@ -323,9 +323,8 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
                     writer.writeAlignmentsAndIndex();
                 }
             } else
-                try (ClnsWriter writer = new ClnsWriter(pipelineConfiguration, cloneSet, out)) {
-                    SmartProgressReporter.startProgressReport(writer);
-                    writer.write();
+                try (ClnsWriter writer = new ClnsWriter(out)) {
+                    writer.writeCloneSet(getFullPipelineConfiguration(), cloneSet);
                 }
 
             // Writing report

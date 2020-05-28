@@ -49,8 +49,6 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -129,12 +127,13 @@ public class CloneAssemblerRunnerTest {
 
         CloneSet cloneSet = assemblerRunner.getCloneSet(null);
 
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        try (ClnsWriter writer = new ClnsWriter(null, cloneSet, bos)) {
-            writer.write();
+        File tmpClnsFile = TempFileManager.getTempFile();
+
+        try (ClnsWriter writer = new ClnsWriter(tmpClnsFile)) {
+            writer.writeCloneSet(null, cloneSet);
         }
 
-        CloneSet cloneSetDeserialized = CloneSetIO.readClns(new ByteArrayInputStream(bos.toByteArray()));
+        CloneSet cloneSetDeserialized = CloneSetIO.read(tmpClnsFile);
 
         assertCSEquals(cloneSet, cloneSetDeserialized);
 
