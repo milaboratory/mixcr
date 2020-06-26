@@ -286,6 +286,10 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
     @Option(names = {"-r", "--report"}, description = "Report file path")
     public String report = null;
 
+    @Option(names = {"-j", "--json-report"}, description = "Output json reports for each of the analysis steps. " +
+            "Individual file will be created for each type of analysis step, value specified for this option will be used as a prefix.")
+    public String jsonReport = null;
+
     @Option(names = {"-b", "--library"}, description = "V/D/J/C gene library")
     public String library = "default";
 
@@ -357,6 +361,18 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         }
     }
 
+    void addReportOptions(String step, List<String> options) {
+        // add report file
+        options.add("--report");
+        options.add(getReport());
+
+        // add json report file
+        if (jsonReport != null) {
+            options.add("--json-report");
+            options.add(jsonReport + "." + step + ".jsonl");
+        }
+    }
+
     CommandAlign mkAlign() {
         // align parameters
         List<String> alignParameters = new ArrayList<>(initialAlignParameters);
@@ -374,9 +390,8 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
 
         inheritThreads(alignParameters, this.alignParameters);
 
-        // add report file
-        alignParameters.add("--report");
-        alignParameters.add(getReport());
+        // adding report options
+        addReportOptions("align", alignParameters);
 
         if (!forceUseRnaSeqOps() && !chains.intersects(Chains.TCR))
             alignParameters.add("-p kAligner2");
@@ -428,9 +443,8 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
     public final CommandAssemblePartialAlignments mkAssemblePartial(String input, String output) {
         List<String> assemblePartialParameters = new ArrayList<>();
 
-        // add report file
-        assemblePartialParameters.add("--report");
-        assemblePartialParameters.add(getReport());
+        // adding report options
+        addReportOptions("assemblePartial", assemblePartialParameters);
 
         // add all override parameters
         assemblePartialParameters.addAll(this.assemblePartialParameters);
@@ -457,9 +471,8 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
     public final CommandExtend mkExtend(String input, String output) {
         List<String> extendParameters = new ArrayList<>();
 
-        // add report file
-        extendParameters.add("--report");
-        extendParameters.add(getReport());
+        // adding report options
+        addReportOptions("extend", extendParameters);
 
         inheritThreads(extendParameters, this.extendAlignmentsParameters);
 
@@ -493,9 +506,8 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
     CommandAssemble mkAssemble(String input, String output) {
         List<String> assembleParameters = new ArrayList<>();
 
-        // add report file
-        assembleParameters.add("--report");
-        assembleParameters.add(getReport());
+        // adding report options
+        addReportOptions("assemble", assembleParameters);
 
         if (contigAssembly)
             assembleParameters.add("--write-alignments");
@@ -533,9 +545,8 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
     public final CommandAssembleContigs mkAssembleContigs(String input, String output) {
         List<String> assembleContigParameters = new ArrayList<>();
 
-        // add report file
-        assembleContigParameters.add("--report");
-        assembleContigParameters.add(getReport());
+        // adding report options
+        addReportOptions("assembleContigs", assembleContigParameters);
 
         inheritThreads(assembleContigParameters, this.assembleContigParameters);
 
