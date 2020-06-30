@@ -17,7 +17,7 @@ jobs:
           name: Installing moreutils
           command: |
             sudo apt-get update
-            sudo apt-get install -y moreutils
+            sudo apt-get install -y moreutils parallel
 
       - run:
           name: Downloading git submodules
@@ -73,5 +73,13 @@ jobs:
           key: v1-dependencies-{{ checksum "pom.xml" }}-{{ checksum "milib/pom.xml" }}-{{ checksum "repseqio/pom.xml" }}
 
       - run:
-          name: Running MiXCR Integration and Regression tests
+          name: Prepare Integration Test Data
+          command: ./prepare-test-data.sh
+
+      - run:
+          name: Running Maven Integration tests
+          command: mvn test -DintegrationTests
+
+      - run:
+          name: Running Script Integration and Regression tests
           command: ./itests.sh test | ts

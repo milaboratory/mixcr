@@ -30,9 +30,11 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.primitivio.annotations.Serializable;
+import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.sorting.*;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
@@ -77,6 +79,15 @@ public class VDJCSProperties {
         @Override
         public int hashCode() {
             return Arrays.hashCode(properties);
+        }
+
+        @Override
+        public String toString() {
+            try {
+                return GlobalObjectMappers.PRETTY.writeValueAsString(this);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 

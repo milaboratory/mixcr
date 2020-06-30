@@ -44,17 +44,12 @@ FreeBSD)
   ;;
 esac
 
-mkdir -p $dir/src/test/resources/sequences/big/
-cd $dir/src/test/resources/sequences/big/
+cd "$dir/src/test/resources/sequences/big/"
 
-if [[ ! -f CD4M1_test_R1.fastq.gz ]]; then
-  curl -O https://s3.amazonaws.com/files.milaboratory.com/test-data/CD4M1_test_R1.fastq.gz
-fi
-
-if [[ ! -f CD4M1_test_R2.fastq.gz ]]; then
-  curl -O https://s3.amazonaws.com/files.milaboratory.com/test-data/CD4M1_test_R2.fastq.gz
-fi
-
-if [[ ! -d yf_sample_data ]]; then
-  curl -sS https://s3.amazonaws.com/files.milaboratory.com/test-data/yf_sample_data.tar | tar -xv
-fi
+cd yf_sample_data
+parallel -j5 "${dir}/mixcr" -Xmx500m analyze amplicon \
+  -s hs --starting-material rna --contig-assembly --5-end v-primers --3-end j-primers --adapters adapters-present \
+  --assemble '-OseparateByC=true' --assemble '-OseparateByV=true' --assemble '-OseparateByJ=true' \
+  --assemble '--sort-by-sequence' \
+  --impute-germline-on-export --json-report "{}" \
+  "{}_L001_R1.fastq.gz" "{}_L001_R2.fastq.gz" "{}" ::: Ig-2_S2 Ig-3_S3 Ig-4_S4 Ig-5_S5 Ig1_S1 Ig2_S2 Ig3_S3 Ig4_S4 Ig5_S5
