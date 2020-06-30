@@ -78,14 +78,18 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
         writeHeader(configuration,
                 cloneSet.getAlignmentParameters(),
                 cloneSet.getAssemblerParameters(),
-                cloneSet.getUsedGenes(), cloneSet);
+                cloneSet.getOrdering(),
+                cloneSet.getUsedGenes(),
+                cloneSet);
     }
 
     public void writeHeader(
             PipelineConfiguration configuration,
             VDJCAlignerParameters alignmentParameters,
             CloneAssemblerParameters assemblerParameters,
-            List<VDJCGene> genes, HasFeatureToAlign featureToAlign
+            VDJCSProperties.CloneOrdering ordering,
+            List<VDJCGene> genes,
+            HasFeatureToAlign featureToAlign
     ) {
         try (PrimitivO o = output.beginPrimitivO(true)) {
             // Writing magic bytes
@@ -100,6 +104,7 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
             o.writeObject(configuration);
             o.writeObject(alignmentParameters);
             o.writeObject(assemblerParameters);
+            o.writeObject(ordering);
 
             IOUtil.stdVDJCPrimitivOStateInit(o, genes, featureToAlign);
         }
@@ -112,7 +117,7 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
         return output.beginPrimitivOBlocks(3, 512);
     }
 
-    public void writeCloneSet(PipelineConfiguration configuration, CloneSet cloneSet){
+    public void writeCloneSet(PipelineConfiguration configuration, CloneSet cloneSet) {
         writeHeaderFromCloneSet(configuration, cloneSet);
         InputPort<Clone> cloneIP = cloneWriter();
         for (Clone clone : cloneSet)

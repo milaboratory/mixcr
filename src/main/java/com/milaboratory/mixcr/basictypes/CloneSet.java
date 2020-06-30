@@ -46,15 +46,19 @@ public final class CloneSet implements Iterable<Clone>, HasFeatureToAlign {
     String versionInfo;
     final CloneAssemblerParameters assemblerParameters;
     final VDJCAlignerParameters alignmentParameters;
-    // final EnumMap<GeneType, GeneFeature> alignedFeatures;
+    final VDJCSProperties.CloneOrdering ordering;
     final List<VDJCGene> usedGenes;
     final List<Clone> clones;
     final double totalCount;
     final TagCounter totalTagCounts;
 
     public CloneSet(List<Clone> clones, Collection<VDJCGene> usedGenes,
-                    VDJCAlignerParameters alignmentParameters, CloneAssemblerParameters assemblerParameters) {
-        this.clones = Collections.unmodifiableList(new ArrayList<>(clones));
+                    VDJCAlignerParameters alignmentParameters,
+                    CloneAssemblerParameters assemblerParameters,
+                    VDJCSProperties.CloneOrdering ordering) {
+        ArrayList<Clone> list = new ArrayList<>(clones);
+        list.sort(ordering.comparator());
+        this.clones = Collections.unmodifiableList(list);
         long totalCount = 0;
         TagCounterBuilder tagCounterBuilder = new TagCounterBuilder();
         for (Clone clone : clones) {
@@ -65,6 +69,7 @@ public final class CloneSet implements Iterable<Clone>, HasFeatureToAlign {
         this.totalTagCounts = tagCounterBuilder.createAndDestroy();
         this.alignmentParameters = alignmentParameters;
         this.assemblerParameters = assemblerParameters;
+        this.ordering = ordering;
         this.usedGenes = Collections.unmodifiableList(new ArrayList<>(usedGenes));
         this.totalCount = totalCount;
     }
@@ -92,6 +97,7 @@ public final class CloneSet implements Iterable<Clone>, HasFeatureToAlign {
         this.totalTagCounts = tagCounterBuilder.createAndDestroy();
         this.assemblerParameters = null;
         this.alignmentParameters = null;
+        this.ordering = new VDJCSProperties.CloneOrdering();
         this.usedGenes = Collections.unmodifiableList(new ArrayList<>(genes.values()));
         this.totalCount = totalCount;
     }
@@ -118,6 +124,10 @@ public final class CloneSet implements Iterable<Clone>, HasFeatureToAlign {
 
     public VDJCAlignerParameters getAlignmentParameters() {
         return alignmentParameters;
+    }
+
+    public VDJCSProperties.CloneOrdering getOrdering() {
+        return ordering;
     }
 
     public List<VDJCGene> getUsedGenes() {
@@ -147,7 +157,18 @@ public final class CloneSet implements Iterable<Clone>, HasFeatureToAlign {
     }
 
     /**
-     * WARNING: current object will be destroyed
+     * WARNING: current object (in) will be destroyed
+     */
+    public static CloneSet reorder(CloneSet in, VDJCSProperties.CloneOrdering newOrdering) {
+        ArrayList<Clone> newClones = new ArrayList<>(in.clones);
+        newClones.sort(newOrdering.comparator());
+        for (Clone nc : newClones)
+            nc.parent = null;
+        return new CloneSet(newClones, in.usedGenes, in.alignmentParameters, in.assemblerParameters, newOrdering);
+    }
+
+    /**
+     * WARNING: current object (in) will be destroyed
      */
     public static CloneSet transform(CloneSet in, Filter<Clone> filter) {
         List<Clone> newClones = new ArrayList<>(in.size());
@@ -158,6 +179,6 @@ public final class CloneSet implements Iterable<Clone>, HasFeatureToAlign {
                 newClones.add(c);
             }
         }
-        return new CloneSet(newClones, in.usedGenes, in.alignmentParameters, in.assemblerParameters);
+        return new CloneSet(newClones, in.usedGenes, in.alignmentParameters, in.assemblerParameters, in.ordering);
     }
 }

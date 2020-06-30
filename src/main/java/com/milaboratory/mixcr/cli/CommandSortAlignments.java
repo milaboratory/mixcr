@@ -45,7 +45,7 @@ import com.milaboratory.primitivio.PipeReader;
 import com.milaboratory.primitivio.PipeWriter;
 import com.milaboratory.util.ObjectSerializer;
 import com.milaboratory.util.SmartProgressReporter;
-import com.milaboratory.util.Sorter;
+import com.milaboratory.util.sorting.Sorter;
 import com.milaboratory.util.TempFileManager;
 import io.repseq.core.VDJCGene;
 import picocli.CommandLine.Command;

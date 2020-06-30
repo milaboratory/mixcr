@@ -29,35 +29,40 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
-import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.CountingOutputPort;
 import com.milaboratory.cli.AppVersionInfo;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.cli.PipelineConfigurationWriter;
+import com.milaboratory.mixcr.util.MiXCRDebug;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
-import com.milaboratory.primitivio.PipeDataInputReader;
-import com.milaboratory.primitivio.PrimitivI;
+import com.milaboratory.primitivio.PrimitivIOStateBuilder;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.blocks.PrimitivIOBlockHeader;
+import com.milaboratory.primitivio.blocks.PrimitivIOBlocksUtil;
 import com.milaboratory.primitivio.blocks.PrimitivOBlocks;
 import com.milaboratory.primitivio.blocks.PrimitivOHybrid;
 import com.milaboratory.util.CanReportProgressAndStage;
-import com.milaboratory.util.ObjectSerializer;
-import com.milaboratory.util.Sorter;
+import com.milaboratory.util.HashFunctions;
+import com.milaboratory.util.TempFileManager;
 import com.milaboratory.util.io.HasPosition;
+import com.milaboratory.util.sorting.HashSorter;
+import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.list.array.TLongArrayList;
-import io.repseq.core.GeneType;
+import gnu.trove.set.hash.TIntHashSet;
 import io.repseq.core.VDJCGene;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ForkJoinPool;
+import java.util.function.ToIntFunction;
 
 /**
  * Writer for CLNA file format.
@@ -76,43 +81,51 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
      * Separates blocks of alignments assigned to the same clonotype
      */
     static final PrimitivIOBlockHeader ALIGNMENT_BLOCK_SEPARATOR = PrimitivIOBlockHeader.specialHeader().setSpecialByte(0, (byte) 1);
-    // /**
-    //  * Added after the last alignments block
-    //  */
-    // static final PrimitivIOBlockHeader ALIGNMENTS_END = PrimitivIOBlockHeader.specialHeader().setSpecialByte(0, (byte) 2);
-    // /**
-    //  * Added after the clones block
-    //  */
-    // static final PrimitivIOBlockHeader CLONES_END = PrimitivIOBlockHeader.specialHeader().setSpecialByte(0, (byte) 3);
 
     /**
      * Will be used for alignments pre-sorting
      */
-    private final File tempFile;
-    /**
-     * Used to read current position in output file
-     */
-    // private final CountingOutputStream outputStream;
-    // private final PrimitivO output;
+    private final Path tempFolder;
+
+    private final boolean highCompression;
+
     private final PrimitivOHybrid output;
     private final PipelineConfiguration configuration;
 
     /**
      * Counter OP used to report progress during stage 2
      */
-    private volatile CountingOutputPort<VDJCAlignments> toSorter;
+    private volatile CountingOutputPort<VDJCAlignments> toCollator;
     private volatile int numberOfClones = -1, numberOfClonesWritten = 0;
-    private volatile OutputPortCloseable<VDJCAlignments> sortedAlignments = null;
+    /**
+     * Clone ids written to the clones section
+     */
+    private volatile TIntHashSet cloneIds = null;
+    private volatile HashSorter<VDJCAlignments> collator;
+    private volatile OutputPortCloseable<VDJCAlignments> collatedAlignments = null;
     private volatile long numberOfAlignments = -1, numberOfAlignmentsWritten = 0;
-    private volatile boolean clonesBlockFinished = false, finished = false;
+    private volatile boolean finished = false;
 
     public ClnAWriter(PipelineConfiguration configuration, String fileName) throws IOException {
-        this(configuration, new File(fileName));
+        this(configuration, fileName, false);
+    }
+
+    public ClnAWriter(PipelineConfiguration configuration, String fileName, boolean highCompression) throws IOException {
+        this(configuration, new File(fileName), highCompression);
     }
 
     public ClnAWriter(PipelineConfiguration configuration, File file) throws IOException {
+        this(configuration, file, false);
+    }
+
+    public ClnAWriter(PipelineConfiguration configuration, File file, boolean highCompression) throws IOException {
         this.configuration = configuration;
-        this.tempFile = new File(file.getAbsolutePath() + ".presorted");
+        this.highCompression = highCompression;
+        File tempFolder = new File(file.getAbsolutePath() + ".presorted");
+        TempFileManager.register(tempFolder);
+        this.tempFolder = tempFolder.toPath();
+        Files.createDirectory(this.tempFolder);
+
         this.output = new PrimitivOHybrid(ForkJoinPool.commonPool(), file.toPath());
         try (PrimitivO o = this.output.beginPrimitivO()) {
             o.write(MAGIC.getBytes(StandardCharsets.US_ASCII));
@@ -129,7 +142,7 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
      */
     public synchronized void writeClones(CloneSet cloneSet) {
         // Checking state
-        if (clonesBlockFinished)
+        if (cloneIds != null)
             throw new IllegalArgumentException("Clone block was already written.");
 
         // Saving VDJC gene list
@@ -154,8 +167,9 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
             o.writeObject(cloneSet.alignmentParameters);
             featureToAlignProvider = cloneSet.alignmentParameters;
 
-            // Writing assembler parameters
+            // Writing assembler parameters and cloneset ordering
             o.writeObject(cloneSet.assemblerParameters);
+            o.writeObject(cloneSet.ordering);
 
             // During deserialization, the same procedure (in the same order) will be applied to
             // the PrimitivI object, so that correct singleton objects (GeneFeature objects and sequences) will be
@@ -173,7 +187,8 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
             numberOfClones = cloneSet.size();
         }
 
-        try (PrimitivOBlocks<Object>.Writer writer = this.output.beginPrimitivOBlocks(4, 1024)) {
+        try (PrimitivOBlocks<Object>.Writer writer = this.output.beginPrimitivOBlocks(4, 1024,
+                PrimitivIOBlocksUtil.highLZ4Compressor())) {
             // Writing clones
             for (Clone clone : cloneSet) {
                 writer.write(clone);
@@ -181,22 +196,23 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
                 ++numberOfClonesWritten;
             }
             writer.flush();
-            // writer.writeHeader(CLONES_END);
         } // will synchronize here (on close method invocation)
 
-        // Setting flag telling other methods that clones block was written successfully
-        clonesBlockFinished = true;
+        // Saving ids; also tells other methods that clones block was written successful
+        TIntHashSet ids = new TIntHashSet(cloneSet.getClones().stream().mapToInt(c -> c.id).toArray());
+        ids.add(-1);
+        this.cloneIds = ids;
     }
 
     /**
      * Step 2
      */
-    public synchronized void sortAlignments(OutputPort<VDJCAlignments> alignments,
-                                            long numberOfAlignments) throws IOException {
+    public synchronized void collateAlignments(OutputPort<VDJCAlignments> alignments,
+                                               long numberOfAlignments) throws IOException {
         // Checking state
-        if (!clonesBlockFinished)
+        if (cloneIds == null)
             throw new IllegalStateException("Write clones before writing alignments.");
-        if (sortedAlignments != null)
+        if (collatedAlignments != null)
             throw new IllegalStateException("Alignments are already sorted.");
 
         // Saving number of alignments
@@ -208,53 +224,26 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
 
         // Sorting alignments by cloneId and then by mapping type (core alignments will be written before all others)
         // and saving sorting output port
-        this.toSorter = new CountingOutputPort<>(alignments);
-        this.sortedAlignments = Sorter.sort(
-                toSorter,
-                Comparator.comparingInt((VDJCAlignments o) -> o.cloneIndex).thenComparingInt(o -> o.mappingType),
-                chunkSize,
-                new VDJCAlignmentsSerializer(usedGenes, featureToAlignProvider),
-                tempFile);
-    }
+        this.toCollator = new CountingOutputPort<>(alignments);
 
-    public static final class VDJCAlignmentsSerializer implements ObjectSerializer<VDJCAlignments> {
-        private final List<VDJCGene> genes;
-        private final HasFeatureToAlign featureToAlign;
+        // Optimize serialization of genes and corresponding subject sequences from alignments
+        PrimitivIOStateBuilder stateBuilder = new PrimitivIOStateBuilder();
+        IOUtil.registerGeneReferences(stateBuilder, usedGenes, featureToAlignProvider);
 
-        public VDJCAlignmentsSerializer(List<VDJCGene> genes, HasFeatureToAlign featureToAlign) {
-            Objects.requireNonNull(genes);
-            Objects.requireNonNull(featureToAlign);
-            this.genes = genes;
-            this.featureToAlign = featureToAlign;
-        }
+        // HDD-offloading collator of alignments
+        // Collate solely by cloneId (no sorting by mapping type, etc.);
+        // less fields to sort by -> faster the procedure
+        collator = new HashSorter<>(
+                VDJCAlignments.class,
+                new CloneIdHash(), CloneIdComparator,
+                5, tempFolder, 4, 6,
+                stateBuilder.getOState(), stateBuilder.getIState(),
+                1 << 28 /* 256 Mb */, 512);
 
-        @Override
-        public void write(Collection<VDJCAlignments> data, OutputStream stream) {
-            PrimitivO primitivO = new PrimitivO(stream);
-            // Initializing PrimitivO object (see big comment block in writeClones(...) method
-            IOUtil.registerGeneReferencesO(primitivO, genes, featureToAlign);
-            for (VDJCAlignments alignments : data) {
-                // Checking that alignments has the same alignedFeature as was in cloneSet
-                assert Arrays.stream(GeneType.values())
-                        .allMatch(gt -> Optional
-                                .ofNullable(alignments.getBestHit(gt))
-                                .map(VDJCHit::getAlignedFeature)
-                                .map(f -> f.equals(featureToAlign.getFeatureToAlign(gt)))
-                                .orElse(true));
-                // Writing alignment
-                primitivO.writeObject(alignments);
-            }
-            // Writing null in the end of the stream to detect end of block during deserialization
-            primitivO.writeObject(null);
-        }
-
-        @Override
-        public OutputPort<VDJCAlignments> read(InputStream stream) {
-            PrimitivI primitivI = new PrimitivI(stream);
-            IOUtil.registerGeneReferencesI(primitivI, genes, featureToAlign);
-            // Will end on null object, that was added to the stream
-            return new PipeDataInputReader<>(VDJCAlignments.class, primitivI);
-        }
+        // Here we wait for the first layer of hash collation to finish "write" stage
+        // (on average 30% time of full collation process)
+        // following steps are executed as needed during port reading
+        this.collatedAlignments = collator.port(toCollator);
     }
 
     /**
@@ -262,7 +251,7 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
      */
     public synchronized void writeAlignmentsAndIndex() {
         // Checking state
-        if (sortedAlignments == null)
+        if (collatedAlignments == null)
             throw new IllegalStateException("Call sortAlignments before this method.");
         if (finished)
             throw new IllegalStateException("Writer already closed.");
@@ -270,79 +259,96 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
         // Indices that will be written below all alignments
         final TLongArrayList aBlockOffset = new TLongArrayList();
         final TLongArrayList aBlockCount = new TLongArrayList();
+        final TIntArrayList cloneIdsIndex = new TIntArrayList();
         long previousAlsCount = 0;
-        int currentCloneIndex = -1;
+        int currentCloneIndex = Integer.MIN_VALUE;
         long indexBeginOffset;
 
         try (PrimitivOBlocks<VDJCAlignments>.Writer o = output.beginPrimitivOBlocks(
                 Math.min(4, Runtime.getRuntime().availableProcessors()), // TODO parametrize
-                VDJCAlignmentsWriter.DEFAULT_ALIGNMENTS_IN_BLOCK)) {
+                VDJCAlignmentsWriter.DEFAULT_ALIGNMENTS_IN_BLOCK,
+                highCompression
+                        ? PrimitivIOBlocksUtil.highLZ4Compressor()
+                        : PrimitivIOBlocksUtil.fastLZ4Compressor())) {
 
-            // Position of alignments with cloneIndex = -1 (not aligned alignments)
-            aBlockOffset.add(o.getPosition());
-
-            // List<VDJCAlignments> block = new ArrayList<>();
             // Writing alignments and writing indices
-            for (VDJCAlignments alignments : CUtils.it(sortedAlignments)) {
-                // End of clone
-                if (currentCloneIndex != alignments.cloneIndex) {
+            VDJCAlignments alignments;
+            while (true) {
+                alignments = collatedAlignments.take();
 
-                    // Async flush
-                    o.flush();
-                    o.writeHeader(ALIGNMENT_BLOCK_SEPARATOR);
+                // End of clone group or first alignment
+                if (alignments == null || currentCloneIndex != alignments.cloneIndex) {
+                    if (currentCloneIndex != Integer.MIN_VALUE) { // Not first alignment
+                        // Async flush
+                        o.flush();
+                        o.writeHeader(ALIGNMENT_BLOCK_SEPARATOR);
+                    }
 
                     // No synchronization here
 
-                    ++currentCloneIndex;
-                    if (currentCloneIndex != alignments.cloneIndex)
-                        throw new IllegalArgumentException("No alignments for clone number " + currentCloneIndex);
-                    if (alignments.cloneIndex >= numberOfClones)
-                        throw new IllegalArgumentException("Out of range clone Index in alignment: " + currentCloneIndex);
+                    if (alignments != null && !cloneIds.remove(alignments.cloneIndex))
+                        throw new IllegalArgumentException("Alignment for a wrong clonotype " +
+                                alignments.cloneIndex);
 
                     // Write stream position as soon as all the blocks are flushed
                     // This will be the start position for the next block
                     o.run(c -> {
-                        // In theory synchronization for aBlockOffset access here is not required as all the IO
+                        // In theory synchronization for aBlockOffset access here is not required as all IO
                         // operations as well as this code are executed strictly sequentially
 
-                        //synchronized (aBlockOffset){
+                        // synchronized (aBlockOffset){
                         aBlockOffset.add(((HasPosition) c).getPosition());
-                        //}
+                        // }
                     });
 
                     aBlockCount.add(numberOfAlignmentsWritten - previousAlsCount);
                     previousAlsCount = numberOfAlignmentsWritten;
+
+                    if (alignments == null)
+                        break;
+
+                    // Saving clone groups sequence
+                    cloneIdsIndex.add(alignments.cloneIndex);
+                    currentCloneIndex = alignments.cloneIndex;
                 }
 
                 o.write(alignments);
                 ++numberOfAlignmentsWritten;
             }
 
-            // Writing last block, and waiting for all the data to be flushed
-            o.flush();
-            o.writeHeader(ALIGNMENT_BLOCK_SEPARATOR);
-            // o.writeHeader(ALIGNMENTS_END);
+            if (!(cloneIds.isEmpty() ||
+                    (cloneIds.size() == 1 && cloneIds.iterator().next() == -1)))
+                throw new IllegalArgumentException("Some clones have no alignments.");
+
+            // Waiting for all alignments to be flushed to the file to read file position
             o.sync();
 
-            // Writing position of last alignments block end
-            aBlockOffset.add(o.getPosition());
+            assert aBlockOffset.size() == aBlockCount.size()
+                    && aBlockCount.size() == cloneIdsIndex.size() + 1
+                    // there may be no alignments with cloneId == -1
+                    && (numberOfClones + 1 == cloneIdsIndex.size() || numberOfClones == cloneIdsIndex.size());
+
             // o.close() will additionally write EOF header
             indexBeginOffset = o.getPosition() + PrimitivIOBlockHeader.HEADER_SIZE;
+
+            // Print IO stat
+            if (MiXCRDebug.DEBUG) {
+                System.out.println("==== IO ClnAWriter: Collator =====");
+                collator.printStat();
+                System.out.println("==== IO ClnAWriter =====");
+                System.out.println(o.getParent().getStats());
+            }
         }
 
-        // Closing sorted output port, this will delete presorted file
-        sortedAlignments.close();
-
-        // Writing count of alignments in the last block
-        aBlockCount.add(numberOfAlignmentsWritten - previousAlsCount);
-
-        // To make counts index the same length as aBlockOffset
-        aBlockCount.add(0);
+        // Closing sorted the output port, this will delete intermediate collation files
+        collatedAlignments.close();
 
         // Saving index offset in file to write in the end of the stream
         long previousValue = 0;
+        try (PrimitivO o = output.beginPrimitivO()) { // TODO also use blocks ?
+            // Writing index size
+            o.writeVarInt(aBlockOffset.size());
 
-        try (PrimitivO o = output.beginPrimitivO()) {
             // Writing both indices
             for (int i = 0; i < aBlockOffset.size(); i++) {
                 long iValue = aBlockOffset.get(i);
@@ -352,6 +358,9 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
                 previousValue = iValue;
 
                 o.writeVarLong(aBlockCount.get(i));
+
+                if (i != aBlockOffset.size() - 1)
+                    o.writeVarInt(cloneIdsIndex.get(i));
             }
 
             // Writing two key positions in a file
@@ -369,29 +378,29 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
 
     @Override
     public double getProgress() {
-        if (!clonesBlockFinished)
+        if (cloneIds == null)
             if (numberOfClones == -1)
                 return Double.NaN;
             else
                 return 1.0 * numberOfClonesWritten / numberOfClones;
-        else if (sortedAlignments == null) {
-            if (toSorter == null)
+        else if (collatedAlignments == null) {
+            if (toCollator == null)
                 return Double.NaN;
             else
-                return 1.0 * toSorter.getCount() / numberOfAlignments;
+                return 1.0 * toCollator.getCount() / numberOfAlignments;
         } else
             return 1.0 * numberOfAlignmentsWritten / numberOfAlignments;
     }
 
     @Override
     public String getStage() {
-        if (!clonesBlockFinished)
+        if (cloneIds == null)
             if (numberOfClones == -1)
                 return "Initialization";
             else
                 return "Writing clones";
-        else if (sortedAlignments == null) {
-            if (toSorter == null)
+        else if (collatedAlignments == null) {
+            if (toCollator == null)
                 return "Preparing for sorting";
             else
                 return "Sorting alignments";
@@ -409,4 +418,14 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
         finished = true;
         output.close();
     }
+
+    private static class CloneIdHash implements ToIntFunction<VDJCAlignments> {
+        @Override
+        public int applyAsInt(VDJCAlignments value) {
+            return HashFunctions.JenkinWang32shift(value.getCloneIndex());
+        }
+    }
+
+    private static final Comparator<VDJCAlignments> CloneIdComparator =
+            Comparator.comparing(VDJCAlignments::getCloneIndex);
 }

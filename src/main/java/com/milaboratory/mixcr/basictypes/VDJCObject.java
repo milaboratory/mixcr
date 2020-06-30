@@ -290,13 +290,25 @@ public abstract class VDJCObject {
     }
 
     public NSequenceWithQuality getFeature(GeneFeature geneFeature) {
-        NSequenceWithQuality feature = null, tmp;
-        for (int i = 0; i < targets.length; ++i) {
-            tmp = getPartitionedTarget(i).getFeature(geneFeature);
-            if (tmp != null && (feature == null || feature.getQuality().minValue() < tmp.getQuality().minValue()))
-                feature = tmp;
-        }
-        return feature;
+        int tcf = getTargetContainingFeature(geneFeature);
+        return tcf == -1 ? null : getPartitionedTarget(tcf).getFeature(geneFeature);
+    }
+
+    public NucleotideSequence getNFeature(GeneFeature geneFeature) {
+        int tcf = getTargetContainingFeature(geneFeature);
+        return tcf == -1 ? null : getPartitionedTarget(tcf).getFeature(geneFeature).getSequence();
+    }
+
+    public AminoAcidSequence getAAFeature(GeneFeature geneFeature) {
+        int tcf = getTargetContainingFeature(geneFeature);
+        if (tcf == -1)
+            return null;
+        VDJCPartitionedSequence target = getPartitionedTarget(tcf);
+        TranslationParameters tp = target.getPartitioning().getTranslationParameters(geneFeature);
+        return tp == null
+                ? null
+                : AminoAcidSequence.translate(
+                target.getFeature(geneFeature).getSequence(), tp); // target.getFeature(geneFeature) uses exactly the same algorithm, guaranteed to be non-null at this point
     }
 
     public CaseSensitiveNucleotideSequence getIncompleteFeature(GeneFeature geneFeature) {

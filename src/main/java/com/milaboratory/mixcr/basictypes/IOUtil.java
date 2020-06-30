@@ -33,6 +33,7 @@ import com.milaboratory.cli.BinaryFileInfo;
 import com.milaboratory.cli.BinaryFileInfoExtractor;
 import com.milaboratory.core.io.CompressionType;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.primitivio.HasPrimitivIOState;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import io.repseq.core.*;
@@ -93,15 +94,15 @@ public class IOUtil {
         for (VDJCGene gene : genes)
             output.writeObject(gene.getId());
 
-        registerGeneReferencesO(output, genes, featuresToAlign);
+        registerGeneReferences(output, genes, featuresToAlign);
     }
 
-    public static void registerGeneReferencesO(PrimitivO output, List<VDJCGene> genes,
+    public static void registerGeneReferences(HasPrimitivIOState ioState, List<VDJCGene> genes,
                                                HasFeatureToAlign featuresToAlign) {
         // Putting genes references and feature sequences to be serialized/deserialized as references
         for (VDJCGene gene : genes) {
-            // Each gene is singleton
-            output.putKnownReference(gene);
+            // Each gene is a singleton
+            ioState.putKnownReference(gene);
             // Also put sequences of certain gene features of genes as known references if required
             GeneFeature featureToAlign = featuresToAlign.getFeatureToAlign(gene.getGeneType());
             if (featureToAlign == null)
@@ -111,7 +112,7 @@ public class IOUtil {
                 continue;
             // Relies on the fact that sequences of gene features are cached,
             // the same instance will be used everywhere (including alignments)
-            output.putKnownReference(gene.getFeature(featuresToAlign.getFeatureToAlign(gene.getGeneType())));
+            ioState.putKnownReference(gene.getFeature(featuresToAlign.getFeatureToAlign(gene.getGeneType())));
         }
     }
 
@@ -137,7 +138,7 @@ public class IOUtil {
     public static List<VDJCGene> readAndRegisterGeneReferences(PrimitivI input, VDJCLibraryRegistry registry,
                                                                HasFeatureToAlign featuresToAlign) {
         List<VDJCGene> genes = readGeneReferences(input, registry);
-        registerGeneReferencesI(input, genes, featuresToAlign);
+        registerGeneReferences(input, genes, featuresToAlign);
         return genes;
     }
 
@@ -154,22 +155,6 @@ public class IOUtil {
         }
 
         return genes;
-    }
-
-    public static void registerGeneReferencesI(PrimitivI input, List<VDJCGene> genes,
-                                               HasFeatureToAlign featuresToAlign) {
-        // Putting genes references and feature sequences to be serialized/deserialized as references
-        for (VDJCGene gene : genes) {
-            input.putKnownReference(gene);
-            // Also put sequences of certain gene features of genes as known references if required
-            GeneFeature featureToAlign = featuresToAlign.getFeatureToAlign(gene.getGeneType());
-            if (featureToAlign == null)
-                continue;
-            NucleotideSequence featureSequence = gene.getFeature(featureToAlign);
-            if (featureSequence == null)
-                continue;
-            input.putKnownReference(featureSequence);
-        }
     }
 
     public static InputStream createIS(String file) throws IOException {

@@ -122,9 +122,12 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
         List<VDJCGene> genes;
         VDJCAlignerParameters alignerParameters;
         CloneAssemblerParameters cloneAssemblerParameters;
+        VDJCSProperties.CloneOrdering ordering;
         try (ClnAReader reader = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4));
              PrimitivO tmpOut = new PrimitivO(new BufferedOutputStream(new FileOutputStream(out))); // TODO ????
              BufferedWriter debugReport = debugReportFile == null ? null : new BufferedWriter(new OutputStreamWriter(new FileOutputStream(debugReportFile)))) {
+
+            ordering = reader.ordering();
 
             final CloneFactory cloneFactory = new CloneFactory(reader.getAssemblerParameters().getCloneFactoryParameters(),
                     reader.getAssemblingFeatures(), reader.getGenes(), reader.getAlignerParameters().getFeaturesToAlignMap());
@@ -132,7 +135,7 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
             alignerParameters = reader.getAlignerParameters();
             cloneAssemblerParameters = reader.getAssemblerParameters();
             genes = reader.getGenes();
-            IOUtil.registerGeneReferencesO(tmpOut, genes, alignerParameters);
+            IOUtil.registerGeneReferences(tmpOut, genes, alignerParameters);
 
             ClnAReader.CloneAlignmentsPort cloneAlignmentsPort = reader.clonesAndAlignments();
             SmartProgressReporter.startProgressReport("Assembling contigs", cloneAlignmentsPort);
@@ -246,16 +249,13 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
 
         Clone[] clones = new Clone[totalClonesCount];
         try (PrimitivI tmpIn = new PrimitivI(new BufferedInputStream(new FileInputStream(out)))) {
-            IOUtil.registerGeneReferencesI(tmpIn, genes, alignerParameters);
+            IOUtil.registerGeneReferences(tmpIn, genes, alignerParameters);
             int i = 0;
             for (Clone clone : CUtils.it(new PipeDataInputReader<>(Clone.class, tmpIn, totalClonesCount)))
                 clones[i++] = clone;
         }
 
-        Arrays.sort(clones, Comparator.comparingDouble(c -> -c.getCount()));
-        for (int i = 0; i < clones.length; i++)
-            clones[i] = clones[i].setId(i);
-        CloneSet cloneSet = new CloneSet(Arrays.asList(clones), genes, alignerParameters, cloneAssemblerParameters);
+        CloneSet cloneSet = new CloneSet(Arrays.asList(clones), genes, alignerParameters, cloneAssemblerParameters, ordering);
 
         try (ClnsWriter writer = new ClnsWriter(out)) {
             writer.writeCloneSet(getFullPipelineConfiguration(), cloneSet);

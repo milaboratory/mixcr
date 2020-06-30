@@ -127,7 +127,10 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         }
     };
 
-    public CloneAssembler(CloneAssemblerParameters parameters, boolean logAssemblerEvents, Collection<VDJCGene> genes, EnumMap<GeneType, GeneFeature> featuresToAlign) {
+    public CloneAssembler(CloneAssemblerParameters parameters,
+                          boolean logAssemblerEvents,
+                          Collection<VDJCGene> genes,
+                          EnumMap<GeneType, GeneFeature> featuresToAlign) {
         if (!parameters.isComplete())
             throw new IllegalArgumentException("Not complete parameters");
         this.parameters = parameters.clone();
@@ -345,13 +348,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     }
 
     public CloneSet getCloneSet(VDJCAlignerParameters alignerParameters) {
-        // EnumMap<GeneType, GeneFeature> features = new EnumMap<>(GeneType.class);
-        // for (GeneType geneType : GeneType.values()) {
-        //     GeneFeature gf = featuresToAlign.get(geneType);
-        //     if (gf != null)
-        //         features.put(geneType, gf);
-        // }
-        return new CloneSet(Arrays.asList(realClones), usedGenes.values(), alignerParameters, parameters);
+        return new CloneSet(Arrays.asList(realClones), usedGenes.values(), alignerParameters, parameters, new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount()));
     }
 
     public OutputPortCloseable<ReadToCloneMapping> getAssembledReadsPort() {
@@ -907,7 +904,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         }
     };
 
-    public static int compareByBestHists(CloneAccumulator o1, CloneAccumulator o2, GeneType geneType) {
+    private static int compareByBestHists(CloneAccumulator o1, CloneAccumulator o2, GeneType geneType) {
         VDJCGeneId a1 = o1.getBestGene(geneType);
         VDJCGeneId a2 = o2.getBestGene(geneType);
 

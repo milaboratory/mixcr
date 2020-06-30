@@ -64,7 +64,9 @@ public class CommandExportAlignmentsForClones extends ACommandWithSmartOverwrite
 
             long count = 0;
             if (getCloneIds().length == 0)
-                for (VDJCAlignments al : CUtils.it(clna.readAssembledAlignments())) {
+                for (VDJCAlignments al : CUtils.it(clna.readAllAlignments())) {
+                    if (al.getCloneIndex() == -1)
+                        continue;
                     writer.write(al);
                     ++count;
                 }

@@ -37,8 +37,6 @@ import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid;
 import com.milaboratory.util.LambdaSemaphore;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
 
@@ -46,7 +44,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumMap;
 import java.util.List;
 
 import static com.milaboratory.mixcr.basictypes.ClnsWriter.MAGIC;
@@ -62,6 +59,7 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
     private final PipelineConfiguration pipelineConfiguration;
     private final VDJCAlignerParameters alignerParameters;
     private final CloneAssemblerParameters assemblerParameters;
+    private final VDJCSProperties.CloneOrdering ordering;
     private final String versionInfo;
     private final List<VDJCGene> genes;
 
@@ -113,6 +111,7 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
             pipelineConfiguration = i.readObject(PipelineConfiguration.class);
             alignerParameters = i.readObject(VDJCAlignerParameters.class);
             assemblerParameters = i.readObject(CloneAssemblerParameters.class);
+            ordering = i.readObject(VDJCSProperties.CloneOrdering.class);
 
             genes = IOUtil.stdVDJCPrimitivIStateInit(i, alignerParameters, libraryRegistry);
         }
@@ -129,7 +128,7 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
         List<Clone> clones = new ArrayList<>();
         for (Clone clone : CUtils.it(readClones()))
             clones.add(clone);
-        CloneSet cloneSet = new CloneSet(clones, genes, alignerParameters, assemblerParameters);
+        CloneSet cloneSet = new CloneSet(clones, genes, alignerParameters, assemblerParameters, ordering);
         cloneSet.versionInfo = versionInfo;
         return cloneSet;
     }
@@ -145,6 +144,11 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
 
     public CloneAssemblerParameters getAssemblerParameters() {
         return assemblerParameters;
+    }
+
+    @Override
+    public VDJCSProperties.CloneOrdering ordering() {
+        return ordering;
     }
 
     @Override

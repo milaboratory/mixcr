@@ -67,7 +67,6 @@ import io.repseq.core.VDJCLibraryRegistry;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 
 import static cc.redberry.pipe.CUtils.chunked;
@@ -132,7 +131,7 @@ public final class RunMiXCR {
             try (AlignmentsMappingMerger merged = new AlignmentsMappingMerger(
                     CUtils.asOutputPort(align.alignments),
                     assemble.cloneAssembler.getAssembledReadsPort())) {
-                writer.sortAlignments(merged, assemble.cloneAssembler.getAlignmentsCount());
+                writer.collateAlignments(merged, assemble.cloneAssembler.getAlignmentsCount());
             }
             writer.writeAlignmentsAndIndex();
         } catch (IOException e) {
@@ -144,7 +143,7 @@ public final class RunMiXCR {
         try (ClnAReader reader = new ClnAReader(clnaFile.toPath(), VDJCLibraryRegistry.getDefault(), 2);  // TODO concurrency ???
              PrimitivO tmpOut = new PrimitivO(new BufferedOutputStream(new FileOutputStream(tmpFile)));) {
 
-            IOUtil.registerGeneReferencesO(tmpOut, align.usedGenes, align.parameters.alignerParameters);
+            IOUtil.registerGeneReferences(tmpOut, align.usedGenes, align.parameters.alignerParameters);
 
             final CloneFactory cloneFactory = new CloneFactory(reader.getAssemblerParameters().getCloneFactoryParameters(),
                     reader.getAssemblingFeatures(), reader.getGenes(), reader.getAlignerParameters().getFeaturesToAlignMap());
@@ -179,7 +178,7 @@ public final class RunMiXCR {
 
         Clone[] clones = new Clone[totalClonesCount];
         try (PrimitivI tmpIn = new PrimitivI(new BufferedInputStream(new FileInputStream(tmpFile)))) {
-            IOUtil.registerGeneReferencesI(tmpIn, align.usedGenes, align.parameters.alignerParameters);
+            IOUtil.registerGeneReferences(tmpIn, align.usedGenes, align.parameters.alignerParameters);
             int i = 0;
             for (Clone clone : CUtils.it(new PipeDataInputReader<>(Clone.class, tmpIn, totalClonesCount)))
                 clones[i++] = clone;
@@ -187,11 +186,8 @@ public final class RunMiXCR {
             throw new RuntimeException(e);
         }
 
-        Arrays.sort(clones, Comparator.comparingDouble(c -> -c.getCount()));
-        for (int i = 0; i < clones.length; i++)
-            clones[i] = clones[i].setId(i);
         CloneSet cloneSet = new CloneSet(Arrays.asList(clones), align.usedGenes, align.parameters.alignerParameters,
-                align.parameters.cloneAssemblerParameters);
+                align.parameters.cloneAssemblerParameters, VDJCSProperties.CO_BY_COUNT);
 
         return new FullSeqAssembleResult(assemble, cloneSet);
     }

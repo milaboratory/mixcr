@@ -134,6 +134,10 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
         this.threads = threads;
     }
 
+    @Option(description = "Use higher compression for output file, 10~25% slower, minus 30~50% of file size.",
+            names = {"--high-compression"})
+    public boolean highCompression = false;
+
     public long limit = 0;
 
     @Option(description = "Maximal number of reads to process",
@@ -503,7 +507,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
              VDJCAlignmentsWriter writer = getOutput().equals(".")
                      ? null
                      : new VDJCAlignmentsWriter(getOutput(), Math.max(1, threads / 8),
-                     DEFAULT_ALIGNMENTS_IN_BLOCK);
+                     DEFAULT_ALIGNMENTS_IN_BLOCK, highCompression);
 
              SequenceWriter notAlignedWriter = failedReadsR1 == null
                      ? null

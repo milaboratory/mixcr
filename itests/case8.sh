@@ -29,21 +29,3 @@ assert "cat case8.assembleContigs.jsonl | head -n 1 | jq -r .longestContigLength
 assert "cat case8.assembleContigs.jsonl | head -n 1 | jq -r .clonesWithAmbiguousLetters" "1378"
 assert "cat case8.assembleContigs.jsonl | head -n 1 | jq -r .assemblePrematureTerminationEvents" "1"
 assert "cat case8.assembleContigs.jsonl | head -n 1 | jq -r .finalCloneCount" "22402"
-
-##mixcr analyze amplicon --assemble '-OcloneClusteringParameters=null' --impute-germline-on-export -s hs --starting-material rna --contig-assembly --5-end v-primers --3-end j-primers --adapters adapters-present case5_R1.fastq case5_R2.fastq case5
-#
-#mixcr exportAlignments -f -readIds -cloneIdWithMappingType case5.clna case5.als.txt
-#
-#sort -t $'\t' --key=1 -n case5.als.txt | tail -n +2 > case5.als.sorted.txt
-#
-#lines=$(cat case5.als.sorted.txt | wc -l)
-#
-#head -n $((lines/2)) case5.als.sorted.txt | cut -f2 > case5.als.sorted.1.txt
-#tail -n $((lines/2)) case5.als.sorted.txt | cut -f2 > case5.als.sorted.2.txt
-#
-#if cmp case5.als.sorted.1.txt case5.als.sorted.2.txt; then
-#  echo "All good"
-#else
-#  echo "Results are different"
-#  diff case5.als.sorted.1.txt case5.als.sorted.2.txt
-#fi

@@ -31,10 +31,12 @@ package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.cli.AppVersionInfo;
 import com.milaboratory.cli.PipelineConfiguration;
+import com.milaboratory.mixcr.util.MiXCRDebug;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivO;
+import com.milaboratory.primitivio.blocks.PrimitivIOBlocksUtil;
 import com.milaboratory.primitivio.blocks.PrimitivOBlocks;
 import com.milaboratory.primitivio.blocks.PrimitivOBlocksStats;
 import com.milaboratory.primitivio.blocks.PrimitivOHybrid;
@@ -46,12 +48,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ForkJoinPool;
 
 public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPosition {
     public static final int DEFAULT_ENCODER_THREADS = 3;
-    public static final int DEFAULT_ALIGNMENTS_IN_BLOCK = 1024; // 1024 alignments * 805-1024 bytes per alignment ~  824 kB - 1MB per block
+    public static final int DEFAULT_ALIGNMENTS_IN_BLOCK = 1 << 10; // 805-1024 bytes per alignment
     static final String MAGIC_V15 = "MiXCR.VDJC.V15";
     static final String MAGIC = MAGIC_V15;
     static final int MAGIC_LENGTH = 14;
@@ -59,6 +59,8 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
 
     /** Number of bytes in footer with meta information */
     static final int FOOTER_LENGTH = 8 + 8 + IOUtil.END_MAGIC_LENGTH;
+
+    private final boolean highCompression;
 
     /**
      * This number will be added to the end of the file to report number of processed read to the following processing
@@ -85,11 +87,11 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
     }
 
     public VDJCAlignmentsWriter(String fileName, int encoderThreads, int alignmentsInBlock) throws IOException {
-        this(fileName, encoderThreads, alignmentsInBlock, ForkJoinPool.commonPool());
+        this(new PrimitivOHybrid(Paths.get(fileName)), encoderThreads, alignmentsInBlock, false);
     }
 
-    public VDJCAlignmentsWriter(String fileName, int encoderThreads, int alignmentsInBlock, ExecutorService executor) throws IOException {
-        this(new PrimitivOHybrid(executor, Paths.get(fileName)), encoderThreads, alignmentsInBlock);
+    public VDJCAlignmentsWriter(String fileName, int encoderThreads, int alignmentsInBlock, boolean highCompression) throws IOException {
+        this(new PrimitivOHybrid(Paths.get(fileName)), encoderThreads, alignmentsInBlock, highCompression);
     }
 
     public VDJCAlignmentsWriter(File file) throws IOException {
@@ -97,14 +99,15 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
     }
 
     public VDJCAlignmentsWriter(File file, int encoderThreads, int alignmentsInBlock) throws IOException {
-        this(file, encoderThreads, alignmentsInBlock, ForkJoinPool.commonPool());
+        this(new PrimitivOHybrid(file.toPath()), encoderThreads, alignmentsInBlock, false);
     }
 
-    public VDJCAlignmentsWriter(File file, int encoderThreads, int alignmentsInBlock, ExecutorService executor) throws IOException {
-        this(new PrimitivOHybrid(executor, file.toPath()), encoderThreads, alignmentsInBlock);
+    public VDJCAlignmentsWriter(File file, int encoderThreads, int alignmentsInBlock, boolean highCompression) throws IOException {
+        this(new PrimitivOHybrid(file.toPath()), encoderThreads, alignmentsInBlock, highCompression);
     }
 
-    public VDJCAlignmentsWriter(PrimitivOHybrid output, int encoderThreads, int alignmentsInBlock) {
+    public VDJCAlignmentsWriter(PrimitivOHybrid output, int encoderThreads, int alignmentsInBlock, boolean highCompression) {
+        this.highCompression = highCompression;
         this.output = output;
         this.encoderThreads = encoderThreads;
         this.alignmentsInBlock = alignmentsInBlock;
@@ -164,7 +167,10 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
             IOUtil.stdVDJCPrimitivOStateInit(o, genes, parameters);
         }
 
-        writer = output.beginPrimitivOBlocks(encoderThreads, alignmentsInBlock);
+        writer = output.beginPrimitivOBlocks(encoderThreads, alignmentsInBlock,
+                highCompression
+                        ? PrimitivIOBlocksUtil.highLZ4Compressor()
+                        : PrimitivIOBlocksUtil.fastLZ4Compressor());
     }
 
     @Override
@@ -202,6 +208,10 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
         try {
             if (!closed) {
                 writer.close(); // This will also write stream termination symbol/block to the stream
+
+                // Printing IO stat
+                if (MiXCRDebug.DEBUG)
+                    System.out.println(writer.getParent().getStats());
 
                 try (PrimitivO o = output.beginPrimitivO()) {
                     // // [ numberOfProcessedReads : long ]

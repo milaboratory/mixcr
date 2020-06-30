@@ -29,6 +29,7 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
+import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.cli.PipelineConfiguration;
@@ -37,6 +38,7 @@ import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.*;
 import com.milaboratory.util.CanReportProgress;
+import gnu.trove.map.hash.TIntIntHashMap;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
@@ -61,11 +63,15 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
     // Index data
 
     final long firstClonePosition;
-    // Index contain two additional records:
-    //  - first = position of alignment block with cloneIndex == -1
-    //  - last = position of the last alignments block end
+    /** last element = position of the last alignments block end */
     final long[] index;
+    /** First record always zero */
     final long[] counts;
+    /**
+     * cloneId -> index in index
+     * e.g. alignments for clone with id0 starts from position index[cloneMapping.get(id0)]
+     */
+    final TIntIntHashMap cloneIdIndex;
     final long totalAlignmentsCount;
 
     // From constructor
@@ -77,6 +83,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
     final PipelineConfiguration configuration;
     final VDJCAlignerParameters alignerParameters;
     final CloneAssemblerParameters assemblerParameters;
+    final VDJCSProperties.CloneOrdering ordering;
 
     final List<VDJCGene> genes;
 
@@ -121,14 +128,21 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
 
         // Step back
         try (PrimitivI pi = this.input.beginRandomAccessPrimitivI(indexBegin)) {
+            int indexSize = pi.readVarInt();
+
+            assert indexSize == numberOfClones + 1 || indexSize == numberOfClones + 2;
+
             // Reading index data
-            this.index = new long[numberOfClones + 2];
-            this.counts = new long[numberOfClones + 2];
+            this.index = new long[indexSize];
+            this.counts = new long[indexSize];
+            this.cloneIdIndex = new TIntIntHashMap(indexSize - 1);
             long previousValue = 0;
             long totalAlignmentsCount = 0;
-            for (int i = 0; i < numberOfClones + 2; i++) {
+            for (int i = 0; i < indexSize; i++) {
                 previousValue = index[i] = previousValue + pi.readVarLong();
                 totalAlignmentsCount += counts[i] = pi.readVarLong();
+                if (i != indexSize - 1)
+                    cloneIdIndex.put(pi.readVarInt(), i);
             }
             this.totalAlignmentsCount = totalAlignmentsCount;
         }
@@ -146,6 +160,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
             this.configuration = pi.readObject(PipelineConfiguration.class);
             this.alignerParameters = pi.readObject(VDJCAlignerParameters.class);
             this.assemblerParameters = pi.readObject(CloneAssemblerParameters.class);
+            this.ordering = pi.readObject(VDJCSProperties.CloneOrdering.class);
             this.genes = IOUtil.stdVDJCPrimitivIStateInit(pi, this.alignerParameters, libraryRegistry);
         }
     }
@@ -171,6 +186,14 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
      */
     public CloneAssemblerParameters getAssemblerParameters() {
         return assemblerParameters;
+    }
+
+    /**
+     * Clone ordering
+     */
+    @Override
+    public VDJCSProperties.CloneOrdering ordering() {
+        return ordering;
     }
 
     public GeneFeature[] getAssemblingFeatures() {
@@ -202,7 +225,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
      * @return number of alignments
      */
     public long numberOfAlignmentsInClone(int cloneIndex) {
-        return counts[cloneIndex + 1];
+        return counts[cloneIdIndex.get(cloneIndex) + 1];
     }
 
     /**
@@ -225,7 +248,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
                 clones.add(reader.take());
         }
 
-        return new CloneSet(clones, genes, alignerParameters, assemblerParameters);
+        return new CloneSet(clones, genes, alignerParameters, assemblerParameters, ordering);
     }
 
     /**
@@ -242,7 +265,11 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
      * @param cloneIndex index of clone; -1 to read unassembled alignments
      */
     public OutputPortCloseable<VDJCAlignments> readAlignmentsOfClone(int cloneIndex) {
-        return input.beginRandomAccessPrimitivIBlocks(VDJCAlignments.class, index[cloneIndex + 1], HEADER_ACTION_STOP_AT_ALIGNMENT_BLOCK_END);
+        if (cloneIndex == -1 && !cloneIdIndex.containsKey(-1))
+            return CUtils.EMPTY_OUTPUT_PORT_CLOSEABLE;
+        return input.beginRandomAccessPrimitivIBlocks(VDJCAlignments.class,
+                index[cloneIdIndex.get(cloneIndex)],
+                HEADER_ACTION_STOP_AT_ALIGNMENT_BLOCK_END);
     }
 
     /**
@@ -250,13 +277,6 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
      */
     public OutputPortCloseable<VDJCAlignments> readAllAlignments() {
         return input.beginRandomAccessPrimitivIBlocks(VDJCAlignments.class, index[0]);
-    }
-
-    /**
-     * Constructs output port to read all alignments that are attached to a clone. Alignments are sorted by cloneIndex.
-     */
-    public OutputPortCloseable<VDJCAlignments> readAssembledAlignments() {
-        return input.beginRandomAccessPrimitivIBlocks(VDJCAlignments.class, index[1]);
     }
 
     /**
@@ -273,7 +293,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
      * Constructs output port of CloneAlignments objects, that allows to get synchronised view on clone and it's
      * corresponding alignments
      */
-    public CloneAlignmentsPort clonesAndAlignments() throws IOException {
+    public CloneAlignmentsPort clonesAndAlignments() {
         return new CloneAlignmentsPort();
     }
 
@@ -286,7 +306,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
 
         CloneAlignmentsPort() {
             this.clones = input.beginRandomAccessPrimitivIBlocks(Clone.class, firstClonePosition);
-            this.fakeCloneSet = new CloneSet(Collections.EMPTY_LIST, genes, alignerParameters, assemblerParameters);
+            this.fakeCloneSet = new CloneSet(Collections.EMPTY_LIST, genes, alignerParameters, assemblerParameters, ordering);
         }
 
         @Override
@@ -327,7 +347,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
         CloneAlignments(Clone clone, int cloneId) {
             this.clone = clone;
             this.cloneId = cloneId;
-            this.alignmentsCount = counts[cloneId + 1];
+            this.alignmentsCount = numberOfAlignmentsInClone(cloneId);
         }
 
         /**
@@ -347,10 +367,4 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
             h -> h.equals(ClnAWriter.ALIGNMENT_BLOCK_SEPARATOR)
                     ? PrimitivIHeaderActions.stopReading()
                     : PrimitivIHeaderActions.skip();
-
-    // private static Function<PrimitivIOBlockHeader, PrimitivIHeaderAction<VDJCAlignments>> HEADER_ACTION_STOP_AT_ALIGNMENTS_END =
-    //         h -> h.equals(ClnAWriter.ALIGNMENTS_END) ? PrimitivIHeaderActions.stopReading() : PrimitivIHeaderActions.skip();
-
-    // private static Function<PrimitivIOBlockHeader, PrimitivIHeaderAction<Clone>> HEADER_ACTION_STOP_AT_CLONES_END =
-    //         h -> h.equals(ClnAWriter.CLONES_END) ? PrimitivIHeaderActions.stopReading() : PrimitivIHeaderActions.skip();
 }

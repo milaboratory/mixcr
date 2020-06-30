@@ -138,7 +138,7 @@ public class CommandSlice extends ACommandWithSmartOverwriteWithSingleInputMiXCR
             }
 
             CloneSet newCloneSet = new CloneSet(clones, cloneSet.getUsedGenes(), cloneSet.getAlignmentParameters(),
-                    cloneSet.getAssemblerParameters());
+                    cloneSet.getAssemblerParameters(), cloneSet.getOrdering());
 
             OutputPort<VDJCAlignments> allAlignmentsPortRaw = new FlatteningOutputPort<>(CUtils.asOutputPort(allAlignmentsList));
             AtomicLong idGen = new AtomicLong();
@@ -151,7 +151,7 @@ public class CommandSlice extends ACommandWithSmartOverwriteWithSingleInputMiXCR
 
             writer.writeClones(newCloneSet);
 
-            writer.sortAlignments(allAlignmentsPort, newNumberOfAlignments);
+            writer.collateAlignments(allAlignmentsPort, newNumberOfAlignments);
 
             writer.writeAlignmentsAndIndex();
         }

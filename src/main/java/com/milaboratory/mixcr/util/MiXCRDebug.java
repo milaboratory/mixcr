@@ -27,21 +27,12 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.basictypes;
+package com.milaboratory.mixcr.util;
 
-import cc.redberry.pipe.OutputPortCloseable;
+public class MiXCRDebug {
+    public static final boolean DEBUG;
 
-import java.util.Comparator;
-import java.util.List;
-
-public interface CloneReader {
-    /**
-     * Sequence of properties the stream is sorted by.
-     *
-     * @return sequence of properties the stream is sorted by
-     */
-    VDJCSProperties.CloneOrdering ordering();
-
-
-    OutputPortCloseable<Clone> readClones();
+    static {
+        DEBUG = System.getenv("MIXCR_DEBUG") != null;
+    }
 }
