@@ -109,6 +109,10 @@ public final class Main {
             TempFileManager.setPrefix("mixcr_");
 
             Path cachePath = Paths.get(System.getProperty("user.home"), ".mixcr", "cache");
+            String repseqioCacheEnv = System.getenv("REPSEQIO_CACHE");
+            if (repseqioCacheEnv != null) {
+                cachePath = Paths.get(repseqioCacheEnv);
+            }
             //if (System.getProperty("allow.http") != null || System.getenv("MIXCR_ALLOW_HTTP") != null)
             //TODO add mechanism to deny http requests
             SequenceResolvers.initDefaultResolver(cachePath);
