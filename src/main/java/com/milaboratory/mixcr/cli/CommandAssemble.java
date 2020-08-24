@@ -48,8 +48,10 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import static com.milaboratory.mixcr.cli.CommandAssemble.ASSEMBLE_COMMAND_NAME;
 
@@ -164,16 +166,8 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
                     break;
                 }
 
-            List<VDJCSProperties.VDJCSProperty<? super Clone>> orderingList = new ArrayList<>();
-            orderingList.addAll(Arrays.stream(assemblingFeatures)
-                    .map(VDJCSProperties.NSequence::new)
-                    .collect(Collectors.toList()));
-            orderingList.addAll(Arrays.stream(assemblingFeatures)
-                    .map(VDJCSProperties.AASequence::new)
-                    .collect(Collectors.toList()));
-            orderingList.add(new VDJCSProperties.VDJCSegment(GeneType.Variable));
-            orderingList.add(new VDJCSProperties.VDJCSegment(GeneType.Joining));
-            ordering = new VDJCSProperties.CloneOrdering(orderingList);
+            ordering = VDJCSProperties.cloneOrderingByNucleotide(assemblingFeatures,
+                    GeneType.Variable, GeneType.Joining);
         } else {
             ordering = VDJCSProperties.CO_BY_COUNT;
         }

@@ -40,28 +40,61 @@ import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGeneId;
 
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import static com.milaboratory.util.sorting.SortingPropertyRelation.*;
 
 public class VDJCSProperties {
     public static final CloneOrdering CO_BY_COUNT = new CloneOrdering(new CloneCount());
 
+    public static CloneOrdering cloneOrderingByAminoAcid(GeneFeature[] geneFeatures,
+                                                         GeneType... segments) {
+        return new CloneOrdering(orderingByAminoAcid(geneFeatures, segments));
+    }
+
+    public static CloneOrdering cloneOrderingByNucleotide(GeneFeature[] geneFeatures,
+                                                          GeneType... segments) {
+        return new CloneOrdering(orderingByNucleotide(geneFeatures, segments));
+    }
+
+    public static List<VDJCSProperties.VDJCSProperty<VDJCObject>> orderingByAminoAcid(
+            GeneFeature[] geneFeatures, GeneType... segments) {
+        List<VDJCSProperties.VDJCSProperty<VDJCObject>> result = new ArrayList<>();
+        for (GeneFeature geneFeature : geneFeatures)
+            result.add(new AASequence(geneFeature));
+        for (GeneType segment : segments)
+            result.add(new VDJCSegment(segment));
+        return result;
+    }
+
+    public static List<VDJCSProperties.VDJCSProperty<VDJCObject>> orderingByNucleotide(
+            GeneFeature[] geneFeatures, GeneType... segments) {
+        List<VDJCSProperties.VDJCSProperty<VDJCObject>> result = new ArrayList<>();
+        for (GeneFeature geneFeature : geneFeatures)
+            result.add(new AASequence(geneFeature));
+        for (GeneFeature geneFeature : geneFeatures)
+            result.add(new NSequence(geneFeature));
+        for (GeneType segment : segments)
+            result.add(new VDJCSegment(segment));
+        return result;
+    }
+
     @Serializable(asJson = true)
     public static final class CloneOrdering {
         @JsonProperty("properties")
-        public final VDJCSProperties.VDJCSProperty<? super Clone>[] properties;
+        private final VDJCSProperties.VDJCSProperty<? super Clone>[] properties;
 
-        public CloneOrdering(List<VDJCSProperty<? super Clone>> properties) {
+        public CloneOrdering(List<? extends VDJCSProperty<? super Clone>> properties) {
             this.properties = properties.toArray(new VDJCSProperty[properties.size()]);
         }
 
         @JsonCreator
         public CloneOrdering(@JsonProperty("properties") VDJCSProperty<? super Clone>... properties) {
             this.properties = properties;
+        }
+
+        public List<VDJCSProperty<? super Clone>> getProperties() {
+            return Arrays.asList(properties);
         }
 
         public Comparator<Clone> comparator() {
@@ -118,7 +151,7 @@ public class VDJCSProperties {
         }
 
         @Override
-        public SortingPropertyRelation relationTo(SortingProperty<VDJCObject> other) {
+        public SortingPropertyRelation relationTo(SortingProperty<?> other) {
             if (equals(other))
                 return SortingPropertyRelation.Equal;
 
@@ -172,7 +205,7 @@ public class VDJCSProperties {
         }
 
         @Override
-        public SortingPropertyRelation relationTo(SortingProperty<VDJCObject> other) {
+        public SortingPropertyRelation relationTo(SortingProperty<?> other) {
             if (equals(other))
                 return SortingPropertyRelation.Equal;
 

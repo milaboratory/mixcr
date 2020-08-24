@@ -1,0 +1,99 @@
+---
+kind: pipeline
+type: docker
+name: linux
+
+platform:
+  os: linux
+  arch: amd64
+
+event:
+  - push
+
+steps:
+  - name: restore_cache
+    image: meltwater/drone-cache
+    pull: true
+    settings:
+      restore: true
+      # debug: true
+      cache_key: '{{ .Commit.Branch }}'
+      access_key:
+        from_secret: aws-key-id
+      secret_key:
+        from_secret: aws-secret-key
+      bucket:
+        from_secret: aws-cache-bucket
+      region:
+        from_secret: aws-region
+      local_root: /drone/src
+      mount:
+        - .m2
+        - src/test/resources/big
+
+  - name: deploy
+    image: maven:3-adoptopenjdk-8
+    commands:
+      - mvn --no-transfer-progress deploy -DskipTests -DaltDeploymentRepository=therepo::default::$${DEPLOY_REPO} -Drevision=${DRONE_COMMIT_SHA:0:7}
+    environment:
+      MAVEN_OPTS: "-Dmaven.repo.local=/drone/src/.m2"
+      AWS_DEFAULT_REGION:
+        from_secret: aws-region
+      AWS_ACCESS_KEY_ID:
+        from_secret: aws-key-id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: aws-secret-key
+      DEPLOY_REPO:
+        from_secret: maven-deploy-repo-private
+    when:
+      event:
+        exclude:
+          - pull_request
+    depends_on:
+      - restore_cache
+
+  - name: build_and_test
+    image: maven:3-adoptopenjdk-8
+    commands:
+      - ./ensure-test-data.sh
+      - mvn --no-transfer-progress clean pre-integration-test
+    environment:
+      MAVEN_OPTS: "-Dmaven.repo.local=/drone/src/.m2"
+    depends_on:
+      - deploy
+
+  - name: integration_tests
+    image: adoptopenjdk:8-hotspot
+    commands:
+      - apt-get update
+      - apt-get install -y jq
+      - ./itests.sh test
+    depends_on:
+      - build_and_test
+
+  - name: rebuild_cache
+    image: meltwater/drone-cache
+    settings:
+      rebuild: true
+      # debug: true
+      cache_key: '{{ .Commit.Branch }}'
+      access_key:
+        from_secret: aws-key-id
+      secret_key:
+        from_secret: aws-secret-key
+      bucket:
+        from_secret: aws-cache-bucket
+      region:
+        from_secret: aws-region
+      local_root: /drone/src
+      mount:
+        - .m2
+        - src/test/resources/big
+    depends_on:
+      - build_and_test
+
+---
+kind: signature
+hmac: 28c3754e0acfce1c26faae033ffe7333cdb37a8714528d92df85e3430ab8c51c
+
+...

@@ -48,11 +48,11 @@ mkdir -p $dir/src/test/resources/sequences/big/
 cd $dir/src/test/resources/sequences/big/
 
 if [[ ! -f CD4M1_test_R1.fastq.gz ]]; then
-  curl -O https://s3.amazonaws.com/files.milaboratory.com/test-data/CD4M1_test_R1.fastq.gz
+    curl -sS -O https://s3.amazonaws.com/files.milaboratory.com/test-data/CD4M1_test_R1.fastq.gz
 fi
 
 if [[ ! -f CD4M1_test_R2.fastq.gz ]]; then
-  curl -O https://s3.amazonaws.com/files.milaboratory.com/test-data/CD4M1_test_R2.fastq.gz
+    curl -sS -O https://s3.amazonaws.com/files.milaboratory.com/test-data/CD4M1_test_R2.fastq.gz
 fi
 
 if [[ ! -d yf_sample_data ]]; then

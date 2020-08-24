@@ -31,17 +31,13 @@ package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPortCloseable;
 
-import java.util.Comparator;
-import java.util.List;
-
-public interface CloneReader {
+public interface CloneReader extends AutoCloseable {
     /**
      * Sequence of properties the stream is sorted by.
      *
      * @return sequence of properties the stream is sorted by
      */
     VDJCSProperties.CloneOrdering ordering();
-
 
     OutputPortCloseable<Clone> readClones();
 }
