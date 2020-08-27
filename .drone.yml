@@ -1,7 +1,7 @@
 ---
 kind: pipeline
 type: docker
-name: linux
+name: depoly
 
 platform:
   os: linux
@@ -17,7 +17,7 @@ steps:
     settings:
       restore: true
       # debug: true
-      cache_key: '{{ .Commit.Branch }}'
+      cache_key: 'deploy-{{ .Commit.Branch }}'
       access_key:
         from_secret: aws-key-id
       secret_key:
@@ -29,15 +29,14 @@ steps:
       local_root: /drone/src
       mount:
         - .m2
-        - src/test/resources/big
 
-  - name: deploy
+  - name: deploy_maven
     image: maven:3-adoptopenjdk-8
     commands:
       - mvn --no-transfer-progress deploy -DskipTests -DaltDeploymentRepository=therepo::default::$${DEPLOY_REPO} -Drevision=${DRONE_COMMIT_SHA:0:7}
     environment:
       MAVEN_OPTS: "-Dmaven.repo.local=/drone/src/.m2"
-      AWS_DEFAULT_REGION:
+      AWS_REGION:
         from_secret: aws-region
       AWS_ACCESS_KEY_ID:
         from_secret: aws-key-id
@@ -52,6 +51,131 @@ steps:
     depends_on:
       - restore_cache
 
+  - name: deploy_bin
+    image: banst/awscli
+    commands:
+      - apk add --no-cache zip
+      - ./pack.sh
+      - touch empty
+      - aws s3 cp target/mixcr.zip s3://$${DEPLOY_S3_CDN_BUCKET}/$${DEPLOY_S3_CDN_PREFIX}/software/mixcr/mixcr-${DRONE_COMMIT}.zip
+      - >
+        aws s3api put-object-tagging \
+            --bucket $${DEPLOY_S3_CDN_BUCKET} \
+            --key $${DEPLOY_S3_CDN_PREFIX}/software/mixcr/mixcr-${DRONE_COMMIT}.zip \
+            --tagging '{"TagSet": [{"Key":"git_commit","Value":"${DRONE_COMMIT}"},{"Key":"git_branch","Value":"${DRONE_BRANCH}"}]}'
+      - aws s3 cp --website-redirect 'https://cdn.milaboratory.com/software/mixcr/mixcr-${DRONE_COMMIT}.zip?response-content-disposition=attachment;filename=mixcr-b${DRONE_BUILD_NUMBER}-${DRONE_COMMIT_SHA:0:7}.zip' empty "s3://$${DEPLOY_S3_LINK_BUCKET}/$${DEPLOY_S3_LINK_PREFIX}/mixcr/mixcr-b${DRONE_BUILD_NUMBER}-${DRONE_COMMIT_SHA:0:7}.zip"
+    environment:
+      AWS_REGION:
+        from_secret: aws-region
+      AWS_ACCESS_KEY_ID:
+        from_secret: aws-key-id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: aws-secret-key
+      DEPLOY_S3_CDN_BUCKET:
+        from_secret: cdn-s3-bucket
+      DEPLOY_S3_CDN_PREFIX:
+        from_secret: cdn-s3-prefix
+      DEPLOY_S3_LINK_BUCKET:
+        from_secret: bin-link-s3-bucket
+      DEPLOY_S3_LINK_PREFIX:
+        from_secret: bin-link-s3-prefix
+    when:
+      event:
+        exclude:
+          - pull_request
+    depends_on:
+      - deploy_maven
+
+  - name: Send Telegram Notification
+    image: appleboy/drone-telegram
+    depends_on:
+      - deploy_bin
+    settings:
+      token:
+        from_secret: telegram-token
+      to:
+        from_secret: telegram-chat-id-micore
+      format: markdown
+      message: >
+        {{#success build.status}}
+        ✅ MiXCR deploy {{build.number}} success.
+
+
+        🌐 https://bin.milaboratory.com/mixcr/mixcr-b{{build.number}}-{{truncate commit.sha 7}}.zip
+
+
+        POM:
+
+        ```
+
+        <groupId>com.milaboratory</groupId>
+
+        <artifactId>mixcr</artifactId>
+
+        <version>3.0.14-{{truncate commit.sha 7}}</version>
+        ```
+        {{else}}
+        ❌ MiXCR deploy {{build.number}} failure.
+        🌐 {{build.link}}
+        {{/success}}
+
+  - name: rebuild_cache
+    image: meltwater/drone-cache
+    settings:
+      rebuild: true
+      # debug: true
+      cache_key: 'deploy-{{ .Commit.Branch }}'
+      access_key:
+        from_secret: aws-key-id
+      secret_key:
+        from_secret: aws-secret-key
+      bucket:
+        from_secret: aws-cache-bucket
+      region:
+        from_secret: aws-region
+      local_root: /drone/src
+      mount:
+        - .m2
+    depends_on:
+      - deploy_maven
+
+---
+
+kind: pipeline
+type: docker
+name: test
+
+platform:
+  os: linux
+  arch: amd64
+
+node:
+  type: highcpu
+
+event:
+  - push
+
+steps:
+  - name: restore_cache
+    image: meltwater/drone-cache
+    pull: true
+    settings:
+      restore: true
+      # debug: true
+      cache_key: 'test-{{ .Commit.Branch }}'
+      access_key:
+        from_secret: aws-key-id
+      secret_key:
+        from_secret: aws-secret-key
+      bucket:
+        from_secret: aws-cache-bucket
+      region:
+        from_secret: aws-region
+      local_root: /drone/src
+      mount:
+        - .m2
+        - src/test/resources/big
+
   - name: build_and_test
     image: maven:3-adoptopenjdk-8
     commands:
@@ -60,7 +184,7 @@ steps:
     environment:
       MAVEN_OPTS: "-Dmaven.repo.local=/drone/src/.m2"
     depends_on:
-      - deploy
+      - restore_cache
 
   - name: integration_tests
     image: adoptopenjdk:8-hotspot
@@ -73,10 +197,11 @@ steps:
 
   - name: rebuild_cache
     image: meltwater/drone-cache
+    pull: true
     settings:
       rebuild: true
       # debug: true
-      cache_key: '{{ .Commit.Branch }}'
+      cache_key: 'test-{{ .Commit.Branch }}'
       access_key:
         from_secret: aws-key-id
       secret_key:
@@ -94,6 +219,6 @@ steps:
 
 ---
 kind: signature
-hmac: 28c3754e0acfce1c26faae033ffe7333cdb37a8714528d92df85e3430ab8c51c
+hmac: d9fb38bed6974279a8b2af61f6a9eb16f0317f2002af6241d92d372fa2609b68
 
 ...
