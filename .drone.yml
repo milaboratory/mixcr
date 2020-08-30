@@ -62,7 +62,7 @@ steps:
         aws s3api put-object-tagging \
             --bucket $${DEPLOY_S3_CDN_BUCKET} \
             --key $${DEPLOY_S3_CDN_PREFIX}/software/mixcr/mixcr-${DRONE_COMMIT}.zip \
-            --tagging '{"TagSet": [{"Key":"git_commit","Value":"${DRONE_COMMIT}"},{"Key":"git_branch","Value":"${DRONE_BRANCH}"}]}'
+            --tagging '{"TagSet": [{"Key":"git_commit","Value":"${DRONE_COMMIT}"},{"Key":"git_branch","Value":"${DRONE_BRANCH}"},{"Key":"software","Value":"mixcr"}]}'
       - aws s3 cp --website-redirect 'https://cdn.milaboratory.com/software/mixcr/mixcr-${DRONE_COMMIT}.zip?response-content-disposition=attachment;filename=mixcr-b${DRONE_BUILD_NUMBER}-${DRONE_COMMIT_SHA:0:7}.zip' empty "s3://$${DEPLOY_S3_LINK_BUCKET}/$${DEPLOY_S3_LINK_PREFIX}/mixcr/mixcr-b${DRONE_BUILD_NUMBER}-${DRONE_COMMIT_SHA:0:7}.zip"
     environment:
       AWS_REGION:
@@ -76,9 +76,9 @@ steps:
       DEPLOY_S3_CDN_PREFIX:
         from_secret: cdn-s3-prefix
       DEPLOY_S3_LINK_BUCKET:
-        from_secret: bin-link-s3-bucket
+        from_secret: link-s3-bucket
       DEPLOY_S3_LINK_PREFIX:
-        from_secret: bin-link-s3-prefix
+        from_secret: link-s3-prefix
     when:
       event:
         exclude:
