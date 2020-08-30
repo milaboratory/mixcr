@@ -63,7 +63,7 @@ steps:
             --bucket $${DEPLOY_S3_CDN_BUCKET} \
             --key $${DEPLOY_S3_CDN_PREFIX}/software/mixcr/mixcr-${DRONE_COMMIT}.zip \
             --tagging '{"TagSet": [{"Key":"git_commit","Value":"${DRONE_COMMIT}"},{"Key":"git_branch","Value":"${DRONE_BRANCH}"},{"Key":"software","Value":"mixcr"}]}'
-      - aws s3 cp --website-redirect 'https://cdn.milaboratory.com/software/mixcr/mixcr-${DRONE_COMMIT}.zip?response-content-disposition=attachment;filename=mixcr-b${DRONE_BUILD_NUMBER}-${DRONE_COMMIT_SHA:0:7}.zip' empty "s3://$${DEPLOY_S3_LINK_BUCKET}/$${DEPLOY_S3_LINK_PREFIX}/mixcr/mixcr-b${DRONE_BUILD_NUMBER}-${DRONE_COMMIT_SHA:0:7}.zip"
+      - aws s3 cp --website-redirect 'https://cdn.milaboratory.com/software/mixcr/mixcr-${DRONE_COMMIT}.zip?response-content-disposition=attachment;filename=mixcr-b${DRONE_BUILD_NUMBER}-${DRONE_COMMIT_SHA:0:7}.zip' empty "s3://$${DEPLOY_S3_LINK_BUCKET}/$${DEPLOY_S3_LINK_PREFIX}/software/mixcr/mixcr-b${DRONE_BUILD_NUMBER}-${DRONE_COMMIT_SHA:0:7}.zip"
     environment:
       AWS_REGION:
         from_secret: aws-region
@@ -219,6 +219,6 @@ steps:
 
 ---
 kind: signature
-hmac: ea6c56834a73234f9c1e6d62b5979878703fc08156b51eb91c194f6a1598bee7
+hmac: 1397d9a89faf007682746dab1e15cfaa72f1f9f512f97b6a85627796cdd361b8
 
 ...
