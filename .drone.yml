@@ -57,12 +57,15 @@ steps:
       - apk add --no-cache zip
       - ./pack.sh
       - touch empty
-      - aws s3 cp target/mixcr.zip s3://$${DEPLOY_S3_CDN_BUCKET}/$${DEPLOY_S3_CDN_PREFIX}/software/mixcr/mixcr-${DRONE_COMMIT}.zip
+      - >
+        aws s3 cp \
+            --metadata-directive REPLACE --cache-control "max-age=604800,public" \
+            target/mixcr.zip \
+            s3://$${DEPLOY_S3_CDN_BUCKET}/$${DEPLOY_S3_CDN_PREFIX}/software/mixcr/mixcr-${DRONE_COMMIT}.zip
       - >
         aws s3api put-object-tagging \
             --bucket $${DEPLOY_S3_CDN_BUCKET} \
             --key $${DEPLOY_S3_CDN_PREFIX}/software/mixcr/mixcr-${DRONE_COMMIT}.zip \
-            --metadata-directive REPLACE --cache-control "max-age=604800,public" \
             --tagging '{"TagSet": [{"Key":"git_commit","Value":"${DRONE_COMMIT}"},{"Key":"git_branch","Value":"${DRONE_BRANCH}"},{"Key":"software","Value":"mixcr"}]}'
       - aws s3 cp --website-redirect 'https://cdn.milaboratory.com/software/mixcr/mixcr-${DRONE_COMMIT}.zip?response-content-disposition=attachment;filename=mixcr-b${DRONE_BUILD_NUMBER}-${DRONE_COMMIT_SHA:0:7}.zip' empty "s3://$${DEPLOY_S3_LINK_BUCKET}/$${DEPLOY_S3_LINK_PREFIX}/software/mixcr/mixcr-b${DRONE_BUILD_NUMBER}-${DRONE_COMMIT_SHA:0:7}.zip"
     environment:
@@ -220,6 +223,6 @@ steps:
 
 ---
 kind: signature
-hmac: a90ec8f75648bbfbb91d74584526f1ca7ea745dbcfb41e0bb0dee75e4d6707ac
+hmac: 9c989edeafff6762641d0f12b227819139f0708413dde34b587471b6f6f997d9
 
 ...
