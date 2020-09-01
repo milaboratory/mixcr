@@ -66,14 +66,14 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
     private final long clonesPosition;
 
     public ClnsReader(Path file, VDJCLibraryRegistry libraryRegistry) throws IOException {
-        this(file, 3, libraryRegistry);
+        this(file, libraryRegistry, 3);
     }
 
-    public ClnsReader(Path file, int concurrency, VDJCLibraryRegistry libraryRegistry) throws IOException {
-        this(file, new LambdaSemaphore(concurrency), libraryRegistry);
+    public ClnsReader(Path file, VDJCLibraryRegistry libraryRegistry, int concurrency) throws IOException {
+        this(file, libraryRegistry, new LambdaSemaphore(concurrency));
     }
 
-    public ClnsReader(Path file, LambdaSemaphore concurrencyLimiter, VDJCLibraryRegistry libraryRegistry) throws IOException {
+    public ClnsReader(Path file, VDJCLibraryRegistry libraryRegistry, LambdaSemaphore concurrencyLimiter) throws IOException {
         this(new PrimitivIHybrid(file, concurrencyLimiter), libraryRegistry);
     }
 

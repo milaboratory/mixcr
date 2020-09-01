@@ -33,7 +33,7 @@ import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.Objects;
 
 import static com.milaboratory.mixcr.basictypes.IOUtil.*;
@@ -65,4 +65,20 @@ public final class CloneSetIO {
                 throw new RuntimeException("Unsupported file type");
         }
     }
+
+    public static CloneReader mkReader(Path file, VDJCLibraryRegistry libraryRegistry) throws IOException {
+        return mkReader(file, libraryRegistry, 1);
+    }
+
+    public static CloneReader mkReader(Path file, VDJCLibraryRegistry libraryRegistry, int concurrency) throws IOException {
+        switch (Objects.requireNonNull(fileInfoExtractorInstance.getFileInfo(file.toFile())).fileType) {
+            case MAGIC_CLNA:
+                return new ClnAReader(file, libraryRegistry, concurrency);
+            case MAGIC_CLNS:
+                return new ClnsReader(file, libraryRegistry, concurrency);
+            default:
+                throw new RuntimeException("Unsupported file type");
+        }
+    }
+
 }

@@ -44,6 +44,8 @@ import picocli.CommandLine.Parameters;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -369,7 +371,12 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         // add json report file
         if (jsonReport != null) {
             options.add("--json-report");
-            options.add(jsonReport + "." + step + ".jsonl");
+            String pref;
+            if (Files.isDirectory(Paths.get(jsonReport)))
+                pref = jsonReport + (jsonReport.endsWith(File.separator) ? "" : File.separator);
+            else
+                pref = jsonReport + ".";
+            options.add(pref + step + ".jsonl");
         }
     }
 
@@ -415,7 +422,10 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         alignParameters.addAll(this.pipelineSpecificAlignParameters());
 
         // add all override parameters
-        alignParameters.addAll(this.alignParameters);
+        alignParameters.addAll(this.alignParameters
+                .stream()
+                .flatMap(s -> Arrays.stream(s.split(" ")))
+                .collect(Collectors.toList()));
 
         // put input fastq files & output vdjca
         alignParameters.addAll(getInputFiles());
@@ -424,13 +434,7 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         // parse parameters
         CommandAlign ap = new CommandAlign();
         ap.spec = this.spec;
-        new CommandLine(ap).parse(
-                alignParameters
-                        .stream()
-                        .flatMap(s -> Arrays.stream(s.split(" ")))
-                        .toArray(String[]::new));
-
-
+        new CommandLine(ap).parseArgs(alignParameters.toArray(new String[0]));
         return ap;
     }
 
@@ -447,18 +451,17 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         addReportOptions("assemblePartial", assemblePartialParameters);
 
         // add all override parameters
-        assemblePartialParameters.addAll(this.assemblePartialParameters);
+        assemblePartialParameters.addAll(this.assemblePartialParameters
+                .stream()
+                .flatMap(s -> Arrays.stream(s.split(" ")))
+                .collect(Collectors.toList()));
 
         assemblePartialParameters.add(input);
         assemblePartialParameters.add(output);
 
         // parse parameters
         CommandAssemblePartialAlignments ap = new CommandAssemblePartialAlignments();
-        new CommandLine(ap).parse(
-                assemblePartialParameters
-                        .stream()
-                        .flatMap(s -> Arrays.stream(s.split(" ")))
-                        .toArray(String[]::new));
+        new CommandLine(ap).parseArgs(assemblePartialParameters.toArray(new String[0]));
         return inheritOptionsAndValidate(ap);
     }
 
@@ -477,18 +480,17 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         inheritThreads(extendParameters, this.extendAlignmentsParameters);
 
         // add all override parameters
-        extendParameters.addAll(this.extendAlignmentsParameters);
+        extendParameters.addAll(this.extendAlignmentsParameters
+                .stream()
+                .flatMap(s -> Arrays.stream(s.split(" ")))
+                .collect(Collectors.toList()));
 
         extendParameters.add(input);
         extendParameters.add(output);
 
         // parse parameters
         CommandExtend ap = new CommandExtend();
-        new CommandLine(ap).parse(
-                extendParameters
-                        .stream()
-                        .flatMap(s -> Arrays.stream(s.split(" ")))
-                        .toArray(String[]::new));
+        new CommandLine(ap).parseArgs(extendParameters.toArray(new String[0]));
         return inheritOptionsAndValidate(ap);
     }
 
@@ -518,21 +520,18 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         assembleParameters.addAll(this.pipelineSpecificAssembleParameters());
 
         // add all override parameters
-        assembleParameters.addAll(this.assembleParameters);
+        assembleParameters.addAll(this.assembleParameters
+                .stream()
+                .flatMap(s -> Arrays.stream(s.split(" ")))
+                .collect(Collectors.toList()));
 
         assembleParameters.add(input);
         assembleParameters.add(output);
 
         // parse parameters
         CommandAssemble ap = new CommandAssemble();
-        new CommandLine(ap).parse(
-                assembleParameters
-                        .stream()
-                        .flatMap(s -> Arrays.stream(s.split(" ")))
-                        .toArray(String[]::new));
-
+        new CommandLine(ap).parseArgs(assembleParameters.toArray(new String[0]));
         ap.getCloneAssemblerParameters().updateFrom(mkAlign().getAlignerParameters());
-
         return ap;
     }
 
@@ -551,18 +550,17 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         inheritThreads(assembleContigParameters, this.assembleContigParameters);
 
         // add all override parameters
-        assembleContigParameters.addAll(this.assembleContigParameters);
+        assembleContigParameters.addAll(this.assembleContigParameters
+                .stream()
+                .flatMap(s -> Arrays.stream(s.split(" ")))
+                .collect(Collectors.toList()));
 
         assembleContigParameters.add(input);
         assembleContigParameters.add(output);
 
         // parse parameters
         CommandAssembleContigs ap = new CommandAssembleContigs();
-        new CommandLine(ap).parse(
-                assembleContigParameters
-                        .stream()
-                        .flatMap(s -> Arrays.stream(s.split(" ")))
-                        .toArray(String[]::new));
+        new CommandLine(ap).parseArgs(assembleContigParameters.toArray(new String[0]));
         return inheritOptionsAndValidate(ap);
     }
 

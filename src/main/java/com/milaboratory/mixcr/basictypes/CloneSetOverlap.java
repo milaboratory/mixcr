@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * Copyright (c) 2014-2020, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
  * (here and after addressed as Inventors)
  * All Rights Reserved
  *
@@ -27,44 +27,30 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.cli;
+package com.milaboratory.mixcr.basictypes;
 
-import org.junit.Ignore;
-import org.junit.Test;
-import picocli.AutoComplete;
+import cc.redberry.pipe.OutputPortCloseable;
+import com.milaboratory.util.sorting.MergeStrategy;
 
-/**
- *
- */
-public class MainTest {
+import java.util.List;
+import java.util.stream.Collectors;
 
-    @Ignore
-    @Test
-    public void test1() {
-        Main.main("analyze", "help", "amplicon");
+public final class CloneSetOverlap {
+    private CloneSetOverlap() {
     }
 
-    @Ignore
-    @Test
-    public void test2() {
-        Main.main("align", "help");
-    }
-
-    @Ignore
-    @Test
-    public void test3() {
-        Main.main("exportClones",
-                "-nMutations",
-                "{FR1Begin:FR3End}",
-                "-count",
-                "-nMutations",
-                "FR4",
-                "/Users/dbolotin/tst");
-    }
-
-    @Ignore
-    @Test
-    public void test2_completion() {
-        System.out.println(AutoComplete.bash("mixcr", Main.mkCmd()));
+    public static final OutputPortCloseable<List<List<Clone>>> overlap(
+            List<? extends VDJCSProperties.VDJCSProperty<? super Clone>> by,
+            List<? extends CloneReader> readers) {
+        VDJCSProperties.CloneOrdering ordering = readers.get(0).ordering();
+        for (int i = 1; i < readers.size(); i++)
+            if (!ordering.equals(readers.get(i).ordering()))
+                throw new RuntimeException("All clonesets must be sorted the same way.");
+        MergeStrategy<Clone> strategy = MergeStrategy.calculateStrategy(ordering.getProperties(), by);
+        if (!strategy.usesStreamOrdering())
+            throw new RuntimeException("Clone sorting is incompatible with overlap criteria.");
+        return strategy.join(readers.stream()
+                .map(CloneReader::readClones)
+                .collect(Collectors.toList()));
     }
 }

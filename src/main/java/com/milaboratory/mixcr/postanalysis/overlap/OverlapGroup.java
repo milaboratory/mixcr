@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * Copyright (c) 2014-2020, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
  * (here and after addressed as Inventors)
  * All Rights Reserved
  *
@@ -27,44 +27,41 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.cli;
+package com.milaboratory.mixcr.postanalysis.overlap;
 
-import org.junit.Ignore;
-import org.junit.Test;
-import picocli.AutoComplete;
+import java.util.List;
+import java.util.Objects;
 
-/**
- *
- */
-public class MainTest {
+public final class OverlapGroup<T> {
+    /** Elements in group separated by sample */
+    final List<List<T>> elements;
 
-    @Ignore
-    @Test
-    public void test1() {
-        Main.main("analyze", "help", "amplicon");
+    public OverlapGroup(List<List<T>> elements) {
+        this.elements = elements;
     }
 
-    @Ignore
-    @Test
-    public void test2() {
-        Main.main("align", "help");
+    public int size() {
+        return elements.size();
     }
 
-    @Ignore
-    @Test
-    public void test3() {
-        Main.main("exportClones",
-                "-nMutations",
-                "{FR1Begin:FR3End}",
-                "-count",
-                "-nMutations",
-                "FR4",
-                "/Users/dbolotin/tst");
+    public List<T> getBySample(int sampleIndex) {
+        return elements.get(sampleIndex);
     }
 
-    @Ignore
-    @Test
-    public void test2_completion() {
-        System.out.println(AutoComplete.bash("mixcr", Main.mkCmd()));
+    public boolean notEmpty() {
+        return !elements.stream().allMatch(List::isEmpty);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        OverlapGroup<?> that = (OverlapGroup<?>) o;
+        return Objects.equals(elements, that.elements);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(elements);
     }
 }

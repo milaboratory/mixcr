@@ -271,7 +271,7 @@ public interface SequenceHistory {
      */
     final class Merge implements SequenceHistory {
         /**
-         * Overlap type
+         * CloneSetOverlap type
          */
         final OverlapType overlapType;
         /**
@@ -499,7 +499,7 @@ public interface SequenceHistory {
                 Merge obj = (Merge) object;
                 // Type descriptor
                 output.writeByte(2);
-                // Overlap type
+                // CloneSetOverlap type
                 output.writeObject(obj.overlapType);
                 // Offset and number of mismatches
                 output.writeVarInt(obj.offset);

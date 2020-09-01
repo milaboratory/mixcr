@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
+ * Copyright (c) 2014-2020, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
  * (here and after addressed as Inventors)
  * All Rights Reserved
  *
@@ -27,44 +27,10 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.cli;
+package com.milaboratory.mixcr.postanalysis.additive;
 
-import org.junit.Ignore;
-import org.junit.Test;
-import picocli.AutoComplete;
-
-/**
- *
- */
-public class MainTest {
-
-    @Ignore
-    @Test
-    public void test1() {
-        Main.main("analyze", "help", "amplicon");
-    }
-
-    @Ignore
-    @Test
-    public void test2() {
-        Main.main("align", "help");
-    }
-
-    @Ignore
-    @Test
-    public void test3() {
-        Main.main("exportClones",
-                "-nMutations",
-                "{FR1Begin:FR3End}",
-                "-count",
-                "-nMutations",
-                "FR4",
-                "/Users/dbolotin/tst");
-    }
-
-    @Ignore
-    @Test
-    public void test2_completion() {
-        System.out.println(AutoComplete.bash("mixcr", Main.mkCmd()));
-    }
+public enum Normalization {
+    None,
+    DivideByTotal,
+    DivideByTotalForKey
 }

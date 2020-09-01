@@ -115,7 +115,8 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
 
     @Override
     public ActionConfiguration getConfiguration() {
-        return new AssembleConfiguration(getCloneAssemblerParameters(), clna);
+        ensureParametersInitialized();
+        return new AssembleConfiguration(getCloneAssemblerParameters(), clna, ordering);
     }
 
     // Extracting V/D/J/C gene list from input vdjca file
@@ -419,13 +420,16 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
     public static class AssembleConfiguration implements ActionConfiguration {
         public final CloneAssemblerParameters assemblerParameters;
         public final boolean clna;
+        public final VDJCSProperties.CloneOrdering ordering;
 
         @JsonCreator
         public AssembleConfiguration(
                 @JsonProperty("assemblerParameters") CloneAssemblerParameters assemblerParameters,
-                @JsonProperty("clna") boolean clna) {
+                @JsonProperty("clna") boolean clna,
+                @JsonProperty("ordering") VDJCSProperties.CloneOrdering ordering) {
             this.assemblerParameters = assemblerParameters;
             this.clna = clna;
+            this.ordering = ordering;
         }
 
         @Override

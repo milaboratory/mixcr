@@ -311,6 +311,35 @@ public abstract class VDJCObject {
                 target.getFeature(geneFeature).getSequence(), tp); // target.getFeature(geneFeature) uses exactly the same algorithm, guaranteed to be non-null at this point
     }
 
+    public AminoAcidSequence getFeatureAA(GeneFeature geneFeature) {
+        NSequenceWithQuality feature = getFeature(geneFeature);
+        if (feature == null)
+            return null;
+
+        int targetId = getTargetContainingFeature(geneFeature);
+        TranslationParameters tr = targetId == -1 ?
+                TranslationParameters.FromLeftWithIncompleteCodon
+                : getPartitionedTarget(targetId).getPartitioning().getTranslationParameters(geneFeature);
+        if (tr == null)
+            return null;
+        return AminoAcidSequence.translate(feature.getSequence(), tr);
+    }
+
+
+    public int ntLengthOf(GeneFeature gf) {
+        NSequenceWithQuality f = getFeature(gf);
+        if (f == null)
+            return -1;
+        return f.size();
+    }
+
+    public int aaLengthOf(GeneFeature gf) {
+        AminoAcidSequence f = getFeatureAA(gf);
+        if (f == null)
+            return -1;
+        return f.size();
+    }
+
     public CaseSensitiveNucleotideSequence getIncompleteFeature(GeneFeature geneFeature) {
         NSequenceWithQuality feature = getFeature(geneFeature);
         if (feature != null) {
