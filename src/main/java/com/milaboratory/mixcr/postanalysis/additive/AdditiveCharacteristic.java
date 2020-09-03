@@ -18,13 +18,13 @@ import java.util.Objects;
 )
 public class AdditiveCharacteristic<K, T> extends Characteristic<K, T> {
     @JsonProperty("key")
-    final KeyFunction<K, T> keyFunction;
+    public final KeyFunction<K, T> keyFunction;
     @JsonProperty("metric")
-    final AdditiveMetric<T> metric;
+    public final AdditiveMetric<T> metric;
     @JsonProperty("agg")
-    final AggregationType aggType;
+    public final AggregationType aggType;
     @JsonProperty("normalizeByKey")
-    final boolean normalizeByKey;
+    public final boolean normalizeByKey;
 
     @JsonCreator
     public AdditiveCharacteristic(@JsonProperty("name") String name,
