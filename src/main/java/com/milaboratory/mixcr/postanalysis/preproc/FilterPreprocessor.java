@@ -8,6 +8,7 @@ import com.milaboratory.mixcr.util.FilteredIterable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 /**
@@ -33,5 +34,18 @@ public class FilterPreprocessor<T> implements SetPreprocessor<T> {
     @Override
     public Function<Iterable<T>, Iterable<T>> setup(Iterable<T>[] sets) {
         return set -> new FilteredIterable<>(set, t -> predicates.stream().allMatch(s -> s.test(t)));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FilterPreprocessor<?> that = (FilterPreprocessor<?>) o;
+        return Objects.equals(predicates, that.predicates);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(predicates);
     }
 }

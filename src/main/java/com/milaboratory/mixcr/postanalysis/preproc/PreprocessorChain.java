@@ -36,4 +36,17 @@ public class PreprocessorChain<T> implements SetPreprocessor<T> {
             mapping.put(sets[i], proc[i]);
         return mapping::get;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PreprocessorChain<?> that = (PreprocessorChain<?>) o;
+        return Objects.equals(chain, that.chain);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(chain);
+    }
 }
