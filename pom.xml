@@ -40,7 +40,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <milib.version>1.14-47a96ec</milib.version>
+        <milib.version>1.14-161fcea</milib.version>
         <revision>SNAPSHOT</revision>
     </properties>
 

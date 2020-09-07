@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 public class AAProperties {
     /** Compute property normalized on sequence length */
     public static double computeNormalized(AAProperty property, VDJCObject obj, GeneFeature gf) {
-        AminoAcidSequence seq = obj.getFeatureAA(gf);
+        AminoAcidSequence seq = obj.getAAFeature(gf);
         if (seq == null)
             return Double.NaN;
         double r = 0;
@@ -28,7 +28,7 @@ public class AAProperties {
     /** Compute property based on selection */
     public static double compute(AAProperty property, VDJCObject obj, GeneFeature gf,
                                  Adjustment alignment, int nLetters) {
-        AminoAcidSequence seq = obj.getFeatureAA(gf);
+        AminoAcidSequence seq = obj.getAAFeature(gf);
         if (seq == null)
             return Double.NaN;
 

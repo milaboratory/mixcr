@@ -90,8 +90,12 @@ steps:
     depends_on:
       - deploy_maven
 
-  - name: Send Telegram Notification
+  - name: telegram
     image: appleboy/drone-telegram
+    when:
+      status:
+        - success
+        - failure
     depends_on:
       - deploy_bin
     settings:
@@ -221,8 +225,25 @@ steps:
     depends_on:
       - build_and_test
 
+  - name: telegram
+    image: appleboy/drone-telegram
+    when:
+      status:
+        - failure
+    depends_on:
+      - integration_tests
+    settings:
+      token:
+        from_secret: telegram-token
+      to:
+        from_secret: telegram-chat-id-micore
+      format: markdown
+      message: >
+        ❌ MiXCR test {{build.number}} failure.
+        🌐 {{build.link}}
+
 ---
 kind: signature
-hmac: 9c989edeafff6762641d0f12b227819139f0708413dde34b587471b6f6f997d9
+hmac: 37dab75dd8e579913e6c3b17b02ee28cba794b96aaafbc20bdc4b4eb977528c2
 
 ...
