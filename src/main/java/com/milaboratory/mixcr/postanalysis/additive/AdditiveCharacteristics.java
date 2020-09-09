@@ -16,6 +16,26 @@ import io.repseq.core.GeneType;
 public final class AdditiveCharacteristics {
     private AdditiveCharacteristics() {}
 
+    public static AdditiveCharacteristic<String, Clone> readCount(SetPreprocessor<Clone> preproc) {
+        String name = "readCount";
+        return new AdditiveCharacteristic<>(name, preproc,
+                new WeightFunctions.Count(),
+                new KeyFunctions.Named<>(name),
+                new AdditiveMetrics.Constant(),
+                AggregationType.Sum,
+                false);
+    }
+
+    public static AdditiveCharacteristic<String, Clone> clonotypeCount(SetPreprocessor<Clone> preproc) {
+        String name = "cloneCount";
+        return new AdditiveCharacteristic<>(name, preproc,
+                new WeightFunctions.NoWeight<>(),
+                new KeyFunctions.Named<>(name),
+                new AdditiveMetrics.Constant(),
+                AggregationType.Sum,
+                false);
+    }
+
     public static AdditiveCharacteristic<String, Clone> weightedLengthOf(GeneFeature gf, boolean aa) {
         return weightedLengthOf(new NoPreprocessing<>(), gf, aa);
     }
