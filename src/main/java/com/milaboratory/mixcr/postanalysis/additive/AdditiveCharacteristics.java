@@ -55,6 +55,19 @@ public final class AdditiveCharacteristics {
         );
     }
 
+    public static AdditiveCharacteristic<String, Clone> weightedAddedNucleotides(SetPreprocessor<Clone> preproc) {
+        String name = "AddedNucleotides";
+        return new AdditiveCharacteristic<>(
+                name,
+                preproc,
+                new WeightFunctions.Count(),
+                new KeyFunctions.Named<>(name),
+                new AdditiveMetrics.AddedNucleotides<>(),
+                AggregationType.Mean,
+                false
+        );
+    }
+
     public static AdditiveCharacteristic<String, Clone> weightedBbiophysicsNormalized(AAProperties.AAProperty property, GeneFeature gf) {
         return weightedBbiophysicsNormalized(new NoPreprocessing<>(), property, gf);
     }

@@ -84,6 +84,36 @@ public final class AdditiveMetrics {
         }
     }
 
+    public static final class AddedNucleotides<T extends VDJCObject> implements AdditiveMetric<T>, JsonSupport {
+        public AddedNucleotides() {}
+
+        @Override
+        public double compute(T obj) {
+            int vd = obj.ntLengthOf(GeneFeature.VDJunction);
+            int dj = obj.ntLengthOf(GeneFeature.DJJunction);
+            if (vd >= 0 && dj >= 0)
+                return vd + dj;
+            if (obj.getFeature(GeneFeature.DCDR3Part) != null)
+                return Double.NaN; // no CDR3
+            int vj = obj.ntLengthOf(GeneFeature.VJJunction);
+            if (vj < 0)
+                return Double.NaN;
+            return vj;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            return 7891;
+        }
+    }
+
     public static final class AAPropertyNormalized implements AdditiveMetric<Clone>, JsonSupport {
         public AAProperty property;
         public GeneFeature geneFeature = GeneFeature.CDR3;
