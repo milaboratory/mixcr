@@ -16,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonSubTypes({
         @JsonSubTypes.Type(value = AdditiveMetrics.Constant.class, name = "constant"),
         @JsonSubTypes.Type(value = AdditiveMetrics.GeneFeatureLength.class, name = "length"),
+        @JsonSubTypes.Type(value = AdditiveMetrics.AddedNucleotides.class, name = "addedNucleotides"),
         @JsonSubTypes.Type(value = AdditiveMetrics.AAPropertyNormalized.class, name = "aaPropertyNormalized"),
         @JsonSubTypes.Type(value = AdditiveMetrics.AAPropertySum.class, name = "aaProperty"),
 })
