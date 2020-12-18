@@ -247,12 +247,13 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
         assert report.getFinalCloneCount() == totalClonesCount;
         assert report.getFinalCloneCount() >= report.getInitialCloneCount();
 
+        int cloneId = 0;
         Clone[] clones = new Clone[totalClonesCount];
         try (PrimitivI tmpIn = new PrimitivI(new BufferedInputStream(new FileInputStream(out)))) {
             IOUtil.registerGeneReferences(tmpIn, genes, alignerParameters);
             int i = 0;
             for (Clone clone : CUtils.it(new PipeDataInputReader<>(Clone.class, tmpIn, totalClonesCount)))
-                clones[i++] = clone;
+                clones[i++] = clone.setId(cloneId++);
         }
 
         CloneSet cloneSet = new CloneSet(Arrays.asList(clones), genes, alignerParameters, cloneAssemblerParameters, ordering);
