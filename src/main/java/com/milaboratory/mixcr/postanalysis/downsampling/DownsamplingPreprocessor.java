@@ -21,7 +21,7 @@ import static com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingUtil.
 /**
  *
  */
-public abstract class DownsamplingPreprocessor<T> implements SetPreprocessor<T> {
+public class DownsamplingPreprocessor<T> implements SetPreprocessor<T> {
     public final ToLongFunction<T> getCount;
     public final BiFunction<T, Long, T> setCount;
     @JsonProperty("downsampleValueChooser")

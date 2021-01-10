@@ -77,11 +77,17 @@ public class AdditiveCharacteristic<K, T> extends Characteristic<K, T> {
 
                         for (int i = 0; i < mean.length; ++i) {
                             MetricValue<K> m = mean[i];
+                            if (meanAgg.nElements == 1) {
+                                result[i] = new MetricValue<>(m.key, 0.0);
+                                continue;
+                            }
                             MetricValue<K> m2 = meanSquare[i];
                             if (!m.key.equals(m2.key))
                                 throw new IllegalArgumentException();
 
-                            result[i] = new MetricValue<>(m.key, Math.sqrt(m2.value - m.value * m.value));
+                            result[i] = new MetricValue<>(m.key, Math.sqrt(
+                                    meanAgg.weightSum / (meanAgg.weightSum - 1)
+                                            * (m2.value - m.value * m.value)));
                         }
 
                         return result;

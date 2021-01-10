@@ -1,5 +1,6 @@
 package com.milaboratory.mixcr.postanalysis.downsampling;
 
+import com.milaboratory.mixcr.postanalysis.TestObject;
 import org.apache.commons.math3.random.RandomDataGenerator;
 import org.apache.commons.math3.random.Well512a;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
@@ -7,7 +8,9 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.Arrays;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
 /**
@@ -69,7 +72,7 @@ public class DownsamplingPreprocessorTest {
         for (int nTry = 0; nTry < nTries; ++nTry) {
             long[] counts = new long[gen.nextInt(1000_000, 2000_000) / 10];
             for (int i = 0; i < counts.length; ++i)
-                counts[i] = (long) (gen.nextInt(50, 500) * 5000 / Math.pow(1 + i, 1) + 1);
+                counts[i] = (long) (gen.nextInt(50, 500) * 5000L / Math.pow(1 + i, 1) + 1);
 
             long sum = Arrays.stream(counts).sum();
 
@@ -84,5 +87,82 @@ public class DownsamplingPreprocessorTest {
             }
         }
         System.out.println(timing);
+    }
+
+    @Test
+    public void test3() {
+        RandomDataGenerator rng = new RandomDataGenerator(new Well512a());
+
+        DownsampleValueChooser dsChooser = counts -> Arrays.stream(counts).min().orElse(0);
+
+        DownsamplingPreprocessor<TestObject> proc = new DownsamplingPreprocessor<>(
+                t -> Math.round(t.weight),
+                (t, w) -> new TestObject(t.value, 1d * w),
+                dsChooser,
+                rng.nextLong(0, Long.MAX_VALUE / 2)
+        );
+
+        int nDatasets = 10;
+        Dataset[] initial = new Dataset[nDatasets];
+        for (int i = 0; i < initial.length; i++) {
+            initial[i] = rndDataset(rng, rng.nextInt(100, 1000));
+        }
+
+        long dsValue = dsChooser.compute(Arrays.stream(initial).mapToLong(d -> d.count).toArray());
+        Function<Iterable<TestObject>, Iterable<TestObject>> setup = proc.setup(initial);
+
+        Dataset[] downsampled = Arrays.stream(initial).map(setup)
+                .map(Dataset::new)
+                .toArray(Dataset[]::new);
+
+        for (int i = 0; i < downsampled.length; i++) {
+            Dataset in = initial[i];
+            Dataset dw = downsampled[i];
+
+            Assert.assertTrue(in.set.containsAll(dw.set));
+            Assert.assertEquals(dsValue, dw.count);
+        }
+    }
+
+    static <T> List<T> toList(Iterable<T> it) {
+        if (it instanceof Collection)
+            return new ArrayList<>((Collection<? extends T>) it);
+
+        ArrayList<T> l = new ArrayList<>();
+        for (T t : it) {
+            l.add(t);
+        }
+        return l;
+    }
+
+    public static Dataset rndDataset(RandomDataGenerator rng, int size) {
+        TestObject[] r = new TestObject[size];
+        for (int i = 0; i < size; i++) {
+            r[i] = new TestObject(
+                    rng.nextUniform(0, 1),
+                    rng.nextUniform(0, 100));
+        }
+        return new Dataset(Arrays.asList(r));
+    }
+
+    private static final class Dataset implements Iterable<TestObject> {
+        final List<TestObject> data;
+        final Set<Double> set;
+        final long count;
+
+        public Dataset(Iterable<TestObject> data) {
+            this(toList(data));
+        }
+
+        public Dataset(List<TestObject> data) {
+            this.data = data;
+            this.set = data.stream().map(s -> s.value).collect(Collectors.toSet());
+            this.count = data.stream().mapToLong(l -> Math.round(l.weight)).sum();
+        }
+
+        @Override
+        public Iterator<TestObject> iterator() {
+            return data.iterator();
+        }
     }
 }

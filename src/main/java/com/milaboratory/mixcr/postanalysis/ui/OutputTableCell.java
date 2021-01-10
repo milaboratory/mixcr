@@ -1,7 +1,5 @@
 package com.milaboratory.mixcr.postanalysis.ui;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.Objects;
 
 /**
@@ -23,7 +21,7 @@ public final class OutputTableCell implements Comparable<OutputTableCell> {
     }
 
     @Override
-    public int compareTo(@NotNull OutputTableCell o) {
+    public int compareTo(OutputTableCell o) {
         int c = Integer.compare(iRow, o.iRow);
         if (c != 0)
             return c;

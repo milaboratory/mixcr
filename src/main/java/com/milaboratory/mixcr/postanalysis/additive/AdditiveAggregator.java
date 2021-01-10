@@ -41,6 +41,10 @@ public class AdditiveAggregator<K, T> implements Aggregator<K, T> {
      */
     double metricSum, weightSum;
     /**
+     * Number of elements
+     */
+    int nElements;
+    /**
      * Aggregated values for other keys ( != null )
      */
     final TObjectDoubleHashMap<K>
@@ -68,6 +72,7 @@ public class AdditiveAggregator<K, T> implements Aggregator<K, T> {
         if (Double.isNaN(metricValue))
             return;
 
+        nElements += 1;
         double weightValue = weight.weight(obj);
         weightSum += weightValue;
 

@@ -1,5 +1,6 @@
 package com.milaboratory.mixcr.postanalysis;
 
+import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.util.CanReportProgressAndStage;
 
 import java.util.*;
@@ -7,17 +8,23 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- *
+ * @param <T> type of objects
  */
 public class PostanalysisRunner<T> implements CanReportProgressAndStage {
     private final List<Characteristic<?, T>> characteristics = new ArrayList<>();
     private Iterable<T>[] datasets;
 
+    public void addCharacteristics(CharacteristicGroup<?, T>... groups) {
+        for (CharacteristicGroup<?, T> g : groups) {
+            addCharacteristics(g.characteristics);
+        }
+    }
+
     public void addCharacteristics(Characteristic<?, T>... chs) {
         addCharacteristics(Arrays.asList(chs));
     }
 
-    public void addCharacteristics(List<Characteristic<?, T>> chs) {
+    public void addCharacteristics(List<? extends Characteristic<?, T>> chs) {
         characteristics.addAll(chs);
     }
 

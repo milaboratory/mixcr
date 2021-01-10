@@ -24,6 +24,7 @@ public class DiversityAggregator<T> implements Aggregator<DiversityMeasure, T> {
     private int diversity = 0;
     /** total count across all clonotypes */
     private long countSum = 0;
+    /** clone count -> number of clones */
     final TLongIntHashMap freqTable = new TLongIntHashMap(Constants.DEFAULT_CAPACITY, Constants.DEFAULT_LOAD_FACTOR, -1, 0);
     final ToLongFunction<T> count;
 
@@ -128,5 +129,4 @@ public class DiversityAggregator<T> implements Aggregator<DiversityMeasure, T> {
         result.addAll(computeEfronThisted());
         return result.toArray(new MetricValue[0]);
     }
-
 }

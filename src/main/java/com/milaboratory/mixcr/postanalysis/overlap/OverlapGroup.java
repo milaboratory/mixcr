@@ -29,10 +29,12 @@
  */
 package com.milaboratory.mixcr.postanalysis.overlap;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
-public final class OverlapGroup<T> {
+public final class OverlapGroup<T> implements Iterable<List<T>> {
     /** Elements in group separated by sample */
     final List<List<T>> elements;
 
@@ -50,6 +52,15 @@ public final class OverlapGroup<T> {
 
     public boolean notEmpty() {
         return !elements.stream().allMatch(List::isEmpty);
+    }
+
+    @Override
+    public Iterator<List<T>> iterator() {
+        return elements.iterator();
+    }
+
+    public Stream<List<T>> stream() {
+        return elements.stream();
     }
 
     @Override

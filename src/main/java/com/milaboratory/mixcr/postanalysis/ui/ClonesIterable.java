@@ -5,7 +5,6 @@ import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import io.repseq.core.VDJCLibraryRegistry;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -32,7 +31,6 @@ public class ClonesIterable implements Iterable<Clone>, AutoCloseable {
 
     private final List<AutoCloseable> close = new ArrayList<>();
 
-    @NotNull
     @Override
     public Iterator<Clone> iterator() {
         try {

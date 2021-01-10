@@ -47,7 +47,7 @@ import java.util.function.Function;
 import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
 
-public abstract class OverlapDownsamplingPreprocessor<T> implements SetPreprocessor<OverlapGroup<T>> {
+public class OverlapDownsamplingPreprocessor<T> implements SetPreprocessor<OverlapGroup<T>> {
     public final ToLongFunction<T> getCount;
     public final BiFunction<T, Long, T> setCount;
     @JsonProperty("downsampleValueChooser")

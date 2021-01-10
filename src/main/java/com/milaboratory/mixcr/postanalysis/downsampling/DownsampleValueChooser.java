@@ -74,7 +74,7 @@ public interface DownsampleValueChooser {
     }
 
     class Auto implements DownsampleValueChooser {
-        public double quantile = 0.2;
+        public double quantile = 20.;
         public double scale = 0.5;
         public long threshold = 500;
 
@@ -87,7 +87,7 @@ public interface DownsampleValueChooser {
         }
 
         @Override
-        public long compute(long[] totalCounts) {
+        public long compute(long... totalCounts) {
             long q = (long) (new Percentile(quantile).evaluate(Arrays.stream(totalCounts).mapToDouble(l -> l).toArray()) * scale);
             long min = Arrays.stream(totalCounts).min().orElse(0);
             long d = Math.max(q, min);

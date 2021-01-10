@@ -1,7 +1,5 @@
 package com.milaboratory.mixcr.util;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.Iterator;
 import java.util.function.Predicate;
 
@@ -17,7 +15,6 @@ public class FilteredIterable<T> implements Iterable<T> {
         this.accept = accept;
     }
 
-    @NotNull
     @Override
     public Iterator<T> iterator() {
         return new FilteredIterator<>(inner.iterator(), accept);
