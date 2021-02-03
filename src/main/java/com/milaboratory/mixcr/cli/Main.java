@@ -94,6 +94,10 @@ public final class Main {
         }
     }
 
+    private static boolean assertionsDisabled() {
+        return System.getProperty("noAssertions") != null;
+    }
+
     public static CommandLine mkCmd() {
         System.setProperty("picocli.usage.width", "100");
 
@@ -101,11 +105,10 @@ public final class Main {
         String command = System.getProperty("mixcr.command", "java -jar mixcr.jar");
 
         if (!initialized) {
-            if (System.getProperty("jdk.module.main") == null) // hack fixme
-                // Checking whether we are running a snapshot version
-                if (VersionInfo.getVersionInfoForArtifact("mixcr").getVersion().contains("SNAPSHOT"))
-                    // If so, enable asserts
-                    ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(true);
+            // Checking whether we are running a snapshot version
+            if (!assertionsDisabled() && VersionInfo.getVersionInfoForArtifact("mixcr").getVersion().contains("SNAPSHOT"))
+                // If so, enable asserts
+                ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(true);
 
             TempFileManager.setPrefix("mixcr_");
 
