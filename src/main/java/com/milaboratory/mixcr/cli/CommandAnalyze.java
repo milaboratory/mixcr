@@ -638,7 +638,7 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         return outputNamePattern() + ".rescued_" + round + ".vdjca";
     }
 
-    public String fNameForExtenedAlignments() {
+    public String fNameForExtendedAlignments() {
         return outputNamePattern() + ".extended.vdjca";
     }
 
@@ -686,7 +686,7 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
 
         // --- Running alignments extender
         if (!doNotExtendAlignments) {
-            String fileWithExtAlignments = fNameForExtenedAlignments();
+            String fileWithExtAlignments = fNameForExtendedAlignments();
             mkExtend(fileWithAlignments, fileWithExtAlignments).run();
             fileWithAlignments = fileWithExtAlignments;
         }
