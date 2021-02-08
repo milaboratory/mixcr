@@ -21,8 +21,17 @@ import java.util.function.Predicate;
         @JsonSubTypes.Type(value = ElementPredicate.OverlapIncludeChains.class, name = "overlapIncludesChains")
 })
 public interface ElementPredicate<T> extends Predicate<T> {
+    default String description() {
+        return "";
+    }
+
     @JsonAutoDetect
     final class NoOutOfFrames implements ElementPredicate<Clone> {
+        @Override
+        public String description() {
+            return "Exclude out-of-frames";
+        }
+
         @Override
         public boolean test(Clone clone) {
             if (clone.isOutOfFrame(GeneFeature.CDR3))
@@ -45,6 +54,11 @@ public interface ElementPredicate<T> extends Predicate<T> {
 
     @JsonAutoDetect
     final class NoStops implements ElementPredicate<Clone> {
+        @Override
+        public String description() {
+            return "Exclude stop-codons";
+        }
+
         @Override
         public boolean test(Clone clone) {
             for (GeneFeature gf : clone.getParentCloneSet().getAssemblingFeatures()) {
@@ -74,6 +88,11 @@ public interface ElementPredicate<T> extends Predicate<T> {
         @JsonCreator
         public IncludeChains(@JsonProperty("chains") Chains chains) {
             this.chains = chains;
+        }
+
+        @Override
+        public String description() {
+            return "Select chains: " + chains;
         }
 
         @Override
@@ -108,6 +127,11 @@ public interface ElementPredicate<T> extends Predicate<T> {
             this.chains = chains;
         }
 
+        @Override
+        public String description() {
+            return "Select chains: " + chains;
+        }
+        
         @Override
         public boolean test(OverlapGroup<Clone> object) {
             for (GeneType gt : GeneType.VJC_REFERENCE)

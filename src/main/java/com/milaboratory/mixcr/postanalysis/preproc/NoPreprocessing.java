@@ -11,6 +11,11 @@ public class NoPreprocessing<T> implements SetPreprocessor<T> {
     public static final NoPreprocessing<?> INSTANCE = new NoPreprocessing<>();
 
     @Override
+    public String[] description() {
+        return new String[0];
+    }
+
+    @Override
     public Function<Iterable<T>, Iterable<T>> setup(Iterable<T>[] sets) {
         return set -> set;
     }

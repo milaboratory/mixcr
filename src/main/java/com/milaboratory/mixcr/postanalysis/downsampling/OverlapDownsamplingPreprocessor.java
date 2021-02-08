@@ -63,6 +63,14 @@ public class OverlapDownsamplingPreprocessor<T> implements SetPreprocessor<Overl
     }
 
     @Override
+    public String[] description() {
+        String ch = downsampleValueChooser.description();
+        if (ch == null || ch.isEmpty())
+            return new String[0];
+        return new String[]{ch};
+    }
+
+    @Override
     public Function<Iterable<OverlapGroup<T>>, Iterable<OverlapGroup<T>>> setup(Iterable<OverlapGroup<T>>[] sets) {
         return set -> {
             TLongArrayList[] counts = null;

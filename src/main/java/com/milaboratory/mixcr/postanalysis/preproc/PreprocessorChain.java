@@ -24,6 +24,16 @@ public class PreprocessorChain<T> implements SetPreprocessor<T> {
     }
 
     @Override
+    public String[] description() {
+        return chain.stream()
+                .map(SetPreprocessor::description)
+                .filter(Objects::nonNull)
+                .flatMap(Arrays::stream)
+                .filter(s -> !s.isEmpty())
+                .toArray(String[]::new);
+    }
+
+    @Override
     public Function<Iterable<T>, Iterable<T>> setup(Iterable<T>[] sets) {
         Iterable<T>[] proc = sets;
         for (SetPreprocessor<T> p : chain) {

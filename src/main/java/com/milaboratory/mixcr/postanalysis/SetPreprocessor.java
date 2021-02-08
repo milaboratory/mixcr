@@ -23,11 +23,14 @@ import java.util.function.Function;
         @JsonSubTypes.Type(value = ClonesOverlapDownsamplingPreprocessor.class, name = "overlapDownsample"),
         @JsonSubTypes.Type(value = PreprocessorChain.class, name = "chain"),
         @JsonSubTypes.Type(value = FilterPreprocessor.class, name = "filter"),
-        @JsonSubTypes.Type(value = SampleFilterPreprocessor.class, name = "filterInvidually")
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public interface SetPreprocessor<T> {
     Function<Iterable<T>, Iterable<T>> setup(Iterable<T>[] sets);
+
+    default String[] description() {
+        return new String[0];
+    }
 
     default SetPreprocessor<T> filter(boolean before, ElementPredicate<T>... predicates) {
         FilterPreprocessor<T> filter = new FilterPreprocessor<>(predicates);

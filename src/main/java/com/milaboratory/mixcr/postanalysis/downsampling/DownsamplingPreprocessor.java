@@ -37,6 +37,14 @@ public class DownsamplingPreprocessor<T> implements SetPreprocessor<T> {
     }
 
     @Override
+    public String[] description() {
+        String ch = downsampleValueChooser.description();
+        if (ch == null || ch.isEmpty())
+            return new String[0];
+        return new String[]{ch};
+    }
+
+    @Override
     public Function<Iterable<T>, Iterable<T>> setup(Iterable<T>[] sets) {
         long[] totals = new long[sets.length];
         for (int i = 0; i < sets.length; i++)

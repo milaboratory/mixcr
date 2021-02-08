@@ -23,6 +23,16 @@ public class FilterPreprocessor<T> implements SetPreprocessor<T> {
         this.predicates = predicates;
     }
 
+    @Override
+    public String[] description() {
+        return predicates.stream()
+                .map(ElementPredicate::description)
+                .filter(Objects::nonNull)
+                .filter(s -> !s.isEmpty())
+                .map(f -> "Filter: " + f)
+                .toArray(String[]::new);
+    }
+
     public FilterPreprocessor(ElementPredicate<T>... predicates) {
         this(Arrays.asList(predicates));
     }

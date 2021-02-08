@@ -26,6 +26,10 @@ import java.util.stream.LongStream;
 public interface DownsampleValueChooser {
     long compute(long[] totalCounts);
 
+    default String description() {
+        return "";
+    }
+
     class Fixed implements DownsampleValueChooser {
         public long value;
 
@@ -33,6 +37,11 @@ public interface DownsampleValueChooser {
 
         public Fixed(long value) {
             this.value = value;
+        }
+
+        @Override
+        public String description() {
+            return "Downsample to a fixed count = " + value;
         }
 
         @Override
@@ -55,6 +64,11 @@ public interface DownsampleValueChooser {
     }
 
     class Minimal implements DownsampleValueChooser {
+        @Override
+        public String description() {
+            return "Downsample to the minimal dataset";
+        }
+
         @Override
         public long compute(long[] totalCounts) {
             return LongStream.of(totalCounts).min().orElse(0);
@@ -84,6 +98,11 @@ public interface DownsampleValueChooser {
             this.quantile = quantile;
             this.scale = scale;
             this.threshold = threshold;
+        }
+
+        @Override
+        public String description() {
+            return String.format("Downsample to the min(%s * percentile(%s), %s))", scale, quantile, threshold);
         }
 
         @Override
