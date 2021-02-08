@@ -11,24 +11,42 @@ import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  *
  */
 public class OutputTable {
     public final String name;
-    public final List<String> rowNames;
-    public final List<String> colNames;
+    /** row & col ids (names) */
+    public final List<?> rowIds, colIds;
+    /** rowId -> index in rows list */
+    private final Map<Object, Integer> rowId2idx;
+    /** colId -> index in columns list */
+    private final Map<Object, Integer> colId2idx;
+    /** sparse cells */
     public final List<OutputTableCell> cells;
 
-    public OutputTable(String name, List<String> rowNames, List<String> colNames, List<OutputTableCell> cells) {
+    public OutputTable(String name, List<?> rowIds, List<?> colIds, List<OutputTableCell> cells) {
         this.name = name;
-        this.rowNames = rowNames;
-        this.colNames = colNames;
+        this.rowIds = rowIds;
+        this.colIds = colIds;
         this.cells = cells;
+        this.rowId2idx = IntStream.range(0, rowIds.size()).boxed().collect(Collectors.toMap(rowIds::get, i -> i));
+        this.colId2idx = IntStream.range(0, colIds.size()).boxed().collect(Collectors.toMap(colIds::get, i -> i));
     }
 
-    private List<HierarchyNode> columnsHierarchy, rowsHierarchy;
+    public int rowIdx(Object rowId) {
+        return rowId2idx.get(rowId);
+    }
+
+    public int colIdx(Object colId) {
+        return colId2idx.get(colId);
+    }
+
+    private volatile List<HierarchyNode> columnsHierarchy, rowsHierarchy;
 
     public synchronized List<HierarchyNode> columnsHierarchy() {
         if (columnsHierarchy == null)
@@ -42,46 +60,50 @@ public class OutputTable {
         return rowsHierarchy;
     }
 
+    public OutputTable reorder(List<?> rowIds, List<?> colIds) {
+        return new OutputTable(name, rowIds, colIds, cells);
+    }
+
     public double[][] columns(double naValue, double nan) {
-        int nRows = rowNames.size(), nCols = colNames.size();
+        int nRows = rowIds.size(), nCols = colIds.size();
         double[][] r = new double[nCols][nRows];
         if (naValue != 0.0)
             for (double[] doubles : r)
                 Arrays.fill(doubles, naValue);
 
         for (OutputTableCell cell : cells)
-            r[cell.iCol][cell.iRow] = Double.isNaN(cell.value) ? nan : cell.value;
+            r[colIdx(cell.iCol)][rowIdx(cell.iRow)] = Double.isNaN(cell.value) ? nan : cell.value;
 
         return r;
     }
 
     public Double[][] columns() {
-        int nRows = rowNames.size(), nCols = colNames.size();
+        int nRows = rowIds.size(), nCols = colIds.size();
         Double[][] r = new Double[nCols][nRows];
         for (OutputTableCell cell : cells)
-            r[cell.iCol][cell.iRow] = cell.value;
+            r[colIdx(cell.iCol)][rowIdx(cell.iRow)] = cell.value;
 
         return r;
     }
 
     public double[][] rows(double naValue, double nan) {
-        int nRows = rowNames.size(), nCols = colNames.size();
+        int nRows = rowIds.size(), nCols = colIds.size();
         double[][] r = new double[nRows][nCols];
         if (naValue != 0.0)
             for (double[] doubles : r)
                 Arrays.fill(doubles, naValue);
 
         for (OutputTableCell cell : cells)
-            r[cell.iRow][cell.iCol] = Double.isNaN(cell.value) ? nan : cell.value;
+            r[rowIdx(cell.iRow)][colIdx(cell.iCol)] = Double.isNaN(cell.value) ? nan : cell.value;
 
         return r;
     }
 
     public Double[][] rows() {
-        int nRows = rowNames.size(), nCols = colNames.size();
+        int nRows = rowIds.size(), nCols = colIds.size();
         Double[][] r = new Double[nRows][nCols];
         for (OutputTableCell cell : cells)
-            r[cell.iRow][cell.iCol] = cell.value;
+            r[rowIdx(cell.iRow)][colIdx(cell.iCol)] = cell.value;
 
         return r;
     }
@@ -92,20 +114,6 @@ public class OutputTable {
 
     public double maxValue() {
         return cells.stream().mapToDouble(c -> c.value).filter(v -> !Double.isNaN(v)).max().orElse(Double.NaN);
-    }
-
-    public OutputTable setRowNames(List<String> rowNames) {
-        OutputTable t = new OutputTable(name, rowNames, colNames, cells);
-        t.columnsHierarchy = columnsHierarchy;
-        t.rowsHierarchy = rowsHierarchy;
-        return t;
-    }
-
-    public OutputTable setColNames(List<String> colNames) {
-        OutputTable t = new OutputTable(name, rowNames, colNames, cells);
-        t.columnsHierarchy = columnsHierarchy;
-        t.rowsHierarchy = rowsHierarchy;
-        return t;
     }
 
     @Override
@@ -134,14 +142,14 @@ public class OutputTable {
         Path outName = dir.resolve(prefix + name + ext);
         try (BufferedWriter writer = Files.newBufferedWriter(outName, StandardOpenOption.CREATE)) {
             writer.write("");
-            for (String column : colNames) {
+            for (Object column : colIds) {
                 writer.write(sep);
-                writer.write(column);
+                writer.write(column.toString());
             }
 
-            for (int iRow = 0; iRow < rowNames.size(); ++iRow) {
+            for (int iRow = 0; iRow < rowIds.size(); ++iRow) {
                 writer.write("\n");
-                writer.write(rowNames.get(iRow));
+                writer.write(rowIds.get(iRow).toString());
                 Double[] row = rows2d[iRow];
                 for (Double val : row) {
                     writer.write(sep);

@@ -26,7 +26,7 @@ import java.util.function.Function;
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public interface SetPreprocessor<T> {
-    Function<Iterable<T>, Iterable<T>> setup(Iterable<T>[] sets);
+    Function<Dataset<T>, Dataset<T>> setup(Dataset<T>[] sets);
 
     default String[] description() {
         return new String[0];

@@ -6,6 +6,7 @@ import com.milaboratory.mixcr.basictypes.ClnsReader;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCObject;
 import com.milaboratory.mixcr.basictypes.VDJCSProperties;
+import com.milaboratory.mixcr.postanalysis.Dataset;
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
 import com.milaboratory.mixcr.postanalysis.PostanalysisRunner;
 import com.milaboratory.mixcr.postanalysis.WeightFunctions;
@@ -16,7 +17,10 @@ import com.milaboratory.mixcr.postanalysis.diversity.DiversityCharacteristic;
 import com.milaboratory.mixcr.postanalysis.downsampling.ClonesDownsamplingPreprocessor;
 import com.milaboratory.mixcr.postanalysis.downsampling.ClonesOverlapDownsamplingPreprocessor;
 import com.milaboratory.mixcr.postanalysis.downsampling.DownsampleValueChooser;
-import com.milaboratory.mixcr.postanalysis.overlap.*;
+import com.milaboratory.mixcr.postanalysis.overlap.OverlapCharacteristic;
+import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup;
+import com.milaboratory.mixcr.postanalysis.overlap.OverlapIntegrationTest;
+import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil;
 import com.milaboratory.mixcr.postanalysis.preproc.NoPreprocessing;
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeCharacteristic;
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeKey;
@@ -32,7 +36,6 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static com.milaboratory.mixcr.postanalysis.additive.AdditiveCharacteristics.weightedBiophysics;
 import static com.milaboratory.mixcr.postanalysis.additive.AdditiveCharacteristics.weightedLengthOf;
@@ -42,21 +45,21 @@ import static com.milaboratory.mixcr.postanalysis.additive.AdditiveCharacteristi
  */
 public class PostanalysisSchemaIntegrationTest {
 
-    private static ClonesIterable getClones(String sample) {
-        return new ClonesIterable(PostanalysisSchemaIntegrationTest.class.getResource("/sequences/big/yf_sample_data/" + sample + ".contigs.clns").getFile(), VDJCLibraryRegistry.getDefault());
+    private static ClonotypeDataset getClones(String sample) {
+        return new ClonotypeDataset(sample, PostanalysisSchemaIntegrationTest.class.getResource("/sequences/big/yf_sample_data/" + sample + ".contigs.clns").getFile(), VDJCLibraryRegistry.getDefault());
     }
 
     @Test
     public void test1() throws IOException {
-        ClonesIterable r1 = getClones("Ig-2_S2");
-        ClonesIterable r2 = getClones("Ig-3_S3");
-        ClonesIterable r3 = getClones("Ig-4_S4");
-        ClonesIterable r4 = getClones("Ig-5_S5");
-        ClonesIterable r5 = getClones("Ig1_S1");
-        ClonesIterable r6 = getClones("Ig2_S2");
-        ClonesIterable r7 = getClones("Ig3_S3");
-        ClonesIterable r8 = getClones("Ig4_S4");
-        ClonesIterable r9 = getClones("Ig5_S5");
+        ClonotypeDataset r1 = getClones("Ig-2_S2");
+        ClonotypeDataset r2 = getClones("Ig-3_S3");
+        ClonotypeDataset r3 = getClones("Ig-4_S4");
+        ClonotypeDataset r4 = getClones("Ig-5_S5");
+        ClonotypeDataset r5 = getClones("Ig1_S1");
+        ClonotypeDataset r6 = getClones("Ig2_S2");
+        ClonotypeDataset r7 = getClones("Ig3_S3");
+        ClonotypeDataset r8 = getClones("Ig4_S4");
+        ClonotypeDataset r9 = getClones("Ig5_S5");
 
         List<CharacteristicGroup<?, Clone>> groups = new ArrayList<>();
 
@@ -126,11 +129,9 @@ public class PostanalysisSchemaIntegrationTest {
         PostanalysisRunner<Clone> runner = new PostanalysisRunner<>();
 
         runner.addCharacteristics(individualPA.getAllCharacterisitcs());
-        Iterable[] input = {r1, r2, r3, r4, r5, r6, r7, r8, r9};
-        runner.setDatasets(input);
+        Dataset[] input = {r1, r2, r3, r4, r5, r6, r7, r8, r9};
 
-        PostanalysisResult result = runner.run().setSampleIds(IntStream.range(0, 9).mapToObj(i -> "" + i).collect(Collectors.toList()));
-        result.setSampleIds(IntStream.range(0, input.length).mapToObj(i -> "" + i).collect(Collectors.toList()));
+        PostanalysisResult result = runner.run(input);
 
         String resultStr = OM.writeValueAsString(result);
         Assert.assertEquals(result, OM.readValue(resultStr, PostanalysisResult.class));
@@ -153,7 +154,7 @@ public class PostanalysisSchemaIntegrationTest {
 
         CharacteristicGroupResult<SpectratypeKey<String>> r = result.getTable(individualPA.getGroup("cdr3Spectratype"));
         Assert.assertTrue(r.cells.stream()
-                .collect(Collectors.groupingBy(c -> c.sampleIndex, Collectors.mapping(c -> c.key.payload, Collectors.toSet())))
+                .collect(Collectors.groupingBy(c -> c.datasetId, Collectors.mapping(c -> c.key.payload, Collectors.toSet())))
                 .values().stream().allMatch(l -> l.size() <= 11));
 
         System.out.println(result.getTable(individualPA.getGroup("VSpectratype")));
@@ -194,7 +195,7 @@ public class PostanalysisSchemaIntegrationTest {
 
         for (List<VDJCSProperties.VDJCSProperty<VDJCObject>> by : Arrays.asList(byN, byAA, byAAAndV)) {
             System.out.println("=============");
-            OverlapIterable<Clone> overlap = OverlapUtil.overlap(by, readers);
+            Dataset<OverlapGroup<Clone>> overlap = OverlapUtil.overlap(sampleNames, by, readers);
 
             ClonesOverlapDownsamplingPreprocessor downsamplePreprocessor = new ClonesOverlapDownsamplingPreprocessor(
                     new DownsampleValueChooser.Minimal(),
@@ -227,10 +228,9 @@ public class PostanalysisSchemaIntegrationTest {
 
 
             PostanalysisRunner<OverlapGroup<Clone>> pr = new PostanalysisRunner<>();
-            pr.setDatasets(Arrays.asList(overlap));
             pr.addCharacteristics(overlapPA.getAllCharacterisitcs());
 
-            PostanalysisResult result = pr.run().setSampleIds(sampleNames);
+            PostanalysisResult result = pr.run(overlap);
             String resultStr = OM.writeValueAsString(result);
             Assert.assertEquals(result, OM.readValue(resultStr, PostanalysisResult.class));
 

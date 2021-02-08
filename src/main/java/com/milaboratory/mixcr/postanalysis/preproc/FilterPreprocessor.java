@@ -2,8 +2,8 @@ package com.milaboratory.mixcr.postanalysis.preproc;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.milaboratory.mixcr.postanalysis.Dataset;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
-import com.milaboratory.mixcr.util.FilteredIterable;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -42,8 +42,8 @@ public class FilterPreprocessor<T> implements SetPreprocessor<T> {
     }
 
     @Override
-    public Function<Iterable<T>, Iterable<T>> setup(Iterable<T>[] sets) {
-        return set -> new FilteredIterable<>(set, t -> predicates.stream().allMatch(s -> s.test(t)));
+    public Function<Dataset<T>, Dataset<T>> setup(Dataset<T>[] sets) {
+        return set -> new FilteredDataset<>(set, t -> predicates.stream().allMatch(s -> s.test(t)));
     }
 
     @Override

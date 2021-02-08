@@ -3,8 +3,10 @@ package com.milaboratory.mixcr.postanalysis.overlap;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.util.SimpleProcessorWrapper;
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
 import com.milaboratory.mixcr.postanalysis.PostanalysisRunner;
+import com.milaboratory.mixcr.postanalysis.TestDataset;
 import com.milaboratory.mixcr.postanalysis.TestObjectWithPayload;
 import com.milaboratory.mixcr.postanalysis.preproc.NoPreprocessing;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
@@ -30,7 +32,7 @@ import java.util.stream.IntStream;
  */
 public class OverlapCharacteristicTest {
     @Test
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "SuspiciousToArrayCall"})
     public void testOverlapPort1() {
         List<ElementOrdering> initialSort = Arrays.asList(
                 new ElementOrdering(0, 2),
@@ -48,12 +50,12 @@ public class OverlapCharacteristicTest {
         RandomDataGenerator rng = new RandomDataGenerator(new Well512a());
         OverlapData ovp = new OverlapData(IntStream.range(0, 10)
                 .mapToObj(__ -> rndDataset(rng, rng.nextInt(11111, 22222), 10))
-                .toArray(List[]::new),
+                .toArray(TestDataset[]::new),
                 targetGroupping);
 
         OutputPortCloseable<List<List<Element>>> join = strategy
                 .join(Arrays.stream(ovp.datasets)
-                        .map(OverlapCharacteristicTest::asOutputPort)
+                        .map(TestDataset::mkElementsPort)
                         .collect(Collectors.toList()));
 
         DescriptiveStatistics ds = new DescriptiveStatistics();
@@ -105,13 +107,13 @@ public class OverlapCharacteristicTest {
         int nDatasets = 10;
         OverlapData ovp = new OverlapData(IntStream.range(0, nDatasets)
                 .mapToObj(__ -> rndDataset(rng, rng.nextInt(11111, 22222), 10))
-                .toArray(List[]::new),
+                .toArray(TestDataset[]::new),
                 targetGroupping);
 
-        OutputPortCloseable<List<List<Element>>> join = strategy
-                .join(Arrays.stream(ovp.datasets)
-                        .map(OverlapCharacteristicTest::asOutputPort)
-                        .collect(Collectors.toList()));
+//        OutputPortCloseable<List<List<Element>>> join = strategy
+//                .join(Arrays.stream(ovp.datasets)
+//                        .map(OverlapCharacteristicTest::asOutputPort)
+//                        .collect(Collectors.toList()));
 
         List<OverlapCharacteristic<Element>> chars = new ArrayList<>();
         for (int i = 0; i < ovp.datasets.length; i++) {
@@ -126,16 +128,17 @@ public class OverlapCharacteristicTest {
 
         PostanalysisRunner<OverlapGroup<Element>> runner = new PostanalysisRunner<>();
         runner.addCharacteristics(chGroup);
-        runner.setDatasets(new Iterable[]{CUtils.it(() -> {
-            List<List<Element>> t = join.take();
-            if (t == null) return null;
-            return new OverlapGroup<>(t);
-        })});
+        List<String> datasetIds = Arrays.stream(ovp.datasets).map(d -> d.id).collect(Collectors.toList());
 
-        PostanalysisResult paResult = runner
-                .run()
-                .setSampleIds(IntStream.range(0, nDatasets)
-                        .mapToObj(String::valueOf).collect(Collectors.toList()));
+        PostanalysisResult paResult = runner.run(new OverlapDataset<Element>(datasetIds) {
+            @Override
+            public OutputPortCloseable<OverlapGroup<Element>> mkElementsPort() {
+                return new SimpleProcessorWrapper<>(strategy
+                        .join(Arrays.stream(ovp.datasets)
+                                .map(TestDataset::mkElementsPort)
+                                .collect(Collectors.toList())), OverlapGroup::new);
+            }
+        });
 
         CharacteristicGroupResult<OverlapKey<OverlapType>> chGroupResult = paResult.getTable(chGroup);
         Map<Object, OutputTable> outputs = chGroupResult.getOutputs();
@@ -187,11 +190,21 @@ public class OverlapCharacteristicTest {
         }
 
         System.out.println(Arrays.stream(expectedSharedElements).map(Arrays::toString).collect(Collectors.joining("\n")));
-        assert2dEquals(expectedSharedElements, outputs.get(OverlapType.SharedClonotypes).rows(0, 0));
-        assert2dEquals(expectedD, outputs.get(OverlapType.D).rows(0, 0));
-        assert2dEquals(expectedF1, outputs.get(OverlapType.F1).rows(0, 0));
-        assert2dEquals(expectedF2, outputs.get(OverlapType.F2).rows(0, 0));
-        assert2dEquals(expectedR, outputs.get(OverlapType.R_Intersection).rows(0, 0));
+        assert2dEquals(expectedSharedElements, outputs.get(OverlapType.SharedClonotypes)
+                .reorder(datasetIds, datasetIds)
+                .rows(0, 0));
+        assert2dEquals(expectedD, outputs.get(OverlapType.D)
+                .reorder(datasetIds, datasetIds)
+                .rows(0, 0));
+        assert2dEquals(expectedF1, outputs.get(OverlapType.F1)
+                .reorder(datasetIds, datasetIds)
+                .rows(0, 0));
+        assert2dEquals(expectedF2, outputs.get(OverlapType.F2)
+                .reorder(datasetIds, datasetIds)
+                .rows(0, 0));
+        assert2dEquals(expectedR, outputs.get(OverlapType.R_Intersection)
+                .reorder(datasetIds, datasetIds)
+                .rows(0, 0));
     }
 
     interface OverlapScanFunction {
@@ -223,7 +236,7 @@ public class OverlapCharacteristicTest {
     }
 
     public static final class OverlapData {
-        final List<Element>[] datasets;
+        final TestDataset<Element>[] datasets;
         final List<ElementOrdering> ordering;
         final Comparator<Element> comparator;
         final Comparator<Payload> pComparator;
@@ -231,7 +244,7 @@ public class OverlapCharacteristicTest {
         final Map<Integer, Integer> diversity;
         final Map<Integer, Double> sumWeight;
 
-        public OverlapData(List<Element>[] datasets, List<ElementOrdering> ordering) {
+        public OverlapData(TestDataset<Element>[] datasets, List<ElementOrdering> ordering) {
             this.datasets = datasets;
             this.ordering = ordering;
             this.comparator = SortingUtil.combine(ordering);
@@ -240,11 +253,11 @@ public class OverlapCharacteristicTest {
             this.diversity = new HashMap<>();
             this.sumWeight = new HashMap<>();
 
-            for (List<Element> d : datasets) {
-                d.sort(comparator);
+            for (TestDataset<Element> d : datasets) {
+                d.data.sort(comparator);
             }
             for (int index = 0; index < datasets.length; index++) {
-                List<Element> dataset = datasets[index];
+                List<Element> dataset = datasets[index].data;
                 for (Element element : dataset) {
                     Map<Integer, List<Element>> m = this.index.computeIfAbsent(element.payload, payload -> new HashMap<>());
                     m.computeIfAbsent(index, __ -> new ArrayList<>()).add(element);
@@ -279,7 +292,7 @@ public class OverlapCharacteristicTest {
         }
     }
 
-    public static List<Element> rndDataset(RandomDataGenerator rng, int size, int pSize) {
+    public static TestDataset<Element> rndDataset(RandomDataGenerator rng, int size, int pSize) {
         Element[] r = new Element[size];
         for (int i = 0; i < size; i++) {
             r[i] = new Element(
@@ -287,7 +300,7 @@ public class OverlapCharacteristicTest {
                     rng.nextUniform(0, 100),
                     rndPayload(rng, pSize));
         }
-        return Arrays.asList(r);
+        return new TestDataset<>(Arrays.asList(r));
     }
 
     public static Payload rndPayload(RandomDataGenerator rng, int pSize) {

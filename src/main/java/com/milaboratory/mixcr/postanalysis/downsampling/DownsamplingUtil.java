@@ -29,9 +29,11 @@
  */
 package com.milaboratory.mixcr.postanalysis.downsampling;
 
+import cc.redberry.pipe.CUtils;
+import cc.redberry.pipe.OutputPortCloseable;
+import com.milaboratory.mixcr.postanalysis.Dataset;
 import org.apache.commons.math3.random.RandomGenerator;
 
-import java.util.Iterator;
 import java.util.function.ToLongFunction;
 import java.util.stream.LongStream;
 
@@ -40,26 +42,26 @@ public final class DownsamplingUtil {
     }
 
     @SuppressWarnings("rawtypes")
-    public static final Iterator emptyIterator = new Iterator() {
+    public static final OutputPortCloseable emptyOP = new OutputPortCloseable() {
         @Override
-        public boolean hasNext() {
-            return false;
-        }
+        public void close() { }
 
         @Override
-        public Object next() {
+        public Object take() {
             return null;
         }
     };
 
     @SuppressWarnings("rawtypes")
-    public static final Iterable emptyIterable = () -> emptyIterator;
+    public static final Dataset EMPTY_DATASET_SUPPLIER = Dataset.fromSupplier(() -> emptyOP);
 
-    public static <T> long total(ToLongFunction<T> getCount, Iterable<T> set) {
+    public static <T> long total(ToLongFunction<T> getCount, Dataset<T> set) {
         long total = 0;
-        for (T t : set)
-            total += getCount.applyAsLong(t);
-        return total;
+        try (OutputPortCloseable<T> port = set.mkElementsPort()) {
+            for (T t : CUtils.it(port))
+                total += getCount.applyAsLong(t);
+            return total;
+        }
     }
 
     public static long[] downsample_mvhg(long[] counts, long downSampleSize, RandomGenerator rnd) {

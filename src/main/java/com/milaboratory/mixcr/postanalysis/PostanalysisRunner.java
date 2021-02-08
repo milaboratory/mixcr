@@ -1,5 +1,7 @@
 package com.milaboratory.mixcr.postanalysis;
 
+import cc.redberry.pipe.CUtils;
+import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.util.CanReportProgressAndStage;
 
@@ -12,7 +14,6 @@ import java.util.stream.Collectors;
  */
 public class PostanalysisRunner<T> implements CanReportProgressAndStage {
     private final List<Characteristic<?, T>> characteristics = new ArrayList<>();
-    private Iterable<T>[] datasets;
 
     public void addCharacteristics(CharacteristicGroup<?, T>... groups) {
         for (CharacteristicGroup<?, T> g : groups) {
@@ -27,16 +28,6 @@ public class PostanalysisRunner<T> implements CanReportProgressAndStage {
     public void addCharacteristics(List<? extends Characteristic<?, T>> chs) {
         characteristics.addAll(chs);
     }
-
-    public void setDatasets(Iterable<T>[] sets) {
-        this.datasets = sets;
-    }
-
-    public void setDatasets(List<Iterable<T>> sets) {
-        setDatasets(sets.toArray(new Iterable[0]));
-    }
-
-    private Map<Characteristic<?, T>, MetricValue<?>[][]> result;
 
     private volatile String stage;
     private volatile double progress = 0.0;
@@ -57,8 +48,12 @@ public class PostanalysisRunner<T> implements CanReportProgressAndStage {
         return isFinished;
     }
 
-    /** returns matrix[sample][metric_values] */
-    public PostanalysisResult run() {
+    @SuppressWarnings("unchecked")
+    public PostanalysisResult run(List<Dataset<T>> datasets) {
+        return run(datasets.toArray(new Dataset[0]));
+    }
+
+    public PostanalysisResult run(Dataset<T>... datasets) {
         stage = "Preparing";
         progress = 0.0;
         isFinished = false;
@@ -67,34 +62,39 @@ public class PostanalysisRunner<T> implements CanReportProgressAndStage {
                 characteristics.stream()
                         .collect(Collectors.groupingBy(c -> c.preprocessor));
 
-        Map<Characteristic<?, T>, MetricValue<?>[][]> result = new IdentityHashMap<>();
+        Map<Characteristic<?, T>, Map<String, MetricValue<?>[]>> result = new IdentityHashMap<>();
 
         for (Map.Entry<SetPreprocessor<T>, List<Characteristic<?, T>>> e : characteristicsByPrep.entrySet()) {
-            Function<Iterable<T>, Iterable<T>> prepFunction = e.getKey().setup(datasets);
-            for (int setIndex = 0; setIndex < datasets.length; setIndex++) {
-                Iterable<T> set = datasets[setIndex];
+            Function<Dataset<T>, Dataset<T>> prepFunction = e.getKey().setup(datasets);
+            for (Dataset<T> dataset : datasets) {
                 List<Characteristic<?, T>> characteristics = e.getValue();
 
                 List<Aggregator<?, T>> aggregators = characteristics.stream()
-                        .map(Characteristic::createAggregator)
+                        .map(c -> c.createAggregator(dataset))
                         .collect(Collectors.toList());
 
-                for (T o : prepFunction.apply(set))
-                    for (Aggregator<?, T> agg : aggregators)
-                        agg.consume(o);
+                try (OutputPortCloseable<T> port = prepFunction.apply(dataset).mkElementsPort()) {
+                    for (T o : CUtils.it(port))
+                        for (Aggregator<?, T> agg : aggregators)
+                            agg.consume(o);
+                }
 
                 for (int charIndex = 0; charIndex < characteristics.size(); charIndex++) {
                     @SuppressWarnings("unchecked")
-                    MetricValue<?>[][] charValues = result.computeIfAbsent(
+                    Map<String, MetricValue<?>[]> charValues = result.computeIfAbsent(
                             characteristics.get(charIndex),
-                            __ -> new MetricValue[datasets.length][]);
-                    charValues[setIndex] = aggregators.get(charIndex).result();
+                            __ -> new HashMap<>());
+                    if (charValues.containsKey(dataset.id()))
+                        throw new IllegalArgumentException("Dataset occurred twice.");
+                    charValues.put(dataset.id(), aggregators.get(charIndex).result());
                 }
             }
         }
 
         isFinished = true;
-        this.result = result;
-        return PostanalysisResult.create(result);
+        Set<String> datasetIds = Arrays.stream(datasets)
+                .map(Dataset::id)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        return PostanalysisResult.create(datasetIds, result);
     }
 }

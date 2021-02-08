@@ -2,6 +2,7 @@ package com.milaboratory.mixcr.postanalysis.additive;
 
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
 import com.milaboratory.mixcr.postanalysis.PostanalysisRunner;
+import com.milaboratory.mixcr.postanalysis.TestDataset;
 import com.milaboratory.mixcr.postanalysis.TestObject;
 import com.milaboratory.mixcr.postanalysis.preproc.NoPreprocessing;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
@@ -16,8 +17,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -60,17 +59,15 @@ public class AdditiveCharacteristicsTest {
 
         RandomDataGenerator rng = new RandomDataGenerator(new Well44497a());
         int nDatasets = 1000;
-        List<TestObject>[] datasets = TestObject.generateDatasets(nDatasets, rng);
+        TestDataset<TestObject>[] datasets = TestObject.generateDatasets(nDatasets, rng);
 
         PostanalysisRunner<TestObject> runner = new PostanalysisRunner<>();
         runner.addCharacteristics(sum, mean, std);
-        runner.setDatasets(datasets);
-        PostanalysisResult result = runner.run();
+        PostanalysisResult result = runner.run(datasets);
 
         CharacteristicGroup<String, TestObject> group = new CharacteristicGroup<>("stat",
                 Arrays.asList(mean, std),
                 Arrays.asList(new GroupSummary<>()));
-        result = result.setSampleIds(IntStream.range(0, nDatasets).mapToObj(String::valueOf).collect(Collectors.toList()));
 
         CharacteristicGroupResult<String> table = result.getTable(group);
         OutputTable summary = table.getOutputs().get(GroupSummary.key);
@@ -87,11 +84,11 @@ public class AdditiveCharacteristicsTest {
             double expectedStd = Math.sqrt(new Variance(true).evaluate(vals, weights));
 
             for (int j = 0; j < metrics.length; j++) {
-                if (summary.colNames.get(j).equals("sum"))
+                if (summary.colIds.get(j).equals("sum"))
                     Assert.assertEquals(expectedSum, metrics[j], 1e-10);
-                else if (summary.colNames.get(j).equals("mean"))
+                else if (summary.colIds.get(j).equals("mean"))
                     Assert.assertEquals(expectedMean, metrics[j], 1e-10);
-                else if (summary.colNames.get(j).equals("std"))
+                else if (summary.colIds.get(j).equals("std"))
                     Assert.assertEquals(expectedStd, metrics[j], 1e-10);
                 else
                     throw new RuntimeException();

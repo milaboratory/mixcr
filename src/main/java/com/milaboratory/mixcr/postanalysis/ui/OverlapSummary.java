@@ -14,9 +14,8 @@ public class OverlapSummary<K> implements CharacteristicGroupOutputExtractor<Ove
         Map<K, OutputTableBuilder> tables = new HashMap<>();
         for (CharacteristicGroupResultCell<OverlapKey<K>> cell : result.cells) {
             OutputTableBuilder tab = tables.computeIfAbsent(cell.key.key, __ -> new OutputTableBuilder(cell.key.key.toString()));
-            int i1 = cell.key.i1, i2 = cell.key.i2;
-            tab.add(new Coordinates(i1, i2, result.sampleIds.get(i1), result.sampleIds.get(i2)), cell);
-            tab.add(new Coordinates(i2, i1, result.sampleIds.get(i2), result.sampleIds.get(i1)), cell);
+            tab.add(cell.key.id1, cell.key.id2, cell);
+            tab.add(cell.key.id2, cell.key.id1, cell);
         }
         Map<Object, OutputTable> r = new HashMap<>();
         for (Map.Entry<K, OutputTableBuilder> e : tables.entrySet())

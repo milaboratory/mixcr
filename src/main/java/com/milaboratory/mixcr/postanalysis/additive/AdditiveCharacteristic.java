@@ -50,7 +50,7 @@ public class AdditiveCharacteristic<K, T> extends Characteristic<K, T> {
     }
 
     @Override
-    protected Aggregator<K, T> createAggregator() {
+    protected Aggregator<K, T> createAggregator(Dataset<T> dataset) {
         switch (aggType) {
             case Sum:
                 return new AdditiveAggregator<>(keyFunction, metric, weight, Normalization.None);

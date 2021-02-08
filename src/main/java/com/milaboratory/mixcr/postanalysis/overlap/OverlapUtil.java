@@ -29,8 +29,7 @@
  */
 package com.milaboratory.mixcr.postanalysis.overlap;
 
-import cc.redberry.pipe.CUtils;
-import cc.redberry.pipe.OutputPort;
+import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.SimpleProcessorWrapper;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneReader;
@@ -40,16 +39,17 @@ import com.milaboratory.mixcr.basictypes.VDJCSProperties;
 import java.util.List;
 
 public final class OverlapUtil {
-    private OverlapUtil() {
-    }
+    private OverlapUtil() {}
 
-    public static OverlapIterable<Clone> overlap(
+    public static OverlapDataset<Clone> overlap(
+            List<String> datasetIds,
             List<? extends VDJCSProperties.VDJCSProperty<? super Clone>> by,
             List<? extends CloneReader> readers) {
-        return () -> {
-            OutputPort<OverlapGroup<Clone>> s =
-                    new SimpleProcessorWrapper<>(CloneSetOverlap.overlap(by, readers), OverlapGroup::new);
-            return CUtils.it(s).iterator();
+        return new OverlapDataset<Clone>(datasetIds) {
+            @Override
+            public OutputPortCloseable<OverlapGroup<Clone>> mkElementsPort() {
+                return new SimpleProcessorWrapper<>(CloneSetOverlap.overlap(by, readers), OverlapGroup::new);
+            }
         };
     }
 }

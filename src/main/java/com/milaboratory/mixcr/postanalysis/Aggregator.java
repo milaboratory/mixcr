@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public interface Aggregator<K, T> {
-    /** apply for each clone */
+    /** apply for each dataset element */
     void consume(T obj);
 
     /** get the result */

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.mixcr.postanalysis.Characteristic;
+import com.milaboratory.mixcr.postanalysis.Dataset;
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
 import com.milaboratory.mixcr.postanalysis.PostanalysisRunner;
 
@@ -65,10 +66,9 @@ public class PostanalysisSchema<T> {
         return Objects.hash(tables);
     }
 
-    public PostanalysisResult run(List<Iterable<T>> datasets) {
+    public PostanalysisResult run(List<Dataset<T>> datasets) {
         PostanalysisRunner<T> runner = new PostanalysisRunner<>();
         runner.addCharacteristics(getAllCharacterisitcs());
-        runner.setDatasets(datasets);
-        return runner.run();
+        return runner.run(datasets);
     }
 }

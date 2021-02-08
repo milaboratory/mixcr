@@ -1,5 +1,8 @@
 package com.milaboratory.mixcr.postanalysis.downsampling;
 
+import cc.redberry.pipe.CUtils;
+import com.milaboratory.mixcr.postanalysis.Dataset;
+import com.milaboratory.mixcr.postanalysis.TestDataset;
 import com.milaboratory.mixcr.postanalysis.TestObject;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup;
 import org.apache.commons.math3.random.RandomDataGenerator;
@@ -7,7 +10,10 @@ import org.apache.commons.math3.random.Well512a;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 
 import static com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingPreprocessorTest.toList;
@@ -27,16 +33,16 @@ public class OverlapDownsamplingPreprocessorTest {
                 System.currentTimeMillis()
         );
 
-        Dataset[] datasets = new Dataset[]{
+        DatasetSupport[] datasets = new DatasetSupport[]{
                 rndDataset(rng, 5, 100000),
                 rndDataset(rng, 10, 10000),
                 rndDataset(rng, 15, 10000)
         };
-        Function<Iterable<OverlapGroup<TestObject>>, Iterable<OverlapGroup<TestObject>>> downsampler = proc.setup(datasets);
+        Function<Dataset<OverlapGroup<TestObject>>, Dataset<OverlapGroup<TestObject>>> downsampler = proc.setup(datasets);
 
-        for (Dataset in : datasets) {
+        for (DatasetSupport in : datasets) {
             long dsValue = chooser.compute(in.counts);
-            Dataset dw = new Dataset(downsampler.apply(in));
+            DatasetSupport dw = new DatasetSupport(downsampler.apply(in));
 
             for (int i = 0; i < in.counts.length; i++) {
                 Assert.assertEquals(dsValue, dw.counts[i]);
@@ -65,17 +71,16 @@ public class OverlapDownsamplingPreprocessorTest {
         return r;
     }
 
-    private static final class Dataset implements Iterable<OverlapGroup<TestObject>> {
-        final List<OverlapGroup<TestObject>> data;
+    private static final class DatasetSupport extends TestDataset<OverlapGroup<TestObject>> {
         final long[] counts;
         final Set<Double>[] sets;
 
-        public Dataset(Iterable<OverlapGroup<TestObject>> data) {
-            this(toList(data));
+        public DatasetSupport(Dataset<OverlapGroup<TestObject>> data) {
+            this(toList(CUtils.it(data.mkElementsPort())));
         }
 
-        public Dataset(List<OverlapGroup<TestObject>> data) {
-            this.data = data;
+        public DatasetSupport(List<OverlapGroup<TestObject>> data) {
+            super(data);
             this.counts = data.stream()
                     .map(row -> row.stream().mapToLong(l -> Math.round(l.stream().mapToDouble(e -> e.weight).sum())).toArray())
                     .reduce(new long[0], OverlapDownsamplingPreprocessorTest::sum);
@@ -92,14 +97,9 @@ public class OverlapDownsamplingPreprocessorTest {
                 }
             }
         }
-
-        @Override
-        public Iterator<OverlapGroup<TestObject>> iterator() {
-            return data.iterator();
-        }
     }
 
-    private static Dataset rndDataset(RandomDataGenerator rng, int nSamples, int size) {
+    private static DatasetSupport rndDataset(RandomDataGenerator rng, int nSamples, int size) {
         List<OverlapGroup<TestObject>> data = new ArrayList<>();
         int p = Math.max(2, nSamples / 4);
         for (int i = 0; i < size; i++) {
@@ -123,6 +123,6 @@ public class OverlapDownsamplingPreprocessorTest {
             }
             data.add(new OverlapGroup<>(row));
         }
-        return new Dataset(data);
+        return new DatasetSupport(data);
     }
 }

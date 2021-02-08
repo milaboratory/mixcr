@@ -4,13 +4,10 @@ package com.milaboratory.mixcr.postanalysis.ui;
  *
  */
 final class Coordinates {
-    final int iRow, iCol;
-    final String row, col;
+    final Object iRow, iCol;
 
-    public Coordinates(int iRow, int iCol, String row, String col) {
+    public Coordinates(Object iRow, Object iCol) {
         this.iRow = iRow;
         this.iCol = iCol;
-        this.row = row;
-        this.col = col;
     }
 }

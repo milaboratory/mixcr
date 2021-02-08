@@ -19,16 +19,16 @@ public final class OverlapKey<K> {
     @JsonProperty("key")
     @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "type")
     public final K key;
-    @JsonProperty("i1")
-    public final int i1;
-    @JsonProperty("i2")
-    public final int i2;
+    @JsonProperty("id1")
+    public final String id1;
+    @JsonProperty("id2")
+    public final String id2;
 
     @JsonCreator
-    public OverlapKey(@JsonProperty("key") K key, @JsonProperty("i1") int i1, @JsonProperty("i2") int i2) {
+    public OverlapKey(@JsonProperty("key") K key, @JsonProperty("id1") String id1, @JsonProperty("id2") String id2) {
         this.key = key;
-        this.i1 = i1;
-        this.i2 = i2;
+        this.id1 = id1;
+        this.id2 = id2;
     }
 
     @Override
@@ -36,22 +36,20 @@ public final class OverlapKey<K> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OverlapKey<?> that = (OverlapKey<?>) o;
-        return i1 == that.i1 &&
-                i2 == that.i2 &&
-                Objects.equals(key, that.key);
+        return Objects.equals(key, that.key) && Objects.equals(id1, that.id1) && Objects.equals(id2, that.id2);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(key, i1, i2);
+        return Objects.hash(key, id1, id2);
     }
 
     @Override
     public String toString() {
         return "OverlapKey{" +
                 "key=" + key +
-                ", i1=" + i1 +
-                ", i2=" + i2 +
+                ", id1='" + id1 + '\'' +
+                ", id2='" + id2 + '\'' +
                 '}';
     }
 }

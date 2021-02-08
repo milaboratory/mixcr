@@ -8,18 +8,17 @@ import java.util.Objects;
  *
  */
 public class CharacteristicGroupResultCell<K> extends MetricValue<K> {
-    public final int sampleIndex;
-    public final int metricIndex;
+    /** id of the dataset */
+    public final String datasetId;
 
-    public CharacteristicGroupResultCell(K key, double value, int sampleIndex, int metricIndex) {
+    public CharacteristicGroupResultCell(K key, double value, String datasetId) {
         super(key, value);
-        this.sampleIndex = sampleIndex;
-        this.metricIndex = metricIndex;
+        this.datasetId = datasetId;
     }
 
     @Override
     public String toString() {
-        return key + "-" + sampleIndex + ":" + metricIndex + ":" + value;
+        return key + "-" + datasetId + ":" + value;
     }
 
     @Override
@@ -28,12 +27,11 @@ public class CharacteristicGroupResultCell<K> extends MetricValue<K> {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         CharacteristicGroupResultCell<?> that = (CharacteristicGroupResultCell<?>) o;
-        return sampleIndex == that.sampleIndex &&
-                metricIndex == that.metricIndex;
+        return Objects.equals(datasetId, that.datasetId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), sampleIndex, metricIndex);
+        return Objects.hash(super.hashCode(), datasetId);
     }
 }

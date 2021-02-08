@@ -29,17 +29,19 @@
  */
 package com.milaboratory.mixcr.postanalysis.downsampling;
 
+import cc.redberry.pipe.CUtils;
+import cc.redberry.pipe.OutputPortCloseable;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.milaboratory.mixcr.postanalysis.Dataset;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup;
-import com.milaboratory.mixcr.util.FilteredIterable;
+import com.milaboratory.mixcr.postanalysis.preproc.FilteredDataset;
 import gnu.trove.list.array.TLongArrayList;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.Well19937c;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.function.BiFunction;
@@ -62,7 +64,6 @@ public class OverlapDownsamplingPreprocessor<T> implements SetPreprocessor<Overl
         this.seed = seed;
     }
 
-    @Override
     public String[] description() {
         String ch = downsampleValueChooser.description();
         if (ch == null || ch.isEmpty())
@@ -71,23 +72,24 @@ public class OverlapDownsamplingPreprocessor<T> implements SetPreprocessor<Overl
     }
 
     @Override
-    public Function<Iterable<OverlapGroup<T>>, Iterable<OverlapGroup<T>>> setup(Iterable<OverlapGroup<T>>[] sets) {
+    public Function<Dataset<OverlapGroup<T>>, Dataset<OverlapGroup<T>>> setup(Dataset<OverlapGroup<T>>[] sets) {
         return set -> {
             TLongArrayList[] counts = null;
-            for (OverlapGroup<T> grp : set) {
-                if (counts == null) {
-                    counts = new TLongArrayList[grp.size()];
-                    for (int i = 0; i < grp.size(); i++)
-                        counts[i] = new TLongArrayList();
+            try (OutputPortCloseable<OverlapGroup<T>> port = set.mkElementsPort()) {
+                for (OverlapGroup<T> grp : CUtils.it(port)) {
+                    if (counts == null) {
+                        counts = new TLongArrayList[grp.size()];
+                        for (int i = 0; i < grp.size(); i++)
+                            counts[i] = new TLongArrayList();
+                    }
+
+                    assert counts.length == grp.size();
+
+                    for (int i = 0; i < counts.length; i++)
+                        for (T t : grp.getBySample(i))
+                            counts[i].add(getCount.applyAsLong(t));
                 }
-
-                assert counts.length == grp.size();
-
-                for (int i = 0; i < counts.length; i++)
-                    for (T t : grp.getBySample(i))
-                        counts[i].add(getCount.applyAsLong(t));
             }
-
             if (counts == null)
                 // empty set
                 return set;
@@ -103,18 +105,46 @@ public class OverlapDownsamplingPreprocessor<T> implements SetPreprocessor<Overl
                 newCounts[i] = DownsamplingUtil.downsample_mvhg(counts[i].toArray(), downsample, rnd);
             }
 
-            return new FilteredIterable<>(() -> new Iterator<OverlapGroup<T>>() {
-                final Iterator<OverlapGroup<T>> innerIterator = set.iterator();
-                final AtomicIntegerArray indices = new AtomicIntegerArray(totals.length);
+            return new FilteredDataset<>(
+                    new DownsampledDataset<>(set, newCounts, getCount, setCount),
+                    OverlapGroup::notEmpty);
+        };
+    }
 
+    private static final class DownsampledDataset<T> implements Dataset<OverlapGroup<T>> {
+        final Dataset<OverlapGroup<T>> inner;
+        final long[][] countsDownsampled;
+        final ToLongFunction<T> getCount;
+        final BiFunction<T, Long, T> setCount;
+
+        public DownsampledDataset(Dataset<OverlapGroup<T>> inner, long[][] countsDownsampled, ToLongFunction<T> getCount, BiFunction<T, Long, T> setCount) {
+            this.inner = inner;
+            this.countsDownsampled = countsDownsampled;
+            this.getCount = getCount;
+            this.setCount = setCount;
+        }
+
+        @Override
+        public String id() {
+            return inner.id();
+        }
+
+        @Override
+        public OutputPortCloseable<OverlapGroup<T>> mkElementsPort() {
+            final OutputPortCloseable<OverlapGroup<T>> inner = this.inner.mkElementsPort();
+            final AtomicIntegerArray indices = new AtomicIntegerArray(countsDownsampled.length);
+            return new OutputPortCloseable<OverlapGroup<T>>() {
                 @Override
-                public boolean hasNext() {
-                    return innerIterator.hasNext();
+                public void close() {
+                    inner.close();
                 }
 
                 @Override
-                public OverlapGroup<T> next() {
-                    OverlapGroup<T> grp = innerIterator.next();
+                public OverlapGroup<T> take() {
+                    OverlapGroup<T> grp = inner.take();
+                    if (grp == null)
+                        return null;
+
                     List<List<T>> newGroups = new ArrayList<>();
                     for (int i = 0; i < grp.size(); i++) {
                         final int fi = i;
@@ -124,7 +154,7 @@ public class OverlapDownsamplingPreprocessor<T> implements SetPreprocessor<Overl
                         else
                             newGroups.add(objs.stream()
                                     .map(o -> {
-                                        long newCount = newCounts[fi] == null ? 0 : newCounts[fi][indices.getAndIncrement(fi)];
+                                        long newCount = countsDownsampled[fi] == null ? 0 : countsDownsampled[fi][indices.getAndIncrement(fi)];
                                         if (getCount.applyAsLong(o) < newCount)
                                             throw new RuntimeException("Assertion exception. Varying ordering of objects in iterator.");
                                         return setCount.apply(o, newCount);
@@ -134,7 +164,7 @@ public class OverlapDownsamplingPreprocessor<T> implements SetPreprocessor<Overl
                     }
                     return new OverlapGroup<>(newGroups);
                 }
-            }, OverlapGroup::notEmpty);
-        };
+            };
+        }
     }
 }

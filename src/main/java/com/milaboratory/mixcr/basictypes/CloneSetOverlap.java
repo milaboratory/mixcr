@@ -36,10 +36,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public final class CloneSetOverlap {
-    private CloneSetOverlap() {
-    }
+    private CloneSetOverlap() {}
 
-    public static final OutputPortCloseable<List<List<Clone>>> overlap(
+    public static OutputPortCloseable<List<List<Clone>>> overlap(
             List<? extends VDJCSProperties.VDJCSProperty<? super Clone>> by,
             List<? extends CloneReader> readers) {
         VDJCSProperties.CloneOrdering ordering = readers.get(0).ordering();

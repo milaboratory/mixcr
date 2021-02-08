@@ -3,10 +3,7 @@ package com.milaboratory.mixcr.postanalysis.diversity;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.mixcr.postanalysis.Aggregator;
-import com.milaboratory.mixcr.postanalysis.Characteristic;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
-import com.milaboratory.mixcr.postanalysis.WeightFunction;
+import com.milaboratory.mixcr.postanalysis.*;
 
 /**
  *
@@ -25,7 +22,7 @@ public class DiversityCharacteristic<T> extends Characteristic<DiversityMeasure,
     }
 
     @Override
-    protected Aggregator<DiversityMeasure, T> createAggregator() {
+    protected Aggregator<DiversityMeasure, T> createAggregator(Dataset<T> dataset) {
         return new DiversityAggregator<>(c -> Math.round(weight.weight(c)));
     }
 }

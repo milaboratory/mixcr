@@ -3,7 +3,6 @@ package com.milaboratory.mixcr.postanalysis;
 import com.fasterxml.jackson.annotation.*;
 import com.milaboratory.mixcr.postanalysis.additive.AdditiveCharacteristic;
 import com.milaboratory.mixcr.postanalysis.diversity.DiversityCharacteristic;
-import com.milaboratory.mixcr.postanalysis.overlap.AdditiveOverlapCharacteristic;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapCharacteristic;
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeCharacteristic;
 
@@ -17,7 +16,6 @@ import java.util.Objects;
         @JsonSubTypes.Type(value = AdditiveCharacteristic.class, name = "individual"),
         @JsonSubTypes.Type(value = DiversityCharacteristic.class, name = "diversity"),
         @JsonSubTypes.Type(value = OverlapCharacteristic.class, name = "overlap"),
-        @JsonSubTypes.Type(value = AdditiveOverlapCharacteristic.class, name = "overlapIndividual"),
         @JsonSubTypes.Type(value = SpectratypeCharacteristic.class, name = "geneFeatureSpectratype"),
         @JsonSubTypes.Type(value = Characteristic.CharacteristicWrapper.class, name = "characteristicWrapper")
 })
@@ -27,6 +25,7 @@ import java.util.Objects;
         isGetterVisibility = JsonAutoDetect.Visibility.NONE
 )
 public abstract class Characteristic<K, T> {
+    /** Unique characteristic name */
     @JsonProperty("name")
     public final String name;
     @JsonProperty("preproc")
@@ -40,7 +39,8 @@ public abstract class Characteristic<K, T> {
         this.weight = weight;
     }
 
-    protected abstract Aggregator<K, T> createAggregator();
+    /** Create aggregator for further processing of a given dataset */
+    protected abstract Aggregator<K, T> createAggregator(Dataset<T> dataset);
 
     /** override name & preproc */
     public Characteristic<K, T> override(String nameOverride, SetPreprocessor<T> preprocOverride) {
@@ -80,8 +80,8 @@ public abstract class Characteristic<K, T> {
         }
 
         @Override
-        protected Aggregator<K, T> createAggregator() {
-            return inner.createAggregator();
+        protected Aggregator<K, T> createAggregator(Dataset<T> dataset) {
+            return inner.createAggregator(dataset);
         }
 
         @Override

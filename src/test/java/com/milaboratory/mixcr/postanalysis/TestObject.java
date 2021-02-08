@@ -3,7 +3,6 @@ package com.milaboratory.mixcr.postanalysis;
 import org.apache.commons.math3.random.RandomDataGenerator;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntFunction;
@@ -33,22 +32,23 @@ public class TestObject {
         return Objects.hash(value, weight);
     }
 
-    public static List<TestObject>[] generateDatasets(int nDatasets, RandomDataGenerator rng) {
+    public static TestDataset<TestObject>[] generateDatasets(int nDatasets, RandomDataGenerator rng) {
         return generateDatasets(nDatasets, rng,
                 r -> r.nextInt(1, 1000),
                 r -> r.nextUniform(0, 10),
                 r -> r.nextUniform(0, 10));
     }
 
-    public static List<TestObject>[] generateDatasets(int nDatasets, RandomDataGenerator rng,
-                                                      ToIntFunction<RandomDataGenerator> sizes,
-                                                      ToDoubleFunction<RandomDataGenerator> values,
-                                                      ToDoubleFunction<RandomDataGenerator> weights) {
+    public static TestDataset<TestObject>[] generateDatasets(int nDatasets, RandomDataGenerator rng,
+                                                             ToIntFunction<RandomDataGenerator> sizes,
+                                                             ToDoubleFunction<RandomDataGenerator> values,
+                                                             ToDoubleFunction<RandomDataGenerator> weights) {
         int[] nElements = new int[nDatasets];
         for (int i = 0; i < nDatasets; i++) {
             nElements[i] = sizes.applyAsInt(rng);
         }
-        List<TestObject>[] datasets = new List[nDatasets];
+        @SuppressWarnings("unchecked")
+        TestDataset<TestObject>[] datasets = new TestDataset[nDatasets];
         for (int i = 0; i < datasets.length; i++) {
             TestObject[] ds = new TestObject[nElements[i]];
             for (int j = 0; j < nElements[i]; j++) {
@@ -57,7 +57,7 @@ public class TestObject {
                         weights.applyAsDouble(rng));
                 ds[j] = w;
             }
-            datasets[i] = Arrays.asList(ds);
+            datasets[i] = new TestDataset<>(Arrays.asList(ds));
         }
         return datasets;
     }

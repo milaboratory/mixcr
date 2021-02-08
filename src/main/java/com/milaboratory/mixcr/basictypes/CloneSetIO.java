@@ -29,6 +29,7 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
+import com.milaboratory.util.LambdaSemaphore;
 import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.File;
@@ -66,11 +67,17 @@ public final class CloneSetIO {
         }
     }
 
+    public static final int DEFAULT_READER_CONCURRENCY_LIMIT = 1;
+
     public static CloneReader mkReader(Path file, VDJCLibraryRegistry libraryRegistry) throws IOException {
-        return mkReader(file, libraryRegistry, 1);
+        return mkReader(file, libraryRegistry, DEFAULT_READER_CONCURRENCY_LIMIT);
     }
 
     public static CloneReader mkReader(Path file, VDJCLibraryRegistry libraryRegistry, int concurrency) throws IOException {
+        return mkReader(file, libraryRegistry, new LambdaSemaphore(concurrency));
+    }
+
+    public static CloneReader mkReader(Path file, VDJCLibraryRegistry libraryRegistry, LambdaSemaphore concurrency) throws IOException {
         switch (Objects.requireNonNull(fileInfoExtractorInstance.getFileInfo(file.toFile())).fileType) {
             case MAGIC_CLNA:
                 return new ClnAReader(file, libraryRegistry, concurrency);

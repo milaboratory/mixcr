@@ -13,6 +13,7 @@ import java.util.List;
 public class OverlapAggregator<T> implements Aggregator<OverlapKey<OverlapType>, OverlapGroup<T>> {
     private final WeightFunction<T> weight;
     private final int i1, i2;
+    private final String id1, id2;
     final SimpleRegression
             regressionAll = new SimpleRegression(),
             regressionIntersection = new SimpleRegression();
@@ -21,10 +22,12 @@ public class OverlapAggregator<T> implements Aggregator<OverlapKey<OverlapType>,
             sumSqProduct;
     long diversity1, diversity2, diversityIntersection;
 
-    public OverlapAggregator(WeightFunction<T> weight, int i1, int i2) {
+    public OverlapAggregator(WeightFunction<T> weight, int i1, int i2, String id1, String id2) {
         this.weight = weight;
         this.i1 = i1;
         this.i2 = i2;
+        this.id1 = id1;
+        this.id2 = id2;
     }
 
     @Override
@@ -52,17 +55,17 @@ public class OverlapAggregator<T> implements Aggregator<OverlapKey<OverlapType>,
     @Override
     public MetricValue<OverlapKey<OverlapType>>[] result() {
         return new MetricValue[]{
-                new MetricValue<>(key(OverlapType.D, i1, i2), 1.0 * diversityIntersection / diversity1 / diversity2),
-                new MetricValue<>(key(OverlapType.SharedClonotypes, i1, i2), 1.0 * diversityIntersection),
-                new MetricValue<>(key(OverlapType.F1, i1, i2), Math.sqrt(sumS1Intersection * sumS2Intersection / sumS1 / sumS2)),
-                new MetricValue<>(key(OverlapType.F2, i1, i2), sumSqProduct / Math.sqrt(sumS1 * sumS2)),
-                new MetricValue<>(key(OverlapType.Jaccard, i1, i2), 1.0 * diversityIntersection / (diversity1 + diversity2 - diversityIntersection)),
-                new MetricValue<>(key(OverlapType.R_Intersection, i1, i2), regressionIntersection.getR()),
-                new MetricValue<>(key(OverlapType.R_All, i1, i2), regressionAll.getR()),
+                new MetricValue<>(key(OverlapType.D, id1, id2), 1.0 * diversityIntersection / diversity1 / diversity2),
+                new MetricValue<>(key(OverlapType.SharedClonotypes, id1, id2), 1.0 * diversityIntersection),
+                new MetricValue<>(key(OverlapType.F1, id1, id2), Math.sqrt(sumS1Intersection * sumS2Intersection / sumS1 / sumS2)),
+                new MetricValue<>(key(OverlapType.F2, id1, id2), sumSqProduct / Math.sqrt(sumS1 * sumS2)),
+                new MetricValue<>(key(OverlapType.Jaccard, id1, id2), 1.0 * diversityIntersection / (diversity1 + diversity2 - diversityIntersection)),
+                new MetricValue<>(key(OverlapType.R_Intersection, id1, id2), regressionIntersection.getR()),
+                new MetricValue<>(key(OverlapType.R_All, id1, id2), regressionAll.getR()),
         };
     }
 
-    private static OverlapKey<OverlapType> key(OverlapType type, int i, int j) {
+    private static OverlapKey<OverlapType> key(OverlapType type, String i, String j) {
         return new OverlapKey<>(type, i, j);
     }
 }

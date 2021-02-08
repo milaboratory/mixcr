@@ -38,6 +38,7 @@ import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.*;
 import com.milaboratory.util.CanReportProgress;
+import com.milaboratory.util.LambdaSemaphore;
 import gnu.trove.map.hash.TIntIntHashMap;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.VDJCGene;
@@ -68,8 +69,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
     /** First record always zero */
     final long[] counts;
     /**
-     * cloneId -> index in index
-     * e.g. alignments for clone with id0 starts from position index[cloneMapping.get(id0)]
+     * cloneId -> index in index e.g. alignments for clone with id0 starts from position index[cloneMapping.get(id0)]
      */
     final TIntIntHashMap cloneIdIndex;
     final long totalAlignmentsCount;
@@ -94,7 +94,11 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
     final String versionInfo;
 
     public ClnAReader(Path path, VDJCLibraryRegistry libraryRegistry, int concurrency) throws IOException {
-        this.input = new PrimitivIHybrid(path, concurrency);
+        this(path, libraryRegistry, new LambdaSemaphore(concurrency));
+    }
+
+    public ClnAReader(Path path, VDJCLibraryRegistry libraryRegistry, LambdaSemaphore concurrencyLimiter) throws IOException {
+        this.input = new PrimitivIHybrid(path, concurrencyLimiter);
 
         this.libraryRegistry = libraryRegistry;
 

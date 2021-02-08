@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -17,21 +19,20 @@ import java.util.stream.Collectors;
 public final class CharacteristicGroupResult<K> {
     /** The group */
     public final CharacteristicGroup<K, ?> group;
+    /** All dataset ids that were analyzed */
+    public final Set<String> datasetIds;
     /** All keys presented in the table */
-    public final List<K> keys;
+    public final Set<K> keys;
     /** Cells */
     public final List<CharacteristicGroupResultCell<K>> cells;
-    /** Number of samples */
-    public final int nSamples;
-    /** Sample names */
-    public final List<String> sampleIds;
 
-    public CharacteristicGroupResult(CharacteristicGroup<K, ?> group, List<K> keys, List<CharacteristicGroupResultCell<K>> cells, int nSamples, List<String> sampleIds) {
+    public CharacteristicGroupResult(CharacteristicGroup<K, ?> group,
+                                     Set<String> datasetIds, Set<K> keys,
+                                     List<CharacteristicGroupResultCell<K>> cells) {
         this.group = group;
+        this.datasetIds = datasetIds;
         this.keys = keys;
         this.cells = cells;
-        this.nSamples = nSamples;
-        this.sampleIds = sampleIds;
     }
 
     @Override
@@ -39,8 +40,26 @@ public final class CharacteristicGroupResult<K> {
         return cells.toString();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CharacteristicGroupResult<?> that = (CharacteristicGroupResult<?>) o;
+        return Objects.equals(group, that.group)
+                && Objects.equals(datasetIds, that.datasetIds)
+                && Objects.equals(keys, that.keys)
+                && Objects.equals(cells, that.cells)
+                && Objects.equals(getOutputs(), that.getOutputs());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(group, datasetIds, keys, cells, getOutputs());
+    }
+
     private Map<Object, OutputTable> outputs;
 
+    /** get all views available for this char group */
     public synchronized Map<Object, OutputTable> getOutputs() {
         if (outputs == null)
             outputs = group.views.stream()

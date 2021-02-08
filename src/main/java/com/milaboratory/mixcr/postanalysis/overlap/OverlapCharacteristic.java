@@ -2,11 +2,9 @@ package com.milaboratory.mixcr.postanalysis.overlap;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.mixcr.postanalysis.Aggregator;
-import com.milaboratory.mixcr.postanalysis.Characteristic;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
-import com.milaboratory.mixcr.postanalysis.WeightFunction;
+import com.milaboratory.mixcr.postanalysis.*;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -33,8 +31,11 @@ public class OverlapCharacteristic<T> extends Characteristic<OverlapKey<OverlapT
     }
 
     @Override
-    protected Aggregator<OverlapKey<OverlapType>, OverlapGroup<T>> createAggregator() {
-        return new OverlapAggregator<>(weight, i1, i2);
+    protected Aggregator<OverlapKey<OverlapType>, OverlapGroup<T>> createAggregator(Dataset<OverlapGroup<T>> dataset) {
+        if (!(dataset instanceof OverlapDataset))
+            throw new IllegalArgumentException();
+        List<String> datasetIds = ((OverlapDataset<T>) dataset).datasetIds;
+        return new OverlapAggregator<>(weight, i1, i2, datasetIds.get(i1), datasetIds.get(i2));
     }
 
     @Override

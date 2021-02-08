@@ -2,8 +2,6 @@ package com.milaboratory.mixcr.postanalysis.ui;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  *
@@ -15,10 +13,11 @@ interface OutputTableExtractor<K> {
         return result -> {
             List<OutputTableCell> cells = new ArrayList<>();
             for (CharacteristicGroupResultCell<K> cell : result.cells)
-                cells.add(new OutputTableCell(cell.sampleIndex, cell.metricIndex, cell.value));
+                cells.add(new OutputTableCell(cell.datasetId, cell.key, cell.value));
 
-            return new OutputTable(result.group.name, result.sampleIds,
-                    result.keys.stream().map(Objects::toString).collect(Collectors.toList()), cells);
+            return new OutputTable(result.group.name,
+                    new ArrayList<>(result.datasetIds),
+                    new ArrayList<>(result.keys), cells);
         };
     }
 }

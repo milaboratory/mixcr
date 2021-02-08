@@ -3,10 +3,7 @@ package com.milaboratory.mixcr.postanalysis.spectratype;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.postanalysis.Aggregator;
-import com.milaboratory.mixcr.postanalysis.Characteristic;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
-import com.milaboratory.mixcr.postanalysis.WeightFunctions;
+import com.milaboratory.mixcr.postanalysis.*;
 
 import java.util.Objects;
 
@@ -30,7 +27,7 @@ public class SpectratypeCharacteristic extends Characteristic<SpectratypeKey<Str
     }
 
     @Override
-    protected Aggregator<SpectratypeKey<String>, Clone> createAggregator() {
+    protected Aggregator<SpectratypeKey<String>, Clone> createAggregator(Dataset<Clone> dataset) {
         return new SpectratypeAggregator<>(nTopClonotypes, keyFunction, weight);
     }
 

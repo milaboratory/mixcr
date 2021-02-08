@@ -13,8 +13,7 @@ import java.util.Map;
 @JsonSubTypes({
         @JsonSubTypes.Type(value = GroupSummary.class, name = "summary"),
         @JsonSubTypes.Type(value = OverlapSummary.class, name = "overlapSummary"),
-        @JsonSubTypes.Type(value = GroupMelt.VJUsageMelt.class, name = "vjUsage"),
-        @JsonSubTypes.Type(value = GroupMelt.BySample.class, name = "bySample"),
+        @JsonSubTypes.Type(value = GroupMelt.VJUsageMelt.class, name = "vjUsage")
 })
 @JsonAutoDetect(
         fieldVisibility = JsonAutoDetect.Visibility.NONE,

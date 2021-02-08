@@ -2,6 +2,7 @@ package com.milaboratory.mixcr.postanalysis.preproc;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.milaboratory.mixcr.postanalysis.Dataset;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
 
 import java.util.*;
@@ -23,7 +24,6 @@ public class PreprocessorChain<T> implements SetPreprocessor<T> {
         this(Arrays.asList(chain));
     }
 
-    @Override
     public String[] description() {
         return chain.stream()
                 .map(SetPreprocessor::description)
@@ -34,14 +34,14 @@ public class PreprocessorChain<T> implements SetPreprocessor<T> {
     }
 
     @Override
-    public Function<Iterable<T>, Iterable<T>> setup(Iterable<T>[] sets) {
-        Iterable<T>[] proc = sets;
+    public Function<Dataset<T>, Dataset<T>> setup(Dataset<T>[] sets) {
+        Dataset<T>[] proc = sets;
         for (SetPreprocessor<T> p : chain) {
-            Function<Iterable<T>, Iterable<T>> func = p.setup(proc);
+            Function<Dataset<T>, Dataset<T>> func = p.setup(proc);
             //noinspection unchecked
-            proc = Arrays.stream(proc).map(func).toArray(Iterable[]::new);
+            proc = Arrays.stream(proc).map(func).toArray(Dataset[]::new);
         }
-        Map<Iterable<T>, Iterable<T>> mapping = new IdentityHashMap<>();
+        Map<Dataset<T>, Dataset<T>> mapping = new IdentityHashMap<>();
         for (int i = 0; i < sets.length; i++)
             mapping.put(sets[i], proc[i]);
         return mapping::get;

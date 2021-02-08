@@ -51,9 +51,8 @@ public class MetricValue<K> {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        MetricValue<?> tuple = (MetricValue<?>) o;
-        return Double.compare(tuple.value, value) == 0 &&
-                Objects.equals(key, tuple.key);
+        MetricValue<?> that = (MetricValue<?>) o;
+        return Double.compare(that.value, value) == 0 && Objects.equals(key, that.key);
     }
 
     @Override

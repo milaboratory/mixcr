@@ -1,5 +1,8 @@
 package com.milaboratory.mixcr.postanalysis.downsampling;
 
+import cc.redberry.pipe.CUtils;
+import com.milaboratory.mixcr.postanalysis.Dataset;
+import com.milaboratory.mixcr.postanalysis.TestDataset;
 import com.milaboratory.mixcr.postanalysis.TestObject;
 import org.apache.commons.math3.random.RandomDataGenerator;
 import org.apache.commons.math3.random.Well512a;
@@ -103,21 +106,21 @@ public class DownsamplingPreprocessorTest {
         );
 
         int nDatasets = 10;
-        Dataset[] initial = new Dataset[nDatasets];
+        DatasetSupport[] initial = new DatasetSupport[nDatasets];
         for (int i = 0; i < initial.length; i++) {
             initial[i] = rndDataset(rng, rng.nextInt(100, 1000));
         }
 
         long dsValue = dsChooser.compute(Arrays.stream(initial).mapToLong(d -> d.count).toArray());
-        Function<Iterable<TestObject>, Iterable<TestObject>> setup = proc.setup(initial);
+        Function<Dataset<TestObject>, Dataset<TestObject>> setup = proc.setup(initial);
 
-        Dataset[] downsampled = Arrays.stream(initial).map(setup)
-                .map(Dataset::new)
-                .toArray(Dataset[]::new);
+        DatasetSupport[] downsampled = Arrays.stream(initial).map(setup)
+                .map(DatasetSupport::new)
+                .toArray(DatasetSupport[]::new);
 
         for (int i = 0; i < downsampled.length; i++) {
-            Dataset in = initial[i];
-            Dataset dw = downsampled[i];
+            DatasetSupport in = initial[i];
+            DatasetSupport dw = downsampled[i];
 
             Assert.assertTrue(in.set.containsAll(dw.set));
             Assert.assertEquals(dsValue, dw.count);
@@ -135,34 +138,28 @@ public class DownsamplingPreprocessorTest {
         return l;
     }
 
-    public static Dataset rndDataset(RandomDataGenerator rng, int size) {
+    public static DatasetSupport rndDataset(RandomDataGenerator rng, int size) {
         TestObject[] r = new TestObject[size];
         for (int i = 0; i < size; i++) {
             r[i] = new TestObject(
                     rng.nextUniform(0, 1),
                     rng.nextUniform(0, 100));
         }
-        return new Dataset(Arrays.asList(r));
+        return new DatasetSupport(Arrays.asList(r));
     }
 
-    private static final class Dataset implements Iterable<TestObject> {
-        final List<TestObject> data;
+    private static final class DatasetSupport extends TestDataset<TestObject> {
         final Set<Double> set;
         final long count;
 
-        public Dataset(Iterable<TestObject> data) {
-            this(toList(data));
+        public DatasetSupport(Dataset<TestObject> data) {
+            this(toList(CUtils.it(data.mkElementsPort())));
         }
 
-        public Dataset(List<TestObject> data) {
-            this.data = data;
+        public DatasetSupport(List<TestObject> data) {
+            super(data);
             this.set = data.stream().map(s -> s.value).collect(Collectors.toSet());
             this.count = data.stream().mapToLong(l -> Math.round(l.weight)).sum();
-        }
-
-        @Override
-        public Iterator<TestObject> iterator() {
-            return data.iterator();
         }
     }
 }

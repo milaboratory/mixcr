@@ -29,10 +29,13 @@
  */
 package com.milaboratory.mixcr.postanalysis.overlap;
 
+import cc.redberry.pipe.CUtils;
+import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.mixcr.basictypes.ClnsReader;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCObject;
 import com.milaboratory.mixcr.basictypes.VDJCSProperties;
+import com.milaboratory.mixcr.postanalysis.Dataset;
 import com.milaboratory.util.Cache;
 import com.milaboratory.util.LambdaSemaphore;
 import gnu.trove.map.hash.TIntIntHashMap;
@@ -50,7 +53,6 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class OverlapIntegrationTest {
     @Test
@@ -58,8 +60,7 @@ public class OverlapIntegrationTest {
         // Limits concurrency across all readers
         LambdaSemaphore concurrencyLimiter = new LambdaSemaphore(4);
 
-        List<ClnsReader> readers = Stream.of(
-                "Ig-2_S2.contigs.clns",
+        List<String> samples = Arrays.asList("Ig-2_S2.contigs.clns",
                 "Ig-3_S3.contigs.clns",
                 "Ig-4_S4.contigs.clns",
                 "Ig-5_S5.contigs.clns",
@@ -67,7 +68,8 @@ public class OverlapIntegrationTest {
                 "Ig2_S2.contigs.clns",
                 "Ig3_S3.contigs.clns",
                 "Ig4_S4.contigs.clns",
-                "Ig5_S5.contigs.clns")
+                "Ig5_S5.contigs.clns");
+        List<ClnsReader> readers = samples.stream()
                 .map(f -> {
                     try {
                         return new ClnsReader(
@@ -88,13 +90,15 @@ public class OverlapIntegrationTest {
         long totalSumExpected = 0;
         for (List<VDJCSProperties.VDJCSProperty<VDJCObject>> by : Arrays.asList(byN, byAA, byAAAndV)) {
             System.out.println("=============");
-            OverlapIterable<Clone> overlap = OverlapUtil.overlap(by, readers);
+            Dataset<OverlapGroup<Clone>> overlap = OverlapUtil.overlap(samples, by, readers);
             TIntIntHashMap hist = new TIntIntHashMap();
             long totalSum = 0;
-            for (OverlapGroup<Clone> cloneOverlapGroup : overlap) {
-                int sum = cloneOverlapGroup.elements.stream().mapToInt(l -> l.isEmpty() ? 0 : 1).sum();
-                totalSum += cloneOverlapGroup.elements.stream().mapToInt(List::size).sum();
-                hist.adjustOrPutValue(sum, 1, 1);
+            try (final OutputPortCloseable<OverlapGroup<Clone>> port = overlap.mkElementsPort()) {
+                for (OverlapGroup<Clone> cloneOverlapGroup : CUtils.it(port)) {
+                    int sum = cloneOverlapGroup.elements.stream().mapToInt(l -> l.isEmpty() ? 0 : 1).sum();
+                    totalSum += cloneOverlapGroup.elements.stream().mapToInt(List::size).sum();
+                    hist.adjustOrPutValue(sum, 1, 1);
+                }
             }
             if (totalSumExpected == 0)
                 totalSumExpected = totalSum;
@@ -145,13 +149,15 @@ public class OverlapIntegrationTest {
 
         for (List<VDJCSProperties.VDJCSProperty<VDJCObject>> by : Arrays.asList(byN, byAA, byAAAndV)) {
             System.out.println("=============");
-            OverlapIterable<Clone> overlap = OverlapUtil.overlap(by, readers);
+            Dataset<OverlapGroup<Clone>> overlap = OverlapUtil.overlap(input.stream().map(Path::toString).collect(Collectors.toList()), by, readers);
             TIntIntHashMap hist = new TIntIntHashMap();
             long totalSum = 0;
-            for (OverlapGroup<Clone> cloneOverlapGroup : overlap) {
-                int sum = cloneOverlapGroup.elements.stream().mapToInt(l -> l.isEmpty() ? 0 : 1).sum();
-                totalSum += cloneOverlapGroup.elements.stream().mapToInt(List::size).sum();
-                hist.adjustOrPutValue(sum, 1, 1);
+            try (OutputPortCloseable<OverlapGroup<Clone>> port = overlap.mkElementsPort()) {
+                for (OverlapGroup<Clone> cloneOverlapGroup : CUtils.it(port)) {
+                    int sum = cloneOverlapGroup.elements.stream().mapToInt(l -> l.isEmpty() ? 0 : 1).sum();
+                    totalSum += cloneOverlapGroup.elements.stream().mapToInt(List::size).sum();
+                    hist.adjustOrPutValue(sum, 1, 1);
+                }
             }
             for (int i = 1; i < readers.size(); i++)
                 if (hist.get(i) != 0)

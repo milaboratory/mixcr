@@ -1,44 +1,33 @@
 package com.milaboratory.mixcr.postanalysis.ui;
 
-import gnu.trove.impl.Constants;
-import gnu.trove.map.hash.TObjectIntHashMap;
-
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
  */
 public final class CharacteristicGroupResultBuilder<K> {
     private final CharacteristicGroup<K, ?> group;
-    private final List<String> sampleIds;
-    private final TObjectIntHashMap<K> keys = new TObjectIntHashMap<>(Constants.DEFAULT_CAPACITY, Constants.DEFAULT_LOAD_FACTOR, -1);
-    private final List<K> keyList = new ArrayList<>();
+    private final Set<String> datasetIds;
+    private final LinkedHashSet<K> keys = new LinkedHashSet<>();
     private final List<CharacteristicGroupResultCell<K>> cells = new ArrayList<>();
-    private int nSamples = 0;
 
-    public CharacteristicGroupResultBuilder(CharacteristicGroup<K, ?> group, List<String> sampleIds) {
+    public CharacteristicGroupResultBuilder(CharacteristicGroup<K, ?> group, Set<String> datasetIds) {
         this.group = group;
-        this.sampleIds = sampleIds;
+        this.datasetIds = datasetIds;
     }
 
-    public CharacteristicGroupResultBuilder<K> add(K key, int sampleIndex, Double value) {
+    public CharacteristicGroupResultBuilder<K> add(K key, String datasetId, Double value) {
         if (value == null)
             return this;
-
-        nSamples = Math.max(nSamples, sampleIndex + 1);
-        int metricIndex = keys.get(key);
-        if (metricIndex < 0) {
-            metricIndex = keys.size();
-            keys.put(key, metricIndex);
-            keyList.add(key);
-        }
-
-        cells.add(new CharacteristicGroupResultCell<>(key, value, sampleIndex, metricIndex));
+        keys.add(key);
+        cells.add(new CharacteristicGroupResultCell<>(key, value, datasetId));
         return this;
     }
 
     public CharacteristicGroupResult<K> build() {
-        return new CharacteristicGroupResult<>(group, keyList, cells, nSamples, sampleIds);
+        return new CharacteristicGroupResult<>(group, datasetIds, keys, cells);
     }
 }
