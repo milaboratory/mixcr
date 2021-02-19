@@ -76,7 +76,7 @@ public final class FullSeqAssembler {
     private static final int N_VARIANT_INDEX = NucleotideSequence.ALPHABET.basicSize() + 2;
 
     /** number of letters to the left of reference V gene in the global coordinate grid */
-    private static final int N_LEFT_DUMMIES = 1024; // fixme
+    private static final int N_LEFT_DUMMIES = 1 << 14; // fixme
     /** clone factory */
     final CloneFactory cloneFactory;
     /** initial clone */
