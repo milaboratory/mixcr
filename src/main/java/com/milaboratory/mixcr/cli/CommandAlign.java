@@ -45,6 +45,7 @@ import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.core.PairedEndReadsLayout;
 import com.milaboratory.core.Target;
+import com.milaboratory.core.io.CompressionType;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SequenceReaderCloseable;
 import com.milaboratory.core.io.sequence.SequenceWriter;
@@ -73,6 +74,7 @@ import picocli.CommandLine.ExecutionException;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.*;
@@ -106,6 +108,10 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
     protected List<String> getOutputFiles() {
         return inOut.subList(inOut.size() - 1, inOut.size());
     }
+
+    @Option(description = CommonDescriptions.SPECIES,
+            names = {"--read-buffer"})
+    public int readBufferSize = 1 << 20;
 
     @Option(description = CommonDescriptions.SPECIES,
             names = {"-s", "--species"},
@@ -288,7 +294,12 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
 
     public SequenceReaderCloseable<? extends SequenceRead> createReader() throws IOException {
         if (isInputPaired())
-            return new PairedFastqReader(getInputFiles().get(0), getInputFiles().get(1), true);
+            return new PairedFastqReader(new FileInputStream(getInputFiles().get(0)), new FileInputStream(getInputFiles().get(1)),
+                    SingleFastqReader.DEFAULT_QUALITY_FORMAT,
+                    CompressionType.detectCompressionType(getInputFiles().get(0)),
+                    true,
+                    readBufferSize,
+                    true, true);
         else {
             String in = getInputFiles().get(0);
             String[] s = in.split("\\.");
@@ -298,7 +309,12 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                         true
                 );
             else
-                return new SingleFastqReader(in, true);
+                return new SingleFastqReader(new FileInputStream(in),
+                        SingleFastqReader.DEFAULT_QUALITY_FORMAT,
+                        CompressionType.detectCompressionType(in),
+                        true,
+                        readBufferSize,
+                        true, true);
         }
     }
 
