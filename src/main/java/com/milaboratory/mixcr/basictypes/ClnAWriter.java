@@ -238,7 +238,7 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
                 new CloneIdHash(), CloneIdComparator,
                 5, tempFolder, 4, 6,
                 stateBuilder.getOState(), stateBuilder.getIState(),
-                1 << 28 /* 256 Mb */, 512);
+                1 << 28 /* 256 Mb */, 1 << 18 /* 256 Kb */);
 
         // Here we wait for the first layer of hash collation to finish "write" stage
         // (on average 30% time of full collation process)
