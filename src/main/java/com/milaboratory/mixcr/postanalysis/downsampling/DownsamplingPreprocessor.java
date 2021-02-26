@@ -1,24 +1,20 @@
 package com.milaboratory.mixcr.postanalysis.downsampling;
 
 
-import cc.redberry.pipe.CUtils;
-import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.InputPort;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.mixcr.postanalysis.Dataset;
+import com.milaboratory.mixcr.postanalysis.MappingFunction;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
-import com.milaboratory.mixcr.postanalysis.preproc.FilteredDataset;
+import com.milaboratory.mixcr.postanalysis.SetPreprocessorSetup;
 import gnu.trove.list.array.TLongArrayList;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.Well19937c;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.ToLongFunction;
 
-import static com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingUtil.*;
+import static com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingUtil.downsample_mvhg;
 
 /**
  *
@@ -31,7 +27,9 @@ public class DownsamplingPreprocessor<T> implements SetPreprocessor<T> {
     @JsonProperty("seed")
     public final long seed;
 
-    public DownsamplingPreprocessor(ToLongFunction<T> getCount, BiFunction<T, Long, T> setCount, DownsampleValueChooser downsampleValueChooser, long seed) {
+    public DownsamplingPreprocessor(ToLongFunction<T> getCount,
+                                    BiFunction<T, Long, T> setCount,
+                                    DownsampleValueChooser downsampleValueChooser, long seed) {
         this.getCount = getCount;
         this.setCount = setCount;
         this.downsampleValueChooser = downsampleValueChooser;
@@ -45,80 +43,66 @@ public class DownsamplingPreprocessor<T> implements SetPreprocessor<T> {
         return new String[]{ch};
     }
 
+    private ComputeCountsStep setup = null;
+    private long downsampling = -1;
+
     @Override
-    public Function<Dataset<T>, Dataset<T>> setup(Dataset<T>[] sets) {
-        long[] totals = new long[sets.length];
-        for (int i = 0; i < sets.length; i++)
-            totals[i] = total(getCount, sets[i]);
-        long downsampling = downsampleValueChooser.compute(totals);
+    public SetPreprocessorSetup<T> nextSetupStep() {
+        if (setup == null)
+            return setup = new ComputeCountsStep();
 
-        Set<Dataset<T>> empty = new HashSet<>();
-        for (int i = 0; i < totals.length; ++i)
-            if (totals[i] < downsampling)
-                empty.add(sets[i]);
+        return null;
+    }
 
-        return set -> {
-            if (empty.contains(set))
-                //noinspection unchecked
-                return EMPTY_DATASET_SUPPLIER;
+    @Override
+    public MappingFunction<T> getMapper(int iDataset) {
+        if (downsampling == -1)
+            downsampling = downsampleValueChooser.compute(setup.counts);
 
-            // compute counts
-            long total = 0;
-            TLongArrayList countsList = new TLongArrayList();
-            try (OutputPortCloseable<T> port = set.mkElementsPort()) {
-                for (T t : CUtils.it(port)) {
-                    long c = getCount.applyAsLong(t);
-                    countsList.add(c);
-                    total += c;
-                }
-            }
+        if (downsampling > setup.counts[iDataset])
+            return t -> null;
 
-            if (total < downsampling)
-                //noinspection unchecked
-                return EMPTY_DATASET_SUPPLIER;
+        long[] counts = setup.countLists[iDataset].toArray();
+        RandomGenerator rnd = new Well19937c(seed);
+        long[] countsDownsampled = downsample_mvhg(counts, downsampling, rnd);
 
-            RandomGenerator rnd = new Well19937c(seed);
-            long[] countsDownsampled = downsample_mvhg(countsList.toArray(), downsampling, rnd);
-
-            return new FilteredDataset<>(
-                    new DownsampledDataset<>(set, countsDownsampled, setCount),
-                    t -> getCount.applyAsLong(t) != 0);
+        AtomicInteger idx = new AtomicInteger(0);
+        return t -> {
+            int i = idx.getAndIncrement();
+            if (countsDownsampled[i] == 0)
+                return null;
+            return setCount.apply(t, countsDownsampled[i]);
         };
     }
 
-    private static final class DownsampledDataset<T> implements Dataset<T> {
-        final Dataset<T> inner;
-        final long[] countsDownsampled;
-        final BiFunction<T, Long, T> setCount;
+    class ComputeCountsStep implements SetPreprocessorSetup<T> {
+        long[] counts;
+        TLongArrayList[] countLists;
 
-        public DownsampledDataset(Dataset<T> inner, long[] countsDownsampled, BiFunction<T, Long, T> setCount) {
-            this.inner = inner;
-            this.countsDownsampled = countsDownsampled;
-            this.setCount = setCount;
+        boolean initialized = false;
+
+        @Override
+        public void initialize(int nDatasets) {
+            if (initialized)
+                throw new IllegalStateException();
+            initialized = true;
+            counts = new long[nDatasets];
+            countLists = new TLongArrayList[nDatasets];
+            for (int i = 0; i < nDatasets; i++) {
+                countLists[i] = new TLongArrayList();
+            }
         }
 
         @Override
-        public String id() {
-            return inner.id();
-        }
-
-        @Override
-        public OutputPortCloseable<T> mkElementsPort() {
-            final OutputPortCloseable<T> inner = this.inner.mkElementsPort();
-            final AtomicInteger index = new AtomicInteger(0);
-            return new OutputPortCloseable<T>() {
-                @Override
-                public void close() {
-                    inner.close();
-                }
-
-                @Override
-                public T take() {
-                    T t = inner.take();
-                    if (t == null)
-                        return null;
-                    return setCount.apply(t, countsDownsampled[index.getAndIncrement()]);
-                }
+        public InputPort<T> consumer(int i) {
+            if (!initialized)
+                throw new IllegalStateException();
+            return object -> {
+                if (object == null)
+                    return;
+                long c = getCount.applyAsLong(object);
+                counts[i] += c;
+                countLists[i].add(c);
             };
         }
     }

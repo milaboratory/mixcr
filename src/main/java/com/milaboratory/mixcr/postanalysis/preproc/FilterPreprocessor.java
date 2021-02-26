@@ -2,60 +2,74 @@ package com.milaboratory.mixcr.postanalysis.preproc;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.mixcr.postanalysis.Dataset;
+import com.milaboratory.mixcr.postanalysis.MappingFunction;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
+import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
+import com.milaboratory.mixcr.postanalysis.SetPreprocessorSetup;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Function;
 
 /**
  *
  */
 public class FilterPreprocessor<T> implements SetPreprocessor<T> {
-    @JsonProperty("predicates")
-    public final List<ElementPredicate<T>> predicates;
+    final List<ElementPredicate<T>> predicates;
 
-    @JsonCreator
-    public FilterPreprocessor(@JsonProperty("predicates") List<ElementPredicate<T>> predicates) {
+    FilterPreprocessor(@JsonProperty("predicates") List<ElementPredicate<T>> predicates) {
         this.predicates = predicates;
     }
 
     @Override
-    public String[] description() {
-        return predicates.stream()
-                .map(ElementPredicate::description)
-                .filter(Objects::nonNull)
-                .filter(s -> !s.isEmpty())
-                .map(f -> "Filter: " + f)
-                .toArray(String[]::new);
-    }
-
-    public FilterPreprocessor(ElementPredicate<T>... predicates) {
-        this(Arrays.asList(predicates));
-    }
-
-    public FilterPreprocessor(ElementPredicate<T> predicate) {
-        this(Collections.singletonList(predicate));
+    public SetPreprocessorSetup<T> nextSetupStep() {
+        return null;
     }
 
     @Override
-    public Function<Dataset<T>, Dataset<T>> setup(Dataset<T>[] sets) {
-        return set -> new FilteredDataset<>(set, t -> predicates.stream().allMatch(s -> s.test(t)));
+    public MappingFunction<T> getMapper(int iDataset) {
+        return t -> predicates.stream().allMatch(p -> p.test(t)) ? t : null;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        FilterPreprocessor<?> that = (FilterPreprocessor<?>) o;
-        return Objects.equals(predicates, that.predicates);
-    }
+    public static final class Factory<T> implements SetPreprocessorFactory<T> {
+        @JsonProperty("predicates")
+        public final List<ElementPredicate<T>> predicates;
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(predicates);
+        @JsonCreator
+        public Factory(@JsonProperty("predicates") List<ElementPredicate<T>> predicates) {
+            this.predicates = predicates;
+        }
+
+        public Factory(ElementPredicate<T>... predicates) {
+            this(Arrays.asList(predicates));
+        }
+
+        @Override
+        public String[] description() {
+            return predicates.stream()
+                    .map(ElementPredicate::description)
+                    .filter(Objects::nonNull)
+                    .filter(s -> !s.isEmpty())
+                    .map(f -> "Filter: " + f)
+                    .toArray(String[]::new);
+        }
+
+        @Override
+        public SetPreprocessor<T> getInstance() {
+            return new FilterPreprocessor<>(predicates);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Factory<?> that = (Factory<?>) o;
+            return Objects.equals(predicates, that.predicates);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(predicates);
+        }
     }
 }

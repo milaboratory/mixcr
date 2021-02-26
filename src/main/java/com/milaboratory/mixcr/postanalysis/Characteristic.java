@@ -29,11 +29,13 @@ public abstract class Characteristic<K, T> {
     @JsonProperty("name")
     public final String name;
     @JsonProperty("preproc")
-    public final SetPreprocessor<T> preprocessor;
+    public final SetPreprocessorFactory<T> preprocessor;
     @JsonProperty("weight")
     public final WeightFunction<T> weight;
 
-    public Characteristic(String name, SetPreprocessor<T> preprocessor, WeightFunction<T> weight) {
+    public Characteristic(String name,
+                          SetPreprocessorFactory<T> preprocessor,
+                          WeightFunction<T> weight) {
         this.name = name;
         this.preprocessor = preprocessor;
         this.weight = weight;
@@ -41,11 +43,6 @@ public abstract class Characteristic<K, T> {
 
     /** Create aggregator for further processing of a given dataset */
     protected abstract Aggregator<K, T> createAggregator(Dataset<T> dataset);
-
-    /** override name & preproc */
-    public Characteristic<K, T> override(String nameOverride, SetPreprocessor<T> preprocOverride) {
-        return new CharacteristicWrapper<>(nameOverride, preprocOverride, this);
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -62,20 +59,25 @@ public abstract class Characteristic<K, T> {
         return Objects.hash(name, preprocessor, weight);
     }
 
+    /** override name & preproc */
+    public Characteristic<K, T> override(String nameOverride, SetPreprocessorFactory<T> preprocOverride) {
+        return new CharacteristicWrapper<>(nameOverride, preprocOverride, this);
+    }
+
     public static final class CharacteristicWrapper<K, T> extends Characteristic<K, T> {
         @JsonProperty("inner")
         public final Characteristic<K, T> inner;
 
         @JsonCreator
         public CharacteristicWrapper(@JsonProperty("name") String name,
-                                     @JsonProperty("preproc") SetPreprocessor<T> preprocessor,
+                                     @JsonProperty("preproc") SetPreprocessorFactory<T> preprocessor,
                                      @JsonProperty("inner") Characteristic<K, T> inner) {
             super(name == null ? inner.name : name, preprocessor == null ? inner.preprocessor : preprocessor, inner.weight);
             this.inner = inner;
         }
 
         @Override
-        public Characteristic<K, T> override(String nameOverride, SetPreprocessor<T> preprocOverride) {
+        public Characteristic<K, T> override(String nameOverride, SetPreprocessorFactory<T> preprocOverride) {
             return new CharacteristicWrapper<>(nameOverride, preprocOverride, inner);
         }
 

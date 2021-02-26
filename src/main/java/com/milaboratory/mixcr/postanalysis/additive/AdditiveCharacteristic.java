@@ -28,7 +28,7 @@ public class AdditiveCharacteristic<K, T> extends Characteristic<K, T> {
 
     @JsonCreator
     public AdditiveCharacteristic(@JsonProperty("name") String name,
-                                  @JsonProperty("preproc") SetPreprocessor<T> preprocessor,
+                                  @JsonProperty("preproc") SetPreprocessorFactory<T> preprocessor,
                                   @JsonProperty("weight") WeightFunction<T> weight,
                                   @JsonProperty("key") KeyFunction<K, T> keyFunction,
                                   @JsonProperty("metric") AdditiveMetric<T> metric,

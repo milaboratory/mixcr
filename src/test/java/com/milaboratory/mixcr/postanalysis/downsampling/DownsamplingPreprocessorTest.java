@@ -2,6 +2,7 @@ package com.milaboratory.mixcr.postanalysis.downsampling;
 
 import cc.redberry.pipe.CUtils;
 import com.milaboratory.mixcr.postanalysis.Dataset;
+import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
 import com.milaboratory.mixcr.postanalysis.TestDataset;
 import com.milaboratory.mixcr.postanalysis.TestObject;
 import org.apache.commons.math3.random.RandomDataGenerator;
@@ -12,7 +13,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
@@ -110,11 +110,9 @@ public class DownsamplingPreprocessorTest {
         for (int i = 0; i < initial.length; i++) {
             initial[i] = rndDataset(rng, rng.nextInt(100, 1000));
         }
-
         long dsValue = dsChooser.compute(Arrays.stream(initial).mapToLong(d -> d.count).toArray());
-        Function<Dataset<TestObject>, Dataset<TestObject>> setup = proc.setup(initial);
 
-        DatasetSupport[] downsampled = Arrays.stream(initial).map(setup)
+        DatasetSupport[] downsampled = Arrays.stream(SetPreprocessorFactory.processDatasets(proc, initial))
                 .map(DatasetSupport::new)
                 .toArray(DatasetSupport[]::new);
 

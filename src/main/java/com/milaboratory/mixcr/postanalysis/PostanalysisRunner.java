@@ -1,13 +1,14 @@
 package com.milaboratory.mixcr.postanalysis;
 
 import cc.redberry.pipe.CUtils;
+import cc.redberry.pipe.InputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.util.CanReportProgressAndStage;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * @param <T> type of objects
@@ -53,41 +54,97 @@ public class PostanalysisRunner<T> implements CanReportProgressAndStage {
         return run(datasets.toArray(new Dataset[0]));
     }
 
+    /** Run PA for a given datasets */
+    @SuppressWarnings("unchecked")
     public PostanalysisResult run(Dataset<T>... datasets) {
         stage = "Preparing";
         progress = 0.0;
         isFinished = false;
 
-        Map<SetPreprocessor<T>, List<Characteristic<?, T>>> characteristicsByPrep =
-                characteristics.stream()
-                        .collect(Collectors.groupingBy(c -> c.preprocessor));
+        // charID -> proc (deduplicated)
+        Map<String, SetPreprocessor<T>> id2proc = new HashMap<>();
+        Map<SetPreprocessorFactory<T>, SetPreprocessor<T>> distinctProcs = new HashMap<>();
+        Map<SetPreprocessor<T>, List<Characteristic<?, T>>> proc2char = new HashMap<>();
+        for (Characteristic<?, T> ch : characteristics) {
+            id2proc.put(ch.name, distinctProcs.computeIfAbsent(ch.preprocessor, __ -> ch.preprocessor.getInstance()));
+            SetPreprocessor<T> proc = distinctProcs.get(ch.preprocessor);
+            proc2char.computeIfAbsent(proc, __ -> new ArrayList<>()).add(ch);
+        }
+        List<SetPreprocessor<T>> procs = id2proc.values().stream().distinct().collect(Collectors.toList());
+
+        while (true) {
+            // next setup iterations
+            List<SetPreprocessorSetup<T>> setupSteps = procs.stream()
+                    .map(SetPreprocessor::nextSetupStep)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
+            if (setupSteps.isEmpty())
+                break;
+
+            // initialize setups
+            for (SetPreprocessorSetup<T> s : setupSteps) {
+                s.initialize(datasets.length);
+            }
+            // inputConsumers[datasetIndex] - all consumers for i-th dataset
+            List<List<InputPort<T>>> inputConsumers = IntStream
+                    .range(0, datasets.length)
+                    .mapToObj(i -> setupSteps.stream()
+                            .map(s -> s.consumer(i))
+                            .collect(Collectors.toList())
+                    ).collect(Collectors.toList());
+
+            for (int i = 0; i < datasets.length; i++) {
+                Dataset<T> ds = datasets[i];
+                try (OutputPortCloseable<T> port = ds.mkElementsPort()) {
+                    for (T t : CUtils.it(port)) {
+                        for (InputPort<T> c : inputConsumers.get(i)) {
+                            c.put(t);
+                        }
+                    }
+                }
+                for (InputPort<T> c : inputConsumers.get(i)) {
+                    c.put(null);
+                }
+            }
+        }
+
+        // mapper functions
+        Map<SetPreprocessor<T>, MappingFunction<T>>[] mappingFunctions = new Map[datasets.length];
+        for (int i = 0; i < datasets.length; i++) {
+            mappingFunctions[i] = new HashMap<>();
+            for (SetPreprocessor<T> p : procs) {
+                mappingFunctions[i].put(p, p.getMapper(i));
+            }
+        }
 
         Map<Characteristic<?, T>, Map<String, MetricValue<?>[]>> result = new IdentityHashMap<>();
+        for (int i = 0; i < datasets.length; i++) {
+            Dataset<T> dataset = datasets[i];
 
-        for (Map.Entry<SetPreprocessor<T>, List<Characteristic<?, T>>> e : characteristicsByPrep.entrySet()) {
-            Function<Dataset<T>, Dataset<T>> prepFunction = e.getKey().setup(datasets);
-            for (Dataset<T> dataset : datasets) {
-                List<Characteristic<?, T>> characteristics = e.getValue();
+            Map<Characteristic<?, T>, Aggregator<?, T>> aggregators = characteristics.stream()
+                    .collect(Collectors.toMap(c -> c, c -> c.createAggregator(dataset)));
 
-                List<Aggregator<?, T>> aggregators = characteristics.stream()
-                        .map(c -> c.createAggregator(dataset))
-                        .collect(Collectors.toList());
-
-                try (OutputPortCloseable<T> port = prepFunction.apply(dataset).mkElementsPort()) {
-                    for (T o : CUtils.it(port))
-                        for (Aggregator<?, T> agg : aggregators)
-                            agg.consume(o);
+            try (OutputPortCloseable<T> port = dataset.mkElementsPort()) {
+                for (T o : CUtils.it(port)) {
+                    for (Map.Entry<SetPreprocessor<T>, MappingFunction<T>> e : mappingFunctions[i].entrySet()) {
+                        MappingFunction<T> mapper = e.getValue();
+                        T oMapped = mapper.apply(o);
+                        if (oMapped != null)
+                            for (Characteristic<?, T> ch : proc2char.get(e.getKey())) {
+                                aggregators.get(ch).consume(oMapped);
+                            }
+                    }
                 }
+            }
 
-                for (int charIndex = 0; charIndex < characteristics.size(); charIndex++) {
-                    @SuppressWarnings("unchecked")
-                    Map<String, MetricValue<?>[]> charValues = result.computeIfAbsent(
-                            characteristics.get(charIndex),
-                            __ -> new HashMap<>());
-                    if (charValues.containsKey(dataset.id()))
-                        throw new IllegalArgumentException("Dataset occurred twice.");
-                    charValues.put(dataset.id(), aggregators.get(charIndex).result());
-                }
+            for (Characteristic<?, T> characteristic : characteristics) {
+                Map<String, MetricValue<?>[]> charValues = result.computeIfAbsent(
+                        characteristic,
+                        __ -> new HashMap<>());
+                if (charValues.containsKey(dataset.id()))
+                    throw new IllegalArgumentException("Dataset occurred twice.");
+                charValues.put(dataset.id(), aggregators.get(characteristic).result());
             }
         }
 

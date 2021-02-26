@@ -2,9 +2,11 @@ package com.milaboratory.mixcr.postanalysis.downsampling;
 
 import cc.redberry.pipe.CUtils;
 import com.milaboratory.mixcr.postanalysis.Dataset;
+import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
 import com.milaboratory.mixcr.postanalysis.TestDataset;
 import com.milaboratory.mixcr.postanalysis.TestObject;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup;
+import com.milaboratory.mixcr.postanalysis.preproc.OverlapPreprocessorAdapter;
 import org.apache.commons.math3.random.RandomDataGenerator;
 import org.apache.commons.math3.random.Well512a;
 import org.junit.Assert;
@@ -14,7 +16,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 
 import static com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingPreprocessorTest.toList;
 
@@ -26,32 +27,38 @@ public class OverlapDownsamplingPreprocessorTest {
     public void test1() {
         RandomDataGenerator rng = new RandomDataGenerator(new Well512a());
         DownsampleValueChooser.Minimal chooser = new DownsampleValueChooser.Minimal();
-        OverlapDownsamplingPreprocessor<TestObject> proc = new OverlapDownsamplingPreprocessor<>(
-                t -> Math.round(t.weight),
-                (t, newW) -> new TestObject(t.value, newW),
-                chooser,
-                System.currentTimeMillis()
-        );
-
-        DatasetSupport[] datasets = new DatasetSupport[]{
+        DatasetSupport[] inputs = new DatasetSupport[]{
                 rndDataset(rng, 5, 100000),
                 rndDataset(rng, 10, 10000),
                 rndDataset(rng, 15, 10000)
         };
-        Function<Dataset<OverlapGroup<TestObject>>, Dataset<OverlapGroup<TestObject>>> downsampler = proc.setup(datasets);
+        for (DatasetSupport dataset : inputs) {
+            DatasetSupport[] datasets = new DatasetSupport[]{dataset};
 
-        for (DatasetSupport in : datasets) {
-            long dsValue = chooser.compute(in.counts);
-            DatasetSupport dw = new DatasetSupport(downsampler.apply(in));
+            DownsamplingPreprocessor<TestObject> proc = new DownsamplingPreprocessor<>(
+                    t -> Math.round(t.weight),
+                    (t, newW) -> new TestObject(t.value, newW),
+                    chooser,
+                    System.currentTimeMillis()
+            );
 
-            for (int i = 0; i < in.counts.length; i++) {
-                Assert.assertEquals(dsValue, dw.counts[i]);
-            }
+            Dataset<OverlapGroup<TestObject>>[] downsampled = SetPreprocessorFactory.processDatasets(new OverlapPreprocessorAdapter<>(proc), datasets);
 
-            for (OverlapGroup<TestObject> row : dw) {
-                for (int i = 0; i < row.size(); i++) {
-                    for (TestObject t : row.getBySample(i)) {
-                        Assert.assertTrue(in.sets[i].contains(t.value));
+            for (int i = 0; i < datasets.length; i++) {
+                DatasetSupport in = datasets[i];
+
+                long dsValue = chooser.compute(in.counts);
+                DatasetSupport dw = new DatasetSupport(downsampled[i]);
+
+                for (int j = 0; j < in.counts.length; j++) {
+                    Assert.assertEquals(dsValue, dw.counts[j]);
+                }
+
+                for (OverlapGroup<TestObject> row : dw) {
+                    for (int j = 0; j < row.size(); j++) {
+                        for (TestObject t : row.getBySample(j)) {
+                            Assert.assertTrue(in.sets[j].contains(t.value));
+                        }
                     }
                 }
             }

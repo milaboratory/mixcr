@@ -70,12 +70,12 @@ public class PostanalysisResult {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PostanalysisResult that = (PostanalysisResult) o;
-        return Objects.equals(datasetIds, that.datasetIds) && Objects.equals(data, that.data) && Objects.equals(cached, that.cached);
+        return Objects.equals(datasetIds, that.datasetIds) && Objects.equals(data, that.data);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(datasetIds, data, cached);
+        return Objects.hash(datasetIds, data);
     }
 
     @Override

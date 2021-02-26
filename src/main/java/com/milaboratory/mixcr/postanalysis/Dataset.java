@@ -2,9 +2,6 @@ package com.milaboratory.mixcr.postanalysis;
 
 import cc.redberry.pipe.OutputPortCloseable;
 
-import java.util.UUID;
-import java.util.function.Supplier;
-
 /**
  *
  */
@@ -15,9 +12,7 @@ public interface Dataset<T> {
     /** Closeable port of dataset elements */
     OutputPortCloseable<T> mkElementsPort();
 
-    /** Uses random UUID as dataset id */
-    static <K> Dataset<K> fromSupplier(Supplier<OutputPortCloseable<K>> supp) {
-        final String id = UUID.randomUUID().toString();
+    static <K> Dataset<K> empty(String id) {
         return new Dataset<K>() {
             @Override
             public String id() {
@@ -26,7 +21,15 @@ public interface Dataset<T> {
 
             @Override
             public OutputPortCloseable<K> mkElementsPort() {
-                return supp.get();
+                return new OutputPortCloseable<K>() {
+                    @Override
+                    public void close() {}
+
+                    @Override
+                    public K take() {
+                        return null;
+                    }
+                };
             }
         };
     }

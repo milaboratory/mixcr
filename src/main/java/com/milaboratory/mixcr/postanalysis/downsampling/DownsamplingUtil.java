@@ -41,20 +41,6 @@ public final class DownsamplingUtil {
     private DownsamplingUtil() {
     }
 
-    @SuppressWarnings("rawtypes")
-    public static final OutputPortCloseable emptyOP = new OutputPortCloseable() {
-        @Override
-        public void close() { }
-
-        @Override
-        public Object take() {
-            return null;
-        }
-    };
-
-    @SuppressWarnings("rawtypes")
-    public static final Dataset EMPTY_DATASET_SUPPLIER = Dataset.fromSupplier(() -> emptyOP);
-
     public static <T> long total(ToLongFunction<T> getCount, Dataset<T> set) {
         long total = 0;
         try (OutputPortCloseable<T> port = set.mkElementsPort()) {

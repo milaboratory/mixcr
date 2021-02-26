@@ -119,7 +119,7 @@ public class OverlapCharacteristicTest {
         for (int i = 0; i < ovp.datasets.length; i++) {
             for (int j = i + 1; j < ovp.datasets.length; j++) {
                 chars.add(new OverlapCharacteristic<>("overlap_" + i + "_" + j,
-                        e -> e.weight, new NoPreprocessing<>(), i, j));
+                        e -> e.weight, NoPreprocessing.factory(), i, j));
             }
         }
 

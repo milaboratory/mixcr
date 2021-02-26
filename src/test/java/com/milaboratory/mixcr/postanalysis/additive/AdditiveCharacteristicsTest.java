@@ -28,7 +28,7 @@ public class AdditiveCharacteristicsTest {
     public void testWeightedDescriptiveStat() {
         AdditiveCharacteristic<String, TestObject> sum = new AdditiveCharacteristic<>(
                 "sum",
-                new NoPreprocessing<>(),
+                NoPreprocessing.factory(),
                 o -> o.weight,
                 o -> "sum",
                 w -> w.value,
@@ -38,7 +38,7 @@ public class AdditiveCharacteristicsTest {
 
         AdditiveCharacteristic<String, TestObject> mean = new AdditiveCharacteristic<>(
                 "mean",
-                new NoPreprocessing<>(),
+                NoPreprocessing.factory(),
                 o -> o.weight,
                 o -> "mean",
                 w -> w.value,
@@ -48,7 +48,7 @@ public class AdditiveCharacteristicsTest {
 
         AdditiveCharacteristic<String, TestObject> std = new AdditiveCharacteristic<>(
                 "std",
-                new NoPreprocessing<>(),
+                NoPreprocessing.factory(),
                 o -> o.weight,
                 o -> "std",
                 w -> w.value,

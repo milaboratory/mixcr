@@ -1,34 +1,50 @@
 package com.milaboratory.mixcr.postanalysis.preproc;
 
-import com.milaboratory.mixcr.postanalysis.Dataset;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
 
-import java.util.function.Function;
+import com.milaboratory.mixcr.postanalysis.MappingFunction;
+import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
+import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
+import com.milaboratory.mixcr.postanalysis.SetPreprocessorSetup;
 
 /**
  *
  */
 public class NoPreprocessing<T> implements SetPreprocessor<T> {
-    public static final NoPreprocessing<?> INSTANCE = new NoPreprocessing<>();
+    private static final NoPreprocessing<?> instance = new NoPreprocessing<>();
 
-    public String[] description() {
-        return new String[0];
+    private NoPreprocessing() {}
+
+    @Override
+    public SetPreprocessorSetup<T> nextSetupStep() {
+        return null;
     }
 
     @Override
-    public Function<Dataset<T>, Dataset<T>> setup(Dataset<T>[] sets) {
-        return set -> set;
+    public MappingFunction<T> getMapper(int iDataset) {
+        return MappingFunction.identity();
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        return true;
-    }
+    public static final Factory<?> factory = new Factory<>();
 
-    @Override
-    public int hashCode() {
-        return 17;
+    @SuppressWarnings("unchecked")
+    public static <T> Factory<T> factory() { return (Factory<T>) factory; }
+
+    public static final class Factory<T> implements SetPreprocessorFactory<T> {
+        @SuppressWarnings("unchecked")
+        @Override
+        public SetPreprocessor<T> getInstance() {
+            return (SetPreprocessor<T>) NoPreprocessing.instance;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            return o != null && getClass() == o.getClass();
+        }
+
+        @Override
+        public int hashCode() {
+            return "NoPreprocessing".hashCode();
+        }
     }
 }

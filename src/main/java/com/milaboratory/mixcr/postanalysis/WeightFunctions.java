@@ -8,6 +8,8 @@ import com.milaboratory.mixcr.basictypes.Clone;
 public final class WeightFunctions {
     private WeightFunctions() {}
 
+    public static final Count Count = new Count();
+
     public static final class Count implements WeightFunction<Clone> {
         @Override
         public double weight(Clone clone) {
@@ -26,6 +28,8 @@ public final class WeightFunctions {
             return 17;
         }
     }
+
+    public static final NoWeight NoWeight = new NoWeight();
 
     public static final class NoWeight<T> implements WeightFunction<T> {
         @Override

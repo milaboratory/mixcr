@@ -1,7 +1,7 @@
 package com.milaboratory.mixcr.postanalysis.additive;
 
 import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
+import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
 import com.milaboratory.mixcr.postanalysis.WeightFunctions;
 import com.milaboratory.mixcr.postanalysis.additive.KeyFunctions.VJGenes;
 import com.milaboratory.mixcr.postanalysis.preproc.NoPreprocessing;
@@ -18,7 +18,7 @@ public final class AdditiveCharacteristics {
 
     public static final String readCountKey = "readCount";
 
-    public static AdditiveCharacteristic<String, Clone> readCount(SetPreprocessor<Clone> preproc) {
+    public static AdditiveCharacteristic<String, Clone> readCount(SetPreprocessorFactory<Clone> preproc) {
         return new AdditiveCharacteristic<>(readCountKey, preproc,
                 new WeightFunctions.Count(),
                 new KeyFunctions.Named<>(readCountKey),
@@ -29,7 +29,7 @@ public final class AdditiveCharacteristics {
 
     public static final String cloneCountKey = "cloneCount";
 
-    public static AdditiveCharacteristic<String, Clone> clonotypeCount(SetPreprocessor<Clone> preproc) {
+    public static AdditiveCharacteristic<String, Clone> clonotypeCount(SetPreprocessorFactory<Clone> preproc) {
         return new AdditiveCharacteristic<>(cloneCountKey, preproc,
                 new WeightFunctions.NoWeight<>(),
                 new KeyFunctions.Named<>(cloneCountKey),
@@ -39,10 +39,10 @@ public final class AdditiveCharacteristics {
     }
 
     public static AdditiveCharacteristic<String, Clone> weightedLengthOf(GeneFeature gf, boolean aa) {
-        return weightedLengthOf(new NoPreprocessing<>(), gf, aa);
+        return weightedLengthOf(NoPreprocessing.factory(), gf, aa);
     }
 
-    public static AdditiveCharacteristic<String, Clone> weightedLengthOf(SetPreprocessor<Clone> preproc, GeneFeature gf, boolean aa) {
+    public static AdditiveCharacteristic<String, Clone> weightedLengthOf(SetPreprocessorFactory<Clone> preproc, GeneFeature gf, boolean aa) {
         String name = (aa ? "aa" : "nt") + "LengthOf" + GeneFeature.encode(gf);
         return new AdditiveCharacteristic<>(
                 name,
@@ -55,7 +55,7 @@ public final class AdditiveCharacteristics {
         );
     }
 
-    public static AdditiveCharacteristic<String, Clone> weightedAddedNucleotides(SetPreprocessor<Clone> preproc) {
+    public static AdditiveCharacteristic<String, Clone> weightedAddedNucleotides(SetPreprocessorFactory<Clone> preproc) {
         String name = "AddedNucleotides";
         return new AdditiveCharacteristic<>(
                 name,
@@ -69,10 +69,10 @@ public final class AdditiveCharacteristics {
     }
 
     public static AdditiveCharacteristic<String, Clone> weightedBbiophysicsNormalized(AAProperties.AAProperty property, GeneFeature gf) {
-        return weightedBbiophysicsNormalized(new NoPreprocessing<>(), property, gf);
+        return weightedBbiophysicsNormalized(NoPreprocessing.factory(), property, gf);
     }
 
-    public static AdditiveCharacteristic<String, Clone> weightedBbiophysicsNormalized(SetPreprocessor<Clone> preproc, AAProperties.AAProperty property, GeneFeature gf) {
+    public static AdditiveCharacteristic<String, Clone> weightedBbiophysicsNormalized(SetPreprocessorFactory<Clone> preproc, AAProperties.AAProperty property, GeneFeature gf) {
         String name = property.name() + "of" + GeneFeature.encode(gf) + "Normalized";
         return new AdditiveCharacteristic<>(
                 name,
@@ -86,10 +86,10 @@ public final class AdditiveCharacteristics {
     }
 
     public static AdditiveCharacteristic<String, Clone> weightedBiophysics(AAProperties.AAProperty property, GeneFeature gf, AAProperties.Adjustment adjustment, int nLetters) {
-        return weightedBiophysics(new NoPreprocessing<>(), property, gf, adjustment, nLetters);
+        return weightedBiophysics(NoPreprocessing.factory(), property, gf, adjustment, nLetters);
     }
 
-    public static AdditiveCharacteristic<String, Clone> weightedBiophysics(SetPreprocessor<Clone> preproc, AAProperties.AAProperty property, GeneFeature gf, AAProperties.Adjustment adjustment, int nLetters) {
+    public static AdditiveCharacteristic<String, Clone> weightedBiophysics(SetPreprocessorFactory<Clone> preproc, AAProperties.AAProperty property, GeneFeature gf, AAProperties.Adjustment adjustment, int nLetters) {
         String name = property.name() + "of" + GeneFeature.encode(gf);
         return new AdditiveCharacteristic<>(
                 name,
@@ -103,10 +103,10 @@ public final class AdditiveCharacteristics {
     }
 
     public static AdditiveCharacteristic<String, Clone> segmentUsage(GeneType geneType, KeyFunction<String, Clone> keyFunction) {
-        return segmentUsage(new NoPreprocessing<>(), geneType, keyFunction);
+        return segmentUsage(NoPreprocessing.factory(), geneType, keyFunction);
     }
 
-    public static AdditiveCharacteristic<String, Clone> segmentUsage(SetPreprocessor<Clone> preproc, GeneType geneType, KeyFunction<String, Clone> keyFunction) {
+    public static AdditiveCharacteristic<String, Clone> segmentUsage(SetPreprocessorFactory<Clone> preproc, GeneType geneType, KeyFunction<String, Clone> keyFunction) {
         String name = geneType.getLetter() + "Usage";
         return new AdditiveCharacteristic<>(
                 name,
@@ -120,37 +120,37 @@ public final class AdditiveCharacteristics {
     }
 
     public static AdditiveCharacteristic<String, Clone> segmentUsage(GeneType geneType) {
-        return segmentUsage(new NoPreprocessing<>(), geneType);
+        return segmentUsage(NoPreprocessing.factory(), geneType);
     }
 
-    public static AdditiveCharacteristic<String, Clone> segmentUsage(SetPreprocessor<Clone> preproc, GeneType geneType) {
+    public static AdditiveCharacteristic<String, Clone> segmentUsage(SetPreprocessorFactory<Clone> preproc, GeneType geneType) {
         return segmentUsage(preproc, geneType, new KeyFunctions.SegmentUsage<>(geneType))
                 .setName(geneType.getLetter() + "SegmentUsage");
     }
 
     public static AdditiveCharacteristic<String, Clone> geneUsage(GeneType geneType) {
-        return geneUsage(new NoPreprocessing<>(), geneType);
+        return geneUsage(NoPreprocessing.factory(), geneType);
     }
 
-    public static AdditiveCharacteristic<String, Clone> geneUsage(SetPreprocessor<Clone> preproc, GeneType geneType) {
+    public static AdditiveCharacteristic<String, Clone> geneUsage(SetPreprocessorFactory<Clone> preproc, GeneType geneType) {
         return segmentUsage(preproc, geneType, new KeyFunctions.GeneUsage<>(geneType))
                 .setName(geneType.getLetter() + "GeneUsage");
     }
 
     public static AdditiveCharacteristic<String, Clone> familyUsage(GeneType geneType) {
-        return familyUsage(new NoPreprocessing<>(), geneType);
+        return familyUsage(NoPreprocessing.factory(), geneType);
     }
 
-    public static AdditiveCharacteristic<String, Clone> familyUsage(SetPreprocessor<Clone> preproc, GeneType geneType) {
+    public static AdditiveCharacteristic<String, Clone> familyUsage(SetPreprocessorFactory<Clone> preproc, GeneType geneType) {
         return segmentUsage(preproc, geneType, new KeyFunctions.FamiltyUsage<>(geneType))
                 .setName(geneType.getLetter() + "FamilyUsage");
     }
 
     public static AdditiveCharacteristic<VJGenes<String>, Clone> vjUsage(KeyFunction<VJGenes<String>, Clone> keyFunction) {
-        return vjUsage(new NoPreprocessing<>(), keyFunction);
+        return vjUsage(NoPreprocessing.factory(), keyFunction);
     }
 
-    public static AdditiveCharacteristic<VJGenes<String>, Clone> vjUsage(SetPreprocessor<Clone> preproc, KeyFunction<VJGenes<String>, Clone> keyFunction) {
+    public static AdditiveCharacteristic<VJGenes<String>, Clone> vjUsage(SetPreprocessorFactory<Clone> preproc, KeyFunction<VJGenes<String>, Clone> keyFunction) {
         return new AdditiveCharacteristic<>(
                 "VJUsage",
                 preproc,
@@ -163,34 +163,34 @@ public final class AdditiveCharacteristics {
     }
 
     public static AdditiveCharacteristic<VJGenes<String>, Clone> vjSegmentUsage() {
-        return vjSegmentUsage(new NoPreprocessing<>());
+        return vjSegmentUsage(NoPreprocessing.factory());
     }
 
-    public static AdditiveCharacteristic<VJGenes<String>, Clone> vjSegmentUsage(SetPreprocessor<Clone> preproc) {
+    public static AdditiveCharacteristic<VJGenes<String>, Clone> vjSegmentUsage(SetPreprocessorFactory<Clone> preproc) {
         return vjUsage(preproc, new KeyFunctions.VJSegmentUsage<>()).setName("VJSegmentUsage");
     }
 
     public static AdditiveCharacteristic<VJGenes<String>, Clone> vjGeneUsage() {
-        return vjGeneUsage(new NoPreprocessing<>());
+        return vjGeneUsage(NoPreprocessing.factory());
     }
 
-    public static AdditiveCharacteristic<VJGenes<String>, Clone> vjGeneUsage(SetPreprocessor<Clone> preproc) {
+    public static AdditiveCharacteristic<VJGenes<String>, Clone> vjGeneUsage(SetPreprocessorFactory<Clone> preproc) {
         return vjUsage(preproc, new KeyFunctions.VJGeneUsage<>()).setName("VJGeneUsage");
     }
 
     public static AdditiveCharacteristic<VJGenes<String>, Clone> vjFamilysage() {
-        return vjFamilysage(new NoPreprocessing<>());
+        return vjFamilysage(NoPreprocessing.factory());
     }
 
-    public static AdditiveCharacteristic<VJGenes<String>, Clone> vjFamilysage(SetPreprocessor<Clone> preproc) {
+    public static AdditiveCharacteristic<VJGenes<String>, Clone> vjFamilysage(SetPreprocessorFactory<Clone> preproc) {
         return vjUsage(preproc, new KeyFunctions.VJFamilyUsage<>()).setName("VJFamilyUsage");
     }
 
     public static AdditiveCharacteristic<KeyFunctions.Isotype, Clone> isotypeUsage() {
-        return isotypeUsage(new NoPreprocessing<>());
+        return isotypeUsage(NoPreprocessing.factory());
     }
 
-    public static AdditiveCharacteristic<KeyFunctions.Isotype, Clone> isotypeUsage(SetPreprocessor<Clone> preproc) {
+    public static AdditiveCharacteristic<KeyFunctions.Isotype, Clone> isotypeUsage(SetPreprocessorFactory<Clone> preproc) {
         return new AdditiveCharacteristic<>(
                 "IsotypeUsage",
                 preproc,
@@ -203,10 +203,10 @@ public final class AdditiveCharacteristics {
     }
 
     public static AdditiveCharacteristic<SpectratypeKey<String>, Clone> VSpectratype() {
-        return VSpectratype(new NoPreprocessing<>());
+        return VSpectratype(NoPreprocessing.factory());
     }
 
-    public static AdditiveCharacteristic<SpectratypeKey<String>, Clone> VSpectratype(SetPreprocessor<Clone> preproc) {
+    public static AdditiveCharacteristic<SpectratypeKey<String>, Clone> VSpectratype(SetPreprocessorFactory<Clone> preproc) {
         return new AdditiveCharacteristic<>("VSpectratype",
                 preproc,
                 new WeightFunctions.Count(),
@@ -214,7 +214,7 @@ public final class AdditiveCharacteristics {
                 new AdditiveMetrics.Constant(), AggregationType.Sum, false);
     }
 
-    public static AdditiveCharacteristic<String, Clone> VSpectratypeMean(SetPreprocessor<Clone> preproc) {
+    public static AdditiveCharacteristic<String, Clone> VSpectratypeMean(SetPreprocessorFactory<Clone> preproc) {
         return new AdditiveCharacteristic<>(
                 "VSpectratypeMean",
                 preproc,

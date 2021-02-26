@@ -14,14 +14,14 @@ import com.milaboratory.mixcr.postanalysis.additive.AAProperties;
 import com.milaboratory.mixcr.postanalysis.additive.AdditiveCharacteristics;
 import com.milaboratory.mixcr.postanalysis.additive.KeyFunctions;
 import com.milaboratory.mixcr.postanalysis.diversity.DiversityCharacteristic;
-import com.milaboratory.mixcr.postanalysis.downsampling.ClonesDownsamplingPreprocessor;
-import com.milaboratory.mixcr.postanalysis.downsampling.ClonesOverlapDownsamplingPreprocessor;
+import com.milaboratory.mixcr.postanalysis.downsampling.ClonesDownsamplingPreprocessorFactory;
 import com.milaboratory.mixcr.postanalysis.downsampling.DownsampleValueChooser;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapCharacteristic;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapIntegrationTest;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil;
 import com.milaboratory.mixcr.postanalysis.preproc.NoPreprocessing;
+import com.milaboratory.mixcr.postanalysis.preproc.OverlapPreprocessorAdapter;
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeCharacteristic;
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeKey;
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeKeyFunction;
@@ -79,7 +79,7 @@ public class PostanalysisSchemaIntegrationTest {
         ));
         groups.add(new CharacteristicGroup<>(
                 "diversity",
-                Arrays.asList(new DiversityCharacteristic<>("diversity", new WeightFunctions.Count(), new ClonesDownsamplingPreprocessor(new DownsampleValueChooser.Auto(), 314))),
+                Arrays.asList(new DiversityCharacteristic<>("diversity", new WeightFunctions.Count(), new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Auto(), 314))),
                 Arrays.asList(new GroupSummary<>())
         ));
 
@@ -109,7 +109,7 @@ public class PostanalysisSchemaIntegrationTest {
         groups.add(new CharacteristicGroup<>(
                 "cdr3Spectratype",
                 Arrays.asList(new SpectratypeCharacteristic("cdr3Spectratype",
-                        new NoPreprocessing<>(), 10,
+                        NoPreprocessing.factory(), 10,
                         new SpectratypeKeyFunction<>(new KeyFunctions.NTFeature(GeneFeature.CDR3), GeneFeature.CDR3, false))),
                 Collections.singletonList(new GroupSummary<>())));
 
@@ -135,22 +135,6 @@ public class PostanalysisSchemaIntegrationTest {
 
         String resultStr = OM.writeValueAsString(result);
         Assert.assertEquals(result, OM.readValue(resultStr, PostanalysisResult.class));
-        Map<String, OutputTable> outputs;
-
-//        CharacteristicGroupResult<String> cdr3Table = result.getTable(cdr3PropsTable);
-//        cdr3Table.getOutputs();
-//        for (OutputTable o : outputs.values()) {
-//            o.writeTSV(Paths.get("/Users/poslavskysv/Downloads/hhhh/"));
-//        }
-//        System.out.println(outputs);
-//
-//        CharacteristicGroupResult<DiversityMeasure> divTable = result.getTable(diversityTable);
-//        divTable.cells.stream().filter(cell -> cell.key == DiversityMeasure.Observed).map(cell -> cell.sampleIndex + " - " + cell.value).forEach(System.out::println);
-//        divTable.cells.stream().filter(cell -> cell.key == DiversityMeasure.Chao1).map(cell -> cell.sampleIndex + " - " + cell.value).forEach(System.out::println);
-//        outputs = divTable.getOutputs();
-//        for (OutputTable o : outputs.values()) {
-//            o.writeTSV(Paths.get("/Users/poslavskysv/Downloads/hhhh"));
-//        }
 
         CharacteristicGroupResult<SpectratypeKey<String>> r = result.getTable(individualPA.getGroup("cdr3Spectratype"));
         Assert.assertTrue(r.cells.stream()
@@ -197,7 +181,7 @@ public class PostanalysisSchemaIntegrationTest {
             System.out.println("=============");
             Dataset<OverlapGroup<Clone>> overlap = OverlapUtil.overlap(sampleNames, by, readers);
 
-            ClonesOverlapDownsamplingPreprocessor downsamplePreprocessor = new ClonesOverlapDownsamplingPreprocessor(
+            ClonesDownsamplingPreprocessorFactory downsamplePreprocessor = new ClonesDownsamplingPreprocessorFactory(
                     new DownsampleValueChooser.Minimal(),
                     332142);
 
@@ -206,11 +190,10 @@ public class PostanalysisSchemaIntegrationTest {
                 for (int j = i + 1; j < readers.size(); ++j) {
                     overlaps.add(new OverlapCharacteristic<>("overlap_" + i + "_" + j,
                             new WeightFunctions.Count(),
-                            downsamplePreprocessor,
+                            new OverlapPreprocessorAdapter.Factory<>(downsamplePreprocessor),
                             i, j));
                 }
             }
-
 
             List<CharacteristicGroup<?, OverlapGroup<Clone>>> groups = new ArrayList<>();
 

@@ -25,7 +25,7 @@ public class DiversityCharacteristicTest {
     @SuppressWarnings("unchecked")
     public void test1() {
         DiversityCharacteristic<TestObject> diversity = new DiversityCharacteristic<>(
-                "diversity", t -> t.weight, new NoPreprocessing<>());
+                "diversity", t -> t.weight, NoPreprocessing.factory());
 
         RandomDataGenerator rng = new RandomDataGenerator(new Well512a());
         int nDatasets = 100;
