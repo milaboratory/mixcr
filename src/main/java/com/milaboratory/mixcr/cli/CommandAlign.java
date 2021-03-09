@@ -66,6 +66,7 @@ import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
 import com.milaboratory.util.CanReportProgress;
+import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.*;
 import picocli.CommandLine;
@@ -74,6 +75,7 @@ import picocli.CommandLine.ExecutionException;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -229,15 +231,24 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
         if (vdjcAlignerParameters != null)
             return vdjcAlignerParameters;
 
-        VDJCAlignerParameters alignerParameters = VDJCParametersPresets.getByName(alignerParametersName);
-        if (alignerParameters == null)
-            throwValidationException("Unknown aligner parameters: " + alignerParametersName);
-
-        if (!overrides.isEmpty()) {
-            // Perform parameters overriding
-            alignerParameters = JsonOverrider.override(alignerParameters, VDJCAlignerParameters.class, overrides);
+        VDJCAlignerParameters alignerParameters;
+        if (alignerParametersName.endsWith(".json")) {
+            try {
+                alignerParameters = GlobalObjectMappers.ONE_LINE.readValue(new File(alignerParametersName), VDJCAlignerParameters.class);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            alignerParameters = VDJCParametersPresets.getByName(alignerParametersName);
             if (alignerParameters == null)
-                throwValidationException("Failed to override some parameter: " + overrides);
+                throwValidationException("Unknown aligner parameters: " + alignerParametersName);
+
+            if (!overrides.isEmpty()) {
+                // Perform parameters overriding
+                alignerParameters = JsonOverrider.override(alignerParameters, VDJCAlignerParameters.class, overrides);
+                if (alignerParameters == null)
+                    throwValidationException("Failed to override some parameter: " + overrides);
+            }
         }
 
         // Detect if automatic featureToAlign correction is required
@@ -509,7 +520,6 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
             throwExecutionException("No J genes to align. Aborting execution. See warnings for more info " +
                     "(turn on verbose warnings by adding --verbose option).");
 
-
         report.setStartMillis(beginTimestamp);
         report.setInputFiles(getInputFiles());
         report.setOutputFiles(getOutput());
@@ -561,6 +571,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
 
             ParallelProcessor alignedChunks = new ParallelProcessor(mainInputReadsPreprocessed, chunked(aligner), Math.max(16, threads), threads);
             if (reportBuffers) {
+                System.out.println("Analysis threads: " + threads);
                 StatusReporter reporter = new StatusReporter();
                 reporter.addBuffer("Input (chunked; chunk size = 64)", mainInputReads.getBufferStatusProvider());
                 reporter.addBuffer("Alignment result (chunked; chunk size = 64)", alignedChunks.getOutputBufferStatusProvider());

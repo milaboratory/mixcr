@@ -52,6 +52,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
     @JsonIgnore
     private final EnumMap<GeneType, GeneAlignmentParameters> alignmentParameters;
     private VJAlignmentOrder vjAlignmentOrder;
+    private VDJCLibraryStructure libraryStructure;
     private boolean includeDScore, includeCScore;
     private float minSumScore;
     private int maxHits;
@@ -72,6 +73,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
                                  @JsonProperty("jParameters") KGeneAlignmentParameters jParameters,
                                  @JsonProperty("cParameters") KGeneAlignmentParameters cParameters,
                                  @JsonProperty("vjAlignmentOrder") VJAlignmentOrder vjAlignmentOrder,
+                                 @JsonProperty("libraryStructure") VDJCLibraryStructure libraryStructure,
                                  @JsonProperty("includeDScore") boolean includeDScore,
                                  @JsonProperty("includeCScore") boolean includeCScore,
                                  @JsonProperty("minSumScore") float minSumScore,
@@ -94,6 +96,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         setGeneAlignerParameters(GeneType.Joining, jParameters);
         setGeneAlignerParameters(GeneType.Constant, cParameters);
         this.vjAlignmentOrder = vjAlignmentOrder;
+        this.libraryStructure = libraryStructure;
         this.includeDScore = includeDScore;
         this.includeCScore = includeCScore;
         this.minSumScore = minSumScore;
@@ -239,6 +242,11 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         return vjAlignmentOrder;
     }
 
+    @JsonProperty("libraryStructure")
+    public VDJCLibraryStructure getLibraryStructure() {
+        return libraryStructure;
+    }
+
     public void setSmartForceEdgeAlignments(boolean smartForceEdgeAlignments) {
         this.smartForceEdgeAlignments = smartForceEdgeAlignments;
     }
@@ -250,6 +258,10 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
 
     public void setVjAlignmentOrder(VJAlignmentOrder vjAlignmentOrder) {
         this.vjAlignmentOrder = vjAlignmentOrder;
+    }
+
+    public void setLibraryStructure(VDJCLibraryStructure libraryStructure) {
+        this.libraryStructure = libraryStructure;
     }
 
     public boolean doIncludeDScore() {
@@ -361,6 +373,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
         return "VDJCAlignerParameters{" +
                 "alignmentParameters=" + alignmentParameters +
                 ", vjAlignmentOrder=" + vjAlignmentOrder +
+                ", libraryStructure=" + libraryStructure +
                 ", includeDScore=" + includeDScore +
                 ", includeCScore=" + includeCScore +
                 ", minSumScore=" + minSumScore +
@@ -399,6 +412,7 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
                 saveOriginalReads == that.saveOriginalReads &&
                 Objects.equals(alignmentParameters, that.alignmentParameters) &&
                 vjAlignmentOrder == that.vjAlignmentOrder &&
+                libraryStructure == that.libraryStructure &&
                 readsLayout == that.readsLayout &&
                 Objects.equals(mergerParameters, that.mergerParameters) &&
                 smartForceEdgeAlignments == that.smartForceEdgeAlignments;
@@ -406,13 +420,13 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
 
     @Override
     public int hashCode() {
-        return Objects.hash(alignmentParameters, vjAlignmentOrder, includeDScore, includeCScore, minSumScore, maxHits, relativeMinVFR3CDR3Score, allowPartialAlignments, allowNoCDR3PartAlignments, allowChimeras, readsLayout, mergerParameters, fixSeed, alignmentBoundaryTolerance, minChimeraDetectionScore, vjOverlapWindow, saveOriginalReads);
+        return Objects.hash(alignmentParameters, vjAlignmentOrder, libraryStructure, includeDScore, includeCScore, minSumScore, maxHits, relativeMinVFR3CDR3Score, allowPartialAlignments, allowNoCDR3PartAlignments, allowChimeras, readsLayout, mergerParameters, fixSeed, alignmentBoundaryTolerance, minChimeraDetectionScore, vjOverlapWindow, saveOriginalReads);
     }
 
     @Override
     public VDJCAlignerParameters clone() {
         return new VDJCAlignerParameters(getVAlignerParameters(), getDAlignerParameters(), getJAlignerParameters(),
-                getCAlignerParameters(), vjAlignmentOrder, includeDScore, includeCScore, minSumScore, maxHits,
+                getCAlignerParameters(), vjAlignmentOrder, libraryStructure, includeDScore, includeCScore, minSumScore, maxHits,
                 relativeMinVFR3CDR3Score, allowPartialAlignments, allowNoCDR3PartAlignments,
                 allowChimeras, readsLayout, mergerParameters, fixSeed, alignmentBoundaryTolerance,
                 minChimeraDetectionScore, vjOverlapWindow, saveOriginalReads, smartForceEdgeAlignments);
