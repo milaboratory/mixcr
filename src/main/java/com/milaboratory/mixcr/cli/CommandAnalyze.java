@@ -245,6 +245,10 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
             required = true)
     public String species = "hs";
 
+    @Option(description = CommonDescriptions.SPECIES,
+            names = {"--align-preset"})
+    public String alignPreset = null;
+
     public Chains chains = Chains.ALL;
 
     @Option(names = "--receptor-type",
@@ -344,7 +348,7 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         return cmdAlign = inheritOptionsAndValidate(mkAlign());
     }
 
-    boolean forceUseRnaSeqOps() { return false; }
+    String forceAlignmentParameters() { return alignPreset; }
 
     boolean include5UTRInRNA() { return true; }
 
@@ -400,10 +404,13 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         // adding report options
         addReportOptions("align", alignParameters);
 
-        if (!forceUseRnaSeqOps() && !chains.intersects(Chains.TCR))
-            alignParameters.add("-p kAligner2");
-        else
-            alignParameters.add("-p rna-seq"); // always use rna-seq by default
+        if (forceAlignmentParameters() == null) {
+            if (!chains.intersects(Chains.TCR))
+                alignParameters.add("-p kAligner2");
+            else
+                alignParameters.add("-p rna-seq");
+        } else
+            alignParameters.add("-p " + forceAlignmentParameters());
 
         // add v feature to align
         switch (startingMaterial) {
@@ -879,8 +886,10 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         }
 
         @Override
-        boolean forceUseRnaSeqOps() {
-            return true;
+        String forceAlignmentParameters() {
+            return alignPreset == null
+                    ? "rna-seq"
+                    : alignPreset;
         }
 
         @Override
