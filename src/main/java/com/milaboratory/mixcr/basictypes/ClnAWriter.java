@@ -43,7 +43,7 @@ import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.PrimitivOState;
 import com.milaboratory.util.CanReportProgressAndStage;
 import com.milaboratory.util.ObjectSerializer;
-import com.milaboratory.util.Sorter;
+import com.milaboratory.util.sorting.Sorter;
 import gnu.trove.list.array.TLongArrayList;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;

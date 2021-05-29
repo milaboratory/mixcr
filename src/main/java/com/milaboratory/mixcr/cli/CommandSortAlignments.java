@@ -41,7 +41,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.ObjectSerializer;
 import com.milaboratory.util.SmartProgressReporter;
-import com.milaboratory.util.Sorter;
+import com.milaboratory.util.sorting.Sorter;
 import com.milaboratory.util.TempFileManager;
 import io.repseq.core.VDJCGene;
 import picocli.CommandLine.Command;
