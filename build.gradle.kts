@@ -85,7 +85,7 @@ val writeBuildProperties by tasks.registering(WriteProperties::class) {
     property("version", version)
     property("name", "MiLib")
     property("revision", gitDetails.gitHash)
-    property("branch", gitDetails.branchName)
+    property("branch", gitDetails.branchName ?: "no_branch")
     property("host", InetAddress.getLocalHost().hostName)
     property("timestamp", System.currentTimeMillis())
 }
