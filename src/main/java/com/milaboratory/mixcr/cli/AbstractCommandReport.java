@@ -32,10 +32,11 @@ package com.milaboratory.mixcr.cli;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
-import com.milaboratory.util.FormatUtils;
 
 import java.util.Collection;
 import java.util.Date;
+
+import static com.milaboratory.util.FormatUtils.nanoTimeToString;
 
 public abstract class AbstractCommandReport implements CommandReport {
     private Date date = new Date();
@@ -121,6 +122,6 @@ public abstract class AbstractCommandReport implements CommandReport {
                 helper.writeField("Command line arguments", getCommandLine());
 
         if (getExecutionTimeMillis() >= 0)
-            helper.writeField("Analysis time", FormatUtils.nanoTimeToString(getExecutionTimeMillis() * 1000_000));
+            helper.writeField("Analysis time", nanoTimeToString(getExecutionTimeMillis() * 1000_000));
     }
 }

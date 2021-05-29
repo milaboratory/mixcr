@@ -29,7 +29,6 @@
  */
 package com.milaboratory.mixcr.tests;
 
-import com.milaboratory.core.alignment.AlignerTest;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.MultiAlignmentHelper;
 import com.milaboratory.core.io.sequence.SingleRead;
@@ -43,6 +42,8 @@ import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.partialassembler.VDJCMultiRead;
 import io.repseq.core.GeneType;
 
+import static com.milaboratory.core.alignment.AlignmantTestUtils.assertAlignment;
+
 public class MiXCRTestUtils {
     public static void assertAlignments(VDJCAlignments alignments) {
         for (GeneType gt : GeneType.VDJC_REFERENCE) {
@@ -52,7 +53,7 @@ public class MiXCRTestUtils {
                     if(al == null)
                         continue;
                     NucleotideSequence sequence = alignments.getTarget(targetIndex).getSequence();
-                    AlignerTest.assertAlignment(al, sequence);
+                    assertAlignment(al, sequence);
                 }
             }
         }
@@ -60,9 +61,9 @@ public class MiXCRTestUtils {
 
     public static void printAlignment(VDJCAlignments alignments) {
         for (int i = 0; i < alignments.numberOfTargets(); i++) {
-//            fixme
-//            if (alignments.getTargetDescriptions() != null)
-//                System.out.println(">>> Description: " + alignments.getTargetDescriptions()[i] + "\n");
+           // fixme
+           // if (alignments.getTargetDescriptions() != null)
+           //     System.out.println(">>> Description: " + alignments.getTargetDescriptions()[i] + "\n");
 
             MultiAlignmentHelper targetAsMultiAlignment = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, i);
             if (targetAsMultiAlignment == null)

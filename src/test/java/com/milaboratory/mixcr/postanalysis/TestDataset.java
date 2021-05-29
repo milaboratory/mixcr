@@ -3,7 +3,6 @@ package com.milaboratory.mixcr.postanalysis;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.IteratorOutputPortAdapter;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -33,7 +32,6 @@ public class TestDataset<T> implements Dataset<T>, Iterable<T> {
         this.id = data.id();
     }
 
-    @NotNull
     @Override
     public Iterator<T> iterator() {
         return data.iterator();

@@ -29,7 +29,9 @@
  */
 package com.milaboratory.mixcr.util;
 
+import com.milaboratory.cli.AppVersionInfo;
 import com.milaboratory.util.GlobalObjectMappers;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -43,6 +45,10 @@ public class MiXCRVersionInfoTest {
     @Test
     public void testSerialize1() throws IOException {
         MiXCRVersionInfo version = MiXCRVersionInfo.get();
+        String versionString = version.getVersionString(AppVersionInfo.OutputType.ToConsole, true);
+        Assert.assertTrue(versionString.contains("RepSeq.IO"));
+        Assert.assertTrue(versionString.contains("MiLib"));
+        Assert.assertTrue(versionString.contains("MiXCR"));
         String pretty = GlobalObjectMappers.PRETTY.writeValueAsString(version);
         MiXCRVersionInfo v = GlobalObjectMappers.PRETTY.readValue(pretty, MiXCRVersionInfo.class);
         assertEquals(version, v);

@@ -49,6 +49,8 @@ import com.milaboratory.util.TempFileManager;
 import com.milaboratory.util.io.HasPosition;
 import com.milaboratory.util.sorting.HashSorter;
 import gnu.trove.list.array.TIntArrayList;
+import com.milaboratory.util.ObjectSerializer;
+import com.milaboratory.util.sorting.Sorter;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.set.hash.TIntHashSet;
 import io.repseq.core.VDJCGene;
@@ -66,7 +68,7 @@ import java.util.function.ToIntFunction;
 
 /**
  * Writer for CLNA file format.
- *
+ * <p>
  * Usage: 1. Constructor (opens the output file, buffered) 2. writeClones() 3. sortAlignments() 4.
  * writeAlignmentsAndIndex() 5. close()
  */
