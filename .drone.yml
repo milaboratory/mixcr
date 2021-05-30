@@ -297,6 +297,7 @@ steps:
     name: initialization
     commands:
       - ./ensure-test-data.sh
+      - find src/test/resources/sequences/big -type f
       - echo "{}" > build_info.json
       - gradle -i --no-daemon CreateInfoFile
 
