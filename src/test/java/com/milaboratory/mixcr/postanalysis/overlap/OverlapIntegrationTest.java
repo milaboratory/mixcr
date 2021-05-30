@@ -36,6 +36,7 @@ import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCObject;
 import com.milaboratory.mixcr.basictypes.VDJCSProperties;
 import com.milaboratory.mixcr.postanalysis.Dataset;
+import com.milaboratory.mixcr.tests.IntegrationTest;
 import com.milaboratory.util.Cache;
 import com.milaboratory.util.LambdaSemaphore;
 import gnu.trove.map.hash.TIntIntHashMap;
@@ -45,6 +46,7 @@ import io.repseq.core.VDJCLibraryRegistry;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -54,6 +56,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Category(IntegrationTest.class)
 public class OverlapIntegrationTest {
     @Test
     public void test1() throws IOException {

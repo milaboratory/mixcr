@@ -1,7 +1,7 @@
 ---
 kind: pipeline
 type: docker
-name: main
+name: build
 
 platform:
   os: linux
@@ -83,16 +83,6 @@ steps:
       - echo "{}" > build_info.json
       - gradle -i --no-daemon CreateInfoFile
 
-  - name: add_url_secret
-    image: alpine
-    commands:
-      - apk add jq
-      - jq ".urlsecret=\"$${URL_SECRET}\"" build_info.json > build_info.json.1
-      - mv build_info.json.1 build_info.json
-    environment:
-      URL_SECRET:
-        from_secret: url-secret
-
   - <<: *gradle_task
     name: create_zip_and_publish_artefact
     commands:
@@ -112,26 +102,6 @@ steps:
     environment:
       <<: *aws_credentials
 
-  #  - name: rename_release_file
-  #    image: alpine
-  #    when:
-  #      event:
-  #        - tag
-  #    commands:
-  #      - apk add jq
-  #      - mv build/distributions/mixcr.zip build/distributions/mixcr-$(jq -r .version build_info.json).zip
-  #
-  #  - name: publish_zip_to_github
-  #    image: plugins/github-release
-  #    when:
-  #      event: tag
-  #    settings:
-  #      api_key:
-  #        from_secret: github-public-repo
-  #      checksum:
-  #        - sha256
-  #      files: build/distributions/*
-
   - name: telegram_mipub_published
     when:
       event:
@@ -149,62 +119,6 @@ steps:
         🧩 build {{build.number}} on `{{commit.branch}}` published ```com.milaboratory:mixcr:{{tpl.version}}```
 
         📦 https://cdn.milaboratory.com/software/mixcr/mixcr-{{tpl.version}}.zip
-
-  - <<: *gradle_task
-    name: test
-    commands:
-      - gradle -i --no-daemon test
-
-  - name: test_report_upload
-    image: amazon/aws-cli
-    when:
-      status:
-        - success
-        - failure
-    commands:
-      - aws s3 cp --recursive build/reports/tests/test s3://$${DEPLOY_S3_CDN_BUCKET}/$${DEPLOY_S3_CDN_PREFIX}/internal/ci/${DRONE_REPO}/${DRONE_COMMIT}-${DRONE_BUILD_NUMBER}-$${URL_SECRET}/tests/
-    environment:
-      <<: *aws_credentials
-      DEPLOY_S3_CDN_BUCKET:
-        from_secret: cdn-s3-bucket
-      DEPLOY_S3_CDN_PREFIX:
-        from_secret: cdn-s3-prefix
-      URL_SECRET:
-        from_secret: url-secret
-
-  - name: telegram_tests
-    image: appleboy/drone-telegram
-    when:
-      status:
-        - success
-        - failure
-    settings:
-      token:
-        from_secret: telegram-token
-      to:
-        from_secret: telegram-chat-id-micore
-      format: markdown
-      template_vars_file: build_info.json
-      message: |
-        {{#success build.status}}
-        ✅ MiXCR build {{build.number}} by {{commit.author}} on `{{commit.branch}}` test success.
-        {{else}}
-        ❌ MiXCR build {{build.number}} by {{commit.author}} on `{{commit.branch}}` test failure.
-        {{/success}}
-
-        🌐 {{build.link}}
-
-        [📊 Test Report](https://cdn.milaboratory.com/internal/ci/${DRONE_REPO}/${DRONE_COMMIT}-${DRONE_BUILD_NUMBER}-{{tpl.urlsecret}}/tests/index.html)
-
-  - name: rebuild_gradle_cache
-    image: meltwater/drone-cache
-    pull: true
-    settings:
-      rebuild: true
-      cache_key: '{{ .Commit.Branch }}'
-      mount:
-        - .gradle
-      <<: *cache_settings
 
 ---
 
@@ -296,10 +210,14 @@ steps:
   - <<: *gradle_task
     name: initialization
     commands:
+      - apt-get update
+      - apt-get install -y moreutils parallel
       - ./ensure-test-data.sh
       - find src/test/resources/sequences/big -type f
       - echo "{}" > build_info.json
       - gradle -i --no-daemon CreateInfoFile
+      - gradle -i --no-daemon -x test build
+      - ./prepare-test-data.sh
 
   - name: rebuild_test_resource_cache
     image: meltwater/drone-cache
@@ -311,14 +229,43 @@ steps:
         - src/test/resources/sequences/big
       <<: *cache_settings
 
+  - name: add_url_secret
+    image: alpine
+    commands:
+      - apk add jq
+      - jq ".urlsecret=\"$${URL_SECRET}\"" build_info.json > build_info.json.1
+      - mv build_info.json.1 build_info.json
+    environment:
+      URL_SECRET:
+        from_secret: url-secret
+
   - <<: *gradle_task
     name: build
     commands:
       - gradle -i --no-daemon -PlongTests=true test build
 
+  - name: test_report_upload
+    image: amazon/aws-cli
+    when:
+      status:
+        - success
+        - failure
+    commands:
+      - aws s3 cp --recursive build/reports/tests/test s3://$${DEPLOY_S3_CDN_BUCKET}/$${DEPLOY_S3_CDN_PREFIX}/internal/ci/${DRONE_REPO}/${DRONE_COMMIT}-${DRONE_BUILD_NUMBER}-$${URL_SECRET}/tests/
+    environment:
+      <<: *aws_credentials
+      DEPLOY_S3_CDN_BUCKET:
+        from_secret: cdn-s3-bucket
+      DEPLOY_S3_CDN_PREFIX:
+        from_secret: cdn-s3-prefix
+      URL_SECRET:
+        from_secret: url-secret
+
   - <<: *gradle_task
     name: integration_tests
     commands:
+      - apt-get update
+      - apt-get install -y jq
       - ./itests.sh test
 
   - name: telegram_tests
@@ -336,9 +283,21 @@ steps:
       template_vars_file: build_info.json
       message: |
         {{#success build.status}}
-        ✅ 🗜 MiXCR build {{build.number}} by {{commit.author}} on `{{commit.branch}}` integration test success.
+        ✅ 🗜 MiXCR build {{build.number}} by {{commit.author}} on `{{commit.branch}}` tests and integration tests success.
         {{else}}
-        ❌ 🗜 MiXCR build {{build.number}} by {{commit.author}} on `{{commit.branch}}` integration test failure.
+        ❌ 🗜 MiXCR build {{build.number}} by {{commit.author}} on `{{commit.branch}}` tests or integration tests failure.
+        {{/success}}
 
         🌐 {{build.link}}
-        {{/success}}
+
+        [📊 Test Report](https://cdn.milaboratory.com/internal/ci/${DRONE_REPO}/${DRONE_COMMIT}-${DRONE_BUILD_NUMBER}-{{tpl.urlsecret}}/tests/index.html)
+
+  - name: rebuild_gradle_cache
+    image: meltwater/drone-cache
+    pull: true
+    settings:
+      rebuild: true
+      cache_key: '{{ .Commit.Branch }}'
+      mount:
+        - .gradle
+      <<: *cache_settings

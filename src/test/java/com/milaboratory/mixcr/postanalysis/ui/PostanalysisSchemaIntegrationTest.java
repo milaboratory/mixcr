@@ -25,12 +25,14 @@ import com.milaboratory.mixcr.postanalysis.preproc.OverlapPreprocessorAdapter;
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeCharacteristic;
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeKey;
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeKeyFunction;
+import com.milaboratory.mixcr.tests.IntegrationTest;
 import com.milaboratory.util.LambdaSemaphore;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCLibraryRegistry;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -40,9 +42,7 @@ import java.util.stream.Collectors;
 import static com.milaboratory.mixcr.postanalysis.additive.AdditiveCharacteristics.weightedBiophysics;
 import static com.milaboratory.mixcr.postanalysis.additive.AdditiveCharacteristics.weightedLengthOf;
 
-/**
- *
- */
+@Category(IntegrationTest.class)
 public class PostanalysisSchemaIntegrationTest {
 
     private static ClonotypeDataset getClones(String sample) {

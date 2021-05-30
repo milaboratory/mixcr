@@ -31,10 +31,13 @@ package com.milaboratory.mixcr.util;
 
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
+import com.milaboratory.mixcr.tests.IntegrationTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 
+@Category(IntegrationTest.class)
 public class DummyIntegrationTest {
     @Test
     public void test1() throws IOException {
