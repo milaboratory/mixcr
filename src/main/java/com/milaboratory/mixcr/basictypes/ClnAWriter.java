@@ -49,11 +49,10 @@ import com.milaboratory.util.TempFileManager;
 import com.milaboratory.util.io.HasPosition;
 import com.milaboratory.util.sorting.HashSorter;
 import gnu.trove.list.array.TIntArrayList;
-import com.milaboratory.util.ObjectSerializer;
-import com.milaboratory.util.sorting.Sorter;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.set.hash.TIntHashSet;
 import io.repseq.core.VDJCGene;
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -123,7 +122,10 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
     public ClnAWriter(PipelineConfiguration configuration, File file, boolean highCompression) throws IOException {
         this.configuration = configuration;
         this.highCompression = highCompression;
+
         File tempFolder = new File(file.getAbsolutePath() + ".presorted");
+        if (tempFolder.exists())
+            FileUtils.deleteDirectory(tempFolder);
         TempFileManager.register(tempFolder);
         this.tempFolder = tempFolder.toPath();
         Files.createDirectory(this.tempFolder);
@@ -189,8 +191,9 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
             numberOfClones = cloneSet.size();
         }
 
-        try (PrimitivOBlocks<Object>.Writer writer = this.output.beginPrimitivOBlocks(4, 1024,
-                PrimitivIOBlocksUtil.highLZ4Compressor())) {
+        try (PrimitivOBlocks<Object>.Writer writer = this.output
+                .beginPrimitivOBlocks(4, 1024,
+                        PrimitivIOBlocksUtil.getCompressor(highCompression))) {
             // Writing clones
             for (Clone clone : cloneSet) {
                 writer.write(clone);
@@ -235,12 +238,16 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
         // HDD-offloading collator of alignments
         // Collate solely by cloneId (no sorting by mapping type, etc.);
         // less fields to sort by -> faster the procedure
+        long memoryBudget =
+                Runtime.getRuntime().maxMemory() > 10_000_000_000L /* -Xmx10g */
+                        ? Runtime.getRuntime().maxMemory() / 4L /* 1 Gb */
+                        : 1 << 28 /* 256 Mb */;
         collator = new HashSorter<>(
                 VDJCAlignments.class,
                 new CloneIdHash(), CloneIdComparator,
                 5, tempFolder, 4, 6,
                 stateBuilder.getOState(), stateBuilder.getIState(),
-                1 << 28 /* 256 Mb */, 1 << 18 /* 256 Kb */);
+                memoryBudget, 1 << 18 /* 256 Kb */);
 
         // Here we wait for the first layer of hash collation to finish "write" stage
         // (on average 30% time of full collation process)
@@ -269,9 +276,7 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
         try (PrimitivOBlocks<VDJCAlignments>.Writer o = output.beginPrimitivOBlocks(
                 Math.min(4, Runtime.getRuntime().availableProcessors()), // TODO parametrize
                 VDJCAlignmentsWriter.DEFAULT_ALIGNMENTS_IN_BLOCK,
-                highCompression
-                        ? PrimitivIOBlocksUtil.highLZ4Compressor()
-                        : PrimitivIOBlocksUtil.fastLZ4Compressor())) {
+                PrimitivIOBlocksUtil.getCompressor(highCompression))) {
 
             // Writing alignments and writing indices
             VDJCAlignments alignments;
