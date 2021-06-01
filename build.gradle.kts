@@ -59,7 +59,7 @@ repositories {
 }
 
 val milibVersion = "1.14.1-5-d5024eff46"
-val repseqioVersion = "1.3.5-2-119d86c79d"
+val repseqioVersion = "1.3.5-4-f7170dd23b"
 val jacksonVersion = "2.12.3"
 
 dependencies {
