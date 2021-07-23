@@ -59,6 +59,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters;
 import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor;
 import com.milaboratory.core.sequence.quality.ReadTrimmerReport;
+import com.milaboratory.mixcr.bam.BAM2fastq;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
@@ -78,6 +79,7 @@ import picocli.CommandLine.Parameters;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -98,7 +100,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
             descriptionKey = "file",
             paramLabel = "files",
             hideParamSyntax = true,
-            description = "file_R1.(fastq[.gz]|fasta) [file_R2.fastq[.gz]] alignments.vdjca")
+            description = "file_R1.(fastq[.gz]|fasta|bam) [file_R2.fastq[.gz]] alignments.vdjca")
     private List<String> inOut = new ArrayList<>();
 
     @Override
@@ -303,8 +305,14 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
         return getInputFiles().size() == 2;
     }
 
+    public boolean isInputBAM() {
+        return getInputFiles().get(0).toLowerCase().endsWith(".bam") || getInputFiles().get(0).toLowerCase().endsWith(".sam");
+    }
+
     public SequenceReaderCloseable<? extends SequenceRead> createReader() throws IOException {
-        if (isInputPaired())
+        if (isInputBAM()){
+            return new BAM2fastq(new Path[]{Paths.get(getInputFiles().get(0))});
+        } else if (isInputPaired())
             return new PairedFastqReader(new FileInputStream(getInputFiles().get(0)), new FileInputStream(getInputFiles().get(1)),
                     SingleFastqReader.DEFAULT_QUALITY_FORMAT,
                     CompressionType.detectCompressionType(getInputFiles().get(0)),

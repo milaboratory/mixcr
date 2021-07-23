@@ -74,6 +74,7 @@ dependencies {
     implementation("net.sf.trove4j:trove4j:3.0.3")
     implementation("info.picocli:picocli:4.1.1")
     implementation("com.google.guava:guava:30.1.1-jre")
+    implementation("com.github.samtools:htsjdk:2.24.1")
 
     testImplementation("junit:junit:4.13.2")
     implementation(testFixtures("com.milaboratory:milib:$milibVersion"))
