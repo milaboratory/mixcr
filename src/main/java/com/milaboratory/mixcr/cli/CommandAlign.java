@@ -59,7 +59,8 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters;
 import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor;
 import com.milaboratory.core.sequence.quality.ReadTrimmerReport;
-import com.milaboratory.mixcr.bam.BAM2fastq;
+import com.milaboratory.mixcr.bam.BAMReader;
+import com.milaboratory.mixcr.bam.BAMReaderWrapper;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
@@ -302,7 +303,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
     }
 
     public boolean isInputPaired() {
-        return getInputFiles().size() == 2;
+        return getInputFiles().size() == 2 || isInputBAM();
     }
 
     public boolean isInputBAM() {
@@ -311,7 +312,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
 
     public SequenceReaderCloseable<? extends SequenceRead> createReader() throws IOException {
         if (isInputBAM()){
-            return new BAM2fastq(new Path[]{Paths.get(getInputFiles().get(0))});
+            return new BAMReaderWrapper(new BAMReader(new Path[]{Paths.get(getInputFiles().get(0))}));
         } else if (isInputPaired())
             return new PairedFastqReader(new FileInputStream(getInputFiles().get(0)), new FileInputStream(getInputFiles().get(1)),
                     SingleFastqReader.DEFAULT_QUALITY_FORMAT,

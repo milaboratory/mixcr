@@ -5,7 +5,7 @@ import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter;
-import com.milaboratory.mixcr.bam.BAM2fastq;
+import com.milaboratory.mixcr.bam.BAMReader;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
@@ -29,7 +29,7 @@ public class CommandBAM2fastq extends ACommandWithOutputMiXCR {
 
     @Override
     public void run0() throws Exception {
-        BAM2fastq converter = new BAM2fastq(bamFiles);
+        BAMReader converter = new BAMReader(bamFiles);
         SequenceRead read;
         try (PairedFastqWriter wr = new PairedFastqWriter(fastq1, fastq2);
              SingleFastqWriter swr = new SingleFastqWriter(fastqUnpaired)) {

@@ -19,7 +19,7 @@ public class BAMConcat implements OutputPort<SAMRecord> {
     }
 
     @Override
-    public SAMRecord take() {
+    public synchronized SAMRecord take() {
         while (portIdx < outputports.size()) {
             SAMRecord out = outputports.get(portIdx).take();
             if (out != null) {
