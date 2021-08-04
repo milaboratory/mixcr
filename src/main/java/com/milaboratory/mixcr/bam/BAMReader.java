@@ -3,6 +3,7 @@ package com.milaboratory.mixcr.bam;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.blocks.FilteringPort;
+import cc.redberry.pipe.util.CountingOutputPort;
 import com.milaboratory.core.io.sequence.*;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
@@ -25,6 +26,7 @@ public class BAMReader implements SequenceReaderCloseable<SequenceRead>, CanRepo
     private SingleReadImpl currRead;
     private SingleReadImpl nextRead;
     private OutputPort<SingleReadImpl> singleReadImplOutputPort;
+    private CountingOutputPort<SAMRecord> progressChecker;
     private final SamReader[] readers;
 
     public long getNumberOfProcessedAlignments() {
@@ -39,7 +41,7 @@ public class BAMReader implements SequenceReaderCloseable<SequenceRead>, CanRepo
         return numberOfUnpairedReads.get();
     }
 
-    public BAMReader(Path[] bamFiles) {
+    public BAMReader(Path[] bamFiles, boolean dropNonVDJChromosomes) {
         readers = new SamReader[bamFiles.length];
         for (int i = 0; i < bamFiles.length; i++) {
             readers[i] = SamReaderFactory.makeDefault().open(bamFiles[i]);
@@ -47,15 +49,27 @@ public class BAMReader implements SequenceReaderCloseable<SequenceRead>, CanRepo
 
         boolean sorted = (readers.length == 1) &&
                 (readers[0].getFileHeader().getSortOrder() == SAMFileHeader.SortOrder.queryname);
-
         OutputPort<SAMRecord> samRecordOutputPort = new BAMConcat(readers);
 
         // Filtering redundant (alternative or supplementary) alignments
         FilteringPort<SAMRecord> filteredSamRecordOutputPort = new FilteringPort<>(samRecordOutputPort,
-                rec -> !rec.isSecondaryOrSupplementary());
+                rec -> (!rec.isSecondaryOrSupplementary()));
+        if (dropNonVDJChromosomes) {
+            filteredSamRecordOutputPort = new FilteringPort<>(filteredSamRecordOutputPort,
+                    rec -> {
+                        String refName = rec.getReferenceName();
+                        return refName.length() < 9 || !refName.startsWith("NC_0000") ||
+                                (refName.startsWith("07", 7) ||
+                                        refName.startsWith("14", 7) ||
+                                        refName.startsWith("02", 7) ||
+                                        refName.startsWith("22", 7));
+                    });
+        }
+
+        progressChecker = new CountingOutputPort<>(filteredSamRecordOutputPort);
 
         // Converting SAMRecord to SingleRead
-        singleReadImplOutputPort = CUtils.wrap(filteredSamRecordOutputPort, rec -> {
+        singleReadImplOutputPort = CUtils.wrap(progressChecker, rec -> {
             if (rec.getReadNegativeStrandFlag()) {
                 rec.reverseComplement(true);
             }
@@ -145,11 +159,11 @@ public class BAMReader implements SequenceReaderCloseable<SequenceRead>, CanRepo
 
     @Override
     public double getProgress() {
-        return 0;
+        return (numberOfPairedReads.get() * 2. + numberOfUnpairedReads.get()) / progressChecker.getCount();
     }
 
     @Override
     public boolean isFinished() {
-        return false;
+        return currRead == null;
     }
 }

@@ -27,9 +27,13 @@ public class CommandBAM2fastq extends ACommandWithOutputMiXCR {
     @Option(names = {"-fu", "--fastqUnpaired"}, description = "File for unpaired reads.", required = true)
     private File fastqUnpaired;
 
+    @Option(names = {"-v", "--drop-non-vdj"},
+            description = "Drop reads from bam file mapped on human chromosomes except with VDJ region (2, 7, 14, 22)")
+    public boolean dropNonVDJ = false;
+
     @Override
     public void run0() throws Exception {
-        BAMReader converter = new BAMReader(bamFiles);
+        BAMReader converter = new BAMReader(bamFiles, dropNonVDJ);
         SequenceRead read;
         try (PairedFastqWriter wr = new PairedFastqWriter(fastq1, fastq2);
              SingleFastqWriter swr = new SingleFastqWriter(fastqUnpaired)) {

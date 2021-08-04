@@ -74,7 +74,7 @@ public class BAMReaderTest {
         for (int i = 0; i < bamName.length; i++) {
             readers[i] = Paths.get(Objects.requireNonNull(classLoader.getResource(bamName[i])).getPath());
         }
-        BAMReader converter = new BAMReader(readers);
+        BAMReader converter = new BAMReader(readers, false);
 
         File res_f1 = File.createTempFile("my_r1", ".fastq");
         File res_f2 = File.createTempFile("my_r2", ".fastq");

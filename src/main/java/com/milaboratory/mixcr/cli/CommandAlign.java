@@ -97,11 +97,11 @@ import static com.milaboratory.mixcr.cli.CommandAlign.ALIGN_COMMAND_NAME;
         description = "Builds alignments with V,D,J and C genes for input sequencing reads.")
 public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
     static final String ALIGN_COMMAND_NAME = "align";
-    @Parameters(arity = "2..3",
+    @Parameters(arity = "2..*",
             descriptionKey = "file",
             paramLabel = "files",
             hideParamSyntax = true,
-            description = "file_R1.(fastq[.gz]|fasta|bam) [file_R2.fastq[.gz]] alignments.vdjca")
+            description = "file_R1.(fastq[.gz]|fasta|bam|sam) [file_R2.(fastq[.gz]|bam|sam)] [file_RN.(bam|sam)] alignments.vdjca")
     private List<String> inOut = new ArrayList<>();
 
     @Override
@@ -190,6 +190,11 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
             names = {"-d", "--no-merge"},
             hidden = true)
     public boolean noMerge = false;
+
+    @Option(description = "Drop reads from bam file mapped on human chromosomes except with VDJ region (2, 7, 14, 22)",
+            names = {"-v", "--drop-non-vdj"},
+            hidden = true)
+    public boolean dropNonVDJ = false;
 
     @Deprecated
     @Option(description = "Copy read(s) description line from .fastq or .fasta to .vdjca file (can then be " +
@@ -312,7 +317,12 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
 
     public SequenceReaderCloseable<? extends SequenceRead> createReader() throws IOException {
         if (isInputBAM()){
-            return new BAMReaderWrapper(new BAMReader(new Path[]{Paths.get(getInputFiles().get(0))}));
+            List<String> bamNames = getInputFiles();
+            Path[] readers = new Path[bamNames.size()];
+            for (int i = 0; i < bamNames.size(); i++) {
+                readers[i] = Paths.get(bamNames.get(i));
+            }
+            return new BAMReaderWrapper(new BAMReader(readers, dropNonVDJ));
         } else if (isInputPaired())
             return new PairedFastqReader(new FileInputStream(getInputFiles().get(0)), new FileInputStream(getInputFiles().get(1)),
                     SingleFastqReader.DEFAULT_QUALITY_FORMAT,
