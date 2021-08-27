@@ -30,6 +30,7 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.OutputPort;
+import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.blocks.FilteringPort;
 import cc.redberry.primitives.Filter;
 import com.milaboratory.mixcr.basictypes.*;
@@ -181,40 +182,19 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
 
         @Override
         void run1(List<FieldExtractor<? super VDJCAlignments>> exporters) throws Exception {
-            AutoCloseable reader = null;
-            OutputPort<VDJCAlignments> source = null;
-
-            switch (fileInfoExtractorInstance.getFileInfo(in).fileType) {
-                case MAGIC_VDJC:
-                    VDJCAlignmentsReader vdjcaReader = new VDJCAlignmentsReader(in, VDJCLibraryRegistry.getDefault());
-                    reader = vdjcaReader;
-                    source = vdjcaReader;
-                    break;
-                case MAGIC_CLNA:
-                    ClnAReader clnaReader = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4));
-                    reader = clnaReader;
-                    source = clnaReader.readAllAlignments();
-                    break;
-                case MAGIC_CLNS:
-                    throwExecutionException("Can't export alignments from *.clns file: " + in);
-                default:
-                    throwExecutionException("Unknown file type: " + in);
-            }
-
-            try (InfoWriter<VDJCAlignments> writer = new InfoWriter<>(out)) {
-                if (source instanceof CanReportProgress)
-                    SmartProgressReporter.startProgressReport("Exporting alignments", (CanReportProgress) source, System.err);
+            try (OutputPortCloseable<VDJCAlignments> reader = openAlignmentsPort(in);
+                 InfoWriter<VDJCAlignments> writer = new InfoWriter<>(out)) {
+                if (reader instanceof CanReportProgress)
+                    SmartProgressReporter.startProgressReport("Exporting alignments", (CanReportProgress) reader, System.err);
                 writer.attachInfoProviders(exporters);
                 writer.ensureHeader();
                 VDJCAlignments alignments;
                 long count = 0;
-                OutputPort<VDJCAlignments> alignmentsPort = new FilteringPort<>(source, mkFilter());
+                OutputPort<VDJCAlignments> alignmentsPort = new FilteringPort<>(reader, mkFilter());
                 while ((alignments = alignmentsPort.take()) != null && count < limit) {
                     writer.put(alignments);
                     ++count;
                 }
-            } finally {
-                reader.close();
             }
         }
     }
@@ -573,5 +553,44 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
      */
     public static CommandSpec mkClonesSpec() {
         return mkCommandSpec(new CommandExportClones());
+    }
+
+    public interface OPAWithReport extends OutputPortCloseable<VDJCAlignments>, CanReportProgress {
+    }
+
+    public static OutputPortCloseable<VDJCAlignments> openAlignmentsPort(String in) {
+        try {
+            switch (fileInfoExtractorInstance.getFileInfo(in).fileType) {
+                case MAGIC_VDJC:
+                    VDJCAlignmentsReader vdjcaReader = null;
+                    vdjcaReader = new VDJCAlignmentsReader(in, VDJCLibraryRegistry.getDefault());
+                    return vdjcaReader;
+                case MAGIC_CLNA:
+                    ClnAReader clnaReader = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4));
+                    OutputPortCloseable<VDJCAlignments> source = clnaReader.readAllAlignments();
+                    return new OutputPortCloseable<VDJCAlignments>() {
+                        @Override
+                        public void close() {
+                            try {
+                                source.close();
+                                clnaReader.close();
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+
+                        @Override
+                        public VDJCAlignments take() {
+                            return source.take();
+                        }
+                    };
+                case MAGIC_CLNS:
+                    throw new RuntimeException("Can't export alignments from *.clns file: " + in);
+                default:
+                    throw new RuntimeException("Unknown file type: " + in);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
