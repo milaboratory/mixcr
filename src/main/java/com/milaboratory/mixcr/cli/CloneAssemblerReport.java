@@ -52,6 +52,7 @@ public final class CloneAssemblerReport extends AbstractCommandReport implements
     final AtomicLong deferredAlignmentsMapped = new AtomicLong();
     final AtomicInteger clonesClustered = new AtomicInteger();
     final AtomicInteger clonesDropped = new AtomicInteger();
+    final AtomicInteger clonesDroppedInFineFiltering = new AtomicInteger();
     final AtomicLong readsDroppedWithClones = new AtomicLong();
     final AtomicInteger clonesPreClustered = new AtomicInteger();
     final AtomicLong readsPreClustered = new AtomicLong();
@@ -122,6 +123,11 @@ public final class CloneAssemblerReport extends AbstractCommandReport implements
     @JsonProperty("clonesDroppedAsLowQuality")
     public int getClonesDropped() {
         return clonesDropped.get();
+    }
+
+    @JsonProperty("clonesDroppedInFineFiltering")
+    public int getClonesDroppedInFineFiltering() {
+        return clonesDroppedInFineFiltering.get();
     }
 
     @JsonProperty("clonesPreClustered")
@@ -230,6 +236,12 @@ public final class CloneAssemblerReport extends AbstractCommandReport implements
         deferred.addAndGet(-clone.getMappedCount());
     }
 
+    @Override
+    public void onCloneDroppedInFineFiltering(CloneAccumulator clone) {
+        onCloneDropped(clone);
+        clonesDroppedInFineFiltering.incrementAndGet();
+    }
+
     public void onClonesetFinished(CloneSet cloneSet) {
         for (Clone clone : cloneSet)
             chainStats.increment(clone);
@@ -284,6 +296,7 @@ public final class CloneAssemblerReport extends AbstractCommandReport implements
                 .writeField("Clonotypes eliminated by PCR error correction", clonesClustered.get())
                 .writeField("Clonotypes dropped as low quality", clonesDropped.get())
                 .writeField("Clonotypes pre-clustered due to the similar VJC-lists", clonesPreClustered.get())
+                .writeField("Clonotypes dropped in fine filtering", clonesDroppedInFineFiltering.get())
                 .writePercentAndAbsoluteField("Partially aligned reads attached to clones by tags", readsAttachedByTags.get(), totalReads)
                 .writePercentAndAbsoluteField("Partially aligned reads with ambiguous clone attachments by tags", readsWithAmbiguousAttachmentsByTags.get(), totalReads)
                 .writePercentAndAbsoluteField("Partially aligned reads failed to attach to clones by tags", readsFailedToAttachedByTags.get(), totalReads);

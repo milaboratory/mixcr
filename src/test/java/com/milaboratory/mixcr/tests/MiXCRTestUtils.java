@@ -44,7 +44,6 @@ import io.repseq.core.GeneType;
 
 import static com.milaboratory.core.alignment.AlignmentTestUtils.assertAlignment;
 
-
 public class MiXCRTestUtils {
     public static void assertAlignments(VDJCAlignments alignments) {
         for (GeneType gt : GeneType.VDJC_REFERENCE) {

@@ -1,5 +1,4 @@
 import com.palantir.gradle.gitversion.VersionDetails
-import java.util.Base64
 import groovy.lang.Closure
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import java.net.InetAddress
@@ -39,6 +38,10 @@ application {
 
 tasks.withType<JavaCompile>() {
     options.encoding = "UTF-8"
+}
+
+tasks.withType<Javadoc> {
+    (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
 }
 
 tasks.register("createInfoFile") {
@@ -83,7 +86,7 @@ dependencies {
 val writeBuildProperties by tasks.registering(WriteProperties::class) {
     outputFile = file("${sourceSets.main.get().output.resourcesDir}/${project.name}-build.properties")
     property("version", version)
-    property("name", "MiLib")
+    property("name", "MiXCR")
     property("revision", gitDetails.gitHash)
     property("branch", gitDetails.branchName ?: "no_branch")
     property("host", InetAddress.getLocalHost().hostName)
@@ -139,6 +142,10 @@ publishing {
     }
 }
 
-tasks.withType<Javadoc> {
-    (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
+tasks.test {
+    useJUnit()
+    minHeapSize = "1024m"
+    maxHeapSize = "2048m"
+
+    longTests?.let { systemProperty("longTests", it) }
 }
