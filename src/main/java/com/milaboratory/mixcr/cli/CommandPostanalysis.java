@@ -48,7 +48,7 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
             names = {"--only-productive"})
     public boolean onlyProductive;
 
-    @Option(description = "umi|d[number]|f[number]",
+    @Option(description = "Choose downsampling. Possible values: umi-count-[1000|auto]|cumulative-top-[percent]|top-[number]",
             names = {"-d", "--downsampling"},
             required = true)
     public String downsampling;
@@ -56,6 +56,10 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
     @Option(description = "Chains",
             names = {"-c", "--chains"})
     public String chains = "ALL";
+
+    @Option(description = "Prefix for outputs",
+            names = {"-p", "--prefix"})
+    public String prefix = "";
 
     List<String> inputs() {
         return inOut.subList(0, inOut.size() - 1);
@@ -66,7 +70,7 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
     }
 
     String output(Chains.NamedChains chain) {
-        return chain.name + "_" + output();
+        return prefix + chain.name + "_" + output();
     }
 
     String outputBase() {
@@ -74,6 +78,7 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
     }
 
     static String baseName(String fName) {
+        fName = Paths.get(fName).toAbsolutePath().getFileName().toString();
         int i = fName.lastIndexOf(".");
         if (i > 0)
             return fName.substring(0, i);
@@ -81,14 +86,22 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
             return fName;
     }
 
+    static int downsamplingValue(String downsampling) {
+        return Integer.parseInt(downsampling.substring(downsampling.lastIndexOf("-") + 1, downsampling.length()));
+    }
+
     static SetPreprocessorFactory<Clone> parseDownsampling(String downsampling) {
-        if (downsampling.equalsIgnoreCase("umi")) {
-            return new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Auto(), 314);
+        if (downsampling.startsWith("umi-count")) {
+            if (downsampling.endsWith("auto"))
+                return new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Auto(), 314);
+            else {
+                return new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Fixed(downsamplingValue(downsampling)), 314);
+            }
         } else {
-            int value = Integer.parseInt(downsampling.substring(1, downsampling.length()));
-            if (downsampling.startsWith("d")) {
+            int value = downsamplingValue(downsampling);
+            if (downsampling.startsWith("cumulative-top")) {
                 return new SelectTop.Factory<>(WeightFunctions.Count, 1.0 * value / 100.0);
-            } else if (downsampling.startsWith("f")) {
+            } else if (downsampling.startsWith("top")) {
                 return new SelectTop.Factory<>(WeightFunctions.Count, value);
             } else {
                 throw new IllegalArgumentException("Illegal downsampling string: " + downsampling);
@@ -114,10 +127,10 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
         return downsampling;
     }
 
-    static <K> void writeTables(Chains.NamedChains chain, CharacteristicGroupResult<K> tableResult) {
+    <K> void writeTables(Chains.NamedChains chain, CharacteristicGroupResult<K> tableResult) {
         for (CharacteristicGroupOutputExtractor<K> view : tableResult.group.views)
             for (OutputTable t : view.getTables(tableResult).values())
-                t.writeTSV(Paths.get("").toAbsolutePath(), chain.name + "_");
+                t.writeTSV(Paths.get("").toAbsolutePath(), prefix + chain.name + "_");
     }
 
     ///////////////////////////////////////////// Individual /////////////////////////////////////////////
@@ -135,6 +148,8 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
             Chains c = Chains.parse(chains);
             if (c.intersects(Chains.TRAD))
                 run(Chains.TRAD_NAMED);
+            if (c.intersects(Chains.TRG))
+                run(Chains.TRG_NAMED);
             if (c.intersects(Chains.TRB))
                 run(Chains.TRB_NAMED);
             if (c.intersects(Chains.IGH))
@@ -254,21 +269,21 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
                 required = false)
         public String f2downsampling;
 
-        public CommandOverlap() {
-        }
+        public CommandOverlap() {}
 
         @Override
         public void run0() throws Exception {
             Chains c = Chains.parse(chains);
             if (c.intersects(Chains.TRAD))
                 run(Chains.TRAD_NAMED);
+            if (c.intersects(Chains.TRG))
+                run(Chains.TRG_NAMED);
             if (c.intersects(Chains.TRB))
                 run(Chains.TRB_NAMED);
             if (c.intersects(Chains.IGH))
                 run(Chains.IGH_NAMED);
             if (c.intersects(Chains.IGKL))
                 run(Chains.IGKL_NAMED);
-
         }
 
         void run(Chains.NamedChains chain) {
