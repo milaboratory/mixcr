@@ -70,6 +70,16 @@ public interface SetPreprocessorFactory<T> {
     }
 
     @SuppressWarnings("unchecked")
+    default SetPreprocessorFactory<T> filterAfter(List<ElementPredicate<T>> predicates) {
+        return filter(false, predicates.toArray(new ElementPredicate[0]));
+    }
+
+    @SuppressWarnings("unchecked")
+    default SetPreprocessorFactory<T> filterFirst(List<ElementPredicate<T>> predicates) {
+        return filter(true, predicates.toArray(new ElementPredicate[0]));
+    }
+
+    @SuppressWarnings("unchecked")
     static <T> Dataset<T>[] processDatasets(SetPreprocessor<T> proc, Dataset<T>... initial) {
         while (true) {
             SetPreprocessorSetup<T> setup = proc.nextSetupStep();

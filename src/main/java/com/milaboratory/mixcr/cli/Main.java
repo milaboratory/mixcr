@@ -148,6 +148,7 @@ public final class Main {
                 .setCommandName(command)
                 .addSubcommand("help", CommandLine.HelpCommand.class)
                 .addSubcommand("analyze", CommandAnalyze.CommandAnalyzeMain.class)
+                .addSubcommand("postanalysis", CommandPostanalysis.CommandPostanalysisMain.class)
 
                 .addSubcommand("align", CommandAlign.class)
                 .addSubcommand("assemble", CommandAssemble.class)
@@ -184,6 +185,11 @@ public final class Main {
                 .get("analyze")
                 .addSubcommand("amplicon", CommandAnalyze.mkAmplicon())
                 .addSubcommand("shotgun", CommandAnalyze.mkShotgun());
+
+        cmd.getSubcommands()
+                .get("postanalysis")
+                .addSubcommand("individual", CommandSpec.forAnnotatedObject(CommandPostanalysis.CommandIndividual.class))
+                .addSubcommand("overlap", CommandSpec.forAnnotatedObject(CommandPostanalysis.CommandOverlap.class));
 
         cmd.setSeparator(" ");
         return cmd;
