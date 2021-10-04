@@ -1,6 +1,8 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.OutputPortCloseable;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.postanalysis.*;
 import com.milaboratory.mixcr.postanalysis.additive.AAProperties;
@@ -29,10 +31,12 @@ import picocli.CommandLine.Parameters;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.milaboratory.mixcr.postanalysis.additive.AdditiveCharacteristics.*;
 import static java.util.stream.Collectors.*;
@@ -46,7 +50,7 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
 
     @Option(description = "Use only productive sequences in postanalysis.",
             names = {"--only-productive"})
-    public boolean onlyProductive;
+    public boolean onlyProductive = false;
 
     @Option(description = "Choose downsampling. Possible values: umi-count-[1000|auto]|cumulative-top-[percent]|top-[number]",
             names = {"-d", "--downsampling"},
@@ -62,7 +66,20 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
     public String prefix = "";
 
     List<String> inputs() {
-        return inOut.subList(0, inOut.size() - 1);
+        return inOut.subList(0, inOut.size() - 1)
+                .stream()
+                .flatMap(f -> {
+                    if (Files.isDirectory(Path.of(f))) {
+                        try {
+                            return Files
+                                    .list(Path.of(f))
+                                    .map(Path::toString);
+                        } catch (IOException ignored) {
+                        }
+                    }
+                    return Stream.of(f);
+                })
+                .collect(toList());
     }
 
     String output() {
@@ -250,7 +267,7 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
                 writeTables(chain, result.getTable(table));
 
             try {
-                GlobalObjectMappers.PRETTY.writeValue(new File(output(chain)), result);
+                GlobalObjectMappers.PRETTY.writeValue(new File(output(chain)), new PostanalysisData(schema, result));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -333,7 +350,7 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
                 writeTables(chain, result.getTable(table));
 
             try {
-                GlobalObjectMappers.PRETTY.writeValue(new File(output(chain)), result);
+                GlobalObjectMappers.PRETTY.writeValue(new File(output(chain)), new PostanalysisData(schema, result));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -427,5 +444,19 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
                     CommandLine.HelpCommand.class
             })
     public static class CommandPostanalysisMain {
+    }
+
+    public static final class PostanalysisData {
+        @JsonProperty("schema")
+        public final PostanalysisSchema<?> schema;
+        @JsonProperty("result")
+        public final PostanalysisResult result;
+
+        @JsonCreator
+        public PostanalysisData(@JsonProperty("schema") PostanalysisSchema<?> schema,
+                                @JsonProperty("result") PostanalysisResult result) {
+            this.schema = schema;
+            this.result = result;
+        }
     }
 }

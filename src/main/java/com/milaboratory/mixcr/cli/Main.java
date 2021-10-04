@@ -149,6 +149,7 @@ public final class Main {
                 .addSubcommand("help", CommandLine.HelpCommand.class)
                 .addSubcommand("analyze", CommandAnalyze.CommandAnalyzeMain.class)
                 .addSubcommand("postanalysis", CommandPostanalysis.CommandPostanalysisMain.class)
+                .addSubcommand("plot", CommandPostanalysisPlots.class)
 
                 .addSubcommand("align", CommandAlign.class)
                 .addSubcommand("assemble", CommandAssemble.class)

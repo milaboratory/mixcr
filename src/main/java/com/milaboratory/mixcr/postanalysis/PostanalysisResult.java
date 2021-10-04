@@ -22,10 +22,10 @@ import java.util.stream.Collectors;
 public class PostanalysisResult {
     /** All dataset ids that were analyzed */
     @JsonProperty("datasetIds")
-    private final Set<String> datasetIds;
+    public final Set<String> datasetIds;
     /** Characteristic Id -> characteristic data */
     @JsonProperty("data")
-    private final Map<String, Array2d> data;
+    public final Map<String, Array2d> data;
 
     @JsonCreator
     public PostanalysisResult(@JsonProperty("datasetIds") Set<String> datasetIds,
@@ -44,6 +44,14 @@ public class PostanalysisResult {
 
     /** cached results for char groups */
     private final Map<CharacteristicGroup<?, ?>, CharacteristicGroupResult<?>> cached = new IdentityHashMap<>();
+
+    /** project result on a specific char group */
+    public PostanalysisResult forGroup(CharacteristicGroup<?, ?> group) {
+        return new PostanalysisResult(datasetIds,
+                group.characteristics.stream()
+                        .map(c -> c.name)
+                        .collect(Collectors.toMap(c -> c, data::get)));
+    }
 
     /** project result on a specific char group */
     @SuppressWarnings({"unchecked"})
@@ -88,10 +96,10 @@ public class PostanalysisResult {
             getterVisibility = JsonAutoDetect.Visibility.NONE,
             isGetterVisibility = JsonAutoDetect.Visibility.NONE
     )
-    private static final class Array2d {
+    public static final class Array2d {
         /** Dataset Id -> Metric values */
         @JsonProperty("2darray")
-        private final Map<String, MetricsArray> data;
+        public final Map<String, MetricsArray> data;
 
         @JsonCreator
         Array2d(@JsonProperty("2darray") Map<String, MetricValue<?>[]> data) {
@@ -117,9 +125,9 @@ public class PostanalysisResult {
         }
     }
 
-    private static final class MetricsArray {
+    public static final class MetricsArray {
         @JsonValue
-        private final MetricValue<?>[] data;
+        public final MetricValue<?>[] data;
 
         public MetricsArray(MetricValue<?>[] data) {
             this.data = data;

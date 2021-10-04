@@ -1,6 +1,7 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.palantir.gradle.gitversion.VersionDetails
 import groovy.lang.Closure
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.InetAddress
 
 plugins {
@@ -9,6 +10,7 @@ plugins {
     `maven-publish`
     id("com.palantir.git-version") version "0.12.3"
     id("com.github.johnrengelman.shadow") version "7.0.0"
+    kotlin("jvm") version "1.6.0-M1"
 }
 
 val miRepoAccessKeyId: String by project
@@ -27,7 +29,7 @@ version =
 description = "MiXCR"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_11
     withSourcesJar()
     withJavadocJar()
 }
@@ -54,6 +56,7 @@ tasks.register("createInfoFile") {
 
 repositories {
     mavenCentral()
+    maven("https://jitpack.io")
 
     // Snapshot versions of milib and repseqio distributed via this repo
     maven {
@@ -64,6 +67,8 @@ repositories {
 val milibVersion = "1.14.1-16-774c60afab"
 val repseqioVersion = "1.3.5-4-f7170dd23b"
 val jacksonVersion = "2.12.4"
+val letsPlotLibraryVersion = "2.1.0"
+val letsPlotKotlinApiVersion = "3.0.3-alpha1"
 
 dependencies {
     api("com.milaboratory:milib:$milibVersion")
@@ -81,6 +86,16 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     implementation(testFixtures("com.milaboratory:milib:$milibVersion"))
     testImplementation("org.mockito:mockito-all:1.9.5")
+
+    // plots
+    implementation(kotlin("stdlib"))
+
+    implementation("org.apache.xmlgraphics:fop-transcoder:2.6")
+    implementation("org.apache.pdfbox:pdfbox:2.0.21")
+
+    implementation("org.jetbrains.kotlinx:dataframe:0.8.0-dev-339-0.10.0.260")
+    implementation("org.jetbrains.lets-plot:lets-plot-common:$letsPlotLibraryVersion")
+    implementation("org.jetbrains.lets-plot:lets-plot-kotlin-jvm:$letsPlotKotlinApiVersion")
 }
 
 val writeBuildProperties by tasks.registering(WriteProperties::class) {
@@ -148,4 +163,13 @@ tasks.test {
     maxHeapSize = "2048m"
 
     longTests?.let { systemProperty("longTests", it) }
+}
+
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.kotlinOptions {
+    jvmTarget = "11"
+}
+val compileTestKotlin: KotlinCompile by tasks
+compileTestKotlin.kotlinOptions {
+    jvmTarget = "11"
 }
