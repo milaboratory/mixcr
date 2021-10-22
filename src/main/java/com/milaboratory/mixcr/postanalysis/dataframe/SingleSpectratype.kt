@@ -126,7 +126,7 @@ object SingleSpectratype {
     }
 
     /**
-     * Creates plot spec for specific sample
+     * Creates Plot for sample
      *
      * @param sample sample
      * @param settings plot settings

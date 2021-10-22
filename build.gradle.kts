@@ -93,6 +93,7 @@ dependencies {
     implementation("org.apache.xmlgraphics:fop-transcoder:2.6")
     implementation("org.apache.pdfbox:pdfbox:2.0.21")
 
+    implementation("org.apache.commons:commons-csv:1.9.0")
     implementation("org.jetbrains.kotlinx:dataframe:0.8.0-dev-339-0.10.0.260")
     implementation("org.jetbrains.lets-plot:lets-plot-common:$letsPlotLibraryVersion")
     implementation("org.jetbrains.lets-plot:lets-plot-kotlin-jvm:$letsPlotKotlinApiVersion")

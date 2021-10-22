@@ -1,8 +1,7 @@
 package com.milaboratory.mixcr.cli;
 
+import com.milaboratory.mixcr.postanalysis.dataframe.GeneUsage;
 import com.milaboratory.mixcr.postanalysis.dataframe.SingleSpectratype;
-import com.milaboratory.mixcr.postanalysis.plots.BoxPlots;
-import com.milaboratory.mixcr.postanalysis.plots.SpectraPlots;
 import com.milaboratory.util.GlobalObjectMappers;
 import picocli.CommandLine;
 
@@ -22,16 +21,15 @@ public class CommandPostanalysisPlots extends ACommandWithOutputMiXCR {
     public void run0() throws Exception {
         CommandPostanalysis.PostanalysisData data = GlobalObjectMappers.PRETTY.readValue(new File(in), CommandPostanalysis.PostanalysisData.class);
 
+        GeneUsage.INSTANCE.plotPDF(Path.of("vUsage.pdf"),
+                data.schema, data.result, "vUsage");
 
         SingleSpectratype.INSTANCE.plotPDF(Path.of(out + "spectra.pdf"),
                 data.schema, data.result, "VSpectratype",
                 SingleSpectratype.SpectratypePlotSettings.Companion.getDefault());
 
-        SpectraPlots.INSTANCE.singleSpectra(Path.of(out + "spectraApp.pdf"),
-                data.schema, data.result, "VSpectratype", 20, null, true);
 
-        BoxPlots.INSTANCE.individualBoxPlots(Path.of(out),
-                data.schema, data.result, "cdr3Properties", null);
+
 
     }
 }

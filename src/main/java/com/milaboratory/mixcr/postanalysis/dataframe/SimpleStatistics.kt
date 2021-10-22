@@ -27,11 +27,10 @@ interface SimpleMetricsRow {
 
         val sample by column<String>()
 
-        val DataFrame<SpectratypeRow>.sample get() = this[SpectratypeRow::sample.name] as DataColumn<String>
-        val DataRow<SpectratypeRow>.sample get() = this[SpectratypeRow::sample.name] as String
+        val DataFrame<SimpleMetricsRow>.sample get() = this[SimpleMetricsRow::sample.name] as DataColumn<String>
+        val DataRow<SimpleMetricsRow>.sample get() = this[SimpleMetricsRow::sample.name] as String
     }
 }
-
 
 object SimpleStatistics {
     /**
@@ -44,7 +43,7 @@ object SimpleStatistics {
     ) = run {
 
         val data = mutableMapOf<String, MutableList<Any>>(
-            SpectratypeRow::sample.name to mutableListOf(),
+            SimpleMetricsRow::sample.name to mutableListOf(),
         )
 
         for ((_, charData) in paResult.forGroup(paSett.getGroup<Any>(group)).data) {
@@ -69,7 +68,7 @@ object SimpleStatistics {
     }
 
     /**
-     * Creates plot spec
+     * Create Plot
      **/
     fun DataFrame<SimpleMetricsRow>.plot(
         metric: String,
