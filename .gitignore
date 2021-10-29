@@ -2,7 +2,9 @@ mixcr.iml
 target
 *.iml
 .idea
+.gradle
 doc/_build
+/build
 .floo
 .flooignore
 out

@@ -179,7 +179,9 @@ public final class Main {
                 .addSubcommand("versionInfo", CommandVersionInfo.class)
                 .addSubcommand("pipelineInfo", CommandPipelineInfo.class)
                 .addSubcommand("slice", CommandSlice.class)
-                .addSubcommand("info", CommandInfo.class);
+                .addSubcommand("info", CommandInfo.class)
+
+                .addSubcommand(CommandBuildSHMTree.BUILD_SHM_TREE_COMMAND_NAME, CommandBuildSHMTree.class);
 
         cmd.getSubcommands()
                 .get("analyze")
