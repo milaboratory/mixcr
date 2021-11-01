@@ -33,6 +33,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.primitivio.annotations.Serializable;
+import io.repseq.core.GeneFeature;
 
 import java.util.Objects;
 
@@ -44,18 +45,24 @@ import java.util.Objects;
 @Serializable(asJson = true)
 public class SHMTreeBuilderParameters implements java.io.Serializable {
     /**
+     * Feature that is covered by all clonotypes (e.g. VDJRegion for full-length data)
+     */
+    public final GeneFeature targetRegion;
+    /**
      * Use only productive clonotypes (no OOF, no stops)
      */
     public final boolean productiveOnly;
 
     @JsonCreator
-    public SHMTreeBuilderParameters(@JsonProperty("productiveOnly") boolean productiveOnly) {
+    public SHMTreeBuilderParameters(@JsonProperty("targetRegion") GeneFeature targetRegion,
+                                    @JsonProperty("productiveOnly") boolean productiveOnly) {
+        this.targetRegion = targetRegion;
         this.productiveOnly = productiveOnly;
     }
 
     @Override
     public SHMTreeBuilderParameters clone() {
-        return new SHMTreeBuilderParameters(productiveOnly);
+        return new SHMTreeBuilderParameters(targetRegion, productiveOnly);
     }
 
     @Override

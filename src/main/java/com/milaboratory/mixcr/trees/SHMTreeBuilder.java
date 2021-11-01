@@ -33,11 +33,19 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.blocks.FilteringPort;
 import cc.redberry.pipe.util.FlatteningOutputPort;
+import com.milaboratory.core.alignment.Alignment;
+import com.milaboratory.core.mutations.Mutation;
+import com.milaboratory.core.mutations.Mutations;
+import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneReader;
+import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
 import com.milaboratory.util.sorting.HashSorter;
 import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
+import io.repseq.core.ReferencePoint;
+import io.repseq.core.VDJCGene;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -153,6 +161,48 @@ public class SHMTreeBuilder {
     public List<Tree> processCluster(Cluster cluster) {
         /// older -> younger
         /// muts  -> muts'
+
+        GeneFeature targetRegion = parameters.targetRegion;
+        Clone clone = cluster.cluster.get(0).clone;
+
+        VDJCHit[] hits = clone.getHits(GeneType.Variable);
+        VDJCHit hit = hits[0];
+
+        class mmm {
+
+        }
+
+        int targetWithCDR3 = clone.getTargetContainingFeature(GeneFeature.CDR3);
+        int cdr3Begin = hit.getPosition(targetWithCDR3, ReferencePoint.CDR3Begin);
+        Mutations<NucleotideSequence> xx = clone.getBestHit(GeneType.Variable).getAlignment(targetWithCDR3).getAbsoluteMutations();
+        int cdr3BeginInGene = xx.convertToSeq2Position(cdr3Begin);
+
+        int cdr3End = hit.getPosition(targetWithCDR3, ReferencePoint.CDR3End);
+
+        VDJCGene gene = hit.getGene();
+        Alignment<NucleotideSequence>[] alignments = hit.getAlignments();
+
+        for (int iTarget = 0; iTarget < alignments.length; iTarget++) {
+            Alignment<NucleotideSequence> al = alignments[iTarget];
+            if (al == null)
+                continue;
+
+            Mutations<NucleotideSequence> mutations = al.getAbsoluteMutations();
+            Mutations<NucleotideSequence> mutRef = mutations.invert();
+
+            for (int j = 0; j < mutRef.size(); j++) {
+                int mutation = mutRef.getMutation(j);
+
+                int refCoord = Mutation.getFrom(mutation);
+            }
+
+
+            /////// seq1:  0-----|0xxxxxxxxxxxxx|-------
+            /////// seq2:----|----------------------------|------
+        }
+
+        /////// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+
 
         return null;
     }
