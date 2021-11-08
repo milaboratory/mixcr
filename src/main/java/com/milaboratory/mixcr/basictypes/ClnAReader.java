@@ -181,6 +181,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
     /**
      * Aligner parameters
      */
+    @Override
     public VDJCAlignerParameters getAlignerParameters() {
         return alignerParameters;
     }
@@ -211,6 +212,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
         return numberOfClones;
     }
 
+    @Override
     public List<VDJCGene> getGenes() {
         return genes;
     }

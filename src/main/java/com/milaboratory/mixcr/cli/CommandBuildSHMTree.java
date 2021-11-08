@@ -36,17 +36,26 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.cli.PipelineConfiguration;
+import com.milaboratory.core.alignment.Alignment;
+import com.milaboratory.core.mutations.Mutation;
+import com.milaboratory.core.mutations.Mutations;
+import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.trees.*;
 import com.milaboratory.mixcr.util.ExceptionUtil;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
 import io.repseq.core.VDJCLibraryRegistry;
+import org.apache.commons.math3.util.Pair;
 import picocli.CommandLine;
 
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @CommandLine.Command(name = CommandBuildSHMTree.BUILD_SHM_TREE_COMMAND_NAME,
         sortOptions = false,
@@ -112,10 +121,103 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
         OutputPortCloseable<CloneWrapper> sortedClonotypes = shmTreeBuilder.sortClonotypes();
         OutputPortCloseable<Cluster> clusters = shmTreeBuilder.buildClusters(sortedClonotypes);
 
+        NewickTreePrinter<CloneWrapper> mutationsPrinter = new NewickTreePrinter<>(c -> new StringBuilder()
+                .append("V: ").append(mutations(c.clone, GeneType.Variable).collect(Collectors.toList()))
+                .append(" J:").append(mutations(c.clone, GeneType.Joining).collect(Collectors.toList()))
+                .toString(), false, false);
+
+        NewickTreePrinter<CloneWrapper> idPrinter = new NewickTreePrinter<>(c -> String.valueOf(c.clone.getId()), false, false);
+
         Cluster cluster;
         while ((cluster = clusters.take()) != null) {
-            shmTreeBuilder.processCluster(cluster);
+            List<Integer> VMutationPositions = allMutationPositions(cluster, GeneType.Variable);
+            List<Integer> JMutationPositions = allMutationPositions(cluster, GeneType.Joining);
+
+            List<String> mutations = cluster.cluster.stream()
+                    .map(cw -> cw.clone)
+                    .filter(clone -> ClusteringCriteria.numberOfMutations(clone, GeneType.Variable) +
+                            ClusteringCriteria.numberOfMutations(clone, GeneType.Joining) > 0)
+                    .map(clone -> new StringBuilder()
+                            .append(clone.getBestHitGene(GeneType.Variable).getId().getName())
+                            .append(clone.getBestHitGene(GeneType.Joining).getId().getName())
+                            .append(" CDR3 length: ").append(clone.ntLengthOf(GeneFeature.CDR3))
+                            .append(" ").append(clone.getFeature(GeneFeature.CDR3).getSequence())
+                            .append(" ").append(String.format("%6d", clone.getId()))
+                            .append(" V: ").append(mutationsRow(clone, GeneType.Variable, VMutationPositions))
+                            .append(" J:").append(mutationsRow(clone, GeneType.Joining, JMutationPositions))
+                            .toString()
+                    )
+                    .collect(Collectors.toList());
+            if (mutations.size() > 30) {
+//                if (true) {
+                if (mutations.stream().anyMatch(it -> it.startsWith("IGHV3-30*00IGHJ4*00 CDR3 length: 42") && it.contains("7679"))) {
+//                if (mutations.stream().anyMatch(it -> it.startsWith("IGHV3-48*00IGHJ4*00 CDR3 length: 57") && it.contains("2361") )
+//                        || mutations.stream().anyMatch(it -> it.startsWith("IGHV3-48*00IGHJ6*00 CDR3 length: 66") && it.contains("18091"))) {
+                    System.out.println("sequences:");
+                    System.out.println(cluster.cluster.stream()
+                            .map(it -> String.format("%6d", it.clone.getId()) + " " + it.clone.getTargets()[0].getSequence().toString() + " " + it.clone.getCount())
+                            .collect(Collectors.joining("\n"))
+                    );
+                    System.out.println("\n");
+
+                    System.out.println("without V/J mutations: " + cluster.cluster.stream().map(cw -> cw.clone)
+                            .filter(clone -> ClusteringCriteria.numberOfMutations(clone, GeneType.Variable) +
+                                    ClusteringCriteria.numberOfMutations(clone, GeneType.Joining) == 0).count() + "\n");
+
+                    System.out.println("mutations:");
+                    System.out.println(String.join("\n", mutations));
+                    System.out.println("\n");
+
+//            IGHV3-48*00IGHJ4*00 CDR3 length: 57
+//            IGHV3-48*00IGHJ6*00 CDR3 length: 66
+//
+//            IGHV3-30*00IGHJ4*00 CDR3 length: 42
+                    Collection<Tree<CloneWrapper>> trees = shmTreeBuilder.processCluster(cluster);
+                    System.out.println(trees.stream().map(mutationsPrinter::print).collect(Collectors.joining("\n")));
+                    System.out.println("\n");
+
+                    System.out.println(trees.stream().map(idPrinter::print).collect(Collectors.joining("\n")));
+                    System.out.println("\n");
+
+                    System.out.println("ids:\n");
+                    System.out.println(cluster.cluster.stream().map(it -> String.valueOf(it.clone.getId())).collect(Collectors.joining("|")));
+
+                    System.out.println("\n\n");
+                }
+            }
         }
+    }
+
+    private List<Integer> allMutationPositions(Cluster cluster, GeneType geneType) {
+        return cluster.cluster.stream()
+                .map(cw -> cw.clone)
+                .flatMap(clone -> mutations(clone, geneType))
+                .flatMap(mutations -> IntStream.range(0, mutations.size())
+                        .map(mutations::getMutation)
+                        .mapToObj(Mutation::getPosition)
+                )
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    private String mutationsRow(Clone clone, GeneType variable, List<Integer> allMutationPositions) {
+        Map<Object, List<Pair<Integer, String>>> allMutations = mutations(clone, variable)
+                .flatMap(mutations -> IntStream.range(0, mutations.size())
+                        .mapToObj(index -> Pair.create(
+                                Mutation.getPosition(mutations.getMutation(index)),
+                                Mutation.toString(mutations.getAlphabet(), mutations.getMutation(index))
+                        )))
+                .collect(Collectors.groupingBy(Pair::getKey, Collectors.toList()));
+        return allMutationPositions.stream()
+                .map(position -> String.format("%9s", allMutations.getOrDefault(position, Collections.emptyList()).stream().map(Pair::getValue).findFirst().orElse("")))
+                .collect(Collectors.joining("|"));
+    }
+
+    private Stream<Mutations<NucleotideSequence>> mutations(Clone clone, GeneType geneType) {
+        return Arrays.stream(clone.getBestHit(geneType).getAlignments())
+                .filter(it -> it.getAbsoluteMutations().size() > 0)
+                .map(Alignment::getAbsoluteMutations);
     }
 
     @JsonAutoDetect(

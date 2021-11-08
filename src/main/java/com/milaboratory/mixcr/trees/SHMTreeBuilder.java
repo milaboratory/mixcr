@@ -39,43 +39,43 @@ import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneReader;
+import com.milaboratory.mixcr.basictypes.IOUtil;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
 import com.milaboratory.util.sorting.HashSorter;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
-import io.repseq.core.ReferencePoint;
-import io.repseq.core.VDJCGene;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  *
  */
 public class SHMTreeBuilder {
-    final SHMTreeBuilderParameters parameters;
-    final ClusteringCriteria clusteringCriteria;
-    final List<CloneReader> datasets;
+    private final SHMTreeBuilderParameters parameters;
+    private final ClusteringCriteria clusteringCriteria;
+    private final List<CloneReader> datasets;
 
     public SHMTreeBuilder(SHMTreeBuilderParameters parameters,
                           ClusteringCriteria clusteringCriteria,
-                          List<CloneReader> datasets) throws IOException {
+                          List<CloneReader> datasets
+    ) {
         this.parameters = parameters;
         this.clusteringCriteria = clusteringCriteria;
         this.datasets = datasets;
 
         // todo group v/j genes
-
-
     }
 
     public OutputPortCloseable<CloneWrapper> sortClonotypes() throws IOException {
         // todo pre-build state, fill with references if possible
         PrimitivIOStateBuilder stateBuilder = new PrimitivIOStateBuilder();
+
+        datasets.forEach(dataset -> IOUtil.registerGeneReferences(stateBuilder, dataset.getGenes(), dataset.getAlignerParameters()));
+
 
         // todo check memory budget
         // HDD-offloading collator of alignments
@@ -89,8 +89,8 @@ public class SHMTreeBuilder {
         // todo move constants to parameters
         // creating sorter instance
         HashSorter<CloneWrapper> sorter = new HashSorter<>(CloneWrapper.class,
-                c -> clusteringCriteria.clusteringHashCode().applyAsInt(c.clone),
-                Comparator.comparing(c -> c.clone, clusteringCriteria.clusteringComparator()),
+                c -> clusteringCriteria.clusteringHashCodeWithNumberOfMutations().applyAsInt(c.clone),
+                Comparator.comparing(c -> c.clone, clusteringCriteria.clusteringComparatorWithNumberOfMutations()),
                 5,
                 Files.createTempFile("tree.builder", "hash.sorter"),
                 8,
@@ -158,52 +158,178 @@ public class SHMTreeBuilder {
         };
     }
 
-    public List<Tree> processCluster(Cluster cluster) {
+    public Collection<Tree<CloneWrapper>> processCluster(Cluster cluster) {
         /// older -> younger
         /// muts  -> muts'
 
-        GeneFeature targetRegion = parameters.targetRegion;
-        Clone clone = cluster.cluster.get(0).clone;
+        List<Tree<CloneWithMutationsDescriptor>> result = new ArrayList<>();
 
-        VDJCHit[] hits = clone.getHits(GeneType.Variable);
-        VDJCHit hit = hits[0];
-
-        class mmm {
-
+        for (CloneWrapper cloneWrapper : cluster.cluster) {
+            addToTheTree(result, cloneWrapper);
         }
+        return result.stream()
+                .map(it -> it.map(CloneWithMutationsDescriptor::getCloneWrapper))
+                .collect(Collectors.toList());
+    }
 
-        int targetWithCDR3 = clone.getTargetContainingFeature(GeneFeature.CDR3);
-        int cdr3Begin = hit.getPosition(targetWithCDR3, ReferencePoint.CDR3Begin);
-        Mutations<NucleotideSequence> xx = clone.getBestHit(GeneType.Variable).getAlignment(targetWithCDR3).getAbsoluteMutations();
-        int cdr3BeginInGene = xx.convertToSeq2Position(cdr3Begin);
+    private void addToTheTree(List<Tree<CloneWithMutationsDescriptor>> result, CloneWrapper cloneWrapper) {
+        MutationsDescriptor mutations = mutationsDescriptor(cloneWrapper.clone);
+        if (mutations.mutations.isEmpty()) {
+            //TODO fix when start to work with D section
+            return;
+        }
+        CloneWithMutationsDescriptor cloneWithMutationsDescriptor = new CloneWithMutationsDescriptor(cloneWrapper, mutations);
+        for (Tree<CloneWithMutationsDescriptor> tree : result) {
+            if (mutations.contains(tree.getRoot().getContent().mutations)) {
+                Tree.Node<CloneWithMutationsDescriptor> mostSimilarNode = tree.allNodes()
+                        .max(Comparator.comparing(node -> node.getContent().mutations.sameMutationsCount(mutations)))
+                        .orElseThrow(IllegalStateException::new);
 
-        int cdr3End = hit.getPosition(targetWithCDR3, ReferencePoint.CDR3End);
+                mostSimilarNode.addChild(cloneWithMutationsDescriptor, null);
+                return;
+            }
+        }
+        result.add(new Tree<>(new Tree.Node<>(cloneWithMutationsDescriptor)));
+    }
 
-        VDJCGene gene = hit.getGene();
+    private MutationsDescriptor mutationsDescriptor(Clone clone) {
+        HashSet<OneMutationDescriptor> mutationDescriptors = new HashSet<>();
+        collectMutationDescriptors(clone, GeneType.Variable, mutationDescriptors);
+        collectMutationDescriptors(clone, GeneType.Joining, mutationDescriptors);
+
+        return new MutationsDescriptor(mutationDescriptors);
+    }
+
+    private void collectMutationDescriptors(Clone clone, GeneType geneType, Collection<OneMutationDescriptor> result) {
+        //TODO check quality by scales
+        VDJCHit hit = clone.getBestHit(geneType);
+
         Alignment<NucleotideSequence>[] alignments = hit.getAlignments();
 
-        for (int iTarget = 0; iTarget < alignments.length; iTarget++) {
-            Alignment<NucleotideSequence> al = alignments[iTarget];
-            if (al == null)
+        for (Alignment<NucleotideSequence> alignment : alignments) {
+            if (alignment == null)
                 continue;
 
-            Mutations<NucleotideSequence> mutations = al.getAbsoluteMutations();
-            Mutations<NucleotideSequence> mutRef = mutations.invert();
+            Mutations<NucleotideSequence> mutations = alignment.getAbsoluteMutations();
 
-            for (int j = 0; j < mutRef.size(); j++) {
-                int mutation = mutRef.getMutation(j);
-
-                int refCoord = Mutation.getFrom(mutation);
+            for (int j = 0; j < mutations.size(); j++) {
+                result.add(asDescriptor(mutations.getMutation(j), geneType));
             }
+        }
+    }
 
+    private OneMutationDescriptor asDescriptor(int mutation, GeneType geneType) {
+        return new OneMutationDescriptor(
+                geneType,
+                Mutation.getPosition(mutation),
+                Mutation.getTo(mutation),
+                determineType(mutation)
+        );
+    }
 
-            /////// seq1:  0-----|0xxxxxxxxxxxxx|-------
-            /////// seq2:----|----------------------------|------
+    private OneMutationDescriptor.Type determineType(int mutation) {
+        if (Mutation.isInsertion(mutation)) {
+            return OneMutationDescriptor.Type.INSERTION;
+        } else if (Mutation.isDeletion(mutation)) {
+            return OneMutationDescriptor.Type.DELETION;
+        } else if (Mutation.isSubstitution(mutation)) {
+            return OneMutationDescriptor.Type.SUBSTITUTION;
+        } else {
+            throw new IllegalArgumentException();
+        }
+    }
+
+    private static class CloneWithMutationsDescriptor {
+        private final CloneWrapper cloneWrapper;
+        private final MutationsDescriptor mutations;
+
+        public CloneWithMutationsDescriptor(CloneWrapper cloneWrapper, MutationsDescriptor mutations) {
+            this.cloneWrapper = cloneWrapper;
+            this.mutations = mutations;
         }
 
-        /////// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+        public CloneWrapper getCloneWrapper() {
+            return cloneWrapper;
+        }
+    }
 
+    private static class MutationsDescriptor {
+        private final HashSet<OneMutationDescriptor> mutations;
 
-        return null;
+        private MutationsDescriptor(HashSet<OneMutationDescriptor> mutations) {
+            this.mutations = mutations;
+        }
+
+        //TODO optimize: replace HashSet with sorted LinkedList
+        boolean contains(MutationsDescriptor other) {
+            return this.mutations.containsAll(other.mutations);
+        }
+
+        int sameMutationsCount(MutationsDescriptor other) {
+            return (int) this.mutations.stream().filter(other.mutations::contains).count();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            MutationsDescriptor that = (MutationsDescriptor) o;
+            return Objects.equals(mutations, that.mutations);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(mutations);
+        }
+
+        @Override
+        public String toString() {
+            return "MutationsDescriptor{" +
+                    "mutations=" + mutations +
+                    '}';
+        }
+    }
+
+    private static class OneMutationDescriptor {
+        private final GeneType geneType;
+        private final int coordinate;
+        private final byte replaceWith;
+        private final Type type;
+
+        public OneMutationDescriptor(GeneType geneType, int coordinate, byte replaceWith, Type type) {
+            this.geneType = geneType;
+            this.coordinate = coordinate;
+            this.replaceWith = replaceWith;
+            this.type = type;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            OneMutationDescriptor that = (OneMutationDescriptor) o;
+            return coordinate == that.coordinate && replaceWith == that.replaceWith && geneType == that.geneType && type == that.type;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(geneType, coordinate, replaceWith, type);
+        }
+
+        @Override
+        public String toString() {
+            return "OneMutationDescriptor{" +
+                    "geneType=" + geneType +
+                    ", coordinate=" + coordinate +
+                    ", replaceWith=" + replaceWith +
+                    ", type=" + type +
+                    '}';
+        }
+
+        enum Type {
+            DELETION,
+            INSERTION,
+            SUBSTITUTION
+        }
     }
 }

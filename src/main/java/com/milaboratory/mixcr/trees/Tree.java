@@ -33,7 +33,10 @@ import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  *
@@ -49,16 +52,30 @@ public class Tree<T> {
         return root;
     }
 
-    public static class Node<T> {
-        @Nullable
-        private final T content;
-        private final List<NodeLink<T>> children = new ArrayList<>();
+    public Stream<Node<T>> allNodes() {
+        return Stream.concat(
+                Stream.of(root),
+                root.allDescendants()
+        );
+    }
 
-        public Node(@Nullable T content) {
+    public <R> Tree<R> map(Function<T, R> mapper) {
+        return new Tree<>(root.map(mapper));
+    }
+
+    public static class Node<T> {
+        private final T content;
+        private final List<NodeLink<T>> children;
+
+        public Node(T content, List<NodeLink<T>> children) {
             this.content = content;
+            this.children = children;
         }
 
-        @Nullable
+        public Node(T content) {
+            this(content, new ArrayList<>());
+        }
+
         public T getContent() {
             return content;
         }
@@ -75,8 +92,21 @@ public class Tree<T> {
             return children;
         }
 
-        void addChild(T content, @Nullable BigDecimal distance) {
+        public void addChild(T content, @Nullable BigDecimal distance) {
             children.add(new NodeLink<>(new Node<>(content), distance));
+        }
+
+        Stream<Node<T>> allDescendants() {
+            return children.stream()
+                    .map(NodeLink::getNode)
+                    .flatMap(child -> Stream.concat(Stream.of(child), child.allDescendants()));
+        }
+
+        public <R> Node<R> map(Function<T, R> mapper) {
+            List<NodeLink<R>> mapperLinks = children.stream()
+                    .map(child -> new NodeLink<>(child.node.map(mapper), child.distance))
+                    .collect(Collectors.toList());
+            return new Node<>(mapper.apply(content), mapperLinks);
         }
     }
 

@@ -17,12 +17,10 @@ import com.milaboratory.mixcr.postanalysis.preproc.SelectTop;
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeCharacteristic;
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeKeyFunction;
 import com.milaboratory.mixcr.postanalysis.ui.*;
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.LambdaSemaphore;
-import io.repseq.core.Chains;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
-import io.repseq.core.VDJCLibraryRegistry;
+import io.repseq.core.*;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
@@ -346,6 +344,16 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
                     VDJCLibraryRegistry.getDefault(),
                     concurrencyLimiter);
             return new CloneReader() {
+                @Override
+                public VDJCAlignerParameters getAlignerParameters() {
+                    return inner.getAlignerParameters();
+                }
+
+                @Override
+                public List<VDJCGene> getGenes() {
+                    return inner.getGenes();
+                }
+
                 @Override
                 public VDJCSProperties.CloneOrdering ordering() {
                     return inner.ordering();

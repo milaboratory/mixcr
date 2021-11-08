@@ -152,6 +152,11 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
     }
 
     @Override
+    public List<VDJCGene> getGenes() {
+        return genes;
+    }
+
+    @Override
     public void close() throws IOException {
         input.close();
     }
