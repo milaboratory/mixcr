@@ -44,6 +44,7 @@ import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerReport;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.util.Concurrency;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PipeDataInputReader;
 import com.milaboratory.primitivio.PrimitivI;
@@ -125,9 +126,12 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
         List<VDJCGene> genes;
         VDJCAlignerParameters alignerParameters;
         CloneAssemblerParameters cloneAssemblerParameters;
-        try (ClnAReader reader = new ClnAReader(in, VDJCLibraryRegistry.getDefault());
-             PrimitivO tmpOut = new PrimitivO(new BufferedOutputStream(new FileOutputStream(out)));
+        VDJCSProperties.CloneOrdering ordering;
+        try (ClnAReader reader = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4));
+             PrimitivO tmpOut = new PrimitivO(new BufferedOutputStream(new FileOutputStream(out))); // TODO ????
              BufferedWriter debugReport = debugReportFile == null ? null : new BufferedWriter(new OutputStreamWriter(new FileOutputStream(debugReportFile)))) {
+
+            ordering = reader.ordering();
 
             final CloneFactory cloneFactory = new CloneFactory(reader.getAssemblerParameters().getCloneFactoryParameters(),
                     reader.getAssemblingFeatures(), reader.getGenes(), reader.getAlignerParameters().getFeaturesToAlignMap());
@@ -252,23 +256,19 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
         assert report.getFinalCloneCount() == totalClonesCount;
         assert report.getFinalCloneCount() >= report.getInitialCloneCount();
 
+        int cloneId = 0;
         Clone[] clones = new Clone[totalClonesCount];
         try (PrimitivI tmpIn = new PrimitivI(new BufferedInputStream(new FileInputStream(out)))) {
             IOUtil.registerGeneReferences(tmpIn, genes, alignerParameters);
             int i = 0;
             for (Clone clone : CUtils.it(new PipeDataInputReader<>(Clone.class, tmpIn, totalClonesCount)))
-                clones[i++] = clone;
+                clones[i++] = clone.setId(cloneId++);
         }
 
-        Arrays.sort(clones, Comparator.comparingDouble(c -> -c.getCount()));
-        for (int i = 0; i < clones.length; i++)
-            clones[i] = clones[i].setId(i);
-        CloneSet cloneSet = new CloneSet(Arrays.asList(clones), genes, alignerParameters.getFeaturesToAlignMap(),
-                alignerParameters, cloneAssemblerParameters);
+        CloneSet cloneSet = new CloneSet(Arrays.asList(clones), genes, alignerParameters, cloneAssemblerParameters, ordering);
 
-        try (ClnsWriter writer = new ClnsWriter(getFullPipelineConfiguration(), cloneSet, out)) {
-            SmartProgressReporter.startProgressReport(writer);
-            writer.write();
+        try (ClnsWriter writer = new ClnsWriter(out)) {
+            writer.writeCloneSet(getFullPipelineConfiguration(), cloneSet);
         }
 
         ReportWrapper reportWrapper = new ReportWrapper(ASSEMBLE_CONTIGS_COMMAND_NAME, report);

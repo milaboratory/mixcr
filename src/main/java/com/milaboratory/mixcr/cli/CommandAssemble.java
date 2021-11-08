@@ -40,6 +40,7 @@ import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.*;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
+import com.milaboratory.util.ArraysUtils;
 import com.milaboratory.util.SmartProgressReporter;
 import gnu.trove.iterator.TObjectDoubleIterator;
 import io.repseq.core.*;
@@ -75,6 +76,15 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
         this.threads = threads;
     }
 
+    @Option(description = "Use higher compression for output file.",
+            names = {"--high-compression"})
+    public boolean highCompression = false;
+
+    @Option(description = "Sort by sequence. Clones in the output file will be sorted by clonal sequence," +
+            "which allows to build overlaps between clonesets.",
+            names = {"-s", "--sort-by-sequence"})
+    public boolean sortBySequence = false;
+
     @Option(description = CommonDescriptions.REPORT,
             names = {"-r", "--report"})
     public String reportFile;
@@ -105,15 +115,17 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
 
     @Override
     public ActionConfiguration getConfiguration() {
-        return new AssembleConfiguration(getCloneAssemblerParameters(), clna);
+        ensureParametersInitialized();
+        return new AssembleConfiguration(getCloneAssemblerParameters(), clna, ordering);
     }
 
     // Extracting V/D/J/C gene list from input vdjca file
     private List<VDJCGene> genes = null;
     private VDJCAlignerParameters alignerParameters = null;
     private CloneAssemblerParameters assemblerParameters = null;
+    private VDJCSProperties.CloneOrdering ordering = null;
 
-    private void initializeParameters() {
+    private void ensureParametersInitialized() {
         if (assemblerParameters != null)
             return;
 
@@ -143,21 +155,43 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
             if (assemblerParameters == null)
                 throwValidationException("Failed to override some parameter: " + overrides);
         }
+
+        if (sortBySequence) {
+            GeneFeature[] assemblingFeatures = assemblerParameters.getAssemblingFeatures();
+
+            // Any CDR3 containing feature will become first
+            for (int i = 0; i < assemblingFeatures.length; i++)
+                if (assemblingFeatures[i].contains(GeneFeature.CDR3)) {
+                    if (i != 0)
+                        ArraysUtils.swap(assemblingFeatures, 0, i);
+                    break;
+                }
+
+            ordering = VDJCSProperties.cloneOrderingByNucleotide(assemblingFeatures,
+                    GeneType.Variable, GeneType.Joining);
+        } else {
+            ordering = VDJCSProperties.CO_BY_COUNT;
+        }
     }
 
     public CloneAssemblerParameters getCloneAssemblerParameters() {
-        initializeParameters();
+        ensureParametersInitialized();
         return assemblerParameters;
     }
 
     public List<VDJCGene> getGenes() {
-        initializeParameters();
+        ensureParametersInitialized();
         return genes;
     }
 
     public VDJCAlignerParameters getAlignerParameters() {
-        initializeParameters();
+        ensureParametersInitialized();
         return alignerParameters;
+    }
+
+    public VDJCSProperties.CloneOrdering getOrdering() {
+        ensureParametersInitialized();
+        return ordering;
     }
 
     /**
@@ -206,14 +240,14 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
                 StatusReporter reporter = new StatusReporter();
                 reporter.addCustomProviderFromLambda(() ->
                         new StatusReporter.Status(
-                                "Reader buffer: " + assemblerRunner.getQueueSize(),
+                                "Reader buffer: FIXME " /*+ assemblerRunner.getQueueSize()*/,
                                 assemblerRunner.isFinished()));
                 reporter.start();
             }
             assemblerRunner.run();
 
             // Getting results
-            final CloneSet cloneSet = assemblerRunner.getCloneSet(alignerParameters);
+            final CloneSet cloneSet = CloneSet.reorder(assemblerRunner.getCloneSet(alignerParameters), getOrdering());
 
             // Passing final cloneset to assemble last pieces of statistics for report
             report.onClonesetFinished(cloneSet);
@@ -245,7 +279,7 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
 //                        }
 //                    }
 
-                try (ClnAWriter writer = new ClnAWriter(pipelineConfiguration, out)) {
+                try (ClnAWriter writer = new ClnAWriter(pipelineConfiguration, out, highCompression)) {
                     // writer will supply current stage and completion percent to the progress reporter
                     SmartProgressReporter.startProgressReport(writer);
                     // Writing clone block
@@ -322,14 +356,13 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
                             };
                         }
 
-                        writer.sortAlignments(port, assembler.getAlignmentsCount());
+                        writer.collateAlignments(port, assembler.getAlignmentsCount());
                     }
                     writer.writeAlignmentsAndIndex();
                 }
             } else
-                try (ClnsWriter writer = new ClnsWriter(pipelineConfiguration, cloneSet, out)) {
-                    SmartProgressReporter.startProgressReport(writer);
-                    writer.write();
+                try (ClnsWriter writer = new ClnsWriter(out)) {
+                    writer.writeCloneSet(getFullPipelineConfiguration(), cloneSet);
                 }
 
             // Writing report
@@ -391,13 +424,16 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
     public static class AssembleConfiguration implements ActionConfiguration<AssembleConfiguration> {
         public final CloneAssemblerParameters assemblerParameters;
         public final boolean clna;
+        public final VDJCSProperties.CloneOrdering ordering;
 
         @JsonCreator
         public AssembleConfiguration(
                 @JsonProperty("assemblerParameters") CloneAssemblerParameters assemblerParameters,
-                @JsonProperty("clna") boolean clna) {
+                @JsonProperty("clna") boolean clna,
+                @JsonProperty("ordering") VDJCSProperties.CloneOrdering ordering) {
             this.assemblerParameters = assemblerParameters;
             this.clna = clna;
+            this.ordering = ordering;
         }
 
         @Override

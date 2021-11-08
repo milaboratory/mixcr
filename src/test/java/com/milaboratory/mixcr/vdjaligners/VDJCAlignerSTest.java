@@ -40,6 +40,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.util.RandomUtil;
+import com.milaboratory.util.TempFileManager;
 import io.repseq.core.Chains;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
@@ -47,8 +48,8 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,9 +59,10 @@ public class VDJCAlignerSTest {
         VDJCAlignerParameters parameters =
                 VDJCParametersPresets.getByName("default");
         //LociLibrary ll = LociLibraryManager.getDefault().getLibrary("mi");
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        File tmpFile = TempFileManager.getTempFile();
+
         List<VDJCAlignments> alignemntsList = new ArrayList<>();
-        int header;
+        long header;
         try (SingleFastqReader reader =
                      new SingleFastqReader(
                              VDJCAlignerSTest.class.getClassLoader()
@@ -69,9 +71,9 @@ public class VDJCAlignerSTest {
             for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("default", "hs").getGenes(Chains.IGH))
                 if (parameters.containsRequiredFeature(gene))
                     aligner.addGene(gene);
-            try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(bos)) {
+            try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tmpFile)) {
                 writer.header(aligner, null);
-                header = bos.size();
+                header = writer.getPosition();
                 for (SingleRead read : CUtils.it(reader)) {
                     VDJCAlignmentResult<SingleRead> result = aligner.process(read);
                     if (result.alignment != null) {
@@ -82,12 +84,14 @@ public class VDJCAlignerSTest {
             }
         }
         Assert.assertTrue(alignemntsList.size() > 10);
-        System.out.println("Bytes per alignment: " + (bos.size() - header) / alignemntsList.size());
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(new ByteArrayInputStream(bos.toByteArray()))) {
+        System.out.println("Bytes per alignment: " + (Files.size(tmpFile.toPath()) - header) / alignemntsList.size());
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tmpFile)) {
             int i = 0;
             for (VDJCAlignments alignments : CUtils.it(reader))
                 Assert.assertEquals(alignemntsList.get(i++), alignments);
         }
+
+        tmpFile.delete();
     }
 
     @Test

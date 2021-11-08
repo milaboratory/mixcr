@@ -144,14 +144,13 @@ public class CommandGroupCells extends ACommandWithSmartOverwriteWithSingleInput
     private void runClns() throws Exception {
         CloneSet cloneSet = CloneSetIO.read(in);
         CloneSet resultCloneSet = doClustering(cloneSet, null);
-        try (ClnsWriter writer = new ClnsWriter(getFullPipelineConfiguration(), resultCloneSet, out)) {
-            SmartProgressReporter.startProgressReport(writer);
-            writer.write();
+        try (ClnsWriter writer = new ClnsWriter(out)) {
+            writer.writeCloneSet(getFullPipelineConfiguration(), resultCloneSet);
         }
     }
 
     private void runClna() throws Exception {
-        try (ClnAReader reader = new ClnAReader(in, VDJCLibraryRegistry.getDefault());
+        try (ClnAReader reader = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), 3);
              ClnAWriter writer = new ClnAWriter(getFullPipelineConfiguration(), out)) {
 
             CloneSet cloneSet = reader.readCloneSet();
@@ -164,7 +163,7 @@ public class CommandGroupCells extends ACommandWithSmartOverwriteWithSingleInput
             writer.writeClones(resultCloneSet);
 
             OutputPortCloseable<VDJCAlignments> alignments = reader.readAllAlignments();
-            writer.sortAlignments(() -> {
+            writer.collateAlignments(() -> {
                 VDJCAlignments als = alignments.take();
                 if (als == null)
                     return null;
@@ -283,25 +282,11 @@ public class CommandGroupCells extends ACommandWithSmartOverwriteWithSingleInput
                         .setCount(clone.getCount() * ungroupedCounter.sum() / sumTotal));
         }
 
-        // sorting resulting clones
-        TIntIntHashMap permutation = new TIntIntHashMap();
-        resultingClones.sort(Comparator.comparingDouble(Clone::getCount).reversed());
-        for (int i = 0; i < resultingClones.size(); i++) {
-            Clone c = resultingClones.get(i);
-            permutation.put(c.getId(), i);
-            resultingClones.set(i, c.setId(i));
-        }
-        TObjectIntIterator<CloneIdWithTag> it = idMapping.iterator();
-        while (it.hasNext()) {
-            it.advance();
-            it.setValue(permutation.get(it.value()));
-        }
-
         return new CloneSet(resultingClones,
                 cloneSet.getUsedGenes(),
-                cloneSet.getAlignedFeatures(),
                 cloneSet.getAlignmentParameters(),
-                cloneSet.getAssemblerParameters());
+                cloneSet.getAssemblerParameters(),
+                cloneSet.getOrdering());
     }
 
     @JsonAutoDetect(

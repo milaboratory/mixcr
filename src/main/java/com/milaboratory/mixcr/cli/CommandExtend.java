@@ -33,7 +33,10 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.blocks.ParallelProcessor;
 import cc.redberry.pipe.util.OrderedOutputPort;
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.core.alignment.AlignmentScoring;
@@ -78,7 +81,8 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
             names = {"-q", "--quality"})
     public byte extensionQuality = 30;
 
-    public int threads = Runtime.getRuntime().availableProcessors();;
+    public int threads = Runtime.getRuntime().availableProcessors();
+    ;
 
     @Option(description = "Processing threads",
             names = {"-t", "--threads"})
@@ -152,11 +156,11 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
 
         clones.sort(Comparator.comparing(Clone::getId));
 
-        CloneSet newCloneSet = new CloneSet(clones, cloneSet.getUsedGenes(), cloneSet.getAlignedFeatures(),
-                cloneSet.getAlignmentParameters(), cloneSet.getAssemblerParameters());
+        CloneSet newCloneSet = new CloneSet(clones, cloneSet.getUsedGenes(), cloneSet.getAlignmentParameters(),
+                cloneSet.getAssemblerParameters(), cloneSet.getOrdering());
 
-        try (ClnsWriter writer = new ClnsWriter(getFullPipelineConfiguration(), newCloneSet, out)) {
-            writer.write();
+        try (ClnsWriter writer = new ClnsWriter(out)) {
+            writer.writeCloneSet(getFullPipelineConfiguration(), newCloneSet);
         }
     }
 
@@ -164,7 +168,7 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
     void processVDJCA() throws IOException {
         try (final VDJCAlignmentsReader reader = new VDJCAlignmentsReader(in);
              final VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)) {
-            SmartProgressReporter.startProgressReport("Processing", reader);
+            SmartProgressReporter.startProgressReport("Extending alignments", reader);
 
             writer.header(reader.getParameters(), reader.getUsedGenes(), getFullPipelineConfiguration());
 

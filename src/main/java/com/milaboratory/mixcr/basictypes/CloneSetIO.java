@@ -29,11 +29,12 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
+import com.milaboratory.util.LambdaSemaphore;
 import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.Objects;
 
 import static com.milaboratory.mixcr.basictypes.IOUtil.*;
@@ -54,11 +55,11 @@ public final class CloneSetIO {
     public static CloneSet read(File file, VDJCLibraryRegistry libraryRegistry) throws IOException {
         switch (Objects.requireNonNull(fileInfoExtractorInstance.getFileInfo(file)).fileType) {
             case MAGIC_CLNA:
-                try (ClnAReader r = new ClnAReader(file.toPath(), libraryRegistry)) {
+                try (ClnAReader r = new ClnAReader(file.toPath(), libraryRegistry, 1)) {
                     return r.readCloneSet();
                 }
             case MAGIC_CLNS:
-                try (ClnsReader r = new ClnsReader(file, libraryRegistry)) {
+                try (ClnsReader r = new ClnsReader(file.toPath(), libraryRegistry)) {
                     return r.getCloneSet();
                 }
             default:
@@ -66,11 +67,25 @@ public final class CloneSetIO {
         }
     }
 
-    public static CloneSet readClns(InputStream inputStream) {
-        return readClns(inputStream, VDJCLibraryRegistry.getDefault());
+    public static final int DEFAULT_READER_CONCURRENCY_LIMIT = 1;
+
+    public static CloneReader mkReader(Path file, VDJCLibraryRegistry libraryRegistry) throws IOException {
+        return mkReader(file, libraryRegistry, DEFAULT_READER_CONCURRENCY_LIMIT);
     }
 
-    public static CloneSet readClns(InputStream inputStream, VDJCLibraryRegistry libraryRegistry) {
-        return new ClnsReader(inputStream, libraryRegistry).getCloneSet();
+    public static CloneReader mkReader(Path file, VDJCLibraryRegistry libraryRegistry, int concurrency) throws IOException {
+        return mkReader(file, libraryRegistry, new LambdaSemaphore(concurrency));
     }
+
+    public static CloneReader mkReader(Path file, VDJCLibraryRegistry libraryRegistry, LambdaSemaphore concurrency) throws IOException {
+        switch (Objects.requireNonNull(fileInfoExtractorInstance.getFileInfo(file.toFile())).fileType) {
+            case MAGIC_CLNA:
+                return new ClnAReader(file, libraryRegistry, concurrency);
+            case MAGIC_CLNS:
+                return new ClnsReader(file, libraryRegistry, concurrency);
+            default:
+                throw new RuntimeException("Unsupported file type");
+        }
+    }
+
 }

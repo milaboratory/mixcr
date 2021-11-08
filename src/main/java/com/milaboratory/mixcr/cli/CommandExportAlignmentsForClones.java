@@ -10,6 +10,7 @@ import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.mixcr.basictypes.ClnAReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
+import com.milaboratory.mixcr.util.Concurrency;
 import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -57,13 +58,15 @@ public class CommandExportAlignmentsForClones extends ACommandWithSmartOverwrite
 
     @Override
     public void run1() throws Exception {
-        try (ClnAReader clna = new ClnAReader(in, VDJCLibraryRegistry.getDefault());
+        try (ClnAReader clna = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4));
              VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(getOutput())) {
             writer.header(clna.getAlignerParameters(), clna.getGenes(), getFullPipelineConfiguration());
 
             long count = 0;
             if (getCloneIds().length == 0)
-                for (VDJCAlignments al : CUtils.it(clna.readAssembledAlignments())) {
+                for (VDJCAlignments al : CUtils.it(clna.readAllAlignments())) {
+                    if (al.getCloneIndex() == -1)
+                        continue;
                     writer.write(al);
                     ++count;
                 }

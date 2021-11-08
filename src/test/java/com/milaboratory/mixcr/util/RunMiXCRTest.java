@@ -76,8 +76,8 @@ public class RunMiXCRTest {
         RunMiXCR.AssembleResult assemble = RunMiXCR.assemble(align);
 
         File tempFile = TempFileManager.getTempFile();
-        try (ClnsWriter writer = new ClnsWriter(null, assemble.cloneSet, tempFile)) {
-            writer.write();
+        try (ClnsWriter writer = new ClnsWriter(tempFile)) {
+            writer.writeCloneSet(null, assemble.cloneSet);
         }
         CloneSet read = CloneSetIO.read(tempFile);
 

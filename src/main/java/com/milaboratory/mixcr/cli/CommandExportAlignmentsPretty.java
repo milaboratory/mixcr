@@ -30,6 +30,7 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
+import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.primitives.Filter;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.AlignmentHelper;
@@ -108,12 +109,22 @@ public class CommandExportAlignmentsPretty extends ACommandSimpleExportMiXCR {
 
     @Option(description = "List of read ids to export",
             names = {"-i", "--read-ids"})
-    public List<Long> ids = new ArrayList<>();
+    public List<Long> readIds = new ArrayList<>();
+
+    @Option(description = "List of clone ids to export",
+            names = {"--clone-ids"})
+    public List<Long> cloneIds = new ArrayList<>();
 
     TLongHashSet getReadIds() {
-        if (ids.isEmpty())
+        if (readIds.isEmpty())
             return null;
-        return new TLongHashSet(ids);
+        return new TLongHashSet(readIds);
+    }
+
+    TLongHashSet getCloneIds() {
+        if (cloneIds.isEmpty())
+            return null;
+        return new TLongHashSet(cloneIds);
     }
 
     public Chains getChain() {
@@ -145,6 +156,10 @@ public class CommandExportAlignmentsPretty extends ACommandSimpleExportMiXCR {
                         return true;
                 return false;
             });
+
+        final TLongHashSet cloneIds = getCloneIds();
+        if (cloneIds != null)
+            filters.add(object -> cloneIds.contains(object.getCloneIndex()));
 
         if (feature != null) {
             final GeneFeature feature = GeneFeature.parse(this.feature);
@@ -185,7 +200,7 @@ public class CommandExportAlignmentsPretty extends ACommandSimpleExportMiXCR {
     public void run0() throws Exception {
         Filter<VDJCAlignments> filter = mkFilter();
         long total = 0, filtered = 0;
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(in);
+        try (OutputPortCloseable<VDJCAlignments> reader = CommandExport.openAlignmentsPort(in);
              PrintStream output = out == null ? System.out :
                      new PrintStream(new BufferedOutputStream(new FileOutputStream(out), 32768))
         ) {

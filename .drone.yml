@@ -1,0 +1,303 @@
+---
+kind: pipeline
+type: docker
+name: build
+
+platform:
+  os: linux
+  arch: amd64
+
+trigger:
+  event:
+    - push
+    - tag
+
+image_pull_secrets:
+  - docker-dockerconfig
+  - quay-dockerconfig
+
+anchors:
+  aws_credentials: &aws_credentials
+    AWS_DEFAULT_REGION:
+      from_secret: aws-region
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws-key-id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws-secret-key
+    DEPLOY_S3_CDN_BUCKET:
+      from_secret: cdn-s3-bucket
+    DEPLOY_S3_CDN_PREFIX:
+      from_secret: cdn-s3-prefix
+
+  gradle_task: &gradle_task
+    image: gradle:7.0.2-jdk8-hotspot
+    environment:
+      # Gradle folder
+      GRADLE_USER_HOME: "/drone/src/.gradle"
+
+      # MiLab repository credentials
+      ORG_GRADLE_PROJECT_miRepoAccessKeyId:
+        from_secret: aws-key-id
+      ORG_GRADLE_PROJECT_miRepoSecretAccessKey:
+        from_secret: aws-secret-key
+
+      # For Maven Central release
+      ORG_GRADLE_PROJECT_sonatypeUsername:
+        from_secret: sonatype-username
+      ORG_GRADLE_PROJECT_sonatypePassword:
+        from_secret: sonatype-password
+      ORG_GRADLE_PROJECT_signingKey:
+        from_secret: signing-key
+
+  cache_settings: &cache_settings
+    # debug: true
+    access_key:
+      from_secret: aws-key-id
+    secret_key:
+      from_secret: aws-secret-key
+    bucket:
+      from_secret: aws-cache-bucket
+    region:
+      from_secret: aws-region
+    local_root: /drone/src
+
+steps:
+  - name: fetch
+    image: alpine/git
+    commands:
+      - git fetch --tags
+
+  - name: restore_gradle_cache
+    image: meltwater/drone-cache
+    pull: true
+    settings:
+      restore: true
+      cache_key: '{{ .Commit.Branch }}'
+      mount:
+        - .gradle
+      <<: *cache_settings
+
+  - <<: *gradle_task
+    name: initialization
+    commands:
+      - echo "{}" > build_info.json
+      - gradle -i --no-daemon CreateInfoFile
+
+  - <<: *gradle_task
+    name: create_zip_and_publish_artefact
+    commands:
+      - gradle --no-daemon -i -x test PublishAllPublicationsToMiPrivRepository distributionZip
+
+  - name: publish_zip_to_cdn
+    image: alpine
+    when:
+      event:
+        - push
+    commands:
+      - apk add jq aws-cli
+      - |
+        aws s3 cp \
+         "build/distributions/mixcr.zip" \
+         "s3://$${DEPLOY_S3_CDN_BUCKET}/$${DEPLOY_S3_CDN_PREFIX}/software/mixcr/mixcr-$(jq -r .version build_info.json).zip"
+    environment:
+      <<: *aws_credentials
+
+  - name: telegram_mipub_published
+    when:
+      event:
+        - push
+    image: appleboy/drone-telegram
+    settings:
+      token:
+        from_secret: telegram-token
+      to:
+        from_secret: telegram-chat-id-micore
+      format: markdown
+      template_vars_file: build_info.json
+      disable_web_page_preview: true
+      message: |
+        🧩 build {{build.number}} on `{{commit.branch}}` published ```com.milaboratory:mixcr:{{tpl.version}}```
+
+        📦 https://cdn.milaboratory.com/software/mixcr/mixcr-{{tpl.version}}.zip
+
+---
+
+kind: pipeline
+type: docker
+name: integration_tests
+
+platform:
+  os: linux
+  arch: amd64
+
+node:
+  type: highcpu
+
+trigger:
+  event:
+    - push
+
+image_pull_secrets:
+  - docker-dockerconfig
+  - quay-dockerconfig
+
+anchors:
+  aws_credentials: &aws_credentials
+    AWS_DEFAULT_REGION:
+      from_secret: aws-region
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws-key-id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws-secret-key
+    DEPLOY_S3_CDN_BUCKET:
+      from_secret: cdn-s3-bucket
+    DEPLOY_S3_CDN_PREFIX:
+      from_secret: cdn-s3-prefix
+
+  gradle_task: &gradle_task
+    image: gradle:7.0.2-jdk8-hotspot
+    environment:
+      # Gradle folder
+      GRADLE_USER_HOME: "/drone/src/.gradle"
+
+      # MiLab repository credentials
+      ORG_GRADLE_PROJECT_miRepoAccessKeyId:
+        from_secret: aws-key-id
+      ORG_GRADLE_PROJECT_miRepoSecretAccessKey:
+        from_secret: aws-secret-key
+
+      # For Maven Central release
+      ORG_GRADLE_PROJECT_sonatypeUsername:
+        from_secret: sonatype-username
+      ORG_GRADLE_PROJECT_sonatypePassword:
+        from_secret: sonatype-password
+      ORG_GRADLE_PROJECT_signingKey:
+        from_secret: signing-key
+
+  cache_settings: &cache_settings
+    # debug: true
+    access_key:
+      from_secret: aws-key-id
+    secret_key:
+      from_secret: aws-secret-key
+    bucket:
+      from_secret: aws-cache-bucket
+    region:
+      from_secret: aws-region
+    local_root: /drone/src
+
+steps:
+  - name: restore_gradle_cache
+    image: meltwater/drone-cache
+    pull: true
+    settings:
+      restore: true
+      cache_key: '{{ .Commit.Branch }}'
+      mount:
+        - .gradle
+      <<: *cache_settings
+
+  - name: restore_test_resource_cache
+    image: meltwater/drone-cache
+    pull: true
+    settings:
+      restore: true
+      cache_key: mixcr_test_resource
+      mount:
+        - src/test/resources/sequences/big
+      <<: *cache_settings
+
+  - <<: *gradle_task
+    name: initialization
+    commands:
+      - apt-get update
+      - apt-get install -y moreutils parallel
+      - ./ensure-test-data.sh
+      - find src/test/resources/sequences/big -type f
+      - echo "{}" > build_info.json
+      - gradle -i --no-daemon CreateInfoFile
+      - gradle -i --no-daemon -x test build
+      - ./prepare-test-data.sh
+
+  - name: rebuild_test_resource_cache
+    image: meltwater/drone-cache
+    pull: true
+    settings:
+      rebuild: true
+      cache_key: mixcr_test_resource
+      mount:
+        - src/test/resources/sequences/big
+      <<: *cache_settings
+
+  - name: add_url_secret
+    image: alpine
+    commands:
+      - apk add jq
+      - jq ".urlsecret=\"$${URL_SECRET}\"" build_info.json > build_info.json.1
+      - mv build_info.json.1 build_info.json
+    environment:
+      URL_SECRET:
+        from_secret: url-secret
+
+  - <<: *gradle_task
+    name: build
+    commands:
+      - gradle -i --no-daemon -PlongTests=true test build
+
+  - name: test_report_upload
+    image: amazon/aws-cli
+    when:
+      status:
+        - success
+        - failure
+    commands:
+      - aws s3 cp --recursive build/reports/tests/test s3://$${DEPLOY_S3_CDN_BUCKET}/$${DEPLOY_S3_CDN_PREFIX}/internal/ci/${DRONE_REPO}/${DRONE_COMMIT}-${DRONE_BUILD_NUMBER}-$${URL_SECRET}/tests/
+    environment:
+      <<: *aws_credentials
+      DEPLOY_S3_CDN_BUCKET:
+        from_secret: cdn-s3-bucket
+      DEPLOY_S3_CDN_PREFIX:
+        from_secret: cdn-s3-prefix
+      URL_SECRET:
+        from_secret: url-secret
+
+  - <<: *gradle_task
+    name: integration_tests
+    commands:
+      - apt-get update
+      - apt-get install -y jq
+      - ./itests.sh test
+
+  - name: telegram_tests
+    image: appleboy/drone-telegram
+    when:
+      status:
+        - success
+        - failure
+    settings:
+      token:
+        from_secret: telegram-token
+      to:
+        from_secret: telegram-chat-id-micore
+      format: markdown
+      template_vars_file: build_info.json
+      message: |
+        {{#success build.status}}
+        ✅ 🗜 MiXCR build {{build.number}} by {{commit.author}} on `{{commit.branch}}` tests and integration tests success.
+        {{else}}
+        ❌ 🗜 MiXCR build {{build.number}} by {{commit.author}} on `{{commit.branch}}` tests or integration tests failure.
+        {{/success}}
+
+        🌐 {{build.link}}
+
+        [📊 Test Report](https://cdn.milaboratory.com/internal/ci/${DRONE_REPO}/${DRONE_COMMIT}-${DRONE_BUILD_NUMBER}-{{tpl.urlsecret}}/tests/index.html)
+
+  - name: rebuild_gradle_cache
+    image: meltwater/drone-cache
+    pull: true
+    settings:
+      rebuild: true
+      cache_key: '{{ .Commit.Branch }}'
+      mount:
+        - .gradle
+      <<: *cache_settings

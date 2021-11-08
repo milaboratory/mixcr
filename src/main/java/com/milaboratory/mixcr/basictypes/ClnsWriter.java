@@ -29,103 +29,108 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
+import cc.redberry.pipe.InputPort;
 import com.milaboratory.cli.AppVersionInfo;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.cli.PipelineConfigurationWriter;
+import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivO;
-import com.milaboratory.util.CanReportProgressAndStage;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneFeatureSerializer;
+import com.milaboratory.primitivio.blocks.PrimitivOHybrid;
+import io.repseq.core.VDJCGene;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.util.List;
 
 /**
  *
  */
-public class ClnsWriter implements PipelineConfigurationWriter,
-        CanReportProgressAndStage,
-        Closeable {
-    static final String MAGIC_V9 = "MiXCR.CLNS.V09";
-    static final String MAGIC = MAGIC_V9;
+public final class ClnsWriter implements PipelineConfigurationWriter, AutoCloseable {
+    static final String MAGIC_V10 = "MiXCR.CLNS.V10";
+    static final String MAGIC = MAGIC_V10;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
 
     final String stage = "Writing clones";
-    final PrimitivO output;
-    final CloneSet cloneSet;
-    final int size;
-    final PipelineConfiguration configuration;
+    final PrimitivOHybrid output;
 
     private volatile int current;
 
-    public ClnsWriter(PipelineConfiguration configuration, CloneSet cloneSet, String fileName) throws IOException {
-        this(configuration, cloneSet, new File(fileName));
+    public ClnsWriter(String fileName) throws IOException {
+        this(new PrimitivOHybrid(Paths.get(fileName)));
     }
 
-    public ClnsWriter(PipelineConfiguration configuration, CloneSet cloneSet, File file) throws IOException {
-        this(configuration, cloneSet, IOUtil.createOS(file));
+    public ClnsWriter(File file) throws IOException {
+        this(new PrimitivOHybrid(file.toPath()));
     }
 
-    public ClnsWriter(PipelineConfiguration configuration, CloneSet cloneSet, OutputStream outputStream) {
-        this.output = new PrimitivO(outputStream);
-        this.configuration = configuration;
-        this.cloneSet = cloneSet;
-        this.size = cloneSet.size();
+    public ClnsWriter(PrimitivOHybrid output) {
+        this.output = output;
     }
 
-    @Override
-    public String getStage() {
-        return stage;
+    public void writeHeaderFromCloneSet(
+            PipelineConfiguration configuration,
+            CloneSet cloneSet) {
+        writeHeader(configuration,
+                cloneSet.getAlignmentParameters(),
+                cloneSet.getAssemblerParameters(),
+                cloneSet.getOrdering(),
+                cloneSet.getUsedGenes(),
+                cloneSet);
     }
 
-    @Override
-    public double getProgress() {
-        return (1.0 * current) / size;
-    }
+    public void writeHeader(
+            PipelineConfiguration configuration,
+            VDJCAlignerParameters alignmentParameters,
+            CloneAssemblerParameters assemblerParameters,
+            VDJCSProperties.CloneOrdering ordering,
+            List<VDJCGene> genes,
+            HasFeatureToAlign featureToAlign
+    ) {
+        try (PrimitivO o = output.beginPrimitivO(true)) {
+            // Writing magic bytes
+            o.write(MAGIC_BYTES);
 
-    @Override
-    public boolean isFinished() {
-        return current == size;
-    }
+            // Writing version information
+            o.writeUTF(
+                    MiXCRVersionInfo.get().getVersionString(
+                            AppVersionInfo.OutputType.ToFile));
 
-    public void write() {
-        // Registering custom serializer
-        output.getSerializersManager().registerCustomSerializer(GeneFeature.class, new GeneFeatureSerializer(true));
+            // Writing analysis meta-information
+            o.writeObject(configuration);
+            o.writeObject(alignmentParameters);
+            o.writeObject(assemblerParameters);
+            o.writeObject(ordering);
 
-        // Writing magic bytes
-        output.write(MAGIC_BYTES);
-
-        // Writing version information
-        output.writeUTF(
-                MiXCRVersionInfo.get().getVersionString(
-                        AppVersionInfo.OutputType.ToFile));
-
-        // Writing analysis meta-information
-        output.writeObject(configuration);
-        output.writeObject(cloneSet.alignmentParameters);
-        output.writeObject(cloneSet.assemblerParameters);
-
-        IO.writeGT2GFMap(output, cloneSet.alignedFeatures);
-        IOUtil.writeAndRegisterGeneReferences(output, cloneSet.getUsedGenes(), new ClnsReader.GT2GFAdapter(cloneSet.alignedFeatures));
-
-        output.writeInt(cloneSet.getClones().size());
-
-        for (Clone clone : cloneSet) {
-            output.writeObject(clone);
-            ++current;
+            IOUtil.stdVDJCPrimitivOStateInit(o, genes, featureToAlign);
         }
+    }
 
-        // Writing end-magic as a file integrity sign
-        output.write(IOUtil.getEndMagicBytes());
+    /**
+     * Must be closed by putting null
+     */
+    public InputPort<Clone> cloneWriter() {
+        return output.beginPrimitivOBlocks(3, 512);
+    }
+
+    public void writeCloneSet(PipelineConfiguration configuration, CloneSet cloneSet) {
+        writeHeaderFromCloneSet(configuration, cloneSet);
+        InputPort<Clone> cloneIP = cloneWriter();
+        for (Clone clone : cloneSet)
+            cloneIP.put(clone);
+        cloneIP.put(null);
     }
 
     @Override
-    public void close() {
+    public void close() throws IOException {
+        try (PrimitivO o = output.beginPrimitivO()) {
+            // Writing end-magic as a file integrity sign
+            o.write(IOUtil.getEndMagicBytes());
+        }
         output.close();
     }
 }

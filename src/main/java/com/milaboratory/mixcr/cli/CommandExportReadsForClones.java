@@ -38,6 +38,7 @@ import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter;
 import com.milaboratory.mixcr.basictypes.ClnAReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.util.Concurrency;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.VDJCLibraryRegistry;
@@ -92,7 +93,7 @@ public class CommandExportReadsForClones extends ACommandWithOutputMiXCR {
 
     @Override
     public void run0() throws Exception {
-        try (ClnAReader clna = new ClnAReader(in, VDJCLibraryRegistry.getDefault())) {
+        try (ClnAReader clna = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4))) {
             VDJCAlignments firstAlignment;
             try (OutputPortCloseable<VDJCAlignments> dummyP = clna.readAllAlignments()) {
                 firstAlignment = dummyP.take();

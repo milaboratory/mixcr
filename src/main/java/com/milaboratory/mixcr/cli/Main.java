@@ -94,6 +94,10 @@ public final class Main {
         }
     }
 
+    private static boolean assertionsDisabled() {
+        return System.getProperty("noAssertions") != null;
+    }
+
     public static CommandLine mkCmd() {
         System.setProperty("picocli.usage.width", "100");
 
@@ -101,15 +105,18 @@ public final class Main {
         String command = System.getProperty("mixcr.command", "java -jar mixcr.jar");
 
         if (!initialized) {
-            if (System.getProperty("jdk.module.main") == null) // hack fixme
-                // Checking whether we are running a snapshot version
-                if (VersionInfo.getVersionInfoForArtifact("mixcr").getVersion().contains("SNAPSHOT"))
-                    // If so, enable asserts
-                    ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(true);
+            // Checking whether we are running a snapshot version
+            if (!assertionsDisabled() && VersionInfo.getVersionInfoForArtifact("mixcr").getVersion().contains("SNAPSHOT"))
+                // If so, enable asserts
+                ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(true);
 
             TempFileManager.setPrefix("mixcr_");
 
             Path cachePath = Paths.get(System.getProperty("user.home"), ".mixcr", "cache");
+            String repseqioCacheEnv = System.getenv("REPSEQIO_CACHE");
+            if (repseqioCacheEnv != null) {
+                cachePath = Paths.get(repseqioCacheEnv);
+            }
             //if (System.getProperty("allow.http") != null || System.getenv("MIXCR_ALLOW_HTTP") != null)
             //TODO add mechanism to deny http requests
             SequenceResolvers.initDefaultResolver(cachePath);
@@ -141,6 +148,7 @@ public final class Main {
                 .setCommandName(command)
                 .addSubcommand("help", CommandLine.HelpCommand.class)
                 .addSubcommand("analyze", CommandAnalyze.CommandAnalyzeMain.class)
+                .addSubcommand("postanalysis", CommandPostanalysis.CommandPostanalysisMain.class)
 
                 .addSubcommand("align", CommandAlign.class)
                 .addSubcommand("assemble", CommandAssemble.class)
@@ -177,6 +185,11 @@ public final class Main {
                 .get("analyze")
                 .addSubcommand("amplicon", CommandAnalyze.mkAmplicon())
                 .addSubcommand("shotgun", CommandAnalyze.mkShotgun());
+
+        cmd.getSubcommands()
+                .get("postanalysis")
+                .addSubcommand("individual", CommandSpec.forAnnotatedObject(CommandPostanalysis.CommandIndividual.class))
+                .addSubcommand("overlap", CommandSpec.forAnnotatedObject(CommandPostanalysis.CommandOverlap.class));
 
         cmd.setSeparator(" ");
         return cmd;

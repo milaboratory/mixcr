@@ -45,6 +45,7 @@ import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.core.PairedEndReadsLayout;
 import com.milaboratory.core.Target;
+import com.milaboratory.core.io.CompressionType;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SequenceReaderCloseable;
 import com.milaboratory.core.io.sequence.SequenceWriter;
@@ -65,6 +66,7 @@ import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
 import com.milaboratory.util.CanReportProgress;
+import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.*;
 import picocli.CommandLine;
@@ -73,6 +75,8 @@ import picocli.CommandLine.ExecutionException;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.*;
@@ -81,7 +85,7 @@ import java.util.stream.Collectors;
 
 import static cc.redberry.pipe.CUtils.chunked;
 import static cc.redberry.pipe.CUtils.unchunked;
-import static com.milaboratory.mixcr.basictypes.AlignmentsIO.DEFAULT_ALIGNMENTS_IN_BLOCK;
+import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.DEFAULT_ALIGNMENTS_IN_BLOCK;
 import static com.milaboratory.mixcr.cli.CommandAlign.ALIGN_COMMAND_NAME;
 
 @Command(name = ALIGN_COMMAND_NAME,
@@ -106,6 +110,10 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
     protected List<String> getOutputFiles() {
         return inOut.subList(inOut.size() - 1, inOut.size());
     }
+
+    @Option(description = CommonDescriptions.SPECIES,
+            names = {"--read-buffer"})
+    public int readBufferSize = 1 << 20;
 
     @Option(description = CommonDescriptions.SPECIES,
             names = {"-s", "--species"},
@@ -133,6 +141,10 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
             throwValidationException("ERROR: -t / --threads must be positive", false);
         this.threads = threads;
     }
+
+    @Option(description = "Use higher compression for output file, 10~25% slower, minus 30~50% of file size.",
+            names = {"--high-compression"})
+    public boolean highCompression = false;
 
     public long limit = 0;
 
@@ -219,15 +231,24 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
         if (vdjcAlignerParameters != null)
             return vdjcAlignerParameters;
 
-        VDJCAlignerParameters alignerParameters = VDJCParametersPresets.getByName(alignerParametersName);
-        if (alignerParameters == null)
-            throwValidationException("Unknown aligner parameters: " + alignerParametersName);
-
-        if (!overrides.isEmpty()) {
-            // Perform parameters overriding
-            alignerParameters = JsonOverrider.override(alignerParameters, VDJCAlignerParameters.class, overrides);
+        VDJCAlignerParameters alignerParameters;
+        if (alignerParametersName.endsWith(".json")) {
+            try {
+                alignerParameters = GlobalObjectMappers.ONE_LINE.readValue(new File(alignerParametersName), VDJCAlignerParameters.class);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            alignerParameters = VDJCParametersPresets.getByName(alignerParametersName);
             if (alignerParameters == null)
-                throwValidationException("Failed to override some parameter: " + overrides);
+                throwValidationException("Unknown aligner parameters: " + alignerParametersName);
+
+            if (!overrides.isEmpty()) {
+                // Perform parameters overriding
+                alignerParameters = JsonOverrider.override(alignerParameters, VDJCAlignerParameters.class, overrides);
+                if (alignerParameters == null)
+                    throwValidationException("Failed to override some parameter: " + overrides);
+            }
         }
 
         // Detect if automatic featureToAlign correction is required
@@ -284,7 +305,12 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
 
     public SequenceReaderCloseable<? extends SequenceRead> createReader() throws IOException {
         if (isInputPaired())
-            return new PairedFastqReader(getInputFiles().get(0), getInputFiles().get(1), true);
+            return new PairedFastqReader(new FileInputStream(getInputFiles().get(0)), new FileInputStream(getInputFiles().get(1)),
+                    SingleFastqReader.DEFAULT_QUALITY_FORMAT,
+                    CompressionType.detectCompressionType(getInputFiles().get(0)),
+                    true,
+                    readBufferSize,
+                    true, true);
         else {
             String in = getInputFiles().get(0);
             String[] s = in.split("\\.");
@@ -294,7 +320,12 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                         true
                 );
             else
-                return new SingleFastqReader(in, true);
+                return new SingleFastqReader(new FileInputStream(in),
+                        SingleFastqReader.DEFAULT_QUALITY_FORMAT,
+                        CompressionType.detectCompressionType(in),
+                        true,
+                        readBufferSize,
+                        true, true);
         }
     }
 
@@ -489,7 +520,6 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
             throwExecutionException("No J genes to align. Aborting execution. See warnings for more info " +
                     "(turn on verbose warnings by adding --verbose option).");
 
-
         report.setStartMillis(beginTimestamp);
         report.setInputFiles(getInputFiles());
         report.setOutputFiles(getOutput());
@@ -503,7 +533,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
              VDJCAlignmentsWriter writer = getOutput().equals(".")
                      ? null
                      : new VDJCAlignmentsWriter(getOutput(), Math.max(1, threads / 8),
-                     DEFAULT_ALIGNMENTS_IN_BLOCK);
+                     DEFAULT_ALIGNMENTS_IN_BLOCK, highCompression);
 
              SequenceWriter notAlignedWriter = failedReadsR1 == null
                      ? null
@@ -541,6 +571,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
 
             ParallelProcessor alignedChunks = new ParallelProcessor(mainInputReadsPreprocessed, chunked(aligner), Math.max(16, threads), threads);
             if (reportBuffers) {
+                System.out.println("Analysis threads: " + threads);
                 StatusReporter reporter = new StatusReporter();
                 reporter.addBuffer("Input (chunked; chunk size = 64)", mainInputReads.getBufferStatusProvider());
                 reporter.addBuffer("Alignment result (chunked; chunk size = 64)", alignedChunks.getOutputBufferStatusProvider());

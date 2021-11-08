@@ -372,15 +372,21 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
          * Step 1: alignment of V gene
          */
 
-        List<AlignmentHit<NucleotideSequence, VDJCGene>>
-                vAl1 = vAligner.align(target.targets[0].getSequence()).getHits(),
-                vAl2 = vAligner.align(target.targets[1].getSequence()).getHits();
+        List<AlignmentHit<NucleotideSequence, VDJCGene>> vAl1, vAl2;
+
+        if (parameters.getLibraryStructure() == VDJCLibraryStructure.R1V) {
+            vAl1 = vAlignerNotFloatingRight.align(target.targets[0].getSequence()).getHits();
+            vAl2 = vAlignerNotFloatingLeft.align(target.targets[1].getSequence()).getHits();
+        } else {
+            vAl1 = vAligner.align(target.targets[0].getSequence()).getHits();
+            vAl2 = vAligner.align(target.targets[1].getSequence()).getHits();
+        }
 
         /*
          * Step 1.4: force floating bounds = false for ---xxx> <---- and ---> <xxx---- topologies
          */
 
-        if (parameters.isSmartForceEdgeAlignments()) {
+        if (parameters.isSmartForceEdgeAlignments() && parameters.getLibraryStructure() != VDJCLibraryStructure.R1V) {
             boolean forceRightEdgeInLeft = false, forceLeftEdgeInRight = false;
             for (PairedHit vHit : sortAndFilterHits(createPairedHits(vAl1, vAl2), parameters.getVAlignerParameters())) {
                 if (vHit.hit0 == null || vHit.hit1 == null)
