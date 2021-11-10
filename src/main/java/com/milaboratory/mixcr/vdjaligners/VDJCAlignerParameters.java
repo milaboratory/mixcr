@@ -30,8 +30,8 @@
 package com.milaboratory.mixcr.vdjaligners;
 
 import com.fasterxml.jackson.annotation.*;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.milaboratory.core.PairedEndReadsLayout;
+import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
 import com.milaboratory.core.merger.MergerParameters;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign;
@@ -43,6 +43,8 @@ import io.repseq.core.VDJCGene;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
@@ -192,6 +194,13 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
 
     public GeneAlignmentParameters getGeneAlignerParameters(GeneType geneType) {
         return alignmentParameters.get(geneType);
+    }
+
+    public Set<GeneType> getGeneTypesWithLinearScoring() {
+        return alignmentParameters.entrySet().stream()
+                .filter(e -> e.getValue().getScoring() instanceof LinearGapAlignmentScoring<?>)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
     }
 
     public KGeneAlignmentParameters getVJCGeneAlignerParameters(GeneType geneType) {

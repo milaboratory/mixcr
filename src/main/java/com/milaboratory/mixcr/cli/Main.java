@@ -105,8 +105,8 @@ public final class Main {
         String command = System.getProperty("mixcr.command", "java -jar mixcr.jar");
 
         if (!initialized) {
-            // Checking whether we are running a snapshot version
-            if (!assertionsDisabled() && VersionInfo.getVersionInfoForArtifact("mixcr").getVersion().contains("SNAPSHOT"))
+            // Checking whether we are running a test version
+            if (!assertionsDisabled() && !VersionInfo.getVersionInfoForArtifact("mixcr").isProductionBuild())
                 // If so, enable asserts
                 ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(true);
 

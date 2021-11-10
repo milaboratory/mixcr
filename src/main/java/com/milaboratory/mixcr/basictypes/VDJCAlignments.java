@@ -107,8 +107,10 @@ public final class VDJCAlignments extends VDJCObject {
         this(-1, createHits(vHits, dHits, jHits, cHits), tagCounter, targets, history, originalReads);
     }
 
-    public VDJCAlignments shiftIndelsAtHomopolymers() {
-        return mapHits(h -> h.mapAlignments(AlignmentUtils::shiftIndelsAtHomopolymers));
+    public VDJCAlignments shiftIndelsAtHomopolymers(Set<GeneType> geneTypes) {
+        return mapHits(h -> geneTypes.contains(h.getGeneType())
+                ? h.mapAlignments(AlignmentUtils::shiftIndelsAtHomopolymers)
+                : h);
     }
 
     public VDJCAlignments mapHits(Function<VDJCHit, VDJCHit> mapper) {

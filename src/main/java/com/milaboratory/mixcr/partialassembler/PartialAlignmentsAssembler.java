@@ -48,6 +48,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class PartialAlignmentsAssembler implements AutoCloseable, Report {
@@ -110,7 +111,10 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
         return maxRightMatchesLimitReached;
     }
 
+    private Set<GeneType> geneTypesToShiftIndels;
+
     public void buildLeftPartsIndex(VDJCAlignmentsReader reader) {
+        geneTypesToShiftIndels = reader.getParameters().getGeneTypesWithLinearScoring();
         writer.header(reader.getParameters(), reader.getUsedGenes(), null);
         for (VDJCAlignments alignment : CUtils.it(reader)) {
             if (alignment.getFeature(GeneFeature.CDR3) != null)
@@ -241,7 +245,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
 
             overlapped.incrementAndGet();
             totalWritten.incrementAndGet();
-            writer.write(mAlignment.shiftIndelsAtHomopolymers());
+            writer.write(mAlignment.shiftIndelsAtHomopolymers(geneTypesToShiftIndels));
 
             // Saving alignment that where merge to prevent it's use as left part
             alreadyMergedIds.add(alignment.getAlignmentsIndex());

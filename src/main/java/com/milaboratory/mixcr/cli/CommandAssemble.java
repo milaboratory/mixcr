@@ -256,29 +256,6 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
             PipelineConfiguration pipelineConfiguration = getFullPipelineConfiguration();
             if (clna) {
 
-
-//
-//                    try (AlignmentsMappingMerger merged = new AlignmentsMappingMerger(alignmentsProvider.create(),
-//                            assembler.getAssembledReadsPort())) {
-//
-//                        VDJCAlignments al;
-//                        while ((al = merged.take()) != null) {
-//                            if (al.getCloneIndex() != -1)
-//                                continue;
-//
-//                            TagCounter tg = al.getTagCounter();
-//                            assert tg.size() == 1;
-//                            TagTuple tags = tg.iterator().key();
-//                            if (al.getBestHit(GeneType.Variable) != null) {
-//                                TagSignature sig = new TagSignature(tags, al.getBestHit(GeneType.Variable).getGene().getId());
-//                                Integer cloneId = tagsToClones.get(sig);
-//                                if (cloneId != null) {
-//
-//                                }
-//                            }
-//                        }
-//                    }
-
                 try (ClnAWriter writer = new ClnAWriter(pipelineConfiguration, out, highCompression)) {
                     // writer will supply current stage and completion percent to the progress reporter
                     SmartProgressReporter.startProgressReport(writer);
@@ -321,7 +298,7 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
                                         || al.getFeature(new GeneFeature(assemblerParameters.getAssemblingFeatures())) != null) // Dropped but has assembling feature
                                     return al;
 
-                                // <-- Only dropped alignments
+                                // <-- Only dropped alignments not covering CDR3
 
                                 TagCounter tg = al.getTagCounter();
                                 assert tg.size() == 1; // Both "align" and "assemblePartial" produces such alignments
@@ -346,6 +323,7 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
 
                                 if (cloneMapping >= 0) {
                                     report.onReadAttachedByTags();
+                                    // TODO add count
                                     return setMappingCloneIndex(al, cloneMapping);
                                 } else if (cloneMapping == -2)
                                     report.onReadWithAmbiguousAttachmentsByTags();

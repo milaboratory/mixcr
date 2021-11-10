@@ -31,6 +31,7 @@ package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
+import cc.redberry.pipe.Processor;
 import cc.redberry.pipe.blocks.Merger;
 import cc.redberry.pipe.blocks.ParallelProcessor;
 import cc.redberry.pipe.util.Chunk;
@@ -49,6 +50,7 @@ import com.milaboratory.core.io.CompressionType;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SequenceReaderCloseable;
 import com.milaboratory.core.io.sequence.SequenceWriter;
+import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.core.io.sequence.fasta.FastaReader;
 import com.milaboratory.core.io.sequence.fasta.FastaSequenceReaderWrapper;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
@@ -56,15 +58,14 @@ import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.core.sequence.ShortSequenceSet;
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters;
 import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor;
 import com.milaboratory.core.sequence.quality.ReadTrimmerReport;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.tags.WhitelistReader;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
-import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
-import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
+import com.milaboratory.mixcr.vdjaligners.*;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.SmartProgressReporter;
@@ -221,9 +222,14 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
             names = {"--buffers"}, hidden = true)
     public boolean reportBuffers = false;
 
-    @Option(description = "Names for groups that contain barcodes, for MiNNN FASTQ input file.",
-            names = {"--tag"})
-    public List<String> tags = new ArrayList<>();
+    // @Option(description = "Names for groups that contain barcodes, for MiNNN FASTQ input file.",
+    //         names = {"--tag"})
+    // public List<String> tags = new ArrayList<>();
+
+    @Option(description = "Specify this option for 10x datasets to extract cell and UMI barcode information from " +
+            "the first read",
+            names = {"--10x"})
+    public boolean tenX = false;
 
     private VDJCAlignerParameters vdjcAlignerParameters = null;
 
@@ -354,7 +360,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
             use = JsonTypeInfo.Id.CLASS,
             include = JsonTypeInfo.As.PROPERTY,
             property = "type")
-    public static class AlignConfiguration implements ActionConfiguration {
+    public static class AlignConfiguration implements ActionConfiguration<AlignConfiguration> {
         /**
          * Aligner parameters
          */
@@ -452,7 +458,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public void run1() throws Exception {
         // Saving initial timestamp
         long beginTimestamp = System.currentTimeMillis();
@@ -528,6 +534,9 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
         // Attaching report to aligner
         aligner.setEventsListener(report);
 
+        if (tenX && !isInputPaired())
+            throwValidationException("Option \"--10x\" requires paired-end input data");
+
         try (SequenceReaderCloseable<? extends SequenceRead> reader = createReader();
 
              VDJCAlignmentsWriter writer = getOutput().equals(".")
@@ -569,7 +578,37 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                 report.setTrimmingReport(rep);
             }
 
-            ParallelProcessor alignedChunks = new ParallelProcessor(mainInputReadsPreprocessed, chunked(aligner), Math.max(16, threads), threads);
+            // Creating processor from aligner
+            Processor<SequenceRead, VDJCAlignmentResult<SequenceRead>> processor = aligner;
+            if (tenX) {
+                final ShortSequenceSet whitelist = WhitelistReader.Whitelist10X2016();
+                final Processor<SequenceRead, VDJCAlignmentResult<SequenceRead>> oldProcessor = processor;
+                processor = input -> {
+                    SingleRead r1 = input.getRead(0);
+                    NucleotideSequence seq = r1.getData().getSequence();
+                    if (seq.size() < 26) {
+                        report.onFailedAlignment(input, VDJCAlignmentFailCause.NoBarcode);
+                        return new VDJCAlignmentResult(input);
+                    }
+
+                    if (!whitelist.contains(seq.getRange(0, 16))) {
+                        report.onFailedAlignment(input, VDJCAlignmentFailCause.BarcodeNotInWhitelist);
+                        return new VDJCAlignmentResult(input);
+                    }
+
+                    String seqString = seq.toString();
+                    TagTuple tt = new TagTuple(seqString.substring(0, 16), seqString.substring(16, 26));
+
+                    SequenceRead trimmed = input.mapReadsWithIndex((index, val) -> index == 0
+                            ? val.mapSequence(s -> s.getRange(26, s.size()))
+                            : val);
+
+                    VDJCAlignmentResult<SequenceRead> alignmentResult = oldProcessor.process(trimmed);
+                    return alignmentResult.withTagTuple(tt);
+                };
+            }
+
+            ParallelProcessor alignedChunks = new ParallelProcessor(mainInputReadsPreprocessed, chunked(processor), Math.max(16, threads), threads);
             if (reportBuffers) {
                 System.out.println("Analysis threads: " + threads);
                 StatusReporter reporter = new StatusReporter();
@@ -581,7 +620,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
 
                     @Override
                     public void updateStatus() {
-                        status = "Busy encoders: " + writer.getBusyEncoders() + " / " + writer.getEncodersCount();
+                        status = "Busy encoders: " + Objects.requireNonNull(writer).getBusyEncoders() + " / " + writer.getEncodersCount();
                         isClosed = writer.isClosed();
                     }
 
@@ -597,19 +636,20 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                 });
                 reporter.start();
             }
+
+            Set<GeneType> genesToShiftIndels = alignerParameters.getGeneTypesWithLinearScoring();
             OutputPort<VDJCAlignmentResult> alignments = unchunked(
                     CUtils.wrap(alignedChunks,
-                            CUtils.<VDJCAlignmentResult, VDJCAlignmentResult>chunked(VDJCAlignmentResult::shiftIndelsAtHomopolymers)));
+                            CUtils.<VDJCAlignmentResult, VDJCAlignmentResult>chunked(
+                                    a -> a.shiftIndelsAtHomopolymers(genesToShiftIndels))));
             for (VDJCAlignmentResult result : CUtils.it(new OrderedOutputPort<>(alignments, o -> o.read.getId()))) {
                 VDJCAlignments alignment = result.alignment;
                 SequenceRead read = result.read;
                 if (alignment == null) {
-                    if (writeAllResults)
-                    // Creating empty alignment object if alignment for current read failed
-                    {
+                    if (writeAllResults) { // Creating empty alignment object if alignment for current read failed
                         Target target = readsLayout.createTargets(read)[0];
                         alignment = new VDJCAlignments(emptyHits,
-                                TagCounter.EMPTY,
+                                result.tagTuple == null ? TagCounter.EMPTY : new TagCounter(result.tagTuple),
                                 target.targets,
                                 SequenceHistory.RawSequence.of(read.getId(), target),
                                 alignerParameters.isSaveOriginalReads() ? new SequenceRead[]{read} : null);
@@ -620,8 +660,8 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                     }
                 }
 
-                if (!tags.isEmpty())
-                    alignment = alignment.setTagCounter(new TagCounter(parseTags(this.spec.commandLine(), tags, read)));
+                if (result.tagTuple != null)
+                    alignment = alignment.setTagCounter(new TagCounter(result.tagTuple));
 
                 if (alignment.isChimera())
                     report.onChimera();

@@ -1,6 +1,6 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.palantir.gradle.gitversion.VersionDetails
 import groovy.lang.Closure
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import java.net.InetAddress
 
 plugins {
@@ -13,6 +13,8 @@ plugins {
 
 val miRepoAccessKeyId: String by project
 val miRepoSecretAccessKey: String by project
+
+val productionBuild: Boolean? by project
 
 val versionDetails: Closure<VersionDetails> by extra
 val gitDetails = versionDetails()
@@ -61,8 +63,8 @@ repositories {
     }
 }
 
-val milibVersion = "1.14.1-16-774c60afab"
-val repseqioVersion = "1.3.5-4-f7170dd23b"
+val milibVersion = "1.14.1-18-f7ca543948"
+val repseqioVersion = "1.3.5-5-2d9bf3f814"
 val jacksonVersion = "2.12.4"
 
 dependencies {
@@ -90,6 +92,7 @@ val writeBuildProperties by tasks.registering(WriteProperties::class) {
     property("revision", gitDetails.gitHash)
     property("branch", gitDetails.branchName ?: "no_branch")
     property("host", InetAddress.getLocalHost().hostName)
+    property("production", productionBuild == true)
     property("timestamp", System.currentTimeMillis())
 }
 

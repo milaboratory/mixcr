@@ -46,6 +46,8 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
     private final ChainUsageStats chainStats = new ChainUsageStats();
     private final AtomicLongArray fails = new AtomicLongArray(VDJCAlignmentFailCause.values().length);
     private final AtomicLong successes = new AtomicLong(0);
+    // private final AtomicLong droppedNoBarcode = new AtomicLong(0);
+    // private final AtomicLong droppedBarcodeNotInWhitelist = new AtomicLong(0);
     private final AtomicLong chimeras = new AtomicLong(0);
     private final AtomicLong alignedSequenceOverlap = new AtomicLong(0);
     private final AtomicLong alignedAlignmentOverlap = new AtomicLong(0);
@@ -137,6 +139,16 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
         return successes.get();
     }
 
+    // @JsonProperty("droppedNoBarcode")
+    // public long getDroppedNoBarcode() {
+    //     return droppedNoBarcode.get();
+    // }
+    //
+    // @JsonProperty("droppedBarcodeNotInWhitelist")
+    // public long getDroppedBarcodeNotInWhitelist() {
+    //     return droppedBarcodeNotInWhitelist.get();
+    // }
+
     @JsonProperty("alignmentAidedOverlaps")
     public long getAlignmentOverlaps() {
         return alignedAlignmentOverlap.get();
@@ -186,6 +198,14 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
     public long getRealignedWithForcedNonFloatingLeftBoundInRightRead() {
         return realignedWithForcedNonFloatingLeftBoundInRightRead.get();
     }
+
+    // public void onNoBarcode(SequenceRead read) {
+    //     droppedNoBarcode.incrementAndGet();
+    // }
+    //
+    // public void onBarcodeNotInWhitelist(SequenceRead read) {
+    //     droppedBarcodeNotInWhitelist.incrementAndGet();
+    // }
 
     @Override
     public void onFailedAlignment(SequenceRead read, VDJCAlignmentFailCause cause) {
@@ -274,6 +294,11 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
         long success = getSuccess();
         helper.writeField("Total sequencing reads", total);
         helper.writePercentAndAbsoluteField("Successfully aligned reads", success, total);
+
+        // if (getDroppedBarcodeNotInWhitelist() != 0 || getDroppedNoBarcode() != 0) {
+        //     helper.writePercentAndAbsoluteField("Absent barcode", getDroppedNoBarcode(), total);
+        //     helper.writePercentAndAbsoluteField("Barcode not in whitelist", getDroppedBarcodeNotInWhitelist(), total);
+        // }
 
         if (getChimeras() != 0)
             helper.writePercentAndAbsoluteField("Chimeras", getChimeras(), total);

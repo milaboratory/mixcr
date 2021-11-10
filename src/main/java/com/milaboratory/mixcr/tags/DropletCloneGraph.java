@@ -193,7 +193,6 @@ public final class DropletCloneGraph {
                 for (int i : topTagCliqueBits)
                     tags.add(indexToTag.get(i));
 
-
                 TIntIntHashMap indexToCloneId = newTIntIntHashMap();
                 // !!! used as cloneId -> count in the loop below
                 TIntIntHashMap cloneIdToIndex = newTIntIntHashMap();

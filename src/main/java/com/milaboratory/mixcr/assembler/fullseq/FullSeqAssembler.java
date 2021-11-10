@@ -1423,8 +1423,8 @@ public final class FullSeqAssembler {
         i = 0;
         int groupCounter = 0;
         for (VDJCAlignments al : CUtils.it(alignments.get())) {
-            TagTuple tagTuple = al.getTagCounter().singleOrNull();
             if (taggedAnalysis()) {
+                TagTuple tagTuple = al.getTagCounter().singleOrNull();
                 int grp = tagTupleToGroup.get(tagTuple);
                 if (grp == -1) {
                     grp = groupCounter++;
