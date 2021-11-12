@@ -33,6 +33,7 @@ import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -59,6 +60,11 @@ public class Tree<T> {
         );
     }
 
+    //TODO for debug only
+    public Optional<Node<T>> findParent(T content) {
+        return root.findParent(content).findFirst();
+    }
+
     public <R> Tree<R> map(Function<T, R> mapper) {
         return new Tree<>(root.map(mapper));
     }
@@ -79,6 +85,19 @@ public class Tree<T> {
         public T getContent() {
             return content;
         }
+
+        //TODO for debug only
+        private Stream<Node<T>> findParent(T content) {
+            return getLinks().stream()
+                    .flatMap(it -> {
+                        if (it.node.content.equals(content)) {
+                            return Stream.of(this);
+                        } else {
+                            return it.node.findParent(content);
+                        }
+                    });
+        }
+
 
         public Node<T> findChild(Predicate<T> filter) {
             return children.stream()

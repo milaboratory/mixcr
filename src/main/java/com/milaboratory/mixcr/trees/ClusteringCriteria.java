@@ -1,6 +1,13 @@
 package com.milaboratory.mixcr.trees;
 
+import com.milaboratory.core.Range;
+import com.milaboratory.core.mutations.Mutation;
+import com.milaboratory.core.mutations.Mutations;
+import com.milaboratory.core.mutations.MutationsBuilder;
+import com.milaboratory.core.sequence.NucleotideAlphabet;
+import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.basictypes.VDJCHit;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 
@@ -9,12 +16,18 @@ import java.util.Comparator;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.ToIntFunction;
+import java.util.stream.IntStream;
+
+import static io.repseq.core.ReferencePoint.CDR3Begin;
+import static io.repseq.core.ReferencePoint.CDR3End;
 
 /**
  *
  */
 public interface ClusteringCriteria {
-    /** Returns the hash code of the feature which is used to group clonotypes */
+    /**
+     * Returns the hash code of the feature which is used to group clonotypes
+     */
     ToIntFunction<Clone> clusteringHashCode();
 
     /**
@@ -55,9 +68,28 @@ public interface ClusteringCriteria {
         }
     }
 
-    /** Returns the number of mutations from the reference */
+    /**
+     * Returns the number of mutations from the reference
+     */
     static int numberOfMutations(Clone clone, GeneType geneType) {
-        return Arrays.stream(clone.getBestHit(geneType).getAlignments())
-                .mapToInt(al -> al.getAbsoluteMutations().size()).sum();
+        return getAbsoluteMutationsWithoutCDR3(clone, geneType).size();
+    }
+
+    static Mutations<NucleotideSequence> getAbsoluteMutationsWithoutCDR3(Clone clone, GeneType geneType) {
+        VDJCHit bestHit = clone.getBestHit(geneType);
+        Range CDR3Range = new Range(bestHit.getPosition(0, CDR3Begin), bestHit.getPosition(0, CDR3End));
+
+        NucleotideAlphabet alphabet = bestHit.getAlignment(0).getSequence1().getAlphabet();
+
+        int[] filteredMutations = Arrays.stream(bestHit.getAlignments())
+                .flatMapToInt(alignment -> {
+                    Mutations<NucleotideSequence> mutations = alignment.getAbsoluteMutations();
+                    return IntStream.range(0, mutations.size())
+                            .map(mutations::getMutation)
+                            .filter(mutation -> !CDR3Range.contains(Mutation.getPosition(mutation)));
+                })
+                .toArray();
+
+        return new MutationsBuilder<>(alphabet, false, filteredMutations, filteredMutations.length).createAndDestroy();
     }
 }

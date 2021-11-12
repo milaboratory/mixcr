@@ -54,8 +54,10 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
     public final boolean productiveOnly;
 
     @JsonCreator
-    public SHMTreeBuilderParameters(@JsonProperty("targetRegion") GeneFeature targetRegion,
-                                    @JsonProperty("productiveOnly") boolean productiveOnly) {
+    public SHMTreeBuilderParameters(
+            @JsonProperty("targetRegion") GeneFeature targetRegion,
+            @JsonProperty("productiveOnly") boolean productiveOnly
+    ) {
         this.targetRegion = targetRegion;
         this.productiveOnly = productiveOnly;
     }

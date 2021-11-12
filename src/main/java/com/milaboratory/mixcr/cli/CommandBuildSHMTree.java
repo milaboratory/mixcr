@@ -36,18 +36,20 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.cli.PipelineConfiguration;
+import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
+import com.milaboratory.core.alignment.Aligner;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.mutations.Mutation;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.core.sequence.SequenceWithQuality;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
+import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.trees.*;
 import com.milaboratory.mixcr.util.ExceptionUtil;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
-import io.repseq.core.VDJCLibraryRegistry;
+import io.repseq.core.*;
 import org.apache.commons.math3.util.Pair;
 import picocli.CommandLine;
 
@@ -56,6 +58,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+
+import static com.milaboratory.mixcr.trees.ClusteringCriteria.getAbsoluteMutationsWithoutCDR3;
+import static com.milaboratory.mixcr.trees.ClusteringCriteria.numberOfMutations;
+import static io.repseq.core.GeneFeature.CDR3;
+import static io.repseq.core.GeneType.Joining;
+import static io.repseq.core.GeneType.Variable;
+import static io.repseq.core.ReferencePoint.*;
 
 @CommandLine.Command(name = CommandBuildSHMTree.BUILD_SHM_TREE_COMMAND_NAME,
         sortOptions = false,
@@ -119,41 +128,47 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                         .collect(Collectors.toList())
         );
         OutputPortCloseable<CloneWrapper> sortedClonotypes = shmTreeBuilder.sortClonotypes();
-        OutputPortCloseable<Cluster> clusters = shmTreeBuilder.buildClusters(sortedClonotypes);
+        OutputPortCloseable<Cluster<CloneWrapper>> clusters = shmTreeBuilder.buildClusters(sortedClonotypes);
 
         NewickTreePrinter<CloneWrapper> mutationsPrinter = new NewickTreePrinter<>(c -> new StringBuilder()
-                .append("V: ").append(mutations(c.clone, GeneType.Variable).collect(Collectors.toList()))
-                .append(" J:").append(mutations(c.clone, GeneType.Joining).collect(Collectors.toList()))
+                .append("V: ").append(mutations(c.clone, Variable).collect(Collectors.toList()))
+                .append(" J:").append(mutations(c.clone, Joining).collect(Collectors.toList()))
                 .toString(), false, false);
 
         NewickTreePrinter<CloneWrapper> idPrinter = new NewickTreePrinter<>(c -> String.valueOf(c.clone.getId()), false, false);
 
-        Cluster cluster;
-        while ((cluster = clusters.take()) != null) {
-            List<Integer> VMutationPositions = allMutationPositions(cluster, GeneType.Variable);
-            List<Integer> JMutationPositions = allMutationPositions(cluster, GeneType.Joining);
-
-            List<String> mutations = cluster.cluster.stream()
+        Cluster<CloneWrapper> clusterTemp;
+        while ((clusterTemp = clusters.take()) != null) {
+            Cluster<CloneWrapper> cluster = clusterTemp;
+            long mutationsCode = cluster.cluster.stream()
                     .map(cw -> cw.clone)
-                    .filter(clone -> ClusteringCriteria.numberOfMutations(clone, GeneType.Variable) +
-                            ClusteringCriteria.numberOfMutations(clone, GeneType.Joining) > 0)
-                    .map(clone -> new StringBuilder()
-                            .append(clone.getBestHitGene(GeneType.Variable).getId().getName())
-                            .append(clone.getBestHitGene(GeneType.Joining).getId().getName())
-                            .append(" CDR3 length: ").append(clone.ntLengthOf(GeneFeature.CDR3))
-                            .append(" ").append(clone.getFeature(GeneFeature.CDR3).getSequence())
-                            .append(" ").append(String.format("%6d", clone.getId()))
-                            .append(" V: ").append(mutationsRow(clone, GeneType.Variable, VMutationPositions))
-                            .append(" J:").append(mutationsRow(clone, GeneType.Joining, JMutationPositions))
-                            .toString()
-                    )
-                    .collect(Collectors.toList());
-            if (mutations.size() > 30) {
-//                if (true) {
-                if (mutations.stream().anyMatch(it -> it.startsWith("IGHV3-30*00IGHJ4*00 CDR3 length: 42") && it.contains("7679"))) {
+                    .filter(clone -> numberOfMutations(clone, Variable) + numberOfMutations(clone, Joining) > 0)
+                    .count();
+            if (mutationsCode > 30) {
+                //                if (true) {
+                if (cluster.cluster.stream().map(it -> it.clone.getId()).anyMatch(it -> it == 7679)) {
 //                if (mutations.stream().anyMatch(it -> it.startsWith("IGHV3-48*00IGHJ4*00 CDR3 length: 57") && it.contains("2361") )
 //                        || mutations.stream().anyMatch(it -> it.startsWith("IGHV3-48*00IGHJ6*00 CDR3 length: 66") && it.contains("18091"))) {
+
+                    System.out.println("V gene:");
+                    System.out.println(cluster.cluster.get(0).clone.getBestHit(Variable).getAlignment(0).getSequence1());
+                    System.out.println("J gene:");
+                    System.out.println(cluster.cluster.get(0).clone.getBestHit(Joining).getAlignment(0).getSequence1());
+                    System.out.println("\n");
+
                     System.out.println("sequences:");
+                    System.out.println(cluster.cluster.stream()
+                            .map(it -> String.format("%6d %s - %s %s %s %f",
+                                    it.clone.getId(),
+                                    it.clone.getFeature(CDR3).getSequence(),
+                                    it.clone.getFeature(new GeneFeature(CDR3Begin, VEndTrimmed)).getSequence(),
+                                    it.clone.getFeature(new GeneFeature(VEndTrimmed, JBeginTrimmed)).getSequence(),
+                                    it.clone.getFeature(new GeneFeature(JBeginTrimmed, CDR3End)).getSequence(),
+                                    it.clone.getCount()
+                            ))
+                            .collect(Collectors.joining("\n"))
+                    );
+                    System.out.println("\n");
                     System.out.println(cluster.cluster.stream()
                             .map(it -> String.format("%6d", it.clone.getId()) + " " + it.clone.getTargets()[0].getSequence().toString() + " " + it.clone.getCount())
                             .collect(Collectors.joining("\n"))
@@ -161,11 +176,189 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                     System.out.println("\n");
 
                     System.out.println("without V/J mutations: " + cluster.cluster.stream().map(cw -> cw.clone)
-                            .filter(clone -> ClusteringCriteria.numberOfMutations(clone, GeneType.Variable) +
-                                    ClusteringCriteria.numberOfMutations(clone, GeneType.Joining) == 0).count() + "\n");
+                            .filter(clone -> numberOfMutationsWithoutCDR3(clone, Variable) +
+                                    numberOfMutationsWithoutCDR3(clone, Joining) == 0).count() + "\n");
+
+
+                    Optional<Clone> rootClone = cluster.cluster.stream().map(cw -> cw.clone).filter(it -> it.getId() == 24722).findFirst();
+
+                    System.out.println("D genes sum score:");
+                    System.out.println(cluster.cluster.subList(13, cluster.cluster.size())
+                            .stream()
+                            .flatMap(it -> Arrays.stream(it.clone.getHits(GeneType.Diversity)))
+                            .collect(Collectors.groupingBy(VDJCHit::getGene, Collectors.summingDouble(VDJCHit::getScore)))
+                            .entrySet()
+                            .stream()
+                            .sorted(Map.Entry.comparingByValue())
+                            .map(e -> {
+                                VDJCGene dGene = e.getKey();
+                                Alignment<NucleotideSequence> bestDAlignment = cluster.cluster.subList(13, cluster.cluster.size())
+                                        .stream()
+                                        .flatMap(it -> Arrays.stream(it.clone.getHits(GeneType.Diversity)))
+                                        .filter(it -> it.getGene().equals(dGene))
+                                        .map(it -> it.getAlignment(0))
+                                        .max(Comparator.comparing(Alignment::getScore))
+                                        .get();
+
+                                NucleotideSequence dSequence = bestDAlignment.getSequence1().getRange(bestDAlignment.getSequence1Range());
+                                return dSequence.toString() + " - " + e.getValue();
+                            })
+                            .collect(Collectors.joining("\n")));
+                    System.out.println("\n");
+
+
+                    List<Integer> VMutationPositions = allMutationPositions(cluster, Variable);
+                    List<Integer> CDR3MutationPositions;
+                    if (rootClone.isPresent()) {
+                        CDR3MutationPositions = allMutationPositionsInCDR3(cluster, rootClone.get());
+                    } else {
+                        CDR3MutationPositions = Collections.emptyList();
+                    }
+                    List<Integer> JMutationPositions = allMutationPositions(cluster, Joining);
+
+                    List<String> mutations = cluster.cluster.stream()
+                            .map(cw -> cw.clone)
+                            .filter(clone -> numberOfMutations(clone, Variable) + numberOfMutations(clone, Joining) > 0)
+                            .map(clone -> {
+                                        StringBuilder stringBuilder = new StringBuilder();
+                                        stringBuilder
+                                                .append(clone.getBestHitGene(Variable).getId().getName())
+                                                .append(clone.getBestHitGene(Joining).getId().getName())
+                                                .append(" CDR3 length: ")
+                                                .append(clone.ntLengthOf(CDR3))
+                                                .append(" ").append(Optional.ofNullable(clone.getFeature(new GeneFeature(CDR3Begin, VEndTrimmed))).map(SequenceWithQuality::getSequence).orElse(null))
+                                                .append(" ").append(Optional.ofNullable(clone.getFeature(new GeneFeature(VEndTrimmed, JBeginTrimmed))).map(SequenceWithQuality::getSequence).orElse(null))
+                                                .append(" ").append(Optional.ofNullable(clone.getFeature(new GeneFeature(JBeginTrimmed, CDR3End))).map(SequenceWithQuality::getSequence).orElse(null))
+                                                .append(" ").append(String.format("%6d", clone.getId()))
+                                                .append(" V: ").append(mutationsRow(clone, Variable, VMutationPositions));
+                                        rootClone.ifPresent(root -> stringBuilder.append(" CDR3:").append(CDR3mutationsRow(clone, root, CDR3MutationPositions)));
+                                        stringBuilder.append(" J:").append(mutationsRow(clone, Joining, JMutationPositions));
+                                        return stringBuilder.toString();
+                                    }
+                            )
+                            .collect(Collectors.toList());
 
                     System.out.println("mutations:");
                     System.out.println(String.join("\n", mutations));
+                    System.out.println("\n");
+
+                    System.out.println("mutation rate:");
+                    System.out.println(cluster.cluster.stream()
+                            .map(cloneWrapper -> cloneWrapper.clone)
+                            .map(clone -> String.format(
+                                    "%6d %.4f (%d) %.4f (%d)",
+                                    clone.getId(),
+                                    numberOfMutationsWithoutCDR3(clone, Variable) / (double) ntLengthOfWithoutCDR3(clone, Variable),
+                                    numberOfMutationsWithoutCDR3(clone, Variable),
+                                    numberOfMutationsWithoutCDR3(clone, Joining) / (double) ntLengthOfWithoutCDR3(clone, Joining),
+                                    numberOfMutationsWithoutCDR3(clone, Joining)
+                            )).collect(Collectors.joining("\n")));
+                    System.out.println("\n");
+
+                    System.out.println("CDR3 comparison:\n");
+                    System.out.println("      |" + cluster.cluster.stream()
+                            .map(cw -> cw.clone)
+                            .map(clone -> String.format("%6d", clone.getId()))
+                            .collect(Collectors.joining("|"))
+                    );
+
+                    System.out.println(cluster.cluster.stream()
+                            .map(cw -> cw.clone)
+                            .map(clone -> String.format("%6d|", clone.getId()) + cluster.cluster.stream()
+                                    .map(cw -> cw.clone)
+                                    .map(compareWith -> String.format("%6d", mutationsBetween(clone, compareWith, CDR3).size()))
+                                    .collect(Collectors.joining("|"))
+                            )
+                            .collect(Collectors.joining("\n"))
+                    );
+                    System.out.println("\n");
+
+                    System.out.println("V|CDR3|J comparison:\n");
+                    System.out.println("      |" + cluster.cluster.stream()
+                            .map(cw -> cw.clone)
+                            .map(clone -> String.format("%10d", clone.getId()))
+                            .collect(Collectors.joining("|"))
+                    );
+
+                    System.out.println(cluster.cluster.stream()
+                            .map(cw -> cw.clone)
+                            .map(clone -> String.format("%6d|", clone.getId()) + cluster.cluster.stream()
+                                    .map(cw -> cw.clone)
+                                    .map(compareWith -> String.format(" %2d|%2d|%2d ",
+                                            mutationsBetweenWithoutCDR3(clone, compareWith, Variable).size(),
+                                            mutationsBetween(clone, compareWith, CDR3).size(),
+                                            mutationsBetweenWithoutCDR3(clone, compareWith, Joining).size()
+                                    ))
+                                    .collect(Collectors.joining("|"))
+                            )
+                            .collect(Collectors.joining("\n"))
+                    );
+                    System.out.println("\n");
+
+                    System.out.println("mutations rate diff:\n");
+                    System.out.println("       |" + cluster.cluster.stream()
+                            .map(cw -> cw.clone)
+                            .map(clone -> String.format("%12d    ", clone.getId()))
+                            .collect(Collectors.joining("|"))
+                    );
+
+                    System.out.println(cluster.cluster.stream()
+                            .map(cw -> cw.clone)
+                            .map(clone -> String.format("%6d |", clone.getId()) + cluster.cluster.stream()
+                                    .map(cw -> cw.clone)
+                                    .map(compareWith -> {
+                                        int vMutationsBetween = mutationsBetweenWithoutCDR3(clone, compareWith, Variable).size();
+                                        int jMutationsBetween = mutationsBetweenWithoutCDR3(clone, compareWith, Joining).size();
+                                        int cdr3MutationsBetween = mutationsBetween(clone, compareWith, CDR3).size();
+                                        int VPlusJLength = ntLengthOfWithoutCDR3(clone, Variable) + ntLengthOfWithoutCDR3(clone, Joining);
+                                        int CDR3Length = clone.ntLengthOf(CDR3);
+                                        double normalizedDistanceFromCloneToGermline = (numberOfMutationsWithoutCDR3(clone, Variable) + numberOfMutationsWithoutCDR3(clone, Joining)) / (double) VPlusJLength;
+                                        double normalizedDistanceFromCompareToGermline = (numberOfMutationsWithoutCDR3(compareWith, Variable) + numberOfMutationsWithoutCDR3(compareWith, Joining)) / (double) VPlusJLength;
+                                        double normalizedAverageDistanceToGermline = (normalizedDistanceFromCloneToGermline + normalizedDistanceFromCompareToGermline) / 2.0;
+                                        double normalizedDistanceBetweenClones = (vMutationsBetween + jMutationsBetween + cdr3MutationsBetween) / (double) (VPlusJLength + CDR3Length);
+                                        double normalizedDistanceBetweenClonesInCDR3 = (cdr3MutationsBetween) / (double) CDR3Length;
+                                        return String.format(" %.2f|%.2f|%.2f ",
+                                                normalizedAverageDistanceToGermline * 20,
+                                                normalizedDistanceBetweenClones * 10,
+                                                normalizedDistanceBetweenClonesInCDR3 * 10
+                                        );
+                                    })
+                                    .collect(Collectors.joining("|"))
+                            )
+                            .collect(Collectors.joining("\n"))
+                    );
+                    System.out.println("\n");
+
+                    System.out.println("clustering fomula:\n");
+                    System.out.println("      |" + cluster.cluster.stream()
+                            .map(cw -> cw.clone)
+                            .map(clone -> String.format("%6d ", clone.getId()))
+                            .collect(Collectors.joining("|"))
+                    );
+
+                    System.out.println(cluster.cluster.stream()
+                            .map(cw -> cw.clone)
+                            .map(clone -> String.format("%6d|", clone.getId()) + cluster.cluster.stream()
+                                    .map(cw -> cw.clone)
+                                    .map(compareWith -> {
+                                        int vMutationsBetween = mutationsBetweenWithoutCDR3(clone, compareWith, Variable).size();
+                                        int jMutationsBetween = mutationsBetweenWithoutCDR3(clone, compareWith, Joining).size();
+                                        int cdr3MutationsBetween = mutationsBetween(clone, compareWith, CDR3).size();
+                                        int VPlusJLength = ntLengthOfWithoutCDR3(clone, Variable) + ntLengthOfWithoutCDR3(clone, Joining);
+                                        int CDR3Length = clone.ntLengthOf(CDR3);
+                                        double normalizedDistanceFromCloneToGermline = (numberOfMutationsWithoutCDR3(clone, Variable) + numberOfMutationsWithoutCDR3(clone, Joining)) / (double) VPlusJLength;
+                                        double normalizedDistanceFromCompareToGermline = (numberOfMutationsWithoutCDR3(compareWith, Variable) + numberOfMutationsWithoutCDR3(compareWith, Joining)) / (double) VPlusJLength;
+                                        double normalizedAverageDistanceToGermline = (normalizedDistanceFromCloneToGermline + normalizedDistanceFromCompareToGermline) / 2.0;
+                                        double normalizedDistanceBetweenClones = (vMutationsBetween + jMutationsBetween + cdr3MutationsBetween) / (double) (VPlusJLength + CDR3Length);
+                                        double normalizedDistanceBetweenClonesInCDR3 = (cdr3MutationsBetween) / (double) CDR3Length;
+                                        return String.format("%.5f",
+                                                normalizedDistanceBetweenClonesInCDR3 + (normalizedDistanceBetweenClones - normalizedAverageDistanceToGermline)
+                                        );
+                                    })
+                                    .collect(Collectors.joining("|"))
+                            )
+                            .collect(Collectors.joining("\n"))
+                    );
                     System.out.println("\n");
 
 //            IGHV3-48*00IGHJ4*00 CDR3 length: 57
@@ -179,6 +372,64 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                     System.out.println(trees.stream().map(idPrinter::print).collect(Collectors.joining("\n")));
                     System.out.println("\n");
 
+                    System.out.println("absalute mutations:\n");
+                    System.out.println(trees.stream()
+                            .map(tree -> tree.map(cw -> cw.clone))
+                            .map(tree -> {
+                                NewickTreePrinter<Clone> treePrinter = new NewickTreePrinter<>(
+                                        clone -> {
+                                            Optional<Tree.Node<Clone>> parent = tree.findParent(clone);
+                                            if (parent.isPresent()) {
+                                                return String.format("%d:%d|%d|%d",
+                                                        clone.getId(),
+                                                        mutationsBetweenWithoutCDR3(clone, parent.get().getContent(), Variable).size(),
+                                                        mutationsBetween(clone, parent.get().getContent(), CDR3).size(),
+                                                        mutationsBetweenWithoutCDR3(clone, parent.get().getContent(), Joining).size()
+                                                );
+                                            } else {
+                                                return String.valueOf(clone.getId());
+                                            }
+                                        },
+                                        false,
+                                        false
+                                );
+                                return treePrinter.print(tree);
+                            })
+                            .collect(Collectors.joining("\n")));
+                    System.out.println("\n");
+
+                    System.out.println("rate of mutations:\n");
+                    System.out.println(trees.stream()
+                            .map(tree -> tree.map(cw -> cw.clone))
+                            .map(tree -> {
+                                NewickTreePrinter<Clone> treePrinter = new NewickTreePrinter<>(
+                                        clone -> {
+                                            Optional<Tree.Node<Clone>> parent = tree.findParent(clone);
+                                            if (parent.isPresent()) {
+                                                Clone compareWith = parent.get().getContent();
+                                                int vMutations = mutationsBetweenWithoutCDR3(clone, compareWith, Variable).size();
+                                                int jMutations = mutationsBetweenWithoutCDR3(clone, compareWith, Joining).size();
+                                                int cdr3Mutations = mutationsBetween(clone, compareWith, new GeneFeature(VEndTrimmed, JBeginTrimmed)).size();
+                                                int VPlusJLength = ntLengthOfWithoutCDR3(clone, Variable) + ntLengthOfWithoutCDR3(clone, Joining);
+                                                double vjRate = (vMutations + jMutations) / (double) VPlusJLength;
+                                                double crd3rate = cdr3Mutations / (double) clone.ntLengthOf(new GeneFeature(VEndTrimmed, JBeginTrimmed));
+                                                return String.format("%d:%.2f|%2d",
+                                                        clone.getId(),
+                                                        vjRate == 0 ? 0 : crd3rate / vjRate,
+                                                        vMutations + jMutations + cdr3Mutations
+                                                );
+                                            } else {
+                                                return String.valueOf(clone.getId());
+                                            }
+                                        },
+                                        false,
+                                        false
+                                );
+                                return treePrinter.print(tree);
+                            })
+                            .collect(Collectors.joining("\n")));
+                    System.out.println("\n");
+
                     System.out.println("ids:\n");
                     System.out.println(cluster.cluster.stream().map(it -> String.valueOf(it.clone.getId())).collect(Collectors.joining("|")));
 
@@ -188,10 +439,50 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
         }
     }
 
-    private List<Integer> allMutationPositions(Cluster cluster, GeneType geneType) {
+    private int ntLengthOfWithoutCDR3(Clone clone, GeneType geneType) {
+        VDJCHit bestHit = clone.getBestHit(geneType);
+        Alignment<NucleotideSequence> alignment = bestHit.getAlignment(0);
+        if (geneType == GeneType.Variable) {
+            return alignment.convertToSeq1Position(bestHit.getPosition(0, CDR3Begin)) - alignment.getSequence1Range().getLower();
+        } else if (geneType == GeneType.Joining) {
+            return alignment.getSequence1Range().getUpper() - alignment.convertToSeq1Position(bestHit.getPosition(0, ReferencePoint.CDR3End));
+        } else {
+            throw new IllegalArgumentException();
+        }
+    }
+
+    private Mutations<NucleotideSequence> mutationsBetween(Clone clone, Clone compareWith, GeneFeature geneFeature) {
+        return Aligner.alignGlobal(
+                AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
+                clone.getNFeature(geneFeature),
+                compareWith.getNFeature(geneFeature)
+        ).getAbsoluteMutations();
+    }
+
+    private Mutations<NucleotideSequence> mutationsBetweenWithoutCDR3(Clone clone, Clone compareWith, GeneType geneType) {
+        Mutations<NucleotideSequence> firstMutations = getAbsoluteMutationsWithoutCDR3(clone, geneType);
+        Mutations<NucleotideSequence> lastMutations = getAbsoluteMutationsWithoutCDR3(compareWith, geneType);
+
+        return firstMutations.invert().combineWith(lastMutations);
+    }
+
+    private List<Integer> allMutationPositions(Cluster<CloneWrapper> cluster, GeneType geneType) {
         return cluster.cluster.stream()
                 .map(cw -> cw.clone)
                 .flatMap(clone -> mutations(clone, geneType))
+                .flatMap(mutations -> IntStream.range(0, mutations.size())
+                        .map(mutations::getMutation)
+                        .mapToObj(Mutation::getPosition)
+                )
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    private List<Integer> allMutationPositionsInCDR3(Cluster<CloneWrapper> cluster, Clone root) {
+        return cluster.cluster.stream()
+                .map(cw -> cw.clone)
+                .map(clone -> mutationsBetween(root, clone, CDR3))
                 .flatMap(mutations -> IntStream.range(0, mutations.size())
                         .map(mutations::getMutation)
                         .mapToObj(Mutation::getPosition)
@@ -214,10 +505,27 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                 .collect(Collectors.joining("|"));
     }
 
+    private String CDR3mutationsRow(Clone clone, Clone root, List<Integer> allMutationPositions) {
+        Mutations<NucleotideSequence> mutations = mutationsBetween(root, clone, CDR3);
+        Map<Object, List<Pair<Integer, String>>> allMutations = IntStream.range(0, mutations.size())
+                .mapToObj(index -> Pair.create(
+                        Mutation.getPosition(mutations.getMutation(index)),
+                        Mutation.toString(mutations.getAlphabet(), mutations.getMutation(index))
+                ))
+                .collect(Collectors.groupingBy(Pair::getKey, Collectors.toList()));
+        return allMutationPositions.stream()
+                .map(position -> String.format("%9s", allMutations.getOrDefault(position, Collections.emptyList()).stream().map(Pair::getValue).findFirst().orElse("")))
+                .collect(Collectors.joining("|"));
+    }
+
     private Stream<Mutations<NucleotideSequence>> mutations(Clone clone, GeneType geneType) {
         return Arrays.stream(clone.getBestHit(geneType).getAlignments())
                 .filter(it -> it.getAbsoluteMutations().size() > 0)
                 .map(Alignment::getAbsoluteMutations);
+    }
+
+    static int numberOfMutationsWithoutCDR3(Clone clone, GeneType geneType) {
+        return getAbsoluteMutationsWithoutCDR3(clone, geneType).size();
     }
 
     @JsonAutoDetect(

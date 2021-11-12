@@ -6,6 +6,8 @@ import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.Serializer;
 import com.milaboratory.primitivio.annotations.Serializable;
 
+import java.util.Objects;
+
 /**
  *
  */
@@ -23,6 +25,19 @@ public class CloneWrapper {
     public CloneWrapper(Clone clone, int datasetId) {
         this.clone = clone;
         this.datasetId = datasetId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CloneWrapper that = (CloneWrapper) o;
+        return datasetId == that.datasetId && Objects.equals(clone, that.clone);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(clone, datasetId);
     }
 
     public static class SerializerImpl implements Serializer<CloneWrapper> {

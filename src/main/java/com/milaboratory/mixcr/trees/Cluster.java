@@ -1,14 +1,32 @@
 package com.milaboratory.mixcr.trees;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  *
  */
-public class Cluster {
-    public final List<CloneWrapper> cluster;
+public class Cluster<T> {
+    public final List<T> cluster;
 
-    public Cluster(List<CloneWrapper> cluster) {
+    public Cluster(List<T> cluster) {
         this.cluster = cluster;
+    }
+
+    public static class Builder<T> {
+        private final List<T> cluster = new ArrayList<>();
+
+        public Builder<T> add(T element) {
+            cluster.add(element);
+            return this;
+        }
+
+        public List<T> getCurrentCluster() {
+            return cluster;
+        }
+
+        public Cluster<T> build() {
+            return new Cluster<>(cluster);
+        }
     }
 }
