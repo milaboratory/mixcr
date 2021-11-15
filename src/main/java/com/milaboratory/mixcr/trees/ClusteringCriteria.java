@@ -1,6 +1,7 @@
 package com.milaboratory.mixcr.trees;
 
 import com.milaboratory.core.Range;
+import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.mutations.Mutation;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.mutations.MutationsBuilder;
@@ -77,12 +78,13 @@ public interface ClusteringCriteria {
 
     static Mutations<NucleotideSequence> getAbsoluteMutationsWithoutCDR3(Clone clone, GeneType geneType) {
         VDJCHit bestHit = clone.getBestHit(geneType);
-        Range CDR3Range = new Range(bestHit.getPosition(0, CDR3Begin), bestHit.getPosition(0, CDR3End));
 
-        NucleotideAlphabet alphabet = bestHit.getAlignment(0).getSequence1().getAlphabet();
 
-        int[] filteredMutations = Arrays.stream(bestHit.getAlignments())
-                .flatMapToInt(alignment -> {
+        int[] filteredMutations = IntStream.range(0, bestHit.getAlignments().length)
+                .flatMap(index -> {
+                    Alignment<NucleotideSequence> alignment = bestHit.getAlignment(index);
+                    Range CDR3Range = CDR3Sequence1Range(bestHit, index);
+
                     Mutations<NucleotideSequence> mutations = alignment.getAbsoluteMutations();
                     return IntStream.range(0, mutations.size())
                             .map(mutations::getMutation)
@@ -90,6 +92,19 @@ public interface ClusteringCriteria {
                 })
                 .toArray();
 
+        NucleotideAlphabet alphabet = bestHit.getAlignment(0).getSequence1().getAlphabet();
         return new MutationsBuilder<>(alphabet, false, filteredMutations, filteredMutations.length).createAndDestroy();
+    }
+
+    static Range CDR3Sequence1Range(VDJCHit hit, int target) {
+        int from = hit.getGene().getPartitioning().getRelativePosition(hit.getAlignedFeature(), CDR3Begin);
+        if (from == -1) {
+            from = hit.getAlignment(target).getSequence1Range().getLower();
+        }
+        int to = hit.getGene().getPartitioning().getRelativePosition(hit.getAlignedFeature(), CDR3End);
+        if (to == -1) {
+            to = hit.getAlignment(target).getSequence1Range().getUpper();
+        }
+        return new Range(from, to);
     }
 }

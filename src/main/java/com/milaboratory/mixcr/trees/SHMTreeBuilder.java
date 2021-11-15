@@ -38,7 +38,9 @@ import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.alignment.Aligner;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.mutations.Mutations;
+import com.milaboratory.core.sequence.NucleotideAlphabet;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.core.sequence.SequenceBuilder;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneReader;
 import com.milaboratory.mixcr.basictypes.IOUtil;
@@ -46,17 +48,21 @@ import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
 import com.milaboratory.util.sorting.HashSorter;
 import io.repseq.core.GeneType;
+import io.repseq.core.ReferencePoint;
+import io.repseq.core.VDJCGene;
 import org.apache.commons.math3.util.Pair;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import static com.milaboratory.mixcr.trees.ClusteringCriteria.CDR3Sequence1Range;
 import static com.milaboratory.mixcr.trees.ClusteringCriteria.getAbsoluteMutationsWithoutCDR3;
 import static io.repseq.core.GeneFeature.CDR3;
-import static io.repseq.core.GeneType.Joining;
-import static io.repseq.core.GeneType.Variable;
+import static io.repseq.core.GeneType.*;
 import static io.repseq.core.ReferencePoint.CDR3Begin;
 import static io.repseq.core.ReferencePoint.CDR3End;
 
@@ -188,11 +194,13 @@ public class SHMTreeBuilder {
     public Collection<Tree<CloneWrapper>> processCluster(Cluster<CloneWrapper> clusterBySameVAndJ) {
         List<CloneDescriptor> clones = clusterBySameVAndJ.cluster.stream()
                 .map(cloneWrapper -> new CloneDescriptor(
-                        getAbsoluteMutationsWithoutCDR3(cloneWrapper.clone, Joining),
-                        getAbsoluteMutationsWithoutCDR3(cloneWrapper.clone, Variable),
-                        cloneWrapper.clone.getNFeature(CDR3),
-                        ntLengthOfWithoutCDR3(cloneWrapper.clone, Joining),
-                        ntLengthOfWithoutCDR3(cloneWrapper.clone, Variable),
+                        new MutationsDescriptor(
+                                getAbsoluteMutationsWithoutCDR3(cloneWrapper.clone, Variable),
+                                getAbsoluteMutationsWithoutCDR3(cloneWrapper.clone, Joining),
+                                cloneWrapper.clone.getNFeature(CDR3),
+                                ntLengthOfWithoutCDR3(cloneWrapper.clone, Variable),
+                                ntLengthOfWithoutCDR3(cloneWrapper.clone, Joining)
+                        ),
                         cloneWrapper
                 ))
                 .collect(Collectors.toList());
@@ -215,46 +223,193 @@ public class SHMTreeBuilder {
             }
         }
 
-        List<Tree<CloneWrapper>> result = new ArrayList<>();
-        clusteredClones.forEach(clusterBuilder -> {
-            // Build a tree for every cluster
-            // determine D gene
-            // fix marks of VEnd and JBegin
-            // resort by mutations count
-            // build by next neighbor
+        List<Tree<CloneDescriptor>> firstStepTrees = clusteredClones.stream()
+                .map(Cluster.Builder::build)
+                .map(this::buildATree)
+                .collect(Collectors.toList());
 
-            Cluster<CloneDescriptor> cluster = clusterBuilder.build();
-            Tree<CloneWrapper> tree = new Tree<>(new Tree.Node<>(cluster.cluster.get(0).cloneWrapper));
-            if (cluster.cluster.size() > 1) {
-                cluster.cluster.subList(1, cluster.cluster.size() - 1).forEach(clone -> tree.getRoot().addChild(clone.cloneWrapper, null));
-            }
-            result.add(tree);
-        });
-        return result;
+        return Collections.singletonList(new Tree<>(null));
+    }
+
+    private Tree<CloneDescriptor> buildATree(Cluster<CloneDescriptor> cluster) {
+        if (cluster.cluster.size() == 1) {
+            return new Tree<>(new Tree.Node<>(cluster.cluster.get(0)));
+        }
+
+
+        // Build a tree for every cluster
+        // determine D gene
+        // fix marks of VEnd and JBegin
+        // resort by mutations count
+        // build by next neighbor
+
+        List<VDJCGene> DGeneScores = topScoredDGenes(cluster);
+        //TODO there is several similar D matches
+        //TODO there is no D match
+        VDJCGene DGene = DGeneScores.get(0);
+
+        NucleotideAlphabet alphabet = cluster.cluster.get(0).mutations.CDR3.getAlphabet();
+
+        Alignment<NucleotideSequence> bestDAlignment = cluster.cluster.stream()
+                .map(clone -> clone.cloneWrapper.clone)
+                .flatMap(clone -> Arrays.stream(clone.getHits(Diversity))
+                        .filter(hit -> hit.getGene().equals(DGene))
+                        //TODO if there is a hole
+                        .map(hit -> hit.getAlignment(0))
+                )
+                .collect(Collectors.groupingBy(it -> it.getSequence1Range().length()))
+                .entrySet().stream()
+                .max(Map.Entry.comparingByKey())
+                .orElseThrow(IllegalStateException::new)
+                .getValue().stream()
+                .max(Comparator.comparing(Alignment::getScore))
+                .orElseThrow(IllegalStateException::new);
+
+        NucleotideSequence VPartInCDR3 = cluster.cluster.stream()
+                .map(clone -> clone.cloneWrapper.clone)
+                .map(clone -> {
+                    VDJCHit hit = clone.getBestHit(Variable);
+
+                    SequenceBuilder<NucleotideSequence> sequenceBuilder = alphabet.createBuilder();
+
+                    int positionOfCDR3Begin = getRelativePosition(hit, CDR3Begin);
+
+                    for (int i = hit.getAlignments().length - 1; i >= 0; i--) {
+                        Alignment<NucleotideSequence> alignment = hit.getAlignment(i);
+                        if (alignment.getSequence1Range().contains(positionOfCDR3Begin)) {
+                            sequenceBuilder.append(alignment.getSequence1().getRange(positionOfCDR3Begin, alignment.getSequence1Range().getUpper()));
+                            break;
+                        } else {
+                            sequenceBuilder.append(alignment.getSequence1().getRange(alignment.getSequence1Range()));
+                        }
+                    }
+
+                    return sequenceBuilder.createAndDestroy();
+                })
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+                .entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElseThrow(IllegalStateException::new);
+
+        NucleotideSequence JPartInCDR3 = cluster.cluster.stream()
+                .map(clone -> clone.cloneWrapper.clone)
+                .map(clone -> {
+                    VDJCHit hit = clone.getBestHit(Joining);
+
+                    SequenceBuilder<NucleotideSequence> sequenceBuilder = alphabet.createBuilder();
+
+                    int positionOfCDR3End = getRelativePosition(hit, CDR3End);
+
+                    for (int i = 0; i < hit.getAlignments().length; i++) {
+                        Alignment<NucleotideSequence> alignment = hit.getAlignment(i);
+                        if (alignment.getSequence1Range().contains(positionOfCDR3End)) {
+                            sequenceBuilder.append(alignment.getSequence1().getRange(alignment.getSequence1Range().getLower(), positionOfCDR3End));
+                            break;
+                        } else {
+                            sequenceBuilder.append(alignment.getSequence1().getRange(alignment.getSequence1Range()));
+                        }
+                    }
+
+                    return sequenceBuilder.createAndDestroy();
+                })
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+                .entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElseThrow(IllegalStateException::new);
+
+
+        NucleotideSequence constructedCDR3 = alphabet.createBuilder()
+                .append(VPartInCDR3)
+                .append(bestDAlignment.getSequence1().getRange(bestDAlignment.getSequence1Range()))
+                .append(JPartInCDR3)
+                .createAndDestroy();
+
+        List<CloneDescriptor> resortedCluster = cluster.cluster.stream()
+                .sorted(Comparator.comparing(cloneDescriptor -> Aligner.alignGlobal(
+                                AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
+                                constructedCDR3,
+                                cloneDescriptor.mutations.CDR3
+                        ).getAbsoluteMutations().size()
+                                + cloneDescriptor.mutations.VMutationsWithoutCDR3.size()
+                                + cloneDescriptor.mutations.JMutationsWithoutCDR3.size()
+                ))
+                .collect(Collectors.toList());
+
+
+        Tree<CloneDescriptor> tree = new Tree<>(new Tree.Node<>(resortedCluster.get(0)));
+        resortedCluster.subList(1, resortedCluster.size()).forEach(clone ->
+                tree.allNodes()
+                        .max(Comparator.comparing(compareWith -> {
+                            //TODO use cache of comparisons
+                            Mutations<NucleotideSequence> VMutations = clone.mutations.VMutationsWithoutCDR3.invert().combineWith(compareWith.getContent().mutations.VMutationsWithoutCDR3);
+                            Mutations<NucleotideSequence> JMutations = clone.mutations.JMutationsWithoutCDR3.invert().combineWith(compareWith.getContent().mutations.JMutationsWithoutCDR3);
+
+                            Mutations<NucleotideSequence> CDR3Mutations = Aligner.alignGlobal(
+                                    AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
+                                    clone.mutations.CDR3,
+                                    compareWith.getContent().mutations.CDR3
+                            ).getAbsoluteMutations();
+                            return VMutations.size() + JMutations.size() + CDR3Mutations.size();
+                        }))
+                        .orElseThrow(IllegalArgumentException::new)
+                        .addChild(clone, null)
+        );
+        return tree;
+    }
+
+    private int getRelativePosition(VDJCHit hit, ReferencePoint referencePoint) {
+        return hit.getGene().getPartitioning().getRelativePosition(hit.getAlignedFeature(), referencePoint);
+    }
+
+    //TODO two matches from the same DGene but in different positions
+    private List<VDJCGene> topScoredDGenes(Cluster<CloneDescriptor> cluster) {
+        List<Map.Entry<VDJCGene, Double>> DGeneScores = cluster.cluster.stream()
+                .flatMap(it -> Arrays.stream(it.cloneWrapper.clone.getHits(Diversity)))
+                .collect(Collectors.groupingBy(VDJCHit::getGene, Collectors.summingDouble(VDJCHit::getScore)))
+                .entrySet().stream()
+                .sorted(Map.Entry.<VDJCGene, Double>comparingByValue().reversed())
+                .collect(Collectors.toList());
+        if (DGeneScores.isEmpty()) {
+            return Collections.emptyList();
+        } else if (DGeneScores.size() == 1) {
+            return Collections.singletonList(DGeneScores.get(0).getKey());
+        }
+        Double maxScore = DGeneScores.get(0).getValue();
+
+        //TODO to parameters
+        double scoreDifferenceThreshold = 1.5;
+        return Stream.concat(
+                Stream.of(DGeneScores.get(0).getKey()),
+                DGeneScores.subList(1, DGeneScores.size() - 1).stream()
+                        .filter(it -> it.getValue() < maxScore / scoreDifferenceThreshold)
+                        .map(Map.Entry::getKey)
+        ).collect(Collectors.toList());
     }
 
     private double distanceToCluster(CloneDescriptor cloneDescriptor, Cluster.Builder<CloneDescriptor> cluster) {
         return cluster.getCurrentCluster().stream()
-                .mapToDouble(compareTo -> computeDistance(cloneDescriptor, compareTo))
+                .mapToDouble(compareTo -> computeDistance(cloneDescriptor.mutations, compareTo.mutations))
                 .min()
                 .orElseThrow(IllegalArgumentException::new);
     }
 
-    private double computeDistance(CloneDescriptor clone, CloneDescriptor compareWith) {
-        Mutations<NucleotideSequence> VMutations = clone.VMutationsWithoutCDR3.invert().combineWith(compareWith.VMutationsWithoutCDR3);
-        Mutations<NucleotideSequence> JMutations = clone.JMutationsWithoutCDR3.invert().combineWith(compareWith.JMutationsWithoutCDR3);
+    private double computeDistance(MutationsDescriptor base, MutationsDescriptor compareWith) {
+        Mutations<NucleotideSequence> VMutations = base.VMutationsWithoutCDR3.invert().combineWith(compareWith.VMutationsWithoutCDR3);
+        Mutations<NucleotideSequence> JMutations = base.JMutationsWithoutCDR3.invert().combineWith(compareWith.JMutationsWithoutCDR3);
 
         Mutations<NucleotideSequence> CDR3Mutations = Aligner.alignGlobal(
                 AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-                clone.CDR3,
+                base.CDR3,
                 compareWith.CDR3
         ).getAbsoluteMutations();
 
-        double CDR3Length = (clone.CDR3.size() + compareWith.CDR3.size()) / 2.0;
-        double VLength = (clone.VLengthWithoutCDR3 + compareWith.VLengthWithoutCDR3) / 2.0;
-        double JLength = (clone.JLengthWithoutCDR3 + compareWith.JLengthWithoutCDR3) / 2.0;
+        double CDR3Length = (base.CDR3.size() + compareWith.CDR3.size()) / 2.0;
+        double VLength = (base.VLengthWithoutCDR3 + compareWith.VLengthWithoutCDR3) / 2.0;
+        double JLength = (base.JLengthWithoutCDR3 + compareWith.JLengthWithoutCDR3) / 2.0;
 
-        double normalizedDistanceFromCloneToGermline = (clone.VMutationsWithoutCDR3.size() + clone.JMutationsWithoutCDR3.size()) / (VLength + JLength);
+        double normalizedDistanceFromCloneToGermline = (base.VMutationsWithoutCDR3.size() + base.JMutationsWithoutCDR3.size()) / (VLength + JLength);
         double normalizedDistanceFromCompareToGermline = (compareWith.VMutationsWithoutCDR3.size() + compareWith.JMutationsWithoutCDR3.size()) / (VLength + JLength);
         double normalizedAverageDistanceToGermline = (normalizedDistanceFromCloneToGermline + normalizedDistanceFromCompareToGermline) / 2.0;
         double normalizedDistanceBetweenClones = (VMutations.size() + JMutations.size() + CDR3Mutations.size()) / (VLength + JLength + CDR3Length);
@@ -266,7 +421,7 @@ public class SHMTreeBuilder {
 
     private static int ntLengthOfWithoutCDR3(Clone clone, GeneType geneType) {
         VDJCHit bestHit = clone.getBestHit(geneType);
-        Range CDR3Range = new Range(bestHit.getPosition(0, CDR3Begin), bestHit.getPosition(0, CDR3End));
+        Range CDR3Range = CDR3Sequence1Range(bestHit, 0);
 
         return Arrays.stream(bestHit.getAlignments())
                 .map(Alignment::getSequence1Range)
@@ -275,26 +430,32 @@ public class SHMTreeBuilder {
                 .sum();
     }
 
-
-    private static class CloneDescriptor {
+    private static class MutationsDescriptor {
         private final Mutations<NucleotideSequence> VMutationsWithoutCDR3;
         private final Mutations<NucleotideSequence> JMutationsWithoutCDR3;
         private final NucleotideSequence CDR3;
         private final int VLengthWithoutCDR3;
         private final int JLengthWithoutCDR3;
+
+        private MutationsDescriptor(Mutations<NucleotideSequence> vMutationsWithoutCDR3,
+                                    Mutations<NucleotideSequence> jMutationsWithoutCDR3,
+                                    NucleotideSequence cdr3,
+                                    int vLengthWithoutCDR3,
+                                    int jLengthWithoutCDR3) {
+            VMutationsWithoutCDR3 = vMutationsWithoutCDR3;
+            JMutationsWithoutCDR3 = jMutationsWithoutCDR3;
+            CDR3 = cdr3;
+            VLengthWithoutCDR3 = vLengthWithoutCDR3;
+            JLengthWithoutCDR3 = jLengthWithoutCDR3;
+        }
+    }
+
+    private static class CloneDescriptor {
+        private final MutationsDescriptor mutations;
         private final CloneWrapper cloneWrapper;
 
-        private CloneDescriptor(Mutations<NucleotideSequence> VMutationsWithoutCDR3,
-                                Mutations<NucleotideSequence> JMutationsWithoutCDR3,
-                                NucleotideSequence CDR3,
-                                int VLengthWithoutCDR3,
-                                int JLengthWithoutCDR3,
-                                CloneWrapper cloneWrapper) {
-            this.VMutationsWithoutCDR3 = VMutationsWithoutCDR3;
-            this.JMutationsWithoutCDR3 = JMutationsWithoutCDR3;
-            this.CDR3 = CDR3;
-            this.VLengthWithoutCDR3 = VLengthWithoutCDR3;
-            this.JLengthWithoutCDR3 = JLengthWithoutCDR3;
+        private CloneDescriptor(MutationsDescriptor mutations, CloneWrapper cloneWrapper) {
+            this.mutations = mutations;
             this.cloneWrapper = cloneWrapper;
         }
     }
