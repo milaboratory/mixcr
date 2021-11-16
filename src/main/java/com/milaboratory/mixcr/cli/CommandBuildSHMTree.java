@@ -47,6 +47,7 @@ import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.trees.*;
+import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.RealOrSynthetic;
 import com.milaboratory.mixcr.util.ExceptionUtil;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import io.repseq.core.*;
@@ -130,12 +131,20 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
         OutputPortCloseable<CloneWrapper> sortedClonotypes = shmTreeBuilder.sortClonotypes();
         OutputPortCloseable<Cluster<CloneWrapper>> clusters = shmTreeBuilder.buildClusters(sortedClonotypes);
 
-        NewickTreePrinter<CloneWrapper, NucleotideSequence> mutationsPrinter = new NewickTreePrinter<>(c -> new StringBuilder()
-                .append("V: ").append(mutations(c.clone, Variable).collect(Collectors.toList()))
-                .append(" J:").append(mutations(c.clone, Joining).collect(Collectors.toList()))
-                .toString(), it -> "", false, false);
+        NewickTreePrinter<RealOrSynthetic<CloneWrapper, NucleotideSequence>> mutationsPrinter = new NewickTreePrinter<>(
+                node -> node.convert(c -> new StringBuilder()
+                                .append("V: ").append(mutations(c.clone, Variable).collect(Collectors.toList()))
+                                .append(" J:").append(mutations(c.clone, Joining).collect(Collectors.toList()))
+                                .toString(),
+                        it -> ""
+                ),
+                false, false
+        );
 
-        NewickTreePrinter<CloneWrapper, NucleotideSequence> idPrinter = new NewickTreePrinter<>(c -> String.valueOf(c.clone.getId()), it -> "", false, false);
+        NewickTreePrinter<RealOrSynthetic<CloneWrapper, NucleotideSequence>> idPrinter = new NewickTreePrinter<>(
+                node -> node.convert(c -> String.valueOf(c.clone.getId()), it -> ""),
+                false, false
+        );
 
         Cluster<CloneWrapper> clusterTemp;
         while ((clusterTemp = clusters.take()) != null) {
@@ -366,7 +375,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
 //            IGHV3-48*00IGHJ6*00 CDR3 length: 66
 //
 //            IGHV3-30*00IGHJ4*00 CDR3 length: 42
-                    Collection<Tree<CloneWrapper, NucleotideSequence>> trees = shmTreeBuilder.processCluster(cluster);
+                    Collection<Tree<RealOrSynthetic<CloneWrapper, NucleotideSequence>>> trees = shmTreeBuilder.processCluster(cluster);
                     System.out.println(trees.stream().map(mutationsPrinter::print).collect(Collectors.joining("\n")));
                     System.out.println("\n");
 

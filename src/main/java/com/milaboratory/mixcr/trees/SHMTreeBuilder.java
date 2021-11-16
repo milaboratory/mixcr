@@ -37,6 +37,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneReader;
 import com.milaboratory.mixcr.basictypes.IOUtil;
+import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.RealOrSynthetic;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
 import com.milaboratory.util.sorting.HashSorter;
 
@@ -156,7 +157,7 @@ public class SHMTreeBuilder {
         };
     }
 
-    public Collection<Tree<CloneWrapper, NucleotideSequence>> processCluster(Cluster<CloneWrapper> clusterBySameVAndJ) {
+    public Collection<Tree<RealOrSynthetic<CloneWrapper, NucleotideSequence>>> processCluster(Cluster<CloneWrapper> clusterBySameVAndJ) {
         return new ClusterProcessor(clusterBySameVAndJ).buildTrees();
     }
 }

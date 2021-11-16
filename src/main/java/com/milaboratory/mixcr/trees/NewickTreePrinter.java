@@ -35,30 +35,27 @@ import java.util.stream.Collectors;
 /**
  * https://en.wikipedia.org/wiki/Newick_format
  */
-public class NewickTreePrinter<T, E> implements TreePrinter<T, E> {
-    private final Function<T, String> nameExtractorFromReal;
-    private final Function<E, String> nameExtractorFromSynthetic;
+public class NewickTreePrinter<T> implements TreePrinter<T> {
+    private final Function<T, String> nameExtractor;
     private final boolean printDistances;
     private final boolean printOnlyLeafNames;
 
     public NewickTreePrinter(
-            Function<T, String> nameExtractorFromReal,
-            Function<E, String> nameExtractorFromSynthetic,
+            Function<T, String> nameExtractor,
             boolean printDistances,
             boolean printOnlyLeafNames
     ) {
-        this.nameExtractorFromReal = nameExtractorFromReal;
-        this.nameExtractorFromSynthetic = nameExtractorFromSynthetic;
+        this.nameExtractor = nameExtractor;
         this.printDistances = printDistances;
         this.printOnlyLeafNames = printOnlyLeafNames;
     }
 
     @Override
-    public String print(Tree<T, E> tree) {
+    public String print(Tree<T> tree) {
         return printNode(tree.getRoot()) + ";";
     }
 
-    private String printNode(Tree.Node<T, E> node) {
+    private String printNode(Tree.Node<T> node) {
         StringBuilder sb = new StringBuilder();
         if (!node.getLinks().isEmpty()) {
             sb.append(node.getLinks().stream()
@@ -73,13 +70,7 @@ public class NewickTreePrinter<T, E> implements TreePrinter<T, E> {
                     .collect(Collectors.joining(",", "(", ")")));
         }
         if (!printOnlyLeafNames || node.getLinks().isEmpty()) {
-            if (node instanceof Tree.Node.Real<?, ?>) {
-                sb.append(nameExtractorFromReal.apply(((Tree.Node.Real<T, E>) node).getContent()));
-            } else if (node instanceof Tree.Node.Synthetic<?, ?>) {
-                sb.append(nameExtractorFromSynthetic.apply(((Tree.Node.Synthetic<T, E>) node).getContent()));
-            } else {
-                throw new IllegalArgumentException();
-            }
+            sb.append(nameExtractor.apply(node.getContent()));
         }
         return sb.toString();
     }

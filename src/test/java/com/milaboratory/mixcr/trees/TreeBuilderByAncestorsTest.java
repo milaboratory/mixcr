@@ -1,5 +1,6 @@
 package com.milaboratory.mixcr.trees;
 
+import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.RealOrSynthetic;
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -10,9 +11,8 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.assertEquals;
 
 public class TreeBuilderByAncestorsTest {
-    private final TreePrinter<int[], int[]> treePrinter = new NewickTreePrinter<>(
-            this::print,
-            node -> "'" + print(node) + "'",
+    private final TreePrinter<RealOrSynthetic<int[], int[]>> treePrinter = new NewickTreePrinter<>(
+            node -> node.convert(this::print, content -> "'" + print(content) + "'"),
             true,
             false
     );
@@ -68,6 +68,36 @@ public class TreeBuilderByAncestorsTest {
                 .addNode(new int[]{1, 1, 0})
                 .addNode(new int[]{1, 0, 1});
         assertTreeBuilder("(100:0,(110:0)'110':1,(101:0)'101':1)'100';", treeBuilder);
+    }
+
+    /**
+     * <pre>
+     *          |
+     *     ----(A)-------------
+     *     |         |        |
+     *    |M1|      |M2|      0
+     *     |         |        |
+     *    (B)-0-B   (C)-0-C   A
+     * =======
+     *  A ⊂ D, B ⊄ D, C ⊄ D
+     *  M3: A*M3 = D,
+     *  M1⋂M3 = ∅, M2⋂M3 = ∅,
+     * =======
+     *          |
+     *     ----(A)----------------------
+     *     |         |        |        |
+     *    |M1|      |M2|     |M3|      0
+     *     |         |        |        |
+     *    (B)-0-B   (C)-0-C  (D)-0-D   A
+     * </pre>
+     */
+    @Test
+    public void addThirdDirectAncestor() {
+        TreeBuilderByAncestors<int[], int[]> treeBuilder = treeBuilder(new int[]{0, 0, 0})
+                .addNode(new int[]{1, 0, 0})
+                .addNode(new int[]{0, 1, 0})
+                .addNode(new int[]{0, 0, 1});
+        assertTreeBuilder("(000:0,(100:0)'100':1,(010:0)'010':1,(001:0)'001':1)'000';", treeBuilder);
     }
 
     /**

@@ -40,135 +40,102 @@ import java.util.stream.Stream;
 /**
  *
  */
-public class Tree<T, E> {
-    private Node<T, E> root;
+public class Tree<T> {
+    private Node<T> root;
 
-    public Tree(Node<T, E> root) {
+    public Tree(Node<T> root) {
         this.root = root;
     }
 
-    public Node<T, E> getRoot() {
+    public Node<T> getRoot() {
         return root;
     }
 
-    void setRoot(Node<T, E> root) {
+    void setRoot(Node<T> root) {
         this.root = root;
     }
 
-    public Stream<Node<T, E>> allNodes() {
+    public Stream<Node<T>> allNodes() {
         return Stream.concat(
                 Stream.of(root),
                 root.allDescendants()
         );
     }
 
-    public <R1, R2> Tree<R1, R2> map(Function<T, R1> mapperReal, Function<E, R2> mapperSynthetic) {
-        return new Tree<>(root.map(mapperReal, mapperSynthetic));
+    public <R> Tree<R> map(Function<T, R> mapper) {
+        return new Tree<>(root.map(mapper));
     }
 
-    public static abstract class Node<T, E> {
-        private final List<NodeLink<T, E>> children;
+    public static class Node<T> {
+        private final T content;
+        private final List<NodeLink<T>> children;
         @Nullable
-        private Node<T, E> parent = null;
+        private Node<T> parent = null;
 
         @Nullable
-        Node<T, E> getParent() {
+        Node<T> getParent() {
             return parent;
         }
 
-        void setParent(Node<T, E> parent) {
+        void setParent(Node<T> parent) {
             this.parent = parent;
         }
 
-        protected Node() {
+        protected Node(T content) {
+            this.content = content;
             children = new ArrayList<>();
         }
 
-        protected Node(List<NodeLink<T, E>> children) {
+        protected Node(T content, List<NodeLink<T>> children) {
+            this.content = content;
             this.children = children;
         }
 
-        public List<NodeLink<T, E>> getLinks() {
+        public List<NodeLink<T>> getLinks() {
             return children;
         }
 
-        public void addChild(Node<T, E> node, @Nullable BigDecimal distance) {
+        public void addChild(Node<T> node, @Nullable BigDecimal distance) {
             node.setParent(this);
             children.add(new NodeLink<>(node, distance));
         }
 
-        public void replaceChild(Node<T, E> what, Node<T, E> substitution, @Nullable BigDecimal distance) {
+        public T getContent() {
+            return content;
+        }
+
+        public void replaceChild(Node<T> what, Node<T> substitution, @Nullable BigDecimal distance) {
             if (!children.removeIf(it -> it.node == what)) {
                 throw new IllegalArgumentException();
             }
             children.add(new NodeLink<>(substitution, distance));
         }
 
-        Stream<Node<T, E>> allDescendants() {
+        Stream<Node<T>> allDescendants() {
             return children.stream()
                     .map(NodeLink::getNode)
                     .flatMap(child -> Stream.concat(Stream.of(child), child.allDescendants()));
         }
 
-        public <R1, R2> Node<R1, R2> map(Function<T, R1> mapperReal, Function<E, R2> mapperSynthetic) {
-            List<NodeLink<R1, R2>> mapperLinks = children.stream()
-                    .map(child -> new NodeLink<>(child.node.map(mapperReal, mapperSynthetic), child.distance))
+        public <R> Node<R> map(Function<T, R> mapper) {
+            List<NodeLink<R>> mapperLinks = children.stream()
+                    .map(child -> new NodeLink<>(child.node.map(mapper), child.distance))
                     .collect(Collectors.toList());
-            if (this instanceof Real) {
-                return new Node.Real<>(mapperReal.apply(((Real<T, E>) this).getContent()), mapperLinks);
-            } else if (this instanceof Synthetic) {
-                return new Node.Synthetic<>(mapperSynthetic.apply(((Synthetic<T, E>) this).getContent()), mapperLinks);
-            } else {
-                throw new IllegalStateException();
-            }
-        }
-
-        public static class Real<T, E> extends Node<T, E> {
-            private final T content;
-
-            public Real(T content) {
-                this.content = content;
-            }
-
-            public Real(T content, List<NodeLink<T, E>> children) {
-                super(children);
-                this.content = content;
-            }
-
-            public T getContent() {
-                return content;
-            }
-        }
-
-        public static class Synthetic<T, E> extends Node<T, E> {
-            private final E content;
-
-            public Synthetic(E content) {
-                this.content = content;
-            }
-
-            public Synthetic(E content, List<NodeLink<T, E>> children) {
-                super(children);
-                this.content = content;
-            }
-
-            public E getContent() {
-                return content;
-            }
+            return new Node<>(mapper.apply(content), mapperLinks);
         }
     }
 
-    public static class NodeLink<T, E> {
-        private final Node<T, E> node;
+    static class NodeLink<T> {
+        private final Node<T> node;
         @Nullable
         private final BigDecimal distance;
 
-        public NodeLink(Node<T, E> node, @Nullable BigDecimal distance) {
+        public NodeLink(Node<T> node, @Nullable BigDecimal distance) {
             this.node = node;
             this.distance = distance;
         }
 
-        public Node<T, E> getNode() {
+        public Node<T> getNode() {
             return node;
         }
 

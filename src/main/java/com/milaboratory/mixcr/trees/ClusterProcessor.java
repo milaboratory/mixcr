@@ -9,6 +9,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceBuilder;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.RealOrSynthetic;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
 import org.apache.commons.math3.util.Pair;
@@ -60,7 +61,7 @@ class ClusterProcessor {
      * 3. Add possible common ancestors
      * 4. Iterate over remain clonotypes and try to add them to build trees with possible ancestors. Try to merge trees
      */
-    Collection<Tree<CloneWrapper, NucleotideSequence>> buildTrees() {
+    Collection<Tree<RealOrSynthetic<CloneWrapper, NucleotideSequence>>> buildTrees() {
         List<CloneWithMutationsFromVJGermline> clones = originalCluster.cluster.stream()
                 .map(cloneWrapper -> new CloneWithMutationsFromVJGermline(
                         new MutationsFromVJGermline(
@@ -92,18 +93,18 @@ class ClusterProcessor {
             }
         }
 
-        List<Tree<CloneWithMutationsFromReconstructedRoot, MutationsFromReconstructedRoot>> firstStepTrees = clusteredClones.stream()
+        List<Tree<RealOrSynthetic<CloneWithMutationsFromReconstructedRoot, MutationsFromReconstructedRoot>>> firstStepTrees = clusteredClones.stream()
                 .map(Cluster.Builder::build)
                 .filter(it -> it.cluster.size() > 1)
                 .map(this::buildATree)
                 .collect(Collectors.toList());
 
         return firstStepTrees.stream()
-                .map(tree -> tree.map(it -> it.cloneWrapper, this::buildSequence))
+                .map(tree -> tree.map(node -> node.map(it -> it.cloneWrapper, this::buildSequence)))
                 .collect(Collectors.toList());
     }
 
-    private Tree<CloneWithMutationsFromReconstructedRoot, MutationsFromReconstructedRoot> buildATree(Cluster<CloneWithMutationsFromVJGermline> cluster) {
+    private Tree<RealOrSynthetic<CloneWithMutationsFromReconstructedRoot, MutationsFromReconstructedRoot>> buildATree(Cluster<CloneWithMutationsFromVJGermline> cluster) {
         // Build a tree for every cluster
         // determine D gene
         // fix marks of VEnd and JBegin
