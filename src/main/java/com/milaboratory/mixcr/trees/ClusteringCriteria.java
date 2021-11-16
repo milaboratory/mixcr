@@ -5,12 +5,12 @@ import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.mutations.Mutation;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.mutations.MutationsBuilder;
-import com.milaboratory.core.sequence.NucleotideAlphabet;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
+import io.repseq.core.ReferencePoint;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -76,6 +76,7 @@ public interface ClusteringCriteria {
         return getAbsoluteMutationsWithoutCDR3(clone, geneType).size();
     }
 
+    //TODO use extractAbsoluteMutationsForRange
     static Mutations<NucleotideSequence> getAbsoluteMutationsWithoutCDR3(Clone clone, GeneType geneType) {
         VDJCHit bestHit = clone.getBestHit(geneType);
 
@@ -92,19 +93,22 @@ public interface ClusteringCriteria {
                 })
                 .toArray();
 
-        NucleotideAlphabet alphabet = bestHit.getAlignment(0).getSequence1().getAlphabet();
-        return new MutationsBuilder<>(alphabet, false, filteredMutations, filteredMutations.length).createAndDestroy();
+        return new MutationsBuilder<>(NucleotideSequence.ALPHABET, false, filteredMutations, filteredMutations.length).createAndDestroy();
     }
 
     static Range CDR3Sequence1Range(VDJCHit hit, int target) {
-        int from = hit.getGene().getPartitioning().getRelativePosition(hit.getAlignedFeature(), CDR3Begin);
+        int from = getRelativePosition(hit, CDR3Begin);
         if (from == -1) {
             from = hit.getAlignment(target).getSequence1Range().getLower();
         }
-        int to = hit.getGene().getPartitioning().getRelativePosition(hit.getAlignedFeature(), CDR3End);
+        int to = getRelativePosition(hit, CDR3End);
         if (to == -1) {
             to = hit.getAlignment(target).getSequence1Range().getUpper();
         }
         return new Range(from, to);
+    }
+
+    static int getRelativePosition(VDJCHit hit, ReferencePoint referencePoint) {
+        return hit.getGene().getPartitioning().getRelativePosition(hit.getAlignedFeature(), referencePoint);
     }
 }

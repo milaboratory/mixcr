@@ -29,6 +29,6 @@
  */
 package com.milaboratory.mixcr.trees;
 
-public interface TreePrinter<T> {
-    String print(Tree<T> tree);
+public interface TreePrinter<T, E> {
+    String print(Tree<T, E> tree);
 }

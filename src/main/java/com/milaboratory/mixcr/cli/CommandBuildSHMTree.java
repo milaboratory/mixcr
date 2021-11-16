@@ -130,12 +130,12 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
         OutputPortCloseable<CloneWrapper> sortedClonotypes = shmTreeBuilder.sortClonotypes();
         OutputPortCloseable<Cluster<CloneWrapper>> clusters = shmTreeBuilder.buildClusters(sortedClonotypes);
 
-        NewickTreePrinter<CloneWrapper> mutationsPrinter = new NewickTreePrinter<>(c -> new StringBuilder()
+        NewickTreePrinter<CloneWrapper, NucleotideSequence> mutationsPrinter = new NewickTreePrinter<>(c -> new StringBuilder()
                 .append("V: ").append(mutations(c.clone, Variable).collect(Collectors.toList()))
                 .append(" J:").append(mutations(c.clone, Joining).collect(Collectors.toList()))
-                .toString(), false, false);
+                .toString(), it -> "", false, false);
 
-        NewickTreePrinter<CloneWrapper> idPrinter = new NewickTreePrinter<>(c -> String.valueOf(c.clone.getId()), false, false);
+        NewickTreePrinter<CloneWrapper, NucleotideSequence> idPrinter = new NewickTreePrinter<>(c -> String.valueOf(c.clone.getId()), it -> "", false, false);
 
         Cluster<CloneWrapper> clusterTemp;
         while ((clusterTemp = clusters.take()) != null) {
@@ -366,69 +366,12 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
 //            IGHV3-48*00IGHJ6*00 CDR3 length: 66
 //
 //            IGHV3-30*00IGHJ4*00 CDR3 length: 42
-                    Collection<Tree<CloneWrapper>> trees = shmTreeBuilder.processCluster(cluster);
-//                    System.out.println(trees.stream().map(mutationsPrinter::print).collect(Collectors.joining("\n")));
-//                    System.out.println("\n");
-//
-//                    System.out.println(trees.stream().map(idPrinter::print).collect(Collectors.joining("\n")));
-//                    System.out.println("\n");
-//
-//                    System.out.println("absalute mutations:\n");
-//                    System.out.println(trees.stream()
-//                            .map(tree -> {
-//                                NewickTreePrinter<Clone> treePrinter = new NewickTreePrinter<>(
-//                                        clone -> {
-//                                            Optional<Tree.Node<Clone>> parent = tree.findParent(clone);
-//                                            if (parent.isPresent()) {
-//                                                return String.format("%d:%d|%d|%d",
-//                                                        clone.getId(),
-//                                                        mutationsBetweenWithoutCDR3(clone, parent.get().getContent(), Variable).size(),
-//                                                        mutationsBetween(clone, parent.get().getContent(), CDR3).size(),
-//                                                        mutationsBetweenWithoutCDR3(clone, parent.get().getContent(), Joining).size()
-//                                                );
-//                                            } else {
-//                                                return String.valueOf(clone.getId());
-//                                            }
-//                                        },
-//                                        false,
-//                                        false
-//                                );
-//                                return treePrinter.print(tree);
-//                            })
-//                            .collect(Collectors.joining("\n")));
-//                    System.out.println("\n");
-//
-//                    System.out.println("rate of mutations:\n");
-//                    System.out.println(trees.stream()
-//                            .map(tree -> tree.map(cw -> cw.clone))
-//                            .map(tree -> {
-//                                NewickTreePrinter<Clone> treePrinter = new NewickTreePrinter<>(
-//                                        clone -> {
-//                                            Optional<Tree.Node<Clone>> parent = tree.findParent(clone);
-//                                            if (parent.isPresent()) {
-//                                                Clone compareWith = parent.get().getContent();
-//                                                int vMutations = mutationsBetweenWithoutCDR3(clone, compareWith, Variable).size();
-//                                                int jMutations = mutationsBetweenWithoutCDR3(clone, compareWith, Joining).size();
-//                                                int cdr3Mutations = mutationsBetween(clone, compareWith, new GeneFeature(VEndTrimmed, JBeginTrimmed)).size();
-//                                                int VPlusJLength = ntLengthOfWithoutCDR3(clone, Variable) + ntLengthOfWithoutCDR3(clone, Joining);
-//                                                double vjRate = (vMutations + jMutations) / (double) VPlusJLength;
-//                                                double crd3rate = cdr3Mutations / (double) clone.ntLengthOf(new GeneFeature(VEndTrimmed, JBeginTrimmed));
-//                                                return String.format("%d:%.2f|%2d",
-//                                                        clone.getId(),
-//                                                        vjRate == 0 ? 0 : crd3rate / vjRate,
-//                                                        vMutations + jMutations + cdr3Mutations
-//                                                );
-//                                            } else {
-//                                                return String.valueOf(clone.getId());
-//                                            }
-//                                        },
-//                                        false,
-//                                        false
-//                                );
-//                                return treePrinter.print(tree);
-//                            })
-//                            .collect(Collectors.joining("\n")));
-//                    System.out.println("\n");
+                    Collection<Tree<CloneWrapper, NucleotideSequence>> trees = shmTreeBuilder.processCluster(cluster);
+                    System.out.println(trees.stream().map(mutationsPrinter::print).collect(Collectors.joining("\n")));
+                    System.out.println("\n");
+
+                    System.out.println(trees.stream().map(idPrinter::print).collect(Collectors.joining("\n")));
+                    System.out.println("\n");
 
                     System.out.println("ids:\n");
                     System.out.println(cluster.cluster.stream().map(it -> String.valueOf(it.clone.getId())).collect(Collectors.joining("|")));

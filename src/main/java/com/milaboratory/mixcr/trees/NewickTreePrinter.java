@@ -35,29 +35,36 @@ import java.util.stream.Collectors;
 /**
  * https://en.wikipedia.org/wiki/Newick_format
  */
-public class NewickTreePrinter<T> implements TreePrinter<T> {
-    private final Function<T, String> nameExtractor;
+public class NewickTreePrinter<T, E> implements TreePrinter<T, E> {
+    private final Function<T, String> nameExtractorFromReal;
+    private final Function<E, String> nameExtractorFromSynthetic;
     private final boolean printDistances;
     private final boolean printOnlyLeafNames;
 
-    public NewickTreePrinter(Function<T, String> nameExtractor, boolean printDistances, boolean printOnlyLeafNames) {
-        this.nameExtractor = nameExtractor;
+    public NewickTreePrinter(
+            Function<T, String> nameExtractorFromReal,
+            Function<E, String> nameExtractorFromSynthetic,
+            boolean printDistances,
+            boolean printOnlyLeafNames
+    ) {
+        this.nameExtractorFromReal = nameExtractorFromReal;
+        this.nameExtractorFromSynthetic = nameExtractorFromSynthetic;
         this.printDistances = printDistances;
         this.printOnlyLeafNames = printOnlyLeafNames;
     }
 
     @Override
-    public String print(Tree<T> tree) {
+    public String print(Tree<T, E> tree) {
         return printNode(tree.getRoot()) + ";";
     }
 
-    private String printNode(Tree.Node<T> node) {
+    private String printNode(Tree.Node<T, E> node) {
         StringBuilder sb = new StringBuilder();
         if (!node.getLinks().isEmpty()) {
             sb.append(node.getLinks().stream()
                     .map(link -> {
                         String printedNode = printNode(link.getNode());
-                        if (printDistances) {
+                        if (printDistances && link.getDistance() != null) {
                             return printedNode + ":" + link.getDistance();
                         } else {
                             return printedNode;
@@ -66,7 +73,13 @@ public class NewickTreePrinter<T> implements TreePrinter<T> {
                     .collect(Collectors.joining(",", "(", ")")));
         }
         if (!printOnlyLeafNames || node.getLinks().isEmpty()) {
-            sb.append(nameExtractor.apply(node.getContent()));
+            if (node instanceof Tree.Node.Real<?, ?>) {
+                sb.append(nameExtractorFromReal.apply(((Tree.Node.Real<T, E>) node).getContent()));
+            } else if (node instanceof Tree.Node.Synthetic<?, ?>) {
+                sb.append(nameExtractorFromSynthetic.apply(((Tree.Node.Synthetic<T, E>) node).getContent()));
+            } else {
+                throw new IllegalArgumentException();
+            }
         }
         return sb.toString();
     }
