@@ -26,7 +26,7 @@ public class TreeBuilderByAncestors<T, E> {
         this.distanceBetween = distanceBetween;
         this.findCommonAncestor = findCommonAncestor;
         this.asAncestor = asAncestor;
-        Tree.Node<RealOrSynthetic<T, E>> rootNode = new Tree.Node<>(new Synthetic<>(asAncestor.apply(root)));
+        Tree.Node<RealOrSynthetic<T, E>> rootNode = new Tree.Node<>(new Synthetic<>(asAncestor.apply(root), BigDecimal.ZERO));
         tree = new Tree<>(rootNode);
         rootNode.addChild(new Tree.Node<>(new Real<>(root)), BigDecimal.ZERO);
     }
@@ -85,14 +85,20 @@ public class TreeBuilderByAncestors<T, E> {
                         return replaceNode(nearestNode, toAdd, commonAncestor);
                     }
                 })
-                .min(Comparator.comparing(Action::changeOfDistance))
+                .min(Comparator.comparing(Action::changeOfDistance).thenComparing(Action::distanceFromReal))
                 .orElseThrow(IllegalArgumentException::new)
                 .apply();
         return this;
     }
 
     private Action replaceNode(Tree.Node<RealOrSynthetic<T, E>> replacedNode, T with, E commonAncestor) {
-        Tree.Node<RealOrSynthetic<T, E>> replacement = new Tree.Node<>(new Synthetic<>(commonAncestor));
+        BigDecimal minDistanceFromReal;
+        if (replacedNode.getParent() != null) {
+            minDistanceFromReal = ((Synthetic<T, E>) replacedNode.getParent().getContent()).minDistanceFromReal.add(replacedNode.getDistanceFromParent());
+        } else {
+            minDistanceFromReal = BigDecimal.ZERO;
+        }
+        Tree.Node<RealOrSynthetic<T, E>> replacement = new Tree.Node<>(new Synthetic<>(commonAncestor, minDistanceFromReal));
         replacement.addChild(replacedNode.copy(), distanceBetween.apply(commonAncestor, ((Synthetic<T, E>) replacedNode.getContent()).getContent()));
         replacement.addChild(nodePairWithSynthetic(with), distanceBetween.apply(commonAncestor, asAncestor.apply(with)));
         if (replacedNode.getParent() == null) {
@@ -104,7 +110,7 @@ public class TreeBuilderByAncestors<T, E> {
     }
 
     private Tree.Node<RealOrSynthetic<T, E>> nodePairWithSynthetic(T toAdd) {
-        Tree.Node<RealOrSynthetic<T, E>> ancestorNode = new Tree.Node<>(new Synthetic<>(asAncestor.apply(toAdd)));
+        Tree.Node<RealOrSynthetic<T, E>> ancestorNode = new Tree.Node<>(new Synthetic<>(asAncestor.apply(toAdd), BigDecimal.ZERO));
         ancestorNode.addChild(new Tree.Node<>(new Real<>(toAdd)), BigDecimal.ZERO);
         return ancestorNode;
     }
@@ -115,6 +121,8 @@ public class TreeBuilderByAncestors<T, E> {
 
     private static abstract class Action {
         abstract BigDecimal changeOfDistance();
+
+        abstract BigDecimal distanceFromReal();
 
         abstract void apply();
     }
@@ -133,6 +141,11 @@ public class TreeBuilderByAncestors<T, E> {
         @Override
         BigDecimal changeOfDistance() {
             return distance;
+        }
+
+        @Override
+        BigDecimal distanceFromReal() {
+            return ((Synthetic<T, E>) addTo.getContent()).minDistanceFromReal;
         }
 
         @Override
@@ -161,6 +174,11 @@ public class TreeBuilderByAncestors<T, E> {
         }
 
         @Override
+        BigDecimal distanceFromReal() {
+            return ((Synthetic<T, E>) replaceWhat.getContent()).minDistanceFromReal;
+        }
+
+        @Override
         void apply() {
             if (replaceWhat.getParent() == null) {
                 tree.setRoot(replacement);
@@ -175,7 +193,8 @@ public class TreeBuilderByAncestors<T, E> {
             if (this instanceof Real<?, ?>) {
                 return new Real<>(mapReal.apply(((Real<T, E>) this).getContent()));
             } else if (this instanceof Synthetic<?, ?>) {
-                return new Synthetic<>(mapSynthetic.apply(((Synthetic<T, E>) this).getContent()));
+                Synthetic<T, E> casted = (Synthetic<T, E>) this;
+                return new Synthetic<>(mapSynthetic.apply(casted.getContent()), casted.minDistanceFromReal);
             } else {
                 throw new IllegalArgumentException();
             }
@@ -206,9 +225,11 @@ public class TreeBuilderByAncestors<T, E> {
 
     public static class Synthetic<T, E> extends RealOrSynthetic<T, E> {
         private final E content;
+        private final BigDecimal minDistanceFromReal;
 
-        public Synthetic(E content) {
+        public Synthetic(E content, BigDecimal minDistanceFromReal) {
             this.content = content;
+            this.minDistanceFromReal = minDistanceFromReal;
         }
 
         public E getContent() {

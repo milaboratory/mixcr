@@ -118,9 +118,14 @@ public class Tree<T> {
             return children;
         }
 
-        public void addChild(Node<T> node, @Nullable BigDecimal distance) {
+        public Node<T> addChild(Node<T> node) {
+            return addChild(node, null);
+        }
+
+        public Node<T> addChild(Node<T> node, @Nullable BigDecimal distance) {
             node.setParent(this, distance);
             children.add(new NodeLink<>(node, distance));
+            return this;
         }
 
         public T getContent() {

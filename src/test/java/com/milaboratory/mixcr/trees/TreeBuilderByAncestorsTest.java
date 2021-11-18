@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.Real;
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.RealOrSynthetic;
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.Synthetic;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -16,10 +17,16 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class TreeBuilderByAncestorsTest {
     private final TreePrinter<RealOrSynthetic<List<Integer>, List<Integer>>> treePrinter = new NewickTreePrinter<>(
             node -> node.convert(this::print, content -> "'" + print(content) + "'"),
+            true,
+            false
+    );
+    private final NewickTreePrinter<List<Integer>> treePrinterOnlyReal = new NewickTreePrinter<>(
+            this::print,
             true,
             false
     );
@@ -221,16 +228,53 @@ public class TreeBuilderByAncestorsTest {
     }
 
     @Test
+    public void chooseInsertionNearerToRealNode() {
+        Tree<List<Integer>> orignial = new Tree<>(
+                new Tree.Node<>(parseNode("0000000000"))
+                        .addChild(new Tree.Node<>(parseNode("1010000000"))
+                                .addChild(new Tree.Node<>(parseNode("1110000001"))
+                                        .addChild(new Tree.Node<>(parseNode("1110001101")))))
+                        .addChild(new Tree.Node<>(parseNode("0000000001"))
+                                .addChild(new Tree.Node<>(parseNode("0100000001"))
+                                        .addChild(new Tree.Node<>(parseNode("0110001001"))
+                                                .addChild(new Tree.Node<>(parseNode("1111001001"))
+                                                        .addChild(new Tree.Node<>(parseNode("1111001101")))))))
+                        .addChild(new Tree.Node<>(parseNode("0100000000"))
+                                .addChild(new Tree.Node<>(parseNode("1100100000"))
+                                        .addChild(new Tree.Node<>(parseNode("1110100000"))
+                                                .addChild(new Tree.Node<>(parseNode("1110101000"))
+                                                        .addChild(new Tree.Node<>(parseNode("1110101011")))))))
+        );
+        TreeBuilderByAncestors<List<Integer>, List<Integer>> treeBuilder = treeBuilder(parseNode("0000000000"));
+        List<List<Integer>> allNodes = orignial.allNodes().map(Tree.Node::getContent)
+                .sorted(Comparator.comparing(it -> it.stream().mapToInt(i -> i).sum()))
+                .collect(Collectors.toList());
+        allNodes.subList(1, allNodes.size()).forEach(toAdd -> {
+            System.out.println(treePrinter.print(treeBuilder.getTree()));
+            treeBuilder.addNode(toAdd);
+        });
+
+        BigDecimal sumOfDistancesInOriginal = calculateDistances(orignial, this::distance).getRoot().sumOfDistancesToDescendants();
+        BigDecimal sumOfDistancesInBuild = calculateDistances(withoutSynthetic(treeBuilder.getTree()), this::distance).getRoot().sumOfDistancesToDescendants();
+        System.out.println("expected:");
+        System.out.println(treePrinterOnlyReal.print(calculateDistances(orignial, this::distance)));
+        System.out.println("actual:");
+        System.out.println(treePrinterOnlyReal.print(calculateDistances(withoutSynthetic(treeBuilder.getTree()), this::distance)));
+        System.out.println(treePrinter.print(treeBuilder.getTree()));
+        assertTrue(sumOfDistancesInOriginal.compareTo(sumOfDistancesInBuild) >= 0);
+    }
+
+    @Ignore
+    @Test
     public void randomizedTest() {
-        List<Long> failedSeeds = IntStream.range(0, 1_000)
+        List<Long> failedSeeds = IntStream.range(0, 1_000_000)
                 .mapToObj(it -> ThreadLocalRandom.current().nextLong())
                 .filter(seed -> {
-                    seed = -3093562264026028548L;
                     Random random = new Random(seed);
 
                     int arrayLength = 10;
                     int depth = 5;
-                    int branchesCount = 1 + random.nextInt(3);
+                    Supplier<Integer> branchesCount = () -> 1 + random.nextInt(2);
                     Supplier<Integer> mutationsCount = () -> 1 + random.nextInt(2);
 
 //                    int arrayLength = 5;
@@ -238,7 +282,7 @@ public class TreeBuilderByAncestorsTest {
 //                    int branchesCount = 1 + random.nextInt(3);
 //                    Supplier<Integer> mutationsCount = () -> 1 + random.nextInt(1);
 
-                    boolean print = true;
+                    boolean print = false;
 
                     List<Integer> root = new ArrayList<>();
                     for (int i = 0; i < arrayLength; i++) {
@@ -249,27 +293,13 @@ public class TreeBuilderByAncestorsTest {
                     Tree<List<Integer>> tree = new Tree<>(rootNode);
                     Set<List<Integer>> insertedLeaves = new HashSet<>();
 
-                    for (int branchNumber = 0; branchNumber < branchesCount; branchNumber++) {
-                        Tree.Node<List<Integer>> parent = rootNode;
+                    for (int branchNumber = 0; branchNumber < branchesCount.get(); branchNumber++) {
+                        List<Tree.Node<List<Integer>>> nodes = Collections.singletonList(rootNode);
                         for (int j = 0; j < depth; j++) {
-                            Tree.Node<List<Integer>> parentFinal = parent;
-                            List<Integer> possiblePositionsToMutate = IntStream.range(0, parent.getContent().size())
-                                    .filter(i -> parentFinal.getContent().get(i) == 0)
-                                    .boxed()
+                            nodes = nodes.stream()
+                                    .flatMap(node -> insetChildren(random, mutationsCount, insertedLeaves, node, branchesCount).stream())
                                     .collect(Collectors.toList());
-                            Collections.shuffle(possiblePositionsToMutate, random);
-                            possiblePositionsToMutate = possiblePositionsToMutate
-                                    .subList(0, Math.min(possiblePositionsToMutate.size() - 1, mutationsCount.get()));
-                            List<Integer> leaf = new ArrayList<>(parent.getContent());
-                            possiblePositionsToMutate.forEach(it -> leaf.set(it, 1));
-                            if (insertedLeaves.contains(leaf)) {
-                                break;
-                            } else {
-                                insertedLeaves.add(leaf);
-                                Tree.Node<List<Integer>> inserted = new Tree.Node<>(leaf);
-                                parent.addChild(inserted, distance(parent.getContent(), leaf));
-                                parent = inserted;
-                            }
+                            if (nodes.isEmpty()) break;
                         }
                     }
 
@@ -277,27 +307,22 @@ public class TreeBuilderByAncestorsTest {
                     insertedLeaves.stream()
                             .sorted(Comparator.comparing(leaf -> distance(root, leaf)))
                             .forEach(toAdd -> {
+                                //noinspection ConstantConditions
                                 if (print) {
-                                    System.out.println(this.treePrinter.print(treeBuilder.getTree()));
+                                    System.out.println(treePrinter.print(treeBuilder.getTree()));
                                 }
                                 treeBuilder.addNode(toAdd);
                             });
-
-                    NewickTreePrinter<List<Integer>> treePrinter = new NewickTreePrinter<>(
-                            this::print,
-                            true,
-                            false
-                    );
 
                     BigDecimal sumOfDistancesInOriginal = sumOfDistances(calculateDistances(tree, this::distance));
                     BigDecimal sumOfDistancesInConstructed = sumOfDistances(calculateDistances(withoutSynthetic(treeBuilder.getTree()), this::distance));
                     boolean fails = sumOfDistancesInOriginal.compareTo(sumOfDistancesInConstructed) < 0;
                     if (fails) {
                         System.out.println("expected:");
-                        System.out.println(treePrinter.print(tree));
+                        System.out.println(treePrinterOnlyReal.print(tree));
                         System.out.println("actual:");
-                        System.out.println(treePrinter.print(calculateDistances(withoutSynthetic(treeBuilder.getTree()), this::distance)));
-                        System.out.println(this.treePrinter.print(this.calculateDistances(treeBuilder.getTree(), (a, b) -> distance(getContent(a), getContent(b)))));
+                        System.out.println(treePrinterOnlyReal.print(calculateDistances(withoutSynthetic(treeBuilder.getTree()), this::distance)));
+                        System.out.println(treePrinter.print(this.calculateDistances(treeBuilder.getTree(), (a, b) -> distance(getContent(a), getContent(b)))));
                         System.out.println("seed:");
                         System.out.println(seed);
                         System.out.println();
@@ -307,6 +332,31 @@ public class TreeBuilderByAncestorsTest {
                 .collect(Collectors.toList());
 
         assertEquals(Collections.emptyList(), failedSeeds);
+    }
+
+    private List<Tree.Node<List<Integer>>> insetChildren(Random random, Supplier<Integer> mutationsCount, Set<List<Integer>> insertedLeaves, Tree.Node<List<Integer>> parent, Supplier<Integer> branchesCount) {
+        return IntStream.range(0, branchesCount.get())
+                .mapToObj(index -> {
+                    List<Integer> possiblePositionsToMutate = IntStream.range(0, parent.getContent().size())
+                            .filter(i -> parent.getContent().get(i) == 0)
+                            .boxed()
+                            .collect(Collectors.toList());
+                    Collections.shuffle(possiblePositionsToMutate, random);
+                    possiblePositionsToMutate = possiblePositionsToMutate
+                            .subList(0, Math.min(possiblePositionsToMutate.size() - 1, mutationsCount.get()));
+                    List<Integer> leaf = new ArrayList<>(parent.getContent());
+                    possiblePositionsToMutate.forEach(it -> leaf.set(it, 1));
+                    if (insertedLeaves.contains(leaf)) {
+                        return null;
+                    } else {
+                        insertedLeaves.add(leaf);
+                        Tree.Node<List<Integer>> inserted = new Tree.Node<>(leaf);
+                        parent.addChild(inserted, distance(parent.getContent(), leaf));
+                        return inserted;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     private BigDecimal sumOfDistances(Tree<?> tree) {
@@ -345,7 +395,7 @@ public class TreeBuilderByAncestorsTest {
 
             if (node.getContent() instanceof Real<?, ?>) {
                 List<Integer> content = ((Real<List<Integer>, List<Integer>>) node.getContent()).getContent();
-                copyTo.addChild(new Tree.Node<>(content), null);
+                copyTo.addChild(new Tree.Node<>(content));
             } else if (node.getContent() instanceof Synthetic<?, ?>) {
                 Optional<Real<List<Integer>, List<Integer>>> realWithDistanceZero = node.getLinks().stream()
                         .filter(it -> Objects.equals(it.getDistance(), BigDecimal.ZERO))
@@ -354,7 +404,7 @@ public class TreeBuilderByAncestorsTest {
                 Tree.Node<List<Integer>> nextNode;
                 if (realWithDistanceZero.isPresent()) {
                     nextNode = new Tree.Node<>(realWithDistanceZero.get().getContent());
-                    copyTo.addChild(nextNode, null);
+                    copyTo.addChild(nextNode);
                 } else {
                     nextNode = copyTo;
                 }
@@ -363,6 +413,10 @@ public class TreeBuilderByAncestorsTest {
                 throw new IllegalArgumentException();
             }
         }
+    }
+
+    private List<Integer> parseNode(String node) {
+        return node.chars().mapToObj(number -> Integer.valueOf(String.valueOf((char) number))).collect(Collectors.toList());
     }
 
     private List<Integer> getContent(RealOrSynthetic<List<Integer>, List<Integer>> content) {

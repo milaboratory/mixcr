@@ -171,6 +171,7 @@ class ClusterProcessor {
         return BigDecimal.valueOf(VMutations.size() + JMutations.size() + CDR3Mutations.size());
     }
 
+    //TODO it is more possible to decrease length of alignment than to increase. It is important on small trees
     private NucleotideSequence findJPartInCDR3(Cluster<CloneWithMutationsFromVJGermline> cluster) {
         return cluster.cluster.stream()
                 .map(clone -> clone.cloneWrapper.clone)
@@ -200,6 +201,7 @@ class ClusterProcessor {
                 .orElseThrow(IllegalStateException::new);
     }
 
+    //TODO it is more possible to decrease length of alignment than to increase. It is important on small trees
     private NucleotideSequence findVPartInCDR3(Cluster<CloneWithMutationsFromVJGermline> cluster) {
         return cluster.cluster.stream()
                 .map(clone -> clone.cloneWrapper.clone)
