@@ -67,6 +67,7 @@ public class NewickTreePrinter<T> implements TreePrinter<T> {
                             return printedNode;
                         }
                     })
+                    .sorted()
                     .collect(Collectors.joining(",", "(", ")")));
         }
         if (!printOnlyLeafNames || node.getLinks().isEmpty()) {

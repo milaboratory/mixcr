@@ -71,14 +71,37 @@ public class Tree<T> {
         private final List<NodeLink<T>> children;
         @Nullable
         private Node<T> parent = null;
+        @Nullable
+        private BigDecimal distanceFromParent = null;
 
         @Nullable
         Node<T> getParent() {
             return parent;
         }
 
-        void setParent(Node<T> parent) {
+        public Node<T> copy() {
+            Node<T> node = new Node<>(content, children);
+            node.setParent(parent, distanceFromParent);
+            return node;
+        }
+
+        public BigDecimal sumOfDistancesToDescendants() {
+            return children.stream()
+                    .map(link -> {
+                        BigDecimal selfDistance = link.getDistance() != null ? link.getDistance() : BigDecimal.ZERO;
+                        return selfDistance.add(link.getNode().sumOfDistancesToDescendants());
+                    })
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
+
+        @Nullable
+        public BigDecimal getDistanceFromParent() {
+            return distanceFromParent;
+        }
+
+        void setParent(Node<T> parent, BigDecimal distanceFromParent) {
             this.parent = parent;
+            this.distanceFromParent = distanceFromParent;
         }
 
         protected Node(T content) {
@@ -96,7 +119,7 @@ public class Tree<T> {
         }
 
         public void addChild(Node<T> node, @Nullable BigDecimal distance) {
-            node.setParent(this);
+            node.setParent(this, distance);
             children.add(new NodeLink<>(node, distance));
         }
 

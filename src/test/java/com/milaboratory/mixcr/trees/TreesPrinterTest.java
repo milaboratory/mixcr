@@ -12,7 +12,7 @@ public class TreesPrinterTest {
         TreePrinter<String> treePrinter = new NewickTreePrinter<>(s -> s, true, false);
 
         Tree<String> tree = sampleTree();
-        assertEquals("(A:0.1,B:0.2,(C:0.3,D:0.4)E:0.5)F;", treePrinter.print(tree));
+        assertEquals("((C:0.3,D:0.4)E:0.5,A:0.1,B:0.2)F;", treePrinter.print(tree));
     }
 
     @Test
@@ -20,7 +20,7 @@ public class TreesPrinterTest {
         TreePrinter<String> treePrinter = new NewickTreePrinter<>(s -> s, true, true);
 
         Tree<String> tree = sampleTree();
-        assertEquals("(A:0.1,B:0.2,(C:0.3,D:0.4):0.5);", treePrinter.print(tree));
+        assertEquals("((C:0.3,D:0.4):0.5,A:0.1,B:0.2);", treePrinter.print(tree));
     }
 
     @Test
@@ -28,7 +28,7 @@ public class TreesPrinterTest {
         TreePrinter<String> treePrinter = new NewickTreePrinter<>(s -> s, false, false);
 
         Tree<String> tree = sampleTree();
-        assertEquals("(A,B,(C,D)E)F;", treePrinter.print(tree));
+        assertEquals("((C,D)E,A,B)F;", treePrinter.print(tree));
     }
 
     @Test
@@ -36,7 +36,7 @@ public class TreesPrinterTest {
         TreePrinter<String> treePrinter = new NewickTreePrinter<>(s -> s, false, true);
 
         Tree<String> tree = sampleTree();
-        assertEquals("(A,B,(C,D));", treePrinter.print(tree));
+        assertEquals("((C,D),A,B);", treePrinter.print(tree));
     }
 
     /**
