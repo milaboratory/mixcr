@@ -1,9 +1,9 @@
 package com.milaboratory.mixcr.trees;
 
 import com.google.common.collect.Lists;
-import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.Real;
-import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.RealOrSynthetic;
-import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.Synthetic;
+import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.Observed;
+import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed;
+import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.Reconstructed;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class TreeBuilderByAncestorsTest {
-    private final TreePrinter<RealOrSynthetic<List<Integer>, List<Integer>>> treePrinter = new NewickTreePrinter<>(
+    private final TreePrinter<ObservedOrReconstructed<List<Integer>, List<Integer>>> treePrinter = new NewickTreePrinter<>(
             node -> node.convert(this::print, content -> "'" + print(content) + "'"),
             true,
             false
@@ -363,8 +363,8 @@ public class TreeBuilderByAncestorsTest {
         return tree.getRoot().sumOfDistancesToDescendants();
     }
 
-    private Tree<List<Integer>> withoutSynthetic(Tree<RealOrSynthetic<List<Integer>, List<Integer>>> original) {
-        List<Integer> rootContent = ((Synthetic<List<Integer>, List<Integer>>) original.getRoot().getContent()).getContent();
+    private Tree<List<Integer>> withoutSynthetic(Tree<ObservedOrReconstructed<List<Integer>, List<Integer>>> original) {
+        List<Integer> rootContent = ((Reconstructed<List<Integer>, List<Integer>>) original.getRoot().getContent()).getContent();
         Tree.Node<List<Integer>> rootNode = new Tree.Node<>(rootContent);
         copyRealNodes(original.getRoot(), rootNode);
         return new Tree<>(rootNode);
@@ -385,21 +385,21 @@ public class TreeBuilderByAncestorsTest {
         }
     }
 
-    private void copyRealNodes(Tree.Node<RealOrSynthetic<List<Integer>, List<Integer>>> copyFrom,
+    private void copyRealNodes(Tree.Node<ObservedOrReconstructed<List<Integer>, List<Integer>>> copyFrom,
                                Tree.Node<List<Integer>> copyTo) {
-        for (Tree.NodeLink<RealOrSynthetic<List<Integer>, List<Integer>>> link : copyFrom.getLinks()) {
+        for (Tree.NodeLink<ObservedOrReconstructed<List<Integer>, List<Integer>>> link : copyFrom.getLinks()) {
             if (Objects.equals(link.getDistance(), BigDecimal.ZERO)) {
                 continue;
             }
-            Tree.Node<RealOrSynthetic<List<Integer>, List<Integer>>> node = link.getNode();
+            Tree.Node<ObservedOrReconstructed<List<Integer>, List<Integer>>> node = link.getNode();
 
-            if (node.getContent() instanceof Real<?, ?>) {
-                List<Integer> content = ((Real<List<Integer>, List<Integer>>) node.getContent()).getContent();
+            if (node.getContent() instanceof TreeBuilderByAncestors.Observed<?, ?>) {
+                List<Integer> content = ((Observed<List<Integer>, List<Integer>>) node.getContent()).getContent();
                 copyTo.addChild(new Tree.Node<>(content));
-            } else if (node.getContent() instanceof Synthetic<?, ?>) {
-                Optional<Real<List<Integer>, List<Integer>>> realWithDistanceZero = node.getLinks().stream()
+            } else if (node.getContent() instanceof TreeBuilderByAncestors.Reconstructed<?, ?>) {
+                Optional<Observed<List<Integer>, List<Integer>>> realWithDistanceZero = node.getLinks().stream()
                         .filter(it -> Objects.equals(it.getDistance(), BigDecimal.ZERO))
-                        .map(it -> (Real<List<Integer>, List<Integer>>) it.getNode().getContent())
+                        .map(it -> (Observed<List<Integer>, List<Integer>>) it.getNode().getContent())
                         .findAny();
                 Tree.Node<List<Integer>> nextNode;
                 if (realWithDistanceZero.isPresent()) {
@@ -419,7 +419,7 @@ public class TreeBuilderByAncestorsTest {
         return node.chars().mapToObj(number -> Integer.valueOf(String.valueOf((char) number))).collect(Collectors.toList());
     }
 
-    private List<Integer> getContent(RealOrSynthetic<List<Integer>, List<Integer>> content) {
+    private List<Integer> getContent(ObservedOrReconstructed<List<Integer>, List<Integer>> content) {
         return content.convert(Function.identity(), Function.identity());
     }
 

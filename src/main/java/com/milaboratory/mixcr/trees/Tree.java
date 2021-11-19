@@ -137,6 +137,7 @@ public class Tree<T> {
                 throw new IllegalArgumentException();
             }
             children.add(new NodeLink<>(substitution, distance));
+            substitution.setParent(this, distance);
         }
 
         Stream<Node<T>> allDescendants() {

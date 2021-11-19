@@ -15,7 +15,7 @@ public class TreeBuilderByAncestors<T, E> {
     private final BiFunction<E, E, E> findCommonAncestor;
     private final Function<T, E> asAncestor;
 
-    private final Tree<RealOrSynthetic<T, E>> tree;
+    private final Tree<ObservedOrReconstructed<T, E>> tree;
 
     public TreeBuilderByAncestors(
             T root,
@@ -26,17 +26,27 @@ public class TreeBuilderByAncestors<T, E> {
         this.distanceBetween = distanceBetween;
         this.findCommonAncestor = findCommonAncestor;
         this.asAncestor = asAncestor;
-        Tree.Node<RealOrSynthetic<T, E>> rootNode = new Tree.Node<>(new Synthetic<>(asAncestor.apply(root), BigDecimal.ZERO));
+        Tree.Node<ObservedOrReconstructed<T, E>> rootNode = new Tree.Node<>(new Reconstructed<>(asAncestor.apply(root), BigDecimal.ZERO));
         tree = new Tree<>(rootNode);
-        rootNode.addChild(new Tree.Node<>(new Real<>(root)), BigDecimal.ZERO);
+        rootNode.addChild(new Tree.Node<>(new Observed<>(root)), BigDecimal.ZERO);
     }
 
+    /**
+     * Assumptions:
+     * 1. Nodes must be added in order by distance from the root
+     * 2. findCommonAncestor is constructing ancestor based on root (left common mutations on nodes from root)
+     * <p>
+     * Invariants of the tree:
+     * 1. Root node is always reconstructed.
+     * 2. Leaves are always observed. Distance between observed and reconstructed may be zero (they are identical).
+     * 3. Siblings have no common ancestors.
+     */
     public TreeBuilderByAncestors<T, E> addNode(T toAdd) {
         E contentAsAncestor = asAncestor.apply(toAdd);
         tree.allNodes()
-                .filter(it -> it.getContent() instanceof Synthetic<?, ?>)
+                .filter(it -> it.getContent() instanceof Reconstructed<?, ?>)
                 .collect(Collectors.groupingBy(compareWith -> {
-                    BigDecimal distance = distanceBetween.apply(((Synthetic<T, E>) compareWith.getContent()).getContent(), contentAsAncestor);
+                    BigDecimal distance = distanceBetween.apply(((Reconstructed<T, E>) compareWith.getContent()).getContent(), contentAsAncestor);
                     if (distance.compareTo(BigDecimal.ZERO) == 0) {
                         throw new IllegalArgumentException("can't add the same node");
                     }
@@ -47,92 +57,137 @@ public class TreeBuilderByAncestors<T, E> {
                 .map(Map.Entry::getValue)
                 .orElseThrow(IllegalArgumentException::new)
                 .stream()
-                .map(nearestNode -> {
-                    E contentOfNearest = ((Synthetic<T, E>) nearestNode.getContent()).getContent();
-                    E commonAncestor = findCommonAncestor.apply(contentOfNearest, contentAsAncestor);
+                .map(chosenNode -> {
+                    E contentOfChosen = ((Reconstructed<T, E>) chosenNode.getContent()).getContent();
+                    E commonAncestor = findCommonAncestor.apply(contentOfChosen, contentAsAncestor);
 
-                    BigDecimal fromCommonToNearest = distanceBetween.apply(commonAncestor, contentOfNearest);
+                    BigDecimal fromCommonToChosen = distanceBetween.apply(commonAncestor, contentOfChosen);
 
-                    if (fromCommonToNearest.compareTo(BigDecimal.ZERO) == 0) {
-                        Optional<Pair<Tree.Node<RealOrSynthetic<T, E>>, E>> mergeWith = nearestNode.getLinks().stream()
+                    if (fromCommonToChosen.compareTo(BigDecimal.ZERO) == 0) {
+                        //the added node is direct descendant of the chosen node (the added node has no mutations that don't exist in the chosen node)
+
+                        //search for siblings with common mutations with the added node
+                        Optional<Action> siblingToMergeWith = chosenNode.getLinks().stream()
                                 .map(Tree.NodeLink::getNode)
-                                .filter(it -> it.getContent() instanceof TreeBuilderByAncestors.Synthetic<?, ?>)
+                                .filter(it -> it.getContent() instanceof Reconstructed<?, ?>)
                                 .map(it -> {
-                                    E commonAncestor2 = findCommonAncestor.apply(contentAsAncestor, ((Synthetic<T, E>) it.getContent()).getContent());
-                                    return Pair.create(it, Pair.create(commonAncestor2, distanceBetween.apply(contentOfNearest, commonAncestor2)));
+                                    E commonAncestorWithSibling = findCommonAncestor.apply(contentAsAncestor, ((Reconstructed<T, E>) it.getContent()).getContent());
+                                    return Pair.create(
+                                            replaceNode(it, toAdd, commonAncestorWithSibling),
+                                            distanceBetween.apply(contentOfChosen, commonAncestorWithSibling)
+                                    );
                                 })
-                                .filter(it -> it.getSecond().getSecond().compareTo(BigDecimal.ZERO) != 0)
-                                .max(Comparator.comparing(it -> it.getSecond().getSecond()))
-                                .map(it -> Pair.create(it.getFirst(), it.getSecond().getFirst()));
-                        if (mergeWith.isPresent()) {
-                            E content = ((Synthetic<T, E>) mergeWith.get().getFirst().getContent()).getContent();
-
-                            BigDecimal fromCommonToNearest2 = distanceBetween.apply(mergeWith.get().getSecond(), content);
-
-                            if (fromCommonToNearest2.compareTo(BigDecimal.ZERO) != 0) {
-                                return replaceNode(mergeWith.get().getFirst(), toAdd, mergeWith.get().getSecond());
-                            }
+                                //if distance is zero than there is no common mutations
+                                .filter(it -> it.getSecond().compareTo(BigDecimal.ZERO) != 0)
+                                //choose a sibling with max count of common mutations
+                                .max(Comparator.comparing(Pair::getSecond))
+                                .map(Pair::getFirst);
+                        //noinspection OptionalIsPresent
+                        if (siblingToMergeWith.isPresent()) {
+                            //the added node (A), the chosen node (B), the sibling (D) has common ancestor (C) with A
+                            //
+                            //       P                   P
+                            //       |                   |
+                            //     --*--               --*--
+                            //     |   |               |   |
+                            //     K   B      ==>      K   B
+                            //         |                   |
+                            //       --*--               --*--
+                            //       |   |               |   |
+                            //       R   D               R   C
+                            //                               |
+                            //                             --*--
+                            //                             |   |
+                            //                             A   D
+                            //
+                            // R and C has no common ancestors because R and D haven't one
+                            return siblingToMergeWith.get();
+                        } else {
+                            //the added node (A), the chosen node (B), no siblings with common ancestors
+                            //
+                            //       P                   P
+                            //       |                   |
+                            //     --*--               --*--
+                            //     |   |               |   |
+                            //     K   B      ==>      K   B
+                            //         |                   |
+                            //       --*--               --*-----
+                            //       |   |               |   |  |
+                            //       R   T               R   T  A
+                            return new Insert(
+                                    chosenNode,
+                                    nodePairWithReconstructed(toAdd),
+                                    distanceBetween.apply(commonAncestor, contentAsAncestor)
+                            );
                         }
-
-
-                        Tree.Node<RealOrSynthetic<T, E>> added = nodePairWithSynthetic(toAdd);
-                        return new Insert(
-                                nearestNode,
-                                added,
-                                distanceBetween.apply(commonAncestor, contentAsAncestor)
-                        );
                     } else {
-                        return replaceNode(nearestNode, toAdd, commonAncestor);
+                        //the added node (A) and the chosen node (B) has common ancestor (C)
+                        //
+                        //       P                   P
+                        //       |                   |
+                        //     --*--               --*--
+                        //     |   |               |   |
+                        //     K   B      ==>      K   C
+                        //         |                   |
+                        //       --*--               --*--
+                        //       |   |               |   |
+                        //       R   T               A   B
+                        //                               |
+                        //                             --*--
+                        //                             |   |
+                        //                             R   T
+                        return replaceNode(chosenNode, toAdd, commonAncestor);
                     }
                 })
-                .min(Comparator.comparing(Action::changeOfDistance).thenComparing(Action::distanceFromReal))
+                //optimize sum of distances in the tree. If there is no difference, optimize by distances without reconstructed nodes
+                .min(Comparator.comparing(Action::changeOfDistance).thenComparing(Action::distanceFromObserved))
                 .orElseThrow(IllegalArgumentException::new)
                 .apply();
         return this;
     }
 
-    private Action replaceNode(Tree.Node<RealOrSynthetic<T, E>> replacedNode, T with, E commonAncestor) {
-        BigDecimal minDistanceFromReal;
+    private Action replaceNode(Tree.Node<ObservedOrReconstructed<T, E>> replacedNode, T with, E commonAncestor) {
+        BigDecimal minDistanceFromObserved;
         if (replacedNode.getParent() != null) {
-            minDistanceFromReal = ((Synthetic<T, E>) replacedNode.getParent().getContent()).minDistanceFromReal.add(replacedNode.getDistanceFromParent());
+            minDistanceFromObserved = ((Reconstructed<T, E>) replacedNode.getParent().getContent()).minDistanceFromObserved.add(replacedNode.getDistanceFromParent());
         } else {
-            minDistanceFromReal = BigDecimal.ZERO;
+            minDistanceFromObserved = BigDecimal.ZERO;
         }
-        Tree.Node<RealOrSynthetic<T, E>> replacement = new Tree.Node<>(new Synthetic<>(commonAncestor, minDistanceFromReal));
-        replacement.addChild(replacedNode.copy(), distanceBetween.apply(commonAncestor, ((Synthetic<T, E>) replacedNode.getContent()).getContent()));
-        replacement.addChild(nodePairWithSynthetic(with), distanceBetween.apply(commonAncestor, asAncestor.apply(with)));
+        Tree.Node<ObservedOrReconstructed<T, E>> replacement = new Tree.Node<>(new Reconstructed<>(commonAncestor, minDistanceFromObserved));
+        replacement.addChild(replacedNode.copy(), distanceBetween.apply(commonAncestor, ((Reconstructed<T, E>) replacedNode.getContent()).getContent()));
+        replacement.addChild(nodePairWithReconstructed(with), distanceBetween.apply(commonAncestor, asAncestor.apply(with)));
         if (replacedNode.getParent() == null) {
             return new Replace(replacedNode, replacement, BigDecimal.ZERO);
         } else {
-            BigDecimal distance = distanceBetween.apply(((Synthetic<T, E>) replacedNode.getParent().getContent()).getContent(), commonAncestor);
+            BigDecimal distance = distanceBetween.apply(((Reconstructed<T, E>) replacedNode.getParent().getContent()).getContent(), commonAncestor);
             return new Replace(replacedNode, replacement, distance);
         }
     }
 
-    private Tree.Node<RealOrSynthetic<T, E>> nodePairWithSynthetic(T toAdd) {
-        Tree.Node<RealOrSynthetic<T, E>> ancestorNode = new Tree.Node<>(new Synthetic<>(asAncestor.apply(toAdd), BigDecimal.ZERO));
-        ancestorNode.addChild(new Tree.Node<>(new Real<>(toAdd)), BigDecimal.ZERO);
+    private Tree.Node<ObservedOrReconstructed<T, E>> nodePairWithReconstructed(T toAdd) {
+        Tree.Node<ObservedOrReconstructed<T, E>> ancestorNode = new Tree.Node<>(new Reconstructed<>(asAncestor.apply(toAdd), BigDecimal.ZERO));
+        ancestorNode.addChild(new Tree.Node<>(new Observed<>(toAdd)), BigDecimal.ZERO);
         return ancestorNode;
     }
 
-    public Tree<RealOrSynthetic<T, E>> getTree() {
+    public Tree<ObservedOrReconstructed<T, E>> getTree() {
         return tree;
     }
 
     private static abstract class Action {
         abstract BigDecimal changeOfDistance();
 
-        abstract BigDecimal distanceFromReal();
+        abstract BigDecimal distanceFromObserved();
 
         abstract void apply();
     }
 
     private class Insert extends Action {
-        private final Tree.Node<RealOrSynthetic<T, E>> addTo;
-        private final Tree.Node<RealOrSynthetic<T, E>> insertion;
+        private final Tree.Node<ObservedOrReconstructed<T, E>> addTo;
+        private final Tree.Node<ObservedOrReconstructed<T, E>> insertion;
         private final BigDecimal distance;
 
-        public Insert(Tree.Node<RealOrSynthetic<T, E>> addTo, Tree.Node<RealOrSynthetic<T, E>> insertion, BigDecimal distance) {
+        public Insert(Tree.Node<ObservedOrReconstructed<T, E>> addTo, Tree.Node<ObservedOrReconstructed<T, E>> insertion, BigDecimal distance) {
             this.addTo = addTo;
             this.insertion = insertion;
             this.distance = distance;
@@ -144,8 +199,8 @@ public class TreeBuilderByAncestors<T, E> {
         }
 
         @Override
-        BigDecimal distanceFromReal() {
-            return ((Synthetic<T, E>) addTo.getContent()).minDistanceFromReal;
+        BigDecimal distanceFromObserved() {
+            return ((Reconstructed<T, E>) addTo.getContent()).minDistanceFromObserved;
         }
 
         @Override
@@ -155,12 +210,12 @@ public class TreeBuilderByAncestors<T, E> {
     }
 
     private class Replace extends Action {
-        private final Tree.Node<RealOrSynthetic<T, E>> replaceWhat;
-        private final Tree.Node<RealOrSynthetic<T, E>> replacement;
+        private final Tree.Node<ObservedOrReconstructed<T, E>> replaceWhat;
+        private final Tree.Node<ObservedOrReconstructed<T, E>> replacement;
         private final BigDecimal newDistance;
         private final BigDecimal sumOfDistancesInReplacement;
 
-        public Replace(Tree.Node<RealOrSynthetic<T, E>> replaceWhat, Tree.Node<RealOrSynthetic<T, E>> replacement, BigDecimal newDistance) {
+        public Replace(Tree.Node<ObservedOrReconstructed<T, E>> replaceWhat, Tree.Node<ObservedOrReconstructed<T, E>> replacement, BigDecimal newDistance) {
             this.replaceWhat = replaceWhat;
             this.replacement = replacement;
             this.newDistance = newDistance;
@@ -174,8 +229,8 @@ public class TreeBuilderByAncestors<T, E> {
         }
 
         @Override
-        BigDecimal distanceFromReal() {
-            return ((Synthetic<T, E>) replaceWhat.getContent()).minDistanceFromReal;
+        BigDecimal distanceFromObserved() {
+            return ((Reconstructed<T, E>) replaceWhat.getContent()).minDistanceFromObserved;
         }
 
         @Override
@@ -188,33 +243,33 @@ public class TreeBuilderByAncestors<T, E> {
         }
     }
 
-    public static abstract class RealOrSynthetic<T, E> {
-        public <R1, R2> RealOrSynthetic<R1, R2> map(Function<T, R1> mapReal, Function<E, R2> mapSynthetic) {
-            if (this instanceof Real<?, ?>) {
-                return new Real<>(mapReal.apply(((Real<T, E>) this).getContent()));
-            } else if (this instanceof Synthetic<?, ?>) {
-                Synthetic<T, E> casted = (Synthetic<T, E>) this;
-                return new Synthetic<>(mapSynthetic.apply(casted.getContent()), casted.minDistanceFromReal);
+    public static abstract class ObservedOrReconstructed<T, E> {
+        public <R1, R2> ObservedOrReconstructed<R1, R2> map(Function<T, R1> mapObserved, Function<E, R2> mapReconstructed) {
+            if (this instanceof Observed<?, ?>) {
+                return new Observed<>(mapObserved.apply(((Observed<T, E>) this).getContent()));
+            } else if (this instanceof Reconstructed<?, ?>) {
+                Reconstructed<T, E> casted = (Reconstructed<T, E>) this;
+                return new Reconstructed<>(mapReconstructed.apply(casted.getContent()), casted.minDistanceFromObserved);
             } else {
                 throw new IllegalArgumentException();
             }
         }
 
-        public <R> R convert(Function<T, R> mapReal, Function<E, R> mapSynthetic) {
-            if (this instanceof Real<?, ?>) {
-                return mapReal.apply(((Real<T, E>) this).getContent());
-            } else if (this instanceof Synthetic<?, ?>) {
-                return mapSynthetic.apply(((Synthetic<T, E>) this).getContent());
+        public <R> R convert(Function<T, R> mapObserved, Function<E, R> mapReconstructed) {
+            if (this instanceof Observed<?, ?>) {
+                return mapObserved.apply(((Observed<T, E>) this).getContent());
+            } else if (this instanceof Reconstructed<?, ?>) {
+                return mapReconstructed.apply(((Reconstructed<T, E>) this).getContent());
             } else {
                 throw new IllegalArgumentException();
             }
         }
     }
 
-    public static class Real<T, E> extends RealOrSynthetic<T, E> {
+    static class Observed<T, E> extends ObservedOrReconstructed<T, E> {
         private final T content;
 
-        public Real(T content) {
+        private Observed(T content) {
             this.content = content;
         }
 
@@ -223,13 +278,13 @@ public class TreeBuilderByAncestors<T, E> {
         }
     }
 
-    public static class Synthetic<T, E> extends RealOrSynthetic<T, E> {
+    static class Reconstructed<T, E> extends ObservedOrReconstructed<T, E> {
         private final E content;
-        private final BigDecimal minDistanceFromReal;
+        private final BigDecimal minDistanceFromObserved;
 
-        public Synthetic(E content, BigDecimal minDistanceFromReal) {
+        private Reconstructed(E content, BigDecimal minDistanceFromObserved) {
             this.content = content;
-            this.minDistanceFromReal = minDistanceFromReal;
+            this.minDistanceFromObserved = minDistanceFromObserved;
         }
 
         public E getContent() {

@@ -9,7 +9,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceBuilder;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.RealOrSynthetic;
+import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
 import org.apache.commons.math3.util.Pair;
@@ -61,7 +61,7 @@ class ClusterProcessor {
      * 3. Add possible common ancestors
      * 4. Iterate over remain clonotypes and try to add them to build trees with possible ancestors. Try to merge trees
      */
-    Collection<Tree<RealOrSynthetic<CloneWrapper, NucleotideSequence>>> buildTrees() {
+    Collection<Tree<ObservedOrReconstructed<CloneWrapper, NucleotideSequence>>> buildTrees() {
         List<CloneWithMutationsFromVJGermline> clones = originalCluster.cluster.stream()
                 .map(cloneWrapper -> new CloneWithMutationsFromVJGermline(
                         new MutationsFromVJGermline(
@@ -93,7 +93,7 @@ class ClusterProcessor {
             }
         }
 
-        List<Tree<RealOrSynthetic<CloneWithMutationsFromReconstructedRoot, MutationsFromReconstructedRoot>>> firstStepTrees = clusteredClones.stream()
+        List<Tree<ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, MutationsFromReconstructedRoot>>> firstStepTrees = clusteredClones.stream()
                 .map(Cluster.Builder::build)
                 .filter(it -> it.cluster.size() > 1)
                 .map(this::buildATree)
@@ -104,7 +104,7 @@ class ClusterProcessor {
                 .collect(Collectors.toList());
     }
 
-    private Tree<RealOrSynthetic<CloneWithMutationsFromReconstructedRoot, MutationsFromReconstructedRoot>> buildATree(Cluster<CloneWithMutationsFromVJGermline> cluster) {
+    private Tree<ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, MutationsFromReconstructedRoot>> buildATree(Cluster<CloneWithMutationsFromVJGermline> cluster) {
         // Build a tree for every cluster
         // determine D gene
         // fix marks of VEnd and JBegin
@@ -265,6 +265,7 @@ class ClusterProcessor {
         );
     }
 
+    //TODO may be it's wrong, check when there will be holes
     private List<Range> intersection(List<Range> first, List<Range> second) {
         return first.stream()
                 .map(range -> {
