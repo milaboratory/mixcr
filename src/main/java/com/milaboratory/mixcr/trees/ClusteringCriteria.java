@@ -12,7 +12,6 @@ import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.ReferencePoint;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.Optional;
@@ -37,10 +36,12 @@ public interface ClusteringCriteria {
     Comparator<Clone> clusteringComparator();
 
     default ToIntFunction<Clone> clusteringHashCodeWithNumberOfMutations() {
-        return clone -> Arrays.hashCode(new int[]{
-                clusteringHashCode().applyAsInt(clone),
-                numberOfMutations(clone, GeneType.Variable) + numberOfMutations(clone, GeneType.Joining)
-        });
+        return clone -> clusteringHashCode().applyAsInt(clone);
+        //TODO check
+//        return clone -> Arrays.hashCode(new int[]{
+//                clusteringHashCode().applyAsInt(clone),
+//                numberOfMutations(clone, GeneType.Variable) + numberOfMutations(clone, GeneType.Joining)
+//        });
     }
 
     default Comparator<Clone> clusteringComparatorWithNumberOfMutations() {
@@ -54,6 +55,7 @@ public interface ClusteringCriteria {
             return clone -> Objects.hash(
                     clone.getBestHitGene(GeneType.Variable).getId().getName(),
                     clone.getBestHitGene(GeneType.Joining).getId().getName(),
+                    //TODO remove
                     Optional.ofNullable(clone.getBestHitGene(GeneType.Diversity)).map(it -> it.getId().getName()).orElse(""),
                     clone.ntLengthOf(GeneFeature.CDR3)
             );
@@ -64,6 +66,7 @@ public interface ClusteringCriteria {
             return Comparator
                     .<Clone, String>comparing(c -> c.getBestHitGene(GeneType.Variable).getId().getName())
                     .thenComparing(c -> c.getBestHitGene(GeneType.Joining).getId().getName())
+                    //TODO remove
                     .thenComparing(c -> Optional.ofNullable(c.getBestHitGene(GeneType.Diversity)).map(it -> it.getId().getName()).orElse(""))
                     .thenComparing(c -> c.ntLengthOf(GeneFeature.CDR3));
         }

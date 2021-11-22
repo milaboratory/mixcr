@@ -4,6 +4,7 @@ import org.apache.commons.math3.util.Pair;
 
 import java.math.BigDecimal;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -43,7 +44,7 @@ public class TreeBuilderByAncestors<T, E> {
      */
     public TreeBuilderByAncestors<T, E> addNode(T toAdd) {
         E contentAsAncestor = asAncestor.apply(toAdd);
-        tree.allNodes()
+        List<Tree.Node<ObservedOrReconstructed<T, E>>> nodes = tree.allNodes()
                 .filter(it -> it.getContent() instanceof Reconstructed<?, ?>)
                 .collect(Collectors.groupingBy(compareWith -> {
                     BigDecimal distance = distanceBetween.apply(((Reconstructed<T, E>) compareWith.getContent()).getContent(), contentAsAncestor);
@@ -55,7 +56,8 @@ public class TreeBuilderByAncestors<T, E> {
                 .entrySet().stream()
                 .min(Map.Entry.comparingByKey())
                 .map(Map.Entry::getValue)
-                .orElseThrow(IllegalArgumentException::new)
+                .orElseThrow(IllegalArgumentException::new);
+        List<Action> actions = nodes
                 .stream()
                 .map(chosenNode -> {
                     E contentOfChosen = ((Reconstructed<T, E>) chosenNode.getContent()).getContent();
@@ -139,6 +141,9 @@ public class TreeBuilderByAncestors<T, E> {
                         return replaceNode(chosenNode, toAdd, commonAncestor);
                     }
                 })
+                .collect(Collectors.toList());
+        actions
+                .stream()
                 //optimize sum of distances in the tree. If there is no difference, optimize by distances without reconstructed nodes
                 .min(Comparator.comparing(Action::changeOfDistance).thenComparing(Action::distanceFromObserved))
                 .orElseThrow(IllegalArgumentException::new)
@@ -230,7 +235,11 @@ public class TreeBuilderByAncestors<T, E> {
 
         @Override
         BigDecimal distanceFromObserved() {
-            return ((Reconstructed<T, E>) replaceWhat.getContent()).minDistanceFromObserved;
+            if (replaceWhat.getParent() == null) {
+                return BigDecimal.ZERO;
+            } else {
+                return ((Reconstructed<T, E>) replaceWhat.getParent().getContent()).minDistanceFromObserved.add(replaceWhat.getDistanceFromParent());
+            }
         }
 
         @Override

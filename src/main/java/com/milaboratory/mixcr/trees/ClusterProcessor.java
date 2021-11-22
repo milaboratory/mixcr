@@ -49,7 +49,7 @@ class ClusterProcessor {
      * - Distance between NDN segments of two clonotypes
      * - Distance between V and J segments of two clonotypes
      * <p>
-     * On stage of clustering we can't use VEnd and JBegin marking because gyppermutation on P region affects accuracy.
+     * On stage of clustering we can't use VEnd and JBegin marking because hypermutation on P region affects accuracy.
      * While alignment in some cases it's not possible to determinate mutation of P segment from shorter V or J version and other N nucleotides.
      * So, there will be used CDR3 instead of NDN, VBegin-CDR3Begin instead V and CDR3End-JEnd instead J
      * <p>
@@ -111,6 +111,7 @@ class ClusterProcessor {
         // resort by mutations count
         // build by next neighbor
 
+        //TODO maybe just use multialignment for finding common part, choose more realistic D gene as common ancestor
         List<VDJCGene> DGeneScores = topScoredDGenes(cluster);
         //TODO there is several similar D matches
         //TODO there is no D match
@@ -144,6 +145,7 @@ class ClusterProcessor {
                 .map(clone -> new CloneWithMutationsFromReconstructedRoot(
                         new MutationsFromReconstructedRoot(
                                 reconstructedCDR3,
+                                //TODO aligin only part
                                 Aligner.alignGlobal(
                                         AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
                                         reconstructedCDR3,
@@ -286,6 +288,7 @@ class ClusterProcessor {
 
     //TODO two matches from the same DGene but in different positions
     private List<VDJCGene> topScoredDGenes(Cluster<CloneWithMutationsFromVJGermline> cluster) {
+        //TODO use distance from germline as fine
         List<Map.Entry<VDJCGene, Double>> DGeneScores = cluster.cluster.stream()
                 .flatMap(it -> Arrays.stream(it.cloneWrapper.clone.getHits(Diversity)))
                 .collect(Collectors.groupingBy(VDJCHit::getGene, Collectors.summingDouble(VDJCHit::getScore)))
@@ -320,6 +323,8 @@ class ClusterProcessor {
         Mutations<NucleotideSequence> VMutations = base.VMutationsWithoutCDR3.invert().combineWith(compareWith.VMutationsWithoutCDR3);
         Mutations<NucleotideSequence> JMutations = base.JMutationsWithoutCDR3.invert().combineWith(compareWith.JMutationsWithoutCDR3);
 
+        //TODO use more optimized variant
+        //TODO compare only part between V and J
         Mutations<NucleotideSequence> CDR3Mutations = Aligner.alignGlobal(
                 AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
                 base.CDR3,
@@ -330,8 +335,11 @@ class ClusterProcessor {
         double VLength = (totalLength(base.VRangesWithoutCDR3) + totalLength(compareWith.VRangesWithoutCDR3)) / 2.0;
         double JLength = (totalLength(base.JRangesWithoutCDR3) + totalLength(compareWith.JRangesWithoutCDR3)) / 2.0;
 
+        //TODO don't use average length
         double normalizedDistanceFromCloneToGermline = (base.VMutationsWithoutCDR3.size() + base.JMutationsWithoutCDR3.size()) / (VLength + JLength);
+        //TODO don't use average length
         double normalizedDistanceFromCompareToGermline = (compareWith.VMutationsWithoutCDR3.size() + compareWith.JMutationsWithoutCDR3.size()) / (VLength + JLength);
+
         double normalizedAverageDistanceToGermline = (normalizedDistanceFromCloneToGermline + normalizedDistanceFromCompareToGermline) / 2.0;
         double normalizedDistanceBetweenClones = (VMutations.size() + JMutations.size() + CDR3Mutations.size()) / (VLength + JLength + CDR3Length);
         double normalizedDistanceBetweenClonesInCDR3 = (CDR3Mutations.size()) / CDR3Length;

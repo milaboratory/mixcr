@@ -217,6 +217,9 @@ public class TreeBuilderByAncestorsTest {
         assertTreeBuilder("(((100110:0)'100110':2,(111000:0)'111000':2)'100000':1,(000001:0)'000001':1,000000:0)'000000';", treeBuilder);
     }
 
+    /**
+     * If there are several nodes with the same distance from added node with must choose those that will minimize change of distances
+     */
     @Test
     public void chooseBestResultOfInsertion() {
         TreeBuilderByAncestors<List<Integer>, List<Integer>> treeBuilder = treeBuilder(Lists.newArrayList(0, 0, 0, 0, 0))
@@ -229,7 +232,7 @@ public class TreeBuilderByAncestorsTest {
 
     @Test
     public void chooseInsertionNearerToRealNode() {
-        Tree<List<Integer>> orignial = new Tree<>(
+        Tree<List<Integer>> original = new Tree<>(
                 new Tree.Node<>(parseNode("0000000000"))
                         .addChild(new Tree.Node<>(parseNode("1010000000"))
                                 .addChild(new Tree.Node<>(parseNode("1110000001"))
@@ -246,28 +249,72 @@ public class TreeBuilderByAncestorsTest {
                                                         .addChild(new Tree.Node<>(parseNode("1110101011")))))))
         );
         TreeBuilderByAncestors<List<Integer>, List<Integer>> treeBuilder = treeBuilder(parseNode("0000000000"));
-        List<List<Integer>> allNodes = orignial.allNodes().map(Tree.Node::getContent)
-                .sorted(Comparator.comparing(it -> it.stream().mapToInt(i -> i).sum()))
+        List<List<Integer>> allNodes = original.allNodes().map(Tree.Node::getContent)
+                .sorted(Comparator.comparing(it -> it.stream().filter(i -> i != 0).count()))
                 .collect(Collectors.toList());
-        allNodes.subList(1, allNodes.size()).forEach(toAdd -> {
-            System.out.println(treePrinter.print(treeBuilder.getTree()));
-            treeBuilder.addNode(toAdd);
-        });
+        allNodes.subList(1, allNodes.size()).forEach(treeBuilder::addNode);
 
-        BigDecimal sumOfDistancesInOriginal = calculateDistances(orignial, this::distance).getRoot().sumOfDistancesToDescendants();
-        BigDecimal sumOfDistancesInBuild = calculateDistances(withoutSynthetic(treeBuilder.getTree()), this::distance).getRoot().sumOfDistancesToDescendants();
-        System.out.println("expected:");
-        System.out.println(treePrinterOnlyReal.print(calculateDistances(orignial, this::distance)));
-        System.out.println("actual:");
-        System.out.println(treePrinterOnlyReal.print(calculateDistances(withoutSynthetic(treeBuilder.getTree()), this::distance)));
-        System.out.println(treePrinter.print(treeBuilder.getTree()));
-        assertTrue(sumOfDistancesInOriginal.compareTo(sumOfDistancesInBuild) >= 0);
+        compareTrees(original, treeBuilder.getTree());
+    }
+
+    @Test
+    public void chooseInsertionNearerToRealNodeWithReplaceOfReal() {
+        Tree<List<Integer>> original = new Tree<>(
+                new Tree.Node<>(parseNode("00000000"))
+                        .addChild(new Tree.Node<>(parseNode("60000030"))
+                                .addChild(new Tree.Node<>(parseNode("65000030"))
+                                        .addChild(new Tree.Node<>(parseNode("65230030")))
+                                        .addChild(new Tree.Node<>(parseNode("65000237"))))
+                                .addChild(new Tree.Node<>(parseNode("60200032"))
+                                        .addChild(new Tree.Node<>(parseNode("65250032")))
+                                        .addChild(new Tree.Node<>(parseNode("60230032")))))
+        );
+        TreeBuilderByAncestors<List<Integer>, List<Integer>> treeBuilder = treeBuilder(parseNode("00000000"));
+        List<List<Integer>> allNodes = original.allNodes().map(Tree.Node::getContent)
+                .sorted(Comparator.comparing(it -> it.stream().filter(i -> i != 0).count()))
+                .collect(Collectors.toList());
+        allNodes.subList(1, allNodes.size()).forEach(treeBuilder::addNode);
+
+        compareTrees(original, treeBuilder.getTree());
+    }
+
+    @Test
+    public void commonAncestorCouldNotHaveMutationsThatNotContainsInAParent() {
+        Tree<List<Integer>> original = new Tree<>(
+                new Tree.Node<>(parseNode("0000"))
+                        .addChild(new Tree.Node<>(parseNode("6000"))
+                                .addChild(new Tree.Node<>(parseNode("6077"))))
+                        .addChild(new Tree.Node<>(parseNode("0007"))
+                                .addChild(new Tree.Node<>(parseNode("1077"))))
+        );
+        //direct comparison of 1077 and 6077 will yield 0077, but with parent 6000 we want them to yield 6077
+
+        TreeBuilderByAncestors<List<Integer>, List<Integer>> treeBuilder = treeBuilder(parseNode("0000"));
+        List<List<Integer>> allNodes = original.allNodes().map(Tree.Node::getContent)
+                .sorted(Comparator.comparing(it -> it.stream().filter(i -> i != 0).count()))
+                .collect(Collectors.toList());
+        allNodes.subList(1, allNodes.size()).forEach(treeBuilder::addNode);
+
+
+        compareTrees(original, treeBuilder.getTree());
+    }
+
+    private void compareTrees(Tree<List<Integer>> original, Tree<ObservedOrReconstructed<List<Integer>, List<Integer>>> result) {
+        boolean assertion = compareSumOfDistances(original, result);
+        if (!assertion) {
+            System.out.println("expected:");
+            System.out.println(treePrinterOnlyReal.print(original));
+            System.out.println("actual:");
+            System.out.println(treePrinterOnlyReal.print(calculateDistances(withoutSynthetic(result), this::distance)));
+            System.out.println(treePrinter.print(result));
+        }
+        assertTrue(assertion);
     }
 
     @Ignore
     @Test
     public void randomizedTest() {
-        List<Long> failedSeeds = IntStream.range(0, 1_000_000)
+        List<Long> failedSeeds = IntStream.range(0, 1_000)
                 .mapToObj(it -> ThreadLocalRandom.current().nextLong())
                 .filter(seed -> {
                     Random random = new Random(seed);
@@ -279,10 +326,10 @@ public class TreeBuilderByAncestorsTest {
 
 //                    int arrayLength = 5;
 //                    int depth = 3;
-//                    int branchesCount = 1 + random.nextInt(3);
+//                    Supplier<Integer> branchesCount = () -> 1 + random.nextInt(2);
 //                    Supplier<Integer> mutationsCount = () -> 1 + random.nextInt(1);
 
-                    boolean print = false;
+                    boolean print = true;
 
                     List<Integer> root = new ArrayList<>();
                     for (int i = 0; i < arrayLength; i++) {
@@ -310,14 +357,15 @@ public class TreeBuilderByAncestorsTest {
                                 //noinspection ConstantConditions
                                 if (print) {
                                     System.out.println(treePrinter.print(treeBuilder.getTree()));
+                                    System.out.println(print(toAdd));
                                 }
-                                treeBuilder.addNode(toAdd);
+                                if (!toAdd.equals(root)) {
+                                    treeBuilder.addNode(toAdd);
+                                }
                             });
 
-                    BigDecimal sumOfDistancesInOriginal = sumOfDistances(calculateDistances(tree, this::distance));
-                    BigDecimal sumOfDistancesInConstructed = sumOfDistances(calculateDistances(withoutSynthetic(treeBuilder.getTree()), this::distance));
-                    boolean fails = sumOfDistancesInOriginal.compareTo(sumOfDistancesInConstructed) < 0;
-                    if (fails) {
+                    boolean success = compareSumOfDistances(tree, treeBuilder.getTree());
+                    if (!success) {
                         System.out.println("expected:");
                         System.out.println(treePrinterOnlyReal.print(tree));
                         System.out.println("actual:");
@@ -327,11 +375,17 @@ public class TreeBuilderByAncestorsTest {
                         System.out.println(seed);
                         System.out.println();
                     }
-                    return fails;
+                    return !success;
                 })
                 .collect(Collectors.toList());
 
         assertEquals(Collections.emptyList(), failedSeeds);
+    }
+
+    private boolean compareSumOfDistances(Tree<List<Integer>> original, Tree<ObservedOrReconstructed<List<Integer>, List<Integer>>> result) {
+        BigDecimal sumOfDistancesInOriginal = sumOfDistances(calculateDistances(original, this::distance));
+        BigDecimal sumOfDistancesInConstructed = sumOfDistances(calculateDistances(withoutSynthetic(result), this::distance));
+        return sumOfDistancesInOriginal.compareTo(sumOfDistancesInConstructed) >= 0;
     }
 
     private List<Tree.Node<List<Integer>>> insetChildren(Random random, Supplier<Integer> mutationsCount, Set<List<Integer>> insertedLeaves, Tree.Node<List<Integer>> parent, Supplier<Integer> branchesCount) {
@@ -345,7 +399,7 @@ public class TreeBuilderByAncestorsTest {
                     possiblePositionsToMutate = possiblePositionsToMutate
                             .subList(0, Math.min(possiblePositionsToMutate.size() - 1, mutationsCount.get()));
                     List<Integer> leaf = new ArrayList<>(parent.getContent());
-                    possiblePositionsToMutate.forEach(it -> leaf.set(it, 1));
+                    possiblePositionsToMutate.forEach(it -> leaf.set(it, random.nextInt(9)));
                     if (insertedLeaves.contains(leaf)) {
                         return null;
                     } else {
