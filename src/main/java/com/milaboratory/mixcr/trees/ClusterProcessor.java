@@ -127,17 +127,24 @@ class ClusterProcessor {
 
         List<CloneWithMutationsFromReconstructedRoot> rebasedCluster = rebaseByReconstructedRoot(cluster, reconstructedCDR3);
 
-        CloneWithMutationsFromReconstructedRoot firstClone = rebasedCluster.get(0);
-
-        TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, MutationsFromReconstructedRoot> treeBuilderByAncestors = new TreeBuilderByAncestors<>(
-                firstClone,
-                this::distance,
-                this::findCommonAncestor,
-                it -> it.mutations
+        MutationsFromReconstructedRoot root = new MutationsFromReconstructedRoot(
+                reconstructedCDR3,
+                Mutations.empty(NucleotideSequence.ALPHABET),
+                Mutations.empty(NucleotideSequence.ALPHABET),
+                overlap(rebasedCluster.stream().map(it -> it.mutations.VRangesWithoutCDR3).collect(Collectors.toList())),
+                Mutations.empty(NucleotideSequence.ALPHABET),
+                overlap(rebasedCluster.stream().map(it -> it.mutations.JRangesWithoutCDR3).collect(Collectors.toList()))
         );
-
-        rebasedCluster.subList(1, rebasedCluster.size()).forEach(treeBuilderByAncestors::addNode);
-        return treeBuilderByAncestors.getTree();
+        return null;
+//        TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, MutationsFromReconstructedRoot> treeBuilderByAncestors = new TreeBuilderByAncestors<>(
+//                root,
+//                this::distance,
+//                this::findCommonAncestor,
+//                it -> it.mutations
+//        );
+//
+//        rebasedCluster.forEach(treeBuilderByAncestors::addNode);
+//        return treeBuilderByAncestors.getTree();
     }
 
     private List<CloneWithMutationsFromReconstructedRoot> rebaseByReconstructedRoot(Cluster<CloneWithMutationsFromVJGermline> cluster, NucleotideSequence reconstructedCDR3) {
@@ -261,13 +268,14 @@ class ClusterProcessor {
                 first.CDR3OfRoot,
                 intersection(first.CDR3Mutations, second.CDR3Mutations),
                 intersection(first.VMutationsWithoutCDR3, second.VMutationsWithoutCDR3),
+                //TODO may be it's wrong, check when there will be holes
                 intersection(first.VRangesWithoutCDR3, second.VRangesWithoutCDR3),
                 intersection(first.JMutationsWithoutCDR3, second.JMutationsWithoutCDR3),
+                //TODO may be it's wrong, check when there will be holes
                 intersection(first.JRangesWithoutCDR3, second.JRangesWithoutCDR3)
         );
     }
 
-    //TODO may be it's wrong, check when there will be holes
     private List<Range> intersection(List<Range> first, List<Range> second) {
         return first.stream()
                 .map(range -> {
@@ -278,6 +286,28 @@ class ClusterProcessor {
                     return result;
                 })
                 .collect(Collectors.toList());
+    }
+
+    //TODO check when there will be holes
+    private List<Range> overlap(List<List<Range>> ranges) {
+        List<Range> sorted = ranges.stream()
+                .flatMap(Collection::stream)
+                .sorted(Comparator.comparing(Range::getLower))
+                .collect(Collectors.toList());
+        List<Range> result = new ArrayList<>();
+        int currentLeft = sorted.get(0).getLower();
+        int currentRight = sorted.get(0).getUpper();
+        for (Range range : sorted.subList(1, sorted.size())) {
+            if (range.getLower() <= currentRight) {
+                currentRight = Math.min(currentRight, range.getUpper());
+            } else {
+                result.add(new Range(currentLeft, currentRight));
+                currentLeft = range.getLower();
+                currentRight = range.getUpper();
+            }
+        }
+        result.add(new Range(currentLeft, currentRight));
+        return result;
     }
 
     private Mutations<NucleotideSequence> intersection(Mutations<NucleotideSequence> first, Mutations<NucleotideSequence> second) {

@@ -3,33 +3,39 @@ package com.milaboratory.mixcr.trees;
 import org.apache.commons.math3.util.Pair;
 
 import java.math.BigDecimal;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public class TreeBuilderByAncestors<T, E> {
-    private final BiFunction<E, E, BigDecimal> distanceBetween;
-    private final BiFunction<E, E, E> findCommonAncestor;
+import static java.util.Comparator.comparing;
+
+public class TreeBuilderByAncestors<T, E, M> {
+    private final Function<M, BigDecimal> distance;
     private final Function<T, E> asAncestor;
+    private final BiFunction<E, E, M> mutationsBetween;
+    private final BiFunction<E, M, E> mutate;
+    private final BiFunction<M, M, M> findCommonMutations;
 
     private final Tree<ObservedOrReconstructed<T, E>> tree;
 
     public TreeBuilderByAncestors(
-            T root,
-            BiFunction<E, E, BigDecimal> distanceBetween,
-            BiFunction<E, E, E> findCommonAncestor,
-            Function<T, E> asAncestor
+            E root,
+            Function<M, BigDecimal> distance,
+            BiFunction<E, E, M> mutationsBetween,
+            BiFunction<E, M, E> mutate,
+            Function<T, E> asAncestor,
+            BiFunction<M, M, M> findCommonMutations
     ) {
-        this.distanceBetween = distanceBetween;
-        this.findCommonAncestor = findCommonAncestor;
+        this.distance = distance;
+        this.mutationsBetween = mutationsBetween;
+        this.mutate = mutate;
         this.asAncestor = asAncestor;
-        Tree.Node<ObservedOrReconstructed<T, E>> rootNode = new Tree.Node<>(new Reconstructed<>(asAncestor.apply(root), BigDecimal.ZERO));
-        tree = new Tree<>(rootNode);
-        rootNode.addChild(new Tree.Node<>(new Observed<>(root)), BigDecimal.ZERO);
+        this.findCommonMutations = findCommonMutations;
+        tree = new Tree<>(new Tree.Node<>(new Reconstructed<>(root, BigDecimal.ZERO)));
     }
 
     /**
@@ -37,142 +43,147 @@ public class TreeBuilderByAncestors<T, E> {
      * 1. Nodes must be added in order by distance from the root
      * 2. findCommonAncestor is constructing ancestor based on root (left common mutations on nodes from root)
      * <p>
+     * <p>
      * Invariants of the tree:
-     * 1. Root node is always reconstructed.
+     * 1. Root node is always reconstructed. Root is not changing
      * 2. Leaves are always observed. Distance between observed and reconstructed may be zero (they are identical).
      * 3. Siblings have no common ancestors.
      */
-    public TreeBuilderByAncestors<T, E> addNode(T toAdd) {
+    public TreeBuilderByAncestors<T, E, M> addNode(T toAdd) {
         E contentAsAncestor = asAncestor.apply(toAdd);
-        List<Tree.Node<ObservedOrReconstructed<T, E>>> nodes = tree.allNodes()
+        List<Tree.Node<ObservedOrReconstructed<T, E>>> nearestNodes = tree.allNodes()
                 .filter(it -> it.getContent() instanceof Reconstructed<?, ?>)
-                .collect(Collectors.groupingBy(compareWith -> {
-                    BigDecimal distance = distanceBetween.apply(((Reconstructed<T, E>) compareWith.getContent()).getContent(), contentAsAncestor);
-                    if (distance.compareTo(BigDecimal.ZERO) == 0) {
-                        throw new IllegalArgumentException("can't add the same node");
-                    }
-                    return distance;
-                }))
+                .collect(Collectors.groupingBy(compareWith ->
+                        distance.apply(mutationsBetween.apply(((Reconstructed<T, E>) compareWith.getContent()).getContent(), contentAsAncestor))
+                ))
                 .entrySet().stream()
                 .min(Map.Entry.comparingByKey())
                 .map(Map.Entry::getValue)
                 .orElseThrow(IllegalArgumentException::new);
-        List<Action> actions = nodes
-                .stream()
-                .map(chosenNode -> {
-                    E contentOfChosen = ((Reconstructed<T, E>) chosenNode.getContent()).getContent();
-                    E commonAncestor = findCommonAncestor.apply(contentOfChosen, contentAsAncestor);
+        Stream<Action> possibleActions = nearestNodes.stream().map(chosenNode -> {
+            E contentOfChosen = ((Reconstructed<T, E>) chosenNode.getContent()).getContent();
+            E commonAncestor;
+            if (chosenNode.getParent() == null) {
+                commonAncestor = contentOfChosen;
+            } else {
+                E contentOfParent = ((Reconstructed<T, E>) chosenNode.getParent().getContent()).getContent();
+                M mutationsToAdded = mutationsBetween.apply(contentOfParent, contentAsAncestor);
+                M mutationsToChosen = mutationsBetween.apply(contentOfParent, contentOfChosen);
 
-                    BigDecimal fromCommonToChosen = distanceBetween.apply(commonAncestor, contentOfChosen);
+                commonAncestor = mutate.apply(contentOfParent, findCommonMutations.apply(mutationsToAdded, mutationsToChosen));
+            }
+            BigDecimal distanceBetweenCommonAndChosen = distance.apply(mutationsBetween.apply(commonAncestor, contentOfChosen));
+            //all nodes are assumed as direct descendant of the root
+            if (chosenNode.getParent() == null || distanceBetweenCommonAndChosen.compareTo(BigDecimal.ZERO) == 0) {
+                //the added node is direct descendant of the chosen node (the added node has no mutations that don't exist in the chosen node)
 
-                    if (fromCommonToChosen.compareTo(BigDecimal.ZERO) == 0) {
-                        //the added node is direct descendant of the chosen node (the added node has no mutations that don't exist in the chosen node)
+                //search for siblings with common mutations with the added node
+                Optional<Action> siblingToMergeWith = chosenNode.getLinks().stream()
+                        .map(Tree.NodeLink::getNode)
+                        .filter(it -> it.getContent() instanceof Reconstructed<?, ?>)
+                        .map(sibling -> {
+                            M mutationsToAdded = mutationsBetween.apply(contentOfChosen, contentAsAncestor);
+                            M mutationsToSibling = mutationsBetween.apply(contentOfChosen, ((Reconstructed<T, E>) sibling.getContent()).getContent());
 
-                        //search for siblings with common mutations with the added node
-                        Optional<Action> siblingToMergeWith = chosenNode.getLinks().stream()
-                                .map(Tree.NodeLink::getNode)
-                                .filter(it -> it.getContent() instanceof Reconstructed<?, ?>)
-                                .map(it -> {
-                                    E commonAncestorWithSibling = findCommonAncestor.apply(contentAsAncestor, ((Reconstructed<T, E>) it.getContent()).getContent());
-                                    return Pair.create(
-                                            replaceNode(it, toAdd, commonAncestorWithSibling),
-                                            distanceBetween.apply(contentOfChosen, commonAncestorWithSibling)
-                                    );
-                                })
-                                //if distance is zero than there is no common mutations
-                                .filter(it -> it.getSecond().compareTo(BigDecimal.ZERO) != 0)
-                                //choose a sibling with max count of common mutations
-                                .max(Comparator.comparing(Pair::getSecond))
-                                .map(Pair::getFirst);
-                        //noinspection OptionalIsPresent
-                        if (siblingToMergeWith.isPresent()) {
-                            //the added node (A), the chosen node (B), the sibling (D) has common ancestor (C) with A
-                            //
-                            //       P                   P
-                            //       |                   |
-                            //     --*--               --*--
-                            //     |   |               |   |
-                            //     K   B      ==>      K   B
-                            //         |                   |
-                            //       --*--               --*--
-                            //       |   |               |   |
-                            //       R   D               R   C
-                            //                               |
-                            //                             --*--
-                            //                             |   |
-                            //                             A   D
-                            //
-                            // R and C has no common ancestors because R and D haven't one
-                            return siblingToMergeWith.get();
-                        } else {
-                            //the added node (A), the chosen node (B), no siblings with common ancestors
-                            //
-                            //       P                   P
-                            //       |                   |
-                            //     --*--               --*--
-                            //     |   |               |   |
-                            //     K   B      ==>      K   B
-                            //         |                   |
-                            //       --*--               --*-----
-                            //       |   |               |   |  |
-                            //       R   T               R   T  A
-                            return new Insert(
-                                    chosenNode,
-                                    nodePairWithReconstructed(toAdd),
-                                    distanceBetween.apply(commonAncestor, contentAsAncestor)
+                            M commonMutations = findCommonMutations.apply(mutationsToAdded, mutationsToSibling);
+                            E commonAncestorWithSibling = mutate.apply(contentOfChosen, commonMutations);
+                            return Pair.create(
+                                    replaceNode(sibling, toAdd, commonAncestorWithSibling),
+                                    distance.apply(commonMutations)
                             );
-                        }
+                        })
+                        //if distance is zero than there is no common mutations
+                        .filter(it -> it.getSecond().compareTo(BigDecimal.ZERO) != 0)
+                        //choose a sibling with max count of common mutations
+                        .max(comparing(Pair::getSecond))
+                        .map(Pair::getFirst);
+                if (siblingToMergeWith.isPresent()) {
+                    //the added node (A), the chosen node (B), the sibling (D) has common ancestor (C) with A
+                    //
+                    //       P                   P
+                    //       |                   |
+                    //     --*--               --*--
+                    //     |   |               |   |
+                    //     K   B      ==>      K   B
+                    //         |                   |
+                    //       --*--               --*--
+                    //       |   |               |   |
+                    //       R   D               R   C
+                    //                               |
+                    //                             --*--
+                    //                             |   |
+                    //                             A   D
+                    //
+                    // R and C has no common ancestors because R and D haven't one
+                    return siblingToMergeWith.get();
+                } else {
+                    //the added node (A), the chosen node (B), no siblings with common ancestors
+                    //
+                    //       P                   P
+                    //       |                   |
+                    //     --*--               --*--
+                    //     |   |               |   |
+                    //     K   B      ==>      K   B
+                    //         |                   |
+                    //       --*--               --*-----
+                    //       |   |               |   |  |
+                    //       R   T               R   T  A
+                    BigDecimal distanceBetweenCommonAndAdded = distance.apply(mutationsBetween.apply(commonAncestor, contentAsAncestor));
+                    Tree.Node<ObservedOrReconstructed<T, E>> nodeToInsert;
+                    if (distanceBetweenCommonAndAdded.compareTo(BigDecimal.ZERO) == 0) {
+                        //case with inserting a node equal to reconstructed root
+                        nodeToInsert = new Tree.Node<>(new Observed<>(toAdd));
                     } else {
-                        //the added node (A) and the chosen node (B) has common ancestor (C)
-                        //
-                        //       P                   P
-                        //       |                   |
-                        //     --*--               --*--
-                        //     |   |               |   |
-                        //     K   B      ==>      K   C
-                        //         |                   |
-                        //       --*--               --*--
-                        //       |   |               |   |
-                        //       R   T               A   B
-                        //                               |
-                        //                             --*--
-                        //                             |   |
-                        //                             R   T
-                        return replaceNode(chosenNode, toAdd, commonAncestor);
+                        nodeToInsert = new Tree.Node<>(new Reconstructed<>(asAncestor.apply(toAdd), BigDecimal.ZERO));
+                        nodeToInsert.addChild(new Tree.Node<>(new Observed<>(toAdd)), BigDecimal.ZERO);
                     }
-                })
-                .collect(Collectors.toList());
-        actions
-                .stream()
-                //optimize sum of distances in the tree. If there is no difference, optimize by distances without reconstructed nodes
-                .min(Comparator.comparing(Action::changeOfDistance).thenComparing(Action::distanceFromObserved))
-                .orElseThrow(IllegalArgumentException::new)
-                .apply();
+                    return new Insert(
+                            chosenNode,
+                            nodeToInsert,
+                            distanceBetweenCommonAndAdded
+                    );
+                }
+            } else {
+                //the added node (A) and the chosen node (B) has common ancestor (C)
+                //
+                //       P                   P
+                //       |                   |
+                //     --*--               --*--
+                //     |   |               |   |
+                //     K   B      ==>      K   C
+                //         |                   |
+                //       --*--               --*--
+                //       |   |               |   |
+                //       R   T               A   B
+                //                               |
+                //                             --*--
+                //                             |   |
+                //                             R   T
+                return replaceNode(chosenNode, toAdd, commonAncestor);
+            }
+        });
+        //optimize sum of distances in the tree. If there is no difference, optimize by distances without reconstructed nodes
+        Optional<Action> bestAction = possibleActions.min(comparing(Action::changeOfDistance).thenComparing(Action::distanceFromObserved));
+        bestAction.orElseThrow(IllegalArgumentException::new).apply();
         return this;
     }
 
     private Action replaceNode(Tree.Node<ObservedOrReconstructed<T, E>> replacedNode, T with, E commonAncestor) {
-        BigDecimal minDistanceFromObserved;
-        if (replacedNode.getParent() != null) {
-            minDistanceFromObserved = ((Reconstructed<T, E>) replacedNode.getParent().getContent()).minDistanceFromObserved.add(replacedNode.getDistanceFromParent());
-        } else {
-            minDistanceFromObserved = BigDecimal.ZERO;
-        }
-        Tree.Node<ObservedOrReconstructed<T, E>> replacement = new Tree.Node<>(new Reconstructed<>(commonAncestor, minDistanceFromObserved));
-        replacement.addChild(replacedNode.copy(), distanceBetween.apply(commonAncestor, ((Reconstructed<T, E>) replacedNode.getContent()).getContent()));
-        replacement.addChild(nodePairWithReconstructed(with), distanceBetween.apply(commonAncestor, asAncestor.apply(with)));
+        //can't replace the root
         if (replacedNode.getParent() == null) {
-            return new Replace(replacedNode, replacement, BigDecimal.ZERO);
-        } else {
-            BigDecimal distance = distanceBetween.apply(((Reconstructed<T, E>) replacedNode.getParent().getContent()).getContent(), commonAncestor);
-            return new Replace(replacedNode, replacement, distance);
+            throw new IllegalArgumentException();
         }
-    }
-
-    private Tree.Node<ObservedOrReconstructed<T, E>> nodePairWithReconstructed(T toAdd) {
-        Tree.Node<ObservedOrReconstructed<T, E>> ancestorNode = new Tree.Node<>(new Reconstructed<>(asAncestor.apply(toAdd), BigDecimal.ZERO));
-        ancestorNode.addChild(new Tree.Node<>(new Observed<>(toAdd)), BigDecimal.ZERO);
-        return ancestorNode;
+        Reconstructed<T, E> parentContent = (Reconstructed<T, E>) replacedNode.getParent().getContent();
+        BigDecimal minDistanceFromObserved = parentContent.minDistanceFromObserved
+                .add(replacedNode.getDistanceFromParent());
+        Tree.Node<ObservedOrReconstructed<T, E>> replacement = new Tree.Node<>(new Reconstructed<>(commonAncestor, minDistanceFromObserved));
+        replacement.addChild(replacedNode.copy(), distance.apply(mutationsBetween.apply(commonAncestor, ((Reconstructed<T, E>) replacedNode.getContent()).getContent())));
+        E contentAsAncestor = asAncestor.apply(with);
+        Tree.Node<ObservedOrReconstructed<T, E>> ancestorNode = new Tree.Node<>(new Reconstructed<>(contentAsAncestor, BigDecimal.ZERO));
+        ancestorNode.addChild(new Tree.Node<>(new Observed<>(with)), BigDecimal.ZERO);
+        replacement.addChild(ancestorNode, distance.apply(mutationsBetween.apply(commonAncestor, contentAsAncestor)));
+        BigDecimal distance = this.distance.apply(mutationsBetween.apply(parentContent.getContent(), commonAncestor));
+        return new Replace(replacedNode, replacement, distance);
     }
 
     public Tree<ObservedOrReconstructed<T, E>> getTree() {
@@ -244,11 +255,8 @@ public class TreeBuilderByAncestors<T, E> {
 
         @Override
         void apply() {
-            if (replaceWhat.getParent() == null) {
-                tree.setRoot(replacement);
-            } else {
-                replaceWhat.getParent().replaceChild(replaceWhat, replacement, newDistance);
-            }
+            if (replaceWhat.getParent() == null) throw new IllegalArgumentException();
+            replaceWhat.getParent().replaceChild(replaceWhat, replacement, newDistance);
         }
     }
 
