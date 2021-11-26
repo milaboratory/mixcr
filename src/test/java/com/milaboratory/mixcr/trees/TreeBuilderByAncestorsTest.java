@@ -8,16 +8,18 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class TreeBuilderByAncestorsTest {
     private final TreePrinter<ObservedOrReconstructed<List<Integer>, List<Integer>>> treePrinter = new NewickTreePrinter<>(
@@ -86,18 +88,6 @@ public class TreeBuilderByAncestorsTest {
                 .addNode(Lists.newArrayList(1, 0, 1))
                 .getTree();
         assertTree("(((101:0)'101':1,(110:0)'110':1,100:0)'100':1)'000';", tree);
-    }
-
-    //TODO rename
-    @Test
-    public void addSecondDirectAncestor2() {
-        Tree<List<Integer>> original = new Tree<>(
-                new Tree.Node<>(parseNode("0000000000"))
-                        .addChild(new Tree.Node<>(parseNode("7070500060"))
-                                .addChild(new Tree.Node<>(parseNode("7370500000"))
-                                        .addChild(new Tree.Node<>(parseNode("7370504030")))))
-        );
-        compareTrees(original, rebuildTree(original));
     }
 
     @Test
@@ -238,9 +228,8 @@ public class TreeBuilderByAncestorsTest {
         compareTrees(original, rebuildTree(original));
     }
 
-    //TODO rename
     @Test
-    public void some() {
+    public void useMinDistanceFromObservedForOptimization() {
         Tree<List<Integer>> original = new Tree<>(
                 new Tree.Node<>(parseNode("00000"))
                         .addChild(new Tree.Node<>(parseNode("00405")))
@@ -308,6 +297,31 @@ public class TreeBuilderByAncestorsTest {
                                 .addChild(new Tree.Node<>(parseNode("154")))
                                 .addChild(new Tree.Node<>(parseNode("454"))))
         );
+        Tree<ObservedOrReconstructed<List<Integer>, List<Integer>>> result = rebuildTree(original);
+        compareTrees(original, result);
+        Tree.Node<ObservedOrReconstructed<List<Integer>, List<Integer>>> reconstructedNodeEqualToObserved = result.allNodes()
+                .filter(it -> it.getContent() instanceof Reconstructed<?, ?>)
+                .filter(it -> ((Reconstructed<List<Integer>, List<Integer>>) it.getContent()).getContent().equals(parseNode("454")))
+                .findFirst()
+                .orElseThrow(IllegalArgumentException::new);
+        Optional<Tree.Node<ObservedOrReconstructed<List<Integer>, List<Integer>>>> observedChild = reconstructedNodeEqualToObserved.getLinks().stream()
+                .filter(it -> Objects.equals(it.getDistance(), BigDecimal.ZERO))
+                .map(Tree.NodeLink::getNode)
+                .findFirst();
+        assertTrue(observedChild.isPresent());
+        assertEquals(parseNode("454"), ((Observed<List<Integer>, List<Integer>>) observedChild.get().getContent()).getContent());
+        assertEquals(BigDecimal.ZERO, ((Reconstructed<List<Integer>, List<Integer>>) reconstructedNodeEqualToObserved.getContent()).getMinDistanceFromObserved());
+    }
+
+    @Test
+    public void useMinDistanceFromToChooseNearestNodes() {
+        Tree<List<Integer>> original = new Tree<>(
+                new Tree.Node<>(parseNode("000000"))
+                        .addChild(new Tree.Node<>(parseNode("053101")))
+                        .addChild(new Tree.Node<>(parseNode("200141")))
+                        .addChild(new Tree.Node<>(parseNode("004000"))
+                                .addChild(new Tree.Node<>(parseNode("004121"))))
+        );
         compareTrees(original, rebuildTree(original));
     }
 
@@ -350,82 +364,108 @@ public class TreeBuilderByAncestorsTest {
                     }
                     treeBuilder.addNode(toAdd);
                 });
+        if (print) {
+            System.out.println(treePrinter.print(treeBuilder.getTree()));
+        }
         return treeBuilder.getTree();
     }
 
     @Ignore
     @Test
     public void randomizedTest() {
-        List<Long> failedSeeds = IntStream.range(0, 1_000_000_000)
+        Instant begin = Instant.now();
+        AtomicInteger count = new AtomicInteger(0);
+
+        int numberOfRuns = 100_000_000;
+        List<Long> failedSeeds = IntStream.range(0, numberOfRuns)
                 .mapToObj(it -> ThreadLocalRandom.current().nextLong())
+                .parallel()
                 .filter(seed -> {
-                    boolean print = false;
-                    Random random = new Random(seed);
-
-                    int arrayLength = 5 + random.nextInt(15);
-                    int depth = 3 + random.nextInt(5);
-
-//                    int arrayLength = 5;
-//                    int depth = 3;
-                    Supplier<Integer> branchesCount = () -> 1 + random.nextInt(2);
-                    Supplier<Integer> mutationsPercentage = () -> random.nextInt(30);
-
-                    List<Integer> root = new ArrayList<>();
-                    for (int i = 0; i < arrayLength; i++) {
-                        root.add(0);
+                    boolean result = testRandomTree(seed, false);
+                    long current = count.incrementAndGet();
+                    if (current % 10_000 == 0) {
+                        Duration runFor = Duration.between(begin, Instant.now());
+                        System.out.print("\r current is " + current + " run for " + runFor + " ETC: " + runFor.multipliedBy((numberOfRuns - current) / current));
+                        System.out.flush();
                     }
-
-                    Tree.Node<List<Integer>> rootNode = new Tree.Node<>(root);
-                    Tree<List<Integer>> original = new Tree<>(rootNode);
-                    Set<List<Integer>> insertedLeaves = new HashSet<>();
-                    insertedLeaves.add(root);
-
-                    for (int branchNumber = 0; branchNumber < branchesCount.get(); branchNumber++) {
-                        List<Tree.Node<List<Integer>>> nodes = Collections.singletonList(rootNode);
-                        for (int j = 0; j < depth; j++) {
-                            nodes = nodes.stream()
-                                    .flatMap(node -> insetChildren(random, mutationsPercentage, insertedLeaves, node, branchesCount).stream())
-                                    .collect(Collectors.toList());
-                            if (nodes.isEmpty()) break;
-                        }
-                    }
-
-                    Tree<ObservedOrReconstructed<List<Integer>, List<Integer>>> rebuild;
-                    try {
-                        //noinspection ConstantConditions
-                        rebuild = rebuildTree(original, print);
-                    } catch (Exception e) {
-                        System.out.println("expected:");
-                        System.out.println(treePrinterOnlyReal.print(original));
-                        System.out.println("seed:");
-                        System.out.println(seed);
-                        throw e;
-                    }
-
-                    try {
-                        boolean success = compareSumOfDistances(original, rebuild);
-                        if (!success) {
-                            System.out.println("expected:");
-                            System.out.println(treePrinterOnlyReal.print(original));
-                            System.out.println("actual:");
-                            System.out.println(treePrinterOnlyReal.print(calculateDistances(withoutReconstructed(rebuild), this::distance)));
-                            System.out.println(treePrinter.print(this.calculateDistances(rebuild, (a, b) -> distance(getContent(a), getContent(b)))));
-                            System.out.println("seed:");
-                            System.out.println(seed);
-                            System.out.println();
-                        }
-                        return !success;
-                    } catch (Throwable e) {
-                        System.out.println(treePrinterOnlyReal.print(original));
-                        System.out.println(treePrinter.print(rebuild));
-                        System.out.println("seed:");
-                        System.out.println(seed);
-                        return true;
-                    }
+                    return result;
                 })
                 .collect(Collectors.toList());
 
         assertEquals(Collections.emptyList(), failedSeeds);
+    }
+
+    @Test
+    public void reproduceRandom() {
+        assertFalse(testRandomTree(-7946181024332746438L, true));
+    }
+
+    //TODO erase random nodes near root
+    private boolean testRandomTree(Long seed, boolean print) {
+        Random random = new Random(seed);
+
+        int arrayLength = 5 + random.nextInt(15);
+        int depth = 3 + random.nextInt(5);
+
+//                    int arrayLength = 5;
+//                    int depth = 3;
+        Supplier<Integer> branchesCount = () -> 1 + random.nextInt(2);
+        Supplier<Integer> mutationsPercentage = () -> random.nextInt(30);
+
+        List<Integer> root = new ArrayList<>();
+        for (int i = 0; i < arrayLength; i++) {
+            root.add(0);
+        }
+
+        Tree.Node<List<Integer>> rootNode = new Tree.Node<>(root);
+        Tree<List<Integer>> original = new Tree<>(rootNode);
+        Set<List<Integer>> insertedLeaves = new HashSet<>();
+        insertedLeaves.add(root);
+
+        for (int branchNumber = 0; branchNumber < branchesCount.get(); branchNumber++) {
+            List<Tree.Node<List<Integer>>> nodes = Collections.singletonList(rootNode);
+            for (int j = 0; j < depth; j++) {
+                nodes = nodes.stream()
+                        .flatMap(node -> insetChildren(random, mutationsPercentage, insertedLeaves, node, branchesCount).stream())
+                        .collect(Collectors.toList());
+                if (nodes.isEmpty()) break;
+            }
+        }
+
+        Tree<ObservedOrReconstructed<List<Integer>, List<Integer>>> rebuild;
+        try {
+            rebuild = rebuildTree(original, print);
+        } catch (Exception e) {
+            System.out.println("expected:");
+            System.out.println(treePrinterOnlyReal.print(original));
+            System.out.println("seed:");
+            System.out.println(seed);
+            e.printStackTrace();
+            System.out.println();
+            return true;
+        }
+
+        try {
+            boolean success = compareSumOfDistances(original, rebuild);
+            if (!success) {
+                System.out.println("expected:");
+                System.out.println(treePrinterOnlyReal.print(original));
+                System.out.println("actual:");
+                System.out.println(treePrinterOnlyReal.print(calculateDistances(withoutReconstructed(rebuild), this::distance)));
+                System.out.println("seed:");
+                System.out.println(seed);
+                System.out.println();
+            }
+            return !success;
+        } catch (Throwable e) {
+            System.out.println(treePrinterOnlyReal.print(original));
+            System.out.println(treePrinter.print(rebuild));
+            System.out.println("seed:");
+            System.out.println(seed);
+            e.printStackTrace();
+            System.out.println();
+            return true;
+        }
     }
 
     private boolean compareSumOfDistances(Tree<List<Integer>> original, Tree<ObservedOrReconstructed<List<Integer>, List<Integer>>> result) {

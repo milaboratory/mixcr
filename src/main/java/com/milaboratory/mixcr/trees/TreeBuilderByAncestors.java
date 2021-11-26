@@ -1,6 +1,7 @@
 package com.milaboratory.mixcr.trees;
 
 import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -54,7 +55,11 @@ public class TreeBuilderByAncestors<T, E, M> {
         List<Tree.Node<ObservedOrReconstructed<T, E>>> nearestNodes = tree.allNodes()
                 .filter(it -> it.getContent() instanceof Reconstructed<?, ?>)
                 .collect(Collectors.groupingBy(compareWith ->
-                        distance.apply(mutationsBetween.apply(((Reconstructed<T, E>) compareWith.getContent()).getContent(), contentAsAncestor))
+                        {
+                            Reconstructed<T, E> nodeContent = (Reconstructed<T, E>) compareWith.getContent();
+                            return distance.apply(mutationsBetween.apply(nodeContent.getContent(), contentAsAncestor))
+                                    .add(nodeContent.getMinDistanceFromObserved());
+                        }
                 ))
                 .entrySet().stream()
                 .min(Map.Entry.comparingByKey())
@@ -105,7 +110,11 @@ public class TreeBuilderByAncestors<T, E, M> {
             }
         });
         //optimize sum of distances from observed nodes
-        Optional<Action> bestAction = possibleActions.min(comparing(action -> action.changeOfDistance().add(action.distanceFromObserved())));
+        List<Action> temp = possibleActions.collect(Collectors.toList());
+        Optional<Action> bestAction = temp.stream().min(
+                Comparator.<Action, BigDecimal>comparing(action -> action.changeOfDistance().add(action.distanceFromObserved()))
+                        .thenComparing(Action::changeOfDistance)
+        );
         bestAction.orElseThrow(IllegalArgumentException::new).apply();
         return this;
     }
@@ -114,16 +123,9 @@ public class TreeBuilderByAncestors<T, E, M> {
         E contentAsAncestor = asAncestor.apply(toAdd);
         E contentOfParent = ((Reconstructed<T, E>) parent.getContent()).getContent();
         BigDecimal distanceBetweenParentAndAdded = distance.apply(mutationsBetween.apply(contentOfParent, contentAsAncestor));
-        Tree.Node<ObservedOrReconstructed<T, E>> nodeToInsert;
-        if (distanceBetweenParentAndAdded.compareTo(BigDecimal.ZERO) == 0) {
-            nodeToInsert = new Tree.Node<>(new Observed<>(toAdd));
-        } else {
-            nodeToInsert = new Tree.Node<>(new Reconstructed<>(asAncestor.apply(toAdd), BigDecimal.ZERO));
-            nodeToInsert.addChild(new Tree.Node<>(new Observed<>(toAdd)), BigDecimal.ZERO);
-        }
         return new Insert(
                 parent,
-                nodeToInsert,
+                toAdd,
                 distanceBetweenParentAndAdded
         );
     }
@@ -158,7 +160,7 @@ public class TreeBuilderByAncestors<T, E, M> {
         E commonAncestor = mutate.apply(parentContent.getContent(), commonMutations);
         Tree.Node<ObservedOrReconstructed<T, E>> replacement = new Tree.Node<>(new Reconstructed<>(
                 commonAncestor,
-                parentContent.minDistanceFromObserved.add(sibling.getDistanceFromParent())
+                parentContent.getMinDistanceFromObserved().add(distance.apply(commonMutations))
         ));
         replacement.addChild(sibling.copy(), distance.apply(mutationsBetween.apply(commonAncestor, ((Reconstructed<T, E>) sibling.getContent()).getContent())));
 
@@ -173,7 +175,7 @@ public class TreeBuilderByAncestors<T, E, M> {
         replacement.addChild(nodeToAdd, distanceBetweenCommonAndAdded);
 
         BigDecimal distanceFromParentToCommon = distance.apply(commonMutations);
-        return new Replace(sibling, replacement, distanceFromParentToCommon, parentContent.minDistanceFromObserved);
+        return new Replace(parent, sibling, replacement, distanceFromParentToCommon);
     }
 
     public Tree<ObservedOrReconstructed<T, E>> getTree() {
@@ -189,48 +191,56 @@ public class TreeBuilderByAncestors<T, E, M> {
     }
 
     private class Insert extends Action {
-        private final Tree.Node<ObservedOrReconstructed<T, E>> addTo;
-        private final Tree.Node<ObservedOrReconstructed<T, E>> insertion;
-        private final BigDecimal distance;
+        private final Tree.Node<ObservedOrReconstructed<T, E>> parent;
+        private final T insertion;
+        private final BigDecimal distanceFromParentAndInsertion;
 
-        public Insert(Tree.Node<ObservedOrReconstructed<T, E>> addTo, Tree.Node<ObservedOrReconstructed<T, E>> insertion, BigDecimal distance) {
-            this.addTo = addTo;
+        public Insert(Tree.Node<ObservedOrReconstructed<T, E>> parent, T insertion, BigDecimal distanceFromParentAndInsertion) {
+            this.parent = parent;
             this.insertion = insertion;
-            this.distance = distance;
+            this.distanceFromParentAndInsertion = distanceFromParentAndInsertion;
         }
 
         @Override
         BigDecimal changeOfDistance() {
-            return distance;
+            return distanceFromParentAndInsertion;
         }
 
         @Override
         BigDecimal distanceFromObserved() {
-            return ((Reconstructed<T, E>) addTo.getContent()).minDistanceFromObserved;
+            return ((Reconstructed<T, E>) parent.getContent()).getMinDistanceFromObserved();
         }
 
         @Override
         void apply() {
-            addTo.addChild(insertion, distance);
+            Tree.Node<ObservedOrReconstructed<T, E>> nodeToInsert;
+            if (distanceFromParentAndInsertion.compareTo(BigDecimal.ZERO) == 0) {
+                ((Reconstructed<T, E>) parent.getContent()).setMinDistanceFromObserved(BigDecimal.ZERO);
+                nodeToInsert = new Tree.Node<>(new Observed<>(insertion));
+            } else {
+                nodeToInsert = new Tree.Node<>(new Reconstructed<>(asAncestor.apply(insertion), BigDecimal.ZERO));
+                nodeToInsert.addChild(new Tree.Node<>(new Observed<>(insertion)), BigDecimal.ZERO);
+            }
+            parent.addChild(nodeToInsert, distanceFromParentAndInsertion);
         }
     }
 
     private class Replace extends Action {
+        private final Tree.Node<ObservedOrReconstructed<T, E>> parent;
         private final Tree.Node<ObservedOrReconstructed<T, E>> replaceWhat;
         private final Tree.Node<ObservedOrReconstructed<T, E>> replacement;
         private final BigDecimal distanceFromParentToCommon;
         private final BigDecimal sumOfDistancesInReplacement;
-        private final BigDecimal minDistanceFromObserved;
 
-        public Replace(Tree.Node<ObservedOrReconstructed<T, E>> replaceWhat,
+        public Replace(Tree.Node<ObservedOrReconstructed<T, E>> parent,
+                       Tree.Node<ObservedOrReconstructed<T, E>> replaceWhat,
                        Tree.Node<ObservedOrReconstructed<T, E>> replacement,
-                       BigDecimal distanceFromParentToCommon,
-                       BigDecimal minDistanceFromObserved) {
+                       BigDecimal distanceFromParentToCommon) {
+            this.parent = parent;
             this.replaceWhat = replaceWhat;
             this.replacement = replacement;
             this.distanceFromParentToCommon = distanceFromParentToCommon;
             this.sumOfDistancesInReplacement = replacement.sumOfDistancesToDescendants();
-            this.minDistanceFromObserved = minDistanceFromObserved;
         }
 
         BigDecimal getDistanceFromParentToCommon() {
@@ -245,13 +255,12 @@ public class TreeBuilderByAncestors<T, E, M> {
 
         @Override
         BigDecimal distanceFromObserved() {
-            return minDistanceFromObserved;
+            return ((Reconstructed<T, E>) parent.getContent()).getMinDistanceFromObserved();
         }
 
         @Override
         void apply() {
-            if (replaceWhat.getParent() == null) throw new IllegalArgumentException();
-            replaceWhat.getParent().replaceChild(replaceWhat, replacement, distanceFromParentToCommon);
+            parent.replaceChild(replaceWhat, replacement, distanceFromParentToCommon);
         }
     }
 
@@ -261,7 +270,7 @@ public class TreeBuilderByAncestors<T, E, M> {
                 return new Observed<>(mapObserved.apply(((Observed<T, E>) this).getContent()));
             } else if (this instanceof Reconstructed<?, ?>) {
                 Reconstructed<T, E> casted = (Reconstructed<T, E>) this;
-                return new Reconstructed<>(mapReconstructed.apply(casted.getContent()), casted.minDistanceFromObserved);
+                return new Reconstructed<>(mapReconstructed.apply(casted.getContent()), casted.getMinDistanceFromObserved());
             } else {
                 throw new IllegalArgumentException();
             }
@@ -292,11 +301,26 @@ public class TreeBuilderByAncestors<T, E, M> {
 
     static class Reconstructed<T, E> extends ObservedOrReconstructed<T, E> {
         private final E content;
-        private final BigDecimal minDistanceFromObserved;
+        /**
+         * This number represents distance that will be added after removing of all reconstructed nodes from the tree.
+         * <p>
+         * zero for root
+         * zero if had an observed child with distance zero
+         * otherwise it is a distance from the nearest parent with minDistanceFromObserved equals zero
+         */
+        private BigDecimal minDistanceFromObserved;
 
         private Reconstructed(E content, BigDecimal minDistanceFromObserved) {
             this.content = content;
             this.minDistanceFromObserved = minDistanceFromObserved;
+        }
+
+        private void setMinDistanceFromObserved(BigDecimal minDistanceFromObserved) {
+            this.minDistanceFromObserved = minDistanceFromObserved;
+        }
+
+        BigDecimal getMinDistanceFromObserved() {
+            return minDistanceFromObserved;
         }
 
         public E getContent() {
