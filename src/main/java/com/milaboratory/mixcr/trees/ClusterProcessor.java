@@ -93,21 +93,23 @@ class ClusterProcessor {
             }
         }
 
-        List<Tree<ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, MutationsFromReconstructedRoot>>> firstStepTrees = clusteredClones.stream()
+        List<TreeWithMeta> firstStepTrees = clusteredClones.stream()
                 .map(Cluster.Builder::build)
                 .filter(it -> it.cluster.size() > 1)
                 .map(this::buildATree)
                 .collect(Collectors.toList());
 
         return firstStepTrees.stream()
-                .map(tree -> tree.map(node -> node.map(it -> it.cloneWrapper, this::buildSequence)))
+                .map(treeWithMeta -> treeWithMeta.tree.map(node ->
+                        node.map(it -> it.cloneWrapper, ancestor -> buildSequence(ancestor, treeWithMeta.CDR3OfRoot))
+                ))
                 .collect(Collectors.toList());
     }
 
-    private Tree<ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, MutationsFromReconstructedRoot>> buildATree(Cluster<CloneWithMutationsFromVJGermline> cluster) {
+    private TreeWithMeta buildATree(Cluster<CloneWithMutationsFromVJGermline> cluster) {
         // Build a tree for every cluster
-        // determine D gene
         // fix marks of VEnd and JBegin
+        // determine part between VEnd and JBegin
         // resort by mutations count
         // build by next neighbor
 
@@ -127,32 +129,34 @@ class ClusterProcessor {
 
         List<CloneWithMutationsFromReconstructedRoot> rebasedCluster = rebaseByReconstructedRoot(cluster, reconstructedCDR3);
 
-        MutationsFromReconstructedRoot root = new MutationsFromReconstructedRoot(
-                reconstructedCDR3,
+        MutationsDescription root = new MutationsDescription(
                 Mutations.empty(NucleotideSequence.ALPHABET),
                 Mutations.empty(NucleotideSequence.ALPHABET),
                 overlap(rebasedCluster.stream().map(it -> it.mutations.VRangesWithoutCDR3).collect(Collectors.toList())),
                 Mutations.empty(NucleotideSequence.ALPHABET),
                 overlap(rebasedCluster.stream().map(it -> it.mutations.JRangesWithoutCDR3).collect(Collectors.toList()))
         );
-        return null;
-//        TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, MutationsFromReconstructedRoot> treeBuilderByAncestors = new TreeBuilderByAncestors<>(
-//                root,
-//                this::distance,
-//                this::findCommonAncestor,
-//                it -> it.mutations
-//        );
-//
-//        rebasedCluster.forEach(treeBuilderByAncestors::addNode);
-//        return treeBuilderByAncestors.getTree();
+        TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, MutationsDescription, MutationsDescription> treeBuilderByAncestors = new TreeBuilderByAncestors<>(
+                root,
+                this::distance,
+                this::mutationsBetween,
+                this::combineWith,
+                CloneWithMutationsFromReconstructedRoot::getMutations,
+                this::commonMutations
+        );
+
+        rebasedCluster.forEach(treeBuilderByAncestors::addNode);
+        return new TreeWithMeta(
+                treeBuilderByAncestors.getTree(),
+                reconstructedCDR3
+        );
     }
 
     private List<CloneWithMutationsFromReconstructedRoot> rebaseByReconstructedRoot(Cluster<CloneWithMutationsFromVJGermline> cluster, NucleotideSequence reconstructedCDR3) {
         return cluster.cluster.stream()
                 .map(clone -> new CloneWithMutationsFromReconstructedRoot(
-                        new MutationsFromReconstructedRoot(
-                                reconstructedCDR3,
-                                //TODO aligin only part
+                        new MutationsDescription(
+                                //TODO align only part
                                 Aligner.alignGlobal(
                                         AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
                                         reconstructedCDR3,
@@ -165,19 +169,54 @@ class ClusterProcessor {
                         ),
                         clone.cloneWrapper
                 ))
-                .sorted(Comparator.comparing(cloneDescriptor -> distanceFromRoot(cloneDescriptor.mutations)))
+                .sorted(Comparator.comparing(cloneDescriptor -> distance(cloneDescriptor.mutations)))
                 .collect(Collectors.toList());
     }
 
-    private int distanceFromRoot(MutationsFromReconstructedRoot mutations) {
-        return mutations.CDR3Mutations.size() + mutations.VMutationsWithoutCDR3.size() + mutations.JMutationsWithoutCDR3.size();
+    private BigDecimal distance(MutationsDescription mutations) {
+        return BigDecimal.valueOf(
+                mutations.CDR3Mutations.size() + mutations.VMutationsWithoutCDR3.size() + mutations.JMutationsWithoutCDR3.size()
+        );
     }
 
-    private BigDecimal distance(MutationsFromReconstructedRoot first, MutationsFromReconstructedRoot second) {
-        Mutations<NucleotideSequence> VMutations = first.VMutationsWithoutCDR3.invert().combineWith(second.VMutationsWithoutCDR3);
-        Mutations<NucleotideSequence> JMutations = first.JMutationsWithoutCDR3.invert().combineWith(second.JMutationsWithoutCDR3);
-        Mutations<NucleotideSequence> CDR3Mutations = first.CDR3Mutations.invert().combineWith(second.CDR3Mutations);
-        return BigDecimal.valueOf(VMutations.size() + JMutations.size() + CDR3Mutations.size());
+    private MutationsDescription mutationsBetween(MutationsDescription first, MutationsDescription second) {
+        return new MutationsDescription(
+                difference(first.CDR3Mutations, second.CDR3Mutations),
+                difference(first.VMutationsWithoutCDR3, second.VMutationsWithoutCDR3),
+                //TODO may be it's wrong, check when there will be holes
+                intersection(first.VRangesWithoutCDR3, second.VRangesWithoutCDR3),
+                difference(first.JMutationsWithoutCDR3, second.JMutationsWithoutCDR3),
+                //TODO may be it's wrong, check when there will be holes
+                intersection(first.JRangesWithoutCDR3, second.JRangesWithoutCDR3)
+        );
+    }
+
+    private MutationsDescription combineWith(MutationsDescription first, MutationsDescription second) {
+        return new MutationsDescription(
+                first.CDR3Mutations.combineWith(second.CDR3Mutations),
+                first.VMutationsWithoutCDR3.combineWith(second.VMutationsWithoutCDR3),
+                //TODO may be it's wrong, check when there will be holes
+                overlap(Arrays.asList(first.VRangesWithoutCDR3, second.VRangesWithoutCDR3)),
+                first.JMutationsWithoutCDR3.combineWith(second.JMutationsWithoutCDR3),
+                //TODO may be it's wrong, check when there will be holes
+                overlap(Arrays.asList(first.JRangesWithoutCDR3, second.JRangesWithoutCDR3))
+        );
+    }
+
+    private Mutations<NucleotideSequence> difference(Mutations<NucleotideSequence> from, Mutations<NucleotideSequence> to) {
+        return from.invert().combineWith(to);
+    }
+
+    private MutationsDescription commonMutations(MutationsDescription first, MutationsDescription second) {
+        return new MutationsDescription(
+                intersection(first.CDR3Mutations, second.CDR3Mutations),
+                intersection(first.VMutationsWithoutCDR3, second.VMutationsWithoutCDR3),
+                //TODO may be it's wrong, check when there will be holes
+                intersection(first.VRangesWithoutCDR3, second.VRangesWithoutCDR3),
+                intersection(first.JMutationsWithoutCDR3, second.JMutationsWithoutCDR3),
+                //TODO may be it's wrong, check when there will be holes
+                intersection(first.JRangesWithoutCDR3, second.JRangesWithoutCDR3)
+        );
     }
 
     //TODO it is more possible to decrease length of alignment than to increase. It is important on small trees
@@ -263,19 +302,6 @@ class ClusterProcessor {
                 .orElseThrow(IllegalStateException::new);
     }
 
-    private MutationsFromReconstructedRoot findCommonAncestor(MutationsFromReconstructedRoot first, MutationsFromReconstructedRoot second) {
-        return new MutationsFromReconstructedRoot(
-                first.CDR3OfRoot,
-                intersection(first.CDR3Mutations, second.CDR3Mutations),
-                intersection(first.VMutationsWithoutCDR3, second.VMutationsWithoutCDR3),
-                //TODO may be it's wrong, check when there will be holes
-                intersection(first.VRangesWithoutCDR3, second.VRangesWithoutCDR3),
-                intersection(first.JMutationsWithoutCDR3, second.JMutationsWithoutCDR3),
-                //TODO may be it's wrong, check when there will be holes
-                intersection(first.JRangesWithoutCDR3, second.JRangesWithoutCDR3)
-        );
-    }
-
     private List<Range> intersection(List<Range> first, List<Range> second) {
         return first.stream()
                 .map(range -> {
@@ -350,8 +376,8 @@ class ClusterProcessor {
     }
 
     private double computeDistance(MutationsFromVJGermline base, MutationsFromVJGermline compareWith) {
-        Mutations<NucleotideSequence> VMutations = base.VMutationsWithoutCDR3.invert().combineWith(compareWith.VMutationsWithoutCDR3);
-        Mutations<NucleotideSequence> JMutations = base.JMutationsWithoutCDR3.invert().combineWith(compareWith.JMutationsWithoutCDR3);
+        Mutations<NucleotideSequence> VMutations = difference(base.VMutationsWithoutCDR3, compareWith.VMutationsWithoutCDR3);
+        Mutations<NucleotideSequence> JMutations = difference(base.JMutationsWithoutCDR3, compareWith.JMutationsWithoutCDR3);
 
         //TODO use more optimized variant
         //TODO compare only part between V and J
@@ -414,9 +440,7 @@ class ClusterProcessor {
         }
     }
 
-    private static class MutationsFromReconstructedRoot {
-        private final NucleotideSequence CDR3OfRoot;
-
+    private static class MutationsDescription {
         private final Mutations<NucleotideSequence> CDR3Mutations;
 
         private final Mutations<NucleotideSequence> VMutationsWithoutCDR3;
@@ -425,13 +449,11 @@ class ClusterProcessor {
         private final Mutations<NucleotideSequence> JMutationsWithoutCDR3;
         private final List<Range> JRangesWithoutCDR3;
 
-        public MutationsFromReconstructedRoot(NucleotideSequence CDR3OfRoot,
-                                              Mutations<NucleotideSequence> CDR3Mutations,
-                                              Mutations<NucleotideSequence> VMutationsWithoutCDR3,
-                                              List<Range> VRangesWithoutCDR3,
-                                              Mutations<NucleotideSequence> JMutationsWithoutCDR3,
-                                              List<Range> JRangesWithoutCDR3) {
-            this.CDR3OfRoot = CDR3OfRoot;
+        public MutationsDescription(Mutations<NucleotideSequence> CDR3Mutations,
+                                    Mutations<NucleotideSequence> VMutationsWithoutCDR3,
+                                    List<Range> VRangesWithoutCDR3,
+                                    Mutations<NucleotideSequence> JMutationsWithoutCDR3,
+                                    List<Range> JRangesWithoutCDR3) {
             this.CDR3Mutations = CDR3Mutations;
             this.VMutationsWithoutCDR3 = VMutationsWithoutCDR3;
             this.VRangesWithoutCDR3 = VRangesWithoutCDR3;
@@ -440,21 +462,39 @@ class ClusterProcessor {
         }
     }
 
-    public NucleotideSequence buildSequence(MutationsFromReconstructedRoot ancestor) {
+    private NucleotideSequence buildSequence(MutationsDescription ancestor, NucleotideSequence CDR3OfRoot) {
         SequenceBuilder<NucleotideSequence> builder = NucleotideSequence.ALPHABET.createBuilder();
         ancestor.VRangesWithoutCDR3.stream().map(VSequence1::getRange).forEach(builder::append);
-        builder.append(ancestor.CDR3Mutations.mutate(ancestor.CDR3OfRoot));
+        builder.append(ancestor.CDR3Mutations.mutate(CDR3OfRoot));
         ancestor.JRangesWithoutCDR3.stream().map(JSequence1::getRange).forEach(builder::append);
         return builder.createAndDestroy();
     }
 
+    private static class TreeWithMeta {
+        private final Tree<ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, MutationsDescription>> tree;
+        private final NucleotideSequence CDR3OfRoot;
+
+        public TreeWithMeta(Tree<ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, MutationsDescription>> tree, NucleotideSequence CDR3OfRoot) {
+            this.tree = tree;
+            this.CDR3OfRoot = CDR3OfRoot;
+        }
+    }
+
     private static class CloneWithMutationsFromReconstructedRoot {
-        private final MutationsFromReconstructedRoot mutations;
+        private final MutationsDescription mutations;
         private final CloneWrapper cloneWrapper;
 
-        private CloneWithMutationsFromReconstructedRoot(MutationsFromReconstructedRoot mutations, CloneWrapper cloneWrapper) {
+        private CloneWithMutationsFromReconstructedRoot(MutationsDescription mutations, CloneWrapper cloneWrapper) {
             this.mutations = mutations;
             this.cloneWrapper = cloneWrapper;
+        }
+
+        public MutationsDescription getMutations() {
+            return mutations;
+        }
+
+        public CloneWrapper getCloneWrapper() {
+            return cloneWrapper;
         }
     }
 

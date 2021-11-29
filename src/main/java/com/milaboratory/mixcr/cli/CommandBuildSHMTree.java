@@ -131,16 +131,6 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
         OutputPortCloseable<CloneWrapper> sortedClonotypes = shmTreeBuilder.sortClonotypes();
         OutputPortCloseable<Cluster<CloneWrapper>> clusters = shmTreeBuilder.buildClusters(sortedClonotypes);
 
-        NewickTreePrinter<ObservedOrReconstructed<CloneWrapper, NucleotideSequence>> mutationsPrinter = new NewickTreePrinter<>(
-                node -> node.convert(c -> new StringBuilder()
-                                .append("V: ").append(mutations(c.clone, Variable).collect(Collectors.toList()))
-                                .append(" J:").append(mutations(c.clone, Joining).collect(Collectors.toList()))
-                                .toString(),
-                        it -> ""
-                ),
-                false, false
-        );
-
         NewickTreePrinter<ObservedOrReconstructed<CloneWrapper, NucleotideSequence>> idPrinter = new NewickTreePrinter<>(
                 node -> node.convert(c -> String.valueOf(c.clone.getId()), it -> ""),
                 false, false
@@ -376,11 +366,18 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
 //
 //            IGHV3-30*00IGHJ4*00 CDR3 length: 42
                     Collection<Tree<ObservedOrReconstructed<CloneWrapper, NucleotideSequence>>> trees = shmTreeBuilder.processCluster(cluster);
-                    System.out.println(trees.stream().map(mutationsPrinter::print).collect(Collectors.joining("\n")));
-                    System.out.println("\n");
 
                     System.out.println(trees.stream().map(idPrinter::print).collect(Collectors.joining("\n")));
                     System.out.println("\n");
+
+                    System.out.println(trees.stream().map(tree ->
+                            new NewickTreePrinter<ObservedOrReconstructed<CloneWrapper, NucleotideSequence>>(
+                                    node -> node.convert(cloneWrapper -> String.valueOf(cloneWrapper.clone.getId()), seq -> "?" + seq.hashCode()),
+                                    true,
+                                    false
+                            ).print(tree)
+                    ).collect(Collectors.joining("\n")));
+
 
                     System.out.println("ids:\n");
                     System.out.println(cluster.cluster.stream().map(it -> String.valueOf(it.clone.getId())).collect(Collectors.joining("|")));

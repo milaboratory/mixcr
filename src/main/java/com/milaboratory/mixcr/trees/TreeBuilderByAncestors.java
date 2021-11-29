@@ -1,10 +1,7 @@
 package com.milaboratory.mixcr.trees;
 
 import java.math.BigDecimal;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -71,8 +68,7 @@ public class TreeBuilderByAncestors<T, E, M> {
                     .map(Tree.NodeLink::getNode)
                     .filter(it -> it.getContent() instanceof Reconstructed<?, ?>)
                     .map(sibling -> replaceSibling(toAdd, chosenNode, sibling))
-                    //if distance is zero than there is no common mutations
-                    .filter(it -> it.getDistanceFromParentToCommon().compareTo(BigDecimal.ZERO) != 0)
+                    .filter(Objects::nonNull)
                     //choose a sibling with max score of common mutations
                     .max(comparing(Replace::getDistanceFromParentToCommon));
             if (siblingToMergeWith.isPresent()) {
@@ -157,12 +153,30 @@ public class TreeBuilderByAncestors<T, E, M> {
         M mutationsToSibling = mutationsBetween.apply(parentContent.getContent(), ((Reconstructed<T, E>) sibling.getContent()).getContent());
 
         M commonMutations = findCommonMutations.apply(mutationsToAdded, mutationsToSibling);
+        BigDecimal distanceFromParentToCommon = distance.apply(commonMutations);
+        //if distance is zero than there is no common mutations
+        if ((distanceFromParentToCommon.compareTo(BigDecimal.ZERO) == 0)) {
+            return null;
+        }
+
         E commonAncestor = mutate.apply(parentContent.getContent(), commonMutations);
+        BigDecimal distanceFromCommonAncestorToSibling = distance.apply(mutationsBetween.apply(commonAncestor, ((Reconstructed<T, E>) sibling.getContent()).getContent()));
+        //if distance is zero than result of replacement equals to insertion
+        if (distanceFromCommonAncestorToSibling.equals(BigDecimal.ZERO)) {
+            return null;
+        }
+        BigDecimal minDistanceFromObserved;
+        //commonAncestor is equal to added node, so minDistanceFromObserved is 0
+        if (distance.apply(mutationsBetween.apply(commonAncestor, contentOfAdded)).equals(BigDecimal.ZERO)) {
+            minDistanceFromObserved = BigDecimal.ZERO;
+        } else {
+            minDistanceFromObserved = parentContent.getMinDistanceFromObserved().add(distance.apply(commonMutations));
+        }
         Tree.Node<ObservedOrReconstructed<T, E>> replacement = new Tree.Node<>(new Reconstructed<>(
                 commonAncestor,
-                parentContent.getMinDistanceFromObserved().add(distance.apply(commonMutations))
+                minDistanceFromObserved
         ));
-        replacement.addChild(sibling.copy(), distance.apply(mutationsBetween.apply(commonAncestor, ((Reconstructed<T, E>) sibling.getContent()).getContent())));
+        replacement.addChild(sibling.copy(), distanceFromCommonAncestorToSibling);
 
         BigDecimal distanceBetweenCommonAndAdded = distance.apply(mutationsBetween.apply(commonAncestor, contentOfAdded));
         Tree.Node<ObservedOrReconstructed<T, E>> nodeToAdd;
@@ -174,7 +188,6 @@ public class TreeBuilderByAncestors<T, E, M> {
         }
         replacement.addChild(nodeToAdd, distanceBetweenCommonAndAdded);
 
-        BigDecimal distanceFromParentToCommon = distance.apply(commonMutations);
         return new Replace(parent, sibling, replacement, distanceFromParentToCommon);
     }
 
