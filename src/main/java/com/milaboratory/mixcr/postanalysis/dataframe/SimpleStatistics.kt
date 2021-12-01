@@ -59,7 +59,6 @@ object SimpleStatistics {
         data.toDataFrame().typed<SimpleMetricsRow>()
     }
 
-
     /**
      * Attaches metadata to statistics
      **/

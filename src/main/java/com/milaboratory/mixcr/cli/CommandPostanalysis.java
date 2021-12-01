@@ -1,6 +1,7 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.OutputPortCloseable;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.mixcr.basictypes.*;
@@ -39,6 +40,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.milaboratory.mixcr.postanalysis.additive.AdditiveCharacteristics.*;
+import static io.repseq.core.Chains.*;
 import static java.util.stream.Collectors.*;
 
 /**
@@ -61,11 +63,8 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
             names = {"-c", "--chains"})
     public String chains = "ALL";
 
-    @Option(description = "Prefix for outputs",
-            names = {"-p", "--prefix"})
-    public String prefix = "";
-
-    List<String> inputs() {
+    @Override
+    protected List<String> getInputFiles() {
         return inOut.subList(0, inOut.size() - 1)
                 .stream()
                 .flatMap(f -> {
@@ -82,32 +81,20 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
                 .collect(toList());
     }
 
-    String output() {
+    @Override
+    protected List<String> getOutputFiles() {
+        return Collections.singletonList(outputFile());
+    }
+
+    String outputFile() {
         return inOut.get(inOut.size() - 1);
     }
 
-    String output(Chains.NamedChains chain) {
-        return prefix + chain.name + "_" + output();
+    private static int downsamplingValue(String downsampling) {
+        return Integer.parseInt(downsampling.substring(downsampling.lastIndexOf("-") + 1));
     }
 
-    String outputBase() {
-        return output().replace(".json", "");
-    }
-
-    static String baseName(String fName) {
-        fName = Paths.get(fName).toAbsolutePath().getFileName().toString();
-        int i = fName.lastIndexOf(".");
-        if (i > 0)
-            return fName.substring(0, i);
-        else
-            return fName;
-    }
-
-    static int downsamplingValue(String downsampling) {
-        return Integer.parseInt(downsampling.substring(downsampling.lastIndexOf("-") + 1, downsampling.length()));
-    }
-
-    static SetPreprocessorFactory<Clone> parseDownsampling(String downsampling) {
+    private static SetPreprocessorFactory<Clone> parseDownsampling(String downsampling) {
         if (downsampling.startsWith("umi-count")) {
             if (downsampling.endsWith("auto"))
                 return new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Auto(), 314);
@@ -144,15 +131,67 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
         return downsampling;
     }
 
-    <K> void writeTables(Chains.NamedChains chain, CharacteristicGroupResult<K> tableResult) {
-        for (CharacteristicGroupOutputExtractor<K> view : tableResult.group.views)
-            for (OutputTable t : view.getTables(tableResult).values())
-                t.writeTSV(Paths.get("").toAbsolutePath(), prefix + chain.name + "_");
+    /**
+     * Resulting data written to disk
+     */
+    @JsonAutoDetect
+    public static final class PaResult {
+        /** Results for individual chains */
+        @JsonProperty("results")
+        public final Map<String, PaResultByChain> results;
+
+        @JsonCreator
+        public PaResult(@JsonProperty("results") Map<String, PaResultByChain> results) {
+            this.results = results;
+        }
     }
+
+    /**
+     * Resulting data written to disk
+     */
+    @JsonAutoDetect
+    public static final class PaResultByChain {
+        @JsonProperty("schema")
+        public final PostanalysisSchema<?> schema;
+        @JsonProperty("result")
+        public final PostanalysisResult result;
+
+        @JsonCreator
+        public PaResultByChain(@JsonProperty("schema") PostanalysisSchema<?> schema,
+                               @JsonProperty("result") PostanalysisResult result) {
+            this.schema = schema;
+            this.result = result;
+        }
+    }
+
+    @Override
+    public void run0() throws Exception {
+        Map<String, PaResultByChain> resultsMap = new HashMap<>();
+        Chains c = Chains.parse(chains);
+        if (c.intersects(TRAD))
+            resultsMap.put(TRAD_NAMED.name, run(TRAD));
+        if (c.intersects(TRG))
+            resultsMap.put(TRG_NAMED.name, run(TRG));
+        if (c.intersects(Chains.TRB))
+            resultsMap.put(TRB_NAMED.name, run(TRB));
+        if (c.intersects(Chains.IGH))
+            resultsMap.put(IGH_NAMED.name, run(Chains.IGH));
+        if (c.intersects(Chains.IGKL))
+            resultsMap.put(IGKL_NAMED.name, run(Chains.IGKL));
+
+        PaResult result = new PaResult(resultsMap);
+        try {
+            GlobalObjectMappers.PRETTY.writeValue(new File(outputFile()), result);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    abstract PaResultByChain run(Chains chain);
 
     ///////////////////////////////////////////// Individual /////////////////////////////////////////////
 
-
+    @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
     @CommandLine.Command(name = "individual",
             sortOptions = false,
             separator = " ",
@@ -161,26 +200,12 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
         public CommandIndividual() {}
 
         @Override
-        public void run0() throws Exception {
-            Chains c = Chains.parse(chains);
-            if (c.intersects(Chains.TRAD))
-                run(Chains.TRAD_NAMED);
-            if (c.intersects(Chains.TRG))
-                run(Chains.TRG_NAMED);
-            if (c.intersects(Chains.TRB))
-                run(Chains.TRB_NAMED);
-            if (c.intersects(Chains.IGH))
-                run(Chains.IGH_NAMED);
-            if (c.intersects(Chains.IGKL))
-                run(Chains.IGKL_NAMED);
-        }
-
         @SuppressWarnings({"unchecked", "rawtypes"})
-        void run(Chains.NamedChains chain) {
+        PaResultByChain run(Chains chain) {
             List<CharacteristicGroup<?, Clone>> groups = new ArrayList<>();
 
             SetPreprocessorFactory<Clone> downsampling = downsampling()
-                    .filterFirst(new ElementPredicate.IncludeChains(chain.chains));
+                    .filterFirst(new ElementPredicate.IncludeChains(chain));
 
             groups.add(new CharacteristicGroup<>(
                     "cdr3Properties",
@@ -253,24 +278,15 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
                     Collections.singletonList(new GroupSummary<>())));
 
             PostanalysisSchema<Clone> schema = new PostanalysisSchema<>(groups);
-
             PostanalysisRunner runner = new PostanalysisRunner<>();
             runner.addCharacteristics(schema.getAllCharacterisitcs());
 
-            List<Dataset> datasets = inputs().stream()
+            List<Dataset> datasets = getInputFiles().stream()
                     .map(file ->
-                            new ClonotypeDataset(baseName(file), file, VDJCLibraryRegistry.getDefault())
+                            new ClonotypeDataset(file, file, VDJCLibraryRegistry.getDefault())
                     ).collect(Collectors.toList());
 
-            PostanalysisResult result = runner.run(datasets);
-            for (CharacteristicGroup<?, Clone> table : schema.tables)
-                writeTables(chain, result.getTable(table));
-
-            try {
-                GlobalObjectMappers.PRETTY.writeValue(new File(output(chain)), new PostanalysisData(schema, result));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            return new PaResultByChain(schema, runner.run(datasets));
         }
     }
 
@@ -289,43 +305,30 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
         public CommandOverlap() {}
 
         @Override
-        public void run0() throws Exception {
-            Chains c = Chains.parse(chains);
-            if (c.intersects(Chains.TRAD))
-                run(Chains.TRAD_NAMED);
-            if (c.intersects(Chains.TRG))
-                run(Chains.TRG_NAMED);
-            if (c.intersects(Chains.TRB))
-                run(Chains.TRB_NAMED);
-            if (c.intersects(Chains.IGH))
-                run(Chains.IGH_NAMED);
-            if (c.intersects(Chains.IGKL))
-                run(Chains.IGKL_NAMED);
-        }
-
-        void run(Chains.NamedChains chain) {
-
+        @SuppressWarnings("unchecked")
+        PaResultByChain run(Chains chain) {
             SetPreprocessorFactory<Clone> downsampling = downsampling();
 
-            Map<OverlapType, SetPreprocessorFactory<Clone>> map = new HashMap<>();
-            map.put(OverlapType.D, downsampling);
-            map.put(OverlapType.F2, f2downsampling == null
+            Map<OverlapType, SetPreprocessorFactory<Clone>> downsamplingByType = new HashMap<>();
+            downsamplingByType.put(OverlapType.D, downsampling);
+            downsamplingByType.put(OverlapType.F2, f2downsampling == null
                     ? downsampling
                     : downsampling(f2downsampling));
-            map.put(OverlapType.R_Intersection, downsampling);
+            downsamplingByType.put(OverlapType.R_Intersection, downsampling);
 
             List<VDJCSProperties.VDJCSProperty<VDJCObject>> ordering = VDJCSProperties.orderingByAminoAcid(new GeneFeature[]{GeneFeature.CDR3});
             OverlapPostanalysisSettings overlapPA = new OverlapPostanalysisSettings(
                     ordering,
                     new WeightFunctions.Count(),
-                    map
+                    downsamplingByType
             );
 
-            PostanalysisSchema<OverlapGroup<Clone>> schema = overlapPA.getSchema(inputs().size(), chain.chains);
+            PostanalysisSchema<OverlapGroup<Clone>> schema = overlapPA.getSchema(getInputFiles().size(), chain);
 
             // Limits concurrency across all readers
             LambdaSemaphore concurrencyLimiter = new LambdaSemaphore(32);
-            List<CloneReader> readers = inputs().stream()
+            List<CloneReader> readers = getInputFiles()
+                    .stream()
                     .map(s -> {
                         try {
                             return mkCheckedReader(
@@ -338,22 +341,15 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
                     .collect(Collectors.toList());
 
             OverlapDataset<Clone> overlapDataset = OverlapUtil.overlap(
-                    inputs().stream().map(CommandPostanalysis::baseName)
-                            .collect(toList()),
-                    ordering, readers);
+                    getInputFiles(),
+                    ordering,
+                    readers);
 
             PostanalysisRunner<OverlapGroup<Clone>> runner = new PostanalysisRunner<>();
             runner.addCharacteristics(schema.getAllCharacterisitcs());
             PostanalysisResult result = runner.run(overlapDataset);
 
-            for (CharacteristicGroup<?, OverlapGroup<Clone>> table : schema.tables)
-                writeTables(chain, result.getTable(table));
-
-            try {
-                GlobalObjectMappers.PRETTY.writeValue(new File(output(chain)), new PostanalysisData(schema, result));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            return new PaResultByChain(schema, result);
         }
 
         public static CloneReader mkCheckedReader(Path path,
@@ -396,6 +392,7 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
             };
         }
 
+        @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
         static final class OverlapPostanalysisSettings {
             final List<VDJCSProperties.VDJCSProperty<VDJCObject>> ordering;
             final WeightFunction<Clone> weight;
@@ -444,19 +441,5 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
                     CommandLine.HelpCommand.class
             })
     public static class CommandPostanalysisMain {
-    }
-
-    public static final class PostanalysisData {
-        @JsonProperty("schema")
-        public final PostanalysisSchema<?> schema;
-        @JsonProperty("result")
-        public final PostanalysisResult result;
-
-        @JsonCreator
-        public PostanalysisData(@JsonProperty("schema") PostanalysisSchema<?> schema,
-                                @JsonProperty("result") PostanalysisResult result) {
-            this.schema = schema;
-            this.result = result;
-        }
     }
 }
