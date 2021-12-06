@@ -23,12 +23,12 @@ import static org.junit.Assert.*;
 
 public class TreeBuilderByAncestorsTest {
     private final TreePrinter<ObservedOrReconstructed<List<Integer>, List<Integer>>> treePrinter = new NewickTreePrinter<>(
-            node -> node.convert(this::print, content -> "'" + print(content) + "'"),
+            node -> node.getContent().convert(this::print, content -> "'" + print(content) + "'"),
             true,
             false
     );
     private final NewickTreePrinter<List<Integer>> treePrinterOnlyReal = new NewickTreePrinter<>(
-            this::print,
+            node -> print(node.getContent()),
             true,
             false
     );
@@ -376,7 +376,7 @@ public class TreeBuilderByAncestorsTest {
         Instant begin = Instant.now();
         AtomicInteger count = new AtomicInteger(0);
 
-        int numberOfRuns = 1_000_000;
+        int numberOfRuns = 400_000_000;
         List<Long> failedSeeds = IntStream.range(0, numberOfRuns)
                 .mapToObj(it -> ThreadLocalRandom.current().nextLong())
                 .parallel()

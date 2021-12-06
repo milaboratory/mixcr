@@ -9,7 +9,7 @@ import static org.junit.Assert.assertEquals;
 public class TreesPrinterTest {
     @Test
     public void treeWithDistancesAndRoot() {
-        TreePrinter<String> treePrinter = new NewickTreePrinter<>(s -> s, true, false);
+        TreePrinter<String> treePrinter = new NewickTreePrinter<>(Tree.Node::getContent, true, false);
 
         Tree<String> tree = sampleTree();
         assertEquals("((C:0.3,D:0.4)E:0.5,A:0.1,B:0.2)F;", treePrinter.print(tree));
@@ -17,7 +17,7 @@ public class TreesPrinterTest {
 
     @Test
     public void treeWithDistancesAndLeafName() {
-        TreePrinter<String> treePrinter = new NewickTreePrinter<>(s -> s, true, true);
+        TreePrinter<String> treePrinter = new NewickTreePrinter<>(Tree.Node::getContent, true, true);
 
         Tree<String> tree = sampleTree();
         assertEquals("((C:0.3,D:0.4):0.5,A:0.1,B:0.2);", treePrinter.print(tree));
@@ -25,7 +25,7 @@ public class TreesPrinterTest {
 
     @Test
     public void allNodesAreNamed() {
-        TreePrinter<String> treePrinter = new NewickTreePrinter<>(s -> s, false, false);
+        TreePrinter<String> treePrinter = new NewickTreePrinter<>(Tree.Node::getContent, false, false);
 
         Tree<String> tree = sampleTree();
         assertEquals("((C,D)E,A,B)F;", treePrinter.print(tree));
@@ -33,7 +33,7 @@ public class TreesPrinterTest {
 
     @Test
     public void allLeafNames() {
-        TreePrinter<String> treePrinter = new NewickTreePrinter<>(s -> s, false, true);
+        TreePrinter<String> treePrinter = new NewickTreePrinter<>(Tree.Node::getContent, false, true);
 
         Tree<String> tree = sampleTree();
         assertEquals("((C,D),A,B);", treePrinter.print(tree));

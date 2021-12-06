@@ -29,49 +29,48 @@
  */
 package com.milaboratory.mixcr.trees;
 
+import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
  * https://en.wikipedia.org/wiki/Newick_format
  */
-public class NewickTreePrinter<T> implements TreePrinter<T> {
+public class XmlTreePrinter<T> implements TreePrinter<T> {
     private final Function<Tree.Node<T>, String> nameExtractor;
-    private final boolean printDistances;
-    private final boolean printOnlyLeafNames;
 
-    public NewickTreePrinter(
-            Function<Tree.Node<T>, String> nameExtractor,
-            boolean printDistances,
-            boolean printOnlyLeafNames
+    public XmlTreePrinter(
+            Function<Tree.Node<T>, String> nameExtractor
     ) {
         this.nameExtractor = nameExtractor;
-        this.printDistances = printDistances;
-        this.printOnlyLeafNames = printOnlyLeafNames;
     }
 
     @Override
     public String print(Tree<T> tree) {
-        return printNode(tree.getRoot()) + ";";
+        return printNode(tree.getRoot());
     }
 
     private String printNode(Tree.Node<T> node) {
         StringBuilder sb = new StringBuilder();
-        if (!node.getLinks().isEmpty()) {
-            sb.append(node.getLinks().stream()
-                    .map(link -> {
-                        String printedNode = printNode(link.getNode());
-                        if (printDistances && link.getDistance() != null) {
-                            return printedNode + ":" + link.getDistance();
-                        } else {
-                            return printedNode;
-                        }
-                    })
-                    .sorted()
-                    .collect(Collectors.joining(",", "(", ")")));
+        sb.append("<node content='");
+        sb.append(nameExtractor.apply(node));
+        sb.append("'");
+        if (node.getDistanceFromParent() != null) {
+            sb.append(" distance='");
+            sb.append(node.getDistanceFromParent());
+            sb.append("'");
         }
-        if (!printOnlyLeafNames || node.getLinks().isEmpty()) {
-            sb.append(nameExtractor.apply(node));
+        if (!node.getLinks().isEmpty()) {
+            sb.append(">");
+            sb.append(node.getLinks().stream()
+                    .sorted(Comparator.comparing(link -> link.getDistance() != null ? link.getDistance() : BigDecimal.ZERO))
+                    .map(link -> printNode(link.getNode()))
+                    .sorted()
+                    .collect(Collectors.joining("")));
+            sb.append("</node>");
+        } else {
+            sb.append("/>");
         }
         return sb.toString();
     }

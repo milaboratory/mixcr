@@ -33,7 +33,6 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.blocks.FilteringPort;
 import cc.redberry.pipe.util.FlatteningOutputPort;
-import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneReader;
 import com.milaboratory.mixcr.basictypes.IOUtil;
@@ -157,7 +156,7 @@ public class SHMTreeBuilder {
         };
     }
 
-    public Collection<Tree<ObservedOrReconstructed<CloneWrapper, NucleotideSequence>>> processCluster(Cluster<CloneWrapper> clusterBySameVAndJ) {
+    public Collection<Tree<ObservedOrReconstructed<CloneWrapper, AncestorInfo>>> processCluster(Cluster<CloneWrapper> clusterBySameVAndJ) {
         return new ClusterProcessor(clusterBySameVAndJ).buildTrees();
     }
 }

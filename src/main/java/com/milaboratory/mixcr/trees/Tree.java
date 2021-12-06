@@ -34,7 +34,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -75,7 +74,7 @@ public class Tree<T> {
         private BigDecimal distanceFromParent = null;
 
         @Nullable
-        Node<T> getParent() {
+        public Node<T> getParent() {
             return parent;
         }
 
@@ -140,17 +139,16 @@ public class Tree<T> {
             substitution.setParent(this, distance);
         }
 
-        Stream<Node<T>> allDescendants() {
+        public Stream<Node<T>> allDescendants() {
             return children.stream()
                     .map(NodeLink::getNode)
                     .flatMap(child -> Stream.concat(Stream.of(child), child.allDescendants()));
         }
 
         public <R> Node<R> map(Function<T, R> mapper) {
-            List<NodeLink<R>> mapperLinks = children.stream()
-                    .map(child -> new NodeLink<>(child.node.map(mapper), child.distance))
-                    .collect(Collectors.toList());
-            return new Node<>(mapper.apply(content), mapperLinks);
+            Node<R> mappedNode = new Node<>(mapper.apply(content));
+            children.forEach(child -> mappedNode.addChild(child.node.map(mapper), child.distance));
+            return mappedNode;
         }
     }
 

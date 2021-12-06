@@ -14,7 +14,6 @@ import io.repseq.core.ReferencePoint;
 
 import java.util.Comparator;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.ToIntFunction;
 import java.util.stream.IntStream;
 
@@ -56,7 +55,6 @@ public interface ClusteringCriteria {
                     clone.getBestHitGene(GeneType.Variable).getId().getName(),
                     clone.getBestHitGene(GeneType.Joining).getId().getName(),
                     //TODO remove
-                    Optional.ofNullable(clone.getBestHitGene(GeneType.Diversity)).map(it -> it.getId().getName()).orElse(""),
                     clone.ntLengthOf(GeneFeature.CDR3)
             );
         }
@@ -67,7 +65,6 @@ public interface ClusteringCriteria {
                     .<Clone, String>comparing(c -> c.getBestHitGene(GeneType.Variable).getId().getName())
                     .thenComparing(c -> c.getBestHitGene(GeneType.Joining).getId().getName())
                     //TODO remove
-                    .thenComparing(c -> Optional.ofNullable(c.getBestHitGene(GeneType.Diversity)).map(it -> it.getId().getName()).orElse(""))
                     .thenComparing(c -> c.ntLengthOf(GeneFeature.CDR3));
         }
     }
