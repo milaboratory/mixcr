@@ -253,7 +253,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                     );
 
 
-                    if (true) {
+                    if (false) {
                         System.out.println("V gene:");
                         System.out.println(cluster.cluster.get(0).clone.getBestHit(Variable).getAlignment(0).getSequence1());
                         System.out.println("J gene:");
@@ -398,7 +398,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                                     fitnessFunctionParams.distanceBetweenClonesInCDR3,
                                     fitnessFunctionParams.distanceBetweenClonesWithoutCDR3,
                                     fitnessFunctionParams.distanceBetweenClones,
-                                    fitnessFunctionParams.maxScoreToGermline,
+                                    fitnessFunctionParams.minDistanceToGermline,
                                     fitnessFunctionFirstPart(fitnessFunctionParams),
                                     fitnessFunctionSecondPart(fitnessFunctionParams),
                                     fitnessFunctionThirdPart(fitnessFunctionParams)
@@ -479,7 +479,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                                         .map(compareWith -> {
                                             FitnessFunctionParams fitnessFunctionParams = fitnessFunctionParams(clone, compareWith);
                                             return String.format(" %.2f|%.2f|%.2f ",
-                                                    fitnessFunctionParams.maxScoreToGermline * 20,
+                                                    fitnessFunctionParams.minDistanceToGermline * 20,
                                                     fitnessFunctionParams.distanceBetweenClones * 10,
                                                     fitnessFunctionParams.distanceBetweenClonesInCDR3 * 10
                                             );
@@ -697,7 +697,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
     }
 
     private double fitnessFunction(FitnessFunctionParams params) {
-        return fitnessFunctionFirstPart(params) + fitnessFunctionSecondPart(params) * fitnessFunctionThirdPart(params);
+        return fitnessFunctionFirstPart(params) + fitnessFunctionSecondPart(params) + fitnessFunctionThirdPart(params);
     }
 
     private double fitnessFunctionFirstPart(FitnessFunctionParams params) {
@@ -710,7 +710,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
     }
 
     private double fitnessFunctionThirdPart(FitnessFunctionParams params) {
-        return Math.pow(params.distanceBetweenClonesInCDR3, 1.0) * (-1.0 * Math.pow(params.maxScoreToGermline, 4.0) + 1);
+        return 4 * Math.pow(params.distanceBetweenClonesInCDR3, 1.0) * Math.pow(params.minDistanceToGermline - 1, 6.0);
     }
 
     //    private double fitnessFunctionFirstPart(FitnessFunctionParams params) {
@@ -760,18 +760,18 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
         double maxScoreForCDR3 = Math.max(maxScoreForFirstCDR3, maxScoreForSecondCDR3);
 
 
-        double normalizedDistanceFromFirstToGermline = (score(VMutationsOfFirst) + score(JMutationsOfFirst)) / maxScoreForFirstVJ;
-        double normalizedDistanceFromSecondToGermline = (score(VMutationsOfSecond) + score(JMutationsOfSecond)) / maxScoreForSecondVJ;
-        double normalizedDistanceBetweenClones = (VMutationsBetweenScore + JMutationsBetweenScore + CDR3MutationsBetweenScore) /
+        double normalizedDistanceFromFirstToGermline = 1 - (score(VMutationsOfFirst) + score(JMutationsOfFirst)) / maxScoreForFirstVJ;
+        double normalizedDistanceFromSecondToGermline = 1 - (score(VMutationsOfSecond) + score(JMutationsOfSecond)) / maxScoreForSecondVJ;
+        double normalizedDistanceBetweenClones = 1 - (VMutationsBetweenScore + JMutationsBetweenScore + CDR3MutationsBetweenScore) /
                 (maxScoreForVJ + maxScoreForCDR3);
-        double normalizedDistanceBetweenClonesInCDR3 = (CDR3MutationsBetweenScore) / maxScoreForCDR3;
-        double normalizedDistanceBetweenClonesWithoutCDR3 = (VMutationsBetweenScore + JMutationsBetweenScore) / (maxScoreForVJ + maxScoreForCDR3);
+        double normalizedDistanceBetweenClonesInCDR3 = 1 - (CDR3MutationsBetweenScore) / maxScoreForCDR3;
+        double normalizedDistanceBetweenClonesWithoutCDR3 = 1 - (VMutationsBetweenScore + JMutationsBetweenScore) / (maxScoreForVJ + maxScoreForCDR3);
 
         return new FitnessFunctionParams(
                 normalizedDistanceBetweenClonesInCDR3,
                 normalizedDistanceBetweenClones,
                 normalizedDistanceBetweenClonesWithoutCDR3,
-                Math.max(normalizedDistanceFromFirstToGermline, normalizedDistanceFromSecondToGermline)
+                Math.min(normalizedDistanceFromFirstToGermline, normalizedDistanceFromSecondToGermline)
         );
     }
 

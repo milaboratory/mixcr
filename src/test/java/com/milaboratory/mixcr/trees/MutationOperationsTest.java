@@ -1,10 +1,10 @@
 package com.milaboratory.mixcr.trees;
 
+import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
+import com.milaboratory.core.alignment.Aligner;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import org.junit.Test;
-
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -15,10 +15,10 @@ public class MutationOperationsTest {
         NucleotideSequence first_ = new NucleotideSequence("ATGG");
         NucleotideSequence second = new NucleotideSequence("ATTG");
 
-        Mutations<NucleotideSequence> result = ClusterProcessor.intersection(
-                ClusterProcessor.mutations(parent, first_),
-                ClusterProcessor.mutations(parent, second)
-        ).get(0).getMutations();
+        Mutations<NucleotideSequence> result = MutationsUtils.intersection(
+                mutations(parent, first_),
+                mutations(parent, second)
+        );
         assertEquals("[S3:T->G]", result.toString());
     }
 
@@ -28,18 +28,33 @@ public class MutationOperationsTest {
         NucleotideSequence first_ = new NucleotideSequence("CA");
         NucleotideSequence second = new NucleotideSequence("GA");
 
-        List<MutationsWithRange> fromParentToFirst = ClusterProcessor.mutations(parent, first_);
-        List<MutationsWithRange> fromParentToSecond = ClusterProcessor.mutations(parent, second);
-        List<MutationsWithRange> result = ClusterProcessor.intersection(
+        Mutations<NucleotideSequence> fromParentToFirst = mutations(parent, first_);
+        Mutations<NucleotideSequence> fromParentToSecond = mutations(parent, second);
+        Mutations<NucleotideSequence> result = MutationsUtils.intersection(
                 fromParentToFirst,
                 fromParentToSecond
         );
-        Mutations<NucleotideSequence> resultMutations = result.get(0).getMutations();
-        assertEquals("[D1:T,D2:G,D3:T]", resultMutations.toString());
+        assertEquals("[D1:T,D2:G,D3:T]", result.toString());
 
-        assertEquals("AA", resultMutations.mutate(parent).toString());
-        assertEquals("[S0:A->C]", ClusterProcessor.mutationsBetween(result, fromParentToFirst).get(0).getMutations().toString());
-        assertEquals("[S0:A->G]", ClusterProcessor.mutationsBetween(result, fromParentToSecond).get(0).getMutations().toString());
+        assertEquals("AA", result.mutate(parent).toString());
+        assertEquals("[S0:A->C]", MutationsUtils.difference(result, fromParentToFirst).toString());
+        assertEquals("[S0:A->G]", MutationsUtils.difference(result, fromParentToSecond).toString());
+    }
+
+    @Test
+    public void mutationsBetweenInsertionIntoParentAndSubstitutionAfter() {
+        NucleotideSequence parent = new NucleotideSequence("AA");
+        NucleotideSequence first_ = new NucleotideSequence("AC");
+        NucleotideSequence second = new NucleotideSequence("ATGTA");
+
+        Mutations<NucleotideSequence> fromParentToFirst = mutations(parent, first_);
+        Mutations<NucleotideSequence> fromParentToSecond = mutations(parent, second);
+        assertEquals("[S1:A->C]", fromParentToFirst.toString());
+        assertEquals("[I1:T,I1:G,I1:T]", fromParentToSecond.toString());
+
+        Mutations<NucleotideSequence> fromFirstToSecond = MutationsUtils.difference(fromParentToFirst, fromParentToSecond);
+        assertEquals("[I1:T,I1:G,I1:T,S1:A->C]", fromFirstToSecond.toString());
+        assertEquals(second, fromParentToFirst.combineWith(fromFirstToSecond).mutate(parent));
     }
 
     @Test
@@ -48,12 +63,12 @@ public class MutationOperationsTest {
         NucleotideSequence first_ = new NucleotideSequence("AA");
         NucleotideSequence second = new NucleotideSequence("ATGTC");
 
-        List<MutationsWithRange> fromParentToFirst = ClusterProcessor.mutations(parent, first_);
-        List<MutationsWithRange> fromParentToSecond = ClusterProcessor.mutations(parent, second);
+        Mutations<NucleotideSequence> fromParentToFirst = mutations(parent, first_);
+        Mutations<NucleotideSequence> fromParentToSecond = mutations(parent, second);
 
-        Mutations<NucleotideSequence> fromFirstToSecond = ClusterProcessor.mutationsBetween(fromParentToFirst, fromParentToSecond).get(0).getMutations();
+        Mutations<NucleotideSequence> fromFirstToSecond = MutationsUtils.difference(fromParentToFirst, fromParentToSecond);
         assertEquals("[I1:T,I1:G,I1:T,S1:A->C]", fromFirstToSecond.toString());
-        assertEquals(second, fromParentToFirst.get(0).getMutations().combineWith(fromFirstToSecond).mutate(parent));
+        assertEquals(second, fromParentToFirst.combineWith(fromFirstToSecond).mutate(parent));
     }
 
     @Test
@@ -62,12 +77,12 @@ public class MutationOperationsTest {
         NucleotideSequence first_ = new NucleotideSequence("AA");
         NucleotideSequence second = new NucleotideSequence("ATATA");
 
-        List<MutationsWithRange> fromParentToFirst = ClusterProcessor.mutations(parent, first_);
-        List<MutationsWithRange> fromParentToSecond = ClusterProcessor.mutations(parent, second);
+        Mutations<NucleotideSequence> fromParentToFirst = mutations(parent, first_);
+        Mutations<NucleotideSequence> fromParentToSecond = mutations(parent, second);
 
-        Mutations<NucleotideSequence> fromFirstToSecond = ClusterProcessor.mutationsBetween(fromParentToFirst, fromParentToSecond).get(0).getMutations();
+        Mutations<NucleotideSequence> fromFirstToSecond = MutationsUtils.difference(fromParentToFirst, fromParentToSecond);
         assertEquals("[I1:T,I1:A,I1:T]", fromFirstToSecond.toString());
-        assertEquals(second, fromParentToFirst.get(0).getMutations().combineWith(fromFirstToSecond).mutate(parent));
+        assertEquals(second, fromParentToFirst.combineWith(fromFirstToSecond).mutate(parent));
     }
 
     @Test
@@ -76,19 +91,18 @@ public class MutationOperationsTest {
         NucleotideSequence first_ = new NucleotideSequence("ATGTA");
         NucleotideSequence second = new NucleotideSequence("AGGTA");
 
-        List<MutationsWithRange> fromParentToFirst = ClusterProcessor.mutations(parent, first_);
-        List<MutationsWithRange> fromParentToSecond = ClusterProcessor.mutations(parent, second);
-        List<MutationsWithRange> fromParentToCommonAncestor = ClusterProcessor.intersection(
+        Mutations<NucleotideSequence> fromParentToFirst = mutations(parent, first_);
+        Mutations<NucleotideSequence> fromParentToSecond = mutations(parent, second);
+        Mutations<NucleotideSequence> fromParentToCommonAncestor = MutationsUtils.intersection(
                 fromParentToFirst,
                 fromParentToSecond
         );
-        Mutations<NucleotideSequence> commonAncestorMutations = fromParentToCommonAncestor.get(0).getMutations();
-        assertEquals("[I1:N,I1:G,I1:T]", commonAncestorMutations.toString());
+        assertEquals("[I1:N,I1:G,I1:T]", fromParentToCommonAncestor.toString());
 
-        NucleotideSequence commonAncestor = commonAncestorMutations.mutate(parent);
+        NucleotideSequence commonAncestor = fromParentToCommonAncestor.mutate(parent);
         assertEquals("ANGTA", commonAncestor.toString());
-        Mutations<NucleotideSequence> fromCommonToFirst = ClusterProcessor.mutationsBetween(fromParentToCommonAncestor, fromParentToFirst).get(0).getMutations();
-        Mutations<NucleotideSequence> fromCommonToSecond = ClusterProcessor.mutationsBetween(fromParentToCommonAncestor, fromParentToSecond).get(0).getMutations();
+        Mutations<NucleotideSequence> fromCommonToFirst = MutationsUtils.difference(fromParentToCommonAncestor, fromParentToFirst);
+        Mutations<NucleotideSequence> fromCommonToSecond = MutationsUtils.difference(fromParentToCommonAncestor, fromParentToSecond);
         assertEquals("[S1:N->T]", fromCommonToFirst.toString());
         assertEquals("[S1:N->G]", fromCommonToSecond.toString());
         assertEquals(first_, fromCommonToFirst.mutate(commonAncestor));
@@ -101,22 +115,29 @@ public class MutationOperationsTest {
         NucleotideSequence first_ = new NucleotideSequence("ATGTA");
         NucleotideSequence second = new NucleotideSequence("ATCTA");
 
-        List<MutationsWithRange> fromParentToFirst = ClusterProcessor.mutations(parent, first_);
-        List<MutationsWithRange> fromParentToSecond = ClusterProcessor.mutations(parent, second);
-        List<MutationsWithRange> fromParentToCommonAncestor = ClusterProcessor.intersection(
+        Mutations<NucleotideSequence> fromParentToFirst = mutations(parent, first_);
+        Mutations<NucleotideSequence> fromParentToSecond = mutations(parent, second);
+        Mutations<NucleotideSequence> fromParentToCommonAncestor = MutationsUtils.intersection(
                 fromParentToFirst,
                 fromParentToSecond
         );
-        Mutations<NucleotideSequence> commonAncestorMutations = fromParentToCommonAncestor.get(0).getMutations();
-        assertEquals("[I1:T,I1:N,I1:T]", commonAncestorMutations.toString());
+        assertEquals("[I1:T,I1:N,I1:T]", fromParentToCommonAncestor.toString());
 
-        NucleotideSequence commonAncestor = commonAncestorMutations.mutate(parent);
+        NucleotideSequence commonAncestor = fromParentToCommonAncestor.mutate(parent);
         assertEquals("ATNTA", commonAncestor.toString());
-        Mutations<NucleotideSequence> fromCommonToFirst = ClusterProcessor.mutationsBetween(fromParentToCommonAncestor, fromParentToFirst).get(0).getMutations();
-        Mutations<NucleotideSequence> fromCommonToSecond = ClusterProcessor.mutationsBetween(fromParentToCommonAncestor, fromParentToSecond).get(0).getMutations();
+        Mutations<NucleotideSequence> fromCommonToFirst = MutationsUtils.difference(fromParentToCommonAncestor, fromParentToFirst);
+        Mutations<NucleotideSequence> fromCommonToSecond = MutationsUtils.difference(fromParentToCommonAncestor, fromParentToSecond);
         assertEquals("[S2:N->G]", fromCommonToFirst.toString());
         assertEquals("[S2:N->C]", fromCommonToSecond.toString());
         assertEquals(first_, fromCommonToFirst.mutate(commonAncestor));
         assertEquals(second, fromCommonToSecond.mutate(commonAncestor));
+    }
+    
+    private Mutations<NucleotideSequence> mutations(NucleotideSequence first, NucleotideSequence second) {
+        return Aligner.alignGlobal(
+                AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
+                first,
+                second
+        ).getAbsoluteMutations();
     }
 }

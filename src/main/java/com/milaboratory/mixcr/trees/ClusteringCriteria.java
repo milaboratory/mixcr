@@ -71,13 +71,18 @@ public interface ClusteringCriteria {
      */
     static double score(List<MutationsWithRange> mutationsWithRanges) {
         return mutationsWithRanges.stream()
-                .mapToDouble(mutations -> AlignmentUtils.calculateScore(
-                        mutations.getSequence1(),
-                        mutations.getSequence1Range(),
-//                        mutations.getMutations().extractAbsoluteMutationsForRange(mutations.getSequence1Range()),
-                        mutations.getMutations(),
-                        AffineGapAlignmentScoring.getNucleotideBLASTScoring()
-                ))
+                .mapToDouble(mutations -> {
+                    try {
+                        return AlignmentUtils.calculateScore(
+                                mutations.getSequence1(),
+                                mutations.getSequence1Range(),
+                                mutations.getMutations(),
+                                AffineGapAlignmentScoring.getNucleotideBLASTScoring()
+                        );
+                    } catch (Exception e) {
+                        throw e;
+                    }
+                })
                 .sum();
     }
 
