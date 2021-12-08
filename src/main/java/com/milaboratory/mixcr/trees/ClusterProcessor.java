@@ -1,9 +1,11 @@
 package com.milaboratory.mixcr.trees;
 
+import com.google.common.collect.Lists;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.alignment.Aligner;
 import com.milaboratory.core.alignment.Alignment;
+import com.milaboratory.core.alignment.AlignmentUtils;
 import com.milaboratory.core.mutations.Mutation;
 import com.milaboratory.core.mutations.MutationType;
 import com.milaboratory.core.mutations.Mutations;
@@ -14,13 +16,13 @@ import com.milaboratory.core.sequence.SequenceBuilder;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed;
-import io.repseq.core.GeneType;
 import org.apache.commons.math3.util.Pair;
 
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.milaboratory.mixcr.trees.ClusteringCriteria.*;
 import static io.repseq.core.GeneFeature.CDR3;
@@ -68,11 +70,9 @@ class ClusterProcessor {
         List<CloneWithMutationsFromVJGermline> clones = originalCluster.cluster.stream()
                 .map(cloneWrapper -> new CloneWithMutationsFromVJGermline(
                         new MutationsFromVJGermline(
-                                getAbsoluteMutationsWithoutCDR3(cloneWrapper.clone, Variable),
-                                getAbsoluteMutationsWithoutCDR3(cloneWrapper.clone, Joining),
-                                cloneWrapper.clone.getNFeature(CDR3),
-                                getSequence1RangesWithoutCDR3(cloneWrapper.clone, Variable),
-                                getSequence1RangesWithoutCDR3(cloneWrapper.clone, Joining)
+                                getMutationsWithoutCDR3(cloneWrapper.clone, Variable),
+                                getMutationsWithoutCDR3(cloneWrapper.clone, Joining),
+                                cloneWrapper.clone.getNFeature(CDR3)
                         ),
                         cloneWrapper
                 ))
@@ -86,8 +86,7 @@ class ClusterProcessor {
                     .min(Comparator.comparing(Pair::getSecond));
 
             //TODO to parameters
-//            double threshold = 0.2;
-            double threshold = 100;
+            double threshold = 0.05;
             if (nearestCluster.isPresent() && nearestCluster.get().getSecond() < threshold) {
                 nearestCluster.get().getFirst().add(cloneDescriptor);
             } else {
@@ -105,7 +104,7 @@ class ClusterProcessor {
 
         return firstStepTrees.stream()
                 .map(treeWithMeta -> treeWithMeta.tree.map(node ->
-                        node.map(it -> it.cloneWrapper, ancestor -> buildAncestorInfo(ancestor, treeWithMeta.CDR3OfRoot))
+                        node.map(it -> it.cloneWrapper, this::buildAncestorInfo)
                 ))
                 .collect(Collectors.toList());
     }
@@ -128,11 +127,29 @@ class ClusterProcessor {
         List<CloneWithMutationsFromReconstructedRoot> rebasedCluster = rebaseByReconstructedRoot(cluster, reconstructedCDR3);
 
         MutationsDescription root = new MutationsDescription(
-                Mutations.empty(NucleotideSequence.ALPHABET),
-                Mutations.empty(NucleotideSequence.ALPHABET),
-                overlap(rebasedCluster.stream().map(it -> it.mutations.VRangesWithoutCDR3).collect(Collectors.toList())),
-                Mutations.empty(NucleotideSequence.ALPHABET),
-                overlap(rebasedCluster.stream().map(it -> it.mutations.JRangesWithoutCDR3).collect(Collectors.toList()))
+                Lists.newArrayList(
+                        new MutationsWithRange(
+                                reconstructedCDR3,
+                                Mutations.empty(NucleotideSequence.ALPHABET),
+                                new Range(0, reconstructedCDR3.size())
+                        )
+                ),
+                overlap(rebasedCluster.stream()
+                        .map(it -> it.mutations.VMutationsWithoutCDR3.stream()
+                                .map(MutationsWithRange::getSequence1Range)
+                                .collect(Collectors.toList())
+                        ).collect(Collectors.toList())
+                ).stream()
+                        .map(it -> new MutationsWithRange(VSequence1, Mutations.EMPTY_NUCLEOTIDE_MUTATIONS, it))
+                        .collect(Collectors.toList()),
+                overlap(rebasedCluster.stream()
+                        .map(it -> it.mutations.JMutationsWithoutCDR3.stream()
+                                .map(MutationsWithRange::getSequence1Range)
+                                .collect(Collectors.toList())
+                        ).collect(Collectors.toList())
+                ).stream()
+                        .map(it -> new MutationsWithRange(JSequence1, Mutations.EMPTY_NUCLEOTIDE_MUTATIONS, it))
+                        .collect(Collectors.toList())
         );
         TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, MutationsDescription, MutationsDescription> treeBuilderByAncestors = new TreeBuilderByAncestors<>(
                 root,
@@ -157,9 +174,7 @@ class ClusterProcessor {
                                 //TODO align only part
                                 mutations(reconstructedCDR3, clone.mutations.CDR3),
                                 clone.mutations.VMutationsWithoutCDR3,
-                                clone.mutations.VRangesWithoutCDR3,
-                                clone.mutations.JMutationsWithoutCDR3,
-                                clone.mutations.JRangesWithoutCDR3
+                                clone.mutations.JMutationsWithoutCDR3
                         ),
                         clone.cloneWrapper
                 ))
@@ -169,37 +184,35 @@ class ClusterProcessor {
 
     private BigDecimal distance(MutationsDescription mutations) {
         return BigDecimal.valueOf(
-                score(mutations.CDR3Mutations) + score(mutations.VMutationsWithoutCDR3) + score(mutations.JMutationsWithoutCDR3)
+                3 - (
+                        (score(mutations.CDR3Mutations) + score(mutations.VMutationsWithoutCDR3) + score(mutations.JMutationsWithoutCDR3)) /
+                                (maxScore(mutations.CDR3Mutations) + maxScore(mutations.VMutationsWithoutCDR3) + maxScore(mutations.JMutationsWithoutCDR3))
+                )
         );
     }
 
-    private int score(Mutations<NucleotideSequence> mutations) {
-        return (int) Arrays.stream(mutations.getRAWMutations())
-                .filter(mutation -> !(Mutation.getType(mutation) == MutationType.Insertion && Mutation.getTo(mutation) == NucleotideAlphabet.N))
-                .count();
+    //TODO not as a sum
+    private double normalizedScore(List<MutationsWithRange> mutations) {
+        double maxScore = maxScore(mutations);
+        if (maxScore == 0.0) {
+            return 1.0;
+        }
+        return 1 - score(mutations) / maxScore;
     }
 
     private MutationsDescription mutationsBetween(MutationsDescription first, MutationsDescription second) {
         return new MutationsDescription(
-                difference(first.CDR3Mutations, second.CDR3Mutations),
-                difference(first.VMutationsWithoutCDR3, second.VMutationsWithoutCDR3),
-                //TODO may be it's wrong, check when there will be holes
-                intersection(first.VRangesWithoutCDR3, second.VRangesWithoutCDR3),
-                difference(first.JMutationsWithoutCDR3, second.JMutationsWithoutCDR3),
-                //TODO may be it's wrong, check when there will be holes
-                intersection(first.JRangesWithoutCDR3, second.JRangesWithoutCDR3)
+                mutationsBetween(first.CDR3Mutations, second.CDR3Mutations),
+                mutationsBetween(first.VMutationsWithoutCDR3, second.VMutationsWithoutCDR3),
+                mutationsBetween(first.JMutationsWithoutCDR3, second.JMutationsWithoutCDR3)
         );
     }
 
     private MutationsDescription combineWith(MutationsDescription first, MutationsDescription second) {
         return new MutationsDescription(
-                first.CDR3Mutations.combineWith(second.CDR3Mutations),
-                first.VMutationsWithoutCDR3.combineWith(second.VMutationsWithoutCDR3),
-                //TODO may be it's wrong, check when there will be holes
-                overlap(Arrays.asList(first.VRangesWithoutCDR3, second.VRangesWithoutCDR3)),
-                first.JMutationsWithoutCDR3.combineWith(second.JMutationsWithoutCDR3),
-                //TODO may be it's wrong, check when there will be holes
-                overlap(Arrays.asList(first.JRangesWithoutCDR3, second.JRangesWithoutCDR3))
+                combineWith(first.CDR3Mutations, second.CDR3Mutations),
+                combineWith(first.VMutationsWithoutCDR3, second.VMutationsWithoutCDR3),
+                combineWith(first.JMutationsWithoutCDR3, second.JMutationsWithoutCDR3)
         );
     }
 
@@ -207,11 +220,7 @@ class ClusterProcessor {
         return new MutationsDescription(
                 intersection(first.CDR3Mutations, second.CDR3Mutations),
                 intersection(first.VMutationsWithoutCDR3, second.VMutationsWithoutCDR3),
-                //TODO may be it's wrong, check when there will be holes
-                intersection(first.VRangesWithoutCDR3, second.VRangesWithoutCDR3),
-                intersection(first.JMutationsWithoutCDR3, second.JMutationsWithoutCDR3),
-                //TODO may be it's wrong, check when there will be holes
-                intersection(first.JRangesWithoutCDR3, second.JRangesWithoutCDR3)
+                intersection(first.JMutationsWithoutCDR3, second.JMutationsWithoutCDR3)
         );
     }
 
@@ -281,18 +290,6 @@ class ClusterProcessor {
                 .orElseThrow(IllegalStateException::new);
     }
 
-    private List<Range> intersection(List<Range> first, List<Range> second) {
-        return first.stream()
-                .map(range -> {
-                    Range result = range;
-                    for (Range rangeInSecond : second) {
-                        result = range.intersection(rangeInSecond);
-                    }
-                    return result;
-                })
-                .collect(Collectors.toList());
-    }
-
     //TODO check when there will be holes
     private List<Range> overlap(List<List<Range>> ranges) {
         List<Range> sorted = ranges.stream()
@@ -315,17 +312,108 @@ class ClusterProcessor {
         return result;
     }
 
-    static Mutations<NucleotideSequence> difference(Mutations<NucleotideSequence> from, Mutations<NucleotideSequence> to) {
-        Mutations<NucleotideSequence> fromBasedOnN = rebuildFromNBase(from).getFirst();
-        Mutations<NucleotideSequence> toBasedOnN = rebuildFromNBase(to).getFirst();
-        try {
-            return fromBasedOnN.invert().combineWith(toBasedOnN);
-        } catch (Exception e) {
-            throw e;
-        }
+    static List<MutationsWithRange> mutationsBetween(List<MutationsWithRange> firstMutations, List<MutationsWithRange> secondMutations) {
+        return firstMutations.stream()
+                .flatMap(base -> secondMutations.stream().flatMap(comparison -> {
+                    Range intersection = base.getSequence1Range().intersection(comparison.getSequence1Range());
+                    if (intersection != null) {
+                        return Stream.of(new MutationsWithRange(
+                                base.getSequence1(),
+                                difference(
+                                        base.getMutations().extractAbsoluteMutationsForRange(intersection),
+                                        comparison.getMutations().extractAbsoluteMutationsForRange(intersection)
+                                ),
+                                intersection
+                        ));
+                    } else {
+                        return Stream.empty();
+                    }
+                }))
+                .collect(Collectors.toList());
     }
 
-    static Mutations<NucleotideSequence> intersection(Mutations<NucleotideSequence> first, Mutations<NucleotideSequence> second) {
+    private List<MutationsWithRange> combineWith(List<MutationsWithRange> firstMutations, List<MutationsWithRange> secondMutations) {
+        return firstMutations.stream()
+                .flatMap(base -> secondMutations.stream().flatMap(comparison -> {
+                    Range intersection = base.getSequence1Range().intersection(comparison.getSequence1Range());
+                    if (intersection != null) {
+                        try {
+                            return Stream.of(new MutationsWithRange(
+                                    base.getSequence1(),
+                                    base.getMutations().extractAbsoluteMutationsForRange(intersection)
+                                            .combineWith(comparison.getMutations().extractAbsoluteMutationsForRange(intersection)),
+                                    intersection
+                            ));
+                        } catch (Exception e) {
+                            throw e;
+                        }
+                    } else {
+                        return Stream.empty();
+                    }
+                }))
+                .collect(Collectors.toList());
+    }
+
+    private static Mutations<NucleotideSequence> difference(Mutations<NucleotideSequence> from, Mutations<NucleotideSequence> to) {
+        Pair<Mutations<NucleotideSequence>, Map<Integer, Integer>> rebasedFrom = rebuildFromNBase(from);
+        Pair<Mutations<NucleotideSequence>, Map<Integer, Integer>> rebasedTo = rebuildFromNBase(to);
+        return replaceSubstitutionsWithInsertions(rebasedFrom.getFirst().invert().combineWith(rebasedTo.getFirst()), rebasedTo.getSecond().keySet());
+    }
+
+    private static Mutations<NucleotideSequence> replaceSubstitutionsWithInsertions(Mutations<NucleotideSequence> base, Set<Integer> rebasedMutations) {
+        MutationsBuilder<NucleotideSequence> builder = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
+        int positionShift = 0;
+        for (int i = 0; i < base.size(); i++) {
+            int mutation = base.getMutation(i);
+            int position = Mutation.getPosition(mutation) + positionShift;
+            if (!rebasedMutations.contains(mutation) && Mutation.getType(mutation) == MutationType.Substitution && Mutation.getFrom(mutation) == NucleotideAlphabet.N) {
+                builder.append(Mutation.createInsertion(position, Mutation.getTo(mutation)));
+                positionShift--;
+            } else {
+                builder.append(Mutation.createMutation(Mutation.getType(mutation), position, Mutation.getFrom(mutation), Mutation.getTo(mutation)));
+            }
+        }
+        return builder.createAndDestroy();
+    }
+
+    private static Mutations<NucleotideSequence> replaceSubstitutionsWithInsertions_2(Mutations<NucleotideSequence> from, Mutations<NucleotideSequence> to) {
+        MutationsBuilder<NucleotideSequence> builder = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
+        int positionShift = 0;
+        for (int i = 0; i < to.size(); i++) {
+            int mutation = to.getMutation(i);
+            int position = Mutation.getPosition(mutation) + positionShift;
+            if (Mutation.getType(mutation) == MutationType.Substitution && Mutation.getType(from.firstMutationWithPosition(position)) == MutationType.Deletion) {
+                builder.append(Mutation.createInsertion(position, Mutation.getTo(mutation)));
+                positionShift--;
+            } else {
+                builder.append(mutation);
+            }
+        }
+        return builder.createAndDestroy();
+    }
+
+    static List<MutationsWithRange> intersection(List<MutationsWithRange> from, List<MutationsWithRange> to) {
+        return from.stream()
+                .flatMap(base -> to.stream().flatMap(comparison -> {
+                    Range intersection = base.getSequence1Range().intersection(comparison.getSequence1Range());
+                    if (intersection != null) {
+                        return Stream.of(new MutationsWithRange(
+                                base.getSequence1(),
+                                intersection(
+                                        base.getMutations().extractAbsoluteMutationsForRange(intersection),
+                                        comparison.getMutations().extractAbsoluteMutationsForRange(intersection)
+                                ),
+                                intersection
+                        ));
+                    } else {
+                        return Stream.empty();
+                    }
+                }))
+                .collect(Collectors.toList());
+
+    }
+
+    private static Mutations<NucleotideSequence> intersection(Mutations<NucleotideSequence> first, Mutations<NucleotideSequence> second) {
         Pair<Mutations<NucleotideSequence>, Map<Integer, Integer>> firstBasedOnN = rebuildFromNBase(first);
         Pair<Mutations<NucleotideSequence>, Map<Integer, Integer>> secondBasedOnN = rebuildFromNBase(second);
         Mutations<NucleotideSequence> intersection = intersectionForSubstitutes(firstBasedOnN.getFirst(), secondBasedOnN.getFirst());
@@ -360,12 +448,7 @@ class ClusterProcessor {
             int position = Mutation.getPosition(mutation) + positionShift;
             int mappedMutation;
             if (Mutation.getType(mutation) == MutationType.Insertion && Mutation.getTo(mutation) == NucleotideAlphabet.N) {
-                mappedMutation = Mutation.createMutation(
-                        MutationType.Insertion,
-                        position,
-                        NucleotideAlphabet.N,
-                        NucleotideAlphabet.N
-                );
+                mappedMutation = Mutation.createInsertion(position, NucleotideAlphabet.N);
             } else {
                 int originalMutation = original.get(mutation);
                 mappedMutation = Mutation.createMutation(
@@ -390,16 +473,25 @@ class ClusterProcessor {
         for (int i = 0; i < mutations.size(); i++) {
             int mutation = mutations.getMutation(i);
             int position = Mutation.getPosition(mutation) + positionShift;
-            byte from;
-            if (Mutation.getType(mutation) == MutationType.Insertion) {
-                from = NucleotideAlphabet.N;
-            } else {
-                from = Mutation.getFrom(mutation);
-            }
             if (Mutation.getType(mutation) == MutationType.Insertion) {
                 positionShift++;
             }
-            int mapped = Mutation.createMutation(MutationType.Substitution, position, from, Mutation.getTo(mutation));
+            byte from;
+            byte to;
+            if (Mutation.getType(mutation) == MutationType.Insertion) {
+                if (Mutation.getTo(mutation) == NucleotideAlphabet.N) {
+                    continue;
+                }
+                from = NucleotideAlphabet.N;
+                to = Mutation.getTo(mutation);
+            } else if (Mutation.getType(mutation) == MutationType.Deletion) {
+                from = Mutation.getFrom(mutation);
+                to = NucleotideAlphabet.N;
+            } else {
+                from = Mutation.getFrom(mutation);
+                to = Mutation.getTo(mutation);
+            }
+            int mapped = Mutation.createSubstitution(position, from, to);
             reversedMapping.put(mapped, mutation);
             builder.append(mapped);
         }
@@ -408,176 +500,140 @@ class ClusterProcessor {
 
     private double distanceToCluster(CloneWithMutationsFromVJGermline cloneDescriptor, Cluster.Builder<CloneWithMutationsFromVJGermline> cluster) {
         return cluster.getCurrentCluster().stream()
-                .mapToDouble(compareTo -> computeDistance(cloneDescriptor.mutations, compareTo.mutations))
+                .mapToDouble(compareTo -> fitnessFunction(fitnessFunctionParams(cloneDescriptor.mutations, compareTo.mutations)))
                 .min()
                 .orElseThrow(IllegalArgumentException::new);
     }
 
     private FitnessFunctionParams fitnessFunctionParams(MutationsFromVJGermline first, MutationsFromVJGermline second) {
-        Mutations<NucleotideSequence> VMutations = difference(first.VMutationsWithoutCDR3, second.VMutationsWithoutCDR3);
-        Mutations<NucleotideSequence> JMutations = difference(first.JMutationsWithoutCDR3, second.JMutationsWithoutCDR3);
+        List<MutationsWithRange> CDR3MutationsBetween = mutations(first.CDR3, second.CDR3);
 
-        //TODO use more optimized variant
-        //TODO compare only part between V and J
-        Mutations<NucleotideSequence> CDR3Mutations = mutations(first.CDR3, second.CDR3);
+        List<MutationsWithRange> VMutationsBetween = mutationsBetween(first.VMutationsWithoutCDR3, second.VMutationsWithoutCDR3);
+        double VMutationsBetweenScore = score(VMutationsBetween);
 
+        List<MutationsWithRange> JMutationsBetween = mutationsBetween(first.JMutationsWithoutCDR3, second.JMutationsWithoutCDR3);
+        double JMutationsBetweenScore = score(JMutationsBetween);
 
-        int vMutationsBetween = VMutations.size();
-        int jMutationsBetween = JMutations.size();
-        int cdr3MutationsBetween = CDR3Mutations.size();
-        int VPlusJLengthOfFirst = totalLength(first.VRangesWithoutCDR3) + totalLength(first.JRangesWithoutCDR3);
-        int VPlusJLengthOfSecond = totalLength(second.VRangesWithoutCDR3) + totalLength(second.JRangesWithoutCDR3);
-        int averageVPlusJLength = (VPlusJLengthOfFirst + VPlusJLengthOfSecond) / 2;
-        int averageCDR3Length = first.CDR3.size() + second.CDR3.size();
-        double normalizedDistanceFromFirstToGermline = (first.VMutationsWithoutCDR3.size() + first.JMutationsWithoutCDR3.size()) / (double) VPlusJLengthOfFirst;
-        double normalizedDistanceFromSecondToGermline = (second.VMutationsWithoutCDR3.size() + second.JMutationsWithoutCDR3.size()) / (double) VPlusJLengthOfSecond;
-        double normalizedAverageDistanceToGermline = (normalizedDistanceFromFirstToGermline + normalizedDistanceFromSecondToGermline) / 2.0;
-        double normalizedCommonAncestorDistanceFromGermline = (intersection(first.VMutationsWithoutCDR3, second.VMutationsWithoutCDR3).size()
-                + intersection(first.JMutationsWithoutCDR3, second.JMutationsWithoutCDR3).size()) / (double) averageVPlusJLength;
-        double normalizedDistanceBetweenClones = (vMutationsBetween + jMutationsBetween + cdr3MutationsBetween) / (double) (averageVPlusJLength + averageCDR3Length);
-        double normalizedDistanceBetweenClonesInCDR3 = (cdr3MutationsBetween) / (double) averageCDR3Length;
-        double normalizedDistanceBetweenClonesWithoutCDR3 = (vMutationsBetween + jMutationsBetween) / (double) (averageVPlusJLength);
+        double CDR3MutationsBetweenScore = score(CDR3MutationsBetween);
 
-        double a = (first.VMutationsWithoutCDR3.size() + first.JMutationsWithoutCDR3.size());
-        double b = (second.VMutationsWithoutCDR3.size() + second.JMutationsWithoutCDR3.size());
-        double c = (vMutationsBetween + jMutationsBetween);
-        double p = 0.5 * (a + b + c);
-        double areaOfTriangle = Math.sqrt(p * (p - a) * (p - b) * (p - c));
-        double baseAngleOfTriangle;
-        if (c == 0.0) {
-            baseAngleOfTriangle = 0.0;
-        } else if (c == a + b) {
-            baseAngleOfTriangle = Math.PI / 2;
-        } else {
-            baseAngleOfTriangle = Math.acos((a * a + b * b - c * c) / (2.0 * a * b));
-        }
-        double baseHeightOfTriangle = areaOfTriangle * 2.0 / c;
-        double radiusOfCircumscribedCircle;
-        if (areaOfTriangle == 0) {
-            radiusOfCircumscribedCircle = Math.max(a, b);
-        } else {
-            radiusOfCircumscribedCircle = 4 * a * b * c / areaOfTriangle;
-        }
+        double maxScoreForFirstVJ = maxScore(first.VMutationsWithoutCDR3) + maxScore(first.JMutationsWithoutCDR3);
+        double maxScoreForSecondVJ = maxScore(second.VMutationsWithoutCDR3) + maxScore(second.JMutationsWithoutCDR3);
+        double maxScoreForVJ = Math.max(maxScoreForFirstVJ, maxScoreForSecondVJ);
+        double maxScoreForCDR3 = Math.max(maxScore(first.CDR3), maxScore(second.CDR3));
 
 
-        return new FitnessFunctionParams(normalizedDistanceBetweenClonesInCDR3,
+        double normalizedDistanceFromFirstToGermline = (score(first.VMutationsWithoutCDR3) + score(first.JMutationsWithoutCDR3)) / maxScoreForFirstVJ;
+        double normalizedDistanceFromSecondToGermline = (score(second.VMutationsWithoutCDR3) + score(second.JMutationsWithoutCDR3)) / maxScoreForSecondVJ;
+        double normalizedDistanceBetweenClones = (VMutationsBetweenScore + JMutationsBetweenScore + CDR3MutationsBetweenScore) /
+                (maxScoreForVJ + maxScoreForCDR3);
+        double normalizedDistanceBetweenClonesInCDR3 = (CDR3MutationsBetweenScore) / maxScoreForCDR3;
+        double normalizedDistanceBetweenClonesWithoutCDR3 = (VMutationsBetweenScore + JMutationsBetweenScore) / (maxScoreForVJ + maxScoreForCDR3);
+
+        return new FitnessFunctionParams(
+                normalizedDistanceBetweenClonesInCDR3,
                 normalizedDistanceBetweenClones,
                 normalizedDistanceBetweenClonesWithoutCDR3,
-                Math.min(normalizedDistanceFromFirstToGermline, normalizedDistanceFromSecondToGermline),
-                normalizedAverageDistanceToGermline,
-                normalizedCommonAncestorDistanceFromGermline,
-                areaOfTriangle,
-                baseAngleOfTriangle,
-                baseHeightOfTriangle,
-                radiusOfCircumscribedCircle
+                Math.max(normalizedDistanceFromFirstToGermline, normalizedDistanceFromSecondToGermline)
         );
     }
 
-    static Mutations<NucleotideSequence> mutations(NucleotideSequence first, NucleotideSequence second) {
-        return Aligner.alignGlobal(
-                AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-                first,
-                second
-        ).getAbsoluteMutations();
+    private double fitnessFunction(FitnessFunctionParams params) {
+        return Math.pow(params.distanceBetweenClonesWithoutCDR3, 1.0)
+                * Math.pow(params.distanceBetweenClonesInCDR3, 1.0)
+                * (-1.0 * Math.pow(params.maxScoreToGermline, 4.0) + 1);
     }
 
-    private double computeDistance(MutationsFromVJGermline first, MutationsFromVJGermline second) {
-        Mutations<NucleotideSequence> VMutations = difference(first.VMutationsWithoutCDR3, second.VMutationsWithoutCDR3);
-        Mutations<NucleotideSequence> JMutations = difference(first.JMutationsWithoutCDR3, second.JMutationsWithoutCDR3);
 
-        //TODO use more optimized variant
-        //TODO compare only part between V and J
-        Mutations<NucleotideSequence> CDR3Mutations = mutations(first.CDR3, second.CDR3);
-
-        double CDR3Length = (first.CDR3.size() + second.CDR3.size()) / 2.0;
-        double VLength = (totalLength(first.VRangesWithoutCDR3) + totalLength(second.VRangesWithoutCDR3)) / 2.0;
-        double JLength = (totalLength(first.JRangesWithoutCDR3) + totalLength(second.JRangesWithoutCDR3)) / 2.0;
-
-        //TODO don't use average length
-        double normalizedDistanceFromCloneToGermline = (first.VMutationsWithoutCDR3.size() + first.JMutationsWithoutCDR3.size()) / (VLength + JLength);
-        //TODO don't use average length
-        double normalizedDistanceFromCompareToGermline = (second.VMutationsWithoutCDR3.size() + second.JMutationsWithoutCDR3.size()) / (VLength + JLength);
-
-        double normalizedAverageDistanceToGermline = (normalizedDistanceFromCloneToGermline + normalizedDistanceFromCompareToGermline) / 2.0;
-        double normalizedDistanceBetweenClones = (VMutations.size() + JMutations.size() + CDR3Mutations.size()) / (VLength + JLength + CDR3Length);
-        double normalizedDistanceBetweenClonesInCDR3 = (CDR3Mutations.size()) / CDR3Length;
-
-        //TODO parameters
-        return normalizedDistanceBetweenClonesInCDR3 + (normalizedDistanceBetweenClones - normalizedAverageDistanceToGermline);
+    private double maxScore(List<MutationsWithRange> vMutationsBetween) {
+        return vMutationsBetween.stream()
+                .mapToDouble(mutations -> AlignmentUtils.calculateScore(
+                        mutations.getSequence1(),
+                        mutations.getSequence1Range(),
+                        Mutations.EMPTY_NUCLEOTIDE_MUTATIONS,
+                        AffineGapAlignmentScoring.getNucleotideBLASTScoring()
+                ))
+                .sum();
     }
 
-    private int totalLength(List<Range> ranges) {
-        return ranges.stream().mapToInt(Range::length).sum();
+    private double maxScore(NucleotideSequence sequence) {
+        return AlignmentUtils.calculateScore(
+                sequence,
+                Mutations.EMPTY_NUCLEOTIDE_MUTATIONS,
+                AffineGapAlignmentScoring.getNucleotideBLASTScoring()
+        );
     }
 
-    private static List<Range> getSequence1RangesWithoutCDR3(Clone clone, GeneType geneType) {
-        VDJCHit bestHit = clone.getBestHit(geneType);
-        Range CDR3Range = CDR3Sequence1Range(bestHit, 0);
-
-        return Arrays.stream(bestHit.getAlignments())
-                .map(Alignment::getSequence1Range)
-                .flatMap(sequence1Range -> sequence1Range.without(CDR3Range).stream())
-                .collect(Collectors.toList());
+    //TODO with holes
+    static List<MutationsWithRange> mutations(NucleotideSequence first, NucleotideSequence second) {
+        return Collections.singletonList(
+                new MutationsWithRange(
+                        first,
+                        Aligner.alignGlobal(
+                                AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
+                                first,
+                                second
+                        ).getAbsoluteMutations(),
+                        new Range(0, first.size())
+                )
+        );
     }
 
     private static class MutationsFromVJGermline {
         private final NucleotideSequence CDR3;
 
-        private final Mutations<NucleotideSequence> VMutationsWithoutCDR3;
-        private final List<Range> VRangesWithoutCDR3;
+        private final List<MutationsWithRange> VMutationsWithoutCDR3;
+        private final List<MutationsWithRange> JMutationsWithoutCDR3;
 
-        private final Mutations<NucleotideSequence> JMutationsWithoutCDR3;
-        private final List<Range> JRangesWithoutCDR3;
-
-        private MutationsFromVJGermline(Mutations<NucleotideSequence> VMutationsWithoutCDR3,
-                                        Mutations<NucleotideSequence> JMutationsWithoutCDR3,
-                                        NucleotideSequence CDR3,
-                                        List<Range> VRangesWithoutCDR3,
-                                        List<Range> JRangesWithoutCDR3) {
+        private MutationsFromVJGermline(
+                List<MutationsWithRange> VMutationsWithoutCDR3,
+                List<MutationsWithRange> JMutationsWithoutCDR3,
+                NucleotideSequence CDR3
+        ) {
             this.VMutationsWithoutCDR3 = VMutationsWithoutCDR3;
             this.JMutationsWithoutCDR3 = JMutationsWithoutCDR3;
             this.CDR3 = CDR3;
-            this.VRangesWithoutCDR3 = VRangesWithoutCDR3;
-            this.JRangesWithoutCDR3 = JRangesWithoutCDR3;
         }
     }
 
     private static class MutationsDescription {
-        private final Mutations<NucleotideSequence> CDR3Mutations;
+        private final List<MutationsWithRange> CDR3Mutations;
 
-        private final Mutations<NucleotideSequence> VMutationsWithoutCDR3;
-        private final List<Range> VRangesWithoutCDR3;
+        private final List<MutationsWithRange> VMutationsWithoutCDR3;
+        private final List<MutationsWithRange> JMutationsWithoutCDR3;
 
-        private final Mutations<NucleotideSequence> JMutationsWithoutCDR3;
-        private final List<Range> JRangesWithoutCDR3;
-
-        public MutationsDescription(Mutations<NucleotideSequence> CDR3Mutations,
-                                    Mutations<NucleotideSequence> VMutationsWithoutCDR3,
-                                    List<Range> VRangesWithoutCDR3,
-                                    Mutations<NucleotideSequence> JMutationsWithoutCDR3,
-                                    List<Range> JRangesWithoutCDR3) {
+        public MutationsDescription(
+                List<MutationsWithRange> CDR3Mutations,
+                List<MutationsWithRange> VMutationsWithoutCDR3,
+                List<MutationsWithRange> JMutationsWithoutCDR3
+        ) {
             this.CDR3Mutations = CDR3Mutations;
             this.VMutationsWithoutCDR3 = VMutationsWithoutCDR3;
-            this.VRangesWithoutCDR3 = VRangesWithoutCDR3;
             this.JMutationsWithoutCDR3 = JMutationsWithoutCDR3;
-            this.JRangesWithoutCDR3 = JRangesWithoutCDR3;
         }
     }
 
-    private AncestorInfo buildAncestorInfo(MutationsDescription ancestor, NucleotideSequence CDR3OfRoot) {
+    private AncestorInfo buildAncestorInfo(MutationsDescription ancestor) {
         SequenceBuilder<NucleotideSequence> builder = NucleotideSequence.ALPHABET.createBuilder();
-        NucleotideSequence vSequence = ancestor.VMutationsWithoutCDR3.mutate(VSequence1);
-        ancestor.VRangesWithoutCDR3.stream().map(vSequence::getRange).forEach(builder::append);
+        ancestor.JMutationsWithoutCDR3.stream()
+                .map(this::buildSequence)
+                .forEach(builder::append);
         int CDR3Begin = builder.size();
-        builder.append(ancestor.CDR3Mutations.mutate(CDR3OfRoot));
+        ancestor.CDR3Mutations.stream()
+                .map(this::buildSequence)
+                .forEach(builder::append);
         int CDR3End = builder.size();
-        NucleotideSequence jSequence = ancestor.JMutationsWithoutCDR3.mutate(JSequence1);
-        ancestor.JRangesWithoutCDR3.stream().map(jSequence::getRange).forEach(builder::append);
+        ancestor.JMutationsWithoutCDR3.stream()
+                .map(this::buildSequence)
+                .forEach(builder::append);
         return new AncestorInfo(
                 builder.createAndDestroy(),
                 CDR3Begin,
                 CDR3End
         );
+    }
+
+    private NucleotideSequence buildSequence(MutationsWithRange mutation) {
+        return mutation.getMutations().mutate(mutation.getSequence1());
     }
 
     private static class TreeWithMeta {

@@ -1,10 +1,10 @@
 package com.milaboratory.mixcr.trees;
 
 import com.milaboratory.core.Range;
+import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.alignment.Alignment;
-import com.milaboratory.core.mutations.Mutation;
+import com.milaboratory.core.alignment.AlignmentUtils;
 import com.milaboratory.core.mutations.Mutations;
-import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
@@ -13,8 +13,10 @@ import io.repseq.core.GeneType;
 import io.repseq.core.ReferencePoint;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.ToIntFunction;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static io.repseq.core.ReferencePoint.CDR3Begin;
@@ -36,16 +38,11 @@ public interface ClusteringCriteria {
 
     default ToIntFunction<Clone> clusteringHashCodeWithNumberOfMutations() {
         return clone -> clusteringHashCode().applyAsInt(clone);
-        //TODO check
-//        return clone -> Arrays.hashCode(new int[]{
-//                clusteringHashCode().applyAsInt(clone),
-//                numberOfMutations(clone, GeneType.Variable) + numberOfMutations(clone, GeneType.Joining)
-//        });
     }
 
     default Comparator<Clone> clusteringComparatorWithNumberOfMutations() {
         return clusteringComparator()
-                .thenComparing(clone -> numberOfMutations(clone, GeneType.Variable) + numberOfMutations(clone, GeneType.Joining));
+                .thenComparing(Comparator.<Clone>comparingDouble(clone -> score(getMutationsWithoutCDR3(clone, GeneType.Variable)) + score(getMutationsWithoutCDR3(clone, GeneType.Joining))).reversed());
     }
 
     class DefaultClusteringCriteria implements ClusteringCriteria {
@@ -70,30 +67,37 @@ public interface ClusteringCriteria {
     }
 
     /**
-     * Returns the number of mutations from the reference
+     * sum score of given mutations
      */
-    static int numberOfMutations(Clone clone, GeneType geneType) {
-        return getAbsoluteMutationsWithoutCDR3(clone, geneType).size();
+    static double score(List<MutationsWithRange> mutationsWithRanges) {
+        return mutationsWithRanges.stream()
+                .mapToDouble(mutations -> AlignmentUtils.calculateScore(
+                        mutations.getSequence1(),
+                        mutations.getSequence1Range(),
+//                        mutations.getMutations().extractAbsoluteMutationsForRange(mutations.getSequence1Range()),
+                        mutations.getMutations(),
+                        AffineGapAlignmentScoring.getNucleotideBLASTScoring()
+                ))
+                .sum();
     }
 
-    //TODO use extractAbsoluteMutationsForRange
-    static Mutations<NucleotideSequence> getAbsoluteMutationsWithoutCDR3(Clone clone, GeneType geneType) {
+    static List<MutationsWithRange> getMutationsWithoutCDR3(Clone clone, GeneType geneType) {
         VDJCHit bestHit = clone.getBestHit(geneType);
-
-
-        int[] filteredMutations = IntStream.range(0, bestHit.getAlignments().length)
+        return IntStream.range(0, bestHit.getAlignments().length)
+                .boxed()
                 .flatMap(index -> {
                     Alignment<NucleotideSequence> alignment = bestHit.getAlignment(index);
                     Range CDR3Range = CDR3Sequence1Range(bestHit, index);
-
                     Mutations<NucleotideSequence> mutations = alignment.getAbsoluteMutations();
-                    return IntStream.range(0, mutations.size())
-                            .map(mutations::getMutation)
-                            .filter(mutation -> !CDR3Range.contains(Mutation.getPosition(mutation)));
+                    List<Range> rangesWithoutCDR3 = alignment.getSequence1Range().without(CDR3Range);
+                    return rangesWithoutCDR3.stream()
+                            .map(range -> new MutationsWithRange(
+                                    alignment.getSequence1(),
+                                    mutations.extractAbsoluteMutationsForRange(range),
+                                    range
+                            ));
                 })
-                .toArray();
-
-        return new MutationsBuilder<>(NucleotideSequence.ALPHABET, false, filteredMutations, filteredMutations.length).createAndDestroy();
+                .collect(Collectors.toList());
     }
 
     static Range CDR3Sequence1Range(VDJCHit hit, int target) {
