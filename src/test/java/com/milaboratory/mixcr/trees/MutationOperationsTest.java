@@ -53,7 +53,7 @@ public class MutationOperationsTest {
         assertEquals("[I1:T,I1:G,I1:T]", fromParentToSecond.toString());
 
         Mutations<NucleotideSequence> fromFirstToSecond = MutationsUtils.difference(fromParentToFirst, fromParentToSecond);
-        assertEquals("[I1:T,I1:G,I1:T,S1:A->C]", fromFirstToSecond.toString());
+        assertEquals("[I1:T,I1:G,I1:T,S1:C->A]", fromFirstToSecond.toString());
         assertEquals(second, fromParentToFirst.combineWith(fromFirstToSecond).mutate(parent));
     }
 
@@ -132,7 +132,7 @@ public class MutationOperationsTest {
         assertEquals(first_, fromCommonToFirst.mutate(commonAncestor));
         assertEquals(second, fromCommonToSecond.mutate(commonAncestor));
     }
-    
+
     private Mutations<NucleotideSequence> mutations(NucleotideSequence first, NucleotideSequence second) {
         return Aligner.alignGlobal(
                 AffineGapAlignmentScoring.getNucleotideBLASTScoring(),

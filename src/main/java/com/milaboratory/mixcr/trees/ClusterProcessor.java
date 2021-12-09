@@ -408,7 +408,7 @@ class ClusterProcessor {
                 .mapToDouble(mutations -> AlignmentUtils.calculateScore(
                         mutations.getSequence1(),
                         mutations.getSequence1Range(),
-                        mutations.getMutations(),
+                        Mutations.EMPTY_NUCLEOTIDE_MUTATIONS,
                         AffineGapAlignmentScoring.getNucleotideBLASTScoring()
                 ))
                 .sum();
