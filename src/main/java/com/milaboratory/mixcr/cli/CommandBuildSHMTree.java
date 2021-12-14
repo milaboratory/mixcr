@@ -63,6 +63,7 @@ import io.repseq.core.VDJCLibraryRegistry;
 import org.apache.commons.math3.util.Pair;
 import picocli.CommandLine;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.util.*;
@@ -587,6 +588,9 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                     System.out.println(mappedTrees.stream().map(xmlTreePrinter::print).collect(Collectors.joining("\n")));
                     System.out.println();
 
+                    System.out.println(mappedTrees.stream().map(xmlTreePrinter::print).map(this::md5).collect(Collectors.joining("\n")));
+                    System.out.println("\n");
+
 
                     for (Tree<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> tree : trees) {
                         XmlTreePrinter<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> printerWithBreadcrumbs = new XmlTreePrinter<>(
@@ -775,6 +779,14 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
         }).get();
     }
 
+    private String md5(String sequence) {
+        return ExceptionUtil.wrap(() -> {
+            MessageDigest md5 = MessageDigest.getInstance("MD5");
+            md5.update(sequence.getBytes(StandardCharsets.UTF_8));
+            return new String(Base64.getEncoder().encode(md5.digest()));
+        }).get();
+    }
+
     private Pair<String, NucleotideSequence> idPair(ObservedOrReconstructed<CloneWrapper, AncestorInfo> content) {
         return Pair.create(
                 content.convert(
@@ -806,9 +818,9 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
         );
     }
 
-    private int findJPositionInCDR3(List<Clone> clones) {
+    private int findVPositionInCDR3(List<Clone> clones) {
         return clones.stream()
-                .map(clone -> clone.getNFeature(GeneFeature.CDR3).size() - clone.getBestHit(GeneType.Joining).getPartitioningForTarget(0).getLength(new GeneFeature(JBeginTrimmed, CDR3End)))
+                .map(clone -> clone.getBestHit(Variable).getPartitioningForTarget(0).getLength(new GeneFeature(CDR3Begin, VEndTrimmed)))
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
                 .entrySet().stream()
                 .max(Map.Entry.comparingByValue())
@@ -816,9 +828,9 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                 .orElseThrow(IllegalStateException::new);
     }
 
-    private int findVPositionInCDR3(List<Clone> clones) {
+    private int findJPositionInCDR3(List<Clone> clones) {
         return clones.stream()
-                .map(clone -> clone.getBestHit(Variable).getPartitioningForTarget(0).getLength(new GeneFeature(CDR3Begin, VEndTrimmed)))
+                .map(clone -> clone.getNFeature(GeneFeature.CDR3).size() - clone.getBestHit(GeneType.Joining).getPartitioningForTarget(0).getLength(new GeneFeature(JBeginTrimmed, CDR3End)))
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
                 .entrySet().stream()
                 .max(Map.Entry.comparingByValue())

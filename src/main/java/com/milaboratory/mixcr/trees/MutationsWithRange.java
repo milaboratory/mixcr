@@ -11,10 +11,12 @@ public class MutationsWithRange {
     private final Mutations<NucleotideSequence> combinedMutations;
     private final Range sequence1Range;
 
-    public MutationsWithRange(NucleotideSequence sequence1,
-                              Mutations<NucleotideSequence> fromBaseToParent,
-                              Mutations<NucleotideSequence> fromParentToThis,
-                              Range sequence1Range) {
+    public MutationsWithRange(
+            NucleotideSequence sequence1,
+            Mutations<NucleotideSequence> fromBaseToParent,
+            Mutations<NucleotideSequence> fromParentToThis,
+            Range sequence1Range
+    ) {
         this.sequence1 = sequence1;
         this.fromBaseToParent = fromBaseToParent;
         this.fromParentToThis = fromParentToThis;

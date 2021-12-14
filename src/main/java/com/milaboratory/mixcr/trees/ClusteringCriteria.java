@@ -73,12 +73,16 @@ public interface ClusteringCriteria {
      */
     static double score(List<MutationsWithRange> mutationsWithRanges) {
         return mutationsWithRanges.stream()
-                .mapToDouble(mutations -> AlignmentUtils.calculateScore(
-                        mutations.getFromBaseToParent().mutate(mutations.getSequence1()),
-                        mutations.getFromParentToThis(),
-                        AffineGapAlignmentScoring.getNucleotideBLASTScoring()
-                ))
+                .mapToDouble(ClusteringCriteria::score)
                 .sum();
+    }
+
+    static int score(MutationsWithRange mutations) {
+        return AlignmentUtils.calculateScore(
+                mutations.getFromBaseToParent().mutate(mutations.getSequence1()),
+                mutations.getFromParentToThis(),
+                AffineGapAlignmentScoring.getNucleotideBLASTScoring()
+        );
     }
 
     static List<MutationsWithRange> getMutationsWithoutCDR3(Clone clone, GeneType geneType) {
