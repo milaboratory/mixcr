@@ -6,7 +6,6 @@ import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.alignment.Aligner;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.AlignmentUtils;
-import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceBuilder;
 import com.milaboratory.mixcr.basictypes.Clone;
@@ -20,6 +19,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS;
 import static com.milaboratory.mixcr.trees.ClusteringCriteria.*;
 import static io.repseq.core.GeneFeature.CDR3;
 import static io.repseq.core.GeneType.Joining;
@@ -27,8 +27,10 @@ import static io.repseq.core.GeneType.Variable;
 import static io.repseq.core.ReferencePoint.CDR3Begin;
 import static io.repseq.core.ReferencePoint.CDR3End;
 
-//TODO use scores, not mutations count for calculating distances
 class ClusterProcessor {
+    //TODO to parameters
+    private final double threshold = 0.9;
+
     private final NucleotideSequence JSequence1;
     private final NucleotideSequence VSequence1;
     private final Cluster<CloneWrapper> originalCluster;
@@ -67,8 +69,8 @@ class ClusterProcessor {
                 .map(cloneWrapper -> new CloneWithMutationsFromVJGermline(
                         new MutationsFromVJGermline(
                                 getMutationsWithoutCDR3(cloneWrapper.clone, Variable),
-                                getMutationsWithoutCDR3(cloneWrapper.clone, Joining),
-                                cloneWrapper.clone.getNFeature(CDR3)
+                                cloneWrapper.clone.getNFeature(CDR3),
+                                getMutationsWithoutCDR3(cloneWrapper.clone, Joining)
                         ),
                         cloneWrapper
                 ))
@@ -81,8 +83,6 @@ class ClusterProcessor {
                     .map(cluster -> Pair.create(cluster, distanceToCluster(cloneDescriptor, cluster)))
                     .min(Comparator.comparing(Pair::getSecond));
 
-            //TODO to parameters
-            double threshold = 0.9;
             if (nearestCluster.isPresent() && nearestCluster.get().getSecond() < threshold) {
                 nearestCluster.get().getFirst().add(cloneDescriptor);
             } else {
@@ -100,7 +100,7 @@ class ClusterProcessor {
 
         return firstStepTrees.stream()
                 .map(treeWithMeta -> treeWithMeta.tree.map(node ->
-                        node.map(it -> it.cloneWrapper, this::buildAncestorInfo)
+                        node.map(it -> it.cloneWrapper, ClusterProcessor::buildAncestorInfo)
                 ))
                 .collect(Collectors.toList());
     }
@@ -114,37 +114,41 @@ class ClusterProcessor {
 
         NucleotideSequence vPartInCDR3 = findVPartInCDR3(cluster);
         NucleotideSequence jPartInCDR3 = findJPartInCDR3(cluster);
+        Range NDNRange = new Range(vPartInCDR3.size(), cluster.cluster.get(0).mutations.CDR3.size() - jPartInCDR3.size());
+        //TODO try to choose root by top clones and direction of mutations
+        NucleotideSequence NDN = cluster.cluster.get(0).mutations.CDR3.getRange(NDNRange);
         NucleotideSequence reconstructedCDR3 = NucleotideSequence.ALPHABET.createBuilder()
                 .append(vPartInCDR3)
-//                .append(cluster.cluster.get(0).mutations.CDR3.getRange(vPartInCDR3.size(), cluster.cluster.get(0).mutations.CDR3.size() - jPartInCDR3.size()))
+                .append(NDN)
                 .append(jPartInCDR3)
                 .createAndDestroy();
 
         List<CloneWithMutationsFromReconstructedRoot> rebasedCluster = rebaseByReconstructedRoot(cluster, reconstructedCDR3);
 
         MutationsDescription root = new MutationsDescription(
-                Lists.newArrayList(
-                        new MutationsWithRange(
-                                reconstructedCDR3,
-                                Mutations.empty(NucleotideSequence.ALPHABET),
-                                new Range(0, reconstructedCDR3.size())
-                        )
-                ),
                 overlap(rebasedCluster.stream()
                         .map(it -> it.mutations.VMutationsWithoutCDR3.stream()
                                 .map(MutationsWithRange::getSequence1Range)
                                 .collect(Collectors.toList())
                         ).collect(Collectors.toList())
                 ).stream()
-                        .map(it -> new MutationsWithRange(VSequence1, Mutations.EMPTY_NUCLEOTIDE_MUTATIONS, it))
+                        .map(it -> new MutationsWithRange(VSequence1, EMPTY_NUCLEOTIDE_MUTATIONS, EMPTY_NUCLEOTIDE_MUTATIONS, it))
                         .collect(Collectors.toList()),
+                Lists.newArrayList(
+                        new MutationsWithRange(
+                                reconstructedCDR3,
+                                EMPTY_NUCLEOTIDE_MUTATIONS,
+                                EMPTY_NUCLEOTIDE_MUTATIONS,
+                                new Range(0, reconstructedCDR3.size())
+                        )
+                ),
                 overlap(rebasedCluster.stream()
                         .map(it -> it.mutations.JMutationsWithoutCDR3.stream()
                                 .map(MutationsWithRange::getSequence1Range)
                                 .collect(Collectors.toList())
                         ).collect(Collectors.toList())
                 ).stream()
-                        .map(it -> new MutationsWithRange(JSequence1, Mutations.EMPTY_NUCLEOTIDE_MUTATIONS, it))
+                        .map(it -> new MutationsWithRange(JSequence1, EMPTY_NUCLEOTIDE_MUTATIONS, EMPTY_NUCLEOTIDE_MUTATIONS, it))
                         .collect(Collectors.toList())
         );
         TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, MutationsDescription, MutationsDescription> treeBuilderByAncestors = new TreeBuilderByAncestors<>(
@@ -168,8 +172,8 @@ class ClusterProcessor {
                 .map(clone -> new CloneWithMutationsFromReconstructedRoot(
                         new MutationsDescription(
                                 //TODO align only part
-                                mutations(reconstructedCDR3, clone.mutations.CDR3),
                                 clone.mutations.VMutationsWithoutCDR3,
+                                mutations(reconstructedCDR3, clone.mutations.CDR3),
                                 clone.mutations.JMutationsWithoutCDR3
                         ),
                         clone.cloneWrapper
@@ -189,56 +193,26 @@ class ClusterProcessor {
 
     private MutationsDescription mutationsBetween(MutationsDescription first, MutationsDescription second) {
         return new MutationsDescription(
-                mutationsBetween(first.CDR3Mutations, second.CDR3Mutations),
                 mutationsBetween(first.VMutationsWithoutCDR3, second.VMutationsWithoutCDR3),
+                mutationsBetween(first.CDR3Mutations, second.CDR3Mutations),
                 mutationsBetween(first.JMutationsWithoutCDR3, second.JMutationsWithoutCDR3)
         );
     }
 
     private MutationsDescription combineWith(MutationsDescription first, MutationsDescription second) {
         return new MutationsDescription(
-                combineWith(first.CDR3Mutations, second.CDR3Mutations),
                 combineWith(first.VMutationsWithoutCDR3, second.VMutationsWithoutCDR3),
+                combineWith(first.CDR3Mutations, second.CDR3Mutations),
                 combineWith(first.JMutationsWithoutCDR3, second.JMutationsWithoutCDR3)
         );
     }
 
     private MutationsDescription commonMutations(MutationsDescription first, MutationsDescription second) {
         return new MutationsDescription(
-                intersection(first.CDR3Mutations, second.CDR3Mutations),
                 intersection(first.VMutationsWithoutCDR3, second.VMutationsWithoutCDR3),
+                intersection(first.CDR3Mutations, second.CDR3Mutations),
                 intersection(first.JMutationsWithoutCDR3, second.JMutationsWithoutCDR3)
         );
-    }
-
-    //TODO it is more possible to decrease length of alignment than to increase. It is important on small trees
-    private NucleotideSequence findJPartInCDR3(Cluster<CloneWithMutationsFromVJGermline> cluster) {
-        return cluster.cluster.stream()
-                .map(clone -> clone.cloneWrapper.clone)
-                .map(clone -> {
-                    VDJCHit hit = clone.getBestHit(Joining);
-
-                    SequenceBuilder<NucleotideSequence> sequenceBuilder = NucleotideSequence.ALPHABET.createBuilder();
-
-                    int positionOfCDR3End = getRelativePosition(hit, CDR3End);
-
-                    for (int i = 0; i < hit.getAlignments().length; i++) {
-                        Alignment<NucleotideSequence> alignment = hit.getAlignment(i);
-                        if (alignment.getSequence1Range().contains(positionOfCDR3End)) {
-                            sequenceBuilder.append(alignment.getSequence1().getRange(alignment.getSequence1Range().getLower(), positionOfCDR3End));
-                            break;
-                        } else {
-                            sequenceBuilder.append(alignment.getSequence1().getRange(alignment.getSequence1Range()));
-                        }
-                    }
-
-                    return sequenceBuilder.createAndDestroy();
-                })
-                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
-                .entrySet().stream()
-                .max(Map.Entry.comparingByValue())
-                .map(Map.Entry::getKey)
-                .orElseThrow(IllegalStateException::new);
     }
 
     //TODO it is more possible to decrease length of alignment than to increase. It is important on small trees
@@ -273,6 +247,38 @@ class ClusterProcessor {
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
                 .entrySet().stream()
                 .max(Map.Entry.comparingByValue())
+//                .min(Comparator.comparing(it -> it.getKey().size()))
+                .map(Map.Entry::getKey)
+                .orElseThrow(IllegalStateException::new);
+    }
+
+    //TODO it is more possible to decrease length of alignment than to increase. It is important on small trees
+    private NucleotideSequence findJPartInCDR3(Cluster<CloneWithMutationsFromVJGermline> cluster) {
+        return cluster.cluster.stream()
+                .map(clone -> clone.cloneWrapper.clone)
+                .map(clone -> {
+                    VDJCHit hit = clone.getBestHit(Joining);
+
+                    SequenceBuilder<NucleotideSequence> sequenceBuilder = NucleotideSequence.ALPHABET.createBuilder();
+
+                    int positionOfCDR3End = getRelativePosition(hit, CDR3End);
+
+                    for (int i = 0; i < hit.getAlignments().length; i++) {
+                        Alignment<NucleotideSequence> alignment = hit.getAlignment(i);
+                        if (alignment.getSequence1Range().contains(positionOfCDR3End)) {
+                            sequenceBuilder.append(alignment.getSequence1().getRange(alignment.getSequence1Range().getLower(), positionOfCDR3End));
+                            break;
+                        } else {
+                            sequenceBuilder.append(alignment.getSequence1().getRange(alignment.getSequence1Range()));
+                        }
+                    }
+
+                    return sequenceBuilder.createAndDestroy();
+                })
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+                .entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+//                .min(Comparator.comparing(it -> it.getKey().size()))
                 .map(Map.Entry::getKey)
                 .orElseThrow(IllegalStateException::new);
     }
@@ -305,11 +311,9 @@ class ClusterProcessor {
                     Range intersection = base.getSequence1Range().intersection(comparison.getSequence1Range());
                     if (intersection != null) {
                         return Stream.of(new MutationsWithRange(
-                                base.getMutations().mutate(base.getSequence1()),
-                                MutationsUtils.difference(
-                                        base.getMutations().extractAbsoluteMutationsForRange(intersection),
-                                        comparison.getMutations().extractAbsoluteMutationsForRange(intersection)
-                                ),
+                                base.getSequence1(),
+                                base.getCombinedMutations(),
+                                MutationsUtils.difference(base.getCombinedMutations(), comparison.getCombinedMutations()),
                                 intersection
                         ));
                     } else {
@@ -326,7 +330,8 @@ class ClusterProcessor {
                     if (intersection != null) {
                         return Stream.of(new MutationsWithRange(
                                 base.getSequence1(),
-                                base.getMutations().combineWith(comparison.getMutations()),
+                                base.getCombinedMutations(),
+                                base.getCombinedMutations().invert().combineWith(comparison.getCombinedMutations()),
                                 intersection
                         ));
                     } else {
@@ -341,11 +346,15 @@ class ClusterProcessor {
                 .flatMap(base -> to.stream().flatMap(comparison -> {
                     Range intersection = base.getSequence1Range().intersection(comparison.getSequence1Range());
                     if (intersection != null) {
+                        if (!base.getFromBaseToParent().equals(comparison.getFromBaseToParent())) {
+                            throw new IllegalArgumentException();
+                        }
                         return Stream.of(new MutationsWithRange(
                                 base.getSequence1(),
+                                base.getFromBaseToParent(),
                                 MutationsUtils.intersection(
-                                        base.getMutations().extractAbsoluteMutationsForRange(intersection),
-                                        comparison.getMutations().extractAbsoluteMutationsForRange(intersection)
+                                        base.getFromParentToThis(),
+                                        comparison.getFromParentToThis()
                                 ),
                                 intersection
                         ));
@@ -402,22 +411,20 @@ class ClusterProcessor {
                 4 * Math.pow(params.distanceBetweenClonesInCDR3, 1.0) * Math.pow(params.minDistanceToGermline - 1, 6.0);
     }
 
-
-    private double maxScore(List<MutationsWithRange> vMutationsBetween) {
+    private static double maxScore(List<MutationsWithRange> vMutationsBetween) {
         return vMutationsBetween.stream()
                 .mapToDouble(mutations -> AlignmentUtils.calculateScore(
-                        mutations.getSequence1(),
-                        mutations.getSequence1Range(),
-                        Mutations.EMPTY_NUCLEOTIDE_MUTATIONS,
+                        mutations.getFromBaseToParent().mutate(mutations.getSequence1()),
+                        EMPTY_NUCLEOTIDE_MUTATIONS,
                         AffineGapAlignmentScoring.getNucleotideBLASTScoring()
                 ))
                 .sum();
     }
 
-    private double maxScore(NucleotideSequence sequence) {
+    private static double maxScore(NucleotideSequence sequence) {
         return AlignmentUtils.calculateScore(
                 sequence,
-                Mutations.EMPTY_NUCLEOTIDE_MUTATIONS,
+                EMPTY_NUCLEOTIDE_MUTATIONS,
                 AffineGapAlignmentScoring.getNucleotideBLASTScoring()
         );
     }
@@ -427,6 +434,7 @@ class ClusterProcessor {
         return Collections.singletonList(
                 new MutationsWithRange(
                         first,
+                        EMPTY_NUCLEOTIDE_MUTATIONS,
                         Aligner.alignGlobal(
                                 AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
                                 first,
@@ -438,15 +446,14 @@ class ClusterProcessor {
     }
 
     private static class MutationsFromVJGermline {
-        private final NucleotideSequence CDR3;
-
         private final List<MutationsWithRange> VMutationsWithoutCDR3;
+        private final NucleotideSequence CDR3;
         private final List<MutationsWithRange> JMutationsWithoutCDR3;
 
         private MutationsFromVJGermline(
                 List<MutationsWithRange> VMutationsWithoutCDR3,
-                List<MutationsWithRange> JMutationsWithoutCDR3,
-                NucleotideSequence CDR3
+                NucleotideSequence CDR3,
+                List<MutationsWithRange> JMutationsWithoutCDR3
         ) {
             this.VMutationsWithoutCDR3 = VMutationsWithoutCDR3;
             this.JMutationsWithoutCDR3 = JMutationsWithoutCDR3;
@@ -455,14 +462,13 @@ class ClusterProcessor {
     }
 
     private static class MutationsDescription {
-        private final List<MutationsWithRange> CDR3Mutations;
-
         private final List<MutationsWithRange> VMutationsWithoutCDR3;
+        private final List<MutationsWithRange> CDR3Mutations;
         private final List<MutationsWithRange> JMutationsWithoutCDR3;
 
         public MutationsDescription(
-                List<MutationsWithRange> CDR3Mutations,
                 List<MutationsWithRange> VMutationsWithoutCDR3,
+                List<MutationsWithRange> CDR3Mutations,
                 List<MutationsWithRange> JMutationsWithoutCDR3
         ) {
             this.CDR3Mutations = CDR3Mutations;
@@ -471,18 +477,18 @@ class ClusterProcessor {
         }
     }
 
-    private AncestorInfo buildAncestorInfo(MutationsDescription ancestor) {
+    private static AncestorInfo buildAncestorInfo(MutationsDescription ancestor) {
         SequenceBuilder<NucleotideSequence> builder = NucleotideSequence.ALPHABET.createBuilder();
-        ancestor.JMutationsWithoutCDR3.stream()
-                .map(this::buildSequence)
+        ancestor.VMutationsWithoutCDR3.stream()
+                .map(ClusterProcessor::buildSequence)
                 .forEach(builder::append);
         int CDR3Begin = builder.size();
         ancestor.CDR3Mutations.stream()
-                .map(this::buildSequence)
+                .map(ClusterProcessor::buildSequence)
                 .forEach(builder::append);
         int CDR3End = builder.size();
         ancestor.JMutationsWithoutCDR3.stream()
-                .map(this::buildSequence)
+                .map(ClusterProcessor::buildSequence)
                 .forEach(builder::append);
         return new AncestorInfo(
                 builder.createAndDestroy(),
@@ -491,8 +497,8 @@ class ClusterProcessor {
         );
     }
 
-    private NucleotideSequence buildSequence(MutationsWithRange mutation) {
-        return mutation.getMutations().mutate(mutation.getSequence1());
+    private static NucleotideSequence buildSequence(MutationsWithRange mutation) {
+        return mutation.getCombinedMutations().mutate(mutation.getSequence1()).getRange(mutation.getSequence1Range());
     }
 
     private static class TreeWithMeta {

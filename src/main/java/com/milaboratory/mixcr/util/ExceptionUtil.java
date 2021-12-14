@@ -29,7 +29,9 @@
  */
 package com.milaboratory.mixcr.util;
 
+import java.util.concurrent.Callable;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public final class ExceptionUtil {
     private ExceptionUtil() {
@@ -39,6 +41,16 @@ public final class ExceptionUtil {
         return t -> {
             try {
                 return body.apply(t);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        };
+    }
+
+    public static <R> Supplier<R> wrap(Callable<R> body) {
+        return () -> {
+            try {
+                return body.call();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

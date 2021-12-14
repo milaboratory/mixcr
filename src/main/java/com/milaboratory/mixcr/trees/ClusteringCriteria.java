@@ -42,7 +42,9 @@ public interface ClusteringCriteria {
 
     default Comparator<Clone> clusteringComparatorWithNumberOfMutations() {
         return clusteringComparator()
-                .thenComparing(Comparator.<Clone>comparingDouble(clone -> score(getMutationsWithoutCDR3(clone, GeneType.Variable)) + score(getMutationsWithoutCDR3(clone, GeneType.Joining))).reversed());
+                .thenComparing(Comparator.<Clone>comparingDouble(clone ->
+                        score(getMutationsWithoutCDR3(clone, GeneType.Variable)) + score(getMutationsWithoutCDR3(clone, GeneType.Joining))
+                ).reversed());
     }
 
     class DefaultClusteringCriteria implements ClusteringCriteria {
@@ -71,18 +73,11 @@ public interface ClusteringCriteria {
      */
     static double score(List<MutationsWithRange> mutationsWithRanges) {
         return mutationsWithRanges.stream()
-                .mapToDouble(mutations -> {
-                    try {
-                        return AlignmentUtils.calculateScore(
-                                mutations.getSequence1(),
-                                mutations.getSequence1Range(),
-                                mutations.getMutations(),
-                                AffineGapAlignmentScoring.getNucleotideBLASTScoring()
-                        );
-                    } catch (Exception e) {
-                        throw e;
-                    }
-                })
+                .mapToDouble(mutations -> AlignmentUtils.calculateScore(
+                        mutations.getFromBaseToParent().mutate(mutations.getSequence1()),
+                        mutations.getFromParentToThis(),
+                        AffineGapAlignmentScoring.getNucleotideBLASTScoring()
+                ))
                 .sum();
     }
 
@@ -98,6 +93,7 @@ public interface ClusteringCriteria {
                     return rangesWithoutCDR3.stream()
                             .map(range -> new MutationsWithRange(
                                     alignment.getSequence1(),
+                                    Mutations.EMPTY_NUCLEOTIDE_MUTATIONS,
                                     mutations.extractAbsoluteMutationsForRange(range),
                                     range
                             ));

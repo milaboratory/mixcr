@@ -155,19 +155,19 @@ public class TreeBuilderByAncestors<T, E, M> {
         M commonMutations = findCommonMutations.apply(mutationsToAdded, mutationsToSibling);
         BigDecimal distanceFromParentToCommon = distance.apply(commonMutations);
         //if distance is zero than there is no common mutations
-        if ((distanceFromParentToCommon.compareTo(BigDecimal.ZERO) == 0)) {
+        if (distanceFromParentToCommon.compareTo(BigDecimal.ZERO) == 0) {
             return null;
         }
 
         E commonAncestor = mutate.apply(parentContent.getContent(), commonMutations);
         BigDecimal distanceFromCommonAncestorToSibling = distance.apply(mutationsBetween.apply(commonAncestor, ((Reconstructed<T, E>) sibling.getContent()).getContent()));
         //if distance is zero than result of replacement equals to insertion
-        if (distanceFromCommonAncestorToSibling.equals(BigDecimal.ZERO)) {
+        if (distanceFromCommonAncestorToSibling.compareTo(BigDecimal.ZERO) == 0) {
             return null;
         }
         BigDecimal minDistanceFromObserved;
         //commonAncestor is equal to added node, so minDistanceFromObserved is 0
-        if (distance.apply(mutationsBetween.apply(commonAncestor, contentOfAdded)).equals(BigDecimal.ZERO)) {
+        if (distance.apply(mutationsBetween.apply(commonAncestor, contentOfAdded)).compareTo(BigDecimal.ZERO) == 0) {
             minDistanceFromObserved = BigDecimal.ZERO;
         } else {
             minDistanceFromObserved = parentContent.getMinDistanceFromObserved().add(distance.apply(commonMutations));
