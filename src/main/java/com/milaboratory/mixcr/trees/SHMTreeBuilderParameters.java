@@ -53,18 +53,25 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
      */
     public final boolean productiveOnly;
 
+    /**
+     * Parameter that defines sensitivity of clusterisation
+     */
+    public final double maxDistanceWithinCluster;
+
     @JsonCreator
     public SHMTreeBuilderParameters(
             @JsonProperty("targetRegion") GeneFeature targetRegion,
-            @JsonProperty("productiveOnly") boolean productiveOnly
+            @JsonProperty("productiveOnly") boolean productiveOnly,
+            @JsonProperty("maxDistanceWithinCluster") double maxDistanceWithinCluster
     ) {
         this.targetRegion = targetRegion;
         this.productiveOnly = productiveOnly;
+        this.maxDistanceWithinCluster = maxDistanceWithinCluster;
     }
 
     @Override
     public SHMTreeBuilderParameters clone() {
-        return new SHMTreeBuilderParameters(targetRegion, productiveOnly);
+        return new SHMTreeBuilderParameters(targetRegion, productiveOnly, maxDistanceWithinCluster);
     }
 
     @Override
@@ -72,11 +79,11 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SHMTreeBuilderParameters that = (SHMTreeBuilderParameters) o;
-        return productiveOnly == that.productiveOnly;
+        return productiveOnly == that.productiveOnly && Double.compare(that.maxDistanceWithinCluster, maxDistanceWithinCluster) == 0 && Objects.equals(targetRegion, that.targetRegion);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(productiveOnly);
+        return Objects.hash(targetRegion, productiveOnly, maxDistanceWithinCluster);
     }
 }

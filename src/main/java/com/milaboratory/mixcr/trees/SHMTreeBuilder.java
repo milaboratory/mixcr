@@ -157,6 +157,6 @@ public class SHMTreeBuilder {
     }
 
     public Collection<Tree<ObservedOrReconstructed<CloneWrapper, AncestorInfo>>> processCluster(Cluster<CloneWrapper> clusterBySameVAndJ) {
-        return new ClusterProcessor(clusterBySameVAndJ).buildTrees();
+        return new ClusterProcessor(parameters, clusterBySameVAndJ).buildTrees();
     }
 }

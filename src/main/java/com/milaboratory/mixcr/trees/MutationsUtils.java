@@ -1,5 +1,6 @@
 package com.milaboratory.mixcr.trees;
 
+import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Aligner;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
 import com.milaboratory.core.mutations.Mutation;
@@ -19,6 +20,34 @@ import static com.milaboratory.core.sequence.NucleotideAlphabet.N;
 final class MutationsUtils {
     private MutationsUtils() {
     }
+
+    /**
+     * Mutate and get result by range in original sequence
+     */
+    public static NucleotideSequence buildSequence(NucleotideSequence sequence1, Mutations<NucleotideSequence> mutations, Range sequence1Range, boolean includeLastInsertions) {
+        return mutations.mutate(sequence1)
+                .getRange(projectRange(mutations, sequence1Range, includeLastInsertions));
+    }
+
+    public static Range projectRange(Mutations<NucleotideSequence> mutations, Range sequence1Range, boolean includeLastInsertions) {
+        //for including inclusions before position one must step left before conversion and step right after
+        int from = positionIfNucleotideWasDeleted(mutations.convertToSeq2Position(sequence1Range.getLower() - 1)) + 1;
+        int to;
+        if (includeLastInsertions) {
+            to = positionIfNucleotideWasDeleted(mutations.convertToSeq2Position(sequence1Range.getUpper()));
+        } else {
+            to = positionIfNucleotideWasDeleted(mutations.convertToSeq2Position(sequence1Range.getUpper() - 1)) + 1;
+        }
+        return new Range(from, to);
+    }
+
+    private static int positionIfNucleotideWasDeleted(int position) {
+        if (position < -1) {
+            return Math.abs(position + 2);
+        }
+        return position;
+    }
+
 
     public static Mutations<NucleotideSequence> intersection(Mutations<NucleotideSequence> first, Mutations<NucleotideSequence> second) {
         return simpleIntersection(

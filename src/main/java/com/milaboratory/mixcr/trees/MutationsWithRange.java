@@ -10,18 +10,25 @@ public class MutationsWithRange {
     private final Mutations<NucleotideSequence> fromParentToThis;
     private final Mutations<NucleotideSequence> combinedMutations;
     private final Range sequence1Range;
+    private final boolean includeLastInserts;
 
     public MutationsWithRange(
             NucleotideSequence sequence1,
             Mutations<NucleotideSequence> fromBaseToParent,
             Mutations<NucleotideSequence> fromParentToThis,
-            Range sequence1Range
+            Range sequence1Range,
+            boolean includeLastInserts
     ) {
         this.sequence1 = sequence1;
         this.fromBaseToParent = fromBaseToParent;
         this.fromParentToThis = fromParentToThis;
         this.sequence1Range = sequence1Range;
-        this.combinedMutations = fromBaseToParent.combineWith(fromParentToThis);
+        this.combinedMutations = this.fromBaseToParent.combineWith(this.fromParentToThis);
+        this.includeLastInserts = includeLastInserts;
+    }
+
+    public boolean isIncludeLastInserts() {
+        return includeLastInserts;
     }
 
     public NucleotideSequence getSequence1() {

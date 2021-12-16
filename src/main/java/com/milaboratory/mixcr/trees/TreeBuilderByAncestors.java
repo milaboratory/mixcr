@@ -17,6 +17,7 @@ public class TreeBuilderByAncestors<T, E, M> {
     private final BiFunction<M, M, M> findCommonMutations;
 
     private final Tree<ObservedOrReconstructed<T, E>> tree;
+    private int nodesCount = 0;
 
     public TreeBuilderByAncestors(
             E root,
@@ -34,6 +35,10 @@ public class TreeBuilderByAncestors<T, E, M> {
         tree = new Tree<>(new Tree.Node<>(new Reconstructed<>(root, BigDecimal.ZERO)));
     }
 
+    public int getNodesCount() {
+        return nodesCount;
+    }
+
     /**
      * Assumptions:
      * 1. Nodes must be added in order by distance from the root
@@ -48,6 +53,7 @@ public class TreeBuilderByAncestors<T, E, M> {
      * 5. Siblings have no common ancestors.
      */
     public TreeBuilderByAncestors<T, E, M> addNode(T toAdd) {
+        nodesCount++;
         E contentAsAncestor = asAncestor.apply(toAdd);
         List<Tree.Node<ObservedOrReconstructed<T, E>>> nearestNodes = tree.allNodes()
                 .filter(it -> it.getContent() instanceof Reconstructed<?, ?>)

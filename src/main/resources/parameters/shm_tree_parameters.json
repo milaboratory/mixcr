@@ -1,5 +1,6 @@
 {
   "default": {
-    "productiveOnly": true
+    "productiveOnly": true,
+    "maxDistanceWithinCluster": 0.9
   }
 }

@@ -395,7 +395,7 @@ public class MutationOperationsTest {
         }
     }
 
-    private NucleotideSequence mutate(NucleotideSequence parent, Random random) {
+    static NucleotideSequence mutate(NucleotideSequence parent, Random random) {
         MutationsBuilder<NucleotideSequence> result = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
 
         byte[] parentChars = parent.getSequence().asArray();

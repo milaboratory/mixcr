@@ -335,8 +335,11 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                         System.out.println(String.join("\n", mutations));
                         System.out.println("\n");
 
-                        Predicate<Clone> clonesForComparisonFilter = it -> clonesDefinitelyInTree.contains(it.getId());
+                        Predicate<Clone> clonesForComparisonFilter = it -> true;
                         boolean skipMismatch = false;
+
+                        Range VRangeInCDR3 = minVRangeInCDR3(cluster);
+                        Range JRangeInCDR3 = minJRangeInCDR3(cluster);
 
                         List<Pair<Clone, Pair<Pair<FitnessFunctionParams, Clone>, List<Integer>>>> cloneComparisonParams = cluster.cluster.stream()
                                 .map(cw -> cw.clone)
@@ -345,7 +348,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                                                     .map(cw -> cw.clone)
                                                     .filter(clonesForComparisonFilter)
                                                     .filter(compareWith -> compareWith.getId() != clone.getId())
-                                                    .map(compareWith -> Pair.create(fitnessFunctionParams(clone, compareWith), compareWith))
+                                                    .map(compareWith -> Pair.create(fitnessFunctionParams(clone, compareWith, VRangeInCDR3, JRangeInCDR3), compareWith))
 //                                                    .filter(it -> fitnessFunction(it.getFirst()) > 0.0)
                                                     .min(Comparator.comparing(it -> fitnessFunction(it.getFirst()))).orElseThrow(IllegalArgumentException::new);
 
@@ -382,9 +385,13 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                             if (clonesMaybeInTree.contains(clone.getId()) || clonesMaybeInTree.contains(compareWith.getId())) {
                                 match = "?";
                             } else if (clonesDefinitelyInTree.contains(clone.getId()) && clonesDefinitelyInTree.contains(compareWith.getId())) {
-                                match = "true";
+                                match = "true  in ";
                             } else if (!clonesDefinitelyInTree.contains(clone.getId()) && !clonesDefinitelyInTree.contains(compareWith.getId())) {
-                                match = "true";
+                                match = "true  out";
+                            } else if (clonesDefinitelyInTree.contains(clone.getId()) && !clonesDefinitelyInTree.contains(compareWith.getId())) {
+                                match = "false out";
+                            } else if (!clonesDefinitelyInTree.contains(clone.getId()) && clonesDefinitelyInTree.contains(compareWith.getId())) {
+                                match = "false in ";
                             } else {
                                 match = "false";
                             }
@@ -393,7 +400,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                                 continue;
                             }
 
-                            String format = String.format("%3d|%6d|%6d|%5s|%6d%s(%.5f)|  %2d|%2d|%2d|  %2d|%2d|%2d|  %2d|  %.5f|%.5f|%.5f|%.5f|  %.5f|%.5f|%.5f",
+                            String format = String.format("%3d|%6d|%6d|%9s|%6d%s(%.5f)|  %2d|%2d|%2d|  %2d|%2d|%2d|  %2d|  %.5f|%.5f|%.5f|%.5f|  %.5f|%.5f|%.5f",
                                     i,
                                     clone.getId(),
                                     compareWith.getId(),
@@ -490,7 +497,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                                 .map(clone -> String.format("%6d |", clone.getId()) + cluster.cluster.stream()
                                         .map(cw -> cw.clone)
                                         .map(compareWith -> {
-                                            FitnessFunctionParams fitnessFunctionParams = fitnessFunctionParams(clone, compareWith);
+                                            FitnessFunctionParams fitnessFunctionParams = fitnessFunctionParams(clone, compareWith, VRangeInCDR3, JRangeInCDR3);
                                             return String.format(" %.2f|%.2f|%.2f ",
                                                     fitnessFunctionParams.minDistanceToGermline * 20,
                                                     fitnessFunctionParams.distanceBetweenClones * 10,
@@ -515,7 +522,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                                 .map(clone -> {
                                             List<Double> calculatedFormula = cluster.cluster.stream()
                                                     .map(cw -> cw.clone)
-                                                    .map(compareWith -> fitnessFunction(fitnessFunctionParams(clone, compareWith)))
+                                                    .map(compareWith -> fitnessFunction(fitnessFunctionParams(clone, compareWith, VRangeInCDR3, JRangeInCDR3)))
                                                     .collect(Collectors.toList());
                                             return String.format("%6d|%.5f|%s",
                                                     clone.getId(),
@@ -533,7 +540,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                                 .map(clone -> {
                                             List<Double> calculatedFormula = cluster.cluster.stream()
                                                     .map(cw -> cw.clone)
-                                                    .map(compareWith -> fitnessFunction(fitnessFunctionParams(clone, compareWith)))
+                                                    .map(compareWith -> fitnessFunction(fitnessFunctionParams(clone, compareWith, VRangeInCDR3, JRangeInCDR3)))
                                                     .collect(Collectors.toList());
                                             return String.format("%6d|%.5f|%s",
                                                     clone.getId(),
@@ -556,6 +563,17 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                             .stream()
                             .sorted(Comparator.<Tree<ObservedOrReconstructed<CloneWrapper, AncestorInfo>>>comparingLong(tree -> tree.allNodes().count()).reversed())
                             .collect(Collectors.toList());
+
+                    for (Tree<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> tree : trees) {
+                        tree.allNodes().forEach(node -> {
+                            Optional<Clone> clone = node.getContent().convert(it -> Optional.of(it.clone), it -> Optional.empty());
+                            if (clone.isPresent() && node.getParent() != null) {
+                                if (!getSequence(node.getParent().getContent()).equals(clone.get().getTarget(0).getSequence())) {
+                                    throw new IllegalStateException();
+                                }
+                            }
+                        });
+                    }
 
                     System.out.println(trees.stream().map(idPrinter::print).collect(Collectors.joining("\n")));
                     System.out.println("\n");
@@ -752,6 +770,29 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                     System.out.println("not in trees: " + clonesNotInTreesCount);
                     System.out.println();
 
+                    Set<Integer> clonesInBaseTree = trees.get(0).allNodes()
+                            .map(node -> node.getContent().convert(it -> Optional.of(it.clone.getId()), it -> Optional.<Integer>empty()))
+                            .flatMap(Java9Util::stream)
+                            .collect(Collectors.toSet());
+
+                    List<Integer> falsePositive = clonesInBaseTree.stream()
+                            .filter(it -> !clonesDefinitelyInTree.contains(it) && !clonesMaybeInTree.contains(it))
+                            .collect(Collectors.toList());
+
+                    List<Integer> truePositive = clonesInBaseTree.stream()
+                            .filter(clonesDefinitelyInTree::contains)
+                            .collect(Collectors.toList());
+
+                    List<Integer> falseNegative = clonesDefinitelyInTree.stream()
+                            .filter(it -> !clonesInBaseTree.contains(it))
+                            .collect(Collectors.toList());
+
+                    System.out.println("statistic:");
+                    System.out.println("FP: " + falsePositive.size() + " FN: " + falseNegative.size() + " TP: " + truePositive.size());
+                    System.out.println();
+                    System.out.println("FP: " + falsePositive);
+                    System.out.println("FN: " + falseNegative);
+
                     System.out.println("ids:");
                     System.out.println();
                     System.out.println(cluster.cluster.stream().map(it -> String.valueOf(it.clone.getId())).collect(Collectors.joining("|")));
@@ -760,6 +801,40 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                 }
             }
         }
+    }
+
+    private Range minVRangeInCDR3(Cluster<CloneWrapper> cluster) {
+        return cluster.cluster.stream()
+                .map(clone -> clone.clone)
+                .map(this::VRangeInCDR3)
+                .min(Comparator.comparing(Range::length))
+                .orElseThrow(IllegalStateException::new);
+    }
+
+    private Range minJRangeInCDR3(Cluster<CloneWrapper> cluster) {
+        return cluster.cluster.stream()
+                .map(clone -> clone.clone)
+                .map(this::JRangeInCDR3)
+                .min(Comparator.comparing(Range::length))
+                .orElseThrow(IllegalStateException::new);
+    }
+
+    private Range VRangeInCDR3(Clone clone) {
+        VDJCHit bestHit = clone.getBestHit(Variable);
+        int positionOfCDR3Begin = bestHit.getGene().getPartitioning().getRelativePosition(bestHit.getAlignedFeature(), CDR3Begin);
+        return new Range(
+                positionOfCDR3Begin,
+                positionOfCDR3Begin + clone.getNFeature(new GeneFeature(CDR3Begin, VEndTrimmed)).size()
+        );
+    }
+
+    private Range JRangeInCDR3(Clone clone) {
+        VDJCHit bestHit = clone.getBestHit(Joining);
+        int positionOfCDR3End = bestHit.getGene().getPartitioning().getRelativePosition(bestHit.getAlignedFeature(), CDR3End);
+        return new Range(
+                positionOfCDR3End - clone.getNFeature(new GeneFeature(JBeginTrimmed, CDR3End)).size(),
+                positionOfCDR3End
+        );
     }
 
     private NucleotideSequence getSequence(ObservedOrReconstructed<CloneWrapper, AncestorInfo> content) {
@@ -864,20 +939,30 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
         return 4 * Math.pow(params.distanceBetweenClonesInCDR3, 1.0) * Math.pow(params.minDistanceToGermline - 1, 6.0);
     }
 
-    private FitnessFunctionParams fitnessFunctionParams(Clone first, Clone second) {
+    private FitnessFunctionParams fitnessFunctionParams(Clone first, Clone second, Range VRangeInCDR3, Range JRangeInCDR3) {
         List<MutationsWithRange> VMutationsOfFirst = getMutationsWithoutCDR3(first, Variable);
+        VMutationsOfFirst.add(VMutationsInCDR3(first, VRangeInCDR3));
         List<MutationsWithRange> VMutationsOfSecond = getMutationsWithoutCDR3(second, Variable);
+        VMutationsOfSecond.add(VMutationsInCDR3(second, VRangeInCDR3));
 
         List<MutationsWithRange> VMutationsBetween = mutationsBetween(VMutationsOfFirst, VMutationsOfSecond);
         double VMutationsBetweenScore = score(VMutationsBetween);
 
         List<MutationsWithRange> JMutationsOfFirst = getMutationsWithoutCDR3(first, Joining);
+        JMutationsOfFirst.add(JMutationsInCDR3(first, JRangeInCDR3));
         List<MutationsWithRange> JMutationsOfSecond = getMutationsWithoutCDR3(second, Joining);
+        JMutationsOfSecond.add(JMutationsInCDR3(second, JRangeInCDR3));
 
         List<MutationsWithRange> JMutationsBetween = mutationsBetween(JMutationsOfFirst, JMutationsOfSecond);
         double JMutationsBetweenScore = score(JMutationsBetween);
 
-        double CDR3MutationsBetweenScore = alignmentOfCDR3(first, second).getScore();
+        NucleotideSequence CDR3OfFirst = first.getNFeature(CDR3);
+        NucleotideSequence CDR3OfSecond = second.getNFeature(CDR3);
+        double CDR3MutationsBetweenScore = Aligner.alignGlobal(
+                AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
+                CDR3OfFirst.getRange(VRangeInCDR3.length(), CDR3OfFirst.size() - JRangeInCDR3.length()),
+                CDR3OfSecond.getRange(VRangeInCDR3.length(), CDR3OfSecond.size() - JRangeInCDR3.length())
+        ).getScore();
 
         double maxScoreForFirstVJ = maxScore(VMutationsOfFirst) + maxScore(JMutationsOfFirst);
         double maxScoreForSecondVJ = maxScore(VMutationsOfSecond) + maxScore(JMutationsOfSecond);
@@ -899,6 +984,45 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                 normalizedDistanceBetweenClones,
                 normalizedDistanceBetweenClonesWithoutCDR3,
                 Math.min(normalizedDistanceFromFirstToGermline, normalizedDistanceFromSecondToGermline)
+        );
+    }
+
+    private MutationsWithRange VMutationsInCDR3(Clone clone, Range VRangeInCDR3) {
+        NucleotideSequence VSequence1 = clone.getBestHit(Variable).getAlignment(0).getSequence1();
+        return new MutationsWithRange(
+                VSequence1,
+                Mutations.EMPTY_NUCLEOTIDE_MUTATIONS,
+                Aligner.alignGlobal(
+                        AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
+                        VSequence1,
+                        clone.getNFeature(CDR3),
+                        VRangeInCDR3.getLower(),
+                        VRangeInCDR3.length(),
+                        0,
+                        VRangeInCDR3.length()
+                ).getAbsoluteMutations(),
+                VRangeInCDR3,
+                true
+        );
+    }
+
+    private MutationsWithRange JMutationsInCDR3(Clone clone, Range JRangeInCDR3) {
+        NucleotideSequence JSequence1 = clone.getBestHit(Joining).getAlignment(0).getSequence1();
+        NucleotideSequence CDR3 = clone.getNFeature(GeneFeature.CDR3);
+        return new MutationsWithRange(
+                JSequence1,
+                Mutations.EMPTY_NUCLEOTIDE_MUTATIONS,
+                Aligner.alignGlobal(
+                        AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
+                        JSequence1,
+                        CDR3,
+                        JRangeInCDR3.getLower(),
+                        JRangeInCDR3.length(),
+                        CDR3.size() - JRangeInCDR3.length(),
+                        JRangeInCDR3.length()
+                ).getAbsoluteMutations(),
+                JRangeInCDR3,
+                true
         );
     }
 
@@ -961,12 +1085,13 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
         return firstMutations.stream()
                 .flatMap(base -> secondMutations.stream().flatMap(comparison -> {
                     Range intersection = base.getSequence1Range().intersection(comparison.getSequence1Range());
-                    if (!intersection.isEmpty()) {
+                    if (intersection != null) {
                         return Stream.of(new MutationsWithRange(
                                 base.getSequence1(),
                                 base.getCombinedMutations(),
                                 base.getCombinedMutations().invert().combineWith(comparison.getCombinedMutations()),
-                                intersection
+                                intersection,
+                                true
                         ));
                     } else {
                         return Stream.empty();

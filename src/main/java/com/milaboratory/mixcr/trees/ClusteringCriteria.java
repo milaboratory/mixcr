@@ -18,6 +18,7 @@ import java.util.Objects;
 import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static io.repseq.core.ReferencePoint.CDR3Begin;
 import static io.repseq.core.ReferencePoint.CDR3End;
@@ -94,13 +95,20 @@ public interface ClusteringCriteria {
                     Range CDR3Range = CDR3Sequence1Range(bestHit, index);
                     Mutations<NucleotideSequence> mutations = alignment.getAbsoluteMutations();
                     List<Range> rangesWithoutCDR3 = alignment.getSequence1Range().without(CDR3Range);
-                    return rangesWithoutCDR3.stream()
-                            .map(range -> new MutationsWithRange(
-                                    alignment.getSequence1(),
-                                    Mutations.EMPTY_NUCLEOTIDE_MUTATIONS,
-                                    mutations.extractAbsoluteMutationsForRange(range),
-                                    range
-                            ));
+                    if (rangesWithoutCDR3.size() > 0) {
+                        if (rangesWithoutCDR3.size() > 1) {
+                            throw new IllegalStateException();
+                        }
+                        return Stream.of(new MutationsWithRange(
+                                alignment.getSequence1(),
+                                Mutations.EMPTY_NUCLEOTIDE_MUTATIONS,
+                                mutations,
+                                rangesWithoutCDR3.get(0),
+                                true
+                        ));
+                    } else {
+                        return Stream.empty();
+                    }
                 })
                 .collect(Collectors.toList());
     }
