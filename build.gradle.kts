@@ -69,6 +69,7 @@ val repseqioVersion = "1.3.5-4-f7170dd23b"
 val jacksonVersion = "2.12.4"
 val letsPlotLibraryVersion = "2.1.0"
 val letsPlotKotlinApiVersion = "3.0.3-alpha1"
+val dataframeVersion = "0.8.0-dev-777-0.11.0.39"
 
 dependencies {
     api("com.milaboratory:milib:$milibVersion")
@@ -94,7 +95,7 @@ dependencies {
     implementation("org.apache.pdfbox:pdfbox:2.0.21")
 
     implementation("org.apache.commons:commons-csv:1.9.0")
-    implementation("org.jetbrains.kotlinx:dataframe:0.8.0-dev-339-0.10.0.260")
+    implementation("org.jetbrains.kotlinx:dataframe:$dataframeVersion")
     implementation("org.jetbrains.lets-plot:lets-plot-common:$letsPlotLibraryVersion")
     implementation("org.jetbrains.lets-plot:lets-plot-kotlin-jvm:$letsPlotKotlinApiVersion")
 }

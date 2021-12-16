@@ -14,9 +14,12 @@ import jetbrains.letsPlot.intern.toSpec
 import jetbrains.letsPlot.label.ggtitle
 import jetbrains.letsPlot.label.labs
 import jetbrains.letsPlot.scale.scaleXDiscrete
-import org.jetbrains.dataframe.*
-import org.jetbrains.dataframe.annotations.DataSchema
-import org.jetbrains.dataframe.columns.DataColumn
+import org.jetbrains.kotlinx.dataframe.DataColumn
+import org.jetbrains.kotlinx.dataframe.DataFrame
+import org.jetbrains.kotlinx.dataframe.DataRow
+import org.jetbrains.kotlinx.dataframe.annotations.DataSchema
+import org.jetbrains.kotlinx.dataframe.api.*
+import org.jetbrains.kotlinx.dataframe.column
 import java.nio.file.Path
 
 /**
@@ -98,7 +101,7 @@ object SingleSpectratype {
             }
         }
 
-        return data.toDataFrame().typed()
+        return data.toDataFrame().cast()
     }
 
     /**
@@ -158,10 +161,11 @@ object SingleSpectratype {
         val max = df.length.max() ?: 0
 
         // add auxiliary points for each cdr3 length
-        df += (min..max)
-            .map { SpectratypeRowImp(sample, it, 0.0, OtherPayload) }
-            .toDataFrameByProperties()
-            .typed()
+        df = df.concat(
+            (min..max)
+                .map { SpectratypeRowImp(sample, it, 0.0, OtherPayload) }
+                .toDataFrame()
+        )
 
         // collapse all "Other" into a single row
         df = df
@@ -174,7 +178,7 @@ object SingleSpectratype {
         df = df.sortByDesc(SpectratypeRow.weight)
 
         if (settings.normalize)
-            df[SpectratypeRow::weight.name] = df.weight / df.weight.sum()
+            df.add(SpectratypeRow::weight.name) { df.weight / df.weight.sum() }
 
         // plot
         var plt = letsPlot(df.toMap()) + geomBar(

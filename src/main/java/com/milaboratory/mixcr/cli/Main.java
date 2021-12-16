@@ -192,6 +192,11 @@ public final class Main {
                 .addSubcommand("individual", CommandSpec.forAnnotatedObject(CommandPostanalysis.CommandIndividual.class))
                 .addSubcommand("overlap", CommandSpec.forAnnotatedObject(CommandPostanalysis.CommandOverlap.class));
 
+        cmd.getSubcommands()
+                .get("exportPostanalysis")
+                .addSubcommand("diversity", CommandSpec.forAnnotatedObject(CommandExportPostanalysis.ExportBoxPlots.class))
+                .addSubcommand("tables", CommandSpec.forAnnotatedObject(CommandExportPostanalysis.ExportTables.class));
+
         cmd.setSeparator(" ");
         return cmd;
     }

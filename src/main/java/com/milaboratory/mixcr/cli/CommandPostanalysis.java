@@ -4,6 +4,8 @@ import cc.redberry.pipe.OutputPortCloseable;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.postanalysis.*;
 import com.milaboratory.mixcr.postanalysis.additive.AAProperties;
@@ -138,10 +140,12 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
     public static final class PaResult {
         /** Results for individual chains */
         @JsonProperty("results")
-        public final Map<String, PaResultByChain> results;
+        @JsonSerialize(keyUsing = KnownChainsKeySerializer.class)
+        @JsonDeserialize(keyUsing = KnownChainsKeyDeserializer.class)
+        public final Map<NamedChains, PaResultByChain> results;
 
         @JsonCreator
-        public PaResult(@JsonProperty("results") Map<String, PaResultByChain> results) {
+        public PaResult(@JsonProperty("results") Map<NamedChains, PaResultByChain> results) {
             this.results = results;
         }
     }
@@ -166,19 +170,12 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
 
     @Override
     public void run0() throws Exception {
-        Map<String, PaResultByChain> resultsMap = new HashMap<>();
+        Map<NamedChains, PaResultByChain> resultsMap = new HashMap<>();
         Chains c = Chains.parse(chains);
-        if (c.intersects(TRAD))
-            resultsMap.put(TRAD_NAMED.name, run(TRAD));
-        if (c.intersects(TRG))
-            resultsMap.put(TRG_NAMED.name, run(TRG));
-        if (c.intersects(Chains.TRB))
-            resultsMap.put(TRB_NAMED.name, run(TRB));
-        if (c.intersects(Chains.IGH))
-            resultsMap.put(IGH_NAMED.name, run(Chains.IGH));
-        if (c.intersects(Chains.IGKL))
-            resultsMap.put(IGKL_NAMED.name, run(Chains.IGKL));
-
+        for (NamedChains knownChains : WELL_KNOWN_CHAINS) {
+            if (c.intersects(knownChains.chains))
+                resultsMap.put(knownChains, run(knownChains.chains));
+        }
         PaResult result = new PaResult(resultsMap);
         try {
             GlobalObjectMappers.PRETTY.writeValue(new File(outputFile()), result);
@@ -190,6 +187,17 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
     abstract PaResultByChain run(Chains chain);
 
     ///////////////////////////////////////////// Individual /////////////////////////////////////////////
+
+    static final String
+            Biophysics = "biophysics",
+            Diversity = "diversity",
+            VUsage = "vUsage",
+            JUsage = "JUsage",
+            VJUsage = "VJUsage",
+            IsotypeUsage = "IsotypeUsage",
+            CDR3Spectratype = "CDR3Spectratype",
+            VSpectratype = "VSpectratype",
+            VSpectratypeMean = "VSpectratypeMean";
 
     @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
     @CommandLine.Command(name = "individual",
@@ -207,8 +215,7 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
             SetPreprocessorFactory<Clone> downsampling = downsampling()
                     .filterFirst(new ElementPredicate.IncludeChains(chain));
 
-            groups.add(new CharacteristicGroup<>(
-                    "cdr3Properties",
+            groups.add(new CharacteristicGroup<>(Biophysics,
                     Arrays.asList(
                             weightedLengthOf(downsampling, GeneFeature.CDR3, false).setName("CDR3 length, nt"),
                             weightedLengthOf(downsampling, GeneFeature.CDR3, true).setName("CDR3 length, aa"),
@@ -223,9 +230,8 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
                     Arrays.asList(new GroupSummary<>())
             ));
 
-            groups.add(new CharacteristicGroup<>(
-                    "diversity",
-                    Arrays.asList(new DiversityCharacteristic<>("diversity", new WeightFunctions.Count(),
+            groups.add(new CharacteristicGroup<>(Diversity,
+                    Arrays.asList(new DiversityCharacteristic<>("Diversity", new WeightFunctions.Count(),
                             downsampling,
                             new DiversityMeasure[]{
                                     DiversityMeasure.Observed,
@@ -238,42 +244,35 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
                     Arrays.asList(new GroupSummary<>())
             ));
 
-            groups.add(new CharacteristicGroup<>(
-                    "vUsage",
+            groups.add(new CharacteristicGroup<>(VUsage,
                     Arrays.asList(AdditiveCharacteristics.segmentUsage(downsampling, GeneType.Variable)),
                     Arrays.asList(new GroupSummary<>())
             ));
-            groups.add(new CharacteristicGroup<>(
-                    "jUsage",
+            groups.add(new CharacteristicGroup<>(JUsage,
                     Arrays.asList(AdditiveCharacteristics.segmentUsage(downsampling, GeneType.Joining)),
                     Arrays.asList(new GroupSummary<>())
             ));
-            groups.add(new CharacteristicGroup<>(
-                    "vjUsage",
+            groups.add(new CharacteristicGroup<>(VJUsage,
                     Arrays.asList(AdditiveCharacteristics.vjSegmentUsage(downsampling)),
                     Arrays.asList(new GroupSummary<>(), new GroupMelt.VJUsageMelt<>())
             ));
 
-            groups.add(new CharacteristicGroup<>(
-                    "isotypeUsage",
+            groups.add(new CharacteristicGroup<>(IsotypeUsage,
                     Arrays.asList(AdditiveCharacteristics.isotypeUsage(downsampling)),
                     Arrays.asList(new GroupSummary<>())
             ));
 
-            groups.add(new CharacteristicGroup<>(
-                    "cdr3Spectratype",
-                    Arrays.asList(new SpectratypeCharacteristic("cdr3Spectratype",
+            groups.add(new CharacteristicGroup<>(CDR3Spectratype,
+                    Arrays.asList(new SpectratypeCharacteristic("CDR3 spectratype",
                             downsampling, 10,
                             new SpectratypeKeyFunction<>(new KeyFunctions.AAFeature(GeneFeature.CDR3), GeneFeature.CDR3, false))),
                     Collections.singletonList(new GroupSummary<>())));
 
-            groups.add(new CharacteristicGroup<>(
-                    "VSpectratype",
+            groups.add(new CharacteristicGroup<>(VSpectratype,
                     Arrays.asList(AdditiveCharacteristics.VSpectratype(downsampling)),
                     Collections.singletonList(new GroupSummary<>())));
 
-            groups.add(new CharacteristicGroup<>(
-                    "VSpectratypeMean",
+            groups.add(new CharacteristicGroup<>(VSpectratypeMean,
                     Arrays.asList(AdditiveCharacteristics.VSpectratypeMean(downsampling)),
                     Collections.singletonList(new GroupSummary<>())));
 

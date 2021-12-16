@@ -3,7 +3,6 @@ package com.milaboratory.mixcr.postanalysis.dataframe
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult
 import com.milaboratory.mixcr.postanalysis.dataframe.GeneUsageRow.Companion.gene
 import com.milaboratory.mixcr.postanalysis.dataframe.GeneUsageRow.Companion.sample
-import com.milaboratory.mixcr.postanalysis.dataframe.GeneUsageRow.Companion.weight
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisSchema
 import jetbrains.datalore.plot.PlotSvgExport
 import jetbrains.letsPlot.coordCartesian
@@ -16,10 +15,15 @@ import jetbrains.letsPlot.scale.scaleSizeIdentity
 import jetbrains.letsPlot.scale.scaleXDiscrete
 import jetbrains.letsPlot.scale.scaleYDiscrete
 import jetbrains.letsPlot.theme
-import org.jetbrains.dataframe.*
-import org.jetbrains.dataframe.annotations.DataSchema
-import org.jetbrains.dataframe.columns.DataColumn
-import org.jetbrains.dataframe.io.writeCSV
+import org.jetbrains.kotlinx.dataframe.DataColumn
+import org.jetbrains.kotlinx.dataframe.DataFrame
+import org.jetbrains.kotlinx.dataframe.DataRow
+import org.jetbrains.kotlinx.dataframe.annotations.DataSchema
+import org.jetbrains.kotlinx.dataframe.api.cast
+import org.jetbrains.kotlinx.dataframe.api.toDataFrame
+import org.jetbrains.kotlinx.dataframe.api.toMap
+import org.jetbrains.kotlinx.dataframe.column
+import org.jetbrains.kotlinx.dataframe.io.writeCSV
 import java.nio.file.Path
 
 
@@ -83,7 +87,7 @@ object GeneUsage {
             }
         }
 
-        data.toDataFrame().typed<GeneUsageRow>()
+        data.toDataFrame().cast<GeneUsageRow>()
     }
 
     /**
