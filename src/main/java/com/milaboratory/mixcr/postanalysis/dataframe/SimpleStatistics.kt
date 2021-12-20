@@ -2,6 +2,8 @@ package com.milaboratory.mixcr.postanalysis.dataframe
 
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult
 import com.milaboratory.mixcr.postanalysis.dataframe.SimpleMetricsRow.Companion.metric
+import com.milaboratory.mixcr.postanalysis.dataframe.SimpleMetricsRow.Companion.value
+import com.milaboratory.mixcr.postanalysis.stat.HolmBonferroni
 import jetbrains.datalore.plot.PlotSvgExport
 import jetbrains.letsPlot.Pos
 import jetbrains.letsPlot.geom.geomBoxplot
@@ -10,7 +12,8 @@ import jetbrains.letsPlot.intern.toSpec
 import jetbrains.letsPlot.label.ggtitle
 import jetbrains.letsPlot.label.labs
 import jetbrains.letsPlot.letsPlot
-import jetbrains.letsPlot.theme
+import jetbrains.letsPlot.stat.statBoxplot
+import jetbrains.letsPlot.stat.statContour
 import org.jetbrains.kotlinx.dataframe.*
 import org.jetbrains.kotlinx.dataframe.annotations.DataSchema
 import org.jetbrains.kotlinx.dataframe.api.*
@@ -66,6 +69,8 @@ object SimpleStatistics {
         val primaryGroupOrder: List<String>? = null,
         val secondaryGroup: String? = null,
         val secondaryGroupOrder: List<String>? = null,
+        val applyHolmBonferroni: Boolean = false,
+        val HolmBonferroniFWer: Double = 0.01
     ) {
         companion object {
             val Default = BoxPlotSettings()
@@ -82,6 +87,8 @@ object SimpleStatistics {
 
         val data = mutableMapOf<String, MutableList<Any>>(
             SimpleMetricsRow::sample.name to mutableListOf(),
+            SimpleMetricsRow::metric.name to mutableListOf(),
+            SimpleMetricsRow::value.name to mutableListOf(),
         )
 
         for ((_, charData) in paResult.data) {
@@ -107,39 +114,6 @@ object SimpleStatistics {
     fun DataFrame<SimpleMetricsRow>.withMetadata(metadata: AnyFrame) = run {
         this.leftJoin(metadata) { SimpleMetricsRow.sample }
     }
-//
-//    /**
-//     * Create Plot for specific metric
-//     **/
-//    fun DataFrame<SimpleMetricsRow>.plot(
-//        settings: BoxPlotSettings,
-//    ) = run {
-//
-//        val df = this.filter {
-//            SimpleMetricsRow.metric.eq(metric)
-//        }
-//
-//        var plt = letsPlot(df.toMap()) {
-//            y = SimpleMetricsRow.value.name()
-//            x = settings.primaryGroup
-//            group = settings.secondaryGroup
-//        }
-//
-//        plt += geomBoxplot()
-//        plt += geomPoint(
-//            position = Pos.jitterdodge,
-//            shape = 21,
-//            color = "black"
-//        )
-//        plt += ggtitle(metric)
-//        plt += labs(x = settings.primaryGroup, y = metric)
-//        plt += theme().axisTitleXBlank()
-//        plt += theme().axisTextXBlank()
-//        plt += theme().axisTicksXBlank()
-//
-//        plt
-//    }
-
 
     /**
      * Create Plots for all metrics
@@ -148,18 +122,47 @@ object SimpleStatistics {
         settings: BoxPlotSettings,
     ) = groupBy { SimpleMetricsRow.metric }.groups.map { df ->
 
-        var plt = letsPlot(df.toMap()) {
-            y = SimpleMetricsRow.value.name()
+        val filteredDf =
+            if (settings.applyHolmBonferroni)
+                HolmBonferroni.run(
+                    df.rows().toList(),
+                    { it.value },
+                    settings.HolmBonferroniFWer
+                ).toDataFrame()
+            else
+                df
+
+        if (filteredDf.isEmpty())
+            return@map null
+
+        var plt = letsPlot(filteredDf.toMap()) {
             x = settings.primaryGroup
+            y = SimpleMetricsRow.value.name()
             group = settings.secondaryGroup
+            fill = settings.secondaryGroup ?: settings.primaryGroup
         }
 
-        plt += geomBoxplot()
+
+        plt += geomBoxplot(
+            fatten = 2,
+            outlierShape = null,
+            outlierColor = null,
+            outlierSize = 0,
+//            position = positionDodge(0.1)
+        ) {
+//            color = settings.secondaryGroup
+//            fill = settings.secondaryGroup
+        }
+
+
         plt += geomPoint(
             position = Pos.jitterdodge,
             shape = 21,
             color = "black"
-        )
+        ) {
+            color = settings.secondaryGroup
+            fill = settings.secondaryGroup
+        }
 
         val metricName = if (!df.isEmpty()) {
             df.first().metric
@@ -170,13 +173,12 @@ object SimpleStatistics {
         plt += ggtitle(metricName)
         plt += labs(x = settings.primaryGroup, y = metricName)
 
-        plt += theme().axisTitleXBlank()
-        plt += theme().axisTextXBlank()
-        plt += theme().axisTicksXBlank()
+//        plt += theme().axisTitleXBlank()
+//        plt += theme().axisTextXBlank()
+//        plt += theme().axisTicksXBlank()
 
         metricName to plt
-
-    }.toList().toMap()
+    }.filter { it != null }.map { it!! }.toList().toMap()
 
 
     /**

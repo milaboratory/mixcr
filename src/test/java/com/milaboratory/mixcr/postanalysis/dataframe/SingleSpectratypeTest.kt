@@ -2,16 +2,16 @@ package com.milaboratory.mixcr.postanalysis.dataframe
 
 import jetbrains.datalore.plot.PlotSvgExport
 import jetbrains.letsPlot.coordFixed
-import jetbrains.letsPlot.geom.geomBoxplot
 import jetbrains.letsPlot.geom.geomTile
 import jetbrains.letsPlot.ggsize
 import jetbrains.letsPlot.intern.toSpec
 import jetbrains.letsPlot.letsPlot
 import jetbrains.letsPlot.scale.scaleXContinuous
 import jetbrains.letsPlot.scale.scaleYContinuous
-import org.jetbrains.dataframe.DataFrame
-import org.jetbrains.dataframe.io.readCSV
-import org.jetbrains.dataframe.toMap
+import org.jetbrains.kotlinx.dataframe.DataFrame
+import org.jetbrains.kotlinx.dataframe.api.head
+import org.jetbrains.kotlinx.dataframe.api.toMap
+import org.jetbrains.kotlinx.dataframe.io.read
 import org.junit.Test
 import java.nio.file.Path
 
@@ -23,7 +23,7 @@ internal class SingleSpectratypeTest {
     @Test
     fun name1() {
         val data =
-            DataFrame.readCSV("https://raw.githubusercontent.com/PoslavskySV/scratch/master/lets-plot-heatmap/data1.csv")
+            DataFrame.read("https://raw.githubusercontent.com/PoslavskySV/scratch/master/lets-plot-heatmap/data1.csv")
         val mData = data.head(1000).toMap()
         val plot = letsPlot(mData) {
             x = "sample"
@@ -41,7 +41,7 @@ internal class SingleSpectratypeTest {
     @Test
     fun name() {
         val data =
-            DataFrame.readCSV("https://raw.githubusercontent.com/PoslavskySV/scratch/master/lets-plot-heatmap/data1.csv")
+            DataFrame.read("https://raw.githubusercontent.com/PoslavskySV/scratch/master/lets-plot-heatmap/data1.csv")
 
         val mData = data.head(1000).toMap()
         val xs = mData["sample"]!!.toList().distinct().size

@@ -4,6 +4,14 @@ import groovy.lang.Closure
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.InetAddress
 
+
+val milibVersion = "1.14.1-16-774c60afab"
+val repseqioVersion = "1.3.5-10-05b9291c5e"
+val jacksonVersion = "2.12.4"
+val letsPlotLibraryVersion = "2.1.0"
+val letsPlotKotlinApiVersion = "3.1.1"
+val dataframeVersion = "0.8.0-dev-808"
+
 plugins {
     `java-library`
     application
@@ -11,7 +19,11 @@ plugins {
     id("com.palantir.git-version") version "0.12.3"
     id("com.github.johnrengelman.shadow") version "7.0.0"
     kotlin("jvm") version "1.6.0-M1"
+    id("org.jetbrains.kotlin.plugin.dataframe") version "0.8.0-dev-808"
 }
+
+// Make IDE aware of the generated code:
+kotlin.sourceSets.getByName("main").kotlin.srcDir("build/generated/ksp/main/kotlin/")
 
 val miRepoAccessKeyId: String by project
 val miRepoSecretAccessKey: String by project
@@ -64,13 +76,6 @@ repositories {
     }
 }
 
-val milibVersion = "1.14.1-16-774c60afab"
-val repseqioVersion = "1.3.5-4-f7170dd23b"
-val jacksonVersion = "2.12.4"
-val letsPlotLibraryVersion = "2.1.0"
-val letsPlotKotlinApiVersion = "3.0.3-alpha1"
-val dataframeVersion = "0.8.0-dev-777-0.11.0.39"
-
 dependencies {
     api("com.milaboratory:milib:$milibVersion")
     api("io.repseq:repseqio:$repseqioVersion") {
@@ -78,6 +83,7 @@ dependencies {
     }
 
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+    implementation("commons-io:commons-io:2.7")
     implementation("commons-io:commons-io:2.7")
     implementation("org.lz4:lz4-java:1.4.1")
     implementation("net.sf.trove4j:trove4j:3.0.3")

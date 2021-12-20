@@ -35,15 +35,14 @@ public abstract class CommandExportPostanalysis extends ACommandWithOutputMiXCR 
     /** Check that directory */
     private void ensureChainsDirExists(Chains.NamedChains chains) {
         try {
-            Files.createDirectory(Paths.get(chains.name));
+            Files.createDirectories(Paths.get(out).resolve(chains.name));
         } catch (IOException e) {
             throwExecutionException(e.getMessage());
         }
     }
 
-
     Path outPath(Chains.NamedChains chains, String suffix) {
-        return Paths.get(chains.name).resolve(suffix);
+        return Paths.get(out).resolve(chains.name).resolve(suffix);
     }
 
     /** Cached PA result */
@@ -71,7 +70,11 @@ public abstract class CommandExportPostanalysis extends ACommandWithOutputMiXCR 
 
     abstract void run(Chains.NamedChains chains, PaResultByChain result);
 
-    static final class ExportTables extends CommandExportPostanalysis {
+    @CommandLine.Command(name = "tables",
+            sortOptions = false,
+            separator = " ",
+            description = "Biophysics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype")
+    public static final class ExportTables extends CommandExportPostanalysis {
         @Override
         void run(Chains.NamedChains chains, PaResultByChain result) {
             for (CharacteristicGroup<?, ?> table : result.schema.tables) {
@@ -86,7 +89,11 @@ public abstract class CommandExportPostanalysis extends ACommandWithOutputMiXCR 
         }
     }
 
-    static final class ExportBoxPlots extends CommandExportPostanalysis {
+    @CommandLine.Command(name = "box-plots",
+            sortOptions = false,
+            separator = " ",
+            description = "Biophysics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype")
+    public static final class ExportBoxPlots extends CommandExportPostanalysis {
         @Option(names = {"-p", "--primary-group"}, description = "Primary group")
         public String primaryGroup;
         @Option(names = {"-s", "--secondary-group"}, description = "Secondary group")

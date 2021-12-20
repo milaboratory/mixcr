@@ -17,6 +17,7 @@ import com.milaboratory.mixcr.postanalysis.downsampling.ClonesDownsamplingPrepro
 import com.milaboratory.mixcr.postanalysis.downsampling.DownsampleValueChooser;
 import com.milaboratory.mixcr.postanalysis.overlap.*;
 import com.milaboratory.mixcr.postanalysis.preproc.ElementPredicate;
+import com.milaboratory.mixcr.postanalysis.preproc.NoPreprocessing;
 import com.milaboratory.mixcr.postanalysis.preproc.OverlapPreprocessorAdapter;
 import com.milaboratory.mixcr.postanalysis.preproc.SelectTop;
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeCharacteristic;
@@ -49,14 +50,16 @@ import static java.util.stream.Collectors.*;
  *
  */
 public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
+    public static final NamedChains[] CHAINS = {TRAD_NAMED, TRB_NAMED, TRG_NAMED, IGH_NAMED, IGKL_NAMED};
+
     @Parameters(description = "cloneset.{clns|clna}... result.json")
     public List<String> inOut;
 
     @Option(description = "Use only productive sequences in postanalysis.",
             names = {"--only-productive"})
-    public boolean onlyProductive = false;
+    public boolean onlyProductive = false; // FIXME - not used
 
-    @Option(description = "Choose downsampling. Possible values: umi-count-[1000|auto]|cumulative-top-[percent]|top-[number]",
+    @Option(description = "Choose downsampling. Possible values: umi-count-[1000|auto]|cumulative-top-[percent]|top-[number]|no-downsampling",
             names = {"-d", "--downsampling"},
             required = true)
     public String downsampling;
@@ -70,10 +73,10 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
         return inOut.subList(0, inOut.size() - 1)
                 .stream()
                 .flatMap(f -> {
-                    if (Files.isDirectory(Path.of(f))) {
+                    if (Files.isDirectory(Paths.get(f))) {
                         try {
                             return Files
-                                    .list(Path.of(f))
+                                    .list(Paths.get(f))
                                     .map(Path::toString);
                         } catch (IOException ignored) {
                         }
@@ -96,8 +99,17 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
         return Integer.parseInt(downsampling.substring(downsampling.lastIndexOf("-") + 1));
     }
 
+    /**
+     * Get sample id from file name
+     */
+    static String getSampleId(String file) {
+        return Paths.get(file).getFileName().toString();
+    }
+
     private static SetPreprocessorFactory<Clone> parseDownsampling(String downsampling) {
-        if (downsampling.startsWith("umi-count")) {
+        if (downsampling.equalsIgnoreCase("no-downsampling")) {
+            return new NoPreprocessing.Factory<>();
+        } else if (downsampling.startsWith("umi-count")) {
             if (downsampling.endsWith("auto"))
                 return new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Auto(), 314);
             else {
@@ -172,7 +184,7 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
     public void run0() throws Exception {
         Map<NamedChains, PaResultByChain> resultsMap = new HashMap<>();
         Chains c = Chains.parse(chains);
-        for (NamedChains knownChains : WELL_KNOWN_CHAINS) {
+        for (NamedChains knownChains : CHAINS) {
             if (c.intersects(knownChains.chains))
                 resultsMap.put(knownChains, run(knownChains.chains));
         }
@@ -282,7 +294,7 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
 
             List<Dataset> datasets = getInputFiles().stream()
                     .map(file ->
-                            new ClonotypeDataset(file, file, VDJCLibraryRegistry.getDefault())
+                            new ClonotypeDataset(getSampleId(file), file, VDJCLibraryRegistry.getDefault())
                     ).collect(Collectors.toList());
 
             return new PaResultByChain(schema, runner.run(datasets));
@@ -340,7 +352,7 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
                     .collect(Collectors.toList());
 
             OverlapDataset<Clone> overlapDataset = OverlapUtil.overlap(
-                    getInputFiles(),
+                    getInputFiles().stream().map(CommandPostanalysis::getSampleId).collect(toList()),
                     ordering,
                     readers);
 
