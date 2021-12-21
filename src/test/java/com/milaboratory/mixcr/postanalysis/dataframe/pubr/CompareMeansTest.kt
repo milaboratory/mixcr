@@ -33,13 +33,14 @@ internal class CompareMeansTest {
             "V" to Gaussian,
             "A" to Category(2),
             "C" to Category(2),
-            len = 100001
+            len = 100000
         )
 
         val comp = CompareMeans(
             Formula("V", Factor("A", "C")),
             data,
-            refGroup = RefGroup.all
+            refGroup = RefGroup.all,
+            method = TestMethod.TTest
         ).stat
 
         comp.print()

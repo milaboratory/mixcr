@@ -1,6 +1,7 @@
 package com.milaboratory.mixcr.postanalysis.dataframe.pubr
 
 import com.milaboratory.mixcr.postanalysis.dataframe.pubr.RefGroup.Companion.all
+import com.milaboratory.mixcr.postanalysis.stat.PValueCorrection
 import org.apache.commons.math3.stat.inference.MannWhitneyUTest
 import org.apache.commons.math3.stat.inference.OneWayAnova
 import org.apache.commons.math3.stat.inference.TTest
@@ -39,16 +40,18 @@ sealed interface RefGroup {
             override fun toString() = "all"
         }
 
-        /** */
+        /** All dataset */
         val all: RefGroup = All
 
-        data class RefGroupImpl(val colValues: List<Any?>) : RefGroup {
+        internal data class RefGroupImpl(val colValues: List<Any?>) : RefGroup {
             override fun toString() = colValues.joinToString("+")
         }
 
-        fun of(vararg columnValues: Any) = RefGroupImpl(columnValues.toList())
+        /** Select part of dataset for specific values of columns */
+        fun of(vararg columnValues: Any): RefGroup = RefGroupImpl(columnValues.toList())
 
-        fun of(columnValues: List<Any>) = RefGroupImpl(columnValues)
+        /** Select part of dataset for specific values of columns */
+        fun of(columnValues: List<Any>): RefGroup = RefGroupImpl(columnValues)
     }
 }
 
@@ -56,75 +59,136 @@ sealed interface RefGroup {
  *
  */
 class CompareMeans(
+    /**
+     * The formula
+     */
     val formula: Formula,
+    /**
+     * A dataframe containing the variables in the formula.
+     */
     val data: AnyFrame,
-    val groupBy: Factor? = null,
+    /**
+     * The type of test. Default is Wilcox
+     */
     val method: TestMethod = TestMethod.Wilcox,
-    val pAdjustMethod: String? = null,
+    /**
+     * Variables used to group the data set before applying the test.
+     * When specified the mean comparisons will be performed in each
+     * subset of the data formed by the different levels of the groupBy variables.
+     */
+    val groupBy: Factor? = null,
+    /**
+     * Method for adjusting p values. Default is Holm.
+     */
+    val pAdjustMethod: PValueCorrection.Method? = PValueCorrection.Method.Holm,
+    /**
+     * The reference group. If specified, for a given grouping variable, each of the
+     * group levels will be compared to the reference group (i.e. control group).
+     * refGroup can be also “all”. In this case, each of the grouping variable levels
+     * is compared to all (i.e. base-mean).
+     */
     val refGroup: RefGroup? = null
 ) {
 
-    /** dataframe for each group*/
-    private val groups: List<Pair<RefGroup, AnyFrame>> =
+    /** all data array */
+    private val allData by lazy {
+        data[formula.y].cast<Double>().toDoubleArray()
+    }
+
+    /** data array for each group*/
+    private val groups: List<Pair<RefGroup, DoubleArray>> =
         data.groupBy(*formula.factor.arr).groups.toList().map {
-            getGroupName(it, formula.factor.arr) to it
+            getRefGroup(it, formula.factor.arr) to it[formula.y].cast<Double>().toDoubleArray()
         }
 
+    /** Overall p-value computed with one way ANOVA */
+    val anovaPValue by lazy {
+        OneWayAnova().anovaPValue(groups.map { it.second })
+    }
 
-    val stat = run {
+    /** List of all "compare means" with no p-Value adjustment */
+    private val compareMeansRaw: List<CompareMeansRow> = run {
         if (refGroup != null) {
             val groups = this.groups.toMap()
 
             //  get reference data
             val refData = (
                     if (refGroup == all)
-                        data
+                        allData
                     else
                         groups[refGroup] ?: throw IllegalArgumentException("reference group not found")
-                    )[formula.y].cast<Double>().toDoubleArray()
-
-            groups.map { (gr, df) ->
-                if (gr == refGroup)
-                    return@map null
-
-                val data = df[formula.y].cast<Double>().toDoubleArray()
-                val pValue = calc(method, refData, data)
-
-                CompareMeansRow(formula.y, method, refGroup, gr, pValue, -1.0, significance(pValue));
-            }.filterNotNull()
-                .toDataFrame()
-        } else {
-            val comparisons = mutableListOf<CompareMeansRow>()
-
-            for (i in groupsList.indices) {
-                for (j in 0 until i) {
-                    val iGroup = groupsList[i]
-                    val jGroup = groupsList[j]
-                    val pValue = calc(
-                        method,
-                        iGroup.second[formula.y].cast<Double>().toDoubleArray(),
-                        jGroup.second[formula.y].cast<Double>().toDoubleArray()
                     )
 
-                    comparisons += CompareMeansRow(
+            groups.map { (group, data) ->
+                if (group == refGroup)
+                    return@map null
+
+                if (refData.size < 2 || data.size < 2)
+                    return@map null
+
+                val pValue = pValue(method, refData, data)
+
+                CompareMeansRow(
+                    formula.y, method,
+                    refGroup, group,
+                    pValue, -1.0, SignificanceLevel.of(pValue)
+                );
+            }.filterNotNull()
+        } else {
+            val cmpList = mutableListOf<CompareMeansRow>()
+
+            for (i in groups.indices) {
+                for (j in 0 until i) {
+                    val iGroup = groups[i]
+                    val jGroup = groups[j]
+
+                    if (iGroup.second.size < 2 || jGroup.second.size < 2)
+                        continue
+
+                    val pValue = pValue(
+                        method,
+                        iGroup.second,
+                        jGroup.second
+                    )
+
+                    cmpList += CompareMeansRow(
                         formula.y, method,
                         iGroup.first, jGroup.first,
-                        pValue, -1.0, significance(pValue)
+                        pValue, -1.0, SignificanceLevel.of(pValue)
                     )
                 }
             }
 
-            comparisons.toDataFrame()
+            cmpList
         }
     }
 
-    private fun getGroupName(df: AnyFrame, group: Array<String>) = run {
+    /** Compare means with adjusted p-values and significance */
+    private val compareMeansAdj =
+        if (pAdjustMethod == null || compareMeansRaw.isEmpty())
+            compareMeansRaw
+        else {
+            val adjusted =
+                PValueCorrection.adjustPValues(compareMeansRaw.map { it.pValue }.toDoubleArray(), pAdjustMethod)
+
+            compareMeansRaw.mapIndexed { i, cmp ->
+                cmp.copy(
+                    pValueAdj = adjusted[i],
+                    pSignif = SignificanceLevel.of(adjusted[i])
+                )
+            }
+        }
+
+    /** Compare means statistics */
+    val stat = compareMeansAdj.toDataFrame()
+
+    private fun getRefGroup(df: AnyFrame, group: Array<String>) = run {
         val f = df.first()
         RefGroup.Companion.RefGroupImpl(group.map { f[it] })
     }
 
-
-    private fun calc(method: TestMethod, a: DoubleArray, b: DoubleArray) = when (method) {
+    /** Compute p-value */
+    private fun pValue(method: TestMethod, a: DoubleArray, b: DoubleArray) = when (method) {
         TestMethod.Wilcox ->
             if (a.size != b.size)
                 MannWhitneyUTest().mannWhitneyUTest(a, b)
@@ -138,21 +202,24 @@ class CompareMeans(
         TestMethod.ANOVA -> OneWayAnova().anovaPValue(listOf(a, b))
         TestMethod.Kruskal -> throw RuntimeException("not supported yet")
     }
-//
-//    private fun byGroups() = run {
-//        groupBy!!
-//
-//    }
+}
+
+enum class SignificanceLevel(val string: String) {
+    NS("ns"),
+    One("*"),
+    Two("**"),
+    Three("***");
 
     companion object {
-        private fun significance(pValue: Double) =
-            if (pValue >= 0.05) "ns"
-            else if (pValue < 0.0001) "***"
-            else if (pValue < 0.001) "**"
-            else "*"
+        fun of(pValue: Double) =
+            if (pValue >= 0.05) NS
+            else if (pValue < 0.0001) Three
+            else if (pValue < 0.001) Two
+            else One
     }
 }
 
+/** Method for calculation of p-value */
 enum class TestMethod {
     TTest,
     Wilcox,
@@ -185,5 +252,5 @@ data class CompareMeansRow(
     val pValueAdj: Double,
 
     /** The significance level */
-    val pSignif: String
+    val pSignif: SignificanceLevel
 )
