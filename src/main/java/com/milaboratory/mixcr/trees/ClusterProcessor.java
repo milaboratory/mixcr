@@ -2,13 +2,10 @@ package com.milaboratory.mixcr.trees;
 
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
-import com.milaboratory.core.alignment.Aligner;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.AlignmentUtils;
-import com.milaboratory.core.mutations.Mutation;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.core.sequence.SequenceBuilder;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed;
@@ -27,6 +24,8 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS;
+import static com.milaboratory.mixcr.trees.ClonesRebase.NDNRangeInKnownNDN;
+import static com.milaboratory.mixcr.trees.ClonesRebase.mutations;
 import static com.milaboratory.mixcr.trees.ClusteringCriteria.score;
 import static io.repseq.core.GeneType.Joining;
 import static io.repseq.core.GeneType.Variable;
@@ -34,6 +33,7 @@ import static io.repseq.core.ReferencePoint.*;
 
 class ClusterProcessor {
     private final double threshold;
+    private final int hideTreesLessThanSize;
 
     private final NucleotideSequence VSequence1;
     private final Function<ReferencePoint, Integer> getVRelativePosition;
@@ -42,10 +42,13 @@ class ClusterProcessor {
     private final Function<ReferencePoint, Integer> getJRelativePosition;
 
     private final Cluster<CloneWrapper> originalCluster;
+    private final ClonesRebase clonesRebase;
+    private final AncestorInfoBuilder ancestorInfoBuilder;
 
 
     ClusterProcessor(SHMTreeBuilderParameters parameters, Cluster<CloneWrapper> originalCluster) {
         this.threshold = parameters.maxDistanceWithinCluster;
+        this.hideTreesLessThanSize = parameters.hideTreesLessThanSize;
         if (originalCluster.cluster.isEmpty()) {
             throw new IllegalArgumentException();
         }
@@ -58,6 +61,9 @@ class ClusterProcessor {
         VDJCHit bestJHit = clone.getBestHit(Joining);
         JSequence1 = bestJHit.getAlignment(0).getSequence1();
         getJRelativePosition = it -> bestJHit.getGene().getPartitioning().getRelativePosition(bestJHit.getAlignedFeature(), it);
+
+        clonesRebase = new ClonesRebase(VSequence1, JSequence1);
+        ancestorInfoBuilder = new AncestorInfoBuilder(getVRelativePosition, getJRelativePosition);
     }
 
     /**
@@ -120,10 +126,10 @@ class ClusterProcessor {
         for (CloneWithMutationsFromVJGermline clone : clusteringResult.clonesNotInClusters) {
             Optional<Pair<Runnable, Double>> nearestTree = firstStepTrees.stream()
                     .map(treeWithMeta -> {
-                        CloneWithMutationsFromReconstructedRoot rebasedClone = rebaseClone(clone, treeWithMeta.rootInfo);
+                        CloneWithMutationsFromReconstructedRoot rebasedClone = clonesRebase.rebaseClone(treeWithMeta.rootInfo, clone.mutations, clone.cloneWrapper);
                         return Pair.<Runnable, Double>create(
                                 () -> treeWithMeta.treeBuilder.addNode(rebasedClone),
-                                distanceFromTree(rebasedClone.mutations, treeWithMeta.treeBuilder.getTree())
+                                distanceFromTree(rebasedClone.getMutationsFromRoot(), treeWithMeta.treeBuilder.getTree())
                         );
                     })
                     .min(Comparator.comparing(Pair::getSecond));
@@ -147,16 +153,16 @@ class ClusterProcessor {
                 double distanceFromTree = treeToAttach.treeBuilder.getTree().allNodes()
                         .map(node -> node.getContent().convert(it -> Optional.<MutationsDescription>empty(), Optional::of))
                         .flatMap(Java9Util::stream)
-                        .map(it -> rebaseMutations(it, treeToAttach.rootInfo, treeToGrow.rootInfo))
+                        .map(it -> clonesRebase.rebaseMutations(it, treeToAttach.rootInfo, treeToGrow.rootInfo))
                         .mapToDouble(it -> distanceFromTree(it, treeToGrow.treeBuilder.getTree()))
                         .min().orElseThrow(IllegalArgumentException::new);
 
                 if (distanceFromTree < threshold) {
                     treeToAttach.treeBuilder.getTree().allNodes()
-                            .map(node -> node.getContent().convert(it -> Optional.of(it.original), it -> Optional.<CloneWithMutationsFromVJGermline>empty()))
+                            .map(node -> node.getContent().convert(Optional::of, it -> Optional.<CloneWithMutationsFromReconstructedRoot>empty()))
                             .flatMap(Java9Util::stream)
-                            .map(clone -> rebaseClone(clone, treeToGrow.rootInfo))
-                            .sorted(Comparator.comparing(clone -> distance(clone.mutations)))
+                            .map(clone -> clonesRebase.rebaseClone(treeToGrow.rootInfo, clone.getMutationsFromVJGermline(), clone.getClone()))
+                            .sorted(Comparator.comparing(clone -> distance(clone.getMutationsFromRoot())))
                             .forEach(treeToGrow.treeBuilder::addNode);
                     firstStepTrees.remove(i);
                 }
@@ -166,190 +172,11 @@ class ClusterProcessor {
         }
 
         return secondStepTrees.stream()
+                .filter(treeWithMeta -> treeWithMeta.treeBuilder.getNodesCount() >= hideTreesLessThanSize)
                 .map(treeWithMeta -> treeWithMeta.treeBuilder.getTree().map(node ->
-                        node.map(it -> it.original.cloneWrapper, this::buildAncestorInfo)
+                        node.map(CloneWithMutationsFromReconstructedRoot::getClone, ancestorInfoBuilder::buildAncestorInfo)
                 ))
                 .collect(Collectors.toList());
-    }
-
-    //TODO test with randomized test
-    private MutationsDescription rebaseMutations(
-            MutationsDescription originalRoot,
-            RootInfo originalRootInfo,
-            RootInfo rebaseTo
-    ) {
-        NucleotideSequence originalKnownNDN = buildSequence(originalRoot.knownNDN);
-        List<MutationsWithRange> VMutationsWithoutNDN;
-        if (originalRootInfo.VRangeInCDR3.length() < rebaseTo.VRangeInCDR3.length()) {
-            VMutationsWithoutNDN = new ArrayList<>(originalRoot.VMutationsWithoutNDN);
-            Range difference = new Range(originalRootInfo.VRangeInCDR3.getUpper(), rebaseTo.VRangeInCDR3.getUpper());
-
-            Mutations<NucleotideSequence> absoluteMutations = Aligner.alignGlobal(
-                    AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-                    VSequence1,
-                    originalKnownNDN,
-                    difference.getLower(),
-                    difference.length(),
-                    0,
-                    difference.length()
-            ).getAbsoluteMutations();
-            VMutationsWithoutNDN.add(new MutationsWithRange(
-                    VSequence1,
-                    EMPTY_NUCLEOTIDE_MUTATIONS,
-                    absoluteMutations,
-                    difference,
-                    true
-            ));
-        } else if (originalRootInfo.VRangeInCDR3.length() == rebaseTo.VRangeInCDR3.length()) {
-            VMutationsWithoutNDN = originalRoot.VMutationsWithoutNDN;
-        } else {
-            VMutationsWithoutNDN = originalRoot.VMutationsWithoutNDN.stream()
-                    .flatMap(mutations -> {
-                        Range intersection = mutations.getSequence1Range().intersection(new Range(0, rebaseTo.VRangeInCDR3.getUpper()));
-                        if (intersection == null) {
-                            return Stream.empty();
-                        } else {
-                            boolean includeLastInserts;
-                            if (intersection.getUpper() == mutations.getSequence1Range().getUpper()) {
-                                includeLastInserts = mutations.isIncludeLastInserts();
-                            } else {
-                                includeLastInserts = true;
-                            }
-                            return Stream.of(new MutationsWithRange(
-                                    mutations.getSequence1(),
-                                    mutations.getFromBaseToParent(),
-                                    mutations.getFromParentToThis(),
-                                    intersection,
-                                    includeLastInserts
-                            ));
-                        }
-                    })
-                    .collect(Collectors.toList());
-        }
-        List<MutationsWithRange> JMutationsWithoutNDN;
-        if (originalRootInfo.JRangeInCDR3.length() < rebaseTo.JRangeInCDR3.length()) {
-            JMutationsWithoutNDN = new ArrayList<>(originalRoot.JMutationsWithoutNDN);
-            Range difference = new Range(rebaseTo.JRangeInCDR3.getLower(), originalRootInfo.JRangeInCDR3.getLower());
-
-            Mutations<NucleotideSequence> absoluteMutations = Aligner.alignGlobal(
-                    AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-                    JSequence1,
-                    originalKnownNDN,
-                    difference.getLower(),
-                    difference.length(),
-                    originalKnownNDN.size() - difference.length(),
-                    difference.length()
-            ).getAbsoluteMutations();
-            JMutationsWithoutNDN.add(0, new MutationsWithRange(
-                    JSequence1,
-                    EMPTY_NUCLEOTIDE_MUTATIONS,
-                    absoluteMutations,
-                    difference,
-                    true
-            ));
-        } else if (originalRootInfo.JRangeInCDR3.length() == rebaseTo.JRangeInCDR3.length()) {
-            JMutationsWithoutNDN = originalRoot.JMutationsWithoutNDN;
-        } else {
-            JMutationsWithoutNDN = originalRoot.JMutationsWithoutNDN.stream()
-                    .flatMap(mutations -> {
-                        Range intersection = mutations.getSequence1Range().intersection(new Range(rebaseTo.JRangeInCDR3.getLower(), JSequence1.size()));
-                        if (intersection == null) {
-                            return Stream.empty();
-                        } else {
-                            boolean includeLastInserts;
-                            if (intersection.getUpper() == mutations.getSequence1Range().getUpper()) {
-                                includeLastInserts = mutations.isIncludeLastInserts();
-                            } else {
-                                includeLastInserts = true;
-                            }
-                            return Stream.of(new MutationsWithRange(
-                                    mutations.getSequence1(),
-                                    mutations.getFromBaseToParent(),
-                                    mutations.getFromParentToThis(),
-                                    intersection,
-                                    includeLastInserts
-                            ));
-                        }
-                    })
-                    .collect(Collectors.toList());
-        }
-
-        SequenceBuilder<NucleotideSequence> knownNDNBuilder = NucleotideSequence.ALPHABET.createBuilder();
-        if (originalRootInfo.VRangeInCDR3.length() > rebaseTo.VRangeInCDR3.length()) {
-            Range rangeToAdd = new Range(rebaseTo.VRangeInCDR3.getUpper(), originalRootInfo.VRangeInCDR3.getUpper());
-            originalRoot.VMutationsWithoutNDN.stream()
-                    .map(mutations -> {
-                        Range intersection = mutations.getSequence1Range().intersection(rangeToAdd);
-                        if (intersection == null) {
-                            return Optional.<NucleotideSequence>empty();
-                        } else {
-                            return Optional.of(buildSequence(
-                                    new MutationsWithRange(
-                                            mutations.getSequence1(),
-                                            mutations.getFromBaseToParent(),
-                                            mutations.getFromParentToThis(),
-                                            intersection,
-                                            true
-                                    )
-                            ));
-                        }
-                    })
-                    .flatMap(Java9Util::stream)
-                    .forEach(knownNDNBuilder::append);
-        }
-
-        knownNDNBuilder.append(originalKnownNDN.getRange(
-                Math.max(0, rebaseTo.VRangeInCDR3.length() - originalRootInfo.VRangeInCDR3.length()),
-                originalKnownNDN.size() - Math.max(0, rebaseTo.JRangeInCDR3.length() - originalRootInfo.JRangeInCDR3.length())
-        ));
-
-        if (originalRootInfo.JRangeInCDR3.length() > rebaseTo.JRangeInCDR3.length()) {
-            Range rangeToAdd = new Range(originalRootInfo.JRangeInCDR3.getLower(), rebaseTo.JRangeInCDR3.getLower());
-            originalRoot.JMutationsWithoutNDN.stream()
-                    .map(mutations -> {
-                        Range intersection = mutations.getSequence1Range().intersection(rangeToAdd);
-                        if (intersection == null) {
-                            return Optional.<NucleotideSequence>empty();
-                        } else {
-                            return Optional.of(buildSequence(
-                                    new MutationsWithRange(
-                                            mutations.getSequence1(),
-                                            mutations.getFromBaseToParent(),
-                                            mutations.getFromParentToThis(),
-                                            intersection,
-                                            true
-                                    )
-                            ));
-                        }
-                    })
-                    .flatMap(Java9Util::stream)
-                    .forEach(knownNDNBuilder::append);
-        }
-
-        NucleotideSequence rebasedKnownNDN = knownNDNBuilder
-                .createAndDestroy();
-        MutationsDescription result = new MutationsDescription(
-                VMutationsWithoutNDN,
-                mutations(rebaseTo.reconstructedNDN, rebasedKnownNDN),
-                JMutationsWithoutNDN
-        );
-        //TODO remove after testing on more data
-        if (result.VMutationsWithoutNDN.stream().mapToInt(it -> it.getSequence1Range().getUpper()).max().getAsInt() != rebaseTo.VRangeInCDR3.getUpper()) {
-            throw new IllegalArgumentException();
-        }
-        if (result.JMutationsWithoutNDN.stream().mapToInt(it -> it.getSequence1Range().getLower()).min().getAsInt() != rebaseTo.JRangeInCDR3.getLower()) {
-            throw new IllegalArgumentException();
-        }
-        AncestorInfo resultAncestorInfo = buildAncestorInfo(result);
-        AncestorInfo originalAncestorInfo = buildAncestorInfo(originalRoot);
-        if (!resultAncestorInfo.getSequence().equals(originalAncestorInfo.getSequence())) {
-            throw new IllegalArgumentException();
-        }
-        if (!resultAncestorInfo.getSequence().getRange(resultAncestorInfo.getCDR3Begin(), resultAncestorInfo.getCDR3End())
-                .equals(originalAncestorInfo.getSequence().getRange(originalAncestorInfo.getCDR3Begin(), originalAncestorInfo.getCDR3End()))) {
-            throw new IllegalArgumentException();
-        }
-        return result;
     }
 
     /**
@@ -398,8 +225,8 @@ class ClusterProcessor {
         RootInfo rootInfo = buildRootInfo(cluster);
 
         List<CloneWithMutationsFromReconstructedRoot> rebasedCluster = cluster.cluster.stream()
-                .map(clone -> rebaseClone(clone, rootInfo))
-                .sorted(Comparator.comparing(cloneDescriptor -> distance(cloneDescriptor.mutations)))
+                .map(clone -> clonesRebase.rebaseClone(rootInfo, clone.mutations, clone.cloneWrapper))
+                .sorted(Comparator.comparing(cloneDescriptor -> distance(cloneDescriptor.getMutationsFromRoot())))
                 .collect(Collectors.toList());
 
         MutationsDescription root = buildARootForATree(rootInfo, rebasedCluster);
@@ -409,7 +236,7 @@ class ClusterProcessor {
                 this::distance,
                 this::mutationsBetween,
                 this::combineWith,
-                CloneWithMutationsFromReconstructedRoot::getMutations,
+                CloneWithMutationsFromReconstructedRoot::getMutationsFromRoot,
                 this::commonMutations
         );
 
@@ -423,132 +250,28 @@ class ClusterProcessor {
     private MutationsDescription buildARootForATree(RootInfo rootInfo, List<CloneWithMutationsFromReconstructedRoot> rebasedCluster) {
         return new MutationsDescription(
                 overlap(rebasedCluster.stream()
-                        .map(it -> it.mutations.VMutationsWithoutNDN.stream()
+                        .map(it -> it.getMutationsFromRoot().getVMutationsWithoutNDN().stream()
                                 .map(MutationsWithRange::getSequence1Range)
                                 .collect(Collectors.toList())
                         ).collect(Collectors.toList())
                 ).stream()
-                        .map(it -> new MutationsWithRange(VSequence1, EMPTY_NUCLEOTIDE_MUTATIONS, EMPTY_NUCLEOTIDE_MUTATIONS, it, false))
+                        .map(it -> new MutationsWithRange(VSequence1, EMPTY_NUCLEOTIDE_MUTATIONS, EMPTY_NUCLEOTIDE_MUTATIONS, it, true, false))
                         .collect(Collectors.toList()),
                 new MutationsWithRange(
-                        rootInfo.reconstructedNDN,
+                        rootInfo.getReconstructedNDN(),
                         EMPTY_NUCLEOTIDE_MUTATIONS,
                         EMPTY_NUCLEOTIDE_MUTATIONS,
-                        new Range(0, rootInfo.reconstructedNDN.size()),
-                        true),
+                        new Range(0, rootInfo.getReconstructedNDN().size()),
+                        true, true),
                 overlap(rebasedCluster.stream()
-                        .map(it -> it.mutations.JMutationsWithoutNDN.stream()
+                        .map(it -> it.getMutationsFromRoot().getJMutationsWithoutNDN().stream()
                                 .map(MutationsWithRange::getSequence1Range)
                                 .collect(Collectors.toList())
                         ).collect(Collectors.toList())
                 ).stream()
-                        .map(it -> new MutationsWithRange(JSequence1, EMPTY_NUCLEOTIDE_MUTATIONS, EMPTY_NUCLEOTIDE_MUTATIONS, it, false))
+                        .map(it -> new MutationsWithRange(JSequence1, EMPTY_NUCLEOTIDE_MUTATIONS, EMPTY_NUCLEOTIDE_MUTATIONS, it, true, false))
                         .collect(Collectors.toList())
         );
-    }
-
-    //TODO check with randomized test
-    private CloneWithMutationsFromReconstructedRoot rebaseClone(CloneWithMutationsFromVJGermline clone, RootInfo rootInfo) {
-        Range NDNRangeInKnownNDN = NDNRangeInKnownNDN(clone.mutations, rootInfo.VRangeInCDR3, rootInfo.JRangeInCDR3);
-
-        List<MutationsWithRange> VMutationsWithoutNDN = new ArrayList<>(clone.mutations.VMutationsWithoutNDN);
-        Range VRange = new Range(clone.mutations.VRangeInCDR3.getLower(), rootInfo.VRangeInCDR3.getUpper());
-        if (!VRange.isEmpty()) {
-            Range VMutationsWithinNDNRange = clone.mutations.knownVMutationsWithinNDN.getSecond()
-                    .intersection(VRange);
-            VMutationsWithinNDNRange = VMutationsWithinNDNRange != null ? VMutationsWithinNDNRange
-                    : new Range(clone.mutations.VRangeInCDR3.getUpper(), clone.mutations.VRangeInCDR3.getUpper());
-            int lengthDelta = 0;
-            if (!VMutationsWithinNDNRange.isEmpty()) {
-                MutationsWithRange VMutationsToAdd = new MutationsWithRange(
-                        VSequence1,
-                        EMPTY_NUCLEOTIDE_MUTATIONS,
-                        clone.mutations.knownVMutationsWithinNDN.getFirst(),
-                        VMutationsWithinNDNRange,
-                        true
-                );
-                VMutationsWithoutNDN.add(VMutationsToAdd);
-                lengthDelta = lengthDelta(VMutationsToAdd);
-            }
-            Range rangeToAlign = new Range(VMutationsWithinNDNRange.getUpper(), rootInfo.VRangeInCDR3.getUpper() - lengthDelta);
-            if (!rangeToAlign.isEmpty() && !rangeToAlign.isReverse()) {
-                Mutations<NucleotideSequence> absoluteMutations = Aligner.alignGlobal(
-                        AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-                        VSequence1,
-                        clone.mutations.knownNDN,
-                        rangeToAlign.getLower(),
-                        rangeToAlign.length(),
-                        VMutationsWithinNDNRange.length() + lengthDelta,
-                        rangeToAlign.length()
-                ).getAbsoluteMutations();
-                VMutationsWithoutNDN.add(new MutationsWithRange(
-                        VSequence1,
-                        EMPTY_NUCLEOTIDE_MUTATIONS,
-                        absoluteMutations,
-                        rangeToAlign,
-                        true
-                ));
-            } else {
-                NDNRangeInKnownNDN = new Range(NDNRangeInKnownNDN.getLower() - lengthDelta, NDNRangeInKnownNDN.getUpper());
-            }
-        }
-
-        List<MutationsWithRange> JMutationsWithoutNDN = new ArrayList<>(clone.mutations.JMutationsWithoutNDN);
-        Range JRange = new Range(rootInfo.JRangeInCDR3.getLower(), clone.mutations.JRangeInCDR3.getLower());
-        if (!JRange.isEmpty()) {
-            Range JMutationsWithinNDNRange = clone.mutations.knownJMutationsWithinNDN.getSecond()
-                    .intersection(JRange);
-            JMutationsWithinNDNRange = JMutationsWithinNDNRange != null ? JMutationsWithinNDNRange
-                    : new Range(clone.mutations.JRangeInCDR3.getLower(), clone.mutations.JRangeInCDR3.getLower());
-            int lengthDelta = 0;
-            if (!JMutationsWithinNDNRange.isEmpty()) {
-                MutationsWithRange JMutationsToAdd = new MutationsWithRange(
-                        JSequence1,
-                        EMPTY_NUCLEOTIDE_MUTATIONS,
-                        clone.mutations.knownJMutationsWithinNDN.getFirst(),
-                        JMutationsWithinNDNRange,
-                        true
-                );
-                JMutationsWithoutNDN.add(0, JMutationsToAdd);
-
-                lengthDelta = lengthDelta(JMutationsToAdd);
-            }
-            Range rangeToAlign = new Range(rootInfo.JRangeInCDR3.getLower() + lengthDelta, JMutationsWithinNDNRange.getLower());
-            if (!rangeToAlign.isEmpty() && !rangeToAlign.isReverse()) {
-                Mutations<NucleotideSequence> absoluteMutations = Aligner.alignGlobal(
-                        AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-                        JSequence1,
-                        clone.mutations.knownNDN,
-                        rangeToAlign.getLower(),
-                        rangeToAlign.length(),
-                        NDNRangeInKnownNDN.getUpper(),
-                        rangeToAlign.length()
-                ).getAbsoluteMutations();
-                JMutationsWithoutNDN.add(0, new MutationsWithRange(
-                        JSequence1,
-                        EMPTY_NUCLEOTIDE_MUTATIONS,
-                        absoluteMutations,
-                        rangeToAlign,
-                        true
-                ));
-            } else {
-                NDNRangeInKnownNDN = new Range(NDNRangeInKnownNDN.getLower(), NDNRangeInKnownNDN.getUpper() - lengthDelta);
-            }
-        }
-        MutationsDescription mutations = new MutationsDescription(
-                VMutationsWithoutNDN,
-                mutations(rootInfo.reconstructedNDN, clone.mutations.knownNDN.getRange(NDNRangeInKnownNDN)),
-                JMutationsWithoutNDN
-        );
-        //TODO remove after test on more data
-        AncestorInfo ancestorInfo = buildAncestorInfo(mutations);
-        if (!ancestorInfo.getSequence().equals(clone.cloneWrapper.clone.getTarget(0).getSequence())) {
-            throw new IllegalArgumentException();
-        }
-        if (!ancestorInfo.getSequence().getRange(ancestorInfo.getCDR3Begin(), ancestorInfo.getCDR3End()).equals(clone.cloneWrapper.clone.getNFeature(GeneFeature.CDR3))) {
-            throw new IllegalArgumentException();
-        }
-        return new CloneWithMutationsFromReconstructedRoot(mutations, clone);
     }
 
     private RootInfo buildRootInfo(Cluster<CloneWithMutationsFromVJGermline> cluster) {
@@ -563,15 +286,7 @@ class ClusterProcessor {
 
         return new RootInfo(
                 VRangeInCDR3,
-                JRangeInCDR3,
-                rootBasedOn.knownNDN.getRange(NDNRangeInKnownNDN)
-        );
-    }
-
-    private Range NDNRangeInKnownNDN(MutationsFromVJGermline mutations, Range VRangeInCDR3, Range JRangeInCDR3) {
-        return new Range(
-                VRangeInCDR3.length() - mutations.VRangeInCDR3.length(),
-                mutations.knownNDN.size() - (JRangeInCDR3.length() - mutations.JRangeInCDR3.length())
+                rootBasedOn.getKnownNDN().getRange(NDNRangeInKnownNDN), JRangeInCDR3
         );
     }
 
@@ -589,7 +304,7 @@ class ClusterProcessor {
                                     Mutations.EMPTY_NUCLEOTIDE_MUTATIONS,
                                     mutations,
                                     range,
-                                    true
+                                    true, true
                             ));
                 })
                 .collect(Collectors.toList());
@@ -642,33 +357,33 @@ class ClusterProcessor {
     private BigDecimal distance(MutationsDescription mutations) {
         return BigDecimal.valueOf(
                 1 - (
-                        (score(mutations.knownNDN) + score(mutations.VMutationsWithoutNDN) + score(mutations.JMutationsWithoutNDN)) /
-                                (maxScore(mutations.knownNDN) + maxScore(mutations.VMutationsWithoutNDN) + maxScore(mutations.JMutationsWithoutNDN))
+                        (score(mutations.getKnownNDN()) + score(mutations.getVMutationsWithoutNDN()) + score(mutations.getJMutationsWithoutNDN())) /
+                                (maxScore(mutations.getKnownNDN()) + maxScore(mutations.getVMutationsWithoutNDN()) + maxScore(mutations.getJMutationsWithoutNDN()))
                 )
         );
     }
 
     private MutationsDescription mutationsBetween(MutationsDescription first, MutationsDescription second) {
         return new MutationsDescription(
-                mutationsBetween(first.VMutationsWithoutNDN, second.VMutationsWithoutNDN),
-                mutationsBetween(first.knownNDN, second.knownNDN, first.knownNDN.getSequence1Range()),
-                mutationsBetween(first.JMutationsWithoutNDN, second.JMutationsWithoutNDN)
+                mutationsBetween(first.getVMutationsWithoutNDN(), second.getVMutationsWithoutNDN()),
+                mutationsBetween(first.getKnownNDN(), second.getKnownNDN(), first.getKnownNDN().getSequence1Range()),
+                mutationsBetween(first.getJMutationsWithoutNDN(), second.getJMutationsWithoutNDN())
         );
     }
 
     private MutationsDescription combineWith(MutationsDescription first, MutationsDescription second) {
         return new MutationsDescription(
-                combineWith(first.VMutationsWithoutNDN, second.VMutationsWithoutNDN),
-                combineWith(first.knownNDN, second.knownNDN, first.knownNDN.getSequence1Range()),
-                combineWith(first.JMutationsWithoutNDN, second.JMutationsWithoutNDN)
+                combineWith(first.getVMutationsWithoutNDN(), second.getVMutationsWithoutNDN()),
+                combineWith(first.getKnownNDN(), second.getKnownNDN(), first.getKnownNDN().getSequence1Range()),
+                combineWith(first.getJMutationsWithoutNDN(), second.getJMutationsWithoutNDN())
         );
     }
 
     private MutationsDescription commonMutations(MutationsDescription first, MutationsDescription second) {
         return new MutationsDescription(
-                intersection(first.VMutationsWithoutNDN, second.VMutationsWithoutNDN),
-                intersection(first.knownNDN, second.knownNDN, first.knownNDN.getSequence1Range()),
-                intersection(first.JMutationsWithoutNDN, second.JMutationsWithoutNDN)
+                intersection(first.getVMutationsWithoutNDN(), second.getVMutationsWithoutNDN()),
+                intersection(first.getKnownNDN(), second.getKnownNDN(), first.getKnownNDN().getSequence1Range()),
+                intersection(first.getJMutationsWithoutNDN(), second.getJMutationsWithoutNDN())
         );
     }
 
@@ -787,7 +502,7 @@ class ClusterProcessor {
                         comparison.getCombinedMutations()
                 ),
                 intersection,
-                base.isIncludeLastInserts() || comparison.isIncludeLastInserts()
+                true, base.isIncludeLastMutations() || comparison.isIncludeLastMutations()
         );
     }
 
@@ -798,7 +513,7 @@ class ClusterProcessor {
                 base.getCombinedMutations().invert()
                         .combineWith(comparison.getCombinedMutations()),
                 intersection,
-                base.isIncludeLastInserts() || comparison.isIncludeLastInserts()
+                true, base.isIncludeLastMutations() || comparison.isIncludeLastMutations()
         );
     }
 
@@ -811,7 +526,7 @@ class ClusterProcessor {
                         comparison.getFromParentToThis()
                 ),
                 intersection,
-                base.isIncludeLastInserts() || comparison.isIncludeLastInserts()
+                true, base.isIncludeLastMutations() || comparison.isIncludeLastMutations()
         );
     }
 
@@ -824,31 +539,31 @@ class ClusterProcessor {
 
     private double distanceFromTree(MutationsDescription mutations, Tree<ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, MutationsDescription>> tree) {
         return tree.allNodes()
-                .map(node -> node.getContent().convert(it -> it.mutations, it -> it))
+                .map(node -> node.getContent().convert(it -> it.getMutationsFromRoot(), it -> it))
                 .mapToDouble(compareTo -> fitnessFunction(fitnessFunctionParams(mutations, compareTo)))
                 .min()
                 .orElseThrow(IllegalArgumentException::new);
     }
 
     private FitnessFunctionParams fitnessFunctionParams(MutationsFromVJGermline first, MutationsFromVJGermline second) {
-        MutationsWithRange CDR3MutationsBetween = mutations(first.knownNDN, second.knownNDN);
+        MutationsWithRange CDR3MutationsBetween = mutations(first.getKnownNDN(), second.getKnownNDN());
 
-        List<MutationsWithRange> VMutationsBetween = mutationsBetween(first.VMutationsWithoutNDN, second.VMutationsWithoutNDN);
+        List<MutationsWithRange> VMutationsBetween = mutationsBetween(first.getVMutationsWithoutNDN(), second.getVMutationsWithoutNDN());
         double VMutationsBetweenScore = score(VMutationsBetween);
 
-        List<MutationsWithRange> JMutationsBetween = mutationsBetween(first.JMutationsWithoutNDN, second.JMutationsWithoutNDN);
+        List<MutationsWithRange> JMutationsBetween = mutationsBetween(first.getJMutationsWithoutNDN(), second.getJMutationsWithoutNDN());
         double JMutationsBetweenScore = score(JMutationsBetween);
 
         double CDR3MutationsBetweenScore = score(CDR3MutationsBetween);
 
-        double maxScoreForFirstVJ = maxScore(first.VMutationsWithoutNDN) + maxScore(first.JMutationsWithoutNDN);
-        double maxScoreForSecondVJ = maxScore(second.VMutationsWithoutNDN) + maxScore(second.JMutationsWithoutNDN);
+        double maxScoreForFirstVJ = maxScore(first.getVMutationsWithoutNDN()) + maxScore(first.getJMutationsWithoutNDN());
+        double maxScoreForSecondVJ = maxScore(second.getVMutationsWithoutNDN()) + maxScore(second.getJMutationsWithoutNDN());
         double maxScoreForVJ = Math.max(maxScoreForFirstVJ, maxScoreForSecondVJ);
-        double maxScoreForCDR3 = Math.max(maxScore(first.knownNDN), maxScore(second.knownNDN));
+        double maxScoreForCDR3 = Math.max(maxScore(first.getKnownNDN()), maxScore(second.getKnownNDN()));
 
 
-        double normalizedDistanceFromFirstToGermline = 1 - (score(first.VMutationsWithoutNDN) + score(first.JMutationsWithoutNDN)) / maxScoreForFirstVJ;
-        double normalizedDistanceFromSecondToGermline = 1 - (score(second.VMutationsWithoutNDN) + score(second.JMutationsWithoutNDN)) / maxScoreForSecondVJ;
+        double normalizedDistanceFromFirstToGermline = 1 - (score(first.getVMutationsWithoutNDN()) + score(first.getJMutationsWithoutNDN())) / maxScoreForFirstVJ;
+        double normalizedDistanceFromSecondToGermline = 1 - (score(second.getVMutationsWithoutNDN()) + score(second.getJMutationsWithoutNDN())) / maxScoreForSecondVJ;
         double normalizedDistanceBetweenClones = 1 - (VMutationsBetweenScore + JMutationsBetweenScore + CDR3MutationsBetweenScore) /
                 (maxScoreForVJ + maxScoreForCDR3);
         double normalizedDistanceBetweenClonesInCDR3 = 1 - (CDR3MutationsBetweenScore) / maxScoreForCDR3;
@@ -864,24 +579,24 @@ class ClusterProcessor {
 
     //TODO duplicated code
     private FitnessFunctionParams fitnessFunctionParams(MutationsDescription first, MutationsDescription second) {
-        MutationsWithRange CDR3MutationsBetween = mutationsBetween(first.knownNDN, second.knownNDN, first.knownNDN.getSequence1Range());
+        MutationsWithRange CDR3MutationsBetween = mutationsBetween(first.getKnownNDN(), second.getKnownNDN(), first.getKnownNDN().getSequence1Range());
 
-        List<MutationsWithRange> VMutationsBetween = mutationsBetween(first.VMutationsWithoutNDN, second.VMutationsWithoutNDN);
+        List<MutationsWithRange> VMutationsBetween = mutationsBetween(first.getVMutationsWithoutNDN(), second.getVMutationsWithoutNDN());
         double VMutationsBetweenScore = score(VMutationsBetween);
 
-        List<MutationsWithRange> JMutationsBetween = mutationsBetween(first.JMutationsWithoutNDN, second.JMutationsWithoutNDN);
+        List<MutationsWithRange> JMutationsBetween = mutationsBetween(first.getJMutationsWithoutNDN(), second.getJMutationsWithoutNDN());
         double JMutationsBetweenScore = score(JMutationsBetween);
 
         double CDR3MutationsBetweenScore = score(CDR3MutationsBetween);
 
-        double maxScoreForFirstVJ = maxScore(first.VMutationsWithoutNDN) + maxScore(first.JMutationsWithoutNDN);
-        double maxScoreForSecondVJ = maxScore(second.VMutationsWithoutNDN) + maxScore(second.JMutationsWithoutNDN);
+        double maxScoreForFirstVJ = maxScore(first.getVMutationsWithoutNDN()) + maxScore(first.getJMutationsWithoutNDN());
+        double maxScoreForSecondVJ = maxScore(second.getVMutationsWithoutNDN()) + maxScore(second.getJMutationsWithoutNDN());
         double maxScoreForVJ = Math.max(maxScoreForFirstVJ, maxScoreForSecondVJ);
-        double maxScoreForCDR3 = Math.max(maxScore(first.knownNDN), maxScore(second.knownNDN));
+        double maxScoreForCDR3 = Math.max(maxScore(first.getKnownNDN()), maxScore(second.getKnownNDN()));
 
 
-        double normalizedDistanceFromFirstToGermline = 1 - (score(first.VMutationsWithoutNDN) + score(first.JMutationsWithoutNDN)) / maxScoreForFirstVJ;
-        double normalizedDistanceFromSecondToGermline = 1 - (score(second.VMutationsWithoutNDN) + score(second.JMutationsWithoutNDN)) / maxScoreForSecondVJ;
+        double normalizedDistanceFromFirstToGermline = 1 - (score(first.getVMutationsWithoutNDN()) + score(first.getJMutationsWithoutNDN())) / maxScoreForFirstVJ;
+        double normalizedDistanceFromSecondToGermline = 1 - (score(second.getVMutationsWithoutNDN()) + score(second.getJMutationsWithoutNDN())) / maxScoreForSecondVJ;
         double normalizedDistanceBetweenClones = 1 - (VMutationsBetweenScore + JMutationsBetweenScore + CDR3MutationsBetweenScore) /
                 (maxScoreForVJ + maxScoreForCDR3);
         double normalizedDistanceBetweenClonesInCDR3 = 1 - (CDR3MutationsBetweenScore) / maxScoreForCDR3;
@@ -923,146 +638,6 @@ class ClusterProcessor {
         );
     }
 
-    private static MutationsWithRange mutations(NucleotideSequence first, NucleotideSequence second) {
-        return new MutationsWithRange(
-                first,
-                EMPTY_NUCLEOTIDE_MUTATIONS,
-                Aligner.alignGlobal(
-                        AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-                        first,
-                        second
-                ).getAbsoluteMutations(),
-                new Range(0, first.size()),
-                true
-        );
-    }
-
-    private static class ClusteringResult {
-        private final List<Cluster<CloneWithMutationsFromVJGermline>> clusters;
-        /**
-         * sorted by score from VJ
-         */
-        private final List<CloneWithMutationsFromVJGermline> clonesNotInClusters;
-
-        private ClusteringResult(List<Cluster<CloneWithMutationsFromVJGermline>> clusters, List<CloneWithMutationsFromVJGermline> clonesNotInClusters) {
-            this.clusters = clusters;
-            this.clonesNotInClusters = clonesNotInClusters;
-        }
-    }
-
-    private static class MutationsFromVJGermline {
-        private final List<MutationsWithRange> VMutationsWithoutNDN;
-        private final Pair<Mutations<NucleotideSequence>, Range> knownVMutationsWithinNDN;
-        private final Range VRangeInCDR3;
-        private final Range JRangeInCDR3;
-        private final NucleotideSequence knownNDN;
-        private final List<MutationsWithRange> JMutationsWithoutNDN;
-        private final Pair<Mutations<NucleotideSequence>, Range> knownJMutationsWithinNDN;
-
-        private MutationsFromVJGermline(
-                List<MutationsWithRange> VMutationsWithoutNDN,
-                Pair<Mutations<NucleotideSequence>, Range> knownVMutationsWithinNDN,
-                Range VRangeInCDR3,
-                Range JRangeInCDR3,
-                NucleotideSequence knownNDN,
-                List<MutationsWithRange> JMutationsWithoutNDN,
-                Pair<Mutations<NucleotideSequence>, Range> knownJMutationsWithinNDN
-        ) {
-            this.VMutationsWithoutNDN = VMutationsWithoutNDN;
-            this.knownVMutationsWithinNDN = knownVMutationsWithinNDN;
-            this.VRangeInCDR3 = VRangeInCDR3;
-            this.JRangeInCDR3 = JRangeInCDR3;
-            this.JMutationsWithoutNDN = JMutationsWithoutNDN;
-            this.knownNDN = knownNDN;
-            this.knownJMutationsWithinNDN = knownJMutationsWithinNDN;
-        }
-    }
-
-    private static class MutationsDescription {
-        private final List<MutationsWithRange> VMutationsWithoutNDN;
-        private final MutationsWithRange knownNDN;
-        private final List<MutationsWithRange> JMutationsWithoutNDN;
-
-        public MutationsDescription(
-                List<MutationsWithRange> VMutationsWithoutNDN,
-                MutationsWithRange knownNDN,
-                List<MutationsWithRange> JMutationsWithoutNDN
-        ) {
-            this.knownNDN = knownNDN;
-            this.VMutationsWithoutNDN = VMutationsWithoutNDN;
-            this.JMutationsWithoutNDN = JMutationsWithoutNDN;
-        }
-    }
-
-    private AncestorInfo buildAncestorInfo(MutationsDescription ancestor) {
-        SequenceBuilder<NucleotideSequence> builder = NucleotideSequence.ALPHABET.createBuilder();
-        ancestor.VMutationsWithoutNDN.stream()
-                .map(ClusterProcessor::buildSequence)
-                .forEach(builder::append);
-        int CDR3Begin = getPositionInSequence2(ancestor.VMutationsWithoutNDN, getVRelativePosition.apply(ReferencePoint.CDR3Begin))
-                .orElseThrow(IllegalArgumentException::new);
-        builder.append(buildSequence(ancestor.knownNDN));
-        int CDR3End = getPositionInSequence2(ancestor.JMutationsWithoutNDN, getJRelativePosition.apply(ReferencePoint.CDR3End))
-                .orElseThrow(IllegalArgumentException::new) + builder.size();
-        ancestor.JMutationsWithoutNDN.stream()
-                .map(ClusterProcessor::buildSequence)
-                .forEach(builder::append);
-        return new AncestorInfo(
-                builder.createAndDestroy(),
-                CDR3Begin,
-                CDR3End
-        );
-    }
-
-    private Optional<Integer> getPositionInSequence2(List<MutationsWithRange> mutations, int positionInSequence1) {
-        int rangesBefore = mutations.stream()
-                .filter(mutation -> mutation.getSequence1Range().getUpper() < positionInSequence1)
-                .mapToInt(mutation -> mutation.getSequence1Range().length() + lengthDelta(mutation))
-                .sum();
-
-        return mutations.stream()
-                .filter(it -> it.getSequence1Range().contains(positionInSequence1) || it.getSequence1Range().getUpper() == positionInSequence1)
-                .map(mutation -> {
-                    Mutations<NucleotideSequence> mutationsWithinRange = removeMutationsNotInRange(
-                            mutation.getCombinedMutations(), mutation.getSequence1Range(), mutation.isIncludeLastInserts()
-                    );
-                    int position = mutationsWithinRange.convertToSeq2Position(positionInSequence1);
-                    if (position < -1) {
-                        position = -(position + 1);
-                    }
-                    return position - mutation.getSequence1Range().getLower();
-                })
-                .findFirst()
-                .map(it -> it + rangesBefore);
-    }
-
-    private Mutations<NucleotideSequence> removeMutationsNotInRange(Mutations<NucleotideSequence> mutations, Range sequence1Range, boolean includeLastInserts) {
-        return new Mutations<>(
-                NucleotideSequence.ALPHABET,
-                IntStream.of(mutations.getRAWMutations())
-                        .filter(mutation -> {
-                            int position = Mutation.getPosition(mutation);
-                            return sequence1Range.contains(position) || (includeLastInserts && position == sequence1Range.getUpper());
-                        })
-                        .toArray()
-        );
-    }
-
-
-    private int lengthDelta(MutationsWithRange mutations) {
-        Range sequence2Range = MutationsUtils.projectRange(mutations.getCombinedMutations(), mutations.getSequence1Range(), mutations.isIncludeLastInserts());
-        return sequence2Range.length() - mutations.getSequence1Range().length();
-    }
-
-    private static NucleotideSequence buildSequence(MutationsWithRange mutations) {
-        return MutationsUtils.buildSequence(
-                mutations.getSequence1(),
-                mutations.getCombinedMutations(),
-                mutations.getSequence1Range(),
-                mutations.isIncludeLastInserts()
-        );
-    }
-
     private static class TreeWithMeta {
         private final TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, MutationsDescription, MutationsDescription> treeBuilder;
         private final RootInfo rootInfo;
@@ -1076,33 +651,16 @@ class ClusterProcessor {
         }
     }
 
-    private static class RootInfo {
-        private final Range VRangeInCDR3;
-        private final Range JRangeInCDR3;
-        private final NucleotideSequence reconstructedNDN;
+    private static class ClusteringResult {
+        private final List<Cluster<CloneWithMutationsFromVJGermline>> clusters;
+        /**
+         * sorted by score from VJ
+         */
+        private final List<CloneWithMutationsFromVJGermline> clonesNotInClusters;
 
-        private RootInfo(Range VRangeInCDR3, Range JRangeInCDR3, NucleotideSequence reconstructedNDN) {
-            this.VRangeInCDR3 = VRangeInCDR3;
-            this.JRangeInCDR3 = JRangeInCDR3;
-            this.reconstructedNDN = reconstructedNDN;
-        }
-    }
-
-    private static class CloneWithMutationsFromReconstructedRoot {
-        private final MutationsDescription mutations;
-        private final CloneWithMutationsFromVJGermline original;
-
-        private CloneWithMutationsFromReconstructedRoot(MutationsDescription mutations, CloneWithMutationsFromVJGermline original) {
-            this.mutations = mutations;
-            this.original = original;
-        }
-
-        public MutationsDescription getMutations() {
-            return mutations;
-        }
-
-        public CloneWithMutationsFromVJGermline getOriginal() {
-            return original;
+        private ClusteringResult(List<Cluster<CloneWithMutationsFromVJGermline>> clusters, List<CloneWithMutationsFromVJGermline> clonesNotInClusters) {
+            this.clusters = clusters;
+            this.clonesNotInClusters = clonesNotInClusters;
         }
     }
 

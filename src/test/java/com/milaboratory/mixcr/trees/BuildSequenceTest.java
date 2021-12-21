@@ -16,7 +16,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static com.milaboratory.mixcr.trees.MutationOperationsTest.mutate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -45,9 +44,9 @@ public class BuildSequenceTest {
             NucleotideSequence part1 = generate(random);
             NucleotideSequence part2 = generate(random);
             NucleotideSequence part3 = generate(random);
-            NucleotideSequence mutatedPart1 = mutate(part1, random);
-            NucleotideSequence mutatedPart2 = mutate(part2, random);
-            NucleotideSequence mutatedPart3 = mutate(part3, random);
+            NucleotideSequence mutatedPart1 = MutationOperationsTest.generateMutations(part1, random).mutate(part1);
+            NucleotideSequence mutatedPart2 = MutationOperationsTest.generateMutations(part2, random).mutate(part2);
+            NucleotideSequence mutatedPart3 = MutationOperationsTest.generateMutations(part3, random).mutate(part3);
             NucleotideSequence parent = NucleotideSequence.ALPHABET.createBuilder()
                     .append(part1)
                     .append(part2)
@@ -81,11 +80,11 @@ public class BuildSequenceTest {
                 System.out.println(part3 + " => " + mutatedPart3);
             }
             final Range sequence1Range = new Range(0, part1.size());
-            NucleotideSequence resultPart1 = MutationsUtils.buildSequence(parent, mutations, sequence1Range, false);
+            NucleotideSequence resultPart1 = MutationsUtils.buildSequence(parent, mutations, sequence1Range, true, false);
             final Range sequence1Range1 = new Range(part1.size(), part1.size() + part2.size());
-            NucleotideSequence resultPart2 = MutationsUtils.buildSequence(parent, mutations, sequence1Range1, false);
+            NucleotideSequence resultPart2 = MutationsUtils.buildSequence(parent, mutations, sequence1Range1, true, false);
             final Range sequence1Range2 = new Range(part1.size() + part2.size(), parent.size());
-            NucleotideSequence resultPart3 = MutationsUtils.buildSequence(parent, mutations, sequence1Range2, true);
+            NucleotideSequence resultPart3 = MutationsUtils.buildSequence(parent, mutations, sequence1Range2, true, true);
             NucleotideSequence result = NucleotideSequence.ALPHABET.createBuilder()
                     .append(resultPart1)
                     .append(resultPart2)

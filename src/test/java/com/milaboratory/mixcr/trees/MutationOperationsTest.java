@@ -1,8 +1,10 @@
 package com.milaboratory.mixcr.trees;
 
 import com.google.common.primitives.Bytes;
+import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.alignment.Aligner;
+import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
 import com.milaboratory.core.mutations.Mutation;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.mutations.MutationsBuilder;
@@ -329,8 +331,8 @@ public class MutationOperationsTest {
                     .collect(Collectors.toList());
 
             NucleotideSequence parent = new NucleotideSequence(Bytes.toArray(chars));
-            NucleotideSequence first = mutate(parent, random);
-            NucleotideSequence second = mutate(parent, random);
+            NucleotideSequence first = generateMutations(parent, random).mutate(parent);
+            NucleotideSequence second = generateMutations(parent, random).mutate(parent);
             if (print) {
                 System.out.println("Parent:");
                 System.out.println(parent);
@@ -395,11 +397,15 @@ public class MutationOperationsTest {
         }
     }
 
-    static NucleotideSequence mutate(NucleotideSequence parent, Random random) {
+    static Mutations<NucleotideSequence> generateMutations(NucleotideSequence parent, Random random) {
+        return generateMutations(parent, random, new Range(0, parent.size()));
+    }
+
+    static Mutations<NucleotideSequence> generateMutations(NucleotideSequence parent, Random random, Range range) {
         MutationsBuilder<NucleotideSequence> result = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
 
         byte[] parentChars = parent.getSequence().asArray();
-        for (int i = 0; i < parentChars.length; i++) {
+        for (int i = range.getFrom(); i < range.getTo() - 1; i++) {
             int count = random.nextInt(20);
             switch (count) {
                 case 0:
@@ -422,7 +428,11 @@ public class MutationOperationsTest {
             }
         }
 
-        return result.createAndDestroy().mutate(parent);
+        return Aligner.alignGlobal(
+                LinearGapAlignmentScoring.getNucleotideBLASTScoring(),
+                parent,
+                result.createAndDestroy().mutate(parent)
+        ).getAbsoluteMutations();
     }
 
     private Mutations<NucleotideSequence> mutations(NucleotideSequence first, NucleotideSequence second) {

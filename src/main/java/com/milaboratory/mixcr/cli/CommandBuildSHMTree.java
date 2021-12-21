@@ -787,11 +787,13 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                             .filter(it -> !clonesInBaseTree.contains(it))
                             .collect(Collectors.toList());
 
+                    System.out.println("maxDistanceWithinCluster: " + shmTreeBuilderParameters.maxDistanceWithinCluster);
                     System.out.println("statistic:");
                     System.out.println("FP: " + falsePositive.size() + " FN: " + falseNegative.size() + " TP: " + truePositive.size());
                     System.out.println();
                     System.out.println("FP: " + falsePositive);
                     System.out.println("FN: " + falseNegative);
+                    System.out.println();
 
                     System.out.println("ids:");
                     System.out.println();
@@ -1002,7 +1004,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                         VRangeInCDR3.length()
                 ).getAbsoluteMutations(),
                 VRangeInCDR3,
-                true
+                true, true
         );
     }
 
@@ -1022,7 +1024,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                         JRangeInCDR3.length()
                 ).getAbsoluteMutations(),
                 JRangeInCDR3,
-                true
+                true, true
         );
     }
 
@@ -1091,7 +1093,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                                 base.getCombinedMutations(),
                                 base.getCombinedMutations().invert().combineWith(comparison.getCombinedMutations()),
                                 intersection,
-                                true
+                                true, true
                         ));
                     } else {
                         return Stream.empty();

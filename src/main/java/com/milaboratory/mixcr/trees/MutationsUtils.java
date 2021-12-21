@@ -24,16 +24,21 @@ final class MutationsUtils {
     /**
      * Mutate and get result by range in original sequence
      */
-    public static NucleotideSequence buildSequence(NucleotideSequence sequence1, Mutations<NucleotideSequence> mutations, Range sequence1Range, boolean includeLastInsertions) {
+    public static NucleotideSequence buildSequence(NucleotideSequence sequence1, Mutations<NucleotideSequence> mutations, Range sequence1Range, boolean includeFirstMutations, boolean includeLastInsertions) {
         return mutations.mutate(sequence1)
-                .getRange(projectRange(mutations, sequence1Range, includeLastInsertions));
+                .getRange(projectRange(mutations, sequence1Range, includeFirstMutations, includeLastInsertions));
     }
 
-    public static Range projectRange(Mutations<NucleotideSequence> mutations, Range sequence1Range, boolean includeLastInsertions) {
+    public static Range projectRange(Mutations<NucleotideSequence> mutations, Range sequence1Range, boolean includeFirstMutations, boolean includeLastMutations) {
         //for including inclusions before position one must step left before conversion and step right after
-        int from = positionIfNucleotideWasDeleted(mutations.convertToSeq2Position(sequence1Range.getLower() - 1)) + 1;
+        int from;
+        if (includeFirstMutations) {
+            from = positionIfNucleotideWasDeleted(mutations.convertToSeq2Position(sequence1Range.getLower() - 1)) + 1;
+        } else {
+            from = positionIfNucleotideWasDeleted(mutations.convertToSeq2Position(sequence1Range.getLower()));
+        }
         int to;
-        if (includeLastInsertions) {
+        if (includeLastMutations) {
             to = positionIfNucleotideWasDeleted(mutations.convertToSeq2Position(sequence1Range.getUpper()));
         } else {
             to = positionIfNucleotideWasDeleted(mutations.convertToSeq2Position(sequence1Range.getUpper() - 1)) + 1;
@@ -41,7 +46,7 @@ final class MutationsUtils {
         return new Range(from, to);
     }
 
-    private static int positionIfNucleotideWasDeleted(int position) {
+    static int positionIfNucleotideWasDeleted(int position) {
         if (position < -1) {
             return Math.abs(position + 2);
         }

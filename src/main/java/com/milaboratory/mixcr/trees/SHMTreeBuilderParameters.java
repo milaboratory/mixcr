@@ -57,21 +57,26 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
      * Parameter that defines sensitivity of clusterisation
      */
     public final double maxDistanceWithinCluster;
+    /**
+     * Hide small trees
+     */
+    public final int hideTreesLessThanSize;
 
     @JsonCreator
     public SHMTreeBuilderParameters(
             @JsonProperty("targetRegion") GeneFeature targetRegion,
             @JsonProperty("productiveOnly") boolean productiveOnly,
-            @JsonProperty("maxDistanceWithinCluster") double maxDistanceWithinCluster
-    ) {
+            @JsonProperty("maxDistanceWithinCluster") double maxDistanceWithinCluster,
+            @JsonProperty("hideTreesLessThanSize") int hideTreesLessThanSize) {
         this.targetRegion = targetRegion;
         this.productiveOnly = productiveOnly;
         this.maxDistanceWithinCluster = maxDistanceWithinCluster;
+        this.hideTreesLessThanSize = hideTreesLessThanSize;
     }
 
     @Override
     public SHMTreeBuilderParameters clone() {
-        return new SHMTreeBuilderParameters(targetRegion, productiveOnly, maxDistanceWithinCluster);
+        return new SHMTreeBuilderParameters(targetRegion, productiveOnly, maxDistanceWithinCluster, hideTreesLessThanSize);
     }
 
     @Override
@@ -79,11 +84,11 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SHMTreeBuilderParameters that = (SHMTreeBuilderParameters) o;
-        return productiveOnly == that.productiveOnly && Double.compare(that.maxDistanceWithinCluster, maxDistanceWithinCluster) == 0 && Objects.equals(targetRegion, that.targetRegion);
+        return productiveOnly == that.productiveOnly && Double.compare(that.maxDistanceWithinCluster, maxDistanceWithinCluster) == 0 && hideTreesLessThanSize == that.hideTreesLessThanSize && Objects.equals(targetRegion, that.targetRegion);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(targetRegion, productiveOnly, maxDistanceWithinCluster);
+        return Objects.hash(targetRegion, productiveOnly, maxDistanceWithinCluster, hideTreesLessThanSize);
     }
 }

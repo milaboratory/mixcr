@@ -104,7 +104,7 @@ public interface ClusteringCriteria {
                                 Mutations.EMPTY_NUCLEOTIDE_MUTATIONS,
                                 mutations,
                                 rangesWithoutCDR3.get(0),
-                                true
+                                true, true
                         ));
                     } else {
                         return Stream.empty();
