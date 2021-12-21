@@ -11,21 +11,6 @@ import kotlin.random.asJavaRandom
  */
 internal class CompareMeansTest {
 
-    fun rndData(
-        vararg cols: Pair<String, Distribution>,
-        len: Int = 100,
-        random: Random = Random.Default
-    ) = run {
-        val datum = cols.map {
-            val d = it.second
-            it.first to when (d) {
-                Normal -> (0 until len).map { random.nextDouble() }
-                Gaussian -> (0 until len).map { random.asJavaRandom().nextGaussian() }
-                is Category -> (0 until len).map { random.nextInt(d.n).toString() }
-            }
-        }
-        datum.toMap().toDataFrame()
-    }
 
     @Test
     fun test1() {
@@ -41,9 +26,28 @@ internal class CompareMeansTest {
             data,
             refGroup = RefGroup.all,
             method = TestMethod.TTest
-        ).stat
+        ).statistics.stat
 
         comp.print()
+    }
+
+    companion object {
+
+        fun rndData(
+            vararg cols: Pair<String, Distribution>,
+            len: Int = 100,
+            random: Random = Random.Default
+        ) = run {
+            val datum = cols.map {
+                val d = it.second
+                it.first to when (d) {
+                    Normal -> (0 until len).map { random.nextDouble() }
+                    Gaussian -> (0 until len).map { random.asJavaRandom().nextGaussian() }
+                    is Category -> (0 until len).map { random.nextInt(d.n).toString() }
+                }
+            }
+            datum.toMap().toDataFrame()
+        }
     }
 }
 

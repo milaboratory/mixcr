@@ -1,5 +1,8 @@
 package com.milaboratory.mixcr.postanalysis.dataframe
 
+import jetbrains.datalore.plot.PlotSvgExport
+import jetbrains.letsPlot.intern.Plot
+import jetbrains.letsPlot.intern.toSpec
 import org.apache.batik.transcoder.TranscoderInput
 import org.apache.batik.transcoder.TranscoderOutput
 import org.apache.fop.render.ps.EPSTranscoder
@@ -11,6 +14,10 @@ import java.io.ByteArrayOutputStream
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.writeBytes
+
+fun Plot.toSvg() = PlotSvgExport.buildSvgImageFromRawSpecs(toSpec())
+fun Plot.toPDF() = toPdf(this.toSvg())
+fun Plot.toEPS() = toEPS(this.toSvg())
 
 fun toPdf(svg: String) = toVector(svg, ExportType.PDF)
 fun toEPS(svg: String) = toVector(svg, ExportType.EPS)

@@ -8,6 +8,7 @@ import jetbrains.datalore.plot.PlotSvgExport
 import jetbrains.letsPlot.Pos
 import jetbrains.letsPlot.geom.geomBoxplot
 import jetbrains.letsPlot.geom.geomPoint
+import jetbrains.letsPlot.intern.Plot
 import jetbrains.letsPlot.intern.toSpec
 import jetbrains.letsPlot.label.ggtitle
 import jetbrains.letsPlot.label.labs
@@ -135,7 +136,7 @@ object SimpleStatistics {
         if (filteredDf.isEmpty())
             return@map null
 
-        var plt = letsPlot(filteredDf.toMap()) {
+        var plt: Plot = letsPlot(filteredDf.toMap()) {
             x = settings.primaryGroup
             y = SimpleMetricsRow.value.name()
             group = settings.secondaryGroup

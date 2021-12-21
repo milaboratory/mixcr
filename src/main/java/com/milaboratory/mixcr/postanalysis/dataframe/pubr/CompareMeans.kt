@@ -55,38 +55,66 @@ sealed interface RefGroup {
     }
 }
 
-/**
- *
- */
-class CompareMeans(
+interface CompareMeansParameters {
     /**
      * The formula
      */
-    val formula: Formula,
+    var formula: Formula?
+
     /**
      * A dataframe containing the variables in the formula.
      */
-    val data: AnyFrame,
+    var data: AnyFrame?
+
     /**
      * The type of test. Default is Wilcox
      */
-    val method: TestMethod = TestMethod.Wilcox,
+    val method: TestMethod
+
     /**
      * Variables used to group the data set before applying the test.
      * When specified the mean comparisons will be performed in each
      * subset of the data formed by the different levels of the groupBy variables.
      */
-    val groupBy: Factor? = null,
+    val groupBy: Factor?
+
     /**
      * Method for adjusting p values. Default is Holm.
      */
-    val pAdjustMethod: PValueCorrection.Method? = PValueCorrection.Method.Holm,
+    val pAdjustMethod: PValueCorrection.Method?
+
     /**
      * The reference group. If specified, for a given grouping variable, each of the
      * group levels will be compared to the reference group (i.e. control group).
      * refGroup can be also “all”. In this case, each of the grouping variable levels
      * is compared to all (i.e. base-mean).
      */
+    val refGroup: RefGroup?
+}
+
+class CompareMeans(
+    override var formula: Formula? = null,
+    override var data: AnyFrame? = null,
+    override val method: TestMethod = TestMethod.Wilcox,
+    override val groupBy: Factor? = null,
+    override val pAdjustMethod: PValueCorrection.Method? = null,
+    override val refGroup: RefGroup? = null,
+) : CompareMeansParameters {
+
+    val statistics by lazy {
+        CompareMeansImpl(formula!!, data!!, method, groupBy, pAdjustMethod, refGroup)
+    }
+}
+
+/**
+ *
+ */
+class CompareMeansImpl(
+    val formula: Formula,
+    val data: AnyFrame,
+    val method: TestMethod = TestMethod.Wilcox,
+    val groupBy: Factor? = null,
+    val pAdjustMethod: PValueCorrection.Method? = PValueCorrection.Method.Holm,
     val refGroup: RefGroup? = null
 ) {
 
@@ -103,7 +131,11 @@ class CompareMeans(
 
     /** Overall p-value computed with one way ANOVA */
     val anovaPValue by lazy {
-        OneWayAnova().anovaPValue(groups.map { it.second })
+        val datum = groups.map { it.second }.filter { it.size > 2 }
+        if (datum.size < 2)
+            -1.0
+        else
+            OneWayAnova().anovaPValue(datum)
     }
 
     /** List of all "compare means" with no p-Value adjustment */
