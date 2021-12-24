@@ -95,7 +95,7 @@ interface CompareMeansParameters {
 class CompareMeans(
     override var formula: Formula? = null,
     override var data: AnyFrame? = null,
-    override val method: TestMethod = TestMethod.Wilcox,
+    override val method: TestMethod = TestMethod.Wilcoxon,
     override val groupBy: Factor? = null,
     override val pAdjustMethod: PValueCorrection.Method? = null,
     override val refGroup: RefGroup? = null,
@@ -112,7 +112,7 @@ class CompareMeans(
 class CompareMeansImpl(
     val formula: Formula,
     val data: AnyFrame,
-    val method: TestMethod = TestMethod.Wilcox,
+    val method: TestMethod = TestMethod.Wilcoxon,
     val groupBy: Factor? = null,
     val pAdjustMethod: PValueCorrection.Method? = PValueCorrection.Method.Holm,
     val refGroup: RefGroup? = null
@@ -124,13 +124,20 @@ class CompareMeansImpl(
     }
 
     /** data array for each group*/
-    private val groups: List<Pair<RefGroup, DoubleArray>> =
+    private val groups: List<Pair<RefGroup, DoubleArray>> by lazy {
         data.groupBy(*formula.factor.arr).groups.toList().map {
             getRefGroup(it, formula.factor.arr) to it[formula.y].cast<Double>().toDoubleArray()
         }
+    }
+
+    /** Method used to compute overall p-value */
+    val overallPValueMethod =
+        if (method.pairedOnly)
+            TestMethod.ANOVA
+        else method
 
     /** Overall p-value computed with one way ANOVA */
-    val anovaPValue by lazy {
+    val overallPValue by lazy {
         val datum = groups.map { it.second }.filter { it.size > 2 }
         if (datum.size < 2)
             -1.0
@@ -139,7 +146,7 @@ class CompareMeansImpl(
     }
 
     /** List of all "compare means" with no p-Value adjustment */
-    private val compareMeansRaw: List<CompareMeansRow> = run {
+    private val compareMeansRaw: List<CompareMeansRow> by lazy {
         if (refGroup != null) {
             val groups = this.groups.toMap()
 
@@ -196,7 +203,7 @@ class CompareMeansImpl(
     }
 
     /** Compare means with adjusted p-values and significance */
-    private val compareMeansAdj =
+    private val compareMeansAdj by lazy {
         if (pAdjustMethod == null || compareMeansRaw.isEmpty())
             compareMeansRaw
         else {
@@ -210,9 +217,10 @@ class CompareMeansImpl(
                 )
             }
         }
+    }
 
     /** Compare means statistics */
-    val stat = compareMeansAdj.toDataFrame()
+    val stat by lazy { compareMeansAdj.toDataFrame() }
 
     private fun getRefGroup(df: AnyFrame, group: Array<String>) = run {
         val f = df.first()
@@ -221,7 +229,7 @@ class CompareMeansImpl(
 
     /** Compute p-value */
     private fun pValue(method: TestMethod, a: DoubleArray, b: DoubleArray) = when (method) {
-        TestMethod.Wilcox ->
+        TestMethod.Wilcoxon ->
             if (a.size != b.size)
                 MannWhitneyUTest().mannWhitneyUTest(a, b)
             else
@@ -252,11 +260,15 @@ enum class SignificanceLevel(val string: String) {
 }
 
 /** Method for calculation of p-value */
-enum class TestMethod {
-    TTest,
-    Wilcox,
-    ANOVA,
-    Kruskal
+enum class TestMethod(val pairedOnly: Boolean, val str: String) {
+    TTest(true, "T-test"),
+    Wilcoxon(true, "Wilcoxon"),
+    ANOVA(false, "ANOVA"),
+    Kruskal(false, "Kruskal-Wallis");
+
+    override fun toString(): String {
+        return str;
+    }
 }
 
 /**
