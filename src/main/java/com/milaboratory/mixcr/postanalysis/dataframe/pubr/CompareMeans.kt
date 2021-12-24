@@ -35,8 +35,11 @@ fun Factor(vararg columnNames: String) = Factor(columnNames.toList())
  * Reference group
  **/
 sealed interface RefGroup {
+    fun value(): Any
+
     companion object {
         internal object All : RefGroup {
+            override fun value(): Any = ""
             override fun toString() = "all"
         }
 
@@ -44,6 +47,7 @@ sealed interface RefGroup {
         val all: RefGroup = All
 
         internal data class RefGroupImpl(val colValues: List<Any?>) : RefGroup {
+            override fun value(): Any = colValues.joinToString(",")
             override fun toString() = colValues.joinToString("+")
         }
 
@@ -130,9 +134,15 @@ class CompareMeansImpl(
         }
     }
 
+    /** maximal y value */
+    val yMax by lazy { allData.maxOrNull() ?: 0.0 }
+
+    /** minimal y value */
+    val yMin by lazy { allData.minOrNull() ?: 0.0 }
+
     /** Method used to compute overall p-value */
     val overallPValueMethod =
-        if (method.pairedOnly)
+        if (method.pairedOnly && groups.map { it.second }.filter { it.size > 2 }.size > 2)
             TestMethod.ANOVA
         else method
 
@@ -142,7 +152,12 @@ class CompareMeansImpl(
         if (datum.size < 2)
             -1.0
         else
-            OneWayAnova().anovaPValue(datum)
+            overallPValueMethod.pValue(*datum.toTypedArray())
+    }
+
+    /** Formatted [overallPValue] */
+    val overallPValueFmt by lazy {
+        formatPValue(overallPValue)
     }
 
     /** List of all "compare means" with no p-Value adjustment */
@@ -165,7 +180,7 @@ class CompareMeansImpl(
                 if (refData.size < 2 || data.size < 2)
                     return@map null
 
-                val pValue = pValue(method, refData, data)
+                val pValue = method.pValue(refData, data)
 
                 CompareMeansRow(
                     formula.y, method,
@@ -184,8 +199,7 @@ class CompareMeansImpl(
                     if (iGroup.second.size < 2 || jGroup.second.size < 2)
                         continue
 
-                    val pValue = pValue(
-                        method,
+                    val pValue = method.pValue(
                         iGroup.second,
                         jGroup.second
                     )
@@ -226,22 +240,6 @@ class CompareMeansImpl(
         val f = df.first()
         RefGroup.Companion.RefGroupImpl(group.map { f[it] })
     }
-
-    /** Compute p-value */
-    private fun pValue(method: TestMethod, a: DoubleArray, b: DoubleArray) = when (method) {
-        TestMethod.Wilcoxon ->
-            if (a.size != b.size)
-                MannWhitneyUTest().mannWhitneyUTest(a, b)
-            else
-                WilcoxonSignedRankTest().wilcoxonSignedRankTest(a, b, false)
-        TestMethod.TTest ->
-            if (a.size != b.size)
-                TTest().tTest(a, b)
-            else
-                TTest().pairedTTest(a, b)
-        TestMethod.ANOVA -> OneWayAnova().anovaPValue(listOf(a, b))
-        TestMethod.Kruskal -> throw RuntimeException("not supported yet")
-    }
 }
 
 enum class SignificanceLevel(val string: String) {
@@ -259,16 +257,62 @@ enum class SignificanceLevel(val string: String) {
     }
 }
 
+private fun formatPValue(pValue: Double, vararg oth: Double) = run {
+    val fn = (if (oth.isEmpty())
+        listOf(pValue)
+    else
+        oth.toList()).map { d ->
+        d.toString()
+            .replace(".", "")
+            .toCharArray()
+            .indexOfFirst { it != '0' }
+    }.maxOrNull() ?: 3
+
+    "%.${fn}f".format(pValue)
+}
+
 /** Method for calculation of p-value */
 enum class TestMethod(val pairedOnly: Boolean, val str: String) {
-    TTest(true, "T-test"),
-    Wilcoxon(true, "Wilcoxon"),
-    ANOVA(false, "ANOVA"),
-    Kruskal(false, "Kruskal-Wallis");
+    TTest(true, "T-test") {
+        override fun pValue(vararg arr: DoubleArray): Double {
+            if (arr.size != 2)
+                throw IllegalArgumentException("more than 2 datasets passed")
+            val a = arr[0]
+            val b = arr[1]
+            return if (a.size != b.size)
+                TTest().tTest(a, b)
+            else
+                TTest().pairedTTest(a, b)
+        }
+    },
+    Wilcoxon(true, "Wilcoxon") {
+        override fun pValue(vararg arr: DoubleArray): Double {
+            if (arr.size != 2)
+                throw IllegalArgumentException("more than 2 datasets passed")
+            val a = arr[0]
+            val b = arr[1]
+            return if (a.size != b.size)
+                MannWhitneyUTest().mannWhitneyUTest(a, b)
+            else
+                WilcoxonSignedRankTest().wilcoxonSignedRankTest(a, b, false)
+        }
+    },
+    ANOVA(false, "ANOVA") {
+        override fun pValue(vararg arr: DoubleArray) =
+            OneWayAnova().anovaPValue(arr.toList())
+
+    },
+    Kruskal(false, "Kruskal-Wallis") {
+        override fun pValue(vararg arr: DoubleArray): Double {
+            TODO("Not yet implemented")
+        }
+    };
 
     override fun toString(): String {
         return str;
     }
+
+    abstract fun pValue(vararg arr: DoubleArray): Double
 }
 
 /**

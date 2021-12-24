@@ -5,8 +5,6 @@ import jetbrains.letsPlot.geom.geomBoxplot
 import jetbrains.letsPlot.geom.geomText
 import jetbrains.letsPlot.intern.Plot
 import org.jetbrains.kotlinx.dataframe.AnyFrame
-import org.jetbrains.kotlinx.dataframe.api.cast
-import org.jetbrains.kotlinx.dataframe.api.max
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 
 @Suppress("ClassName")
@@ -20,6 +18,9 @@ class statCompareMeans(
 
     val pairs: List<Pair<String, String>> = emptyList()
 ) : CompareMeansParameters {
+
+    internal var x: String? = null
+
     val statistics by lazy {
         CompareMeansImpl(formula!!, data!!, method, groupBy, pAdjustMethod, refGroup)
     }
@@ -42,14 +43,20 @@ internal val Plot.boxPlotMapping
             m
         }
 
-operator fun Plot.plus(cmp: statCompareMeans) = run {
+operator fun Plot.plus(cmp: statCompareMeans): Plot = run {
     if (cmp.data == null) {
         @Suppress("UNCHECKED_CAST")
         cmp.data = (this.boxPlotData as Map<String, List<Any>>).toDataFrame()
     }
 
+    val aes = this.boxPlotMapping.map
+    if (cmp.x == null) {
+        if (aes.containsKey("x"))
+            cmp.x = aes["x"] as String
+        else if (aes.containsKey("group"))
+            cmp.x = aes["пкщгз"] as String
+    }
     if (cmp.formula == null) {
-        val aes = this.boxPlotMapping.map
         val factor =
             if (aes.containsKey("x") && aes.containsKey("group"))
                 Factor(aes["x"] as String, aes["group"] as String)
@@ -59,24 +66,49 @@ operator fun Plot.plus(cmp: statCompareMeans) = run {
                 Factor(aes["group"] as String)
             else
                 Factor()
-
         cmp.formula = Formula(aes["y"] as String, factor)
     }
 
-    if (cmp.pairs.isEmpty()) {
-
-        val stat = cmp.statistics
-        val data = cmp.data!!
-        val y = cmp.formula!!.y
-        val yMax = data[y].cast<Double>().max()
-
-
-        this + geomText(
-            x = 0,
-            y = yMax * 1.1,
-            label = "${stat.overallPValueMethod} p-value ${stat.overallPValue}"
-        )
-    } else {
+    if (cmp.pairs.isEmpty() && cmp.refGroup == null) {
+        this.withOverallPValue(cmp)
+    } else if (cmp.refGroup != null) {
+        this.withSignificanceLevel(cmp)
+    } else
         this
+}
+
+private fun Plot.withOverallPValue(cmp: statCompareMeans) = run {
+    val stat = cmp.statistics
+
+    this + geomText(
+        x = 0,
+        y = stat.yMax * 1.1,
+        family = "Inter",
+        size = 8,
+        label = "${stat.overallPValueMethod}, p = ${stat.overallPValueFmt}"
+    )
+}
+
+private fun Plot.withSignificanceLevel(cmp: statCompareMeans) = run {
+    val xVar = cmp.x!!
+    val stat = cmp.statistics
+
+    // group1 = refGroup
+    val statDf = stat.stat
+//    statDf[statDf.group2, statDf.pSignif].rename(statDf.group2.name() to x)
+//    listOf(
+//        stat.stat.group2,
+//        stat.stat.pSignif
+//    ).toDataFrame()
+
+    this + geomText(
+        mapOf(
+            xVar to statDf.group2.toList().map { it.value() },
+            "signif" to statDf.pSignif.toList().map { it.string }
+        ),
+        y = stat.yMax * 1.1
+    ) {
+        x = xVar
+        label = "signif"
     }
 }
