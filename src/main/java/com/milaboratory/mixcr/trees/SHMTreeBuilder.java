@@ -33,6 +33,8 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.blocks.FilteringPort;
 import cc.redberry.pipe.util.FlatteningOutputPort;
+import com.milaboratory.core.alignment.AlignmentScoring;
+import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneReader;
 import com.milaboratory.mixcr.basictypes.IOUtil;
@@ -56,6 +58,8 @@ public class SHMTreeBuilder {
     private final SHMTreeBuilderParameters parameters;
     private final ClusteringCriteria clusteringCriteria;
     private final List<CloneReader> datasets;
+    private final AlignmentScoring<NucleotideSequence> VScoring;
+    private final AlignmentScoring<NucleotideSequence> JScoring;
 
     public SHMTreeBuilder(SHMTreeBuilderParameters parameters,
                           ClusteringCriteria clusteringCriteria,
@@ -64,8 +68,8 @@ public class SHMTreeBuilder {
         this.parameters = parameters;
         this.clusteringCriteria = clusteringCriteria;
         this.datasets = datasets;
-
-        // todo group v/j genes
+        VScoring = datasets.get(0).getAssemblerParameters().getCloneFactoryParameters().getVParameters().getScoring();
+        JScoring = datasets.get(0).getAssemblerParameters().getCloneFactoryParameters().getJParameters().getScoring();
     }
 
     public OutputPortCloseable<CloneWrapper> sortClonotypes() throws IOException {
@@ -88,7 +92,10 @@ public class SHMTreeBuilder {
         // creating sorter instance
         HashSorter<CloneWrapper> sorter = new HashSorter<>(CloneWrapper.class,
                 c -> clusteringCriteria.clusteringHashCodeWithNumberOfMutations().applyAsInt(c.clone),
-                Comparator.comparing(c -> c.clone, clusteringCriteria.clusteringComparatorWithNumberOfMutations()),
+                Comparator.comparing(
+                        c -> c.clone,
+                        clusteringCriteria.clusteringComparatorWithNumberOfMutations(VScoring, JScoring)
+                ),
                 5,
                 Files.createTempFile("tree.builder", "hash.sorter"),
                 8,
@@ -157,6 +164,6 @@ public class SHMTreeBuilder {
     }
 
     public Collection<Tree<ObservedOrReconstructed<CloneWrapper, AncestorInfo>>> processCluster(Cluster<CloneWrapper> clusterBySameVAndJ) {
-        return new ClusterProcessor(parameters, clusterBySameVAndJ).buildTrees();
+        return new ClusterProcessor(parameters, VScoring, JScoring, clusterBySameVAndJ).buildTrees();
     }
 }

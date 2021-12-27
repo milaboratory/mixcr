@@ -189,6 +189,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
     /**
      * Clone assembler parameters
      */
+    @Override
     public CloneAssemblerParameters getAssemblerParameters() {
         return assemblerParameters;
     }

@@ -1,8 +1,8 @@
 package com.milaboratory.mixcr.trees;
 
 import com.milaboratory.core.Range;
-import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.alignment.Alignment;
+import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.alignment.AlignmentUtils;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
@@ -16,10 +16,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.ToIntFunction;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
+import static io.repseq.core.GeneType.Joining;
+import static io.repseq.core.GeneType.Variable;
 import static io.repseq.core.ReferencePoint.CDR3Begin;
 import static io.repseq.core.ReferencePoint.CDR3End;
 
@@ -41,10 +41,10 @@ public interface ClusteringCriteria {
         return clone -> clusteringHashCode().applyAsInt(clone);
     }
 
-    default Comparator<Clone> clusteringComparatorWithNumberOfMutations() {
+    default Comparator<Clone> clusteringComparatorWithNumberOfMutations(AlignmentScoring<NucleotideSequence> VScoring, AlignmentScoring<NucleotideSequence> JScoring) {
         return clusteringComparator()
                 .thenComparing(Comparator.<Clone>comparingDouble(clone ->
-                        score(getMutationsWithoutCDR3(clone, GeneType.Variable)) + score(getMutationsWithoutCDR3(clone, GeneType.Joining))
+                        mutationsScoreWithoutCDR3(clone, Variable, VScoring) + mutationsScoreWithoutCDR3(clone, Joining, JScoring)
                 ).reversed());
     }
 
@@ -52,8 +52,8 @@ public interface ClusteringCriteria {
         @Override
         public ToIntFunction<Clone> clusteringHashCode() {
             return clone -> Objects.hash(
-                    clone.getBestHitGene(GeneType.Variable).getId().getName(),
-                    clone.getBestHitGene(GeneType.Joining).getId().getName(),
+                    clone.getBestHitGene(Variable).getId().getName(),
+                    clone.getBestHitGene(Joining).getId().getName(),
                     //TODO remove
                     clone.ntLengthOf(GeneFeature.CDR3)
             );
@@ -62,35 +62,17 @@ public interface ClusteringCriteria {
         @Override
         public Comparator<Clone> clusteringComparator() {
             return Comparator
-                    .<Clone, String>comparing(c -> c.getBestHitGene(GeneType.Variable).getId().getName())
-                    .thenComparing(c -> c.getBestHitGene(GeneType.Joining).getId().getName())
+                    .<Clone, String>comparing(c -> c.getBestHitGene(Variable).getId().getName())
+                    .thenComparing(c -> c.getBestHitGene(Joining).getId().getName())
                     //TODO remove
                     .thenComparing(c -> c.ntLengthOf(GeneFeature.CDR3));
         }
     }
 
-    /**
-     * sum score of given mutations
-     */
-    static double score(List<MutationsWithRange> mutationsWithRanges) {
-        return mutationsWithRanges.stream()
-                .mapToDouble(ClusteringCriteria::score)
-                .sum();
-    }
-
-    static int score(MutationsWithRange mutations) {
-        return AlignmentUtils.calculateScore(
-                mutations.getFromBaseToParent().mutate(mutations.getSequence1()),
-                mutations.getFromParentToThis(),
-                AffineGapAlignmentScoring.getNucleotideBLASTScoring()
-        );
-    }
-
-    static List<MutationsWithRange> getMutationsWithoutCDR3(Clone clone, GeneType geneType) {
+    static double mutationsScoreWithoutCDR3(Clone clone, GeneType geneType, AlignmentScoring<NucleotideSequence> scoring) {
         VDJCHit bestHit = clone.getBestHit(geneType);
         return IntStream.range(0, bestHit.getAlignments().length)
-                .boxed()
-                .flatMap(index -> {
+                .mapToDouble(index -> {
                     Alignment<NucleotideSequence> alignment = bestHit.getAlignment(index);
                     Range CDR3Range = CDR3Sequence1Range(bestHit, index);
                     Mutations<NucleotideSequence> mutations = alignment.getAbsoluteMutations();
@@ -99,18 +81,16 @@ public interface ClusteringCriteria {
                         if (rangesWithoutCDR3.size() > 1) {
                             throw new IllegalStateException();
                         }
-                        return Stream.of(new MutationsWithRange(
+                        return AlignmentUtils.calculateScore(
                                 alignment.getSequence1(),
-                                Mutations.EMPTY_NUCLEOTIDE_MUTATIONS,
                                 mutations,
-                                rangesWithoutCDR3.get(0),
-                                true, true
-                        ));
+                                scoring
+                        );
                     } else {
-                        return Stream.empty();
+                        return 0.0;
                     }
                 })
-                .collect(Collectors.toList());
+                .sum();
     }
 
     static Range CDR3Sequence1Range(VDJCHit hit, int target) {

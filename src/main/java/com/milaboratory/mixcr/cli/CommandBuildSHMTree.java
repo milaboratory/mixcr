@@ -39,16 +39,14 @@ import com.google.common.collect.Sets;
 import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.core.Range;
-import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
-import com.milaboratory.core.alignment.Aligner;
-import com.milaboratory.core.alignment.Alignment;
-import com.milaboratory.core.alignment.AlignmentUtils;
+import com.milaboratory.core.alignment.*;
 import com.milaboratory.core.mutations.Mutation;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceWithQuality;
 import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.basictypes.CloneReader;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.trees.*;
@@ -73,8 +71,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS;
 import static com.milaboratory.mixcr.trees.ClusteringCriteria.CDR3Sequence1Range;
-import static com.milaboratory.mixcr.trees.ClusteringCriteria.getMutationsWithoutCDR3;
 import static io.repseq.core.GeneFeature.CDR3;
 import static io.repseq.core.GeneType.Joining;
 import static io.repseq.core.GeneType.Variable;
@@ -134,12 +132,13 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
     @Override
     public void run1() throws Exception {
         BuildSHMTreeConfiguration configuration = getConfiguration();
+        List<CloneReader> cloneReaders = getInputFiles().stream()
+                .map(ExceptionUtil.wrap(path -> CloneSetIO.mkReader(Paths.get(path), VDJCLibraryRegistry.getDefault())))
+                .collect(Collectors.toList());
         SHMTreeBuilder shmTreeBuilder = new SHMTreeBuilder(
                 configuration.shmTreeBuilderParameters,
                 new ClusteringCriteria.DefaultClusteringCriteria(),
-                getInputFiles().stream()
-                        .map(ExceptionUtil.wrap(path -> CloneSetIO.mkReader(Paths.get(path), VDJCLibraryRegistry.getDefault())))
-                        .collect(Collectors.toList())
+                cloneReaders
         );
         OutputPortCloseable<CloneWrapper> sortedClonotypes = shmTreeBuilder.sortClonotypes();
         OutputPortCloseable<Cluster<CloneWrapper>> clusters = shmTreeBuilder.buildClusters(sortedClonotypes);
@@ -152,7 +151,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
         Cluster<CloneWrapper> clusterTemp;
         while ((clusterTemp = clusters.take()) != null) {
             Cluster<CloneWrapper> cluster = clusterTemp;
-            boolean print = false;
+            boolean print = true;
 
             if (true) {
 //            if (mutationsCount > 30) {
@@ -267,6 +266,9 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
 
 
                     if (print) {
+                        AlignmentScoring<NucleotideSequence> VScoring = cloneReaders.get(0).getAssemblerParameters().getCloneFactoryParameters().getVParameters().getScoring();
+                        AlignmentScoring<NucleotideSequence> JScoring = cloneReaders.get(0).getAssemblerParameters().getCloneFactoryParameters().getJParameters().getScoring();
+
                         System.out.println("V gene:");
                         System.out.println(cluster.cluster.get(0).clone.getBestHit(Variable).getAlignment(0).getSequence1());
                         System.out.println("J gene:");
@@ -341,6 +343,8 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                         Range VRangeInCDR3 = minVRangeInCDR3(cluster);
                         Range JRangeInCDR3 = minJRangeInCDR3(cluster);
 
+                        Function<FitnessFunctionParams, Double> fitnessFunctionSample = params -> (params.distanceBetweenClonesInNDN + params.distanceBetweenClonesWithoutNDN) * Math.pow(params.minDistanceToGermline - 1, 2.0);
+
                         List<Pair<Clone, Pair<Pair<FitnessFunctionParams, Clone>, List<Integer>>>> cloneComparisonParams = cluster.cluster.stream()
                                 .map(cw -> cw.clone)
                                 .map(clone -> {
@@ -348,9 +352,9 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                                                     .map(cw -> cw.clone)
                                                     .filter(clonesForComparisonFilter)
                                                     .filter(compareWith -> compareWith.getId() != clone.getId())
-                                                    .map(compareWith -> Pair.create(fitnessFunctionParams(clone, compareWith, VRangeInCDR3, JRangeInCDR3), compareWith))
+                                                    .map(compareWith -> Pair.create(fitnessFunctionParams(clone, compareWith, VRangeInCDR3, JRangeInCDR3, VScoring, JScoring), compareWith))
 //                                                    .filter(it -> fitnessFunction(it.getFirst()) > 0.0)
-                                                    .min(Comparator.comparing(it -> fitnessFunction(it.getFirst()))).orElseThrow(IllegalArgumentException::new);
+                                                    .min(Comparator.comparing(it -> fitnessFunctionSample.apply(it.getFirst()))).orElseThrow(IllegalArgumentException::new);
 
                                             List<Integer> minMutations = cluster.cluster.stream()
                                                     .map(cw -> cw.clone)
@@ -366,14 +370,14 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                                             return Pair.create(clone, Pair.create(minFitnessFunctionParams, minMutations));
                                         }
                                 )
-                                .sorted(Comparator.comparing(it -> fitnessFunction(it.getSecond().getFirst().getFirst())))
+                                .sorted(Comparator.comparing(it -> fitnessFunctionSample.apply(it.getSecond().getFirst().getFirst())))
                                 .collect(Collectors.toList());
                         double lastFitnessFunction = 0.0;
 
                         for (int i = 0; i < cloneComparisonParams.size(); i++) {
                             Pair<Clone, Pair<Pair<FitnessFunctionParams, Clone>, List<Integer>>> cloneComparisonParam = cloneComparisonParams.get(i);
                             FitnessFunctionParams fitnessFunctionParams = cloneComparisonParam.getSecond().getFirst().getFirst();
-                            double fitnessFunctionResult = fitnessFunction(fitnessFunctionParams);
+                            double fitnessFunctionResult = fitnessFunctionSample.apply(fitnessFunctionParams);
                             Clone clone = cloneComparisonParam.getFirst();
                             Clone compareWith = cloneComparisonParam.getSecond().getFirst().getSecond();
 
@@ -415,8 +419,8 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                                     cloneComparisonParam.getSecond().getSecond().get(1),
                                     cloneComparisonParam.getSecond().getSecond().get(2),
                                     numberOfMutationsWithoutCDR3(clone, Variable) + numberOfMutationsWithoutCDR3(clone, Joining),
-                                    fitnessFunctionParams.distanceBetweenClonesInCDR3,
-                                    fitnessFunctionParams.distanceBetweenClonesWithoutCDR3,
+                                    fitnessFunctionParams.distanceBetweenClonesInNDN,
+                                    fitnessFunctionParams.distanceBetweenClonesWithoutNDN,
                                     fitnessFunctionParams.distanceBetweenClones,
                                     fitnessFunctionParams.minDistanceToGermline,
                                     fitnessFunctionFirstPart(fitnessFunctionParams),
@@ -485,10 +489,10 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                         );
                         System.out.println("\n");
 
-                        System.out.println("mutations rate diff:\n");
+                        System.out.println("fitness function params:\n");
                         System.out.println("       |" + cluster.cluster.stream()
                                 .map(cw -> cw.clone)
-                                .map(clone -> String.format("%12d    ", clone.getId()))
+                                .map(clone -> String.format("%17d    ", clone.getId()))
                                 .collect(Collectors.joining("|"))
                         );
 
@@ -497,11 +501,12 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                                 .map(clone -> String.format("%6d |", clone.getId()) + cluster.cluster.stream()
                                         .map(cw -> cw.clone)
                                         .map(compareWith -> {
-                                            FitnessFunctionParams fitnessFunctionParams = fitnessFunctionParams(clone, compareWith, VRangeInCDR3, JRangeInCDR3);
-                                            return String.format(" %.2f|%.2f|%.2f ",
-                                                    fitnessFunctionParams.minDistanceToGermline * 20,
-                                                    fitnessFunctionParams.distanceBetweenClones * 10,
-                                                    fitnessFunctionParams.distanceBetweenClonesInCDR3 * 10
+                                            FitnessFunctionParams fitnessFunctionParams = fitnessFunctionParams(clone, compareWith, VRangeInCDR3, JRangeInCDR3, VScoring, JScoring);
+                                            return String.format(" %.2f|%.2f|%.2f|%.2f ",
+                                                    fitnessFunctionParams.minDistanceToGermline,
+                                                    fitnessFunctionParams.distanceBetweenClones,
+                                                    fitnessFunctionParams.distanceBetweenClonesInNDN,
+                                                    fitnessFunctionParams.distanceBetweenClonesWithoutNDN
                                             );
                                         })
                                         .collect(Collectors.joining("|"))
@@ -509,6 +514,11 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                                 .collect(Collectors.joining("\n"))
                         );
                         System.out.println("\n");
+
+//                        if (true) {
+//                            break;
+//                        }
+
 
                         System.out.println("clustering formula:\n");
                         System.out.println("      |  min  |" + cluster.cluster.stream()
@@ -522,7 +532,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                                 .map(clone -> {
                                             List<Double> calculatedFormula = cluster.cluster.stream()
                                                     .map(cw -> cw.clone)
-                                                    .map(compareWith -> fitnessFunction(fitnessFunctionParams(clone, compareWith, VRangeInCDR3, JRangeInCDR3)))
+                                                    .map(compareWith -> fitnessFunction(fitnessFunctionParams(clone, compareWith, VRangeInCDR3, JRangeInCDR3, VScoring, JScoring)))
                                                     .collect(Collectors.toList());
                                             return String.format("%6d|%.5f|%s",
                                                     clone.getId(),
@@ -540,7 +550,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                                 .map(clone -> {
                                             List<Double> calculatedFormula = cluster.cluster.stream()
                                                     .map(cw -> cw.clone)
-                                                    .map(compareWith -> fitnessFunction(fitnessFunctionParams(clone, compareWith, VRangeInCDR3, JRangeInCDR3)))
+                                                    .map(compareWith -> fitnessFunction(fitnessFunctionParams(clone, compareWith, VRangeInCDR3, JRangeInCDR3, VScoring, JScoring)))
                                                     .collect(Collectors.toList());
                                             return String.format("%6d|%.5f|%s",
                                                     clone.getId(),
@@ -934,66 +944,113 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
     }
 
     private double fitnessFunctionSecondPart(FitnessFunctionParams params) {
-        return Math.pow(params.distanceBetweenClonesWithoutCDR3, 1.0);
+        return Math.pow(params.distanceBetweenClonesWithoutNDN, 1.0);
     }
 
     private double fitnessFunctionThirdPart(FitnessFunctionParams params) {
-        return 4 * Math.pow(params.distanceBetweenClonesInCDR3, 1.0) * Math.pow(params.minDistanceToGermline - 1, 6.0);
+        return 4 * Math.pow(params.distanceBetweenClonesInNDN, 1.0) * Math.pow(params.minDistanceToGermline - 1, 6.0);
     }
 
-    private FitnessFunctionParams fitnessFunctionParams(Clone first, Clone second, Range VRangeInCDR3, Range JRangeInCDR3) {
+    private FitnessFunctionParams fitnessFunctionParams(Clone first, Clone second, Range VRangeInCDR3, Range JRangeInCDR3, AlignmentScoring<NucleotideSequence> VScoring, AlignmentScoring<NucleotideSequence> JScoring) {
         List<MutationsWithRange> VMutationsOfFirst = getMutationsWithoutCDR3(first, Variable);
-        VMutationsOfFirst.add(VMutationsInCDR3(first, VRangeInCDR3));
         List<MutationsWithRange> VMutationsOfSecond = getMutationsWithoutCDR3(second, Variable);
-        VMutationsOfSecond.add(VMutationsInCDR3(second, VRangeInCDR3));
+        if (!VRangeInCDR3.isEmpty()) {
+            VMutationsOfFirst.add(VMutationsInCDR3(first, VRangeInCDR3));
+            VMutationsOfSecond.add(VMutationsInCDR3(second, VRangeInCDR3));
+        }
 
         List<MutationsWithRange> VMutationsBetween = mutationsBetween(VMutationsOfFirst, VMutationsOfSecond);
-        double VMutationsBetweenScore = score(VMutationsBetween);
+        double VMutationsBetweenScore = score(VMutationsBetween, VScoring);
 
         List<MutationsWithRange> JMutationsOfFirst = getMutationsWithoutCDR3(first, Joining);
-        JMutationsOfFirst.add(JMutationsInCDR3(first, JRangeInCDR3));
         List<MutationsWithRange> JMutationsOfSecond = getMutationsWithoutCDR3(second, Joining);
-        JMutationsOfSecond.add(JMutationsInCDR3(second, JRangeInCDR3));
+        if (!JRangeInCDR3.isEmpty()) {
+            JMutationsOfFirst.add(JMutationsInCDR3(first, JRangeInCDR3));
+            JMutationsOfSecond.add(JMutationsInCDR3(second, JRangeInCDR3));
+        }
 
         List<MutationsWithRange> JMutationsBetween = mutationsBetween(JMutationsOfFirst, JMutationsOfSecond);
-        double JMutationsBetweenScore = score(JMutationsBetween);
+        double JMutationsBetweenScore = score(JMutationsBetween, JScoring);
 
         NucleotideSequence CDR3OfFirst = first.getNFeature(CDR3);
         NucleotideSequence CDR3OfSecond = second.getNFeature(CDR3);
-        double CDR3MutationsBetweenScore = Aligner.alignGlobal(
-                AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-                CDR3OfFirst.getRange(VRangeInCDR3.length(), CDR3OfFirst.size() - JRangeInCDR3.length()),
-                CDR3OfSecond.getRange(VRangeInCDR3.length(), CDR3OfSecond.size() - JRangeInCDR3.length())
-        ).getScore();
+        AlignmentScoring<NucleotideSequence> NDNScoring = AffineGapAlignmentScoring.getNucleotideBLASTScoring();
+        NucleotideSequence NDNOfFirst = CDR3OfFirst.getRange(VRangeInCDR3.length(), CDR3OfFirst.size() - JRangeInCDR3.length());
+        NucleotideSequence NDNOfSecond = CDR3OfSecond.getRange(VRangeInCDR3.length(), CDR3OfSecond.size() - JRangeInCDR3.length());
+        double NDNMutationsBetweenScore = Aligner.alignGlobal(NDNScoring, NDNOfFirst, NDNOfSecond).getScore();
+        double maxScoreForFirstNDN = AlignmentUtils.calculateScore(NDNOfFirst, EMPTY_NUCLEOTIDE_MUTATIONS, NDNScoring);
+        double maxScoreForSecondNDN = AlignmentUtils.calculateScore(NDNOfFirst, EMPTY_NUCLEOTIDE_MUTATIONS, NDNScoring);
+        double maxScoreForNDN = Math.max(maxScoreForFirstNDN, maxScoreForSecondNDN);
+        double averageLengthOfNDN = (NDNOfFirst.size() + NDNOfSecond.size()) / 2.0;
 
-        double maxScoreForFirstVJ = maxScore(VMutationsOfFirst) + maxScore(JMutationsOfFirst);
-        double maxScoreForSecondVJ = maxScore(VMutationsOfSecond) + maxScore(JMutationsOfSecond);
-        double maxScoreForVJ = Math.max(maxScoreForFirstVJ, maxScoreForSecondVJ);
-        double maxScoreForFirstCDR3 = maxScoreForCDR3(first);
-        double maxScoreForSecondCDR3 = maxScoreForCDR3(second);
-        double maxScoreForCDR3 = Math.max(maxScoreForFirstCDR3, maxScoreForSecondCDR3);
+        double scoreForFirstVJ = score(VMutationsOfFirst, VScoring) + score(JMutationsOfFirst, JScoring);
+        double scoreForSecondVJ = score(VMutationsOfSecond, VScoring) + score(JMutationsOfSecond, JScoring);
+
+        double maxScoreForFirstVJ = maxScore(VMutationsOfFirst, VScoring) + maxScore(JMutationsOfFirst, JScoring);
+        double maxScoreForSecondVJ = maxScore(VMutationsOfSecond, VScoring) + maxScore(JMutationsOfSecond, JScoring);
+
+        double lengthOfFirstVJ = totalLength(VMutationsOfFirst) + totalLength(JMutationsOfFirst);
+        double lengthOfSecondVJ = totalLength(VMutationsOfSecond) + totalLength(JMutationsOfSecond);
+        double averageLengthOfVJ = (lengthOfFirstVJ + lengthOfSecondVJ) / 2;
 
 
-        double normalizedDistanceFromFirstToGermline = 1 - (score(VMutationsOfFirst) + score(JMutationsOfFirst)) / maxScoreForFirstVJ;
-        double normalizedDistanceFromSecondToGermline = 1 - (score(VMutationsOfSecond) + score(JMutationsOfSecond)) / maxScoreForSecondVJ;
-        double normalizedDistanceBetweenClones = 1 - (VMutationsBetweenScore + JMutationsBetweenScore + CDR3MutationsBetweenScore) /
-                (maxScoreForVJ + maxScoreForCDR3);
-        double normalizedDistanceBetweenClonesInCDR3 = 1 - (CDR3MutationsBetweenScore) / maxScoreForCDR3;
-        double normalizedDistanceBetweenClonesWithoutCDR3 = 1 - (VMutationsBetweenScore + JMutationsBetweenScore) / (maxScoreForVJ + maxScoreForCDR3);
+        double VMutationsBetweenMaxScore = Math.max(maxScore(VMutationsBetween, VScoring), maxScore(invert(VMutationsBetween), VScoring));
+        double JMutationsBetweenMaxScore = Math.max(maxScore(JMutationsBetween, JScoring), maxScore(invert(JMutationsBetween), JScoring));
+        double VJMutationsBetweenMaxScore = VMutationsBetweenMaxScore + JMutationsBetweenMaxScore;
+
+        double normalizedDistanceFromFirstToGermline = (maxScoreForFirstVJ - scoreForFirstVJ) / lengthOfFirstVJ;
+        double normalizedDistanceFromSecondToGermline = (maxScoreForSecondVJ - scoreForSecondVJ) / lengthOfSecondVJ;
+        double normalizedDistanceBetweenClonesInNDN = (maxScoreForNDN - NDNMutationsBetweenScore) / averageLengthOfNDN;
+        double normalizedDistanceBetweenClonesWithoutNDN = (VJMutationsBetweenMaxScore - VMutationsBetweenScore - JMutationsBetweenScore) / averageLengthOfVJ;
+        double normalizedDistanceBetweenClones = (maxScoreForNDN + VJMutationsBetweenMaxScore - NDNMutationsBetweenScore - VMutationsBetweenScore - JMutationsBetweenScore) / (averageLengthOfNDN + averageLengthOfVJ);
 
         return new FitnessFunctionParams(
-                normalizedDistanceBetweenClonesInCDR3,
+                normalizedDistanceBetweenClonesInNDN,
                 normalizedDistanceBetweenClones,
-                normalizedDistanceBetweenClonesWithoutCDR3,
+                normalizedDistanceBetweenClonesWithoutNDN,
+                normalizedDistanceFromFirstToGermline,
+                normalizedDistanceFromSecondToGermline,
                 Math.min(normalizedDistanceFromFirstToGermline, normalizedDistanceFromSecondToGermline)
         );
+    }
+
+    private int totalLength(List<MutationsWithRange> mutations) {
+        return mutations.stream().mapToInt(it -> it.getSequence1Range().length()).sum();
+    }
+
+    private static List<MutationsWithRange> getMutationsWithoutCDR3(Clone clone, GeneType geneType) {
+        VDJCHit bestHit = clone.getBestHit(geneType);
+        return IntStream.range(0, bestHit.getAlignments().length)
+                .boxed()
+                .flatMap(index -> {
+                    Alignment<NucleotideSequence> alignment = bestHit.getAlignment(index);
+                    Range CDR3Range = CDR3Sequence1Range(bestHit, index);
+                    Mutations<NucleotideSequence> mutations = alignment.getAbsoluteMutations();
+                    List<Range> rangesWithoutCDR3 = alignment.getSequence1Range().without(CDR3Range);
+                    if (rangesWithoutCDR3.size() > 0) {
+                        if (rangesWithoutCDR3.size() > 1) {
+                            throw new IllegalStateException();
+                        }
+                        return Stream.of(new MutationsWithRange(
+                                alignment.getSequence1(),
+                                EMPTY_NUCLEOTIDE_MUTATIONS,
+                                mutations,
+                                rangesWithoutCDR3.get(0),
+                                true,
+                                true
+                        ));
+                    } else {
+                        return Stream.empty();
+                    }
+                })
+                .collect(Collectors.toList());
     }
 
     private MutationsWithRange VMutationsInCDR3(Clone clone, Range VRangeInCDR3) {
         NucleotideSequence VSequence1 = clone.getBestHit(Variable).getAlignment(0).getSequence1();
         return new MutationsWithRange(
                 VSequence1,
-                Mutations.EMPTY_NUCLEOTIDE_MUTATIONS,
+                EMPTY_NUCLEOTIDE_MUTATIONS,
                 Aligner.alignGlobal(
                         AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
                         VSequence1,
@@ -1013,7 +1070,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
         NucleotideSequence CDR3 = clone.getNFeature(GeneFeature.CDR3);
         return new MutationsWithRange(
                 JSequence1,
-                Mutations.EMPTY_NUCLEOTIDE_MUTATIONS,
+                EMPTY_NUCLEOTIDE_MUTATIONS,
                 Aligner.alignGlobal(
                         AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
                         JSequence1,
@@ -1028,22 +1085,22 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
         );
     }
 
-    private double score(List<MutationsWithRange> mutationsWithRanges) {
+    private double score(List<MutationsWithRange> mutationsWithRanges, AlignmentScoring<NucleotideSequence> scoring) {
         return mutationsWithRanges.stream()
                 .mapToDouble(mutations -> AlignmentUtils.calculateScore(
                         mutations.getFromBaseToParent().mutate(mutations.getSequence1()),
                         mutations.getFromParentToThis(),
-                        AffineGapAlignmentScoring.getNucleotideBLASTScoring()
+                        scoring
                 ))
                 .sum();
     }
 
-    private double maxScore(List<MutationsWithRange> vMutationsBetween) {
+    private double maxScore(List<MutationsWithRange> vMutationsBetween, AlignmentScoring<NucleotideSequence> scoring) {
         return vMutationsBetween.stream()
                 .mapToDouble(mutations -> AlignmentUtils.calculateScore(
                         mutations.getFromBaseToParent().mutate(mutations.getSequence1()),
-                        Mutations.EMPTY_NUCLEOTIDE_MUTATIONS,
-                        AffineGapAlignmentScoring.getNucleotideBLASTScoring()
+                        EMPTY_NUCLEOTIDE_MUTATIONS,
+                        scoring
                 ))
                 .sum();
     }
@@ -1068,19 +1125,24 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
         );
     }
 
-    private double maxScoreForCDR3(Clone clone) {
-        return AlignmentUtils.calculateScore(
-                clone.getNFeature(GeneFeature.CDR3),
-                Mutations.EMPTY_NUCLEOTIDE_MUTATIONS,
-                AffineGapAlignmentScoring.getNucleotideBLASTScoring()
-        );
-    }
-
     private Mutations<NucleotideSequence> mutationsBetweenWithoutCDR3(Clone first, Clone second, GeneType geneType) {
         Mutations<NucleotideSequence> firstMutations = getAbsoluteMutationsWithoutCDR3(first, geneType);
         Mutations<NucleotideSequence> secondMutations = getAbsoluteMutationsWithoutCDR3(second, geneType);
 
         return firstMutations.invert().combineWith(secondMutations);
+    }
+
+    private List<MutationsWithRange> invert(List<MutationsWithRange> mutations) {
+        return mutations.stream()
+                .map(it -> new MutationsWithRange(
+                        it.getSequence1(),
+                        it.getCombinedMutations(),
+                        it.getFromParentToThis().invert(),
+                        it.getSequence1Range(),
+                        it.isIncludeFirstMutations(),
+                        it.isIncludeLastMutations()
+                ))
+                .collect(Collectors.toList());
     }
 
     private List<MutationsWithRange> mutationsBetween(List<MutationsWithRange> firstMutations, List<MutationsWithRange> secondMutations) {

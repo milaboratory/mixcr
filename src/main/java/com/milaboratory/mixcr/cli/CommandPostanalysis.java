@@ -1,6 +1,7 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.OutputPortCloseable;
+import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.postanalysis.*;
 import com.milaboratory.mixcr.postanalysis.additive.AAProperties;
@@ -347,6 +348,11 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
                 @Override
                 public VDJCAlignerParameters getAlignerParameters() {
                     return inner.getAlignerParameters();
+                }
+
+                @Override
+                public CloneAssemblerParameters getAssemblerParameters() {
+                    return inner.getAssemblerParameters();
                 }
 
                 @Override

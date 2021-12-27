@@ -3,6 +3,7 @@ package com.milaboratory.mixcr.trees;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Bytes;
 import com.milaboratory.core.Range;
+import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import io.repseq.core.ReferencePoint;
@@ -27,7 +28,7 @@ public class RebaseClonesTest {
     @Ignore
     @Test
     public void randomizedTestForRebaseClone() {
-        int numberOfRuns = 1_000_000;
+        int numberOfRuns = 100_000;
         List<Long> failedSeeds = IntStream.range(0, numberOfRuns)
                 .mapToObj(it -> ThreadLocalRandom.current().nextLong())
                 .parallel()
@@ -96,8 +97,8 @@ public class RebaseClonesTest {
             Range JRangeInCDR3 = new Range(-(commonJRangeInCDR3.length() + random.nextInt(5)), 0)
                     .move(JRangeBeforeCDR3End.getUpper());
             NucleotideSequence NDNSubsetBeforeMutation = CDR3.getRange(
-                    VRangeInCDR3.length(),
-                    CDR3.size() - JRangeInCDR3.length()
+                    VSequenceInCDR3.size(),
+                    CDR3.size() - JSequenceInCDR3.size()
             );
             Mutations<NucleotideSequence> mutationsOfNDN = generateMutations(NDNSubsetBeforeMutation, random);
             RootInfo rootInfo = new RootInfo(
@@ -142,7 +143,7 @@ public class RebaseClonesTest {
                     Pair.create(JMutations, new Range(JRangeBeforeCDR3End.getLower(), commonJRangeInCDR3.getLower()))
             );
 
-            CloneWithMutationsFromReconstructedRoot rebasedClone = new ClonesRebase(VSequence, JSequence)
+            CloneWithMutationsFromReconstructedRoot rebasedClone = new ClonesRebase(VSequence, JSequence, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
                     .rebaseClone(rootInfo, mutationsFromVJGermline, new CloneWrapper(null, 0));
 
             AncestorInfoBuilder ancestorInfoBuilder = new AncestorInfoBuilder(

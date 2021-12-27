@@ -1,20 +1,26 @@
 package com.milaboratory.mixcr.trees;
 
 public class FitnessFunctionParams {
-    public final double distanceBetweenClonesInCDR3;
+    public final double distanceBetweenClonesInNDN;
     public final double distanceBetweenClones;
-    public final double distanceBetweenClonesWithoutCDR3;
+    public final double distanceBetweenClonesWithoutNDN;
+    public final double firstDistanceToGermline;
+    public final double secondDistanceToGermline;
     public final double minDistanceToGermline;
 
     public FitnessFunctionParams(
-            double distanceBetweenClonesInCDR3,
+            double distanceBetweenClonesInNDN,
             double distanceBetweenClones,
-            double distanceBetweenClonesWithoutCDR3,
+            double distanceBetweenClonesWithoutNDN,
+            double firstDistanceToGermline,
+            double secondDistanceToGermline,
             double minDistanceToGermline
     ) {
-        this.distanceBetweenClonesInCDR3 = distanceBetweenClonesInCDR3;
+        this.distanceBetweenClonesInNDN = distanceBetweenClonesInNDN;
         this.distanceBetweenClones = distanceBetweenClones;
-        this.distanceBetweenClonesWithoutCDR3 = distanceBetweenClonesWithoutCDR3;
+        this.distanceBetweenClonesWithoutNDN = distanceBetweenClonesWithoutNDN;
+        this.firstDistanceToGermline = firstDistanceToGermline;
+        this.secondDistanceToGermline = secondDistanceToGermline;
         this.minDistanceToGermline = minDistanceToGermline;
     }
 }

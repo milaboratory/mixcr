@@ -3,6 +3,7 @@ package com.milaboratory.mixcr.trees;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.alignment.Aligner;
+import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceBuilder;
@@ -19,10 +20,12 @@ import static com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIO
 class ClonesRebase {
     private final NucleotideSequence VSequence1;
     private final NucleotideSequence JSequence1;
+    private final AlignmentScoring<NucleotideSequence> NDNScoring;
 
-    ClonesRebase(NucleotideSequence vSequence1, NucleotideSequence jSequence1) {
+    ClonesRebase(NucleotideSequence vSequence1, NucleotideSequence jSequence1, AlignmentScoring<NucleotideSequence> NDNScoring) {
         VSequence1 = vSequence1;
         JSequence1 = jSequence1;
+        this.NDNScoring = NDNScoring;
     }
 
     CloneWithMutationsFromReconstructedRoot rebaseClone(RootInfo rootInfo, MutationsFromVJGermline mutationsFromVJGermline, CloneWrapper cloneWrapper) {
@@ -115,7 +118,7 @@ class ClonesRebase {
         }
         MutationsDescription mutations = new MutationsDescription(
                 VMutationsWithoutNDN,
-                mutations(rootInfo.getReconstructedNDN(), mutationsFromVJGermline.getKnownNDN().getRange(NDNRangeInKnownNDN)),
+                NDNMutations(rootInfo.getReconstructedNDN(), mutationsFromVJGermline.getKnownNDN().getRange(NDNRangeInKnownNDN)),
                 JMutationsWithoutNDN
         );
         return new CloneWithMutationsFromReconstructedRoot(mutations, mutationsFromVJGermline, cloneWrapper);
@@ -279,7 +282,7 @@ class ClonesRebase {
                 .createAndDestroy();
         MutationsDescription result = new MutationsDescription(
                 VMutationsWithoutNDN,
-                mutations(rebaseTo.getReconstructedNDN(), rebasedKnownNDN),
+                NDNMutations(rebaseTo.getReconstructedNDN(), rebasedKnownNDN),
                 JMutationsWithoutNDN
         );
         //TODO remove after testing on more data
@@ -309,12 +312,12 @@ class ClonesRebase {
         );
     }
 
-    static MutationsWithRange mutations(NucleotideSequence first, NucleotideSequence second) {
+    MutationsWithRange NDNMutations(NucleotideSequence first, NucleotideSequence second) {
         return new MutationsWithRange(
                 first,
                 EMPTY_NUCLEOTIDE_MUTATIONS,
                 Aligner.alignGlobal(
-                        AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
+                        NDNScoring,
                         first,
                         second
                 ).getAbsoluteMutations(),
