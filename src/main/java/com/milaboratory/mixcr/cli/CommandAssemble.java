@@ -66,15 +66,15 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
             names = {"-p", "--preset"})
     public String assemblerParametersName = "default";
 
-    public int threads = Runtime.getRuntime().availableProcessors();
-
-    @Option(description = "Processing threads",
-            names = {"-t", "--threads"})
-    public void setThreads(int threads) {
-        if (threads <= 0)
-            throwValidationException("-t / --threads must be positive");
-        this.threads = threads;
-    }
+    // public int threads = Runtime.getRuntime().availableProcessors();
+    //
+    // @Option(description = "Processing threads",
+    //         names = {"-t", "--threads"})
+    // public void setThreads(int threads) {
+    //     if (threads <= 0)
+    //         throwValidationException("-t / --threads must be positive");
+    //     this.threads = threads;
+    // }
 
     @Option(description = "Use higher compression for output file.",
             names = {"--high-compression"})
@@ -233,7 +233,7 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
             // Running assembler
             CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(
                     alignmentsProvider,
-                    assembler, threads);
+                    assembler);
             SmartProgressReporter.startProgressReport(assemblerRunner);
 
             if (reportBuffers) {

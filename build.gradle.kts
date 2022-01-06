@@ -63,9 +63,9 @@ repositories {
     }
 }
 
-val milibVersion = "1.14.1-18-f7ca543948"
+val milibVersion = "0.0.1-4-eab6152014"
 val repseqioVersion = "1.3.5-5-2d9bf3f814"
-val jacksonVersion = "2.12.4"
+val jacksonVersion = "2.13.1"
 
 dependencies {
     api("com.milaboratory:milib:$milibVersion")

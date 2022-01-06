@@ -121,7 +121,7 @@ public class CloneAssemblerRunnerTest {
         System.out.println(GlobalObjectMappers.toOneLine(assemblerParameters));
 
         CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(alignmentsProvider,
-                new CloneAssembler(assemblerParameters, true, aligner.getUsedGenes(), alignerParameters), 2);
+                new CloneAssembler(assemblerParameters, true, aligner.getUsedGenes(), alignerParameters));
         SmartProgressReporter.startProgressReport(assemblerRunner);
         assemblerRunner.run();
 

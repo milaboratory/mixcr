@@ -102,7 +102,7 @@ public final class RunMiXCR {
                 public long getTotalNumberOfReads() {
                     return align.alignments.size();
                 }
-            }, assembler, parameters.threads);
+            }, assembler);
 
             //start progress reporting
             SmartProgressReporter.startProgressReport(assemblerRunner);

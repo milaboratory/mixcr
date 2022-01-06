@@ -42,16 +42,15 @@ import com.milaboratory.util.CanReportProgressAndStage;
 public class CloneAssemblerRunner implements CanReportProgressAndStage {
     final AlignmentsProvider alignmentsProvider;
     final CloneAssembler assembler;
-    final int threads;
+    final int threads = 1;
     volatile String stage = "Initialization";
     volatile CanReportProgress innerProgress;
     volatile VDJCAlignmentsReader alignmentReader = null;
     volatile boolean isFinished = false;
 
-    public CloneAssemblerRunner(AlignmentsProvider alignmentsProvider, CloneAssembler assembler, int threads) {
+    public CloneAssemblerRunner(AlignmentsProvider alignmentsProvider, CloneAssembler assembler) {
         this.alignmentsProvider = alignmentsProvider;
         this.assembler = assembler;
-        this.threads = Math.min(threads, Runtime.getRuntime().availableProcessors());
     }
 
     @Override
@@ -104,8 +103,8 @@ public class CloneAssemblerRunner implements CanReportProgressAndStage {
                 }
                 try {
                     CUtils.processAllInParallel(CUtils.buffered(
-                            new FilteringPort<>(alignmentsPort,
-                                    assembler.getDeferredAlignmentsFilter()), 128),
+                                    new FilteringPort<>(alignmentsPort,
+                                            assembler.getDeferredAlignmentsFilter()), 128),
                             assembler.getDeferredAlignmentsMapper(), threads);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);

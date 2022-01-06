@@ -31,7 +31,6 @@ package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
-import cc.redberry.pipe.blocks.ParallelProcessor;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -144,7 +143,7 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
             ClnAReader.CloneAlignmentsPort cloneAlignmentsPort = reader.clonesAndAlignments();
             SmartProgressReporter.startProgressReport("Assembling contigs", cloneAlignmentsPort);
 
-            OutputPort<Clone[]> parallelProcessor = new ParallelProcessor<>(cloneAlignmentsPort, cloneAlignments -> {
+            OutputPort<Clone[]> parallelProcessor = CUtils.orderedParallelProcessor(cloneAlignmentsPort, cloneAlignments -> {
                 Clone clone = cloneAlignments.clone;
 
                 if (ignoreTags)
@@ -242,7 +241,7 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
                 } catch (Throwable re) {
                     throw new RuntimeException("While processing clone #" + clone.getId(), re);
                 }
-            }, threads);
+            }, 1024, threads);
 
             for (Clone[] clones : CUtils.it(parallelProcessor)) {
                 totalClonesCount += clones.length;
