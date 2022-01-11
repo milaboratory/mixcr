@@ -63,6 +63,16 @@ public class MutationsWithRange {
         return sequence2Range.length() - getSequence1Range().length();
     }
 
+    NucleotideSequence buildParent() {
+        return MutationsUtils.buildSequence(
+                getSequence1(),
+                getFromBaseToParent(),
+                getSequence1Range(),
+                isIncludeFirstMutations(),
+                isIncludeLastMutations()
+        );
+    }
+
     NucleotideSequence buildSequence() {
         return MutationsUtils.buildSequence(
                 getSequence1(),
@@ -70,28 +80,6 @@ public class MutationsWithRange {
                 getSequence1Range(),
                 isIncludeFirstMutations(),
                 isIncludeLastMutations()
-        );
-    }
-
-    MutationsWithRange withIncludeLastMutations(boolean includeLastMutations) {
-        return new MutationsWithRange(
-                sequence1,
-                fromBaseToParent,
-                fromParentToThis,
-                sequence1Range,
-                includeFirstMutations,
-                includeLastMutations
-        );
-    }
-
-    MutationsWithRange withIncludeFirstMutations(boolean includeFirstMutations) {
-        return new MutationsWithRange(
-                sequence1,
-                fromBaseToParent,
-                fromParentToThis,
-                sequence1Range,
-                includeFirstMutations,
-                includeLastMutations
         );
     }
 }

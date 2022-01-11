@@ -3,7 +3,7 @@ package com.milaboratory.mixcr.trees;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.sequence.NucleotideSequence;
 
-class RootInfo {
+public class RootInfo {
     private final Range VRangeInCDR3;
     private final Range JRangeInCDR3;
     private final NucleotideSequence reconstructedNDN;
@@ -22,7 +22,7 @@ class RootInfo {
         return JRangeInCDR3;
     }
 
-    public NucleotideSequence getReconstructedNDN() {
+    NucleotideSequence getReconstructedNDN() {
         return reconstructedNDN;
     }
 }

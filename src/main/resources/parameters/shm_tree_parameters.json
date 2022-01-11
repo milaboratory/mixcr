@@ -1,7 +1,8 @@
 {
   "default": {
     "productiveOnly": true,
-    "maxDistanceWithinCluster": 1.0,
-    "hideTreesLessThanSize": 3
+    "maxDistanceWithinCluster": 0.9,
+    "hideTreesLessThanSize": 1,
+    "commonMutationsCountForClustering": 5
   }
 }

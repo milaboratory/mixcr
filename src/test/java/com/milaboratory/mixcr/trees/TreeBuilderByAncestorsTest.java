@@ -27,6 +27,9 @@ public class TreeBuilderByAncestorsTest {
             true,
             false
     );
+    private final TreePrinter<ObservedOrReconstructed<List<Integer>, List<Integer>>> xmlTreePrinter = new XmlTreePrinter<>(
+            node -> node.getContent().convert(this::print, content -> "-" + print(content) + "-")
+    );
     private final NewickTreePrinter<List<Integer>> treePrinterOnlyReal = new NewickTreePrinter<>(
             node -> print(node.getContent()),
             true,
@@ -53,8 +56,8 @@ public class TreeBuilderByAncestorsTest {
     @Test
     public void addDirectAncestor() {
         Tree<ObservedOrReconstructed<List<Integer>, List<Integer>>> tree = treeBuilder(3)
-                .addNode(Lists.newArrayList(1, 0, 0))
                 .addNode(Lists.newArrayList(1, 1, 0))
+                .addNode(Lists.newArrayList(1, 0, 0))
                 .getTree();
         assertTree("(((110:0)'110':1,100:0)'100':1)'000';", tree);
     }
@@ -83,9 +86,9 @@ public class TreeBuilderByAncestorsTest {
     @Test
     public void addSecondDirectAncestor() {
         Tree<ObservedOrReconstructed<List<Integer>, List<Integer>>> tree = treeBuilder(3)
-                .addNode(Lists.newArrayList(1, 0, 0))
-                .addNode(Lists.newArrayList(1, 1, 0))
                 .addNode(Lists.newArrayList(1, 0, 1))
+                .addNode(Lists.newArrayList(1, 1, 0))
+                .addNode(Lists.newArrayList(1, 0, 0))
                 .getTree();
         assertTree("(((101:0)'101':1,(110:0)'110':1,100:0)'100':1)'000';", tree);
     }
@@ -127,10 +130,10 @@ public class TreeBuilderByAncestorsTest {
     @Test
     public void addThirdDirectAncestor() {
         Tree<ObservedOrReconstructed<List<Integer>, List<Integer>>> tree = treeBuilder(3)
-                .addNode(Lists.newArrayList(0, 0, 0))
+                .addNode(Lists.newArrayList(0, 0, 1))
                 .addNode(Lists.newArrayList(1, 0, 0))
                 .addNode(Lists.newArrayList(0, 1, 0))
-                .addNode(Lists.newArrayList(0, 0, 1))
+                .addNode(Lists.newArrayList(0, 0, 0))
                 .getTree();
         assertTree("((001:0)'001':1,(010:0)'010':1,(100:0)'100':1,000:0)'000';", tree);
     }
@@ -156,8 +159,8 @@ public class TreeBuilderByAncestorsTest {
     @Test
     public void addNodeWithIntersection() {
         Tree<ObservedOrReconstructed<List<Integer>, List<Integer>>> tree = treeBuilder(3)
-                .addNode(Lists.newArrayList(1, 1, 0))
                 .addNode(Lists.newArrayList(1, 0, 1))
+                .addNode(Lists.newArrayList(1, 1, 0))
                 .getTree();
         assertTree("(((101:0)'101':1,(110:0)'110':1)'100':1)'000';", tree);
     }
@@ -195,10 +198,10 @@ public class TreeBuilderByAncestorsTest {
     @Test
     public void addNodeWithReplacementOfSibling() {
         Tree<ObservedOrReconstructed<List<Integer>, List<Integer>>> tree = treeBuilder(6)
-                .addNode(Lists.newArrayList(0, 0, 0, 0, 0, 0))//A
-                .addNode(Lists.newArrayList(0, 0, 0, 0, 0, 1))//C
-                .addNode(Lists.newArrayList(1, 1, 1, 0, 0, 0))//B
                 .addNode(Lists.newArrayList(1, 0, 0, 1, 1, 0))//D
+                .addNode(Lists.newArrayList(1, 1, 1, 0, 0, 0))//B
+                .addNode(Lists.newArrayList(0, 0, 0, 0, 0, 1))//C
+                .addNode(Lists.newArrayList(0, 0, 0, 0, 0, 0))//A
                 .getTree();
         assertTree("(((100110:0)'100110':2,(111000:0)'111000':2)'100000':1,(000001:0)'000001':1,000000:0)'000000';", tree);
     }
@@ -208,14 +211,13 @@ public class TreeBuilderByAncestorsTest {
      */
     @Test
     public void chooseBestResultOfInsertion() {
-        Tree<ObservedOrReconstructed<List<Integer>, List<Integer>>> tree = treeBuilder(5)
-                .addNode(Lists.newArrayList(0, 0, 0, 0, 0))
-                .addNode(Lists.newArrayList(1, 0, 1, 0, 0))
-                .addNode(Lists.newArrayList(0, 1, 1, 0, 1))
-                .addNode(Lists.newArrayList(1, 1, 1, 0, 1))
-                .addNode(Lists.newArrayList(1, 0, 1, 1, 1))
-                .getTree();
-        assertTree("((((10111:0)'10111':2,10100:0)'10100':1,((11101:0)'11101':1,01101:0)'01101':2)'00100':1,00000:0)'00000';", tree);
+        Tree<List<Integer>> original = new Tree<>(
+                new Tree.Node<>(parseNode("00000"))
+                        .addChild(new Tree.Node<>(parseNode("01101"))
+                                .addChild(new Tree.Node<>(parseNode("11101"))))
+                        .addChild(new Tree.Node<>(parseNode("10100"))
+                                .addChild(new Tree.Node<>(parseNode("10111")))));
+        compareTrees(original, rebuildTree(original));
     }
 
     @Test
@@ -356,16 +358,17 @@ public class TreeBuilderByAncestorsTest {
                 .collect(Collectors.toList());
         TreeBuilderByAncestors<List<Integer>, List<Integer>, List<Integer>> treeBuilder = treeBuilder(root.size());
         original.allNodes().map(Tree.Node::getContent)
-                .sorted(Comparator.comparing(lead -> distance(root, lead)))
+//                .sorted(Comparator.comparing(lead -> distance(root, lead)))
+                .sorted(Comparator.<List<Integer>, BigDecimal>comparing(lead -> distance(root, lead)).reversed())
                 .forEach(toAdd -> {
                     if (print) {
-                        System.out.println(treePrinter.print(treeBuilder.getTree()));
-                        System.out.println(print(toAdd));
+                        System.out.println(xmlTreePrinter.print(treeBuilder.getTree()));
+                        System.out.println("<item>" + print(toAdd) + "</item>");
                     }
                     treeBuilder.addNode(toAdd);
                 });
         if (print) {
-            System.out.println(treePrinter.print(treeBuilder.getTree()));
+            System.out.println(xmlTreePrinter.print(treeBuilder.getTree()));
         }
         return treeBuilder.getTree();
     }
@@ -568,10 +571,6 @@ public class TreeBuilderByAncestorsTest {
         return node.chars().mapToObj(number -> Integer.valueOf(String.valueOf((char) number))).collect(Collectors.toList());
     }
 
-    private List<Integer> getContent(ObservedOrReconstructed<List<Integer>, List<Integer>> content) {
-        return content.convert(Function.identity(), Function.identity());
-    }
-
     private void assertTree(String expected, Tree<ObservedOrReconstructed<List<Integer>, List<Integer>>> tree) {
         assertEquals(expected, treePrinter.print(tree));
     }
@@ -619,7 +618,7 @@ public class TreeBuilderByAncestorsTest {
     }
 
     private BigDecimal distance(List<Integer> first, List<Integer> second) {
-        int result = 0;
+        double result = 0;
         for (int i = 0; i < first.size(); i++) {
             if (!Objects.equals(first.get(i), second.get(i))) {
                 result++;

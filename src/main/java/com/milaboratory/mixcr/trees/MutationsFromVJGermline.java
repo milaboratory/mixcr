@@ -34,6 +34,11 @@ class MutationsFromVJGermline {
         this.knownJMutationsWithinNDN = knownJMutationsWithinNDN;
     }
 
+    public int getVJMutationsCount() {
+        return VMutationsWithoutNDN.stream().mapToInt(it -> it.getCombinedMutations().getRAWMutations().length).sum() +
+                JMutationsWithoutNDN.stream().mapToInt(it -> it.getCombinedMutations().getRAWMutations().length).sum();
+    }
+
     public List<MutationsWithRange> getVMutationsWithoutNDN() {
         return VMutationsWithoutNDN;
     }

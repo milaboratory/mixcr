@@ -1,14 +1,18 @@
 package com.milaboratory.mixcr.trees;
 
 import com.milaboratory.core.Range;
+import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.alignment.Aligner;
+import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
 import com.milaboratory.core.mutations.Mutation;
 import com.milaboratory.core.mutations.MutationType;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.mutations.MutationsBuilder;
+import com.milaboratory.core.sequence.NucleotideAlphabet;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceBuilder;
+import com.milaboratory.core.sequence.Wildcard;
 
 import java.util.*;
 import java.util.function.Function;
@@ -53,16 +57,69 @@ final class MutationsUtils {
         return position;
     }
 
+    public static AlignmentScoring<NucleotideSequence> NDNScoring() {
+        return new AffineGapAlignmentScoring<>(
+                NucleotideSequence.ALPHABET,
+                calculateSubstitutionMatrix(5, -4, 2, NucleotideSequence.ALPHABET),
+                -10,
+                -1
+        );
+    }
 
-    public static Mutations<NucleotideSequence> intersection(Mutations<NucleotideSequence> first, Mutations<NucleotideSequence> second) {
+    private static int[] calculateSubstitutionMatrix(int match, int mismatch, int multiplierOfAsymmetry, NucleotideAlphabet alphabet) {
+        int codes = alphabet.size();
+        int[] matrix = new int[codes * codes];
+        Arrays.fill(matrix, mismatch);
+        for (int i = 0; i < codes; ++i)
+            matrix[i + codes * i] = match;
+        return fillWildcardScoresMatches(matrix, alphabet, match, mismatch, multiplierOfAsymmetry);
+    }
+
+    private static int[] fillWildcardScoresMatches(int[] matrix, NucleotideAlphabet alphabet, int match, int mismatch, int multiplierOfAsymmetry) {
+        int alSize = alphabet.size();
+
+        if (matrix.length != alSize * alSize)
+            throw new IllegalArgumentException("Wrong matrix size.");
+
+        //TODO remove excludeSet from milib
+        for (Wildcard wc1 : alphabet.getAllWildcards())
+            for (Wildcard wc2 : alphabet.getAllWildcards()) {
+                if (wc1.isBasic() && wc2.isBasic())
+                    continue;
+                int sumScore = 0;
+                for (int i = 0; i < wc1.basicSize(); i++) {
+                    if (wc2.matches(wc1.getMatchingCode(i))) {
+                        sumScore += match;
+                    } else {
+                        sumScore += mismatch;
+                    }
+                }
+                for (int i = 0; i < wc2.basicSize(); i++) {
+                    if (wc1.matches(wc2.getMatchingCode(i))) {
+                        sumScore += match * multiplierOfAsymmetry;
+                    } else {
+                        sumScore += mismatch * multiplierOfAsymmetry;
+                    }
+                }
+                sumScore /= wc1.basicSize() + wc2.basicSize() * multiplierOfAsymmetry;
+                matrix[wc1.getCode() + wc2.getCode() * alSize] = sumScore;
+            }
+
+        return matrix;
+    }
+
+    public static Mutations<NucleotideSequence> intersection(
+            Mutations<NucleotideSequence> first,
+            Mutations<NucleotideSequence> second,
+            Range range,
+            boolean includeLastMutations
+    ) {
         return simpleIntersection(
                 first,
-                second
+                second,
+                range,
+                includeLastMutations
         );
-//        return simpleIntersection(
-//                rebaseByNBase(first, second),
-//                rebaseByNBase(second, first)
-//        );
     }
 
     private static Mutations<NucleotideSequence> rebaseByNBase(Mutations<NucleotideSequence> original, Mutations<NucleotideSequence> second) {
@@ -144,19 +201,88 @@ final class MutationsUtils {
         return from.invert().combineWith(to);
     }
 
+    //TODO removals and inserts
     private static Mutations<NucleotideSequence> simpleIntersection(
             Mutations<NucleotideSequence> first,
-            Mutations<NucleotideSequence> second
+            Mutations<NucleotideSequence> second,
+            Range range,
+            boolean includeLastMutations
     ) {
         Set<Integer> mutationsOfFirstAsSet = Arrays.stream(first.getRAWMutations()).boxed().collect(Collectors.toSet());
 
         MutationsBuilder<NucleotideSequence> mutationsBuilder = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
         for (int i = 0; i < second.size(); i++) {
             int mutation = second.getMutation(i);
-            if (mutationsOfFirstAsSet.contains(mutation)) {
-                mutationsBuilder.append(mutation);
+            int position = Mutation.getPosition(mutation);
+            if (range.contains(position) || (includeLastMutations && range.getUpper() == position && Mutation.isInsertion(mutation))) {
+                if (mutationsOfFirstAsSet.contains(mutation)) {
+                    mutationsBuilder.append(mutation);
+                }
             }
         }
         return mutationsBuilder.createAndDestroy();
     }
+
+    //TODO removals and inserts
+    static Mutations<NucleotideSequence> findNDNCommonAncestor(Mutations<NucleotideSequence> first, Mutations<NucleotideSequence> second) {
+        Map<Integer, Set<Integer>> mutationsOfFirstByPositions = Arrays.stream(first.getRAWMutations())
+                .boxed()
+                .collect(Collectors.groupingBy(Mutation::getPosition, Collectors.toSet()));
+
+        MutationsBuilder<NucleotideSequence> mutationsBuilder = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
+        for (int i = 0; i < second.size(); i++) {
+            int mutation = second.getMutation(i);
+            int position = Mutation.getPosition(mutation);
+            Set<Integer> mutationsOfFirst = mutationsOfFirstByPositions.get(position);
+            if (mutationsOfFirst != null) {
+                if (mutationsOfFirst.contains(mutation)) {
+                    mutationsBuilder.append(mutation);
+                } else if (Mutation.isSubstitution(mutation)) {
+                    mutationsOfFirst.stream()
+                            .filter(Mutation::isSubstitution)
+                            .findFirst()
+                            .map(otherSubstitution -> Mutation.createSubstitution(
+                                    position,
+                                    Mutation.getFrom(mutation),
+                                    combine(Mutation.getTo(mutation), Mutation.getTo(otherSubstitution))
+                            ))
+                            .ifPresent(mutationsBuilder::append);
+                }
+            }
+        }
+        return mutationsBuilder.createAndDestroy();
+    }
+
+    private static byte combine(byte firstSymbol, byte secondSymbol) {
+        if (firstSymbol == secondSymbol) {
+            return firstSymbol;
+        } else if (NucleotideSequence.ALPHABET.isWildcard(firstSymbol) && matchesStrictly(NucleotideSequence.ALPHABET.codeToWildcard(firstSymbol), secondSymbol)) {
+            return secondSymbol;
+        } else if (NucleotideSequence.ALPHABET.isWildcard(secondSymbol) && matchesStrictly(NucleotideSequence.ALPHABET.codeToWildcard(secondSymbol), firstSymbol)) {
+            return firstSymbol;
+        } else {
+            long basicMask = 0;
+            if (!NucleotideSequence.ALPHABET.isWildcard(firstSymbol)) {
+                basicMask |= 1L << firstSymbol;
+            } else {
+                basicMask |= NucleotideSequence.ALPHABET.codeToWildcard(firstSymbol).getBasicMask();
+            }
+            if (!NucleotideSequence.ALPHABET.isWildcard(secondSymbol)) {
+                basicMask |= 1L << secondSymbol;
+            } else {
+                basicMask |= NucleotideSequence.ALPHABET.codeToWildcard(secondSymbol).getBasicMask();
+            }
+            return NucleotideSequence.ALPHABET.maskToWildcard(basicMask).getCode();
+        }
+    }
+
+    private static boolean matchesStrictly(Wildcard wildcard, byte secondSymbol) {
+        if (!NucleotideSequence.ALPHABET.isWildcard(secondSymbol)) {
+            return wildcard.matches(secondSymbol);
+        } else {
+            Wildcard secondAsWildcard = NucleotideSequence.ALPHABET.codeToWildcard(secondSymbol);
+            return ((wildcard.getBasicMask() ^ secondAsWildcard.getBasicMask()) & secondAsWildcard.getBasicMask()) == 0;
+        }
+    }
+
 }

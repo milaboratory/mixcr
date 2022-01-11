@@ -22,9 +22,9 @@ class ClonesRebase {
     private final NucleotideSequence JSequence1;
     private final AlignmentScoring<NucleotideSequence> NDNScoring;
 
-    ClonesRebase(NucleotideSequence vSequence1, NucleotideSequence jSequence1, AlignmentScoring<NucleotideSequence> NDNScoring) {
-        VSequence1 = vSequence1;
-        JSequence1 = jSequence1;
+    ClonesRebase(NucleotideSequence VSequence1, NucleotideSequence JSequence1, AlignmentScoring<NucleotideSequence> NDNScoring) {
+        this.VSequence1 = VSequence1;
+        this.JSequence1 = JSequence1;
         this.NDNScoring = NDNScoring;
     }
 

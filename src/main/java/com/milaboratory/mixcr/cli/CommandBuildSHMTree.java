@@ -151,7 +151,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
         Cluster<CloneWrapper> clusterTemp;
         while ((clusterTemp = clusters.take()) != null) {
             Cluster<CloneWrapper> cluster = clusterTemp;
-            boolean print = true;
+            boolean print = false;
 
             if (true) {
 //            if (mutationsCount > 30) {
@@ -569,13 +569,13 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
 //                            .filter(it -> clonesDefinitelyInTree.contains(it.clone.getId()) || clonesMaybeInTree.contains(it.clone.getId()))
 //                            .collect(Collectors.toList()));
                     Cluster<CloneWrapper> clusterToProcess = cluster;
-                    List<Tree<ObservedOrReconstructed<CloneWrapper, AncestorInfo>>> trees = shmTreeBuilder.processCluster(clusterToProcess)
+                    List<TreeWithMeta> trees = shmTreeBuilder.processCluster(clusterToProcess)
                             .stream()
-                            .sorted(Comparator.<Tree<ObservedOrReconstructed<CloneWrapper, AncestorInfo>>>comparingLong(tree -> tree.allNodes().count()).reversed())
+                            .sorted(Comparator.<TreeWithMeta>comparingLong(tree -> tree.getTree().allNodes().count()).reversed())
                             .collect(Collectors.toList());
 
-                    for (Tree<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> tree : trees) {
-                        tree.allNodes().forEach(node -> {
+                    for (TreeWithMeta treeWithMeta : trees) {
+                        treeWithMeta.getTree().allNodes().forEach(node -> {
                             Optional<Clone> clone = node.getContent().convert(it -> Optional.of(it.clone), it -> Optional.empty());
                             if (clone.isPresent() && node.getParent() != null) {
                                 if (!getSequence(node.getParent().getContent()).equals(clone.get().getTarget(0).getSequence())) {
@@ -585,11 +585,11 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                         });
                     }
 
-                    System.out.println(trees.stream().map(idPrinter::print).collect(Collectors.joining("\n")));
+                    System.out.println(trees.stream().map(TreeWithMeta::getTree).map(idPrinter::print).collect(Collectors.joining("\n")));
                     System.out.println("\n");
 
                     List<Tree<Pair<String, NucleotideSequence>>> mappedTrees = trees.stream()
-                            .map(tree -> tree.map(this::idPair))
+                            .map(treeWithMeta -> treeWithMeta.getTree().map(this::idPair))
                             .sorted(Comparator.<Tree<Pair<String, NucleotideSequence>>, Long>comparing(tree -> tree.allNodes().count()).reversed())
                             .collect(Collectors.toList());
                     XmlTreePrinter<Pair<String, NucleotideSequence>> xmlTreePrinter = new XmlTreePrinter<>(
@@ -599,6 +599,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                     boolean printAllSequences = false;
                     if (printAllSequences) {
                         trees.stream()
+                                .map(TreeWithMeta::getTree)
                                 .flatMap(Tree::allNodes)
                                 .map(node -> {
                                     NucleotideSequence sequence = getSequence(node.getContent());
@@ -620,7 +621,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                     System.out.println("\n");
 
 
-                    for (Tree<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> tree : trees) {
+                    for (TreeWithMeta treeWithMeta : trees) {
                         XmlTreePrinter<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> printerWithBreadcrumbs = new XmlTreePrinter<>(
                                 node -> {
                                     Pair<String, NucleotideSequence> idPair = idPair(node.getContent());
@@ -633,7 +634,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                                                     allAncestors(node),
                                                     Stream.of(node)
                                             )
-                                            .filter(it -> it != tree.getRoot())
+                                            .filter(it -> it != treeWithMeta.getTree().getRoot())
                                             .collect(Collectors.toList());
 
                                     List<Clone> clonesInBranch = ancestors.stream()
@@ -644,20 +645,17 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                                             .flatMap(Java9Util::stream)
                                             .collect(Collectors.toList());
                                     if (clonesInBranch.isEmpty()) {
-                                        return "?!!!" + idPair.getFirst() + "|" + md5(idPair.getSecond());
+                                        throw new IllegalStateException();
                                     }
                                     int vPositionInCDR3 = findVPositionInCDR3(clonesInBranch);
                                     int jPositionInCDR3 = findJPositionInCDR3(clonesInBranch);
                                     Range NDNRange = new Range(vPositionInCDR3, jPositionInCDR3);
 //                                    Range NDNRange = new Range(0, 0);
 
-                                    NucleotideSequence CDR3OfParent = getCDR3(node.getParent().getContent()).getRange(NDNRange);
-                                    NucleotideSequence CDR3OfNode = getCDR3(node.getContent()).getRange(NDNRange);
-
                                     Mutations<NucleotideSequence> mutationsOfNDN = Aligner.alignGlobal(
                                             AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-                                            CDR3OfParent,
-                                            CDR3OfNode
+                                            getCDR3(node.getParent().getContent()).getRange(NDNRange),
+                                            getCDR3(node.getContent()).getRange(NDNRange)
                                     ).getAbsoluteMutations();
 
                                     Mutations<NucleotideSequence> mutationsOfCDR3 = Aligner.alignGlobal(
@@ -681,7 +679,47 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                                     return mutationsOfNDN.size() + " :" + idPair.getFirst() + "|" + md5(idPair.getSecond()) + "(" + NDNRange.getLower() + "-" + NDNRange.getUpper() + ")" + " " + mutationsOfNDN + "(" + (mutationsOfNDN.size() / (double) NDNRange.length()) + ") CDR3: " + mutationsOfCDR3.size() + " V: " + mutationsOfVWithoutCDR3.size() + " J: " + mutationsOfJWithoutCDR3.size();
                                 }
                         );
-                        System.out.println(printerWithBreadcrumbs.print(tree));
+                        System.out.println(printerWithBreadcrumbs.print(treeWithMeta.getTree()));
+                    }
+                    System.out.println();
+
+                    for (TreeWithMeta treeWithMeta : trees) {
+                        Tree<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> tree = treeWithMeta.getTree();
+                        XmlTreePrinter<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> printerOfNDN = new XmlTreePrinter<>(
+                                node -> {
+                                    Pair<String, NucleotideSequence> idPair = idPair(node.getContent());
+
+                                    if (node.getParent() == null) {
+                                        return "" + md5(idPair.getSecond());
+                                    }
+
+                                    NucleotideSequence CDR3OfNode = getCDR3(node.getContent());
+
+                                    RootInfo rootInfo = treeWithMeta.getRootInfo();
+                                    Range NDNRange = new Range(rootInfo.getVRangeInCDR3().length(), CDR3OfNode.size() - rootInfo.getJRangeInCDR3().length());
+
+                                    Mutations<NucleotideSequence> mutationsOfNDN = Aligner.alignGlobal(
+                                            AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
+                                            getCDR3(node.getParent().getContent()).getRange(NDNRange),
+                                            getCDR3(node.getContent()).getRange(NDNRange)
+                                    ).getAbsoluteMutations();
+
+                                    Mutations<NucleotideSequence> mutationsOfVWithoutCDR3 = Aligner.alignGlobal(
+                                            AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
+                                            getVWithoutCDR3(node.getParent()),
+                                            getVWithoutCDR3(node)
+                                    ).getAbsoluteMutations();
+
+                                    Mutations<NucleotideSequence> mutationsOfJWithoutCDR3 = Aligner.alignGlobal(
+                                            AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
+                                            getJWithoutCDR3(node.getParent()),
+                                            getJWithoutCDR3(node)
+                                    ).getAbsoluteMutations();
+
+                                    return CDR3OfNode.getRange(NDNRange) + ":" + idPair.getFirst() + "|" + md5(idPair.getSecond()) + " V: " + mutationsOfVWithoutCDR3.size() + " J: " + mutationsOfJWithoutCDR3.size() + " NDN: " + mutationsOfNDN;
+                                }
+                        );
+                        System.out.println(printerOfNDN.print(tree));
                     }
                     System.out.println();
 
@@ -735,7 +773,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
 
                         System.out.println("FASTA CDR3:");
                         for (int i = 0; i < trees.size(); i++) {
-                            Tree<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> tree = trees.get(i);
+                            Tree<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> tree = trees.get(i).getTree();
                             System.out.println(i);
                             System.out.println(tree.allNodes()
                                     .map(Tree.Node::getContent)
@@ -752,6 +790,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                                         trees.get(2),
                                         trees.get(4)
                                 ).stream()
+                                .map(TreeWithMeta::getTree)
                                 .flatMap(Tree::allNodes)
                                 .map(Tree.Node::getContent)
                                 .map(content -> content.convert(it -> Optional.of(it.clone), it -> Optional.<Clone>empty()))
@@ -760,7 +799,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                                 .collect(Collectors.joining("\n")));
                         System.out.println();
 
-                        AncestorInfo ancestorInfo = trees.get(0).allNodes()
+                        AncestorInfo ancestorInfo = trees.get(0).getTree().allNodes()
                                 .map(node -> node.getContent().convert(it -> Optional.<AncestorInfo>empty(), Optional::of))
                                 .flatMap(Java9Util::stream)
                                 .findFirst()
@@ -771,6 +810,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
 
 
                     Set<Integer> clonesInTree = trees.stream()
+                            .map(TreeWithMeta::getTree)
                             .flatMap(Tree::allNodes)
                             .map(node -> node.getContent().convert(it -> Optional.of(it.clone.getId()), it -> Optional.<Integer>empty()))
                             .flatMap(Java9Util::stream)
@@ -780,7 +820,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                     System.out.println("not in trees: " + clonesNotInTreesCount);
                     System.out.println();
 
-                    Set<Integer> clonesInBaseTree = trees.get(0).allNodes()
+                    Set<Integer> clonesInBaseTree = trees.get(0).getTree().allNodes()
                             .map(node -> node.getContent().convert(it -> Optional.of(it.clone.getId()), it -> Optional.<Integer>empty()))
                             .flatMap(Java9Util::stream)
                             .collect(Collectors.toSet());
@@ -893,7 +933,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
 
     private NucleotideSequence getVWithoutCDR3(Tree.Node<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> node) {
         return node.getContent().convert(
-                cloneWrapper -> cloneWrapper.clone.getNFeature(new GeneFeature(FR2Begin, CDR3Begin)),
+                cloneWrapper -> cloneWrapper.clone.getNFeature(new GeneFeature(FR1End, CDR3Begin)),
                 ancestorInfo -> ancestorInfo.getSequence().getRange(0, ancestorInfo.getCDR3Begin())
         );
     }
@@ -901,7 +941,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
     private NucleotideSequence getJWithoutCDR3(Tree.Node<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> node) {
         return node.getContent().convert(
                 cloneWrapper -> cloneWrapper.clone.getNFeature(new GeneFeature(CDR3End, FR4End)),
-                ancestorInfo -> ancestorInfo.getSequence().getRange(0, ancestorInfo.getCDR3Begin())
+                ancestorInfo -> ancestorInfo.getSequence().getRange(ancestorInfo.getCDR3End(), ancestorInfo.getSequence().size())
         );
     }
 

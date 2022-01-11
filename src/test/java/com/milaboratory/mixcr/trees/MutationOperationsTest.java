@@ -31,7 +31,9 @@ public class MutationOperationsTest {
 
         Mutations<NucleotideSequence> result = MutationsUtils.intersection(
                 mutations(parent, first_),
-                mutations(parent, second)
+                mutations(parent, second),
+                new Range(0, parent.size()),
+                true
         );
         assertEquals("[S3:T->G]", result.toString());
     }
@@ -46,7 +48,9 @@ public class MutationOperationsTest {
         Mutations<NucleotideSequence> fromParentToSecond = mutations(parent, second);
         Mutations<NucleotideSequence> result = MutationsUtils.intersection(
                 fromParentToFirst,
-                fromParentToSecond
+                fromParentToSecond,
+                new Range(0, parent.size()),
+                true
         );
         assertEquals("[D1:T,D2:G,D3:T]", result.toString());
 
@@ -68,7 +72,9 @@ public class MutationOperationsTest {
 
         Mutations<NucleotideSequence> fromParentToCommonAncestor = MutationsUtils.intersection(
                 fromParentToFirst,
-                fromParentToSecond
+                fromParentToSecond,
+                new Range(0, parent.size()),
+                true
         );
         assertEquals("[I1:N,I1:N,I1:N]", fromParentToCommonAncestor.toString());
 
@@ -102,7 +108,9 @@ public class MutationOperationsTest {
 
         Mutations<NucleotideSequence> fromParentToCommonAncestor = MutationsUtils.intersection(
                 fromParentToFirst,
-                fromParentToSecond
+                fromParentToSecond,
+                new Range(0, parent.size()),
+                true
         );
         assertEquals("[I0:N,S1:T->A]", fromParentToCommonAncestor.toString());
 
@@ -136,8 +144,9 @@ public class MutationOperationsTest {
 
         Mutations<NucleotideSequence> fromParentToCommonAncestor = MutationsUtils.intersection(
                 fromParentToFirst,
-                fromParentToSecond
-        );
+                fromParentToSecond,
+                new Range(0, parent.size()),
+                true);
         assertEquals("[I2:N,I2:N]", fromParentToCommonAncestor.toString());
 
         NucleotideSequence commonAncestor = fromParentToCommonAncestor.mutate(parent);
@@ -195,7 +204,9 @@ public class MutationOperationsTest {
         Mutations<NucleotideSequence> fromParentToSecond = mutations(parent, second);
         Mutations<NucleotideSequence> fromParentToCommonAncestor = MutationsUtils.intersection(
                 fromParentToFirst,
-                fromParentToSecond
+                fromParentToSecond,
+                new Range(0, parent.size()),
+                true
         );
         assertEquals("[I1:N,I1:C,I1:T]", fromParentToCommonAncestor.toString());
 
@@ -225,7 +236,9 @@ public class MutationOperationsTest {
         Mutations<NucleotideSequence> fromParentToSecond = mutations(parent, second);
         Mutations<NucleotideSequence> fromParentToCommonAncestor = MutationsUtils.intersection(
                 fromParentToFirst,
-                fromParentToSecond
+                fromParentToSecond,
+                new Range(0, parent.size()),
+                true
         );
         assertEquals("[I1:N,I1:G,I1:N]", fromParentToCommonAncestor.toString());
 
@@ -255,7 +268,9 @@ public class MutationOperationsTest {
         Mutations<NucleotideSequence> fromParentToSecond = mutations(parent, second);
         Mutations<NucleotideSequence> fromParentToCommonAncestor = MutationsUtils.intersection(
                 fromParentToFirst,
-                fromParentToSecond
+                fromParentToSecond,
+                new Range(0, parent.size()),
+                true
         );
         assertEquals("[I1:N,I1:G,I1:G,I1:N]", fromParentToCommonAncestor.toString());
 
@@ -285,7 +300,9 @@ public class MutationOperationsTest {
         Mutations<NucleotideSequence> fromParentToSecond = mutations(parent, second);
         Mutations<NucleotideSequence> fromParentToCommonAncestor = MutationsUtils.intersection(
                 fromParentToFirst,
-                fromParentToSecond
+                fromParentToSecond,
+                new Range(0, parent.size()),
+                true
         );
         assertEquals("[I1:T,I1:N,I1:T]", fromParentToCommonAncestor.toString());
 
@@ -347,7 +364,9 @@ public class MutationOperationsTest {
             Mutations<NucleotideSequence> fromParentToSecond = mutations(parent, second);
             Mutations<NucleotideSequence> fromParentToCommonAncestor = MutationsUtils.intersection(
                     fromParentToFirst,
-                    fromParentToSecond
+                    fromParentToSecond,
+                    new Range(0, parent.size()),
+                    true
             );
             if (print) {
                 System.out.println("Parent -> First:");

@@ -61,22 +61,26 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
      * Hide small trees
      */
     public final int hideTreesLessThanSize;
+    public final int commonMutationsCountForClustering;
 
     @JsonCreator
     public SHMTreeBuilderParameters(
             @JsonProperty("targetRegion") GeneFeature targetRegion,
             @JsonProperty("productiveOnly") boolean productiveOnly,
             @JsonProperty("maxDistanceWithinCluster") double maxDistanceWithinCluster,
-            @JsonProperty("hideTreesLessThanSize") int hideTreesLessThanSize) {
+            @JsonProperty("hideTreesLessThanSize") int hideTreesLessThanSize,
+            @JsonProperty("commonMutationsCountForClustering") int commonMutationsCountForClustering
+    ) {
         this.targetRegion = targetRegion;
         this.productiveOnly = productiveOnly;
         this.maxDistanceWithinCluster = maxDistanceWithinCluster;
         this.hideTreesLessThanSize = hideTreesLessThanSize;
+        this.commonMutationsCountForClustering = commonMutationsCountForClustering;
     }
 
     @Override
     public SHMTreeBuilderParameters clone() {
-        return new SHMTreeBuilderParameters(targetRegion, productiveOnly, maxDistanceWithinCluster, hideTreesLessThanSize);
+        return new SHMTreeBuilderParameters(targetRegion, productiveOnly, maxDistanceWithinCluster, hideTreesLessThanSize, commonMutationsCountForClustering);
     }
 
     @Override
@@ -84,11 +88,11 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SHMTreeBuilderParameters that = (SHMTreeBuilderParameters) o;
-        return productiveOnly == that.productiveOnly && Double.compare(that.maxDistanceWithinCluster, maxDistanceWithinCluster) == 0 && hideTreesLessThanSize == that.hideTreesLessThanSize && Objects.equals(targetRegion, that.targetRegion);
+        return productiveOnly == that.productiveOnly && Double.compare(that.maxDistanceWithinCluster, maxDistanceWithinCluster) == 0 && hideTreesLessThanSize == that.hideTreesLessThanSize && commonMutationsCountForClustering == that.commonMutationsCountForClustering && Objects.equals(targetRegion, that.targetRegion);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(targetRegion, productiveOnly, maxDistanceWithinCluster, hideTreesLessThanSize);
+        return Objects.hash(targetRegion, productiveOnly, maxDistanceWithinCluster, hideTreesLessThanSize, commonMutationsCountForClustering);
     }
 }
