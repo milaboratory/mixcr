@@ -14,7 +14,6 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -602,7 +601,7 @@ public class TreeBuilderByAncestorsTest {
                     }
                     return result;
                 },
-                Function.identity(),
+                (parent, node) -> node,
                 (firstMutation, secondMutation) -> {
                     List<Integer> result = new ArrayList<>();
                     for (int i = 0; i < firstMutation.size(); i++) {

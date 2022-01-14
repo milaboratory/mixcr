@@ -4,7 +4,6 @@ import com.google.common.primitives.Bytes;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.alignment.Aligner;
-import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
 import com.milaboratory.core.mutations.Mutation;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.mutations.MutationsBuilder;
@@ -447,11 +446,12 @@ public class MutationOperationsTest {
             }
         }
 
-        return Aligner.alignGlobal(
-                LinearGapAlignmentScoring.getNucleotideBLASTScoring(),
-                parent,
-                result.createAndDestroy().mutate(parent)
-        ).getAbsoluteMutations();
+        return result.createAndDestroy();
+//        return Aligner.alignGlobal(
+//                LinearGapAlignmentScoring.getNucleotideBLASTScoring(),
+//                parent,
+//                result.createAndDestroy().mutate(parent)
+//        ).getAbsoluteMutations();
     }
 
     private Mutations<NucleotideSequence> mutations(NucleotideSequence first, NucleotideSequence second) {

@@ -1073,7 +1073,6 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                         }
                         return Stream.of(new MutationsWithRange(
                                 alignment.getSequence1(),
-                                EMPTY_NUCLEOTIDE_MUTATIONS,
                                 mutations,
                                 rangesWithoutCDR3.get(0),
                                 true,
@@ -1090,7 +1089,6 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
         NucleotideSequence VSequence1 = clone.getBestHit(Variable).getAlignment(0).getSequence1();
         return new MutationsWithRange(
                 VSequence1,
-                EMPTY_NUCLEOTIDE_MUTATIONS,
                 Aligner.alignGlobal(
                         AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
                         VSequence1,
@@ -1110,7 +1108,6 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
         NucleotideSequence CDR3 = clone.getNFeature(GeneFeature.CDR3);
         return new MutationsWithRange(
                 JSequence1,
-                EMPTY_NUCLEOTIDE_MUTATIONS,
                 Aligner.alignGlobal(
                         AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
                         JSequence1,
@@ -1128,8 +1125,8 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
     private double score(List<MutationsWithRange> mutationsWithRanges, AlignmentScoring<NucleotideSequence> scoring) {
         return mutationsWithRanges.stream()
                 .mapToDouble(mutations -> AlignmentUtils.calculateScore(
-                        mutations.getFromBaseToParent().mutate(mutations.getSequence1()),
-                        mutations.getFromParentToThis(),
+                        mutations.getSequence1(),
+                        mutations.getMutations(),
                         scoring
                 ))
                 .sum();
@@ -1138,7 +1135,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
     private double maxScore(List<MutationsWithRange> vMutationsBetween, AlignmentScoring<NucleotideSequence> scoring) {
         return vMutationsBetween.stream()
                 .mapToDouble(mutations -> AlignmentUtils.calculateScore(
-                        mutations.getFromBaseToParent().mutate(mutations.getSequence1()),
+                        mutations.getSequence1(),
                         EMPTY_NUCLEOTIDE_MUTATIONS,
                         scoring
                 ))
@@ -1175,9 +1172,8 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
     private List<MutationsWithRange> invert(List<MutationsWithRange> mutations) {
         return mutations.stream()
                 .map(it -> new MutationsWithRange(
-                        it.getSequence1(),
-                        it.getCombinedMutations(),
-                        it.getFromParentToThis().invert(),
+                        it.getMutations().mutate(it.getSequence1()),
+                        it.getMutations().invert(),
                         it.getSequence1Range(),
                         it.isIncludeFirstMutations(),
                         it.isIncludeLastMutations()
@@ -1192,8 +1188,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                     if (intersection != null) {
                         return Stream.of(new MutationsWithRange(
                                 base.getSequence1(),
-                                base.getCombinedMutations(),
-                                base.getCombinedMutations().invert().combineWith(comparison.getCombinedMutations()),
+                                base.getMutations().invert().combineWith(comparison.getMutations()),
                                 intersection,
                                 true, true
                         ));

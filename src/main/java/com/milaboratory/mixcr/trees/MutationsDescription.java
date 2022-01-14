@@ -3,29 +3,43 @@ package com.milaboratory.mixcr.trees;
 import java.util.List;
 
 class MutationsDescription {
-    private final List<MutationsWithRange> VMutationsWithoutNDN;
+    private final List<MutationsWithRange> VMutationsWithoutCDR3;
+    private final MutationsWithRange VMutationsInCDR3WithoutNDN;
     private final MutationsWithRange knownNDN;
-    private final List<MutationsWithRange> JMutationsWithoutNDN;
+    private final MutationsWithRange JMutationsInCDR3WithoutNDN;
+    private final List<MutationsWithRange> JMutationsWithoutCDR3;
 
-    MutationsDescription(
-            List<MutationsWithRange> VMutationsWithoutNDN,
+    public MutationsDescription(
+            List<MutationsWithRange> VMutationsWithoutCDR3,
+            MutationsWithRange VMutationsInCDR3WithoutNDN,
             MutationsWithRange knownNDN,
-            List<MutationsWithRange> JMutationsWithoutNDN
+            MutationsWithRange JMutationsInCDR3WithoutNDN,
+            List<MutationsWithRange> JMutationsWithoutCDR3
     ) {
+        this.VMutationsWithoutCDR3 = VMutationsWithoutCDR3;
+        this.VMutationsInCDR3WithoutNDN = VMutationsInCDR3WithoutNDN;
         this.knownNDN = knownNDN;
-        this.VMutationsWithoutNDN = VMutationsWithoutNDN;
-        this.JMutationsWithoutNDN = JMutationsWithoutNDN;
+        this.JMutationsInCDR3WithoutNDN = JMutationsInCDR3WithoutNDN;
+        this.JMutationsWithoutCDR3 = JMutationsWithoutCDR3;
     }
 
-    public List<MutationsWithRange> getVMutationsWithoutNDN() {
-        return VMutationsWithoutNDN;
+    public List<MutationsWithRange> getVMutationsWithoutCDR3() {
+        return VMutationsWithoutCDR3;
+    }
+
+    public MutationsWithRange getVMutationsInCDR3WithoutNDN() {
+        return VMutationsInCDR3WithoutNDN;
     }
 
     public MutationsWithRange getKnownNDN() {
         return knownNDN;
     }
 
-    public List<MutationsWithRange> getJMutationsWithoutNDN() {
-        return JMutationsWithoutNDN;
+    public MutationsWithRange getJMutationsInCDR3WithoutNDN() {
+        return JMutationsInCDR3WithoutNDN;
+    }
+
+    public List<MutationsWithRange> getJMutationsWithoutCDR3() {
+        return JMutationsWithoutCDR3;
     }
 }
