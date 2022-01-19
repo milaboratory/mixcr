@@ -9,6 +9,7 @@ import jetbrains.letsPlot.geom.geomBoxplot
 import jetbrains.letsPlot.geom.geomPoint
 import jetbrains.letsPlot.geom.geomText
 import jetbrains.letsPlot.letsPlot
+import jetbrains.letsPlot.scale.scaleColorManual
 import jetbrains.letsPlot.theme
 import org.apache.commons.math3.distribution.BinomialDistribution
 import org.apache.commons.math3.stat.StatUtils
@@ -51,8 +52,8 @@ class StatCompareMeansTest {
         val G = "G"
 
         val data = CompareMeansTest.rndData(
-            "Y" to Rnd,
-            "X" to Category(10),
+            "Y" to Normal,
+            "X" to Category(5),
             "G" to Category(2),
             len = 100
         )
@@ -74,6 +75,10 @@ class StatCompareMeansTest {
             color = X
             fill = X
         }
+
+        plt += scaleColorManual(
+            listOf("#ffffff", "#aaaaaa")
+        )
 
 
         plt += theme(panelGrid = "blank", panelBackground = elementRect(color = "black"))

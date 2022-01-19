@@ -41,7 +41,6 @@ internal class CompareMeansTest {
             val datum = cols.map {
                 val d = it.second
                 it.first to when (d) {
-                    Rnd -> (0 until len).map { if (it % 10 < 5) 1.0 * random.nextInt(1000) else 1000 * random.nextDouble() }
                     Normal -> (0 until len).map { 10 * random.nextDouble() }
                     Gaussian -> (0 until len).map { 10 * random.asJavaRandom().nextGaussian() }
                     is Category -> (0 until len).map { (65 + random.nextInt(d.n)).toChar().toString() }
@@ -57,4 +56,3 @@ sealed interface Distribution
 data class Category(val n: Int) : Distribution
 object Gaussian : Distribution
 object Normal : Distribution
-object Rnd : Distribution

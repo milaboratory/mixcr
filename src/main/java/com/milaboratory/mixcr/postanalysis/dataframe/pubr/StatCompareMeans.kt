@@ -92,14 +92,7 @@ private fun Plot.withOverallPValue(cmp: statCompareMeans) = run {
 private fun Plot.withSignificanceLevel(cmp: statCompareMeans) = run {
     val xVar = cmp.x!!
     val stat = cmp.statistics
-
-    // group1 = refGroup
     val statDf = stat.stat
-//    statDf[statDf.group2, statDf.pSignif].rename(statDf.group2.name() to x)
-//    listOf(
-//        stat.stat.group2,
-//        stat.stat.pSignif
-//    ).toDataFrame()
 
     this + geomText(
         mapOf(

@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.InetAddress
 
 
-val milibVersion = "1.14.1-16-774c60afab"
+val milibVersion = "2.0.0"
 val repseqioVersion = "1.3.5-10-05b9291c5e"
 val jacksonVersion = "2.12.4"
 val letsPlotLibraryVersion = "2.1.0"
