@@ -3,7 +3,10 @@ package com.milaboratory.mixcr.trees;
 import com.milaboratory.mixcr.util.Java9Util;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -20,6 +23,7 @@ public class TreeBuilderByAncestors<T, E, M> {
     private final BiFunction<E, E, M> mutationsBetween;
     private final BiFunction<E, M, E> mutate;
     private final BiFunction<M, M, M> findCommonMutations;
+    private final BiFunction<E, E, E> postprocessDescendants;
 
     private final Tree<ObservedOrReconstructed<T, E>> tree;
     private int observedNodesCount = 0;
@@ -30,7 +34,8 @@ public class TreeBuilderByAncestors<T, E, M> {
             BiFunction<E, E, M> mutationsBetween,
             BiFunction<E, M, E> mutate,
             BiFunction<E, T, E> asAncestor,
-            BiFunction<M, M, M> findCommonMutations
+            BiFunction<M, M, M> findCommonMutations,
+            BiFunction<E, E, E> postprocessDescendants
     ) {
         this.distance = distance;
         this.mutationsBetween = mutationsBetween;
@@ -38,6 +43,7 @@ public class TreeBuilderByAncestors<T, E, M> {
         this.asAncestor = asAncestor;
         this.findCommonMutations = findCommonMutations;
         tree = new Tree<>(new Tree.Node<>(new Reconstructed<>(root, BigDecimal.ZERO)));
+        this.postprocessDescendants = postprocessDescendants;
     }
 
     public int getObservedNodesCount() {
@@ -59,25 +65,21 @@ public class TreeBuilderByAncestors<T, E, M> {
      */
     public TreeBuilderByAncestors<T, E, M> addNode(T toAdd) {
         observedNodesCount++;
-        List<Tree.Node<ObservedOrReconstructed<T, E>>> nearestNodes = tree.allNodes()
-                .filter(it -> it.getContent() instanceof Reconstructed<?, ?>)
-                .collect(Collectors.groupingBy(compareWith ->
-                        {
-                            Reconstructed<T, E> nodeContent = (Reconstructed<T, E>) compareWith.getContent();
-                            return distance.apply(mutationsBetween.apply(nodeContent.getContent(), asAncestor.apply(nodeContent.getContent(), toAdd)))
-                                    .add(nodeContent.getMinDistanceFromObserved());
-                        }
-                ))
-                .entrySet().stream()
-                .min(Map.Entry.comparingByKey())
-                .map(Map.Entry::getValue)
-                .orElseThrow(IllegalArgumentException::new);
-        Stream<Action> possibleActions = nearestNodes.stream().flatMap(chosenNode -> {
+        List<Tree.NodeWithParent<ObservedOrReconstructed<T, E>>> nearestNodes = tree.allNodes()
+                .filter(it -> it.getNode().getContent() instanceof Reconstructed<?, ?>)
+                .sorted(Comparator.comparing(compareWith -> {
+                    Reconstructed<T, E> nodeContent = (Reconstructed<T, E>) compareWith.getNode().getContent();
+                    return this.distance.apply(mutationsBetween.apply(nodeContent.getContent(), asAncestor.apply(nodeContent.getContent(), toAdd)))
+                            .add(nodeContent.getMinDistanceFromObserved());
+                }))
+                .limit(3)
+                .collect(Collectors.toList());
+        Stream<Action> possibleActions = nearestNodes.stream().flatMap(nodeWithParent -> {
+            Tree.Node<ObservedOrReconstructed<T, E>> chosenNode = nodeWithParent.getNode();
             //search for siblings with common mutations with the added node
             Optional<Replace> siblingToMergeWith = chosenNode.getLinks().stream()
-                    .map(Tree.NodeLink::getNode)
-                    .filter(it -> it.getContent() instanceof Reconstructed<?, ?>)
-                    .map(sibling -> replaceChild(toAdd, chosenNode, sibling))
+                    .filter(it -> it.getNode().getContent() instanceof Reconstructed<?, ?>)
+                    .map(link -> replaceChild(toAdd, chosenNode, link.getNode(), link.getDistance()))
                     .filter(Objects::nonNull)
                     //choose a sibling with max score of common mutations
                     .max(comparing(Replace::getDistanceFromParentToCommon));
@@ -112,9 +114,16 @@ public class TreeBuilderByAncestors<T, E, M> {
                 //       --*--               --*-----
                 //       |   |               |   |  |
                 //       R   T               R   T  A
+                Stream<Replace> insertAsParent;
+                if (nodeWithParent.getParent() != null) {
+                    insertAsParent = Stream.of(replaceChild(toAdd, nodeWithParent.getParent(), chosenNode, nodeWithParent.getDistance()))
+                            .filter(Objects::nonNull);
+                } else {
+                    insertAsParent = Stream.empty();
+                }
                 return Stream.concat(
                         Stream.of(insertAsDirectDescendant(toAdd, chosenNode)),
-                        Java9Util.stream(Optional.ofNullable(chosenNode.getParent()).map(parent -> replaceChild(toAdd, parent, chosenNode)))
+                        insertAsParent
                 );
             }
         });
@@ -159,7 +168,7 @@ public class TreeBuilderByAncestors<T, E, M> {
      * B - child
      * C - commonAncestor
      */
-    private Replace replaceChild(T toAdd, Tree.Node<ObservedOrReconstructed<T, E>> parent, Tree.Node<ObservedOrReconstructed<T, E>> child) {
+    private Replace replaceChild(T toAdd, Tree.Node<ObservedOrReconstructed<T, E>> parent, Tree.Node<ObservedOrReconstructed<T, E>> child, BigDecimal distanceFromParentToChild) {
         Reconstructed<T, E> parentContent = (Reconstructed<T, E>) parent.getContent();
         E contentOfAdded = asAncestor.apply(parentContent.getContent(), toAdd);
         E childContent = ((Reconstructed<T, E>) child.getContent()).getContent();
@@ -168,7 +177,7 @@ public class TreeBuilderByAncestors<T, E, M> {
         M mutationsToChild = mutationsBetween.apply(parentContent.getContent(), childContent);
 
         M commonMutations = findCommonMutations.apply(mutationsToAdded, mutationsToChild);
-        BigDecimal distanceFromParentToCommon = distance.apply(commonMutations);
+        BigDecimal distanceFromParentToCommon = this.distance.apply(commonMutations);
         //if distance is zero than there is no common mutations
         if (distanceFromParentToCommon.compareTo(BigDecimal.ZERO) == 0) {
             return null;
@@ -176,17 +185,17 @@ public class TreeBuilderByAncestors<T, E, M> {
 
         E commonAncestor = mutate.apply(parentContent.getContent(), commonMutations);
         M fromCommonToChild = mutationsBetween.apply(commonAncestor, childContent);
-        BigDecimal distanceFromCommonAncestorToChild = distance.apply(fromCommonToChild);
+        BigDecimal distanceFromCommonAncestorToChild = this.distance.apply(fromCommonToChild);
         //if distance is zero than result of replacement equals to insertion
         if (distanceFromCommonAncestorToChild.compareTo(BigDecimal.ZERO) == 0) {
             return null;
         }
-        BigDecimal distanceFromCommonToAdded = distance.apply(mutationsBetween.apply(commonAncestor, contentOfAdded));
+        BigDecimal distanceFromCommonToAdded = this.distance.apply(mutationsBetween.apply(commonAncestor, contentOfAdded));
 
         BigDecimal minDistanceFromObserved = Stream.of(
                 distanceFromCommonToAdded,
                 distanceFromCommonAncestorToChild,
-                parentContent.getMinDistanceFromObserved().add(distance.apply(commonMutations))
+                parentContent.getMinDistanceFromObserved().add(this.distance.apply(commonMutations))
         ).min(BigDecimal::compareTo).get();
 //        //commonAncestor is equal to added node, so minDistanceFromObserved is 0
 //        if (distanceFromCommonToAdded.compareTo(BigDecimal.ZERO) == 0) {
@@ -211,11 +220,13 @@ public class TreeBuilderByAncestors<T, E, M> {
         }
         replacement.addChild(nodeToAdd, distanceFromCommonToAdded);
 
-        return new Replace(parent,
+        return new Replace(
+                parent,
                 child,
                 replacement,
                 distanceFromParentToCommon,
-                distanceFromCommonAncestorToChild.add(distanceFromCommonToAdded)
+                distanceFromCommonAncestorToChild.add(distanceFromCommonToAdded),
+                distanceFromParentToChild
         );
     }
 
@@ -273,17 +284,21 @@ public class TreeBuilderByAncestors<T, E, M> {
         private final Tree.Node<ObservedOrReconstructed<T, E>> replacement;
         private final BigDecimal distanceFromParentToCommon;
         private final BigDecimal sumOfDistancesFromAncestor;
+        private final BigDecimal distanceFromParentToReplaceWhat;
 
         public Replace(Tree.Node<ObservedOrReconstructed<T, E>> parent,
                        Tree.Node<ObservedOrReconstructed<T, E>> replaceWhat,
                        Tree.Node<ObservedOrReconstructed<T, E>> replacement,
                        BigDecimal distanceFromParentToCommon,
-                       BigDecimal sumOfDistancesFromAncestor) {
+                       BigDecimal sumOfDistancesFromAncestor,
+                       BigDecimal distanceFromParentToReplaceWhat
+        ) {
             this.parent = parent;
             this.replaceWhat = replaceWhat;
             this.replacement = replacement;
             this.distanceFromParentToCommon = distanceFromParentToCommon;
             this.sumOfDistancesFromAncestor = sumOfDistancesFromAncestor;
+            this.distanceFromParentToReplaceWhat = distanceFromParentToReplaceWhat;
         }
 
         BigDecimal getDistanceFromParentToCommon() {
@@ -292,8 +307,7 @@ public class TreeBuilderByAncestors<T, E, M> {
 
         @Override
         BigDecimal changeOfDistance() {
-            BigDecimal distanceFromParent = replaceWhat.getDistanceFromParent() != null ? replaceWhat.getDistanceFromParent() : BigDecimal.ZERO;
-            return distanceFromParentToCommon.subtract(distanceFromParent).add(sumOfDistancesFromAncestor);
+            return distanceFromParentToCommon.subtract(distanceFromParentToReplaceWhat).add(sumOfDistancesFromAncestor);
         }
 
         @Override
@@ -303,7 +317,48 @@ public class TreeBuilderByAncestors<T, E, M> {
 
         @Override
         void apply() {
-            parent.replaceChild(replaceWhat, replacement, distanceFromParentToCommon);
+            parent.replaceChild(
+                    replaceWhat,
+                    postprocess(replacement),
+                    distanceFromParentToCommon
+            );
+        }
+
+        private Tree.Node<ObservedOrReconstructed<T, E>> postprocess(Tree.Node<ObservedOrReconstructed<T, E>> parentToPostprocess) {
+            return new Tree.Node<>(
+                    parentToPostprocess.getContent(),
+                    postprocess(
+                            ((Reconstructed<T, E>) parentToPostprocess.getContent()).getContent(),
+                            parentToPostprocess.getLinks()
+                    )
+            );
+        }
+
+        private List<Tree.NodeLink<ObservedOrReconstructed<T, E>>> postprocess(
+                E parentContent, List<Tree.NodeLink<ObservedOrReconstructed<T, E>>> links
+        ) {
+            return links.stream()
+                    .map(link -> {
+                        Tree.Node<ObservedOrReconstructed<T, E>> child = link.getNode();
+                        if (child.getContent() instanceof Reconstructed<?, ?>) {
+                            Reconstructed<T, E> childContent = (Reconstructed<T, E>) child.getContent();
+                            E mapped = postprocessDescendants.apply(parentContent, childContent.getContent());
+                            return new Tree.NodeLink<>(
+                                    new Tree.Node<>(
+                                            new Reconstructed<>(
+                                                    mapped,
+                                                    //TODO recalculate minDistanceFromObserved
+                                                    childContent.getMinDistanceFromObserved()
+                                            ),
+                                            postprocess(mapped, child.getLinks())
+                                    ),
+                                    distance.apply(mutationsBetween.apply(parentContent, mapped))
+                            );
+                        } else {
+                            return link;
+                        }
+                    })
+                    .collect(Collectors.toList());
         }
     }
 

@@ -27,7 +27,7 @@ public class TreeBuilderByAncestorsTest {
             false
     );
     private final TreePrinter<ObservedOrReconstructed<List<Integer>, List<Integer>>> xmlTreePrinter = new XmlTreePrinter<>(
-            node -> node.getContent().convert(this::print, content -> "-" + print(content) + "-")
+            nodeWithParent -> nodeWithParent.getNode().getContent().convert(this::print, content -> "-" + print(content) + "-")
     );
     private final NewickTreePrinter<List<Integer>> treePrinterOnlyReal = new NewickTreePrinter<>(
             node -> print(node.getContent()),
@@ -301,6 +301,7 @@ public class TreeBuilderByAncestorsTest {
         Tree<ObservedOrReconstructed<List<Integer>, List<Integer>>> result = rebuildTree(original);
         compareTrees(original, result);
         Tree.Node<ObservedOrReconstructed<List<Integer>, List<Integer>>> reconstructedNodeEqualToObserved = result.allNodes()
+                .map(Tree.NodeWithParent::getNode)
                 .filter(it -> it.getContent() instanceof Reconstructed<?, ?>)
                 .filter(it -> ((Reconstructed<List<Integer>, List<Integer>>) it.getContent()).getContent().equals(parseNode("454")))
                 .findFirst()
@@ -356,7 +357,9 @@ public class TreeBuilderByAncestorsTest {
                 .mapToObj(it -> 0)
                 .collect(Collectors.toList());
         TreeBuilderByAncestors<List<Integer>, List<Integer>, List<Integer>> treeBuilder = treeBuilder(root.size());
-        original.allNodes().map(Tree.Node::getContent)
+        original.allNodes()
+                .map(Tree.NodeWithParent::getNode)
+                .map(Tree.Node::getContent)
 //                .sorted(Comparator.comparing(lead -> distance(root, lead)))
                 .sorted(Comparator.<List<Integer>, BigDecimal>comparing(lead -> distance(root, lead)).reversed())
                 .forEach(toAdd -> {
@@ -511,7 +514,9 @@ public class TreeBuilderByAncestorsTest {
     }
 
     private BigDecimal sumOfDistances(Tree<?> tree) {
-        return tree.getRoot().sumOfDistancesToDescendants();
+        return tree.allNodes().map(Tree.NodeWithParent::getDistance)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private Tree<List<Integer>> withoutReconstructed(Tree<ObservedOrReconstructed<List<Integer>, List<Integer>>> original) {
@@ -612,7 +617,8 @@ public class TreeBuilderByAncestorsTest {
                         }
                     }
                     return result;
-                }
+                },
+                (parent, child) -> child
         );
     }
 

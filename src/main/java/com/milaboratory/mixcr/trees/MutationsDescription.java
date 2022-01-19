@@ -42,4 +42,14 @@ class MutationsDescription {
     public List<MutationsWithRange> getJMutationsWithoutCDR3() {
         return JMutationsWithoutCDR3;
     }
+
+    public MutationsDescription withKnownNDNMutations(MutationsWithRange mutations) {
+        return new MutationsDescription(
+                VMutationsWithoutCDR3,
+                VMutationsInCDR3WithoutNDN,
+                mutations,
+                JMutationsInCDR3WithoutNDN,
+                JMutationsWithoutCDR3
+        );
+    }
 }

@@ -40,7 +40,7 @@ import java.util.stream.Stream;
  *
  */
 public class Tree<T> {
-    private Node<T> root;
+    private final Node<T> root;
 
     public Tree(Node<T> root) {
         this.root = root;
@@ -50,13 +50,9 @@ public class Tree<T> {
         return root;
     }
 
-    void setRoot(Node<T> root) {
-        this.root = root;
-    }
-
-    public Stream<Node<T>> allNodes() {
+    public Stream<NodeWithParent<T>> allNodes() {
         return Stream.concat(
-                Stream.of(root),
+                Stream.of(new NodeWithParent<>(null, root, null)),
                 root.allDescendants()
         );
     }
@@ -68,40 +64,6 @@ public class Tree<T> {
     public static class Node<T> {
         private final T content;
         private final List<NodeLink<T>> children;
-        @Nullable
-        private Node<T> parent = null;
-        @Nullable
-        private BigDecimal distanceFromParent = null;
-
-        @Nullable
-        public Node<T> getParent() {
-            return parent;
-        }
-
-        public Node<T> copy() {
-            Node<T> node = new Node<>(content, children);
-            node.setParent(parent, distanceFromParent);
-            return node;
-        }
-
-        public BigDecimal sumOfDistancesToDescendants() {
-            return children.stream()
-                    .map(link -> {
-                        BigDecimal selfDistance = link.getDistance() != null ? link.getDistance() : BigDecimal.ZERO;
-                        return selfDistance.add(link.getNode().sumOfDistancesToDescendants());
-                    })
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-        }
-
-        @Nullable
-        public BigDecimal getDistanceFromParent() {
-            return distanceFromParent;
-        }
-
-        void setParent(Node<T> parent, BigDecimal distanceFromParent) {
-            this.parent = parent;
-            this.distanceFromParent = distanceFromParent;
-        }
 
         protected Node(T content) {
             this.content = content;
@@ -122,7 +84,6 @@ public class Tree<T> {
         }
 
         public Node<T> addChild(Node<T> node, @Nullable BigDecimal distance) {
-            node.setParent(this, distance);
             children.add(new NodeLink<>(node, distance));
             return this;
         }
@@ -136,13 +97,14 @@ public class Tree<T> {
                 throw new IllegalArgumentException();
             }
             children.add(new NodeLink<>(substitution, distance));
-            substitution.setParent(this, distance);
         }
 
-        public Stream<Node<T>> allDescendants() {
+        public Stream<NodeWithParent<T>> allDescendants() {
             return children.stream()
-                    .map(NodeLink::getNode)
-                    .flatMap(child -> Stream.concat(Stream.of(child), child.allDescendants()));
+                    .flatMap(link -> Stream.concat(
+                            Stream.of(new NodeWithParent<>(this, link.getNode(), link.getDistance())),
+                            link.getNode().allDescendants())
+                    );
         }
 
         public <R> Node<R> map(Function<T, R> mapper) {
@@ -169,6 +131,34 @@ public class Tree<T> {
         @Nullable
         public BigDecimal getDistance() {
             return distance;
+        }
+    }
+
+    public static class NodeWithParent<T> {
+        @Nullable
+        private final Node<T> parent;
+        private final Node<T> node;
+        @Nullable
+        private final BigDecimal distance;
+
+        public NodeWithParent(@Nullable Node<T> parent, Node<T> node, @Nullable BigDecimal distance) {
+            this.parent = parent;
+            this.node = node;
+            this.distance = distance;
+        }
+
+        @Nullable
+        public BigDecimal getDistance() {
+            return distance;
+        }
+
+        @Nullable
+        public Node<T> getParent() {
+            return parent;
+        }
+
+        public Node<T> getNode() {
+            return node;
         }
     }
 }

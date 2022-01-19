@@ -38,34 +38,35 @@ import java.util.stream.Collectors;
  * https://en.wikipedia.org/wiki/Newick_format
  */
 public class XmlTreePrinter<T> implements TreePrinter<T> {
-    private final Function<Tree.Node<T>, String> nameExtractor;
+    private final Function<Tree.NodeWithParent<T>, String> nameExtractor;
 
     public XmlTreePrinter(
-            Function<Tree.Node<T>, String> nameExtractor
+            Function<Tree.NodeWithParent<T>, String> nameExtractor
     ) {
         this.nameExtractor = nameExtractor;
     }
 
     @Override
     public String print(Tree<T> tree) {
-        return printNode(tree.getRoot());
+        return printNode(new Tree.NodeWithParent<>(null, tree.getRoot(), null));
     }
 
-    private String printNode(Tree.Node<T> node) {
+    private String printNode(Tree.NodeWithParent<T> nodeWithParent) {
+        Tree.Node<T> node = nodeWithParent.getNode();
         StringBuilder sb = new StringBuilder();
         sb.append("<node content='");
-        sb.append(nameExtractor.apply(node));
+        sb.append(nameExtractor.apply(nodeWithParent));
         sb.append("'");
-        if (node.getDistanceFromParent() != null) {
+        if (nodeWithParent.getDistance() != null) {
             sb.append(" distance='");
-            sb.append(node.getDistanceFromParent());
+            sb.append(nodeWithParent.getDistance());
             sb.append("'");
         }
         if (!node.getLinks().isEmpty()) {
             sb.append(">");
             sb.append(node.getLinks().stream()
                     .sorted(Comparator.comparing(link -> link.getDistance() != null ? link.getDistance() : BigDecimal.ZERO))
-                    .map(link -> printNode(link.getNode()))
+                    .map(link -> printNode(new Tree.NodeWithParent<>(node, link.getNode(), link.getDistance())))
                     .sorted()
                     .collect(Collectors.joining("")));
             sb.append("</node>");

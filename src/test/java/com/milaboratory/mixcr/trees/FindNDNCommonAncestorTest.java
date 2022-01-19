@@ -63,6 +63,76 @@ public class FindNDNCommonAncestorTest {
         assertEquals("TTTY", findNDNCommonAncestor(second, first).mutate(base).toString());
     }
 
+    /**
+     * <pre>
+     *     G
+     *     |
+     *   S----
+     *   |   |
+     *  ---  G
+     *  | |
+     *  G C
+     *
+     *  =>
+     *
+     *     G
+     *     |
+     *   G----
+     *   |   |
+     *  ---  G
+     *  | |
+     *  G C
+     * </pre>
+     */
+    @Test
+    public void wideningFromLetterToWildcardMayBeConcertized() {
+        NucleotideSequence base = base(4);
+        Mutations<NucleotideSequence> parent = build("TTTG", base);
+        Mutations<NucleotideSequence> child = build("TTTS", base);
+
+        Mutations<NucleotideSequence> result = MutationsUtils.concreteNDNChild(parent, child);
+        assertEquals("TTTG", result.mutate(base).toString());
+    }
+
+    /**
+     * <pre>
+     *     T
+     *     |
+     *   B----
+     *   |   |
+     *  ---  T
+     *  | |
+     *  T S
+     *    |
+     *   ---
+     *   | |
+     *   G S
+     *
+     *  =>
+     *
+     *     T
+     *     |
+     *   T----
+     *   |   |
+     *  ---  T
+     *  | |
+     *  T B
+     *    |
+     *   ---
+     *   | |
+     *   G S
+     * </pre>
+     */
+    @Test
+    public void narrowingFromWildcardToWildcardMayBeConcertized() {
+        NucleotideSequence base = base(4);
+        Mutations<NucleotideSequence> parent = build("TTTT", base);
+        Mutations<NucleotideSequence> child = build("TTTS", base);
+
+        Mutations<NucleotideSequence> result = MutationsUtils.concreteNDNChild(parent, child);
+        assertEquals("TTTB", result.mutate(base).toString());
+    }
+
     private Mutations<NucleotideSequence> build(String target, NucleotideSequence base) {
         return Aligner.alignGlobal(
                 AffineGapAlignmentScoring.getNucleotideBLASTScoring(),

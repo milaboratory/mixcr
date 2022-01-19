@@ -224,6 +224,52 @@ final class MutationsUtils {
     }
 
     //TODO removals and inserts
+    static Mutations<NucleotideSequence> concreteNDNChild(Mutations<NucleotideSequence> parent, Mutations<NucleotideSequence> child) {
+        Map<Integer, Set<Integer>> mutationsOfParentByPositions = Arrays.stream(parent.getRAWMutations())
+                .boxed()
+                .collect(Collectors.groupingBy(Mutation::getPosition, Collectors.toSet()));
+        MutationsBuilder<NucleotideSequence> mutationsBuilder = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
+        for (int i = 0; i < child.size(); i++) {
+            int mutationOfChild = child.getMutation(i);
+            if (Mutation.isInDel(mutationOfChild)) {
+                mutationsBuilder.append(mutationOfChild);
+            } else {
+                int position = Mutation.getPosition(mutationOfChild);
+                Optional<Integer> mutationsOfParent = mutationsOfParentByPositions.getOrDefault(position, Collections.emptySet()).stream()
+                        .filter(Mutation::isSubstitution)
+                        .findFirst();
+                if (!mutationsOfParent.isPresent()) {
+                    mutationsBuilder.append(mutationOfChild);
+                } else {
+                    byte from = Mutation.getFrom(mutationOfChild);
+                    byte to = concreteChild(Mutation.getTo(mutationsOfParent.get()), Mutation.getTo(mutationOfChild));
+                    if (from != to) {
+                        mutationsBuilder.append(Mutation.createSubstitution(position, from, to));
+                    }
+                }
+            }
+        }
+
+        return mutationsBuilder.createAndDestroy();
+    }
+
+    private static byte concreteChild(byte parentSymbol, byte childSymbol) {
+        if (parentSymbol == childSymbol) {
+            return childSymbol;
+        } else if (NucleotideSequence.ALPHABET.isWildcard(childSymbol)) {
+            if (matchesStrictly(NucleotideSequence.ALPHABET.codeToWildcard(childSymbol), parentSymbol)) {
+                return parentSymbol;
+            } else {
+                long basicMask = NucleotideSequence.ALPHABET.codeToWildcard(parentSymbol).getBasicMask()
+                        | NucleotideSequence.ALPHABET.codeToWildcard(childSymbol).getBasicMask();
+                return NucleotideSequence.ALPHABET.maskToWildcard(basicMask).getCode();
+            }
+        } else {
+            return childSymbol;
+        }
+    }
+
+    //TODO removals and inserts
     static Mutations<NucleotideSequence> findNDNCommonAncestor(Mutations<NucleotideSequence> first, Mutations<NucleotideSequence> second) {
         Map<Integer, Set<Integer>> mutationsOfFirstByPositions = Arrays.stream(first.getRAWMutations())
                 .boxed()
@@ -231,23 +277,21 @@ final class MutationsUtils {
 
         MutationsBuilder<NucleotideSequence> mutationsBuilder = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
         for (int i = 0; i < second.size(); i++) {
-            int mutation = second.getMutation(i);
-            int position = Mutation.getPosition(mutation);
-            Set<Integer> mutationsOfFirst = mutationsOfFirstByPositions.get(position);
-            if (mutationsOfFirst != null) {
-                if (mutationsOfFirst.contains(mutation)) {
-                    mutationsBuilder.append(mutation);
-                } else if (Mutation.isSubstitution(mutation)) {
-                    mutationsOfFirst.stream()
-                            .filter(Mutation::isSubstitution)
-                            .findFirst()
-                            .map(otherSubstitution -> Mutation.createSubstitution(
-                                    position,
-                                    Mutation.getFrom(mutation),
-                                    combine(Mutation.getTo(mutation), Mutation.getTo(otherSubstitution))
-                            ))
-                            .ifPresent(mutationsBuilder::append);
-                }
+            int mutationOfSecond = second.getMutation(i);
+            int position = Mutation.getPosition(mutationOfSecond);
+            Set<Integer> mutationsOfFirst = mutationsOfFirstByPositions.getOrDefault(position, Collections.emptySet());
+            if (mutationsOfFirst.contains(mutationOfSecond)) {
+                mutationsBuilder.append(mutationOfSecond);
+            } else if (Mutation.isSubstitution(mutationOfSecond)) {
+                mutationsOfFirst.stream()
+                        .filter(Mutation::isSubstitution)
+                        .findFirst()
+                        .map(otherSubstitution -> Mutation.createSubstitution(
+                                position,
+                                Mutation.getFrom(mutationOfSecond),
+                                combine(Mutation.getTo(mutationOfSecond), Mutation.getTo(otherSubstitution))
+                        ))
+                        .ifPresent(mutationsBuilder::append);
             }
         }
         return mutationsBuilder.createAndDestroy();
@@ -261,17 +305,8 @@ final class MutationsUtils {
         } else if (NucleotideSequence.ALPHABET.isWildcard(secondSymbol) && matchesStrictly(NucleotideSequence.ALPHABET.codeToWildcard(secondSymbol), firstSymbol)) {
             return firstSymbol;
         } else {
-            long basicMask = 0;
-            if (!NucleotideSequence.ALPHABET.isWildcard(firstSymbol)) {
-                basicMask |= 1L << firstSymbol;
-            } else {
-                basicMask |= NucleotideSequence.ALPHABET.codeToWildcard(firstSymbol).getBasicMask();
-            }
-            if (!NucleotideSequence.ALPHABET.isWildcard(secondSymbol)) {
-                basicMask |= 1L << secondSymbol;
-            } else {
-                basicMask |= NucleotideSequence.ALPHABET.codeToWildcard(secondSymbol).getBasicMask();
-            }
+            long basicMask = NucleotideSequence.ALPHABET.codeToWildcard(firstSymbol).getBasicMask()
+                    | NucleotideSequence.ALPHABET.codeToWildcard(secondSymbol).getBasicMask();
             return NucleotideSequence.ALPHABET.maskToWildcard(basicMask).getCode();
         }
     }
