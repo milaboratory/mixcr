@@ -7,27 +7,21 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 public class MutationsWithRange {
     private final NucleotideSequence sequence1;
     private final Mutations<NucleotideSequence> mutations;
-    private final Range sequence1Range;
-    private final boolean includeFirstMutations;
-    private final boolean includeLastMutations;
+    private final RangeInfo rangeInfo;
     private NucleotideSequence result;
 
     public MutationsWithRange(
             NucleotideSequence sequence1,
             Mutations<NucleotideSequence> mutations,
-            Range sequence1Range,
-            boolean includeFirstMutations,
-            boolean includeLastMutations
+            RangeInfo rangeInfo
     ) {
         this.sequence1 = sequence1;
         this.mutations = mutations;
-        this.sequence1Range = sequence1Range;
-        this.includeFirstMutations = includeFirstMutations;
-        this.includeLastMutations = includeLastMutations;
+        this.rangeInfo = rangeInfo;
     }
 
-    public boolean isIncludeLastMutations() {
-        return includeLastMutations;
+    public RangeInfo getRangeInfo() {
+        return rangeInfo;
     }
 
     public NucleotideSequence getSequence1() {
@@ -39,64 +33,56 @@ public class MutationsWithRange {
     }
 
     public int mutationsCount() {
-        return mutations.extractAbsoluteMutationsForRange(sequence1Range).size();
-    }
-
-    public Range getSequence1Range() {
-        return sequence1Range;
-    }
-
-    public boolean isIncludeFirstMutations() {
-        return includeFirstMutations;
+        return mutationsForRange().size();
     }
 
     public MutationsWithRange withMutations(Mutations<NucleotideSequence> mutations) {
-        return new MutationsWithRange(sequence1, mutations, sequence1Range, includeFirstMutations, includeLastMutations);
+        return new MutationsWithRange(sequence1, mutations, rangeInfo);
     }
 
     public MutationsWithRange addMutations(Mutations<NucleotideSequence> additional) {
-        return new MutationsWithRange(sequence1, mutations.combineWith(additional), sequence1Range, includeFirstMutations, includeLastMutations);
+        return new MutationsWithRange(sequence1, mutations.combineWith(additional), rangeInfo);
     }
 
     int lengthDelta() {
-        Range sequence2Range = MutationsUtils.projectRange(getMutations(), getSequence1Range(), isIncludeFirstMutations(), isIncludeLastMutations());
-        return sequence2Range.length() - getSequence1Range().length();
+        return projectedRange().length() - getRangeInfo().getRange().length();
+    }
+
+    public Range projectedRange() {
+        return MutationsUtils.projectRange(mutations, rangeInfo);
     }
 
     public MutationsWithRange combineWithMutationsToTheRight(Mutations<NucleotideSequence> mutations, Range range) {
-        if (sequence1Range.getUpper() != range.getLower()) {
+        if (rangeInfo.getRange().getUpper() != range.getLower()) {
             throw new IllegalArgumentException();
         }
         return new MutationsWithRange(
                 sequence1,
                 this.mutations.concat(mutations),
-                new Range(sequence1Range.getLower(), range.getUpper()),
-                sequence1Range.isEmpty() || includeFirstMutations,
-                true
+                new RangeInfo(
+                        rangeInfo.getRange().setUpper(range.getUpper()),
+                        rangeInfo.getRange().isEmpty()
+                )
         );
     }
 
     public MutationsWithRange combineWithMutationsToTheLeft(Mutations<NucleotideSequence> mutations, Range range) {
-        if (range.getUpper() != sequence1Range.getLower()) {
+        if (range.getUpper() != rangeInfo.getRange().getLower()) {
             throw new IllegalArgumentException();
         }
-        Mutations<NucleotideSequence> mutationsBefore;
-        if (sequence1Range.isEmpty()) {
-            mutationsBefore = Mutations.EMPTY_NUCLEOTIDE_MUTATIONS;
-        } else {
-            mutationsBefore = this.mutations.move(mutations.getLengthDelta());
-        }
+        Mutations<NucleotideSequence> mutationsBefore = mutationsForRange();
         return new MutationsWithRange(
                 sequence1,
                 mutations.concat(mutationsBefore),
-                new Range(range.getLower(), sequence1Range.getUpper()),
-                true,
-                sequence1Range.isEmpty() || includeLastMutations
+                new RangeInfo(
+                        rangeInfo.getRange().setLower(range.getLower()),
+                        true
+                )
         );
     }
 
     public MutationsWithRange combineWithTheSameMutationsRight(MutationsWithRange another) {
-        if (sequence1Range.getUpper() != another.sequence1Range.getLower()) {
+        if (rangeInfo.getRange().getUpper() != another.rangeInfo.getRange().getLower()) {
             throw new IllegalArgumentException();
         }
         if (!mutations.equals(another.mutations)) {
@@ -105,14 +91,15 @@ public class MutationsWithRange {
         return new MutationsWithRange(
                 sequence1,
                 mutations,
-                new Range(sequence1Range.getLower(), another.sequence1Range.getUpper()),
-                includeFirstMutations,
-                another.includeLastMutations
+                new RangeInfo(
+                        rangeInfo.getRange().setUpper(another.rangeInfo.getRange().getUpper()),
+                        false
+                )
         );
     }
 
     public MutationsWithRange combineWithTheSameMutationsLeft(MutationsWithRange another) {
-        if (sequence1Range.getLower() != another.sequence1Range.getUpper()) {
+        if (rangeInfo.getRange().getLower() != another.rangeInfo.getRange().getUpper()) {
             throw new IllegalArgumentException();
         }
         if (!mutations.equals(another.mutations)) {
@@ -121,22 +108,22 @@ public class MutationsWithRange {
         return new MutationsWithRange(
                 sequence1,
                 mutations,
-                new Range(another.sequence1Range.getLower(), sequence1Range.getUpper()),
-                another.includeFirstMutations,
-                includeLastMutations
+                new RangeInfo(
+                        rangeInfo.getRange().setLower(another.rangeInfo.getRange().getLower()),
+                        another.getRangeInfo().isIncludeFirstInserts()
+                )
         );
     }
 
     NucleotideSequence buildSequence() {
         if (result == null) {
-            result = MutationsUtils.buildSequence(
-                    getSequence1(),
-                    getMutations(),
-                    getSequence1Range(),
-                    isIncludeFirstMutations(),
-                    isIncludeLastMutations()
-            );
+            result = mutations.mutate(sequence1).getRange(projectedRange());
         }
         return result;
     }
+
+    Mutations<NucleotideSequence> mutationsForRange() {
+        return rangeInfo.extractAbsoluteMutations(mutations);
+    }
+
 }

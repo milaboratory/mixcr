@@ -583,7 +583,7 @@ public class TreeBuilderByAncestorsTest {
         List<Integer> root = IntStream.range(0, sizeOfNode).mapToObj(it -> 0).collect(Collectors.toList());
         return new TreeBuilderByAncestors<>(
                 root,
-                mutation -> BigDecimal.valueOf(mutation.stream().filter(it -> it != -1).count()),
+                (parent, mutation) -> BigDecimal.valueOf(mutation.stream().filter(it -> it != -1).count()),
                 (from, to) -> {
                     List<Integer> result = new ArrayList<>();
                     for (int i = 0; i < from.size(); i++) {
@@ -618,7 +618,7 @@ public class TreeBuilderByAncestorsTest {
                     }
                     return result;
                 },
-                (parent, child) -> child
+                (parent, child) -> child, 3
         );
     }
 

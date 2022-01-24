@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS;
-import static com.milaboratory.mixcr.trees.MutationOperationsTest.generateMutations;
+import static com.milaboratory.mixcr.trees.CalculationOfCommonMutationsTest.generateMutations;
 import static com.milaboratory.mixcr.trees.MutationsUtils.buildSequence;
 import static com.milaboratory.mixcr.trees.MutationsUtils.projectRange;
 import static org.junit.Assert.assertEquals;
@@ -41,6 +41,9 @@ public class RebaseClonesTest {
 
     @Test
     public void reproduceRebaseClone() {
+        assertFalse(testRebaseClone(-6528292659028221478L, true));
+        assertFalse(testRebaseClone(-1959168467592812968L, true));
+        assertFalse(testRebaseClone(4887507527711339190L, true));
         assertFalse(testRebaseClone(2049978999466120864L, true));
         assertFalse(testRebaseClone(-7534105378312308262L, true));
         assertFalse(testRebaseClone(4510972677298188920L, true));
@@ -87,8 +90,8 @@ public class RebaseClonesTest {
             Range JRange = new Range(JRangeBeforeCDR3End.getLower(), JRangeAfterCDR3End.getUpper());
             Mutations<NucleotideSequence> JMutations = generateMutations(JSequence, random, JRange);
 
-            NucleotideSequence VSequenceInCDR3 = buildSequence(VSequence, VMutations, VRangeAfterCDR3Begin, false, true);
-            NucleotideSequence JSequenceInCDR3 = buildSequence(JSequence, JMutations, JRangeBeforeCDR3End, true, false);
+            NucleotideSequence VSequenceInCDR3 = buildSequence(VSequence, VMutations, new RangeInfo(VRangeAfterCDR3Begin, false));
+            NucleotideSequence JSequenceInCDR3 = buildSequence(JSequence, JMutations, new RangeInfo(JRangeBeforeCDR3End, true));
 
             Range commonVRangeInCDR3 = new Range(0, VRangeAfterCDR3Begin.length() == 0 ? 0 : random.nextInt(VRangeAfterCDR3Begin.length())).move(VRangeAfterCDR3Begin.getLower());
             Range commonJRangeInCDR3 = new Range(JRangeBeforeCDR3End.length() == 0 ? 0 : -random.nextInt(JRangeBeforeCDR3End.length()), 0).move(JRangeBeforeCDR3End.getUpper());
@@ -103,9 +106,11 @@ public class RebaseClonesTest {
                     .move(VRangeBeforeCDR3Begin.getUpper());
             Range JRangeInCDR3 = new Range(-(commonJRangeInCDR3.length() + random.nextInt(5)), 0)
                     .move(JRangeBeforeCDR3End.getUpper());
+            Range projectedVRangeInCDR3 = projectRange(VMutations, new RangeInfo(VRangeInCDR3, false));
+            Range projectedJRangeInCDR3 = projectRange(JMutations, new RangeInfo(JRangeInCDR3, true));
             Range NDNSubsetRangeBeforeMutation = new Range(
-                    projectRange(VMutations, VRangeInCDR3, false, true).length(),
-                    CDR3.size() - projectRange(JMutations, JRangeInCDR3, true, false).length()
+                    projectedVRangeInCDR3.length(),
+                    CDR3.size() - projectedJRangeInCDR3.length()
             );
             NucleotideSequence NDNSubsetBeforeMutation = CDR3.getRange(NDNSubsetRangeBeforeMutation);
             Mutations<NucleotideSequence> mutationsOfNDN = generateMutations(NDNSubsetBeforeMutation, random);
@@ -116,11 +121,11 @@ public class RebaseClonesTest {
             );
 
             NucleotideSequence builtClone = NucleotideSequence.ALPHABET.createBuilder()
-                    .append(buildSequence(VSequence, VMutations, VRangeBeforeCDR3Begin, true, true))
+                    .append(buildSequence(VSequence, VMutations, new RangeInfo(VRangeBeforeCDR3Begin, true)))
                     .append(VSequenceInCDR3)
                     .append(NDN)
                     .append(JSequenceInCDR3)
-                    .append(buildSequence(JSequence, JMutations, JRangeAfterCDR3End, true, true))
+                    .append(buildSequence(JSequence, JMutations, new RangeInfo(JRangeAfterCDR3End, false)))
                     .createAndDestroy();
 
             MutationsFromVJGermline mutationsFromVJGermline = new MutationsFromVJGermline(
@@ -128,35 +133,31 @@ public class RebaseClonesTest {
                             new MutationsWithRange(
                                     VSequence,
                                     VMutations,
-                                    VRangeBeforeCDR3Begin,
-                                    true, true
+                                    new RangeInfo(VRangeBeforeCDR3Begin, true)
                             )
                     ),
                     new MutationsWithRange(
                             VSequence,
                             VMutations,
-                            commonVRangeInCDR3,
-                            false, true
+                            new RangeInfo(commonVRangeInCDR3, false)
                     ),
                     Pair.create(VMutations, new Range(commonVRangeInCDR3.getUpper(), VRangeAfterCDR3Begin.getUpper())),
                     NucleotideSequence.ALPHABET.createBuilder()
-                            .append(buildSequence(VSequence, VMutations, new Range(commonVRangeInCDR3.getUpper(), VRangeAfterCDR3Begin.getUpper()), false, true))
+                            .append(buildSequence(VSequence, VMutations, new RangeInfo(new Range(commonVRangeInCDR3.getUpper(), VRangeAfterCDR3Begin.getUpper()), false)))
                             .append(NDN)
-                            .append(buildSequence(JSequence, JMutations, new Range(JRangeBeforeCDR3End.getLower(), commonJRangeInCDR3.getLower()), true, false))
+                            .append(buildSequence(JSequence, JMutations, new RangeInfo(new Range(JRangeBeforeCDR3End.getLower(), commonJRangeInCDR3.getLower()), true)))
                             .createAndDestroy(),
                     Pair.create(JMutations, new Range(JRangeBeforeCDR3End.getLower(), commonJRangeInCDR3.getLower())),
                     new MutationsWithRange(
                             JSequence,
                             JMutations,
-                            commonJRangeInCDR3,
-                            true, false
+                            new RangeInfo(commonJRangeInCDR3, false)
                     ),
                     Lists.newArrayList(
                             new MutationsWithRange(
                                     JSequence,
                                     JMutations,
-                                    JRangeAfterCDR3End,
-                                    true, true
+                                    new RangeInfo(JRangeAfterCDR3End, false)
                             )
                     )
             );
@@ -170,14 +171,20 @@ public class RebaseClonesTest {
 
             Range VPartLeftInRootRange = VRangeAfterCDR3Begin.intersection(rootInfo.getVRangeInCDR3());
             VPartLeftInRootRange = VPartLeftInRootRange == null ? new Range(VRangeAfterCDR3Begin.getLower(), VRangeAfterCDR3Begin.getLower()) : VPartLeftInRootRange;
-            NucleotideSequence VPartLeftInRoot = buildSequence(VSequence, VMutations, VPartLeftInRootRange, false, true);
+            NucleotideSequence VPartLeftInRoot = buildSequence(VSequence, VMutations, new RangeInfo(VPartLeftInRootRange, false));
 
             Range JPartLeftInRootRange = JRangeBeforeCDR3End.intersection(rootInfo.getJRangeInCDR3());
             JPartLeftInRootRange = JPartLeftInRootRange == null ? new Range(JRangeBeforeCDR3End.getUpper(), JRangeBeforeCDR3End.getUpper()) : JPartLeftInRootRange;
-            NucleotideSequence JPartLeftInRoot = buildSequence(JSequence, JMutations, JPartLeftInRootRange, true, false);
+            NucleotideSequence JPartLeftInRoot = buildSequence(JSequence, JMutations, new RangeInfo(JPartLeftInRootRange, true));
 
-            Range VPartGotFromNDNRange = new Range(VPartLeftInRootRange.length(), rootInfo.getVRangeInCDR3().length()).move(VPartLeftInRoot.size() - VPartLeftInRootRange.length());
-            Range JPartGotFromNDNRange = new Range(CDR3.size() - rootInfo.getJRangeInCDR3().length(), CDR3.size() - JPartLeftInRootRange.length()).move(JPartLeftInRootRange.length() - JPartLeftInRoot.size());
+            Range VPartGotFromNDNRange = new Range(
+                    VPartLeftInRootRange.length(),
+                    rootInfo.getVRangeInCDR3().length()
+            ).move(VPartLeftInRoot.size() - VPartLeftInRootRange.length());
+            Range JPartGotFromNDNRange = new Range(
+                    CDR3.size() - rootInfo.getJRangeInCDR3().length(),
+                    CDR3.size() - JPartLeftInRootRange.length()
+            ).move(JPartLeftInRootRange.length() - JPartLeftInRoot.size());
 
             NucleotideSequence VPartGotFromNDN = VPartGotFromNDNRange.isReverse() ? new NucleotideSequence("") : CDR3.getRange(VPartGotFromNDNRange);
             NucleotideSequence JPartGotFromNDN = JPartGotFromNDNRange.isReverse() ? new NucleotideSequence("") : CDR3.getRange(JPartGotFromNDNRange);
@@ -187,7 +194,7 @@ public class RebaseClonesTest {
                 System.out.println("  result: " + ancestorInfo.getSequence());
                 System.out.println();
                 System.out.println("   original with marking: "
-                        + buildSequence(VSequence, VMutations, VRangeBeforeCDR3Begin, true, true)
+                        + buildSequence(VSequence, VMutations, new RangeInfo(VRangeBeforeCDR3Begin, true))
                         + " "
                         + VSequenceInCDR3
                         + " "
@@ -195,7 +202,7 @@ public class RebaseClonesTest {
                         + " "
                         + JSequenceInCDR3
                         + " "
-                        + buildSequence(JSequence, JMutations, JRangeAfterCDR3End, true, true)
+                        + buildSequence(JSequence, JMutations, new RangeInfo(JRangeAfterCDR3End, false))
                 );
                 System.out.println("     result with marking: "
                         + result.getVMutationsWithoutCDR3().stream().map(MutationsWithRange::buildSequence).map(String::valueOf).collect(Collectors.joining())
@@ -209,7 +216,7 @@ public class RebaseClonesTest {
                         + result.getJMutationsWithoutCDR3().stream().map(MutationsWithRange::buildSequence).map(String::valueOf).collect(Collectors.joining())
                 );
                 System.out.println("root mutated in germline: "
-                        + buildSequence(VSequence, VMutations, VRangeBeforeCDR3Begin, true, true)
+                        + buildSequence(VSequence, VMutations, new RangeInfo(VRangeBeforeCDR3Begin, true))
                         + " "
                         + VPartLeftInRoot
                         + " "
@@ -221,18 +228,18 @@ public class RebaseClonesTest {
                         + " "
                         + JPartLeftInRoot
                         + " "
-                        + buildSequence(JSequence, JMutations, JRangeAfterCDR3End, true, true)
+                        + buildSequence(JSequence, JMutations, new RangeInfo(JRangeAfterCDR3End, false))
                 );
                 System.out.println("          rebase on root: "
-                        + buildSequence(VSequence, EMPTY_NUCLEOTIDE_MUTATIONS, VRangeBeforeCDR3Begin, true, true)
+                        + buildSequence(VSequence, EMPTY_NUCLEOTIDE_MUTATIONS, new RangeInfo(VRangeBeforeCDR3Begin, true))
                         + " "
-                        + buildSequence(VSequence, EMPTY_NUCLEOTIDE_MUTATIONS, rootInfo.getVRangeInCDR3(), true, true)
+                        + buildSequence(VSequence, EMPTY_NUCLEOTIDE_MUTATIONS, new RangeInfo(rootInfo.getVRangeInCDR3(), false))
                         + " "
                         + rootInfo.getReconstructedNDN()
                         + " "
-                        + buildSequence(JSequence, EMPTY_NUCLEOTIDE_MUTATIONS, rootInfo.getJRangeInCDR3(), true, true)
+                        + buildSequence(JSequence, EMPTY_NUCLEOTIDE_MUTATIONS, new RangeInfo(rootInfo.getJRangeInCDR3(), true))
                         + " "
-                        + buildSequence(JSequence, EMPTY_NUCLEOTIDE_MUTATIONS, JRangeAfterCDR3End, true, true)
+                        + buildSequence(JSequence, EMPTY_NUCLEOTIDE_MUTATIONS, new RangeInfo(JRangeAfterCDR3End, false))
                 );
                 System.out.println();
                 System.out.println("original CDR3: " + CDR3);
@@ -245,14 +252,14 @@ public class RebaseClonesTest {
                 System.out.println();
             }
             assertEquals(rootInfo.getVRangeInCDR3().getLower(), result.getVMutationsWithoutCDR3().stream()
-                    .mapToInt(it -> it.getSequence1Range().getUpper())
+                    .mapToInt(it -> it.getRangeInfo().getRange().getUpper())
                     .max().orElseThrow(IllegalStateException::new));
-            assertEquals(rootInfo.getVRangeInCDR3(), result.getVMutationsInCDR3WithoutNDN().getSequence1Range());
+            assertEquals(rootInfo.getVRangeInCDR3(), result.getVMutationsInCDR3WithoutNDN().getRangeInfo().getRange());
 
             assertEquals(rootInfo.getJRangeInCDR3().getUpper(), result.getJMutationsWithoutCDR3().stream()
-                    .mapToInt(it -> it.getSequence1Range().getLower())
+                    .mapToInt(it -> it.getRangeInfo().getRange().getLower())
                     .min().orElseThrow(IllegalStateException::new));
-            assertEquals(rootInfo.getJRangeInCDR3(), result.getJMutationsInCDR3WithoutNDN().getSequence1Range());
+            assertEquals(rootInfo.getJRangeInCDR3(), result.getJMutationsInCDR3WithoutNDN().getRangeInfo().getRange());
 
             assertEquals(builtClone, ancestorInfo.getSequence());
             assertEquals(CDR3, ancestorInfo.getSequence().getRange(ancestorInfo.getCDR3Begin(), ancestorInfo.getCDR3End()));

@@ -22,8 +22,9 @@ class ClonesRebase {
         Range NDNRangeInKnownNDN = NDNRangeInKnownNDN(mutationsFromVJGermline, rootInfo.getVRangeInCDR3(), rootInfo.getJRangeInCDR3());
 
         MutationsWithRange VMutationsInCDR3WithoutNDN = mutationsFromVJGermline.getVMutationsInCDR3WithoutNDN();
-        Range wasVRangeInCDR3 = mutationsFromVJGermline.getVMutationsInCDR3WithoutNDN().getSequence1Range();
+        Range wasVRangeInCDR3 = mutationsFromVJGermline.getVMutationsInCDR3WithoutNDN().getRangeInfo().getRange();
         Range VRange = new Range(wasVRangeInCDR3.getLower(), rootInfo.getVRangeInCDR3().getUpper());
+        //can skip empty VRange because we will not include first mutations (empty range always will mutate to empty range)
         if (!VRange.isEmpty()) {
             Range VMutationsWithinNDNRange = mutationsFromVJGermline.getKnownVMutationsWithinNDN().getSecond()
                     .intersection(VRange);
@@ -34,9 +35,7 @@ class ClonesRebase {
                 MutationsWithRange VMutationsToAdd = new MutationsWithRange(
                         VSequence1,
                         mutationsFromVJGermline.getKnownVMutationsWithinNDN().getFirst(),
-                        VMutationsWithinNDNRange,
-                        false,
-                        true
+                        new RangeInfo(VMutationsWithinNDNRange, false)
                 );
                 VMutationsInCDR3WithoutNDN = VMutationsInCDR3WithoutNDN.combineWithTheSameMutationsRight(VMutationsToAdd);
                 lengthDelta += VMutationsToAdd.lengthDelta();
@@ -58,40 +57,34 @@ class ClonesRebase {
         }
 
         MutationsWithRange JMutationsInCDR3WithoutNDN = mutationsFromVJGermline.getJMutationsInCDR3WithoutNDN();
-        Range wasJRangeInCDR3 = mutationsFromVJGermline.getJMutationsInCDR3WithoutNDN().getSequence1Range();
+        Range wasJRangeInCDR3 = mutationsFromVJGermline.getJMutationsInCDR3WithoutNDN().getRangeInfo().getRange();
         Range JRange = new Range(rootInfo.getJRangeInCDR3().getLower(), wasJRangeInCDR3.getLower());
-        if (!JRange.isEmpty()) {
-            Range JMutationsWithinNDNRange = mutationsFromVJGermline.getKnownJMutationsWithinNDN().getSecond()
-                    .intersection(JRange);
-            JMutationsWithinNDNRange = JMutationsWithinNDNRange != null ? JMutationsWithinNDNRange
-                    : new Range(wasJRangeInCDR3.getLower(), wasJRangeInCDR3.getLower());
-            int lengthDelta = 0;
-            if (!JMutationsWithinNDNRange.isEmpty()) {
-                MutationsWithRange JMutationsToAdd = new MutationsWithRange(
-                        JSequence1,
-                        mutationsFromVJGermline.getKnownJMutationsWithinNDN().getFirst(),
-                        JMutationsWithinNDNRange,
-                        true,
-                        false
-                );
-                JMutationsInCDR3WithoutNDN = JMutationsInCDR3WithoutNDN.combineWithTheSameMutationsLeft(JMutationsToAdd);
-                lengthDelta += JMutationsToAdd.lengthDelta();
-            }
-            Range rangeToAlign = new Range(rootInfo.getJRangeInCDR3().getLower(), JMutationsWithinNDNRange.getLower());
-            if (!rangeToAlign.isEmpty() && !rangeToAlign.isReverse()) {
-                Mutations<NucleotideSequence> absoluteMutations = Aligner.alignGlobal(
-                        AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-                        JSequence1,
-                        mutationsFromVJGermline.getKnownNDN(),
-                        rangeToAlign.getLower(),
-                        rangeToAlign.length(),
-                        NDNRangeInKnownNDN.getUpper() - lengthDelta,
-                        rangeToAlign.length()
-                ).getAbsoluteMutations();
-                JMutationsInCDR3WithoutNDN = JMutationsInCDR3WithoutNDN.combineWithMutationsToTheLeft(absoluteMutations, rangeToAlign);
-            }
-            NDNRangeInKnownNDN = new Range(NDNRangeInKnownNDN.getLower(), NDNRangeInKnownNDN.getUpper() - lengthDelta);
+        Range JMutationsWithinNDNRange = mutationsFromVJGermline.getKnownJMutationsWithinNDN().getSecond()
+                .intersection(JRange);
+        JMutationsWithinNDNRange = JMutationsWithinNDNRange != null ? JMutationsWithinNDNRange
+                : new Range(wasJRangeInCDR3.getLower(), wasJRangeInCDR3.getLower());
+        int lengthDelta = 0;
+        MutationsWithRange JMutationsToAdd = new MutationsWithRange(
+                JSequence1,
+                mutationsFromVJGermline.getKnownJMutationsWithinNDN().getFirst(),
+                new RangeInfo(JMutationsWithinNDNRange, true)
+        );
+        JMutationsInCDR3WithoutNDN = JMutationsInCDR3WithoutNDN.combineWithTheSameMutationsLeft(JMutationsToAdd);
+        lengthDelta += JMutationsToAdd.lengthDelta();
+        Range rangeToAlign = new Range(rootInfo.getJRangeInCDR3().getLower(), JMutationsWithinNDNRange.getLower());
+        if (!rangeToAlign.isEmpty() && !rangeToAlign.isReverse()) {
+            Mutations<NucleotideSequence> absoluteMutations = Aligner.alignGlobal(
+                    AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
+                    JSequence1,
+                    mutationsFromVJGermline.getKnownNDN(),
+                    rangeToAlign.getLower(),
+                    rangeToAlign.length(),
+                    NDNRangeInKnownNDN.getUpper() - lengthDelta,
+                    rangeToAlign.length()
+            ).getAbsoluteMutations();
+            JMutationsInCDR3WithoutNDN = JMutationsInCDR3WithoutNDN.combineWithMutationsToTheLeft(absoluteMutations, rangeToAlign);
         }
+        NDNRangeInKnownNDN = new Range(NDNRangeInKnownNDN.getLower(), NDNRangeInKnownNDN.getUpper() - lengthDelta);
         MutationsDescription mutations = new MutationsDescription(
                 mutationsFromVJGermline.getVMutationsWithoutCDR3(),
                 VMutationsInCDR3WithoutNDN,
@@ -285,8 +278,8 @@ class ClonesRebase {
 
     static Range NDNRangeInKnownNDN(MutationsFromVJGermline mutations, Range VRangeInCDR3, Range JRangeInCDR3) {
         return new Range(
-                VRangeInCDR3.length() - mutations.getVMutationsInCDR3WithoutNDN().getSequence1Range().length(),
-                mutations.getKnownNDN().size() - (JRangeInCDR3.length() - mutations.getJMutationsInCDR3WithoutNDN().getSequence1Range().length())
+                VRangeInCDR3.length() - mutations.getVMutationsInCDR3WithoutNDN().getRangeInfo().getRange().length(),
+                mutations.getKnownNDN().size() - (JRangeInCDR3.length() - mutations.getJMutationsInCDR3WithoutNDN().getRangeInfo().getRange().length())
         );
     }
 
@@ -298,9 +291,7 @@ class ClonesRebase {
                         first,
                         second
                 ).getAbsoluteMutations(),
-                new Range(0, first.size()),
-                true,
-                true
+                new RangeInfo(new Range(0, first.size()), true)
         );
     }
 }

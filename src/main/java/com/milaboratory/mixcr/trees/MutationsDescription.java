@@ -1,5 +1,9 @@
 package com.milaboratory.mixcr.trees;
 
+import com.milaboratory.core.mutations.Mutations;
+import com.milaboratory.core.mutations.MutationsBuilder;
+import com.milaboratory.core.sequence.NucleotideSequence;
+
 import java.util.List;
 
 class MutationsDescription {
@@ -52,4 +56,25 @@ class MutationsDescription {
                 JMutationsWithoutCDR3
         );
     }
+
+    public Mutations<NucleotideSequence> getConcatenatedVMutations() {
+        MutationsBuilder<NucleotideSequence> builder = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
+
+        VMutationsWithoutCDR3.stream()
+                .map(MutationsWithRange::mutationsForRange)
+                .forEach(builder::append);
+        builder.append(VMutationsInCDR3WithoutNDN.mutationsForRange());
+        return builder.createAndDestroy();
+    }
+
+    public Mutations<NucleotideSequence> getConcatenatedJMutations() {
+        MutationsBuilder<NucleotideSequence> builder = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
+
+        builder.append(JMutationsInCDR3WithoutNDN.mutationsForRange());
+        JMutationsWithoutCDR3.stream()
+                .map(MutationsWithRange::mutationsForRange)
+                .forEach(builder::append);
+        return builder.createAndDestroy();
+    }
+
 }

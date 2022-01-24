@@ -3,6 +3,8 @@
     "productiveOnly": true,
     "maxDistanceWithinCluster": 0.9,
     "hideTreesLessThanSize": 1,
-    "commonMutationsCountForClustering": 5
+    "commonMutationsCountForClustering": 5,
+    "penaltyForReversedMutations": 10,
+    "countOfNodesToProbe": 3
   }
 }

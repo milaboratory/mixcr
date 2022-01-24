@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 import static java.util.Comparator.comparing;
 
 public class TreeBuilderByAncestors<T, E, M> {
-    private final Function<M, BigDecimal> distance;
+    private final BiFunction<E, M, BigDecimal> distance;
     /**
      * parent, observed -> reconstructed
      */
@@ -27,15 +27,17 @@ public class TreeBuilderByAncestors<T, E, M> {
 
     private final Tree<ObservedOrReconstructed<T, E>> tree;
     private int observedNodesCount = 0;
+    private final int countOfNodesToProbe;
 
     public TreeBuilderByAncestors(
             E root,
-            Function<M, BigDecimal> distance,
+            BiFunction<E, M, BigDecimal> distance,
             BiFunction<E, E, M> mutationsBetween,
             BiFunction<E, M, E> mutate,
             BiFunction<E, T, E> asAncestor,
             BiFunction<M, M, M> findCommonMutations,
-            BiFunction<E, E, E> postprocessDescendants
+            BiFunction<E, E, E> postprocessDescendants,
+            int countOfNodesToProbe
     ) {
         this.distance = distance;
         this.mutationsBetween = mutationsBetween;
@@ -44,6 +46,7 @@ public class TreeBuilderByAncestors<T, E, M> {
         this.findCommonMutations = findCommonMutations;
         tree = new Tree<>(new Tree.Node<>(new Reconstructed<>(root, BigDecimal.ZERO)));
         this.postprocessDescendants = postprocessDescendants;
+        this.countOfNodesToProbe = countOfNodesToProbe;
     }
 
     public int getObservedNodesCount() {
@@ -68,11 +71,11 @@ public class TreeBuilderByAncestors<T, E, M> {
         List<Tree.NodeWithParent<ObservedOrReconstructed<T, E>>> nearestNodes = tree.allNodes()
                 .filter(it -> it.getNode().getContent() instanceof Reconstructed<?, ?>)
                 .sorted(Comparator.comparing(compareWith -> {
-                    Reconstructed<T, E> nodeContent = (Reconstructed<T, E>) compareWith.getNode().getContent();
-                    return this.distance.apply(mutationsBetween.apply(nodeContent.getContent(), asAncestor.apply(nodeContent.getContent(), toAdd)))
-                            .add(nodeContent.getMinDistanceFromObserved());
+                    Reconstructed<T, E> reconstructed = (Reconstructed<T, E>) compareWith.getNode().getContent();
+                    E nodeContent = reconstructed.getContent();
+                    return distanceFromNode(nodeContent, toAdd).add(reconstructed.getMinDistanceFromObserved());
                 }))
-                .limit(3)
+                .limit(countOfNodesToProbe)
                 .collect(Collectors.toList());
         Stream<Action> possibleActions = nearestNodes.stream().flatMap(nodeWithParent -> {
             Tree.Node<ObservedOrReconstructed<T, E>> chosenNode = nodeWithParent.getNode();
@@ -138,10 +141,17 @@ public class TreeBuilderByAncestors<T, E, M> {
         return this;
     }
 
+    public BigDecimal distanceFromNode(E nodeContent, T toAdd) {
+        return distance.apply(
+                nodeContent,
+                mutationsBetween.apply(nodeContent, asAncestor.apply(nodeContent, toAdd))
+        );
+    }
+
     private Insert insertAsDirectDescendant(T toAdd, Tree.Node<ObservedOrReconstructed<T, E>> parent) {
         E contentOfParent = ((Reconstructed<T, E>) parent.getContent()).getContent();
         E contentAsAncestor = asAncestor.apply(contentOfParent, toAdd);
-        BigDecimal distanceBetweenParentAndAdded = distance.apply(mutationsBetween.apply(contentOfParent, contentAsAncestor));
+        BigDecimal distanceBetweenParentAndAdded = distance.apply(contentOfParent, mutationsBetween.apply(contentOfParent, contentAsAncestor));
         return new Insert(
                 parent,
                 toAdd,
@@ -169,40 +179,35 @@ public class TreeBuilderByAncestors<T, E, M> {
      * C - commonAncestor
      */
     private Replace replaceChild(T toAdd, Tree.Node<ObservedOrReconstructed<T, E>> parent, Tree.Node<ObservedOrReconstructed<T, E>> child, BigDecimal distanceFromParentToChild) {
-        Reconstructed<T, E> parentContent = (Reconstructed<T, E>) parent.getContent();
-        E contentOfAdded = asAncestor.apply(parentContent.getContent(), toAdd);
+        Reconstructed<T, E> parentAsReconstructed = (Reconstructed<T, E>) parent.getContent();
+        E parentContent = parentAsReconstructed.getContent();
+        E contentOfAdded = asAncestor.apply(parentContent, toAdd);
         E childContent = ((Reconstructed<T, E>) child.getContent()).getContent();
 
-        M mutationsToAdded = mutationsBetween.apply(parentContent.getContent(), contentOfAdded);
-        M mutationsToChild = mutationsBetween.apply(parentContent.getContent(), childContent);
+        M mutationsToAdded = mutationsBetween.apply(parentContent, contentOfAdded);
+        M mutationsToChild = mutationsBetween.apply(parentContent, childContent);
 
         M commonMutations = findCommonMutations.apply(mutationsToAdded, mutationsToChild);
-        BigDecimal distanceFromParentToCommon = this.distance.apply(commonMutations);
+        BigDecimal distanceFromParentToCommon = distance.apply(parentContent, commonMutations);
         //if distance is zero than there is no common mutations
         if (distanceFromParentToCommon.compareTo(BigDecimal.ZERO) == 0) {
             return null;
         }
 
-        E commonAncestor = mutate.apply(parentContent.getContent(), commonMutations);
+        E commonAncestor = mutate.apply(parentContent, commonMutations);
         M fromCommonToChild = mutationsBetween.apply(commonAncestor, childContent);
-        BigDecimal distanceFromCommonAncestorToChild = this.distance.apply(fromCommonToChild);
+        BigDecimal distanceFromCommonAncestorToChild = distance.apply(commonAncestor, fromCommonToChild);
         //if distance is zero than result of replacement equals to insertion
         if (distanceFromCommonAncestorToChild.compareTo(BigDecimal.ZERO) == 0) {
             return null;
         }
-        BigDecimal distanceFromCommonToAdded = this.distance.apply(mutationsBetween.apply(commonAncestor, contentOfAdded));
+        BigDecimal distanceFromCommonToAdded = distance.apply(commonAncestor, mutationsBetween.apply(commonAncestor, contentOfAdded));
 
         BigDecimal minDistanceFromObserved = Stream.of(
                 distanceFromCommonToAdded,
                 distanceFromCommonAncestorToChild,
-                parentContent.getMinDistanceFromObserved().add(this.distance.apply(commonMutations))
+                parentAsReconstructed.getMinDistanceFromObserved().add(distanceFromParentToCommon)
         ).min(BigDecimal::compareTo).get();
-//        //commonAncestor is equal to added node, so minDistanceFromObserved is 0
-//        if (distanceFromCommonToAdded.compareTo(BigDecimal.ZERO) == 0) {
-//            minDistanceFromObserved = BigDecimal.ZERO;
-//        } else {
-//            minDistanceFromObserved = parentContent.getMinDistanceFromObserved().add(distance.apply(commonMutations));
-//        }
         Tree.Node<ObservedOrReconstructed<T, E>> replacement = new Tree.Node<>(new Reconstructed<>(
                 commonAncestor,
                 minDistanceFromObserved
@@ -265,13 +270,13 @@ public class TreeBuilderByAncestors<T, E, M> {
 
         @Override
         void apply() {
-            Reconstructed<T, E> parentContent = (Reconstructed<T, E>) parent.getContent();
+            Reconstructed<T, E> parentAsReconstructed = (Reconstructed<T, E>) parent.getContent();
             Tree.Node<ObservedOrReconstructed<T, E>> nodeToInsert;
             if (distanceFromParentAndInsertion.compareTo(BigDecimal.ZERO) == 0) {
-                parentContent.setMinDistanceFromObserved(BigDecimal.ZERO);
+                parentAsReconstructed.setMinDistanceFromObserved(BigDecimal.ZERO);
                 nodeToInsert = new Tree.Node<>(new Observed<>(insertion));
             } else {
-                nodeToInsert = new Tree.Node<>(new Reconstructed<>(asAncestor.apply(parentContent.getContent(), insertion), BigDecimal.ZERO));
+                nodeToInsert = new Tree.Node<>(new Reconstructed<>(asAncestor.apply(parentAsReconstructed.getContent(), insertion), BigDecimal.ZERO));
                 nodeToInsert.addChild(new Tree.Node<>(new Observed<>(insertion)), BigDecimal.ZERO);
             }
             parent.addChild(nodeToInsert, distanceFromParentAndInsertion);
@@ -352,7 +357,7 @@ public class TreeBuilderByAncestors<T, E, M> {
                                             ),
                                             postprocess(mapped, child.getLinks())
                                     ),
-                                    distance.apply(mutationsBetween.apply(parentContent, mapped))
+                                    distance.apply(parentContent, mutationsBetween.apply(parentContent, mapped))
                             );
                         } else {
                             return link;

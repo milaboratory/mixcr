@@ -58,29 +58,41 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
      */
     public final double maxDistanceWithinCluster;
     /**
+     * Penalty that will be multiplied by reversed mutations count.
+     */
+    public final double penaltyForReversedMutations;
+    /**
      * Hide small trees
      */
     public final int hideTreesLessThanSize;
     public final int commonMutationsCountForClustering;
+    /**
+     * Count of the nearest nodes to added that will be proceeded to find optimal insertion.
+     */
+    public final int countOfNodesToProbe;
 
     @JsonCreator
     public SHMTreeBuilderParameters(
             @JsonProperty("targetRegion") GeneFeature targetRegion,
             @JsonProperty("productiveOnly") boolean productiveOnly,
             @JsonProperty("maxDistanceWithinCluster") double maxDistanceWithinCluster,
+            @JsonProperty("penaltyForReversedMutations") double penaltyForReversedMutations,
             @JsonProperty("hideTreesLessThanSize") int hideTreesLessThanSize,
-            @JsonProperty("commonMutationsCountForClustering") int commonMutationsCountForClustering
+            @JsonProperty("commonMutationsCountForClustering") int commonMutationsCountForClustering,
+            @JsonProperty("countOfNodesToProbe") int countOfNodesToProbe
     ) {
         this.targetRegion = targetRegion;
         this.productiveOnly = productiveOnly;
         this.maxDistanceWithinCluster = maxDistanceWithinCluster;
+        this.penaltyForReversedMutations = penaltyForReversedMutations;
         this.hideTreesLessThanSize = hideTreesLessThanSize;
         this.commonMutationsCountForClustering = commonMutationsCountForClustering;
+        this.countOfNodesToProbe = countOfNodesToProbe;
     }
 
     @Override
     public SHMTreeBuilderParameters clone() {
-        return new SHMTreeBuilderParameters(targetRegion, productiveOnly, maxDistanceWithinCluster, hideTreesLessThanSize, commonMutationsCountForClustering);
+        return new SHMTreeBuilderParameters(targetRegion, productiveOnly, maxDistanceWithinCluster, penaltyForReversedMutations, hideTreesLessThanSize, commonMutationsCountForClustering, countOfNodesToProbe);
     }
 
     @Override

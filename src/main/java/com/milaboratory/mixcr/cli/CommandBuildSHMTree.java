@@ -1071,7 +1071,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
     }
 
     private int totalLength(List<MutationsWithRange> mutations) {
-        return mutations.stream().mapToInt(it -> it.getSequence1Range().length()).sum();
+        return mutations.stream().mapToInt(it -> it.getRangeInfo().getRange().length()).sum();
     }
 
     private static List<MutationsWithRange> getMutationsWithoutCDR3(Clone clone, GeneType geneType) {
@@ -1090,9 +1090,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                         return Stream.of(new MutationsWithRange(
                                 alignment.getSequence1(),
                                 mutations,
-                                rangesWithoutCDR3.get(0),
-                                true,
-                                true
+                                new RangeInfo(rangesWithoutCDR3.get(0), false)
                         ));
                     } else {
                         return Stream.empty();
@@ -1114,8 +1112,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                         0,
                         VRangeInCDR3.length()
                 ).getAbsoluteMutations(),
-                VRangeInCDR3,
-                true, true
+                new RangeInfo(VRangeInCDR3, false)
         );
     }
 
@@ -1133,8 +1130,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                         CDR3.size() - JRangeInCDR3.length(),
                         JRangeInCDR3.length()
                 ).getAbsoluteMutations(),
-                JRangeInCDR3,
-                true, true
+                new RangeInfo(JRangeInCDR3, false)
         );
     }
 
@@ -1190,9 +1186,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                 .map(it -> new MutationsWithRange(
                         it.getMutations().mutate(it.getSequence1()),
                         it.getMutations().invert(),
-                        it.getSequence1Range(),
-                        it.isIncludeFirstMutations(),
-                        it.isIncludeLastMutations()
+                        it.getRangeInfo()
                 ))
                 .collect(Collectors.toList());
     }
@@ -1200,13 +1194,12 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
     private List<MutationsWithRange> mutationsBetween(List<MutationsWithRange> firstMutations, List<MutationsWithRange> secondMutations) {
         return firstMutations.stream()
                 .flatMap(base -> secondMutations.stream().flatMap(comparison -> {
-                    Range intersection = base.getSequence1Range().intersection(comparison.getSequence1Range());
+                    RangeInfo intersection = base.getRangeInfo().intersection(comparison.getRangeInfo());
                     if (intersection != null) {
                         return Stream.of(new MutationsWithRange(
                                 base.getSequence1(),
                                 base.getMutations().invert().combineWith(comparison.getMutations()),
-                                intersection,
-                                true, true
+                                intersection
                         ));
                     } else {
                         return Stream.empty();

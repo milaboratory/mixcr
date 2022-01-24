@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 class SyntheticNode {
     private final MutationsDescription fromRootToParent;
     private final MutationsDescription fromParentToThis;
-    private MutationsDescription fromRootToThis;
+    private final MutationsDescription fromRootToThis;
 
     public SyntheticNode(MutationsDescription fromRootToParent, MutationsDescription fromParentToThis) {
         this.fromRootToParent = fromRootToParent;
@@ -43,31 +43,13 @@ class SyntheticNode {
                 .map(baseMutations -> {
                     MutationsBuilder<NucleotideSequence> builder = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
                     for (MutationsWithRange combineWithMutations : combineWith) {
-                        Range intersection = baseMutations.getSequence1Range().intersection(combineWithMutations.getSequence1Range());
+                        Range intersection = baseMutations.getRangeInfo().getRange().intersection(combineWithMutations.getRangeInfo().getRange());
                         if (intersection != null) {
                             for (int i = 0; i < combineWithMutations.getMutations().size(); i++) {
                                 int mutation = combineWithMutations.getMutations().getMutation(i);
                                 int position = Mutation.getPosition(mutation);
                                 if (intersection.contains(position)) {
-                                    if (combineWithMutations.getSequence1Range().getLower() == position) {
-                                        if (Mutation.isInDel(mutation)) {
-                                            if (combineWithMutations.isIncludeFirstMutations()) {
-                                                builder.append(mutation);
-                                            }
-                                        } else {
-                                            builder.append(mutation);
-                                        }
-                                    } else if (combineWithMutations.getSequence1Range().getUpper() == position) {
-                                        if (Mutation.isInDel(mutation)) {
-                                            if (combineWithMutations.isIncludeLastMutations()) {
-                                                builder.append(mutation);
-                                            }
-                                        } else {
-                                            builder.append(mutation);
-                                        }
-                                    } else {
-                                        builder.append(mutation);
-                                    }
+                                    builder.append(mutation);
                                 }
                             }
                         }
