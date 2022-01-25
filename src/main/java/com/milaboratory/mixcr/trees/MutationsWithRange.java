@@ -36,20 +36,19 @@ public class MutationsWithRange {
         return mutationsForRange().size();
     }
 
-    public MutationsWithRange withMutations(Mutations<NucleotideSequence> mutations) {
-        return new MutationsWithRange(sequence1, mutations, rangeInfo);
-    }
-
-    public MutationsWithRange addMutations(Mutations<NucleotideSequence> additional) {
+    public MutationsWithRange combineWithMutations(Mutations<NucleotideSequence> additional) {
         return new MutationsWithRange(sequence1, mutations.combineWith(additional), rangeInfo);
     }
 
     int lengthDelta() {
-        return projectedRange().length() - getRangeInfo().getRange().length();
+        return projectedRange().getRange().length() - getRangeInfo().getRange().length();
     }
 
-    public Range projectedRange() {
-        return MutationsUtils.projectRange(mutations, rangeInfo);
+    public RangeInfo projectedRange() {
+        return new RangeInfo(
+                MutationsUtils.projectRange(mutations, rangeInfo),
+                rangeInfo.isIncludeFirstInserts()
+        );
     }
 
     public MutationsWithRange combineWithMutationsToTheRight(Mutations<NucleotideSequence> mutations, Range range) {
@@ -117,7 +116,7 @@ public class MutationsWithRange {
 
     NucleotideSequence buildSequence() {
         if (result == null) {
-            result = mutations.mutate(sequence1).getRange(projectedRange());
+            result = MutationsUtils.buildSequence(sequence1, mutations, rangeInfo);
         }
         return result;
     }

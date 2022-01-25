@@ -18,42 +18,23 @@ final class MutationsUtils {
     private MutationsUtils() {
     }
 
-    //TODO remove, it is using only in tests
-
     /**
      * Mutate and get result by range in original sequence
      */
     public static NucleotideSequence buildSequence(NucleotideSequence sequence1, Mutations<NucleotideSequence> mutations, RangeInfo rangeInfo) {
-        return mutations.mutate(sequence1)
-                .getRange(projectRange(mutations, rangeInfo));
+        return mutations.mutate(sequence1).getRange(projectRange(mutations, rangeInfo));
     }
 
     public static Range projectRange(Mutations<NucleotideSequence> mutations, RangeInfo rangeInfo) {
         //for including inclusions before position one must step left before conversion and step right after
-        int from;
-//        if (rangeInfo.getRange().getLower() == 0) {
-//            from = 0;
-//        } else {
-        int previousLetterPositionOfBegin = mutations.convertToSeq2Position(rangeInfo.getRange().getLower());
-        if (previousLetterPositionOfBegin < 0) {
-            from = positionIfNucleotideWasDeleted(previousLetterPositionOfBegin);
-        } else {
-            from = previousLetterPositionOfBegin;
-        }
+        int from = positionIfNucleotideWasDeleted(mutations.convertToSeq2Position(rangeInfo.getRange().getLower()));
         if (rangeInfo.isIncludeFirstInserts()) {
             from -= IntStream.of(mutations.getRAWMutations())
                     .filter(mutation -> Mutation.getPosition(mutation) == rangeInfo.getRange().getLower() && Mutation.isInsertion(mutation))
                     .count();
         }
 
-//        }
-        int previousLetterPositionOfEnd = mutations.convertToSeq2Position(rangeInfo.getRange().getUpper());
-        int to;
-        if (previousLetterPositionOfEnd < 0) {
-            to = positionIfNucleotideWasDeleted(previousLetterPositionOfEnd);
-        } else {
-            to = previousLetterPositionOfEnd;
-        }
+        int to = positionIfNucleotideWasDeleted(mutations.convertToSeq2Position(rangeInfo.getRange().getUpper()));
         return new Range(from, to);
     }
 
@@ -257,5 +238,4 @@ final class MutationsUtils {
             return ((wildcard.getBasicMask() ^ secondAsWildcard.getBasicMask()) & secondAsWildcard.getBasicMask()) == 0;
         }
     }
-
 }

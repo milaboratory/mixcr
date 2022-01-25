@@ -3,11 +3,11 @@ package com.milaboratory.mixcr.trees;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.mutations.Mutation;
 import com.milaboratory.core.mutations.Mutations;
-import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.sequence.NucleotideSequence;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
+import java.util.stream.IntStream;
 
 public class RangeInfo {
     private final Range range;
@@ -36,7 +36,7 @@ public class RangeInfo {
         if (intersection.getLower() == getRange().getLower()) {
             includeFirstInserts = isIncludeFirstInserts();
         } else if (intersection.getLower() == another.getRange().getLower()) {
-            includeFirstInserts = another.isIncludeFirstInserts();
+            includeFirstInserts = isIncludeFirstInserts() || another.isIncludeFirstInserts();
         } else {
             includeFirstInserts = false;
         }
@@ -68,23 +68,24 @@ public class RangeInfo {
     }
 
     Mutations<NucleotideSequence> extractAbsoluteMutations(Mutations<NucleotideSequence> mutations) {
-        MutationsBuilder<NucleotideSequence> builder = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
-        for (int mutation : mutations.getRAWMutations()) {
-            int position = Mutation.getPosition(mutation);
-            if (position == range.getLower()) {
-                if (Mutation.isInsertion(mutation)) {
-                    if (includeFirstInserts) {
-                        builder.append(mutation);
-                    }
-                } else {
-                    builder.append(mutation);
-                }
-            } else if (range.getLower() < position && position <= range.getUpper() - 1) {
-                builder.append(mutation);
-            } else if (position == range.getUpper()) {
-                builder.append(mutation);
+        int[] filteredMutations = IntStream.of(mutations.getRAWMutations())
+                .filter(this::contains)
+                .toArray();
+        return new Mutations<>(NucleotideSequence.ALPHABET, filteredMutations);
+    }
+
+    boolean contains(int mutation) {
+        int position = Mutation.getPosition(mutation);
+        if (position == range.getLower()) {
+            if (Mutation.isInsertion(mutation)) {
+                return includeFirstInserts;
+            } else {
+                return true;
             }
+        } else if (range.getLower() < position && position <= range.getUpper() - 1) {
+            return true;
+        } else {
+            return position == range.getUpper();
         }
-        return builder.createAndDestroy();
     }
 }

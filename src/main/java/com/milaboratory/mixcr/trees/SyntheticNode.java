@@ -1,13 +1,11 @@
 package com.milaboratory.mixcr.trees;
 
-import com.milaboratory.core.Range;
-import com.milaboratory.core.mutations.Mutation;
-import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.sequence.NucleotideSequence;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 class SyntheticNode {
     private final MutationsDescription fromRootToParent;
@@ -15,15 +13,19 @@ class SyntheticNode {
     private final MutationsDescription fromRootToThis;
 
     public SyntheticNode(MutationsDescription fromRootToParent, MutationsDescription fromParentToThis) {
+        this(fromRootToParent, fromParentToThis, new MutationsDescription(
+                combine(fromRootToParent.getVMutationsWithoutCDR3(), fromParentToThis.getVMutationsWithoutCDR3()),
+                fromRootToParent.getVMutationsInCDR3WithoutNDN().combineWithMutations(fromParentToThis.getVMutationsInCDR3WithoutNDN().getMutations()),
+                fromRootToParent.getKnownNDN().combineWithMutations(fromParentToThis.getKnownNDN().getMutations()),
+                fromRootToParent.getJMutationsInCDR3WithoutNDN().combineWithMutations(fromParentToThis.getJMutationsInCDR3WithoutNDN().getMutations()),
+                combine(fromRootToParent.getJMutationsWithoutCDR3(), fromParentToThis.getJMutationsWithoutCDR3())
+        ));
+    }
+
+    public SyntheticNode(MutationsDescription fromRootToParent, MutationsDescription fromParentToThis, MutationsDescription fromRootToThis) {
         this.fromRootToParent = fromRootToParent;
         this.fromParentToThis = fromParentToThis;
-        fromRootToThis = new MutationsDescription(
-                combine(fromRootToParent.getVMutationsWithoutCDR3(), fromParentToThis.getVMutationsWithoutCDR3()),
-                fromRootToParent.getVMutationsInCDR3WithoutNDN().addMutations(fromParentToThis.getVMutationsInCDR3WithoutNDN().getMutations()),
-                fromRootToParent.getKnownNDN().addMutations(fromParentToThis.getKnownNDN().getMutations()),
-                fromRootToParent.getJMutationsInCDR3WithoutNDN().addMutations(fromParentToThis.getJMutationsInCDR3WithoutNDN().getMutations()),
-                combine(fromRootToParent.getJMutationsWithoutCDR3(), fromParentToThis.getJMutationsWithoutCDR3())
-        );
+        this.fromRootToThis = fromRootToThis;
     }
 
     public MutationsDescription getFromRootToParent() {
@@ -43,22 +45,15 @@ class SyntheticNode {
                 .map(baseMutations -> {
                     MutationsBuilder<NucleotideSequence> builder = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
                     for (MutationsWithRange combineWithMutations : combineWith) {
-                        Range intersection = baseMutations.getRangeInfo().getRange().intersection(combineWithMutations.getRangeInfo().getRange());
+                        RangeInfo intersection = baseMutations.getRangeInfo().intersection(combineWithMutations.getRangeInfo());
                         if (intersection != null) {
-                            for (int i = 0; i < combineWithMutations.getMutations().size(); i++) {
-                                int mutation = combineWithMutations.getMutations().getMutation(i);
-                                int position = Mutation.getPosition(mutation);
-                                if (intersection.contains(position)) {
-                                    builder.append(mutation);
-                                }
-                            }
+                            int[] filteredMutations = IntStream.of(combineWithMutations.getMutations().getRAWMutations())
+                                    .filter(intersection::contains)
+                                    .toArray();
+                            builder.append(filteredMutations);
                         }
                     }
-                    Mutations<NucleotideSequence> andDestroy = builder.createAndDestroy();
-                    Mutations<NucleotideSequence> resultMutations = baseMutations.getMutations().combineWith(andDestroy);
-                    MutationsWithRange mutationsWithRange = baseMutations.withMutations(resultMutations);
-                    mutationsWithRange.buildSequence();
-                    return mutationsWithRange;
+                    return baseMutations.combineWithMutations(builder.createAndDestroy());
                 })
                 .collect(Collectors.toList());
     }

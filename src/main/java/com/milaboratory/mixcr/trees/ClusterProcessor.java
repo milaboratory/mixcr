@@ -181,6 +181,7 @@ class ClusterProcessor {
                 .sorted(Comparator.<TreeWithMetaBuilder>comparingInt(it -> it.treeBuilder.getObservedNodesCount()).reversed())
                 .collect(Collectors.toList());
 
+        List<Double> distances = new ArrayList<>();
         //try to add as nodes clones that wasn't picked up by clustering
         for (CloneWithMutationsFromVJGermline clone : clusteringResult.clonesNotInClusters) {
             Optional<Pair<Runnable, Double>> nearestTree = firstStepTrees.stream()
@@ -192,11 +193,13 @@ class ClusterProcessor {
                         );
                     })
                     .max(Comparator.comparing(Pair::getSecond));
-            System.out.println(nearestTree.map(Pair::getSecond).orElse(-1.0));
+            distances.add(nearestTree.map(Pair::getSecond).orElse(-1.0));
 //            if (nearestTree.isPresent() && nearestTree.get().getSecond() < threshold) {
 //                nearestTree.get().getFirst().run();
 //            }
         }
+        distances.stream().sorted().forEach(System.out::println);
+        System.out.println();
 
 //        List<TreeWithMetaBuilder> secondStepTrees = new ArrayList<>();
 //
@@ -413,13 +416,21 @@ class ClusterProcessor {
                             parent.getFromRootToThis(),
                             mutationsBetween(parent.getFromRootToThis(), observed.getMutationsFromRoot())
                     );
-                    AncestorInfo ancestorInfo = ancestorInfoBuilder.buildAncestorInfo(syntheticNode.getFromRootToThis());
-                    //TODO remove
-                    if (!observed.getClone().clone.getNFeature(GeneFeature.CDR3).equals(ancestorInfo.getSequence().getRange(ancestorInfo.getCDR3Begin(), ancestorInfo.getCDR3End()))) {
-                        throw new IllegalStateException();
-                    }
-                    if (!observed.getClone().clone.getTarget(0).getSequence().equals(ancestorInfo.getSequence())) {
-                        throw new IllegalStateException();
+                    try {
+                        AncestorInfo ancestorInfo = ancestorInfoBuilder.buildAncestorInfo(syntheticNode.getFromRootToThis());
+                        //TODO remove
+                        if (!observed.getClone().clone.getNFeature(GeneFeature.CDR3).equals(ancestorInfo.getSequence().getRange(ancestorInfo.getCDR3Begin(), ancestorInfo.getCDR3End()))) {
+                            throw new IllegalStateException();
+                        }
+                        if (!observed.getClone().clone.getTarget(0).getSequence().equals(ancestorInfo.getSequence())) {
+                            throw new IllegalStateException();
+                        }
+                    } catch (Throwable e) {
+                        new SyntheticNode(
+                                parent.getFromRootToThis(),
+                                mutationsBetween(parent.getFromRootToThis(), observed.getMutationsFromRoot())
+                        );
+                        throw e;
                     }
                     return syntheticNode;
                 },
@@ -508,12 +519,12 @@ class ClusterProcessor {
                 new MutationsWithRange(
                         rootInfo.getReconstructedNDN(),
                         EMPTY_NUCLEOTIDE_MUTATIONS,
-                        new RangeInfo(new Range(0, rootInfo.getReconstructedNDN().size()), false)
+                        new RangeInfo(new Range(0, rootInfo.getReconstructedNDN().size()), true)
                 ),
                 new MutationsWithRange(
                         JSequence1,
                         EMPTY_NUCLEOTIDE_MUTATIONS,
-                        new RangeInfo(rootInfo.getJRangeInCDR3(), false)
+                        new RangeInfo(rootInfo.getJRangeInCDR3(), true)
                 ),
                 overlap(rebasedCluster.stream()
                         .map(clone -> clone.getMutationsFromRoot().getJMutationsWithoutCDR3().stream()
@@ -524,7 +535,7 @@ class ClusterProcessor {
                         .map(it -> new MutationsWithRange(JSequence1, EMPTY_NUCLEOTIDE_MUTATIONS, new RangeInfo(it, false)))
                         .collect(Collectors.toList())
         );
-        return new SyntheticNode(emptyMutations, emptyMutations);
+        return new SyntheticNode(emptyMutations, emptyMutations, emptyMutations);
     }
 
     private RootInfo buildRootInfo(Cluster<CloneWithMutationsFromVJGermline> cluster) {
@@ -560,7 +571,7 @@ class ClusterProcessor {
                             .map(range -> new MutationsWithRange(
                                     alignment.getSequence1(),
                                     mutations,
-                                    new RangeInfo(range, false)
+                                    new RangeInfo(range, alignment.getSequence1Range().getLower() == range.getLower())
                             ));
                 })
                 .collect(Collectors.toList());
@@ -782,7 +793,7 @@ class ClusterProcessor {
     ) {
         return firstMutations.stream()
                 .flatMap(base -> secondMutations.stream()
-                        .map(comparison -> Optional.ofNullable(base.getRangeInfo().intersection(comparison.getRangeInfo()))
+                        .map(comparison -> Optional.ofNullable(base.projectedRange().intersection(comparison.getRangeInfo()))
                                 .map(it -> folder.apply(base, comparison, it)))
                         .flatMap(Java9Util::stream)
                 )
@@ -807,17 +818,14 @@ class ClusterProcessor {
             throw new IllegalArgumentException();
         }
         return new MutationsWithRange(
-                base.buildSequence(),
+                base.getMutations().mutate(base.getSequence1()),
                 MutationsUtils.difference(
                         base.getMutations(),
                         base.getRangeInfo(),
                         comparison.getMutations(),
                         comparison.getRangeInfo()
-                ).move(-base.getRangeInfo().getRange().getLower()),
-                new RangeInfo(
-                        new Range(0, base.buildSequence().size()),
-                        true
-                )
+                ),
+                base.getRangeInfo().intersection(comparison.getRangeInfo())
         );
     }
 
