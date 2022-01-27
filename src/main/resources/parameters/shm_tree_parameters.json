@@ -1,7 +1,8 @@
 {
   "default": {
     "productiveOnly": true,
-    "maxDistanceWithinCluster": 0.9,
+    "threshold": 2.0,
+    "NDNScoreMultiplier": 2.5,
     "hideTreesLessThanSize": 1,
     "commonMutationsCountForClustering": 5,
     "penaltyForReversedMutations": 10,

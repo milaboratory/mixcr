@@ -51,7 +51,7 @@ final class MutationsUtils {
     public static AlignmentScoring<NucleotideSequence> NDNScoring() {
         return new AffineGapAlignmentScoring<>(
                 NucleotideSequence.ALPHABET,
-                calculateSubstitutionMatrix(5, -4, 2, NucleotideSequence.ALPHABET),
+                calculateSubstitutionMatrix(5, -4, 4, NucleotideSequence.ALPHABET),
                 -10,
                 -1
         );

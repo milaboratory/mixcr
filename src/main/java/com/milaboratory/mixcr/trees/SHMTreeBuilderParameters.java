@@ -54,9 +54,9 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
     public final boolean productiveOnly;
 
     /**
-     * Parameter that defines sensitivity of clusterisation
+     * TODO
      */
-    public final double maxDistanceWithinCluster;
+    public final double threshold;
     /**
      * Penalty that will be multiplied by reversed mutations count.
      */
@@ -70,29 +70,32 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
      * Count of the nearest nodes to added that will be proceeded to find optimal insertion.
      */
     public final int countOfNodesToProbe;
+    public final double NDNScoreMultiplier;
 
     @JsonCreator
     public SHMTreeBuilderParameters(
             @JsonProperty("targetRegion") GeneFeature targetRegion,
             @JsonProperty("productiveOnly") boolean productiveOnly,
-            @JsonProperty("maxDistanceWithinCluster") double maxDistanceWithinCluster,
+            @JsonProperty("threshold") double threshold,
             @JsonProperty("penaltyForReversedMutations") double penaltyForReversedMutations,
             @JsonProperty("hideTreesLessThanSize") int hideTreesLessThanSize,
             @JsonProperty("commonMutationsCountForClustering") int commonMutationsCountForClustering,
-            @JsonProperty("countOfNodesToProbe") int countOfNodesToProbe
+            @JsonProperty("countOfNodesToProbe") int countOfNodesToProbe,
+            @JsonProperty("NDNScoreMultiplier") double NDNScoreMultiplier
     ) {
         this.targetRegion = targetRegion;
         this.productiveOnly = productiveOnly;
-        this.maxDistanceWithinCluster = maxDistanceWithinCluster;
+        this.threshold = threshold;
         this.penaltyForReversedMutations = penaltyForReversedMutations;
         this.hideTreesLessThanSize = hideTreesLessThanSize;
         this.commonMutationsCountForClustering = commonMutationsCountForClustering;
         this.countOfNodesToProbe = countOfNodesToProbe;
+        this.NDNScoreMultiplier = NDNScoreMultiplier;
     }
 
     @Override
     public SHMTreeBuilderParameters clone() {
-        return new SHMTreeBuilderParameters(targetRegion, productiveOnly, maxDistanceWithinCluster, penaltyForReversedMutations, hideTreesLessThanSize, commonMutationsCountForClustering, countOfNodesToProbe);
+        return new SHMTreeBuilderParameters(targetRegion, productiveOnly, threshold, penaltyForReversedMutations, hideTreesLessThanSize, commonMutationsCountForClustering, countOfNodesToProbe, NDNScoreMultiplier);
     }
 
     @Override
@@ -100,11 +103,11 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SHMTreeBuilderParameters that = (SHMTreeBuilderParameters) o;
-        return productiveOnly == that.productiveOnly && Double.compare(that.maxDistanceWithinCluster, maxDistanceWithinCluster) == 0 && hideTreesLessThanSize == that.hideTreesLessThanSize && commonMutationsCountForClustering == that.commonMutationsCountForClustering && Objects.equals(targetRegion, that.targetRegion);
+        return productiveOnly == that.productiveOnly && Double.compare(that.threshold, threshold) == 0 && Double.compare(that.penaltyForReversedMutations, penaltyForReversedMutations) == 0 && hideTreesLessThanSize == that.hideTreesLessThanSize && commonMutationsCountForClustering == that.commonMutationsCountForClustering && countOfNodesToProbe == that.countOfNodesToProbe && Double.compare(that.NDNScoreMultiplier, NDNScoreMultiplier) == 0 && Objects.equals(targetRegion, that.targetRegion);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(targetRegion, productiveOnly, maxDistanceWithinCluster, hideTreesLessThanSize, commonMutationsCountForClustering);
+        return Objects.hash(targetRegion, productiveOnly, threshold, penaltyForReversedMutations, hideTreesLessThanSize, commonMutationsCountForClustering, countOfNodesToProbe, NDNScoreMultiplier);
     }
 }

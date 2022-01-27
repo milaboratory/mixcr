@@ -169,20 +169,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                             21841,
 
 
-                            //TODO consult
-                            4689,
-                            5113,
-                            36487,
-                            48367,
-
-
                             24722,
-                            13552,
-                            39832,
-                            22831,
-                            29919,
-                            49407,
-                            20908,
                             11055,
                             44141,
                             47669,
@@ -190,30 +177,20 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                             24733,
                             26817,
                             33091,
-                            37617,
                             11054,
                             35381,
                             50034,
                             34317,
                             32066,
-                            17340,
                             38713,
-                            29946,
-                            6936,
-                            40966,
                             1114,
                             32092,
                             27827,
-                            44143,
-                            36514,
-                            561,
                             17363,
                             9919,
                             24732,
                             33139,
                             43129,
-                            16459,
-                            8481,
                             28875,
                             12221,
                             16514,
@@ -222,9 +199,6 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                             32105,
                             22866,
                             18210,
-                            22839,
-                            38699,
-                            32080,
                             46060,
                             32093,
                             12280
@@ -235,31 +209,77 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                             17365, //TODO consult
 
 
-                            19129,
                             41109,
                             37766,
-                            15694,
                             18208
                     );
 
                     List<Set<Integer>> anotherTrees = Lists.newArrayList(
                             Sets.newHashSet(
                                     46050,
+                                    27,
                                     444,
-                                    6935
+                                    6935,
+                                    18193
                             ),
                             Sets.newHashSet(
                                     21022,
                                     9930
+                            ),
+                            Sets.newHashSet(
+                                    44140,
+                                    9920
+                            ),
+                            Sets.newHashSet(
+                                    15694,
+                                    17340
+                            ),
+                            //TODO check that it is separate
+                            Sets.newHashSet(
+                                    6936,
+                                    40966
+                            ),
+                            //TODO check that it is separate
+                            Sets.newHashSet(
+                                    8481,
+                                    29946
+                            ),
+                            //TODO check that it is separate
+                            Sets.newHashSet(
+                                    37617,
+                                    16459
+                            ),
+                            //TODO check that it is separate
+                            Sets.newHashSet(
+                                    561,
+                                    36514,
+                                    44143
+                            ),
+                            //TODO check that it is separate
+                            Sets.newHashSet(
+                                    22839,
+                                    38699,
+                                    32080
+                            ),
+                            //TODO consult
+                            Sets.newHashSet(
+                                    4689,
+                                    5113,
+                                    22831,
+                                    36487,
+                                    48367,
+                                    29919,
+                                    13552,
+                                    39832,
+                                    49407,
+                                    20908
                             )
                     );
 
                     Set<Integer> clonesWithMutationsButNotInMainTree = Sets.newHashSet(
                             19143,
-                            9920,
                             1194,
                             2889,
-                            44140,
                             20062,
                             39858
                     );
@@ -299,8 +319,8 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                                         numberOfMutationsWithoutCDR3(clone, Joining) == 0).count() + "\n");
 
 
-                        int rootCloneId = 19129;
-//                        int rootCloneId = 24722;
+//                        int rootCloneId = 19129;
+                        int rootCloneId = 24722;
                         Optional<Clone> rootClone = cluster.cluster.stream().map(cw -> cw.clone).filter(it -> it.getId() == rootCloneId).findFirst();
 
                         List<Integer> VMutationPositions = allMutationPositions(cluster, Variable);
@@ -853,7 +873,7 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                             .filter(it -> !clonesInBaseTree.contains(it))
                             .collect(Collectors.toList());
 
-                    System.out.println("maxDistanceWithinCluster: " + shmTreeBuilderParameters.maxDistanceWithinCluster);
+                    System.out.println("threshold: " + shmTreeBuilderParameters.threshold);
                     System.out.println("statistic:");
                     System.out.println("FP: " + falsePositive.size() + " FN: " + falseNegative.size() + " TP: " + truePositive.size());
                     System.out.println();
