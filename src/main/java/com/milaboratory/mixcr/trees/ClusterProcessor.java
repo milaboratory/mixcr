@@ -1,6 +1,7 @@
 package com.milaboratory.mixcr.trees;
 
 import com.milaboratory.core.Range;
+import com.milaboratory.core.alignment.Aligner;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.alignment.AlignmentUtils;
@@ -17,7 +18,6 @@ import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstruct
 import com.milaboratory.mixcr.util.AdjacencyMatrix;
 import com.milaboratory.mixcr.util.BitArrayInt;
 import com.milaboratory.mixcr.util.Java9Util;
-import com.milaboratory.mixcr.util.TriFunction;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.ReferencePoint;
@@ -25,6 +25,7 @@ import org.apache.commons.math3.util.Pair;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -32,12 +33,16 @@ import java.util.stream.Stream;
 
 import static com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS;
 import static com.milaboratory.mixcr.trees.ClonesRebase.NDNRangeInKnownNDN;
+import static com.milaboratory.mixcr.trees.MutationsUtils.*;
 import static io.repseq.core.GeneType.Joining;
 import static io.repseq.core.GeneType.Variable;
 import static io.repseq.core.ReferencePoint.*;
 
 class ClusterProcessor {
-    private final double threshold;
+    private final double thresholdForFreeClones;
+    private final double thresholdForCombineByNDN;
+    private final int topToVoteOnNDNSize;
+    private final List<String> stepsOrder;
     private final double NDNScoreMultiplier;
     private final double penaltyForReversedMutations;
     private final int commonMutationsCountForClustering;
@@ -61,26 +66,34 @@ class ClusterProcessor {
             nodeWithParent -> nodeWithParent.getNode().getContent().convert(
                     clone -> String.valueOf(clone.getClone().clone.getId()),
                     mutations -> {
+                        Optional<MutationsDescription> parentMutations = Optional.ofNullable(nodeWithParent.getParent())
+                                .flatMap(parent -> parent.getContent().convert(it -> Optional.empty(), it -> Optional.of(it.getFromRootToThis())));
+
+                        Optional<MutationsDescription> fromParentToThis = parentMutations.map(parent -> mutationsBetween(parent, mutations.getFromRootToThis()));
+
                         int widening = 0;
-                        for (int i = 0; i < mutations.getFromParentToThis().getKnownNDN().getMutations().size(); i++) {
-                            int mutation = mutations.getFromParentToThis().getKnownNDN().getMutations().getMutation(i);
-                            if (Mutation.isSubstitution(mutation)) {
-                                Wildcard from = NucleotideAlphabet.complementWildcard(Mutation.getFrom(mutation));
-                                Wildcard to = NucleotideAlphabet.complementWildcard(Mutation.getTo(mutation));
-                                if (to.intersectsWith(from) && to.basicSize() > from.basicSize()) {
-                                    widening++;
+                        if (fromParentToThis.isPresent()) {
+                            for (int i = 0; i < fromParentToThis.get().getKnownNDN().getMutations().size(); i++) {
+                                int mutation = fromParentToThis.get().getKnownNDN().getMutations().getMutation(i);
+                                if (Mutation.isSubstitution(mutation)) {
+                                    Wildcard from = NucleotideAlphabet.complementWildcard(Mutation.getFrom(mutation));
+                                    Wildcard to = NucleotideAlphabet.complementWildcard(Mutation.getTo(mutation));
+                                    if (to.intersectsWith(from) && to.basicSize() > from.basicSize()) {
+                                        widening++;
+                                    }
                                 }
                             }
                         }
 
-                        return "V: " + (mutations.getFromParentToThis().getVMutationsWithoutCDR3().stream().mapToInt(MutationsWithRange::mutationsCount).sum() + mutations.getFromParentToThis().getVMutationsInCDR3WithoutNDN().mutationsCount()) +
-                                " J: " + (mutations.getFromParentToThis().getJMutationsWithoutCDR3().stream().mapToInt(MutationsWithRange::mutationsCount).sum() + mutations.getFromParentToThis().getJMutationsInCDR3WithoutNDN().mutationsCount()) +
+
+                        return "V: " + fromParentToThis.map(it -> it.getVMutationsWithoutCDR3().stream().mapToInt(MutationsWithRange::mutationsCount).sum() + it.getVMutationsInCDR3WithoutNDN().mutationsCount()).orElse(0) +
+                                " J: " + fromParentToThis.map(it -> it.getJMutationsWithoutCDR3().stream().mapToInt(MutationsWithRange::mutationsCount).sum() + it.getJMutationsInCDR3WithoutNDN().mutationsCount()).orElse(0) +
                                 " widening: " + widening +
-                                " reversedV: " + reversedMutations(mutations.getFromRootToParent().getConcatenatedVMutations(), mutations.getFromParentToThis().getConcatenatedVMutations()) +
-                                " reversedJ: " + reversedMutations(mutations.getFromRootToParent().getConcatenatedJMutations(), mutations.getFromParentToThis().getConcatenatedJMutations()) +
-                                " NDN: " + mutations.getFromRootToThis().getKnownNDN().buildSequence() + " " + mutations.getFromParentToThis().getKnownNDN().getMutations() +
-                                " V: " + mutations.getFromParentToThis().getConcatenatedVMutations() +
-                                " J: " + mutations.getFromParentToThis().getConcatenatedJMutations()
+                                " reversedV: " + fromParentToThis.flatMap(it -> parentMutations.map(parent -> reversedMutations(parent.getConcatenatedVMutations(), it.getConcatenatedVMutations()))).orElse(Collections.emptyList()) +
+                                " reversedJ: " + fromParentToThis.flatMap(it -> parentMutations.map(parent -> reversedMutations(parent.getConcatenatedJMutations(), it.getConcatenatedJMutations()))).orElse(Collections.emptyList()) +
+                                " NDN: " + mutations.getFromRootToThis().getKnownNDN().buildSequence() + " " + fromParentToThis.map(it -> it.getKnownNDN().getMutations()).orElse(EMPTY_NUCLEOTIDE_MUTATIONS) +
+                                " V: " + fromParentToThis.map(MutationsDescription::getConcatenatedVMutations).orElse(EMPTY_NUCLEOTIDE_MUTATIONS) +
+                                " J: " + fromParentToThis.map(MutationsDescription::getConcatenatedJMutations).orElse(EMPTY_NUCLEOTIDE_MUTATIONS)
                                 ;
                     }
             )
@@ -93,12 +106,15 @@ class ClusterProcessor {
             AlignmentScoring<NucleotideSequence> JScoring,
             Cluster<CloneWrapper> originalCluster
     ) {
-        this.threshold = parameters.threshold;
+        this.thresholdForFreeClones = parameters.thresholdForFreeClones;
+        this.thresholdForCombineByNDN = parameters.thresholdForCombineByNDN;
+        this.topToVoteOnNDNSize = parameters.topToVoteOnNDNSize;
         this.NDNScoreMultiplier = parameters.NDNScoreMultiplier;
         this.hideTreesLessThanSize = parameters.hideTreesLessThanSize;
         this.commonMutationsCountForClustering = parameters.commonMutationsCountForClustering;
         this.penaltyForReversedMutations = parameters.penaltyForReversedMutations;
-        countOfNodesToProbe = parameters.countOfNodesToProbe;
+        this.countOfNodesToProbe = parameters.countOfNodesToProbe;
+        this.stepsOrder = parameters.stepsOrder;
         this.VScoring = VScoring;
         this.JScoring = JScoring;
         if (originalCluster.cluster.isEmpty()) {
@@ -115,7 +131,7 @@ class ClusterProcessor {
         getJRelativePosition = it -> bestJHit.getGene().getPartitioning().getRelativePosition(bestJHit.getAlignedFeature(), it);
 
         NDNScoring = MutationsUtils.NDNScoring();
-        clonesRebase = new ClonesRebase(VSequence1, JSequence1, NDNScoring);
+        clonesRebase = new ClonesRebase(VSequence1, VScoring, NDNScoring, JSequence1, JScoring);
         ancestorInfoBuilder = new AncestorInfoBuilder();
     }
 
@@ -138,8 +154,8 @@ class ClusterProcessor {
      * 4. Iterate over remain clonotypes and try to add them to build trees with possible ancestors. Try to merge trees
      */
     List<TreeWithMeta> buildTrees() {
-        Range VRangeInCDR3 = minVRangeInCDR3(originalCluster);
-        Range JRangeInCDR3 = minJRangeInCDR3(originalCluster);
+        Range VRangeInCDR3 = minRangeInCDR3(originalCluster, this::VRangeInCDR3);
+        Range JRangeInCDR3 = minRangeInCDR3(originalCluster, this::JRangeInCDR3);
 
         List<CloneWithMutationsFromVJGermline> clones = originalCluster.cluster.stream()
                 .map(cloneWrapper -> {
@@ -175,92 +191,34 @@ class ClusterProcessor {
                 })
                 .collect(Collectors.toList());
 
-        ClusteringResult clusteringResult = clusterByCommonMutations(clones);
-        List<TreeWithMetaBuilder> firstStepTrees = clusteringResult.clusters
+        ClusteringResult clusteringResult = clusterByCommonMutations(clones, false);
+        List<CloneWithMutationsFromVJGermline> clonesNotInClusters = clusteringResult.clonesNotInClusters;
+
+        List<TreeWithMetaBuilder> resultTrees = clusteringResult.clusters
                 .stream()
                 .filter(it -> it.cluster.size() > 1)
                 .map(this::buildATree)
                 .sorted(Comparator.<TreeWithMetaBuilder>comparingInt(it -> it.treeBuilder.getObservedNodesCount()).reversed())
                 .collect(Collectors.toList());
+        printTress(resultTrees);
 
-        //try to add as nodes clones that wasn't picked up by clustering
-        List<CloneWithMutationsFromVJGermline> clonesNotInClusters = clusteringResult.clonesNotInClusters;
-        for (int i = clonesNotInClusters.size() - 1; i >= 0; i--) {
-            CloneWithMutationsFromVJGermline clone = clonesNotInClusters.get(i);
-            Optional<Pair<TreeBuilderByAncestors.Action, Double>> bestActionAndDistanceFromRoot = firstStepTrees.stream()
-                    .map(treeWithMeta -> {
-                        CloneWithMutationsFromReconstructedRoot rebasedClone = clonesRebase.rebaseClone(treeWithMeta.rootInfo, clone.mutations, clone.cloneWrapper);
-                        TreeBuilderByAncestors.Action bestAction = treeWithMeta.treeBuilder.bestAction(rebasedClone);
-                        return Pair.create(
-                                bestAction,
-                                distanceFromRoot(rebasedClone, treeWithMeta.treeBuilder)
-                        );
-                    })
-                    .min(Comparator.comparing(p -> p.getFirst().changeOfDistance()));
+        Map<String, BiFunction<List<TreeWithMetaBuilder>, List<CloneWithMutationsFromVJGermline>, Pair<List<TreeWithMetaBuilder>, List<CloneWithMutationsFromVJGermline>>>> stepsByNames = new HashMap<>();
+        stepsByNames.put("attachClonesByNDN", (trees, freeClones) -> attachClonesByNDNIfPossible(trees, false, freeClones));
+        stepsByNames.put("combineTrees", (trees, freeClones) -> Pair.create(combineTreesIfPossible(trees, false), freeClones));
+        stepsByNames.put("attachClonesByDistanceChange", (trees, freeClones) -> attachClonesByDistanceChangeIfPossible(trees, false, freeClones));
 
-            bestActionAndDistanceFromRoot.ifPresent(pair -> {
-                double changeOfDistance = pair.getFirst().changeOfDistance().doubleValue();
-                double metric = pair.getSecond() / changeOfDistance;
-                System.out.printf("distanceFromRoot: %.4f, action: %.4f, metric: %.2f, success: %5s, cloneId: %d%n",
-                        pair.getSecond(),
-                        changeOfDistance,
-                        metric,
-                        metric >= threshold,
-                        clone.cloneWrapper.clone.getId()
-                );
-            });
+        List<BiFunction<List<TreeWithMetaBuilder>, List<CloneWithMutationsFromVJGermline>, Pair<List<TreeWithMetaBuilder>, List<CloneWithMutationsFromVJGermline>>>> steps = stepsOrder.stream()
+                .map(stepsByNames::get)
+                .collect(Collectors.toList());
 
-            if (bestActionAndDistanceFromRoot.isPresent()) {
-                TreeBuilderByAncestors.Action bestAction = bestActionAndDistanceFromRoot.get().getFirst();
-                double distanceFromRoot = bestActionAndDistanceFromRoot.get().getSecond();
-                if (distanceFromRoot / bestAction.changeOfDistance().doubleValue() >= threshold) {
-                    bestAction.apply();
-                    clonesNotInClusters.remove(i);
-                }
-            }
+        for (BiFunction<List<TreeWithMetaBuilder>, List<CloneWithMutationsFromVJGermline>, Pair<List<TreeWithMetaBuilder>, List<CloneWithMutationsFromVJGermline>>> step : steps) {
+            Pair<List<TreeWithMetaBuilder>, List<CloneWithMutationsFromVJGermline>> stepResult = step.apply(resultTrees, clonesNotInClusters);
+            resultTrees = stepResult.getFirst();
+            clonesNotInClusters = stepResult.getSecond();
+            printTress(resultTrees);
         }
 
-//        List<TreeWithMetaBuilder> secondStepTrees = new ArrayList<>();
-//
-//        //trying to grow the biggest trees first
-//        while (!firstStepTrees.isEmpty()) {
-//            TreeWithMetaBuilder treeToGrow = firstStepTrees.get(0);
-//            firstStepTrees.remove(0);
-//
-//            //trying to add the smallest trees first
-//            for (int i = firstStepTrees.size() - 1; i >= 0; i--) {
-//                TreeWithMetaBuilder treeToAttach = firstStepTrees.get(i);
-//
-//                double distanceFromTree = treeToAttach.treeBuilder.getTree().allNodes()
-//                        .map(node -> node.getContent().convert(it -> Optional.<MutationsDescription>empty(), Optional::of))
-//                        .flatMap(Java9Util::stream)
-//                        .map(it -> clonesRebase.rebaseMutations(it, treeToAttach.rootInfo, treeToGrow.rootInfo))
-//                        .mapToDouble(it -> distanceFromTree(it, treeToGrow.treeBuilder.getTree()))
-//                        .min().orElseThrow(IllegalArgumentException::new);
-//
-//                if (distanceFromTree < threshold) {
-//                    treeToAttach.treeBuilder.getTree().allNodes()
-//                            .map(node -> node.getContent().convert(Optional::of, it -> Optional.<CloneWithMutationsFromReconstructedRoot>empty()))
-//                            .flatMap(Java9Util::stream)
-//                            .map(clone -> clonesRebase.rebaseClone(treeToGrow.rootInfo, clone.getMutationsFromVJGermline(), clone.getClone()))
-//                            .sorted(Comparator.<CloneWithMutationsFromReconstructedRoot, BigDecimal>comparing(clone -> distance(clone.getMutationsFromRoot())).reversed())
-//                            .forEach(treeToGrow.treeBuilder::addNode);
-//                    firstStepTrees.remove(i);
-//                }
-//            }
-//
-//            secondStepTrees.add(treeToGrow);
-//        }
-
-        List<TreeWithMetaBuilder> secondStepTrees = new ArrayList<>(firstStepTrees);
-        System.out.println();
-        secondStepTrees.stream()
-                .sorted(Comparator.<TreeWithMetaBuilder>comparingInt(it -> it.treeBuilder.getObservedNodesCount()).reversed())
-                .map(it -> it.treeBuilder.getTree())
-                .map(printer::print)
-                .forEach(System.out::println);
-        System.out.println();
-        return secondStepTrees.stream()
+        return resultTrees.stream()
                 .filter(treeWithMetaBuilder -> treeWithMetaBuilder.treeBuilder.getObservedNodesCount() >= hideTreesLessThanSize)
                 .map(treeWithMetaBuilder -> new TreeWithMeta(
                         treeWithMetaBuilder.treeBuilder.getTree().map(node ->
@@ -274,10 +232,248 @@ class ClusterProcessor {
                 .collect(Collectors.toList());
     }
 
+    private List<TreeWithMetaBuilder> combineTreesIfPossible(List<TreeWithMetaBuilder> originalTrees, boolean print) {
+        List<TreeWithMetaBuilder> result = new ArrayList<>();
+
+        List<TreeWithMetaBuilder> originalTreesCopy = new ArrayList<>(originalTrees);
+        //trying to grow the biggest trees first
+        while (!originalTreesCopy.isEmpty()) {
+            TreeWithMetaBuilder treeToGrow = originalTreesCopy.get(0);
+            originalTreesCopy.remove(0);
+
+            //trying to add the smallest trees first
+            for (int i = originalTreesCopy.size() - 1; i >= 0; i--) {
+                TreeWithMetaBuilder treeToAttach = originalTreesCopy.get(i);
+
+                SyntheticNode oldestAncestorOfTreeToAttach = oldestReconstructedAncestor(treeToAttach);
+                SyntheticNode oldestAncestorOfTreeToGrow = oldestReconstructedAncestor(treeToGrow);
+
+                Range NDNRangeInCDR3OfTreeToAttach = new Range(
+                        treeToAttach.rootInfo.getVRangeInCDR3().length(),
+                        treeToAttach.rootInfo.getVRangeInCDR3().length() + treeToAttach.rootInfo.getReconstructedNDN().size()
+                );
+                Range NDNRangeInCDR3OfTreeToGrow = new Range(
+                        treeToGrow.rootInfo.getVRangeInCDR3().length(),
+                        treeToGrow.rootInfo.getVRangeInCDR3().length() + treeToGrow.rootInfo.getReconstructedNDN().size()
+                );
+                Range intersection = NDNRangeInCDR3OfTreeToAttach.intersection(NDNRangeInCDR3OfTreeToGrow);
+                Range wideIntersection = new Range(
+                        Math.min(NDNRangeInCDR3OfTreeToAttach.getLower(), NDNRangeInCDR3OfTreeToGrow.getLower()),
+                        Math.max(NDNRangeInCDR3OfTreeToAttach.getUpper(), NDNRangeInCDR3OfTreeToGrow.getUpper())
+                );
+                if (intersection == null) {
+                    continue;
+                }
+
+                NucleotideSequence NDNOfTreeToGrow = oldestAncestorOfTreeToGrow.getFromRootToThis().getKnownNDN().buildSequence();
+                NucleotideSequence NDNOfTreeToAttach = oldestAncestorOfTreeToAttach.getFromRootToThis().getKnownNDN().buildSequence();
+
+                NucleotideSequence intersectionForTreeToGrow = NDNOfTreeToGrow.getRange(intersection.move(-treeToGrow.rootInfo.getVRangeInCDR3().length()));
+                NucleotideSequence intersectionForTreeToAttach = NDNOfTreeToAttach.getRange(intersection.move(-treeToAttach.rootInfo.getVRangeInCDR3().length()));
+
+                float score_1 = Aligner.alignGlobal(
+                        NDNScoring,
+                        NDNOfTreeToAttach,
+                        NDNOfTreeToGrow,
+                        intersection.getLower() - treeToAttach.rootInfo.getVRangeInCDR3().length(),
+                        intersection.length(),
+                        intersection.getLower() - treeToGrow.rootInfo.getVRangeInCDR3().length(),
+                        intersection.length()
+                ).getScore();
+                float score_2 = Aligner.alignGlobal(
+                        NDNScoring,
+                        NDNOfTreeToGrow,
+                        NDNOfTreeToAttach,
+                        intersection.getLower() - treeToGrow.rootInfo.getVRangeInCDR3().length(),
+                        intersection.length(),
+                        intersection.getLower() - treeToAttach.rootInfo.getVRangeInCDR3().length(),
+                        intersection.length()
+                ).getScore();
+                double metric_1 = ((double) (NDNScoring.getMaximalMatchScore() * intersection.length()) - score_1) / intersection.length();
+                double metric_2 = ((double) (NDNScoring.getMaximalMatchScore() * wideIntersection.length()) - score_2) / wideIntersection.length();
+
+                if (print) {
+                    NucleotideSequence wideIntersectionForTreeToGrow =
+                            VSequence1.getRange(treeToGrow.rootInfo.getVRangeInCDR3()).getRange(wideIntersection.getLower(), treeToGrow.rootInfo.getVRangeInCDR3().length())
+                                    .concatenate(NDNOfTreeToGrow)
+                                    .concatenate(JSequence1.getRange(treeToGrow.rootInfo.getJRangeInCDR3()).getRange(0, wideIntersection.getUpper() - treeToGrow.rootInfo.getVRangeInCDR3().length() - NDNOfTreeToGrow.size()));
+                    NucleotideSequence wideIntersectionForTreeToAttach =
+                            VSequence1.getRange(treeToAttach.rootInfo.getVRangeInCDR3()).getRange(wideIntersection.getLower(), treeToAttach.rootInfo.getVRangeInCDR3().length())
+                                    .concatenate(NDNOfTreeToAttach)
+                                    .concatenate(JSequence1.getRange(treeToAttach.rootInfo.getJRangeInCDR3()).getRange(0, wideIntersection.getUpper() - treeToAttach.rootInfo.getVRangeInCDR3().length() - NDNOfTreeToAttach.size()));
+
+                    System.out.printf(
+                            "metric_1: %.3f,                   treeToGrow: %s %s %s %s %s  %s success: %s%n",
+                            metric_1,
+                            VSequence1.getRange(treeToGrow.rootInfo.getVRangeInCDR3()),
+                            NDNOfTreeToGrow.getRange(0, intersection.getLower() - treeToGrow.rootInfo.getVRangeInCDR3().length()),
+                            intersectionForTreeToGrow,
+                            NDNOfTreeToGrow.getRange(intersection.getUpper() - treeToGrow.rootInfo.getVRangeInCDR3().length(), NDNOfTreeToGrow.size()),
+                            JSequence1.getRange(treeToGrow.rootInfo.getJRangeInCDR3()),
+                            wideIntersectionForTreeToGrow,
+                            metric_1 <= thresholdForCombineByNDN
+                    );
+                    System.out.printf(
+                            "metric_2: %.3f,                 treeToAttach: %s %s %s %s %s  %s success: %s%n",
+                            metric_2,
+                            VSequence1.getRange(treeToAttach.rootInfo.getVRangeInCDR3()),
+                            NDNOfTreeToAttach.getRange(0, intersection.getLower() - treeToAttach.rootInfo.getVRangeInCDR3().length()),
+                            intersectionForTreeToAttach,
+                            NDNOfTreeToAttach.getRange(intersection.getUpper() - treeToAttach.rootInfo.getVRangeInCDR3().length(), NDNOfTreeToAttach.size()),
+                            JSequence1.getRange(treeToAttach.rootInfo.getJRangeInCDR3()),
+                            wideIntersectionForTreeToAttach,
+                            metric_2 <= thresholdForCombineByNDN
+                    );
+                }
+
+                if (metric_1 < thresholdForCombineByNDN || metric_2 < thresholdForCombineByNDN) {
+                    treeToGrow = buildATree(new Cluster<>(
+                            Stream.of(treeToGrow, treeToAttach)
+                                    .flatMap(it -> it.treeBuilder.getTree().allNodes())
+                                    .map(Tree.NodeWithParent::getNode)
+                                    .map(node -> node.getContent().convert(it -> Optional.of(new CloneWithMutationsFromVJGermline(it.getMutationsFromVJGermline(), it.getClone())), it -> Optional.<CloneWithMutationsFromVJGermline>empty()))
+                                    .flatMap(Java9Util::stream)
+                                    .collect(Collectors.toList())
+                    ));
+                    originalTreesCopy.remove(i);
+                }
+            }
+
+            result.add(treeToGrow);
+        }
+        return result;
+    }
+
+    private Pair<List<TreeWithMetaBuilder>, List<CloneWithMutationsFromVJGermline>> attachClonesByNDNIfPossible(List<TreeWithMetaBuilder> originalTrees, boolean print, List<CloneWithMutationsFromVJGermline> clonesNotInClusters) {
+        List<TreeWithMetaBuilder> result = originalTrees.stream().map(TreeWithMetaBuilder::copy).collect(Collectors.toList());
+        List<CloneWithMutationsFromVJGermline> clonesNotInClustersLeft = new ArrayList<>();
+
+        clonesNotInClusters.stream()
+                .filter(clone -> clone.mutations.getVJMutationsCount() <= commonMutationsCountForClustering)
+                .forEach(clone -> {
+                    Optional<Pair<Double, Runnable>> bestTreeToAttach = originalTrees.stream()
+                            .map(tree -> {
+                                SyntheticNode oldestAncestorOfTreeToGrow = oldestReconstructedAncestor(tree);
+                                CloneWithMutationsFromReconstructedRoot rebasedClone = clonesRebase.rebaseClone(tree.rootInfo, clone.mutations, clone.cloneWrapper);
+                                SyntheticNode oldestAncestorOfTreeToAttach = SyntheticNode.createFromMutations(rebasedClone.getMutationsFromRoot());
+                                NucleotideSequence NDNOfTreeToGrow = oldestAncestorOfTreeToGrow.getFromRootToThis().getKnownNDN().buildSequence();
+                                NucleotideSequence NDNOfTreeToAttach = oldestAncestorOfTreeToAttach.getFromRootToThis().getKnownNDN().buildSequence();
+                                float score_1 = Aligner.alignGlobal(
+                                        NDNScoring,
+                                        NDNOfTreeToAttach,
+                                        NDNOfTreeToGrow
+                                ).getScore();
+                                float score_2 = Aligner.alignGlobal(
+                                        NDNScoring,
+                                        NDNOfTreeToGrow,
+                                        NDNOfTreeToAttach
+                                ).getScore();
+                                double metric_1 = ((double) (NDNScoring.getMaximalMatchScore() * tree.rootInfo.getReconstructedNDN().size()) - score_1) / tree.rootInfo.getReconstructedNDN().size();
+                                double metric_2 = ((double) (NDNScoring.getMaximalMatchScore() * tree.rootInfo.getReconstructedNDN().size()) - score_2) / tree.rootInfo.getReconstructedNDN().size();
+                                if (print) {
+                                    System.out.printf(
+                                            "metric_1: %.3f,    treeToGrow: %s cloneId: %d, success: %s%n",
+                                            metric_1,
+                                            NDNOfTreeToGrow,
+                                            clone.cloneWrapper.clone.getId(),
+                                            metric_1 <= thresholdForCombineByNDN || metric_2 <= thresholdForCombineByNDN
+                                    );
+                                    System.out.printf(
+                                            "metric_2: %.3f, cloneToAttach: %s%n",
+                                            metric_2,
+                                            NDNOfTreeToAttach
+                                    );
+                                }
+                                return Pair.<Double, Runnable>create(Math.min(metric_1, metric_2), () -> tree.treeBuilder.addNode(rebasedClone));
+                            })
+                            .min(Comparator.comparing(Pair::getFirst));
+                    if (bestTreeToAttach.isPresent()) {
+                        double metric = bestTreeToAttach.get().getFirst();
+                        if (metric <= thresholdForCombineByNDN) {
+                            bestTreeToAttach.get().getSecond().run();
+                        } else {
+                            clonesNotInClustersLeft.add(clone);
+                        }
+                    } else {
+                        clonesNotInClustersLeft.add(clone);
+                    }
+                });
+        return Pair.create(result, clonesNotInClustersLeft);
+    }
+
+    private Pair<List<TreeWithMetaBuilder>, List<CloneWithMutationsFromVJGermline>> attachClonesByDistanceChangeIfPossible(List<TreeWithMetaBuilder> originalTrees, boolean print, List<CloneWithMutationsFromVJGermline> clonesNotInClusters) {
+        List<TreeWithMetaBuilder> result = originalTrees.stream().map(TreeWithMetaBuilder::copy).collect(Collectors.toList());
+        List<CloneWithMutationsFromVJGermline> clonesNotInClustersLeft = new ArrayList<>();
+
+        //try to add as nodes clones that wasn't picked up by clustering
+        for (int i = clonesNotInClusters.size() - 1; i >= 0; i--) {
+            CloneWithMutationsFromVJGermline clone = clonesNotInClusters.get(i);
+            Optional<Pair<TreeBuilderByAncestors.Action, Double>> bestActionAndDistanceFromRoot = result.stream()
+                    .map(treeWithMeta -> {
+                        CloneWithMutationsFromReconstructedRoot rebasedClone = clonesRebase.rebaseClone(treeWithMeta.rootInfo, clone.mutations, clone.cloneWrapper);
+                        TreeBuilderByAncestors.Action bestAction = treeWithMeta.treeBuilder.bestActionForObserved(rebasedClone);
+                        return Pair.create(
+                                bestAction,
+                                treeWithMeta.treeBuilder.distanceFromRootToObserved(rebasedClone).doubleValue()
+                        );
+                    })
+                    .min(Comparator.comparing(p -> p.getFirst().changeOfDistance()));
+
+            if (print) {
+                bestActionAndDistanceFromRoot.ifPresent(pair -> {
+                    double changeOfDistance = pair.getFirst().changeOfDistance().doubleValue();
+                    Double distanceFromRoot = pair.getSecond();
+                    double metric = distanceFromRoot / changeOfDistance;
+                    System.out.printf("distanceFromRoot: %.4f, action: %.4f, metric: %.2f, success: %5s, cloneId: %d%n",
+                            distanceFromRoot,
+                            changeOfDistance,
+                            metric,
+                            metric >= thresholdForFreeClones,
+                            clone.cloneWrapper.clone.getId()
+                    );
+                });
+            }
+
+            if (bestActionAndDistanceFromRoot.isPresent()) {
+                TreeBuilderByAncestors.Action bestAction = bestActionAndDistanceFromRoot.get().getFirst();
+                double distanceFromRoot = bestActionAndDistanceFromRoot.get().getSecond();
+                if (distanceFromRoot / bestAction.changeOfDistance().doubleValue() >= thresholdForFreeClones) {
+                    bestAction.apply();
+                    clonesNotInClusters.remove(i);
+                } else {
+                    clonesNotInClustersLeft.add(clone);
+                }
+            } else {
+                clonesNotInClustersLeft.add(clone);
+            }
+        }
+        return Pair.create(result, clonesNotInClustersLeft);
+    }
+
+    private void printTress(List<TreeWithMetaBuilder> trees) {
+        trees.stream()
+                .sorted(Comparator.<TreeWithMetaBuilder>comparingInt(it -> it.treeBuilder.getObservedNodesCount()).reversed())
+                .map(it -> it.treeBuilder.getTree())
+                .map(printer::print)
+                .forEach(System.out::println);
+        System.out.println();
+    }
+
+    private SyntheticNode oldestReconstructedAncestor(TreeWithMetaBuilder treeToAttach) {
+        //TODO check that there is only one direct child of the root
+        TreeBuilderByAncestors.Reconstructed<CloneWithMutationsFromReconstructedRoot, SyntheticNode> oldestReconstructedAncestor = (TreeBuilderByAncestors.Reconstructed<CloneWithMutationsFromReconstructedRoot, SyntheticNode>) treeToAttach
+                .treeBuilder.getTree().getRoot()
+                .getLinks()
+                .get(0)
+                .getNode()
+                .getContent();
+        return oldestReconstructedAncestor.getContent();
+    }
+
     /**
      * sort order of clones will be saved in ClusteringResult::clonesNotInClusters
      */
-    private ClusteringResult clusterByCommonMutations(List<CloneWithMutationsFromVJGermline> clones) {
+    private ClusteringResult clusterByCommonMutations(List<CloneWithMutationsFromVJGermline> clones, boolean print) {
         AdjacencyMatrix matrix = new AdjacencyMatrix(clones.size());
         for (int i = 0; i < clones.size(); i++) {
             for (int j = 0; j < clones.size(); j++) {
@@ -306,38 +502,39 @@ class ClusterProcessor {
                     .collect(Collectors.toList())
             ));
         }
-        //debug
-        for (BitArrayInt clique : notOverlappedCliques) {
-            List<Integer> clonesInClique = Arrays.stream(clique.getBits()).boxed().collect(Collectors.toList());
-            System.out.println("      |" + clonesInClique.stream()
-                    .map(i -> clones.get(i).cloneWrapper.clone.getId())
-                    .map(id -> String.format("%6d|", id))
-                    .collect(Collectors.joining()));
-            for (int i : clonesInClique) {
-                CloneWithMutationsFromVJGermline base = clones.get(i);
-                System.out.println(String.format("%6d|", base.cloneWrapper.clone.getId()) +
-                        clonesInClique.stream()
-                                .map(clones::get)
-                                .map(it -> String.format("%6d|", commonMutationsCount(base.mutations, it.mutations)))
-                                .collect(Collectors.joining())
-                );
-            }
+        if (print) {
+            for (BitArrayInt clique : notOverlappedCliques) {
+                List<Integer> clonesInClique = Arrays.stream(clique.getBits()).boxed().collect(Collectors.toList());
+                System.out.println("      |" + clonesInClique.stream()
+                        .map(i -> clones.get(i).cloneWrapper.clone.getId())
+                        .map(id -> String.format("%6d|", id))
+                        .collect(Collectors.joining()));
+                for (int i : clonesInClique) {
+                    CloneWithMutationsFromVJGermline base = clones.get(i);
+                    System.out.println(String.format("%6d|", base.cloneWrapper.clone.getId()) +
+                            clonesInClique.stream()
+                                    .map(clones::get)
+                                    .map(it -> String.format("%6d|", commonMutationsCount(base.mutations, it.mutations)))
+                                    .collect(Collectors.joining())
+                    );
+                }
 
-            List<List<Mutations<NucleotideSequence>>> commonMutationsByPairs = new ArrayList<>();
-            for (int i : clonesInClique) {
-                CloneWithMutationsFromVJGermline base = clones.get(i);
-                clonesInClique.stream()
-                        .map(clones::get)
-                        .map(it -> commonMutations(base.mutations, it.mutations))
-                        .forEach(commonMutationsByPairs::add);
-            }
-            List<Mutations<NucleotideSequence>> commonMutations = commonMutationsByPairs.get(0);
-            for (List<Mutations<NucleotideSequence>> commonMutationsByPair : commonMutationsByPairs) {
-                commonMutations = commonMutationsTemp(commonMutations, commonMutationsByPair);
-            }
-            System.out.println(commonMutations.stream().mapToInt(Mutations::size).sum());
+                List<List<Mutations<NucleotideSequence>>> commonMutationsByPairs = new ArrayList<>();
+                for (int i : clonesInClique) {
+                    CloneWithMutationsFromVJGermline base = clones.get(i);
+                    clonesInClique.stream()
+                            .map(clones::get)
+                            .map(it -> commonMutations(base.mutations, it.mutations))
+                            .forEach(commonMutationsByPairs::add);
+                }
+                List<Mutations<NucleotideSequence>> commonMutations = commonMutationsByPairs.get(0);
+                for (List<Mutations<NucleotideSequence>> commonMutationsByPair : commonMutationsByPairs) {
+                    commonMutations = commonMutationsTemp(commonMutations, commonMutationsByPair);
+                }
+                System.out.println(commonMutations.stream().mapToInt(Mutations::size).sum());
 
-            System.out.println();
+                System.out.println();
+            }
         }
 
         List<CloneWithMutationsFromVJGermline> clonesNotInClusters = new ArrayList<>();
@@ -367,7 +564,7 @@ class ClusterProcessor {
     private int commonMutationsCount(List<MutationsWithRange> first, List<MutationsWithRange> second) {
         return foldByIntersection(
                 first, second,
-                (a, b, rangeInfo) -> MutationsUtils.intersection(a.getMutations(), b.getMutations(), rangeInfo).size()
+                (a, b, rangeInfo) -> intersection(a.getMutations(), b.getMutations(), rangeInfo).size()
         ).stream().mapToInt(it -> it).sum();
     }
 
@@ -389,7 +586,7 @@ class ClusterProcessor {
         MutationsBuilder<NucleotideSequence> builder = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
         foldByIntersection(
                 first, second,
-                (a, b, rangeInfo) -> MutationsUtils.intersection(a.getMutations(), b.getMutations(), rangeInfo)
+                (a, b, rangeInfo) -> intersection(a.getMutations(), b.getMutations(), rangeInfo)
         ).forEach(builder::append);
         return builder.createAndDestroy();
     }
@@ -402,7 +599,7 @@ class ClusterProcessor {
             if (firstRange == null || secondRange == null) {
                 result.add(EMPTY_NUCLEOTIDE_MUTATIONS);
             } else {
-                result.add(MutationsUtils.intersection(
+                result.add(intersection(
                         first.get(i),
                         second.get(i),
                         new RangeInfo(
@@ -417,12 +614,6 @@ class ClusterProcessor {
 
 
     private TreeWithMetaBuilder buildATree(Cluster<CloneWithMutationsFromVJGermline> cluster) {
-        // Build a tree for every cluster
-        // fix marks of VEnd and JBegin
-        // determine part between VEnd and JBegin
-        // resort by mutations count
-        // build by next neighbor
-
         RootInfo rootInfo = buildRootInfo(cluster);
 
         List<CloneWithMutationsFromReconstructedRoot> rebasedCluster = cluster.cluster.stream()
@@ -435,48 +626,19 @@ class ClusterProcessor {
         TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, SyntheticNode, MutationsDescription> treeBuilderByAncestors = new TreeBuilderByAncestors<>(
                 root,
                 (base, mutations) -> distance(mutations).add(penaltyForReversedMutations(base.getFromRootToThis(), mutations)),
-                this::mutationsBetween,
-                this::combineWith,
-                (parent, observed) -> {
-                    SyntheticNode syntheticNode = new SyntheticNode(
-                            parent.getFromRootToThis(),
-                            mutationsBetween(parent.getFromRootToThis(), observed.getMutationsFromRoot())
-                    );
-                    try {
-                        AncestorInfo ancestorInfo = ancestorInfoBuilder.buildAncestorInfo(syntheticNode.getFromRootToThis());
-                        //TODO remove
-                        if (!observed.getClone().clone.getNFeature(GeneFeature.CDR3).equals(ancestorInfo.getSequence().getRange(ancestorInfo.getCDR3Begin(), ancestorInfo.getCDR3End()))) {
-                            throw new IllegalStateException();
-                        }
-                        if (!observed.getClone().clone.getTarget(0).getSequence().equals(ancestorInfo.getSequence())) {
-                            throw new IllegalStateException();
-                        }
-                    } catch (Throwable e) {
-                        new SyntheticNode(
-                                parent.getFromRootToThis(),
-                                mutationsBetween(parent.getFromRootToThis(), observed.getMutationsFromRoot())
-                        );
-                        throw e;
-                    }
-                    return syntheticNode;
-                },
+                MutationsUtils::mutationsBetween,
+                (parent, mutations) -> SyntheticNode.createFromParentAndDiffOfParentAndChild(parent.getFromRootToThis(), mutations),
+                observed -> SyntheticNode.createFromMutations(observed.getMutationsFromRoot()),
                 this::commonMutations,
-                (parent, child) -> new SyntheticNode(
-                        parent.getFromRootToThis(),
-                        child.getFromParentToThis().withKnownNDNMutations(
+                (parent, child) -> SyntheticNode.createFromMutations(
+                        child.getFromRootToThis().withKnownNDNMutations(
                                 new MutationsWithRange(
-                                        child.getFromParentToThis().getKnownNDN().getSequence1(),
-                                        MutationsUtils.difference(
+                                        child.getFromRootToThis().getKnownNDN().getSequence1(),
+                                        MutationsUtils.concreteNDNChild(
                                                 parent.getFromRootToThis().getKnownNDN().getMutations(),
-                                                parent.getFromParentToThis().getKnownNDN().getRangeInfo(),
-                                                MutationsUtils.concreteNDNChild(
-                                                        parent.getFromRootToThis().getKnownNDN().getMutations(),
-                                                        child.getFromRootToThis().getKnownNDN().getMutations()
-                                                ),
-                                                //TODO indels
-                                                parent.getFromParentToThis().getKnownNDN().getRangeInfo()
+                                                child.getFromRootToThis().getKnownNDN().getMutations()
                                         ),
-                                        child.getFromParentToThis().getKnownNDN().getRangeInfo()
+                                        child.getFromRootToThis().getKnownNDN().getRangeInfo()
                                 )
                         )
                 ),
@@ -485,10 +647,7 @@ class ClusterProcessor {
 
         for (CloneWithMutationsFromReconstructedRoot cloneWithMutationsFromReconstructedRoot : rebasedCluster) {
             treeBuilderByAncestors.addNode(cloneWithMutationsFromReconstructedRoot);
-            System.out.println(printer.print(treeBuilderByAncestors.getTree()));
-            System.out.println(sumOfDistances(treeBuilderByAncestors));
         }
-        System.out.println();
         return new TreeWithMetaBuilder(
                 treeBuilderByAncestors,
                 rootInfo
@@ -528,49 +687,31 @@ class ClusterProcessor {
     }
 
     private SyntheticNode buildARootForATree(RootInfo rootInfo, List<CloneWithMutationsFromReconstructedRoot> rebasedCluster) {
-        MutationsDescription emptyMutations = new MutationsDescription(
+        return SyntheticNode.createRoot(
                 overlap(rebasedCluster.stream()
                         .map(clone -> clone.getMutationsFromRoot().getVMutationsWithoutCDR3().stream()
                                 .map(it -> it.getRangeInfo().getRange())
                                 .collect(Collectors.toList())
                         ).collect(Collectors.toList())
-                ).stream()
-                        .map(it -> new MutationsWithRange(VSequence1, EMPTY_NUCLEOTIDE_MUTATIONS, new RangeInfo(it, false)))
-                        .collect(Collectors.toList()),
-                new MutationsWithRange(
-                        VSequence1,
-                        EMPTY_NUCLEOTIDE_MUTATIONS,
-                        new RangeInfo(rootInfo.getVRangeInCDR3(), false)
                 ),
-                new MutationsWithRange(
-                        rootInfo.getReconstructedNDN(),
-                        EMPTY_NUCLEOTIDE_MUTATIONS,
-                        new RangeInfo(new Range(0, rootInfo.getReconstructedNDN().size()), true)
-                ),
-                new MutationsWithRange(
-                        JSequence1,
-                        EMPTY_NUCLEOTIDE_MUTATIONS,
-                        new RangeInfo(rootInfo.getJRangeInCDR3(), true)
-                ),
+                VSequence1,
+                rootInfo,
                 overlap(rebasedCluster.stream()
                         .map(clone -> clone.getMutationsFromRoot().getJMutationsWithoutCDR3().stream()
                                 .map(it -> it.getRangeInfo().getRange())
                                 .collect(Collectors.toList())
                         ).collect(Collectors.toList())
-                ).stream()
-                        .map(it -> new MutationsWithRange(JSequence1, EMPTY_NUCLEOTIDE_MUTATIONS, new RangeInfo(it, false)))
-                        .collect(Collectors.toList())
+                ),
+                JSequence1
         );
-        return new SyntheticNode(emptyMutations, emptyMutations, emptyMutations);
     }
 
     private RootInfo buildRootInfo(Cluster<CloneWithMutationsFromVJGermline> cluster) {
-        //TODO try to choose root by top clones and direction of mutations
         MutationsFromVJGermline rootBasedOn = cluster.cluster.get(0).mutations;
 
         //TODO may be just get from root?
-        Range VRangeInCDR3 = mostLikableVRangeInCDR3(cluster);
-        Range JRangeInCDR3 = mostLikableJRangeInCDR3(cluster);
+        Range VRangeInCDR3 = mostLikableRangeInCDR3(cluster, this::VRangeInCDR3);
+        Range JRangeInCDR3 = mostLikableRangeInCDR3(cluster, this::JRangeInCDR3);
 
         Range NDNRangeInKnownNDN = NDNRangeInKnownNDN(rootBasedOn, VRangeInCDR3, JRangeInCDR3);
 
@@ -682,27 +823,6 @@ class ClusterProcessor {
         return BigDecimal.valueOf((NDNPenalties * NDNScoreMultiplier + VPenalties + JPenalties) / (NDNLength + VLength + JLength));
     }
 
-    private MutationsDescription mutationsBetween(SyntheticNode first, SyntheticNode second) {
-        return mutationsBetween(first.getFromRootToThis(), second.getFromRootToThis());
-    }
-
-    private MutationsDescription mutationsBetween(MutationsDescription first, MutationsDescription second) {
-        return new MutationsDescription(
-                mutationsBetween(first.getVMutationsWithoutCDR3(), second.getVMutationsWithoutCDR3()),
-                mutationsBetween(first.getVMutationsInCDR3WithoutNDN(), second.getVMutationsInCDR3WithoutNDN()),
-                mutationsBetween(first.getKnownNDN(), second.getKnownNDN()),
-                mutationsBetween(first.getJMutationsInCDR3WithoutNDN(), second.getJMutationsInCDR3WithoutNDN()),
-                mutationsBetween(first.getJMutationsWithoutCDR3(), second.getJMutationsWithoutCDR3())
-        );
-    }
-
-    private SyntheticNode combineWith(SyntheticNode first, MutationsDescription second) {
-        return new SyntheticNode(
-                first.getFromRootToThis(),
-                second
-        );
-    }
-
     private MutationsDescription commonMutations(MutationsDescription first, MutationsDescription second) {
         return new MutationsDescription(
                 intersection(first.getVMutationsWithoutCDR3(), second.getVMutationsWithoutCDR3()),
@@ -720,11 +840,13 @@ class ClusterProcessor {
         );
     }
 
-    //TODO it is more possible to decrease length of alignment than to increase. It is important on small trees
-    private Range mostLikableVRangeInCDR3(Cluster<CloneWithMutationsFromVJGermline> cluster) {
+    //TODO it is more possible to decrease length of alignment than to increase
+    private Range mostLikableRangeInCDR3(Cluster<CloneWithMutationsFromVJGermline> cluster, Function<Clone, Range> rangeSupplier) {
         return cluster.cluster.stream()
+                .sorted(Comparator.comparing(it -> it.mutations.getVJMutationsCount()))
+                .limit(topToVoteOnNDNSize)
                 .map(clone -> clone.cloneWrapper.clone)
-                .map(this::VRangeInCDR3)
+                .map(rangeSupplier)
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
                 .entrySet().stream()
                 .max(Map.Entry.comparingByValue())
@@ -732,35 +854,16 @@ class ClusterProcessor {
                 .orElseThrow(IllegalStateException::new);
     }
 
-    //TODO it is more possible to decrease length of alignment than to increase. It is important on small trees
-    private Range mostLikableJRangeInCDR3(Cluster<CloneWithMutationsFromVJGermline> cluster) {
-        return cluster.cluster.stream()
-                .map(clone -> clone.cloneWrapper.clone)
-                .map(this::JRangeInCDR3)
-                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
-                .entrySet().stream()
-                .max(Map.Entry.comparingByValue())
-                .map(Map.Entry::getKey)
-                .orElseThrow(IllegalStateException::new);
-    }
-
-    private Range minVRangeInCDR3(Cluster<CloneWrapper> cluster) {
+    private Range minRangeInCDR3(Cluster<CloneWrapper> cluster, Function<Clone, Range> rangeSupplier) {
         return cluster.cluster.stream()
                 .map(clone -> clone.clone)
-                .map(this::VRangeInCDR3)
-                .min(Comparator.comparing(Range::length))
-                .orElseThrow(IllegalStateException::new);
-    }
-
-    private Range minJRangeInCDR3(Cluster<CloneWrapper> cluster) {
-        return cluster.cluster.stream()
-                .map(clone -> clone.clone)
-                .map(this::JRangeInCDR3)
+                .map(rangeSupplier)
                 .min(Comparator.comparing(Range::length))
                 .orElseThrow(IllegalStateException::new);
     }
 
     private Range VRangeInCDR3(Clone clone) {
+        //TODO try to use alignment to calculate most possible position
         int positionOfCDR3Begin = getVRelativePosition.apply(CDR3Begin);
         return new Range(
                 positionOfCDR3Begin,
@@ -769,6 +872,7 @@ class ClusterProcessor {
     }
 
     private Range JRangeInCDR3(Clone clone) {
+        //TODO try to use alignment to calculate most possible position
         int positionOfCDR3End = getJRelativePosition.apply(CDR3End);
         return new Range(
                 positionOfCDR3End - clone.getNFeature(new GeneFeature(JBeginTrimmed, CDR3End)).size(),
@@ -795,171 +899,6 @@ class ClusterProcessor {
         }
         result.add(new Range(currentLeft, currentRight));
         return result;
-    }
-
-    private static List<MutationsWithRange> mutationsBetween(List<MutationsWithRange> firstMutations, List<MutationsWithRange> secondMutations) {
-        return foldByIntersection(firstMutations, secondMutations, ClusterProcessor::mutationsBetween);
-    }
-
-    private static MutationsWithRange intersection(MutationsWithRange from, MutationsWithRange to) {
-        if (!from.getRangeInfo().equals(to.getRangeInfo())) {
-            throw new IllegalArgumentException();
-        }
-        return ClusterProcessor.intersection(from, to, from.getRangeInfo());
-    }
-
-    private static List<MutationsWithRange> intersection(List<MutationsWithRange> from, List<MutationsWithRange> to) {
-        return foldByIntersection(from, to, ClusterProcessor::intersection);
-    }
-
-    private static <T> List<T> foldByIntersection(
-            List<MutationsWithRange> firstMutations,
-            List<MutationsWithRange> secondMutations,
-            TriFunction<MutationsWithRange, MutationsWithRange, RangeInfo, T> folder
-    ) {
-        return firstMutations.stream()
-                .flatMap(base -> secondMutations.stream()
-                        .map(comparison -> Optional.ofNullable(base.projectedRange().intersection(comparison.getRangeInfo()))
-                                .map(it -> folder.apply(base, comparison, it)))
-                        .flatMap(Java9Util::stream)
-                )
-                .collect(Collectors.toList());
-    }
-
-    private static MutationsWithRange mutationsBetween(MutationsWithRange base, MutationsWithRange comparison, RangeInfo intersection) {
-        return new MutationsWithRange(
-                base.getMutations().mutate(base.getSequence1()),
-                MutationsUtils.difference(
-                        base.getMutations(),
-                        base.getRangeInfo(),
-                        comparison.getMutations(),
-                        comparison.getRangeInfo()
-                ),
-                intersection
-        );
-    }
-
-    static MutationsWithRange mutationsBetween(MutationsWithRange base, MutationsWithRange comparison) {
-        if (!base.getRangeInfo().getRange().equals(comparison.getRangeInfo().getRange())) {
-            throw new IllegalArgumentException();
-        }
-        return new MutationsWithRange(
-                base.getMutations().mutate(base.getSequence1()),
-                MutationsUtils.difference(
-                        base.getMutations(),
-                        base.getRangeInfo(),
-                        comparison.getMutations(),
-                        comparison.getRangeInfo()
-                ),
-                base.getRangeInfo().intersection(comparison.getRangeInfo())
-        );
-    }
-
-    private static MutationsWithRange intersection(MutationsWithRange base, MutationsWithRange comparison, RangeInfo intersection) {
-        return new MutationsWithRange(
-                base.getSequence1(),
-                MutationsUtils.intersection(
-                        base.getMutations(),
-                        comparison.getMutations(),
-                        intersection
-                ),
-                intersection
-        );
-    }
-
-    private double distanceFromTree(CloneWithMutationsFromReconstructedRoot clone, TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, SyntheticNode, MutationsDescription> treeBuilder) {
-        return treeBuilder.getTree().allNodes()
-                .map(Tree.NodeWithParent::getNode)
-                .map(node -> node.getContent().convert(it -> Optional.<SyntheticNode>empty(), Optional::of))
-                .flatMap(Java9Util::stream)
-                .map(syntheticNode -> treeBuilder.distanceFromNode(syntheticNode, clone))
-                .min(Comparator.naturalOrder())
-                .orElseThrow(IllegalArgumentException::new)
-                .doubleValue();
-    }
-
-    private double distanceFromRoot(CloneWithMutationsFromReconstructedRoot clone, TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, SyntheticNode, MutationsDescription> treeBuilder) {
-        SyntheticNode rootContent = ((TreeBuilderByAncestors.Reconstructed<CloneWithMutationsFromReconstructedRoot, SyntheticNode>) treeBuilder.getTree().getRoot().getContent())
-                .getContent();
-        return treeBuilder.distanceFromNode(rootContent, clone).doubleValue();
-    }
-
-    private FitnessFunctionParams fitnessFunctionParams(MutationsFromVJGermline first, MutationsFromVJGermline second) {
-        throw new UnsupportedOperationException();
-//        MutationsWithRange CDR3MutationsBetween = clonesRebase.NDNMutations(first.getKnownNDN(), second.getKnownNDN());
-//
-//        List<MutationsWithRange> VMutationsBetween = mutationsBetween(first.getVMutationsWithoutNDN(), second.getVMutationsWithoutNDN());
-//        double VMutationsBetweenScore = score(VMutationsBetween, VScoring);
-//
-//        List<MutationsWithRange> JMutationsBetween = mutationsBetween(first.getJMutationsWithoutNDN(), second.getJMutationsWithoutNDN());
-//        double JMutationsBetweenScore = score(JMutationsBetween, JScoring);
-//
-//        double CDR3MutationsBetweenScore = score(CDR3MutationsBetween, NDNScoring);
-//
-//        double maxScoreForFirstVJ = maxScore(first.getVMutationsWithoutNDN(), VScoring) + maxScore(first.getJMutationsWithoutNDN(), JScoring);
-//        double maxScoreForSecondVJ = maxScore(second.getVMutationsWithoutNDN(), VScoring) + maxScore(second.getJMutationsWithoutNDN(), JScoring);
-//        double maxScoreForVJ = Math.max(maxScoreForFirstVJ, maxScoreForSecondVJ);
-//        double maxScoreForNDN = Math.max(maxScore(first.getKnownNDN(), NDNScoring), maxScore(second.getKnownNDN(), NDNScoring));
-//
-//        // TODO maybe (maxScore - score) / length
-//        double normalizedDistanceFromFirstToGermline = 1 - (score(first.getVMutationsWithoutNDN(), VScoring) + score(first.getJMutationsWithoutNDN(), JScoring)) / maxScoreForFirstVJ;
-//        double normalizedDistanceFromSecondToGermline = 1 - (score(second.getVMutationsWithoutNDN(), VScoring) + score(second.getJMutationsWithoutNDN(), JScoring)) / maxScoreForSecondVJ;
-//        double normalizedDistanceBetweenClones = 1 - (VMutationsBetweenScore + JMutationsBetweenScore + CDR3MutationsBetweenScore) /
-//                (maxScoreForVJ + maxScoreForNDN);
-//        double normalizedDistanceBetweenClonesInNDN = 1 - (CDR3MutationsBetweenScore) / maxScoreForNDN;
-//        double normalizedDistanceBetweenClonesWithoutNDN = 1 - (VMutationsBetweenScore + JMutationsBetweenScore) / (maxScoreForVJ + maxScoreForNDN);
-//
-//        return new FitnessFunctionParams(
-//                normalizedDistanceBetweenClonesInNDN,
-//                normalizedDistanceBetweenClones,
-//                normalizedDistanceBetweenClonesWithoutNDN,
-//                normalizedDistanceFromFirstToGermline,
-//                normalizedDistanceFromSecondToGermline,
-//                Math.min(normalizedDistanceFromFirstToGermline, normalizedDistanceFromSecondToGermline)
-//        );
-    }
-
-    //TODO duplicated code
-    private FitnessFunctionParams fitnessFunctionParams(MutationsDescription first, MutationsDescription second) {
-        throw new UnsupportedOperationException();
-//        MutationsWithRange CDR3MutationsBetween = mutationsBetween(first.getKnownNDN(), second.getKnownNDN());
-//
-//        List<MutationsWithRange> VMutationsBetween = mutationsBetween(first.getVMutationsWithoutNDN(), second.getVMutationsWithoutNDN());
-//        double VMutationsBetweenScore = score(VMutationsBetween, VScoring);
-//
-//        List<MutationsWithRange> JMutationsBetween = mutationsBetween(first.getJMutationsWithoutNDN(), second.getJMutationsWithoutNDN());
-//        double JMutationsBetweenScore = score(JMutationsBetween, JScoring);
-//
-//        double CDR3MutationsBetweenScore = score(CDR3MutationsBetween, NDNScoring);
-//
-//        double maxScoreForFirstVJ = maxScore(first.getVMutationsWithoutNDN(), VScoring) + maxScore(first.getJMutationsWithoutNDN(), JScoring);
-//        double maxScoreForSecondVJ = maxScore(second.getVMutationsWithoutNDN(), VScoring) + maxScore(second.getJMutationsWithoutNDN(), JScoring);
-//        double maxScoreForVJ = Math.max(maxScoreForFirstVJ, maxScoreForSecondVJ);
-//        double maxScoreForCDR3 = Math.max(maxScore(first.getKnownNDN(), NDNScoring), maxScore(second.getKnownNDN(), NDNScoring));
-//
-//
-//        // TODO maybe (maxScore - score) / length
-//        double normalizedDistanceFromFirstToGermline = 1 - (score(first.getVMutationsWithoutNDN(), VScoring) + score(first.getJMutationsWithoutNDN(), JScoring)) / maxScoreForFirstVJ;
-//        double normalizedDistanceFromSecondToGermline = 1 - (score(second.getVMutationsWithoutNDN(), VScoring) + score(second.getJMutationsWithoutNDN(), JScoring)) / maxScoreForSecondVJ;
-//        double normalizedDistanceBetweenClones = 1 - (VMutationsBetweenScore + JMutationsBetweenScore + CDR3MutationsBetweenScore) /
-//                (maxScoreForVJ + maxScoreForCDR3);
-//        double normalizedDistanceBetweenClonesInNDN = 1 - (CDR3MutationsBetweenScore) / maxScoreForCDR3;
-//        double normalizedDistanceBetweenClonesWithoutNDN = 1 - (VMutationsBetweenScore + JMutationsBetweenScore) / (maxScoreForVJ + maxScoreForCDR3);
-//
-//        return new FitnessFunctionParams(
-//                normalizedDistanceBetweenClonesInNDN,
-//                normalizedDistanceBetweenClones,
-//                normalizedDistanceBetweenClonesWithoutNDN,
-//                normalizedDistanceFromFirstToGermline,
-//                normalizedDistanceFromSecondToGermline,
-//                Math.min(normalizedDistanceFromFirstToGermline, normalizedDistanceFromSecondToGermline)
-//        );
-    }
-
-    private double fitnessFunction(FitnessFunctionParams params) {
-        //TODO move constants to params
-        return Math.pow(params.distanceBetweenClonesWithoutNDN, 1.0) +
-                4 * Math.pow(params.distanceBetweenClonesInNDN, 1.0) * Math.pow(params.minDistanceToGermline - 1, 6.0);
     }
 
     /**
@@ -990,18 +929,16 @@ class ClusterProcessor {
     }
 
     private static int maxScore(NucleotideSequence sequence, AlignmentScoring<NucleotideSequence> scoring) {
-        //TODO modify score to get the same result
         return sequence.size() * scoring.getMaximalMatchScore();
-//        return AlignmentUtils.calculateScore(
-//                sequence,
-//                EMPTY_NUCLEOTIDE_MUTATIONS,
-//                scoring
-//        );
     }
 
     private static class TreeWithMetaBuilder {
         private final TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, SyntheticNode, MutationsDescription> treeBuilder;
         private final RootInfo rootInfo;
+
+        public TreeWithMetaBuilder copy() {
+            return new TreeWithMetaBuilder(treeBuilder.copy(), rootInfo);
+        }
 
         public TreeWithMetaBuilder(
                 TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, SyntheticNode, MutationsDescription> treeBuilder,

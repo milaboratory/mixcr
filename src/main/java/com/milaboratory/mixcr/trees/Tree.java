@@ -34,6 +34,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -48,6 +49,10 @@ public class Tree<T> {
 
     public Node<T> getRoot() {
         return root;
+    }
+
+    public Tree<T> copy() {
+        return new Tree<>(root);
     }
 
     public Stream<NodeWithParent<T>> allNodes() {
@@ -73,6 +78,13 @@ public class Tree<T> {
         protected Node(T content, List<NodeLink<T>> children) {
             this.content = content;
             this.children = children;
+        }
+
+        public Node<T> copy() {
+            List<NodeLink<T>> childrenCopy = this.children.stream()
+                    .map(it -> new NodeLink<>(it.getNode().copy(), it.getDistance()))
+                    .collect(Collectors.toList());
+            return new Node<>(content, childrenCopy);
         }
 
         public List<NodeLink<T>> getLinks() {

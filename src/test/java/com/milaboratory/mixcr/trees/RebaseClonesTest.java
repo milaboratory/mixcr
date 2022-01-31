@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.common.primitives.Bytes;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
+import com.milaboratory.core.alignment.Aligner;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import org.apache.commons.math3.util.Pair;
@@ -25,6 +26,28 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 public class RebaseClonesTest {
+    @Ignore
+    @Test
+    public void randomizedTestForRebaseMutations() {
+        int numberOfRuns = 1_000_000;
+        List<Long> failedSeeds = IntStream.range(0, numberOfRuns)
+                .mapToObj(it -> ThreadLocalRandom.current().nextLong())
+                .parallel()
+                .filter(seed -> testRebaseMutations(seed, false))
+                .collect(Collectors.toList());
+
+        System.out.println("failed: " + failedSeeds.size());
+        assertEquals(Collections.emptyList(), failedSeeds);
+    }
+
+    @Test
+    public void reproduceRebaseMutations() {
+        assertFalse(testRebaseMutations(2717362330381213098L, true));
+        assertFalse(testRebaseMutations(-7736026003531838642L, true));
+        assertFalse(testRebaseMutations(-2276640640846890955L, true));
+        assertFalse(testRebaseMutations(-4625731613403327929L, true));
+    }
+
     @Ignore
     @Test
     public void randomizedTestForRebaseClone() {
@@ -68,6 +91,119 @@ public class RebaseClonesTest {
         assertFalse(testRebaseClone(5492150036748141135L, true));
         assertFalse(testRebaseClone(8053975088522559753L, true));
         assertFalse(testRebaseClone(8812578697731451467L, true));
+    }
+
+    private boolean testRebaseMutations(long seed, boolean print) {
+        try {
+            Random random = new Random(seed);
+
+            NucleotideSequence VSequence = generate(random, 50 + random.nextInt(50));
+            Range VRangeBeforeCDR3Begin = new Range(0, 10 + random.nextInt(10)).move(10 + random.nextInt(5));
+            Range VRangeAfterCDR3Begin = new Range(0, random.nextInt(5)).move(VRangeBeforeCDR3Begin.getUpper());
+
+            NucleotideSequence JSequence = generate(random, 50 + random.nextInt(50));
+            Range JRangeBeforeCDR3End = new Range(0, random.nextInt(5)).move(10 + random.nextInt(5));
+            Range JRangeAfterCDR3End = new Range(0, 10 + random.nextInt(10)).move(JRangeBeforeCDR3End.getUpper());
+
+            Range VRange = new Range(VRangeBeforeCDR3Begin.getLower(), VRangeAfterCDR3Begin.getUpper());
+            Mutations<NucleotideSequence> VMutations = generateMutations(VSequence, random, VRange);
+
+            Range JRange = new Range(JRangeBeforeCDR3End.getLower(), JRangeAfterCDR3End.getUpper());
+            Mutations<NucleotideSequence> JMutations = generateMutations(JSequence, random, JRange);
+
+            NucleotideSequence NDN = generate(random, 10 + random.nextInt(10));
+
+            RootInfo originalRootInfo = new RootInfo(
+                    VRangeAfterCDR3Begin,
+                    generate(random, NDN.size() - 3 + random.nextInt(6)),
+                    JRangeAfterCDR3End
+            );
+
+            MutationsDescription original = new MutationsDescription(
+                    Lists.newArrayList(
+                            new MutationsWithRange(
+                                    VSequence,
+                                    VMutations,
+                                    new RangeInfo(VRangeBeforeCDR3Begin, true)
+                            )
+                    ),
+                    new MutationsWithRange(
+                            VSequence,
+                            VMutations,
+                            new RangeInfo(originalRootInfo.getVRangeInCDR3(), false)
+                    ),
+                    new MutationsWithRange(
+                            originalRootInfo.getReconstructedNDN(),
+                            Aligner.alignGlobal(
+                                    AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
+                                    originalRootInfo.getReconstructedNDN(),
+                                    NDN
+                            ).getAbsoluteMutations(),
+                            new RangeInfo(new Range(0, originalRootInfo.getReconstructedNDN().size()), true)
+                    ),
+                    new MutationsWithRange(
+                            JSequence,
+                            JMutations,
+                            new RangeInfo(originalRootInfo.getJRangeInCDR3(), false)
+                    ),
+                    Lists.newArrayList(
+                            new MutationsWithRange(
+                                    JSequence,
+                                    JMutations,
+                                    new RangeInfo(JRangeAfterCDR3End, true)
+                            )
+                    )
+            );
+
+            ClonesRebase clonesRebase = new ClonesRebase(VSequence, AffineGapAlignmentScoring.getNucleotideBLASTScoring(), MutationsUtils.NDNScoring(), JSequence, AffineGapAlignmentScoring.getNucleotideBLASTScoring());
+            int VBorderExpand = -2 + random.nextInt(4);
+            if (originalRootInfo.getVRangeInCDR3().length() + VBorderExpand < 0) {
+                VBorderExpand = originalRootInfo.getVRangeInCDR3().length();
+            }
+            int JBorderExpand = -2 + random.nextInt(4);
+            if (originalRootInfo.getJRangeInCDR3().length() + JBorderExpand < 0) {
+                JBorderExpand = originalRootInfo.getJRangeInCDR3().length();
+            }
+            RootInfo rebaseToRootInfo = new RootInfo(
+                    originalRootInfo.getVRangeInCDR3().expand(0, VBorderExpand),
+                    generate(random, originalRootInfo.getReconstructedNDN().size() - VBorderExpand - JBorderExpand),
+                    originalRootInfo.getJRangeInCDR3().expand(JBorderExpand, 0)
+            );
+
+            MutationsDescription result = clonesRebase.rebaseMutations(original, originalRootInfo, rebaseToRootInfo);
+
+            if (print) {
+                System.out.println(" original rootInfo: " + originalRootInfo);
+                System.out.println("rebase to rootInfo: " + rebaseToRootInfo);
+                System.out.println("original CDR3: " + original.getVMutationsInCDR3WithoutNDN().buildSequence() + " " + original.getKnownNDN().buildSequence() + " " + original.getJMutationsInCDR3WithoutNDN().buildSequence());
+                System.out.println("  result CDR3: " + result.getVMutationsInCDR3WithoutNDN().buildSequence() + " " + result.getKnownNDN().buildSequence() + " " + result.getJMutationsInCDR3WithoutNDN().buildSequence());
+            }
+            assertEquals(buildSequences(original.getVMutationsWithoutCDR3()), buildSequences(result.getVMutationsWithoutCDR3()));
+            assertEquals(buildCDR3(original), buildCDR3(result));
+            assertEquals(buildSequences(original.getJMutationsWithoutCDR3()), buildSequences(result.getJMutationsWithoutCDR3()));
+            assertEquals(rebaseToRootInfo.getVRangeInCDR3(), result.getVMutationsInCDR3WithoutNDN().getRangeInfo().getRange());
+//            assertEquals(rebaseToRootInfo.getReconstructedNDN(), result.getKnownNDN().getSequence1());
+            assertEquals(rebaseToRootInfo.getJRangeInCDR3(), result.getJMutationsInCDR3WithoutNDN().getRangeInfo().getRange());
+
+            return false;
+        } catch (Throwable e) {
+            if (print) {
+                e.printStackTrace();
+            }
+            return true;
+        }
+    }
+
+    private NucleotideSequence buildCDR3(MutationsDescription original) {
+        return original.getVMutationsInCDR3WithoutNDN().buildSequence()
+                .concatenate(original.getKnownNDN().buildSequence())
+                .concatenate(original.getJMutationsInCDR3WithoutNDN().buildSequence());
+    }
+
+    private NucleotideSequence buildSequences(List<MutationsWithRange> mutations) {
+        return mutations.stream()
+                .map(MutationsWithRange::buildSequence)
+                .reduce(NucleotideSequence.EMPTY, NucleotideSequence::concatenate);
     }
 
     private boolean testRebaseClone(long seed, boolean print) {
@@ -162,7 +298,7 @@ public class RebaseClonesTest {
                     )
             );
 
-            CloneWithMutationsFromReconstructedRoot rebasedClone = new ClonesRebase(VSequence, JSequence, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
+            CloneWithMutationsFromReconstructedRoot rebasedClone = new ClonesRebase(VSequence, AffineGapAlignmentScoring.getNucleotideBLASTScoring(), AffineGapAlignmentScoring.getNucleotideBLASTScoring(), JSequence, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
                     .rebaseClone(rootInfo, mutationsFromVJGermline, new CloneWrapper(null, 0));
 
             AncestorInfoBuilder ancestorInfoBuilder = new AncestorInfoBuilder();

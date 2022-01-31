@@ -6,16 +6,27 @@ import com.milaboratory.core.alignment.Aligner;
 import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.core.sequence.SequenceBuilder;
 
 class ClonesRebase {
     private final NucleotideSequence VSequence1;
-    private final NucleotideSequence JSequence1;
+    private final AlignmentScoring<NucleotideSequence> VScoring;
     private final AlignmentScoring<NucleotideSequence> NDNScoring;
+    private final NucleotideSequence JSequence1;
+    private final AlignmentScoring<NucleotideSequence> JScoring;
 
-    ClonesRebase(NucleotideSequence VSequence1, NucleotideSequence JSequence1, AlignmentScoring<NucleotideSequence> NDNScoring) {
+    ClonesRebase(
+            NucleotideSequence VSequence1,
+            AlignmentScoring<NucleotideSequence> VScoring,
+            AlignmentScoring<NucleotideSequence> NDNScoring,
+            NucleotideSequence JSequence1,
+            AlignmentScoring<NucleotideSequence> JScoring
+    ) {
         this.VSequence1 = VSequence1;
+        this.VScoring = VScoring;
         this.JSequence1 = JSequence1;
         this.NDNScoring = NDNScoring;
+        this.JScoring = JScoring;
     }
 
     CloneWithMutationsFromReconstructedRoot rebaseClone(RootInfo rootInfo, MutationsFromVJGermline mutationsFromVJGermline, CloneWrapper cloneWrapper) {
@@ -95,184 +106,109 @@ class ClonesRebase {
         return new CloneWithMutationsFromReconstructedRoot(mutations, mutationsFromVJGermline, cloneWrapper);
     }
 
-    //TODO test with randomized test
     MutationsDescription rebaseMutations(
-            MutationsDescription originalRoot,
-            RootInfo originalRootInfo,
+            MutationsDescription originalNode,
+            RootInfo originalRoot,
             RootInfo rebaseTo
     ) {
-        throw new UnsupportedOperationException();
-//        NucleotideSequence originalKnownNDN = originalRoot.getKnownNDN().buildSequence();
-//        List<MutationsWithRange> VMutationsWithoutNDN;
-//        if (originalRootInfo.getVRangeInCDR3().length() < rebaseTo.getVRangeInCDR3().length()) {
-//            VMutationsWithoutNDN = new ArrayList<>(originalRoot.getVMutationsWithoutNDN());
-//            Range difference = new Range(originalRootInfo.getVRangeInCDR3().getUpper(), rebaseTo.getVRangeInCDR3().getUpper());
-//
-//            Mutations<NucleotideSequence> absoluteMutations = Aligner.alignGlobal(
-//                    AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-//                    VSequence1,
-//                    originalKnownNDN,
-//                    difference.getLower(),
-//                    difference.length(),
-//                    0,
-//                    difference.length()
-//            ).getAbsoluteMutations();
-//            VMutationsWithoutNDN.add(new MutationsWithRange(
-//                    VSequence1,
-//                    absoluteMutations,
-//                    difference,
-//                    true, true
-//            ));
-//        } else if (originalRootInfo.getVRangeInCDR3().length() == rebaseTo.getVRangeInCDR3().length()) {
-//            VMutationsWithoutNDN = originalRoot.getVMutationsWithoutNDN();
-//        } else {
-//            VMutationsWithoutNDN = originalRoot.getVMutationsWithoutNDN().stream()
-//                    .flatMap(mutations -> {
-//                        Range intersection = mutations.getSequence1Range().intersection(new Range(0, rebaseTo.getVRangeInCDR3().getUpper()));
-//                        if (intersection == null) {
-//                            return Stream.empty();
-//                        } else {
-//                            boolean includeLastInserts;
-//                            if (intersection.getUpper() == mutations.getSequence1Range().getUpper()) {
-//                                includeLastInserts = mutations.isIncludeLastMutations();
-//                            } else {
-//                                includeLastInserts = true;
-//                            }
-//                            return Stream.of(new MutationsWithRange(
-//                                    mutations.getSequence1(),
-//                                    mutations.getMutations(),
-//                                    intersection,
-//                                    true,
-//                                    includeLastInserts
-//                            ));
-//                        }
-//                    })
-//                    .collect(Collectors.toList());
-//        }
-//        List<MutationsWithRange> JMutationsWithoutNDN;
-//        if (originalRootInfo.getJRangeInCDR3().length() < rebaseTo.getJRangeInCDR3().length()) {
-//            JMutationsWithoutNDN = new ArrayList<>(originalRoot.getJMutationsWithoutNDN());
-//            Range difference = new Range(rebaseTo.getJRangeInCDR3().getLower(), originalRootInfo.getJRangeInCDR3().getLower());
-//
-//            Mutations<NucleotideSequence> absoluteMutations = Aligner.alignGlobal(
-//                    AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-//                    JSequence1,
-//                    originalKnownNDN,
-//                    difference.getLower(),
-//                    difference.length(),
-//                    originalKnownNDN.size() - difference.length(),
-//                    difference.length()
-//            ).getAbsoluteMutations();
-//            JMutationsWithoutNDN.add(0, new MutationsWithRange(
-//                    JSequence1,
-//                    absoluteMutations,
-//                    difference,
-//                    true,
-//                    true
-//            ));
-//        } else if (originalRootInfo.getJRangeInCDR3().length() == rebaseTo.getJRangeInCDR3().length()) {
-//            JMutationsWithoutNDN = originalRoot.getJMutationsWithoutNDN();
-//        } else {
-//            JMutationsWithoutNDN = originalRoot.getJMutationsWithoutNDN().stream()
-//                    .flatMap(mutations -> {
-//                        Range intersection = mutations.getSequence1Range().intersection(new Range(rebaseTo.getJRangeInCDR3().getLower(), JSequence1.size()));
-//                        if (intersection == null) {
-//                            return Stream.empty();
-//                        } else {
-//                            boolean includeLastInserts;
-//                            if (intersection.getUpper() == mutations.getSequence1Range().getUpper()) {
-//                                includeLastInserts = mutations.isIncludeLastMutations();
-//                            } else {
-//                                includeLastInserts = true;
-//                            }
-//                            return Stream.of(new MutationsWithRange(
-//                                    mutations.getSequence1(),
-//                                    mutations.getMutations(),
-//                                    intersection,
-//                                    true,
-//                                    includeLastInserts
-//                            ));
-//                        }
-//                    })
-//                    .collect(Collectors.toList());
-//        }
-//
-//        SequenceBuilder<NucleotideSequence> knownNDNBuilder = NucleotideSequence.ALPHABET.createBuilder();
-//        if (originalRootInfo.getVRangeInCDR3().length() > rebaseTo.getVRangeInCDR3().length()) {
-//            Range rangeToAdd = new Range(rebaseTo.getVRangeInCDR3().getUpper(), originalRootInfo.getVRangeInCDR3().getUpper());
-//            originalRoot.getVMutationsWithoutNDN().stream()
-//                    .map(mutations -> {
-//                        Range intersection = mutations.getSequence1Range().intersection(rangeToAdd);
-//                        if (intersection == null) {
-//                            return Optional.<NucleotideSequence>empty();
-//                        } else {
-//                            return Optional.of(
-//                                    new MutationsWithRange(
-//                                            mutations.getSequence1(),
-//                                            mutations.getMutations(),
-//                                            intersection,
-//                                            true,
-//                                            true
-//                                    ).buildSequence()
-//                            );
-//                        }
-//                    })
-//                    .flatMap(Java9Util::stream)
-//                    .forEach(knownNDNBuilder::append);
-//        }
-//
-//        knownNDNBuilder.append(originalKnownNDN.getRange(
-//                Math.max(0, rebaseTo.getVRangeInCDR3().length() - originalRootInfo.getVRangeInCDR3().length()),
-//                originalKnownNDN.size() - Math.max(0, rebaseTo.getJRangeInCDR3().length() - originalRootInfo.getJRangeInCDR3().length())
-//        ));
-//
-//        if (originalRootInfo.getJRangeInCDR3().length() > rebaseTo.getJRangeInCDR3().length()) {
-//            Range rangeToAdd = new Range(originalRootInfo.getJRangeInCDR3().getLower(), rebaseTo.getJRangeInCDR3().getLower());
-//            originalRoot.getJMutationsWithoutNDN().stream()
-//                    .map(mutations -> {
-//                        Range intersection = mutations.getSequence1Range().intersection(rangeToAdd);
-//                        if (intersection == null) {
-//                            return Optional.<NucleotideSequence>empty();
-//                        } else {
-//                            return Optional.of(
-//                                    new MutationsWithRange(
-//                                            mutations.getSequence1(),
-//                                            mutations.getMutations(),
-//                                            intersection,
-//                                            true,
-//                                            true
-//                                    ).buildSequence()
-//                            );
-//                        }
-//                    })
-//                    .flatMap(Java9Util::stream)
-//                    .forEach(knownNDNBuilder::append);
-//        }
-//
-//        NucleotideSequence rebasedKnownNDN = knownNDNBuilder
-//                .createAndDestroy();
-//        MutationsDescription result = new MutationsDescription(
-//                VMutationsWithoutNDN,
-//                NDNMutations(rebaseTo.getReconstructedNDN(), rebasedKnownNDN),
-//                JMutationsWithoutNDN
-//        );
-//        //TODO remove after testing on more data
-////        if (result.getVMutationsWithoutNDN().stream().mapToInt(it -> it.getSequence1Range().getUpper()).max().getAsInt() != rebaseTo.getVRangeInCDR3().getUpper()) {
-////            throw new IllegalArgumentException();
-////        }
-////        if (result.getJMutationsWithoutNDN().stream().mapToInt(it -> it.getSequence1Range().getLower()).min().getAsInt() != rebaseTo.getJRangeInCDR3().getLower()) {
-////            throw new IllegalArgumentException();
-////        }
-////        AncestorInfo resultAncestorInfo = ancestorInfoBuilder.buildAncestorInfo(result);
-////        AncestorInfo originalAncestorInfo = ancestorInfoBuilder.buildAncestorInfo(originalRoot);
-////        if (!resultAncestorInfo.getSequence().equals(originalAncestorInfo.getSequence())) {
-////            throw new IllegalArgumentException();
-////        }
-////        if (!resultAncestorInfo.getSequence().getRange(resultAncestorInfo.getCDR3Begin(), resultAncestorInfo.getCDR3End())
-////                .equals(originalAncestorInfo.getSequence().getRange(originalAncestorInfo.getCDR3Begin(), originalAncestorInfo.getCDR3End()))) {
-////            throw new IllegalArgumentException();
-////        }
-//        return result;
+        NucleotideSequence originalKnownNDN = originalNode.getKnownNDN().buildSequence();
+        MutationsWithRange VMutationsInCDR3WithoutNDN;
+        if (originalRoot.getVRangeInCDR3().length() < rebaseTo.getVRangeInCDR3().length()) {
+            Range difference = new Range(originalRoot.getVRangeInCDR3().getUpper(), rebaseTo.getVRangeInCDR3().getUpper());
+            VMutationsInCDR3WithoutNDN = originalNode.getVMutationsInCDR3WithoutNDN()
+                    .combineWithMutationsToTheRight(
+                            Aligner.alignGlobal(
+                                    VScoring,
+                                    VSequence1,
+                                    originalKnownNDN,
+                                    difference.getLower(),
+                                    difference.length(),
+                                    0,
+                                    difference.length()
+                            ).getAbsoluteMutations(),
+                            difference
+                    );
+        } else if (rebaseTo.getVRangeInCDR3().length() < originalRoot.getVRangeInCDR3().length()) {
+            VMutationsInCDR3WithoutNDN = new MutationsWithRange(
+                    VSequence1,
+                    originalNode.getVMutationsInCDR3WithoutNDN().getMutations(),
+                    new RangeInfo(
+                            rebaseTo.getVRangeInCDR3(),
+                            false
+                    )
+            );
+        } else {
+            VMutationsInCDR3WithoutNDN = originalNode.getVMutationsInCDR3WithoutNDN();
+        }
+
+        SequenceBuilder<NucleotideSequence> knownNDNBuilder = NucleotideSequence.ALPHABET.createBuilder();
+
+        if (rebaseTo.getVRangeInCDR3().length() < originalRoot.getVRangeInCDR3().length()) {
+            knownNDNBuilder.append(MutationsUtils.buildSequence(
+                    VSequence1,
+                    originalNode.getVMutationsInCDR3WithoutNDN().getMutations(),
+                    new RangeInfo(
+                            new Range(rebaseTo.getVRangeInCDR3().getUpper(), originalRoot.getVRangeInCDR3().getUpper()),
+                            false
+                    )
+            ));
+        }
+
+        knownNDNBuilder.append(originalKnownNDN.getRange(
+                Math.max(0, rebaseTo.getVRangeInCDR3().length() - originalRoot.getVRangeInCDR3().length()),
+                originalKnownNDN.size() - Math.max(0, rebaseTo.getJRangeInCDR3().length() - originalRoot.getJRangeInCDR3().length())
+        ));
+
+        if (rebaseTo.getJRangeInCDR3().length() < originalRoot.getJRangeInCDR3().length()) {
+            knownNDNBuilder.append(MutationsUtils.buildSequence(
+                    JSequence1,
+                    originalNode.getJMutationsInCDR3WithoutNDN().getMutations(),
+                    new RangeInfo(
+                            new Range(originalRoot.getJRangeInCDR3().getLower(), rebaseTo.getJRangeInCDR3().getLower()),
+                            false
+                    )
+            ));
+        }
+
+        NucleotideSequence rebasedKnownNDN = knownNDNBuilder.createAndDestroy();
+
+        MutationsWithRange JMutationsInCDR3WithoutNDN;
+        if (originalRoot.getJRangeInCDR3().length() < rebaseTo.getJRangeInCDR3().length()) {
+            Range difference = new Range(rebaseTo.getJRangeInCDR3().getLower(), originalRoot.getJRangeInCDR3().getLower());
+            JMutationsInCDR3WithoutNDN = originalNode.getJMutationsInCDR3WithoutNDN()
+                    .combineWithMutationsToTheLeft(
+                            Aligner.alignGlobal(
+                                    JScoring,
+                                    JSequence1,
+                                    originalKnownNDN,
+                                    difference.getLower(),
+                                    difference.length(),
+                                    originalKnownNDN.size() - difference.length(),
+                                    difference.length()
+                            ).getAbsoluteMutations(),
+                            difference
+                    );
+        } else if (rebaseTo.getJRangeInCDR3().length() < originalRoot.getJRangeInCDR3().length()) {
+            JMutationsInCDR3WithoutNDN = new MutationsWithRange(
+                    JSequence1,
+                    originalNode.getJMutationsInCDR3WithoutNDN().getMutations(),
+                    new RangeInfo(
+                            rebaseTo.getJRangeInCDR3(),
+                            false
+                    )
+            );
+        } else {
+            JMutationsInCDR3WithoutNDN = originalNode.getJMutationsInCDR3WithoutNDN();
+        }
+
+
+        return new MutationsDescription(
+                originalNode.getVMutationsWithoutCDR3(),
+                VMutationsInCDR3WithoutNDN,
+                NDNMutations(rebaseTo.getReconstructedNDN(), rebasedKnownNDN),
+                JMutationsInCDR3WithoutNDN,
+                originalNode.getJMutationsWithoutCDR3()
+        );
     }
 
 

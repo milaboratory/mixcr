@@ -14,6 +14,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static com.milaboratory.mixcr.trees.MutationsUtils.mutationsBetween;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -35,7 +36,7 @@ public class CalculationOfMutationsDifferenceTest {
                 new RangeInfo(new Range(0, grand_.size()), true)
         );
         assertEquals(child_, fromGrandToChild.buildSequence());
-        MutationsWithRange result = ClusterProcessor.mutationsBetween(fromGrandToParent, fromGrandToChild);
+        MutationsWithRange result = mutationsBetween(fromGrandToParent, fromGrandToChild);
         assertEquals(child_, result.buildSequence());
     }
 
@@ -56,7 +57,7 @@ public class CalculationOfMutationsDifferenceTest {
                 new RangeInfo(new Range(0, grand_.size()), false)
         );
         assertEquals(child_, fromGrandToChild.buildSequence());
-        MutationsWithRange result = ClusterProcessor.mutationsBetween(fromGrandToParent, fromGrandToChild);
+        MutationsWithRange result = mutationsBetween(fromGrandToParent, fromGrandToChild);
         assertEquals(child_, result.buildSequence());
     }
 
@@ -77,7 +78,7 @@ public class CalculationOfMutationsDifferenceTest {
                 new RangeInfo(new Range(0, grand_.size()), false)
         );
         assertEquals(child_, fromGrandToChild.buildSequence());
-        MutationsWithRange result = ClusterProcessor.mutationsBetween(fromGrandToParent, fromGrandToChild);
+        MutationsWithRange result = mutationsBetween(fromGrandToParent, fromGrandToChild);
         assertEquals(child_, result.buildSequence());
     }
 
@@ -98,7 +99,7 @@ public class CalculationOfMutationsDifferenceTest {
                 new RangeInfo(new Range(0, grand_.size()), false)
         );
         assertEquals(child_, fromGrandToChild.buildSequence());
-        MutationsWithRange result = ClusterProcessor.mutationsBetween(fromGrandToParent, fromGrandToChild);
+        MutationsWithRange result = mutationsBetween(fromGrandToParent, fromGrandToChild);
         assertEquals(child_, result.buildSequence());
     }
 
@@ -119,7 +120,7 @@ public class CalculationOfMutationsDifferenceTest {
                 new RangeInfo(new Range(0, grand_.size()), false)
         );
         assertEquals(child_, fromGrandToChild.buildSequence());
-        MutationsWithRange result = ClusterProcessor.mutationsBetween(fromGrandToParent, fromGrandToChild);
+        MutationsWithRange result = mutationsBetween(fromGrandToParent, fromGrandToChild);
         assertEquals(child_, result.buildSequence());
     }
 
@@ -140,7 +141,7 @@ public class CalculationOfMutationsDifferenceTest {
                 new RangeInfo(new Range(1, grand_.size()), false)
         );
         assertEquals(child_, fromGrandToChild.buildSequence());
-        MutationsWithRange result = ClusterProcessor.mutationsBetween(fromGrandToParent, fromGrandToChild);
+        MutationsWithRange result = mutationsBetween(fromGrandToParent, fromGrandToChild);
         assertEquals(child_, result.buildSequence());
     }
 
@@ -161,7 +162,7 @@ public class CalculationOfMutationsDifferenceTest {
                 new RangeInfo(new Range(1, 4), false)
         );
         assertEquals(child_, fromGrandToChild.buildSequence());
-        MutationsWithRange result = ClusterProcessor.mutationsBetween(fromGrandToParent, fromGrandToChild);
+        MutationsWithRange result = mutationsBetween(fromGrandToParent, fromGrandToChild);
         assertEquals(child_, result.buildSequence());
     }
 
@@ -211,7 +212,7 @@ public class CalculationOfMutationsDifferenceTest {
                 System.out.println("from grand to child range info: " + fromGrandToChild.getRangeInfo());
                 System.out.println();
             }
-            MutationsWithRange result = ClusterProcessor.mutationsBetween(fromGrandToParent, fromGrandToChild);
+            MutationsWithRange result = mutationsBetween(fromGrandToParent, fromGrandToChild);
             if (print) {
                 System.out.println("result: " + result.getMutations());
                 System.out.println("result range info: " + result.getRangeInfo());

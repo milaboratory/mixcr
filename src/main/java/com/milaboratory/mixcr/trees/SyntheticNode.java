@@ -1,5 +1,6 @@
 package com.milaboratory.mixcr.trees;
 
+import com.milaboratory.core.Range;
 import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.sequence.NucleotideSequence;
 
@@ -7,13 +8,21 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS;
+
 class SyntheticNode {
-    private final MutationsDescription fromRootToParent;
-    private final MutationsDescription fromParentToThis;
     private final MutationsDescription fromRootToThis;
 
-    public SyntheticNode(MutationsDescription fromRootToParent, MutationsDescription fromParentToThis) {
-        this(fromRootToParent, fromParentToThis, new MutationsDescription(
+    private SyntheticNode(MutationsDescription fromRootToThis) {
+        this.fromRootToThis = fromRootToThis;
+    }
+
+    public static SyntheticNode createFromMutations(MutationsDescription fromRootToThis) {
+        return new SyntheticNode(fromRootToThis);
+    }
+
+    public static SyntheticNode createFromParentAndDiffOfParentAndChild(MutationsDescription fromRootToParent, MutationsDescription fromParentToThis) {
+        return new SyntheticNode(new MutationsDescription(
                 combine(fromRootToParent.getVMutationsWithoutCDR3(), fromParentToThis.getVMutationsWithoutCDR3()),
                 fromRootToParent.getVMutationsInCDR3WithoutNDN().combineWithMutations(fromParentToThis.getVMutationsInCDR3WithoutNDN().getMutations()),
                 fromRootToParent.getKnownNDN().combineWithMutations(fromParentToThis.getKnownNDN().getMutations()),
@@ -22,18 +31,33 @@ class SyntheticNode {
         ));
     }
 
-    public SyntheticNode(MutationsDescription fromRootToParent, MutationsDescription fromParentToThis, MutationsDescription fromRootToThis) {
-        this.fromRootToParent = fromRootToParent;
-        this.fromParentToThis = fromParentToThis;
-        this.fromRootToThis = fromRootToThis;
-    }
+    public static SyntheticNode createRoot(List<Range> VRanges, NucleotideSequence VSequence1, RootInfo rootInfo, List<Range> JRanges, NucleotideSequence JSequence1) {
+        MutationsDescription emptyMutations = new MutationsDescription(
+                VRanges.stream()
+                        //TODO includeFirstInserts for first range
+                        .map(it -> new MutationsWithRange(VSequence1, EMPTY_NUCLEOTIDE_MUTATIONS, new RangeInfo(it, false)))
+                        .collect(Collectors.toList()),
+                new MutationsWithRange(
+                        VSequence1,
+                        EMPTY_NUCLEOTIDE_MUTATIONS,
+                        new RangeInfo(rootInfo.getVRangeInCDR3(), false)
+                ),
+                new MutationsWithRange(
+                        rootInfo.getReconstructedNDN(),
+                        EMPTY_NUCLEOTIDE_MUTATIONS,
+                        new RangeInfo(new Range(0, rootInfo.getReconstructedNDN().size()), true)
+                ),
+                new MutationsWithRange(
+                        JSequence1,
+                        EMPTY_NUCLEOTIDE_MUTATIONS,
+                        new RangeInfo(rootInfo.getJRangeInCDR3(), true)
+                ),
+                JRanges.stream()
+                        .map(it -> new MutationsWithRange(JSequence1, EMPTY_NUCLEOTIDE_MUTATIONS, new RangeInfo(it, false)))
+                        .collect(Collectors.toList())
+        );
 
-    public MutationsDescription getFromRootToParent() {
-        return fromRootToParent;
-    }
-
-    public MutationsDescription getFromParentToThis() {
-        return fromParentToThis;
+        return new SyntheticNode(emptyMutations);
     }
 
     public MutationsDescription getFromRootToThis() {

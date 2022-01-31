@@ -25,4 +25,13 @@ public class RootInfo {
     NucleotideSequence getReconstructedNDN() {
         return reconstructedNDN;
     }
+
+    @Override
+    public String toString() {
+        return "RootInfo{" +
+                "VRangeInCDR3=" + VRangeInCDR3 +
+                ", JRangeInCDR3=" + JRangeInCDR3 +
+                ", reconstructedNDN=" + reconstructedNDN +
+                '}';
+    }
 }

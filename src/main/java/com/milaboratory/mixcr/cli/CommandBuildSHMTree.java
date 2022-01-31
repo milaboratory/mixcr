@@ -873,7 +873,8 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                             .filter(it -> !clonesInBaseTree.contains(it))
                             .collect(Collectors.toList());
 
-                    System.out.println("threshold: " + shmTreeBuilderParameters.threshold);
+                    System.out.println("threshold: " + shmTreeBuilderParameters.thresholdForFreeClones);
+                    System.out.println("NDNScoreMultiplier: " + shmTreeBuilderParameters.NDNScoreMultiplier);
                     System.out.println("statistic:");
                     System.out.println("FP: " + falsePositive.size() + " FN: " + falseNegative.size() + " TP: " + truePositive.size());
                     System.out.println();

@@ -606,7 +606,7 @@ public class TreeBuilderByAncestorsTest {
                     }
                     return result;
                 },
-                (parent, node) -> node,
+                node -> node,
                 (firstMutation, secondMutation) -> {
                     List<Integer> result = new ArrayList<>();
                     for (int i = 0; i < firstMutation.size(); i++) {

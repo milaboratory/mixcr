@@ -1,11 +1,18 @@
 {
   "default": {
     "productiveOnly": true,
-    "threshold": 2.0,
+    "thresholdForCombineByNDN": 1.0,
+    "thresholdForFreeClones": 2.3,
+    "topToVoteOnNDNSize": 5,
     "NDNScoreMultiplier": 2.5,
     "hideTreesLessThanSize": 1,
     "commonMutationsCountForClustering": 5,
     "penaltyForReversedMutations": 10,
-    "countOfNodesToProbe": 3
+    "countOfNodesToProbe": 3,
+    "stepsOrder": [
+      "attachClonesByNDN",
+      "combineTrees",
+      "attachClonesByDistanceChange"
+    ]
   }
 }

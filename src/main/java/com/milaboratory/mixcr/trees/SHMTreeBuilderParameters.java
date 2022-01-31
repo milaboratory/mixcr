@@ -35,6 +35,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.primitivio.annotations.Serializable;
 import io.repseq.core.GeneFeature;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -45,24 +46,32 @@ import java.util.Objects;
 @Serializable(asJson = true)
 public class SHMTreeBuilderParameters implements java.io.Serializable {
     /**
-     * Feature that is covered by all clonotypes (e.g. VDJRegion for full-length data)
+     * Feature that is covered by all clonotypes (e.g. VDJRegion for full-length data).
      */
     public final GeneFeature targetRegion;
     /**
-     * Use only productive clonotypes (no OOF, no stops)
+     * Use only productive clonotypes (no OOF, no stops).
      */
     public final boolean productiveOnly;
 
     /**
-     * TODO
+     * Clone will be accepted if distanceFromRoot / changeOfDistanceOnCloneAdd >= thresholdForFreeClones.
      */
-    public final double threshold;
+    public final double thresholdForFreeClones;
+    /**
+     * Trees will be combined if penalty by letter on alignment of NDNs will be less than this value.
+     */
+    public final double thresholdForCombineByNDN;
+    /**
+     * Count of clones nearest to the root that will be used to determinate borders of NDN region.
+     */
+    public final int topToVoteOnNDNSize;
     /**
      * Penalty that will be multiplied by reversed mutations count.
      */
     public final double penaltyForReversedMutations;
     /**
-     * Hide small trees
+     * Hide small trees.
      */
     public final int hideTreesLessThanSize;
     public final int commonMutationsCountForClustering;
@@ -70,32 +79,44 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
      * Count of the nearest nodes to added that will be proceeded to find optimal insertion.
      */
     public final int countOfNodesToProbe;
+    /**
+     * Multiplier of NDN score on calculating distance between clones in a tree.
+     */
     public final double NDNScoreMultiplier;
+    /**
+     * Order of steps to postprocess trees.
+     */
+    public final List<String> stepsOrder;
 
     @JsonCreator
     public SHMTreeBuilderParameters(
             @JsonProperty("targetRegion") GeneFeature targetRegion,
             @JsonProperty("productiveOnly") boolean productiveOnly,
-            @JsonProperty("threshold") double threshold,
+            @JsonProperty("thresholdForFreeClones") double thresholdForFreeClones,
+            @JsonProperty("thresholdForCombineByNDN") double thresholdForCombineByNDN,
+            @JsonProperty("topToVoteOnNDNSize") int topToVoteOnNDNSize,
             @JsonProperty("penaltyForReversedMutations") double penaltyForReversedMutations,
             @JsonProperty("hideTreesLessThanSize") int hideTreesLessThanSize,
             @JsonProperty("commonMutationsCountForClustering") int commonMutationsCountForClustering,
             @JsonProperty("countOfNodesToProbe") int countOfNodesToProbe,
-            @JsonProperty("NDNScoreMultiplier") double NDNScoreMultiplier
-    ) {
+            @JsonProperty("NDNScoreMultiplier") double NDNScoreMultiplier,
+            @JsonProperty("stepsOrder") List<String> stepsOrder) {
         this.targetRegion = targetRegion;
         this.productiveOnly = productiveOnly;
-        this.threshold = threshold;
+        this.thresholdForFreeClones = thresholdForFreeClones;
+        this.thresholdForCombineByNDN = thresholdForCombineByNDN;
+        this.topToVoteOnNDNSize = topToVoteOnNDNSize;
         this.penaltyForReversedMutations = penaltyForReversedMutations;
         this.hideTreesLessThanSize = hideTreesLessThanSize;
         this.commonMutationsCountForClustering = commonMutationsCountForClustering;
         this.countOfNodesToProbe = countOfNodesToProbe;
         this.NDNScoreMultiplier = NDNScoreMultiplier;
+        this.stepsOrder = stepsOrder;
     }
 
     @Override
     public SHMTreeBuilderParameters clone() {
-        return new SHMTreeBuilderParameters(targetRegion, productiveOnly, threshold, penaltyForReversedMutations, hideTreesLessThanSize, commonMutationsCountForClustering, countOfNodesToProbe, NDNScoreMultiplier);
+        return new SHMTreeBuilderParameters(targetRegion, productiveOnly, thresholdForFreeClones, thresholdForCombineByNDN, topToVoteOnNDNSize, penaltyForReversedMutations, hideTreesLessThanSize, commonMutationsCountForClustering, countOfNodesToProbe, NDNScoreMultiplier, stepsOrder);
     }
 
     @Override
@@ -103,11 +124,11 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SHMTreeBuilderParameters that = (SHMTreeBuilderParameters) o;
-        return productiveOnly == that.productiveOnly && Double.compare(that.threshold, threshold) == 0 && Double.compare(that.penaltyForReversedMutations, penaltyForReversedMutations) == 0 && hideTreesLessThanSize == that.hideTreesLessThanSize && commonMutationsCountForClustering == that.commonMutationsCountForClustering && countOfNodesToProbe == that.countOfNodesToProbe && Double.compare(that.NDNScoreMultiplier, NDNScoreMultiplier) == 0 && Objects.equals(targetRegion, that.targetRegion);
+        return productiveOnly == that.productiveOnly && Double.compare(that.thresholdForFreeClones, thresholdForFreeClones) == 0 && Double.compare(that.penaltyForReversedMutations, penaltyForReversedMutations) == 0 && hideTreesLessThanSize == that.hideTreesLessThanSize && commonMutationsCountForClustering == that.commonMutationsCountForClustering && countOfNodesToProbe == that.countOfNodesToProbe && Double.compare(that.NDNScoreMultiplier, NDNScoreMultiplier) == 0 && Objects.equals(targetRegion, that.targetRegion);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(targetRegion, productiveOnly, threshold, penaltyForReversedMutations, hideTreesLessThanSize, commonMutationsCountForClustering, countOfNodesToProbe, NDNScoreMultiplier);
+        return Objects.hash(targetRegion, productiveOnly, thresholdForFreeClones, penaltyForReversedMutations, hideTreesLessThanSize, commonMutationsCountForClustering, countOfNodesToProbe, NDNScoreMultiplier);
     }
 }
