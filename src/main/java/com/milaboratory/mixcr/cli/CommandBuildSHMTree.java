@@ -51,6 +51,7 @@ import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.trees.*;
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed;
+import com.milaboratory.mixcr.util.Cluster;
 import com.milaboratory.mixcr.util.ExceptionUtil;
 import com.milaboratory.mixcr.util.Java9Util;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;

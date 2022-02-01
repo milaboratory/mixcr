@@ -38,6 +38,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneReader;
 import com.milaboratory.mixcr.basictypes.IOUtil;
+import com.milaboratory.mixcr.util.Cluster;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
 import com.milaboratory.util.sorting.HashSorter;
 

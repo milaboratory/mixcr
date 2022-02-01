@@ -17,6 +17,7 @@ import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed;
 import com.milaboratory.mixcr.util.AdjacencyMatrix;
 import com.milaboratory.mixcr.util.BitArrayInt;
+import com.milaboratory.mixcr.util.Cluster;
 import com.milaboratory.mixcr.util.Java9Util;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;

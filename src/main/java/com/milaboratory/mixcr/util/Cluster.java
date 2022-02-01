@@ -1,4 +1,4 @@
-package com.milaboratory.mixcr.trees;
+package com.milaboratory.mixcr.util;
 
 import java.util.ArrayList;
 import java.util.List;

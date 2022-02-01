@@ -1,0 +1,5 @@
+{
+  "default": {
+    "minPartOfClonesToDeterminateAllele": 0.3
+  }
+}

@@ -124,11 +124,11 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SHMTreeBuilderParameters that = (SHMTreeBuilderParameters) o;
-        return productiveOnly == that.productiveOnly && Double.compare(that.thresholdForFreeClones, thresholdForFreeClones) == 0 && Double.compare(that.penaltyForReversedMutations, penaltyForReversedMutations) == 0 && hideTreesLessThanSize == that.hideTreesLessThanSize && commonMutationsCountForClustering == that.commonMutationsCountForClustering && countOfNodesToProbe == that.countOfNodesToProbe && Double.compare(that.NDNScoreMultiplier, NDNScoreMultiplier) == 0 && Objects.equals(targetRegion, that.targetRegion);
+        return productiveOnly == that.productiveOnly && Double.compare(that.thresholdForFreeClones, thresholdForFreeClones) == 0 && Double.compare(that.thresholdForCombineByNDN, thresholdForCombineByNDN) == 0 && topToVoteOnNDNSize == that.topToVoteOnNDNSize && Double.compare(that.penaltyForReversedMutations, penaltyForReversedMutations) == 0 && hideTreesLessThanSize == that.hideTreesLessThanSize && commonMutationsCountForClustering == that.commonMutationsCountForClustering && countOfNodesToProbe == that.countOfNodesToProbe && Double.compare(that.NDNScoreMultiplier, NDNScoreMultiplier) == 0 && Objects.equals(targetRegion, that.targetRegion) && Objects.equals(stepsOrder, that.stepsOrder);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(targetRegion, productiveOnly, thresholdForFreeClones, penaltyForReversedMutations, hideTreesLessThanSize, commonMutationsCountForClustering, countOfNodesToProbe, NDNScoreMultiplier);
+        return Objects.hash(targetRegion, productiveOnly, thresholdForFreeClones, thresholdForCombineByNDN, topToVoteOnNDNSize, penaltyForReversedMutations, hideTreesLessThanSize, commonMutationsCountForClustering, countOfNodesToProbe, NDNScoreMultiplier, stepsOrder);
     }
 }
