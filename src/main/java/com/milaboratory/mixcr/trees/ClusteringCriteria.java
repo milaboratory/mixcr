@@ -1,27 +1,25 @@
 package com.milaboratory.mixcr.trees;
 
 import com.milaboratory.core.Range;
-import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.alignment.AlignmentUtils;
+import com.milaboratory.core.mutations.Mutation;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.util.ClonesAlignmentRanges;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
-import io.repseq.core.ReferencePoint;
 
+import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Objects;
 import java.util.function.ToIntFunction;
 import java.util.stream.IntStream;
 
 import static io.repseq.core.GeneType.Joining;
 import static io.repseq.core.GeneType.Variable;
-import static io.repseq.core.ReferencePoint.CDR3Begin;
-import static io.repseq.core.ReferencePoint.CDR3End;
 
 /**
  *
@@ -71,41 +69,30 @@ public interface ClusteringCriteria {
 
     static double mutationsScoreWithoutCDR3(Clone clone, GeneType geneType, AlignmentScoring<NucleotideSequence> scoring) {
         VDJCHit bestHit = clone.getBestHit(geneType);
-        return IntStream.range(0, bestHit.getAlignments().length)
-                .mapToDouble(index -> {
-                    Alignment<NucleotideSequence> alignment = bestHit.getAlignment(index);
-                    Range CDR3Range = CDR3Sequence1Range(bestHit, index);
-                    Mutations<NucleotideSequence> mutations = alignment.getAbsoluteMutations();
-                    List<Range> rangesWithoutCDR3 = alignment.getSequence1Range().without(CDR3Range);
-                    if (rangesWithoutCDR3.size() > 0) {
-                        if (rangesWithoutCDR3.size() > 1) {
-                            throw new IllegalStateException();
-                        }
-                        return AlignmentUtils.calculateScore(
-                                alignment.getSequence1(),
-                                mutations,
-                                scoring
+        return Arrays.stream(bestHit.getAlignments())
+                .mapToDouble(alignment -> {
+                    Range CDR3Range = ClonesAlignmentRanges.CDR3Sequence1Range(bestHit, alignment);
+                    Mutations<NucleotideSequence> mutationsWithoutCDR3;
+                    if (CDR3Range != null) {
+                        mutationsWithoutCDR3 = new Mutations<>(
+                                NucleotideSequence.ALPHABET,
+                                IntStream.of(alignment.getAbsoluteMutations().getRAWMutations())
+                                        .filter(it -> {
+                                            int position = Mutation.getPosition(it);
+                                            return !CDR3Range.contains(position);
+                                        })
+                                        .toArray()
                         );
                     } else {
-                        return 0.0;
+                        mutationsWithoutCDR3 = alignment.getAbsoluteMutations();
                     }
+                    return AlignmentUtils.calculateScore(
+                            alignment.getSequence1(),
+                            mutationsWithoutCDR3,
+                            scoring
+                    );
                 })
                 .sum();
     }
 
-    static Range CDR3Sequence1Range(VDJCHit hit, int target) {
-        int from = getRelativePosition(hit, CDR3Begin);
-        if (from == -1) {
-            from = hit.getAlignment(target).getSequence1Range().getLower();
-        }
-        int to = getRelativePosition(hit, CDR3End);
-        if (to == -1) {
-            to = hit.getAlignment(target).getSequence1Range().getUpper();
-        }
-        return new Range(from, to);
-    }
-
-    static int getRelativePosition(VDJCHit hit, ReferencePoint referencePoint) {
-        return hit.getGene().getPartitioning().getRelativePosition(hit.getAlignedFeature(), referencePoint);
-    }
 }

@@ -11,6 +11,7 @@ import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneReader;
 import com.milaboratory.mixcr.basictypes.IOUtil;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.util.ClonesAlignmentRanges;
 import com.milaboratory.mixcr.util.Cluster;
 import com.milaboratory.mixcr.util.ExceptionUtil;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
@@ -143,17 +144,25 @@ public class AllelesSearcher {
         if (clusterByTheSameGene.cluster.isEmpty()) {
             throw new IllegalArgumentException();
         }
+        ClonesAlignmentRanges commonAlignmentRanges = ClonesAlignmentRanges.commonAlignmentRanges(
+                clusterByTheSameGene.cluster,
+                parameters.minPortionOfClonesForCommonAlignmentRanges,
+                geneType
+        );
+
+        VDJCHit bestHit = clusterByTheSameGene.cluster.get(0).getBestHit(geneType);
         GeneType complimentaryGene = complimentaryGene(geneType);
         List<CloneDescription> cloneDescriptors = clusterByTheSameGene.cluster.stream()
+                .filter(commonAlignmentRanges::containsClone)
                 .map(clone -> new CloneDescription(
                         () -> Arrays.stream(clone.getBestHit(geneType).getAlignments())
-                                .flatMapToInt(it -> IntStream.of(it.getAbsoluteMutations().getRAWMutations())),
+                                .flatMapToInt(it -> IntStream.of(it.getAbsoluteMutations().getRAWMutations()))
+                                .filter(commonAlignmentRanges::containsMutation),
                         clone.getNFeature(GeneFeature.CDR3).size(),
                         clone.getBestHit(complimentaryGene).getGene().getGeneName()
                 ))
                 .collect(Collectors.toList());
 
-        VDJCHit bestHit = clusterByTheSameGene.cluster.get(0).getBestHit(geneType);
         CommonMutationsSearcher commonMutationsSearcher = new CommonMutationsSearcher(
                 parameters.minPartOfClonesToDeterminateAllele,
                 parameters.maxPenaltyByAlleleMutation,

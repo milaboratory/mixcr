@@ -70,7 +70,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS;
-import static com.milaboratory.mixcr.trees.ClusteringCriteria.CDR3Sequence1Range;
+import static com.milaboratory.mixcr.util.ClonesAlignmentRanges.CDR3Sequence1Range;
 import static io.repseq.core.GeneFeature.CDR3;
 import static io.repseq.core.GeneType.Joining;
 import static io.repseq.core.GeneType.Variable;
@@ -1099,8 +1099,15 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                 .boxed()
                 .flatMap(index -> {
                     Alignment<NucleotideSequence> alignment = bestHit.getAlignment(index);
-                    Range CDR3Range = CDR3Sequence1Range(bestHit, index);
+                    Range CDR3Range = CDR3Sequence1Range(bestHit, bestHit.getAlignment(index));
                     Mutations<NucleotideSequence> mutations = alignment.getAbsoluteMutations();
+                    if (CDR3Range == null) {
+                        return Stream.of(new MutationsWithRange(
+                                alignment.getSequence1(),
+                                mutations,
+                                new RangeInfo(alignment.getSequence1Range(), false)
+                        ));
+                    }
                     List<Range> rangesWithoutCDR3 = alignment.getSequence1Range().without(CDR3Range);
                     if (rangesWithoutCDR3.size() > 0) {
                         if (rangesWithoutCDR3.size() > 1) {
@@ -1296,12 +1303,12 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
         int[] filteredMutations = IntStream.range(0, bestHit.getAlignments().length)
                 .flatMap(index -> {
                     Alignment<NucleotideSequence> alignment = bestHit.getAlignment(index);
-                    Range CDR3Range = CDR3Sequence1Range(bestHit, index);
+                    Range CDR3Range = CDR3Sequence1Range(bestHit, bestHit.getAlignment(index));
 
                     Mutations<NucleotideSequence> mutations = alignment.getAbsoluteMutations();
                     return IntStream.range(0, mutations.size())
                             .map(mutations::getMutation)
-                            .filter(mutation -> !CDR3Range.contains(Mutation.getPosition(mutation)));
+                            .filter(mutation -> CDR3Range == null || !CDR3Range.contains(Mutation.getPosition(mutation)));
                 })
                 .toArray();
 

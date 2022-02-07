@@ -55,21 +55,27 @@ public class FindAllelesParameters implements java.io.Serializable {
      * Use only productive clonotypes (no OOF, no stops).
      */
     public final boolean productiveOnly;
+    /**
+     * Min portion of clones to determinate common alignment ranges.
+     */
+    public final double minPortionOfClonesForCommonAlignmentRanges;
 
     @JsonCreator
     public FindAllelesParameters(
             @JsonProperty("minPartOfClonesToDeterminateAllele") double minPartOfClonesToDeterminateAllele,
             @JsonProperty("maxPenaltyByAlleleMutation") double maxPenaltyByAlleleMutation,
-            @JsonProperty("productiveOnly") boolean productiveOnly
+            @JsonProperty("productiveOnly") boolean productiveOnly,
+            @JsonProperty("minPortionOfClonesForCommonAlignmentRanges") double minPortionOfClonesForCommonAlignmentRanges
     ) {
         this.minPartOfClonesToDeterminateAllele = minPartOfClonesToDeterminateAllele;
         this.maxPenaltyByAlleleMutation = maxPenaltyByAlleleMutation;
         this.productiveOnly = productiveOnly;
+        this.minPortionOfClonesForCommonAlignmentRanges = minPortionOfClonesForCommonAlignmentRanges;
     }
 
     @Override
     public FindAllelesParameters clone() {
-        return new FindAllelesParameters(minPartOfClonesToDeterminateAllele, maxPenaltyByAlleleMutation, productiveOnly);
+        return new FindAllelesParameters(minPartOfClonesToDeterminateAllele, maxPenaltyByAlleleMutation, productiveOnly, minPortionOfClonesForCommonAlignmentRanges);
     }
 
     @Override
@@ -77,11 +83,11 @@ public class FindAllelesParameters implements java.io.Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         FindAllelesParameters that = (FindAllelesParameters) o;
-        return Double.compare(that.minPartOfClonesToDeterminateAllele, minPartOfClonesToDeterminateAllele) == 0 && Double.compare(that.maxPenaltyByAlleleMutation, maxPenaltyByAlleleMutation) == 0 && productiveOnly == that.productiveOnly;
+        return Double.compare(that.minPartOfClonesToDeterminateAllele, minPartOfClonesToDeterminateAllele) == 0 && Double.compare(that.maxPenaltyByAlleleMutation, maxPenaltyByAlleleMutation) == 0 && productiveOnly == that.productiveOnly && Double.compare(that.minPortionOfClonesForCommonAlignmentRanges, minPortionOfClonesForCommonAlignmentRanges) == 0;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(minPartOfClonesToDeterminateAllele, maxPenaltyByAlleleMutation, productiveOnly);
+        return Objects.hash(minPartOfClonesToDeterminateAllele, maxPenaltyByAlleleMutation, productiveOnly, minPortionOfClonesForCommonAlignmentRanges);
     }
 }

@@ -2,6 +2,7 @@
   "default": {
     "productiveOnly": true,
     "minPartOfClonesToDeterminateAllele": 0.95,
-    "maxPenaltyByAlleleMutation": 5.0
+    "maxPenaltyByAlleleMutation": 5.0,
+    "minPortionOfClonesForCommonAlignmentRanges": 0.95
   }
 }
