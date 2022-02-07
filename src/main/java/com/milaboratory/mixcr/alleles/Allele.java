@@ -26,6 +26,14 @@ public class Allele {
         return mutations;
     }
 
+    @Override
+    public String toString() {
+        return "Allele{" +
+                "id=" + id +
+                ", mutations=" + mutations +
+                '}';
+    }
+
     public static class AlleleSerializer implements Serializer<Allele> {
         @Override
         public void write(PrimitivO output, Allele object) {

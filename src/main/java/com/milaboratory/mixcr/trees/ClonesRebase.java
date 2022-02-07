@@ -7,6 +7,7 @@ import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceBuilder;
+import com.milaboratory.mixcr.util.RangeInfo;
 
 class ClonesRebase {
     private final NucleotideSequence VSequence1;

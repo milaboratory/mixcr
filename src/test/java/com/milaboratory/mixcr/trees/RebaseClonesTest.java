@@ -7,6 +7,7 @@ import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.alignment.Aligner;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.util.RangeInfo;
 import org.apache.commons.math3.util.Pair;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -19,7 +20,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS;
-import static com.milaboratory.mixcr.trees.CalculationOfCommonMutationsTest.generateMutations;
+import static com.milaboratory.mixcr.trees.MutationsGenerator.generateMutations;
 import static com.milaboratory.mixcr.trees.MutationsUtils.buildSequence;
 import static com.milaboratory.mixcr.trees.MutationsUtils.projectRange;
 import static org.junit.Assert.assertEquals;

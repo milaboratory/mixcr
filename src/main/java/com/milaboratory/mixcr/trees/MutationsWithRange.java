@@ -3,6 +3,7 @@ package com.milaboratory.mixcr.trees;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.util.RangeInfo;
 
 public class MutationsWithRange {
     private final NucleotideSequence sequence1;

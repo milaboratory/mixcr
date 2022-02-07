@@ -46,7 +46,6 @@ import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.util.Cluster;
 import com.milaboratory.mixcr.util.ExceptionUtil;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
-import io.repseq.core.GeneType;
 import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine;
 
@@ -54,6 +53,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static io.repseq.core.GeneType.Joining;
+import static io.repseq.core.GeneType.Variable;
 
 @CommandLine.Command(name = CommandFindAlleles.FIND_ALLELES_COMMAND_NAME,
         sortOptions = false,
@@ -108,6 +110,8 @@ public class CommandFindAlleles extends ACommandWithSmartOverwriteMiXCR {
 
     @Override
     public void run1() throws Exception {
+        //TODO different ranges of alignments. Find region that contains in 80% of clones and throw away all clones that not contains it
+
         FindAllelesConfiguration configuration = getConfiguration();
         List<CloneReader> cloneReaders = getInputFiles().stream()
                 .map(ExceptionUtil.wrap(path -> CloneSetIO.mkReader(Paths.get(path), VDJCLibraryRegistry.getDefault())))
@@ -115,19 +119,21 @@ public class CommandFindAlleles extends ACommandWithSmartOverwriteMiXCR {
         AllelesSearcher allelesSearcher = new AllelesSearcher(configuration.findAllelesParameters, cloneReaders);
         AllelesSearcher.SortedClonotypes sortedClonotypes = allelesSearcher.sortClonotypes();
 
-        OutputPortCloseable<Cluster<Clone>> clustersByV = allelesSearcher.buildClusters(sortedClonotypes.getSortedByV(), GeneType.Variable);
+        OutputPortCloseable<Cluster<Clone>> clustersByV = allelesSearcher.buildClusters(sortedClonotypes.getSortedByV(), Variable);
 
         List<Allele> result = new ArrayList<>();
         Cluster<Clone> cluster;
         while ((cluster = clustersByV.take()) != null) {
-            result.addAll(allelesSearcher.findAlleles(cluster, GeneType.Variable));
+            List<Allele> alleles = allelesSearcher.findAlleles(cluster, Variable);
+            result.addAll(alleles);
         }
 
-        OutputPortCloseable<Cluster<Clone>> clustersByJ = allelesSearcher.buildClusters(sortedClonotypes.getSortedByJ(), GeneType.Joining);
+        OutputPortCloseable<Cluster<Clone>> clustersByJ = allelesSearcher.buildClusters(sortedClonotypes.getSortedByJ(), Joining);
         while ((cluster = clustersByJ.take()) != null) {
-            result.addAll(allelesSearcher.findAlleles(cluster, GeneType.Joining));
+            List<Allele> alleles = allelesSearcher.findAlleles(cluster, Joining);
+            result.addAll(alleles);
         }
-        System.out.println(result.size());
+        System.out.println(result);
     }
 
     @JsonAutoDetect(

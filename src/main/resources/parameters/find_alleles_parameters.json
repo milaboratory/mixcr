@@ -1,5 +1,7 @@
 {
   "default": {
-    "minPartOfClonesToDeterminateAllele": 0.3
+    "productiveOnly": true,
+    "minPartOfClonesToDeterminateAllele": 0.95,
+    "maxPenaltyByAlleleMutation": 5.0
   }
 }

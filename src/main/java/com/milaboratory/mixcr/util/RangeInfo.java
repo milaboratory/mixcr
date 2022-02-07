@@ -1,4 +1,4 @@
-package com.milaboratory.mixcr.trees;
+package com.milaboratory.mixcr.util;
 
 import com.milaboratory.core.Range;
 import com.milaboratory.core.mutations.Mutation;
@@ -67,14 +67,14 @@ public class RangeInfo {
         return Objects.hash(range, includeFirstInserts);
     }
 
-    Mutations<NucleotideSequence> extractAbsoluteMutations(Mutations<NucleotideSequence> mutations) {
+    public Mutations<NucleotideSequence> extractAbsoluteMutations(Mutations<NucleotideSequence> mutations) {
         int[] filteredMutations = IntStream.of(mutations.getRAWMutations())
                 .filter(this::contains)
                 .toArray();
         return new Mutations<>(NucleotideSequence.ALPHABET, filteredMutations);
     }
 
-    boolean contains(int mutation) {
+    public boolean contains(int mutation) {
         int position = Mutation.getPosition(mutation);
         if (position == range.getLower()) {
             if (Mutation.isInsertion(mutation)) {

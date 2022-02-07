@@ -47,17 +47,29 @@ public class FindAllelesParameters implements java.io.Serializable {
      * Clone will be accepted if distanceFromRoot / changeOfDistanceOnCloneAdd >= thresholdForFreeClones.
      */
     public final double minPartOfClonesToDeterminateAllele;
+    /**
+     * Max penalty by mutations count in allele to determinate is this clone have the allele.
+     */
+    public final double maxPenaltyByAlleleMutation;
+    /**
+     * Use only productive clonotypes (no OOF, no stops).
+     */
+    public final boolean productiveOnly;
 
     @JsonCreator
     public FindAllelesParameters(
-            @JsonProperty("minPartOfClonesToDeterminateAllele") double minPartOfClonesToDeterminateAllele
+            @JsonProperty("minPartOfClonesToDeterminateAllele") double minPartOfClonesToDeterminateAllele,
+            @JsonProperty("maxPenaltyByAlleleMutation") double maxPenaltyByAlleleMutation,
+            @JsonProperty("productiveOnly") boolean productiveOnly
     ) {
         this.minPartOfClonesToDeterminateAllele = minPartOfClonesToDeterminateAllele;
+        this.maxPenaltyByAlleleMutation = maxPenaltyByAlleleMutation;
+        this.productiveOnly = productiveOnly;
     }
 
     @Override
     public FindAllelesParameters clone() {
-        return new FindAllelesParameters(minPartOfClonesToDeterminateAllele);
+        return new FindAllelesParameters(minPartOfClonesToDeterminateAllele, maxPenaltyByAlleleMutation, productiveOnly);
     }
 
     @Override
@@ -65,11 +77,11 @@ public class FindAllelesParameters implements java.io.Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         FindAllelesParameters that = (FindAllelesParameters) o;
-        return Double.compare(that.minPartOfClonesToDeterminateAllele, minPartOfClonesToDeterminateAllele) == 0;
+        return Double.compare(that.minPartOfClonesToDeterminateAllele, minPartOfClonesToDeterminateAllele) == 0 && Double.compare(that.maxPenaltyByAlleleMutation, maxPenaltyByAlleleMutation) == 0 && productiveOnly == that.productiveOnly;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(minPartOfClonesToDeterminateAllele);
+        return Objects.hash(minPartOfClonesToDeterminateAllele, maxPenaltyByAlleleMutation, productiveOnly);
     }
 }

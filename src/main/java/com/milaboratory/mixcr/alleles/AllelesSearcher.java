@@ -2,30 +2,46 @@ package com.milaboratory.mixcr.alleles;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.blocks.FilteringPort;
 import cc.redberry.pipe.util.FlatteningOutputPort;
+import com.milaboratory.core.alignment.AlignmentScoring;
+import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.alleles.CommonMutationsSearcher.CloneDescription;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneReader;
 import com.milaboratory.mixcr.basictypes.IOUtil;
+import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.util.Cluster;
 import com.milaboratory.mixcr.util.ExceptionUtil;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
 import com.milaboratory.util.sorting.HashSorter;
+import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static io.repseq.core.GeneFeature.CDR3;
+import static io.repseq.core.GeneType.Joining;
+import static io.repseq.core.GeneType.Variable;
+
 public class AllelesSearcher {
+    private final FindAllelesParameters parameters;
     private final List<CloneReader> datasets;
-    private final CommonMutationsSearcher commonMutationsSearcher;
+    private final AlignmentScoring<NucleotideSequence> VScoring;
+    private final AlignmentScoring<NucleotideSequence> JScoring;
 
     public AllelesSearcher(FindAllelesParameters parameters, List<CloneReader> datasets) {
+        this.parameters = parameters;
         this.datasets = datasets;
-        commonMutationsSearcher = new CommonMutationsSearcher(parameters.minPartOfClonesToDeterminateAllele);
+        VScoring = datasets.get(0).getAssemblerParameters().getCloneFactoryParameters().getVParameters().getScoring();
+        JScoring = datasets.get(0).getAssemblerParameters().getCloneFactoryParameters().getJParameters().getScoring();
     }
 
     public SortedClonotypes sortClonotypes() {
@@ -63,13 +79,24 @@ public class AllelesSearcher {
         });
 
         return new SortedClonotypes(
-                sorterSupplier.apply(GeneType.Variable).port(new FlatteningOutputPort<>(CUtils.asOutputPort(
-                        datasets.stream().map(CloneReader::readClones).collect(Collectors.toList()))
+                sorterSupplier.apply(Variable).port(new FlatteningOutputPort<>(CUtils.asOutputPort(
+                        datasets.stream().map(this::readClonesWithNonProductiveFilter).collect(Collectors.toList()))
                 )),
-                sorterSupplier.apply(GeneType.Joining).port(new FlatteningOutputPort<>(CUtils.asOutputPort(
-                        datasets.stream().map(CloneReader::readClones).collect(Collectors.toList()))
+                sorterSupplier.apply(Joining).port(new FlatteningOutputPort<>(CUtils.asOutputPort(
+                        datasets.stream().map(this::readClonesWithNonProductiveFilter).collect(Collectors.toList()))
                 ))
         );
+    }
+
+    private OutputPortCloseable<Clone> readClonesWithNonProductiveFilter(CloneReader dataset) {
+        // filter non-productive clonotypes
+        if (parameters.productiveOnly) {
+            // todo CDR3?
+            return new FilteringPort<>(dataset.readClones(),
+                    c -> !c.containsStops(CDR3) && !c.isOutOfFrame(CDR3));
+        } else {
+            return dataset.readClones();
+        }
     }
 
     public OutputPortCloseable<Cluster<Clone>> buildClusters(OutputPortCloseable<Clone> sortedClones, GeneType geneType) {
@@ -113,15 +140,55 @@ public class AllelesSearcher {
     }
 
     public List<Allele> findAlleles(Cluster<Clone> clusterByTheSameGene, GeneType geneType) {
-        List<Supplier<IntStream>> mutations = clusterByTheSameGene.cluster.stream()
-                .<Supplier<IntStream>>map(clone -> () -> Arrays.stream(clone.getBestHit(geneType).getAlignments())
-                        .flatMapToInt(it -> IntStream.of(it.getAbsoluteMutations().getRAWMutations()))
-                )
+        if (clusterByTheSameGene.cluster.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+        GeneType complimentaryGene = complimentaryGene(geneType);
+        List<CloneDescription> cloneDescriptors = clusterByTheSameGene.cluster.stream()
+                .map(clone -> new CloneDescription(
+                        () -> Arrays.stream(clone.getBestHit(geneType).getAlignments())
+                                .flatMapToInt(it -> IntStream.of(it.getAbsoluteMutations().getRAWMutations())),
+                        clone.getNFeature(GeneFeature.CDR3).size(),
+                        clone.getBestHit(complimentaryGene).getGene().getGeneName()
+                ))
                 .collect(Collectors.toList());
 
-        commonMutationsSearcher.findAlleles(mutations);
+        VDJCHit bestHit = clusterByTheSameGene.cluster.get(0).getBestHit(geneType);
+        CommonMutationsSearcher commonMutationsSearcher = new CommonMutationsSearcher(
+                parameters.minPartOfClonesToDeterminateAllele,
+                parameters.maxPenaltyByAlleleMutation,
+                scoring(geneType),
+                bestHit.getAlignment(0).getSequence1()
+        );
 
-        return Collections.emptyList();
+        return commonMutationsSearcher.findAlleles(cloneDescriptors).stream()
+                .map(alleleMutationsFromGermline -> new Allele(
+                        bestHit.getGene().getId(),
+                        alleleMutationsFromGermline
+                ))
+                .collect(Collectors.toList());
+    }
+
+    private GeneType complimentaryGene(GeneType geneType) {
+        switch (geneType) {
+            case Variable:
+                return Joining;
+            case Joining:
+                return Variable;
+            default:
+                throw new IllegalArgumentException();
+        }
+    }
+
+    private AlignmentScoring<NucleotideSequence> scoring(GeneType geneType) {
+        switch (geneType) {
+            case Variable:
+                return VScoring;
+            case Joining:
+                return JScoring;
+            default:
+                throw new IllegalArgumentException();
+        }
     }
 
     public static class SortedClonotypes {

@@ -4,6 +4,7 @@ import com.google.common.primitives.Bytes;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.util.RangeInfo;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -191,12 +192,12 @@ public class CalculationOfMutationsDifferenceTest {
             Range subRange = new Range(random.nextInt(2), grand.size() - random.nextInt(2));
             MutationsWithRange fromGrandToParent = new MutationsWithRange(
                     grand,
-                    CalculationOfCommonMutationsTest.generateMutations(grand, random),
+                    MutationsGenerator.generateMutations(grand, random),
                     new RangeInfo(subRange, random.nextBoolean())
             );
             MutationsWithRange fromGrandToChild = new MutationsWithRange(
                     grand,
-                    CalculationOfCommonMutationsTest.generateMutations(grand, random),
+                    MutationsGenerator.generateMutations(grand, random),
                     new RangeInfo(subRange, random.nextBoolean())
             );
             NucleotideSequence child = fromGrandToChild.buildSequence();

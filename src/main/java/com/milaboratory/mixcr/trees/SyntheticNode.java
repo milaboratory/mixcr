@@ -3,6 +3,7 @@ package com.milaboratory.mixcr.trees;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.util.RangeInfo;
 
 import java.util.List;
 import java.util.stream.Collectors;

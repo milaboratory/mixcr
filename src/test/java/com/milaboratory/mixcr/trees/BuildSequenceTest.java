@@ -6,6 +6,7 @@ import com.milaboratory.core.alignment.Aligner;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.util.RangeInfo;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -193,9 +194,9 @@ public class BuildSequenceTest {
             NucleotideSequence part1 = generate(random, 5 + random.nextInt(5));
             NucleotideSequence part2 = generate(random, 5 + random.nextInt(5));
             NucleotideSequence part3 = generate(random, 5 + random.nextInt(5));
-            NucleotideSequence mutatedPart1 = CalculationOfCommonMutationsTest.generateMutations(part1, random).mutate(part1);
-            NucleotideSequence mutatedPart2 = CalculationOfCommonMutationsTest.generateMutations(part2, random).mutate(part2);
-            NucleotideSequence mutatedPart3 = CalculationOfCommonMutationsTest.generateMutations(part3, random).mutate(part3);
+            NucleotideSequence mutatedPart1 = MutationsGenerator.generateMutations(part1, random).mutate(part1);
+            NucleotideSequence mutatedPart2 = MutationsGenerator.generateMutations(part2, random).mutate(part2);
+            NucleotideSequence mutatedPart3 = MutationsGenerator.generateMutations(part3, random).mutate(part3);
             NucleotideSequence parent = NucleotideSequence.ALPHABET.createBuilder()
                     .append(part1)
                     .append(part2)
@@ -268,7 +269,7 @@ public class BuildSequenceTest {
             RangeInfo range2 = new RangeInfo(new Range(5, 10), false);
             RangeInfo range3 = new RangeInfo(new Range(10, 15), false);
 
-            Mutations<NucleotideSequence> mutations = CalculationOfCommonMutationsTest.generateMutations(parent, random);
+            Mutations<NucleotideSequence> mutations = MutationsGenerator.generateMutations(parent, random);
             NucleotideSequence child = mutations.mutate(parent);
             NucleotideSequence mutatedPart1 = child.getRange(projectRange(mutations, range1));
             NucleotideSequence mutatedPart2 = child.getRange(projectRange(mutations, range2));

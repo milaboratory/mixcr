@@ -15,10 +15,7 @@ import com.milaboratory.core.sequence.Wildcard;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed;
-import com.milaboratory.mixcr.util.AdjacencyMatrix;
-import com.milaboratory.mixcr.util.BitArrayInt;
-import com.milaboratory.mixcr.util.Cluster;
-import com.milaboratory.mixcr.util.Java9Util;
+import com.milaboratory.mixcr.util.*;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.ReferencePoint;
@@ -627,7 +624,7 @@ class ClusterProcessor {
         TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, SyntheticNode, MutationsDescription> treeBuilderByAncestors = new TreeBuilderByAncestors<>(
                 root,
                 (base, mutations) -> distance(mutations).add(penaltyForReversedMutations(base.getFromRootToThis(), mutations)),
-                MutationsUtils::mutationsBetween,
+                (first, second) -> mutationsBetween(first.getFromRootToThis(), second.getFromRootToThis()),
                 (parent, mutations) -> SyntheticNode.createFromParentAndDiffOfParentAndChild(parent.getFromRootToThis(), mutations),
                 observed -> SyntheticNode.createFromMutations(observed.getMutationsFromRoot()),
                 this::commonMutations,
