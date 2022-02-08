@@ -82,10 +82,8 @@ public class RangeInfo {
             } else {
                 return true;
             }
-        } else if (range.getLower() < position && position <= range.getUpper() - 1) {
-            return true;
         } else {
-            return position == range.getUpper();
+            return range.getLower() < position && position <= range.getUpper();
         }
     }
 }

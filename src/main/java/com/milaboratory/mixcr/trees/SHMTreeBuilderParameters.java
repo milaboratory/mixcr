@@ -87,6 +87,10 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
      * Order of steps to postprocess trees.
      */
     public final List<String> stepsOrder;
+    /**
+     * Min portion of clones to determinate common alignment ranges.
+     */
+    public final double minPortionOfClonesForCommonAlignmentRanges;
 
     @JsonCreator
     public SHMTreeBuilderParameters(
@@ -100,7 +104,9 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
             @JsonProperty("commonMutationsCountForClustering") int commonMutationsCountForClustering,
             @JsonProperty("countOfNodesToProbe") int countOfNodesToProbe,
             @JsonProperty("NDNScoreMultiplier") double NDNScoreMultiplier,
-            @JsonProperty("stepsOrder") List<String> stepsOrder) {
+            @JsonProperty("stepsOrder") List<String> stepsOrder,
+            @JsonProperty("minPortionOfClonesForCommonAlignmentRanges") double minPortionOfClonesForCommonAlignmentRanges
+    ) {
         this.targetRegion = targetRegion;
         this.productiveOnly = productiveOnly;
         this.thresholdForFreeClones = thresholdForFreeClones;
@@ -112,11 +118,12 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
         this.countOfNodesToProbe = countOfNodesToProbe;
         this.NDNScoreMultiplier = NDNScoreMultiplier;
         this.stepsOrder = stepsOrder;
+        this.minPortionOfClonesForCommonAlignmentRanges = minPortionOfClonesForCommonAlignmentRanges;
     }
 
     @Override
     public SHMTreeBuilderParameters clone() {
-        return new SHMTreeBuilderParameters(targetRegion, productiveOnly, thresholdForFreeClones, thresholdForCombineByNDN, topToVoteOnNDNSize, penaltyForReversedMutations, hideTreesLessThanSize, commonMutationsCountForClustering, countOfNodesToProbe, NDNScoreMultiplier, stepsOrder);
+        return new SHMTreeBuilderParameters(targetRegion, productiveOnly, thresholdForFreeClones, thresholdForCombineByNDN, topToVoteOnNDNSize, penaltyForReversedMutations, hideTreesLessThanSize, commonMutationsCountForClustering, countOfNodesToProbe, NDNScoreMultiplier, stepsOrder, minPortionOfClonesForCommonAlignmentRanges);
     }
 
     @Override

@@ -9,6 +9,7 @@
     "commonMutationsCountForClustering": 5,
     "penaltyForReversedMutations": 10,
     "countOfNodesToProbe": 3,
+    "minPortionOfClonesForCommonAlignmentRanges": 0.95,
     "stepsOrder": [
       "attachClonesByNDN",
       "combineTrees",

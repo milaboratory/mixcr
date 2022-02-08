@@ -9,11 +9,10 @@ import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.sequence.NucleotideAlphabet;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.Wildcard;
-import com.milaboratory.mixcr.util.Java9Util;
 import com.milaboratory.mixcr.util.RangeInfo;
-import com.milaboratory.mixcr.util.TriFunction;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -44,67 +43,18 @@ final class MutationsUtils {
     static MutationsDescription mutationsBetween(MutationsDescription first, MutationsDescription second) {
         return new MutationsDescription(
                 mutationsBetween(first.getVMutationsWithoutCDR3(), second.getVMutationsWithoutCDR3()),
-                mutationsBetween(first.getVMutationsInCDR3WithoutNDN(), second.getVMutationsInCDR3WithoutNDN()),
-                mutationsBetween(first.getKnownNDN(), second.getKnownNDN()),
-                mutationsBetween(first.getJMutationsInCDR3WithoutNDN(), second.getJMutationsInCDR3WithoutNDN()),
+                first.getVMutationsInCDR3WithoutNDN().differenceWith(second.getVMutationsInCDR3WithoutNDN()),
+                first.getKnownNDN().differenceWith(second.getKnownNDN()),
+                first.getJMutationsInCDR3WithoutNDN().differenceWith(second.getJMutationsInCDR3WithoutNDN()),
                 mutationsBetween(first.getJMutationsWithoutCDR3(), second.getJMutationsWithoutCDR3())
         );
     }
 
     private static List<MutationsWithRange> mutationsBetween(List<MutationsWithRange> firstMutations, List<MutationsWithRange> secondMutations) {
-        return foldByIntersection(firstMutations, secondMutations, MutationsUtils::mutationsBetween);
+        return fold(firstMutations, secondMutations, MutationsWithRange::differenceWith);
     }
 
-    static MutationsWithRange intersection(MutationsWithRange from, MutationsWithRange to) {
-        if (!from.getRangeInfo().equals(to.getRangeInfo())) {
-            throw new IllegalArgumentException();
-        }
-        return intersection(from, to, from.getRangeInfo());
-    }
-
-    static List<MutationsWithRange> intersection(List<MutationsWithRange> from, List<MutationsWithRange> to) {
-        return foldByIntersection(from, to, MutationsUtils::intersection);
-    }
-
-    //TODO remove after filter out clones that have mutations out of common range
-    static <T> List<T> foldByIntersection(
-            List<MutationsWithRange> firstMutations,
-            List<MutationsWithRange> secondMutations,
-            TriFunction<MutationsWithRange, MutationsWithRange, RangeInfo, T> folder
-    ) {
-        return firstMutations.stream()
-                .flatMap(base -> secondMutations.stream()
-                        .map(comparison -> Optional.ofNullable(base.projectedRange().intersection(comparison.getRangeInfo()))
-                                .map(it -> folder.apply(base, comparison, it)))
-                        .flatMap(Java9Util::stream)
-                )
-                .collect(Collectors.toList());
-    }
-
-    static MutationsWithRange mutationsBetween(MutationsWithRange base, MutationsWithRange comparison) {
-        if (!base.getRangeInfo().getRange().equals(comparison.getRangeInfo().getRange())) {
-            throw new IllegalArgumentException();
-        }
-        NucleotideSequence sequence1 = base.buildSequence();
-        return new MutationsWithRange(
-                sequence1,
-                base.mutationsForRange().invert()
-                        .combineWith(comparison.mutationsForRange())
-                        .move(-base.getRangeInfo().getRange().getLower()),
-                new RangeInfo(new Range(0, sequence1.size()), true)
-        );
-    }
-
-    private static MutationsWithRange mutationsBetween(MutationsWithRange base, MutationsWithRange comparison, RangeInfo intersection) {
-        return new MutationsWithRange(
-                base.getMutations().mutate(base.getSequence1()),
-                base.mutationsForRange().invert()
-                        .combineWith(comparison.mutationsForRange()),
-                intersection
-        );
-    }
-
-    private static MutationsWithRange intersection(MutationsWithRange base, MutationsWithRange comparison, RangeInfo intersection) {
+    static MutationsWithRange intersection(MutationsWithRange base, MutationsWithRange comparison, RangeInfo intersection) {
         return new MutationsWithRange(
                 base.getSequence1(),
                 MutationsUtils.intersection(
@@ -114,6 +64,38 @@ final class MutationsUtils {
                 ),
                 intersection
         );
+    }
+
+    static MutationsWithRange intersection(MutationsWithRange from, MutationsWithRange to) {
+        if (!from.getRangeInfo().equals(to.getRangeInfo())) {
+            throw new IllegalArgumentException();
+        }
+        return new MutationsWithRange(
+                from.getSequence1(),
+                MutationsUtils.intersection(
+                        from.getMutations(),
+                        to.getMutations(),
+                        from.getRangeInfo()
+                ),
+                from.getRangeInfo()
+        );
+    }
+
+    static List<MutationsWithRange> intersection(List<MutationsWithRange> from, List<MutationsWithRange> to) {
+        return fold(from, to, (a, b) -> intersection(a, b, a.getRangeInfo().intersection(b.getRangeInfo())));
+    }
+
+    static <T> List<T> fold(
+            List<MutationsWithRange> firstMutations,
+            List<MutationsWithRange> secondMutations,
+            BiFunction<MutationsWithRange, MutationsWithRange, T> folder
+    ) {
+        if (firstMutations.size() != secondMutations.size()) {
+            throw new IllegalArgumentException();
+        }
+        return IntStream.range(0, firstMutations.size())
+                .mapToObj(i -> folder.apply(firstMutations.get(0), secondMutations.get(0)))
+                .collect(Collectors.toList());
     }
 
     static int positionIfNucleotideWasDeleted(int position) {
@@ -305,5 +287,9 @@ final class MutationsUtils {
             Wildcard secondAsWildcard = NucleotideSequence.ALPHABET.codeToWildcard(secondSymbol);
             return ((wildcard.getBasicMask() ^ secondAsWildcard.getBasicMask()) & secondAsWildcard.getBasicMask()) == 0;
         }
+    }
+
+    static List<MutationsWithRange> combine(List<MutationsWithRange> base, List<MutationsWithRange> combineWith) {
+        return fold(base, combineWith, MutationsWithRange::combineWith);
     }
 }

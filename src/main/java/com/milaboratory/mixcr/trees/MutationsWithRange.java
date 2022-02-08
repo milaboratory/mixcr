@@ -37,8 +37,26 @@ public class MutationsWithRange {
         return mutationsForRange().size();
     }
 
-    public MutationsWithRange combineWithMutations(Mutations<NucleotideSequence> additional) {
-        return new MutationsWithRange(sequence1, mutations.combineWith(additional), rangeInfo);
+    MutationsWithRange differenceWith(MutationsWithRange comparison) {
+        if (!getRangeInfo().getRange().equals(comparison.getRangeInfo().getRange())) {
+            throw new IllegalArgumentException();
+        }
+        NucleotideSequence sequence1 = buildSequence();
+        return new MutationsWithRange(
+                sequence1,
+                mutationsForRange().invert()
+                        .combineWith(comparison.mutationsForRange())
+                        .move(-getRangeInfo().getRange().getLower()),
+                new RangeInfo(new Range(0, sequence1.size()), true)
+        );
+    }
+
+    MutationsWithRange combineWith(MutationsWithRange next) {
+        return new MutationsWithRange(
+                sequence1,
+                mutationsForRange().combineWith(next.mutationsForRange().move(getRangeInfo().getRange().getLower())),
+                new RangeInfo(rangeInfo.getRange(), true)
+        );
     }
 
     int lengthDelta() {
@@ -125,5 +143,4 @@ public class MutationsWithRange {
     Mutations<NucleotideSequence> mutationsForRange() {
         return rangeInfo.extractAbsoluteMutations(mutations);
     }
-
 }

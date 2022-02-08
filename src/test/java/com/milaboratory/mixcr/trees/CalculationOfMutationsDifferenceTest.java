@@ -15,7 +15,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static com.milaboratory.mixcr.trees.MutationsUtils.mutationsBetween;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -37,8 +36,9 @@ public class CalculationOfMutationsDifferenceTest {
                 new RangeInfo(new Range(0, grand_.size()), true)
         );
         assertEquals(child_, fromGrandToChild.buildSequence());
-        MutationsWithRange result = mutationsBetween(fromGrandToParent, fromGrandToChild);
+        MutationsWithRange result = fromGrandToParent.differenceWith(fromGrandToChild);
         assertEquals(child_, result.buildSequence());
+        assertEquals(child_, fromGrandToParent.combineWith(result).buildSequence());
     }
 
     @Test
@@ -58,8 +58,9 @@ public class CalculationOfMutationsDifferenceTest {
                 new RangeInfo(new Range(0, grand_.size()), false)
         );
         assertEquals(child_, fromGrandToChild.buildSequence());
-        MutationsWithRange result = mutationsBetween(fromGrandToParent, fromGrandToChild);
+        MutationsWithRange result = fromGrandToParent.differenceWith(fromGrandToChild);
         assertEquals(child_, result.buildSequence());
+        assertEquals(child_, fromGrandToParent.combineWith(result).buildSequence());
     }
 
     @Test
@@ -79,8 +80,9 @@ public class CalculationOfMutationsDifferenceTest {
                 new RangeInfo(new Range(0, grand_.size()), false)
         );
         assertEquals(child_, fromGrandToChild.buildSequence());
-        MutationsWithRange result = mutationsBetween(fromGrandToParent, fromGrandToChild);
+        MutationsWithRange result = fromGrandToParent.differenceWith(fromGrandToChild);
         assertEquals(child_, result.buildSequence());
+        assertEquals(child_, fromGrandToParent.combineWith(result).buildSequence());
     }
 
     @Test
@@ -100,8 +102,9 @@ public class CalculationOfMutationsDifferenceTest {
                 new RangeInfo(new Range(0, grand_.size()), false)
         );
         assertEquals(child_, fromGrandToChild.buildSequence());
-        MutationsWithRange result = mutationsBetween(fromGrandToParent, fromGrandToChild);
+        MutationsWithRange result = fromGrandToParent.differenceWith(fromGrandToChild);
         assertEquals(child_, result.buildSequence());
+        assertEquals(child_, fromGrandToParent.combineWith(result).buildSequence());
     }
 
     @Test
@@ -121,8 +124,9 @@ public class CalculationOfMutationsDifferenceTest {
                 new RangeInfo(new Range(0, grand_.size()), false)
         );
         assertEquals(child_, fromGrandToChild.buildSequence());
-        MutationsWithRange result = mutationsBetween(fromGrandToParent, fromGrandToChild);
+        MutationsWithRange result = fromGrandToParent.differenceWith(fromGrandToChild);
         assertEquals(child_, result.buildSequence());
+        assertEquals(child_, fromGrandToParent.combineWith(result).buildSequence());
     }
 
     @Test
@@ -142,8 +146,9 @@ public class CalculationOfMutationsDifferenceTest {
                 new RangeInfo(new Range(1, grand_.size()), false)
         );
         assertEquals(child_, fromGrandToChild.buildSequence());
-        MutationsWithRange result = mutationsBetween(fromGrandToParent, fromGrandToChild);
+        MutationsWithRange result = fromGrandToParent.differenceWith(fromGrandToChild);
         assertEquals(child_, result.buildSequence());
+        assertEquals(child_, fromGrandToParent.combineWith(result).buildSequence());
     }
 
     @Test
@@ -163,8 +168,9 @@ public class CalculationOfMutationsDifferenceTest {
                 new RangeInfo(new Range(1, 4), false)
         );
         assertEquals(child_, fromGrandToChild.buildSequence());
-        MutationsWithRange result = mutationsBetween(fromGrandToParent, fromGrandToChild);
+        MutationsWithRange result = fromGrandToParent.differenceWith(fromGrandToChild);
         assertEquals(child_, result.buildSequence());
+        assertEquals(child_, fromGrandToParent.combineWith(result).buildSequence());
     }
 
     @Test
@@ -213,13 +219,14 @@ public class CalculationOfMutationsDifferenceTest {
                 System.out.println("from grand to child range info: " + fromGrandToChild.getRangeInfo());
                 System.out.println();
             }
-            MutationsWithRange result = mutationsBetween(fromGrandToParent, fromGrandToChild);
+            MutationsWithRange result = fromGrandToParent.differenceWith(fromGrandToChild);
             if (print) {
                 System.out.println("result: " + result.getMutations());
                 System.out.println("result range info: " + result.getRangeInfo());
                 System.out.println();
             }
             assertEquals(child, result.buildSequence());
+            assertEquals(child, fromGrandToParent.combineWith(result).buildSequence());
             return false;
         } catch (Throwable e) {
             if (print) {

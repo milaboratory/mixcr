@@ -28,6 +28,10 @@ public class ClonesAlignmentRanges {
         this.geneType = geneType;
     }
 
+    public List<Range> getCommonRanges() {
+        return commonRanges;
+    }
+
     public static Range CDR3Sequence1Range(VDJCHit hit, Alignment<NucleotideSequence> alignment) {
         int from = getRelativePosition(hit, CDR3Begin);
         int to = getRelativePosition(hit, CDR3End);
@@ -45,6 +49,13 @@ public class ClonesAlignmentRanges {
 
     private static int getRelativePosition(VDJCHit hit, ReferencePoint referencePoint) {
         return hit.getGene().getPartitioning().getRelativePosition(hit.getAlignedFeature(), referencePoint);
+    }
+
+    public Range cutRange(Range range) {
+        return commonRanges.stream()
+                .filter(it -> it.intersectsWith(range))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("range is not represented in common ranges"));
     }
 
     public boolean containsMutation(int mutation) {

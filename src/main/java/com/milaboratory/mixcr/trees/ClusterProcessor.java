@@ -45,6 +45,7 @@ class ClusterProcessor {
     private final double penaltyForReversedMutations;
     private final int commonMutationsCountForClustering;
     private final int hideTreesLessThanSize;
+    private final double minPortionOfClonesForCommonAlignmentRanges;
     private final AlignmentScoring<NucleotideSequence> VScoring;
     private final AlignmentScoring<NucleotideSequence> JScoring;
 
@@ -64,10 +65,10 @@ class ClusterProcessor {
             nodeWithParent -> nodeWithParent.getNode().getContent().convert(
                     clone -> String.valueOf(clone.getClone().clone.getId()),
                     mutations -> {
-                        Optional<MutationsDescription> parentMutations = Optional.ofNullable(nodeWithParent.getParent())
-                                .flatMap(parent -> parent.getContent().convert(it -> Optional.empty(), it -> Optional.of(it.getFromRootToThis())));
+                        Optional<SyntheticNode> parentMutations = Optional.ofNullable(nodeWithParent.getParent())
+                                .flatMap(parent -> parent.getContent().convert(it -> Optional.empty(), Optional::of));
 
-                        Optional<MutationsDescription> fromParentToThis = parentMutations.map(parent -> mutationsBetween(parent, mutations.getFromRootToThis()));
+                        Optional<MutationsDescription> fromParentToThis = parentMutations.map(parent -> mutationsBetween(parent.getFromRootToThis(), mutations.getFromRootToThis()));
 
                         int widening = 0;
                         if (fromParentToThis.isPresent()) {
@@ -87,11 +88,9 @@ class ClusterProcessor {
                         return "V: " + fromParentToThis.map(it -> it.getVMutationsWithoutCDR3().stream().mapToInt(MutationsWithRange::mutationsCount).sum() + it.getVMutationsInCDR3WithoutNDN().mutationsCount()).orElse(0) +
                                 " J: " + fromParentToThis.map(it -> it.getJMutationsWithoutCDR3().stream().mapToInt(MutationsWithRange::mutationsCount).sum() + it.getJMutationsInCDR3WithoutNDN().mutationsCount()).orElse(0) +
                                 " widening: " + widening +
-                                " reversedV: " + fromParentToThis.flatMap(it -> parentMutations.map(parent -> reversedMutations(parent.getConcatenatedVMutations(), it.getConcatenatedVMutations()))).orElse(Collections.emptyList()) +
-                                " reversedJ: " + fromParentToThis.flatMap(it -> parentMutations.map(parent -> reversedMutations(parent.getConcatenatedJMutations(), it.getConcatenatedJMutations()))).orElse(Collections.emptyList()) +
-                                " NDN: " + mutations.getFromRootToThis().getKnownNDN().buildSequence() + " " + fromParentToThis.map(it -> it.getKnownNDN().getMutations()).orElse(EMPTY_NUCLEOTIDE_MUTATIONS) +
-                                " V: " + fromParentToThis.map(MutationsDescription::getConcatenatedVMutations).orElse(EMPTY_NUCLEOTIDE_MUTATIONS) +
-                                " J: " + fromParentToThis.map(MutationsDescription::getConcatenatedJMutations).orElse(EMPTY_NUCLEOTIDE_MUTATIONS)
+                                " reversedV: " + Arrays.stream(fromParentToThis.flatMap(it -> parentMutations.map(parent -> reversedVMutations(parent, it))).orElse(new int[0])).boxed().collect(Collectors.toList()) +
+                                " reversedJ: " + Arrays.stream(fromParentToThis.flatMap(it -> parentMutations.map(parent -> reversedJMutations(parent, it))).orElse(new int[0])).boxed().collect(Collectors.toList()) +
+                                " NDN: " + mutations.getFromRootToThis().getKnownNDN().buildSequence() + " " + fromParentToThis.map(it -> it.getKnownNDN().getMutations()).orElse(EMPTY_NUCLEOTIDE_MUTATIONS)
                                 ;
                     }
             )
@@ -113,6 +112,7 @@ class ClusterProcessor {
         this.penaltyForReversedMutations = parameters.penaltyForReversedMutations;
         this.countOfNodesToProbe = parameters.countOfNodesToProbe;
         this.stepsOrder = parameters.stepsOrder;
+        this.minPortionOfClonesForCommonAlignmentRanges = parameters.minPortionOfClonesForCommonAlignmentRanges;
         this.VScoring = VScoring;
         this.JScoring = JScoring;
         if (originalCluster.cluster.isEmpty()) {
@@ -155,15 +155,30 @@ class ClusterProcessor {
         Range VRangeInCDR3 = minRangeInCDR3(originalCluster, this::VRangeInCDR3);
         Range JRangeInCDR3 = minRangeInCDR3(originalCluster, this::JRangeInCDR3);
 
+        ClonesAlignmentRanges commonVAlignmentRanges = ClonesAlignmentRanges.commonAlignmentRanges(
+                originalCluster.cluster.stream().map(it -> it.clone).collect(Collectors.toList()),
+                minPortionOfClonesForCommonAlignmentRanges,
+                Variable
+        );
+
+        ClonesAlignmentRanges commonJAlignmentRanges = ClonesAlignmentRanges.commonAlignmentRanges(
+                originalCluster.cluster.stream().map(it -> it.clone).collect(Collectors.toList()),
+                minPortionOfClonesForCommonAlignmentRanges,
+                Joining
+        );
+
+
         List<CloneWithMutationsFromVJGermline> clones = originalCluster.cluster.stream()
+                .filter(cloneWrapper -> commonVAlignmentRanges.containsClone(cloneWrapper.clone) && commonVAlignmentRanges.containsClone(cloneWrapper.clone))
                 .map(cloneWrapper -> {
                     NucleotideSequence CDR3 = cloneWrapper.clone.getNFeature(GeneFeature.CDR3);
                     return new CloneWithMutationsFromVJGermline(
                             new MutationsFromVJGermline(
-                                    getMutationsWithoutRange(
+                                    getMutationsWithoutCDR3(
                                             cloneWrapper.clone,
                                             Variable,
-                                            new Range(VRangeInCDR3.getLower(), VSequence1.size())
+                                            new Range(VRangeInCDR3.getLower(), VSequence1.size()),
+                                            commonVAlignmentRanges
                                     ),
                                     new MutationsWithRange(
                                             VSequence1,
@@ -178,10 +193,11 @@ class ClusterProcessor {
                                             getMutationsForRange(cloneWrapper.clone, JRangeInCDR3, Joining),
                                             new RangeInfo(JRangeInCDR3, false)
                                     ),
-                                    getMutationsWithoutRange(
+                                    getMutationsWithoutCDR3(
                                             cloneWrapper.clone,
                                             Joining,
-                                            new Range(0, JRangeInCDR3.getLower())
+                                            new Range(0, JRangeInCDR3.getLower()),
+                                            commonJAlignmentRanges
                                     )
                             ),
                             cloneWrapper
@@ -195,14 +211,14 @@ class ClusterProcessor {
         List<TreeWithMetaBuilder> resultTrees = clusteringResult.clusters
                 .stream()
                 .filter(it -> it.cluster.size() > 1)
-                .map(this::buildATree)
+                .map(cluster -> buildATree(cluster, commonVAlignmentRanges, commonJAlignmentRanges))
                 .sorted(Comparator.<TreeWithMetaBuilder>comparingInt(it -> it.treeBuilder.getObservedNodesCount()).reversed())
                 .collect(Collectors.toList());
         printTress(resultTrees);
 
         Map<String, BiFunction<List<TreeWithMetaBuilder>, List<CloneWithMutationsFromVJGermline>, Pair<List<TreeWithMetaBuilder>, List<CloneWithMutationsFromVJGermline>>>> stepsByNames = new HashMap<>();
         stepsByNames.put("attachClonesByNDN", (trees, freeClones) -> attachClonesByNDNIfPossible(trees, false, freeClones));
-        stepsByNames.put("combineTrees", (trees, freeClones) -> Pair.create(combineTreesIfPossible(trees, false), freeClones));
+        stepsByNames.put("combineTrees", (trees, freeClones) -> Pair.create(combineTreesIfPossible(trees, commonVAlignmentRanges, commonJAlignmentRanges, false), freeClones));
         stepsByNames.put("attachClonesByDistanceChange", (trees, freeClones) -> attachClonesByDistanceChangeIfPossible(trees, false, freeClones));
 
         List<BiFunction<List<TreeWithMetaBuilder>, List<CloneWithMutationsFromVJGermline>, Pair<List<TreeWithMetaBuilder>, List<CloneWithMutationsFromVJGermline>>>> steps = stepsOrder.stream()
@@ -230,7 +246,7 @@ class ClusterProcessor {
                 .collect(Collectors.toList());
     }
 
-    private List<TreeWithMetaBuilder> combineTreesIfPossible(List<TreeWithMetaBuilder> originalTrees, boolean print) {
+    private List<TreeWithMetaBuilder> combineTreesIfPossible(List<TreeWithMetaBuilder> originalTrees, ClonesAlignmentRanges commonVAlignmentRanges, ClonesAlignmentRanges commonJAlignmentRanges, boolean print) {
         List<TreeWithMetaBuilder> result = new ArrayList<>();
 
         List<TreeWithMetaBuilder> originalTreesCopy = new ArrayList<>(originalTrees);
@@ -332,7 +348,7 @@ class ClusterProcessor {
                                     .map(node -> node.getContent().convert(it -> Optional.of(new CloneWithMutationsFromVJGermline(it.getMutationsFromVJGermline(), it.getClone())), it -> Optional.<CloneWithMutationsFromVJGermline>empty()))
                                     .flatMap(Java9Util::stream)
                                     .collect(Collectors.toList())
-                    ));
+                    ), commonVAlignmentRanges, commonJAlignmentRanges);
                     originalTreesCopy.remove(i);
                 }
             }
@@ -556,13 +572,13 @@ class ClusterProcessor {
     }
 
     private int commonMutationsCount(MutationsWithRange first, MutationsWithRange second) {
-        return commonMutationsCount(Collections.singletonList(first), Collections.singletonList(second));
+        return intersection(first, second).mutationsCount();
     }
 
     private int commonMutationsCount(List<MutationsWithRange> first, List<MutationsWithRange> second) {
-        return foldByIntersection(
+        return fold(
                 first, second,
-                (a, b, rangeInfo) -> intersection(a.getMutations(), b.getMutations(), rangeInfo).size()
+                (a, b) -> intersection(a, b, a.getRangeInfo().intersection(b.getRangeInfo())).mutationsCount()
         ).stream().mapToInt(it -> it).sum();
     }
 
@@ -582,10 +598,12 @@ class ClusterProcessor {
 
     private Mutations<NucleotideSequence> commonMutations(List<MutationsWithRange> first, List<MutationsWithRange> second) {
         MutationsBuilder<NucleotideSequence> builder = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
-        foldByIntersection(
+        fold(
                 first, second,
-                (a, b, rangeInfo) -> intersection(a.getMutations(), b.getMutations(), rangeInfo)
-        ).forEach(builder::append);
+                (from, to) -> MutationsUtils.intersection(from, to, from.getRangeInfo().intersection(to.getRangeInfo()))
+        ).stream()
+                .map(MutationsWithRange::mutationsForRange)
+                .forEach(builder::append);
         return builder.createAndDestroy();
     }
 
@@ -611,7 +629,7 @@ class ClusterProcessor {
     }
 
 
-    private TreeWithMetaBuilder buildATree(Cluster<CloneWithMutationsFromVJGermline> cluster) {
+    private TreeWithMetaBuilder buildATree(Cluster<CloneWithMutationsFromVJGermline> cluster, ClonesAlignmentRanges commonVAlignmentRanges, ClonesAlignmentRanges commonJAlignmentRanges) {
         RootInfo rootInfo = buildRootInfo(cluster);
 
         List<CloneWithMutationsFromReconstructedRoot> rebasedCluster = cluster.cluster.stream()
@@ -619,11 +637,17 @@ class ClusterProcessor {
                 .sorted(Comparator.<CloneWithMutationsFromReconstructedRoot, BigDecimal>comparing(cloneDescriptor -> distance(cloneDescriptor.getMutationsFromRoot())).reversed())
                 .collect(Collectors.toList());
 
-        SyntheticNode root = buildARootForATree(rootInfo, rebasedCluster);
+        SyntheticNode root = SyntheticNode.createRoot(
+                commonVAlignmentRanges,
+                VSequence1,
+                rootInfo,
+                commonJAlignmentRanges,
+                JSequence1
+        );
 
         TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, SyntheticNode, MutationsDescription> treeBuilderByAncestors = new TreeBuilderByAncestors<>(
                 root,
-                (base, mutations) -> distance(mutations).add(penaltyForReversedMutations(base.getFromRootToThis(), mutations)),
+                (base, mutations) -> distance(mutations).add(penaltyForReversedMutations(base, mutations)),
                 (first, second) -> mutationsBetween(first.getFromRootToThis(), second.getFromRootToThis()),
                 (parent, mutations) -> SyntheticNode.createFromParentAndDiffOfParentAndChild(parent.getFromRootToThis(), mutations),
                 observed -> SyntheticNode.createFromMutations(observed.getMutationsFromRoot()),
@@ -632,7 +656,7 @@ class ClusterProcessor {
                         child.getFromRootToThis().withKnownNDNMutations(
                                 new MutationsWithRange(
                                         child.getFromRootToThis().getKnownNDN().getSequence1(),
-                                        MutationsUtils.concreteNDNChild(
+                                        concreteNDNChild(
                                                 parent.getFromRootToThis().getKnownNDN().getMutations(),
                                                 child.getFromRootToThis().getKnownNDN().getMutations()
                                         ),
@@ -645,6 +669,20 @@ class ClusterProcessor {
 
         for (CloneWithMutationsFromReconstructedRoot cloneWithMutationsFromReconstructedRoot : rebasedCluster) {
             treeBuilderByAncestors.addNode(cloneWithMutationsFromReconstructedRoot);
+            treeBuilderByAncestors.getTree().allNodes().forEach(nodeWithParent -> {
+                Tree.Node<ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, SyntheticNode>> node = nodeWithParent.getNode();
+                Tree.Node<ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, SyntheticNode>> parent = nodeWithParent.getParent();
+                Optional<Clone> clone = node.getContent().convert(it -> Optional.of(it.getClone().clone), it -> Optional.empty());
+                if (clone.isPresent() && parent != null) {
+                    MutationsDescription mutations = parent.getContent().convert(it -> {
+                        throw new IllegalArgumentException();
+                    }, SyntheticNode::getFromRootToThis);
+                    AncestorInfo ancestorInfo = new AncestorInfoBuilder().buildAncestorInfo(mutations);
+                    if (!ancestorInfo.getSequence().equals(clone.get().getTarget(0).getSequence())) {
+                        throw new IllegalStateException();
+                    }
+                }
+            });
         }
         return new TreeWithMetaBuilder(
                 treeBuilderByAncestors,
@@ -652,19 +690,62 @@ class ClusterProcessor {
         );
     }
 
-    private BigDecimal sumOfDistances(TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, SyntheticNode, MutationsDescription> treeBuilderByAncestors) {
-        return treeBuilderByAncestors.getTree().allNodes()
-                .map(Tree.NodeWithParent::getDistance)
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    private int[] reversedVMutations(SyntheticNode fromRootToBase, MutationsDescription mutations) {
+        MutationsBuilder<NucleotideSequence> mutationsFromRootToBaseBuilder = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
+        fromRootToBase.getFromRootToThis().getVMutationsWithoutCDR3().stream()
+                .map(MutationsWithRange::mutationsForRange)
+                .forEach(mutationsFromRootToBaseBuilder::append);
+        mutationsFromRootToBaseBuilder.append(fromRootToBase.getFromRootToThis().getVMutationsInCDR3WithoutNDN()
+                .mutationsForRange());
+        Mutations<NucleotideSequence> mutationsFromRootToBase = mutationsFromRootToBaseBuilder.createAndDestroy();
+
+        MutationsBuilder<NucleotideSequence> combinedMutationsBuilder = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
+        combine(
+                fromRootToBase.getFromRootToThis().getVMutationsWithoutCDR3(),
+                mutations.getVMutationsWithoutCDR3()
+        ).stream()
+                .map(MutationsWithRange::mutationsForRange)
+                .forEach(combinedMutationsBuilder::append);
+        combinedMutationsBuilder.append(fromRootToBase.getFromRootToThis().getVMutationsInCDR3WithoutNDN()
+                .combineWith(mutations.getVMutationsInCDR3WithoutNDN())
+                .mutationsForRange()
+        );
+        Mutations<NucleotideSequence> combinedMutations = combinedMutationsBuilder.createAndDestroy();
+
+        return reversedMutations(mutationsFromRootToBase, combinedMutations);
     }
 
-    private List<Integer> reversedMutations(Mutations<NucleotideSequence> fromRootToBase, Mutations<NucleotideSequence> mutations) {
-        Map<Integer, List<Integer>> fromRootToBaseByPositions = IntStream.range(0, fromRootToBase.size())
-                .mapToObj(fromRootToBase::getMutation)
+    private int[] reversedJMutations(SyntheticNode fromRootToBase, MutationsDescription mutations) {
+        MutationsBuilder<NucleotideSequence> mutationsFromRootToBaseBuilder = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
+        mutationsFromRootToBaseBuilder.append(fromRootToBase.getFromRootToThis().getJMutationsInCDR3WithoutNDN()
+                .mutationsForRange());
+        fromRootToBase.getFromRootToThis().getJMutationsWithoutCDR3().stream()
+                .map(MutationsWithRange::mutationsForRange)
+                .forEach(mutationsFromRootToBaseBuilder::append);
+        Mutations<NucleotideSequence> mutationsFromRootToBase = mutationsFromRootToBaseBuilder.createAndDestroy();
+
+        MutationsBuilder<NucleotideSequence> combinedMutationsBuilder = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
+        combinedMutationsBuilder.append(fromRootToBase.getFromRootToThis().getJMutationsInCDR3WithoutNDN()
+                .combineWith(mutations.getJMutationsInCDR3WithoutNDN())
+                .mutationsForRange()
+        );
+        combine(
+                fromRootToBase.getFromRootToThis().getJMutationsWithoutCDR3(),
+                mutations.getJMutationsWithoutCDR3()
+        ).stream()
+                .map(MutationsWithRange::mutationsForRange)
+                .forEach(combinedMutationsBuilder::append);
+        Mutations<NucleotideSequence> combinedMutations = combinedMutationsBuilder.createAndDestroy();
+
+        return reversedMutations(mutationsFromRootToBase, combinedMutations);
+    }
+
+    private int[] reversedMutations(Mutations<NucleotideSequence> mutationsFromRootToBase, Mutations<NucleotideSequence> combinedMutations) {
+        Map<Integer, List<Integer>> fromRootToBaseByPositions = Arrays.stream(mutationsFromRootToBase.getRAWMutations())
+                .boxed()
                 .collect(Collectors.groupingBy(Mutation::getPosition));
-        Map<Integer, List<Integer>> mutationsByPositions = IntStream.range(0, mutations.size())
-                .mapToObj(mutations::getMutation)
+        Map<Integer, List<Integer>> mutationsByPositions = Arrays.stream(mutationsFromRootToBase.invert().combineWith(combinedMutations).getRAWMutations())
+                .boxed()
                 .collect(Collectors.groupingBy(Mutation::getPosition));
 
         return Stream.concat(fromRootToBaseByPositions.keySet().stream(), mutationsByPositions.keySet().stream())
@@ -680,28 +761,8 @@ class ClusterProcessor {
                 .filter(pair -> pair.getFirst().isPresent() && pair.getSecond().isPresent())
                 .map(pair -> Pair.create(pair.getFirst().get(), pair.getSecond().get()))
                 .filter(pair -> Mutation.getTo(pair.getFirst()) == Mutation.getFrom(pair.getSecond()) && Mutation.getFrom(pair.getFirst()) == Mutation.getTo(pair.getSecond()))
-                .map(pair -> Mutation.getPosition(pair.getFirst()))
-                .collect(Collectors.toList());
-    }
-
-    private SyntheticNode buildARootForATree(RootInfo rootInfo, List<CloneWithMutationsFromReconstructedRoot> rebasedCluster) {
-        return SyntheticNode.createRoot(
-                overlap(rebasedCluster.stream()
-                        .map(clone -> clone.getMutationsFromRoot().getVMutationsWithoutCDR3().stream()
-                                .map(it -> it.getRangeInfo().getRange())
-                                .collect(Collectors.toList())
-                        ).collect(Collectors.toList())
-                ),
-                VSequence1,
-                rootInfo,
-                overlap(rebasedCluster.stream()
-                        .map(clone -> clone.getMutationsFromRoot().getJMutationsWithoutCDR3().stream()
-                                .map(it -> it.getRangeInfo().getRange())
-                                .collect(Collectors.toList())
-                        ).collect(Collectors.toList())
-                ),
-                JSequence1
-        );
+                .mapToInt(Pair::getFirst)
+                .toArray();
     }
 
     private RootInfo buildRootInfo(Cluster<CloneWithMutationsFromVJGermline> cluster) {
@@ -723,15 +784,16 @@ class ClusterProcessor {
         );
     }
 
-    private List<MutationsWithRange> getMutationsWithoutRange(Clone clone, GeneType geneType, Range without) {
+    private List<MutationsWithRange> getMutationsWithoutCDR3(Clone clone, GeneType geneType, Range CDR3Range, ClonesAlignmentRanges commonAlignmentRanges) {
         VDJCHit bestHit = clone.getBestHit(geneType);
         return IntStream.range(0, bestHit.getAlignments().length)
                 .boxed()
                 .flatMap(index -> {
                     Alignment<NucleotideSequence> alignment = bestHit.getAlignment(index);
                     Mutations<NucleotideSequence> mutations = alignment.getAbsoluteMutations();
-                    List<Range> rangesWithout = alignment.getSequence1Range().without(without);
+                    List<Range> rangesWithout = alignment.getSequence1Range().without(CDR3Range);
                     return rangesWithout.stream()
+                            .map(commonAlignmentRanges::cutRange)
                             .filter(range -> !range.isEmpty())
                             .map(range -> new MutationsWithRange(
                                     alignment.getSequence1(),
@@ -797,9 +859,8 @@ class ClusterProcessor {
                 .orElseGet(() -> Pair.create(EMPTY_NUCLEOTIDE_MUTATIONS, new Range(to, to)));
     }
 
-    private BigDecimal penaltyForReversedMutations(MutationsDescription fromRootToBase, MutationsDescription mutations) {
-        int reversedMutationsCount = reversedMutations(fromRootToBase.getConcatenatedVMutations(), mutations.getConcatenatedVMutations()).size() +
-                reversedMutations(fromRootToBase.getConcatenatedJMutations(), mutations.getConcatenatedJMutations()).size();
+    private BigDecimal penaltyForReversedMutations(SyntheticNode fromRootToBase, MutationsDescription mutations) {
+        int reversedMutationsCount = reversedVMutations(fromRootToBase, mutations).length + reversedJMutations(fromRootToBase, mutations).length;
         return BigDecimal.valueOf(penaltyForReversedMutations).multiply(BigDecimal.valueOf(reversedMutationsCount));
     }
 
