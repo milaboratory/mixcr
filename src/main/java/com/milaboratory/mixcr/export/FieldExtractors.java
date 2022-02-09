@@ -36,6 +36,7 @@ import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.mutations.MutationsUtil;
 import com.milaboratory.core.sequence.AminoAcidSequence;
+import com.milaboratory.core.sequence.AminoAcidSequence.AminoAcidSequencePosition;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.TranslationParameters;
@@ -57,6 +58,7 @@ import java.util.stream.Collectors;
 public final class FieldExtractors {
     static final String NULL = "";
     private static final DecimalFormat SCORE_FORMAT = new DecimalFormat("#.#");
+    private static final int MAX_SHIFTED_TRIPLETS = 3;
 
     static Field[] descriptors = null;
 
@@ -321,23 +323,23 @@ public final class FieldExtractors {
             });
 
 
-//            descriptorsList.add(new FeatureExtractorDescriptor("-aaFeatureFromLeft", "Export amino acid sequence of " +
-//                    "specified gene feature starting from the leftmost nucleotide (differs from -aaFeature only for " +
-//                    "sequences which length are not multiple of 3)", "AA. Seq.", "aaSeq") {
-//                @Override
-//                public String convert(NSequenceWithQuality seq) {
-//                    return AminoAcidSequence.translate(seq.getSequence(), FromLeftWithoutIncompleteCodon).toString();
-//                }
-//            });
-//
-//            descriptorsList.add(new FeatureExtractorDescriptor("-aaFeatureFromRight", "Export amino acid sequence of " +
-//                    "specified gene feature starting from the rightmost nucleotide (differs from -aaFeature only for " +
-//                    "sequences which length are not multiple of 3)", "AA. Seq.", "aaSeq") {
-//                @Override
-//                public String convert(NSequenceWithQuality seq) {
-//                    return AminoAcidSequence.translate(seq.getSequence(), FromRightWithoutIncompleteCodon).toString();
-//                }
-//            });
+            // descriptorsList.add(new FeatureExtractorDescriptor("-aaFeatureFromLeft", "Export amino acid sequence of " +
+            //         "specified gene feature starting from the leftmost nucleotide (differs from -aaFeature only for " +
+            //         "sequences which length are not multiple of 3)", "AA. Seq.", "aaSeq") {
+            //     @Override
+            //     public String convert(NSequenceWithQuality seq) {
+            //         return AminoAcidSequence.translate(seq.getSequence(), FromLeftWithoutIncompleteCodon).toString();
+            //     }
+            // });
+            //
+            // descriptorsList.add(new FeatureExtractorDescriptor("-aaFeatureFromRight", "Export amino acid sequence of " +
+            //         "specified gene feature starting from the rightmost nucleotide (differs from -aaFeature only for " +
+            //         "sequences which length are not multiple of 3)", "AA. Seq.", "aaSeq") {
+            //     @Override
+            //     public String convert(NSequenceWithQuality seq) {
+            //         return AminoAcidSequence.translate(seq.getSequence(), FromRightWithoutIncompleteCodon).toString();
+            //     }
+            // });
 
             descriptorsList.add(new FeatureExtractors.NSeqExtractor("-minFeatureQuality", "Export minimal quality of specified gene feature", "Min. qual. ", "minQual") {
                 @Override
@@ -365,7 +367,7 @@ public final class FieldExtractors {
                     new String[]{"N. Mutations in "}, new String[]{"nMutations"}) {
                 @Override
                 String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1,
-                               NucleotideSequence seq2, TranslationParameters tr) {
+                               NucleotideSequence seq2, Range range, TranslationParameters tr) {
                     return mutations.encode(",");
                 }
             });
@@ -375,7 +377,7 @@ public final class FieldExtractors {
                     new String[]{"N. Mutations in ", " relative to "}, new String[]{"nMutationsIn", "Relative"}) {
                 @Override
                 String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1,
-                               NucleotideSequence seq2, TranslationParameters tr) {
+                               NucleotideSequence seq2, Range range, TranslationParameters tr) {
                     return mutations.encode(",");
                 }
             });
@@ -387,11 +389,23 @@ public final class FieldExtractors {
 
                 @Override
                 String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1,
-                               NucleotideSequence seq2, TranslationParameters tr) {
+                               NucleotideSequence seq2, Range range, TranslationParameters tr) {
                     if (tr == null) return "-";
-                    Mutations<AminoAcidSequence> aaMuts = MutationsUtil.nt2aa(seq1, mutations, tr);
+                    Mutations<AminoAcidSequence> aaMuts = MutationsUtil.nt2aa(seq1, mutations, tr, MAX_SHIFTED_TRIPLETS);
                     if (aaMuts == null)
                         return "-";
+
+                    AminoAcidSequencePosition aaPos = AminoAcidSequence.convertNtPositionToAA(range.getFrom(), seq1.size(), tr);
+                    if (aaPos == null)
+                        return "-";
+                    int aaFromP1 = aaPos.floor();
+                    aaPos = AminoAcidSequence.convertNtPositionToAA(range.getTo(), seq1.size(), tr);
+                    if (aaPos == null)
+                        return "-";
+                    int aaToP1 = aaPos.ceil();
+
+                    aaMuts = aaMuts.extractAbsoluteMutationsForRange(aaFromP1, aaToP1);
+
                     return aaMuts.encode(",");
                 }
             }
@@ -410,9 +424,9 @@ public final class FieldExtractors {
                 }
 
                 @Override
-                String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1, NucleotideSequence seq2, TranslationParameters tr) {
+                String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1, NucleotideSequence seq2, Range range, TranslationParameters tr) {
                     if (tr == null) return "-";
-                    MutationsUtil.MutationNt2AADescriptor[] descriptors = MutationsUtil.nt2aaDetailed(seq1, mutations, tr, 10);
+                    MutationsUtil.MutationNt2AADescriptor[] descriptors = MutationsUtil.nt2aaDetailed(seq1, mutations, tr, MAX_SHIFTED_TRIPLETS);
                     if (descriptors == null)
                         return "-";
                     StringBuilder sb = new StringBuilder();
