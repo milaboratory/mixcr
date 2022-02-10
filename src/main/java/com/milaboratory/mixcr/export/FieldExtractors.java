@@ -322,25 +322,6 @@ public final class FieldExtractors {
                 }
             });
 
-
-            // descriptorsList.add(new FeatureExtractorDescriptor("-aaFeatureFromLeft", "Export amino acid sequence of " +
-            //         "specified gene feature starting from the leftmost nucleotide (differs from -aaFeature only for " +
-            //         "sequences which length are not multiple of 3)", "AA. Seq.", "aaSeq") {
-            //     @Override
-            //     public String convert(NSequenceWithQuality seq) {
-            //         return AminoAcidSequence.translate(seq.getSequence(), FromLeftWithoutIncompleteCodon).toString();
-            //     }
-            // });
-            //
-            // descriptorsList.add(new FeatureExtractorDescriptor("-aaFeatureFromRight", "Export amino acid sequence of " +
-            //         "specified gene feature starting from the rightmost nucleotide (differs from -aaFeature only for " +
-            //         "sequences which length are not multiple of 3)", "AA. Seq.", "aaSeq") {
-            //     @Override
-            //     public String convert(NSequenceWithQuality seq) {
-            //         return AminoAcidSequence.translate(seq.getSequence(), FromRightWithoutIncompleteCodon).toString();
-            //     }
-            // });
-
             descriptorsList.add(new FeatureExtractors.NSeqExtractor("-minFeatureQuality", "Export minimal quality of specified gene feature", "Min. qual. ", "minQual") {
                 @Override
                 public String convert(NSequenceWithQuality seq) {
