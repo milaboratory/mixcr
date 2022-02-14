@@ -8,7 +8,7 @@ plugins {
     application
     `maven-publish`
     id("com.palantir.git-version") version "0.12.3"
-    id("com.github.johnrengelman.shadow") version "7.0.0"
+    id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
 val miRepoAccessKeyId: String by project
