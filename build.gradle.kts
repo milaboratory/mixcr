@@ -5,6 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.InetAddress
 
 
+val miplotsVersion = "1.0.0"
 val milibVersion = "2.0.0"
 val repseqioVersion = "1.3.5-10-05b9291c5e"
 val jacksonVersion = "2.12.4"
@@ -77,6 +78,7 @@ repositories {
 }
 
 dependencies {
+    api("com.milaboratory:miplots:$miplotsVersion")
     api("com.milaboratory:milib:$milibVersion")
     api("io.repseq:repseqio:$repseqioVersion") {
         exclude("com.milaboratory", "milib")
