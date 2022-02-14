@@ -11,7 +11,6 @@ val repseqioVersion = "1.3.5-10-05b9291c5e"
 val jacksonVersion = "2.12.4"
 val letsPlotLibraryVersion = "2.1.0"
 val letsPlotKotlinApiVersion = "3.1.1"
-val dataframeVersion = "0.8.0-dev-808"
 
 plugins {
     `java-library`
@@ -103,9 +102,6 @@ dependencies {
     implementation("org.apache.pdfbox:pdfbox:2.0.21")
 
     implementation("org.apache.commons:commons-csv:1.9.0")
-    implementation("org.jetbrains.kotlinx:dataframe:$dataframeVersion")
-    implementation("org.jetbrains.lets-plot:lets-plot-common:$letsPlotLibraryVersion")
-    implementation("org.jetbrains.lets-plot:lets-plot-kotlin-jvm:$letsPlotKotlinApiVersion")
 }
 
 val writeBuildProperties by tasks.registering(WriteProperties::class) {

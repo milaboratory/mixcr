@@ -1,8 +1,6 @@
 package com.milaboratory.mixcr.postanalysis.dataframe
 
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult
-import com.milaboratory.mixcr.postanalysis.dataframe.GeneUsageRow.Companion.gene
-import com.milaboratory.mixcr.postanalysis.dataframe.GeneUsageRow.Companion.sample
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisSchema
 import jetbrains.datalore.plot.PlotSvgExport
 import jetbrains.letsPlot.coordCartesian
@@ -15,14 +13,11 @@ import jetbrains.letsPlot.scale.scaleSizeIdentity
 import jetbrains.letsPlot.scale.scaleXDiscrete
 import jetbrains.letsPlot.scale.scaleYDiscrete
 import jetbrains.letsPlot.theme
-import org.jetbrains.kotlinx.dataframe.DataColumn
 import org.jetbrains.kotlinx.dataframe.DataFrame
-import org.jetbrains.kotlinx.dataframe.DataRow
 import org.jetbrains.kotlinx.dataframe.annotations.DataSchema
 import org.jetbrains.kotlinx.dataframe.api.cast
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.jetbrains.kotlinx.dataframe.api.toMap
-import org.jetbrains.kotlinx.dataframe.api.column
 import org.jetbrains.kotlinx.dataframe.io.writeCSV
 import java.nio.file.Path
 
@@ -41,23 +36,6 @@ interface GeneUsageRow {
 
     /** Payload weight */
     val weight: Double
-
-    companion object {
-        ////// DSL
-
-        val sample by column<String>()
-        val gene by column<String>()
-        val weight by column<Double>()
-
-        val DataFrame<GeneUsageRow>.sample get() = this[GeneUsageRow::sample.name] as DataColumn<String>
-        val DataRow<GeneUsageRow>.sample get() = this[GeneUsageRow::sample.name] as String
-
-        val DataFrame<GeneUsageRow>.gene get() = this[GeneUsageRow::gene.name] as DataColumn<String>
-        val DataRow<GeneUsageRow>.gene get() = this[GeneUsageRow::gene.name] as String
-
-        val DataFrame<GeneUsageRow>.weight get() = this[GeneUsageRow::weight.name] as DataColumn<Double>
-        val DataRow<GeneUsageRow>.weight get() = this[GeneUsageRow::weight.name] as Double
-    }
 }
 
 object GeneUsage {

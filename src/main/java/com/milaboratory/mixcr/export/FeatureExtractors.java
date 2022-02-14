@@ -149,14 +149,15 @@ final class FeatureExtractors {
                 return "-";
 
             GeneFeature alignedFeature = hit.getAlignedFeature();
-//            if (!alignedFeature.contains(smallGeneFeature))
-//                return "-";
+            // if (!alignedFeature.contains(smallGeneFeature))
+            //     return "-";
 
             VDJCGene gene = hit.getGene();
             ReferencePoints germlinePartitioning = gene.getPartitioning();
             if (!germlinePartitioning.isAvailable(bigGeneFeature))
                 return "-";
 
+            Range bigTargetRage = germlinePartitioning.getRelativeRange(alignedFeature, bigGeneFeature);
             Range smallTargetRage =
                     smallGeneFeature.isAlignmentAttached() ?
                             null :
@@ -203,21 +204,24 @@ final class FeatureExtractors {
 
                     mutations = mutations.move(shift);
 
-//                    int shift = germlinePartitioning.getRelativePosition(bigGeneFeature, smallGeneFeature.getFirstPoint());
-//                    if (shift < 0)
-//                        continue;
-//                    mutations = mutations.move(shift);
-//                    mutations = mutations.extractRelativeMutationsForRange(bigRange);
-//                    if (mutations == null)
-//                        continue;
+                    // int shift = germlinePartitioning.getRelativePosition(bigGeneFeature, smallGeneFeature.getFirstPoint());
+                    // if (shift < 0)
+                    //     continue;
+                    // mutations = mutations.move(shift);
+                    // mutations = mutations.extractRelativeMutationsForRange(bigRange);
+                    // if (mutations == null)
+                    //     continue;
                 } else
                     mutations = alignment.getAbsoluteMutations().extractRelativeMutationsForRange(smallTargetRage);
 
-                return convert(mutations, gene.getFeature(bigGeneFeature), object.getFeature(smallGeneFeature).getSequence(), germlinePartitioning.getTranslationParameters(bigGeneFeature));
+                return convert(mutations, gene.getFeature(bigGeneFeature),
+                        object.getFeature(smallGeneFeature).getSequence(),
+                        bigTargetRage.getRelativeRangeOf(smallTargetRage),
+                        germlinePartitioning.getTranslationParameters(bigGeneFeature));
             }
             return "-";
         }
 
-        abstract String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1, NucleotideSequence seq2, TranslationParameters tr);
+        abstract String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1, NucleotideSequence seq2, Range range, TranslationParameters tr);
     }
 }
