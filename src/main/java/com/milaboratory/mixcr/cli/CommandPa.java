@@ -49,7 +49,7 @@ import static java.util.stream.Collectors.*;
 /**
  *
  */
-public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
+public abstract class CommandPa extends ACommandWithOutputMiXCR {
     public static final NamedChains[] CHAINS = {TRAD_NAMED, TRB_NAMED, TRG_NAMED, IGH_NAMED, IGKL_NAMED};
 
     @Parameters(description = "cloneset.{clns|clna}... result.json")
@@ -216,7 +216,7 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
             sortOptions = false,
             separator = " ",
             description = "Biophysics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype")
-    public static class CommandIndividual extends CommandPostanalysis {
+    public static class CommandIndividual extends CommandPa {
         public CommandIndividual() {}
 
         @Override
@@ -307,7 +307,7 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
             sortOptions = false,
             separator = " ",
             description = "Overlap analysis")
-    public static class CommandOverlap extends CommandPostanalysis {
+    public static class CommandOverlap extends CommandPa {
         @Option(description = "Override downsampling for F2 umi|d[number]|f[number]",
                 names = {"--f2-downsampling"},
                 required = false)
@@ -352,7 +352,7 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
                     .collect(Collectors.toList());
 
             OverlapDataset<Clone> overlapDataset = OverlapUtil.overlap(
-                    getInputFiles().stream().map(CommandPostanalysis::getSampleId).collect(toList()),
+                    getInputFiles().stream().map(CommandPa::getSampleId).collect(toList()),
                     ordering,
                     readers);
 

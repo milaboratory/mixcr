@@ -31,11 +31,11 @@ internal class SingleSpectratypeTest {
             fill = "weight"
         } + geomTile(color = "white") + coordFixed()
 
-        writePDF(
-            Path.of("/Users/poslavskysv/Downloads/letsplot.pdf"), toPdf(
-                PlotSvgExport.buildSvgImageFromRawSpecs(plot.toSpec())
-            )
-        )
+//        writePDF(
+//            Path.of("/Users/poslavskysv/Downloads/letsplot.pdf"), toPdf(
+//                PlotSvgExport.buildSvgImageFromRawSpecs(plot.toSpec())
+//            )
+//        )
     }
 
     @Test
@@ -61,10 +61,10 @@ internal class SingleSpectratypeTest {
                 ggsize(xs * f + 5 * f, 3 * ys * f / 5)
 
 
-        writePDF(
-            Path.of("/Users/poslavskysv/Downloads/letsplot.pdf"), toPdf(
-                PlotSvgExport.buildSvgImageFromRawSpecs(plot.toSpec())
-            )
-        )
+//        writePDF(
+//            Path.of("/Users/poslavskysv/Downloads/letsplot.pdf"), toPdf(
+//                PlotSvgExport.buildSvgImageFromRawSpecs(plot.toSpec())
+//            )
+//        )
     }
 }

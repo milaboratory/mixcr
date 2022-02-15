@@ -148,8 +148,8 @@ public final class Main {
                 .setCommandName(command)
                 .addSubcommand("help", CommandLine.HelpCommand.class)
                 .addSubcommand("analyze", CommandAnalyze.CommandAnalyzeMain.class)
-                .addSubcommand("postanalysis", CommandPostanalysis.CommandPostanalysisMain.class)
-                .addSubcommand("exportPostanalysis", CommandExportPostanalysis.CommandExportPostanalysisMain.class)
+                .addSubcommand("postanalysis", CommandPa.CommandPostanalysisMain.class)
+                .addSubcommand("exportPa", CommandPaExport.CommandExportPostanalysisMain.class)
 
                 .addSubcommand("align", CommandAlign.class)
                 .addSubcommand("assemble", CommandAssemble.class)
@@ -191,13 +191,13 @@ public final class Main {
 
         cmd.getSubcommands()
                 .get("postanalysis")
-                .addSubcommand("individual", CommandSpec.forAnnotatedObject(CommandPostanalysis.CommandIndividual.class))
-                .addSubcommand("overlap", CommandSpec.forAnnotatedObject(CommandPostanalysis.CommandOverlap.class));
+                .addSubcommand("individual", CommandSpec.forAnnotatedObject(CommandPa.CommandIndividual.class))
+                .addSubcommand("overlap", CommandSpec.forAnnotatedObject(CommandPa.CommandOverlap.class));
 
         cmd.getSubcommands()
-                .get("exportPostanalysis")
-                .addSubcommand("diversity", CommandSpec.forAnnotatedObject(CommandExportPostanalysis.ExportBoxPlots.class))
-                .addSubcommand("tables", CommandSpec.forAnnotatedObject(CommandExportPostanalysis.ExportTables.class));
+                .get("exportPa")
+                .addSubcommand("biophysics", CommandSpec.forAnnotatedObject(CommandPaExport.ExportBiophysics.class))
+                .addSubcommand("tables", CommandSpec.forAnnotatedObject(CommandPaExport.ExportTables.class));
 
         cmd.setSeparator(" ");
         return cmd;

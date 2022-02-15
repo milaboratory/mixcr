@@ -2,12 +2,10 @@ package com.milaboratory.mixcr.postanalysis.dataframe
 
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisSchema
-import jetbrains.datalore.plot.PlotSvgExport
 import jetbrains.letsPlot.coordCartesian
 import jetbrains.letsPlot.coordFixed
 import jetbrains.letsPlot.geom.geomTile
 import jetbrains.letsPlot.intern.Plot
-import jetbrains.letsPlot.intern.toSpec
 import jetbrains.letsPlot.letsPlot
 import jetbrains.letsPlot.scale.scaleSizeIdentity
 import jetbrains.letsPlot.scale.scaleXDiscrete
@@ -19,7 +17,6 @@ import org.jetbrains.kotlinx.dataframe.api.cast
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.jetbrains.kotlinx.dataframe.api.toMap
 import org.jetbrains.kotlinx.dataframe.io.writeCSV
-import java.nio.file.Path
 
 
 /**
@@ -67,33 +64,33 @@ object GeneUsage {
 
         data.toDataFrame().cast<GeneUsageRow>()
     }
-
-    /**
-     * Create Plot
-     **/
-    fun DataFrame<GeneUsageRow>.plot() = run {
-        var plt = letsPlot(toMap()) {
-            x = GeneUsageRow::gene.name
-            y = GeneUsageRow::sample.name
-            fill = GeneUsageRow::weight.name
-        }
-
-        writeCSV("data.csv")
-        val xValues = this.gene.toList()
-        val yValues = this.sample.toList()
-
-        plt += geomTile(
-//            sampling = samplingNone,
-//            size = 0.0,
-//            width = xValues.size * 40.0,
-//            height = yValues.size * 40.0
-        )
-
-//        plt += scaleFillGradient()
-//        plt += ggsize(1024, 1024)
-
-        addCommonParams(plt, xValues, yValues, true)
-    }
+//
+//    /**
+//     * Create Plot
+//     **/
+//    fun DataFrame<GeneUsageRow>.plot() = run {
+//        var plt = letsPlot(toMap()) {
+//            x = GeneUsageRow::gene.name
+//            y = GeneUsageRow::sample.name
+//            fill = GeneUsageRow::weight.name
+//        }
+//
+//        writeCSV("data.csv")
+//        val xValues = this.gene.toList()
+//        val yValues = this.sample.toList()
+//
+//        plt += geomTile(
+////            sampling = samplingNone,
+////            size = 0.0,
+////            width = xValues.size * 40.0,
+////            height = yValues.size * 40.0
+//        )
+//
+////        plt += scaleFillGradient()
+////        plt += ggsize(1024, 1024)
+//
+//        addCommonParams(plt, xValues, yValues, true)
+//    }
 
     /////// from CorrPlot
     private fun addCommonParams(
@@ -126,35 +123,5 @@ object GeneUsage {
             plot += coordFixed(xlim = xLim, ylim = yLim)
         }
         return plot
-    }
-
-    /**
-     * Export plot to PDF
-     *
-     * @param destination path to export PDF
-     */
-    fun DataFrame<GeneUsageRow>.plotPDF(
-        destination: Path
-    ) = run {
-        writePDF(
-            destination,
-            toPdf(PlotSvgExport.buildSvgImageFromRawSpecs(plot().toSpec()))
-        )
-    }
-
-    /**
-     * Create and export plot into single PDF file
-     *
-     * @param destination path to export PDF
-     * @param paSett PA settings
-     * @param paResult PA results
-     * */
-    fun plotPDF(
-        destination: Path,
-        paSett: PostanalysisSchema<*>,
-        paResult: PostanalysisResult,
-        group: String
-    ) {
-        dataFrame(paSett, paResult, group).plotPDF(destination)
     }
 }

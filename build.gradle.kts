@@ -16,9 +16,9 @@ plugins {
     `java-library`
     application
     `maven-publish`
-    id("com.palantir.git-version") version "0.12.3"
+    id("com.palantir.git-version") version "0.13.0"
     id("com.github.johnrengelman.shadow") version "7.0.0"
-    kotlin("jvm") version "1.6.0-M1"
+    kotlin("jvm") version "1.6.10"
     id("org.jetbrains.kotlin.plugin.dataframe") version "0.8.0-dev-808"
 }
 

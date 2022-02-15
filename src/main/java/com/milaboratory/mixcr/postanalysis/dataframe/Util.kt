@@ -1,54 +1,75 @@
 package com.milaboratory.mixcr.postanalysis.dataframe
 
-import jetbrains.datalore.plot.PlotSvgExport
-import jetbrains.letsPlot.intern.Plot
-import jetbrains.letsPlot.intern.toSpec
-import org.apache.batik.transcoder.TranscoderInput
-import org.apache.batik.transcoder.TranscoderOutput
-import org.apache.fop.render.ps.EPSTranscoder
-import org.apache.fop.svg.PDFTranscoder
-import org.apache.pdfbox.io.MemoryUsageSetting
-import org.apache.pdfbox.multipdf.PDFMergerUtility
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.nio.file.Path
-import kotlin.io.path.absolutePathString
-import kotlin.io.path.writeBytes
+import com.milaboratory.util.StringUtil
+import org.jetbrains.kotlinx.dataframe.AnyFrame
+import org.jetbrains.kotlinx.dataframe.api.add
+import org.jetbrains.kotlinx.dataframe.api.all
+import org.jetbrains.kotlinx.dataframe.api.cast
+import org.jetbrains.kotlinx.dataframe.api.leftJoin
+import java.util.*
 
-fun Plot.toSvg() = PlotSvgExport.buildSvgImageFromRawSpecs(toSpec())
-fun Plot.toPDF() = toPdf(this.toSvg())
-fun Plot.toEPS() = toEPS(this.toSvg())
 
-fun toPdf(svg: String) = toVector(svg, ExportType.PDF)
-fun toEPS(svg: String) = toVector(svg, ExportType.EPS)
+fun AnyFrame.isNumeric(col: String) = this[col].all { it == null || it is Number }
+fun AnyFrame.isCategorial(col: String) = !isNumeric(col)
 
-enum class ExportType { PDF, EPS }
+fun attachMetadata(
+    data: AnyFrame,
+    dataCol: String,
+    meta: AnyFrame,
+    metaCol: String
+) = run {
+    val m = matchLists(
+        data[dataCol].distinct().cast<String>().toList(),
+        meta[metaCol].distinct().cast<String>().toList(),
+    )
 
-private fun toVector(svg: String, type: ExportType) = run {
-    val pdfTranscoder = if (type == ExportType.PDF) PDFTranscoder() else EPSTranscoder()
-    val input = TranscoderInput(ByteArrayInputStream(svg.toByteArray()))
-    ByteArrayOutputStream().use { byteArrayOutputStream ->
-        val output = TranscoderOutput(byteArrayOutputStream)
-        pdfTranscoder.transcode(input, output)
-        byteArrayOutputStream.toByteArray()
-    }
-}
-
-fun writeEPS(destination: Path, image: ByteArray) {
-    destination.writeBytes(image)
-}
-
-fun writePDF(destination: Path, vararg images: ByteArray) {
-    writePDF(destination, images.toList())
-}
-
-fun writePDF(destination: Path, images: List<ByteArray>) {
-    val merger = PDFMergerUtility()
-    merger.destinationFileName = destination.absolutePathString()
-
-    for (image in images) {
-        merger.addSource(ByteArrayInputStream(image))
+    m.filter { it.value == null }.apply {
+        if (!isEmpty())
+            throw IllegalArgumentException("can't unambiguously match metadata for the following rows: $keys")
     }
 
-    merger.mergeDocuments(MemoryUsageSetting.setupMainMemoryOnly())
+    data
+        .add("_meta_join_") { m[it[dataCol]] }
+        .leftJoin(meta) { "_meta_join_" match metaCol }
+}
+
+fun matchLists(target: List<String>, query: List<String>): Map<String, String?> {
+    val matched: MutableMap<String, PriorityQueue<Pair<String, Double>>> = HashMap()
+    for (t in target) {
+        val matchedForKey = PriorityQueue<Pair<String, Double>>(
+            Comparator.comparing { -it.second }
+        )
+
+        for (q in query) {
+            val a = t.lowercase(Locale.getDefault())
+            val b = q.lowercase(Locale.getDefault())
+            val match = StringUtil.longestCommonSubstring(a, b)
+            val score = 2.0 * (0.5 + match) / (1 + a.length + b.length)
+            matchedForKey.add(q to score)
+        }
+
+        matched[t] = matchedForKey
+    }
+
+    val unmatchedQ = query.toMutableSet()
+    val r = mutableMapOf<String, String?>()
+
+    for ((t, q) in matched.toList().sortedBy { kv -> -kv.second.maxOf { it.second } }) {
+        if (q.isEmpty()) {
+            r[t] = null
+            continue
+        }
+        var m: String? = null
+        while (!q.isEmpty()) {
+            val candidate = q.poll()
+            val wasUnmatched = unmatchedQ.remove(candidate.first)
+            if (wasUnmatched) {
+                m = candidate.first
+                break
+            }
+        }
+        r[t] = m
+    }
+
+    return r
 }

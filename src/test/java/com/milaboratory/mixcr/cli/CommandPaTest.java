@@ -6,7 +6,7 @@ import org.junit.Test;
 /**
  *
  */
-public class CommandPostanalysisTest extends TestCase {
+public class CommandPaTest extends TestCase {
     @Test
     public void test1() {
         Main.main("postanalysis", "help", "overlap");
