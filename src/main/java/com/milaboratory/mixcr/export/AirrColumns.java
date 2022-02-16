@@ -8,9 +8,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence;
 import com.milaboratory.mixcr.export.AirrUtil.AirrAlignment;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
-import io.repseq.core.VDJCGene;
+import io.repseq.core.*;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -175,12 +173,120 @@ public final class AirrColumns {
         }
     }
 
-    public static final class NFeature implements FieldExtractor<AirrVDJCObjectWrapper> {
-        private final GeneFeature feature;
-        private final String header;
+    public interface ComplexReferencePoint {
+        int getPosition(SequencePartitioning partitioning);
+    }
 
-        public NFeature(GeneFeature feature, String header) {
+    public static final class Single implements ComplexReferencePoint {
+        private final ReferencePoint point;
+
+        public Single(ReferencePoint refPoint) {
+            this.point = refPoint;
+        }
+
+        @Override
+        public int getPosition(SequencePartitioning partitioning) {
+            return partitioning.getPosition(point);
+        }
+
+        @Override
+        public String toString() {
+            return point.toString();
+        }
+    }
+
+    public static final class Rightmost implements ComplexReferencePoint {
+        private final ComplexReferencePoint[] points;
+
+        public Rightmost(ReferencePoint... points) {
+            this.points = new ComplexReferencePoint[points.length];
+            for (int i = 0; i < points.length; i++)
+                this.points[i] = new Single(points[i]);
+        }
+
+        public Rightmost(ComplexReferencePoint... points) {
+            this.points = points;
+        }
+
+        @Override
+        public int getPosition(SequencePartitioning partitioning) {
+            int result = -1;
+            for (ComplexReferencePoint rp : points) {
+                int position = rp.getPosition(partitioning);
+                if (position < 0)
+                    continue;
+                result = Math.max(result, position);
+            }
+            return result;
+        }
+
+        @Override
+        public String toString() {
+            return "Rightmost{" + Arrays.toString(points) + '}';
+        }
+    }
+
+    public static final class Leftmost implements ComplexReferencePoint {
+        private final ComplexReferencePoint[] points;
+
+        public Leftmost(ReferencePoint... points) {
+            this.points = new ComplexReferencePoint[points.length];
+            for (int i = 0; i < points.length; i++)
+                this.points[i] = new Single(points[i]);
+        }
+
+        public Leftmost(ComplexReferencePoint... points) {
+            this.points = points;
+        }
+
+        @Override
+        public int getPosition(SequencePartitioning partitioning) {
+            int result = Integer.MAX_VALUE;
+            for (ComplexReferencePoint rp : points) {
+                int position = rp.getPosition(partitioning);
+                if (position < 0)
+                    continue;
+                result = Math.min(result, position);
+            }
+            return result == Integer.MAX_VALUE ? -1 : result;
+        }
+
+        @Override
+        public String toString() {
+            return "Leftmost{" + Arrays.toString(points) + '}';
+        }
+    }
+
+    public abstract static class NFeatureAbstract implements FieldExtractor<AirrVDJCObjectWrapper> {
+        /**
+         * Used only for complex features
+         */
+        protected final int targetId;
+        /**
+         * Not null for simple gene features
+         */
+        protected final GeneFeature feature;
+        /**
+         * Not null for complex gene features.
+         */
+        protected final ComplexReferencePoint from, to;
+        protected final String header;
+
+        public NFeatureAbstract(int targetId,
+                                ComplexReferencePoint from, ComplexReferencePoint to,
+                                String header) {
+            this.targetId = targetId;
+            this.feature = null;
+            this.from = from;
+            this.to = to;
+            this.header = header;
+        }
+
+        public NFeatureAbstract(GeneFeature feature, String header) {
+            this.targetId = -1; // will not be used
             this.feature = feature;
+            this.from = null;
+            this.to = null;
             this.header = header;
         }
 
@@ -191,10 +297,66 @@ public final class AirrColumns {
 
         @Override
         public String extractValue(AirrVDJCObjectWrapper object) {
-            NSequenceWithQuality feature = object.object.getFeature(this.feature);
-            if (feature == null)
-                return "";
-            return feature.getSequence().toString();
+            if (feature != null) {
+                NSequenceWithQuality feature = object.object.getFeature(this.feature);
+                if (feature == null)
+                    return "";
+                return extractValue(feature.getSequence());
+            } else {
+                int resolvedTargetId = targetId == -1 ? object.getBestTarget() : targetId;
+
+                assert from != null && to != null;
+                SequencePartitioning partitioning = object.object.getPartitionedTarget(resolvedTargetId).getPartitioning();
+
+                int fromPosition = from.getPosition(partitioning);
+                if (fromPosition < 0)
+                    return "";
+
+                int toPosition = to.getPosition(partitioning);
+                if (toPosition < 0)
+                    return "";
+
+                if (fromPosition < toPosition)
+                    return extractValue(object.object.getTarget(resolvedTargetId).getSequence().getRange(fromPosition, toPosition));
+                else
+                    return extractValue(NucleotideSequence.EMPTY);
+            }
+        }
+
+        protected abstract String extractValue(NucleotideSequence feature);
+    }
+
+    public static final class NFeature extends NFeatureAbstract {
+        public NFeature(int targetId,
+                        ComplexReferencePoint from, ComplexReferencePoint to,
+                        String header) {
+            super(targetId, from, to, header);
+        }
+
+        public NFeature(GeneFeature feature, String header) {
+            super(feature, header);
+        }
+
+        @Override
+        public String extractValue(NucleotideSequence feature) {
+            return feature.toString();
+        }
+    }
+
+    public static final class NFeatureLength extends NFeatureAbstract {
+        public NFeatureLength(int targetId,
+                              ComplexReferencePoint from, ComplexReferencePoint to,
+                              String header) {
+            super(targetId, from, to, header);
+        }
+
+        public NFeatureLength(GeneFeature feature, String header) {
+            super(feature, header);
+        }
+
+        @Override
+        public String extractValue(NucleotideSequence feature) {
+            return "" + feature.size();
         }
     }
 
