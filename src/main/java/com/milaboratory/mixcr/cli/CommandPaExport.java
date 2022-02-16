@@ -2,6 +2,7 @@ package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.miplots.ExportKt;
 import com.milaboratory.miplots.stat.util.TestMethod;
+import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.cli.CommandPa.PaResult;
 import com.milaboratory.mixcr.cli.CommandPa.PaResultByChain;
@@ -23,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -100,6 +102,47 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
         }
     }
 
+    @CommandLine.Command(name = "listMetrics",
+            sortOptions = false,
+            separator = " ",
+            description = "List available metrics")
+    static class ListMetrics extends ACommandMiXCR {
+        @Parameters(index = "0", description = "pa_result.json")
+        public String in;
+
+        @Override
+        public void run0() {
+            PaResult paResult;
+            try {
+                paResult = GlobalObjectMappers.PRETTY.readValue(new File(in), PaResult.class);
+            } catch (IOException e) {
+                throwValidationException("Corrupted PA file.");
+                throw new RuntimeException();
+            }
+
+            PaResultByChain result = paResult.results.values().stream().findAny().orElseThrow();
+            CharacteristicGroup<Clone, ?>
+                    biophys = result.schema.getGroup(CommandPa.Biophysics),
+                    diversity = result.schema.getGroup(CommandPa.Diversity);
+
+            for (int i = 0; i < 2; i++) {
+                System.out.println();
+                CharacteristicGroup<Clone, ?> gr = i == 0 ? biophys : diversity;
+                if (i == 0)
+                    System.out.println("Biophysics metrics:");
+                else
+                    System.out.println("Diversity metrics:");
+                result.result.forGroup(gr)
+                        .data.values().stream()
+                        .flatMap(d -> d.data.values()
+                                .stream().flatMap(ma -> Arrays.stream(ma.data)))
+                        .map(m -> m.key)
+                        .distinct()
+                        .forEach(metric -> System.out.println("    " + metric));
+            }
+        }
+    }
+
     static abstract class ExportBasicStatistics extends CommandPaExport {
         abstract String group();
 
@@ -112,8 +155,9 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
         public String secondaryGroup;
         @Option(names = {"--facet-by"}, description = "Facet by")
         public String facetBy;
-        @Option(names = {"--metric"}, description = "Metrics to export")
+        @Option(names = {"--metric"}, description = "Select specific metrics to export.")
         public List<String> metrics;
+
 
         @Override
         public void validate() {
@@ -147,7 +191,8 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
                             false,
                             TestMethod.Wilcoxon,
                             TestMethod.KruskalWallis,
-                            null
+                            null,
+                            CorrelationMethod.Pearson
                     ));
 
             ExportKt.writePDFFigure(Path.of(out.substring(0, out.length() - 3) + chains.name + ".pdf"), plots);
@@ -162,6 +207,17 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
         @Override
         String group() {
             return CommandPa.Biophysics;
+        }
+    }
+
+    @CommandLine.Command(name = "diversity",
+            sortOptions = false,
+            separator = " ",
+            description = "Export diversity characteristics")
+    public static class ExportDiversity extends ExportBasicStatistics {
+        @Override
+        String group() {
+            return CommandPa.Diversity;
         }
     }
 

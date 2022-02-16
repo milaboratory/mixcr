@@ -196,8 +196,10 @@ public final class Main {
 
         cmd.getSubcommands()
                 .get("exportPa")
+                .addSubcommand("tables", CommandSpec.forAnnotatedObject(CommandPaExport.ExportTables.class))
+                .addSubcommand("listMetrics", CommandSpec.forAnnotatedObject(CommandPaExport.ListMetrics.class))
                 .addSubcommand("biophysics", CommandSpec.forAnnotatedObject(CommandPaExport.ExportBiophysics.class))
-                .addSubcommand("tables", CommandSpec.forAnnotatedObject(CommandPaExport.ExportTables.class));
+                .addSubcommand("diversity", CommandSpec.forAnnotatedObject(CommandPaExport.ExportBiophysics.class));
 
         cmd.setSeparator(" ");
         return cmd;

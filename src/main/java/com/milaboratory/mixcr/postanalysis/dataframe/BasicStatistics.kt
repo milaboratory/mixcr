@@ -3,7 +3,14 @@ package com.milaboratory.mixcr.postanalysis.dataframe
 import com.milaboratory.miplots.stat.util.PValueCorrection
 import com.milaboratory.miplots.stat.util.RefGroup
 import com.milaboratory.miplots.stat.util.TestMethod
-import com.milaboratory.miplots.stat.xdiscrete.*
+import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod
+import com.milaboratory.miplots.stat.xcontinious.GGScatter
+import com.milaboratory.miplots.stat.xcontinious.plusAssign
+import com.milaboratory.miplots.stat.xcontinious.statCor
+import com.milaboratory.miplots.stat.xdiscrete.GGBoxPlot
+import com.milaboratory.miplots.stat.xdiscrete.LabelFormat
+import com.milaboratory.miplots.stat.xdiscrete.plusAssign
+import com.milaboratory.miplots.stat.xdiscrete.statCompareMeans
 import com.milaboratory.miplots.writePDF
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult
 import jetbrains.letsPlot.facet.facetWrap
@@ -97,6 +104,7 @@ object BasicStatistics {
         val method: TestMethod = TestMethod.Wilcoxon,
         val multipleGroupsMethod: TestMethod = TestMethod.KruskalWallis,
         val pAdjustMethod: PValueCorrection.Method? = PValueCorrection.Method.Bonferroni,
+        val correlationMethod: CorrelationMethod = CorrelationMethod.Pearson,
     )
 
     fun plots(
@@ -125,28 +133,32 @@ object BasicStatistics {
 
             plt += xlab("")
             plt
+        } else if (df.isNumeric(pp.primaryGroup)) {
+            val plt = GGScatter(
+                df,
+                x = pp.primaryGroup,
+                y = BasicStatRow::value.name,
+                facetBy = pp.facetBy,
+                facetNRow = 1,
+            ) {
+                shape = pp.secondaryGroup
+                color = pp.secondaryGroup
+                linetype = pp.secondaryGroup
+            }
+
+            plt += statCor(method = pp.correlationMethod)
+
+            plt.plot
         } else {
-            val plt =
-                if (df.isNumeric(pp.primaryGroup))
-                    GGLinePlot(
-                        df,
-                        x = pp.primaryGroup,
-                        facetBy = pp.facetBy,
-                        facetNRow = 1,
-                        y = BasicStatRow::value.name
-                    ) {
-                        fill = pp.secondaryGroup ?: pp.primaryGroup
-                    }
-                else
-                    GGBoxPlot(
-                        df,
-                        x = pp.primaryGroup,
-                        facetBy = pp.facetBy,
-                        facetNRow = 1,
-                        y = BasicStatRow::value.name
-                    ) {
-                        fill = pp.secondaryGroup ?: pp.primaryGroup
-                    }
+            val plt = GGBoxPlot(
+                df,
+                x = pp.primaryGroup,
+                y = BasicStatRow::value.name,
+                facetBy = pp.facetBy,
+                facetNRow = 1,
+            ) {
+                fill = pp.secondaryGroup ?: pp.primaryGroup
+            }
 
             if (pp.showPairwisePValue)
                 plt += statCompareMeans(
