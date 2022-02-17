@@ -110,8 +110,8 @@ object SingleSpectratype {
             .with { OtherPayload }
 
         // find min max
-        val min = df.length.min() ?: 0
-        val max = df.length.max() ?: 0
+        val min = df.length.min()
+        val max = df.length.max()
 
         // add auxiliary points for each cdr3 length
         df = df.concat(

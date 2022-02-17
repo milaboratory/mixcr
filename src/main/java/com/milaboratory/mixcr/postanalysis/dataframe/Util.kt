@@ -2,6 +2,7 @@ package com.milaboratory.mixcr.postanalysis.dataframe
 
 import com.milaboratory.util.StringUtil
 import org.jetbrains.kotlinx.dataframe.AnyFrame
+import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.add
 import org.jetbrains.kotlinx.dataframe.api.all
 import org.jetbrains.kotlinx.dataframe.api.cast
@@ -12,6 +13,16 @@ import java.util.*
 fun AnyFrame.isNumeric(col: String) = this[col].all { it == null || it is Number }
 fun AnyFrame.isCategorial(col: String) = !isNumeric(col)
 
+/**
+ * Attaches metadata to statistics
+ **/
+fun <T> DataFrame<T>.withMetadata(metadata: AnyFrame) = run {
+    attachMetadata(this, "sample", metadata, "sample").cast<T>()
+}
+
+/**
+ * Attaches metadata to statistics
+ **/
 fun attachMetadata(
     data: AnyFrame,
     dataCol: String,

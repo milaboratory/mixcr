@@ -199,7 +199,11 @@ public final class Main {
                 .addSubcommand("tables", CommandSpec.forAnnotatedObject(CommandPaExport.ExportTables.class))
                 .addSubcommand("listMetrics", CommandSpec.forAnnotatedObject(CommandPaExport.ListMetrics.class))
                 .addSubcommand("biophysics", CommandSpec.forAnnotatedObject(CommandPaExport.ExportBiophysics.class))
-                .addSubcommand("diversity", CommandSpec.forAnnotatedObject(CommandPaExport.ExportBiophysics.class));
+                .addSubcommand("diversity", CommandSpec.forAnnotatedObject(CommandPaExport.ExportDiversity.class))
+
+                .addSubcommand("vUsage", CommandSpec.forAnnotatedObject(CommandPaExport.ExportVUsage.class))
+                .addSubcommand("jUsage", CommandSpec.forAnnotatedObject(CommandPaExport.ExportJUsage.class))
+                .addSubcommand("isotypeUsage", CommandSpec.forAnnotatedObject(CommandPaExport.ExportIsotypeUsage.class));
 
         cmd.setSeparator(" ");
         return cmd;

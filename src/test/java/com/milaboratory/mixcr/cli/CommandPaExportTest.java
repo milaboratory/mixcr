@@ -18,4 +18,19 @@ public class CommandPaExportTest {
                 "scratch/pa/bio.pdf"
         );
     }
+
+    @Ignore
+    @Test
+    public void test2() {
+        Main.main(
+                "exportPa",
+                "vUsage",
+                "--chains",
+                "TRB",
+                "--meta",
+                "scratch/metadata.csv",
+                "scratch/pa/pa.json",
+                "scratch/pa/vUsage.pdf"
+        );
+    }
 }

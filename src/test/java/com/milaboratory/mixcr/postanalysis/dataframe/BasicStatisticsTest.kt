@@ -2,7 +2,6 @@ package com.milaboratory.mixcr.postanalysis.dataframe
 
 import com.milaboratory.miplots.writePDF
 import com.milaboratory.mixcr.cli.CommandPa
-import com.milaboratory.mixcr.postanalysis.dataframe.BasicStatistics.withMetadata
 import com.milaboratory.util.GlobalObjectMappers
 import io.repseq.core.Chains
 import org.jetbrains.kotlinx.dataframe.DataFrame

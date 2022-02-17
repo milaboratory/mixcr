@@ -11,20 +11,16 @@ import com.milaboratory.miplots.stat.xdiscrete.GGBoxPlot
 import com.milaboratory.miplots.stat.xdiscrete.LabelFormat
 import com.milaboratory.miplots.stat.xdiscrete.plusAssign
 import com.milaboratory.miplots.stat.xdiscrete.statCompareMeans
-import com.milaboratory.miplots.writePDF
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult
 import jetbrains.letsPlot.facet.facetWrap
 import jetbrains.letsPlot.geom.geomBoxplot
-import jetbrains.letsPlot.intern.Plot
 import jetbrains.letsPlot.label.ggtitle
 import jetbrains.letsPlot.label.xlab
 import jetbrains.letsPlot.letsPlot
-import org.jetbrains.kotlinx.dataframe.AnyFrame
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.annotations.DataSchema
 import org.jetbrains.kotlinx.dataframe.api.*
 import org.jetbrains.kotlinx.dataframe.io.read
-import java.nio.file.Path
 
 /**
  * DataFrame row for single statistical char group
@@ -82,13 +78,6 @@ object BasicStatistics {
         df
     }
 
-    /**
-     * Attaches metadata to statistics
-     **/
-    fun DataFrame<BasicStatRow>.withMetadata(metadata: AnyFrame) = run {
-        attachMetadata(this, "sample", metadata, "sample").cast<BasicStatRow>()
-    }
-
     data class PlotParameters(
         val primaryGroup: String? = null,
         val secondaryGroup: String? = null,
@@ -112,10 +101,6 @@ object BasicStatistics {
         pp: PlotParameters,
     ) = df.metric.distinct().toList()
         .map { mt -> plot(df.filter { metric == mt }, pp) + ggtitle(mt) }
-
-    fun write(path: String, plots: List<Plot>) {
-        writePDF(Path.of(path), plots)
-    }
 
     fun plot(
         df: DataFrame<BasicStatRow>,

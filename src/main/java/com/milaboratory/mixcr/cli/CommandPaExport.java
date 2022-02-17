@@ -8,6 +8,8 @@ import com.milaboratory.mixcr.cli.CommandPa.PaResult;
 import com.milaboratory.mixcr.cli.CommandPa.PaResultByChain;
 import com.milaboratory.mixcr.postanalysis.dataframe.BasicStatRow;
 import com.milaboratory.mixcr.postanalysis.dataframe.BasicStatistics;
+import com.milaboratory.mixcr.postanalysis.dataframe.GeneUsage;
+import com.milaboratory.mixcr.postanalysis.dataframe.GeneUsageRow;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroupOutputExtractor;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroupResult;
@@ -158,7 +160,6 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
         @Option(names = {"--metric"}, description = "Select specific metrics to export.")
         public List<String> metrics;
 
-
         @Override
         public void validate() {
             super.validate();
@@ -221,7 +222,82 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
         }
     }
 
-    @CommandLine.Command(name = "exportPostanalysis",
+    static abstract class ExportGeneUsage extends CommandPaExport {
+        abstract String group();
+
+        @Parameters(index = "1", description = "Output PDF file name", defaultValue = "plot.pdf")
+        public String out;
+        @Option(names = {"--no-dendro-samples"}, description = "Plot dendrogram for hierarchical clusterization of samples.")
+        public boolean noSamplesDendro;
+        @Option(names = {"--no-dendro-genes"}, description = "Plot dendrogram for hierarchical clusterization of genes.")
+        public boolean noGenesDendro;
+        @Option(names = {"--color-key"}, description = "Add color key layer.")
+        public List<String> colorKey;
+
+        @Override
+        public void validate() {
+            super.validate();
+            if (!out.endsWith(".pdf"))
+                throwValidationException("Output file must ends with .pdf extension");
+        }
+
+        @Override
+        void run(Chains.NamedChains chains, PaResultByChain result) {
+            CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(group());
+
+            DataFrame<GeneUsageRow> df = GeneUsage.INSTANCE.dataFrame(
+                    result.result.forGroup(ch),
+                    metadata
+            );
+
+            if (df.rowsCount() == 0)
+                return;
+
+            Plot plots = GeneUsage.INSTANCE.plot(df,
+                    new GeneUsage.PlotParameters(
+                            colorKey,
+                            !noSamplesDendro,
+                            !noGenesDendro
+                    ));
+
+            ExportKt.writePDF(Path.of(out.substring(0, out.length() - 3) + chains.name + ".pdf"), plots);
+        }
+    }
+
+    @CommandLine.Command(name = "vUsage",
+            sortOptions = false,
+            separator = " ",
+            description = "Export V gene usage heatmap")
+    public static class ExportVUsage extends ExportGeneUsage {
+        @Override
+        String group() {
+            return CommandPa.VUsage;
+        }
+    }
+
+    @CommandLine.Command(name = "jUsage",
+            sortOptions = false,
+            separator = " ",
+            description = "Export J gene usage heatmap")
+    public static class ExportJUsage extends ExportGeneUsage {
+        @Override
+        String group() {
+            return CommandPa.JUsage;
+        }
+    }
+
+    @CommandLine.Command(name = "isotypeUsage",
+            sortOptions = false,
+            separator = " ",
+            description = "Export isotype usage heatmap")
+    public static class ExportIsotypeUsage extends ExportGeneUsage {
+        @Override
+        String group() {
+            return CommandPa.IsotypeUsage;
+        }
+    }
+
+    @CommandLine.Command(name = "exportPa",
             separator = " ",
             description = "Export postanalysis results.",
             subcommands = {
