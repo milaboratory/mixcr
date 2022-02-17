@@ -82,12 +82,13 @@ public class VDJCSProperties {
     @Serializable(asJson = true)
     public static final class CloneOrdering {
         @JsonProperty("properties")
-        private final VDJCSProperties.VDJCSProperty<? super Clone>[] properties;
+        private final VDJCSProperty<? super Clone>[] properties;
 
         public CloneOrdering(List<? extends VDJCSProperty<? super Clone>> properties) {
             this.properties = properties.toArray(new VDJCSProperty[properties.size()]);
         }
 
+        @SafeVarargs
         @JsonCreator
         public CloneOrdering(@JsonProperty("properties") VDJCSProperty<? super Clone>... properties) {
             this.properties = properties;

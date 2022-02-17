@@ -345,8 +345,9 @@ class ClusterProcessor {
                             Stream.of(treeToGrow, treeToAttach)
                                     .flatMap(it -> it.treeBuilder.getTree().allNodes())
                                     .map(Tree.NodeWithParent::getNode)
-                                    .map(node -> node.getContent().convert(it -> Optional.of(new CloneWithMutationsFromVJGermline(it.getMutationsFromVJGermline(), it.getClone())), it -> Optional.<CloneWithMutationsFromVJGermline>empty()))
+                                    .map(node -> node.getContent().convert(Optional::of, it -> Optional.<CloneWithMutationsFromReconstructedRoot>empty()))
                                     .flatMap(Java9Util::stream)
+                                    .map(it -> new CloneWithMutationsFromVJGermline(it.getMutationsFromVJGermline(), it.getClone()))
                                     .collect(Collectors.toList())
                     ), commonVAlignmentRanges, commonJAlignmentRanges);
                     originalTreesCopy.remove(i);

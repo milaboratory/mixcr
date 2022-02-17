@@ -35,19 +35,21 @@ import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
+import com.milaboratory.primitivio.Util;
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid;
 import com.milaboratory.util.LambdaSemaphore;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
+import io.repseq.dto.VDJCLibraryData;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
-import static com.milaboratory.mixcr.basictypes.ClnsWriter.MAGIC;
-import static com.milaboratory.mixcr.basictypes.ClnsWriter.MAGIC_LENGTH;
+import static com.milaboratory.mixcr.basictypes.ClnsWriter.*;
 
 /**
  *
@@ -81,6 +83,7 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
         this.input = input;
         this.libraryRegistry = libraryRegistry;
 
+        boolean readLibraries = true;
         try (PrimitivI i = input.beginPrimitivI(true)) {
             byte[] magicBytes = new byte[MAGIC_LENGTH];
             i.readFully(magicBytes);
@@ -91,6 +94,9 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
 
             switch (magicString) {
                 case MAGIC:
+                    break;
+                case MAGIC_V10:
+                    readLibraries = false;
                     break;
                 default:
                     throw new RuntimeException("Unsupported file format; .clns file of version " + magicString +
@@ -112,6 +118,10 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
             alignerParameters = i.readObject(VDJCAlignerParameters.class);
             assemblerParameters = i.readObject(CloneAssemblerParameters.class);
             ordering = i.readObject(VDJCSProperties.CloneOrdering.class);
+            if (readLibraries) {
+                Map<String, VDJCLibraryData> liberalise = Util.readMap(i, String.class, VDJCLibraryData.class);
+                liberalise.forEach((name, libraryData) -> libraryRegistry.registerLibrary(null, name, libraryData));
+            }
 
             genes = IOUtil.stdVDJCPrimitivIStateInit(i, alignerParameters, libraryRegistry);
         }

@@ -55,7 +55,7 @@ public final class CloneFactory {
     final EnumMap<GeneType, GeneFeature> featuresToAlign;
 
     public CloneFactory(CloneFactoryParameters parameters, GeneFeature[] assemblingFeatures,
-                        List<VDJCGene> usedGenes, EnumMap<GeneType, GeneFeature> featuresToAlign) {
+                        Collection<VDJCGene> usedGenes, EnumMap<GeneType, GeneFeature> featuresToAlign) {
         this(parameters, assemblingFeatures,
                 usedGenes.stream().collect(Collectors.toMap(VDJCGene::getId, Function.identity())), featuresToAlign);
     }

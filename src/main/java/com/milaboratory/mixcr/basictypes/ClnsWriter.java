@@ -37,21 +37,26 @@ import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivO;
+import com.milaboratory.primitivio.Util;
 import com.milaboratory.primitivio.blocks.PrimitivOHybrid;
 import io.repseq.core.VDJCGene;
+import io.repseq.core.VDJCLibrary;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  *
  */
 public final class ClnsWriter implements PipelineConfigurationWriter, AutoCloseable {
     static final String MAGIC_V10 = "MiXCR.CLNS.V10";
-    static final String MAGIC = MAGIC_V10;
+    static final String MAGIC_V11 = "MiXCR.CLNS.V11";
+    static final String MAGIC = MAGIC_V11;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
 
@@ -80,7 +85,9 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
                 cloneSet.getAssemblerParameters(),
                 cloneSet.getOrdering(),
                 cloneSet.getUsedGenes(),
-                cloneSet);
+                cloneSet,
+                Collections.emptyList()
+        );
     }
 
     public void writeHeader(
@@ -89,7 +96,8 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
             CloneAssemblerParameters assemblerParameters,
             VDJCSProperties.CloneOrdering ordering,
             List<VDJCGene> genes,
-            HasFeatureToAlign featureToAlign
+            HasFeatureToAlign featureToAlign,
+            List<VDJCLibrary> libraries
     ) {
         try (PrimitivO o = output.beginPrimitivO(true)) {
             // Writing magic bytes
@@ -105,6 +113,7 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
             o.writeObject(alignmentParameters);
             o.writeObject(assemblerParameters);
             o.writeObject(ordering);
+            Util.writeMap(libraries.stream().collect(Collectors.toMap(VDJCLibrary::getName, VDJCLibrary::getData)), o);
 
             IOUtil.stdVDJCPrimitivOStateInit(o, genes, featureToAlign);
         }
@@ -115,6 +124,21 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
      */
     public InputPort<Clone> cloneWriter() {
         return output.beginPrimitivOBlocks(3, 512);
+    }
+
+    public void writeCloneSet(PipelineConfiguration configuration, CloneSet cloneSet, List<VDJCLibrary> libraries) {
+        writeHeader(configuration,
+                cloneSet.getAlignmentParameters(),
+                cloneSet.getAssemblerParameters(),
+                cloneSet.getOrdering(),
+                cloneSet.getUsedGenes(),
+                cloneSet,
+                libraries
+        );
+        InputPort<Clone> cloneIP = cloneWriter();
+        for (Clone clone : cloneSet)
+            cloneIP.put(clone);
+        cloneIP.put(null);
     }
 
     public void writeCloneSet(PipelineConfiguration configuration, CloneSet cloneSet) {

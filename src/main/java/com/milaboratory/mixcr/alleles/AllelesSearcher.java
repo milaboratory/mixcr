@@ -4,7 +4,11 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.blocks.FilteringPort;
 import cc.redberry.pipe.util.FlatteningOutputPort;
+import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.AlignmentScoring;
+import com.milaboratory.core.mutations.Mutation;
+import com.milaboratory.core.mutations.Mutations;
+import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.alleles.CommonMutationsSearcher.CloneDescription;
 import com.milaboratory.mixcr.basictypes.Clone;
@@ -16,18 +20,16 @@ import com.milaboratory.mixcr.util.Cluster;
 import com.milaboratory.mixcr.util.ExceptionUtil;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
 import com.milaboratory.util.sorting.HashSorter;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
+import io.repseq.core.*;
+import io.repseq.dto.VDJCGeneData;
 
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS;
 import static io.repseq.core.GeneFeature.CDR3;
 import static io.repseq.core.GeneType.Joining;
 import static io.repseq.core.GeneType.Variable;
@@ -140,7 +142,7 @@ public class AllelesSearcher {
         };
     }
 
-    public List<Allele> findAlleles(Cluster<Clone> clusterByTheSameGene, GeneType geneType) {
+    private List<Allele> findAlleles(Cluster<Clone> clusterByTheSameGene, GeneType geneType) {
         if (clusterByTheSameGene.cluster.isEmpty()) {
             throw new IllegalArgumentException();
         }
@@ -170,11 +172,44 @@ public class AllelesSearcher {
                 bestHit.getAlignment(0).getSequence1()
         );
 
+        //TODO search for mutations in CDR3
         return commonMutationsSearcher.findAlleles(cloneDescriptors).stream()
-                .map(alleleMutationsFromGermline -> new Allele(
-                        bestHit.getGene().getId(),
-                        alleleMutationsFromGermline
-                ))
+                .map(alleleMutationsFromGermline -> {
+                    if (alleleMutationsFromGermline.equals(EMPTY_NUCLEOTIDE_MUTATIONS)) {
+                        return new Allele(
+                                bestHit.getGene(),
+                                EMPTY_NUCLEOTIDE_MUTATIONS,
+                                bestHit.getAlignedFeature(),
+                                Collections.emptyList()
+                        );
+                    } else {
+                        MutationsBuilder<NucleotideSequence> mutationsOnBaseLine = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
+                        for (int i = 0; i < alleleMutationsFromGermline.size(); i++) {
+                            int mutation = alleleMutationsFromGermline.getMutation(i);
+                            int convertedPosition = 0;
+                            for (Range alignmentRange : commonAlignmentRanges.getCommonRanges()) {
+                                if (alignmentRange.contains(Mutation.getPosition(mutation))) {
+                                    convertedPosition += Mutation.getPosition(mutation) - alignmentRange.getLower();
+                                    break;
+                                } else {
+                                    convertedPosition += alignmentRange.length();
+                                }
+                            }
+                            mutationsOnBaseLine.append(Mutation.createMutation(
+                                    Mutation.getType(mutation),
+                                    convertedPosition,
+                                    Mutation.getFrom(mutation),
+                                    Mutation.getTo(mutation)
+                            ));
+                        }
+                        return new Allele(
+                                bestHit.getGene(),
+                                alleleMutationsFromGermline,
+                                bestHit.getAlignedFeature(),
+                                commonAlignmentRanges.getCommonRanges()
+                        );
+                    }
+                })
                 .collect(Collectors.toList());
     }
 
@@ -200,6 +235,66 @@ public class AllelesSearcher {
         }
     }
 
+    public List<VDJCGeneData> allelesGeneData(Cluster<Clone> cluster, GeneType geneType) {
+        return findAlleles(cluster, geneType)
+                .stream()
+                .map(allele -> {
+                    if (!allele.mutations.equals(EMPTY_NUCLEOTIDE_MUTATIONS)) {
+                        return buildGene(allele);
+                    } else {
+                        return allele.gene.getData();
+                    }
+                })
+                .collect(Collectors.toList());
+    }
+
+    private VDJCGeneData buildGene(Allele allele) {
+        return new VDJCGeneData(
+                new BaseSequence(
+                        allele.gene.getData().getBaseSequence().getOrigin(),
+                        allele.gene.getPartitioning().getRanges(allele.alignedFeature),
+                        allele.mutations
+                ),
+                generateGeneName(allele),
+                allele.gene.getData().getGeneType(),
+                allele.gene.getData().isFunctional(),
+                allele.gene.getData().getChains(),
+                metaForGeneratedGene(allele),
+                recalculatedAnchorPoints(allele)
+        );
+    }
+
+    private String generateGeneName(Allele allele) {
+        return allele.gene.getName() + "-M" + allele.mutations.size() + "-" + allele.mutations.hashCode();
+    }
+
+    private SortedMap<String, SortedSet<String>> metaForGeneratedGene(Allele allele) {
+        SortedMap<String, SortedSet<String>> meta = new TreeMap<>(allele.gene.getData().getMeta());
+        meta.put(
+                "alleleMutationsReliableRanges",
+                allele.knownRanges.stream()
+                        .map(Range::toString)
+                        .collect(Collectors.toCollection(TreeSet::new))
+        );
+        return meta;
+    }
+
+    private TreeMap<ReferencePoint, Long> recalculatedAnchorPoints(Allele allele) {
+        ReferencePoints mappedReferencePoints = allele.gene.getPartitioning()
+                .getRelativeReferencePoints(allele.alignedFeature)
+                .applyMutations(allele.mutations);
+        return IntStream.range(0, mappedReferencePoints.pointsCount())
+                .mapToObj(mappedReferencePoints::referencePointFromIndex)
+                .collect(Collectors.toMap(
+                        Function.identity(),
+                        it -> (long) mappedReferencePoints.getPosition(it),
+                        (Long a, Long b) -> {
+                            throw new IllegalArgumentException();
+                        },
+                        TreeMap::new
+                ));
+    }
+
     public static class SortedClonotypes {
         private final OutputPortCloseable<Clone> sortedByV;
         private final OutputPortCloseable<Clone> sortedByJ;
@@ -209,12 +304,38 @@ public class AllelesSearcher {
             this.sortedByJ = sortedByJ;
         }
 
-        public OutputPortCloseable<Clone> getSortedByV() {
-            return sortedByV;
-        }
-
-        public OutputPortCloseable<Clone> getSortedByJ() {
-            return sortedByJ;
+        public OutputPortCloseable<Clone> getSortedBy(GeneType geneType) {
+            switch (geneType) {
+                case Variable:
+                    return sortedByV;
+                case Joining:
+                    return sortedByJ;
+                default:
+                    throw new IllegalArgumentException();
+            }
         }
     }
+
+    private static class Allele {
+        private final VDJCGene gene;
+        private final Mutations<NucleotideSequence> mutations;
+        private final GeneFeature alignedFeature;
+        private final List<Range> knownRanges;
+
+        public Allele(VDJCGene gene, Mutations<NucleotideSequence> mutations, GeneFeature alignedFeature, List<Range> knownRanges) {
+            this.gene = gene;
+            this.mutations = mutations;
+            this.alignedFeature = alignedFeature;
+            this.knownRanges = knownRanges;
+        }
+
+        @Override
+        public String toString() {
+            return "Allele{" +
+                    "id=" + gene +
+                    ", mutations=" + mutations +
+                    '}';
+        }
+    }
+
 }

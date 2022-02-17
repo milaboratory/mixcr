@@ -1,6 +1,8 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.OutputPortCloseable;
+import com.milaboratory.cli.BinaryFileInfo;
+import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.postanalysis.*;
@@ -345,6 +347,26 @@ public abstract class CommandPostanalysis extends ACommandWithOutputMiXCR {
                     VDJCLibraryRegistry.getDefault(),
                     concurrencyLimiter);
             return new CloneReader() {
+                @Override
+                public PipelineConfiguration getPipelineConfiguration() {
+                    return inner.getPipelineConfiguration();
+                }
+
+                @Override
+                public PipelineConfiguration fromFileOrNull(String fileName, BinaryFileInfo fileInfo) {
+                    return inner.fromFileOrNull(fileName, fileInfo);
+                }
+
+                @Override
+                public PipelineConfiguration fromFile(String fileName) {
+                    return inner.fromFile(fileName);
+                }
+
+                @Override
+                public PipelineConfiguration fromFile(String fileName, BinaryFileInfo fileInfo) {
+                    return inner.fromFile(fileName, fileInfo);
+                }
+
                 @Override
                 public VDJCAlignerParameters getAlignerParameters() {
                     return inner.getAlignerParameters();

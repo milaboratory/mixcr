@@ -30,14 +30,8 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.OutputPortCloseable;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.milaboratory.cli.ActionConfiguration;
-import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.*;
 import com.milaboratory.core.mutations.Mutation;
@@ -51,7 +45,10 @@ import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.trees.*;
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed;
-import com.milaboratory.mixcr.util.*;
+import com.milaboratory.mixcr.util.Cluster;
+import com.milaboratory.mixcr.util.ExceptionUtil;
+import com.milaboratory.mixcr.util.Java9Util;
+import com.milaboratory.mixcr.util.RangeInfo;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.ReferencePoint;
@@ -80,7 +77,7 @@ import static io.repseq.core.ReferencePoint.*;
         sortOptions = false,
         separator = " ",
         description = "Builds SHM trees.")
-public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
+public class CommandBuildSHMTree extends ACommandWithOutputMiXCR {
     static final String BUILD_SHM_TREE_COMMAND_NAME = "shm_tree";
 
     @CommandLine.Parameters(
@@ -99,17 +96,15 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
         return inOut.subList(inOut.size() - 1, inOut.size());
     }
 
+    public List<String> getClnsFiles() {
+        return getInputFiles();
+    }
+
     @CommandLine.Option(description = "SHM tree builder parameters preset.",
             names = {"-p", "--preset"})
     public String shmTreeBuilderParametersName = "default";
 
     private SHMTreeBuilderParameters shmTreeBuilderParameters = null;
-
-    @Override
-    public BuildSHMTreeConfiguration getConfiguration() {
-        ensureParametersInitialized();
-        return new BuildSHMTreeConfiguration(shmTreeBuilderParameters);
-    }
 
     private void ensureParametersInitialized() {
         if (shmTreeBuilderParameters != null)
@@ -120,21 +115,20 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
             throwValidationException("Unknown parameters: " + shmTreeBuilderParametersName);
     }
 
-
     @Override
-    public PipelineConfiguration getFullPipelineConfiguration() {
-        return PipelineConfiguration.mkInitial(getInputFiles(), getConfiguration(),
-                MiXCRVersionInfo.getAppVersionInfo());
-    }
-
-    @Override
-    public void run1() throws Exception {
-        BuildSHMTreeConfiguration configuration = getConfiguration();
-        List<CloneReader> cloneReaders = getInputFiles().stream()
+    public void run0() throws Exception {
+        ensureParametersInitialized();
+        List<CloneReader> cloneReaders = getClnsFiles().stream()
                 .map(ExceptionUtil.wrap(path -> CloneSetIO.mkReader(Paths.get(path), VDJCLibraryRegistry.getDefault())))
                 .collect(Collectors.toList());
+        if (cloneReaders.size() == 0) {
+            throw new IllegalArgumentException("there is no files to process");
+        }
+        if (cloneReaders.stream().map(CloneReader::getAssemblerParameters).distinct().count() != 1) {
+            throw new IllegalArgumentException("input files must have the same assembler parameters");
+        }
         SHMTreeBuilder shmTreeBuilder = new SHMTreeBuilder(
-                configuration.shmTreeBuilderParameters,
+                shmTreeBuilderParameters,
                 new ClusteringCriteria.DefaultClusteringCriteria(),
                 cloneReaders
         );
@@ -154,7 +148,9 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
             if (true) {
 //            if (mutationsCount > 30) {
                 //                if (true) {
-                if (cluster.cluster.stream().map(it -> it.clone.getId()).anyMatch(it -> it == 7679)) {
+//                        int rootCloneId = 19129;
+                int rootCloneId = 24722;
+                if (cluster.cluster.stream().map(it -> it.clone.getId()).anyMatch(it -> it == rootCloneId)) {
 //                if (mutations.stream().anyMatch(it -> it.startsWith("IGHV3-48*00IGHJ4*00 CDR3 length: 57") && it.contains("2361") )
 //                        || mutations.stream().anyMatch(it -> it.startsWith("IGHV3-48*00IGHJ6*00 CDR3 length: 66") && it.contains("18091"))) {
 
@@ -317,8 +313,6 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                                         numberOfMutationsWithoutCDR3(clone, Joining) == 0).count() + "\n");
 
 
-//                        int rootCloneId = 19129;
-                        int rootCloneId = 24722;
                         Optional<Clone> rootClone = cluster.cluster.stream().map(cw -> cw.clone).filter(it -> it.getId() == rootCloneId).findFirst();
 
                         List<Integer> VMutationPositions = allMutationPositions(cluster, Variable);
@@ -1313,30 +1307,5 @@ public class CommandBuildSHMTree extends ACommandWithSmartOverwriteMiXCR {
                 .toArray();
 
         return new MutationsBuilder<>(NucleotideSequence.ALPHABET, false, filteredMutations, filteredMutations.length).createAndDestroy();
-    }
-
-
-    @JsonAutoDetect(
-            fieldVisibility = JsonAutoDetect.Visibility.ANY,
-            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-            getterVisibility = JsonAutoDetect.Visibility.NONE)
-    @JsonTypeInfo(
-            use = JsonTypeInfo.Id.CLASS,
-            include = JsonTypeInfo.As.PROPERTY,
-            property = "type")
-    public static class BuildSHMTreeConfiguration implements ActionConfiguration<BuildSHMTreeConfiguration> {
-        public final SHMTreeBuilderParameters shmTreeBuilderParameters;
-
-        @JsonCreator
-        public BuildSHMTreeConfiguration(
-                @JsonProperty("shmTreeBuilderParameters") SHMTreeBuilderParameters shmTreeBuilderParameters
-        ) {
-            this.shmTreeBuilderParameters = shmTreeBuilderParameters;
-        }
-
-        @Override
-        public String actionName() {
-            return BUILD_SHM_TREE_COMMAND_NAME;
-        }
     }
 }
