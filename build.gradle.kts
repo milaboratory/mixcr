@@ -1,6 +1,6 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.palantir.gradle.gitversion.VersionDetails
 import groovy.lang.Closure
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import java.net.InetAddress
 
 plugins {
@@ -20,10 +20,7 @@ val gitDetails = versionDetails()
 val longTests: String? by project
 
 group = "com.milaboratory"
-val gitLastTag = gitDetails.lastTag.removePrefix("v")
-version =
-    if (gitDetails.commitDistance == 0) gitLastTag
-    else "${gitLastTag}-${gitDetails.commitDistance}-${gitDetails.gitHash}"
+version = if (version != "unspecified") version else "SNAPSHOT"
 description = "MiXCR"
 
 java {
@@ -36,7 +33,7 @@ application {
     mainClass.set("com.milaboratory.mixcr.cli.Main")
 }
 
-tasks.withType<JavaCompile>() {
+tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
 }
 
@@ -44,25 +41,17 @@ tasks.withType<Javadoc> {
     (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
 }
 
-tasks.register("createInfoFile") {
-    doLast {
-        projectDir
-            .resolve("build_info.json")
-            .writeText("""{"version":"$version"}""")
-    }
-}
-
 repositories {
     mavenCentral()
 
-    // Snapshot versions of milib and repseqio distributed via this repo
+    // Snapshot versions of redberry-pipe, milib and repseqio distributed via this repo
     maven {
         url = uri("https://pub.maven.milaboratory.com")
     }
 }
 
-val milibVersion = "1.14.1-16-774c60afab"
-val repseqioVersion = "1.3.5-4-f7170dd23b"
+val milibVersion = "1.14.1-47-master"
+val repseqioVersion = "1.3.5-18-master"
 val jacksonVersion = "2.12.4"
 
 dependencies {
