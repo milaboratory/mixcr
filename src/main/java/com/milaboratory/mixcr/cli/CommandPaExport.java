@@ -6,10 +6,7 @@ import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.cli.CommandPa.PaResult;
 import com.milaboratory.mixcr.cli.CommandPa.PaResultByChain;
-import com.milaboratory.mixcr.postanalysis.dataframe.BasicStatRow;
-import com.milaboratory.mixcr.postanalysis.dataframe.BasicStatistics;
-import com.milaboratory.mixcr.postanalysis.dataframe.GeneUsage;
-import com.milaboratory.mixcr.postanalysis.dataframe.GeneUsageRow;
+import com.milaboratory.mixcr.postanalysis.dataframe.*;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroupOutputExtractor;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroupResult;
@@ -227,9 +224,9 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
 
         @Parameters(index = "1", description = "Output PDF file name", defaultValue = "plot.pdf")
         public String out;
-        @Option(names = {"--no-dendro-samples"}, description = "Plot dendrogram for hierarchical clusterization of samples.")
+        @Option(names = {"--no-samples-dendro"}, description = "Do not plot dendrogram for hierarchical clusterization of samples.")
         public boolean noSamplesDendro;
-        @Option(names = {"--no-dendro-genes"}, description = "Plot dendrogram for hierarchical clusterization of genes.")
+        @Option(names = {"--no-genes-dendro"}, description = "Do not plot dendrogram for hierarchical clusterization of genes.")
         public boolean noGenesDendro;
         @Option(names = {"--color-key"}, description = "Add color key layer.")
         public List<String> colorKey;
@@ -294,6 +291,93 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
         @Override
         String group() {
             return CommandPa.IsotypeUsage;
+        }
+    }
+
+    @CommandLine.Command(name = "vjUsage",
+            sortOptions = false,
+            separator = " ",
+            description = "Export V-J usage heatmap")
+    static class ExportVJUsage extends CommandPaExport {
+        @Parameters(index = "1", description = "Output PDF file name", defaultValue = "plot.pdf")
+        public String out;
+        @Option(names = {"--no-v-dendro"}, description = "Plot dendrogram for hierarchical clusterization of V genes.")
+        public boolean noVDendro;
+        @Option(names = {"--no-j-dendro"}, description = "Plot dendrogram for hierarchical clusterization of genes.")
+        public boolean noJDendro;
+        @Option(names = {"--color-key"}, description = "Add color key layer.")
+        public List<String> colorKey;
+
+        @Override
+        public void validate() {
+            super.validate();
+            if (!out.endsWith(".pdf"))
+                throwValidationException("Output file must ends with .pdf extension");
+        }
+
+        @Override
+        void run(Chains.NamedChains chains, PaResultByChain result) {
+            CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(CommandPa.VJUsage);
+
+            DataFrame<VJUsageRow> df = VJUsage.INSTANCE.dataFrame(
+                    result.result.forGroup(ch),
+                    metadata
+            );
+
+            if (df.rowsCount() == 0)
+                return;
+
+            Plot plots = VJUsage.INSTANCE.plot(df,
+                    new VJUsage.PlotParameters(
+                            colorKey,
+                            !noVDendro,
+                            !noJDendro
+                    ));
+
+            ExportKt.writePDF(Path.of(out.substring(0, out.length() - 3) + chains.name + ".pdf"), plots);
+        }
+    }
+
+    @CommandLine.Command(name = "overlap",
+            sortOptions = false,
+            separator = " ",
+            description = "Export overlap heatmap")
+    static class ExportOverlap extends CommandPaExport {
+        @Parameters(index = "1", description = "Output PDF file name", defaultValue = "plot.pdf")
+        public String out;
+        @Option(names = {"--no-dendro"}, description = "Plot dendrogram for hierarchical clusterization of V genes.")
+        public boolean noDendro;
+        @Option(names = {"--color-key"}, description = "Add color key layer.")
+        public List<String> colorKey;
+        @Option(names = {"--metric"}, description = "Select specific metrics to export.")
+        public List<String> metrics;
+
+        @Override
+        public void validate() {
+            super.validate();
+            if (!out.endsWith(".pdf"))
+                throwValidationException("Output file must ends with .pdf extension");
+        }
+
+        @Override
+        void run(Chains.NamedChains chains, PaResultByChain result) {
+            CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(CommandPa.Overlap);
+
+            DataFrame<OverlapRow> df = Overlap.INSTANCE.dataFrame(
+                    result.result.forGroup(ch),
+                    metadata
+            );
+
+            if (df.rowsCount() == 0)
+                return;
+
+            Plot plots = Overlap.INSTANCE.plot(df,
+                    new Overlap.PlotParameters(
+                            colorKey,
+                            !noDendro,
+                    ));
+
+            ExportKt.writePDF(Path.of(out.substring(0, out.length() - 3) + chains.name + ".pdf"), plots);
         }
     }
 

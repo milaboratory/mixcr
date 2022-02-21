@@ -150,7 +150,9 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
      */
     @JsonAutoDetect
     public static final class PaResult {
-        /** Results for individual chains */
+        /**
+         * Results for individual chains
+         */
         @JsonProperty("results")
         @JsonSerialize(keyUsing = KnownChainsKeySerializer.class)
         @JsonDeserialize(keyUsing = KnownChainsKeyDeserializer.class)
@@ -209,7 +211,8 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
             IsotypeUsage = "IsotypeUsage",
             CDR3Spectratype = "CDR3Spectratype",
             VSpectratype = "VSpectratype",
-            VSpectratypeMean = "VSpectratypeMean";
+            VSpectratypeMean = "VSpectratypeMean",
+            Overlap = "overlap";
 
     @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
     @CommandLine.Command(name = "individual",
@@ -217,7 +220,8 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
             separator = " ",
             description = "Biophysics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype")
     public static class CommandIndividual extends CommandPa {
-        public CommandIndividual() {}
+        public CommandIndividual() {
+        }
 
         @Override
         @SuppressWarnings({"unchecked", "rawtypes"})
@@ -313,7 +317,8 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
                 required = false)
         public String f2downsampling;
 
-        public CommandOverlap() {}
+        public CommandOverlap() {
+        }
 
         @Override
         @SuppressWarnings("unchecked")
@@ -437,7 +442,7 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
                         overlaps.addAll(getCharacteristics(i, j, chain));
 
                 return new PostanalysisSchema<>(Collections.singletonList(
-                        new CharacteristicGroup<>("overlap",
+                        new CharacteristicGroup<>(Overlap,
                                 overlaps,
                                 Arrays.asList(new OverlapSummary<>())
                         )));

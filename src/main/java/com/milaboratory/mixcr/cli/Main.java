@@ -203,7 +203,8 @@ public final class Main {
 
                 .addSubcommand("vUsage", CommandSpec.forAnnotatedObject(CommandPaExport.ExportVUsage.class))
                 .addSubcommand("jUsage", CommandSpec.forAnnotatedObject(CommandPaExport.ExportJUsage.class))
-                .addSubcommand("isotypeUsage", CommandSpec.forAnnotatedObject(CommandPaExport.ExportIsotypeUsage.class));
+                .addSubcommand("isotypeUsage", CommandSpec.forAnnotatedObject(CommandPaExport.ExportIsotypeUsage.class))
+                .addSubcommand("vjUsage", CommandSpec.forAnnotatedObject(CommandPaExport.ExportVJUsage.class));
 
         cmd.setSeparator(" ");
         return cmd;

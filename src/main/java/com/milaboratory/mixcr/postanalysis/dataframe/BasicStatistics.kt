@@ -99,8 +99,9 @@ object BasicStatistics {
     fun plots(
         df: DataFrame<BasicStatRow>,
         pp: PlotParameters,
-    ) = df.metric.distinct().toList()
-        .map { mt -> plot(df.filter { metric == mt }, pp) + ggtitle(mt) }
+    ) = df.groupBy { metric }.groups.toList()
+        .filter { !it.isEmpty() }
+        .map { mdf -> plot(mdf, pp) + ggtitle(mdf.first()[BasicStatRow::metric.name]!!.toString()) }
 
     fun plot(
         df: DataFrame<BasicStatRow>,
