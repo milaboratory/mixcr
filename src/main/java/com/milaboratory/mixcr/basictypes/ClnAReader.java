@@ -207,6 +207,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
     /**
      * Returns number of clones in the file
      */
+    @Override
     public int numberOfClones() {
         return numberOfClones;
     }
