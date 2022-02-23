@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.util.ArraysUtils;
+import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCLibraryRegistry;
@@ -56,10 +57,28 @@ public class CommandSortClones extends ACommandWithSmartOverwriteWithSingleInput
                 return;
 
             case MAGIC_CLNA:
-                throw new RuntimeException();
+                try (ClnAReader reader = new ClnAReader(Path.of(in), VDJCLibraryRegistry.getDefault(), Runtime.getRuntime().availableProcessors());
+                     ClnAWriter writer = new ClnAWriter(getFullPipelineConfiguration(), out)) {
+                    SmartProgressReporter.startProgressReport(writer);
 
+                    GeneFeature[] assemblingFeatures = reader.getAssemblerParameters().getAssemblingFeatures();
+
+                    // Any CDR3 containing feature will become first
+                    for (int i = 0; i < assemblingFeatures.length; i++)
+                        if (assemblingFeatures[i].contains(GeneFeature.CDR3)) {
+                            if (i != 0)
+                                ArraysUtils.swap(assemblingFeatures, 0, i);
+                            break;
+                        }
+
+                    VDJCSProperties.CloneOrdering ordering = VDJCSProperties.cloneOrderingByNucleotide(assemblingFeatures,
+                            GeneType.Variable, GeneType.Joining);
+
+                    writer.writeClones(CloneSet.reorder(reader.readCloneSet(), ordering));
+                    writer.collateAlignments(reader.readAllAlignments(), reader.numberOfAlignments());
+                    writer.writeAlignmentsAndIndex();
+                }
         }
-
     }
 
 
