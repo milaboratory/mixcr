@@ -173,6 +173,7 @@ public final class Main {
                 .addSubcommand("mergeAlignments", CommandMergeAlignments.class)
                 .addSubcommand("filterAlignments", CommandFilterAlignments.class)
                 .addSubcommand("sortAlignments", CommandSortAlignments.class)
+                .addSubcommand("sortClones", CommandSortClones.class)
 
                 .addSubcommand("alignmentsDiff", CommandAlignmentsDiff.class)
                 .addSubcommand("clonesDiff", CommandClonesDiff.class)

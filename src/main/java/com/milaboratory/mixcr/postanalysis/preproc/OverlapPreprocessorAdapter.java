@@ -27,7 +27,7 @@ public class OverlapPreprocessorAdapter<T> implements SetPreprocessor<OverlapGro
         SetPreprocessorSetup<T> innerStep = inner.nextSetupStep();
         if (innerStep == null)
             return null;
-        return new SetPreprocessorSetup<OverlapGroup<T>>() {
+        return new SetPreprocessorSetup<>() {
             boolean initialized = false;
 
             @Override
@@ -92,6 +92,8 @@ public class OverlapPreprocessorAdapter<T> implements SetPreprocessor<OverlapGro
                 result.add(gr);
             }
 
+            if (result.stream().allMatch(List::isEmpty))
+                return null;
             return new OverlapGroup<>(result);
         };
     }

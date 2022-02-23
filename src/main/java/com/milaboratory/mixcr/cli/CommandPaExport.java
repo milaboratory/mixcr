@@ -374,7 +374,7 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
             Plot plots = Overlap.INSTANCE.plot(df,
                     new Overlap.PlotParameters(
                             colorKey,
-                            !noDendro,
+                            !noDendro
                     ));
 
             ExportKt.writePDF(Path.of(out.substring(0, out.length() - 3) + chains.name + ".pdf"), plots);

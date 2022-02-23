@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.milaboratory.mixcr.postanalysis.downsampling.ClonesDownsamplingPreprocessorFactory;
 import com.milaboratory.mixcr.postanalysis.preproc.*;
+import com.milaboratory.mixcr.util.OutputPortWithProgress;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -95,9 +96,24 @@ public interface SetPreprocessorFactory<T> {
                         }
 
                         @Override
-                        public OutputPortCloseable<T> mkElementsPort() {
-                            OutputPortCloseable<T> inner = initial[datasetIdx].mkElementsPort();
-                            return new OutputPortCloseable<T>() {
+                        public OutputPortWithProgress<T> mkElementsPort() {
+                            OutputPortWithProgress<T> inner = initial[datasetIdx].mkElementsPort();
+                            return new OutputPortWithProgress<T>() {
+                                @Override
+                                public double getProgress() {
+                                    return inner.getProgress();
+                                }
+
+                                @Override
+                                public boolean isFinished() {
+                                    return inner.isFinished();
+                                }
+
+                                @Override
+                                public long index() {
+                                    return inner.index();
+                                }
+
                                 @Override
                                 public void close() {
                                     inner.close();

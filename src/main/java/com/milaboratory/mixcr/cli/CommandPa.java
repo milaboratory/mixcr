@@ -25,6 +25,7 @@ import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeKeyFunction;
 import com.milaboratory.mixcr.postanalysis.ui.*;
 import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.LambdaSemaphore;
+import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.Chains;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
@@ -301,6 +302,8 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
                             new ClonotypeDataset(getSampleId(file), file, VDJCLibraryRegistry.getDefault())
                     ).collect(Collectors.toList());
 
+            System.out.println("Running for " + chain);
+            SmartProgressReporter.startProgressReport(runner);
             return new PaResultByChain(schema, runner.run(datasets));
         }
     }
@@ -363,6 +366,9 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
 
             PostanalysisRunner<OverlapGroup<Clone>> runner = new PostanalysisRunner<>();
             runner.addCharacteristics(schema.getAllCharacterisitcs());
+
+            System.out.println("Running for " + chain);
+            SmartProgressReporter.startProgressReport(runner);
             PostanalysisResult result = runner.run(overlapDataset);
 
             return new PaResultByChain(schema, result);
@@ -404,6 +410,11 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
                 @Override
                 public void close() throws Exception {
                     inner.close();
+                }
+
+                @Override
+                public int numberOfClones() {
+                    return inner.numberOfClones();
                 }
             };
         }

@@ -13,6 +13,7 @@ import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroupResult;
 import com.milaboratory.mixcr.postanalysis.ui.OutputTable;
 import com.milaboratory.mixcr.postanalysis.ui.OverlapSummary;
+import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.util.sorting.MergeStrategy;
 import com.milaboratory.util.sorting.SortingProperty;
 import com.milaboratory.util.sorting.SortingPropertyRelation;
@@ -132,11 +133,38 @@ public class OverlapCharacteristicTest {
 
         PostanalysisResult paResult = runner.run(new OverlapDataset<Element>(datasetIds) {
             @Override
-            public OutputPortCloseable<OverlapGroup<Element>> mkElementsPort() {
-                return new SimpleProcessorWrapper<>(strategy
+            public OutputPortWithProgress<OverlapGroup<Element>> mkElementsPort() {
+                OutputPortCloseable<OverlapGroup<Element>> inner = new SimpleProcessorWrapper<>(strategy
                         .join(Arrays.stream(ovp.datasets)
                                 .map(TestDataset::mkElementsPort)
                                 .collect(Collectors.toList())), OverlapGroup::new);
+
+                return new OutputPortWithProgress<OverlapGroup<Element>>() {
+                    @Override
+                    public long index() {
+                        return 0;
+                    }
+
+                    @Override
+                    public void close() {
+                        inner.close();
+                    }
+
+                    @Override
+                    public OverlapGroup<Element> take() {
+                        return inner.take();
+                    }
+
+                    @Override
+                    public double getProgress() {
+                        return 0;
+                    }
+
+                    @Override
+                    public boolean isFinished() {
+                        return false;
+                    }
+                };
             }
         });
 
@@ -226,7 +254,8 @@ public class OverlapCharacteristicTest {
         OutputPort<T> p = CUtils.asOutputPort(l);
         return new OutputPortCloseable<T>() {
             @Override
-            public void close() {}
+            public void close() {
+            }
 
             @Override
             public T take() {
