@@ -163,6 +163,8 @@ public final class Main {
                 .addSubcommand("exportClones", CommandExport.mkClonesSpec())
                 .addSubcommand("exportClonesPretty", CommandExportClonesPretty.class)
 
+                .addSubcommand("exportAirr", CommandExportAirr.class)
+
                 .addSubcommand("exportReadsForClones", CommandExportReadsForClones.class)
                 .addSubcommand("exportAlignmentsForClones", CommandExportAlignmentsForClones.class)
                 .addSubcommand("exportReads", CommandExportReads.class)

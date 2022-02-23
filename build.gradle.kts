@@ -7,8 +7,8 @@ plugins {
     `java-library`
     application
     `maven-publish`
-    id("com.palantir.git-version") version "0.12.3"
-    id("com.github.johnrengelman.shadow") version "7.0.0"
+    id("com.palantir.git-version") version "0.13.0"
+    id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
 val miRepoAccessKeyId: String by project
@@ -22,10 +22,7 @@ val gitDetails = versionDetails()
 val longTests: String? by project
 
 group = "com.milaboratory"
-val gitLastTag = gitDetails.lastTag.removePrefix("v")
-version =
-    if (gitDetails.commitDistance == 0) gitLastTag
-    else "${gitLastTag}-${gitDetails.commitDistance}-${gitDetails.gitHash}"
+version = if (version != "unspecified") version else "SNAPSHOT"
 description = "MiXCR"
 
 java {
@@ -38,7 +35,7 @@ application {
     mainClass.set("com.milaboratory.mixcr.cli.Main")
 }
 
-tasks.withType<JavaCompile>() {
+tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
 }
 
@@ -46,25 +43,17 @@ tasks.withType<Javadoc> {
     (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
 }
 
-tasks.register("createInfoFile") {
-    doLast {
-        projectDir
-            .resolve("build_info.json")
-            .writeText("""{"version":"$version"}""")
-    }
-}
-
 repositories {
     mavenCentral()
 
-    // Snapshot versions of milib and repseqio distributed via this repo
+    // Snapshot versions of redberry-pipe, milib and repseqio distributed via this repo
     maven {
         url = uri("https://pub.maven.milaboratory.com")
     }
 }
 
-val milibVersion = "0.0.1-4-eab6152014"
-val repseqioVersion = "1.3.5-5-2d9bf3f814"
+val milibVersion = "1.15.0"
+val repseqioVersion = "1.3.5-23-master"
 val jacksonVersion = "2.13.1"
 
 dependencies {
