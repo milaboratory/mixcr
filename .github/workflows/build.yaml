@@ -3,7 +3,7 @@ name: "Build"
 on:
   push:
     tags: [ '*' ]
-    branches: [ 'master' ]
+    branches: [ 'pmaster' ]
 
   workflow_dispatch: {}
 
