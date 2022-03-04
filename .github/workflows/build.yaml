@@ -11,10 +11,11 @@ jobs:
   init:
     runs-on: ubuntu-latest
     steps:
-      - id: context
-        uses: milaboratory/github-ci/actions/context/init@v2
+      - uses: milaboratory/github-ci/actions/context/init@v2
         with:
           version-canonize: false
+      - id: context
+        uses: milaboratory/github-ci/actions/context@v2
 
     outputs:
       is-release: ${{ steps.context.outputs.is-release }}
