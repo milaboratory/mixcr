@@ -17,10 +17,15 @@ val miRepoSecretAccessKey: String by project
 val versionDetails: Closure<VersionDetails> by extra
 val gitDetails = versionDetails()
 
-val longTests: String? by project
+fun boolProperty(name: String): Boolean {
+    return ((properties[name] as String?) ?: "false").toBoolean()
+}
 
-group = "com.milaboratory"
-version = if (version != "unspecified") version else "SNAPSHOT"
+val isMiCi = boolProperty("mi-ci")
+val isRelease = boolProperty("mi-release")
+
+val longTests: String? by project
+val miCiStage = properties["mi-ci-stage"] as String?
 description = "MiXCR"
 
 java {
@@ -136,5 +141,10 @@ tasks.test {
     minHeapSize = "1024m"
     maxHeapSize = "2048m"
 
+//    miCiStage?.let {
+//        if (it == "test") {
+//            systemProperty("longTests", "true");
+//        }
+//    }
     longTests?.let { systemProperty("longTests", it) }
 }
