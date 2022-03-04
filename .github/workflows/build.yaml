@@ -13,6 +13,8 @@ jobs:
     steps:
       - id: context
         uses: milaboratory/github-ci/actions/context/init@v2
+        with:
+          version-canonize: false
 
     outputs:
       is-release: ${{ steps.context.outputs.is-release }}
