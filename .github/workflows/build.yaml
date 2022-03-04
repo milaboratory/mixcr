@@ -32,6 +32,8 @@ jobs:
       app-name-slug: 'mixcr'
 
       # Distribution
+      dist-docker: false
+      dist-archive: true
       dist-archive-tasks: 'distributionZip'
       dist-archive-paths: './distributions/*.zip'
 
