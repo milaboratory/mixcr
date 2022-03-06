@@ -16,7 +16,6 @@ import org.jetbrains.kotlinx.dataframe.api.*
  * DataFrame row for single (V/J/CDR3) spectratype
  */
 @DataSchema
-@Suppress("UNCHECKED_CAST")
 data class SpectratypeRow(
     /** Sample ID */
     val sample: String,

@@ -49,7 +49,7 @@ application {
     mainClass.set("com.milaboratory.mixcr.cli.Main")
 }
 
-tasks.withType<JavaCompile>() {
+tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
 }
 
@@ -96,10 +96,8 @@ dependencies {
 
     implementation(kotlin("stdlib"))
     implementation("org.jetbrains.kotlinx:dataframe:$dataframeVersion")
-    implementation("org.apache.xmlgraphics:fop-transcoder:2.6")
-    implementation("org.apache.pdfbox:pdfbox:2.0.21")
-
-    implementation("org.apache.commons:commons-csv:1.9.0")
+    implementation("org.jetbrains.lets-plot:lets-plot-common:$letsPlotLibraryVersion")
+    implementation("org.jetbrains.lets-plot:lets-plot-kotlin-jvm:$letsPlotKotlinApiVersion")
 }
 
 val writeBuildProperties by tasks.registering(WriteProperties::class) {

@@ -4,41 +4,39 @@ import com.milaboratory.miplots.Position
 import com.milaboratory.miplots.color.Palletes
 import com.milaboratory.miplots.heatmap.*
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult
-import com.milaboratory.mixcr.postanalysis.overlap.OverlapKey
-import com.milaboratory.mixcr.postanalysis.overlap.OverlapType
-import jetbrains.letsPlot.ggsize
-import jetbrains.letsPlot.label.ggtitle
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.annotations.DataSchema
-import org.jetbrains.kotlinx.dataframe.api.cast
-import org.jetbrains.kotlinx.dataframe.api.first
-import org.jetbrains.kotlinx.dataframe.api.groupBy
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.jetbrains.kotlinx.dataframe.io.read
+
 
 /**
  * DataFrame row for V or J usage data
  */
 @DataSchema
-data class OverlapRow(
-    val sample1: String,
-    val sample2: String,
-    val metric: OverlapType,
+data class GeneUsageRow(
+    /** Sample ID */
+    val sample: String,
+
+    /** Payload (Gene) */
+    val gene: String,
+
+    /** Payload weight */
     val weight: Double,
 )
 
-object Overlap {
+object GeneUsage {
     /**
      * Imports data into DataFrame
      **/
     fun dataFrame(paResult: PostanalysisResult) = run {
-        val data = mutableListOf<OverlapRow>()
+        val data = mutableListOf<GeneUsageRow>()
 
         for ((_, charData) in paResult.data) {
-            for ((_, keys) in charData.data) {
+            for ((sampleId, keys) in charData.data) {
                 for (metric in keys.data) {
-                    val key = metric.key as? OverlapKey<OverlapType> ?: throw RuntimeException()
-                    data += OverlapRow(key.id1, key.id2, key.key, metric.value)
+                    val key = metric.key.toString()
+                    data += GeneUsageRow(sampleId, key, metric.value)
                 }
             }
         }
@@ -53,39 +51,30 @@ object Overlap {
         paResult: PostanalysisResult,
         metadataPath: String?,
     ) = run {
-        var df: DataFrame<OverlapRow> = dataFrame(paResult)
+        var df = dataFrame(paResult)
         if (metadataPath != null)
-            df = attachMetadata(df, "sample1", DataFrame.read(metadataPath), "sample").cast()
+            df = df.withMetadata(DataFrame.read(metadataPath))
         df
     }
 
-    data class OverlapParameters(
+    data class PlotParameters(
         val colorKey: List<String>? = null,
-        val cluster: Boolean = true,
-        override val width: Int,
-        override val height: Int
-    ) : PlotParameters
-
-    fun plots(
-        df: DataFrame<OverlapRow>,
-        pp: OverlapParameters,
-    ) = df.groupBy { "metric"<String>() }.groups.toList()
-        .map { sdf -> plot(df, pp) + ggtitle(sdf.first()[OverlapRow::metric.name]!!.toString()) }
+        val clusterSamples: Boolean = true,
+        val clusterGenes: Boolean = true
+    )
 
     fun plot(
-        df: DataFrame<OverlapRow>,
-        pp: OverlapParameters,
+        df: DataFrame<GeneUsageRow>,
+        pp: PlotParameters,
     ) = run {
         var plt = Heatmap(
             df,
-            x = OverlapRow::sample1.name,
-            y = OverlapRow::sample2.name,
+            x = GeneUsageRow::sample.name,
+            y = GeneUsageRow::gene.name,
             z = GeneUsageRow::weight.name,
-            xOrder = if (pp.cluster) Hierarchical() else null,
-            yOrder = if (pp.cluster) Hierarchical() else null,
-            fillPallette = Palletes.Diverging.lime90rose130,
-            fillNoValue = true,
-            noValue = 0.0
+            xOrder = if (pp.clusterSamples) Hierarchical() else null,
+            yOrder = if (pp.clusterGenes) Hierarchical() else null,
+            fillPallette = Palletes.Diverging.lime90rose130
         )
 
         plt = plt.withBorder()
@@ -109,17 +98,15 @@ object Overlap {
             }
         }
 
-        if (pp.cluster) {
+        if (pp.clusterSamples)
             plt = plt.withDendrogram(pos = Position.Top, 0.1)
+        if (pp.clusterGenes)
             plt = plt.withDendrogram(pos = Position.Right, 0.1)
-        }
 
         plt = plt.withLabels(Position.Bottom, angle = 45, sep = 0.1)
         plt = plt.withLabels(Position.Left, sep = 0.1, width = 4.0)
         plt = plt.withFillLegend(Position.Left, size = 0.5)
         plt = plt.withColorKeyLegend(Position.Left)
-        if (pp.width > 0 && pp.height > 0)
-            plt.plusAssign(ggsize(pp.width, pp.height))
         plt.plot
     }
 }
