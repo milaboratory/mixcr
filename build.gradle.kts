@@ -94,10 +94,6 @@ dependencies {
     implementation(testFixtures("com.milaboratory:milib:$milibVersion"))
     testImplementation("org.mockito:mockito-all:1.9.5")
 
-    implementation(kotlin("stdlib"))
-    implementation("org.jetbrains.kotlinx:dataframe:$dataframeVersion")
-    implementation("org.jetbrains.lets-plot:lets-plot-common:$letsPlotLibraryVersion")
-    implementation("org.jetbrains.lets-plot:lets-plot-kotlin-jvm:$letsPlotKotlinApiVersion")
 }
 
 val writeBuildProperties by tasks.registering(WriteProperties::class) {
@@ -126,6 +122,8 @@ val shadowJar = tasks.withType<ShadowJar> {
         exclude(dependency("commons-logging:commons-logging"))
         exclude(dependency("ch.qos.logback:logback-core"))
         exclude(dependency("ch.qos.logback:logback-classic"))
+
+        exclude(dependency("org.jetbrains.kotlin:.*"))
     }
 }
 
