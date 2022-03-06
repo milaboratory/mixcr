@@ -205,7 +205,9 @@ public final class Main {
                 .addSubcommand("vUsage", CommandSpec.forAnnotatedObject(CommandPaExport.ExportVUsage.class))
                 .addSubcommand("jUsage", CommandSpec.forAnnotatedObject(CommandPaExport.ExportJUsage.class))
                 .addSubcommand("isotypeUsage", CommandSpec.forAnnotatedObject(CommandPaExport.ExportIsotypeUsage.class))
-                .addSubcommand("vjUsage", CommandSpec.forAnnotatedObject(CommandPaExport.ExportVJUsage.class));
+                .addSubcommand("vjUsage", CommandSpec.forAnnotatedObject(CommandPaExport.ExportVJUsage.class))
+
+                .addSubcommand("overlap", CommandSpec.forAnnotatedObject(CommandPaExport.ExportOverlap.class));
 
         cmd.setSeparator(" ");
         return cmd;
@@ -214,7 +216,7 @@ public final class Main {
     public static CommandLine parseArgs(String... args) {
         if (args.length == 0)
             args = new String[]{"help"};
-        ExceptionHandler exHandler = new ExceptionHandler();
+        ExceptionHandler<?> exHandler = new ExceptionHandler<>();
         exHandler.andExit(1);
         CommandLine cmd = mkCmd();
         try {

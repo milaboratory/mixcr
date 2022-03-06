@@ -35,4 +35,13 @@ public class CommandPaExportTest {
                 "scratch/pa/vUsage.pdf"
         );
     }
+
+    @Test
+    public void test3() {
+        Main.main("exportPa", "overlap",
+                "--width", "1000",
+                "--height", "3000",
+                "/Users/poslavskysv/Projects/milab/mixcr-test-data/pa/overlapPa.json",
+                "/Users/poslavskysv/Projects/milab/mixcr-test-data/pa/overlap.pdf");
+    }
 }

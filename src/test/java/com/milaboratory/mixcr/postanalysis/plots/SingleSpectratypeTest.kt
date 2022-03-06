@@ -1,10 +1,8 @@
-package com.milaboratory.mixcr.postanalysis.dataframe
+package com.milaboratory.mixcr.postanalysis.plots
 
-import jetbrains.datalore.plot.PlotSvgExport
 import jetbrains.letsPlot.coordFixed
 import jetbrains.letsPlot.geom.geomTile
 import jetbrains.letsPlot.ggsize
-import jetbrains.letsPlot.intern.toSpec
 import jetbrains.letsPlot.letsPlot
 import jetbrains.letsPlot.scale.scaleXContinuous
 import jetbrains.letsPlot.scale.scaleYContinuous
@@ -13,7 +11,6 @@ import org.jetbrains.kotlinx.dataframe.api.head
 import org.jetbrains.kotlinx.dataframe.api.toMap
 import org.jetbrains.kotlinx.dataframe.io.read
 import org.junit.Test
-import java.nio.file.Path
 
 
 /**

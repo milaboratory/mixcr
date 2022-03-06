@@ -9,8 +9,7 @@ val miplotsVersion = "1.0.0"
 val milibVersion = "2.0.0"
 val repseqioVersion = "1.3.5-10-05b9291c5e"
 val jacksonVersion = "2.12.4"
-val letsPlotLibraryVersion = "2.1.0"
-val letsPlotKotlinApiVersion = "3.1.1"
+val dataframeVersion = "0.8.0-rc-7"
 
 plugins {
     `java-library`
@@ -18,8 +17,8 @@ plugins {
     `maven-publish`
     id("com.palantir.git-version") version "0.13.0"
     id("com.github.johnrengelman.shadow") version "7.0.0"
-    kotlin("jvm") version "1.6.10"
-    id("org.jetbrains.kotlin.plugin.dataframe") version "0.8.0-dev-808"
+    kotlin("jvm") version "1.6.20-M1"
+    id("org.jetbrains.kotlin.plugin.dataframe") version "0.8.0-rc-7"
 }
 
 // Make IDE aware of the generated code:
@@ -95,9 +94,8 @@ dependencies {
     implementation(testFixtures("com.milaboratory:milib:$milibVersion"))
     testImplementation("org.mockito:mockito-all:1.9.5")
 
-    // plots
     implementation(kotlin("stdlib"))
-
+    implementation("org.jetbrains.kotlinx:dataframe:$dataframeVersion")
     implementation("org.apache.xmlgraphics:fop-transcoder:2.6")
     implementation("org.apache.pdfbox:pdfbox:2.0.21")
 

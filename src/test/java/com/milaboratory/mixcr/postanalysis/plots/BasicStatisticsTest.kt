@@ -1,4 +1,4 @@
-package com.milaboratory.mixcr.postanalysis.dataframe
+package com.milaboratory.mixcr.postanalysis.plots
 
 import com.milaboratory.miplots.writePDF
 import com.milaboratory.mixcr.cli.CommandPa

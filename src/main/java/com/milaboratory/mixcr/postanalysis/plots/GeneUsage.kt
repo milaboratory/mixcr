@@ -1,46 +1,43 @@
-package com.milaboratory.mixcr.postanalysis.dataframe
+package com.milaboratory.mixcr.postanalysis.plots
 
 import com.milaboratory.miplots.Position
 import com.milaboratory.miplots.color.Palletes
 import com.milaboratory.miplots.heatmap.*
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult
-import com.milaboratory.mixcr.postanalysis.additive.KeyFunctions
-import jetbrains.letsPlot.label.ggtitle
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.annotations.DataSchema
-import org.jetbrains.kotlinx.dataframe.api.first
-import org.jetbrains.kotlinx.dataframe.api.groupBy
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.jetbrains.kotlinx.dataframe.io.read
+
 
 /**
  * DataFrame row for V or J usage data
  */
 @DataSchema
 @Suppress("UNCHECKED_CAST")
-data class VJUsageRow(
+data class GeneUsageRow(
     /** Sample ID */
     val sample: String,
 
-    val vGene: String,
-    val jGene: String,
+    /** Payload (Gene) */
+    val gene: String,
+
     /** Payload weight */
     val weight: Double,
 )
 
-object VJUsage {
+object GeneUsage {
     /**
      * Imports data into DataFrame
      **/
-    @Suppress("UNCHECKED_CAST")
     fun dataFrame(paResult: PostanalysisResult) = run {
-        val data = mutableListOf<VJUsageRow>()
+        val data = mutableListOf<GeneUsageRow>()
 
         for ((_, charData) in paResult.data) {
             for ((sampleId, keys) in charData.data) {
                 for (metric in keys.data) {
-                    val key = metric.key as? KeyFunctions.VJGenes<String> ?: throw RuntimeException()
-                    data += VJUsageRow(sampleId, key.vGene, key.jJene, metric.value)
+                    val key = metric.key.toString()
+                    data += GeneUsageRow(sampleId, key, metric.value)
                 }
             }
         }
@@ -63,27 +60,21 @@ object VJUsage {
 
     data class PlotParameters(
         val colorKey: List<String>? = null,
-        val clusterV: Boolean = true,
-        val clusterJ: Boolean = true
+        val clusterSamples: Boolean = true,
+        val clusterGenes: Boolean = true
     )
 
-    fun plots(
-        df: DataFrame<VJUsageRow>,
-        pp: PlotParameters,
-    ) = df.groupBy { "sample"<String>() }.groups.toList()
-        .map { sdf -> plot(df, pp) + ggtitle(sdf.first()[VJUsageRow::sample.name]!!.toString()) }
-
     fun plot(
-        df: DataFrame<VJUsageRow>,
+        df: DataFrame<GeneUsageRow>,
         pp: PlotParameters,
     ) = run {
         var plt = Heatmap(
             df,
-            x = VJUsageRow::jGene.name,
-            y = VJUsageRow::vGene.name,
+            x = GeneUsageRow::sample.name,
+            y = GeneUsageRow::gene.name,
             z = GeneUsageRow::weight.name,
-            xOrder = if (pp.clusterV) Hierarchical() else null,
-            yOrder = if (pp.clusterJ) Hierarchical() else null,
+            xOrder = if (pp.clusterSamples) Hierarchical() else null,
+            yOrder = if (pp.clusterGenes) Hierarchical() else null,
             fillPallette = Palletes.Diverging.lime90rose130
         )
 
@@ -108,9 +99,9 @@ object VJUsage {
             }
         }
 
-        if (pp.clusterV)
+        if (pp.clusterSamples)
             plt = plt.withDendrogram(pos = Position.Top, 0.1)
-        if (pp.clusterJ)
+        if (pp.clusterGenes)
             plt = plt.withDendrogram(pos = Position.Right, 0.1)
 
         plt = plt.withLabels(Position.Bottom, angle = 45, sep = 0.1)

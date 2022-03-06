@@ -1,4 +1,4 @@
-package com.milaboratory.mixcr.postanalysis.dataframe
+package com.milaboratory.mixcr.postanalysis.plots
 
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeKey

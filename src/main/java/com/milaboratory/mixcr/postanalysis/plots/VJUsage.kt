@@ -1,15 +1,13 @@
-package com.milaboratory.mixcr.postanalysis.dataframe
+package com.milaboratory.mixcr.postanalysis.plots
 
 import com.milaboratory.miplots.Position
 import com.milaboratory.miplots.color.Palletes
 import com.milaboratory.miplots.heatmap.*
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult
-import com.milaboratory.mixcr.postanalysis.overlap.OverlapKey
-import com.milaboratory.mixcr.postanalysis.overlap.OverlapType
+import com.milaboratory.mixcr.postanalysis.additive.KeyFunctions
 import jetbrains.letsPlot.label.ggtitle
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.annotations.DataSchema
-import org.jetbrains.kotlinx.dataframe.api.cast
 import org.jetbrains.kotlinx.dataframe.api.first
 import org.jetbrains.kotlinx.dataframe.api.groupBy
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
@@ -20,26 +18,29 @@ import org.jetbrains.kotlinx.dataframe.io.read
  */
 @DataSchema
 @Suppress("UNCHECKED_CAST")
-data class OverlapRow(
-    val sample1: String,
-    val sample2: String,
-    val metric: OverlapType,
+data class VJUsageRow(
+    /** Sample ID */
+    val sample: String,
+
+    val vGene: String,
+    val jGene: String,
+    /** Payload weight */
     val weight: Double,
 )
 
-object Overlap {
+object VJUsage {
     /**
      * Imports data into DataFrame
      **/
     @Suppress("UNCHECKED_CAST")
     fun dataFrame(paResult: PostanalysisResult) = run {
-        val data = mutableListOf<OverlapRow>()
+        val data = mutableListOf<VJUsageRow>()
 
         for ((_, charData) in paResult.data) {
-            for ((_, keys) in charData.data) {
+            for ((sampleId, keys) in charData.data) {
                 for (metric in keys.data) {
-                    val key = metric.key as? OverlapKey<OverlapType> ?: throw RuntimeException()
-                    data += OverlapRow(key.id1, key.id2, key.key, metric.value)
+                    val key = metric.key as? KeyFunctions.VJGenes<String> ?: throw RuntimeException()
+                    data += VJUsageRow(sampleId, key.vGene, key.jJene, metric.value)
                 }
             }
         }
@@ -56,32 +57,33 @@ object Overlap {
     ) = run {
         var df = dataFrame(paResult)
         if (metadataPath != null)
-            df = attachMetadata(df, "sample1", DataFrame.read(metadataPath), "sample").cast()
+            df = df.withMetadata(DataFrame.read(metadataPath))
         df
     }
 
     data class PlotParameters(
         val colorKey: List<String>? = null,
-        val cluster: Boolean = true
+        val clusterV: Boolean = true,
+        val clusterJ: Boolean = true
     )
 
     fun plots(
-        df: DataFrame<OverlapRow>,
+        df: DataFrame<VJUsageRow>,
         pp: PlotParameters,
-    ) = df.groupBy { "metric"<String>() }.groups.toList()
+    ) = df.groupBy { "sample"<String>() }.groups.toList()
         .map { sdf -> plot(df, pp) + ggtitle(sdf.first()[VJUsageRow::sample.name]!!.toString()) }
 
     fun plot(
-        df: DataFrame<OverlapRow>,
+        df: DataFrame<VJUsageRow>,
         pp: PlotParameters,
     ) = run {
         var plt = Heatmap(
             df,
-            x = OverlapRow::sample1.name,
-            y = OverlapRow::sample2.name,
+            x = VJUsageRow::jGene.name,
+            y = VJUsageRow::vGene.name,
             z = GeneUsageRow::weight.name,
-            xOrder = if (pp.cluster) Hierarchical() else null,
-            yOrder = if (pp.cluster) Hierarchical() else null,
+            xOrder = if (pp.clusterV) Hierarchical() else null,
+            yOrder = if (pp.clusterJ) Hierarchical() else null,
             fillPallette = Palletes.Diverging.lime90rose130
         )
 
@@ -106,10 +108,10 @@ object Overlap {
             }
         }
 
-        if (pp.cluster) {
+        if (pp.clusterV)
             plt = plt.withDendrogram(pos = Position.Top, 0.1)
+        if (pp.clusterJ)
             plt = plt.withDendrogram(pos = Position.Right, 0.1)
-        }
 
         plt = plt.withLabels(Position.Bottom, angle = 45, sep = 0.1)
         plt = plt.withLabels(Position.Left, sep = 0.1, width = 4.0)

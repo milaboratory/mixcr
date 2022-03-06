@@ -1,4 +1,4 @@
-package com.milaboratory.mixcr.postanalysis.dataframe
+package com.milaboratory.mixcr.postanalysis.plots
 
 import com.milaboratory.util.StringUtil
 import org.jetbrains.kotlinx.dataframe.AnyFrame
@@ -84,3 +84,5 @@ fun matchLists(target: List<String>, query: List<String>): Map<String, String?> 
 
     return r
 }
+
+data class Filter(val column: String, val value: Any)

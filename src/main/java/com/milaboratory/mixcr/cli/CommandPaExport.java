@@ -6,7 +6,7 @@ import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.cli.CommandPa.PaResult;
 import com.milaboratory.mixcr.cli.CommandPa.PaResultByChain;
-import com.milaboratory.mixcr.postanalysis.dataframe.*;
+import com.milaboratory.mixcr.postanalysis.plots.*;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroupOutputExtractor;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroupResult;
@@ -142,7 +142,14 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
         }
     }
 
-    static abstract class ExportBasicStatistics extends CommandPaExport {
+    static abstract class CommandPaExportPlots extends CommandPaExport {
+        @Option(names = {"--width"}, description = "Plot width")
+        public int width = 0;
+        @Option(names = {"--height"}, description = "Plot height")
+        public int height = 0;
+    }
+
+    static abstract class ExportBasicStatistics extends CommandPaExportPlots {
         abstract String group();
 
         @Parameters(index = "1", description = "Output PDF file name", defaultValue = "plot.pdf")
@@ -219,7 +226,7 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
         }
     }
 
-    static abstract class ExportGeneUsage extends CommandPaExport {
+    static abstract class ExportGeneUsage extends CommandPaExportPlots {
         abstract String group();
 
         @Parameters(index = "1", description = "Output PDF file name", defaultValue = "plot.pdf")
@@ -298,7 +305,7 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
             sortOptions = false,
             separator = " ",
             description = "Export V-J usage heatmap")
-    static class ExportVJUsage extends CommandPaExport {
+    static class ExportVJUsage extends CommandPaExportPlots {
         @Parameters(index = "1", description = "Output PDF file name", defaultValue = "plot.pdf")
         public String out;
         @Option(names = {"--no-v-dendro"}, description = "Plot dendrogram for hierarchical clusterization of V genes.")
@@ -342,7 +349,7 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
             sortOptions = false,
             separator = " ",
             description = "Export overlap heatmap")
-    static class ExportOverlap extends CommandPaExport {
+    static class ExportOverlap extends CommandPaExportPlots {
         @Parameters(index = "1", description = "Output PDF file name", defaultValue = "plot.pdf")
         public String out;
         @Option(names = {"--no-dendro"}, description = "Plot dendrogram for hierarchical clusterization of V genes.")
@@ -371,13 +378,18 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
             if (df.rowsCount() == 0)
                 return;
 
-            Plot plots = Overlap.INSTANCE.plot(df,
-                    new Overlap.PlotParameters(
+            if (df.get("weight").distinct().toList().size() <= 1)
+                return;
+
+            List<Plot> plots = Overlap.INSTANCE.plots(df,
+                    new Overlap.OverlapParameters(
                             colorKey,
-                            !noDendro
+                            !noDendro,
+                            width,
+                            height
                     ));
 
-            ExportKt.writePDF(Path.of(out.substring(0, out.length() - 3) + chains.name + ".pdf"), plots);
+            ExportKt.writePDFFigure(Path.of(out.substring(0, out.length() - 3) + chains.name + ".pdf"), plots);
         }
     }
 
