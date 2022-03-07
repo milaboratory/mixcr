@@ -36,11 +36,12 @@ public class CommandPaExportTest {
         );
     }
 
+    //    @Ignore
     @Test
     public void test3() {
         Main.main("exportPa", "overlap",
-                "--width", "1000",
-                "--height", "3000",
+//                "--width", "2000",
+//                "--height", "5000",
                 "/Users/poslavskysv/Projects/milab/mixcr-test-data/pa/overlapPa.json",
                 "/Users/poslavskysv/Projects/milab/mixcr-test-data/pa/overlap.pdf");
     }

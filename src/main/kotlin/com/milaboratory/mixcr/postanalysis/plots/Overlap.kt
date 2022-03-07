@@ -31,12 +31,13 @@ object Overlap {
     /**
      * Imports data into DataFrame
      **/
-     fun dataFrame(paResult: PostanalysisResult) = run {
+    fun dataFrame(paResult: PostanalysisResult) = run {
         val data = mutableListOf<OverlapRow>()
 
         for ((_, charData) in paResult.data) {
             for ((_, keys) in charData.data) {
                 for (metric in keys.data) {
+                    @Suppress("UNCHECKED_CAST")
                     val key = metric.key as? OverlapKey<OverlapType> ?: throw RuntimeException()
                     data += OverlapRow(key.id1, key.id2, key.key, metric.value)
                 }
