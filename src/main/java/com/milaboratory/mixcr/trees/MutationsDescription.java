@@ -1,5 +1,9 @@
 package com.milaboratory.mixcr.trees;
 
+import com.milaboratory.core.mutations.Mutations;
+import com.milaboratory.core.mutations.MutationsBuilder;
+import com.milaboratory.core.sequence.NucleotideSequence;
+
 import java.util.List;
 
 class MutationsDescription {
@@ -51,5 +55,35 @@ class MutationsDescription {
                 JMutationsInCDR3WithoutNDN,
                 JMutationsWithoutCDR3
         );
+    }
+
+    Mutations<NucleotideSequence> combinedVMutations() {
+        boolean allBasedOnTheSameSequence = getVMutationsWithoutCDR3().stream()
+                .map(MutationsWithRange::getSequence1)
+                .allMatch(getVMutationsInCDR3WithoutNDN().getSequence1()::equals);
+        if (!allBasedOnTheSameSequence) {
+            throw new IllegalArgumentException();
+        }
+        MutationsBuilder<NucleotideSequence> mutationsFromRootToBaseBuilder = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
+        getVMutationsWithoutCDR3().stream()
+                .map(MutationsWithRange::mutationsForRange)
+                .forEach(mutationsFromRootToBaseBuilder::append);
+        mutationsFromRootToBaseBuilder.append(getVMutationsInCDR3WithoutNDN().mutationsForRange());
+        return mutationsFromRootToBaseBuilder.createAndDestroy();
+    }
+
+    Mutations<NucleotideSequence> combinedJMutations() {
+        boolean allBasedOnTheSameSequence = getJMutationsWithoutCDR3().stream()
+                .map(MutationsWithRange::getSequence1)
+                .allMatch(getJMutationsInCDR3WithoutNDN().getSequence1()::equals);
+        if (!allBasedOnTheSameSequence) {
+            throw new IllegalArgumentException();
+        }
+        MutationsBuilder<NucleotideSequence> mutationsFromRootToBaseBuilder = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
+        mutationsFromRootToBaseBuilder.append(getJMutationsInCDR3WithoutNDN().mutationsForRange());
+        getJMutationsWithoutCDR3().stream()
+                .map(MutationsWithRange::mutationsForRange)
+                .forEach(mutationsFromRootToBaseBuilder::append);
+        return mutationsFromRootToBaseBuilder.createAndDestroy();
     }
 }

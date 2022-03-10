@@ -28,9 +28,14 @@ public class RangeInfo {
 
     @Nullable
     public RangeInfo intersection(RangeInfo another) {
-        Range intersection = getRange().intersection(another.getRange());
-        if (intersection == null) {
-            return null;
+        Range intersection;
+        if (getRange().equals(another.getRange())) {
+            intersection = getRange();
+        } else {
+            intersection = getRange().intersection(another.getRange());
+            if (intersection == null) {
+                return null;
+            }
         }
         boolean includeFirstInserts;
         if (intersection.getLower() == getRange().getLower()) {

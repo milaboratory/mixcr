@@ -29,16 +29,14 @@
  */
 package com.milaboratory.mixcr.cli;
 
-import cc.redberry.pipe.OutputPortCloseable;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import cc.redberry.pipe.CUtils;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.*;
 import com.milaboratory.core.mutations.Mutation;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.core.sequence.SequenceWithQuality;
+import com.milaboratory.core.sequence.Wildcard;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneReader;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
@@ -47,7 +45,6 @@ import com.milaboratory.mixcr.trees.*;
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed;
 import com.milaboratory.mixcr.util.Cluster;
 import com.milaboratory.mixcr.util.ExceptionUtil;
-import com.milaboratory.mixcr.util.Java9Util;
 import com.milaboratory.mixcr.util.RangeInfo;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
@@ -61,7 +58,6 @@ import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -132,756 +128,119 @@ public class CommandBuildSHMTree extends ACommandWithOutputMiXCR {
                 new ClusteringCriteria.DefaultClusteringCriteria(),
                 cloneReaders
         );
-        OutputPortCloseable<CloneWrapper> sortedClonotypes = shmTreeBuilder.sortClonotypes();
-        OutputPortCloseable<Cluster<CloneWrapper>> clusters = shmTreeBuilder.buildClusters(sortedClonotypes);
-
-        NewickTreePrinter<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> idPrinter = new NewickTreePrinter<>(
-                node -> node.getContent().convert(c -> String.valueOf(c.clone.getId()), it -> ""),
-                false, false
-        );
-
-        Cluster<CloneWrapper> clusterTemp;
-        while ((clusterTemp = clusters.take()) != null) {
-            Cluster<CloneWrapper> cluster = clusterTemp;
-            boolean print = false;
-
-            if (true) {
-//            if (mutationsCount > 30) {
-                //                if (true) {
-//                        int rootCloneId = 19129;
-                int rootCloneId = 24722;
-                if (cluster.cluster.stream().map(it -> it.clone.getId()).anyMatch(it -> it == rootCloneId)) {
-//                if (mutations.stream().anyMatch(it -> it.startsWith("IGHV3-48*00IGHJ4*00 CDR3 length: 57") && it.contains("2361") )
-//                        || mutations.stream().anyMatch(it -> it.startsWith("IGHV3-48*00IGHJ6*00 CDR3 length: 66") && it.contains("18091"))) {
-
-                    Set<Integer> clonesDefinitelyInTree = Sets.newHashSet(
-                            //TODO consult
-                            29944,
-                            15729,
-                            20946,
-                            25712,
-                            21841,
-
-
-                            24722,
-                            11055,
-                            44141,
-                            47669,
-                            17342,
-                            24733,
-                            26817,
-                            33091,
-                            11054,
-                            35381,
-                            50034,
-                            34317,
-                            32066,
-                            38713,
-                            1114,
-                            32092,
-                            27827,
-                            17363,
-                            9919,
-                            24732,
-                            33139,
-                            43129,
-                            28875,
-                            12221,
-                            16514,
-                            11015,
-                            37588,
-                            32105,
-                            22866,
-                            18210,
-                            46060,
-                            32093,
-                            12280
-                    );
-
-                    Set<Integer> clonesMaybeInTree = Sets.newHashSet(
-                            27, //TODO consult
-                            17365, //TODO consult
-
-
-                            41109,
-                            37766,
-                            18208
-                    );
-
-                    List<Set<Integer>> anotherTrees = Lists.newArrayList(
-                            Sets.newHashSet(
-                                    46050,
-                                    27,
-                                    444,
-                                    6935,
-                                    18193
-                            ),
-                            Sets.newHashSet(
-                                    21022,
-                                    9930
-                            ),
-                            Sets.newHashSet(
-                                    44140,
-                                    9920
-                            ),
-                            Sets.newHashSet(
-                                    15694,
-                                    17340
-                            ),
-                            //TODO check that it is separate
-                            Sets.newHashSet(
-                                    6936,
-                                    40966
-                            ),
-                            //TODO check that it is separate
-                            Sets.newHashSet(
-                                    8481,
-                                    29946
-                            ),
-                            //TODO check that it is separate
-                            Sets.newHashSet(
-                                    37617,
-                                    16459
-                            ),
-                            //TODO check that it is separate
-                            Sets.newHashSet(
-                                    561,
-                                    36514,
-                                    44143
-                            ),
-                            //TODO check that it is separate
-                            Sets.newHashSet(
-                                    22839,
-                                    38699,
-                                    32080
-                            ),
-                            //TODO consult
-                            Sets.newHashSet(
-                                    4689,
-                                    5113,
-                                    22831,
-                                    36487,
-                                    48367,
-                                    29919,
-                                    13552,
-                                    39832,
-                                    49407,
-                                    20908
-                            )
-                    );
-
-                    Set<Integer> clonesWithMutationsButNotInMainTree = Sets.newHashSet(
-                            19143,
-                            1194,
-                            2889,
-                            20062,
-                            39858
-                    );
-
-
-                    if (print) {
-                        AlignmentScoring<NucleotideSequence> VScoring = cloneReaders.get(0).getAssemblerParameters().getCloneFactoryParameters().getVParameters().getScoring();
-                        AlignmentScoring<NucleotideSequence> JScoring = cloneReaders.get(0).getAssemblerParameters().getCloneFactoryParameters().getJParameters().getScoring();
-
-                        System.out.println("V gene:");
-                        System.out.println(cluster.cluster.get(0).clone.getBestHit(Variable).getAlignment(0).getSequence1());
-                        System.out.println("J gene:");
-                        System.out.println(cluster.cluster.get(0).clone.getBestHit(Joining).getAlignment(0).getSequence1());
-                        System.out.println("\n");
-
-                        System.out.println("sequences:");
-                        System.out.println(cluster.cluster.stream()
-                                .map(it -> String.format("%6d %s - %s %s %s %f",
-                                        it.clone.getId(),
-                                        it.clone.getFeature(CDR3).getSequence(),
-                                        it.clone.getFeature(new GeneFeature(CDR3Begin, VEndTrimmed)).getSequence(),
-                                        it.clone.getFeature(new GeneFeature(VEndTrimmed, JBeginTrimmed)).getSequence(),
-                                        it.clone.getFeature(new GeneFeature(JBeginTrimmed, CDR3End)).getSequence(),
-                                        it.clone.getCount()
-                                ))
-                                .collect(Collectors.joining("\n"))
-                        );
-                        System.out.println("\n");
-                        System.out.println(cluster.cluster.stream()
-                                .map(it -> String.format("%6d", it.clone.getId()) + " " + it.clone.getTargets()[0].getSequence().toString() + " " + it.clone.getCount())
-                                .collect(Collectors.joining("\n"))
-                        );
-                        System.out.println("\n");
-
-                        System.out.println("without V/J mutations: " + cluster.cluster.stream().map(cw -> cw.clone)
-                                .filter(clone -> numberOfMutationsWithoutCDR3(clone, Variable) +
-                                        numberOfMutationsWithoutCDR3(clone, Joining) == 0).count() + "\n");
-
-
-                        Optional<Clone> rootClone = cluster.cluster.stream().map(cw -> cw.clone).filter(it -> it.getId() == rootCloneId).findFirst();
-
-                        List<Integer> VMutationPositions = allMutationPositions(cluster, Variable);
-                        List<Integer> CDR3MutationPositions;
-                        if (rootClone.isPresent()) {
-                            CDR3MutationPositions = allMutationPositionsInCDR3(cluster, rootClone.get());
-                        } else {
-                            CDR3MutationPositions = Collections.emptyList();
-                        }
-                        List<Integer> JMutationPositions = allMutationPositions(cluster, Joining);
-
-                        List<String> mutations = cluster.cluster.stream()
-                                .map(cw -> cw.clone)
-                                .map(clone -> {
-                                            StringBuilder stringBuilder = new StringBuilder();
-                                            stringBuilder
-                                                    .append(clone.getBestHitGene(Variable).getId().getName())
-                                                    .append(clone.getBestHitGene(Joining).getId().getName())
-                                                    .append(" CDR3 length: ")
-                                                    .append(clone.ntLengthOf(CDR3))
-                                                    .append(" ").append(Optional.ofNullable(clone.getFeature(new GeneFeature(CDR3Begin, VEndTrimmed))).map(SequenceWithQuality::getSequence).orElse(null))
-                                                    .append(" ").append(Optional.ofNullable(clone.getFeature(new GeneFeature(VEndTrimmed, JBeginTrimmed))).map(SequenceWithQuality::getSequence).orElse(null))
-                                                    .append(" ").append(Optional.ofNullable(clone.getFeature(new GeneFeature(JBeginTrimmed, CDR3End))).map(SequenceWithQuality::getSequence).orElse(null))
-                                                    .append(" ").append(String.format("%6d", clone.getId()))
-                                                    .append(" V: ").append(mutationsRow(clone, Variable, VMutationPositions));
-                                            rootClone.ifPresent(root -> stringBuilder.append(" CDR3:").append(CDR3mutationsRow(clone, root, CDR3MutationPositions)));
-                                            stringBuilder.append(" J:").append(mutationsRow(clone, Joining, JMutationPositions));
-                                            return stringBuilder.toString();
-                                        }
-                                )
-                                .collect(Collectors.toList());
-
-                        System.out.println("mutations:");
-                        System.out.println(String.join("\n", mutations));
-                        System.out.println("\n");
-
-                        Predicate<Clone> clonesForComparisonFilter = it -> true;
-                        boolean skipMismatch = false;
-
-                        Range VRangeInCDR3 = minVRangeInCDR3(cluster);
-                        Range JRangeInCDR3 = minJRangeInCDR3(cluster);
-
-                        Function<FitnessFunctionParams, Double> fitnessFunctionSample = params -> (params.distanceBetweenClonesInNDN + params.distanceBetweenClonesWithoutNDN) * Math.pow(params.minDistanceToGermline - 1, 2.0);
-
-                        List<Pair<Clone, Pair<Pair<FitnessFunctionParams, Clone>, List<Integer>>>> cloneComparisonParams = cluster.cluster.stream()
-                                .map(cw -> cw.clone)
-                                .map(clone -> {
-                                            Pair<FitnessFunctionParams, Clone> minFitnessFunctionParams = cluster.cluster.stream()
-                                                    .map(cw -> cw.clone)
-                                                    .filter(clonesForComparisonFilter)
-                                                    .filter(compareWith -> compareWith.getId() != clone.getId())
-                                                    .map(compareWith -> Pair.create(fitnessFunctionParams(clone, compareWith, VRangeInCDR3, JRangeInCDR3, VScoring, JScoring), compareWith))
-//                                                    .filter(it -> fitnessFunction(it.getFirst()) > 0.0)
-                                                    .min(Comparator.comparing(it -> fitnessFunctionSample.apply(it.getFirst()))).orElseThrow(IllegalArgumentException::new);
-
-                                            List<Integer> minMutations = cluster.cluster.stream()
-                                                    .map(cw -> cw.clone)
-                                                    .filter(clonesForComparisonFilter)
-                                                    .filter(compareWith -> compareWith.getId() != clone.getId())
-                                                    .map(compareWith -> {
-                                                        int vMutationsBetween = mutationsBetweenWithoutCDR3(clone, compareWith, Variable).size();
-                                                        int jMutationsBetween = mutationsBetweenWithoutCDR3(clone, compareWith, Joining).size();
-                                                        int cdr3MutationsBetween = alignmentOfCDR3(clone, compareWith).getAbsoluteMutations().size();
-                                                        return Lists.newArrayList(vMutationsBetween, cdr3MutationsBetween, jMutationsBetween);
-                                                    })
-                                                    .min(Comparator.comparing(it -> it.get(0) + it.get(1))).orElseThrow(IllegalArgumentException::new);
-                                            return Pair.create(clone, Pair.create(minFitnessFunctionParams, minMutations));
-                                        }
-                                )
-                                .sorted(Comparator.comparing(it -> fitnessFunctionSample.apply(it.getSecond().getFirst().getFirst())))
-                                .collect(Collectors.toList());
-                        double lastFitnessFunction = 0.0;
-
-                        for (int i = 0; i < cloneComparisonParams.size(); i++) {
-                            Pair<Clone, Pair<Pair<FitnessFunctionParams, Clone>, List<Integer>>> cloneComparisonParam = cloneComparisonParams.get(i);
-                            FitnessFunctionParams fitnessFunctionParams = cloneComparisonParam.getSecond().getFirst().getFirst();
-                            double fitnessFunctionResult = fitnessFunctionSample.apply(fitnessFunctionParams);
-                            Clone clone = cloneComparisonParam.getFirst();
-                            Clone compareWith = cloneComparisonParam.getSecond().getFirst().getSecond();
-
-                            int vMutationsBetween = mutationsBetweenWithoutCDR3(clone, compareWith, Variable).size();
-                            int jMutationsBetween = mutationsBetweenWithoutCDR3(clone, compareWith, Joining).size();
-                            int cdr3MutationsBetween = alignmentOfCDR3(clone, compareWith).getAbsoluteMutations().size();
-
-                            String match;
-                            if (clonesMaybeInTree.contains(clone.getId()) || clonesMaybeInTree.contains(compareWith.getId())) {
-                                match = "?";
-                            } else if (clonesDefinitelyInTree.contains(clone.getId()) && clonesDefinitelyInTree.contains(compareWith.getId())) {
-                                match = "true  in ";
-                            } else if (!clonesDefinitelyInTree.contains(clone.getId()) && !clonesDefinitelyInTree.contains(compareWith.getId())) {
-                                match = "true  out";
-                            } else if (clonesDefinitelyInTree.contains(clone.getId()) && !clonesDefinitelyInTree.contains(compareWith.getId())) {
-                                match = "false out";
-                            } else if (!clonesDefinitelyInTree.contains(clone.getId()) && clonesDefinitelyInTree.contains(compareWith.getId())) {
-                                match = "false in ";
-                            } else {
-                                match = "false";
-                            }
-
-                            if (!match.equals("false") && skipMismatch) {
-                                continue;
-                            }
-
-                            String format = String.format("%3d|%6d|%6d|%9s|%6d%s(%.5f)|  %2d|%2d|%2d|  %2d|%2d|%2d|  %2d|  %.5f|%.5f|%.5f|%.5f|  %.5f|%.5f|%.5f",
-                                    i,
-                                    clone.getId(),
-                                    compareWith.getId(),
-                                    match,
-                                    (int) Math.floor(fitnessFunctionResult),
-                                    String.format("%.5f", fitnessFunctionResult - Math.floor(fitnessFunctionResult)).substring(1),
-                                    fitnessFunctionResult - lastFitnessFunction,
-                                    vMutationsBetween,
-                                    cdr3MutationsBetween,
-                                    jMutationsBetween,
-                                    cloneComparisonParam.getSecond().getSecond().get(0),
-                                    cloneComparisonParam.getSecond().getSecond().get(1),
-                                    cloneComparisonParam.getSecond().getSecond().get(2),
-                                    numberOfMutationsWithoutCDR3(clone, Variable) + numberOfMutationsWithoutCDR3(clone, Joining),
-                                    fitnessFunctionParams.distanceBetweenClonesInNDN,
-                                    fitnessFunctionParams.distanceBetweenClonesWithoutNDN,
-                                    fitnessFunctionParams.distanceBetweenClones,
-                                    fitnessFunctionParams.minDistanceToGermline,
-                                    fitnessFunctionFirstPart(fitnessFunctionParams),
-                                    fitnessFunctionSecondPart(fitnessFunctionParams),
-                                    fitnessFunctionThirdPart(fitnessFunctionParams)
-                            );
-                            lastFitnessFunction = fitnessFunctionResult;
-                            System.out.println(format);
-                        }
-                        System.out.println("\n");
-
-                        if (true) {
-                            break;
-                        }
-
-                        System.out.println("mutation rate:");
-                        System.out.println(cluster.cluster.stream()
-                                .map(cloneWrapper -> cloneWrapper.clone)
-                                .map(clone -> String.format(
-                                        "%6d %.4f (%d) %.4f (%d)",
-                                        clone.getId(),
-                                        numberOfMutationsWithoutCDR3(clone, Variable) / (double) ntLengthOfWithoutCDR3(clone, Variable),
-                                        numberOfMutationsWithoutCDR3(clone, Variable),
-                                        numberOfMutationsWithoutCDR3(clone, Joining) / (double) ntLengthOfWithoutCDR3(clone, Joining),
-                                        numberOfMutationsWithoutCDR3(clone, Joining)
-                                )).collect(Collectors.joining("\n")));
-                        System.out.println("\n");
-
-                        System.out.println("CDR3 comparison:\n");
-                        System.out.println("      |" + cluster.cluster.stream()
-                                .map(cw -> cw.clone)
-                                .map(clone -> String.format("%6d", clone.getId()))
-                                .collect(Collectors.joining("|"))
-                        );
-
-                        System.out.println(cluster.cluster.stream()
-                                .map(cw -> cw.clone)
-                                .map(clone -> String.format("%6d|", clone.getId()) + cluster.cluster.stream()
-                                        .map(cw -> cw.clone)
-                                        .map(compareWith -> String.format("%6d", alignmentOfCDR3(clone, compareWith).getAbsoluteMutations().size()))
-                                        .collect(Collectors.joining("|"))
-                                )
-                                .collect(Collectors.joining("\n"))
-                        );
-                        System.out.println("\n");
-
-                        System.out.println("V|CDR3|J comparison:\n");
-                        System.out.println("      |" + cluster.cluster.stream()
-                                .map(cw -> cw.clone)
-                                .map(clone -> String.format("%10d", clone.getId()))
-                                .collect(Collectors.joining("|"))
-                        );
-
-                        System.out.println(cluster.cluster.stream()
-                                .map(cw -> cw.clone)
-                                .map(clone -> String.format("%6d|", clone.getId()) + cluster.cluster.stream()
-                                        .map(cw -> cw.clone)
-                                        .map(compareWith -> String.format(" %2d|%2d|%2d ",
-                                                mutationsBetweenWithoutCDR3(clone, compareWith, Variable).size(),
-                                                alignmentOfCDR3(clone, compareWith).getAbsoluteMutations().size(),
-                                                mutationsBetweenWithoutCDR3(clone, compareWith, Joining).size()
-                                        ))
-                                        .collect(Collectors.joining("|"))
-                                )
-                                .collect(Collectors.joining("\n"))
-                        );
-                        System.out.println("\n");
-
-                        System.out.println("fitness function params:\n");
-                        System.out.println("       |" + cluster.cluster.stream()
-                                .map(cw -> cw.clone)
-                                .map(clone -> String.format("%17d    ", clone.getId()))
-                                .collect(Collectors.joining("|"))
-                        );
-
-                        System.out.println(cluster.cluster.stream()
-                                .map(cw -> cw.clone)
-                                .map(clone -> String.format("%6d |", clone.getId()) + cluster.cluster.stream()
-                                        .map(cw -> cw.clone)
-                                        .map(compareWith -> {
-                                            FitnessFunctionParams fitnessFunctionParams = fitnessFunctionParams(clone, compareWith, VRangeInCDR3, JRangeInCDR3, VScoring, JScoring);
-                                            return String.format(" %.2f|%.2f|%.2f|%.2f ",
-                                                    fitnessFunctionParams.minDistanceToGermline,
-                                                    fitnessFunctionParams.distanceBetweenClones,
-                                                    fitnessFunctionParams.distanceBetweenClonesInNDN,
-                                                    fitnessFunctionParams.distanceBetweenClonesWithoutNDN
-                                            );
-                                        })
-                                        .collect(Collectors.joining("|"))
-                                )
-                                .collect(Collectors.joining("\n"))
-                        );
-                        System.out.println("\n");
-
-//                        if (true) {
-//                            break;
-//                        }
-
-
-                        System.out.println("clustering formula:\n");
-                        System.out.println("      |  min  |" + cluster.cluster.stream()
-                                .map(cw -> cw.clone)
-                                .map(clone -> String.format("%6d ", clone.getId()))
-                                .collect(Collectors.joining("|"))
-                        );
-
-                        System.out.println(cluster.cluster.stream()
-                                .map(cw -> cw.clone)
-                                .map(clone -> {
-                                            List<Double> calculatedFormula = cluster.cluster.stream()
-                                                    .map(cw -> cw.clone)
-                                                    .map(compareWith -> fitnessFunction(fitnessFunctionParams(clone, compareWith, VRangeInCDR3, JRangeInCDR3, VScoring, JScoring)))
-                                                    .collect(Collectors.toList());
-                                            return String.format("%6d|%.5f|%s",
-                                                    clone.getId(),
-                                                    calculatedFormula.stream().filter(it -> it > 0.0).mapToDouble(it -> it).min().orElseThrow(IllegalArgumentException::new),
-                                                    calculatedFormula.stream().map(r -> String.format("%.5f", r)).collect(Collectors.joining("|"))
-                                            );
-                                        }
-                                )
-                                .collect(Collectors.joining("\n"))
-                        );
-                        System.out.println("\n");
-
-                        System.out.println(cluster.cluster.stream()
-                                .map(cw -> cw.clone)
-                                .map(clone -> {
-                                            List<Double> calculatedFormula = cluster.cluster.stream()
-                                                    .map(cw -> cw.clone)
-                                                    .map(compareWith -> fitnessFunction(fitnessFunctionParams(clone, compareWith, VRangeInCDR3, JRangeInCDR3, VScoring, JScoring)))
-                                                    .collect(Collectors.toList());
-                                            return String.format("%6d|%.5f|%s",
-                                                    clone.getId(),
-                                                    calculatedFormula.stream().filter(it -> it > 0.0).mapToDouble(it -> it).min().orElseThrow(IllegalArgumentException::new),
-                                                    calculatedFormula.stream().map(r -> String.format("%.5f", r)).collect(Collectors.joining("|"))
-                                            );
-                                        }
-                                )
-                                .collect(Collectors.joining("\n"))
-                        );
-                        System.out.println("\n");
-                    }
-
-
-//                    Cluster<CloneWrapper> clusterToProcess = new Cluster<>(cluster.cluster.stream()
-//                            .filter(it -> clonesDefinitelyInTree.contains(it.clone.getId()) || clonesMaybeInTree.contains(it.clone.getId()))
-//                            .collect(Collectors.toList()));
-                    Cluster<CloneWrapper> clusterToProcess = cluster;
-                    List<TreeWithMeta> trees = shmTreeBuilder.processCluster(clusterToProcess)
-                            .stream()
-                            .sorted(Comparator.<TreeWithMeta>comparingLong(tree -> tree.getTree().allNodes().count()).reversed())
-                            .collect(Collectors.toList());
-
-                    for (TreeWithMeta treeWithMeta : trees) {
-                        treeWithMeta.getTree().allNodes().forEach(nodeWithParent -> {
-                            Tree.Node<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> node = nodeWithParent.getNode();
-                            Tree.Node<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> parent = nodeWithParent.getParent();
-                            Optional<Clone> clone = node.getContent().convert(it -> Optional.of(it.clone), it -> Optional.empty());
-                            if (clone.isPresent() && parent != null) {
-                                if (!getSequence(parent.getContent()).equals(clone.get().getTarget(0).getSequence())) {
-                                    throw new IllegalStateException();
-                                }
-                            }
-                        });
-                    }
-
-                    System.out.println(trees.stream().map(TreeWithMeta::getTree).map(idPrinter::print).collect(Collectors.joining("\n")));
-                    System.out.println("\n");
-
-                    List<Tree<Pair<String, NucleotideSequence>>> mappedTrees = trees.stream()
-                            .map(treeWithMeta -> treeWithMeta.getTree().map(this::idPair))
-                            .sorted(Comparator.<Tree<Pair<String, NucleotideSequence>>, Long>comparing(tree -> tree.allNodes().count()).reversed())
-                            .collect(Collectors.toList());
-                    XmlTreePrinter<Pair<String, NucleotideSequence>> xmlTreePrinter = new XmlTreePrinter<>(
-                            nodeWithParent -> nodeWithParent.getNode().getContent().getFirst() + "(" + md5(nodeWithParent.getNode().getContent().getSecond()) + ")"
-                    );
-
-                    boolean printAllSequences = false;
-                    if (printAllSequences) {
-                        trees.stream()
-                                .map(TreeWithMeta::getTree)
-                                .flatMap(Tree::allNodes)
-                                .map(nodeWithParent -> {
-                                    Tree.Node<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> node = nodeWithParent.getNode();
-                                    NucleotideSequence sequence = getSequence(node.getContent());
-                                    NucleotideSequence CDR3 = getCDR3(node.getContent());
-                                    return String.format("%20s | %50s | %s",
-                                            md5(sequence),
-                                            CDR3.toString(),
-                                            sequence);
-                                })
-                                .distinct()
-                                .forEach(System.out::println);
-                        System.out.println();
-                    }
-
-                    System.out.println(mappedTrees.stream().map(xmlTreePrinter::print).collect(Collectors.joining("\n")));
-                    System.out.println();
-
-                    System.out.println(mappedTrees.stream().map(xmlTreePrinter::print).map(this::md5).collect(Collectors.joining("\n")));
-                    System.out.println("\n");
-
-
-                    for (TreeWithMeta treeWithMeta : trees) {
-                        XmlTreePrinter<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> printerWithBreadcrumbs = new XmlTreePrinter<>(
-                                nodeWithParent -> {
-                                    Tree.Node<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> node = nodeWithParent.getNode();
-                                    Tree.Node<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> parent = nodeWithParent.getParent();
-                                    Pair<String, NucleotideSequence> idPair = idPair(node.getContent());
-
-                                    if (parent == null) {
-                                        return "" + md5(idPair.getSecond());
-                                    }
-
-                                    List<Tree.Node<ObservedOrReconstructed<CloneWrapper, AncestorInfo>>> ancestors = Stream.concat(
-                                                    allAncestors(treeWithMeta.getTree(), nodeWithParent),
-                                                    Stream.of(node)
-                                            )
-                                            .filter(it -> it != treeWithMeta.getTree().getRoot())
-                                            .collect(Collectors.toList());
-
-                                    List<Clone> clonesInBranch = ancestors.stream()
-                                            .flatMap(Tree.Node::allDescendants)
-                                            .distinct()
-                                            .map(Tree.NodeWithParent::getNode)
-                                            .map(Tree.Node::getContent)
-                                            .map(content -> content.convert(it -> Optional.of(it.clone), it -> Optional.<Clone>empty()))
-                                            .flatMap(Java9Util::stream)
-                                            .collect(Collectors.toList());
-                                    if (clonesInBranch.isEmpty()) {
-                                        throw new IllegalStateException();
-                                    }
-                                    int vPositionInCDR3 = findVPositionInCDR3(clonesInBranch);
-                                    int jPositionInCDR3 = findJPositionInCDR3(clonesInBranch);
-                                    Range NDNRange = new Range(vPositionInCDR3, jPositionInCDR3);
-//                                    Range NDNRange = new Range(0, 0);
-
-                                    Mutations<NucleotideSequence> mutationsOfNDN = Aligner.alignGlobal(
-                                            AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-                                            getCDR3(parent.getContent()).getRange(NDNRange),
-                                            getCDR3(node.getContent()).getRange(NDNRange)
-                                    ).getAbsoluteMutations();
-
-                                    Mutations<NucleotideSequence> mutationsOfCDR3 = Aligner.alignGlobal(
-                                            AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-                                            getCDR3(parent.getContent()),
-                                            getCDR3(node.getContent())
-                                    ).getAbsoluteMutations();
-
-                                    Mutations<NucleotideSequence> mutationsOfVWithoutCDR3 = Aligner.alignGlobal(
-                                            AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-                                            getVWithoutCDR3(parent),
-                                            getVWithoutCDR3(node)
-                                    ).getAbsoluteMutations();
-
-                                    Mutations<NucleotideSequence> mutationsOfJWithoutCDR3 = Aligner.alignGlobal(
-                                            AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-                                            getJWithoutCDR3(parent),
-                                            getJWithoutCDR3(node)
-                                    ).getAbsoluteMutations();
-
-                                    return mutationsOfNDN.size() + " :" + idPair.getFirst() + "|" + md5(idPair.getSecond()) + "(" + NDNRange.getLower() + "-" + NDNRange.getUpper() + ")" + " " + mutationsOfNDN + "(" + (mutationsOfNDN.size() / (double) NDNRange.length()) + ") CDR3: " + mutationsOfCDR3.size() + " V: " + mutationsOfVWithoutCDR3.size() + " J: " + mutationsOfJWithoutCDR3.size();
-                                }
-                        );
-                        System.out.println(printerWithBreadcrumbs.print(treeWithMeta.getTree()));
-                    }
-                    System.out.println();
-
-                    for (TreeWithMeta treeWithMeta : trees) {
-                        Tree<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> tree = treeWithMeta.getTree();
-                        XmlTreePrinter<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> printerOfNDN = new XmlTreePrinter<>(
-                                nodeWithParent -> {
-                                    Tree.Node<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> node = nodeWithParent.getNode();
-                                    Tree.Node<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> parent = nodeWithParent.getParent();
-                                    Pair<String, NucleotideSequence> idPair = idPair(node.getContent());
-
-                                    if (parent == null) {
-                                        return "" + md5(idPair.getSecond());
-                                    }
-
-                                    NucleotideSequence CDR3OfNode = getCDR3(node.getContent());
-
-                                    RootInfo rootInfo = treeWithMeta.getRootInfo();
-                                    Range NDNRange = new Range(rootInfo.getVRangeInCDR3().length(), CDR3OfNode.size() - rootInfo.getJRangeInCDR3().length());
-
-                                    Mutations<NucleotideSequence> mutationsOfNDN = Aligner.alignGlobal(
-                                            AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-                                            getCDR3(parent.getContent()).getRange(NDNRange),
-                                            getCDR3(node.getContent()).getRange(NDNRange)
-                                    ).getAbsoluteMutations();
-
-                                    Mutations<NucleotideSequence> mutationsOfVWithoutCDR3 = Aligner.alignGlobal(
-                                            AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-                                            getVWithoutCDR3(parent),
-                                            getVWithoutCDR3(node)
-                                    ).getAbsoluteMutations();
-
-                                    Mutations<NucleotideSequence> mutationsOfJWithoutCDR3 = Aligner.alignGlobal(
-                                            AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-                                            getJWithoutCDR3(parent),
-                                            getJWithoutCDR3(node)
-                                    ).getAbsoluteMutations();
-
-                                    return CDR3OfNode.getRange(NDNRange) + ":" + idPair.getFirst() + "|" + md5(idPair.getSecond()) + " V: " + mutationsOfVWithoutCDR3.size() + " J: " + mutationsOfJWithoutCDR3.size() + " NDN: " + mutationsOfNDN;
-                                }
-                        );
-                        System.out.println(printerOfNDN.print(tree));
-                    }
-                    System.out.println();
-
-
-                    if (false) {
-                        if (mappedTrees.size() > 1) {
-                            Tree<Pair<String, NucleotideSequence>> bigTree = mappedTrees.get(0);
-
-                            XmlTreePrinter<Pair<String, NucleotideSequence>> printerForSmallTree = new XmlTreePrinter<>(
-                                    nodeOfSmallTree -> nodeOfSmallTree.getNode().getContent().getFirst() + ":" + bigTree.allNodes()
-                                            .map(Tree.NodeWithParent::getNode)
-                                            .map(nodeOfBigTree -> Pair.create(nodeOfBigTree, Aligner.alignGlobal(
-                                                    AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-                                                    nodeOfBigTree.getContent().getSecond(),
-                                                    nodeOfSmallTree.getNode().getContent().getSecond()
-                                            ).getScore()))
-                                            .max(Comparator.comparing(Pair::getSecond))
-                                            //                                        .map(it -> it.getSecond().size() + "(" + it.getSecond() + ")" + "|" + it.getFirst().getContent().getSecond().hashCode())
-                                            .map(it -> it.getSecond() + "|" + md5(it.getFirst().getContent().getSecond()))
-                                            .orElseThrow(IllegalArgumentException::new) + ":" + bigTree.allNodes()
-                                            .map(Tree.NodeWithParent::getNode)
-                                            .filter(nodeOfBigTree -> !nodeOfBigTree.getContent().getFirst().equals("?"))
-                                            .map(nodeOfBigTree -> Pair.create(nodeOfBigTree, Aligner.alignGlobal(
-                                                    AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-                                                    nodeOfBigTree.getContent().getSecond(),
-                                                    nodeOfSmallTree.getNode().getContent().getSecond()
-                                            ).getScore()))
-                                            .max(Comparator.comparing(Pair::getSecond))
-                                            //                                        .map(it -> it.getSecond().size() + "(" + it.getSecond() + ")" + "|" + it.getFirst().getContent().getSecond().hashCode())
-                                            .map(it -> it.getSecond() + "|" + md5(it.getFirst().getContent().getSecond()))
-                                            .orElseThrow(IllegalArgumentException::new)
-                            );
-                            mappedTrees.subList(1, mappedTrees.size())
-                                    .forEach(smallTree -> System.out.println(printerForSmallTree.print(smallTree)));
-                            System.out.println();
-                        }
-                    }
-
-                    boolean printFasta = false;
-                    if (printFasta) {
-                        System.out.println("FASTA full:");
-                        for (int i = 0; i < mappedTrees.size(); i++) {
-                            Tree<Pair<String, NucleotideSequence>> tree = mappedTrees.get(i);
-                            System.out.println(i);
-                            System.out.println(tree.allNodes()
-                                    .map(Tree.NodeWithParent::getNode)
-                                    .map(Tree.Node::getContent)
-                                    .map(content -> ">" + content.getFirst() + "|" + md5(content.getSecond()) + "\n" + content.getSecond())
-                                    .distinct()
-                                    .collect(Collectors.joining("\n")));
-
-                            System.out.println();
-                        }
-
-                        System.out.println("FASTA CDR3:");
-                        for (int i = 0; i < trees.size(); i++) {
-                            Tree<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> tree = trees.get(i).getTree();
-                            System.out.println(i);
-                            System.out.println(tree.allNodes()
-                                    .map(Tree.NodeWithParent::getNode)
-                                    .map(Tree.Node::getContent)
-                                    .map(content -> ">" + content.convert(it -> it.clone.getId(), it -> "?") + "|" + md5(getCDR3(content)) + "\n" + getCDR3(content))
-                                    .distinct()
-                                    .collect(Collectors.joining("\n")));
-
-                            System.out.println();
-                        }
-
-                        System.out.println(Lists.newArrayList(
-                                        trees.get(0),
-                                        trees.get(1),
-                                        trees.get(2),
-                                        trees.get(4)
-                                ).stream()
-                                .map(TreeWithMeta::getTree)
-                                .flatMap(Tree::allNodes)
-                                .map(Tree.NodeWithParent::getNode)
-                                .map(Tree.Node::getContent)
-                                .map(content -> content.convert(it -> Optional.of(it.clone), it -> Optional.<Clone>empty()))
-                                .flatMap(Java9Util::stream)
-                                .map(clone -> ">" + clone.getId() + "\n" + clone.getTarget(0).getSequence())
-                                .collect(Collectors.joining("\n")));
-                        System.out.println();
-
-                        AncestorInfo ancestorInfo = trees.get(0).getTree().allNodes()
-                                .map(Tree.NodeWithParent::getNode)
-                                .map(node -> node.getContent().convert(it -> Optional.<AncestorInfo>empty(), Optional::of))
-                                .flatMap(Java9Util::stream)
-                                .findFirst()
-                                .orElseThrow(IllegalArgumentException::new);
-                        System.out.println("CDR3 range" + ancestorInfo.getCDR3Begin() + "-" + ancestorInfo.getCDR3End());
-                        System.out.println();
-                    }
-
-
-                    Set<Integer> clonesInTree = trees.stream()
-                            .map(TreeWithMeta::getTree)
-                            .flatMap(Tree::allNodes)
-                            .map(Tree.NodeWithParent::getNode)
-                            .map(node -> node.getContent().convert(it -> Optional.of(it.clone.getId()), it -> Optional.<Integer>empty()))
-                            .flatMap(Java9Util::stream)
-                            .collect(Collectors.toSet());
-
-                    long clonesNotInTreesCount = cluster.cluster.stream().map(it -> it.clone.getId()).filter(it -> !clonesInTree.contains(it)).count();
-                    System.out.println("not in trees: " + clonesNotInTreesCount);
-                    System.out.println();
-
-                    Set<Integer> clonesInBaseTree = trees.get(0).getTree().allNodes()
-                            .map(Tree.NodeWithParent::getNode)
-                            .map(node -> node.getContent().convert(it -> Optional.of(it.clone.getId()), it -> Optional.<Integer>empty()))
-                            .flatMap(Java9Util::stream)
-                            .collect(Collectors.toSet());
-
-                    List<Integer> falsePositive = clonesInBaseTree.stream()
-                            .filter(it -> !clonesDefinitelyInTree.contains(it) && !clonesMaybeInTree.contains(it))
-                            .collect(Collectors.toList());
-
-                    List<Integer> truePositive = clonesInBaseTree.stream()
-                            .filter(clonesDefinitelyInTree::contains)
-                            .collect(Collectors.toList());
-
-                    List<Integer> falseNegative = clonesDefinitelyInTree.stream()
-                            .filter(it -> !clonesInBaseTree.contains(it))
-                            .collect(Collectors.toList());
-
-                    System.out.println("threshold: " + shmTreeBuilderParameters.thresholdForFreeClones);
-                    System.out.println("NDNScoreMultiplier: " + shmTreeBuilderParameters.NDNScoreMultiplier);
-                    System.out.println("statistic:");
-                    System.out.println("FP: " + falsePositive.size() + " FN: " + falseNegative.size() + " TP: " + truePositive.size());
-                    System.out.println();
-                    System.out.println("FP: " + falsePositive);
-                    System.out.println("FN: " + falseNegative);
-                    System.out.println();
-
-                    System.out.println("ids:");
-                    System.out.println();
-                    System.out.println(cluster.cluster.stream().map(it -> String.valueOf(it.clone.getId())).collect(Collectors.joining("|")));
-
-                    System.out.println("\n\n");
-                }
+        for (Cluster<CloneWrapper> cluster : CUtils.it(shmTreeBuilder.buildClusters(shmTreeBuilder.sortClonotypes()))) {
+            int rootCloneId = 24722;
+            if (cluster.cluster.stream().map(it -> it.clone.getId()).anyMatch(it -> it == rootCloneId)) {
+                shmTreeBuilder.zeroStep(cluster);
             }
         }
+        shmTreeBuilder.makeDecisions("Building initial clusters");
+        //TODO check that all trees has minimum common mutations in VJ
+
+        for (String step : shmTreeBuilderParameters.stepsOrder) {
+            for (Cluster<CloneWrapper> cluster : CUtils.it(shmTreeBuilder.buildClusters(shmTreeBuilder.sortClonotypes()))) {
+                int rootCloneId = 24722;
+                if (cluster.cluster.stream().map(it -> it.clone.getId()).anyMatch(it -> it == rootCloneId)) {
+                    shmTreeBuilder.applyStep(cluster, step);
+                }
+            }
+            shmTreeBuilder.makeDecisions(step);
+        }
+
+        List<TreeWithMeta> trees = new ArrayList<>();
+        for (Cluster<CloneWrapper> cluster : CUtils.it(shmTreeBuilder.buildClusters(shmTreeBuilder.sortClonotypes()))) {
+            int rootCloneId = 24722;
+            if (cluster.cluster.stream().map(it -> it.clone.getId()).anyMatch(it -> it == rootCloneId)) {
+                trees.addAll(shmTreeBuilder.getResult(cluster));
+            }
+        }
+
+        trees = trees.stream()
+                .sorted(Comparator.<TreeWithMeta>comparingLong(tree -> tree.getTree().allNodes().count()).reversed())
+                .collect(Collectors.toList());
+
+        for (TreeWithMeta treeWithMeta : trees) {
+            treeWithMeta.getTree().allNodes().forEach(nodeWithParent -> {
+                Tree.Node<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> node = nodeWithParent.getNode();
+                Tree.Node<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> parent = nodeWithParent.getParent();
+                Optional<Clone> clone = node.getContent().convert(it -> Optional.of(it.clone), it -> Optional.empty());
+                if (clone.isPresent() && parent != null) {
+                    if (!getSequence(parent.getContent()).equals(clone.get().getTarget(0).getSequence())) {
+                        throw new IllegalStateException();
+                    }
+                }
+            });
+        }
+
+        List<Tree<Pair<String, NucleotideSequence>>> mappedTrees = trees.stream()
+                .map(treeWithMeta -> treeWithMeta.getTree().map(this::idPair))
+                .sorted(Comparator.<Tree<Pair<String, NucleotideSequence>>, Long>comparing(tree -> tree.allNodes().count()).reversed())
+                .collect(Collectors.toList());
+        XmlTreePrinter<Pair<String, NucleotideSequence>> xmlTreePrinter = new XmlTreePrinter<>(
+                nodeWithParent -> nodeWithParent.getNode().getContent().getFirst() + "(" + md5(nodeWithParent.getNode().getContent().getSecond()) + ")"
+        );
+
+        System.out.println(mappedTrees.stream().map(xmlTreePrinter::print).map(this::md5).collect(Collectors.joining("\n")));
+        System.out.println("\n");
+
+        for (TreeWithMeta treeWithMeta : trees) {
+            Tree<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> tree = treeWithMeta.getTree();
+            XmlTreePrinter<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> printerOfNDN = new XmlTreePrinter<>(
+                    nodeWithParent -> {
+                        Tree.Node<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> node = nodeWithParent.getNode();
+                        Tree.Node<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> parent = nodeWithParent.getParent();
+                        Pair<String, NucleotideSequence> idPair = idPair(node.getContent());
+
+                        if (parent == null) {
+                            return "" + md5(idPair.getSecond());
+                        }
+
+                        NucleotideSequence CDR3OfNode = getCDR3(node.getContent());
+
+                        RootInfo rootInfo = treeWithMeta.getRootInfo();
+                        Range NDNRange = new Range(rootInfo.getVRangeInCDR3().length(), CDR3OfNode.size() - rootInfo.getJRangeInCDR3().length());
+
+                        Mutations<NucleotideSequence> mutationsOfNDN = Aligner.alignGlobal(
+                                AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
+                                getCDR3(parent.getContent()).getRange(NDNRange),
+                                getCDR3(node.getContent()).getRange(NDNRange)
+                        ).getAbsoluteMutations();
+
+                        Mutations<NucleotideSequence> mutationsOfV = Aligner.alignGlobal(
+                                AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
+                                getV(parent, treeWithMeta.getRootInfo()),
+                                getV(node, treeWithMeta.getRootInfo())
+                        ).getAbsoluteMutations().move(232);
+
+                        Mutations<NucleotideSequence> mutationsOfJWithoutCDR3 = Aligner.alignGlobal(
+                                AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
+                                getJ(parent, treeWithMeta.getRootInfo()),
+                                getJ(node, treeWithMeta.getRootInfo())
+                        ).getAbsoluteMutations().move(11);
+
+                        NucleotideSequence NDN = CDR3OfNode.getRange(NDNRange);
+                        int wildcardsScore = 0;
+                        for (int i = 0; i < NDN.size(); i++) {
+                            Wildcard wildcard = NucleotideSequence.ALPHABET.codeToWildcard(NDN.codeAt(i));
+                            wildcardsScore += wildcard.basicSize();
+                        }
+                        return NDN + " (" + String.format("%.2f", wildcardsScore / (double) NDN.size()) + ")" + ":" + idPair.getFirst() + " V: " + mutationsOfV.size() + " J: " + mutationsOfJWithoutCDR3.size() + " V: " + mutationsOfV + " J: " + mutationsOfJWithoutCDR3 + " NDN: " + mutationsOfNDN;
+                    }
+            );
+            System.out.println();
+            long count = treeWithMeta.getTree().allNodes()
+                    .filter(node -> node.getNode().getContent().convert(it -> true, it -> false))
+                    .count();
+            System.out.println(treeWithMeta.getVJBase() + " size: " + count);
+            System.out.println(printerOfNDN.print(tree));
+        }
+        System.out.println();
+
+        System.out.println("threshold: " + shmTreeBuilderParameters.thresholdForFreeClones);
+        System.out.println("NDNScoreMultiplier: " + shmTreeBuilderParameters.NDNScoreMultiplier);
+        System.out.println();
+
+        System.out.println("\n\n");
     }
 
     private Range minVRangeInCDR3(Cluster<CloneWrapper> cluster) {
@@ -960,17 +319,22 @@ public class CommandBuildSHMTree extends ACommandWithOutputMiXCR {
         );
     }
 
-    private NucleotideSequence getVWithoutCDR3(Tree.Node<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> node) {
+    private NucleotideSequence getV(Tree.Node<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> node, RootInfo rootInfo) {
         return node.getContent().convert(
-                cloneWrapper -> cloneWrapper.clone.getNFeature(new GeneFeature(FR1End, CDR3Begin)),
-                ancestorInfo -> ancestorInfo.getSequence().getRange(0, ancestorInfo.getCDR3Begin())
+                cloneWrapper -> cloneWrapper.clone.getNFeature(new GeneFeature(FR1End, CDR3Begin))
+                        .concatenate(cloneWrapper.clone.getNFeature(CDR3).getRange(0, rootInfo.getVRangeInCDR3().length())),
+                ancestorInfo -> ancestorInfo.getSequence().getRange(0, ancestorInfo.getCDR3Begin() + rootInfo.getVRangeInCDR3().length())
         );
     }
 
-    private NucleotideSequence getJWithoutCDR3(Tree.Node<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> node) {
+    private NucleotideSequence getJ(Tree.Node<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> node, RootInfo rootInfo) {
         return node.getContent().convert(
-                cloneWrapper -> cloneWrapper.clone.getNFeature(new GeneFeature(CDR3End, FR4End)),
-                ancestorInfo -> ancestorInfo.getSequence().getRange(ancestorInfo.getCDR3End(), ancestorInfo.getSequence().size())
+                cloneWrapper -> {
+                    NucleotideSequence CDR3 = cloneWrapper.clone.getNFeature(GeneFeature.CDR3);
+                    return CDR3.getRange(CDR3.size() - rootInfo.getJRangeInCDR3().length(), CDR3.size())
+                            .concatenate(cloneWrapper.clone.getNFeature(new GeneFeature(CDR3End, FR4End)));
+                },
+                ancestorInfo -> ancestorInfo.getSequence().getRange(ancestorInfo.getCDR3End() - rootInfo.getJRangeInCDR3().length(), ancestorInfo.getSequence().size())
         );
     }
 

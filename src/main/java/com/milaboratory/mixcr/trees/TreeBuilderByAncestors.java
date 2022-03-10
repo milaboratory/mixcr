@@ -31,7 +31,6 @@ public class TreeBuilderByAncestors<T, E, M> {
     private final BiFunction<E, E, E> postprocessDescendants;
 
     private final Tree<ObservedOrReconstructed<T, E>> tree;
-    private int observedNodesCount;
     private final int countOfNodesToProbe;
 
     public TreeBuilderByAncestors(
@@ -52,12 +51,11 @@ public class TreeBuilderByAncestors<T, E, M> {
                 findCommonMutations,
                 postprocessDescendants,
                 new Tree<>(new Tree.Node<>(new Reconstructed<>(root, BigDecimal.ZERO))),
-                0,
                 countOfNodesToProbe
         );
     }
 
-    private TreeBuilderByAncestors(BiFunction<E, M, BigDecimal> distance, Function<T, E> asAncestor, BiFunction<E, E, M> mutationsBetween, BiFunction<E, M, E> mutate, BiFunction<M, M, M> findCommonMutations, BiFunction<E, E, E> postprocessDescendants, Tree<ObservedOrReconstructed<T, E>> tree, int observedNodesCount, int countOfNodesToProbe) {
+    private TreeBuilderByAncestors(BiFunction<E, M, BigDecimal> distance, Function<T, E> asAncestor, BiFunction<E, E, M> mutationsBetween, BiFunction<E, M, E> mutate, BiFunction<M, M, M> findCommonMutations, BiFunction<E, E, E> postprocessDescendants, Tree<ObservedOrReconstructed<T, E>> tree, int countOfNodesToProbe) {
         this.distance = distance;
         this.asAncestor = asAncestor;
         this.mutationsBetween = mutationsBetween;
@@ -65,7 +63,6 @@ public class TreeBuilderByAncestors<T, E, M> {
         this.findCommonMutations = findCommonMutations;
         this.postprocessDescendants = postprocessDescendants;
         this.tree = tree;
-        this.observedNodesCount = observedNodesCount;
         this.countOfNodesToProbe = countOfNodesToProbe;
     }
 
@@ -78,13 +75,8 @@ public class TreeBuilderByAncestors<T, E, M> {
                 findCommonMutations,
                 postprocessDescendants,
                 tree.copy(),
-                observedNodesCount,
                 countOfNodesToProbe
         );
-    }
-
-    public int getObservedNodesCount() {
-        return observedNodesCount;
     }
 
     public TreeBuilderByAncestors<T, E, M> addNode(T toAdd) {
@@ -337,7 +329,6 @@ public class TreeBuilderByAncestors<T, E, M> {
 
         @Override
         protected void apply() {
-            observedNodesCount++;
             Reconstructed<T, E> parentAsReconstructed = (Reconstructed<T, E>) parent.getContent();
             if (distanceFromParentAndInsertion.compareTo(BigDecimal.ZERO) == 0) {
                 parentAsReconstructed.setMinDistanceFromObserved(BigDecimal.ZERO);
@@ -385,7 +376,6 @@ public class TreeBuilderByAncestors<T, E, M> {
 
         @Override
         protected void apply() {
-            observedNodesCount++;
             parent.replaceChild(
                     replaceWhat,
                     postprocess(replacement),

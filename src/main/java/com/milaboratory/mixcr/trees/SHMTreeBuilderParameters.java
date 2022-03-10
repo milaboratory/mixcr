@@ -59,9 +59,13 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
      */
     public final double thresholdForFreeClones;
     /**
-     * Trees will be combined if penalty by letter on alignment of NDNs will be less than this value.
+     * Clone will be combined with a tree if penalty by letter on alignment of NDN on root will be less than this value.
      */
     public final double thresholdForCombineByNDN;
+    /**
+     * Trees will be combined if distance between roots will be less than this value.
+     */
+    public final double thresholdForCombineTrees;
     /**
      * Count of clones nearest to the root that will be used to determinate borders of NDN region.
      */
@@ -75,6 +79,7 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
      */
     public final int hideTreesLessThanSize;
     public final int commonMutationsCountForClustering;
+    public final int maxNDNDistanceForClustering;
     /**
      * Count of the nearest nodes to added that will be proceeded to find optimal insertion.
      */
@@ -98,10 +103,12 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
             @JsonProperty("productiveOnly") boolean productiveOnly,
             @JsonProperty("thresholdForFreeClones") double thresholdForFreeClones,
             @JsonProperty("thresholdForCombineByNDN") double thresholdForCombineByNDN,
+            @JsonProperty("thresholdForCombineTrees") double thresholdForCombineTrees,
             @JsonProperty("topToVoteOnNDNSize") int topToVoteOnNDNSize,
             @JsonProperty("penaltyForReversedMutations") double penaltyForReversedMutations,
             @JsonProperty("hideTreesLessThanSize") int hideTreesLessThanSize,
             @JsonProperty("commonMutationsCountForClustering") int commonMutationsCountForClustering,
+            @JsonProperty("maxNDNDistanceForClustering") int maxNDNDistanceForClustering,
             @JsonProperty("countOfNodesToProbe") int countOfNodesToProbe,
             @JsonProperty("NDNScoreMultiplier") double NDNScoreMultiplier,
             @JsonProperty("stepsOrder") List<String> stepsOrder,
@@ -111,10 +118,12 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
         this.productiveOnly = productiveOnly;
         this.thresholdForFreeClones = thresholdForFreeClones;
         this.thresholdForCombineByNDN = thresholdForCombineByNDN;
+        this.thresholdForCombineTrees = thresholdForCombineTrees;
         this.topToVoteOnNDNSize = topToVoteOnNDNSize;
         this.penaltyForReversedMutations = penaltyForReversedMutations;
         this.hideTreesLessThanSize = hideTreesLessThanSize;
         this.commonMutationsCountForClustering = commonMutationsCountForClustering;
+        this.maxNDNDistanceForClustering = maxNDNDistanceForClustering;
         this.countOfNodesToProbe = countOfNodesToProbe;
         this.NDNScoreMultiplier = NDNScoreMultiplier;
         this.stepsOrder = stepsOrder;
@@ -123,7 +132,7 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
 
     @Override
     public SHMTreeBuilderParameters clone() {
-        return new SHMTreeBuilderParameters(targetRegion, productiveOnly, thresholdForFreeClones, thresholdForCombineByNDN, topToVoteOnNDNSize, penaltyForReversedMutations, hideTreesLessThanSize, commonMutationsCountForClustering, countOfNodesToProbe, NDNScoreMultiplier, stepsOrder, minPortionOfClonesForCommonAlignmentRanges);
+        return new SHMTreeBuilderParameters(targetRegion, productiveOnly, thresholdForFreeClones, thresholdForCombineByNDN, thresholdForCombineTrees, topToVoteOnNDNSize, penaltyForReversedMutations, hideTreesLessThanSize, commonMutationsCountForClustering, maxNDNDistanceForClustering, countOfNodesToProbe, NDNScoreMultiplier, stepsOrder, minPortionOfClonesForCommonAlignmentRanges);
     }
 
     @Override

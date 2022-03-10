@@ -6,12 +6,18 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 public class RootInfo {
     private final Range VRangeInCDR3;
     private final Range JRangeInCDR3;
+    private final VJBase VJBase;
     private final NucleotideSequence reconstructedNDN;
 
-    RootInfo(Range VRangeInCDR3, NucleotideSequence reconstructedNDN, Range JRangeInCDR3) {
+    RootInfo(Range VRangeInCDR3, NucleotideSequence reconstructedNDN, Range JRangeInCDR3, VJBase vjBase) {
         this.VRangeInCDR3 = VRangeInCDR3;
         this.JRangeInCDR3 = JRangeInCDR3;
         this.reconstructedNDN = reconstructedNDN;
+        VJBase = vjBase;
+    }
+
+    public VJBase getVJBase() {
+        return VJBase;
     }
 
     public Range getVRangeInCDR3() {

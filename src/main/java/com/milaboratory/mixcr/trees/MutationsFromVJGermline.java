@@ -5,6 +5,7 @@ import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import org.apache.commons.math3.util.Pair;
 
+import java.util.ArrayList;
 import java.util.List;
 
 class MutationsFromVJGermline {
@@ -61,11 +62,24 @@ class MutationsFromVJGermline {
         return VMutationsInCDR3WithoutNDN;
     }
 
+    public List<MutationsWithRange> getVMutations() {
+        List<MutationsWithRange> result = new ArrayList<>(VMutationsWithoutCDR3);
+        result.add(VMutationsInCDR3WithoutNDN);
+        return result;
+    }
+
     public List<MutationsWithRange> getJMutationsWithoutCDR3() {
         return JMutationsWithoutCDR3;
     }
 
     public MutationsWithRange getJMutationsInCDR3WithoutNDN() {
         return JMutationsInCDR3WithoutNDN;
+    }
+
+    public List<MutationsWithRange> getJMutations() {
+        List<MutationsWithRange> result = new ArrayList<>();
+        result.add(JMutationsInCDR3WithoutNDN);
+        result.addAll(JMutationsWithoutCDR3);
+        return result;
     }
 }

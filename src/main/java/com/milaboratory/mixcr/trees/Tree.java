@@ -52,7 +52,7 @@ public class Tree<T> {
     }
 
     public Tree<T> copy() {
-        return new Tree<>(root);
+        return new Tree<>(root.copy());
     }
 
     public Stream<NodeWithParent<T>> allNodes() {

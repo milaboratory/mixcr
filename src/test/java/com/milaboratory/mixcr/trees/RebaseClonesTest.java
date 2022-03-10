@@ -117,7 +117,8 @@ public class RebaseClonesTest {
             RootInfo originalRootInfo = new RootInfo(
                     VRangeAfterCDR3Begin,
                     generate(random, NDN.size() - 3 + random.nextInt(6)),
-                    JRangeAfterCDR3End
+                    JRangeAfterCDR3End,
+                    new VJBase("VSome", "JSome")
             );
 
             MutationsDescription original = new MutationsDescription(
@@ -168,7 +169,8 @@ public class RebaseClonesTest {
             RootInfo rebaseToRootInfo = new RootInfo(
                     originalRootInfo.getVRangeInCDR3().expand(0, VBorderExpand),
                     generate(random, originalRootInfo.getReconstructedNDN().size() - VBorderExpand - JBorderExpand),
-                    originalRootInfo.getJRangeInCDR3().expand(JBorderExpand, 0)
+                    originalRootInfo.getJRangeInCDR3().expand(JBorderExpand, 0),
+                    new VJBase("VSome", "JSome")
             );
 
             MutationsDescription result = clonesRebase.rebaseMutations(original, originalRootInfo, rebaseToRootInfo);
@@ -254,7 +256,8 @@ public class RebaseClonesTest {
             RootInfo rootInfo = new RootInfo(
                     VRangeInCDR3,
                     mutationsOfNDN.mutate(NDNSubsetBeforeMutation),
-                    JRangeInCDR3
+                    JRangeInCDR3,
+                    new VJBase("VSome", "JSome")
             );
 
             NucleotideSequence builtClone = NucleotideSequence.ALPHABET.createBuilder()
@@ -300,7 +303,7 @@ public class RebaseClonesTest {
             );
 
             CloneWithMutationsFromReconstructedRoot rebasedClone = new ClonesRebase(VSequence, AffineGapAlignmentScoring.getNucleotideBLASTScoring(), AffineGapAlignmentScoring.getNucleotideBLASTScoring(), JSequence, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
-                    .rebaseClone(rootInfo, mutationsFromVJGermline, new CloneWrapper(null, 0));
+                    .rebaseClone(rootInfo, mutationsFromVJGermline, new CloneWrapper(null, 0, new VJBase("BGeneName", "JGeneName")));
 
             AncestorInfoBuilder ancestorInfoBuilder = new AncestorInfoBuilder();
             MutationsDescription result = rebasedClone.getMutationsFromRoot();

@@ -1,19 +1,23 @@
 {
   "default": {
     "productiveOnly": true,
-    "thresholdForCombineByNDN": 1.0,
-    "thresholdForFreeClones": 2.3,
+    "thresholdForCombineTrees": 0.5,
+    "thresholdForCombineByNDN": 1.5,
+    "thresholdForFreeClones": 0.45,
     "topToVoteOnNDNSize": 5,
     "NDNScoreMultiplier": 2.5,
     "hideTreesLessThanSize": 1,
     "commonMutationsCountForClustering": 5,
+    "maxNDNDistanceForClustering": 1.5,
     "penaltyForReversedMutations": 10,
     "countOfNodesToProbe": 3,
     "minPortionOfClonesForCommonAlignmentRanges": 0.95,
     "stepsOrder": [
-      "attachClonesByNDN",
+      "attachClonesByDistanceChange",
       "combineTrees",
-      "attachClonesByDistanceChange"
+      "attachClonesByNDN",
+      "attachClonesByDistanceChange",
+      "combineTrees"
     ]
   }
 }

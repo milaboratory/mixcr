@@ -1,7 +1,6 @@
 package com.milaboratory.mixcr.trees;
 
 import com.milaboratory.core.Range;
-import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.alignment.Aligner;
 import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.mutations.Mutations;
@@ -55,7 +54,7 @@ class ClonesRebase {
             Range rangeToAlign = new Range(VMutationsWithinNDNRange.getUpper(), rootInfo.getVRangeInCDR3().getUpper());
             if (!rangeToAlign.isEmpty() && !rangeToAlign.isReverse()) {
                 Mutations<NucleotideSequence> absoluteMutations = Aligner.alignGlobal(
-                        AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
+                        VScoring,
                         VSequence1,
                         mutationsFromVJGermline.getKnownNDN(),
                         rangeToAlign.getLower(),
@@ -86,7 +85,7 @@ class ClonesRebase {
         Range rangeToAlign = new Range(rootInfo.getJRangeInCDR3().getLower(), JMutationsWithinNDNRange.getLower());
         if (!rangeToAlign.isEmpty() && !rangeToAlign.isReverse()) {
             Mutations<NucleotideSequence> absoluteMutations = Aligner.alignGlobal(
-                    AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
+                    JScoring,
                     JSequence1,
                     mutationsFromVJGermline.getKnownNDN(),
                     rangeToAlign.getLower(),
