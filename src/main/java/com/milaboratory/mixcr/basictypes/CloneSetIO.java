@@ -29,6 +29,7 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
+import com.milaboratory.cli.BinaryFileInfo;
 import com.milaboratory.util.LambdaSemaphore;
 import io.repseq.core.VDJCLibraryRegistry;
 
@@ -53,7 +54,10 @@ public final class CloneSetIO {
     }
 
     public static CloneSet read(File file, VDJCLibraryRegistry libraryRegistry) throws IOException {
-        switch (Objects.requireNonNull(fileInfoExtractorInstance.getFileInfo(file)).fileType) {
+        BinaryFileInfo fileInfo = fileInfoExtractorInstance.getFileInfo(file);
+        if (fileInfo == null)
+            throw new RuntimeException("Unsupported file type");
+        switch (Objects.requireNonNull(fileInfo).fileType) {
             case MAGIC_CLNA:
                 try (ClnAReader r = new ClnAReader(file.toPath(), libraryRegistry, 1)) {
                     return r.readCloneSet();
