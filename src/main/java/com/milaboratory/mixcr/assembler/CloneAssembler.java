@@ -35,7 +35,6 @@ import cc.redberry.primitives.Filter;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.clustering.Cluster;
 import com.milaboratory.core.clustering.Clustering;
-import com.milaboratory.core.clustering.SequenceExtractor;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceQuality;
@@ -298,15 +297,10 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         if (!preClusteringDone)
             throw new IllegalStateException("No pre-clustering is done.");
 
-        @SuppressWarnings("unchecked")
-        Clustering clustering = new Clustering(cloneList,
-                new SequenceExtractor<CloneAccumulator, NucleotideSequence>() {
-                    @Override
-                    public NucleotideSequence getSequence(CloneAccumulator object) {
-                        return object.getSequence().getConcatenated().getSequence();
-                    }
-                }, new CloneClusteringStrategy(parameters.getCloneClusteringParameters(),
-                this));
+        Clustering<CloneAccumulator, NucleotideSequence> clustering = new Clustering<>(cloneList,
+                object -> object.getSequence().getConcatenated().getSequence(),
+                new CloneClusteringStrategy(parameters.getCloneClusteringParameters(), this));
+
         this.progressReporter = clustering;
         List<Cluster<CloneAccumulator>> clusters = clustering.performClustering();
         clusteredClonesAccumulators = new ArrayList<>(clusters.size());
@@ -319,15 +313,12 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             head.setCloneIndex(i);
             // k - index to be set for all child clonotypes
             final int k = ~i;
-            cluster.processAllChildren(new TObjectProcedure<Cluster<CloneAccumulator>>() {
-                @Override
-                public boolean execute(Cluster<CloneAccumulator> object) {
-                    onClustered(head, object.getHead());
-                    if (parameters.isAddReadsCountOnClustering())
-                        head.mergeCounts(object.getHead());
-                    idMapping.put(object.getHead().getCloneIndex(), k);
-                    return true;
-                }
+            cluster.processAllChildren(object -> {
+                onClustered(head, object.getHead());
+                if (parameters.isAddReadsCountOnClustering())
+                    head.mergeCounts(object.getHead());
+                idMapping.put(object.getHead().getCloneIndex(), k);
+                return true;
             });
             clusteredClonesAccumulators.add(head);
         }
@@ -518,6 +509,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 return;
             }
 
+            // Selecting a random clone if mapping is ambiguous
             count = (count == 1 ? 1 : RandomUtil.getThreadLocalRandomData().nextLong(1, count));
             CloneAccumulator accumulator = null;
             for (CloneAccumulator acc : candidates)
@@ -694,10 +686,6 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                         if (mappedClones == null)
                             reversePreClustered.put(accs[i].getCloneIndex(), mappedClones = new TIntArrayList());
                         mappedClones.add(accs[j].getCloneIndex());
-                        // Also adding nested clones (clones that were previously clustered to current minor clone)
-                        TIntArrayList subClones = reversePreClustered.get(accs[j].getCloneIndex());
-                        if (subClones != null)
-                            mappedClones.addAll(subClones);
 
                         accs[j] = null;
                         ++deleted;
@@ -755,7 +743,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 }
             }
 
-            // Filtering low quality clonotypes
+            // Filtering low quality clonotypes (has nothing to do with clustering)
             List<CloneAccumulator> result = new ArrayList<>(accs.length - deleted);
 
             for (CloneAccumulator acc : accs) {

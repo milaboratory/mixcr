@@ -570,6 +570,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
             Merger<Chunk<? extends SequenceRead>> mainInputReads = CUtils.buffered((OutputPort) chunked(sReads, 64), Math.max(16, threads));
 
             OutputPort<Chunk<? extends SequenceRead>> mainInputReadsPreprocessed = mainInputReads;
+            // TODO do this after barcode extraction
             if (trimmingQualityThreshold > 0) {
                 ReadTrimmerReport rep = new ReadTrimmerReport();
                 mainInputReadsPreprocessed = CUtils.wrap(
