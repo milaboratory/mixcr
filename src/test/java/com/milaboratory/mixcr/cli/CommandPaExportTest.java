@@ -45,6 +45,7 @@ public class CommandPaExportTest {
                 "--chains", "TRA",
                 "--filter", "Chain=TRA",
                 "--metadata", "/Users/poslavskysv/Projects/milab/mixcr-test-data/metadata.tsv",
+                "--color-key", "x_Tissue", "--color-key", "x_CellPopulation", "--color-key", "y_MouseID",
                 "/Users/poslavskysv/Projects/milab/mixcr-test-data/pa/overlapPa.json",
                 "/Users/poslavskysv/Projects/milab/mixcr-test-data/pa/overlap.pdf");
     }

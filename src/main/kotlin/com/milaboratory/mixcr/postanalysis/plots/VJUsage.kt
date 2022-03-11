@@ -1,8 +1,5 @@
 package com.milaboratory.mixcr.postanalysis.plots
 
-import com.milaboratory.miplots.Position
-import com.milaboratory.miplots.color.Palletes
-import com.milaboratory.miplots.heatmap.*
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult
 import com.milaboratory.mixcr.postanalysis.additive.KeyFunctions
 import jetbrains.letsPlot.label.ggtitle
@@ -59,43 +56,20 @@ object VJUsage {
         df
     }
 
-    data class PlotParameters(
-        val clusterV: Boolean = true,
-        val clusterJ: Boolean = true
-    )
-
     fun plots(
         df: DataFrame<VJUsageRow>,
-        pp: PlotParameters,
+        pp: HeatmapParameters,
     ) = df.groupBy { "sample"<String>() }.groups.toList()
         .map { sdf -> plot(df, pp) + ggtitle(sdf.first()[VJUsageRow::sample.name]!!.toString()) }
 
     fun plot(
         df: DataFrame<VJUsageRow>,
-        pp: PlotParameters,
-    ) = run {
-        var plt = Heatmap(
-            df,
-            x = VJUsageRow::jGene.name,
-            y = VJUsageRow::vGene.name,
-            z = GeneUsageRow::weight.name,
-            xOrder = if (pp.clusterV) Hierarchical() else null,
-            yOrder = if (pp.clusterJ) Hierarchical() else null,
-            fillPallette = Palletes.Diverging.lime90rose130
-        )
-
-        plt = plt.withBorder()
-
-        if (pp.clusterV)
-            plt = plt.withDendrogram(pos = Position.Top, 0.1)
-        if (pp.clusterJ)
-            plt = plt.withDendrogram(pos = Position.Right, 0.1)
-
-        plt = plt
-            .withLabels(Position.Bottom, angle = 45, sep = 0.1)
-            .withLabels(Position.Left, sep = 0.1, width = 4.0)
-            .withFillLegend(Position.Left, size = 0.5)
-
-        plt.plot
-    }
+        params: HeatmapParameters,
+    ) = mkHeatmap(
+        df,
+        x = VJUsageRow::jGene.name,
+        y = VJUsageRow::vGene.name,
+        z = GeneUsageRow::weight.name,
+        params = params
+    )
 }

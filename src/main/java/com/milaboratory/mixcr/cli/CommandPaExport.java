@@ -1,6 +1,7 @@
 package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.miplots.ExportKt;
+import com.milaboratory.miplots.Position;
 import com.milaboratory.miplots.stat.util.TestMethod;
 import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod;
 import com.milaboratory.mixcr.basictypes.Clone;
@@ -23,10 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -177,6 +175,14 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
                     ? metadataDf
                     : (metadata == null ? null : (metadataDf = MetadataKt.readMetadata(metadata)));
         }
+
+        void writePlots(Chains.NamedChains chains, List<Plot> plots) {
+            ExportKt.writePDFFigure(Path.of(out.substring(0, out.length() - 3) + chains.name + ".pdf"), plots);
+        }
+
+        void writePlots(Chains.NamedChains chains, Plot plot) {
+            ExportKt.writePDF(Path.of(out.substring(0, out.length() - 3) + chains.name + ".pdf"), plot);
+        }
     }
 
     static abstract class ExportBasicStatistics extends CommandPaExportPlots {
@@ -224,7 +230,7 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
                             CorrelationMethod.Pearson
                     ));
 
-            ExportKt.writePDFFigure(Path.of(out.substring(0, out.length() - 3) + chains.name + ".pdf"), plots);
+            writePlots(chains, plots);
         }
     }
 
@@ -250,7 +256,14 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
         }
     }
 
-    static abstract class ExportGeneUsage extends CommandPaExportPlots {
+    static abstract class ExportHeatmap extends CommandPaExportPlots {
+        @Option(names = {"--h-labels-size"}, description = "Width of horizontal labels. One unit corresponds to the width of one tile.")
+        public double hLabelsSize = -1.0;
+        @Option(names = {"--v-labels-size"}, description = "Height of vertical labels. One unit corresponds to the height of one tile.")
+        public double vLabelsSize = -1.0;
+    }
+
+    static abstract class ExportGeneUsage extends ExportHeatmap {
         abstract String group();
 
         @Option(names = {"--no-samples-dendro"}, description = "Do not plot dendrogram for hierarchical clusterization of samples.")
@@ -258,7 +271,7 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
         @Option(names = {"--no-genes-dendro"}, description = "Do not plot dendrogram for hierarchical clusterization of genes.")
         public boolean noGenesDendro;
         @Option(names = {"--color-key"}, description = "Add color key layer.")
-        public List<String> colorKey;
+        public List<String> colorKey = new ArrayList<>();
 
         @Override
         void run(Chains.NamedChains chains, PaResultByChain result) {
@@ -274,14 +287,19 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
             if (df.rowsCount() == 0)
                 return;
 
-            Plot plots = GeneUsage.INSTANCE.plot(df,
-                    new GeneUsage.PlotParameters(
-                            colorKey,
+            Plot plot = GeneUsage.INSTANCE.plot(df,
+                    new HeatmapParameters(
                             !noSamplesDendro,
-                            !noGenesDendro
+                            !noGenesDendro,
+                            colorKey.stream().map(it -> new ColorKey(it, Position.Bottom)).collect(Collectors.toList()),
+                            hLabelsSize,
+                            vLabelsSize,
+                            false,
+                            width,
+                            height
                     ));
 
-            ExportKt.writePDF(Path.of(out.substring(0, out.length() - 3) + chains.name + ".pdf"), plots);
+            writePlots(chains, plot);
         }
     }
 
@@ -322,7 +340,7 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
             sortOptions = false,
             separator = " ",
             description = "Export V-J usage heatmap")
-    static class ExportVJUsage extends CommandPaExportPlots {
+    static class ExportVJUsage extends ExportHeatmap {
         @Option(names = {"--no-v-dendro"}, description = "Plot dendrogram for hierarchical clusterization of V genes.")
         public boolean noVDendro;
         @Option(names = {"--no-j-dendro"}, description = "Plot dendrogram for hierarchical clusterization of genes.")
@@ -343,12 +361,18 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
                 return;
 
             List<Plot> plots = VJUsage.INSTANCE.plots(df,
-                    new VJUsage.PlotParameters(
+                    new HeatmapParameters(
+                            !noJDendro,
                             !noVDendro,
-                            !noJDendro
+                            Collections.emptyList(),
+                            hLabelsSize,
+                            vLabelsSize,
+                            false,
+                            width,
+                            height
                     ));
 
-            ExportKt.writePDFFigure(Path.of(out.substring(0, out.length() - 3) + chains.name + ".pdf"), plots);
+            writePlots(chains, plots);
         }
     }
 
@@ -356,11 +380,11 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
             sortOptions = false,
             separator = " ",
             description = "Export overlap heatmap")
-    static class ExportOverlap extends CommandPaExportPlots {
+    static class ExportOverlap extends ExportHeatmap {
         @Option(names = {"--no-dendro"}, description = "Plot dendrogram for hierarchical clusterization of V genes.")
         public boolean noDendro;
         @Option(names = {"--color-key"}, description = "Add color key layer.")
-        public List<String> colorKey;
+        public List<String> colorKey = new ArrayList<>();
         @Option(names = {"--metric"}, description = "Select specific metrics to export.")
         public List<String> metrics;
 
@@ -379,6 +403,7 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
             DataFrame<?> metadata = metadata();
             DataFrame<OverlapRow> df = Overlap.INSTANCE.dataFrame(
                     result.result.forGroup(ch),
+                    metrics,
                     metadata
             );
             df = filterOverlap(df);
@@ -390,14 +415,20 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
                 return;
 
             List<Plot> plots = Overlap.INSTANCE.plots(df,
-                    new Overlap.OverlapParameters(
-                            colorKey,
+                    new HeatmapParameters(
                             !noDendro,
+                            !noDendro,
+                            colorKey.stream()
+                                    .map(it -> new ColorKey(it, it.startsWith("x") ? Position.Bottom : Position.Left))
+                                    .collect(Collectors.toList()),
+                            hLabelsSize,
+                            vLabelsSize,
+                            true,
                             width,
                             height
                     ));
 
-            ExportKt.writePDFFigure(Path.of(out.substring(0, out.length() - 3) + chains.name + ".pdf"), plots);
+            writePlots(chains, plots);
         }
     }
 
