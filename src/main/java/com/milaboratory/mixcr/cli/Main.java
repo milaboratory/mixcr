@@ -149,7 +149,7 @@ public final class Main {
                 .addSubcommand("help", CommandLine.HelpCommand.class)
                 .addSubcommand("analyze", CommandAnalyze.CommandAnalyzeMain.class)
                 .addSubcommand("postanalysis", CommandPa.CommandPostanalysisMain.class)
-                .addSubcommand("exportPa", CommandPaExport.CommandExportPostanalysisMain.class)
+                .addSubcommand("exportPa", CommandPaExport.CommandExportPaMain.class)
 
                 .addSubcommand("align", CommandAlign.class)
                 .addSubcommand("assemble", CommandAssemble.class)

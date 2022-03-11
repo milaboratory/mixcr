@@ -11,7 +11,6 @@ import org.jetbrains.kotlinx.dataframe.annotations.DataSchema
 import org.jetbrains.kotlinx.dataframe.api.first
 import org.jetbrains.kotlinx.dataframe.api.groupBy
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
-import org.jetbrains.kotlinx.dataframe.io.read
 
 /**
  * DataFrame row for V or J usage data
@@ -52,16 +51,15 @@ object VJUsage {
      **/
     fun dataFrame(
         paResult: PostanalysisResult,
-        metadataPath: String?,
+        metadata: Metadata?,
     ) = run {
         var df = dataFrame(paResult)
-        if (metadataPath != null)
-            df = df.withMetadata(DataFrame.read(metadataPath))
+        if (metadata != null)
+            df = df.withMetadata(metadata)
         df
     }
 
     data class PlotParameters(
-        val colorKey: List<String>? = null,
         val clusterV: Boolean = true,
         val clusterJ: Boolean = true
     )
@@ -88,34 +86,16 @@ object VJUsage {
 
         plt = plt.withBorder()
 
-        val ncats = pp.colorKey?.map { df[it].distinct().size() }?.sum() ?: 0
-        var pallete = Palletes.Categorical.auto(ncats)
-        pp.colorKey?.let {
-            var first = true
-            for (key in it) {
-                val nColors = df[key].distinct().size()
-                plt.withColorKey(
-                    key,
-                    pos = Position.Bottom,
-                    sep = if (first) 0.1 else 0.0,
-                    labelPos = Position.Left,
-                    labelSep = 0.1,
-                    pallete = pallete
-                )
-                pallete = pallete.shift(nColors)
-                first = false
-            }
-        }
-
         if (pp.clusterV)
             plt = plt.withDendrogram(pos = Position.Top, 0.1)
         if (pp.clusterJ)
             plt = plt.withDendrogram(pos = Position.Right, 0.1)
 
-        plt = plt.withLabels(Position.Bottom, angle = 45, sep = 0.1)
-        plt = plt.withLabels(Position.Left, sep = 0.1, width = 4.0)
-        plt = plt.withFillLegend(Position.Left, size = 0.5)
-        plt = plt.withColorKeyLegend(Position.Left)
+        plt = plt
+            .withLabels(Position.Bottom, angle = 45, sep = 0.1)
+            .withLabels(Position.Left, sep = 0.1, width = 4.0)
+            .withFillLegend(Position.Left, size = 0.5)
+
         plt.plot
     }
 }

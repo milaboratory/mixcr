@@ -10,11 +10,7 @@ import jetbrains.letsPlot.ggsize
 import jetbrains.letsPlot.label.ggtitle
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.annotations.DataSchema
-import org.jetbrains.kotlinx.dataframe.api.cast
-import org.jetbrains.kotlinx.dataframe.api.first
-import org.jetbrains.kotlinx.dataframe.api.groupBy
-import org.jetbrains.kotlinx.dataframe.api.toDataFrame
-import org.jetbrains.kotlinx.dataframe.io.read
+import org.jetbrains.kotlinx.dataframe.api.*
 
 /**
  * DataFrame row for V or J usage data
@@ -40,6 +36,7 @@ object Overlap {
                     @Suppress("UNCHECKED_CAST")
                     val key = metric.key as? OverlapKey<OverlapType> ?: throw RuntimeException()
                     data += OverlapRow(key.id1, key.id2, key.key, metric.value)
+                    data += OverlapRow(key.id2, key.id1, key.key, metric.value)
                 }
             }
         }
@@ -52,12 +49,28 @@ object Overlap {
      **/
     fun dataFrame(
         paResult: PostanalysisResult,
-        metadataPath: String?,
+        metadata: Metadata?,
     ) = run {
         var df: DataFrame<OverlapRow> = dataFrame(paResult)
-        if (metadataPath != null)
-            df = attachMetadata(df, "sample1", DataFrame.read(metadataPath), "sample").cast()
+        if (metadata != null)
+            df = df.withMetadata(metadata)
         df
+    }
+
+    private fun DataFrame<OverlapRow>.withMetadata(meta: Metadata) = run {
+        var df = this
+        val metaX = meta.rename { all() }.into { "x_" + it.name() }
+        val metaY = meta.rename { all() }.into { "y_" + it.name() }
+        df = attachMetadata(df, "sample1", metaX, "x_sample").cast()
+        df = attachMetadata(df, "sample2", metaY, "y_sample").cast()
+        df
+    }
+
+    fun filterOverlap(filter: Filter, df: DataFrame<OverlapRow>) = run {
+        var ndf = df
+        ndf = filter.rename { "x_$it" }.apply(ndf)
+        ndf = filter.rename { "y_$it" }.apply(ndf)
+        ndf
     }
 
     data class OverlapParameters(
@@ -115,6 +128,7 @@ object Overlap {
             plt = plt.withDendrogram(pos = Position.Right, 0.1)
         }
 
+        // TRAV14D-3-DV8*00
         plt = plt.withLabels(Position.Bottom, angle = 45, sep = 0.1)
         plt = plt.withLabels(Position.Left, sep = 0.1, width = 4.0)
         plt = plt.withFillLegend(Position.Left, size = 0.5)

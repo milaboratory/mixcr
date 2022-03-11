@@ -20,7 +20,6 @@ import jetbrains.letsPlot.letsPlot
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.annotations.DataSchema
 import org.jetbrains.kotlinx.dataframe.api.*
-import org.jetbrains.kotlinx.dataframe.io.read
 
 /**
  * DataFrame row for single statistical char group
@@ -70,13 +69,22 @@ object BasicStatistics {
     fun dataFrame(
         paResult: PostanalysisResult,
         metricsFilter: List<String>?,
-        metadataPath: String?,
+        metadata: Metadata?,
     ) = run {
         var df = dataFrame(paResult, metricsFilter)
-        if (metadataPath != null)
-            df = df.withMetadata(DataFrame.read(metadataPath))
+        if (metadata != null)
+            df = df.withMetadata(metadata)
         df
     }
+
+    /**
+     * Imports data into DataFrame
+     **/
+    fun dataFrame(
+        paResult: PostanalysisResult,
+        metricsFilter: List<String>?,
+        metadataPath: String?,
+    ) = dataFrame(paResult, metricsFilter, readMetadata(metadataPath))
 
     data class PlotParameters(
         val primaryGroup: String? = null,

@@ -147,13 +147,40 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
         public int width = 0;
         @Option(names = {"--height"}, description = "Plot height")
         public int height = 0;
+        @Option(names = {"--filter"}, description = "Filter by metadata. Possible filters column=value, column>=value etc.")
+        public String filterByMetadata;
+
+        @Parameters(index = "1", description = "Output PDF file name", defaultValue = "plot.pdf")
+        public String out;
+
+        <T> DataFrame<T> filter(DataFrame<T> df) {
+            if (filterByMetadata != null) {
+                return MetadataKt.parseFilter(metadata(), filterByMetadata).apply(df);
+            } else
+                return df;
+        }
+
+        @Override
+        public void validate() {
+            super.validate();
+            if (!out.endsWith(".pdf"))
+                throwValidationException("Output file must ends with .pdf extension");
+
+            if (filterByMetadata != null && metadata == null)
+                throwValidationException("Filter is specified by metadata is not.");
+        }
+
+        private DataFrame<?> metadataDf;
+
+        DataFrame<?> metadata() {
+            return metadataDf != null
+                    ? metadataDf
+                    : (metadata == null ? null : (metadataDf = MetadataKt.readMetadata(metadata)));
+        }
     }
 
     static abstract class ExportBasicStatistics extends CommandPaExportPlots {
         abstract String group();
-
-        @Parameters(index = "1", description = "Output PDF file name", defaultValue = "plot.pdf")
-        public String out;
 
         @Option(names = {"-p", "--primary-group"}, description = "Primary group")
         public String primaryGroup;
@@ -165,21 +192,18 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
         public List<String> metrics;
 
         @Override
-        public void validate() {
-            super.validate();
-            if (!out.endsWith(".pdf"))
-                throwValidationException("Output file must ends with .pdf extension");
-        }
-
-        @Override
         void run(Chains.NamedChains chains, PaResultByChain result) {
             CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(group());
+
+            DataFrame<?> metadata = metadata();
 
             DataFrame<BasicStatRow> df = BasicStatistics.INSTANCE.dataFrame(
                     result.result.forGroup(ch),
                     metrics,
                     metadata
             );
+
+            df = filter(df);
 
             List<Plot> plots = BasicStatistics.INSTANCE.plots(df,
                     new BasicStatistics.PlotParameters(
@@ -229,8 +253,6 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
     static abstract class ExportGeneUsage extends CommandPaExportPlots {
         abstract String group();
 
-        @Parameters(index = "1", description = "Output PDF file name", defaultValue = "plot.pdf")
-        public String out;
         @Option(names = {"--no-samples-dendro"}, description = "Do not plot dendrogram for hierarchical clusterization of samples.")
         public boolean noSamplesDendro;
         @Option(names = {"--no-genes-dendro"}, description = "Do not plot dendrogram for hierarchical clusterization of genes.")
@@ -239,20 +261,15 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
         public List<String> colorKey;
 
         @Override
-        public void validate() {
-            super.validate();
-            if (!out.endsWith(".pdf"))
-                throwValidationException("Output file must ends with .pdf extension");
-        }
-
-        @Override
         void run(Chains.NamedChains chains, PaResultByChain result) {
             CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(group());
 
+            DataFrame<?> metadata = metadata();
             DataFrame<GeneUsageRow> df = GeneUsage.INSTANCE.dataFrame(
                     result.result.forGroup(ch),
                     metadata
             );
+            df = filter(df);
 
             if (df.rowsCount() == 0)
                 return;
@@ -306,42 +323,32 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
             separator = " ",
             description = "Export V-J usage heatmap")
     static class ExportVJUsage extends CommandPaExportPlots {
-        @Parameters(index = "1", description = "Output PDF file name", defaultValue = "plot.pdf")
-        public String out;
         @Option(names = {"--no-v-dendro"}, description = "Plot dendrogram for hierarchical clusterization of V genes.")
         public boolean noVDendro;
         @Option(names = {"--no-j-dendro"}, description = "Plot dendrogram for hierarchical clusterization of genes.")
         public boolean noJDendro;
-        @Option(names = {"--color-key"}, description = "Add color key layer.")
-        public List<String> colorKey;
-
-        @Override
-        public void validate() {
-            super.validate();
-            if (!out.endsWith(".pdf"))
-                throwValidationException("Output file must ends with .pdf extension");
-        }
 
         @Override
         void run(Chains.NamedChains chains, PaResultByChain result) {
             CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(CommandPa.VJUsage);
 
+            DataFrame<?> metadata = metadata();
             DataFrame<VJUsageRow> df = VJUsage.INSTANCE.dataFrame(
                     result.result.forGroup(ch),
                     metadata
             );
+            df = filter(df);
 
             if (df.rowsCount() == 0)
                 return;
 
-            Plot plots = VJUsage.INSTANCE.plot(df,
+            List<Plot> plots = VJUsage.INSTANCE.plots(df,
                     new VJUsage.PlotParameters(
-                            colorKey,
                             !noVDendro,
                             !noJDendro
                     ));
 
-            ExportKt.writePDF(Path.of(out.substring(0, out.length() - 3) + chains.name + ".pdf"), plots);
+            ExportKt.writePDFFigure(Path.of(out.substring(0, out.length() - 3) + chains.name + ".pdf"), plots);
         }
     }
 
@@ -350,8 +357,6 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
             separator = " ",
             description = "Export overlap heatmap")
     static class ExportOverlap extends CommandPaExportPlots {
-        @Parameters(index = "1", description = "Output PDF file name", defaultValue = "plot.pdf")
-        public String out;
         @Option(names = {"--no-dendro"}, description = "Plot dendrogram for hierarchical clusterization of V genes.")
         public boolean noDendro;
         @Option(names = {"--color-key"}, description = "Add color key layer.")
@@ -359,21 +364,24 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
         @Option(names = {"--metric"}, description = "Select specific metrics to export.")
         public List<String> metrics;
 
-        @Override
-        public void validate() {
-            super.validate();
-            if (!out.endsWith(".pdf"))
-                throwValidationException("Output file must ends with .pdf extension");
+        DataFrame<OverlapRow> filterOverlap(DataFrame<OverlapRow> df) {
+            if (filterByMetadata != null) {
+                Filter filter = MetadataKt.parseFilter(metadata(), filterByMetadata);
+                return Overlap.INSTANCE.filterOverlap(filter, df);
+            } else
+                return df;
         }
 
         @Override
         void run(Chains.NamedChains chains, PaResultByChain result) {
             CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(CommandPa.Overlap);
 
+            DataFrame<?> metadata = metadata();
             DataFrame<OverlapRow> df = Overlap.INSTANCE.dataFrame(
                     result.result.forGroup(ch),
                     metadata
             );
+            df = filterOverlap(df);
 
             if (df.rowsCount() == 0)
                 return;
@@ -399,6 +407,6 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
             subcommands = {
                     CommandLine.HelpCommand.class
             })
-    public static class CommandExportPostanalysisMain {
+    public static class CommandExportPaMain {
     }
 }

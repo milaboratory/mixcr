@@ -42,6 +42,9 @@ public class CommandPaExportTest {
         Main.main("exportPa", "overlap",
 //                "--width", "2000",
 //                "--height", "5000",
+                "--chains", "TRA",
+                "--filter", "Chain=TRA",
+                "--metadata", "/Users/poslavskysv/Projects/milab/mixcr-test-data/metadata.tsv",
                 "/Users/poslavskysv/Projects/milab/mixcr-test-data/pa/overlapPa.json",
                 "/Users/poslavskysv/Projects/milab/mixcr-test-data/pa/overlap.pdf");
     }

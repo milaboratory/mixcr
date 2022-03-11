@@ -7,7 +7,6 @@ import com.milaboratory.mixcr.postanalysis.PostanalysisResult
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.annotations.DataSchema
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
-import org.jetbrains.kotlinx.dataframe.io.read
 
 
 /**
@@ -49,11 +48,11 @@ object GeneUsage {
      **/
     fun dataFrame(
         paResult: PostanalysisResult,
-        metadataPath: String?,
+        metadata: Metadata?,
     ) = run {
         var df = dataFrame(paResult)
-        if (metadataPath != null)
-            df = df.withMetadata(DataFrame.read(metadataPath))
+        if (metadata != null)
+            df = df.withMetadata(metadata)
         df
     }
 
@@ -77,8 +76,6 @@ object GeneUsage {
             fillPallette = Palletes.Diverging.lime90rose130
         )
 
-        plt = plt.withBorder()
-
         val ncats = pp.colorKey?.map { df[it].distinct().size() }?.sum() ?: 0
         var pallete = Palletes.Categorical.auto(ncats)
         pp.colorKey?.let {
@@ -98,15 +95,19 @@ object GeneUsage {
             }
         }
 
+        plt = plt.withBorder()
+
         if (pp.clusterSamples)
             plt = plt.withDendrogram(pos = Position.Top, 0.1)
         if (pp.clusterGenes)
             plt = plt.withDendrogram(pos = Position.Right, 0.1)
 
-        plt = plt.withLabels(Position.Bottom, angle = 45, sep = 0.1)
-        plt = plt.withLabels(Position.Left, sep = 0.1, width = 4.0)
-        plt = plt.withFillLegend(Position.Left, size = 0.5)
-        plt = plt.withColorKeyLegend(Position.Left)
+        plt = plt
+            .withLabels(Position.Bottom, angle = 45, sep = 0.1)
+            .withLabels(Position.Left, sep = 0.1, width = 4.0)
+            .withFillLegend(Position.Left, size = 0.5)
+            .withColorKeyLegend(Position.Left)
+
         plt.plot
     }
 }
