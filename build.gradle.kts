@@ -11,8 +11,8 @@ plugins {
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
-val miRepoAccessKeyId: String by project
-val miRepoSecretAccessKey: String by project
+val miRepoAccessKeyId: String? by project
+val miRepoSecretAccessKey: String? by project
 
 val versionDetails: Closure<VersionDetails> by extra
 val gitDetails = versionDetails()
@@ -118,14 +118,16 @@ val distributionZip by tasks.registering(Zip::class) {
 
 publishing {
     repositories {
-        maven {
-            name = "mipriv"
-            url = uri("s3://milaboratory-artefacts-private-files.s3.eu-central-1.amazonaws.com/maven")
+        if (miRepoAccessKeyId != null) {
+            maven {
+                name = "mipriv"
+                url = uri("s3://milaboratory-artefacts-private-files.s3.eu-central-1.amazonaws.com/maven")
 
-            authentication {
-                credentials(AwsCredentials::class) {
-                    accessKey = miRepoAccessKeyId
-                    secretKey = miRepoSecretAccessKey
+                authentication {
+                    credentials(AwsCredentials::class) {
+                        accessKey = miRepoAccessKeyId!!
+                        secretKey = miRepoSecretAccessKey!!
+                    }
                 }
             }
         }
@@ -141,10 +143,10 @@ tasks.test {
     minHeapSize = "1024m"
     maxHeapSize = "2048m"
 
-//    miCiStage?.let {
-//        if (it == "test") {
-//            systemProperty("longTests", "true");
-//        }
-//    }
+    // miCiStage?.let {
+    //     if (it == "test") {
+    //         systemProperty("longTests", "true");
+    //     }
+    // }
     longTests?.let { systemProperty("longTests", it) }
 }
