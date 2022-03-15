@@ -8,6 +8,7 @@ import com.milaboratory.mixcr.export.AirrVDJCObjectWrapper;
 import com.milaboratory.mixcr.export.FieldExtractor;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.SmartProgressReporter;
+import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCLibraryRegistry;
 
@@ -33,6 +34,14 @@ public class CommandExportAirr extends ACommandMiXCR {
             names = {"-t", "--target"})
     public int targetId = -1;
 
+    @Option(description = "If this option alignment fields will be padded with IMGT-style gaps.",
+            names = {"-g", "--imgt-gaps"})
+    public boolean withPadding = false;
+
+    @Option(description = "Get fields like fwr1, cdr2, etc.. from alignment.",
+            names = {"-a", "--from-alignment"})
+    public boolean fromAlignment = false;
+
     @Parameters(index = "0", description = "input_file.[vdjca|clna|clns]")
     public String in;
     @Parameters(index = "1", description = "output.tsv")
@@ -44,6 +53,16 @@ public class CommandExportAirr extends ACommandMiXCR {
         if (info0 == null)
             info0 = (IOUtil.MiXCRFileInfo) fileInfoExtractorInstance.getFileInfo(in);
         return info0.fileType;
+    }
+
+    private FieldExtractor<AirrVDJCObjectWrapper> nFeature(GeneFeature gf, String header) {
+        if (gf.isComposite())
+            throw new IllegalArgumentException();
+        return fromAlignment
+                ? new NFeatureFromAlign(targetId, withPadding,
+                new Single(gf.getFirstPoint()), new Single(gf.getLastPoint()),
+                header)
+                : new NFeature(gf, header);
     }
 
     @SuppressWarnings("UnnecessaryLocalVariable")
@@ -69,8 +88,8 @@ public class CommandExportAirr extends ACommandMiXCR {
                 new VDJCCalls(Joining),
                 new VDJCCalls(Constant),
 
-                new SequenceAlignment(targetId),
-                new GermlineAlignment(targetId),
+                new SequenceAlignment(targetId, withPadding),
+                new GermlineAlignment(targetId, withPadding),
 
                 new CompleteVDJ(targetId),
 
@@ -80,25 +99,25 @@ public class CommandExportAirr extends ACommandMiXCR {
                 new NFeature(targetId, np1Begin, np1End, "np1"),
                 new NFeature(targetId, np2Begin, np2End, "np2"),
 
-                new NFeature(CDR1, "cdr1"),
+                nFeature(CDR1, "cdr1"),
                 new AAFeature(CDR1, "cdr1_aa"),
 
-                new NFeature(CDR2, "cdr2"),
+                nFeature(CDR2, "cdr2"),
                 new AAFeature(CDR2, "cdr2_aa"),
 
-                new NFeature(ShortCDR3, "cdr3"),
+                nFeature(ShortCDR3, "cdr3"),
                 new AAFeature(ShortCDR3, "cdr3_aa"),
 
-                new NFeature(FR1, "fwr1"),
+                nFeature(FR1, "fwr1"),
                 new AAFeature(FR1, "fwr1_aa"),
 
-                new NFeature(FR2, "fwr2"),
+                nFeature(FR2, "fwr2"),
                 new AAFeature(FR2, "fwr2_aa"),
 
-                new NFeature(FR3, "fwr3"),
+                nFeature(FR3, "fwr3"),
                 new AAFeature(FR3, "fwr3_aa"),
 
-                new NFeature(FR4, "fwr4"),
+                nFeature(FR4, "fwr4"),
                 new AAFeature(FR4, "fwr4_aa"),
 
                 new AlignmentScoring(targetId, Variable),
@@ -125,7 +144,7 @@ public class CommandExportAirr extends ACommandMiXCR {
 
         for (GeneType gt : VDJC_REFERENCE)
             for (boolean start : new boolean[]{true, false})
-                ret.add(new AirrAlignmentBoundary(targetId, gt, start));
+                ret.add(new AirrAlignmentBoundary(targetId, withPadding, gt, start));
 
         return ret;
     }
