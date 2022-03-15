@@ -1,5 +1,6 @@
-package com.milaboratory.mixcr.basictypes;
+package com.milaboratory.mixcr.basictypes.tag;
 
+import com.milaboratory.mixcr.basictypes.IO;
 import com.milaboratory.primitivio.annotations.Serializable;
 import gnu.trove.TDoubleCollection;
 import gnu.trove.iterator.TDoubleIterator;

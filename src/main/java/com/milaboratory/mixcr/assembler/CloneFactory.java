@@ -34,7 +34,7 @@ import com.milaboratory.core.alignment.*;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.basictypes.TagCounter;
+import com.milaboratory.mixcr.basictypes.tag.TagCounter;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.vdjaligners.SingleDAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;

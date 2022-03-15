@@ -32,7 +32,7 @@ package com.milaboratory.mixcr.cli;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SingleReadImpl;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
-import com.milaboratory.mixcr.basictypes.TagTuple;
+import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import org.junit.*;
 import picocli.CommandLine;
 

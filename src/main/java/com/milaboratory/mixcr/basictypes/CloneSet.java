@@ -31,6 +31,8 @@ package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.primitives.Filter;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
+import com.milaboratory.mixcr.basictypes.tag.TagCounter;
+import com.milaboratory.mixcr.basictypes.tag.TagCounterBuilder;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;

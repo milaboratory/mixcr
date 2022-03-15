@@ -36,6 +36,7 @@ import com.milaboratory.core.io.sequence.SequenceReadUtil;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
+import com.milaboratory.mixcr.basictypes.tag.TagCounter;
 import com.milaboratory.primitivio.annotations.Serializable;
 import com.milaboratory.util.ArraysUtils;
 import gnu.trove.map.hash.TLongObjectHashMap;

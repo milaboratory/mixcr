@@ -34,6 +34,7 @@ import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.blocks.FilteringPort;
 import cc.redberry.primitives.Filter;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.tag.TagCounter;
 import com.milaboratory.mixcr.export.*;
 import com.milaboratory.mixcr.util.Concurrency;
 import com.milaboratory.util.CanReportProgress;

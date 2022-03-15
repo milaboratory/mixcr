@@ -36,7 +36,7 @@ import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.tree.NeighborhoodIterator;
 import com.milaboratory.core.tree.TreeSearchParameters;
-import com.milaboratory.mixcr.basictypes.TagCounterBuilder;
+import com.milaboratory.mixcr.basictypes.tag.TagCounterBuilder;
 
 public class CloneClusteringStrategy implements ClusteringStrategy<CloneAccumulator, NucleotideSequence> {
     final CloneClusteringParameters parameters;

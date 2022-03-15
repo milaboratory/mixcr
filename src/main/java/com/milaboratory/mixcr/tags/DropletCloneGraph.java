@@ -31,7 +31,7 @@ package com.milaboratory.mixcr.tags;
 
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
-import com.milaboratory.mixcr.basictypes.TagTuple;
+import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.mixcr.util.AdjacencyMatrix;
 import com.milaboratory.mixcr.util.BitArrayInt;
 import com.milaboratory.util.ProgressAndStage;

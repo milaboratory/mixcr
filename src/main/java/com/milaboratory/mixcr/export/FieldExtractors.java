@@ -42,6 +42,8 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.TranslationParameters;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.tag.TagCounter;
+import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.util.GlobalObjectMappers;
 import gnu.trove.iterator.TObjectDoubleIterator;
 import gnu.trove.iterator.TObjectFloatIterator;

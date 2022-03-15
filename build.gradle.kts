@@ -59,7 +59,7 @@ repositories {
 
 val milibVersion = "1.15.0"
 val repseqioVersion = "1.3.5-23-master"
-val jacksonVersion = "2.13.1"
+val jacksonVersion = "2.13.2"
 
 dependencies {
     api("com.milaboratory:milib:$milibVersion")
@@ -72,7 +72,7 @@ dependencies {
     implementation("org.lz4:lz4-java:1.4.1")
     implementation("net.sf.trove4j:trove4j:3.0.3")
     implementation("info.picocli:picocli:4.1.1")
-    implementation("com.google.guava:guava:30.1.1-jre")
+    implementation("com.google.guava:guava:31.1-jre")
 
     testImplementation("junit:junit:4.13.2")
     implementation(testFixtures("com.milaboratory:milib:$milibVersion"))

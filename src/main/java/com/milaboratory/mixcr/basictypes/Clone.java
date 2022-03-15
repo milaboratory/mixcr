@@ -30,6 +30,9 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.sequence.NSequenceWithQuality;
+import com.milaboratory.mixcr.basictypes.tag.TagCounter;
+import com.milaboratory.mixcr.basictypes.tag.TagCounterBuilder;
+import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.primitivio.annotations.Serializable;
 import gnu.trove.iterator.TObjectDoubleIterator;
 import io.repseq.core.GeneType;

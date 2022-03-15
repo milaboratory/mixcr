@@ -1,4 +1,4 @@
-package com.milaboratory.mixcr.basictypes;
+package com.milaboratory.mixcr.basictypes.tag;
 
 import gnu.trove.impl.Constants;
 import gnu.trove.iterator.TObjectDoubleIterator;

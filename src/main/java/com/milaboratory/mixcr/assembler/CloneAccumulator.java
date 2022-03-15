@@ -37,7 +37,7 @@ import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.core.sequence.quality.QualityAggregationType;
 import com.milaboratory.core.sequence.quality.QualityAggregator;
 import com.milaboratory.mixcr.basictypes.ClonalSequence;
-import com.milaboratory.mixcr.basictypes.TagCounterBuilder;
+import com.milaboratory.mixcr.basictypes.tag.TagCounterBuilder;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import gnu.trove.iterator.TObjectFloatIterator;

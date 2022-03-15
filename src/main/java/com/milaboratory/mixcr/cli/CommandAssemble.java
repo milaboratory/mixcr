@@ -39,6 +39,8 @@ import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.*;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.tag.TagCounter;
+import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.ArraysUtils;
 import com.milaboratory.util.SmartProgressReporter;

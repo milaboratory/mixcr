@@ -40,7 +40,7 @@ import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.SequenceHistory;
-import com.milaboratory.mixcr.basictypes.TagCounter;
+import com.milaboratory.mixcr.basictypes.tag.TagCounter;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.util.BitArray;

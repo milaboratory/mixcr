@@ -38,7 +38,7 @@ import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.core.alignment.kaligner2.KAlignerParameters2;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.basictypes.TagCounter;
+import com.milaboratory.mixcr.basictypes.tag.TagCounter;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerAbstract;

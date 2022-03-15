@@ -34,6 +34,8 @@ import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
+import com.milaboratory.mixcr.basictypes.tag.TagCounter;
+import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.Serializer;
@@ -69,43 +71,6 @@ class IO {
                 alignments[i] = input.readObject(Alignment.class);
             float score = input.readFloat();
             return new VDJCHit(gene, alignments, alignedFeature, score);
-        }
-
-        @Override
-        public boolean isReference() {
-            return true;
-        }
-
-        @Override
-        public boolean handlesReference() {
-            return false;
-        }
-    }
-
-    public static class TagCounterSerializer implements Serializer<TagCounter> {
-        @Override
-        public void write(PrimitivO output, TagCounter object) {
-            output.writeInt(object.tags.size());
-            TObjectDoubleIterator<TagTuple> it = object.tags.iterator();
-            while (it.hasNext()) {
-                it.advance();
-                output.writeObject(it.key().tags);
-                output.writeDouble(it.value());
-            }
-        }
-
-        @Override
-        public TagCounter read(PrimitivI input) {
-            int len = input.readInt();
-            if (len == 0)
-                return TagCounter.EMPTY;
-            TObjectDoubleHashMap<TagTuple> r = new TObjectDoubleHashMap<>(len, Constants.DEFAULT_LOAD_FACTOR, 0.0);
-            for (int i = 0; i < len; ++i) {
-                String[] tags = input.readObject(String[].class);
-                double count = input.readDouble();
-                r.put(new TagTuple(tags), count);
-            }
-            return new TagCounter(r);
         }
 
         @Override

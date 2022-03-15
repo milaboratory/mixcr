@@ -32,6 +32,7 @@ package com.milaboratory.mixcr.basictypes;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.sequence.*;
+import com.milaboratory.mixcr.basictypes.tag.TagCounter;
 import com.milaboratory.util.Cache;
 import io.repseq.core.*;
 import io.repseq.gen.VDJCGenes;
