@@ -8,5 +8,5 @@ import cc.redberry.pipe.InputPort;
 public interface SetPreprocessorSetup<T> {
     void initialize(int nDatasets);
 
-    InputPort<T> consumer(int i);
+    InputPort<T> consumer(int iDataset);
 }

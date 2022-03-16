@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonSubTypes({
         @JsonSubTypes.Type(value = WeightFunctions.Count.class, name = "count"),
         @JsonSubTypes.Type(value = WeightFunctions.NoWeight.class, name = "none"),
+        @JsonSubTypes.Type(value = WeightFunctions.DefaultWtFunction.class, name = "default"),
 })
 public interface WeightFunction<T> {
     double weight(T t);

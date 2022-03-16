@@ -3,10 +3,13 @@ package com.milaboratory.mixcr.postanalysis;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.InputPort;
 import cc.redberry.pipe.OutputPortCloseable;
+import com.milaboratory.mixcr.postanalysis.overlap.OverlapDataset;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.util.CanReportProgressAndStage;
+import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -76,7 +79,7 @@ public class PostanalysisRunner<T> implements CanReportProgressAndStage {
         Map<SetPreprocessorFactory<T>, SetPreprocessor<T>> distinctProcs = new HashMap<>();
         Map<SetPreprocessor<T>, TIntArrayList> proc2char = new IdentityHashMap<>();
         for (Characteristic<?, T> ch : characteristics) {
-            id2proc.put(ch.name, distinctProcs.computeIfAbsent(ch.preprocessor, __ -> ch.preprocessor.getInstance()));
+            id2proc.put(ch.name, distinctProcs.computeIfAbsent(ch.preprocessor, __ -> ch.preprocessor.newInstance()));
             SetPreprocessor<T> proc = distinctProcs.get(ch.preprocessor);
             proc2char.computeIfAbsent(proc, __ -> new TIntArrayList()).add(char2idx.get(ch));
         }
@@ -166,6 +169,27 @@ public class PostanalysisRunner<T> implements CanReportProgressAndStage {
         Set<String> datasetIds = Arrays.stream(datasets)
                 .map(Dataset::id)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
-        return PostanalysisResult.create(datasetIds, result);
+
+        // collect summary by preprocessor
+        Map<String, SetPreprocessorSummary> preprocResult = procs.stream().collect(Collectors.toMap(SetPreprocessor::id, p -> {
+            TIntObjectHashMap<List<SetPreprocessorStat>> stat = p.getStat();
+            List<String> datasetIdsActual;
+            if (datasets.length == 1 && datasets[0] instanceof OverlapDataset) {
+                datasetIdsActual = ((OverlapDataset<T>) datasets[0]).datasetIds;
+            } else {
+                datasetIdsActual = Arrays
+                        .stream(datasets)
+                        .map(Dataset::id)
+                        .collect(Collectors.toList());
+            }
+            Map<String, List<SetPreprocessorStat>> r = new HashMap<>();
+            TIntObjectIterator<List<SetPreprocessorStat>> it = stat.iterator();
+            while (it.hasNext()) {
+                it.advance();
+                r.put(datasetIdsActual.get(it.key()), it.value());
+            }
+            return new SetPreprocessorSummary(r);
+        }));
+        return PostanalysisResult.create(datasetIds, result, preprocResult);
     }
 }

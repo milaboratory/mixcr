@@ -7,6 +7,7 @@ import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.cli.CommandPa.PaResult;
 import com.milaboratory.mixcr.cli.CommandPa.PaResultByChain;
+import com.milaboratory.mixcr.postanalysis.SetPreprocessorSummary;
 import com.milaboratory.mixcr.postanalysis.plots.*;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroupOutputExtractor;
@@ -71,22 +72,54 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
 
     abstract void run(Chains.NamedChains chains, PaResultByChain result);
 
+    private abstract static class ExportTablesBase extends CommandPaExport {
+        @Parameters(index = "1", description = "Output path")
+        public String out;
+
+        @Override
+        public void validate() {
+            super.validate();
+            if (!out.endsWith(".tsv") && !out.endsWith(".csv"))
+                throwValidationException("Output file must have .tsv or .csv extension");
+        }
+
+        Path outDir() {
+            return Path.of(out).toAbsolutePath().getParent();
+        }
+
+        String outPrefix() {
+            String fName = Path.of(out).getFileName().toString();
+            return fName.substring(0, fName.length() - 4);
+        }
+
+        String outExtension(Chains.NamedChains chains) {
+            return "." + chains.name + "." + out.substring(out.length() - 3);
+        }
+
+        String separator() {
+            return out.endsWith("tsv") ? "\t" : ",";
+        }
+
+        @Override
+        void run(Chains.NamedChains chains, PaResultByChain result) {
+            try {
+                Files.createDirectories(outDir());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            run1(chains, result);
+        }
+
+        abstract void run1(Chains.NamedChains chains, PaResultByChain result);
+    }
+
     @CommandLine.Command(name = "tables",
             sortOptions = false,
             separator = " ",
             description = "Biophysics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype")
-    public static final class ExportTables extends CommandPaExport {
-        @Parameters(index = "1", description = "Output directory")
-        public String out;
-
+    public static final class ExportTables extends ExportTablesBase {
         @Override
-        void run(Chains.NamedChains chains, PaResultByChain result) {
-            Path p = Path.of(out).toAbsolutePath();
-            try {
-                Files.createDirectories(p);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+        void run1(Chains.NamedChains chains, PaResultByChain result) {
             for (CharacteristicGroup<?, ?> table : result.schema.tables) {
                 writeTables(chains, result.result.getTable(table));
             }
@@ -94,8 +127,20 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
 
         <K> void writeTables(Chains.NamedChains chain, CharacteristicGroupResult<K> tableResult) {
             for (CharacteristicGroupOutputExtractor<K> view : tableResult.group.views)
-                for (OutputTable t : view.getTables(tableResult).values())
-                    t.writeCSV(Path.of(out).toAbsolutePath(), "", "\t", "." + chain.name + ".tsv");
+                for (OutputTable t : view.getTables(tableResult).values()) {
+                    t.writeCSV(outDir(), outPrefix() + ".", separator(), outExtension(chain));
+                }
+        }
+    }
+
+    @CommandLine.Command(name = "preprocSummary",
+            sortOptions = false,
+            separator = " ",
+            description = "Export preprocessing summary tables.")
+    public static final class ExportPreprocessingSummary extends ExportTablesBase {
+        @Override
+        void run1(Chains.NamedChains chains, PaResultByChain result) {
+            SetPreprocessorSummary.writeToCSV(outDir().resolve(outPrefix() + outExtension(chains)), result.result.preprocSummary, "\t");
         }
     }
 

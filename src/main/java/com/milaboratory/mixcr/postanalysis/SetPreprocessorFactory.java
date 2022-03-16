@@ -36,11 +36,10 @@ import java.util.stream.IntStream;
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public interface SetPreprocessorFactory<T> {
-    SetPreprocessor<T> getInstance();
+    SetPreprocessor<T> newInstance();
 
-    default String[] description() {
-        return new String[0];
-    }
+    /** Descriptive unique identifier */
+    String id();
 
     @SuppressWarnings("unchecked")
     default SetPreprocessorFactory<T> filter(boolean before, ElementPredicate<T>... predicates) {

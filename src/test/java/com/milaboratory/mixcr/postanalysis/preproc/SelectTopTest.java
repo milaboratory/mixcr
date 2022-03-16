@@ -55,7 +55,7 @@ public class SelectTopTest {
                     break;
             }
 
-            SelectTop<TestObject> cumulativeTopProc = new SelectTop<>(o -> o.weight, topFraction, -1);
+            SelectTop<TestObject> cumulativeTopProc = new SelectTop<>(o -> o.weight, topFraction, -1, "");
             Dataset<TestObject> topCumulative = SetPreprocessorFactory.processDatasets(cumulativeTopProc, dataset)[0];
 
             double actualCum = 0;
@@ -64,7 +64,7 @@ public class SelectTopTest {
             }
             Assert.assertEquals(expectedSumCum, actualCum, 1e-5);
 
-            SelectTop<TestObject> fixedTopProc = new SelectTop<>(o -> o.weight, Double.NaN, nTop);
+            SelectTop<TestObject> fixedTopProc = new SelectTop<>(o -> o.weight, Double.NaN, nTop, "");
             Dataset<TestObject> topFixed = SetPreprocessorFactory.processDatasets(fixedTopProc, dataset)[0];
             double actualFixed = 0;
             int actualNTop = 0;
@@ -129,7 +129,7 @@ public class SelectTopTest {
         ArrayList<TestObject> list = new ArrayList<>(dataset.data);
         list.sort(Comparator.comparing(t -> -t.weight));
 
-        SelectTop<TestObject> cumulativeTopProc = new SelectTop<>(o -> o.weight, topFraction, -1);
+        SelectTop<TestObject> cumulativeTopProc = new SelectTop<>(o -> o.weight, topFraction, -1, "");
         Dataset<TestObject> topCumulative = SetPreprocessorFactory.processDatasets(cumulativeTopProc, dataset)[0];
 
         double actualCum = 0;

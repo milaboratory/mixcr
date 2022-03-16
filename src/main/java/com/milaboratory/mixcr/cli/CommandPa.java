@@ -221,8 +221,7 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
             separator = " ",
             description = "Biophysics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype")
     public static class CommandIndividual extends CommandPa {
-        public CommandIndividual() {
-        }
+        public CommandIndividual() {}
 
         @Override
         @SuppressWarnings({"unchecked", "rawtypes"})
@@ -439,8 +438,9 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
                 return new OverlapPreprocessorAdapter.Factory<>(preprocessors.get(type).filterFirst(new ElementPredicate.IncludeChains(chain)));
             }
 
+            //fixme only productive??
             public List<OverlapCharacteristic<Clone>> getCharacteristics(int i, int j, Chains chain) {
-                return groupped.entrySet().stream().map(e -> new OverlapCharacteristic<>("overlap_" + i + "_" + j + e.getValue().stream().map(t -> t.name).collect(Collectors.joining("_")), weight,
+                return groupped.entrySet().stream().map(e -> new OverlapCharacteristic<>("overlap_" + i + "_" + j + " / " + e.getValue().stream().map(t -> t.name).collect(Collectors.joining(" / ")), weight,
                         new OverlapPreprocessorAdapter.Factory<>(e.getKey().filterFirst(new ElementPredicate.IncludeChains(chain))),
                         e.getValue().toArray(new OverlapType[0]),
                         i, j)).collect(toList());

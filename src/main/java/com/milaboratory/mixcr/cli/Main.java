@@ -74,9 +74,7 @@ public final class Main {
                         return new ArrayList<>();
                     }
                     return super.handle(parseResult);
-                } catch (ParameterException ex) {
-                    throw ex;
-                } catch (CommandLine.ExecutionException ex) {
+                } catch (ParameterException | CommandLine.ExecutionException ex) {
                     throw ex;
                 } catch (Exception ex) {
                     throw new CommandLine.ExecutionException(commandLine,
@@ -198,6 +196,7 @@ public final class Main {
         cmd.getSubcommands()
                 .get("exportPa")
                 .addSubcommand("tables", CommandSpec.forAnnotatedObject(CommandPaExport.ExportTables.class))
+                .addSubcommand("preprocSummary", CommandSpec.forAnnotatedObject(CommandPaExport.ExportPreprocessingSummary.class))
                 .addSubcommand("listMetrics", CommandSpec.forAnnotatedObject(CommandPaExport.ListMetrics.class))
                 .addSubcommand("biophysics", CommandSpec.forAnnotatedObject(CommandPaExport.ExportBiophysics.class))
                 .addSubcommand("diversity", CommandSpec.forAnnotatedObject(CommandPaExport.ExportDiversity.class))

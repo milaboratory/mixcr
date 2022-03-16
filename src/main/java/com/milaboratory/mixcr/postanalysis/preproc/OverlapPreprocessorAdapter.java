@@ -2,11 +2,9 @@ package com.milaboratory.mixcr.postanalysis.preproc;
 
 import cc.redberry.pipe.InputPort;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.mixcr.postanalysis.MappingFunction;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessorSetup;
+import com.milaboratory.mixcr.postanalysis.*;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup;
+import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -98,6 +96,16 @@ public class OverlapPreprocessorAdapter<T> implements SetPreprocessor<OverlapGro
         };
     }
 
+    @Override
+    public TIntObjectHashMap<List<SetPreprocessorStat>> getStat() {
+        return inner.getStat();
+    }
+
+    @Override
+    public String id() {
+        return inner.id();
+    }
+
     public static final class Factory<T> implements SetPreprocessorFactory<OverlapGroup<T>> {
         @JsonProperty("inner")
         public final SetPreprocessorFactory<T> inner;
@@ -107,13 +115,13 @@ public class OverlapPreprocessorAdapter<T> implements SetPreprocessor<OverlapGro
         }
 
         @Override
-        public String[] description() {
-            return inner.description();
+        public String id() {
+            return inner.id();
         }
 
         @Override
-        public SetPreprocessor<OverlapGroup<T>> getInstance() {
-            return new OverlapPreprocessorAdapter<>(inner.getInstance());
+        public SetPreprocessor<OverlapGroup<T>> newInstance() {
+            return new OverlapPreprocessorAdapter<>(inner.newInstance());
         }
 
         @Override

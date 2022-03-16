@@ -26,20 +26,26 @@ public class PostanalysisResult {
     /** Characteristic Id -> characteristic data */
     @JsonProperty("data")
     public final Map<String, Array2d> data;
+    /** Preprocessor Id -> Preprocessors summary */
+    @JsonProperty("preprocSummary")
+    public final Map<String, SetPreprocessorSummary> preprocSummary;
 
     @JsonCreator
     public PostanalysisResult(@JsonProperty("datasetIds") Set<String> datasetIds,
-                              @JsonProperty("data") Map<String, Array2d> data) {
+                              @JsonProperty("data") Map<String, Array2d> data,
+                              @JsonProperty("preprocSummary") Map<String, SetPreprocessorSummary> preprocSummary) {
         this.datasetIds = datasetIds;
         this.data = data;
+        this.preprocSummary = preprocSummary;
     }
 
     static <T> PostanalysisResult create(Set<String> datasetIds,
-                                         Map<Characteristic<?, T>, Map<String, MetricValue<?>[]>> data) {
+                                         Map<Characteristic<?, T>, Map<String, MetricValue<?>[]>> data,
+                                         Map<String, SetPreprocessorSummary> preprocSummary) {
         Map<String, Array2d> d = new HashMap<>();
         for (Map.Entry<Characteristic<?, T>, Map<String, MetricValue<?>[]>> e : data.entrySet())
             d.put(e.getKey().name, new Array2d(e.getValue()));
-        return new PostanalysisResult(datasetIds, d);
+        return new PostanalysisResult(datasetIds, d, preprocSummary);
     }
 
     /** cached results for char groups */
@@ -47,10 +53,14 @@ public class PostanalysisResult {
 
     /** project result on a specific char group */
     public PostanalysisResult forGroup(CharacteristicGroup<?, ?> group) {
-        return new PostanalysisResult(datasetIds,
+        return new PostanalysisResult(
+                datasetIds,
                 group.characteristics.stream()
                         .map(c -> c.name)
-                        .collect(Collectors.toMap(c -> c, data::get)));
+                        .collect(Collectors.toMap(c -> c, data::get)),
+                group.characteristics.stream()
+                        .map(c -> c.name)
+                        .collect(Collectors.toMap(c -> c, preprocSummary::get)));
     }
 
     /** project result on a specific char group */
