@@ -31,6 +31,14 @@ jobs:
       app-name: MiXCR
       app-name-slug: 'mixcr'
 
+      # Tests
+      test-unit: true
+      test-unit-before-tasks: shadowJar
+
+      test-integration: true
+      test-integration-before-tasks: shadowJar
+      test-integration-tasks: ''
+
       # Distribution
       dist-docker: false
       dist-archive: true
