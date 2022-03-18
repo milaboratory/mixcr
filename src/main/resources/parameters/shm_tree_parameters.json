@@ -13,11 +13,11 @@
     "countOfNodesToProbe": 3,
     "minPortionOfClonesForCommonAlignmentRanges": 0.95,
     "stepsOrder": [
-      "attachClonesByDistanceChange",
-      "combineTrees",
-      "attachClonesByNDN",
-      "attachClonesByDistanceChange",
-      "combineTrees"
+      "AttachClonesByDistanceChange",
+      "CombineTrees",
+      "AttachClonesByNDN",
+      "AttachClonesByDistanceChange",
+      "CombineTrees"
     ]
   }
 }

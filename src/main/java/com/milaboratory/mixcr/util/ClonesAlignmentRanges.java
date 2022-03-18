@@ -6,6 +6,7 @@ import com.milaboratory.core.mutations.Mutation;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.trees.CloneWrapper;
 import io.repseq.core.GeneType;
 import io.repseq.core.ReferencePoint;
 import org.apache.commons.math3.util.Pair;
@@ -52,15 +53,25 @@ public class ClonesAlignmentRanges {
     }
 
     public Range cutRange(Range range) {
-        return commonRanges.stream()
-                .filter(it -> it.intersectsWith(range))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("range is not represented in common ranges"));
+        try {
+            return commonRanges.stream()
+                    .filter(it -> it.intersectsWith(range))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("range is not represented in common ranges"));
+        } catch (IllegalArgumentException e) {
+            throw e;
+        }
     }
 
     public boolean containsMutation(int mutation) {
         int position = Mutation.getPosition(mutation);
         return commonRanges.stream().anyMatch(it -> it.contains(position));
+    }
+
+    public boolean containsCloneWrapper(CloneWrapper clone) {
+        return Arrays.stream(clone.getHit(geneType).getAlignments())
+                .map(Alignment::getSequence1Range)
+                .allMatch(range -> commonRanges.stream().anyMatch(range::contains));
     }
 
     public boolean containsClone(Clone clone) {
@@ -69,7 +80,7 @@ public class ClonesAlignmentRanges {
                 .allMatch(range -> commonRanges.stream().anyMatch(range::contains));
     }
 
-    public static ClonesAlignmentRanges commonAlignmentRanges(List<Clone> clones, double minPortionOfClones, GeneType geneType) {
+    public static <T> ClonesAlignmentRanges commonAlignmentRanges(List<T> clones, double minPortionOfClones, GeneType geneType, Function<T, VDJCHit> hitSupplier) {
         if (minPortionOfClones < 0.5) {
             throw new IllegalArgumentException("if minPortionOfClones < 0.5 than there may be ranges with intersections that exist in all clones");
         }
@@ -77,7 +88,7 @@ public class ClonesAlignmentRanges {
         int threshold = Math.max((int) Math.floor(clones.size() * minPortionOfClones), (int) Math.ceil(clones.size() / 2.0));
         Map<Range, Long> rangeCounts = clones.stream()
                 .flatMap(clone -> {
-                    VDJCHit bestHit = clone.getBestHit(geneType);
+                    VDJCHit bestHit = hitSupplier.apply(clone);
                     return Arrays.stream(bestHit.getAlignments())
                             .map(alignment -> {
                                 Range CDR3Range = CDR3Sequence1Range(bestHit, alignment);

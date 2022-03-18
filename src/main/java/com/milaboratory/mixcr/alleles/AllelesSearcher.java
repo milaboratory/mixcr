@@ -149,7 +149,7 @@ public class AllelesSearcher {
         ClonesAlignmentRanges commonAlignmentRanges = ClonesAlignmentRanges.commonAlignmentRanges(
                 clusterByTheSameGene.cluster,
                 parameters.minPortionOfClonesForCommonAlignmentRanges,
-                geneType
+                geneType, it -> it.getBestHit(geneType)
         );
 
         VDJCHit bestHit = clusterByTheSameGene.cluster.get(0).getBestHit(geneType);

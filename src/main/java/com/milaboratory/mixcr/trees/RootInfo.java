@@ -9,11 +9,11 @@ public class RootInfo {
     private final VJBase VJBase;
     private final NucleotideSequence reconstructedNDN;
 
-    RootInfo(Range VRangeInCDR3, NucleotideSequence reconstructedNDN, Range JRangeInCDR3, VJBase vjBase) {
+    RootInfo(Range VRangeInCDR3, NucleotideSequence reconstructedNDN, Range JRangeInCDR3, VJBase VJBase) {
         this.VRangeInCDR3 = VRangeInCDR3;
         this.JRangeInCDR3 = JRangeInCDR3;
         this.reconstructedNDN = reconstructedNDN;
-        VJBase = vjBase;
+        this.VJBase = VJBase;
     }
 
     public VJBase getVJBase() {

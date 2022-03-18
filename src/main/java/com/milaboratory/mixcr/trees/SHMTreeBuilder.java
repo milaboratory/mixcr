@@ -39,13 +39,18 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneReader;
 import com.milaboratory.mixcr.basictypes.IOUtil;
+import com.milaboratory.mixcr.cli.BuildSHMTreeStep;
+import com.milaboratory.mixcr.trees.ClusterProcessor.StepResult;
 import com.milaboratory.mixcr.trees.TreeWithMetaBuilder.DecisionInfo;
 import com.milaboratory.mixcr.util.Cluster;
+import com.milaboratory.mixcr.util.XSV;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
 import com.milaboratory.util.sorting.HashSorter;
-import org.apache.commons.math3.util.Pair;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.ReferencePoint;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -65,6 +70,7 @@ public class SHMTreeBuilder {
     private final AlignmentScoring<NucleotideSequence> JScoring;
     private Map<Integer, Map<VJBase, DecisionInfo>> decisions = new HashMap<>();
     private Map<VJBase, List<TreeWithMetaBuilder.Snapshot>> currentTrees = new HashMap<>();
+    private Map<VJBase, IdGenerator> idGenerators = new HashMap<>();
     private final Map<VJBase, ClusterProcessor.CalculatedClusterInfo> calculatedClustersInfo = new HashMap<>();
 
     public SHMTreeBuilder(SHMTreeBuilderParameters parameters,
@@ -78,7 +84,16 @@ public class SHMTreeBuilder {
         JScoring = datasets.get(0).getAssemblerParameters().getCloneFactoryParameters().getJParameters().getScoring();
     }
 
-    public OutputPortCloseable<CloneWrapper> sortClonotypes() throws IOException {
+    public int cloneWrappersCount() {
+        int cloneWrappersCount = 0;
+        OutputPort<CloneWrapper> unsortedClones = unsortedClonotypes();
+        while (unsortedClones.take() != null) {
+            cloneWrappersCount++;
+        }
+        return cloneWrappersCount;
+    }
+
+    private HashSorter<CloneWrapper> createSorter() throws IOException {
         // todo pre-build state, fill with references if possible
         PrimitivIOStateBuilder stateBuilder = new PrimitivIOStateBuilder();
 
@@ -96,7 +111,7 @@ public class SHMTreeBuilder {
 
         // todo move constants to parameters
         // creating sorter instance
-        HashSorter<CloneWrapper> sorter = new HashSorter<>(CloneWrapper.class,
+        return new HashSorter<>(CloneWrapper.class,
                 clusteringCriteria.clusteringHashCode(),
                 clusteringCriteria.clusteringComparatorWithNumberOfMutations(VScoring, JScoring),
                 5,
@@ -108,7 +123,9 @@ public class SHMTreeBuilder {
                 memoryBudget,
                 1 << 18 /* 256 Kb */
         );
+    }
 
+    private OutputPort<CloneWrapper> unsortedClonotypes() {
         List<OutputPort<CloneWrapper>> wrapped = new ArrayList<>();
         for (int i = 0; i < datasets.size(); i++) {
             int datasetId = i;
@@ -132,21 +149,23 @@ public class SHMTreeBuilder {
                 return CUtils.asOutputPort(
                         VGeneNames.stream()
                                 .flatMap(VGeneName -> JGeneNames.stream()
-                                        .map(JGeneName -> new CloneWrapper(c, datasetId, new VJBase(VGeneName, JGeneName))))
+                                        .map(JGeneName -> new CloneWrapper(c, datasetId, new VJBase(VGeneName, JGeneName, c.getNFeature(CDR3).size())))
+                                )
+                                .filter(it -> it.getFeature(new GeneFeature(ReferencePoint.VEndTrimmed, ReferencePoint.JBeginTrimmed)) != null)
                                 .collect(Collectors.toList())
                 );
             });
             wrapped.add(new FlatteningOutputPort<>(wrap));
         }
 
-        return sorter.port(new FlatteningOutputPort<>(CUtils.asOutputPort(wrapped)));
+        return new FlatteningOutputPort<>(CUtils.asOutputPort(wrapped));
     }
 
     public OutputPortCloseable<Cluster<CloneWrapper>> buildClusters(OutputPortCloseable<CloneWrapper> sortedClones) {
         // todo do not copy cluster
         final List<CloneWrapper> cluster = new ArrayList<>();
 
-        // group by similar V/J/C genes
+        // group by similar V/J genes
         return new OutputPortCloseable<Cluster<CloneWrapper>>() {
             @Override
             public void close() {
@@ -180,7 +199,11 @@ public class SHMTreeBuilder {
         };
     }
 
-    public void makeDecisions(String stepName) {
+    public OutputPortCloseable<CloneWrapper> sortedClones() throws IOException {
+        return createSorter().port(unsortedClonotypes());
+    }
+
+    public int makeDecisions() {
         Map<VJBase, Set<Integer>> clonesToRemove = new HashMap<>();
 
         decisions.forEach((cloneId, decisions) -> {
@@ -197,35 +220,47 @@ public class SHMTreeBuilder {
                                 .filter(snapshot -> snapshot.getClonesAdditionHistory().size() > 1)
                                 .collect(Collectors.toList()))
                 );
-        System.out.println(stepName + ", clones was added: " + decisions.size() + ", trees count: " + currentTrees.values().stream().mapToInt(List::size).sum());
+        int clonesWasAdded = decisions.size();
         decisions = new HashMap<>();
+        return clonesWasAdded;
     }
 
-    public void zeroStep(Cluster<CloneWrapper> clusterBySameVAndJ) {
-        VJBase VJBase = clusterVJBase(clusterBySameVAndJ);
-        ClusterProcessor clusterProcessor = ClusterProcessor.build(parameters, VScoring, JScoring, clusterBySameVAndJ, getOrCalculateClusterInfo(VJBase, clusterBySameVAndJ));
-        Pair<List<Pair<Integer, ? extends DecisionInfo>>, List<TreeWithMetaBuilder.Snapshot>> result = clusterProcessor.buildTreeTopParts();
-        currentTrees.put(VJBase, result.getSecond());
-        result.getFirst().forEach(decision ->
-                decisions.computeIfAbsent(decision.getKey(), __ -> new HashMap<>())
-                        .put(VJBase, decision.getValue())
-        );
+    public int treesCount() {
+        return currentTrees.values().stream().mapToInt(List::size).sum();
     }
 
-    public void applyStep(Cluster<CloneWrapper> clusterBySameVAndJ, String step) {
+    public void zeroStep(Cluster<CloneWrapper> clusterBySameVAndJ, PrintStream debug) {
         VJBase VJBase = clusterVJBase(clusterBySameVAndJ);
-        ClusterProcessor clusterProcessor = ClusterProcessor.build(parameters, VScoring, JScoring, clusterBySameVAndJ, getOrCalculateClusterInfo(VJBase, clusterBySameVAndJ));
-        Pair<List<Pair<Integer, ? extends DecisionInfo>>, List<TreeWithMetaBuilder.Snapshot>> result = clusterProcessor.applyStep(currentTrees.get(VJBase), step);
-        currentTrees.put(VJBase, result.getSecond());
-        result.getFirst().forEach(decision ->
-                decisions.computeIfAbsent(decision.getKey(), __ -> new HashMap<>())
-                        .put(VJBase, decision.getValue())
+        ClusterProcessor clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase);
+        StepResult result = clusterProcessor.buildTreeTopParts();
+        currentTrees.put(VJBase, result.getSnapshots());
+        result.getDecisions().forEach((cloneId, decision) ->
+                decisions.computeIfAbsent(cloneId, __ -> new HashMap<>()).put(VJBase, decision)
         );
+        XSV.writeXSVBody(debug, result.getNodesDebugInfo(), DebugInfo.COLUMNS_FOR_XSV, ";");
+    }
+
+    public void writeTreesToDebug(Cluster<CloneWrapper> clusterBySameVAndJ, PrintStream debug) {
+        VJBase VJBase = clusterVJBase(clusterBySameVAndJ);
+        ClusterProcessor clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase);
+        List<DebugInfo> debugInfos = clusterProcessor.debugInfos(currentTrees.get(VJBase));
+        XSV.writeXSVBody(debug, debugInfos, DebugInfo.COLUMNS_FOR_XSV, ";");
+    }
+
+    public void applyStep(Cluster<CloneWrapper> clusterBySameVAndJ, BuildSHMTreeStep step, PrintStream debug) {
+        VJBase VJBase = clusterVJBase(clusterBySameVAndJ);
+        ClusterProcessor clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase);
+        StepResult result = clusterProcessor.applyStep(currentTrees.get(VJBase), step);
+        currentTrees.put(VJBase, result.getSnapshots());
+        result.getDecisions().forEach((cloneId, decision) ->
+                decisions.computeIfAbsent(cloneId, __ -> new HashMap<>()).put(VJBase, decision)
+        );
+        XSV.writeXSVBody(debug, result.getNodesDebugInfo(), DebugInfo.COLUMNS_FOR_XSV, ";");
     }
 
     public List<TreeWithMeta> getResult(Cluster<CloneWrapper> clusterBySameVAndJ) {
         VJBase VJBase = clusterVJBase(clusterBySameVAndJ);
-        ClusterProcessor clusterProcessor = ClusterProcessor.build(parameters, VScoring, JScoring, clusterBySameVAndJ, getOrCalculateClusterInfo(VJBase, clusterBySameVAndJ));
+        ClusterProcessor clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase);
         return clusterProcessor.restore(currentTrees.get(VJBase)).stream()
                 .filter(treeWithMetaBuilder -> treeWithMetaBuilder.clonesCount() >= parameters.hideTreesLessThanSize)
                 .map(treeWithMetaBuilder -> new TreeWithMeta(
@@ -233,6 +268,17 @@ public class SHMTreeBuilder {
                         treeWithMetaBuilder.getRootInfo(),
                         VJBase
                 )).collect(Collectors.toList());
+    }
+
+    private ClusterProcessor buildClusterProcessor(Cluster<CloneWrapper> clusterBySameVAndJ, VJBase VJBase) {
+        return ClusterProcessor.build(
+                parameters,
+                VScoring,
+                JScoring,
+                clusterBySameVAndJ,
+                getOrCalculateClusterInfo(VJBase, clusterBySameVAndJ),
+                idGenerators.computeIfAbsent(VJBase, __ -> new IdGenerator())
+        );
     }
 
     private VJBase clusterVJBase(Cluster<CloneWrapper> clusterBySameVAndJ) {

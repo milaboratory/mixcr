@@ -32,6 +32,7 @@ package com.milaboratory.mixcr.trees;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.milaboratory.mixcr.cli.BuildSHMTreeStep;
 import com.milaboratory.primitivio.annotations.Serializable;
 import io.repseq.core.GeneFeature;
 
@@ -91,7 +92,7 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
     /**
      * Order of steps to postprocess trees.
      */
-    public final List<String> stepsOrder;
+    public final List<BuildSHMTreeStep> stepsOrder;
     /**
      * Min portion of clones to determinate common alignment ranges.
      */
@@ -111,7 +112,7 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
             @JsonProperty("maxNDNDistanceForClustering") int maxNDNDistanceForClustering,
             @JsonProperty("countOfNodesToProbe") int countOfNodesToProbe,
             @JsonProperty("NDNScoreMultiplier") double NDNScoreMultiplier,
-            @JsonProperty("stepsOrder") List<String> stepsOrder,
+            @JsonProperty("stepsOrder") List<BuildSHMTreeStep> stepsOrder,
             @JsonProperty("minPortionOfClonesForCommonAlignmentRanges") double minPortionOfClonesForCommonAlignmentRanges
     ) {
         this.targetRegion = targetRegion;

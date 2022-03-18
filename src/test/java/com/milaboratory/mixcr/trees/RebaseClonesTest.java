@@ -49,7 +49,7 @@ public class RebaseClonesTest {
         assertFalse(testRebaseMutations(-4625731613403327929L, true));
     }
 
-    @Ignore
+//    @Ignore
     @Test
     public void randomizedTestForRebaseClone() {
         int numberOfRuns = 100_000;
@@ -118,7 +118,7 @@ public class RebaseClonesTest {
                     VRangeAfterCDR3Begin,
                     generate(random, NDN.size() - 3 + random.nextInt(6)),
                     JRangeAfterCDR3End,
-                    new VJBase("VSome", "JSome")
+                    new VJBase("VSome", "JSome", 20)
             );
 
             MutationsDescription original = new MutationsDescription(
@@ -170,7 +170,7 @@ public class RebaseClonesTest {
                     originalRootInfo.getVRangeInCDR3().expand(0, VBorderExpand),
                     generate(random, originalRootInfo.getReconstructedNDN().size() - VBorderExpand - JBorderExpand),
                     originalRootInfo.getJRangeInCDR3().expand(JBorderExpand, 0),
-                    new VJBase("VSome", "JSome")
+                    new VJBase("VSome", "JSome", 20)
             );
 
             MutationsDescription result = clonesRebase.rebaseMutations(original, originalRootInfo, rebaseToRootInfo);
@@ -185,7 +185,7 @@ public class RebaseClonesTest {
             assertEquals(buildCDR3(original), buildCDR3(result));
             assertEquals(buildSequences(original.getJMutationsWithoutCDR3()), buildSequences(result.getJMutationsWithoutCDR3()));
             assertEquals(rebaseToRootInfo.getVRangeInCDR3(), result.getVMutationsInCDR3WithoutNDN().getRangeInfo().getRange());
-//            assertEquals(rebaseToRootInfo.getReconstructedNDN(), result.getKnownNDN().getSequence1());
+            assertEquals(rebaseToRootInfo.getReconstructedNDN(), result.getKnownNDN().getSequence1());
             assertEquals(rebaseToRootInfo.getJRangeInCDR3(), result.getJMutationsInCDR3WithoutNDN().getRangeInfo().getRange());
 
             return false;
@@ -257,7 +257,7 @@ public class RebaseClonesTest {
                     VRangeInCDR3,
                     mutationsOfNDN.mutate(NDNSubsetBeforeMutation),
                     JRangeInCDR3,
-                    new VJBase("VSome", "JSome")
+                    new VJBase("VSome", "JSome", 20)
             );
 
             NucleotideSequence builtClone = NucleotideSequence.ALPHABET.createBuilder()
@@ -303,7 +303,7 @@ public class RebaseClonesTest {
             );
 
             CloneWithMutationsFromReconstructedRoot rebasedClone = new ClonesRebase(VSequence, AffineGapAlignmentScoring.getNucleotideBLASTScoring(), AffineGapAlignmentScoring.getNucleotideBLASTScoring(), JSequence, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
-                    .rebaseClone(rootInfo, mutationsFromVJGermline, new CloneWrapper(null, 0, new VJBase("BGeneName", "JGeneName")));
+                    .rebaseClone(rootInfo, mutationsFromVJGermline, new CloneWrapper(null, 0, new VJBase("BGeneName", "JGeneName", 20)));
 
             AncestorInfoBuilder ancestorInfoBuilder = new AncestorInfoBuilder();
             MutationsDescription result = rebasedClone.getMutationsFromRoot();

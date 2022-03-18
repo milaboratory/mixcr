@@ -7,10 +7,12 @@ import java.util.Objects;
 class VJBase {
     final String VGeneName;
     final String JGeneName;
+    final int CDR3length;
 
-    public VJBase(String VGeneName, String JGeneName) {
+    public VJBase(String VGeneName, String JGeneName, int CDR3length) {
         this.VGeneName = VGeneName;
         this.JGeneName = JGeneName;
+        this.CDR3length = CDR3length;
     }
 
     @Override
@@ -18,12 +20,12 @@ class VJBase {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         VJBase vjBase = (VJBase) o;
-        return VGeneName.equals(vjBase.VGeneName) && JGeneName.equals(vjBase.JGeneName);
+        return CDR3length == vjBase.CDR3length && VGeneName.equals(vjBase.VGeneName) && JGeneName.equals(vjBase.JGeneName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(VGeneName, JGeneName);
+        return Objects.hash(VGeneName, JGeneName, CDR3length);
     }
 
     @Override
@@ -31,6 +33,7 @@ class VJBase {
         return "VJBase{" +
                 "VGeneName='" + VGeneName + '\'' +
                 ", JGeneName='" + JGeneName + '\'' +
+                ", cdr3length=" + CDR3length +
                 '}';
     }
 

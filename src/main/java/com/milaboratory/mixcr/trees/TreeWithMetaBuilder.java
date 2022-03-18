@@ -16,29 +16,32 @@ class TreeWithMetaBuilder {
     private final TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, SyntheticNode, MutationsDescription> treeBuilder;
     private final RootInfo rootInfo;
     private final ClonesRebase clonesRebase;
+    private final TreeId treeId;
 
     public TreeWithMetaBuilder copy() {
-        return new TreeWithMetaBuilder(treeBuilder.copy(), rootInfo, clonesRebase, clonesAdditionHistory);
+        return new TreeWithMetaBuilder(treeBuilder.copy(), rootInfo, clonesRebase, clonesAdditionHistory, treeId);
     }
 
     public TreeWithMetaBuilder(
             TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, SyntheticNode, MutationsDescription> treeBuilder,
             RootInfo rootInfo,
             ClonesRebase clonesRebase,
-            LinkedList<Integer> clonesAdditionHistory
+            LinkedList<Integer> clonesAdditionHistory,
+            TreeId treeId
     ) {
         this.clonesRebase = clonesRebase;
         this.treeBuilder = treeBuilder;
         this.rootInfo = rootInfo;
         this.clonesAdditionHistory = clonesAdditionHistory;
+        this.treeId = treeId;
+    }
+
+    public TreeId getTreeId() {
+        return treeId;
     }
 
     int clonesCount() {
         return clonesAdditionHistory.size();
-    }
-
-    public LinkedList<Integer> getClonesAdditionHistory() {
-        return clonesAdditionHistory;
     }
 
     /**
@@ -89,11 +92,8 @@ class TreeWithMetaBuilder {
         ));
     }
 
-    Stream<CloneWithMutationsFromReconstructedRoot> allClones() {
-        return treeBuilder.getTree().allNodes()
-                .map(Tree.NodeWithParent::getNode)
-                .map(node -> node.getContent().convert(Optional::of, it -> Optional.<CloneWithMutationsFromReconstructedRoot>empty()))
-                .flatMap(Java9Util::stream);
+    Stream<Tree.NodeWithParent<TreeBuilderByAncestors.ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, SyntheticNode>>> allNodes() {
+        return treeBuilder.getTree().allNodes();
     }
 
     TreeBuilderByAncestors.Action bestAction(CloneWithMutationsFromReconstructedRoot rebasedClone) {
@@ -126,16 +126,34 @@ class TreeWithMetaBuilder {
     }
 
     Snapshot snapshot() {
-        return new Snapshot(clonesAdditionHistory, rootInfo);
+        return new Snapshot(clonesAdditionHistory, rootInfo, treeId);
+    }
+
+    static class TreeId {
+        private final int id;
+
+        public TreeId(int id) {
+            this.id = id;
+        }
+
+        public int getId() {
+            return id;
+        }
     }
 
     static class Snapshot {
         private final LinkedList<Integer> clonesAdditionHistory;
         private final RootInfo rootInfo;
+        private final TreeId treeId;
 
-        public Snapshot(LinkedList<Integer> clonesAdditionHistory, RootInfo rootInfo) {
+        public Snapshot(LinkedList<Integer> clonesAdditionHistory, RootInfo rootInfo, TreeId treeId) {
             this.clonesAdditionHistory = clonesAdditionHistory;
             this.rootInfo = rootInfo;
+            this.treeId = treeId;
+        }
+
+        public TreeId getTreeId() {
+            return treeId;
         }
 
         public LinkedList<Integer> getClonesAdditionHistory() {
@@ -151,8 +169,8 @@ class TreeWithMetaBuilder {
                     getClonesAdditionHistory().stream()
                             .filter(it -> !toExclude.contains(it))
                             .collect(Collectors.toCollection(LinkedList::new)),
-                    getRootInfo()
-            );
+                    getRootInfo(),
+                    treeId);
         }
     }
 
