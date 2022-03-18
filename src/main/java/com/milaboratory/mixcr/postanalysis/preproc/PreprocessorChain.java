@@ -3,26 +3,33 @@ package com.milaboratory.mixcr.postanalysis.preproc;
 import cc.redberry.pipe.InputPort;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.mixcr.postanalysis.MappingFunction;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessorSetup;
+import com.milaboratory.mixcr.postanalysis.*;
+import gnu.trove.iterator.TIntObjectIterator;
+import gnu.trove.map.hash.TIntObjectHashMap;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  *
  */
 public class PreprocessorChain<T> implements SetPreprocessor<T> {
     final List<SetPreprocessor<T>> chain;
+    final String id;
 
-    public PreprocessorChain(List<SetPreprocessor<T>> chain) {
-        this.chain = chain;
+    public PreprocessorChain(List<SetPreprocessor<T>> chain, String id) {
+        this.chain = chain.stream().flatMap(c ->
+                        c instanceof PreprocessorChain
+                                ? ((PreprocessorChain<T>) c).chain.stream()
+                                : Stream.of(c))
+                .collect(Collectors.toList());
+        this.id = id;
     }
 
     private final AtomicReference<Function<Integer, MappingFunction<T>>> mapperRef = new AtomicReference<>(i -> t -> t);
@@ -104,6 +111,31 @@ public class PreprocessorChain<T> implements SetPreprocessor<T> {
         return mapper.apply(iDataset);
     }
 
+    @Override
+    public TIntObjectHashMap<List<SetPreprocessorStat>> getStat() {
+        TIntObjectHashMap<List<SetPreprocessorStat>> r = new TIntObjectHashMap<>();
+        for (TIntObjectHashMap<List<SetPreprocessorStat>> stat :
+                chain.stream().map(SetPreprocessor::getStat).collect(Collectors.toList())) {
+
+            TIntObjectIterator<List<SetPreprocessorStat>> it = stat.iterator();
+            while (it.hasNext()) {
+                it.advance();
+                List<SetPreprocessorStat> l = r.get(it.key());
+                if (l == null) {
+                    r.put(it.key(), l = new ArrayList<>());
+                }
+                l.addAll(it.value());
+            }
+        }
+
+        return r;
+    }
+
+    @Override
+    public String id() {
+        return id;
+    }
+
     public static final class Factory<T> implements SetPreprocessorFactory<T> {
         @JsonProperty("chain")
         public final List<SetPreprocessorFactory<T>> chain;
@@ -113,25 +145,23 @@ public class PreprocessorChain<T> implements SetPreprocessor<T> {
             this.chain = chain;
         }
 
+        @SafeVarargs
         public Factory(SetPreprocessorFactory<T>... chain) {
             this(Arrays.asList(chain));
         }
 
         @Override
-        public String[] description() {
+        public String id() {
             return chain.stream()
-                    .map(SetPreprocessorFactory::description)
-                    .filter(Objects::nonNull)
-                    .flatMap(Arrays::stream)
-                    .filter(s -> !s.isEmpty())
-                    .toArray(String[]::new);
+                    .map(SetPreprocessorFactory::id)
+                    .collect(Collectors.joining(" | "));
         }
 
         @Override
-        public SetPreprocessor<T> getInstance() {
+        public SetPreprocessor<T> newInstance() {
             return new PreprocessorChain<>(chain.stream()
-                    .map(SetPreprocessorFactory::getInstance)
-                    .collect(Collectors.toList()));
+                    .map(SetPreprocessorFactory::newInstance)
+                    .collect(Collectors.toList()), id());
         }
 
         @Override

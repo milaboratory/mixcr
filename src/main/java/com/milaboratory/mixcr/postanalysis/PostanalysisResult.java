@@ -22,28 +22,47 @@ import java.util.stream.Collectors;
 public class PostanalysisResult {
     /** All dataset ids that were analyzed */
     @JsonProperty("datasetIds")
-    private final Set<String> datasetIds;
+    public final Set<String> datasetIds;
     /** Characteristic Id -> characteristic data */
     @JsonProperty("data")
-    private final Map<String, Array2d> data;
+    public final Map<String, Array2d> data;
+    /** Preprocessor Id -> Preprocessors summary */
+    @JsonProperty("preprocSummary")
+    public final Map<String, SetPreprocessorSummary> preprocSummary;
 
     @JsonCreator
     public PostanalysisResult(@JsonProperty("datasetIds") Set<String> datasetIds,
-                              @JsonProperty("data") Map<String, Array2d> data) {
+                              @JsonProperty("data") Map<String, Array2d> data,
+                              @JsonProperty("preprocSummary") Map<String, SetPreprocessorSummary> preprocSummary) {
         this.datasetIds = datasetIds;
         this.data = data;
+        this.preprocSummary = preprocSummary;
     }
 
     static <T> PostanalysisResult create(Set<String> datasetIds,
-                                         Map<Characteristic<?, T>, Map<String, MetricValue<?>[]>> data) {
+                                         Map<Characteristic<?, T>, Map<String, MetricValue<?>[]>> data,
+                                         Map<String, SetPreprocessorSummary> preprocSummary) {
         Map<String, Array2d> d = new HashMap<>();
         for (Map.Entry<Characteristic<?, T>, Map<String, MetricValue<?>[]>> e : data.entrySet())
             d.put(e.getKey().name, new Array2d(e.getValue()));
-        return new PostanalysisResult(datasetIds, d);
+        return new PostanalysisResult(datasetIds, d, preprocSummary);
     }
 
     /** cached results for char groups */
     private final Map<CharacteristicGroup<?, ?>, CharacteristicGroupResult<?>> cached = new IdentityHashMap<>();
+
+    /** project result on a specific char group */
+    public PostanalysisResult forGroup(CharacteristicGroup<?, ?> group) {
+        return new PostanalysisResult(
+                datasetIds,
+                group.characteristics.stream()
+                        .map(c -> c.name)
+                        .collect(Collectors.toMap(c -> c, data::get)),
+                group.characteristics.stream()
+                        .map(c -> c.preprocessor.id())
+                        .distinct()
+                        .collect(Collectors.toMap(c -> c, preprocSummary::get)));
+    }
 
     /** project result on a specific char group */
     @SuppressWarnings({"unchecked"})
@@ -88,10 +107,10 @@ public class PostanalysisResult {
             getterVisibility = JsonAutoDetect.Visibility.NONE,
             isGetterVisibility = JsonAutoDetect.Visibility.NONE
     )
-    private static final class Array2d {
+    public static final class Array2d {
         /** Dataset Id -> Metric values */
         @JsonProperty("2darray")
-        private final Map<String, MetricsArray> data;
+        public final Map<String, MetricsArray> data;
 
         @JsonCreator
         Array2d(@JsonProperty("2darray") Map<String, MetricValue<?>[]> data) {
@@ -117,9 +136,9 @@ public class PostanalysisResult {
         }
     }
 
-    private static final class MetricsArray {
+    public static final class MetricsArray {
         @JsonValue
-        private final MetricValue<?>[] data;
+        public final MetricValue<?>[] data;
 
         public MetricsArray(MetricValue<?>[] data) {
             this.data = data;

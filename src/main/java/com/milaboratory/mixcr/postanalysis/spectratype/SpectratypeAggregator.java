@@ -36,6 +36,8 @@ public class SpectratypeAggregator<Payload> implements Aggregator<SpectratypeKey
     @Override
     public void consume(Clone obj) {
         SpectratypeKey<Payload> key = keyFunction.getKey(obj);
+        if (key == null)
+            return;
         Payload payload = key.payload;
         double weight = weightFunction.weight(obj);
         Count<Payload> count = new Count<>(payload, weight);

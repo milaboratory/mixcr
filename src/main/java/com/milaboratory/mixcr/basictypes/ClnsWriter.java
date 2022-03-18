@@ -60,10 +60,7 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
 
-    final String stage = "Writing clones";
     final PrimitivOHybrid output;
-
-    private volatile int current;
 
     public ClnsWriter(String fileName) throws IOException {
         this(new PrimitivOHybrid(Paths.get(fileName)));
@@ -86,7 +83,8 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
                 cloneSet.getOrdering(),
                 cloneSet.getUsedGenes(),
                 cloneSet,
-                Collections.emptyList()
+                Collections.emptyList(),
+                cloneSet.size()
         );
     }
 
@@ -97,7 +95,8 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
             VDJCSProperties.CloneOrdering ordering,
             List<VDJCGene> genes,
             HasFeatureToAlign featureToAlign,
-            List<VDJCLibrary> libraries
+            List<VDJCLibrary> libraries,
+            int numberOfClones
     ) {
         try (PrimitivO o = output.beginPrimitivO(true)) {
             // Writing magic bytes
@@ -113,6 +112,7 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
             o.writeObject(alignmentParameters);
             o.writeObject(assemblerParameters);
             o.writeObject(ordering);
+            o.writeInt(numberOfClones);
             Util.writeMap(libraries.stream().collect(Collectors.toMap(VDJCLibrary::getName, VDJCLibrary::getData)), o);
 
             IOUtil.stdVDJCPrimitivOStateInit(o, genes, featureToAlign);
@@ -133,7 +133,8 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
                 cloneSet.getOrdering(),
                 cloneSet.getUsedGenes(),
                 cloneSet,
-                libraries
+                libraries,
+                cloneSet.size()
         );
         InputPort<Clone> cloneIP = cloneWriter();
         for (Clone clone : cloneSet)

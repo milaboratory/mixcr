@@ -52,4 +52,6 @@ public interface CloneReader extends AutoCloseable, PipelineConfigurationReader 
     List<VDJCGene> getGenes();
 
     OutputPortCloseable<Clone> readClones();
+
+    int numberOfClones();
 }

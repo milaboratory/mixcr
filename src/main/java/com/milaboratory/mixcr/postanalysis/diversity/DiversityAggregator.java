@@ -50,6 +50,9 @@ public class DiversityAggregator<T> implements Aggregator<DiversityMeasure, T> {
         double f2 = freqTable.get(2); // doubletons
         double f0 = f1 * (f1 - 1) / 2 / (f2 + 1);
         double chao1 = sobs + f0;
+        if (!measures.contains(Chao1Std))
+            return Collections.singletonList(new MetricValue<>(Chao1, chao1));
+
         double chao1std = Math.sqrt(
                 f0 + f1 * (2 * f1 - 1) * (2 * f1 - 1) / 4 / (f2 + 1) / (f2 + 1) +
                         f1 * f1 * f2 * (f1 - 1) * (f1 - 1) / 4 / (f2 + 1) / (f2 + 1) / (f2 + 1) / (f2 + 1));

@@ -1,15 +1,28 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.palantir.gradle.gitversion.VersionDetails
 import groovy.lang.Closure
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.InetAddress
+
+
+val miplotsVersion = "1.0.0"
+val milibVersion = "2.0.0"
+val repseqioVersion = "1.3.5-10-05b9291c5e"
+val jacksonVersion = "2.12.4"
+val dataframeVersion = "0.8.0-rc-7"
 
 plugins {
     `java-library`
     application
     `maven-publish`
-    id("com.palantir.git-version") version "0.12.3"
+    id("com.palantir.git-version") version "0.13.0"
     id("com.github.johnrengelman.shadow") version "7.0.0"
+    kotlin("jvm") version "1.6.10"
+    id("org.jetbrains.kotlin.plugin.dataframe") version "0.8.0-rc-7"
 }
+
+// Make IDE aware of the generated code:
+kotlin.sourceSets.getByName("main").kotlin.srcDir("build/generated/ksp/main/kotlin/")
 
 val miRepoAccessKeyId: String by project
 val miRepoSecretAccessKey: String by project
@@ -27,7 +40,7 @@ version =
 description = "MiXCR"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_11
     withSourcesJar()
     withJavadocJar()
 }
@@ -36,7 +49,7 @@ application {
     mainClass.set("com.milaboratory.mixcr.cli.Main")
 }
 
-tasks.withType<JavaCompile>() {
+tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
 }
 
@@ -54,16 +67,13 @@ tasks.register("createInfoFile") {
 
 repositories {
     mavenCentral()
+    maven("https://jitpack.io")
 
     // Snapshot versions of milib and repseqio distributed via this repo
     maven {
         url = uri("https://pub.maven.milaboratory.com")
     }
 }
-
-val milibVersion = "1.14.1-16-774c60afab"
-val repseqioVersion = "1.3.5-4-f7170dd23b"
-val jacksonVersion = "2.12.4"
 
 dependencies {
     api("com.milaboratory:milib:$milibVersion")
@@ -73,10 +83,15 @@ dependencies {
 
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("commons-io:commons-io:2.7")
+    implementation("commons-io:commons-io:2.7")
     implementation("org.lz4:lz4-java:1.4.1")
     implementation("net.sf.trove4j:trove4j:3.0.3")
     implementation("info.picocli:picocli:4.1.1")
     implementation("com.google.guava:guava:30.1.1-jre")
+
+    api("com.milaboratory:miplots:$miplotsVersion")
+    implementation("com.itextpdf:itext7-core:7.2.1")
+    implementation("com.itextpdf:layout:7.2.1")
 
     testImplementation("junit:junit:4.13.2")
     implementation(testFixtures("com.milaboratory:milib:$milibVersion"))
@@ -98,18 +113,24 @@ tasks.processResources {
 }
 
 val shadowJar = tasks.withType<ShadowJar> {
-    minimize {
-        exclude(dependency("io.repseq:repseqio"))
-        exclude(dependency("com.milaboratory:milib"))
-        exclude(dependency("org.lz4:lz4-java"))
-        exclude(dependency("com.fasterxml.jackson.core:jackson-databind"))
-
-        exclude(dependency("log4j:log4j"))
-        exclude(dependency("org.slf4j:slf4j-api"))
-        exclude(dependency("commons-logging:commons-logging"))
-        exclude(dependency("ch.qos.logback:logback-core"))
-        exclude(dependency("ch.qos.logback:logback-classic"))
-    }
+//    minimize {
+//        exclude(dependency("io.repseq:repseqio"))
+//        exclude(dependency("com.milaboratory:milib"))
+//        exclude(dependency("org.lz4:lz4-java"))
+//        exclude(dependency("com.fasterxml.jackson.core:jackson-databind"))
+//
+//        exclude(dependency("log4j:log4j"))
+//        exclude(dependency("org.slf4j:slf4j-api"))
+//        exclude(dependency("commons-logging:commons-logging"))
+//        exclude(dependency("ch.qos.logback:logback-core"))
+//        exclude(dependency("ch.qos.logback:logback-classic"))
+//
+//        exclude("org.apache.xmlgraphics:.*")
+//        exclude("org.apache.pdfbox:pdfbox:2.0.24")
+//        exclude("org.apache.commons:commons-csv:1.9.0")
+//        exclude(dependency("org.jetbrains.kotlin:.*"))
+//        exclude(dependency("org.apache.batik:.*"))
+//    }
 }
 
 val distributionZip by tasks.registering(Zip::class) {
@@ -148,4 +169,13 @@ tasks.test {
     maxHeapSize = "2048m"
 
     longTests?.let { systemProperty("longTests", it) }
+}
+
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.kotlinOptions {
+    jvmTarget = "11"
+}
+val compileTestKotlin: KotlinCompile by tasks
+compileTestKotlin.kotlinOptions {
+    jvmTarget = "11"
 }

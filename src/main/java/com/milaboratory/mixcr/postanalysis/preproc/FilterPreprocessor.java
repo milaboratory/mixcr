@@ -2,23 +2,26 @@ package com.milaboratory.mixcr.postanalysis.preproc;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.mixcr.postanalysis.MappingFunction;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessorSetup;
+import com.milaboratory.mixcr.postanalysis.*;
+import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  *
  */
 public class FilterPreprocessor<T> implements SetPreprocessor<T> {
     final List<ElementPredicate<T>> predicates;
+    final String id;
+    final SetPreprocessorStat.Builder<T> stats;
 
-    FilterPreprocessor(@JsonProperty("predicates") List<ElementPredicate<T>> predicates) {
+    public FilterPreprocessor(List<ElementPredicate<T>> predicates, String id) {
         this.predicates = predicates;
+        this.id = id;
+        this.stats = new SetPreprocessorStat.Builder<>(id, WeightFunctions.Default());
     }
 
     @Override
@@ -28,7 +31,23 @@ public class FilterPreprocessor<T> implements SetPreprocessor<T> {
 
     @Override
     public MappingFunction<T> getMapper(int iDataset) {
-        return t -> predicates.stream().allMatch(p -> p.test(t)) ? t : null;
+        return t -> {
+            stats.before(iDataset, t);
+            if (!predicates.stream().allMatch(p -> p.test(t)))
+                return null;
+            stats.after(iDataset, t);
+            return t;
+        };
+    }
+
+    @Override
+    public TIntObjectHashMap<List<SetPreprocessorStat>> getStat() {
+        return stats.getStatMap();
+    }
+
+    @Override
+    public String id() {
+        return id;
     }
 
     public static final class Factory<T> implements SetPreprocessorFactory<T> {
@@ -40,23 +59,21 @@ public class FilterPreprocessor<T> implements SetPreprocessor<T> {
             this.predicates = predicates;
         }
 
+        @SafeVarargs
         public Factory(ElementPredicate<T>... predicates) {
             this(Arrays.asList(predicates));
         }
 
         @Override
-        public String[] description() {
-            return predicates.stream()
-                    .map(ElementPredicate::description)
-                    .filter(Objects::nonNull)
-                    .filter(s -> !s.isEmpty())
-                    .map(f -> "Filter: " + f)
-                    .toArray(String[]::new);
+        public String id() {
+            return "Filter " + predicates.stream()
+                    .map(ElementPredicate::id)
+                    .collect(Collectors.joining(", "));
         }
 
         @Override
-        public SetPreprocessor<T> getInstance() {
-            return new FilterPreprocessor<>(predicates);
+        public SetPreprocessor<T> newInstance() {
+            return new FilterPreprocessor<>(predicates, id());
         }
 
         @Override

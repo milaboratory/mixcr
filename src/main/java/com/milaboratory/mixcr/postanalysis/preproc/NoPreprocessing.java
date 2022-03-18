@@ -1,10 +1,11 @@
 package com.milaboratory.mixcr.postanalysis.preproc;
 
 
-import com.milaboratory.mixcr.postanalysis.MappingFunction;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessorSetup;
+import com.milaboratory.mixcr.postanalysis.*;
+import gnu.trove.map.hash.TIntObjectHashMap;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  *
@@ -24,16 +25,37 @@ public class NoPreprocessing<T> implements SetPreprocessor<T> {
         return MappingFunction.identity();
     }
 
+    @Override
+    public TIntObjectHashMap<List<SetPreprocessorStat>> getStat() {
+        //noinspection ExternalizableWithoutPublicNoArgConstructor
+        return new TIntObjectHashMap<>() {
+            @Override
+            public List<SetPreprocessorStat> get(int key) {
+                return Collections.emptyList();
+            }
+        };
+    }
+
+    @Override
+    public String id() {
+        return factory().id();
+    }
+
     public static final Factory<?> factory = new Factory<>();
 
     @SuppressWarnings("unchecked")
-    public static <T> Factory<T> factory() { return (Factory<T>) factory; }
+    public static <T> Factory<T> factory() {return (Factory<T>) factory;}
 
     public static final class Factory<T> implements SetPreprocessorFactory<T> {
         @SuppressWarnings("unchecked")
         @Override
-        public SetPreprocessor<T> getInstance() {
+        public SetPreprocessor<T> newInstance() {
             return (SetPreprocessor<T>) NoPreprocessing.instance;
+        }
+
+        @Override
+        public String id() {
+            return "NoPreprocessing";
         }
 
         @Override

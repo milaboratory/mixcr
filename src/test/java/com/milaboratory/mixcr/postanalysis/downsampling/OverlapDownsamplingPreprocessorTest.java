@@ -39,7 +39,8 @@ public class OverlapDownsamplingPreprocessorTest {
                     t -> Math.round(t.weight),
                     (t, newW) -> new TestObject(t.value, newW),
                     chooser,
-                    System.currentTimeMillis()
+                    System.currentTimeMillis(),
+                    ""
             );
 
             Dataset<OverlapGroup<TestObject>>[] downsampled = SetPreprocessorFactory.processDatasets(new OverlapPreprocessorAdapter<>(proc), datasets);

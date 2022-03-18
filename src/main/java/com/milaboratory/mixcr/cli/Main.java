@@ -74,9 +74,7 @@ public final class Main {
                         return new ArrayList<>();
                     }
                     return super.handle(parseResult);
-                } catch (ParameterException ex) {
-                    throw ex;
-                } catch (CommandLine.ExecutionException ex) {
+                } catch (ParameterException | CommandLine.ExecutionException ex) {
                     throw ex;
                 } catch (Exception ex) {
                     throw new CommandLine.ExecutionException(commandLine,
@@ -148,7 +146,8 @@ public final class Main {
                 .setCommandName(command)
                 .addSubcommand("help", CommandLine.HelpCommand.class)
                 .addSubcommand("analyze", CommandAnalyze.CommandAnalyzeMain.class)
-                .addSubcommand("postanalysis", CommandPostanalysis.CommandPostanalysisMain.class)
+                .addSubcommand("postanalysis", CommandPa.CommandPostanalysisMain.class)
+                .addSubcommand("exportPa", CommandPaExport.CommandExportPaMain.class)
 
                 .addSubcommand("align", CommandAlign.class)
                 .addSubcommand("assemble", CommandAssemble.class)
@@ -163,6 +162,8 @@ public final class Main {
                 .addSubcommand("exportClones", CommandExport.mkClonesSpec())
                 .addSubcommand("exportClonesPretty", CommandExportClonesPretty.class)
 
+                .addSubcommand("exportAirr", CommandExportAirr.class)
+
                 .addSubcommand("exportReadsForClones", CommandExportReadsForClones.class)
                 .addSubcommand("exportAlignmentsForClones", CommandExportAlignmentsForClones.class)
                 .addSubcommand("exportReads", CommandExportReads.class)
@@ -170,6 +171,7 @@ public final class Main {
                 .addSubcommand("mergeAlignments", CommandMergeAlignments.class)
                 .addSubcommand("filterAlignments", CommandFilterAlignments.class)
                 .addSubcommand("sortAlignments", CommandSortAlignments.class)
+                .addSubcommand("sortClones", CommandSortClones.class)
 
                 .addSubcommand("alignmentsDiff", CommandAlignmentsDiff.class)
                 .addSubcommand("clonesDiff", CommandClonesDiff.class)
@@ -191,8 +193,23 @@ public final class Main {
 
         cmd.getSubcommands()
                 .get("postanalysis")
-                .addSubcommand("individual", CommandSpec.forAnnotatedObject(CommandPostanalysis.CommandIndividual.class))
-                .addSubcommand("overlap", CommandSpec.forAnnotatedObject(CommandPostanalysis.CommandOverlap.class));
+                .addSubcommand("individual", CommandSpec.forAnnotatedObject(CommandPa.CommandIndividual.class))
+                .addSubcommand("overlap", CommandSpec.forAnnotatedObject(CommandPa.CommandOverlap.class));
+
+        cmd.getSubcommands()
+                .get("exportPa")
+                .addSubcommand("tables", CommandSpec.forAnnotatedObject(CommandPaExport.ExportTables.class))
+                .addSubcommand("preprocSummary", CommandSpec.forAnnotatedObject(CommandPaExport.ExportPreprocessingSummary.class))
+                .addSubcommand("listMetrics", CommandSpec.forAnnotatedObject(CommandPaExport.ListMetrics.class))
+                .addSubcommand("biophysics", CommandSpec.forAnnotatedObject(CommandPaExport.ExportBiophysics.class))
+                .addSubcommand("diversity", CommandSpec.forAnnotatedObject(CommandPaExport.ExportDiversity.class))
+
+                .addSubcommand("vUsage", CommandSpec.forAnnotatedObject(CommandPaExport.ExportVUsage.class))
+                .addSubcommand("jUsage", CommandSpec.forAnnotatedObject(CommandPaExport.ExportJUsage.class))
+                .addSubcommand("isotypeUsage", CommandSpec.forAnnotatedObject(CommandPaExport.ExportIsotypeUsage.class))
+                .addSubcommand("vjUsage", CommandSpec.forAnnotatedObject(CommandPaExport.ExportVJUsage.class))
+
+                .addSubcommand("overlap", CommandSpec.forAnnotatedObject(CommandPaExport.ExportOverlap.class));
 
         cmd.setSeparator(" ");
         return cmd;
@@ -201,7 +218,7 @@ public final class Main {
     public static CommandLine parseArgs(String... args) {
         if (args.length == 0)
             args = new String[]{"help"};
-        ExceptionHandler exHandler = new ExceptionHandler();
+        ExceptionHandler<?> exHandler = new ExceptionHandler<>();
         exHandler.andExit(1);
         CommandLine cmd = mkCmd();
         try {

@@ -102,7 +102,8 @@ public class DownsamplingPreprocessorTest {
                 t -> Math.round(t.weight),
                 (t, w) -> new TestObject(t.value, 1d * w),
                 dsChooser,
-                rng.nextLong(0, Long.MAX_VALUE / 2)
+                rng.nextLong(0, Long.MAX_VALUE / 2),
+                ""
         );
 
         int nDatasets = 10;
