@@ -3,6 +3,8 @@ package com.milaboratory.mixcr.postanalysis.plots
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapKey
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapType
+import com.milaboratory.mixcr.postanalysis.plots.Preprocessing.pdfTable
+import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup
 import jetbrains.letsPlot.label.ggtitle
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.annotations.DataSchema
@@ -13,6 +15,7 @@ import org.jetbrains.kotlinx.dataframe.api.*
  */
 @DataSchema
 data class OverlapRow(
+    val preproc: String,
     val sample1: String,
     val sample2: String,
     val metric: OverlapType,
@@ -24,13 +27,17 @@ object Overlap {
      * Imports data into DataFrame
      **/
     fun dataFrame(
+        ch: CharacteristicGroup<*, *>,
         paResult: PostanalysisResult,
         metricsFilter: List<String>?
     ) = run {
         val data = mutableListOf<OverlapRow>()
 
+        val ch2preproc = ch.characteristics.associate { it.name to it.preprocessor.id() }
+        val projectedResult = paResult.forGroup(ch)
         val mf = metricsFilter?.map { it.lowercase() }?.toSet()
-        for ((_, charData) in paResult.data) {
+        for ((char, charData) in projectedResult.data) {
+            val preproc = ch2preproc[char]!!
             for ((_, keys) in charData.data) {
                 for (metric in keys.data) {
                     @Suppress("UNCHECKED_CAST")
@@ -38,8 +45,8 @@ object Overlap {
                     if (mf != null && !mf.contains(key.key.toString().lowercase())) {
                         continue
                     }
-                    data += OverlapRow(key.id1, key.id2, key.key, metric.value)
-                    data += OverlapRow(key.id2, key.id1, key.key, metric.value)
+                    data += OverlapRow(preproc, key.id1, key.id2, key.key, metric.value)
+                    data += OverlapRow(preproc, key.id2, key.id1, key.key, metric.value)
                 }
             }
         }
@@ -51,11 +58,12 @@ object Overlap {
      * Imports data into DataFrame
      **/
     fun dataFrame(
+        ch: CharacteristicGroup<*, *>,
         paResult: PostanalysisResult,
         metricsFilter: List<String>?,
         metadata: Metadata?,
     ) = run {
-        var df: DataFrame<OverlapRow> = dataFrame(paResult, metricsFilter)
+        var df: DataFrame<OverlapRow> = dataFrame(ch, paResult, metricsFilter)
         if (metadata != null)
             df = df.withMetadata(metadata)
         df
@@ -77,13 +85,7 @@ object Overlap {
         ndf
     }
 
-    fun plots(
-        df: DataFrame<OverlapRow>,
-        pp: HeatmapParameters,
-    ) = df.groupBy { "metric"<String>() }.groups.toList()
-        .map { sdf -> plot(df, pp) + ggtitle(sdf.first()[OverlapRow::metric.name]!!.toString()) }
-
-    fun plot(
+    private fun plot(
         df: DataFrame<OverlapRow>,
         params: HeatmapParameters,
     ) = mkHeatmap(
@@ -93,4 +95,23 @@ object Overlap {
         z = GeneUsageRow::weight.name,
         params = params
     )
+
+    fun plots(
+        df: DataFrame<OverlapRow>,
+        par: HeatmapParameters,
+    ) = df.groupBy { metric }.groups.toList()
+        .map { sdf -> plot(df, par) + ggtitle(sdf.first()[OverlapRow::metric.name]!!.toString()) }
+
+    fun tables(
+        df: DataFrame<OverlapRow>,
+        pp: DataFrame<PreprocSummaryRow>
+    ) = df
+        .groupBy { preproc }
+        .groups.toList().map { byChar ->
+            val metrics = byChar.metric.distinct().toList()
+            val preprocId = byChar.first()[OverlapRow::preproc.name] as String
+            pp
+                .filter { preproc == preprocId }
+                .pdfTable(header = metrics.joinToString(",") { it.toString() })
+        }
 }

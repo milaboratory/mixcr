@@ -7,6 +7,7 @@ import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.cli.CommandPa.PaResult;
 import com.milaboratory.mixcr.cli.CommandPa.PaResultByChain;
+import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorSummary;
 import com.milaboratory.mixcr.postanalysis.plots.*;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
@@ -15,6 +16,7 @@ import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroupResult;
 import com.milaboratory.mixcr.postanalysis.ui.OutputTable;
 import com.milaboratory.util.GlobalObjectMappers;
 import io.repseq.core.Chains;
+import io.repseq.core.Chains.NamedChains;
 import jetbrains.letsPlot.intern.Plot;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
 import picocli.CommandLine;
@@ -60,17 +62,17 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
 
     @Override
     public void run0() throws Exception {
-        Set<Chains.NamedChains> set = chains == null
+        Set<NamedChains> set = chains == null
                 ? null
                 : chains.stream().map(Chains::getNamedChains).collect(Collectors.toSet());
 
-        for (Map.Entry<Chains.NamedChains, PaResultByChain> r : getPaResult().results.entrySet()) {
+        for (Map.Entry<NamedChains, PaResultByChain> r : getPaResult().results.entrySet()) {
             if (set == null || set.stream().anyMatch(c -> c.chains.intersects(r.getKey().chains)))
                 run(r.getKey(), r.getValue());
         }
     }
 
-    abstract void run(Chains.NamedChains chains, PaResultByChain result);
+    abstract void run(NamedChains chains, PaResultByChain result);
 
     private abstract static class ExportTablesBase extends CommandPaExport {
         @Parameters(index = "1", description = "Output path")
@@ -92,7 +94,7 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
             return fName.substring(0, fName.length() - 4);
         }
 
-        String outExtension(Chains.NamedChains chains) {
+        String outExtension(NamedChains chains) {
             return "." + chains.name + "." + out.substring(out.length() - 3);
         }
 
@@ -101,7 +103,7 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
         }
 
         @Override
-        void run(Chains.NamedChains chains, PaResultByChain result) {
+        void run(NamedChains chains, PaResultByChain result) {
             try {
                 Files.createDirectories(outDir());
             } catch (IOException e) {
@@ -110,22 +112,22 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
             run1(chains, result);
         }
 
-        abstract void run1(Chains.NamedChains chains, PaResultByChain result);
+        abstract void run1(NamedChains chains, PaResultByChain result);
     }
 
     @CommandLine.Command(name = "tables",
             sortOptions = false,
             separator = " ",
-            description = "Biophysics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype")
+            description = "Biophysics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype, Overlap")
     public static final class ExportTables extends ExportTablesBase {
         @Override
-        void run1(Chains.NamedChains chains, PaResultByChain result) {
+        void run1(NamedChains chains, PaResultByChain result) {
             for (CharacteristicGroup<?, ?> table : result.schema.tables) {
                 writeTables(chains, result.result.getTable(table));
             }
         }
 
-        <K> void writeTables(Chains.NamedChains chain, CharacteristicGroupResult<K> tableResult) {
+        <K> void writeTables(NamedChains chain, CharacteristicGroupResult<K> tableResult) {
             for (CharacteristicGroupOutputExtractor<K> view : tableResult.group.views)
                 for (OutputTable t : view.getTables(tableResult).values()) {
                     t.writeCSV(outDir(), outPrefix() + ".", separator(), outExtension(chain));
@@ -139,7 +141,7 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
             description = "Export preprocessing summary tables.")
     public static final class ExportPreprocessingSummary extends ExportTablesBase {
         @Override
-        void run1(Chains.NamedChains chains, PaResultByChain result) {
+        void run1(NamedChains chains, PaResultByChain result) {
             SetPreprocessorSummary.writeToCSV(outDir().resolve(outPrefix() + outExtension(chains)), result.result.preprocSummary, "\t");
         }
     }
@@ -192,7 +194,6 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
         public int height = 0;
         @Option(names = {"--filter"}, description = "Filter by metadata. Possible filters column=value, column>=value etc.")
         public String filterByMetadata;
-
         @Parameters(index = "1", description = "Output PDF file name", defaultValue = "plot.pdf")
         public String out;
 
@@ -221,12 +222,32 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
                     : (metadata == null ? null : (metadataDf = MetadataKt.readMetadata(metadata)));
         }
 
-        void writePlots(Chains.NamedChains chains, List<Plot> plots) {
-            ExportKt.writePDFFigure(Path.of(out.substring(0, out.length() - 3) + chains.name + ".pdf"), plots);
+        String plotDestStr(NamedChains chains) {
+            return out.substring(0, out.length() - 3) + chains.name + ".pdf";
         }
 
-        void writePlots(Chains.NamedChains chains, Plot plot) {
-            ExportKt.writePDF(Path.of(out.substring(0, out.length() - 3) + chains.name + ".pdf"), plot);
+        Path plotDestPath(NamedChains chains) {
+            return Path.of(plotDestStr(chains));
+        }
+
+        String tablesDestStr(NamedChains chains) {
+            return out.substring(0, out.length() - 3) + "preproc." + chains.name + ".pdf";
+        }
+
+        Path tablesDestPath(NamedChains chains) {
+            return Path.of(tablesDestStr(chains));
+        }
+
+        void writeTables(NamedChains chains, List<byte[]> tables) {
+            ExportKt.writePDF(tablesDestPath(chains), tables);
+        }
+
+        void writePlots(NamedChains chains, List<Plot> plots) {
+            ExportKt.writePDFFigure(plotDestPath(chains), plots);
+        }
+
+        void writePlots(NamedChains chains, Plot plot) {
+            ExportKt.writePDF(tablesDestPath(chains), plot);
         }
     }
 
@@ -243,7 +264,7 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
         public List<String> metrics;
 
         @Override
-        void run(Chains.NamedChains chains, PaResultByChain result) {
+        void run(NamedChains chains, PaResultByChain result) {
             CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(group());
 
             DataFrame<?> metadata = metadata();
@@ -319,7 +340,7 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
         public List<String> colorKey = new ArrayList<>();
 
         @Override
-        void run(Chains.NamedChains chains, PaResultByChain result) {
+        void run(NamedChains chains, PaResultByChain result) {
             CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(group());
 
             DataFrame<?> metadata = metadata();
@@ -392,7 +413,7 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
         public boolean noJDendro;
 
         @Override
-        void run(Chains.NamedChains chains, PaResultByChain result) {
+        void run(NamedChains chains, PaResultByChain result) {
             CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(CommandPa.VJUsage);
 
             DataFrame<?> metadata = metadata();
@@ -442,12 +463,14 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
         }
 
         @Override
-        void run(Chains.NamedChains chains, PaResultByChain result) {
+        void run(NamedChains chains, PaResultByChain result) {
             CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(CommandPa.Overlap);
-
+            PostanalysisResult paResult = result.result.forGroup(ch);
             DataFrame<?> metadata = metadata();
+
             DataFrame<OverlapRow> df = Overlap.INSTANCE.dataFrame(
-                    result.result.forGroup(ch),
+                    ch,
+                    paResult,
                     metrics,
                     metadata
             );
@@ -459,21 +482,25 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
             if (df.get("weight").distinct().toList().size() <= 1)
                 return;
 
-            List<Plot> plots = Overlap.INSTANCE.plots(df,
-                    new HeatmapParameters(
-                            !noDendro,
-                            !noDendro,
-                            colorKey.stream()
-                                    .map(it -> new ColorKey(it, it.startsWith("x") ? Position.Bottom : Position.Left))
-                                    .collect(Collectors.toList()),
-                            hLabelsSize,
-                            vLabelsSize,
-                            true,
-                            width,
-                            height
-                    ));
+            DataFrame<PreprocSummaryRow> pp = Preprocessing.INSTANCE.dataFrame(paResult, null);
+
+            HeatmapParameters par = new HeatmapParameters(
+                    !noDendro,
+                    !noDendro,
+                    colorKey.stream()
+                            .map(it -> new ColorKey(it, it.startsWith("x") ? Position.Bottom : Position.Left))
+                            .collect(Collectors.toList()),
+                    hLabelsSize,
+                    vLabelsSize,
+                    true,
+                    width,
+                    height
+            );
+            List<Plot> plots = Overlap.INSTANCE.plots(df, par);
+            List<byte[]> tables = Overlap.INSTANCE.tables(df, pp);
 
             writePlots(chains, plots);
+            writeTables(chains, tables);
         }
     }
 
@@ -483,6 +510,5 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
             subcommands = {
                     CommandLine.HelpCommand.class
             })
-    public static class CommandExportPaMain {
-    }
+    public static class CommandExportPaMain {}
 }

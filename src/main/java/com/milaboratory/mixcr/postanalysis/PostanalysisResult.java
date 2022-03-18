@@ -59,7 +59,8 @@ public class PostanalysisResult {
                         .map(c -> c.name)
                         .collect(Collectors.toMap(c -> c, data::get)),
                 group.characteristics.stream()
-                        .map(c -> c.name)
+                        .map(c -> c.preprocessor.id())
+                        .distinct()
                         .collect(Collectors.toMap(c -> c, preprocSummary::get)));
     }
 

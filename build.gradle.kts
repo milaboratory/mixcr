@@ -76,7 +76,6 @@ repositories {
 }
 
 dependencies {
-    api("com.milaboratory:miplots:$miplotsVersion")
     api("com.milaboratory:milib:$milibVersion")
     api("io.repseq:repseqio:$repseqioVersion") {
         exclude("com.milaboratory", "milib")
@@ -90,10 +89,13 @@ dependencies {
     implementation("info.picocli:picocli:4.1.1")
     implementation("com.google.guava:guava:30.1.1-jre")
 
+    api("com.milaboratory:miplots:$miplotsVersion")
+    implementation("com.itextpdf:itext7-core:7.2.1")
+    implementation("com.itextpdf:layout:7.2.1")
+
     testImplementation("junit:junit:4.13.2")
     implementation(testFixtures("com.milaboratory:milib:$milibVersion"))
     testImplementation("org.mockito:mockito-all:1.9.5")
-
 }
 
 val writeBuildProperties by tasks.registering(WriteProperties::class) {
