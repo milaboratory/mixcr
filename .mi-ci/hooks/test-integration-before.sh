@@ -2,4 +2,8 @@
 
 script_dir=$(dirname "${0}")
 
-# Do nothing for now
+# downloadable test data
+"${script_dir}/../../ensure-test-data.sh"
+
+# builds predprocessed test data
+"${script_dir}/../../prepare-test-data.sh"
