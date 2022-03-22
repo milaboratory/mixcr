@@ -173,6 +173,19 @@ public class AllelesSearcher {
         );
 
         //TODO search for mutations in CDR3
+        // iterate over positions in CDR3 and align every clone to germline
+        // get mutations of every clone as proposals.
+        // Align every clone against every proposal. Choose proposal with maximum sum of score.
+        // Calculate sum of score fine on a letter in a sliding window.
+        // If it decreasing more than constant in left and right parts of a window, than stop (decide what choose as an end).
+        // May be size of a window depends on clones count
+        //
+        // What to do with P segment? May be use previous decisions as germline or generate more proposals based on mirroring
+        //
+        // Why it will works: on the end of a gene we will get chaotic nucleotides, otherwise few clones will have
+        // mutation that will not correspond with others in this position.
+        // So if it is an allele mutation score will decrease slightly and dramatically otherwise.
+        // Sliding window will allow to make decisions even on small count of clones (voting will be on 'count of clones' * 'window size')
         return commonMutationsSearcher.findAlleles(cloneDescriptors).stream()
                 .map(alleleMutationsFromGermline -> {
                     if (alleleMutationsFromGermline.equals(EMPTY_NUCLEOTIDE_MUTATIONS)) {

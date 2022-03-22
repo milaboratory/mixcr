@@ -31,6 +31,7 @@ public class DebugInfo {
             .put("JMutationsFromParent", it -> it.mutationsFromParent != null ? it.mutationsFromParent.JMutations.encode() : null)
             .put("NDNMutationsFromParent", it -> it.mutationsFromParent != null ? it.mutationsFromParent.NDNMutations.encode() : null)
             .put("decisionMetric", it -> it.decisionMetric)
+            .put("publicClone", it -> it.publicClone)
             .build();
 
     private static String encodeRange(Range range) {
@@ -53,6 +54,7 @@ public class DebugInfo {
     private final MutationsSet mutationsFromRoot;
     private final MutationsSet mutationsFromParent;
     private final Double decisionMetric;
+    private final boolean publicClone;
 
 
     public DebugInfo(
@@ -66,7 +68,8 @@ public class DebugInfo {
             NucleotideSequence NDN,
             MutationsSet mutationsFromRoot,
             MutationsSet mutationsFromParent,
-            Double decisionMetric
+            Double decisionMetric,
+            boolean publicClone
     ) {
         this.treeId = treeId;
         this.rootInfo = rootInfo;
@@ -79,6 +82,7 @@ public class DebugInfo {
         this.mutationsFromRoot = mutationsFromRoot;
         this.mutationsFromParent = mutationsFromParent;
         this.decisionMetric = decisionMetric;
+        this.publicClone = publicClone;
     }
 
     public static class MutationsSet {

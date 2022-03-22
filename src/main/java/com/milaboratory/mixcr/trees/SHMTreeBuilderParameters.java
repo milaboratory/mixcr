@@ -97,6 +97,7 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
      * Min portion of clones to determinate common alignment ranges.
      */
     public final double minPortionOfClonesForCommonAlignmentRanges;
+    public final int NDNSizeLimitForPublicClones;
 
     @JsonCreator
     public SHMTreeBuilderParameters(
@@ -113,7 +114,8 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
             @JsonProperty("countOfNodesToProbe") int countOfNodesToProbe,
             @JsonProperty("NDNScoreMultiplier") double NDNScoreMultiplier,
             @JsonProperty("stepsOrder") List<BuildSHMTreeStep> stepsOrder,
-            @JsonProperty("minPortionOfClonesForCommonAlignmentRanges") double minPortionOfClonesForCommonAlignmentRanges
+            @JsonProperty("minPortionOfClonesForCommonAlignmentRanges") double minPortionOfClonesForCommonAlignmentRanges,
+            @JsonProperty("NDNSizeLimitForPublicClones") int NDNSizeLimitForPublicClones
     ) {
         this.targetRegion = targetRegion;
         this.productiveOnly = productiveOnly;
@@ -129,11 +131,12 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
         this.NDNScoreMultiplier = NDNScoreMultiplier;
         this.stepsOrder = stepsOrder;
         this.minPortionOfClonesForCommonAlignmentRanges = minPortionOfClonesForCommonAlignmentRanges;
+        this.NDNSizeLimitForPublicClones = NDNSizeLimitForPublicClones;
     }
 
     @Override
     public SHMTreeBuilderParameters clone() {
-        return new SHMTreeBuilderParameters(targetRegion, productiveOnly, thresholdForFreeClones, thresholdForCombineByNDN, thresholdForCombineTrees, topToVoteOnNDNSize, penaltyForReversedMutations, hideTreesLessThanSize, commonMutationsCountForClustering, maxNDNDistanceForClustering, countOfNodesToProbe, NDNScoreMultiplier, stepsOrder, minPortionOfClonesForCommonAlignmentRanges);
+        return new SHMTreeBuilderParameters(targetRegion, productiveOnly, thresholdForFreeClones, thresholdForCombineByNDN, thresholdForCombineTrees, topToVoteOnNDNSize, penaltyForReversedMutations, hideTreesLessThanSize, commonMutationsCountForClustering, maxNDNDistanceForClustering, countOfNodesToProbe, NDNScoreMultiplier, stepsOrder, minPortionOfClonesForCommonAlignmentRanges, NDNSizeLimitForPublicClones);
     }
 
     @Override
@@ -141,11 +144,11 @@ public class SHMTreeBuilderParameters implements java.io.Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SHMTreeBuilderParameters that = (SHMTreeBuilderParameters) o;
-        return productiveOnly == that.productiveOnly && Double.compare(that.thresholdForFreeClones, thresholdForFreeClones) == 0 && Double.compare(that.thresholdForCombineByNDN, thresholdForCombineByNDN) == 0 && topToVoteOnNDNSize == that.topToVoteOnNDNSize && Double.compare(that.penaltyForReversedMutations, penaltyForReversedMutations) == 0 && hideTreesLessThanSize == that.hideTreesLessThanSize && commonMutationsCountForClustering == that.commonMutationsCountForClustering && countOfNodesToProbe == that.countOfNodesToProbe && Double.compare(that.NDNScoreMultiplier, NDNScoreMultiplier) == 0 && Objects.equals(targetRegion, that.targetRegion) && Objects.equals(stepsOrder, that.stepsOrder);
+        return productiveOnly == that.productiveOnly && Double.compare(that.thresholdForFreeClones, thresholdForFreeClones) == 0 && Double.compare(that.thresholdForCombineByNDN, thresholdForCombineByNDN) == 0 && Double.compare(that.thresholdForCombineTrees, thresholdForCombineTrees) == 0 && topToVoteOnNDNSize == that.topToVoteOnNDNSize && Double.compare(that.penaltyForReversedMutations, penaltyForReversedMutations) == 0 && hideTreesLessThanSize == that.hideTreesLessThanSize && commonMutationsCountForClustering == that.commonMutationsCountForClustering && maxNDNDistanceForClustering == that.maxNDNDistanceForClustering && countOfNodesToProbe == that.countOfNodesToProbe && Double.compare(that.NDNScoreMultiplier, NDNScoreMultiplier) == 0 && Double.compare(that.minPortionOfClonesForCommonAlignmentRanges, minPortionOfClonesForCommonAlignmentRanges) == 0 && NDNSizeLimitForPublicClones == that.NDNSizeLimitForPublicClones && Objects.equals(targetRegion, that.targetRegion) && Objects.equals(stepsOrder, that.stepsOrder);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(targetRegion, productiveOnly, thresholdForFreeClones, thresholdForCombineByNDN, topToVoteOnNDNSize, penaltyForReversedMutations, hideTreesLessThanSize, commonMutationsCountForClustering, countOfNodesToProbe, NDNScoreMultiplier, stepsOrder);
+        return Objects.hash(targetRegion, productiveOnly, thresholdForFreeClones, thresholdForCombineByNDN, thresholdForCombineTrees, topToVoteOnNDNSize, penaltyForReversedMutations, hideTreesLessThanSize, commonMutationsCountForClustering, maxNDNDistanceForClustering, countOfNodesToProbe, NDNScoreMultiplier, stepsOrder, minPortionOfClonesForCommonAlignmentRanges, NDNSizeLimitForPublicClones);
     }
 }

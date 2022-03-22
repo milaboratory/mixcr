@@ -47,6 +47,7 @@ import com.milaboratory.mixcr.util.XSV;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.VDJCLibraryRegistry;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.math3.util.Pair;
 import picocli.CommandLine;
 
@@ -97,6 +98,12 @@ public class CommandBuildSHMTree extends ACommandWithOutputMiXCR {
             names = {"-p", "--preset"})
     public String shmTreeBuilderParametersName = "default";
 
+    @CommandLine.Option(names = {"-r", "--report"}, description = "Report file path")
+    public String report = null;
+
+    @CommandLine.Option(names = {"-rp", "--report-pdf"}, description = "Pdf report file path")
+    public String reportPdf = null;
+
     @CommandLine.Option(description = "Path to directory to store debug info",
             names = {"-d", "--debug"})
     public String debugDirectoryPath = null;
@@ -120,6 +127,25 @@ public class CommandBuildSHMTree extends ACommandWithOutputMiXCR {
             }
         }
         debugDirectory.toFile().mkdirs();
+    }
+
+    @Override
+    public void validate() {
+        super.validate();
+        if (report == null)
+            warn("NOTE: report file is not specified, using " + getReport() + " to write report.");
+    }
+
+    public String getReport() {
+        if (report != null) {
+            return report;
+        } else {
+            return FilenameUtils.removeExtension(getOutputPath()) + ".report";
+        }
+    }
+
+    public String getOutputPath() {
+        return getOutputFiles().get(0);
     }
 
     @Override
@@ -148,39 +174,56 @@ public class CommandBuildSHMTree extends ACommandWithOutputMiXCR {
         int stepNumber = 1;
         String stepDescription = "Step " + stepNumber + "/" + stepsCount + ", " + BuildSHMTreeStep.BuildingInitialTrees.forPrint;
         SmartProgressReporter.startProgressReport(stepDescription, SmartProgressReporter.extractProgress(sortedClones, cloneWrappersCount));
-        Debug debug = createDebug(stepNumber);
+        Debug currentStepDebug = createDebug(stepNumber);
         for (Cluster<CloneWrapper> cluster : CUtils.it(shmTreeBuilder.buildClusters(sortedClones))) {
-            shmTreeBuilder.zeroStep(cluster, debug.treesBeforeDecisionsWriter);
+            shmTreeBuilder.zeroStep(cluster, currentStepDebug.treesBeforeDecisionsWriter);
         }
-        int clonesWasAdded = shmTreeBuilder.makeDecisions();
+        int clonesWasAddedOnInit = shmTreeBuilder.makeDecisions();
         //TODO check that all trees has minimum common mutations in VJ
-        sortedClones = new CountingOutputPort<>(shmTreeBuilder.sortedClones());
-        for (Cluster<CloneWrapper> cluster : CUtils.it(shmTreeBuilder.buildClusters(sortedClones))) {
-            shmTreeBuilder.writeTreesToDebug(cluster, debug.treesAfterDecisionsWriter);
-        }
-        report.onStepEnd(BuildSHMTreeStep.BuildingInitialTrees, clonesWasAdded, shmTreeBuilder.treesCount(), debug);
+        report.onStepEnd(BuildSHMTreeStep.BuildingInitialTrees, clonesWasAddedOnInit, shmTreeBuilder.treesCount());
 
+        Debug previousStepDebug = currentStepDebug;
         for (BuildSHMTreeStep step : shmTreeBuilderParameters.stepsOrder) {
             stepNumber++;
-            debug = createDebug(stepNumber);
+            currentStepDebug = createDebug(stepNumber);
             int treesCountBefore = shmTreeBuilder.treesCount();
             sortedClones = new CountingOutputPort<>(shmTreeBuilder.sortedClones());
             stepDescription = "Step " + stepNumber + "/" + stepsCount + ", " + step.forPrint;
             SmartProgressReporter.startProgressReport(stepDescription, SmartProgressReporter.extractProgress(sortedClones, cloneWrappersCount));
             for (Cluster<CloneWrapper> cluster : CUtils.it(shmTreeBuilder.buildClusters(sortedClones))) {
-                shmTreeBuilder.applyStep(cluster, step, debug.treesBeforeDecisionsWriter);
+                shmTreeBuilder.applyStep(
+                        cluster,
+                        step,
+                        previousStepDebug.treesAfterDecisionsWriter,
+                        currentStepDebug.treesBeforeDecisionsWriter
+                );
             }
-            clonesWasAdded = shmTreeBuilder.makeDecisions();
-            report.onStepEnd(step, clonesWasAdded, shmTreeBuilder.treesCount() - treesCountBefore, debug);
+            int clonesWasAdded = shmTreeBuilder.makeDecisions();
+
+            report.onStepEnd(step, clonesWasAdded, shmTreeBuilder.treesCount() - treesCountBefore);
+            previousStepDebug = currentStepDebug;
         }
 
         List<TreeWithMeta> trees = new ArrayList<>();
-        for (Cluster<CloneWrapper> cluster : CUtils.it(shmTreeBuilder.buildClusters(shmTreeBuilder.sortedClones()))) {
-            trees.addAll(shmTreeBuilder.getResult(cluster));
+        sortedClones = new CountingOutputPort<>(shmTreeBuilder.sortedClones());
+        SmartProgressReporter.startProgressReport("Building results", SmartProgressReporter.extractProgress(sortedClones, cloneWrappersCount));
+        for (Cluster<CloneWrapper> cluster : CUtils.it(shmTreeBuilder.buildClusters(sortedClones))) {
+            trees.addAll(shmTreeBuilder.getResult(cluster, previousStepDebug.treesAfterDecisionsWriter));
+        }
+
+        for (int i = 0; i <= shmTreeBuilderParameters.stepsOrder.size(); i++) {
+            stepNumber = i + 1;
+            File treesBeforeDecisions = debugFile(stepNumber, Debug.BEFORE_DECISIONS_SUFFIX);
+            File treesAfterDecisions = debugFile(stepNumber, Debug.AFTER_DECISIONS_SUFFIX);
+            report.addStatsForStep(i, treesBeforeDecisions, treesAfterDecisions);
         }
 
         System.out.println("============= Report ==============");
         Util.writeReportToStdout(report);
+        Util.writeJsonReport(getReport(), report);
+        if (reportPdf != null) {
+            report.writePdfReport(Paths.get(reportPdf));
+        }
 
         boolean print = false;
         if (print) {
@@ -243,27 +286,23 @@ public class CommandBuildSHMTree extends ACommandWithOutputMiXCR {
     }
 
     private Debug createDebug(int stepNumber) throws IOException {
-        File treesBeforeDecisions = createDebugFile(stepNumber, "before_decisions");
-        PrintStream treesBeforeDecisionsWriter = new PrintStream(treesBeforeDecisions);
-        XSV.writeXSVHeaders(treesBeforeDecisionsWriter, DebugInfo.COLUMNS_FOR_XSV, ";");
-
-        File treesAfterDecisions = createDebugFile(stepNumber, "after_decisions");
-        PrintStream treesAfterDecisionsWriter = new PrintStream(treesAfterDecisions);
-        XSV.writeXSVHeaders(treesAfterDecisionsWriter, DebugInfo.COLUMNS_FOR_XSV, ";");
-
         return new Debug(
-                treesBeforeDecisions,
-                treesBeforeDecisionsWriter,
-                treesAfterDecisions,
-                treesAfterDecisionsWriter
+                prepareDebugFile(stepNumber, Debug.BEFORE_DECISIONS_SUFFIX),
+                prepareDebugFile(stepNumber, Debug.AFTER_DECISIONS_SUFFIX)
         );
     }
 
-    private File createDebugFile(int stepNumber, String suffix) throws IOException {
-        File file = debugDirectory.resolve("step_" + stepNumber + "_" + suffix + ".csv").toFile();
-        file.delete();
-        file.createNewFile();
-        return file;
+    private PrintStream prepareDebugFile(int stepNumber, String suffix) throws IOException {
+        File debugFile = debugFile(stepNumber, suffix);
+        debugFile.delete();
+        debugFile.createNewFile();
+        PrintStream debugWriter = new PrintStream(debugFile);
+        XSV.writeXSVHeaders(debugWriter, DebugInfo.COLUMNS_FOR_XSV, ";");
+        return debugWriter;
+    }
+
+    private File debugFile(int stepNumber, String suffix) {
+        return debugDirectory.resolve("step_" + stepNumber + "_" + suffix + ".csv").toFile();
     }
 
     private NucleotideSequence getSequence(ObservedOrReconstructed<CloneWrapper, AncestorInfo> content) {
@@ -319,16 +358,15 @@ public class CommandBuildSHMTree extends ACommandWithOutputMiXCR {
         );
     }
 
-    static class Debug {
-        final File treesBeforeDecisions;
+    public static class Debug {
+        private static final String BEFORE_DECISIONS_SUFFIX = "before_decisions";
+        private static final String AFTER_DECISIONS_SUFFIX = "after_decisions";
+
         private final PrintStream treesBeforeDecisionsWriter;
-        final File treesAfterDecisions;
         private final PrintStream treesAfterDecisionsWriter;
 
-        private Debug(File treesBeforeDecisions, PrintStream treesBeforeDecisionsWriter, File treesAfterDecisions, PrintStream treesAfterDecisionsWriter) {
-            this.treesBeforeDecisions = treesBeforeDecisions;
+        private Debug(PrintStream treesBeforeDecisionsWriter, PrintStream treesAfterDecisionsWriter) {
             this.treesBeforeDecisionsWriter = treesBeforeDecisionsWriter;
-            this.treesAfterDecisions = treesAfterDecisions;
             this.treesAfterDecisionsWriter = treesAfterDecisionsWriter;
         }
     }

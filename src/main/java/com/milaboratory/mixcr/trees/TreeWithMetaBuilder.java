@@ -6,6 +6,7 @@ import io.repseq.core.GeneType;
 
 import java.math.BigDecimal;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -38,6 +39,10 @@ class TreeWithMetaBuilder {
 
     public TreeId getTreeId() {
         return treeId;
+    }
+
+    public LinkedList<Integer> getClonesAdditionHistory() {
+        return clonesAdditionHistory;
     }
 
     int clonesCount() {
@@ -142,11 +147,12 @@ class TreeWithMetaBuilder {
     }
 
     static class Snapshot {
-        private final LinkedList<Integer> clonesAdditionHistory;
+        //TODO save position and action description to skip recalculation
+        private final List<Integer> clonesAdditionHistory;
         private final RootInfo rootInfo;
         private final TreeId treeId;
 
-        public Snapshot(LinkedList<Integer> clonesAdditionHistory, RootInfo rootInfo, TreeId treeId) {
+        public Snapshot(List<Integer> clonesAdditionHistory, RootInfo rootInfo, TreeId treeId) {
             this.clonesAdditionHistory = clonesAdditionHistory;
             this.rootInfo = rootInfo;
             this.treeId = treeId;
@@ -156,7 +162,7 @@ class TreeWithMetaBuilder {
             return treeId;
         }
 
-        public LinkedList<Integer> getClonesAdditionHistory() {
+        public List<Integer> getClonesAdditionHistory() {
             return clonesAdditionHistory;
         }
 

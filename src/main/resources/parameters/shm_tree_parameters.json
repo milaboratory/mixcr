@@ -9,6 +9,7 @@
     "hideTreesLessThanSize": 1,
     "commonMutationsCountForClustering": 5,
     "maxNDNDistanceForClustering": 1.5,
+    "NDNSizeLimitForPublicClones": 3,
     "penaltyForReversedMutations": 10,
     "countOfNodesToProbe": 3,
     "minPortionOfClonesForCommonAlignmentRanges": 0.95,

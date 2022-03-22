@@ -221,11 +221,10 @@ class ClusterProcessor {
                 .orElseThrow(IllegalStateException::new);
     }
 
-    StepResult applyStep(List<TreeWithMetaBuilder.Snapshot> currentTrees, BuildSHMTreeStep stepName) {
+    StepResult applyStep(BuildSHMTreeStep stepName, List<TreeWithMetaBuilder> currentTrees) {
         Step step = stepByName(stepName);
-        List<TreeWithMetaBuilder> restoredTrees = restore(currentTrees);
         return step.next(
-                restoredTrees,
+                currentTrees,
                 () -> {
                     Set<Integer> clonesInTrees = currentTrees.stream()
                             .flatMap(it -> it.getClonesAdditionHistory().stream())
@@ -1030,13 +1029,17 @@ class ClusterProcessor {
                         nodeContent.getFromRootToThis().combinedJMutations()
                 ),
                 parentMutations.orElse(null),
-                metric
+                metric,
+                isPublic(tree.getRootInfo())
         );
     }
 
-    public List<DebugInfo> debugInfos(List<TreeWithMetaBuilder.Snapshot> currentTrees) {
-        List<TreeWithMetaBuilder> restoredTrees = restore(currentTrees);
-        return restoredTrees.stream()
+    private boolean isPublic(RootInfo rootInfo) {
+        return rootInfo.getReconstructedNDN().size() <= parameters.NDNSizeLimitForPublicClones;
+    }
+
+    public List<DebugInfo> debugInfos(List<TreeWithMetaBuilder> currentTrees) {
+        return currentTrees.stream()
                 .flatMap(tree -> tree.allNodes()
                         .filter(it -> it.getNode().getContent() instanceof TreeBuilderByAncestors.Reconstructed)
                         .map(nodeWithParent -> buildDebugInfo(Collections.emptyMap(), tree, nodeWithParent))

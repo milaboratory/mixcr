@@ -240,28 +240,34 @@ public class SHMTreeBuilder {
         XSV.writeXSVBody(debug, result.getNodesDebugInfo(), DebugInfo.COLUMNS_FOR_XSV, ";");
     }
 
-    public void writeTreesToDebug(Cluster<CloneWrapper> clusterBySameVAndJ, PrintStream debug) {
+    public void applyStep(
+            Cluster<CloneWrapper> clusterBySameVAndJ,
+            BuildSHMTreeStep step,
+            PrintStream debugOfPreviousStep,
+            PrintStream debugOfCurrentStep
+    ) {
         VJBase VJBase = clusterVJBase(clusterBySameVAndJ);
         ClusterProcessor clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase);
-        List<DebugInfo> debugInfos = clusterProcessor.debugInfos(currentTrees.get(VJBase));
-        XSV.writeXSVBody(debug, debugInfos, DebugInfo.COLUMNS_FOR_XSV, ";");
-    }
+        List<TreeWithMetaBuilder> currentTrees = clusterProcessor.restore(this.currentTrees.get(VJBase));
+        List<DebugInfo> debugInfos = clusterProcessor.debugInfos(currentTrees);
+        XSV.writeXSVBody(debugOfPreviousStep, debugInfos, DebugInfo.COLUMNS_FOR_XSV, ";");
 
-    public void applyStep(Cluster<CloneWrapper> clusterBySameVAndJ, BuildSHMTreeStep step, PrintStream debug) {
-        VJBase VJBase = clusterVJBase(clusterBySameVAndJ);
-        ClusterProcessor clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase);
-        StepResult result = clusterProcessor.applyStep(currentTrees.get(VJBase), step);
-        currentTrees.put(VJBase, result.getSnapshots());
+
+        StepResult result = clusterProcessor.applyStep(step, currentTrees);
+        this.currentTrees.put(VJBase, result.getSnapshots());
         result.getDecisions().forEach((cloneId, decision) ->
                 decisions.computeIfAbsent(cloneId, __ -> new HashMap<>()).put(VJBase, decision)
         );
-        XSV.writeXSVBody(debug, result.getNodesDebugInfo(), DebugInfo.COLUMNS_FOR_XSV, ";");
+        XSV.writeXSVBody(debugOfCurrentStep, result.getNodesDebugInfo(), DebugInfo.COLUMNS_FOR_XSV, ";");
     }
 
-    public List<TreeWithMeta> getResult(Cluster<CloneWrapper> clusterBySameVAndJ) {
+    public List<TreeWithMeta> getResult(Cluster<CloneWrapper> clusterBySameVAndJ, PrintStream previousStepDebug) {
         VJBase VJBase = clusterVJBase(clusterBySameVAndJ);
         ClusterProcessor clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase);
-        return clusterProcessor.restore(currentTrees.get(VJBase)).stream()
+        List<TreeWithMetaBuilder> currentTrees = clusterProcessor.restore(this.currentTrees.get(VJBase));
+        List<DebugInfo> debugInfos = clusterProcessor.debugInfos(currentTrees);
+        XSV.writeXSVBody(previousStepDebug, debugInfos, DebugInfo.COLUMNS_FOR_XSV, ";");
+        return currentTrees.stream()
                 .filter(treeWithMetaBuilder -> treeWithMetaBuilder.clonesCount() >= parameters.hideTreesLessThanSize)
                 .map(treeWithMetaBuilder -> new TreeWithMeta(
                         treeWithMetaBuilder.buildResult(),

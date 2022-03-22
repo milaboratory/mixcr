@@ -210,14 +210,6 @@ public class TreeBuilderByAncestors<T, E, M> {
         );
     }
 
-    public BigDecimal distanceFromRootToReconstructed(E node) {
-        E rootContent = ((Reconstructed<T, E>) tree.getRoot().getContent()).getContent();
-        return distance.apply(
-                rootContent,
-                mutationsBetween.apply(rootContent, node)
-        );
-    }
-
     private Insert insertAsDirectDescendant(Tree.Node<ObservedOrReconstructed<T, E>> parent, E toAdd, Function<BigDecimal, Tree.Node<ObservedOrReconstructed<T, E>>> nodeGenerator) {
         E contentOfParent = ((Reconstructed<T, E>) parent.getContent()).getContent();
         BigDecimal distanceBetweenParentAndAdded = distance.apply(contentOfParent, mutationsBetween.apply(contentOfParent, toAdd));
