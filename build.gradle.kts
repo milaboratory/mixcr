@@ -143,10 +143,10 @@ tasks.test {
     minHeapSize = "1024m"
     maxHeapSize = "2048m"
 
-    // miCiStage?.let {
-    //     if (it == "test") {
-    //         systemProperty("longTests", "true");
-    //     }
-    // }
+     miCiStage?.let {
+         if (it == "test") {
+             systemProperty("longTests", "true");
+         }
+     }
     longTests?.let { systemProperty("longTests", it) }
 }
