@@ -2,6 +2,7 @@ package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.util.CountLimitingOutputPort;
 import cc.redberry.pipe.util.CountingOutputPort;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.export.AirrVDJCObjectWrapper;
@@ -11,6 +12,7 @@ import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCLibraryRegistry;
+import org.apache.commons.io.output.CloseShieldOutputStream;
 
 import java.io.PrintStream;
 import java.nio.file.Path;
@@ -42,10 +44,15 @@ public class CommandExportAirr extends ACommandMiXCR {
             names = {"-a", "--from-alignment"})
     public boolean fromAlignment = false;
 
+    @Option(description = "Limit number of filtered alignments; no more " +
+            "than N alignments will be outputted",
+            names = {"-n", "--limit"})
+    public Integer limit = null;
+
     @Parameters(index = "0", description = "input_file.[vdjca|clna|clns]")
     public String in;
-    @Parameters(index = "1", description = "output.tsv")
-    public String out;
+    @Parameters(index = "1", description = "output.tsv", arity = "0..1")
+    public String out = null;
 
     private IOUtil.MiXCRFileInfo info0 = null;
 
@@ -164,6 +171,7 @@ public class CommandExportAirr extends ACommandMiXCR {
         return ret;
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public void run0() throws Exception {
         List<FieldExtractor<AirrVDJCObjectWrapper>> extractors;
@@ -215,9 +223,18 @@ public class CommandExportAirr extends ACommandMiXCR {
                 return;
         }
 
+
+        if (limit != null) {
+            CountLimitingOutputPort clop = new CountLimitingOutputPort(port, limit);
+            port = clop;
+            progressReporter = SmartProgressReporter.extractProgress(clop);
+        }
+
         SmartProgressReporter.startProgressReport("Exporting to AIRR format", progressReporter);
 
-        try (PrintStream output = new PrintStream(out);
+        try (PrintStream output = out == null
+                ? new PrintStream(new CloseShieldOutputStream(System.out))
+                : new PrintStream(out);
              AutoCloseable c = closeable; OutputPortCloseable<VDJCObject> p = port) {
             boolean first = true;
 
