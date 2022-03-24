@@ -45,6 +45,7 @@ import com.milaboratory.mixcr.assembler.CloneFactoryParameters;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.util.Cluster;
 import com.milaboratory.mixcr.util.ExceptionUtil;
+import com.milaboratory.mixcr.util.XSV;
 import com.milaboratory.util.GlobalObjectMappers;
 import gnu.trove.map.hash.TObjectFloatHashMap;
 import io.repseq.core.*;
@@ -55,9 +56,12 @@ import org.apache.commons.math3.util.Pair;
 import picocli.CommandLine;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -115,9 +119,13 @@ public class CommandFindAlleles extends ACommandWithOutputMiXCR {
         return clnsFiles;
     }
 
-    @CommandLine.Option(description = "Find alleles parameters preset.",
+    @CommandLine.Option(description = "File to write library with found alleles.",
             names = {"--export-library"})
     public String libraryOutput = null;
+
+    @CommandLine.Option(description = "File to description of each allele.",
+            names = {"--export-alleles-mutations"})
+    public String allelesMutationsOutput = null;
 
     @CommandLine.Option(description = "Find alleles parameters preset.",
             names = {"-p", "--preset"})
@@ -168,7 +176,27 @@ public class CommandFindAlleles extends ACommandWithOutputMiXCR {
             GlobalObjectMappers.ONE_LINE.writeValue(new File(libraryOutput), resultLibrary.getData());
         }
 
+        if (allelesMutationsOutput != null) {
+            printAllelesMutationsOutput(resultLibrary);
+        }
+
         writeResultClnsFiles(cloneReaders, alleles, resultLibrary);
+    }
+
+    private void printAllelesMutationsOutput(VDJCLibrary resultLibrary) throws FileNotFoundException {
+        try (PrintStream output = new PrintStream(allelesMutationsOutput)) {
+            var genesWithAlleles = resultLibrary.getGenes().stream()
+                    .filter(it -> it.getData().getBaseSequence().getMutations() != null)
+                    .collect(Collectors.toList());
+            Map<String, Function<VDJCGene, Object>> columns = Map.of(
+                    "geneName", VDJCGene::getName,
+                    "type", VDJCGene::getGeneType,
+                    "regions", gene -> Arrays.toString(gene.getData().getBaseSequence().getRegions()),
+                    "mutations", gene -> gene.getData().getBaseSequence().getMutations()
+            );
+            XSV.writeXSVHeaders(output, columns, ";");
+            XSV.writeXSVBody(output, genesWithAlleles, columns, ";");
+        }
     }
 
     private void writeResultClnsFiles(List<CloneReader> cloneReaders, Map<String, List<VDJCGeneData>> alleles, VDJCLibrary resultLibrary) throws IOException {
