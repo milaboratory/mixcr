@@ -449,7 +449,7 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
             public PostanalysisSchema<OverlapGroup<Clone>> getSchema(int nSamples, Chains chain) {
                 List<OverlapCharacteristic<Clone>> overlaps = new ArrayList<>();
                 for (int i = 0; i < nSamples; ++i)
-                    for (int j = i + 1; j < nSamples; ++j)
+                    for (int j = i; j < nSamples; ++j) // j=i to include diagonal elements
                         overlaps.addAll(getCharacteristics(i, j, chain));
 
                 return new PostanalysisSchema<>(Collections.singletonList(

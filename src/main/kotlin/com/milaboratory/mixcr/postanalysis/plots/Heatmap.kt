@@ -19,6 +19,7 @@ data class HeatmapParameters(
     val clusterX: Boolean,
     val clusterY: Boolean,
     val colorKey: List<ColorKey>? = null,
+    val groupBy: List<String>? = null,
     val hLabelsSize: Double,
     val vLabelsSize: Double,
     val fillNaZeroes: Boolean,

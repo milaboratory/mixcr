@@ -8,6 +8,7 @@ import org.jetbrains.kotlinx.dataframe.api.*
 import org.jetbrains.kotlinx.dataframe.io.read
 import org.jetbrains.kotlinx.dataframe.io.readTSV
 import java.util.*
+import javax.xml.crypto.Data
 
 fun AnyFrame.isNumeric(col: String) = this[col].all { it == null || it is Number }
 fun AnyFrame.isCategorial(col: String) = !isNumeric(col)
@@ -41,8 +42,8 @@ fun <T> DataFrame<T>.withMetadata(metadata: Metadata) = run {
 /**
  * Attaches metadata to statistics
  **/
-fun attachMetadata(
-    data: AnyFrame,
+fun <T> attachMetadata(
+    data: DataFrame<T>,
     dataCol: String,
     meta: Metadata,
     metaCol: String

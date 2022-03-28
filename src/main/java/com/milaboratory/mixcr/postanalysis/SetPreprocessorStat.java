@@ -48,7 +48,7 @@ public class SetPreprocessorStat {
                                double sumWeightBefore,
                                double sumWeightAfter) {
         this.preprocId = preprocId;
-        this.dropped = false;
+        this.dropped = nElementsAfter == 0;
         this.nElementsBefore = nElementsBefore;
         this.nElementsAfter = nElementsAfter;
         this.sumWeightBefore = sumWeightBefore;
@@ -72,11 +72,23 @@ public class SetPreprocessorStat {
         return Objects.hash(preprocId, dropped, nElementsBefore, nElementsAfter, sumWeightBefore, sumWeightAfter);
     }
 
+    @Override
+    public String toString() {
+        return "SetPreprocessorStat{" +
+                "preprocId='" + preprocId + '\'' +
+                ", dropped=" + dropped +
+                ", nElementsBefore=" + nElementsBefore +
+                ", nElementsAfter=" + nElementsAfter +
+                ", sumWeightBefore=" + sumWeightBefore +
+                ", sumWeightAfter=" + sumWeightAfter +
+                '}';
+    }
+
     public static SetPreprocessorStat cumulative(List<SetPreprocessorStat> stats) {
         SetPreprocessorStat first = stats.get(0);
         SetPreprocessorStat last = stats.get(stats.size() - 1);
         return new SetPreprocessorStat(
-                stats.stream().map(s -> s.preprocId).collect(Collectors.joining("_")),
+                stats.stream().map(s -> s.preprocId).collect(Collectors.joining(" | ")),
                 first.nElementsBefore,
                 last.nElementsAfter,
                 first.sumWeightBefore,

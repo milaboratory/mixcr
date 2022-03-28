@@ -2,14 +2,16 @@ package com.milaboratory.mixcr.postanalysis;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 
 import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class SetPreprocessorSummary {
@@ -35,8 +37,37 @@ public class SetPreprocessorSummary {
         return Objects.hash(result);
     }
 
-    public static void writeToCSV(Path file,
+    public static void writeCSV(Path path,
+                                CharacteristicGroup<Clone, ?> chGroup,
+                                Map<String, SetPreprocessorSummary> preprocSummary,
+                                String sep
+    ) {
+        Set<String> preprocs = chGroup.characteristics
+                .stream()
+                .map(ch -> ch.preprocessor.id())
+                .collect(Collectors.toSet());
+        preprocSummary = preprocSummary.entrySet().stream()
+                .filter(e -> preprocs.contains(e.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        Map<String, List<String>> pp2ch = chGroup.characteristics.stream().collect(Collectors.toMap(
+                ch -> ch.preprocessor.id(),
+                ch -> Collections.singletonList(ch.name),
+                (a, b) -> {
+                    List<String> c = new ArrayList<>(a);
+                    c.addAll(b);
+                    return c;
+                }
+        ));
+        writeToCSV(
+                path,
+                preprocSummary,
+                pp2ch,
+                sep);
+    }
+
+    public static void writeToCSV(Path path,
                                   Map<String, SetPreprocessorSummary> preprocSummary,
+                                  Map<String, List<String>> pp2ch,
                                   String sep) {
         List<List<Object>> rows = new ArrayList<>();
         for (Map.Entry<String, SetPreprocessorSummary> e : preprocSummary.entrySet()) {
@@ -49,6 +80,8 @@ public class SetPreprocessorSummary {
                     continue;
                 List<Object> row = new ArrayList<>();
                 row.add(sample);
+                if (pp2ch != null)
+                    row.add(String.join(",", pp2ch.get(preprocId)));
                 row.add(preprocId);
                 addStat(row, SetPreprocessorStat.cumulative(stats));
                 for (SetPreprocessorStat stat : stats) {
@@ -67,6 +100,8 @@ public class SetPreprocessorSummary {
 
         List<String> header = new ArrayList<>();
         header.add("sample");
+        if (pp2ch != null)
+            header.add("characteristics");
         for (int i = 0; i < (nCols - 1) / 5; i++) {
             String suff;
             if (i == 0)
@@ -81,7 +116,7 @@ public class SetPreprocessorSummary {
             header.add("sumWeightAfter" + suff);
         }
 
-        try (BufferedWriter writer = Files.newBufferedWriter(file, StandardOpenOption.CREATE)) {
+        try (BufferedWriter writer = Files.newBufferedWriter(path, StandardOpenOption.CREATE)) {
             for (int i = 0; ; i++) {
                 writer.write(header.get(i));
                 if (i == header.size() - 1)

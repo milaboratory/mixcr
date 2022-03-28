@@ -1,9 +1,10 @@
 package com.milaboratory.mixcr.postanalysis.plots
 
+import com.milaboratory.miplots.toPDF
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapKey
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapType
-import com.milaboratory.mixcr.postanalysis.plots.Preprocessing.pdfTable
+import com.milaboratory.mixcr.postanalysis.plots.Preprocessing.pdfSummary
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup
 import jetbrains.letsPlot.label.ggtitle
 import org.jetbrains.kotlinx.dataframe.DataFrame
@@ -102,16 +103,45 @@ object Overlap {
     ) = df.groupBy { metric }.groups.toList()
         .map { sdf -> plot(df, par) + ggtitle(sdf.first()[OverlapRow::metric.name]!!.toString()) }
 
-    fun tables(
+//    fun tables(
+//        df: DataFrame<OverlapRow>,
+//        pp: DataFrame<PreprocSummaryRow>
+//    ) = df
+//        .groupBy { preproc }
+//        .groups.toList().map { byPreproc ->
+//            val metrics = byPreproc.metric.distinct().toList()
+//            val preprocId = byPreproc.first()[OverlapRow::preproc.name] as String
+//            pp
+//                .filter { preproc == preprocId }
+//                .pdfTable(header = metrics.joinToString(",") { it.toString() })
+//        }
+
+    fun plotsAndSummary(
         df: DataFrame<OverlapRow>,
-        pp: DataFrame<PreprocSummaryRow>
+        pp: DataFrame<PreprocSummaryRow>,
+        par: HeatmapParameters,
     ) = df
         .groupBy { preproc }
-        .groups.toList().map { byChar ->
-            val metrics = byChar.metric.distinct().toList()
-            val preprocId = byChar.first()[OverlapRow::preproc.name] as String
-            pp
-                .filter { preproc == preprocId }
-                .pdfTable(header = metrics.joinToString(",") { it.toString() })
+        .groups.toList().flatMap { byPreproc ->
+            val metrics = byPreproc.metric.distinct().toList()
+            val preprocId = byPreproc.first()[OverlapRow::preproc.name] as String
+
+            val ppFiltered = pp.filter { preproc == preprocId }
+            val droppedSamples =
+                ppFiltered.filter { stat.dropped || stat.nElementsAfter == 0L }
+                    .sample.distinct().toSet()
+
+            val summary = ppFiltered.pdfSummary(metrics.joinToString(", "))
+            val plots = byPreproc
+                .filter { !droppedSamples.contains(it.sample1) && !droppedSamples.contains(it.sample2) }
+                .groupBy { metric }.groups.toList()
+                .map { byMetric ->
+                    plot(byMetric, par) + ggtitle(byMetric.first()[OverlapRow::metric.name]!!.toString())
+                }.map { it.toPDF() }
+
+            if (summary == null)
+                plots
+            else
+                listOf(summary) + plots
         }
 }

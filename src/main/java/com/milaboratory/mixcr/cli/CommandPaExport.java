@@ -142,7 +142,7 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
     public static final class ExportPreprocessingSummary extends ExportTablesBase {
         @Override
         void run1(NamedChains chains, PaResultByChain result) {
-            SetPreprocessorSummary.writeToCSV(outDir().resolve(outPrefix() + outExtension(chains)), result.result.preprocSummary, "\t");
+            SetPreprocessorSummary.writeToCSV(outDir().resolve(outPrefix() + outExtension(chains)), result.result.preprocSummary, null, "\t");
         }
     }
 
@@ -193,13 +193,16 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
         @Option(names = {"--height"}, description = "Plot height")
         public int height = 0;
         @Option(names = {"--filter"}, description = "Filter by metadata. Possible filters column=value, column>=value etc.")
-        public String filterByMetadata;
+        public List<String> filterByMetadata;
         @Parameters(index = "1", description = "Output PDF file name", defaultValue = "plot.pdf")
         public String out;
 
         <T> DataFrame<T> filter(DataFrame<T> df) {
             if (filterByMetadata != null) {
-                return MetadataKt.parseFilter(metadata(), filterByMetadata).apply(df);
+                for (Filter f : filterByMetadata.stream().map(f -> MetadataKt.parseFilter(metadata(), f)).collect(Collectors.toList())) {
+                    df = f.apply(df);
+                }
+                return df;
             } else
                 return df;
         }
@@ -231,7 +234,7 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
         }
 
         String tablesDestStr(NamedChains chains) {
-            return out.substring(0, out.length() - 3) + "preproc." + chains.name + ".pdf";
+            return out.substring(0, out.length() - 3) + "preproc." + chains.name + ".tsv";
         }
 
         Path tablesDestPath(NamedChains chains) {
@@ -329,7 +332,12 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
         public double vLabelsSize = -1.0;
     }
 
-    static abstract class ExportGeneUsage extends ExportHeatmap {
+    static abstract class ExportHeatmapWithGroupBy extends ExportHeatmap {
+        @Option(names = {"--group-by"}, description = "Group heatmaps by specific metadata properties.")
+        public List<String> groupBy;
+    }
+
+    static abstract class ExportGeneUsage extends ExportHeatmapWithGroupBy {
         abstract String group();
 
         @Option(names = {"--no-samples-dendro"}, description = "Do not plot dendrogram for hierarchical clusterization of samples.")
@@ -358,6 +366,7 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
                             !noSamplesDendro,
                             !noGenesDendro,
                             colorKey.stream().map(it -> new ColorKey(it, Position.Bottom)).collect(Collectors.toList()),
+                            groupBy,
                             hLabelsSize,
                             vLabelsSize,
                             false,
@@ -431,6 +440,7 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
                             !noJDendro,
                             !noVDendro,
                             Collections.emptyList(),
+                            null,
                             hLabelsSize,
                             vLabelsSize,
                             false,
@@ -446,7 +456,7 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
             sortOptions = false,
             separator = " ",
             description = "Export overlap heatmap")
-    static class ExportOverlap extends ExportHeatmap {
+    static class ExportOverlap extends ExportHeatmapWithGroupBy {
         @Option(names = {"--no-dendro"}, description = "Plot dendrogram for hierarchical clusterization of V genes.")
         public boolean noDendro;
         @Option(names = {"--color-key"}, description = "Add color key layer.")
@@ -456,16 +466,19 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
 
         DataFrame<OverlapRow> filterOverlap(DataFrame<OverlapRow> df) {
             if (filterByMetadata != null) {
-                Filter filter = MetadataKt.parseFilter(metadata(), filterByMetadata);
-                return Overlap.INSTANCE.filterOverlap(filter, df);
-            } else
-                return df;
+                for (String f : filterByMetadata) {
+                    Filter filter = MetadataKt.parseFilter(metadata(), f);
+                    df = Overlap.INSTANCE.filterOverlap(filter, df);
+                }
+            }
+            return df;
         }
 
         @Override
         void run(NamedChains chains, PaResultByChain result) {
             CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(CommandPa.Overlap);
             PostanalysisResult paResult = result.result.forGroup(ch);
+            Map<String, SetPreprocessorSummary> preprocSummary = paResult.preprocSummary;
             DataFrame<?> metadata = metadata();
 
             DataFrame<OverlapRow> df = Overlap.INSTANCE.dataFrame(
@@ -483,6 +496,8 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
                 return;
 
             DataFrame<PreprocSummaryRow> pp = Preprocessing.INSTANCE.dataFrame(paResult, null);
+            pp = MetadataKt.attachMetadata(pp, "sample", metadata, "sample");
+            pp = filter(pp);
 
             HeatmapParameters par = new HeatmapParameters(
                     !noDendro,
@@ -490,17 +505,19 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
                     colorKey.stream()
                             .map(it -> new ColorKey(it, it.startsWith("x") ? Position.Bottom : Position.Left))
                             .collect(Collectors.toList()),
+                    groupBy,
                     hLabelsSize,
                     vLabelsSize,
-                    true,
+                    false,
                     width,
                     height
             );
-            List<Plot> plots = Overlap.INSTANCE.plots(df, par);
-            List<byte[]> tables = Overlap.INSTANCE.tables(df, pp);
 
-            writePlots(chains, plots);
-            writeTables(chains, tables);
+            List<byte[]> plotsAndSummary = Overlap.INSTANCE.plotsAndSummary(df, pp, par);
+            ExportKt.writePDF(plotDestPath(chains), plotsAndSummary);
+            SetPreprocessorSummary.writeCSV(tablesDestPath(chains),
+                    ch, preprocSummary,
+                    "\t");
         }
     }
 

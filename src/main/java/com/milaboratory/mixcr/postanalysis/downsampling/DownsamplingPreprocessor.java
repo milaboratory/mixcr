@@ -12,7 +12,6 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.Well19937c;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
@@ -84,8 +83,9 @@ public class DownsamplingPreprocessor<T> implements SetPreprocessor<T> {
             int i = idx.getAndIncrement();
             if (countsDownsampled[i] == 0)
                 return null;
-            stats.after(iDataset, t);
-            return setCount.apply(t, countsDownsampled[i]);
+            T tNew = setCount.apply(t, countsDownsampled[i]);
+            stats.after(iDataset, tNew);
+            return tNew;
         };
     }
 
