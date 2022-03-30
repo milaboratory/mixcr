@@ -30,6 +30,7 @@
 package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.cli.ValidationException;
+import com.milaboratory.mixcr.cli.postanalysis.*;
 import com.milaboratory.util.TempFileManager;
 import com.milaboratory.util.VersionInfo;
 import io.repseq.core.VDJCLibraryRegistry;
@@ -190,23 +191,23 @@ public final class Main {
 
         cmd.getSubcommands()
                 .get("postanalysis")
-                .addSubcommand("individual", CommandSpec.forAnnotatedObject(CommandPa.CommandIndividual.class))
-                .addSubcommand("overlap", CommandSpec.forAnnotatedObject(CommandPa.CommandOverlap.class));
+                .addSubcommand("individual", CommandSpec.forAnnotatedObject(CommandPaIndividual.class))
+                .addSubcommand("overlap", CommandSpec.forAnnotatedObject(CommandPaOverlap.class));
 
         cmd.getSubcommands()
                 .get("exportPa")
-                .addSubcommand("tables", CommandSpec.forAnnotatedObject(CommandPaExport.ExportTables.class))
-                .addSubcommand("preprocSummary", CommandSpec.forAnnotatedObject(CommandPaExport.ExportPreprocessingSummary.class))
-                .addSubcommand("listMetrics", CommandSpec.forAnnotatedObject(CommandPaExport.ListMetrics.class))
-                .addSubcommand("biophysics", CommandSpec.forAnnotatedObject(CommandPaExport.ExportBiophysics.class))
-                .addSubcommand("diversity", CommandSpec.forAnnotatedObject(CommandPaExport.ExportDiversity.class))
+                .addSubcommand("tables", CommandSpec.forAnnotatedObject(CommandPaExportTables.class))
+                .addSubcommand("preprocSummary", CommandSpec.forAnnotatedObject(CommandPaExportTablesPreprocSummary.class))
+                .addSubcommand("listMetrics", CommandSpec.forAnnotatedObject(CommandPaListMetrics.class))
+                .addSubcommand("biophysics", CommandSpec.forAnnotatedObject(CommandPaExportPlotsBasicStatistics.ExportBiophysics.class))
+                .addSubcommand("diversity", CommandSpec.forAnnotatedObject(CommandPaExportPlotsBasicStatistics.ExportDiversity.class))
 
-                .addSubcommand("vUsage", CommandSpec.forAnnotatedObject(CommandPaExport.ExportVUsage.class))
-                .addSubcommand("jUsage", CommandSpec.forAnnotatedObject(CommandPaExport.ExportJUsage.class))
-                .addSubcommand("isotypeUsage", CommandSpec.forAnnotatedObject(CommandPaExport.ExportIsotypeUsage.class))
-                .addSubcommand("vjUsage", CommandSpec.forAnnotatedObject(CommandPaExport.ExportVJUsage.class))
+                .addSubcommand("vUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsGeneUsage.ExportVUsage.class))
+                .addSubcommand("jUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsGeneUsage.ExportJUsage.class))
+                .addSubcommand("isotypeUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsGeneUsage.ExportIsotypeUsage.class))
+                .addSubcommand("vjUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsVJUsage.class))
 
-                .addSubcommand("overlap", CommandSpec.forAnnotatedObject(CommandPaExport.ExportOverlap.class));
+                .addSubcommand("overlap", CommandSpec.forAnnotatedObject(CommandPaExportPlotsOverlap.class));
 
         cmd.setSeparator(" ");
         return cmd;

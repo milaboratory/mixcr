@@ -1,5 +1,6 @@
-package com.milaboratory.mixcr.cli;
+package com.milaboratory.mixcr.cli.postanalysis;
 
+import com.milaboratory.mixcr.cli.Main;
 import org.junit.Ignore;
 import org.junit.Test;
 

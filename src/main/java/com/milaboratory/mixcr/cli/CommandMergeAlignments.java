@@ -73,7 +73,7 @@ public class CommandMergeAlignments extends ACommandWithSmartOverwriteMiXCR {
     private MergeConfiguration configuration = null;
 
     @Override
-    public ActionConfiguration getConfiguration() {
+    public ActionConfiguration<MergeConfiguration> getConfiguration() {
         return configuration != null
                 ? configuration
                 : (configuration = new MergeConfiguration(getInputFiles().stream()
@@ -107,7 +107,7 @@ public class CommandMergeAlignments extends ACommandWithSmartOverwriteMiXCR {
             use = JsonTypeInfo.Id.CLASS,
             include = JsonTypeInfo.As.PROPERTY,
             property = "type")
-    public static class MergeConfiguration implements ActionConfiguration {
+    public static class MergeConfiguration implements ActionConfiguration<MergeConfiguration> {
         final PipelineConfiguration[] sources;
 
         @JsonCreator
