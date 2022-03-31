@@ -21,6 +21,17 @@ public class CommonMutationsSearcherTest {
     private final AffineGapAlignmentScoring<NucleotideSequence> scoring = AffineGapAlignmentScoring.getNucleotideBLASTScoring();
 
     @Test
+    public void oneMutationsExistsInAllCloneButOne() {
+        CommonMutationsSearcher searcher = searcher("TTTTTTTTTTTT");
+        List<Mutations<NucleotideSequence>> result = searcher.findAlleles(Lists.newArrayList(
+                clone("ST1G,ST3G", "J1*00"),
+                clone("ST1G,ST2G,ST4G", "J1*00"),
+                clone("ST1G,ST2G,ST5G,ST6G", "J2*00")
+        ));
+        assertEqualsMutations(result, "[S1:T->G]", "[S1:T->G,S2:T->G,S5:T->G,S6:T->G]");
+    }
+
+    @Test
     public void onlyOneAlleleThatIsTheSameAsLibraryGermline() {
         CommonMutationsSearcher searcher = searcher("ATTT");
         List<Mutations<NucleotideSequence>> result = searcher.findAlleles(Lists.newArrayList(

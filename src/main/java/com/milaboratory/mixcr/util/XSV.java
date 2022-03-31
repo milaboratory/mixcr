@@ -9,8 +9,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class XSV {
-    public static <T> void writeXSVHeaders(PrintStream output, Map<String, Function<T, Object>> columns, String delimiter) {
-        output.println(String.join(delimiter, columns.keySet()));
+    public static <T> void writeXSVHeaders(PrintStream output, Collection<String> columns, String delimiter) {
+        output.println(String.join(delimiter, columns));
     }
 
     public static <T> void writeXSVBody(PrintStream output, Collection<T> records, Map<String, Function<T, Object>> columns, String delimiter) {

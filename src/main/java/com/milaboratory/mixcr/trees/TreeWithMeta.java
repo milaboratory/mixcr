@@ -3,19 +3,20 @@ package com.milaboratory.mixcr.trees;
 public class TreeWithMeta {
     private final Tree<TreeBuilderByAncestors.ObservedOrReconstructed<CloneWrapper, AncestorInfo>> tree;
     private final RootInfo rootInfo;
-    private final VJBase VJBase;
+    private final TreeWithMetaBuilder.TreeId treeId;
 
     public TreeWithMeta(
             Tree<TreeBuilderByAncestors.ObservedOrReconstructed<CloneWrapper, AncestorInfo>> tree,
             RootInfo rootInfo,
-            VJBase vjBase) {
+            TreeWithMetaBuilder.TreeId treeId
+    ) {
         this.tree = tree;
         this.rootInfo = rootInfo;
-        VJBase = vjBase;
+        this.treeId = treeId;
     }
 
-    public VJBase getVJBase() {
-        return VJBase;
+    public TreeWithMetaBuilder.TreeId getTreeId() {
+        return treeId;
     }
 
     public Tree<TreeBuilderByAncestors.ObservedOrReconstructed<CloneWrapper, AncestorInfo>> getTree() {

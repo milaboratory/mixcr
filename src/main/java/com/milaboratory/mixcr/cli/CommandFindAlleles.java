@@ -30,6 +30,7 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.OutputPortCloseable;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
@@ -93,9 +94,6 @@ public class CommandFindAlleles extends ACommandWithOutputMiXCR {
     protected List<String> getOutputFiles() {
         List<String> outputs = outputClnsFiles();
         if (libraryOutput != null) {
-            if (!libraryOutput.endsWith(".json")) {
-                throwValidationException("Exported library must be json: " + libraryOutput);
-            }
             outputs.add(libraryOutput);
         }
         return outputs;
@@ -132,6 +130,20 @@ public class CommandFindAlleles extends ACommandWithOutputMiXCR {
     public String findAllelesParametersName = "default";
 
     private FindAllelesParameters findAllelesParameters = null;
+
+    @Override
+    public void validate() {
+        if (libraryOutput != null) {
+            if (!libraryOutput.endsWith(".json")) {
+                throwValidationException("--export-library must be json: " + libraryOutput);
+            }
+        }
+        if (allelesMutationsOutput != null) {
+            if (!allelesMutationsOutput.endsWith(".csv")) {
+                throwValidationException("--export-alleles-mutations must be csv: " + allelesMutationsOutput);
+            }
+        }
+    }
 
     private void ensureParametersInitialized() {
         if (findAllelesParameters != null)
@@ -173,10 +185,13 @@ public class CommandFindAlleles extends ACommandWithOutputMiXCR {
         VDJCLibrary resultLibrary = buildLibrary(libraryRegistry, cloneReaders, usedGenes);
 
         if (libraryOutput != null) {
-            GlobalObjectMappers.ONE_LINE.writeValue(new File(libraryOutput), resultLibrary.getData());
+            var libraryOutputFile = new File(libraryOutput);
+            libraryOutputFile.getParentFile().mkdirs();
+            GlobalObjectMappers.ONE_LINE.writeValue(libraryOutputFile, resultLibrary.getData());
         }
 
         if (allelesMutationsOutput != null) {
+            new File(allelesMutationsOutput).getParentFile().mkdirs();
             printAllelesMutationsOutput(resultLibrary);
         }
 
@@ -185,17 +200,24 @@ public class CommandFindAlleles extends ACommandWithOutputMiXCR {
 
     private void printAllelesMutationsOutput(VDJCLibrary resultLibrary) throws FileNotFoundException {
         try (PrintStream output = new PrintStream(allelesMutationsOutput)) {
-            var genesWithAlleles = resultLibrary.getGenes().stream()
-                    .filter(it -> it.getData().getBaseSequence().getMutations() != null)
+            var columns = ImmutableMap.<String, Function<VDJCGene, Object>>builder()
+                    .put("geneName", VDJCGene::getName)
+                    .put("type", VDJCGene::getGeneType)
+                    .put("regions", gene -> Optional.ofNullable(gene.getData().getBaseSequence().getRegions())
+                            .stream().flatMap(Arrays::stream)
+                            .map(Range::toString)
+                            .collect(Collectors.joining())
+                    )
+                    .put("mutations", gene -> Optional.ofNullable(gene.getData().getBaseSequence().getMutations())
+                            .map(Mutations::encode)
+                            .orElse("")
+                    )
+                    .build();
+            XSV.writeXSVHeaders(output, columns.keySet(), ";");
+            var genes = resultLibrary.getGenes().stream()
+                    .sorted(Comparator.comparing(VDJCGene::getGeneType).thenComparing(VDJCGene::getName))
                     .collect(Collectors.toList());
-            Map<String, Function<VDJCGene, Object>> columns = Map.of(
-                    "geneName", VDJCGene::getName,
-                    "type", VDJCGene::getGeneType,
-                    "regions", gene -> Arrays.toString(gene.getData().getBaseSequence().getRegions()),
-                    "mutations", gene -> gene.getData().getBaseSequence().getMutations()
-            );
-            XSV.writeXSVHeaders(output, columns, ";");
-            XSV.writeXSVBody(output, genesWithAlleles, columns, ";");
+            XSV.writeXSVBody(output, genes, columns, ";");
         }
     }
 
@@ -209,6 +231,7 @@ public class CommandFindAlleles extends ACommandWithOutputMiXCR {
         for (int i = 0; i < cloneReaders.size(); i++) {
             CloneReader cloneReader = cloneReaders.get(i);
             String outputFile = outputClnsFiles().get(i);
+            new File(outputFile).getParentFile().mkdirs();
 
             List<Clone> mapperClones = rebuildClones(resultLibrary, allelesMapping, cloneReader);
             CloneSet cloneSet = new CloneSet(
@@ -348,8 +371,8 @@ public class CommandFindAlleles extends ACommandWithOutputMiXCR {
             Mutations<NucleotideSequence> alleleMutations = foundAllele.getData().getBaseSequence().getMutations();
             if (alleleMutations != null) {
                 Range seq1RangeAfterAlleleMutations = new Range(
-                        alleleMutations.convertToSeq2Position(alignment.getSequence1Range().getLower()),
-                        alleleMutations.convertToSeq2Position(alignment.getSequence1Range().getUpper())
+                        positionIfNucleotideWasDeleted(alleleMutations.convertToSeq2Position(alignment.getSequence1Range().getLower())),
+                        positionIfNucleotideWasDeleted(alleleMutations.convertToSeq2Position(alignment.getSequence1Range().getUpper()))
                 );
                 Mutations<NucleotideSequence> mutationsFromAllele = alignment.getAbsoluteMutations().invert().combineWith(alleleMutations).invert();
                 int recalculatedScore = AlignmentUtils.calculateScore(
@@ -364,6 +387,15 @@ public class CommandFindAlleles extends ACommandWithOutputMiXCR {
         return scoreDelta;
     }
 
+    private static int positionIfNucleotideWasDeleted(int position) {
+        if (position < -1) {
+            return Math.abs(position + 1);
+        }
+        if (position == -1) {
+            return 0;
+        }
+        return position;
+    }
 
     private Clone anyClone(List<CloneReader> cloneReaders) {
         try (OutputPortCloseable<Clone> port = cloneReaders.get(0).readClones()) {

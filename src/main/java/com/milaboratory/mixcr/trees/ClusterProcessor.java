@@ -213,7 +213,7 @@ class ClusterProcessor {
                 .map(withTheSameGeneBase -> withTheSameGeneBase.stream()
                         .min(Comparator.comparing(it -> it.getValue().getCommonMutationsCount()))
                 )
-                .flatMap(Java9Util::stream)
+                .flatMap(Optional::stream)
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
         return filteredByAlleles.stream()
@@ -385,7 +385,7 @@ class ClusterProcessor {
                                     .flatMap(treeWithMetaBuilder -> treeWithMetaBuilder.allNodes()
                                             .map(Tree.NodeWithParent::getNode)
                                             .map(node -> node.getContent().convert(Optional::of, it -> Optional.<CloneWithMutationsFromReconstructedRoot>empty()))
-                                            .flatMap(Java9Util::stream)
+                                            .flatMap(Optional::stream)
                                             .map(it -> new CloneWithMutationsFromVJGermline(it.getMutationsFromVJGermline(), it.getClone()))
                                     )
                                     .collect(Collectors.toList())
@@ -657,7 +657,7 @@ class ClusterProcessor {
                 rootInfo,
                 clonesRebase,
                 new LinkedList<>(),
-                idGenerator.next()
+                idGenerator.next(rootInfo.getVJBase())
         );
 
         for (CloneWithMutationsFromReconstructedRoot cloneWithMutationsFromReconstructedRoot : rebasedCluster) {
@@ -818,7 +818,7 @@ class ClusterProcessor {
                         return Optional.<Pair<Mutations<NucleotideSequence>, Range>>empty();
                     }
                 })
-                .flatMap(Java9Util::stream)
+                .flatMap(Optional::stream)
                 .findFirst()
                 .orElseGet(() -> Pair.create(EMPTY_NUCLEOTIDE_MUTATIONS, new Range(from, from)));
     }
@@ -851,7 +851,7 @@ class ClusterProcessor {
                         return Optional.<Pair<Mutations<NucleotideSequence>, Range>>empty();
                     }
                 })
-                .flatMap(Java9Util::stream)
+                .flatMap(Optional::stream)
                 .findFirst()
                 .orElseGet(() -> Pair.create(EMPTY_NUCLEOTIDE_MUTATIONS, new Range(to, to)));
     }
@@ -988,7 +988,7 @@ class ClusterProcessor {
         Integer cloneId = nodeWithParent.getNode().getLinks().stream()
                 .map(Tree.NodeLink::getNode)
                 .map(child -> child.getContent().convert(it -> Optional.of(it.getClone().clone.getId()), __ -> Optional.<Integer>empty()))
-                .flatMap(Java9Util::stream)
+                .flatMap(Optional::stream)
                 .findAny().orElse(null);
         Double metric = null;
         if (cloneId != null) {

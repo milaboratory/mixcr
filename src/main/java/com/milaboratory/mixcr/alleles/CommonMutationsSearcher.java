@@ -47,7 +47,7 @@ class CommonMutationsSearcher {
             return Collections.singletonList(firstAllele);
         }
         if (diversity(clonesWithoutFirstAllele) == 1) {
-            return Lists.newArrayList(firstAllele, EMPTY_NUCLEOTIDE_MUTATIONS);
+            return Lists.newArrayList(firstAllele, findFirstAlleleResult.mutationsInAlmostAllClones);
         }
         Mutations<NucleotideSequence> secondAllele = findSecondAllele(firstAllele, clonesWithoutFirstAllele)
                 .orElse(EMPTY_NUCLEOTIDE_MUTATIONS);
@@ -78,14 +78,18 @@ class CommonMutationsSearcher {
 
     private FindFirstAlleleResult findFirstAllele(List<CloneDescription> clones) {
         int[] allMutations = clones.stream()
-                .flatMapToInt(CloneDescription::getMutations)
+                .flatMapToInt(cloneDescription -> cloneDescription.mutationsSupplier.get())
                 .distinct()
                 .toArray();
         int[][] commonMutationsDiversity = commonMutationsDiversity(clones, allMutations);
 
         int diversityOfACluster = diversity(clones);
 
-        Set<Integer> mutationsInAlmostAllClones = mutationsInAllClones(allMutations, commonMutationsDiversity, minPartOfClones * diversityOfACluster);
+        Set<Integer> mutationsInAlmostAllClones = mutationsInAllClones(
+                allMutations,
+                commonMutationsDiversity,
+                minPartOfClones * diversityOfACluster
+        );
         Set<Pair<Integer, Integer>> mutationPairsInAHalfOfClones = mutationPairsWithDiversityMoreThan(
                 allMutations,
                 commonMutationsDiversity,
@@ -113,14 +117,14 @@ class CommonMutationsSearcher {
 
     private int diversity(List<CloneDescription> clones) {
         return (int) clones.stream()
-                .map(clone -> Pair.create(clone.getCDR3Length(), clone.getComplimentaryGeneName()))
+                .map(clone -> clone.clusterIdentity)
                 .distinct()
                 .count();
     }
 
     private Optional<Mutations<NucleotideSequence>> findSecondAllele(Mutations<NucleotideSequence> firstAllele, List<CloneDescription> clonesWithoutFirstAllele) {
         int[] allMutations = clonesWithoutFirstAllele.stream()
-                .flatMapToInt(CloneDescription::getMutations)
+                .flatMapToInt(cloneDescription -> cloneDescription.mutationsSupplier.get())
                 .distinct()
                 .toArray();
         int diversityOfAllClones = diversity(clonesWithoutFirstAllele);
@@ -165,7 +169,7 @@ class CommonMutationsSearcher {
 
     private List<CloneDescription> withoutAnyMutations(List<CloneDescription> clones) {
         return clones.stream()
-                .filter(clone -> clone.getMutations().count() > 0)
+                .filter(clone -> clone.mutationsSupplier.get().count() > 0)
                 .collect(Collectors.toList());
     }
 
@@ -175,11 +179,11 @@ class CommonMutationsSearcher {
                 .collect(Collectors.toSet());
         return clones.stream()
                 .filter(clone -> {
-                    Mutations<NucleotideSequence> mutationsOfClone = asMutations(clone.getMutations()
+                    Mutations<NucleotideSequence> mutationsOfClone = asMutations(clone.mutationsSupplier.get()
                             .filter(mutation -> positionsOfMutationsInAllele.contains(Mutation.getPosition(mutation)))
                             .boxed()
                     );
-                    Mutations<NucleotideSequence> difference = mutationsOfClone.invert().combineWith(allele);
+                    Mutations<NucleotideSequence> difference = allele.invert().combineWith(mutationsOfClone);
                     int maxScore = scoring.getMaximalMatchScore() * sequence1.size();
                     int score = AlignmentUtils.calculateScore(
                             sequence1,
@@ -254,12 +258,15 @@ class CommonMutationsSearcher {
         return mutationsInAllClones;
     }
 
+    /**
+     * Matrix of mutation pairs. Value - sum of clusters where that mutation pair exists in all clones.
+     */
     private int[][] commonMutationsDiversity(List<CloneDescription> clones, int[] allMutations) {
         Map<Integer, Integer> indexesByMutations = objectToIndexMap(allMutations);
 
         Diversity[][] commonMutationsDiversity = new Diversity[allMutations.length][allMutations.length];
         for (CloneDescription clone : clones) {
-            int[] mutationsInAClone = clone.getMutations().toArray();
+            int[] mutationsInAClone = clone.mutationsSupplier.get().toArray();
             for (int i = 0; i < mutationsInAClone.length; i++) {
                 int indexOfFirst = indexesByMutations.get(mutationsInAClone[i]);
                 for (int j = 0; j < i; j++) {
@@ -270,6 +277,10 @@ class CommonMutationsSearcher {
                 addClone(commonMutationsDiversity, clone, indexOfFirst, indexOfFirst);
             }
         }
+
+        Map<ClusterIdentity, Long> clustersCounts = clones.stream()
+                .collect(Collectors.groupingBy(clone -> clone.clusterIdentity, Collectors.counting()));
+
         int[][] result = new int[allMutations.length][allMutations.length];
 
         for (int i = 0; i < commonMutationsDiversity.length; i++) {
@@ -277,7 +288,7 @@ class CommonMutationsSearcher {
                 if (commonMutationsDiversity[i][j] == null) {
                     result[i][j] = 0;
                 } else {
-                    result[i][j] = commonMutationsDiversity[i][j].summarize();
+                    result[i][j] = commonMutationsDiversity[i][j].summarize(clustersCounts);
                 }
             }
         }
@@ -319,38 +330,49 @@ class CommonMutationsSearcher {
     }
 
     private static class Diversity {
-        private final Set<Pair<Integer, String>> differentClones = new HashSet<>();
+        private final Map<ClusterIdentity, Integer> differentClones = new HashMap<>();
 
         void add(CloneDescription clone) {
-            differentClones.add(Pair.create(clone.getCDR3Length(), clone.getComplimentaryGeneName()));
+            differentClones.merge(clone.clusterIdentity, 1, (__, before) -> before + 1);
         }
 
-        int summarize() {
-            return differentClones.size();
+        int summarize(Map<ClusterIdentity, Long> clustersCounts) {
+            return (int) differentClones.entrySet().stream()
+                    .filter(e -> ((long) clustersCounts.get(e.getKey())) == e.getValue())
+                    .count();
         }
     }
 
     static class CloneDescription {
         private final Supplier<IntStream> mutationsSupplier;
-        private final int CDR3Length;
-        private final String complimentaryGeneName;
+        private final ClusterIdentity clusterIdentity;
 
         public CloneDescription(Supplier<IntStream> mutationsSupplier, int CDR3Length, String complimentaryGeneName) {
             this.mutationsSupplier = mutationsSupplier;
+            this.clusterIdentity = new ClusterIdentity(CDR3Length, complimentaryGeneName);
+        }
+    }
+
+    private static class ClusterIdentity {
+        private final int CDR3Length;
+        private final String complimentaryGeneName;
+
+        private ClusterIdentity(int CDR3Length, String complimentaryGeneName) {
             this.CDR3Length = CDR3Length;
             this.complimentaryGeneName = complimentaryGeneName;
         }
 
-        public IntStream getMutations() {
-            return mutationsSupplier.get();
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ClusterIdentity that = (ClusterIdentity) o;
+            return CDR3Length == that.CDR3Length && complimentaryGeneName.equals(that.complimentaryGeneName);
         }
 
-        public int getCDR3Length() {
-            return CDR3Length;
-        }
-
-        public String getComplimentaryGeneName() {
-            return complimentaryGeneName;
+        @Override
+        public int hashCode() {
+            return Objects.hash(CDR3Length, complimentaryGeneName);
         }
     }
 }

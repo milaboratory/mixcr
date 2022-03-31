@@ -1,7 +1,6 @@
 package com.milaboratory.mixcr.trees;
 
 import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.util.Java9Util;
 import io.repseq.core.GeneType;
 
 import java.math.BigDecimal;
@@ -56,7 +55,7 @@ class TreeWithMetaBuilder {
         return treeBuilder.getTree().allNodes()
                 .filter(nodeWithParent -> nodeWithParent.getNode().getLinks().stream()
                         .map(link -> link.getNode().getContent().convert(it -> Optional.of(it.getClone().clone.getId()), it -> Optional.<Integer>empty()))
-                        .flatMap(Java9Util::stream)
+                        .flatMap(Optional::stream)
                         .anyMatch(cloneId -> clone.getId() == cloneId)
                 )
                 .map(Tree.NodeWithParent::getParent)
@@ -134,15 +133,28 @@ class TreeWithMetaBuilder {
         return new Snapshot(clonesAdditionHistory, rootInfo, treeId);
     }
 
-    static class TreeId {
+    public static class TreeId {
         private final int id;
+        private final VJBase VJBase;
 
-        public TreeId(int id) {
+        public TreeId(int id, VJBase VJBase) {
             this.id = id;
+            this.VJBase = VJBase;
         }
 
         public int getId() {
             return id;
+        }
+
+        public String encode() {
+            var result = new StringBuilder()
+                    .append(VJBase.VGeneName);
+            if (VJBase.CDR3length != null) {
+                result.append("-").append(VJBase.CDR3length);
+            }
+            result.append("-").append(VJBase.JGeneName)
+                    .append("-").append(id);
+            return result.toString();
         }
     }
 

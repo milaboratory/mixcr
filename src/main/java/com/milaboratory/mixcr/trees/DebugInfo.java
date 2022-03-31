@@ -19,7 +19,7 @@ public class DebugInfo {
             .put("VRangeInCDR3", it -> encodeRange(it.rootInfo.getVRangeInCDR3()))
             .put("JRangeInCDR3", it -> encodeRange(it.rootInfo.getJRangeInCDR3()))
             .put("JRangeWithoutCDR3", it -> it.JRangesWithoutCDR3.stream().map(DebugInfo::encodeRange).collect(Collectors.joining(",")))
-            .put("treeId", it -> it.treeId.getId())
+            .put("treeId", it -> it.treeId.encode())
             .put("cloneId", it -> it.cloneId)
             .put("id", it -> it.id)
             .put("parentId", it -> it.parentId)

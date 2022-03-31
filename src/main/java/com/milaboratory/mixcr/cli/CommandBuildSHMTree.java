@@ -31,12 +31,10 @@ package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.util.CountingOutputPort;
-import com.milaboratory.core.Range;
-import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
-import com.milaboratory.core.alignment.Aligner;
-import com.milaboratory.core.mutations.Mutations;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.core.sequence.Wildcard;
 import com.milaboratory.mixcr.basictypes.CloneReader;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.trees.*;
@@ -60,8 +58,8 @@ import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Comparator;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static io.repseq.core.GeneFeature.CDR3;
@@ -76,7 +74,7 @@ public class CommandBuildSHMTree extends ACommandWithOutputMiXCR {
 
     @CommandLine.Parameters(
             arity = "2..*",
-            description = "input_file.clns [input_file2.clns ....] output_file.tree"
+            description = "input_file.clns [input_file2.clns ....] output_files.zip"
     )
     private List<String> inOut = new ArrayList<>();
 
@@ -90,8 +88,12 @@ public class CommandBuildSHMTree extends ACommandWithOutputMiXCR {
         return inOut.subList(inOut.size() - 1, inOut.size());
     }
 
-    public List<String> getClnsFiles() {
+    private List<String> getClnsFiles() {
         return getInputFiles();
+    }
+
+    private String getOutputZipPath() {
+        return inOut.get(inOut.size() - 1);
     }
 
     @CommandLine.Option(description = "SHM tree builder parameters preset.",
@@ -204,11 +206,56 @@ public class CommandBuildSHMTree extends ACommandWithOutputMiXCR {
             previousStepDebug = currentStepDebug;
         }
 
-        List<TreeWithMeta> trees = new ArrayList<>();
         sortedClones = new CountingOutputPort<>(shmTreeBuilder.sortedClones());
         SmartProgressReporter.startProgressReport("Building results", SmartProgressReporter.extractProgress(sortedClones, cloneWrappersCount));
+        var outputDirInTmp = Files.createTempDirectory("tree_outputs").toFile();
+        outputDirInTmp.deleteOnExit();
+
+        var columnsThatDependOnNode = ImmutableMap.<String, Function<Tree.NodeWithParent<ObservedOrReconstructed<CloneWrapper, AncestorInfo>>, Object>>builder()
+                .put("id", it -> it.getNode().getContent().getId())
+                .put("parentId", it -> it.getParent() == null ? null : it.getParent().getContent().getId())
+                .put("cloneId", it -> it.getNode().getContent().convert(cw -> cw.clone.getId(), __ -> null))
+                .put("CDR3", CommandBuildSHMTree::getCDR3)
+                .put("CDR3_AA", it -> {
+                    var CDR3 = getCDR3(it);
+                    if (CDR3.size() % 3 == 0) {
+                        return AminoAcidSequence.translate(CDR3);
+                    } else {
+                        return "";
+                    }
+                })
+                .put("sequence", nodeWithParent -> nodeWithParent.getNode().getContent().convert(
+                        it -> it.clone.getTarget(0).getSequence(),
+                        AncestorInfo::getSequence
+                ))
+                .build();
+
+        var columnsThatDependOnTree = ImmutableMap.<String, Function<TreeWithMeta, Object>>builder()
+                .put("treeId", it -> it.getTreeId().encode())
+                .build();
+
+        var nodesTableFile = outputDirInTmp.toPath().resolve("nodes.csv").toFile();
+        nodesTableFile.createNewFile();
+        var nodesTable = new PrintStream(nodesTableFile);
+
+        var allColumnNames = ImmutableSet.<String>builder()
+                .addAll(columnsThatDependOnNode.keySet())
+                .addAll(columnsThatDependOnTree.keySet())
+                .build();
+        XSV.writeXSVHeaders(nodesTable, allColumnNames, ";");
+
         for (Cluster<CloneWrapper> cluster : CUtils.it(shmTreeBuilder.buildClusters(sortedClones))) {
-            trees.addAll(shmTreeBuilder.getResult(cluster, previousStepDebug.treesAfterDecisionsWriter));
+            for (TreeWithMeta tree : shmTreeBuilder.getResult(cluster, previousStepDebug.treesAfterDecisionsWriter)) {
+                var columnsBuilder = ImmutableMap.<String, Function<Tree.NodeWithParent<ObservedOrReconstructed<CloneWrapper, AncestorInfo>>, Object>>builder()
+                        .putAll(columnsThatDependOnNode);
+                columnsThatDependOnTree.forEach((key, function) -> columnsBuilder.put(key, __ -> function.apply(tree)));
+                var columns = columnsBuilder.build();
+
+                var nodes = tree.getTree()
+                        .allNodes()
+                        .collect(Collectors.toList());
+                XSV.writeXSVBody(nodesTable, nodes, columns, ";");
+            }
         }
 
         for (int i = 0; i <= shmTreeBuilderParameters.stepsOrder.size(); i++) {
@@ -224,65 +271,13 @@ public class CommandBuildSHMTree extends ACommandWithOutputMiXCR {
         if (reportPdf != null) {
             report.writePdfReport(Paths.get(reportPdf));
         }
+    }
 
-        boolean print = false;
-        if (print) {
-            trees = trees.stream()
-                    .sorted(Comparator.<TreeWithMeta>comparingLong(tree -> tree.getTree().allNodes().count()).reversed())
-                    .collect(Collectors.toList());
-
-            for (TreeWithMeta treeWithMeta : trees) {
-                Tree<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> tree = treeWithMeta.getTree();
-                XmlTreePrinter<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> printerOfNDN = new XmlTreePrinter<>(
-                        nodeWithParent -> {
-                            Tree.Node<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> node = nodeWithParent.getNode();
-                            Tree.Node<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> parent = nodeWithParent.getParent();
-                            Pair<String, NucleotideSequence> idPair = idPair(node.getContent());
-
-                            if (parent == null) {
-                                return "" + md5(idPair.getSecond());
-                            }
-
-                            NucleotideSequence CDR3OfNode = getCDR3(node.getContent());
-
-                            RootInfo rootInfo = treeWithMeta.getRootInfo();
-                            Range NDNRange = new Range(rootInfo.getVRangeInCDR3().length(), CDR3OfNode.size() - rootInfo.getJRangeInCDR3().length());
-
-                            Mutations<NucleotideSequence> mutationsOfNDN = Aligner.alignGlobal(
-                                    AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-                                    getCDR3(parent.getContent()).getRange(NDNRange),
-                                    getCDR3(node.getContent()).getRange(NDNRange)
-                            ).getAbsoluteMutations();
-
-                            Mutations<NucleotideSequence> mutationsOfV = Aligner.alignGlobal(
-                                    AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-                                    getV(parent, treeWithMeta.getRootInfo()),
-                                    getV(node, treeWithMeta.getRootInfo())
-                            ).getAbsoluteMutations().move(232);
-
-                            Mutations<NucleotideSequence> mutationsOfJWithoutCDR3 = Aligner.alignGlobal(
-                                    AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-                                    getJ(parent, treeWithMeta.getRootInfo()),
-                                    getJ(node, treeWithMeta.getRootInfo())
-                            ).getAbsoluteMutations().move(11);
-
-                            NucleotideSequence NDN = CDR3OfNode.getRange(NDNRange);
-                            int wildcardsScore = 0;
-                            for (int i = 0; i < NDN.size(); i++) {
-                                Wildcard wildcard = NucleotideSequence.ALPHABET.codeToWildcard(NDN.codeAt(i));
-                                wildcardsScore += wildcard.basicSize();
-                            }
-                            return NDN + " (" + String.format("%.2f", wildcardsScore / (double) NDN.size()) + ")" + ":" + idPair.getFirst() + " V: " + mutationsOfV.size() + " J: " + mutationsOfJWithoutCDR3.size() + " V: " + mutationsOfV + " J: " + mutationsOfJWithoutCDR3 + " NDN: " + mutationsOfNDN;
-                        }
-                );
-                System.out.println();
-                long count = treeWithMeta.getTree().allNodes()
-                        .filter(node -> node.getNode().getContent().convert(it -> true, it -> false))
-                        .count();
-                System.out.println(treeWithMeta.getVJBase() + " size: " + count);
-                System.out.println(printerOfNDN.print(tree));
-            }
-        }
+    private static NucleotideSequence getCDR3(Tree.NodeWithParent<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> nodeWithParent) {
+        return nodeWithParent.getNode().getContent().convert(
+                cw -> cw.getFeature(CDR3).getSequence(),
+                ancestor -> ancestor.getSequence().getRange(ancestor.getCDR3Begin(), ancestor.getCDR3End())
+        );
     }
 
     private Debug createDebug(int stepNumber) throws IOException {
@@ -297,7 +292,7 @@ public class CommandBuildSHMTree extends ACommandWithOutputMiXCR {
         debugFile.delete();
         debugFile.createNewFile();
         PrintStream debugWriter = new PrintStream(debugFile);
-        XSV.writeXSVHeaders(debugWriter, DebugInfo.COLUMNS_FOR_XSV, ";");
+        XSV.writeXSVHeaders(debugWriter, DebugInfo.COLUMNS_FOR_XSV.keySet(), ";");
         return debugWriter;
     }
 

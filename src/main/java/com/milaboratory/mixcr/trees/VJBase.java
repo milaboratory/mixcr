@@ -7,9 +7,9 @@ import java.util.Objects;
 class VJBase {
     final String VGeneName;
     final String JGeneName;
-    final int CDR3length;
+    final Integer CDR3length;
 
-    public VJBase(String VGeneName, String JGeneName, int CDR3length) {
+    public VJBase(String VGeneName, String JGeneName, Integer CDR3length) {
         this.VGeneName = VGeneName;
         this.JGeneName = JGeneName;
         this.CDR3length = CDR3length;
@@ -20,7 +20,7 @@ class VJBase {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         VJBase vjBase = (VJBase) o;
-        return CDR3length == vjBase.CDR3length && VGeneName.equals(vjBase.VGeneName) && JGeneName.equals(vjBase.JGeneName);
+        return VGeneName.equals(vjBase.VGeneName) && JGeneName.equals(vjBase.JGeneName) && Objects.equals(CDR3length, vjBase.CDR3length);
     }
 
     @Override

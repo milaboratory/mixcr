@@ -1,7 +1,5 @@
 package com.milaboratory.mixcr.trees;
 
-import com.milaboratory.mixcr.util.Java9Util;
-
 import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
@@ -166,7 +164,7 @@ public class TreeBuilderByAncestors<T, E, M> {
                 //                             A   D
                 //
                 // R and C has no common ancestors because R and D haven't one
-                return Java9Util.stream(siblingToMergeWith);
+                return siblingToMergeWith.stream();
             } else {
                 //the added node (A), the chosen node (B), no siblings with common ancestors
                 //

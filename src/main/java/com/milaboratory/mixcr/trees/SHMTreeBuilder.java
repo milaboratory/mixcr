@@ -70,7 +70,7 @@ public class SHMTreeBuilder {
     private final AlignmentScoring<NucleotideSequence> JScoring;
     private Map<Integer, Map<VJBase, DecisionInfo>> decisions = new HashMap<>();
     private Map<VJBase, List<TreeWithMetaBuilder.Snapshot>> currentTrees = new HashMap<>();
-    private Map<VJBase, IdGenerator> idGenerators = new HashMap<>();
+    private final Map<VJBase, IdGenerator> idGenerators = new HashMap<>();
     private final Map<VJBase, ClusterProcessor.CalculatedClusterInfo> calculatedClustersInfo = new HashMap<>();
 
     public SHMTreeBuilder(SHMTreeBuilderParameters parameters,
@@ -272,7 +272,7 @@ public class SHMTreeBuilder {
                 .map(treeWithMetaBuilder -> new TreeWithMeta(
                         treeWithMetaBuilder.buildResult(),
                         treeWithMetaBuilder.getRootInfo(),
-                        VJBase
+                        treeWithMetaBuilder.getTreeId()
                 )).collect(Collectors.toList());
     }
 
