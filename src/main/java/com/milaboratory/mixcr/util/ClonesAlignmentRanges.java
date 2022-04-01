@@ -53,14 +53,10 @@ public class ClonesAlignmentRanges {
     }
 
     public Range cutRange(Range range) {
-        try {
-            return commonRanges.stream()
-                    .filter(it -> it.intersectsWith(range))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("range is not represented in common ranges"));
-        } catch (IllegalArgumentException e) {
-            throw e;
-        }
+        return commonRanges.stream()
+                .filter(it -> it.intersectsWith(range))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("range is not represented in common ranges"));
     }
 
     public boolean containsMutation(int mutation) {

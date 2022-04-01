@@ -11,6 +11,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.milaboratory.mixcr.trees.MutationsUtils.mutationsBetween;
+
 class TreeWithMetaBuilder {
     private final LinkedList<Integer> clonesAdditionHistory;
     private final TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, SyntheticNode, MutationsDescription> treeBuilder;
@@ -88,12 +90,54 @@ class TreeWithMetaBuilder {
         return oldestReconstructedAncestor.getContent();
     }
 
-    Tree<TreeBuilderByAncestors.ObservedOrReconstructed<CloneWrapper, AncestorInfo>> buildResult() {
-        AncestorInfoBuilder ancestorInfoBuilder = new AncestorInfoBuilder();
-        return treeBuilder.getTree().map(node -> node.map(
-                CloneWithMutationsFromReconstructedRoot::getClone,
-                ancestor -> ancestorInfoBuilder.buildAncestorInfo(ancestor.getFromRootToThis())
-        ));
+    Tree<CloneOrFoundAncestor> buildResult() {
+        var reconstructedRoot = oldestReconstructedAncestor();
+        var fromGermlineToReconstructedRoot = reconstructedRoot.getFromRootToThis();
+        return treeBuilder.getTree().map((parent, node) -> {
+            MutationsDescription fromGermlineToParent;
+            if (parent != null) {
+                fromGermlineToParent = asMutations(parent);
+            } else {
+                fromGermlineToParent = null;
+            }
+            var nodeAsMutationsFromGermline = asMutations(node);
+            BigDecimal distanceFromReconstructedRootToNode;
+            if (parent != null) {
+                distanceFromReconstructedRootToNode = treeBuilder.distance.apply(
+                        reconstructedRoot,
+                        mutationsBetween(reconstructedRoot.getFromRootToThis(), nodeAsMutationsFromGermline)
+                );
+            } else {
+                distanceFromReconstructedRootToNode = null;
+            }
+            var rootAsNode = treeBuilder.getTree().getRoot().getContent()
+                    .convert(it -> Optional.<SyntheticNode>empty(), Optional::of)
+                    .orElseThrow();
+            var distanceFromGermlineToNode = treeBuilder.distance.apply(rootAsNode, nodeAsMutationsFromGermline);
+            return node.convert(
+                    c -> new CloneOrFoundAncestor.CloneInfo(
+                            c.getClone(),
+                            node.getId(),
+                            nodeAsMutationsFromGermline,
+                            fromGermlineToReconstructedRoot,
+                            fromGermlineToParent,
+                            distanceFromReconstructedRootToNode,
+                            distanceFromGermlineToNode
+                    ),
+                    ancestor -> new CloneOrFoundAncestor.AncestorInfo(
+                            node.getId(),
+                            nodeAsMutationsFromGermline,
+                            fromGermlineToReconstructedRoot,
+                            fromGermlineToParent,
+                            distanceFromReconstructedRootToNode,
+                            distanceFromGermlineToNode
+                    )
+            );
+        });
+    }
+
+    private MutationsDescription asMutations(TreeBuilderByAncestors.ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, SyntheticNode> parent) {
+        return parent.convert(CloneWithMutationsFromReconstructedRoot::getMutationsFromRoot, SyntheticNode::getFromRootToThis);
     }
 
     Stream<Tree.NodeWithParent<TreeBuilderByAncestors.ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, SyntheticNode>>> allNodes() {
@@ -123,10 +167,6 @@ class TreeWithMetaBuilder {
 
     double distanceFromRootToClone(CloneWithMutationsFromReconstructedRoot rebasedClone) {
         return treeBuilder.distanceFromRootToObserved(rebasedClone).doubleValue();
-    }
-
-    String print(XmlTreePrinter<TreeBuilderByAncestors.ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, SyntheticNode>> printer) {
-        return printer.print(treeBuilder.getTree());
     }
 
     Snapshot snapshot() {

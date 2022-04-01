@@ -41,6 +41,9 @@ public class MutationsWithRange {
         if (!getRangeInfo().getRange().equals(comparison.getRangeInfo().getRange())) {
             throw new IllegalArgumentException();
         }
+        if (!sequence1.equals(comparison.sequence1)) {
+            throw new IllegalArgumentException();
+        }
         NucleotideSequence sequence1 = buildSequence();
         return new MutationsWithRange(
                 sequence1,
@@ -52,6 +55,9 @@ public class MutationsWithRange {
     }
 
     MutationsWithRange combineWith(MutationsWithRange next) {
+        if (!next.getSequence1().getRange(next.getRangeInfo().getRange()).equals(buildSequence())) {
+            throw new IllegalArgumentException();
+        }
         return new MutationsWithRange(
                 sequence1,
                 mutationsForRange().combineWith(next.mutationsForRange().move(getRangeInfo().getRange().getLower())),

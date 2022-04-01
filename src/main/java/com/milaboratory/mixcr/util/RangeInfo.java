@@ -87,8 +87,10 @@ public class RangeInfo {
             } else {
                 return true;
             }
+        } else if (position == range.getUpper()) {
+            return Mutation.isInsertion(mutation);
         } else {
-            return range.getLower() < position && position <= range.getUpper();
+            return range.getLower() < position && position < range.getUpper();
         }
     }
 }

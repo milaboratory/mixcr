@@ -33,20 +33,17 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.util.CountingOutputPort;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.milaboratory.core.mutations.MutationsUtil;
 import com.milaboratory.core.sequence.AminoAcidSequence;
-import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.CloneReader;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.trees.*;
-import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed;
 import com.milaboratory.mixcr.util.Cluster;
 import com.milaboratory.mixcr.util.ExceptionUtil;
 import com.milaboratory.mixcr.util.XSV;
 import com.milaboratory.util.SmartProgressReporter;
-import io.repseq.core.GeneFeature;
 import io.repseq.core.VDJCLibraryRegistry;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.math3.util.Pair;
 import picocli.CommandLine;
 
 import java.io.File;
@@ -55,15 +52,13 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.MessageDigest;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
-import static io.repseq.core.GeneFeature.CDR3;
-import static io.repseq.core.ReferencePoint.*;
+import static com.milaboratory.mixcr.trees.CloneOrFoundAncestor.Base.*;
 
 @CommandLine.Command(name = CommandBuildSHMTree.BUILD_SHM_TREE_COMMAND_NAME,
         sortOptions = false,
@@ -71,6 +66,48 @@ import static io.repseq.core.ReferencePoint.*;
         description = "Builds SHM trees.")
 public class CommandBuildSHMTree extends ACommandWithOutputMiXCR {
     static final String BUILD_SHM_TREE_COMMAND_NAME = "shm_tree";
+
+    private static final Map<String, Function<Tree.NodeWithParent<CloneOrFoundAncestor>, Object>> columnsThatDependOnNode = ImmutableMap.<String, Function<Tree.NodeWithParent<CloneOrFoundAncestor>, Object>>builder()
+            .put("id", it -> it.getNode().getContent().getId())
+            .put("parentId", it -> it.getParent() == null ? null : it.getParent().getContent().getId())
+            .put("cloneId", it -> it.getNode().getContent().getCloneId())
+            .put("count", it -> it.getNode().getContent().getCount())
+            .put("distanceFromGermline", it -> it.getNode().getContent().getDistanceFromGermline())
+            .put("distanceFromReconstructedRoot", it -> it.getNode().getContent().getDistanceFromReconstructedRoot())
+            .put("distanceFromParent", Tree.NodeWithParent::getDistance)
+            .put("CDR3", it -> it.getNode().getContent().getCDR3())
+            .put("CDR3_AA", it -> {
+                var CDR3 = it.getNode().getContent().getCDR3();
+                if (CDR3.size() % 3 == 0) {
+                    return AminoAcidSequence.translate(CDR3);
+                } else {
+                    return "";
+                }
+            })
+            .put("CDR3_VMutations_FromGermline", it -> it.getNode().getContent().CDR3_VMutations(FromGermline))
+            .put("CDR3_VMutations_FromParent", it -> it.getNode().getContent().CDR3_VMutations(FromParent))
+            .put("CDR3_VMutations_FromRoot", it -> it.getNode().getContent().CDR3_VMutations(FromReconstructedRoot))
+            .put("CDR3_AA_VMutations_FromGermline", it -> toString(it.getNode().getContent().CDR3_AA_VMutations(FromGermline)))
+            .put("CDR3_AA_VMutations_FromParent", it -> toString(it.getNode().getContent().CDR3_AA_VMutations(FromParent)))
+            .put("CDR3_AA_VMutations_FromRoot", it -> toString(it.getNode().getContent().CDR3_AA_VMutations(FromReconstructedRoot)))
+            .put("CDR3_JMutations_FromGermline", it -> it.getNode().getContent().CDR3_JMutations(FromGermline))
+            .put("CDR3_JMutations_FromParent", it -> it.getNode().getContent().CDR3_JMutations(FromParent))
+            .put("CDR3_JMutations_FromRoot", it -> it.getNode().getContent().CDR3_JMutations(FromReconstructedRoot))
+            .put("CDR3_AA_JMutations_FromGermline", it -> toString(it.getNode().getContent().CDR3_AA_JMutations(FromGermline)))
+            .put("CDR3_AA_JMutations_FromParent", it -> toString(it.getNode().getContent().CDR3_AA_JMutations(FromParent)))
+            .put("CDR3_AA_JMutations_FromRoot", it -> toString(it.getNode().getContent().CDR3_AA_JMutations(FromReconstructedRoot)))
+            .put("CDR3_NDN_FromGermline", it -> it.getNode().getContent().CDR3_NDNMutations(FromGermline))
+            .put("CDR3_NDN_FromParent", it -> it.getNode().getContent().CDR3_NDNMutations(FromParent))
+            .put("CDR3_NDN_FromRoot", it -> it.getNode().getContent().CDR3_NDNMutations(FromReconstructedRoot))
+            .put("CGene", it -> it.getNode().getContent().getCGeneName())
+            .build();
+
+    private static String toString(MutationsUtil.MutationNt2AADescriptor[] array) {
+        if (array == null) {
+            return "";
+        }
+        return Arrays.stream(array).map(Object::toString).collect(Collectors.joining());
+    }
 
     @CommandLine.Parameters(
             arity = "2..*",
@@ -139,15 +176,7 @@ public class CommandBuildSHMTree extends ACommandWithOutputMiXCR {
     }
 
     public String getReport() {
-        if (report != null) {
-            return report;
-        } else {
-            return FilenameUtils.removeExtension(getOutputPath()) + ".report";
-        }
-    }
-
-    public String getOutputPath() {
-        return getOutputFiles().get(0);
+        return Objects.requireNonNullElseGet(report, () -> FilenameUtils.removeExtension(getOutputZipPath()) + ".report");
     }
 
     @Override
@@ -211,30 +240,13 @@ public class CommandBuildSHMTree extends ACommandWithOutputMiXCR {
         var outputDirInTmp = Files.createTempDirectory("tree_outputs").toFile();
         outputDirInTmp.deleteOnExit();
 
-        var columnsThatDependOnNode = ImmutableMap.<String, Function<Tree.NodeWithParent<ObservedOrReconstructed<CloneWrapper, AncestorInfo>>, Object>>builder()
-                .put("id", it -> it.getNode().getContent().getId())
-                .put("parentId", it -> it.getParent() == null ? null : it.getParent().getContent().getId())
-                .put("cloneId", it -> it.getNode().getContent().convert(cw -> cw.clone.getId(), __ -> null))
-                .put("CDR3", CommandBuildSHMTree::getCDR3)
-                .put("CDR3_AA", it -> {
-                    var CDR3 = getCDR3(it);
-                    if (CDR3.size() % 3 == 0) {
-                        return AminoAcidSequence.translate(CDR3);
-                    } else {
-                        return "";
-                    }
-                })
-                .put("sequence", nodeWithParent -> nodeWithParent.getNode().getContent().convert(
-                        it -> it.clone.getTarget(0).getSequence(),
-                        AncestorInfo::getSequence
-                ))
-                .build();
-
         var columnsThatDependOnTree = ImmutableMap.<String, Function<TreeWithMeta, Object>>builder()
                 .put("treeId", it -> it.getTreeId().encode())
+                .put("VGene", it -> it.getRootInfo().getVJBase().VGeneName)
+                .put("JGene", it -> it.getRootInfo().getVJBase().JGeneName)
                 .build();
 
-        var nodesTableFile = outputDirInTmp.toPath().resolve("nodes.csv").toFile();
+        var nodesTableFile = outputDirInTmp.toPath().resolve("nodes.tsv").toFile();
         nodesTableFile.createNewFile();
         var nodesTable = new PrintStream(nodesTableFile);
 
@@ -242,21 +254,28 @@ public class CommandBuildSHMTree extends ACommandWithOutputMiXCR {
                 .addAll(columnsThatDependOnNode.keySet())
                 .addAll(columnsThatDependOnTree.keySet())
                 .build();
-        XSV.writeXSVHeaders(nodesTable, allColumnNames, ";");
+        XSV.writeXSVHeaders(nodesTable, allColumnNames, "\t");
+
+        var printer = new NewickTreePrinter<CloneOrFoundAncestor>(it -> Integer.toString(it.getContent().getId()), true, false);
 
         for (Cluster<CloneWrapper> cluster : CUtils.it(shmTreeBuilder.buildClusters(sortedClones))) {
-            for (TreeWithMeta tree : shmTreeBuilder.getResult(cluster, previousStepDebug.treesAfterDecisionsWriter)) {
-                var columnsBuilder = ImmutableMap.<String, Function<Tree.NodeWithParent<ObservedOrReconstructed<CloneWrapper, AncestorInfo>>, Object>>builder()
+            for (TreeWithMeta treeWithMeta : shmTreeBuilder.getResult(cluster, previousStepDebug.treesAfterDecisionsWriter)) {
+                var columnsBuilder = ImmutableMap.<String, Function<Tree.NodeWithParent<CloneOrFoundAncestor>, Object>>builder()
                         .putAll(columnsThatDependOnNode);
-                columnsThatDependOnTree.forEach((key, function) -> columnsBuilder.put(key, __ -> function.apply(tree)));
+                columnsThatDependOnTree.forEach((key, function) -> columnsBuilder.put(key, __ -> function.apply(treeWithMeta)));
                 var columns = columnsBuilder.build();
 
-                var nodes = tree.getTree()
+                var nodes = treeWithMeta.getTree()
                         .allNodes()
                         .collect(Collectors.toList());
-                XSV.writeXSVBody(nodesTable, nodes, columns, ";");
+                XSV.writeXSVBody(nodesTable, nodes, columns, "\t");
+
+                var treeFile = outputDirInTmp.toPath().resolve(treeWithMeta.getTreeId().encode() + ".tree").toFile();
+                Files.writeString(treeFile.toPath(), printer.print(treeWithMeta.getTree()));
             }
         }
+
+        zip(outputDirInTmp.toPath(), Path.of(getOutputZipPath()));
 
         for (int i = 0; i <= shmTreeBuilderParameters.stepsOrder.size(); i++) {
             stepNumber = i + 1;
@@ -273,11 +292,21 @@ public class CommandBuildSHMTree extends ACommandWithOutputMiXCR {
         }
     }
 
-    private static NucleotideSequence getCDR3(Tree.NodeWithParent<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> nodeWithParent) {
-        return nodeWithParent.getNode().getContent().convert(
-                cw -> cw.getFeature(CDR3).getSequence(),
-                ancestor -> ancestor.getSequence().getRange(ancestor.getCDR3Begin(), ancestor.getCDR3End())
-        );
+    private static void zip(Path sourceDir, Path destination) throws IOException {
+        try (ZipOutputStream zs = new ZipOutputStream(Files.newOutputStream(destination))) {
+            Files.walk(sourceDir)
+                    .filter(path -> !Files.isDirectory(path))
+                    .forEach(path -> {
+                        ZipEntry zipEntry = new ZipEntry(sourceDir.relativize(path).toString());
+                        try {
+                            zs.putNextEntry(zipEntry);
+                            Files.copy(path, zs);
+                            zs.closeEntry();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+        }
     }
 
     private Debug createDebug(int stepNumber) throws IOException {
@@ -298,59 +327,6 @@ public class CommandBuildSHMTree extends ACommandWithOutputMiXCR {
 
     private File debugFile(int stepNumber, String suffix) {
         return debugDirectory.resolve("step_" + stepNumber + "_" + suffix + ".csv").toFile();
-    }
-
-    private NucleotideSequence getSequence(ObservedOrReconstructed<CloneWrapper, AncestorInfo> content) {
-        return content.convert(
-                cloneWrapper -> cloneWrapper.clone.getTarget(0).getSequence(),
-                AncestorInfo::getSequence
-        );
-    }
-
-    private String md5(NucleotideSequence sequence) {
-        return ExceptionUtil.wrap(() -> {
-            MessageDigest md5 = MessageDigest.getInstance("MD5");
-            for (int i = 0; i < sequence.size(); i++) {
-                md5.update(sequence.codeAt(i));
-            }
-            return new String(Base64.getEncoder().encode(md5.digest()));
-        }).get();
-    }
-
-    private Pair<String, NucleotideSequence> idPair(ObservedOrReconstructed<CloneWrapper, AncestorInfo> content) {
-        return Pair.create(
-                content.convert(
-                        cloneWrapper -> String.valueOf(cloneWrapper.clone.getId()),
-                        seq -> "?"
-                ),
-                getSequence(content)
-        );
-    }
-
-    private NucleotideSequence getCDR3(ObservedOrReconstructed<CloneWrapper, AncestorInfo> content) {
-        return content.convert(
-                cloneWrapper -> cloneWrapper.clone.getNFeature(GeneFeature.CDR3),
-                ancestorInfo -> ancestorInfo.getSequence().getRange(ancestorInfo.getCDR3Begin(), ancestorInfo.getCDR3End())
-        );
-    }
-
-    private NucleotideSequence getV(Tree.Node<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> node, RootInfo rootInfo) {
-        return node.getContent().convert(
-                cloneWrapper -> cloneWrapper.clone.getNFeature(new GeneFeature(FR1End, CDR3Begin))
-                        .concatenate(cloneWrapper.clone.getNFeature(CDR3).getRange(0, rootInfo.getVRangeInCDR3().length())),
-                ancestorInfo -> ancestorInfo.getSequence().getRange(0, ancestorInfo.getCDR3Begin() + rootInfo.getVRangeInCDR3().length())
-        );
-    }
-
-    private NucleotideSequence getJ(Tree.Node<ObservedOrReconstructed<CloneWrapper, AncestorInfo>> node, RootInfo rootInfo) {
-        return node.getContent().convert(
-                cloneWrapper -> {
-                    NucleotideSequence CDR3 = cloneWrapper.clone.getNFeature(GeneFeature.CDR3);
-                    return CDR3.getRange(CDR3.size() - rootInfo.getJRangeInCDR3().length(), CDR3.size())
-                            .concatenate(cloneWrapper.clone.getNFeature(new GeneFeature(CDR3End, FR4End)));
-                },
-                ancestorInfo -> ancestorInfo.getSequence().getRange(ancestorInfo.getCDR3End() - rootInfo.getJRangeInCDR3().length(), ancestorInfo.getSequence().size())
-        );
     }
 
     public static class Debug {

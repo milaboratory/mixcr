@@ -1,12 +1,12 @@
 package com.milaboratory.mixcr.trees;
 
 public class TreeWithMeta {
-    private final Tree<TreeBuilderByAncestors.ObservedOrReconstructed<CloneWrapper, AncestorInfo>> tree;
+    private final Tree<CloneOrFoundAncestor> tree;
     private final RootInfo rootInfo;
     private final TreeWithMetaBuilder.TreeId treeId;
 
     public TreeWithMeta(
-            Tree<TreeBuilderByAncestors.ObservedOrReconstructed<CloneWrapper, AncestorInfo>> tree,
+            Tree<CloneOrFoundAncestor> tree,
             RootInfo rootInfo,
             TreeWithMetaBuilder.TreeId treeId
     ) {
@@ -19,7 +19,7 @@ public class TreeWithMeta {
         return treeId;
     }
 
-    public Tree<TreeBuilderByAncestors.ObservedOrReconstructed<CloneWrapper, AncestorInfo>> getTree() {
+    public Tree<CloneOrFoundAncestor> getTree() {
         return tree;
     }
 

@@ -4,9 +4,9 @@ import io.repseq.core.GeneType;
 
 import java.util.Objects;
 
-class VJBase {
-    final String VGeneName;
-    final String JGeneName;
+public class VJBase {
+    public final String VGeneName;
+    public final String JGeneName;
     final Integer CDR3length;
 
     public VJBase(String VGeneName, String JGeneName, Integer CDR3length) {

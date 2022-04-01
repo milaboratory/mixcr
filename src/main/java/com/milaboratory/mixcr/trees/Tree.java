@@ -33,7 +33,7 @@ import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -62,8 +62,8 @@ public class Tree<T> {
         );
     }
 
-    public <R> Tree<R> map(Function<T, R> mapper) {
-        return new Tree<>(root.map(mapper));
+    public <R> Tree<R> map(BiFunction<T, T, R> mapper) {
+        return new Tree<>(root.map(null, mapper));
     }
 
     public static class Node<T> {
@@ -119,9 +119,9 @@ public class Tree<T> {
                     );
         }
 
-        public <R> Node<R> map(Function<T, R> mapper) {
-            Node<R> mappedNode = new Node<>(mapper.apply(content));
-            children.forEach(child -> mappedNode.addChild(child.node.map(mapper), child.distance));
+        public <R> Node<R> map(T parent, BiFunction<T, T, R> mapper) {
+            Node<R> mappedNode = new Node<>(mapper.apply(parent, content));
+            children.forEach(child -> mappedNode.addChild(child.node.map(content, mapper), child.distance));
             return mappedNode;
         }
     }

@@ -18,7 +18,7 @@ public class TreeBuilderByAncestors<T, E, M> {
             .thenComparing(Action::changeOfDistance)
             .thenComparing(action -> action instanceof TreeBuilderByAncestors.Insert ? 1 : -1);
 
-    private final BiFunction<E, M, BigDecimal> distance;
+    final BiFunction<E, M, BigDecimal> distance;
     /**
      * parent, observed -> reconstructed
      */

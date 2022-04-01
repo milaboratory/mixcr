@@ -70,6 +70,16 @@ public class BuildSequenceTest {
     }
 
     @Test
+    public void mutationsWithInsertionAtTheEndOfRange() {
+        NucleotideSequence parent = new NucleotideSequence("CCCTTT");
+        Mutations<NucleotideSequence> mutations = new Mutations<>(NucleotideSequence.ALPHABET, "I3A");
+        NucleotideSequence child = mutations.mutate(parent);
+        assertEquals("CCCATTT", child.toString());
+        assertEquals("[I3:A]", new RangeInfo(new Range(0, 3), true).extractAbsoluteMutations(mutations).toString());
+        assertEquals("[I3:A]", new RangeInfo(new Range(0, 3), false).extractAbsoluteMutations(mutations).toString());
+    }
+
+    @Test
     public void insertionOnBoundary() {
         NucleotideSequence parent = new NucleotideSequence("CCCTTT");
         Mutations<NucleotideSequence> mutations = new Mutations<>(NucleotideSequence.ALPHABET, "I3A");

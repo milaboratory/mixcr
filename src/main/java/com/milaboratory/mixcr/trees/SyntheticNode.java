@@ -20,13 +20,13 @@ class SyntheticNode {
         return new SyntheticNode(fromRootToThis);
     }
 
-    public static SyntheticNode createFromParentAndDiffOfParentAndChild(MutationsDescription fromRootToParent, MutationsDescription fromParentToThis) {
+    public SyntheticNode mutate(MutationsDescription fromParentToThis) {
         return new SyntheticNode(new MutationsDescription(
-                MutationsUtils.combine(fromRootToParent.getVMutationsWithoutCDR3(), fromParentToThis.getVMutationsWithoutCDR3()),
-                fromRootToParent.getVMutationsInCDR3WithoutNDN().combineWith(fromParentToThis.getVMutationsInCDR3WithoutNDN()),
-                fromRootToParent.getKnownNDN().combineWith(fromParentToThis.getKnownNDN()),
-                fromRootToParent.getJMutationsInCDR3WithoutNDN().combineWith(fromParentToThis.getJMutationsInCDR3WithoutNDN()),
-                MutationsUtils.combine(fromRootToParent.getJMutationsWithoutCDR3(), fromParentToThis.getJMutationsWithoutCDR3())
+                MutationsUtils.combine(fromRootToThis.getVMutationsWithoutCDR3(), fromParentToThis.getVMutationsWithoutCDR3()),
+                fromRootToThis.getVMutationsInCDR3WithoutNDN().combineWith(fromParentToThis.getVMutationsInCDR3WithoutNDN()),
+                fromRootToThis.getKnownNDN().combineWith(fromParentToThis.getKnownNDN()),
+                fromRootToThis.getJMutationsInCDR3WithoutNDN().combineWith(fromParentToThis.getJMutationsInCDR3WithoutNDN()),
+                MutationsUtils.combine(fromRootToThis.getJMutationsWithoutCDR3(), fromParentToThis.getJMutationsWithoutCDR3())
         ));
     }
 
