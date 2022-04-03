@@ -3,6 +3,8 @@ import com.palantir.gradle.gitversion.VersionDetails
 import groovy.lang.Closure
 import java.net.InetAddress
 
+gradle.startParameter.excludedTaskNames += listOf("assembleDist", "assembleShadowDist", "distTar", "distZip", "installDist", "installShadowDist", "shadowDistTar", "shadowDistZip")
+
 plugins {
     `java-library`
     application
@@ -107,6 +109,7 @@ val shadowJar = tasks.withType<ShadowJar> {
 }
 
 val distributionZip by tasks.registering(Zip::class) {
+    group = "distribution"
     archiveFileName.set("${project.name}.zip")
     destinationDirectory.set(file("$buildDir/distributions"))
     from(shadowJar) {
@@ -143,10 +146,10 @@ tasks.test {
     minHeapSize = "1024m"
     maxHeapSize = "2048m"
 
-     miCiStage?.let {
-         if (it == "test") {
-             systemProperty("longTests", "true");
-         }
-     }
+    miCiStage?.let {
+        if (it == "test") {
+            systemProperty("longTests", "true");
+        }
+    }
     longTests?.let { systemProperty("longTests", it) }
 }
