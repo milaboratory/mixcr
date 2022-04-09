@@ -11,6 +11,7 @@ import com.itextpdf.layout.layout.LayoutArea
 import com.itextpdf.layout.layout.LayoutContext
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorStat
+import org.apache.commons.io.output.NullOutputStream
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.annotations.DataSchema
 import org.jetbrains.kotlinx.dataframe.api.maxOfOrNull
@@ -76,7 +77,7 @@ object Preprocessing {
         val bs = ByteArrayOutputStream()
         val pdfDoc = PdfDocument(PdfWriter(bs))
 
-        val dummyDoc = Document(PdfDocument(PdfWriter(OutputStream.nullOutputStream())))
+        val dummyDoc = Document(PdfDocument(PdfWriter(NullOutputStream.NULL_OUTPUT_STREAM)))
         val renderer = table.createRendererSubTree().setParent(dummyDoc.renderer)
         val layout =
             renderer.layout(LayoutContext(LayoutArea(0, Rectangle(1000.0f, 1000.0f))))

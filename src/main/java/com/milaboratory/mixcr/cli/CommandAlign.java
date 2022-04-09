@@ -551,6 +551,11 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                 progress = SmartProgressReporter.extractProgress((CountLimitingOutputPort<?>) sReads);
             }
 
+            // Shifting indels in homopolymers is effective only for alignments build with linear gap scoring,
+            // consolidating some gaps, on the contrary, for alignments obtained with affine scoring such procedure
+            // may break the alignment (gaps there are already consolidated as much as possible)
+            Set<GeneType> gtRequiringIndelShifts = alignerParameters.getGeneTypesWithLinearScoring();
+
             EnumMap<GeneType, VDJCHit[]> emptyHits = new EnumMap<>(GeneType.class);
             for (GeneType gt : GeneType.values())
                 if (alignerParameters.getGeneAlignerParameters(gt) != null)
@@ -597,9 +602,10 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                 });
                 reporter.start();
             }
+
             OutputPort<VDJCAlignmentResult> alignments = unchunked(
                     CUtils.wrap(alignedChunks,
-                            CUtils.<VDJCAlignmentResult, VDJCAlignmentResult>chunked(VDJCAlignmentResult::shiftIndelsAtHomopolymers)));
+                            CUtils.<VDJCAlignmentResult, VDJCAlignmentResult>chunked(al -> al.shiftIndelsAtHomopolymers(gtRequiringIndelShifts))));
             for (VDJCAlignmentResult result : CUtils.it(new OrderedOutputPort<>(alignments, o -> o.read.getId()))) {
                 VDJCAlignments alignment = result.alignment;
                 SequenceRead read = result.read;

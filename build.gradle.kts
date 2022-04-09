@@ -4,19 +4,14 @@ import groovy.lang.Closure
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.InetAddress
 
-
-val miplotsVersion = "1.0.0"
-val milibVersion = "2.0.0"
-val repseqioVersion = "1.3.5-10-05b9291c5e"
-val jacksonVersion = "2.12.4"
-val dataframeVersion = "0.8.0-rc-7"
+gradle.startParameter.excludedTaskNames += listOf("assembleDist", "assembleShadowDist", "distTar", "distZip", "installDist", "installShadowDist", "shadowDistTar", "shadowDistZip")
 
 plugins {
     `java-library`
     application
     `maven-publish`
     id("com.palantir.git-version") version "0.13.0"
-    id("com.github.johnrengelman.shadow") version "7.0.0"
+    id("com.github.johnrengelman.shadow") version "7.1.2"
     kotlin("jvm") version "1.6.10"
     id("org.jetbrains.kotlin.plugin.dataframe") version "0.8.0-rc-7"
 }
@@ -24,20 +19,28 @@ plugins {
 // Make IDE aware of the generated code:
 kotlin.sourceSets.getByName("main").kotlin.srcDir("build/generated/ksp/main/kotlin/")
 
-val miRepoAccessKeyId: String by project
-val miRepoSecretAccessKey: String by project
+val miRepoAccessKeyId: String? by project
+val miRepoSecretAccessKey: String? by project
+
+// val miGitHubMavenUser: String by project
+// val miGitHubMavenToken: String by project
 
 val versionDetails: Closure<VersionDetails> by extra
 val gitDetails = versionDetails()
 
-val longTests: String? by project
-
 group = "com.milaboratory"
-val gitLastTag = gitDetails.lastTag.removePrefix("v")
-version =
-    if (gitDetails.commitDistance == 0) gitLastTag
-    else "${gitLastTag}-${gitDetails.commitDistance}-${gitDetails.gitHash}"
+version = if (version != "unspecified") version else ""
 description = "MiXCR"
+
+fun boolProperty(name: String): Boolean {
+    return ((properties[name] as String?) ?: "false").toBoolean()
+}
+
+val isMiCi = boolProperty("mi-ci")
+val isRelease = boolProperty("mi-release")
+
+val longTests: String? by project
+val miCiStage = properties["mi-ci-stage"] as String?
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
@@ -45,51 +48,50 @@ java {
     withJavadocJar()
 }
 
-application {
-    mainClass.set("com.milaboratory.mixcr.cli.Main")
-}
-
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
+}
+
+tasks.withType<KotlinCompile> { // this affects to all kotlinCompilation tasks
+    kotlinOptions.jvmTarget = "11"
+}
+
+application {
+    mainClass.set("com.milaboratory.mixcr.cli.Main")
 }
 
 tasks.withType<Javadoc> {
     (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
 }
 
-tasks.register("createInfoFile") {
-    doLast {
-        projectDir
-            .resolve("build_info.json")
-            .writeText("""{"version":"$version"}""")
-    }
-}
-
 repositories {
     mavenCentral()
-    maven("https://jitpack.io")
 
-    // Snapshot versions of milib and repseqio distributed via this repo
+    // Snapshot versions of redberry-pipe, milib and repseqio distributed via this repo
     maven {
         url = uri("https://pub.maven.milaboratory.com")
     }
 }
 
+val miplotsVersion = "0.1-19-master"
+val milibVersion = "1.15.0-13-master"
+val dataframeVersion = "0.8.0-rc-7"
+val repseqioVersion = "1.3.5-24-master"
+val jacksonVersion = "2.13.2"
+
 dependencies {
     api("com.milaboratory:milib:$milibVersion")
+    api("com.milaboratory:miplots:$miplotsVersion")
     api("io.repseq:repseqio:$repseqioVersion") {
         exclude("com.milaboratory", "milib")
     }
 
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("commons-io:commons-io:2.7")
-    implementation("commons-io:commons-io:2.7")
     implementation("org.lz4:lz4-java:1.4.1")
     implementation("net.sf.trove4j:trove4j:3.0.3")
     implementation("info.picocli:picocli:4.1.1")
-    implementation("com.google.guava:guava:30.1.1-jre")
-
-    api("com.milaboratory:miplots:$miplotsVersion")
+    implementation("com.google.guava:guava:31.1-jre")
     implementation("com.itextpdf:itext7-core:7.2.1")
     implementation("com.itextpdf:layout:7.2.1")
 
@@ -134,6 +136,7 @@ val shadowJar = tasks.withType<ShadowJar> {
 }
 
 val distributionZip by tasks.registering(Zip::class) {
+    group = "distribution"
     archiveFileName.set("${project.name}.zip")
     destinationDirectory.set(file("$buildDir/distributions"))
     from(shadowJar) {
@@ -145,14 +148,16 @@ val distributionZip by tasks.registering(Zip::class) {
 
 publishing {
     repositories {
-        maven {
-            name = "mipriv"
-            url = uri("s3://milaboratory-artefacts-private-files.s3.eu-central-1.amazonaws.com/maven")
+        if (miRepoAccessKeyId != null) {
+            maven {
+                name = "mipriv"
+                url = uri("s3://milaboratory-artefacts-private-files.s3.eu-central-1.amazonaws.com/maven")
 
-            authentication {
-                credentials(AwsCredentials::class) {
-                    accessKey = miRepoAccessKeyId
-                    secretKey = miRepoSecretAccessKey
+                authentication {
+                    credentials(AwsCredentials::class) {
+                        accessKey = miRepoAccessKeyId!!
+                        secretKey = miRepoSecretAccessKey!!
+                    }
                 }
             }
         }
@@ -168,14 +173,10 @@ tasks.test {
     minHeapSize = "1024m"
     maxHeapSize = "2048m"
 
+    miCiStage?.let {
+        if (it == "test") {
+            systemProperty("longTests", "true");
+        }
+    }
     longTests?.let { systemProperty("longTests", it) }
-}
-
-val compileKotlin: KotlinCompile by tasks
-compileKotlin.kotlinOptions {
-    jvmTarget = "11"
-}
-val compileTestKotlin: KotlinCompile by tasks
-compileTestKotlin.kotlinOptions {
-    jvmTarget = "11"
 }

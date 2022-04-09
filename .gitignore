@@ -3,10 +3,10 @@ target
 *.iml
 .idea
 doc/_build
-.floo
-.flooignore
 out
 test_target
 src/test/resources/sequences/big
 tmp
 pack
+.gradle
+build

@@ -8,15 +8,21 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence;
 import com.milaboratory.mixcr.export.AirrUtil.AirrAlignment;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
-import io.repseq.core.VDJCGene;
+import io.repseq.core.*;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
 public final class AirrColumns {
     private AirrColumns() {
+    }
+
+    private static String airrStr(String str) {
+        return str == null ? "" : str;
+    }
+
+    private static String airrBoolean(Boolean value) {
+        return value == null ? "" : value ? "T" : "F";
     }
 
     public static final class CloneId implements FieldExtractor<AirrVDJCObjectWrapper> {
@@ -82,8 +88,14 @@ public final class AirrColumns {
 
         @Override
         public String extractValue(AirrVDJCObjectWrapper object) {
-            // TODO better implementation
-            return "T";
+            NSequenceWithQuality cdr3nt = object.object.getFeature(GeneFeature.CDR3);
+            AminoAcidSequence cdr3aa = object.object.getAAFeature(GeneFeature.CDR3);
+            return airrBoolean(
+                    cdr3nt != null
+                            && cdr3aa != null
+                            && cdr3nt.size() % 3 == 0
+                            && !cdr3aa.containStops()
+            );
         }
     }
 
@@ -128,9 +140,11 @@ public final class AirrColumns {
 
     public static abstract class AirrAlignmentExtractor implements FieldExtractor<AirrVDJCObjectWrapper> {
         private final int targetId;
+        protected final boolean withPadding;
 
-        public AirrAlignmentExtractor(int targetId) {
+        public AirrAlignmentExtractor(int targetId, boolean withPadding) {
             this.targetId = targetId;
+            this.withPadding = withPadding;
         }
 
         public abstract String extractValue(AirrAlignment object);
@@ -138,14 +152,16 @@ public final class AirrColumns {
         @Override
         public String extractValue(AirrVDJCObjectWrapper object) {
             int resolvedTargetId = targetId == -1 ? object.getBestTarget() : targetId;
-            AirrAlignment alignment = object.getAirrAlignment(resolvedTargetId);
-            return extractValue(alignment);
+            AirrAlignment alignment = object.getAirrAlignment(resolvedTargetId, withPadding);
+            if (alignment == null)
+                return "";
+            return airrStr(extractValue(alignment));
         }
     }
 
     public static final class SequenceAlignment extends AirrAlignmentExtractor {
-        public SequenceAlignment(int targetId) {
-            super(targetId);
+        public SequenceAlignment(int targetId, boolean withPadding) {
+            super(targetId, withPadding);
         }
 
         @Override
@@ -155,13 +171,13 @@ public final class AirrColumns {
 
         @Override
         public String extractValue(AirrAlignment object) {
-            return object.sequence;
+            return airrStr(object.getSequence(withPadding));
         }
     }
 
     public static final class GermlineAlignment extends AirrAlignmentExtractor {
-        public GermlineAlignment(int targetId) {
-            super(targetId);
+        public GermlineAlignment(int targetId, boolean withPadding) {
+            super(targetId, withPadding);
         }
 
         @Override
@@ -171,16 +187,150 @@ public final class AirrColumns {
 
         @Override
         public String extractValue(AirrAlignment object) {
-            return object.germline;
+            return airrStr(object.getGermline(withPadding));
         }
     }
 
-    public static final class NFeature implements FieldExtractor<AirrVDJCObjectWrapper> {
-        private final GeneFeature feature;
+    public interface ComplexReferencePoint {
+        int getPosition(SequencePartitioning partitioning, GeneFeature referenceFeature);
+    }
+
+    public static final class Single implements ComplexReferencePoint {
+        private final ReferencePoint point;
+
+        public Single(ReferencePoint refPoint) {
+            this.point = refPoint;
+        }
+
+        @Override
+        public int getPosition(SequencePartitioning partitioning, GeneFeature referenceFeature) {
+            return referenceFeature == null
+                    ? partitioning.getPosition(point)
+                    : partitioning.getRelativePosition(referenceFeature, point);
+        }
+
+        @Override
+        public String toString() {
+            return point.toString();
+        }
+    }
+
+    public static final class Rightmost implements ComplexReferencePoint {
+        private final ComplexReferencePoint[] points;
+
+        public Rightmost(ReferencePoint... points) {
+            this.points = new ComplexReferencePoint[points.length];
+            for (int i = 0; i < points.length; i++)
+                this.points[i] = new Single(points[i]);
+        }
+
+        public Rightmost(ComplexReferencePoint... points) {
+            this.points = points;
+        }
+
+        @Override
+        public int getPosition(SequencePartitioning partitioning, GeneFeature referenceFeature) {
+            int result = -1;
+            for (ComplexReferencePoint rp : points) {
+                int position = rp.getPosition(partitioning, referenceFeature);
+                if (position < 0)
+                    continue;
+                result = Math.max(result, position);
+            }
+            return result;
+        }
+
+        @Override
+        public String toString() {
+            return "Rightmost{" + Arrays.toString(points) + '}';
+        }
+    }
+
+    public static final class Leftmost implements ComplexReferencePoint {
+        private final ComplexReferencePoint[] points;
+
+        public Leftmost(ReferencePoint... points) {
+            this.points = new ComplexReferencePoint[points.length];
+            for (int i = 0; i < points.length; i++)
+                this.points[i] = new Single(points[i]);
+        }
+
+        public Leftmost(ComplexReferencePoint... points) {
+            this.points = points;
+        }
+
+        @Override
+        public int getPosition(SequencePartitioning partitioning, GeneFeature referenceFeature) {
+            int result = Integer.MAX_VALUE;
+            for (ComplexReferencePoint rp : points) {
+                int position = rp.getPosition(partitioning, referenceFeature);
+                if (position < 0)
+                    continue;
+                result = Math.min(result, position);
+            }
+            return result == Integer.MAX_VALUE ? -1 : result;
+        }
+
+        @Override
+        public String toString() {
+            return "Leftmost{" + Arrays.toString(points) + '}';
+        }
+    }
+
+    public final static class NFeatureFromAlign extends AirrAlignmentExtractor {
+        private final ComplexReferencePoint from, to;
         private final String header;
 
-        public NFeature(GeneFeature feature, String header) {
+        public NFeatureFromAlign(int targetId, boolean withPadding,
+                                 ComplexReferencePoint from, ComplexReferencePoint to,
+                                 String header) {
+            super(targetId, withPadding);
+            this.from = from;
+            this.to = to;
+            this.header = header;
+        }
+
+        @Override
+        public String getHeader() {
+            return header;
+        }
+
+        @Override
+        public String extractValue(AirrAlignment object) {
+            return object.getSequence(from, to, withPadding);
+        }
+    }
+
+    public abstract static class NFeatureAbstract implements FieldExtractor<AirrVDJCObjectWrapper> {
+        /**
+         * Used only for complex features
+         */
+        protected final int targetId;
+        /**
+         * Not null for simple gene features
+         */
+        protected final GeneFeature feature;
+        /**
+         * Not null for complex gene features.
+         */
+        protected final ComplexReferencePoint from, to;
+        protected final String header;
+
+        public NFeatureAbstract(int targetId,
+                                ComplexReferencePoint from, ComplexReferencePoint to,
+                                String header) {
+            this.targetId = targetId;
+            this.feature = null;
+            this.from = from;
+            this.to = to;
+            this.header = header;
+        }
+
+        public NFeatureAbstract(GeneFeature feature, String header) {
+            this.targetId = -1; // will not be used
             this.feature = feature;
+            this.from = null;
+            this.to = null;
             this.header = header;
         }
 
@@ -191,10 +341,66 @@ public final class AirrColumns {
 
         @Override
         public String extractValue(AirrVDJCObjectWrapper object) {
-            NSequenceWithQuality feature = object.object.getFeature(this.feature);
-            if (feature == null)
-                return "";
-            return feature.getSequence().toString();
+            if (feature != null) {
+                NSequenceWithQuality feature = object.object.getFeature(this.feature);
+                if (feature == null)
+                    return "";
+                return extractValue(feature.getSequence());
+            } else {
+                int resolvedTargetId = targetId == -1 ? object.getBestTarget() : targetId;
+
+                assert from != null && to != null;
+                SequencePartitioning partitioning = object.object.getPartitionedTarget(resolvedTargetId).getPartitioning();
+
+                int fromPosition = from.getPosition(partitioning, null);
+                if (fromPosition < 0)
+                    return "";
+
+                int toPosition = to.getPosition(partitioning, null);
+                if (toPosition < 0)
+                    return "";
+
+                if (fromPosition < toPosition)
+                    return extractValue(object.object.getTarget(resolvedTargetId).getSequence().getRange(fromPosition, toPosition));
+                else
+                    return extractValue(NucleotideSequence.EMPTY);
+            }
+        }
+
+        protected abstract String extractValue(NucleotideSequence feature);
+    }
+
+    public static final class NFeature extends NFeatureAbstract {
+        public NFeature(int targetId,
+                        ComplexReferencePoint from, ComplexReferencePoint to,
+                        String header) {
+            super(targetId, from, to, header);
+        }
+
+        public NFeature(GeneFeature feature, String header) {
+            super(feature, header);
+        }
+
+        @Override
+        public String extractValue(NucleotideSequence feature) {
+            return feature.toString();
+        }
+    }
+
+    public static final class NFeatureLength extends NFeatureAbstract {
+        public NFeatureLength(int targetId,
+                              ComplexReferencePoint from, ComplexReferencePoint to,
+                              String header) {
+            super(targetId, from, to, header);
+        }
+
+        public NFeatureLength(GeneFeature feature, String header) {
+            super(feature, header);
+        }
+
+        @Override
+        public String extractValue(NucleotideSequence feature) {
+            return "" + feature.size();
         }
     }
 
@@ -308,8 +514,8 @@ public final class AirrColumns {
         private final GeneType geneType;
         private final boolean start;
 
-        public AirrAlignmentBoundary(int targetId, GeneType geneType, boolean start) {
-            super(targetId);
+        public AirrAlignmentBoundary(int targetId, boolean withPadding, GeneType geneType, boolean start) {
+            super(targetId, withPadding);
             this.geneType = geneType;
             this.start = start;
         }
@@ -322,7 +528,7 @@ public final class AirrColumns {
 
         @Override
         public String extractValue(AirrAlignment object) {
-            Range range = object.ranges.get(geneType);
+            Range range = object.getRange(geneType, withPadding);
             if (range == null)
                 return "";
             return "" + (start ? range.getLower() + 1 : range.getUpper());
@@ -357,7 +563,7 @@ public final class AirrColumns {
         public String extractValue(AirrVDJCObjectWrapper object) {
             int resolvedTargetId = targetId == -1 ? object.getBestTarget() : targetId;
             VDJCPartitionedSequence partitionedTarget = object.object.getPartitionedTarget(resolvedTargetId);
-            return partitionedTarget.getPartitioning().isAvailable(GeneFeature.VDJRegion) ? "T" : "F";
+            return airrBoolean(partitionedTarget.getPartitioning().isAvailable(GeneFeature.VDJRegion));
         }
     }
 }

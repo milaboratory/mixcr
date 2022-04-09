@@ -124,7 +124,7 @@ public class FieldExtractorsTest {
 
         Integer[][] r = goAssert.go("{CDR3Begin(-250):VEnd(-3)} 'CCAAA' {DBegin(0):DEnd(0)} 'AAA' {JBegin(2):FR4End} " +
                         "{CBegin}C*100 N*100",
-                100, 240, 307, 450, "");
+                100, 230, 307, 450, "");
         assertExportPoint(r[0], ReferencePoint.VEnd, -3);
         assertExportPoint(r[0], ReferencePoint.DBegin, 0);
         assertExportPoint(r[0], ReferencePoint.DEnd, 0);

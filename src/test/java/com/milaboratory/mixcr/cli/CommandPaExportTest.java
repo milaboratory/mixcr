@@ -36,7 +36,7 @@ public class CommandPaExportTest {
         );
     }
 
-    //    @Ignore
+    @Ignore
     @Test
     public void test3() {
         Main.main("exportPa", "overlap",
@@ -50,6 +50,7 @@ public class CommandPaExportTest {
                 "/Users/poslavskysv/Projects/milab/mixcr-test-data/pa/overlap.pdf");
     }
 
+    @Ignore
     @Test
     public void test4() {
         Main.main("exportPa", "preprocSummary",
