@@ -57,9 +57,9 @@ repositories {
     }
 }
 
-val milibVersion = "1.15.0"
+val milibVersion = "1.15.0-16-master"
 val repseqioVersion = "1.3.5-24-master"
-val jacksonVersion = "2.13.2"
+val jacksonVersion = "2.13.2.2"
 
 dependencies {
     api("com.milaboratory:milib:$milibVersion")
@@ -68,15 +68,15 @@ dependencies {
     }
 
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
-    implementation("commons-io:commons-io:2.7")
-    implementation("org.lz4:lz4-java:1.4.1")
+    implementation("commons-io:commons-io:2.11.0")
+    implementation("org.lz4:lz4-java:1.8.0")
     implementation("net.sf.trove4j:trove4j:3.0.3")
     implementation("info.picocli:picocli:4.1.1")
     implementation("com.google.guava:guava:31.1-jre")
 
     testImplementation("junit:junit:4.13.2")
     implementation(testFixtures("com.milaboratory:milib:$milibVersion"))
-    testImplementation("org.mockito:mockito-all:1.9.5")
+    testImplementation("org.mockito:mockito-all:1.10.19")
 }
 
 val writeBuildProperties by tasks.registering(WriteProperties::class) {
@@ -148,7 +148,7 @@ tasks.test {
 
     miCiStage?.let {
         if (it == "test") {
-            systemProperty("longTests", "true");
+            systemProperty("longTests", "true")
         }
     }
     longTests?.let { systemProperty("longTests", it) }
