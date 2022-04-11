@@ -53,6 +53,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static io.repseq.core.GeneFeature.CDR3;
@@ -68,10 +69,10 @@ public class SHMTreeBuilder {
     private final List<CloneReader> datasets;
     private final AlignmentScoring<NucleotideSequence> VScoring;
     private final AlignmentScoring<NucleotideSequence> JScoring;
-    private Map<Integer, Map<VJBase, DecisionInfo>> decisions = new HashMap<>();
-    private Map<VJBase, List<TreeWithMetaBuilder.Snapshot>> currentTrees = new HashMap<>();
-    private final Map<VJBase, IdGenerator> idGenerators = new HashMap<>();
-    private final Map<VJBase, ClusterProcessor.CalculatedClusterInfo> calculatedClustersInfo = new HashMap<>();
+    private Map<Integer, Map<VJBase, DecisionInfo>> decisions = new ConcurrentHashMap<>();
+    private Map<VJBase, List<TreeWithMetaBuilder.Snapshot>> currentTrees = new ConcurrentHashMap<>();
+    private final Map<VJBase, IdGenerator> idGenerators = new ConcurrentHashMap<>();
+    private final Map<VJBase, ClusterProcessor.CalculatedClusterInfo> calculatedClustersInfo = new ConcurrentHashMap<>();
 
     public SHMTreeBuilder(SHMTreeBuilderParameters parameters,
                           ClusteringCriteria clusteringCriteria,
@@ -151,6 +152,7 @@ public class SHMTreeBuilder {
                                 .flatMap(VGeneName -> JGeneNames.stream()
                                         .map(JGeneName -> new CloneWrapper(c, datasetId, new VJBase(VGeneName, JGeneName, c.getNFeature(CDR3).size())))
                                 )
+                                .filter(it -> it.getFeature(CDR3) != null)
                                 .filter(it -> it.getFeature(new GeneFeature(ReferencePoint.VEndTrimmed, ReferencePoint.JBeginTrimmed)) != null)
                                 .collect(Collectors.toList())
                 );
@@ -166,14 +168,14 @@ public class SHMTreeBuilder {
         final List<CloneWrapper> cluster = new ArrayList<>();
 
         // group by similar V/J genes
-        return new OutputPortCloseable<Cluster<CloneWrapper>>() {
+        return new OutputPortCloseable<>() {
             @Override
             public void close() {
                 sortedClones.close();
             }
 
             @Override
-            public Cluster<CloneWrapper> take() {
+            public synchronized Cluster<CloneWrapper> take() {
                 CloneWrapper clone;
                 while ((clone = sortedClones.take()) != null) {
                     if (cluster.isEmpty()) {
@@ -235,7 +237,7 @@ public class SHMTreeBuilder {
         StepResult result = clusterProcessor.buildTreeTopParts();
         currentTrees.put(VJBase, result.getSnapshots());
         result.getDecisions().forEach((cloneId, decision) ->
-                decisions.computeIfAbsent(cloneId, __ -> new HashMap<>()).put(VJBase, decision)
+                decisions.computeIfAbsent(cloneId, __ -> new ConcurrentHashMap<>()).put(VJBase, decision)
         );
         XSV.writeXSVBody(debug, result.getNodesDebugInfo(), DebugInfo.COLUMNS_FOR_XSV, ";");
     }
@@ -256,7 +258,7 @@ public class SHMTreeBuilder {
         StepResult result = clusterProcessor.applyStep(step, currentTrees);
         this.currentTrees.put(VJBase, result.getSnapshots());
         result.getDecisions().forEach((cloneId, decision) ->
-                decisions.computeIfAbsent(cloneId, __ -> new HashMap<>()).put(VJBase, decision)
+                decisions.computeIfAbsent(cloneId, __ -> new ConcurrentHashMap<>()).put(VJBase, decision)
         );
         XSV.writeXSVBody(debugOfCurrentStep, result.getNodesDebugInfo(), DebugInfo.COLUMNS_FOR_XSV, ";");
     }

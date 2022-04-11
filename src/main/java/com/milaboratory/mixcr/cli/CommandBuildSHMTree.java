@@ -115,6 +115,16 @@ public class CommandBuildSHMTree extends ACommandWithOutputMiXCR {
     )
     private List<String> inOut = new ArrayList<>();
 
+    public int threads = Runtime.getRuntime().availableProcessors();
+
+    @CommandLine.Option(description = "Processing threads",
+            names = {"-t", "--threads"})
+    public void setThreads(int threads) {
+        if (threads <= 0)
+            throwValidationException("-t / --threads must be positive");
+        this.threads = threads;
+    }
+
     @Override
     public List<String> getInputFiles() {
         return inOut.subList(0, inOut.size() - 1);
@@ -206,9 +216,12 @@ public class CommandBuildSHMTree extends ACommandWithOutputMiXCR {
         String stepDescription = "Step " + stepNumber + "/" + stepsCount + ", " + BuildSHMTreeStep.BuildingInitialTrees.forPrint;
         SmartProgressReporter.startProgressReport(stepDescription, SmartProgressReporter.extractProgress(sortedClones, cloneWrappersCount));
         Debug currentStepDebug = createDebug(stepNumber);
-        for (Cluster<CloneWrapper> cluster : CUtils.it(shmTreeBuilder.buildClusters(sortedClones))) {
-            shmTreeBuilder.zeroStep(cluster, currentStepDebug.treesBeforeDecisionsWriter);
-        }
+        Debug finalCurrentStepDebug = currentStepDebug;
+        CUtils.processAllInParallel(
+                shmTreeBuilder.buildClusters(sortedClones),
+                cluster -> shmTreeBuilder.zeroStep(cluster, finalCurrentStepDebug.treesBeforeDecisionsWriter),
+                threads
+        );
         int clonesWasAddedOnInit = shmTreeBuilder.makeDecisions();
         //TODO check that all trees has minimum common mutations in VJ
         report.onStepEnd(BuildSHMTreeStep.BuildingInitialTrees, clonesWasAddedOnInit, shmTreeBuilder.treesCount());
@@ -221,14 +234,19 @@ public class CommandBuildSHMTree extends ACommandWithOutputMiXCR {
             sortedClones = new CountingOutputPort<>(shmTreeBuilder.sortedClones());
             stepDescription = "Step " + stepNumber + "/" + stepsCount + ", " + step.forPrint;
             SmartProgressReporter.startProgressReport(stepDescription, SmartProgressReporter.extractProgress(sortedClones, cloneWrappersCount));
-            for (Cluster<CloneWrapper> cluster : CUtils.it(shmTreeBuilder.buildClusters(sortedClones))) {
-                shmTreeBuilder.applyStep(
-                        cluster,
-                        step,
-                        previousStepDebug.treesAfterDecisionsWriter,
-                        currentStepDebug.treesBeforeDecisionsWriter
-                );
-            }
+
+            Debug finalPreviousStepDebug = previousStepDebug;
+            Debug finalCurrentStepDebug2 = currentStepDebug;
+            CUtils.processAllInParallel(
+                    shmTreeBuilder.buildClusters(sortedClones),
+                    cluster -> shmTreeBuilder.applyStep(
+                            cluster,
+                            step,
+                            finalPreviousStepDebug.treesAfterDecisionsWriter,
+                            finalCurrentStepDebug2.treesBeforeDecisionsWriter
+                    ),
+                    threads
+            );
             int clonesWasAdded = shmTreeBuilder.makeDecisions();
 
             report.onStepEnd(step, clonesWasAdded, shmTreeBuilder.treesCount() - treesCountBefore);
@@ -259,7 +277,10 @@ public class CommandBuildSHMTree extends ACommandWithOutputMiXCR {
         var printer = new NewickTreePrinter<CloneOrFoundAncestor>(it -> Integer.toString(it.getContent().getId()), true, false);
 
         for (Cluster<CloneWrapper> cluster : CUtils.it(shmTreeBuilder.buildClusters(sortedClones))) {
-            for (TreeWithMeta treeWithMeta : shmTreeBuilder.getResult(cluster, previousStepDebug.treesAfterDecisionsWriter)) {
+            var result = shmTreeBuilder.getResult(cluster, previousStepDebug.treesAfterDecisionsWriter).stream()
+                    .sorted(Comparator.comparing(it -> it.getTreeId().encode()))
+                    .collect(Collectors.toList());
+            for (TreeWithMeta treeWithMeta : result) {
                 var columnsBuilder = ImmutableMap.<String, Function<Tree.NodeWithParent<CloneOrFoundAncestor>, Object>>builder()
                         .putAll(columnsThatDependOnNode);
                 columnsThatDependOnTree.forEach((key, function) -> columnsBuilder.put(key, __ -> function.apply(treeWithMeta)));

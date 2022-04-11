@@ -1,9 +1,11 @@
 package com.milaboratory.mixcr.trees;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 class IdGenerator {
-    private int counter = 0;
+    private final AtomicInteger counter = new AtomicInteger(0);
 
     public TreeWithMetaBuilder.TreeId next(VJBase VJBase) {
-        return new TreeWithMetaBuilder.TreeId(counter++, VJBase);
+        return new TreeWithMetaBuilder.TreeId(counter.incrementAndGet(), VJBase);
     }
 }
