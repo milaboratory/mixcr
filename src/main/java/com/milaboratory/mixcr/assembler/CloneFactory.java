@@ -47,12 +47,12 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public final class CloneFactory {
-    final SingleDAligner dAligner;
-    final CloneFactoryParameters parameters;
-    final Map<VDJCGeneId, VDJCGene> usedGenes;
-    final GeneFeature[] assemblingFeatures;
-    final int indexOfAssemblingFeatureWithD;
-    final EnumMap<GeneType, GeneFeature> featuresToAlign;
+    private final SingleDAligner dAligner;
+    private final CloneFactoryParameters parameters;
+    private final Map<VDJCGeneId, VDJCGene> usedGenes;
+    private final GeneFeature[] assemblingFeatures;
+    private final int indexOfAssemblingFeatureWithD;
+    private final EnumMap<GeneType, GeneFeature> featuresToAlign;
 
     public CloneFactory(CloneFactoryParameters parameters, GeneFeature[] assemblingFeatures,
                         Collection<VDJCGene> usedGenes, EnumMap<GeneType, GeneFeature> featuresToAlign) {
@@ -80,6 +80,10 @@ public final class CloneFactory {
                 else
                     throw new IllegalArgumentException("Several features with D.");
         this.indexOfAssemblingFeatureWithD = indexOfAssemblingFeatureWithD;
+    }
+
+    public CloneFactoryParameters getParameters() {
+        return parameters;
     }
 
     public Clone create(int id, double count,

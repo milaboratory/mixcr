@@ -29,7 +29,10 @@
  */
 package com.milaboratory.mixcr.cli;
 
+import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.blocks.Buffer;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.milaboratory.core.Range;
@@ -42,9 +45,7 @@ import com.milaboratory.mixcr.alleles.AllelesSearcher;
 import com.milaboratory.mixcr.alleles.FindAllelesParameters;
 import com.milaboratory.mixcr.alleles.FindAllelesParametersPresets;
 import com.milaboratory.mixcr.assembler.CloneFactory;
-import com.milaboratory.mixcr.assembler.CloneFactoryParameters;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.util.Cluster;
 import com.milaboratory.mixcr.util.ExceptionUtil;
 import com.milaboratory.mixcr.util.XSV;
 import com.milaboratory.util.GlobalObjectMappers;
@@ -54,6 +55,7 @@ import io.repseq.dto.VDJCGeneData;
 import io.repseq.dto.VDJCLibraryData;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.math3.util.Pair;
+import org.jetbrains.annotations.NotNull;
 import picocli.CommandLine;
 
 import java.io.File;
@@ -97,6 +99,16 @@ public class CommandFindAlleles extends ACommandWithOutputMiXCR {
             outputs.add(libraryOutput);
         }
         return outputs;
+    }
+
+    public int threads = Runtime.getRuntime().availableProcessors();
+
+    @CommandLine.Option(description = "Processing threads",
+            names = {"-t", "--threads"})
+    public void setThreads(int threads) {
+        if (threads <= 0)
+            throwValidationException("-t / --threads must be positive");
+        this.threads = threads;
     }
 
     private List<String> outputClnsFiles() {
@@ -297,70 +309,79 @@ public class CommandFindAlleles extends ACommandWithOutputMiXCR {
     }
 
     private List<Clone> rebuildClones(VDJCLibrary resultLibrary, Map<String, List<VDJCGeneId>> allelesMapping, CloneReader cloneReader) {
-        CloneFactoryParameters cloneFactoryParameters = cloneReader.getAssemblerParameters().getCloneFactoryParameters();
         CloneFactory cloneFactory = new CloneFactory(
-                cloneFactoryParameters,
+                cloneReader.getAssemblerParameters().getCloneFactoryParameters(),
                 cloneReader.getAssemblerParameters().getAssemblingFeatures(),
                 resultLibrary.getGenes(),
                 cloneReader.getAlignerParameters().getFeaturesToAlignMap()
         );
 
-        List<Clone> mapperClones = new ArrayList<>();
-        try (OutputPortCloseable<Clone> port = cloneReader.readClones()) {
-            Clone clone;
-            while ((clone = port.take()) != null) {
-                EnumMap<GeneType, TObjectFloatHashMap<VDJCGeneId>> originalGeneScores = new EnumMap<>(GeneType.class);
-                //copy D and C
-                for (GeneType gt : Lists.newArrayList(Diversity, Constant)) {
-                    TObjectFloatHashMap<VDJCGeneId> scores = new TObjectFloatHashMap<>();
-                    for (VDJCHit hit : clone.getHits(gt)) {
-                        VDJCGeneId mappedGeneId = new VDJCGeneId(resultLibrary.getLibraryId(), hit.getGene().getName());
-                        scores.put(mappedGeneId, hit.getScore());
-                    }
-                    originalGeneScores.put(gt, scores);
-                }
+        var result = CUtils.orderedParallelProcessor(
+                cloneReader.readClones(),
+                clone -> rebuildClone(resultLibrary, allelesMapping, cloneFactory, clone),
+                Buffer.DEFAULT_SIZE,
+                threads
+        );
 
-                for (GeneType gt : Lists.newArrayList(Variable, Joining)) {
-                    TObjectFloatHashMap<VDJCGeneId> scores = new TObjectFloatHashMap<>();
-                    for (VDJCHit hit : clone.getHits(gt)) {
-                        for (VDJCGeneId foundAlleleId : allelesMapping.get(hit.getGene().getName())) {
-                            if (!foundAlleleId.getName().equals(hit.getGene().getName())) {
-                                float scoreDelta = scoreDelta(
-                                        resultLibrary.get(foundAlleleId.getName()),
-                                        cloneFactoryParameters.getVJCParameters(gt).getScoring(),
-                                        hit.getAlignments()
-                                );
-                                scores.put(foundAlleleId, hit.getScore() + scoreDelta);
-                            } else {
-                                scores.put(foundAlleleId, hit.getScore());
-                            }
-                        }
-                    }
-                    originalGeneScores.put(gt, scores);
-                }
+        return ImmutableList.copyOf(CUtils.it(result));
+    }
 
-                mapperClones.add(cloneFactory.create(
-                        clone.getId(),
-                        clone.getCount(),
-                        originalGeneScores,
-                        clone.getTagCounter(),
-                        clone.getTargets()
-                ));
+    @NotNull
+    private Clone rebuildClone(VDJCLibrary resultLibrary, Map<String, List<VDJCGeneId>> allelesMapping, CloneFactory cloneFactory, Clone clone) {
+        EnumMap<GeneType, TObjectFloatHashMap<VDJCGeneId>> originalGeneScores = new EnumMap<>(GeneType.class);
+        //copy D and C
+        for (GeneType gt : Lists.newArrayList(Diversity, Constant)) {
+            TObjectFloatHashMap<VDJCGeneId> scores = new TObjectFloatHashMap<>();
+            for (VDJCHit hit : clone.getHits(gt)) {
+                VDJCGeneId mappedGeneId = new VDJCGeneId(resultLibrary.getLibraryId(), hit.getGene().getName());
+                scores.put(mappedGeneId, hit.getScore());
             }
+            originalGeneScores.put(gt, scores);
         }
-        return mapperClones;
+
+        for (GeneType gt : Lists.newArrayList(Variable, Joining)) {
+            TObjectFloatHashMap<VDJCGeneId> scores = new TObjectFloatHashMap<>();
+            for (VDJCHit hit : clone.getHits(gt)) {
+                for (VDJCGeneId foundAlleleId : allelesMapping.get(hit.getGene().getName())) {
+                    if (!foundAlleleId.getName().equals(hit.getGene().getName())) {
+                        float scoreDelta = scoreDelta(
+                                resultLibrary.get(foundAlleleId.getName()),
+                                cloneFactory.getParameters().getVJCParameters(gt).getScoring(),
+                                hit.getAlignments()
+                        );
+                        scores.put(foundAlleleId, hit.getScore() + scoreDelta);
+                    } else {
+                        scores.put(foundAlleleId, hit.getScore());
+                    }
+                }
+            }
+            originalGeneScores.put(gt, scores);
+        }
+
+        return cloneFactory.create(
+                clone.getId(),
+                clone.getCount(),
+                originalGeneScores,
+                clone.getTagCounter(),
+                clone.getTargets()
+        );
     }
 
     private List<Pair<String, List<VDJCGeneData>>> buildAlleles(AllelesSearcher allelesSearcher, AllelesSearcher.SortedClonotypes sortedClonotypes, GeneType geneType) {
-        List<Pair<String, List<VDJCGeneData>>> result = new ArrayList<>();
-        OutputPortCloseable<Cluster<Clone>> clusters = allelesSearcher.buildClusters(sortedClonotypes.getSortedBy(geneType), geneType);
-        Cluster<Clone> cluster;
-        while ((cluster = clusters.take()) != null) {
-            String geneId = cluster.cluster.get(0).getBestHit(geneType).getGene().getName();
-            List<VDJCGeneData> resultGenes = allelesSearcher.allelesGeneData(cluster, geneType);
-            result.add(Pair.create(geneId, resultGenes));
-        }
-        return result;
+        var sortedClones = sortedClonotypes.getSortedBy(geneType);
+        var clusters = allelesSearcher.buildClusters(sortedClones, geneType);
+
+        var result = CUtils.orderedParallelProcessor(
+                clusters,
+                cluster -> {
+                    String geneId = cluster.cluster.get(0).getBestHit(geneType).getGene().getName();
+                    List<VDJCGeneData> resultGenes = allelesSearcher.allelesGeneData(cluster, geneType);
+                    return Pair.create(geneId, resultGenes);
+                },
+                Buffer.DEFAULT_SIZE,
+                threads
+        );
+        return ImmutableList.copyOf(CUtils.it(result));
     }
 
     private float scoreDelta(VDJCGene foundAllele, AlignmentScoring<NucleotideSequence> scoring, Alignment<NucleotideSequence>[] alignments) {

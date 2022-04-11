@@ -163,19 +163,19 @@ public class SHMTreeBuilder {
         return new FlatteningOutputPort<>(CUtils.asOutputPort(wrapped));
     }
 
-    public OutputPortCloseable<Cluster<CloneWrapper>> buildClusters(OutputPortCloseable<CloneWrapper> sortedClones) {
+    public OutputPort<Cluster<CloneWrapper>> buildClusters(OutputPortCloseable<CloneWrapper> sortedClones) {
         // todo do not copy cluster
         final List<CloneWrapper> cluster = new ArrayList<>();
 
         // group by similar V/J genes
-        return new OutputPortCloseable<>() {
+        var result = new OutputPortCloseable<Cluster<CloneWrapper>>() {
             @Override
             public void close() {
                 sortedClones.close();
             }
 
             @Override
-            public synchronized Cluster<CloneWrapper> take() {
+            public Cluster<CloneWrapper> take() {
                 CloneWrapper clone;
                 while ((clone = sortedClones.take()) != null) {
                     if (cluster.isEmpty()) {
@@ -199,6 +199,7 @@ public class SHMTreeBuilder {
                 return null;
             }
         };
+        return CUtils.wrapSynchronized(result);
     }
 
     public OutputPortCloseable<CloneWrapper> sortedClones() throws IOException {

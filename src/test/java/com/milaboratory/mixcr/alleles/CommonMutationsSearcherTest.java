@@ -21,14 +21,40 @@ public class CommonMutationsSearcherTest {
     private final AffineGapAlignmentScoring<NucleotideSequence> scoring = AffineGapAlignmentScoring.getNucleotideBLASTScoring();
 
     @Test
-    public void oneMutationsExistsInAllCloneButOne() {
+    public void notEnoughDiversityToFindAlleles() {
         CommonMutationsSearcher searcher = searcher("TTTTTTTTTTTT");
         List<Mutations<NucleotideSequence>> result = searcher.findAlleles(Lists.newArrayList(
                 clone("ST1G,ST3G", "J1*00"),
                 clone("ST1G,ST2G,ST4G", "J1*00"),
                 clone("ST1G,ST2G,ST5G,ST6G", "J2*00")
         ));
-        assertEqualsMutations(result, "[S1:T->G]", "[S1:T->G,S2:T->G,S5:T->G,S6:T->G]");
+        assertEqualsMutations(result, "[]");
+    }
+
+    @Test
+    public void oneMutationsExistsInAllCloneButOne() {
+        CommonMutationsSearcher searcher = searcher("TTTTTTTTTTTT");
+        List<Mutations<NucleotideSequence>> result = searcher.findAlleles(Lists.newArrayList(
+                clone("ST1G,ST3G", "J1*00"),
+                clone("ST1G,ST2G,ST4G", "J1*00"),
+                clone("ST1G,ST2G,ST5G"),
+                clone("ST1G,ST2G,ST7G"),
+                clone("ST1G,ST2G,ST8G"),
+                clone("ST1G,ST2G,ST9G")
+        ));
+        assertEqualsMutations(result, "[S1:T->G,S2:T->G]");
+    }
+
+    @Test
+    public void oneMutationsExistsInAllCloneInCaseOfSmallDiversity() {
+        CommonMutationsSearcher searcher = searcher("TTTTTTTTTTTT");
+        List<Mutations<NucleotideSequence>> result = searcher.findAlleles(Lists.newArrayList(
+                clone("ST1G,ST3G", "J1*00"),
+                clone("ST1G,ST4G", "J1*00"),
+                clone("ST1G,ST5G,ST6G", "J2*00"),
+                clone("ST1G,ST5G,ST6G", "J3*00")
+        ));
+        assertEqualsMutations(result, "[S1:T->G]");
     }
 
     @Test
@@ -65,9 +91,47 @@ public class CommonMutationsSearcherTest {
     }
 
     @Test
+    public void allelesThatSpreadInClustersEvenly() {
+        CommonMutationsSearcher searcher = searcher("TTTTTTTTTTTT");
+        List<Mutations<NucleotideSequence>> result = searcher.findAlleles(Lists.newArrayList(
+                clone("ST1G", "J1*00"),
+                clone("ST3G,ST4G", "J1*00"),
+                clone("ST1G", "J2*00"),
+                clone("ST3G,ST4G", "J2*00"),
+                clone("ST1G", "J3*00"),
+                clone("ST3G,ST4G", "J3*00"),
+                clone("ST1G", "J4*00"),
+                clone("ST3G,ST4G", "J4*00"),
+                clone("ST1G", "J5*00"),
+                clone("ST3G,ST4G", "J5*00")
+        ));
+        assertEqualsMutations(result, "[S1:T->G]", "[S3:T->G,S4:T->G]");
+    }
+
+    @Test
+    public void allelesThatSpreadInClustersEvenlyAndHaveOverlap() {
+        CommonMutationsSearcher searcher = searcher("TTTTTTTTTTTT");
+        List<Mutations<NucleotideSequence>> result = searcher.findAlleles(Lists.newArrayList(
+                clone("ST1G,ST3G", "J1*00"),
+                clone("ST3G,ST4G", "J1*00"),
+                clone("ST1G,ST3G", "J2*00"),
+                clone("ST3G,ST4G", "J2*00"),
+                clone("ST1G,ST3G", "J3*00"),
+                clone("ST3G,ST4G", "J3*00"),
+                clone("ST1G,ST3G", "J4*00"),
+                clone("ST3G,ST4G", "J4*00"),
+                clone("ST1G,ST3G", "J5*00"),
+                clone("ST3G,ST4G", "J5*00")
+        ));
+        assertEqualsMutations(result, "[S1:T->G,S3:T->G]", "[S3:T->G,S4:T->G]");
+    }
+
+    @Test
     public void onlyOneAlleleThatDifferentFromLibraryGermlineAndAllOthersInTheSameTree() {
         CommonMutationsSearcher searcher = searcher("ATTTTTTTTTTT");
         List<Mutations<NucleotideSequence>> result = searcher.findAlleles(Lists.newArrayList(
+                clone("SA0G"),
+                clone("SA0G"),
                 clone("SA0G"),
                 clone("SA0G"),
                 clone(""),
@@ -114,6 +178,8 @@ public class CommonMutationsSearcherTest {
                 .mapToObj(i -> "ST" + i + "G")
                 .collect(Collectors.joining(",", "[", "]")));
         List<Mutations<NucleotideSequence>> result = searcher.findAlleles(Lists.newArrayList(
+                cloneFactory.apply(10),
+                cloneFactory.apply(10),
                 cloneFactory.apply(10),
                 cloneFactory.apply(10),
                 cloneFactory.apply(10),
@@ -455,7 +521,15 @@ public class CommonMutationsSearcherTest {
     }
 
     private CommonMutationsSearcher searcher(String sequence1) {
-        return new CommonMutationsSearcher(0.8, 2.0, scoring, new NucleotideSequence(sequence1));
+        var parameters = new FindAllelesParameters(
+                3,
+                5,
+                0.8,
+                2.0,
+                true,
+                0.9
+        );
+        return new CommonMutationsSearcher(parameters, scoring, new NucleotideSequence(sequence1));
     }
 
     private void assertEqualsMutations(List<Mutations<NucleotideSequence>> result, String... mutations) {

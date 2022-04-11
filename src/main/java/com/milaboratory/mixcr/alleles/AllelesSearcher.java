@@ -1,6 +1,7 @@
 package com.milaboratory.mixcr.alleles;
 
 import cc.redberry.pipe.CUtils;
+import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.blocks.FilteringPort;
 import cc.redberry.pipe.util.FlatteningOutputPort;
@@ -102,14 +103,14 @@ public class AllelesSearcher {
         }
     }
 
-    public OutputPortCloseable<Cluster<Clone>> buildClusters(OutputPortCloseable<Clone> sortedClones, GeneType geneType) {
+    public OutputPort<Cluster<Clone>> buildClusters(OutputPortCloseable<Clone> sortedClones, GeneType geneType) {
         Comparator<Clone> comparator = Comparator.comparing(c -> c.getBestHit(geneType).getGene().getId().getName());
 
         // todo do not copy cluster
         final List<Clone> cluster = new ArrayList<>();
 
         // group by similar V/J/C genes
-        return new OutputPortCloseable<Cluster<Clone>>() {
+        var result = new OutputPortCloseable<Cluster<Clone>>() {
             @Override
             public void close() {
                 sortedClones.close();
@@ -140,6 +141,7 @@ public class AllelesSearcher {
                 return null;
             }
         };
+        return CUtils.wrapSynchronized(result);
     }
 
     private List<Allele> findAlleles(Cluster<Clone> clusterByTheSameGene, GeneType geneType) {
@@ -166,8 +168,7 @@ public class AllelesSearcher {
                 .collect(Collectors.toList());
 
         CommonMutationsSearcher commonMutationsSearcher = new CommonMutationsSearcher(
-                parameters.minPartOfClonesToDeterminateAllele,
-                parameters.maxPenaltyByAlleleMutation,
+                parameters,
                 scoring(geneType),
                 bestHit.getAlignment(0).getSequence1()
         );
@@ -258,6 +259,7 @@ public class AllelesSearcher {
                         return allele.gene.getData();
                     }
                 })
+                .sorted(Comparator.comparing(VDJCGeneData::getName))
                 .collect(Collectors.toList());
     }
 

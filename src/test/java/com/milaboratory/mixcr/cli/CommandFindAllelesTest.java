@@ -72,10 +72,10 @@ public class CommandFindAllelesTest {
         ).getParseResult();
         CommandFindAlleles command = p.asCommandLineList().get(p.asCommandLineList().size() - 1).getCommand();
         try {
-            command.getOutputFiles();
+            command.validate();
             fail();
         } catch (ValidationException e) {
-            assertEquals("Exported library must be json: /output/folder/library.txt", e.getMessage());
+            assertEquals("--export-library must be json: /output/folder/library.txt", e.getMessage());
         }
     }
 
