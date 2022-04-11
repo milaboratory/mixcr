@@ -9,6 +9,7 @@ import com.milaboratory.mixcr.postanalysis.*;
 import org.apache.commons.math3.random.RandomDataGenerator;
 import org.apache.commons.math3.random.Well512a;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ import java.util.Comparator;
 public class SelectTopTest {
     @SuppressWarnings("unchecked")
     @Test
+    @Ignore
     public void test1() {
         RandomDataGenerator rng = new RandomDataGenerator(new Well512a());
         int nIterations = 10;
@@ -78,6 +80,7 @@ public class SelectTopTest {
     }
 
     @Test
+    @Ignore
     public void test2() {
         TestDataset<TestObject> dataset = new TestDataset<>(Arrays.asList(
                 new TestObject(1, 1),
@@ -93,6 +96,7 @@ public class SelectTopTest {
     }
 
     @Test
+    @Ignore
     public void test3() {
         TestDataset<TestObject> dataset = new TestDataset<>(Arrays.asList(
                 new TestObject(1, 1),
@@ -110,6 +114,7 @@ public class SelectTopTest {
     }
 
     @Test
+    @Ignore
     public void test4() {
         TestDataset<TestObject> dataset = new TestDataset<>(Arrays.asList(
                 new TestObject(1, 1.1),

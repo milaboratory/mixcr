@@ -7,6 +7,7 @@ import io.repseq.core.Chains
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.filter
 import org.jetbrains.kotlinx.dataframe.io.read
+import org.junit.Ignore
 import org.junit.Test
 import java.nio.file.Paths
 
@@ -16,6 +17,7 @@ import java.nio.file.Paths
  */
 internal class BasicStatisticsTest {
     @Test
+    @Ignore
     fun test1() {
         val meta = DataFrame.read(javaClass.getResource("/postanalysis/metadata.csv")!!)
         val pa = GlobalObjectMappers.PRETTY.readValue(

@@ -30,8 +30,8 @@
 package com.milaboratory.mixcr.vdjaligners;
 
 import com.fasterxml.jackson.annotation.*;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.milaboratory.core.PairedEndReadsLayout;
+import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
 import com.milaboratory.core.merger.MergerParameters;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign;
@@ -40,9 +40,7 @@ import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
 
-import java.util.EnumMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
@@ -366,6 +364,16 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
     public VDJCAlignerParameters setSaveOriginalReads(boolean saveOriginalReads) {
         this.saveOriginalReads = saveOriginalReads;
         return this;
+    }
+
+    public Set<GeneType> getGeneTypesWithLinearScoring() {
+        final Set<GeneType> gtRequiringIndelShifts = new HashSet<>();
+        for (GeneType gt : GeneType.values()) {
+            GeneAlignmentParameters p = getGeneAlignerParameters(gt);
+            if (p != null && p.getScoring() instanceof LinearGapAlignmentScoring)
+                gtRequiringIndelShifts.add(gt);
+        }
+        return Collections.unmodifiableSet(gtRequiringIndelShifts);
     }
 
     @Override
