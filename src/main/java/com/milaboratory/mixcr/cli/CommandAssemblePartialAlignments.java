@@ -35,6 +35,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssembler;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParameters;
+import com.milaboratory.util.JsonOverrider;
 import com.milaboratory.util.SmartProgressReporter;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
