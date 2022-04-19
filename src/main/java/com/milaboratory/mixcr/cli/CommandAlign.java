@@ -245,6 +245,14 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                 throwValidationException("Unknown aligner parameters: " + alignerParametersName);
 
             if (!overrides.isEmpty()) {
+                // Printing warning message for some common mistakes in parameter overrides
+                for (Map.Entry<String, String> o : overrides.entrySet())
+                    if ("Parameters.parameters.relativeMinScore".equals(o.getKey().substring(1)))
+                        warn("WARNING: most probably you want to change \"" + o.getKey().charAt(0) +
+                                "Parameters.relativeMinScore\" instead of \"" + o.getKey().charAt(0) +
+                                "Parameters.parameters.relativeMinScore\". " +
+                                "The latter should be touched only in a very specific cases.");
+
                 // Perform parameters overriding
                 alignerParameters = JsonOverrider.override(alignerParameters, VDJCAlignerParameters.class, overrides);
                 if (alignerParameters == null)
