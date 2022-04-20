@@ -46,12 +46,12 @@ public final class OverlapUtil {
             List<String> datasetIds,
             List<? extends VDJCSProperties.VDJCSProperty<? super Clone>> by,
             List<? extends CloneReader> readers) {
-        return new OverlapDataset<>(datasetIds) {
+        return new OverlapDataset<Clone>(datasetIds) {
             @Override
             public OutputPortWithProgress<OverlapGroup<Clone>> mkElementsPort() {
                 OutputPortWithProgress<List<List<Clone>>> port = CloneSetOverlap.overlap(by, readers);
                 SimpleProcessorWrapper<List<List<Clone>>, OverlapGroup<Clone>> processor = new SimpleProcessorWrapper<>(port, OverlapGroup::new);
-                return new OutputPortWithProgress<>() {
+                return new OutputPortWithProgress<OverlapGroup<Clone>>() {
                     @Override
                     public long index() {
                         return port.index();

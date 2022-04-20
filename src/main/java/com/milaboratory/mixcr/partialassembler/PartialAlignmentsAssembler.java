@@ -37,7 +37,7 @@ import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.cli.Report;
-import com.milaboratory.mixcr.cli.ReportHelper;
+import com.milaboratory.util.ReportHelper;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import gnu.trove.iterator.TObjectDoubleIterator;
 import gnu.trove.map.hash.TLongObjectHashMap;
@@ -240,7 +240,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
 
             overlapped.incrementAndGet();
             totalWritten.incrementAndGet();
-            writer.write(mAlignment.shiftIndelsAtHomopolymers());
+            writer.write(mAlignment);
 
             // Saving alignment that where merge to prevent it's use as left part
             alreadyMergedIds.add(alignment.getAlignmentsIndex());

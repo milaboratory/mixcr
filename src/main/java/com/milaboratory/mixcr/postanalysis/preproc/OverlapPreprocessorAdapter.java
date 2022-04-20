@@ -25,7 +25,7 @@ public class OverlapPreprocessorAdapter<T> implements SetPreprocessor<OverlapGro
         SetPreprocessorSetup<T> innerStep = inner.nextSetupStep();
         if (innerStep == null)
             return null;
-        return new SetPreprocessorSetup<>() {
+        return new SetPreprocessorSetup<OverlapGroup<T>>() {
             boolean initialized = false;
 
             @Override

@@ -63,7 +63,7 @@ public final class CloneSetOverlap {
         AtomicLong index = new AtomicLong(0);
         AtomicBoolean isFinished = new AtomicBoolean(false);
         long totalClones = readers.stream().mapToLong(CloneReader::numberOfClones).sum();
-        return new OutputPortWithProgress<>() {
+        return new OutputPortWithProgress<List<List<Clone>>>() {
             @Override
             public long index() {
                 return index.get();

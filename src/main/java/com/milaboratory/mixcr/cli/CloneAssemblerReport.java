@@ -35,6 +35,7 @@ import com.milaboratory.mixcr.assembler.CloneAssemblerListener;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.util.ReportHelper;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -279,7 +280,7 @@ public final class CloneAssemblerReport extends AbstractCommandReport implements
         long clusterizationBase = getReadsInClonesBeforeClustering();
 
         helper.writeField("Final clonotype count", clonesCount)
-                .writeField("Average number of reads per clonotype", Util.PERCENT_FORMAT.format(1.0 * alignmentsInClones / clonesCount))
+                .writeField("Average number of reads per clonotype", ReportHelper.PERCENT_FORMAT.format(1.0 * alignmentsInClones / clonesCount))
                 .writePercentAndAbsoluteField("Reads used in clonotypes, percent of total", alignmentsInClones, totalReads)
                 .writePercentAndAbsoluteField("Reads used in clonotypes before clustering, percent of total", clusterizationBase, totalReads)
                 .writePercentAndAbsoluteField("Number of reads used as a core, percent of used", coreAlignments.get(), clusterizationBase)

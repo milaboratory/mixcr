@@ -34,8 +34,7 @@ import com.google.common.util.concurrent.AtomicDouble;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.cli.Report;
-import com.milaboratory.mixcr.cli.ReportHelper;
-import com.milaboratory.mixcr.cli.Util;
+import com.milaboratory.util.ReportHelper;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.util.List;
@@ -368,12 +367,12 @@ public class DropletCloneGraphReport implements Report {
                 .writeField("Groups", numberOfGroups.get() - groupsClustered.get())
                 .writeField("Groups before clustering", numberOfGroups.get())
                 .writeField("Max clones per group", maxClonesPerGroup.get())
-                .writeField("Mean clones per group", Util.PERCENT_FORMAT.format(1.0 * sumClonesPerGroup.get() / numberOfGroups.get()))
+                .writeField("Mean clones per group", ReportHelper.PERCENT_FORMAT.format(1.0 * sumClonesPerGroup.get() / numberOfGroups.get()))
                 .writeField("Max tags per group", maxTagsPerGroup.get())
-                .writeField("Mean tags per group", Util.PERCENT_FORMAT.format(1.0 * sumTagsPerGroup.get() / numberOfGroups.get()))
+                .writeField("Mean tags per group", ReportHelper.PERCENT_FORMAT.format(1.0 * sumTagsPerGroup.get() / numberOfGroups.get()))
                 .writeField("Max tags clique", maxTagsClique.get())
                 .writeField("Max tags clique delta", maxTagsCliqueDelta.get())
-                .writeField("Mean tags clique delta", Util.PERCENT_FORMAT.format(1.0 * sumTagsCliqueDelta.get() / numberOfGroups.get()));
+                .writeField("Mean tags clique delta", ReportHelper.PERCENT_FORMAT.format(1.0 * sumTagsCliqueDelta.get() / numberOfGroups.get()));
 
         helper
                 .writePercentAndAbsoluteField("Groups clustered", groupsClustered.get(), numberOfGroups.get())

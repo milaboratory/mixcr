@@ -31,6 +31,9 @@ package com.milaboratory.mixcr.vdjaligners;
 
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import io.repseq.core.GeneType;
+
+import java.util.Set;
 
 public final class VDJCAlignmentResult<R extends SequenceRead> {
     public final R read;
@@ -46,9 +49,9 @@ public final class VDJCAlignmentResult<R extends SequenceRead> {
         this.alignment = null;
     }
 
-    public VDJCAlignmentResult<R> shiftIndelsAtHomopolymers() {
+    public VDJCAlignmentResult<R> shiftIndelsAtHomopolymers(Set<GeneType> gts) {
         if (alignment == null)
             return this;
-        return new VDJCAlignmentResult<>(read, alignment.shiftIndelsAtHomopolymers());
+        return new VDJCAlignmentResult<>(read, alignment.shiftIndelsAtHomopolymers(gts));
     }
 }

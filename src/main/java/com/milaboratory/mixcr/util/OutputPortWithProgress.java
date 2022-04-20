@@ -15,7 +15,7 @@ public interface OutputPortWithProgress<T> extends OutputPortCloseable<T>, CanRe
     static <T> OutputPortWithProgress<T> wrap(int size, OutputPortCloseable<T> inner) {
         final AtomicBoolean isFinished = new AtomicBoolean(false);
         final AtomicLong index = new AtomicLong(0);
-        return new OutputPortWithProgress<>() {
+        return new OutputPortWithProgress<T>() {
             @Override
             public long index() {
                 return index.get();
