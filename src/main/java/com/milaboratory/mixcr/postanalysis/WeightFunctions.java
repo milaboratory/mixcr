@@ -59,7 +59,7 @@ public final class WeightFunctions {
             if (o instanceof Clone)
                 return ((Clone) o).getCount();
             else
-                throw new RuntimeException();
+                throw new RuntimeException("Unsupported for class: " + o.getClass());
         }
 
         @Override

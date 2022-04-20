@@ -36,7 +36,7 @@ public class SelectTop<T> implements SetPreprocessor<T> {
         this.abundanceFraction = abundanceFraction;
         this.numberOfTop = numberOfTop;
         this.id = id;
-        this.stats = new SetPreprocessorStat.Builder<>(id, WeightFunctions.Default());
+        this.stats = new SetPreprocessorStat.Builder<>(id, weight);
     }
 
     private boolean computeCumulativeTop() {
