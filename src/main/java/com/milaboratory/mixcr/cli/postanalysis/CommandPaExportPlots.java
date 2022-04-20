@@ -9,6 +9,8 @@ import org.jetbrains.kotlinx.dataframe.api.DataFrameIterableKt;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -69,15 +71,26 @@ abstract class CommandPaExportPlots extends CommandPaExport {
         return Path.of(tablesDestStr(group));
     }
 
+    protected void ensureOutputPathExists() {
+        try {
+            Files.createDirectories(Path.of(out).toAbsolutePath().getParent());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     void writeTables(IsolationGroup group, List<byte[]> tables) {
+        ensureOutputPathExists();
         ExportKt.writePDF(tablesDestPath(group), tables);
     }
 
     void writePlots(IsolationGroup group, List<Plot> plots) {
+        ensureOutputPathExists();
         ExportKt.writePDFFigure(plotDestPath(group), plots);
     }
 
     void writePlots(IsolationGroup group, Plot plot) {
+        ensureOutputPathExists();
         ExportKt.writePDF(tablesDestPath(group), plot);
     }
 }

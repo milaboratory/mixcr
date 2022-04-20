@@ -80,6 +80,7 @@ public class CommandPaExportPlotsOverlap extends CommandPaExportPlotsHeatmapWith
                 height
         );
 
+        ensureOutputPathExists();
         List<byte[]> plotsAndSummary = Overlap.INSTANCE.plotsAndSummary(df, pp, par);
         ExportKt.writePDF(plotDestPath(result.group), plotsAndSummary);
         SetPreprocessorSummary.writeCSV(tablesDestPath(result.group),
