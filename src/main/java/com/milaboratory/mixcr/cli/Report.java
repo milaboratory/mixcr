@@ -30,7 +30,7 @@
 package com.milaboratory.mixcr.cli;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.milaboratory.util.ReportHelper;
 
 @JsonAutoDetect(
         getterVisibility = JsonAutoDetect.Visibility.NONE,

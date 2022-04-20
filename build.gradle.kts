@@ -57,7 +57,7 @@ repositories {
     }
 }
 
-val milibVersion = "1.15.0-18-master"
+val milibVersion = "1.15.0-23-master"
 val repseqioVersion = "1.3.5-24-master"
 val jacksonVersion = "2.13.2.2"
 

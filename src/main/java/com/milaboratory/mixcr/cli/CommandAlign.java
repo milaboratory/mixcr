@@ -65,10 +65,7 @@ import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
-import com.milaboratory.util.CanReportProgress;
-import com.milaboratory.util.GlobalObjectMappers;
-import com.milaboratory.util.JsonOverrider;
-import com.milaboratory.util.SmartProgressReporter;
+import com.milaboratory.util.*;
 import io.repseq.core.*;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -283,7 +280,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
         if (totalVErrors > totalV * 0.9 && hasVRegion > totalVErrors * 0.8) {
             warn("WARNING: forcing -OvParameters.geneFeatureToAlign=" + GeneFeature.encode(correctingFeature) +
                     " since current gene feature (" + GeneFeature.encode(alignerParameters.getVAlignerParameters().getGeneFeatureToAlign()) + ") is absent in " +
-                    Util.PERCENT_FORMAT.format(100.0 * totalVErrors / totalV) + "% of V genes.");
+                    ReportHelper.PERCENT_FORMAT.format(100.0 * totalVErrors / totalV) + "% of V genes.");
             alignerParameters.getVAlignerParameters().setGeneFeatureToAlign(correctingFeature);
         }
 

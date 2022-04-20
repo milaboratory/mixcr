@@ -32,6 +32,7 @@ package com.milaboratory.mixcr.cli;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
+import com.milaboratory.util.ReportHelper;
 
 import java.util.Collection;
 import java.util.Date;

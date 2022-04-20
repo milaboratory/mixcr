@@ -42,7 +42,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.cli.Report;
-import com.milaboratory.mixcr.cli.ReportHelper;
+import com.milaboratory.util.ReportHelper;
 import io.repseq.core.*;
 
 import java.util.Arrays;
