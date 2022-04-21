@@ -9,6 +9,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.util.AdjacencyMatrix;
 import com.milaboratory.mixcr.util.BitArrayInt;
 import org.apache.commons.math3.util.Pair;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -30,10 +31,10 @@ class CommonMutationsSearcher {
     }
 
     List<Mutations<NucleotideSequence>> findAlleles(List<CloneDescription> clones) {
-        if (diversity(clones) < parameters.minDiversityToSearchAlleles) {
+        if (diversity(clones) < parameters.minDiversityForAlgorithm) {
             return Collections.singletonList(EMPTY_NUCLEOTIDE_MUTATIONS);
         }
-        if (diversity(clones) < parameters.minDiversityToFindSecondAllele) {
+        if (diversity(clones) < parameters.minDiversityToFindAllele) {
             return Collections.singletonList(alleleThatCoversEveryClone(clones));
         }
         FindFirstAlleleResult findFirstAlleleResult = findFirstAllele(clones);
@@ -45,7 +46,15 @@ class CommonMutationsSearcher {
             clonesWithoutFirstAllele = withoutAllele(clones, firstAllele);
         }
         if (clonesWithoutFirstAllele.isEmpty()) {
-            return Collections.singletonList(firstAllele);
+            Optional<Mutations<NucleotideSequence>> mutationsOfSecondAllele = findAlleleThatIncludedInAlreadyFound(clones, firstAllele);
+            if (mutationsOfSecondAllele.isPresent()) {
+                return List.of(
+                        firstAllele,
+                        firstAllele.combineWith(mutationsOfSecondAllele.get())
+                );
+            } else {
+                return Collections.singletonList(firstAllele);
+            }
         }
         if (diversity(clonesWithoutFirstAllele) == 1) {
             return Lists.newArrayList(firstAllele, findFirstAlleleResult.mutationsInAlmostAllClones);
@@ -75,6 +84,36 @@ class CommonMutationsSearcher {
             throw new IllegalStateException();
         }
         return Lists.newArrayList(firstAllele, secondAllele);
+    }
+
+    @NotNull
+    private Optional<Mutations<NucleotideSequence>> findAlleleThatIncludedInAlreadyFound(List<CloneDescription> clones, Mutations<NucleotideSequence> foundAllele) {
+        var alleleMutations = Arrays.stream(foundAllele.getRAWMutations()).boxed().collect(Collectors.toSet());
+        var clonesWithoutAlleleMutations = clones.stream()
+                .map(it -> it.withoutMutations(alleleMutations))
+                .collect(Collectors.toList());
+        int[] allMutations = clonesWithoutAlleleMutations.stream()
+                .flatMapToInt(cloneDescription -> cloneDescription.mutationsSupplier.get())
+                .distinct()
+                .toArray();
+        int[][] commonMutationsDiversity = commonMutationsDiversity(clonesWithoutAlleleMutations, allMutations);
+
+        var maxDiversity = Arrays.stream(commonMutationsDiversity)
+                .flatMapToInt(Arrays::stream)
+                .max();
+        if (maxDiversity.isEmpty()) {
+            return Optional.empty();
+        }
+        Set<Pair<Integer, Integer>> mutationPairsInAHalfOfClones = mutationPairsWithDiversityMoreThan(
+                allMutations,
+                commonMutationsDiversity,
+                alleleMutations,
+                Math.max(parameters.minDiversityForAlgorithm, (1 - parameters.minPartOfClonesToDeterminateAllele / 2.0) * maxDiversity.getAsInt())
+//                Math.max(parameters.minDiversityForAlgorithm, (1 - parameters.minPartOfClonesToDeterminateAllele / 2.0) * maxDiversity.getAsInt())
+        );
+
+        Optional<IntStream> bestClique = bestCliques(mutationPairsInAHalfOfClones).findFirst();
+        return bestClique.map(IntStream::boxed).map(this::asMutations);
     }
 
     private FindFirstAlleleResult findFirstAllele(List<CloneDescription> clones) {
@@ -374,9 +413,17 @@ class CommonMutationsSearcher {
         private final Supplier<IntStream> mutationsSupplier;
         private final ClusterIdentity clusterIdentity;
 
-        public CloneDescription(Supplier<IntStream> mutationsSupplier, int CDR3Length, String complimentaryGeneName) {
+        private CloneDescription(Supplier<IntStream> mutationsSupplier, ClusterIdentity clusterIdentity) {
             this.mutationsSupplier = mutationsSupplier;
-            this.clusterIdentity = new ClusterIdentity(CDR3Length, complimentaryGeneName);
+            this.clusterIdentity = clusterIdentity;
+        }
+
+        CloneDescription(Supplier<IntStream> mutationsSupplier, int CDR3Length, String complimentaryGeneName) {
+            this(mutationsSupplier, new ClusterIdentity(CDR3Length, complimentaryGeneName));
+        }
+
+        CloneDescription withoutMutations(Set<Integer> mutations) {
+            return new CloneDescription(() -> mutationsSupplier.get().filter(mutation -> !mutations.contains(mutation)), clusterIdentity);
         }
     }
 

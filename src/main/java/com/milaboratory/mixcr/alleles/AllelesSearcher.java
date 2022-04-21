@@ -27,6 +27,7 @@ import io.repseq.dto.VDJCGeneData;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -82,25 +83,33 @@ public class AllelesSearcher {
             );
         });
 
+        Supplier<OutputPort<Clone>> clonesSupplier = () -> new FlatteningOutputPort<>(
+                CUtils.asOutputPort(datasets.stream()
+                        .map(CloneReader::readClones)
+                        .map(this::readClonesWithNonProductiveFilter)
+                        .map(this::readClonesWithCountThreshold)
+                        .collect(Collectors.toList())
+                )
+        );
+
         return new SortedClonotypes(
-                sorterSupplier.apply(Variable).port(new FlatteningOutputPort<>(CUtils.asOutputPort(
-                        datasets.stream().map(this::readClonesWithNonProductiveFilter).collect(Collectors.toList()))
-                )),
-                sorterSupplier.apply(Joining).port(new FlatteningOutputPort<>(CUtils.asOutputPort(
-                        datasets.stream().map(this::readClonesWithNonProductiveFilter).collect(Collectors.toList()))
-                ))
+                sorterSupplier.apply(Variable).port(clonesSupplier.get()),
+                sorterSupplier.apply(Joining).port(clonesSupplier.get())
         );
     }
 
-    private OutputPortCloseable<Clone> readClonesWithNonProductiveFilter(CloneReader dataset) {
+    private OutputPort<Clone> readClonesWithNonProductiveFilter(OutputPort<Clone> port) {
         // filter non-productive clonotypes
         if (parameters.productiveOnly) {
             // todo CDR3?
-            return new FilteringPort<>(dataset.readClones(),
-                    c -> !c.containsStops(CDR3) && !c.isOutOfFrame(CDR3));
+            return new FilteringPort<>(port, c -> !c.containsStops(CDR3) && !c.isOutOfFrame(CDR3));
         } else {
-            return dataset.readClones();
+            return port;
         }
+    }
+
+    private OutputPort<Clone> readClonesWithCountThreshold(OutputPort<Clone> port) {
+        return new FilteringPort<>(port, c -> c.getCount() >= parameters.filterClonesWithCountLessThan);
     }
 
     public OutputPort<Cluster<Clone>> buildClusters(OutputPortCloseable<Clone> sortedClones, GeneType geneType) {
@@ -151,7 +160,8 @@ public class AllelesSearcher {
         ClonesAlignmentRanges commonAlignmentRanges = ClonesAlignmentRanges.commonAlignmentRanges(
                 clusterByTheSameGene.cluster,
                 parameters.minPortionOfClonesForCommonAlignmentRanges,
-                geneType, it -> it.getBestHit(geneType)
+                geneType,
+                it -> it.getBestHit(geneType)
         );
 
         VDJCHit bestHit = clusterByTheSameGene.cluster.get(0).getBestHit(geneType);

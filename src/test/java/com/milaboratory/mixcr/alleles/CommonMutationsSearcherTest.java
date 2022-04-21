@@ -453,6 +453,10 @@ public class CommonMutationsSearcherTest {
                 clone("SA0G"),
                 clone("SA0G"),
                 clone("SA0G"),
+                clone("SA0G"),
+                clone("SA0G"),
+                clone("SA0G"),
+                clone("SA0G"),
                 clone("SA0G,ST1G,ST2G"),
                 clone("SA0G,ST1G,ST2G"),
                 clone("SA0G,ST1G,ST2G"),
@@ -460,6 +464,35 @@ public class CommonMutationsSearcherTest {
                 clone("SA0G,ST1G,ST2G"),
                 clone("SA0G,ST1G,ST2G"),
                 clone("SA0G,ST1G,ST2G")
+        ));
+        assertEqualsMutations(result, "[S0:A->G]", "[S0:A->G,S1:T->G,S2:T->G]");
+    }
+
+    @Test
+    public void oneMutationCoversAlmostAllClonesAndThisMutationWithSeveralOthersCoversAHalfButAlsoHaveRegularHupermutation() {
+        CommonMutationsSearcher searcher = searcher("ATTTTTTTTTTTTTTTTTTTTT");
+        List<Mutations<NucleotideSequence>> result = searcher.findAlleles(Lists.newArrayList(
+                clone("SA0G"),
+                clone("SA0G"),
+                clone("SA0G"),
+                clone("SA0G"),
+                clone("SA0G"),
+                clone("SA0G"),
+                clone("SA0G"),
+                clone("SA0G"),
+                clone("SA0G"),
+                clone("SA0G"),
+                clone("SA0G"),
+                clone("SA0G"),
+                clone("SA0G"),
+                clone("SA0G,ST1G,ST2G,ST3G"),
+                clone("SA0G,ST1G,ST2G,ST3G"),
+                clone("SA0G,ST1G,ST2G,ST3G"),
+                clone("SA0G,ST1G,ST2G,ST3G"),
+                clone("SA0G,ST1G,ST2G,ST4G"),
+                clone("SA0G,ST1G,ST2G,ST4G"),
+                clone("SA0G,ST1G,ST2G,ST4G"),
+                clone("SA0G,ST1G,ST2G,ST4G")
         ));
         assertEqualsMutations(result, "[S0:A->G]", "[S0:A->G,S1:T->G,S2:T->G]");
     }
@@ -522,6 +555,7 @@ public class CommonMutationsSearcherTest {
 
     private CommonMutationsSearcher searcher(String sequence1) {
         var parameters = new FindAllelesParameters(
+                2,
                 3,
                 5,
                 0.8,

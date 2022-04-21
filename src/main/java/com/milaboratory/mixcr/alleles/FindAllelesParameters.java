@@ -43,11 +43,9 @@ import java.util.Objects;
         getterVisibility = JsonAutoDetect.Visibility.NONE)
 @Serializable(asJson = true)
 public class FindAllelesParameters implements java.io.Serializable {
-    public final int minDiversityToSearchAlleles;
-    public final int minDiversityToFindSecondAllele;
-    /**
-     * Clone will be accepted if distanceFromRoot / changeOfDistanceOnCloneAdd >= thresholdForFreeClones.
-     */
+    public final int filterClonesWithCountLessThan;
+    public final int minDiversityForAlgorithm;
+    public final int minDiversityToFindAllele;
     public final double minPartOfClonesToDeterminateAllele;
     /**
      * Max penalty by mutations count in allele to determinate is this clone have the allele.
@@ -64,15 +62,17 @@ public class FindAllelesParameters implements java.io.Serializable {
 
     @JsonCreator
     public FindAllelesParameters(
-            @JsonProperty("minDiversityToSearchAlleles") int minDiversityToSearchAlleles,
-            @JsonProperty("minDiversityToFindSecondAllele") int minDiversityToFindSecondAllele,
+            @JsonProperty("filterClonesWithCountLessThan") int filterClonesWithCountLessThan,
+            @JsonProperty("minDiversityForAlgorithm") int minDiversityForAlgorithm,
+            @JsonProperty("minDiversityToFindAllele") int minDiversityToFindAllele,
             @JsonProperty("minPartOfClonesToDeterminateAllele") double minPartOfClonesToDeterminateAllele,
             @JsonProperty("maxPenaltyByAlleleMutation") double maxPenaltyByAlleleMutation,
             @JsonProperty("productiveOnly") boolean productiveOnly,
             @JsonProperty("minPortionOfClonesForCommonAlignmentRanges") double minPortionOfClonesForCommonAlignmentRanges
     ) {
-        this.minDiversityToSearchAlleles = minDiversityToSearchAlleles;
-        this.minDiversityToFindSecondAllele = minDiversityToFindSecondAllele;
+        this.filterClonesWithCountLessThan = filterClonesWithCountLessThan;
+        this.minDiversityForAlgorithm = minDiversityForAlgorithm;
+        this.minDiversityToFindAllele = minDiversityToFindAllele;
         this.minPartOfClonesToDeterminateAllele = minPartOfClonesToDeterminateAllele;
         this.maxPenaltyByAlleleMutation = maxPenaltyByAlleleMutation;
         this.productiveOnly = productiveOnly;
@@ -81,7 +81,7 @@ public class FindAllelesParameters implements java.io.Serializable {
 
     @Override
     public FindAllelesParameters clone() {
-        return new FindAllelesParameters(minDiversityToSearchAlleles, minDiversityToFindSecondAllele, minPartOfClonesToDeterminateAllele, maxPenaltyByAlleleMutation, productiveOnly, minPortionOfClonesForCommonAlignmentRanges);
+        return new FindAllelesParameters(filterClonesWithCountLessThan, minDiversityForAlgorithm, minDiversityToFindAllele, minPartOfClonesToDeterminateAllele, maxPenaltyByAlleleMutation, productiveOnly, minPortionOfClonesForCommonAlignmentRanges);
     }
 
     @Override
@@ -89,11 +89,11 @@ public class FindAllelesParameters implements java.io.Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         FindAllelesParameters that = (FindAllelesParameters) o;
-        return minDiversityToSearchAlleles == that.minDiversityToSearchAlleles && minDiversityToFindSecondAllele == that.minDiversityToFindSecondAllele && Double.compare(that.minPartOfClonesToDeterminateAllele, minPartOfClonesToDeterminateAllele) == 0 && Double.compare(that.maxPenaltyByAlleleMutation, maxPenaltyByAlleleMutation) == 0 && productiveOnly == that.productiveOnly && Double.compare(that.minPortionOfClonesForCommonAlignmentRanges, minPortionOfClonesForCommonAlignmentRanges) == 0;
+        return filterClonesWithCountLessThan == that.filterClonesWithCountLessThan && minDiversityForAlgorithm == that.minDiversityForAlgorithm && minDiversityToFindAllele == that.minDiversityToFindAllele && Double.compare(that.minPartOfClonesToDeterminateAllele, minPartOfClonesToDeterminateAllele) == 0 && Double.compare(that.maxPenaltyByAlleleMutation, maxPenaltyByAlleleMutation) == 0 && productiveOnly == that.productiveOnly && Double.compare(that.minPortionOfClonesForCommonAlignmentRanges, minPortionOfClonesForCommonAlignmentRanges) == 0;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(minDiversityToSearchAlleles, minDiversityToFindSecondAllele, minPartOfClonesToDeterminateAllele, maxPenaltyByAlleleMutation, productiveOnly, minPortionOfClonesForCommonAlignmentRanges);
+        return Objects.hash(filterClonesWithCountLessThan, minDiversityForAlgorithm, minDiversityToFindAllele, minPartOfClonesToDeterminateAllele, maxPenaltyByAlleleMutation, productiveOnly, minPortionOfClonesForCommonAlignmentRanges);
     }
 }
