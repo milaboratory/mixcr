@@ -243,6 +243,11 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
             }
         }
         PaResult result = new PaResult(readMetadata(), isolationGroups, results);
+        try {
+            Files.createDirectories(outputPath().getParent());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         PaResult.writeJson(outputPath(), result);
     }
 
