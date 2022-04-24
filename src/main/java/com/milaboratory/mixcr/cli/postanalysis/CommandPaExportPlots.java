@@ -1,8 +1,11 @@
 package com.milaboratory.mixcr.cli.postanalysis;
 
 import com.milaboratory.miplots.ExportKt;
+import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.postanalysis.SetPreprocessorSummary;
 import com.milaboratory.mixcr.postanalysis.plots.Filter;
 import com.milaboratory.mixcr.postanalysis.plots.MetadataKt;
+import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import jetbrains.letsPlot.intern.Plot;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
 import org.jetbrains.kotlinx.dataframe.api.DataFrameIterableKt;
@@ -12,7 +15,9 @@ import picocli.CommandLine.Parameters;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 abstract class CommandPaExportPlots extends CommandPaExport {
@@ -60,7 +65,7 @@ abstract class CommandPaExportPlots extends CommandPaExport {
     }
 
     Path plotDestPath(IsolationGroup group) {
-        return Path.of(plotDestStr(group));
+        return Paths.get(plotDestStr(group));
     }
 
     String tablesDestStr(IsolationGroup group) {
@@ -68,12 +73,12 @@ abstract class CommandPaExportPlots extends CommandPaExport {
     }
 
     Path tablesDestPath(IsolationGroup group) {
-        return Path.of(tablesDestStr(group));
+        return Paths.get(tablesDestStr(group));
     }
 
     protected void ensureOutputPathExists() {
         try {
-            Files.createDirectories(Path.of(out).toAbsolutePath().getParent());
+            Files.createDirectories(Paths.get(out).toAbsolutePath().getParent());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -92,5 +97,17 @@ abstract class CommandPaExportPlots extends CommandPaExport {
     void writePlots(IsolationGroup group, Plot plot) {
         ensureOutputPathExists();
         ExportKt.writePDF(tablesDestPath(group), plot);
+    }
+
+    void writePlotsAndSummary(CharacteristicGroup<Clone, ?> ch,
+                              IsolationGroup group,
+                              List<byte[]> plotsAndSummary,
+                              Map<String, SetPreprocessorSummary> preprocSummary
+    ) {
+        ensureOutputPathExists();
+        ExportKt.writePDF(plotDestPath(group), plotsAndSummary);
+        SetPreprocessorSummary.writeCSV(tablesDestPath(group),
+                ch, preprocSummary,
+                "\t");
     }
 }

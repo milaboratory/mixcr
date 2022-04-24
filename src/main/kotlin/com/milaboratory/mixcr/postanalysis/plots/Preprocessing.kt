@@ -7,10 +7,7 @@ import com.itextpdf.layout.element.Paragraph
 import com.itextpdf.layout.element.Text
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorStat
-import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.annotations.DataSchema
-import org.jetbrains.kotlinx.dataframe.api.filter
-import org.jetbrains.kotlinx.dataframe.api.rows
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import java.io.ByteArrayOutputStream
 
@@ -40,60 +37,66 @@ object Preprocessing {
         rows.toDataFrame()
     }
 
-    fun DataFrame<PreprocSummaryRow>.pdfSummary(
-        preprocId: String?,
-        header: String = ""
+    fun pdfSummary(
+        stat: Map<String, SetPreprocessorStat>,
+        headerText: String
     ): ByteArray? = run {
-        val pp = if (preprocId == null)
-            this
-        else
-            this.filter { preproc == preprocId }
-
-        val downsampling = pp.filter {
-            stat.nElementsAfter > 0
-                    && preproc.lowercase().contains("downsampling")
+        val statFiltered = stat.filter {
+            it.value.nElementsAfter > 0 // && preproc.lowercase().contains("downsampl")
         }
-        val elementsAfter = downsampling.rows().map { it.stat.nElementsAfter }.distinct()
-        val weightAfter = downsampling.rows().map { it.stat.sumWeightAfter }.distinct()
+        val elementsAfter = statFiltered.values.map { it.nElementsAfter }.distinct()
+        val weightAfter = statFiltered.values.map { it.sumWeightAfter }.distinct()
 
         val downsamplingText1 =
             if (elementsAfter.size == 1)
-                "Downsampled to $elementsAfter clonotypes"
+                "Downsampled to ${elementsAfter[0]} clonotypes"
             else
                 null
 
         val downsamplingText2 =
             if (weightAfter.size == 1)
-                "Downsampled to $weightAfter reads"
+                "Downsampled to ${weightAfter[0]} reads"
             else
                 null
 
         // dropped samples:
-        val dropped = pp.filter { stat.dropped || stat.nElementsAfter == 0L }.sample.toList().distinct()
+        val dropped = stat.filter { it.value.dropped || it.value.nElementsAfter == 0L }.keys.distinct()
 
         if (downsamplingText1 == null && downsamplingText2 == null && dropped.isEmpty())
             return@run null
 
-        val bs = ByteArrayOutputStream()
-        val pdfDoc = PdfDocument(PdfWriter(bs))
-
-        val document = Document(pdfDoc)
-        document.use {
-            document.add(Paragraph(header).setBold())
+        document {
+            add(Paragraph(headerText).setBold())
             if (downsamplingText1 != null)
-                document.add(Paragraph(downsamplingText1))
+                add(Paragraph(downsamplingText1))
             if (downsamplingText2 != null)
-                document.add(Paragraph(downsamplingText2))
+                add(Paragraph(downsamplingText2))
             if (dropped.isNotEmpty()) {
-                document.add(
+                add(
                     Paragraph("Dropped samples (" + dropped.size + "):\n")
                         .add(Text(dropped.joinToString(", ")).setFontSize(8.0f))
                 )
             }
-            document.close()
+        }
+    }
+
+    private fun document(content: Document.() -> Unit) = run {
+//        val dummyDoc = Document(PdfDocument(PdfWriter(OutputStream.nullOutputStream())))
+//        dummyDoc.content()
+//        val renderer = dummyDoc.renderer//.setParent(dummyDoc2.renderer)
+//        val layout =
+//            renderer.layout(LayoutContext(LayoutArea(0, Rectangle(1000.0f, 1000.0f))))
+
+        val bs = ByteArrayOutputStream()
+        val pdfDoc = PdfDocument(PdfWriter(bs))
+        val document = Document(pdfDoc) //, PageSize(layout.occupiedArea.bBox.width, layout.occupiedArea.bBox.height))
+        document.use {
+            it.content()
+            it.close()
             bs.toByteArray()
         }
     }
+
 //
 //    fun DataFrame<PreprocSummaryRow>.pdfTable(header: String = "") = run {
 //        val nCols = 1 + (this.maxOfOrNull { it.chain.size } ?: 0)

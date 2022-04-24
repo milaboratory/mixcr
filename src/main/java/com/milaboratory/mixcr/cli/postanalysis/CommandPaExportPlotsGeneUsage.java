@@ -2,12 +2,12 @@ package com.milaboratory.mixcr.cli.postanalysis;
 
 import com.milaboratory.miplots.Position;
 import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
 import com.milaboratory.mixcr.postanalysis.plots.ColorKey;
 import com.milaboratory.mixcr.postanalysis.plots.GeneUsage;
 import com.milaboratory.mixcr.postanalysis.plots.GeneUsageRow;
 import com.milaboratory.mixcr.postanalysis.plots.HeatmapParameters;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
-import jetbrains.letsPlot.intern.Plot;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
@@ -32,10 +32,10 @@ public abstract class CommandPaExportPlotsGeneUsage extends CommandPaExportPlots
     @Override
     void run(PaResultByGroup result) {
         CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(group());
-
+        PostanalysisResult paResult = result.result.forGroup(ch);
         DataFrame<?> metadata = metadata();
         DataFrame<GeneUsageRow> df = GeneUsage.INSTANCE.dataFrame(
-                result.result.forGroup(ch),
+                paResult,
                 metadata
         );
         df = filter(df);
@@ -43,7 +43,7 @@ public abstract class CommandPaExportPlotsGeneUsage extends CommandPaExportPlots
         if (df.rowsCount() == 0)
             return;
 
-        Plot plot = GeneUsage.INSTANCE.plot(df,
+        List<byte[]> plot = GeneUsage.INSTANCE.plotAndSummary(df,
                 new HeatmapParameters(
                         !noSamplesDendro,
                         !noGenesDendro,
@@ -56,7 +56,7 @@ public abstract class CommandPaExportPlotsGeneUsage extends CommandPaExportPlots
                         height
                 ));
 
-        writePlots(result.group, plot);
+        writePlotsAndSummary(ch, result.group, plot, paResult.preprocSummary);
     }
 
     @CommandLine.Command(name = "vUsage",

@@ -1,8 +1,11 @@
 package com.milaboratory.mixcr.postanalysis.plots
 
+import com.milaboratory.miplots.toPDF
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult
+import com.milaboratory.mixcr.postanalysis.SetPreprocessorStat
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.annotations.DataSchema
+import org.jetbrains.kotlinx.dataframe.api.rows
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 
 
@@ -13,10 +16,10 @@ import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 data class GeneUsageRow(
     /** Sample ID */
     val sample: String,
-
+    /** Preprocessor statistics for the sample */
+    val preprocStat: SetPreprocessorStat,
     /** Payload (Gene) */
     val gene: String,
-
     /** Payload weight */
     val weight: Double,
 )
@@ -28,11 +31,16 @@ object GeneUsage {
     fun dataFrame(paResult: PostanalysisResult) = run {
         val data = mutableListOf<GeneUsageRow>()
 
-        for ((_, charData) in paResult.data) {
+        for ((ch, charData) in paResult.data) {
             for ((sampleId, keys) in charData.data) {
                 for (metric in keys.data) {
                     val key = metric.key.toString()
-                    data += GeneUsageRow(sampleId, key, metric.value)
+                    data += GeneUsageRow(
+                        sampleId,
+                        paResult.getPreprocStat(ch, sampleId),
+                        key,
+                        metric.value
+                    )
                 }
             }
         }
@@ -51,6 +59,29 @@ object GeneUsage {
         if (metadata != null)
             df = df.withMetadata(metadata)
         df
+    }
+
+    fun plotAndSummary(
+        df: DataFrame<GeneUsageRow>,
+        params: HeatmapParameters,
+    ) = run {
+        val summary = Preprocessing.pdfSummary(
+            df.rows().associate { it.sample to it.preprocStat },
+            ""
+        )
+
+        val plt = mkHeatmap(
+            df,
+            x = GeneUsageRow::sample.name,
+            y = GeneUsageRow::gene.name,
+            z = GeneUsageRow::weight.name,
+            params = params
+        ).toPDF()
+
+        if (summary == null)
+            listOf(plt)
+        else
+            listOf(summary, plt)
     }
 
     fun plot(

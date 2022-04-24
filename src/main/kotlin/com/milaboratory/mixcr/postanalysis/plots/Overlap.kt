@@ -2,10 +2,9 @@ package com.milaboratory.mixcr.postanalysis.plots
 
 import com.milaboratory.miplots.toPDF
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult
+import com.milaboratory.mixcr.postanalysis.SetPreprocessorStat
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapKey
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapType
-import com.milaboratory.mixcr.postanalysis.plots.Preprocessing.pdfSummary
-import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup
 import jetbrains.letsPlot.label.ggtitle
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.annotations.DataSchema
@@ -17,6 +16,8 @@ import org.jetbrains.kotlinx.dataframe.api.*
 @DataSchema
 data class OverlapRow(
     val preproc: String,
+    val preprocStat1: SetPreprocessorStat,
+    val preprocStat2: SetPreprocessorStat,
     val sample1: String,
     val sample2: String,
     val metric: OverlapType,
@@ -28,17 +29,13 @@ object Overlap {
      * Imports data into DataFrame
      **/
     fun dataFrame(
-        ch: CharacteristicGroup<*, *>,
         paResult: PostanalysisResult,
         metricsFilter: List<String>?
     ) = run {
         val data = mutableListOf<OverlapRow>()
-
-        val ch2preproc = ch.characteristics.associate { it.name to it.preprocessor.id() }
-        val projectedResult = paResult.forGroup(ch)
         val mf = metricsFilter?.map { it.lowercase() }?.toSet()
-        for ((char, charData) in projectedResult.data) {
-            val preproc = ch2preproc[char]!!
+        for ((ch, charData) in paResult.data) {
+            val preproc = charData.preproc
             for ((_, keys) in charData.data) {
                 for (metric in keys.data) {
                     @Suppress("UNCHECKED_CAST")
@@ -46,8 +43,12 @@ object Overlap {
                     if (mf != null && !mf.contains(key.key.toString().lowercase())) {
                         continue
                     }
-                    data += OverlapRow(preproc, key.id1, key.id2, key.key, metric.value)
-                    data += OverlapRow(preproc, key.id2, key.id1, key.key, metric.value)
+                    val sample1 = key.id1
+                    val sample2 = key.id2
+                    val preprocStat1 = paResult.getPreprocStat(ch, sample1)
+                    val preprocStat2 = paResult.getPreprocStat(ch, sample2)
+                    data += OverlapRow(preproc, preprocStat1, preprocStat2, sample1, sample2, key.key, metric.value)
+                    data += OverlapRow(preproc, preprocStat2, preprocStat1, sample2, sample1, key.key, metric.value)
                 }
             }
         }
@@ -59,12 +60,11 @@ object Overlap {
      * Imports data into DataFrame
      **/
     fun dataFrame(
-        ch: CharacteristicGroup<*, *>,
         paResult: PostanalysisResult,
         metricsFilter: List<String>?,
         metadata: Metadata?,
     ) = run {
-        var df: DataFrame<OverlapRow> = dataFrame(ch, paResult, metricsFilter)
+        var df: DataFrame<OverlapRow> = dataFrame(paResult, metricsFilter)
         if (metadata != null)
             df = df.withMetadata(metadata)
         df
@@ -118,20 +118,21 @@ object Overlap {
 
     fun plotsAndSummary(
         df: DataFrame<OverlapRow>,
-        pp: DataFrame<PreprocSummaryRow>,
         par: HeatmapParameters,
     ) = df
         .groupBy { preproc }
         .groups.toList().flatMap { byPreproc ->
             val metrics = byPreproc.metric.distinct().toList()
-            val preprocId = byPreproc.first()[OverlapRow::preproc.name] as String
 
-            val ppFiltered = pp.filter { preproc == preprocId }
             val droppedSamples =
-                ppFiltered.filter { stat.dropped || stat.nElementsAfter == 0L }
-                    .sample.distinct().toSet()
+                byPreproc.filter { preprocStat1.dropped || preprocStat1.nElementsAfter == 0L }
+                    .sample1.distinct().toSet()
 
-            val summary = ppFiltered.pdfSummary(metrics.joinToString(", "))
+            val summary = Preprocessing.pdfSummary(
+                byPreproc.rows().associate { it.sample1 to it.preprocStat1 },
+                metrics.joinToString(", ")
+            )
+
             val plots = byPreproc
                 .filter { !droppedSamples.contains(it.sample1) && !droppedSamples.contains(it.sample2) }
                 .groupBy { metric }.groups.toList()

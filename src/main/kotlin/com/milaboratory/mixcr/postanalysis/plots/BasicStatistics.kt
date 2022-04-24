@@ -11,7 +11,9 @@ import com.milaboratory.miplots.stat.xdiscrete.GGBoxPlot
 import com.milaboratory.miplots.stat.xdiscrete.LabelFormat
 import com.milaboratory.miplots.stat.xdiscrete.plusAssign
 import com.milaboratory.miplots.stat.xdiscrete.statCompareMeans
+import com.milaboratory.miplots.toPDF
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult
+import com.milaboratory.mixcr.postanalysis.SetPreprocessorStat
 import jetbrains.letsPlot.facet.facetWrap
 import jetbrains.letsPlot.geom.geomBoxplot
 import jetbrains.letsPlot.label.ggtitle
@@ -27,12 +29,14 @@ import org.jetbrains.kotlinx.dataframe.api.*
 @DataSchema
 @Suppress("UNCHECKED_CAST")
 data class BasicStatRow(
+    /** Preprocessor */
+    val preproc: String,
+    /** Preprocessor statistics for the sample */
+    val preprocStat: SetPreprocessorStat,
     /** Sample ID */
     val sample: String,
-
     /** Metric name */
     val metric: String,
-
     /** Value */
     val value: Double,
 )
@@ -48,14 +52,18 @@ object BasicStatistics {
         val data = mutableListOf<BasicStatRow>()
 
         val mf = metricsFilter?.toSet()
-        for ((_, charData) in paResult.data) {
+        for ((ch, charData) in paResult.data) {
             for ((sampleId, keys) in charData.data) {
                 for (metric in keys.data) {
                     val key = metric.key.toString()
                     if (mf != null && !mf.contains(key)) {
                         continue
                     }
-                    data += BasicStatRow(sampleId, key, metric.value)
+                    data += BasicStatRow(
+                        charData.preproc,
+                        paResult.getPreprocStat(ch, sampleId),
+                        sampleId, key, metric.value
+                    )
                 }
             }
         }
@@ -111,76 +119,105 @@ object BasicStatistics {
         .filter { !it.isEmpty() }
         .map { mdf -> plot(mdf, pp) + ggtitle(mdf.first()[BasicStatRow::metric.name]!!.toString()) }
 
+    fun plotsAndSummary(
+        df: DataFrame<BasicStatRow>,
+        par: PlotParameters,
+    ): List<ByteArray> = df.groupBy { preproc }.groups.toList().flatMap { byPreproc ->
+        val metrics = byPreproc.metric.distinct().toList()
+
+        val droppedSamples =
+            df.filter { preprocStat.dropped || preprocStat.nElementsAfter == 0L }
+                .sample.distinct().toSet()
+
+        val summary = Preprocessing.pdfSummary(
+            byPreproc.rows().associate { it.sample to it.preprocStat },
+            metrics.joinToString(", ")
+        )
+
+        val plots = byPreproc
+            .filter { !droppedSamples.contains(it.sample) }
+            .groupBy { metric }.groups.toList()
+            .filter { !it.isEmpty() }
+            .map { mdf -> plot(mdf, par) + ggtitle(mdf.first()[BasicStatRow::metric.name]!!.toString()) }
+            .map { it.toPDF() }
+            .toList()
+
+        if (summary == null)
+            plots
+        else
+            listOf(summary) + plots
+    }
+
     fun plot(
         df: DataFrame<BasicStatRow>,
-        pp: PlotParameters,
+        par: PlotParameters,
     ) =
-        if (pp.primaryGroup == null) {
+        if (par.primaryGroup == null) {
             val data = df.add(List(df.rowsCount()) { "" }.toColumn("__x__")).toMap()
             var plt = letsPlot(data) {
                 x = "__x__"
                 y = BasicStatRow::value.name
             }
             plt += geomBoxplot()
-            if (pp.facetBy != null)
-                plt += facetWrap(pp.facetBy)
+            if (par.facetBy != null)
+                plt += facetWrap(par.facetBy)
 
             plt += xlab("")
             plt
-        } else if (df.isNumeric(pp.primaryGroup)) {
+        } else if (df.isNumeric(par.primaryGroup)) {
             val plt = GGScatter(
                 df,
-                x = pp.primaryGroup,
+                x = par.primaryGroup,
                 y = BasicStatRow::value.name,
-                facetBy = pp.facetBy,
+                facetBy = par.facetBy,
                 facetNRow = 1,
             ) {
-                shape = pp.secondaryGroup
-                color = pp.secondaryGroup
-                linetype = pp.secondaryGroup
+                shape = par.secondaryGroup
+                color = par.secondaryGroup
+                linetype = par.secondaryGroup
             }
 
-            plt += statCor(method = pp.correlationMethod)
+            plt += statCor(method = par.correlationMethod)
 
             plt.plot
         } else {
             val plt = GGBoxPlot(
                 df,
-                x = pp.primaryGroup,
+                x = par.primaryGroup,
                 y = BasicStatRow::value.name,
-                facetBy = pp.facetBy,
+                facetBy = par.facetBy,
                 facetNRow = 1,
             ) {
-                fill = pp.secondaryGroup ?: pp.primaryGroup
+                fill = par.secondaryGroup ?: par.primaryGroup
             }
 
-            if (pp.showPairwisePValue)
+            if (par.showPairwisePValue)
                 plt += statCompareMeans(
-                    method = pp.method,
-                    multipleGroupsMethod = pp.multipleGroupsMethod,
-                    pAdjustMethod = pp.pAdjustMethod,
-                    paired = pp.paired,
-                    hideNS = pp.hideNS,
-                    labelFormat = pp.comparisonsPValueFormat,
+                    method = par.method,
+                    multipleGroupsMethod = par.multipleGroupsMethod,
+                    pAdjustMethod = par.pAdjustMethod,
+                    paired = par.paired,
+                    hideNS = par.hideNS,
+                    labelFormat = par.comparisonsPValueFormat,
                     allComparisons = true
                 )
 
-            if (pp.refGroup != null)
+            if (par.refGroup != null)
                 plt += statCompareMeans(
-                    method = pp.method,
-                    multipleGroupsMethod = pp.multipleGroupsMethod,
-                    pAdjustMethod = pp.pAdjustMethod,
-                    paired = pp.paired,
-                    hideNS = pp.hideNS,
-                    labelFormat = pp.refPValueFormat,
-                    refGroup = pp.refGroup
+                    method = par.method,
+                    multipleGroupsMethod = par.multipleGroupsMethod,
+                    pAdjustMethod = par.pAdjustMethod,
+                    paired = par.paired,
+                    hideNS = par.hideNS,
+                    labelFormat = par.refPValueFormat,
+                    refGroup = par.refGroup
                 )
 
-            if (pp.showOverallPValue)
+            if (par.showOverallPValue && par.secondaryGroup == null)
                 plt += statCompareMeans(
-                    method = pp.method,
-                    multipleGroupsMethod = pp.multipleGroupsMethod,
-                    labelFormat = pp.overallPValueFormat,
+                    method = par.method,
+                    multipleGroupsMethod = par.multipleGroupsMethod,
+                    labelFormat = par.overallPValueFormat,
                 )
 
             plt.plot

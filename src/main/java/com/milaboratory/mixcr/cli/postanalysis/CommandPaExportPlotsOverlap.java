@@ -1,6 +1,5 @@
 package com.milaboratory.mixcr.cli.postanalysis;
 
-import com.milaboratory.miplots.ExportKt;
 import com.milaboratory.miplots.Position;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
@@ -49,7 +48,6 @@ public class CommandPaExportPlotsOverlap extends CommandPaExportPlotsHeatmapWith
         DataFrame<?> metadata = metadata();
 
         DataFrame<OverlapRow> df = Overlap.INSTANCE.dataFrame(
-                ch,
                 paResult,
                 metrics,
                 metadata
@@ -61,10 +59,6 @@ public class CommandPaExportPlotsOverlap extends CommandPaExportPlotsHeatmapWith
 
         if (df.get("weight").distinct().toList().size() <= 1)
             return;
-
-        DataFrame<PreprocSummaryRow> pp = Preprocessing.INSTANCE.dataFrame(paResult, null);
-        pp = MetadataKt.attachMetadata(pp, "sample", metadata, "sample");
-        pp = filter(pp);
 
         HeatmapParameters par = new HeatmapParameters(
                 !noDendro,
@@ -80,11 +74,7 @@ public class CommandPaExportPlotsOverlap extends CommandPaExportPlotsHeatmapWith
                 height
         );
 
-        ensureOutputPathExists();
-        List<byte[]> plotsAndSummary = Overlap.INSTANCE.plotsAndSummary(df, pp, par);
-        ExportKt.writePDF(plotDestPath(result.group), plotsAndSummary);
-        SetPreprocessorSummary.writeCSV(tablesDestPath(result.group),
-                ch, preprocSummary,
-                "\t");
+        List<byte[]> plotsAndSummary = Overlap.INSTANCE.plotsAndSummary(df, par);
+        writePlotsAndSummary(ch, result.group, plotsAndSummary, preprocSummary);
     }
 }

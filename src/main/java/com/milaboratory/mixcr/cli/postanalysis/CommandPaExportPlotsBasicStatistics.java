@@ -3,10 +3,10 @@ package com.milaboratory.mixcr.cli.postanalysis;
 import com.milaboratory.miplots.stat.util.TestMethod;
 import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod;
 import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatRow;
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
-import jetbrains.letsPlot.intern.Plot;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
@@ -28,37 +28,36 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
     @Override
     void run(PaResultByGroup result) {
         CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(group());
-
+        PostanalysisResult paResult = result.result.forGroup(ch);
         DataFrame<?> metadata = metadata();
-
         DataFrame<BasicStatRow> df = BasicStatistics.INSTANCE.dataFrame(
-                result.result.forGroup(ch),
+                paResult,
                 metrics,
                 metadata
         );
 
         df = filter(df);
 
-        List<Plot> plots = BasicStatistics.INSTANCE.plots(df,
-                new BasicStatistics.PlotParameters(
-                        primaryGroup,
-                        secondaryGroup,
-                        facetBy,
-                        true,
-                        true,
-                        null,
-                        false,
-                        null,
-                        null,
-                        null,
-                        false,
-                        TestMethod.Wilcoxon,
-                        TestMethod.KruskalWallis,
-                        null,
-                        CorrelationMethod.Pearson
-                ));
+        BasicStatistics.PlotParameters par = new BasicStatistics.PlotParameters(
+                primaryGroup,
+                secondaryGroup,
+                facetBy,
+                true,
+                true,
+                null,
+                false,
+                null,
+                null,
+                null,
+                false,
+                TestMethod.Wilcoxon,
+                TestMethod.KruskalWallis,
+                null,
+                CorrelationMethod.Pearson
+        );
 
-        writePlots(result.group, plots);
+        List<byte[]> plots = BasicStatistics.INSTANCE.plotsAndSummary(df, par);
+        writePlotsAndSummary(ch, result.group, plots, paResult.preprocSummary);
     }
 
     @CommandLine.Command(name = "biophysics",

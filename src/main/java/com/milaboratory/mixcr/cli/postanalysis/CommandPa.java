@@ -52,6 +52,10 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
             names = {"-m", "--meta", "--metadata"})
     public String metadata;
 
+    @Option(description = "Metadata column for chains.",
+            names = {"--chains-column"})
+    public String chainsColumn;
+
     @Option(description = "Metadata categories used to isolate samples into separate groups",
             names = {"-g", "--group"})
     public List<String> isolationGroups;
@@ -153,7 +157,7 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
             return _metadata;
         List<String> content;
         try {
-            content = Files.readAllLines(Path.of(metadata).toAbsolutePath());
+            content = Files.readAllLines(Paths.get(metadata).toAbsolutePath());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -195,7 +199,7 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
 
     /** group samples into isolated groups */
     protected List<SamplesGroup> groupSamples() {
-        if (isolationGroups == null || isolationGroups.isEmpty()) {
+        if ((isolationGroups == null || isolationGroups.isEmpty()) && chainsColumn == null) {
             return Collections.singletonList(new SamplesGroup(getInputFiles(), Collections.emptyMap()));
         }
 
@@ -218,9 +222,12 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
         Map<Map<String, Object>, List<String>> samplesByGroup = new HashMap<>();
         for (int i = 0; i < nRows; i++) {
             Map<String, Object> group = new HashMap<>();
-            for (String igr : isolationGroups) {
+            for (String igr : isolationGroups == null ? Collections.singletonList(chainsColumn) : isolationGroups) {
                 group.put(igr, metadata.get(igr).get(i));
             }
+            if (chainsColumn != null)
+                group.put(chainsColumn, metadata.get(chainsColumn).get(i));
+
             String sample = (String) metadata.get("sample").get(i);
             samplesByGroup.computeIfAbsent(group, __ -> new ArrayList<>())
                     .add(meta2sample.get(sample));
@@ -234,13 +241,17 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
     @Override
     public void run0() throws Exception {
         List<PaResultByGroup> results = new ArrayList<>();
+        Chains c = Chains.parse(chains);
         for (SamplesGroup group : groupSamples()) {
-            Chains c = Chains.parse(chains);
-            for (NamedChains knownChains : CHAINS) {
-                if (c.intersects(knownChains.chains)) {
-                    results.add(run(new IsolationGroup(knownChains, group.group), group.samples));
+            if (chainsColumn != null)
+                results.add(run(new IsolationGroup(
+                        Chains.getNamedChains(group.group.get(chainsColumn).toString()), group.group), group.samples));
+            else
+                for (NamedChains knownChains : CHAINS) {
+                    if (c.intersects(knownChains.chains)) {
+                        results.add(run(new IsolationGroup(knownChains, group.group), group.samples));
+                    }
                 }
-            }
         }
         PaResult result = new PaResult(readMetadata(), isolationGroups, results);
         try {

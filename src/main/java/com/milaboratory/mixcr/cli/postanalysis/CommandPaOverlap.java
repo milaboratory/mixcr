@@ -86,7 +86,22 @@ public class CommandPaOverlap extends CommandPa {
         SmartProgressReporter.startProgressReport(runner);
         PostanalysisResult result = runner.run(overlapDataset);
 
+        result = updatePreprocSummary(result);
+
         return new PaResultByGroup(group, schema, result);
+    }
+
+    private static PostanalysisResult updatePreprocSummary(PostanalysisResult r) {
+        return new PostanalysisResult(r.datasetIds, r.data,
+                r.preprocSummary.entrySet().stream()
+                        .map(e -> new AbstractMap.SimpleEntry<>(e.getKey(),
+                                        new SetPreprocessorSummary(e.getValue().result.entrySet().stream()
+                                                .map(e2 -> new AbstractMap.SimpleEntry<>(e2.getKey(),
+                                                        e2.getValue().stream()
+                                                                .map(l -> l.setPreprocId("overlap"))
+                                                                .collect(toList()))).collect(toMap(Map.Entry::getKey, Map.Entry::getValue)))
+                                )
+                        ).collect(toMap(Map.Entry::getKey, Map.Entry::getValue)));
     }
 
     public static CloneReader mkCheckedReader(Path path,

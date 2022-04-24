@@ -56,7 +56,8 @@ public class IsolationGroup {
         StringBuilder sb = new StringBuilder();
         sb.append(".").append(chains.name);
         for (Object v : group.values()) {
-            sb.append(".").append(v);
+            if (!v.toString().equalsIgnoreCase(chains.name))
+                sb.append(".").append(v);
         }
         return sb.toString();
     }

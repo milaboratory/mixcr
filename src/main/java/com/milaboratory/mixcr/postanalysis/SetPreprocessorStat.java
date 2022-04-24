@@ -59,6 +59,10 @@ public class SetPreprocessorStat {
         this(preprocId, true, -1, -1, Double.NaN, Double.NaN);
     }
 
+    public SetPreprocessorStat setPreprocId(String newId) {
+        return new SetPreprocessorStat(newId, dropped, nElementsBefore, nElementsAfter, sumWeightBefore, sumWeightAfter);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
