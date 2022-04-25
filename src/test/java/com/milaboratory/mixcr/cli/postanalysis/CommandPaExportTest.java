@@ -43,7 +43,7 @@ public class CommandPaExportTest {
         Main.main("exportPa", "overlap",
 //                "--width", "2000",
 //                "--height", "5000",
-           //     "--chains", "TRA",
+                //     "--chains", "TRA",
 //                "--filter", "Chain=TRA",
 //                "--filter", "CellPopulation=CD4mem",
                 "--metadata", "/Users/poslavskysv/Projects/milab/mixcr-test-data/metadata.tsv",

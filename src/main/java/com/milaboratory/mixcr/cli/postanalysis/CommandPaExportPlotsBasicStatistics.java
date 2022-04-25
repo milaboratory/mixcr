@@ -1,5 +1,7 @@
 package com.milaboratory.mixcr.cli.postanalysis;
 
+import com.milaboratory.miplots.stat.util.PValueCorrection;
+import com.milaboratory.miplots.stat.util.RefGroup;
 import com.milaboratory.miplots.stat.util.TestMethod;
 import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod;
 import com.milaboratory.mixcr.basictypes.Clone;
@@ -12,6 +14,7 @@ import picocli.CommandLine;
 import picocli.CommandLine.Option;
 
 import java.util.List;
+import java.util.Objects;
 
 public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExportPlots {
     abstract String group();
@@ -24,6 +27,22 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
     public String facetBy;
     @Option(description = "Select specific metrics to export.", names = {"--metric"})
     public List<String> metrics;
+    @Option(description = "Hide overall p-value.", names = {"--hide-overall-p-value"})
+    public boolean hideOverallPValue;
+    @Option(description = "Hide pairwise p-values.", names = {"--hide-pairwise-p-value"})
+    public boolean hidePairwisePValue;
+    @Option(description = "Reference group. Can be \"all\" or some specific value.", names = {"--ref-group"})
+    public String refGroup;
+    @Option(description = "Hide non-significant observations.", names = {"--hide-ns"})
+    public boolean hideNS;
+    @Option(description = "Do paired analysis.", names = {"--paired"})
+    public boolean paired;
+    @Option(description = "Test method. Default is Wilcoxon. Available methods: Wilcoxon, ANOVA, TTest, KruskalWallis, KolmogorovSmirnov", names = {"--method"})
+    public String method = "Wilcoxon";
+    @Option(description = "Test method for multiple groups comparison. Default is KruskalWallis. Available methods: ANOVA, KruskalWallis, KolmogorovSmirnov", names = {"--method-multiple-groups"})
+    public String methodForMultipleGroups = "KruskalWallis";
+    @Option(description = "Test method for multiple groups comparison. Default is KruskalWallis. Available methods: none, BenjaminiHochberg, BenjaminiYekutieli, Bonferroni, Hochberg, Holm, Hommel", names = {"--p-adjust-method"})
+    public String pAdjustMethod = "Holm";
 
     @Override
     void run(PaResultByGroup result) {
@@ -38,21 +57,27 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
 
         df = filter(df);
 
+        RefGroup rg = null;
+        if (Objects.equals(refGroup, "all"))
+            rg = RefGroup.Companion.getAll();
+        else if (refGroup != null)
+            rg = RefGroup.Companion.of(refGroup);
+
         BasicStatistics.PlotParameters par = new BasicStatistics.PlotParameters(
                 primaryGroup,
                 secondaryGroup,
                 facetBy,
-                true,
-                true,
+                !hideOverallPValue,
+                !hidePairwisePValue,
+                rg,
+                hideNS,
                 null,
-                false,
                 null,
                 null,
-                null,
-                false,
-                TestMethod.Wilcoxon,
-                TestMethod.KruskalWallis,
-                null,
+                paired,
+                TestMethod.valueOf(method),
+                TestMethod.valueOf(methodForMultipleGroups),
+                pAdjustMethod.equals("none") ? null : PValueCorrection.Method.valueOf(pAdjustMethod),
                 CorrelationMethod.Pearson
         );
 
