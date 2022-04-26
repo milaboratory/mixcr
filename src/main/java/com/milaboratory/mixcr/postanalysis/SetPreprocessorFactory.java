@@ -56,9 +56,15 @@ public interface SetPreprocessorFactory<T> {
             }
             return new PreprocessorChain.Factory<>(list);
         } else
-            return before
-                    ? new PreprocessorChain.Factory<>(filter, this)
-                    : new PreprocessorChain.Factory<>(this, filter);
+            return before ? before(filter) : then(filter);
+    }
+
+    default SetPreprocessorFactory<T> then(SetPreprocessorFactory<T> then) {
+        return new PreprocessorChain.Factory<T>(this, then);
+    }
+
+    default SetPreprocessorFactory<T> before(SetPreprocessorFactory<T> before) {
+        return new PreprocessorChain.Factory<T>(before, this);
     }
 
     default SetPreprocessorFactory<T> filterAfter(ElementPredicate<T>... predicates) {

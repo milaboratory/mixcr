@@ -11,6 +11,7 @@ import com.milaboratory.mixcr.postanalysis.additive.KeyFunctions;
 import com.milaboratory.mixcr.postanalysis.diversity.DiversityCharacteristic;
 import com.milaboratory.mixcr.postanalysis.diversity.DiversityMeasure;
 import com.milaboratory.mixcr.postanalysis.preproc.ElementPredicate;
+import com.milaboratory.mixcr.postanalysis.preproc.SelectTop;
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeCharacteristic;
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeKeyFunction;
 import com.milaboratory.mixcr.postanalysis.ui.*;
@@ -72,15 +73,20 @@ public class CommandPaIndividual extends CommandPa {
 
         groups.add(new CharacteristicGroup<>(Diversity,
                 Arrays.asList(new DiversityCharacteristic<>("Diversity", new WeightFunctions.Count(),
-                        downsampling,
-                        new DiversityMeasure[]{
-                                DiversityMeasure.Observed,
-                                DiversityMeasure.Clonality,
-                                DiversityMeasure.ShannonWeiner,
-                                DiversityMeasure.InverseSimpson,
-                                DiversityMeasure.Chao1,
-                                DiversityMeasure.Gini
-                        })),
+                                downsampling,
+                                new DiversityMeasure[]{
+                                        DiversityMeasure.Observed,
+                                        DiversityMeasure.Clonality,
+                                        DiversityMeasure.ShannonWeiner,
+                                        DiversityMeasure.InverseSimpson,
+                                        DiversityMeasure.Chao1,
+                                        DiversityMeasure.Gini
+                                }),
+                        new DiversityCharacteristic<>("D50", new WeightFunctions.Count(),
+                                downsampling.then(new SelectTop.Factory<>(WeightFunctions.Default(), 0.5)),
+                                new DiversityMeasure[]{
+                                        DiversityMeasure.Observed.overrideName("d50")
+                                })),
                 Arrays.asList(new GroupSummary<>())
         ));
 
