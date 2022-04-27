@@ -260,7 +260,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
      */
     @Override
     public OutputPortCloseable<Clone> readClones() {
-        return input.beginPrimitivIBlocks(Clone.class);
+        return input.beginRandomAccessPrimitivIBlocks(Clone.class, firstClonePosition);
     }
 
     /**
