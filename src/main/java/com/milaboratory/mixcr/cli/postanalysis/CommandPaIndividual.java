@@ -82,7 +82,7 @@ public class CommandPaIndividual extends CommandPa {
                                         DiversityMeasure.Chao1,
                                         DiversityMeasure.Gini
                                 }),
-                        new DiversityCharacteristic<>("D50", new WeightFunctions.Count(),
+                        new DiversityCharacteristic<>("d50", new WeightFunctions.Count(),
                                 downsampling.then(new SelectTop.Factory<>(WeightFunctions.Default(), 0.5)),
                                 new DiversityMeasure[]{
                                         DiversityMeasure.Observed.overrideName("d50")
