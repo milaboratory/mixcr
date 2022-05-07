@@ -18,12 +18,9 @@ plugins {
     `java-library`
     application
     `maven-publish`
-    id("com.palantir.git-version") version "0.13.0"
+    id("com.palantir.git-version") version "0.15.0"
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
-
-// val miGitHubMavenUser: String by project
-// val miGitHubMavenToken: String by project
 
 val miRepoAccessKeyId: String? by project
 val miRepoSecretAccessKey: String? by project
@@ -74,7 +71,7 @@ repositories {
     }
 }
 
-val milibVersion = "1.15.0-23-master"
+val milibVersion = "1.15.0-26-master"
 val repseqioVersion = "1.3.5-24-master"
 val jacksonVersion = "2.13.2.2"
 
