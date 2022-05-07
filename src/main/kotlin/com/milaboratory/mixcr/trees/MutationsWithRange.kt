@@ -1,152 +1,106 @@
-package com.milaboratory.mixcr.trees;
+package com.milaboratory.mixcr.trees
 
-import com.milaboratory.core.Range;
-import com.milaboratory.core.mutations.Mutations;
-import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.util.RangeInfo;
+import com.milaboratory.core.Range
+import com.milaboratory.core.mutations.Mutations
+import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.mixcr.util.RangeInfo
 
-public class MutationsWithRange {
-    private final NucleotideSequence sequence1;
-    private final Mutations<NucleotideSequence> mutations;
-    private final RangeInfo rangeInfo;
-    private NucleotideSequence result;
-
-    public MutationsWithRange(
-            NucleotideSequence sequence1,
-            Mutations<NucleotideSequence> mutations,
-            RangeInfo rangeInfo
-    ) {
-        this.sequence1 = sequence1;
-        this.mutations = mutations;
-        this.rangeInfo = rangeInfo;
+class MutationsWithRange(
+    val sequence1: NucleotideSequence,
+    val mutations: Mutations<NucleotideSequence>,
+    val rangeInfo: RangeInfo
+) {
+    private var result: NucleotideSequence? = null
+    fun mutationsCount(): Int {
+        return mutationsForRange().size()
     }
 
-    public RangeInfo getRangeInfo() {
-        return rangeInfo;
+    fun differenceWith(comparison: MutationsWithRange): MutationsWithRange {
+        require(rangeInfo.range == comparison.rangeInfo.range)
+        require(sequence1 == comparison.sequence1)
+        val sequence1 = buildSequence()
+        return MutationsWithRange(
+            sequence1,
+            mutationsForRange().invert()
+                .combineWith(comparison.mutationsForRange())
+                .move(-rangeInfo.range.lower),
+            RangeInfo(Range(0, sequence1.size()), true)
+        )
     }
 
-    public NucleotideSequence getSequence1() {
-        return sequence1;
+    fun combineWith(next: MutationsWithRange): MutationsWithRange {
+        require(next.sequence1.getRange(next.rangeInfo.range) == buildSequence())
+        return MutationsWithRange(
+            sequence1,
+            mutationsForRange().combineWith(next.mutationsForRange().move(rangeInfo.range.lower)),
+            RangeInfo(rangeInfo.range, true)
+        )
     }
 
-    public Mutations<NucleotideSequence> getMutations() {
-        return mutations;
+    fun lengthDelta(): Int = projectedRange().range.length() - rangeInfo.range.length()
+
+    private fun projectedRange(): RangeInfo = RangeInfo(
+        MutationsUtils.projectRange(mutations, rangeInfo),
+        rangeInfo.isIncludeFirstInserts
+    )
+
+    fun combineWithMutationsToTheRight(mutations: Mutations<NucleotideSequence>, range: Range): MutationsWithRange {
+        require(rangeInfo.range.upper == range.lower)
+        return MutationsWithRange(
+            sequence1,
+            this.mutations.concat(mutations),
+            RangeInfo(
+                rangeInfo.range.setUpper(range.upper),
+                rangeInfo.range.isEmpty
+            )
+        )
     }
 
-    public int mutationsCount() {
-        return mutationsForRange().size();
+    fun combineWithMutationsToTheLeft(mutations: Mutations<NucleotideSequence>, range: Range): MutationsWithRange {
+        require(range.upper == rangeInfo.range.lower)
+        val mutationsBefore = mutationsForRange()
+        return MutationsWithRange(
+            sequence1,
+            mutations.concat(mutationsBefore),
+            RangeInfo(
+                rangeInfo.range.setLower(range.lower),
+                true
+            )
+        )
     }
 
-    MutationsWithRange differenceWith(MutationsWithRange comparison) {
-        if (!getRangeInfo().getRange().equals(comparison.getRangeInfo().getRange())) {
-            throw new IllegalArgumentException();
-        }
-        if (!sequence1.equals(comparison.sequence1)) {
-            throw new IllegalArgumentException();
-        }
-        NucleotideSequence sequence1 = buildSequence();
-        return new MutationsWithRange(
-                sequence1,
-                mutationsForRange().invert()
-                        .combineWith(comparison.mutationsForRange())
-                        .move(-getRangeInfo().getRange().getLower()),
-                new RangeInfo(new Range(0, sequence1.size()), true)
-        );
+    fun combineWithTheSameMutationsRight(another: MutationsWithRange): MutationsWithRange {
+        require(rangeInfo.range.upper == another.rangeInfo.range.lower)
+        require(mutations == another.mutations)
+        return MutationsWithRange(
+            sequence1,
+            mutations,
+            RangeInfo(
+                rangeInfo.range.setUpper(another.rangeInfo.range.upper),
+                false
+            )
+        )
     }
 
-    MutationsWithRange combineWith(MutationsWithRange next) {
-        if (!next.getSequence1().getRange(next.getRangeInfo().getRange()).equals(buildSequence())) {
-            throw new IllegalArgumentException();
-        }
-        return new MutationsWithRange(
-                sequence1,
-                mutationsForRange().combineWith(next.mutationsForRange().move(getRangeInfo().getRange().getLower())),
-                new RangeInfo(rangeInfo.getRange(), true)
-        );
+    fun combineWithTheSameMutationsLeft(another: MutationsWithRange): MutationsWithRange {
+        require(rangeInfo.range.lower == another.rangeInfo.range.upper)
+        require(mutations == another.mutations)
+        return MutationsWithRange(
+            sequence1,
+            mutations,
+            RangeInfo(
+                rangeInfo.range.setLower(another.rangeInfo.range.lower),
+                another.rangeInfo.isIncludeFirstInserts
+            )
+        )
     }
 
-    int lengthDelta() {
-        return projectedRange().getRange().length() - getRangeInfo().getRange().length();
-    }
-
-    public RangeInfo projectedRange() {
-        return new RangeInfo(
-                MutationsUtils.projectRange(mutations, rangeInfo),
-                rangeInfo.isIncludeFirstInserts()
-        );
-    }
-
-    public MutationsWithRange combineWithMutationsToTheRight(Mutations<NucleotideSequence> mutations, Range range) {
-        if (rangeInfo.getRange().getUpper() != range.getLower()) {
-            throw new IllegalArgumentException();
-        }
-        return new MutationsWithRange(
-                sequence1,
-                this.mutations.concat(mutations),
-                new RangeInfo(
-                        rangeInfo.getRange().setUpper(range.getUpper()),
-                        rangeInfo.getRange().isEmpty()
-                )
-        );
-    }
-
-    public MutationsWithRange combineWithMutationsToTheLeft(Mutations<NucleotideSequence> mutations, Range range) {
-        if (range.getUpper() != rangeInfo.getRange().getLower()) {
-            throw new IllegalArgumentException();
-        }
-        Mutations<NucleotideSequence> mutationsBefore = mutationsForRange();
-        return new MutationsWithRange(
-                sequence1,
-                mutations.concat(mutationsBefore),
-                new RangeInfo(
-                        rangeInfo.getRange().setLower(range.getLower()),
-                        true
-                )
-        );
-    }
-
-    public MutationsWithRange combineWithTheSameMutationsRight(MutationsWithRange another) {
-        if (rangeInfo.getRange().getUpper() != another.rangeInfo.getRange().getLower()) {
-            throw new IllegalArgumentException();
-        }
-        if (!mutations.equals(another.mutations)) {
-            throw new IllegalArgumentException();
-        }
-        return new MutationsWithRange(
-                sequence1,
-                mutations,
-                new RangeInfo(
-                        rangeInfo.getRange().setUpper(another.rangeInfo.getRange().getUpper()),
-                        false
-                )
-        );
-    }
-
-    public MutationsWithRange combineWithTheSameMutationsLeft(MutationsWithRange another) {
-        if (rangeInfo.getRange().getLower() != another.rangeInfo.getRange().getUpper()) {
-            throw new IllegalArgumentException();
-        }
-        if (!mutations.equals(another.mutations)) {
-            throw new IllegalArgumentException();
-        }
-        return new MutationsWithRange(
-                sequence1,
-                mutations,
-                new RangeInfo(
-                        rangeInfo.getRange().setLower(another.rangeInfo.getRange().getLower()),
-                        another.getRangeInfo().isIncludeFirstInserts()
-                )
-        );
-    }
-
-    NucleotideSequence buildSequence() {
+    fun buildSequence(): NucleotideSequence {
         if (result == null) {
-            result = MutationsUtils.buildSequence(sequence1, mutations, rangeInfo);
+            result = MutationsUtils.buildSequence(sequence1, mutations, rangeInfo)
         }
-        return result;
+        return result!!
     }
 
-    Mutations<NucleotideSequence> mutationsForRange() {
-        return rangeInfo.extractAbsoluteMutations(mutations);
-    }
+    fun mutationsForRange(): Mutations<NucleotideSequence> = rangeInfo.extractAbsoluteMutations(mutations)
 }

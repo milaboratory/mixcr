@@ -1,246 +1,243 @@
-package com.milaboratory.mixcr.trees;
+@file:Suppress("LocalVariableName")
 
-import com.google.common.primitives.Bytes;
-import com.milaboratory.core.Range;
-import com.milaboratory.core.mutations.Mutations;
-import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.util.RangeInfo;
-import org.junit.Ignore;
-import org.junit.Test;
+package com.milaboratory.mixcr.trees
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import com.google.common.primitives.Bytes
+import com.milaboratory.core.Range
+import com.milaboratory.core.mutations.Mutations
+import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.mixcr.trees.MutationsGenerator.generateMutations
+import com.milaboratory.mixcr.util.RangeInfo
+import org.junit.Assert
+import org.junit.Ignore
+import org.junit.Test
+import java.util.*
+import java.util.concurrent.ThreadLocalRandom
+import java.util.stream.Collectors
+import java.util.stream.IntStream
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-
-public class CalculationOfMutationsDifferenceTest {
+class CalculationOfMutationsDifferenceTest {
     @Test
-    public void dontIncludeInsertionsFirstInsertionsInParent() {
-        NucleotideSequence grand_ = new NucleotideSequence("TTTT");
-        NucleotideSequence parent = new NucleotideSequence("TTTTG");
-        NucleotideSequence child_ = new NucleotideSequence("ATTTTA");
-        MutationsWithRange fromGrandToParent = new MutationsWithRange(
-                grand_,
-                new Mutations<>(NucleotideSequence.ALPHABET, "I0G,I4G"),
-                new RangeInfo(new Range(0, grand_.size()), false)
-        );
-        assertEquals(parent, fromGrandToParent.buildSequence());
-        MutationsWithRange fromGrandToChild = new MutationsWithRange(
-                grand_,
-                new Mutations<>(NucleotideSequence.ALPHABET, "I0A,I4A"),
-                new RangeInfo(new Range(0, grand_.size()), true)
-        );
-        assertEquals(child_, fromGrandToChild.buildSequence());
-        MutationsWithRange result = fromGrandToParent.differenceWith(fromGrandToChild);
-        assertEquals(child_, result.buildSequence());
-        assertEquals(child_, fromGrandToParent.combineWith(result).buildSequence());
+    fun dontIncludeInsertionsFirstInsertionsInParent() {
+        val grand_ = NucleotideSequence("TTTT")
+        val parent = NucleotideSequence("TTTTG")
+        val child_ = NucleotideSequence("ATTTTA")
+        val fromGrandToParent = MutationsWithRange(
+            grand_,
+            Mutations(NucleotideSequence.ALPHABET, "I0G,I4G"),
+            RangeInfo(Range(0, grand_.size()), false)
+        )
+        Assert.assertEquals(parent, fromGrandToParent.buildSequence())
+        val fromGrandToChild = MutationsWithRange(
+            grand_,
+            Mutations(NucleotideSequence.ALPHABET, "I0A,I4A"),
+            RangeInfo(Range(0, grand_.size()), true)
+        )
+        Assert.assertEquals(child_, fromGrandToChild.buildSequence())
+        val result = fromGrandToParent.differenceWith(fromGrandToChild)
+        Assert.assertEquals(child_, result.buildSequence())
+        Assert.assertEquals(child_, fromGrandToParent.combineWith(result).buildSequence())
     }
 
     @Test
-    public void dontIncludeFirstInsertionsInChild() {
-        NucleotideSequence grand_ = new NucleotideSequence("TTTT");
-        NucleotideSequence parent = new NucleotideSequence("GTTTTG");
-        NucleotideSequence child_ = new NucleotideSequence("TTTTA");
-        MutationsWithRange fromGrandToParent = new MutationsWithRange(
-                grand_,
-                new Mutations<>(NucleotideSequence.ALPHABET, "I0G,I4G"),
-                new RangeInfo(new Range(0, grand_.size()), true)
-        );
-        assertEquals(parent, fromGrandToParent.buildSequence());
-        MutationsWithRange fromGrandToChild = new MutationsWithRange(
-                grand_,
-                new Mutations<>(NucleotideSequence.ALPHABET, "I0A,I4A"),
-                new RangeInfo(new Range(0, grand_.size()), false)
-        );
-        assertEquals(child_, fromGrandToChild.buildSequence());
-        MutationsWithRange result = fromGrandToParent.differenceWith(fromGrandToChild);
-        assertEquals(child_, result.buildSequence());
-        assertEquals(child_, fromGrandToParent.combineWith(result).buildSequence());
+    fun dontIncludeFirstInsertionsInChild() {
+        val grand_ = NucleotideSequence("TTTT")
+        val parent = NucleotideSequence("GTTTTG")
+        val child_ = NucleotideSequence("TTTTA")
+        val fromGrandToParent = MutationsWithRange(
+            grand_,
+            Mutations(NucleotideSequence.ALPHABET, "I0G,I4G"),
+            RangeInfo(Range(0, grand_.size()), true)
+        )
+        Assert.assertEquals(parent, fromGrandToParent.buildSequence())
+        val fromGrandToChild = MutationsWithRange(
+            grand_,
+            Mutations(NucleotideSequence.ALPHABET, "I0A,I4A"),
+            RangeInfo(Range(0, grand_.size()), false)
+        )
+        Assert.assertEquals(child_, fromGrandToChild.buildSequence())
+        val result = fromGrandToParent.differenceWith(fromGrandToChild)
+        Assert.assertEquals(child_, result.buildSequence())
+        Assert.assertEquals(child_, fromGrandToParent.combineWith(result).buildSequence())
     }
 
     @Test
-    public void deletionOfFirstLetterInChildAndIncludeFirst() {
-        NucleotideSequence grand_ = new NucleotideSequence("TTTT");
-        NucleotideSequence parent = new NucleotideSequence("TTTG");
-        NucleotideSequence child_ = new NucleotideSequence("TTT");
-        MutationsWithRange fromGrandToParent = new MutationsWithRange(
-                grand_,
-                new Mutations<>(NucleotideSequence.ALPHABET, "ST3G"),
-                new RangeInfo(new Range(0, grand_.size()), false)
-        );
-        assertEquals(parent, fromGrandToParent.buildSequence());
-        MutationsWithRange fromGrandToChild = new MutationsWithRange(
-                grand_,
-                new Mutations<>(NucleotideSequence.ALPHABET, "DT0"),
-                new RangeInfo(new Range(0, grand_.size()), false)
-        );
-        assertEquals(child_, fromGrandToChild.buildSequence());
-        MutationsWithRange result = fromGrandToParent.differenceWith(fromGrandToChild);
-        assertEquals(child_, result.buildSequence());
-        assertEquals(child_, fromGrandToParent.combineWith(result).buildSequence());
+    fun deletionOfFirstLetterInChildAndIncludeFirst() {
+        val grand_ = NucleotideSequence("TTTT")
+        val parent = NucleotideSequence("TTTG")
+        val child_ = NucleotideSequence("TTT")
+        val fromGrandToParent = MutationsWithRange(
+            grand_,
+            Mutations(NucleotideSequence.ALPHABET, "ST3G"),
+            RangeInfo(Range(0, grand_.size()), false)
+        )
+        Assert.assertEquals(parent, fromGrandToParent.buildSequence())
+        val fromGrandToChild = MutationsWithRange(
+            grand_,
+            Mutations(NucleotideSequence.ALPHABET, "DT0"),
+            RangeInfo(Range(0, grand_.size()), false)
+        )
+        Assert.assertEquals(child_, fromGrandToChild.buildSequence())
+        val result = fromGrandToParent.differenceWith(fromGrandToChild)
+        Assert.assertEquals(child_, result.buildSequence())
+        Assert.assertEquals(child_, fromGrandToParent.combineWith(result).buildSequence())
     }
 
     @Test
-    public void deletionOfFirstLetterInChildAndDontIncludeFirstInsertions() {
-        NucleotideSequence grand_ = new NucleotideSequence("TTTT");
-        NucleotideSequence parent = new NucleotideSequence("TTTG");
-        NucleotideSequence child_ = new NucleotideSequence("TTT");
-        MutationsWithRange fromGrandToParent = new MutationsWithRange(
-                grand_,
-                new Mutations<>(NucleotideSequence.ALPHABET, "ST3G"),
-                new RangeInfo(new Range(0, grand_.size()), false)
-        );
-        assertEquals(parent, fromGrandToParent.buildSequence());
-        MutationsWithRange fromGrandToChild = new MutationsWithRange(
-                grand_,
-                new Mutations<>(NucleotideSequence.ALPHABET, "DT0"),
-                new RangeInfo(new Range(0, grand_.size()), false)
-        );
-        assertEquals(child_, fromGrandToChild.buildSequence());
-        MutationsWithRange result = fromGrandToParent.differenceWith(fromGrandToChild);
-        assertEquals(child_, result.buildSequence());
-        assertEquals(child_, fromGrandToParent.combineWith(result).buildSequence());
+    fun deletionOfFirstLetterInChildAndDontIncludeFirstInsertions() {
+        val grand_ = NucleotideSequence("TTTT")
+        val parent = NucleotideSequence("TTTG")
+        val child_ = NucleotideSequence("TTT")
+        val fromGrandToParent = MutationsWithRange(
+            grand_,
+            Mutations(NucleotideSequence.ALPHABET, "ST3G"),
+            RangeInfo(Range(0, grand_.size()), false)
+        )
+        Assert.assertEquals(parent, fromGrandToParent.buildSequence())
+        val fromGrandToChild = MutationsWithRange(
+            grand_,
+            Mutations(NucleotideSequence.ALPHABET, "DT0"),
+            RangeInfo(Range(0, grand_.size()), false)
+        )
+        Assert.assertEquals(child_, fromGrandToChild.buildSequence())
+        val result = fromGrandToParent.differenceWith(fromGrandToChild)
+        Assert.assertEquals(child_, result.buildSequence())
+        Assert.assertEquals(child_, fromGrandToParent.combineWith(result).buildSequence())
     }
 
     @Test
-    public void insertionsInDifferentPlaces() {
-        NucleotideSequence grand_ = new NucleotideSequence("CCCC");
-        NucleotideSequence parent = new NucleotideSequence("CTCCC");
-        NucleotideSequence child_ = new NucleotideSequence("CCCAC");
-        MutationsWithRange fromGrandToParent = new MutationsWithRange(
-                grand_,
-                new Mutations<>(NucleotideSequence.ALPHABET, "I1T"),
-                new RangeInfo(new Range(0, grand_.size()), false)
-        );
-        assertEquals(parent, fromGrandToParent.buildSequence());
-        MutationsWithRange fromGrandToChild = new MutationsWithRange(
-                grand_,
-                new Mutations<>(NucleotideSequence.ALPHABET, "I3A"),
-                new RangeInfo(new Range(0, grand_.size()), false)
-        );
-        assertEquals(child_, fromGrandToChild.buildSequence());
-        MutationsWithRange result = fromGrandToParent.differenceWith(fromGrandToChild);
-        assertEquals(child_, result.buildSequence());
-        assertEquals(child_, fromGrandToParent.combineWith(result).buildSequence());
+    fun insertionsInDifferentPlaces() {
+        val grand_ = NucleotideSequence("CCCC")
+        val parent = NucleotideSequence("CTCCC")
+        val child_ = NucleotideSequence("CCCAC")
+        val fromGrandToParent = MutationsWithRange(
+            grand_,
+            Mutations(NucleotideSequence.ALPHABET, "I1T"),
+            RangeInfo(Range(0, grand_.size()), false)
+        )
+        Assert.assertEquals(parent, fromGrandToParent.buildSequence())
+        val fromGrandToChild = MutationsWithRange(
+            grand_,
+            Mutations(NucleotideSequence.ALPHABET, "I3A"),
+            RangeInfo(Range(0, grand_.size()), false)
+        )
+        Assert.assertEquals(child_, fromGrandToChild.buildSequence())
+        val result = fromGrandToParent.differenceWith(fromGrandToChild)
+        Assert.assertEquals(child_, result.buildSequence())
+        Assert.assertEquals(child_, fromGrandToParent.combineWith(result).buildSequence())
     }
 
     @Test
-    public void substitutionsWithSubRangeFromOne() {
-        NucleotideSequence grand_ = new NucleotideSequence("CCGCCG");
-        NucleotideSequence parent = new NucleotideSequence("CACCG");
-        NucleotideSequence child_ = new NucleotideSequence("CGCCA");
-        MutationsWithRange fromGrandToParent = new MutationsWithRange(
-                grand_,
-                new Mutations<>(NucleotideSequence.ALPHABET, "SG2A"),
-                new RangeInfo(new Range(1, grand_.size()), false)
-        );
-        assertEquals(parent, fromGrandToParent.buildSequence());
-        MutationsWithRange fromGrandToChild = new MutationsWithRange(
-                grand_,
-                new Mutations<>(NucleotideSequence.ALPHABET, "SG5A"),
-                new RangeInfo(new Range(1, grand_.size()), false)
-        );
-        assertEquals(child_, fromGrandToChild.buildSequence());
-        MutationsWithRange result = fromGrandToParent.differenceWith(fromGrandToChild);
-        assertEquals(child_, result.buildSequence());
-        assertEquals(child_, fromGrandToParent.combineWith(result).buildSequence());
+    fun substitutionsWithSubRangeFromOne() {
+        val grand_ = NucleotideSequence("CCGCCG")
+        val parent = NucleotideSequence("CACCG")
+        val child_ = NucleotideSequence("CGCCA")
+        val fromGrandToParent = MutationsWithRange(
+            grand_,
+            Mutations(NucleotideSequence.ALPHABET, "SG2A"),
+            RangeInfo(Range(1, grand_.size()), false)
+        )
+        Assert.assertEquals(parent, fromGrandToParent.buildSequence())
+        val fromGrandToChild = MutationsWithRange(
+            grand_,
+            Mutations(NucleotideSequence.ALPHABET, "SG5A"),
+            RangeInfo(Range(1, grand_.size()), false)
+        )
+        Assert.assertEquals(child_, fromGrandToChild.buildSequence())
+        val result = fromGrandToParent.differenceWith(fromGrandToChild)
+        Assert.assertEquals(child_, result.buildSequence())
+        Assert.assertEquals(child_, fromGrandToParent.combineWith(result).buildSequence())
     }
 
     @Test
-    public void deletionInTheStartOfSubRangeFromOneAndDontIncludeFirstInsertions() {
-        NucleotideSequence grand_ = new NucleotideSequence("GTTGT");
-        NucleotideSequence parent = new NucleotideSequence("ATG");
-        NucleotideSequence child_ = new NucleotideSequence("TG");
-        MutationsWithRange fromGrandToParent = new MutationsWithRange(
-                grand_,
-                new Mutations<>(NucleotideSequence.ALPHABET, "ST1A"),
-                new RangeInfo(new Range(1, 4), false)
-        );
-        assertEquals(parent, fromGrandToParent.buildSequence());
-        MutationsWithRange fromGrandToChild = new MutationsWithRange(
-                grand_,
-                new Mutations<>(NucleotideSequence.ALPHABET, "DT1"),
-                new RangeInfo(new Range(1, 4), false)
-        );
-        assertEquals(child_, fromGrandToChild.buildSequence());
-        MutationsWithRange result = fromGrandToParent.differenceWith(fromGrandToChild);
-        assertEquals(child_, result.buildSequence());
-        assertEquals(child_, fromGrandToParent.combineWith(result).buildSequence());
+    fun deletionInTheStartOfSubRangeFromOneAndDontIncludeFirstInsertions() {
+        val grand_ = NucleotideSequence("GTTGT")
+        val parent = NucleotideSequence("ATG")
+        val child_ = NucleotideSequence("TG")
+        val fromGrandToParent = MutationsWithRange(
+            grand_,
+            Mutations(NucleotideSequence.ALPHABET, "ST1A"),
+            RangeInfo(Range(1, 4), false)
+        )
+        Assert.assertEquals(parent, fromGrandToParent.buildSequence())
+        val fromGrandToChild = MutationsWithRange(
+            grand_,
+            Mutations(NucleotideSequence.ALPHABET, "DT1"),
+            RangeInfo(Range(1, 4), false)
+        )
+        Assert.assertEquals(child_, fromGrandToChild.buildSequence())
+        val result = fromGrandToParent.differenceWith(fromGrandToChild)
+        Assert.assertEquals(child_, result.buildSequence())
+        Assert.assertEquals(child_, fromGrandToParent.combineWith(result).buildSequence())
     }
 
     @Test
-    public void reproduceRandom() {
-        assertFalse(testRandom(5657551124671488951L, true));
+    fun reproduceRandom() {
+        Assert.assertFalse(testRandom(5657551124671488951L, true))
     }
 
     @Ignore
     @Test
-    public void randomizedTest() {
-        int numberOfRuns = 1_000_000;
-        List<Long> failedSeeds = IntStream.range(0, numberOfRuns)
-                .mapToObj(it -> ThreadLocalRandom.current().nextLong())
-                .parallel()
-                .filter(seed -> testRandom(seed, false))
-                .collect(Collectors.toList());
-        System.out.println("failed: " + failedSeeds.size());
-        assertEquals(Collections.emptyList(), failedSeeds);
+    fun randomizedTest() {
+        val numberOfRuns = 1000000
+        val failedSeeds = IntStream.range(0, numberOfRuns)
+            .mapToObj { ThreadLocalRandom.current().nextLong() }
+            .parallel()
+            .filter { seed: Long -> testRandom(seed, false) }
+            .collect(Collectors.toList())
+        println("failed: " + failedSeeds.size)
+        Assert.assertEquals(emptyList<Any>(), failedSeeds)
     }
 
-    private boolean testRandom(long seed, boolean print) {
-        try {
-            Random random = new Random(seed);
-            NucleotideSequence grand = generate(random);
-            Range subRange = new Range(random.nextInt(2), grand.size() - random.nextInt(2));
-            MutationsWithRange fromGrandToParent = new MutationsWithRange(
-                    grand,
-                    MutationsGenerator.generateMutations(grand, random),
-                    new RangeInfo(subRange, random.nextBoolean())
-            );
-            MutationsWithRange fromGrandToChild = new MutationsWithRange(
-                    grand,
-                    MutationsGenerator.generateMutations(grand, random),
-                    new RangeInfo(subRange, random.nextBoolean())
-            );
-            NucleotideSequence child = fromGrandToChild.buildSequence();
+    private fun testRandom(seed: Long, print: Boolean): Boolean {
+        return try {
+            val random = Random(seed)
+            val grand = generate(random)
+            val subRange = Range(random.nextInt(2), grand.size() - random.nextInt(2))
+            val fromGrandToParent = MutationsWithRange(
+                grand,
+                generateMutations(grand, random),
+                RangeInfo(subRange, random.nextBoolean())
+            )
+            val fromGrandToChild = MutationsWithRange(
+                grand,
+                generateMutations(grand, random),
+                RangeInfo(subRange, random.nextBoolean())
+            )
+            val child = fromGrandToChild.buildSequence()
             if (print) {
-                System.out.println("grand: " + grand);
-                System.out.println("parent: " + fromGrandToParent.buildSequence());
-                System.out.println("child: " + child);
-                System.out.println();
-                System.out.println("from grand to parent: " + fromGrandToParent.getMutations());
-                System.out.println("from grand to parent range info: " + fromGrandToParent.getRangeInfo());
-                System.out.println();
-                System.out.println("from grand to child: " + fromGrandToChild.getMutations());
-                System.out.println("from grand to child range info: " + fromGrandToChild.getRangeInfo());
-                System.out.println();
+                println("grand: $grand")
+                println("parent: " + fromGrandToParent.buildSequence())
+                println("child: $child")
+                println()
+                println("from grand to parent: " + fromGrandToParent.mutations)
+                println("from grand to parent range info: " + fromGrandToParent.rangeInfo)
+                println()
+                println("from grand to child: " + fromGrandToChild.mutations)
+                println("from grand to child range info: " + fromGrandToChild.rangeInfo)
+                println()
             }
-            MutationsWithRange result = fromGrandToParent.differenceWith(fromGrandToChild);
+            val result = fromGrandToParent.differenceWith(fromGrandToChild)
             if (print) {
-                System.out.println("result: " + result.getMutations());
-                System.out.println("result range info: " + result.getRangeInfo());
-                System.out.println();
+                println("result: " + result.mutations)
+                println("result range info: " + result.rangeInfo)
+                println()
             }
-            assertEquals(child, result.buildSequence());
-            assertEquals(child, fromGrandToParent.combineWith(result).buildSequence());
-            return false;
-        } catch (Throwable e) {
+            Assert.assertEquals(child, result.buildSequence())
+            Assert.assertEquals(child, fromGrandToParent.combineWith(result).buildSequence())
+            false
+        } catch (e: Throwable) {
             if (print) {
-                e.printStackTrace();
+                e.printStackTrace()
             }
-            return true;
+            true
         }
     }
 
-    private NucleotideSequence generate(Random random) {
-        List<Byte> chars = IntStream.range(0, 5 + random.nextInt(5))
-                .mapToObj(it -> (byte) random.nextInt(4))
-                .collect(Collectors.toList());
-
-        return new NucleotideSequence(Bytes.toArray(chars));
+    private fun generate(random: Random): NucleotideSequence {
+        val chars = IntStream.range(0, 5 + random.nextInt(5))
+            .mapToObj { random.nextInt(4).toByte() }
+            .collect(Collectors.toList())
+        return NucleotideSequence(Bytes.toArray(chars))
     }
 }

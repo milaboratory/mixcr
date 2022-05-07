@@ -1,93 +1,90 @@
-package com.milaboratory.mixcr.trees;
+package com.milaboratory.mixcr.trees
 
-import com.milaboratory.core.Range;
-import com.milaboratory.core.alignment.AlignmentScoring;
-import com.milaboratory.core.alignment.AlignmentUtils;
-import com.milaboratory.core.mutations.Mutation;
-import com.milaboratory.core.mutations.Mutations;
-import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.util.ClonesAlignmentRanges;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
-
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Objects;
-import java.util.function.ToIntFunction;
-import java.util.stream.IntStream;
-
-import static io.repseq.core.GeneType.Joining;
-import static io.repseq.core.GeneType.Variable;
+import com.milaboratory.core.alignment.Alignment
+import com.milaboratory.core.alignment.AlignmentScoring
+import com.milaboratory.core.alignment.AlignmentUtils
+import com.milaboratory.core.mutations.Mutation
+import com.milaboratory.core.mutations.Mutations
+import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.mixcr.util.ClonesAlignmentRanges
+import io.repseq.core.GeneFeature
+import io.repseq.core.GeneType
+import java.util.*
+import java.util.function.ToIntFunction
+import java.util.stream.IntStream
 
 /**
  *
  */
-public interface ClusteringCriteria {
+interface ClusteringCriteria {
     /**
      * Returns the hash code of the feature which is used to group clonotypes
      */
-    ToIntFunction<CloneWrapper> clusteringHashCode();
+    fun clusteringHashCode(): ToIntFunction<CloneWrapper>
 
     /**
      * Comparator for clonotypes with the same hash code but from different clusters
      */
-    Comparator<CloneWrapper> clusteringComparator();
-
-    default Comparator<CloneWrapper> clusteringComparatorWithNumberOfMutations(AlignmentScoring<NucleotideSequence> VScoring, AlignmentScoring<NucleotideSequence> JScoring) {
+    fun clusteringComparator(): Comparator<CloneWrapper?>
+    fun clusteringComparatorWithNumberOfMutations(
+        VScoring: AlignmentScoring<NucleotideSequence>,
+        JScoring: AlignmentScoring<NucleotideSequence>
+    ): Comparator<CloneWrapper?>? {
         return clusteringComparator()
-                .thenComparing(Comparator.<CloneWrapper>comparingDouble(clone ->
-                        mutationsScoreWithoutCDR3(clone, Variable, VScoring)
-                                + mutationsScoreWithoutCDR3(clone, Joining, JScoring)
-                ).reversed());
+            .thenComparing(Comparator.comparingDouble { clone: CloneWrapper ->
+                (mutationsScoreWithoutCDR3(clone, GeneType.Variable, VScoring)
+                    + mutationsScoreWithoutCDR3(clone, GeneType.Joining, JScoring))
+            }.reversed())
     }
 
-    class DefaultClusteringCriteria implements ClusteringCriteria {
-        @Override
-        public ToIntFunction<CloneWrapper> clusteringHashCode() {
-            return clone -> Objects.hash(
-                    clone.VJBase,
-                    //TODO remove
+    class DefaultClusteringCriteria : ClusteringCriteria {
+        override fun clusteringHashCode(): ToIntFunction<CloneWrapper> {
+            return ToIntFunction { clone: CloneWrapper ->
+                Objects.hash(
+                    clone.VJBase,  //TODO remove
                     clone.clone.ntLengthOf(GeneFeature.CDR3)
-            );
+                )
+            }
         }
 
-        @Override
-        public Comparator<CloneWrapper> clusteringComparator() {
+        override fun clusteringComparator(): Comparator<CloneWrapper?> {
             return Comparator
-                    .<CloneWrapper, String>comparing(c -> c.VJBase.VGeneName)
-                    .thenComparing(c -> c.VJBase.JGeneName)
-                    //TODO remove
-                    .thenComparing(c -> c.clone.ntLengthOf(GeneFeature.CDR3));
+                .comparing { c: CloneWrapper? -> c!!.VJBase.VGeneName }
+                .thenComparing { c: CloneWrapper? -> c!!.VJBase.JGeneName } //TODO remove
+                .thenComparing { c: CloneWrapper? -> c!!.clone.ntLengthOf(GeneFeature.CDR3) }
         }
     }
 
-    static double mutationsScoreWithoutCDR3(CloneWrapper clone, GeneType geneType, AlignmentScoring<NucleotideSequence> scoring) {
-        VDJCHit hit = clone.getHit(geneType);
-        return Arrays.stream(hit.getAlignments())
-                .mapToDouble(alignment -> {
-                    Range CDR3Range = ClonesAlignmentRanges.CDR3Sequence1Range(hit, alignment);
-                    Mutations<NucleotideSequence> mutationsWithoutCDR3;
-                    if (CDR3Range != null) {
-                        mutationsWithoutCDR3 = new Mutations<>(
-                                NucleotideSequence.ALPHABET,
-                                IntStream.of(alignment.getAbsoluteMutations().getRAWMutations())
-                                        .filter(it -> {
-                                            int position = Mutation.getPosition(it);
-                                            return !CDR3Range.contains(position);
-                                        })
-                                        .toArray()
-                        );
+    companion object {
+        fun mutationsScoreWithoutCDR3(
+            clone: CloneWrapper,
+            geneType: GeneType,
+            scoring: AlignmentScoring<NucleotideSequence>
+        ): Double {
+            val hit = clone.getHit(geneType)
+            return Arrays.stream(hit.alignments)
+                .mapToDouble { alignment: Alignment<NucleotideSequence?> ->
+                    val CDR3Range = ClonesAlignmentRanges.CDR3Sequence1Range(hit, alignment)
+                    val mutationsWithoutCDR3 = if (CDR3Range != null) {
+                        Mutations(
+                            NucleotideSequence.ALPHABET,
+                            *IntStream.of(*alignment.absoluteMutations.rawMutations)
+                                .filter { it: Int ->
+                                    val position = Mutation.getPosition(it)
+                                    !CDR3Range.contains(position)
+                                }
+                                .toArray()
+                        )
                     } else {
-                        mutationsWithoutCDR3 = alignment.getAbsoluteMutations();
+                        alignment.absoluteMutations
                     }
-                    return AlignmentUtils.calculateScore(
-                            alignment.getSequence1(),
-                            mutationsWithoutCDR3,
-                            scoring
-                    );
-                })
-                .sum();
+                    AlignmentUtils.calculateScore(
+                        alignment.sequence1,
+                        mutationsWithoutCDR3,
+                        scoring
+                    ).toDouble()
+                }
+                .sum()
+        }
     }
-
 }

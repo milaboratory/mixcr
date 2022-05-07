@@ -27,52 +27,43 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.trees;
+package com.milaboratory.mixcr.trees
 
-import java.math.BigDecimal;
-import java.util.Comparator;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import com.milaboratory.mixcr.trees.Tree.NodeWithParent
+import java.util.stream.Collectors
 
 /**
  * https://en.wikipedia.org/wiki/Newick_format
  */
-public class XmlTreePrinter<T> implements TreePrinter<T> {
-    private final Function<Tree.NodeWithParent<T>, String> nameExtractor;
-
-    public XmlTreePrinter(
-            Function<Tree.NodeWithParent<T>, String> nameExtractor
-    ) {
-        this.nameExtractor = nameExtractor;
+class XmlTreePrinter<T : Any>(
+    private val nameExtractor: (NodeWithParent<T>) -> String
+) : TreePrinter<T> {
+    override fun print(tree: Tree<T>): String {
+        return printNode(NodeWithParent(null, tree.root, null))
     }
 
-    @Override
-    public String print(Tree<T> tree) {
-        return printNode(new Tree.NodeWithParent<>(null, tree.getRoot(), null));
-    }
-
-    private String printNode(Tree.NodeWithParent<T> nodeWithParent) {
-        Tree.Node<T> node = nodeWithParent.getNode();
-        StringBuilder sb = new StringBuilder();
-        sb.append("<node content='");
-        sb.append(nameExtractor.apply(nodeWithParent));
-        sb.append("'");
-        if (nodeWithParent.getDistance() != null) {
-            sb.append(" distance='");
-            sb.append(nodeWithParent.getDistance());
-            sb.append("'");
+    private fun printNode(nodeWithParent: NodeWithParent<T>): String {
+        val node = nodeWithParent.node
+        val sb = StringBuilder()
+        sb.append("<node content='")
+        sb.append(nameExtractor(nodeWithParent))
+        sb.append("'")
+        if (nodeWithParent.distance != null) {
+            sb.append(" distance='")
+            sb.append(nodeWithParent.distance)
+            sb.append("'")
         }
-        if (!node.getLinks().isEmpty()) {
-            sb.append(">");
-            sb.append(node.getLinks().stream()
-                    .sorted(Comparator.comparing(link -> link.getDistance() != null ? link.getDistance() : BigDecimal.ZERO))
-                    .map(link -> printNode(new Tree.NodeWithParent<>(node, link.getNode(), link.getDistance())))
-                    .sorted()
-                    .collect(Collectors.joining("")));
-            sb.append("</node>");
+        if (node.links.isNotEmpty()) {
+            sb.append(">")
+            sb.append(node.links.stream()
+                .sorted(Comparator.comparing { link -> link.distance })
+                .map { link -> printNode(NodeWithParent(node, link.node, link.distance)) }
+                .sorted()
+                .collect(Collectors.joining("")))
+            sb.append("</node>")
         } else {
-            sb.append("/>");
+            sb.append("/>")
         }
-        return sb.toString();
+        return sb.toString()
     }
 }

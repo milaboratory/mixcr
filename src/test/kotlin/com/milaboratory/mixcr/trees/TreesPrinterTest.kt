@@ -1,58 +1,66 @@
-package com.milaboratory.mixcr.trees;
+package com.milaboratory.mixcr.trees
 
-import org.junit.Test;
+import org.junit.Assert.assertEquals
+import org.junit.Test
+import java.math.BigDecimal
 
-import java.math.BigDecimal;
-
-import static org.junit.Assert.assertEquals;
-
-public class TreesPrinterTest {
+class TreesPrinterTest {
     @Test
-    public void treeWithDistancesAndRoot() {
-        TreePrinter<String> treePrinter = new NewickTreePrinter<>(Tree.Node::getContent, true, false);
-
-        Tree<String> tree = sampleTree();
-        assertEquals("((C:0.3,D:0.4)E:0.5,A:0.1,B:0.2)F;", treePrinter.print(tree));
+    fun treeWithDistancesAndRoot() {
+        val treePrinter: TreePrinter<String> = NewickTreePrinter(
+            nameExtractor = { it.content },
+            printDistances = true,
+            printOnlyLeafNames = false
+        )
+        val tree = sampleTree()
+        assertEquals("((C:0.3,D:0.4)E:0.5,A:0.1,B:0.2)F;", treePrinter.print(tree))
     }
 
     @Test
-    public void treeWithDistancesAndLeafName() {
-        TreePrinter<String> treePrinter = new NewickTreePrinter<>(Tree.Node::getContent, true, true);
-
-        Tree<String> tree = sampleTree();
-        assertEquals("((C:0.3,D:0.4):0.5,A:0.1,B:0.2);", treePrinter.print(tree));
+    fun treeWithDistancesAndLeafName() {
+        val treePrinter: TreePrinter<String> = NewickTreePrinter(
+            nameExtractor = { it.content },
+            printDistances = true,
+            printOnlyLeafNames = true
+        )
+        val tree = sampleTree()
+        assertEquals("((C:0.3,D:0.4):0.5,A:0.1,B:0.2);", treePrinter.print(tree))
     }
 
     @Test
-    public void allNodesAreNamed() {
-        TreePrinter<String> treePrinter = new NewickTreePrinter<>(Tree.Node::getContent, false, false);
-
-        Tree<String> tree = sampleTree();
-        assertEquals("((C,D)E,A,B)F;", treePrinter.print(tree));
+    fun allNodesAreNamed() {
+        val treePrinter: TreePrinter<String> = NewickTreePrinter(
+            nameExtractor = { it.content },
+            printDistances = false,
+            printOnlyLeafNames = false
+        )
+        val tree = sampleTree()
+        assertEquals("((C,D)E,A,B)F;", treePrinter.print(tree))
     }
 
     @Test
-    public void allLeafNames() {
-        TreePrinter<String> treePrinter = new NewickTreePrinter<>(Tree.Node::getContent, false, true);
-
-        Tree<String> tree = sampleTree();
-        assertEquals("((C,D),A,B);", treePrinter.print(tree));
+    fun allLeafNames() {
+        val treePrinter: TreePrinter<String> = NewickTreePrinter(
+            nameExtractor = { it.content },
+            printDistances = false,
+            printOnlyLeafNames = true
+        )
+        val tree = sampleTree()
+        assertEquals("((C,D),A,B);", treePrinter.print(tree))
     }
 
     /**
      * sample from https://en.wikipedia.org/wiki/Newick_format
      */
-    private Tree<String> sampleTree() {
-        Tree.Node<String> root = new Tree.Node<>("F");
-        Tree<String> tree = new Tree<>(root);
-
-        root.addChild(new Tree.Node<>("A"), new BigDecimal("0.1"));
-        root.addChild(new Tree.Node<>("B"), new BigDecimal("0.2"));
-        Tree.Node<String> e = new Tree.Node<>("E");
-        root.addChild(e, new BigDecimal("0.5"));
-
-        e.addChild(new Tree.Node<>("C"), new BigDecimal("0.3"));
-        e.addChild(new Tree.Node<>("D"), new BigDecimal("0.4"));
-        return tree;
+    private fun sampleTree(): Tree<String> {
+        val root = Tree.Node("F")
+        val tree = Tree(root)
+        root.addChild(Tree.Node("A"), BigDecimal("0.1"))
+        root.addChild(Tree.Node("B"), BigDecimal("0.2"))
+        val e = Tree.Node("E")
+        root.addChild(e, BigDecimal("0.5"))
+        e.addChild(Tree.Node("C"), BigDecimal("0.3"))
+        e.addChild(Tree.Node("D"), BigDecimal("0.4"))
+        return tree
     }
 }

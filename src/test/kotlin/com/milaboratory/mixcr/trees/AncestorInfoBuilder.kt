@@ -1,26 +1,27 @@
-package com.milaboratory.mixcr.trees;
+@file:Suppress("LocalVariableName")
 
-import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.core.sequence.SequenceBuilder;
+package com.milaboratory.mixcr.trees
 
-class AncestorInfoBuilder {
-    AncestorInfo buildAncestorInfo(MutationsDescription ancestor) {
-        SequenceBuilder<NucleotideSequence> builder = NucleotideSequence.ALPHABET.createBuilder();
-        ancestor.getVMutationsWithoutCDR3().stream()
-                .map(MutationsWithRange::buildSequence)
-                .forEach(builder::append);
-        int CDR3Begin = builder.size();
-        builder.append(ancestor.getVMutationsInCDR3WithoutNDN().buildSequence());
-        builder.append(ancestor.getKnownNDN().buildSequence());
-        builder.append(ancestor.getJMutationsInCDR3WithoutNDN().buildSequence());
-        int CDR3End = builder.size();
-        ancestor.getJMutationsWithoutCDR3().stream()
-                .map(MutationsWithRange::buildSequence)
-                .forEach(builder::append);
-        return new AncestorInfo(
-                builder.createAndDestroy(),
-                CDR3Begin,
-                CDR3End
-        );
+import com.milaboratory.core.sequence.NucleotideSequence
+
+internal class AncestorInfoBuilder {
+    fun buildAncestorInfo(ancestor: MutationsDescription): AncestorInfo {
+        val builder = NucleotideSequence.ALPHABET.createBuilder()
+        ancestor.VMutationsWithoutCDR3.stream()
+            .map { obj: MutationsWithRange -> obj.buildSequence() }
+            .forEach { seq: NucleotideSequence -> builder.append(seq) }
+        val CDR3Begin = builder.size()
+        builder.append(ancestor.VMutationsInCDR3WithoutNDN.buildSequence())
+        builder.append(ancestor.knownNDN.buildSequence())
+        builder.append(ancestor.JMutationsInCDR3WithoutNDN.buildSequence())
+        val CDR3End = builder.size()
+        ancestor.JMutationsWithoutCDR3.stream()
+            .map { obj: MutationsWithRange -> obj.buildSequence() }
+            .forEach { seq: NucleotideSequence -> builder.append(seq) }
+        return AncestorInfo(
+            builder.createAndDestroy(),
+            CDR3Begin,
+            CDR3End
+        )
     }
 }

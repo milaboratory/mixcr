@@ -1,96 +1,51 @@
-package com.milaboratory.mixcr.util;
+package com.milaboratory.mixcr.util
 
-import com.milaboratory.core.Range;
-import com.milaboratory.core.mutations.Mutation;
-import com.milaboratory.core.mutations.Mutations;
-import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.core.Range
+import com.milaboratory.core.mutations.Mutation
+import com.milaboratory.core.mutations.Mutations
+import com.milaboratory.core.sequence.NucleotideSequence
+import java.util.stream.IntStream
 
-import javax.annotation.Nullable;
-import java.util.Objects;
-import java.util.stream.IntStream;
+data class RangeInfo(
+    val range: Range,
+    val isIncludeFirstInserts: Boolean
+) {
 
-public class RangeInfo {
-    private final Range range;
-    private final boolean includeFirstInserts;
-
-    public RangeInfo(Range range, boolean includeFirstInserts) {
-        this.range = range;
-        this.includeFirstInserts = includeFirstInserts;
-    }
-
-    public Range getRange() {
-        return range;
-    }
-
-    public boolean isIncludeFirstInserts() {
-        return includeFirstInserts;
-    }
-
-    @Nullable
-    public RangeInfo intersection(RangeInfo another) {
-        Range intersection;
-        if (getRange().equals(another.getRange())) {
-            intersection = getRange();
+    fun intersection(another: RangeInfo): RangeInfo? {
+        val intersection: Range?
+        if (range == another.range) {
+            intersection = range
         } else {
-            intersection = getRange().intersection(another.getRange());
+            intersection = range.intersection(another.range)
             if (intersection == null) {
-                return null;
+                return null
             }
         }
-        boolean includeFirstInserts;
-        if (intersection.getLower() == getRange().getLower()) {
-            includeFirstInserts = isIncludeFirstInserts();
-        } else if (intersection.getLower() == another.getRange().getLower()) {
-            includeFirstInserts = isIncludeFirstInserts() || another.isIncludeFirstInserts();
-        } else {
-            includeFirstInserts = false;
+        val includeFirstInserts = when (intersection.lower) {
+            range.lower -> isIncludeFirstInserts
+            another.range.lower -> isIncludeFirstInserts || another.isIncludeFirstInserts
+            else -> false
         }
-        return new RangeInfo(
-                intersection,
-                includeFirstInserts
-        );
+        return RangeInfo(
+            intersection,
+            includeFirstInserts
+        )
     }
 
-    @Override
-    public String toString() {
-        return "RangeInfo{" +
-                "range=" + range +
-                ", includeFirstInserts=" + includeFirstInserts +
-                '}';
+    fun extractAbsoluteMutations(mutations: Mutations<NucleotideSequence>): Mutations<NucleotideSequence> {
+        val filteredMutations = IntStream.of(*mutations.rawMutations)
+            .filter { mutation: Int -> this.contains(mutation) }
+            .toArray()
+        return Mutations(NucleotideSequence.ALPHABET, *filteredMutations)
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        RangeInfo rangeInfo = (RangeInfo) o;
-        return includeFirstInserts == rangeInfo.includeFirstInserts && range.equals(rangeInfo.range);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(range, includeFirstInserts);
-    }
-
-    public Mutations<NucleotideSequence> extractAbsoluteMutations(Mutations<NucleotideSequence> mutations) {
-        int[] filteredMutations = IntStream.of(mutations.getRAWMutations())
-                .filter(this::contains)
-                .toArray();
-        return new Mutations<>(NucleotideSequence.ALPHABET, filteredMutations);
-    }
-
-    public boolean contains(int mutation) {
-        int position = Mutation.getPosition(mutation);
-        if (position == range.getLower()) {
-            if (Mutation.isInsertion(mutation)) {
-                return includeFirstInserts;
-            } else {
-                return true;
+    operator fun contains(mutation: Int): Boolean =
+        when (val position = Mutation.getPosition(mutation)) {
+            range.lower -> when {
+                Mutation.isInsertion(mutation) -> isIncludeFirstInserts
+                else -> true
             }
-        } else if (position == range.getUpper()) {
-            return Mutation.isInsertion(mutation);
-        } else {
-            return range.getLower() < position && position < range.getUpper();
+            range.upper -> Mutation.isInsertion(mutation)
+            else -> range.lower < position && position < range.upper
         }
-    }
 }

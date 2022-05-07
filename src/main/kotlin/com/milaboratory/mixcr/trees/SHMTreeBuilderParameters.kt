@@ -27,128 +27,74 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.trees;
+package com.milaboratory.mixcr.trees
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.mixcr.cli.BuildSHMTreeStep;
-import com.milaboratory.primitivio.annotations.Serializable;
-import io.repseq.core.GeneFeature;
-
-import java.util.List;
-import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonAutoDetect
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.milaboratory.mixcr.cli.BuildSHMTreeStep
+import com.milaboratory.primitivio.annotations.Serializable
+import io.repseq.core.GeneFeature
 
 /**
  *
  */
-@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-        getterVisibility = JsonAutoDetect.Visibility.NONE)
+@JsonAutoDetect(
+    fieldVisibility = JsonAutoDetect.Visibility.ANY,
+    isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+    getterVisibility = JsonAutoDetect.Visibility.NONE
+)
 @Serializable(asJson = true)
-public class SHMTreeBuilderParameters implements java.io.Serializable {
+data class SHMTreeBuilderParameters @JsonCreator constructor(
     /**
      * Feature that is covered by all clonotypes (e.g. VDJRegion for full-length data).
      */
-    public final GeneFeature targetRegion;
+    @param:JsonProperty("targetRegion") val targetRegion: GeneFeature?,
     /**
      * Use only productive clonotypes (no OOF, no stops).
      */
-    public final boolean productiveOnly;
-
+    @param:JsonProperty("productiveOnly") val productiveOnly: Boolean,
     /**
      * Clone will be accepted if distanceFromRoot / changeOfDistanceOnCloneAdd >= thresholdForFreeClones.
      */
-    public final double thresholdForFreeClones;
+    @param:JsonProperty("thresholdForFreeClones") val thresholdForFreeClones: Double,
     /**
      * Clone will be combined with a tree if penalty by letter on alignment of NDN on root will be less than this value.
      */
-    public final double thresholdForCombineByNDN;
+    @param:JsonProperty("thresholdForCombineByNDN") val thresholdForCombineByNDN: Double,
     /**
      * Trees will be combined if distance between roots will be less than this value.
      */
-    public final double thresholdForCombineTrees;
+    @param:JsonProperty("thresholdForCombineTrees") val thresholdForCombineTrees: Double,
     /**
      * Count of clones nearest to the root that will be used to determinate borders of NDN region.
      */
-    public final int topToVoteOnNDNSize;
+    @param:JsonProperty("topToVoteOnNDNSize") val topToVoteOnNDNSize: Int,
     /**
      * Penalty that will be multiplied by reversed mutations count.
      */
-    public final double penaltyForReversedMutations;
+    @param:JsonProperty("penaltyForReversedMutations") val penaltyForReversedMutations: Double,
     /**
      * Hide small trees.
      */
-    public final int hideTreesLessThanSize;
-    public final int commonMutationsCountForClustering;
-    public final int maxNDNDistanceForClustering;
+    @param:JsonProperty("hideTreesLessThanSize") val hideTreesLessThanSize: Int,
+    @param:JsonProperty("commonMutationsCountForClustering") val commonMutationsCountForClustering: Int,
+    @param:JsonProperty("maxNDNDistanceForClustering") val maxNDNDistanceForClustering: Int,
     /**
      * Count of the nearest nodes to added that will be proceeded to find optimal insertion.
      */
-    public final int countOfNodesToProbe;
+    @param:JsonProperty("countOfNodesToProbe") val countOfNodesToProbe: Int,
     /**
      * Multiplier of NDN score on calculating distance between clones in a tree.
      */
-    public final double NDNScoreMultiplier;
+    @param:JsonProperty("NDNScoreMultiplier") val NDNScoreMultiplier: Double,
     /**
      * Order of steps to postprocess trees.
      */
-    public final List<BuildSHMTreeStep> stepsOrder;
+    @param:JsonProperty("stepsOrder") val stepsOrder: List<BuildSHMTreeStep>,
     /**
      * Min portion of clones to determinate common alignment ranges.
      */
-    public final double minPortionOfClonesForCommonAlignmentRanges;
-    public final int NDNSizeLimitForPublicClones;
-
-    @JsonCreator
-    public SHMTreeBuilderParameters(
-            @JsonProperty("targetRegion") GeneFeature targetRegion,
-            @JsonProperty("productiveOnly") boolean productiveOnly,
-            @JsonProperty("thresholdForFreeClones") double thresholdForFreeClones,
-            @JsonProperty("thresholdForCombineByNDN") double thresholdForCombineByNDN,
-            @JsonProperty("thresholdForCombineTrees") double thresholdForCombineTrees,
-            @JsonProperty("topToVoteOnNDNSize") int topToVoteOnNDNSize,
-            @JsonProperty("penaltyForReversedMutations") double penaltyForReversedMutations,
-            @JsonProperty("hideTreesLessThanSize") int hideTreesLessThanSize,
-            @JsonProperty("commonMutationsCountForClustering") int commonMutationsCountForClustering,
-            @JsonProperty("maxNDNDistanceForClustering") int maxNDNDistanceForClustering,
-            @JsonProperty("countOfNodesToProbe") int countOfNodesToProbe,
-            @JsonProperty("NDNScoreMultiplier") double NDNScoreMultiplier,
-            @JsonProperty("stepsOrder") List<BuildSHMTreeStep> stepsOrder,
-            @JsonProperty("minPortionOfClonesForCommonAlignmentRanges") double minPortionOfClonesForCommonAlignmentRanges,
-            @JsonProperty("NDNSizeLimitForPublicClones") int NDNSizeLimitForPublicClones
-    ) {
-        this.targetRegion = targetRegion;
-        this.productiveOnly = productiveOnly;
-        this.thresholdForFreeClones = thresholdForFreeClones;
-        this.thresholdForCombineByNDN = thresholdForCombineByNDN;
-        this.thresholdForCombineTrees = thresholdForCombineTrees;
-        this.topToVoteOnNDNSize = topToVoteOnNDNSize;
-        this.penaltyForReversedMutations = penaltyForReversedMutations;
-        this.hideTreesLessThanSize = hideTreesLessThanSize;
-        this.commonMutationsCountForClustering = commonMutationsCountForClustering;
-        this.maxNDNDistanceForClustering = maxNDNDistanceForClustering;
-        this.countOfNodesToProbe = countOfNodesToProbe;
-        this.NDNScoreMultiplier = NDNScoreMultiplier;
-        this.stepsOrder = stepsOrder;
-        this.minPortionOfClonesForCommonAlignmentRanges = minPortionOfClonesForCommonAlignmentRanges;
-        this.NDNSizeLimitForPublicClones = NDNSizeLimitForPublicClones;
-    }
-
-    @Override
-    public SHMTreeBuilderParameters clone() {
-        return new SHMTreeBuilderParameters(targetRegion, productiveOnly, thresholdForFreeClones, thresholdForCombineByNDN, thresholdForCombineTrees, topToVoteOnNDNSize, penaltyForReversedMutations, hideTreesLessThanSize, commonMutationsCountForClustering, maxNDNDistanceForClustering, countOfNodesToProbe, NDNScoreMultiplier, stepsOrder, minPortionOfClonesForCommonAlignmentRanges, NDNSizeLimitForPublicClones);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        SHMTreeBuilderParameters that = (SHMTreeBuilderParameters) o;
-        return productiveOnly == that.productiveOnly && Double.compare(that.thresholdForFreeClones, thresholdForFreeClones) == 0 && Double.compare(that.thresholdForCombineByNDN, thresholdForCombineByNDN) == 0 && Double.compare(that.thresholdForCombineTrees, thresholdForCombineTrees) == 0 && topToVoteOnNDNSize == that.topToVoteOnNDNSize && Double.compare(that.penaltyForReversedMutations, penaltyForReversedMutations) == 0 && hideTreesLessThanSize == that.hideTreesLessThanSize && commonMutationsCountForClustering == that.commonMutationsCountForClustering && maxNDNDistanceForClustering == that.maxNDNDistanceForClustering && countOfNodesToProbe == that.countOfNodesToProbe && Double.compare(that.NDNScoreMultiplier, NDNScoreMultiplier) == 0 && Double.compare(that.minPortionOfClonesForCommonAlignmentRanges, minPortionOfClonesForCommonAlignmentRanges) == 0 && NDNSizeLimitForPublicClones == that.NDNSizeLimitForPublicClones && Objects.equals(targetRegion, that.targetRegion) && Objects.equals(stepsOrder, that.stepsOrder);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(targetRegion, productiveOnly, thresholdForFreeClones, thresholdForCombineByNDN, thresholdForCombineTrees, topToVoteOnNDNSize, penaltyForReversedMutations, hideTreesLessThanSize, commonMutationsCountForClustering, maxNDNDistanceForClustering, countOfNodesToProbe, NDNScoreMultiplier, stepsOrder, minPortionOfClonesForCommonAlignmentRanges, NDNSizeLimitForPublicClones);
-    }
-}
+    @param:JsonProperty("minPortionOfClonesForCommonAlignmentRanges") val minPortionOfClonesForCommonAlignmentRanges: Double,
+    @param:JsonProperty("NDNSizeLimitForPublicClones") val NDNSizeLimitForPublicClones: Int
+) : java.io.Serializable

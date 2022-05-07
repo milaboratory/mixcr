@@ -27,339 +27,371 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.cli;
+@file:Suppress("LocalVariableName")
 
-import cc.redberry.pipe.CUtils;
-import cc.redberry.pipe.util.CountingOutputPort;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.milaboratory.core.mutations.MutationsUtil;
-import com.milaboratory.core.sequence.AminoAcidSequence;
-import com.milaboratory.mixcr.basictypes.CloneReader;
-import com.milaboratory.mixcr.basictypes.CloneSetIO;
-import com.milaboratory.mixcr.trees.*;
-import com.milaboratory.mixcr.util.Cluster;
-import com.milaboratory.mixcr.util.ExceptionUtil;
-import com.milaboratory.mixcr.util.XSV;
-import com.milaboratory.util.SmartProgressReporter;
-import io.repseq.core.VDJCLibraryRegistry;
-import org.apache.commons.io.FilenameUtils;
-import picocli.CommandLine;
+package com.milaboratory.mixcr.cli
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
+import cc.redberry.pipe.CUtils
+import cc.redberry.pipe.util.CountingOutputPort
+import com.google.common.collect.ImmutableMap
+import com.google.common.collect.ImmutableSet
+import com.milaboratory.core.mutations.MutationsUtil.MutationNt2AADescriptor
+import com.milaboratory.core.sequence.AminoAcidSequence
+import com.milaboratory.mixcr.basictypes.CloneReader
+import com.milaboratory.mixcr.basictypes.CloneSetIO
+import com.milaboratory.mixcr.trees.CloneOrFoundAncestor
+import com.milaboratory.mixcr.trees.ClusteringCriteria.DefaultClusteringCriteria
+import com.milaboratory.mixcr.trees.DebugInfo
+import com.milaboratory.mixcr.trees.NewickTreePrinter
+import com.milaboratory.mixcr.trees.SHMTreeBuilder
+import com.milaboratory.mixcr.trees.SHMTreeBuilderParameters
+import com.milaboratory.mixcr.trees.SHMTreeBuilderParametersPresets
+import com.milaboratory.mixcr.trees.Tree.NodeWithParent
+import com.milaboratory.mixcr.trees.TreeWithMeta
+import com.milaboratory.mixcr.util.XSV
+import com.milaboratory.util.SmartProgressReporter
+import io.repseq.core.VDJCLibraryRegistry
+import org.apache.commons.io.FilenameUtils
+import picocli.CommandLine
+import java.io.File
+import java.io.IOException
+import java.io.PrintStream
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.util.*
+import java.util.function.Function
+import java.util.stream.Collectors
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
-import static com.milaboratory.mixcr.trees.CloneOrFoundAncestor.Base.*;
+@CommandLine.Command(
+    name = CommandBuildSHMTree.BUILD_SHM_TREE_COMMAND_NAME,
+    sortOptions = false,
+    separator = " ",
+    description = ["Builds SHM trees."]
+)
+class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
+    @CommandLine.Parameters(arity = "2..*", description = ["input_file.clns [input_file2.clns ....] output_files.zip"])
+    private val inOut: List<String> = ArrayList()
 
-@CommandLine.Command(name = CommandBuildSHMTree.BUILD_SHM_TREE_COMMAND_NAME,
-        sortOptions = false,
-        separator = " ",
-        description = "Builds SHM trees.")
-public class CommandBuildSHMTree extends ACommandWithOutputMiXCR {
-    static final String BUILD_SHM_TREE_COMMAND_NAME = "shm_tree";
-
-    private static final Map<String, Function<Tree.NodeWithParent<CloneOrFoundAncestor>, Object>> columnsThatDependOnNode = ImmutableMap.<String, Function<Tree.NodeWithParent<CloneOrFoundAncestor>, Object>>builder()
-            .put("id", it -> it.getNode().getContent().getId())
-            .put("parentId", it -> it.getParent() == null ? null : it.getParent().getContent().getId())
-            .put("cloneId", it -> it.getNode().getContent().getCloneId())
-            .put("count", it -> it.getNode().getContent().getCount())
-            .put("distanceFromGermline", it -> it.getNode().getContent().getDistanceFromGermline())
-            .put("distanceFromReconstructedRoot", it -> it.getNode().getContent().getDistanceFromReconstructedRoot())
-            .put("distanceFromParent", Tree.NodeWithParent::getDistance)
-            .put("CDR3", it -> it.getNode().getContent().getCDR3())
-            .put("CDR3_AA", it -> {
-                var CDR3 = it.getNode().getContent().getCDR3();
-                if (CDR3.size() % 3 == 0) {
-                    return AminoAcidSequence.translate(CDR3);
-                } else {
-                    return "";
-                }
-            })
-            .put("CDR3_VMutations_FromGermline", it -> it.getNode().getContent().CDR3_VMutations(FromGermline))
-            .put("CDR3_VMutations_FromParent", it -> it.getNode().getContent().CDR3_VMutations(FromParent))
-            .put("CDR3_VMutations_FromRoot", it -> it.getNode().getContent().CDR3_VMutations(FromReconstructedRoot))
-            .put("CDR3_AA_VMutations_FromGermline", it -> toString(it.getNode().getContent().CDR3_AA_VMutations(FromGermline)))
-            .put("CDR3_AA_VMutations_FromParent", it -> toString(it.getNode().getContent().CDR3_AA_VMutations(FromParent)))
-            .put("CDR3_AA_VMutations_FromRoot", it -> toString(it.getNode().getContent().CDR3_AA_VMutations(FromReconstructedRoot)))
-            .put("CDR3_JMutations_FromGermline", it -> it.getNode().getContent().CDR3_JMutations(FromGermline))
-            .put("CDR3_JMutations_FromParent", it -> it.getNode().getContent().CDR3_JMutations(FromParent))
-            .put("CDR3_JMutations_FromRoot", it -> it.getNode().getContent().CDR3_JMutations(FromReconstructedRoot))
-            .put("CDR3_AA_JMutations_FromGermline", it -> toString(it.getNode().getContent().CDR3_AA_JMutations(FromGermline)))
-            .put("CDR3_AA_JMutations_FromParent", it -> toString(it.getNode().getContent().CDR3_AA_JMutations(FromParent)))
-            .put("CDR3_AA_JMutations_FromRoot", it -> toString(it.getNode().getContent().CDR3_AA_JMutations(FromReconstructedRoot)))
-            .put("CDR3_NDN_FromGermline", it -> it.getNode().getContent().CDR3_NDNMutations(FromGermline))
-            .put("CDR3_NDN_FromParent", it -> it.getNode().getContent().CDR3_NDNMutations(FromParent))
-            .put("CDR3_NDN_FromRoot", it -> it.getNode().getContent().CDR3_NDNMutations(FromReconstructedRoot))
-            .put("CGene", it -> it.getNode().getContent().getCGeneName())
-            .build();
-
-    private static String toString(MutationsUtil.MutationNt2AADescriptor[] array) {
-        if (array == null) {
-            return "";
+    @CommandLine.Option(description = ["Processing threads"], names = ["-t", "--threads"])
+    var threads = Runtime.getRuntime().availableProcessors()
+        set(value) {
+            if (value <= 0) throwValidationException("-t / --threads must be positive")
+            field = value
         }
-        return Arrays.stream(array).map(Object::toString).collect(Collectors.joining());
+
+    public override fun getInputFiles(): List<String> {
+        return inOut.subList(0, inOut.size - 1)
     }
 
-    @CommandLine.Parameters(
-            arity = "2..*",
-            description = "input_file.clns [input_file2.clns ....] output_files.zip"
-    )
-    private List<String> inOut = new ArrayList<>();
-
-    public int threads = Runtime.getRuntime().availableProcessors();
-
-    @CommandLine.Option(description = "Processing threads",
-            names = {"-t", "--threads"})
-    public void setThreads(int threads) {
-        if (threads <= 0)
-            throwValidationException("-t / --threads must be positive");
-        this.threads = threads;
+    override fun getOutputFiles(): List<String> {
+        return inOut.subList(inOut.size - 1, inOut.size)
     }
 
-    @Override
-    public List<String> getInputFiles() {
-        return inOut.subList(0, inOut.size() - 1);
-    }
+    private val clnsFiles: List<String>
+        get() = inputFiles
+    private val outputZipPath: String
+        get() = inOut[inOut.size - 1]
 
-    @Override
-    protected List<String> getOutputFiles() {
-        return inOut.subList(inOut.size() - 1, inOut.size());
-    }
+    @CommandLine.Option(description = ["SHM tree builder parameters preset."], names = ["-p", "--preset"])
+    var shmTreeBuilderParametersName = "default"
 
-    private List<String> getClnsFiles() {
-        return getInputFiles();
-    }
+    @CommandLine.Option(names = ["-r", "--report"], description = ["Report file path"])
+    var report: String? = null
 
-    private String getOutputZipPath() {
-        return inOut.get(inOut.size() - 1);
-    }
+    @CommandLine.Option(names = ["-rp", "--report-pdf"], description = ["Pdf report file path"])
+    var reportPdf: String? = null
 
-    @CommandLine.Option(description = "SHM tree builder parameters preset.",
-            names = {"-p", "--preset"})
-    public String shmTreeBuilderParametersName = "default";
+    @CommandLine.Option(description = ["Path to directory to store debug info"], names = ["-d", "--debug"])
+    var debugDirectoryPath: String? = null
+    var debugDirectory: Path? = null
+    private var shmTreeBuilderParameters: SHMTreeBuilderParameters? = null
 
-    @CommandLine.Option(names = {"-r", "--report"}, description = "Report file path")
-    public String report = null;
-
-    @CommandLine.Option(names = {"-rp", "--report-pdf"}, description = "Pdf report file path")
-    public String reportPdf = null;
-
-    @CommandLine.Option(description = "Path to directory to store debug info",
-            names = {"-d", "--debug"})
-    public String debugDirectoryPath = null;
-
-    public Path debugDirectory = null;
-
-    private SHMTreeBuilderParameters shmTreeBuilderParameters = null;
-
-    private void ensureParametersInitialized() throws IOException {
-        if (shmTreeBuilderParameters != null)
-            return;
-
-        shmTreeBuilderParameters = SHMTreeBuilderParametersPresets.getByName(shmTreeBuilderParametersName);
-        if (shmTreeBuilderParameters == null)
-            throwValidationException("Unknown parameters: " + shmTreeBuilderParametersName);
+    @Throws(IOException::class)
+    private fun ensureParametersInitialized() {
+        if (shmTreeBuilderParameters != null) return
+        shmTreeBuilderParameters = SHMTreeBuilderParametersPresets.getByName(shmTreeBuilderParametersName)
+        if (shmTreeBuilderParameters == null) throwValidationException("Unknown parameters: $shmTreeBuilderParametersName")
         if (debugDirectory == null) {
-            if (debugDirectoryPath == null) {
-                debugDirectory = Files.createTempDirectory("debug");
+            debugDirectory = if (debugDirectoryPath == null) {
+                Files.createTempDirectory("debug")
             } else {
-                debugDirectory = Paths.get(debugDirectoryPath);
+                Paths.get(debugDirectoryPath!!)
             }
         }
-        debugDirectory.toFile().mkdirs();
+        debugDirectory!!.toFile().mkdirs()
     }
 
-    @Override
-    public void validate() {
-        super.validate();
-        if (report == null)
-            warn("NOTE: report file is not specified, using " + getReport() + " to write report.");
+    override fun validate() {
+        super.validate()
+        if (report == null) warn("NOTE: report file is not specified, using " + getReportFileName() + " to write report.")
     }
 
-    public String getReport() {
-        return Objects.requireNonNullElseGet(report, () -> FilenameUtils.removeExtension(getOutputZipPath()) + ".report");
-    }
-
-    @Override
-    public void run0() throws Exception {
-        ensureParametersInitialized();
-        List<CloneReader> cloneReaders = getClnsFiles().stream()
-                .map(ExceptionUtil.wrap(path -> CloneSetIO.mkReader(Paths.get(path), VDJCLibraryRegistry.getDefault())))
-                .collect(Collectors.toList());
-        if (cloneReaders.size() == 0) {
-            throw new IllegalArgumentException("there is no files to process");
+    private fun getReportFileName(): String? {
+        return Objects.requireNonNullElseGet(report) {
+            FilenameUtils.removeExtension(
+                outputZipPath
+            ) + ".report"
         }
-        if (cloneReaders.stream().map(CloneReader::getAssemblerParameters).distinct().count() != 1) {
-            throw new IllegalArgumentException("input files must have the same assembler parameters");
-        }
-        SHMTreeBuilder shmTreeBuilder = new SHMTreeBuilder(
-                shmTreeBuilderParameters,
-                new ClusteringCriteria.DefaultClusteringCriteria(),
-                cloneReaders
-        );
-        int cloneWrappersCount = shmTreeBuilder.cloneWrappersCount();
+    }
 
-        BuildSHMTreeReport report = new BuildSHMTreeReport();
-        int stepsCount = shmTreeBuilderParameters.stepsOrder.size() + 1;
-
-        CountingOutputPort<CloneWrapper> sortedClones = new CountingOutputPort<>(shmTreeBuilder.sortedClones());
-        int stepNumber = 1;
-        String stepDescription = "Step " + stepNumber + "/" + stepsCount + ", " + BuildSHMTreeStep.BuildingInitialTrees.forPrint;
-        SmartProgressReporter.startProgressReport(stepDescription, SmartProgressReporter.extractProgress(sortedClones, cloneWrappersCount));
-        Debug currentStepDebug = createDebug(stepNumber);
-        Debug finalCurrentStepDebug = currentStepDebug;
+    @Throws(Exception::class)
+    override fun run0() {
+        ensureParametersInitialized()
+        val cloneReaders = clnsFiles.stream()
+            .map { path ->
+                CloneSetIO.mkReader(
+                    Paths.get(path),
+                    VDJCLibraryRegistry.getDefault()
+                )
+            }
+            .collect(Collectors.toList())
+        require(cloneReaders.size != 0) { "there is no files to process" }
+        require(
+            cloneReaders.stream().map { obj: CloneReader -> obj.assemblerParameters }.distinct().count() == 1L
+        ) { "input files must have the same assembler parameters" }
+        val shmTreeBuilder = SHMTreeBuilder(
+            shmTreeBuilderParameters!!,
+            DefaultClusteringCriteria(),
+            cloneReaders
+        )
+        val cloneWrappersCount = shmTreeBuilder.cloneWrappersCount()
+        val report = BuildSHMTreeReport()
+        val stepsCount = shmTreeBuilderParameters!!.stepsOrder.size + 1
+        var sortedClones = CountingOutputPort(shmTreeBuilder.sortedClones())
+        var stepNumber = 1
+        var stepDescription =
+            "Step " + stepNumber + "/" + stepsCount + ", " + BuildSHMTreeStep.BuildingInitialTrees.forPrint
+        SmartProgressReporter.startProgressReport(
+            stepDescription,
+            SmartProgressReporter.extractProgress(sortedClones, cloneWrappersCount.toLong())
+        )
+        var currentStepDebug = createDebug(stepNumber)
+        val finalCurrentStepDebug = currentStepDebug
         CUtils.processAllInParallel(
-                shmTreeBuilder.buildClusters(sortedClones),
-                cluster -> shmTreeBuilder.zeroStep(cluster, finalCurrentStepDebug.treesBeforeDecisionsWriter),
-                threads
-        );
-        int clonesWasAddedOnInit = shmTreeBuilder.makeDecisions();
+            shmTreeBuilder.buildClusters(sortedClones),
+            { cluster ->
+                shmTreeBuilder.zeroStep(
+                    cluster,
+                    finalCurrentStepDebug.treesBeforeDecisionsWriter
+                )
+            },
+            threads
+        )
+        val clonesWasAddedOnInit = shmTreeBuilder.makeDecisions()
         //TODO check that all trees has minimum common mutations in VJ
-        report.onStepEnd(BuildSHMTreeStep.BuildingInitialTrees, clonesWasAddedOnInit, shmTreeBuilder.treesCount());
-
-        Debug previousStepDebug = currentStepDebug;
-        for (BuildSHMTreeStep step : shmTreeBuilderParameters.stepsOrder) {
-            stepNumber++;
-            currentStepDebug = createDebug(stepNumber);
-            int treesCountBefore = shmTreeBuilder.treesCount();
-            sortedClones = new CountingOutputPort<>(shmTreeBuilder.sortedClones());
-            stepDescription = "Step " + stepNumber + "/" + stepsCount + ", " + step.forPrint;
-            SmartProgressReporter.startProgressReport(stepDescription, SmartProgressReporter.extractProgress(sortedClones, cloneWrappersCount));
-
-            Debug finalPreviousStepDebug = previousStepDebug;
-            Debug finalCurrentStepDebug2 = currentStepDebug;
+        report.onStepEnd(BuildSHMTreeStep.BuildingInitialTrees, clonesWasAddedOnInit, shmTreeBuilder.treesCount())
+        var previousStepDebug = currentStepDebug
+        for (step in shmTreeBuilderParameters!!.stepsOrder) {
+            stepNumber++
+            currentStepDebug = createDebug(stepNumber)
+            val treesCountBefore = shmTreeBuilder.treesCount()
+            sortedClones = CountingOutputPort(shmTreeBuilder.sortedClones())
+            stepDescription = "Step " + stepNumber + "/" + stepsCount + ", " + step.forPrint
+            SmartProgressReporter.startProgressReport(
+                stepDescription,
+                SmartProgressReporter.extractProgress(sortedClones, cloneWrappersCount.toLong())
+            )
+            val finalPreviousStepDebug = previousStepDebug
+            val finalCurrentStepDebug2 = currentStepDebug
             CUtils.processAllInParallel(
-                    shmTreeBuilder.buildClusters(sortedClones),
-                    cluster -> shmTreeBuilder.applyStep(
-                            cluster,
-                            step,
-                            finalPreviousStepDebug.treesAfterDecisionsWriter,
-                            finalCurrentStepDebug2.treesBeforeDecisionsWriter
-                    ),
-                    threads
-            );
-            int clonesWasAdded = shmTreeBuilder.makeDecisions();
-
-            report.onStepEnd(step, clonesWasAdded, shmTreeBuilder.treesCount() - treesCountBefore);
-            previousStepDebug = currentStepDebug;
+                shmTreeBuilder.buildClusters(sortedClones),
+                { cluster ->
+                    shmTreeBuilder.applyStep(
+                        cluster,
+                        step,
+                        finalPreviousStepDebug.treesAfterDecisionsWriter,
+                        finalCurrentStepDebug2.treesBeforeDecisionsWriter
+                    )
+                },
+                threads
+            )
+            val clonesWasAdded = shmTreeBuilder.makeDecisions()
+            report.onStepEnd(step, clonesWasAdded, shmTreeBuilder.treesCount() - treesCountBefore)
+            previousStepDebug = currentStepDebug
         }
+        sortedClones = CountingOutputPort(shmTreeBuilder.sortedClones())
+        SmartProgressReporter.startProgressReport(
+            "Building results",
+            SmartProgressReporter.extractProgress(sortedClones, cloneWrappersCount.toLong())
+        )
+        val outputDirInTmp = Files.createTempDirectory("tree_outputs").toFile()
+        outputDirInTmp.deleteOnExit()
+        val columnsThatDependOnTree = ImmutableMap.builder<String, Function<TreeWithMeta, Any>>()
+            .put("treeId", Function { it.treeId.encode() })
+            .put("VGene", Function { it.rootInfo.VJBase.VGeneName })
+            .put("JGene", Function { it.rootInfo.VJBase.JGeneName })
+            .build()
+        val nodesTableFile = outputDirInTmp.toPath().resolve("nodes.tsv").toFile()
+        nodesTableFile.createNewFile()
+        val nodesTable = PrintStream(nodesTableFile)
+        val allColumnNames = ImmutableSet.builder<String>()
+            .addAll(columnsThatDependOnNode.keys)
+            .addAll(columnsThatDependOnTree.keys)
+            .build()
+        XSV.writeXSVHeaders(nodesTable, allColumnNames, "\t")
+        val printer = NewickTreePrinter<CloneOrFoundAncestor>(
+            nameExtractor = { it.content.id.toString() },
+            printDistances = true,
+            printOnlyLeafNames = false
+        )
+        for (cluster in CUtils.it(shmTreeBuilder.buildClusters(sortedClones))) {
+            val result = shmTreeBuilder.getResult(cluster, previousStepDebug.treesAfterDecisionsWriter).stream()
+                .sorted(Comparator.comparing { it.treeId.encode() })
+                .collect(Collectors.toList())
+            for (treeWithMeta in result) {
+                val columnsBuilder =
+                    ImmutableMap.builder<String, (NodeWithParent<CloneOrFoundAncestor>) -> Any?>()
+                        .putAll(columnsThatDependOnNode)
+                columnsThatDependOnTree.forEach { (key: String, function: Function<TreeWithMeta, Any>) ->
+                    columnsBuilder.put(key) { function.apply(treeWithMeta) }
+                }
+                val columns = columnsBuilder.build()
+                val nodes = treeWithMeta.tree
+                    .allNodes()
+                    .collect(Collectors.toList())
+                XSV.writeXSVBody(nodesTable, nodes, columns, "\t")
+                val treeFile = outputDirInTmp.toPath().resolve(treeWithMeta.treeId.encode() + ".tree").toFile()
+                Files.writeString(treeFile.toPath(), printer.print(treeWithMeta.tree))
+            }
+        }
+        zip(outputDirInTmp.toPath(), Path.of(outputZipPath))
+        for (i in 0..shmTreeBuilderParameters!!.stepsOrder.size) {
+            stepNumber = i + 1
+            val treesBeforeDecisions = debugFile(stepNumber, Debug.BEFORE_DECISIONS_SUFFIX)
+            val treesAfterDecisions = debugFile(stepNumber, Debug.AFTER_DECISIONS_SUFFIX)
+            report.addStatsForStep(i, treesBeforeDecisions, treesAfterDecisions)
+        }
+        println("============= Report ==============")
+        Util.writeReportToStdout(report)
+        Util.writeJsonReport(getReportFileName(), report)
+        if (reportPdf != null) {
+            report.writePdfReport(Paths.get(reportPdf!!))
+        }
+    }
 
-        sortedClones = new CountingOutputPort<>(shmTreeBuilder.sortedClones());
-        SmartProgressReporter.startProgressReport("Building results", SmartProgressReporter.extractProgress(sortedClones, cloneWrappersCount));
-        var outputDirInTmp = Files.createTempDirectory("tree_outputs").toFile();
-        outputDirInTmp.deleteOnExit();
+    @Throws(IOException::class)
+    private fun createDebug(stepNumber: Int): Debug {
+        return Debug(
+            prepareDebugFile(stepNumber, Debug.BEFORE_DECISIONS_SUFFIX),
+            prepareDebugFile(stepNumber, Debug.AFTER_DECISIONS_SUFFIX)
+        )
+    }
 
-        var columnsThatDependOnTree = ImmutableMap.<String, Function<TreeWithMeta, Object>>builder()
-                .put("treeId", it -> it.getTreeId().encode())
-                .put("VGene", it -> it.getRootInfo().getVJBase().VGeneName)
-                .put("JGene", it -> it.getRootInfo().getVJBase().JGeneName)
-                .build();
+    @Throws(IOException::class)
+    private fun prepareDebugFile(stepNumber: Int, suffix: String): PrintStream {
+        val debugFile = debugFile(stepNumber, suffix)
+        debugFile.delete()
+        debugFile.createNewFile()
+        val debugWriter = PrintStream(debugFile)
+        XSV.writeXSVHeaders(debugWriter, DebugInfo.COLUMNS_FOR_XSV.keys, ";")
+        return debugWriter
+    }
 
-        var nodesTableFile = outputDirInTmp.toPath().resolve("nodes.tsv").toFile();
-        nodesTableFile.createNewFile();
-        var nodesTable = new PrintStream(nodesTableFile);
+    private fun debugFile(stepNumber: Int, suffix: String): File {
+        return debugDirectory!!.resolve("step_" + stepNumber + "_" + suffix + ".csv").toFile()
+    }
 
-        var allColumnNames = ImmutableSet.<String>builder()
-                .addAll(columnsThatDependOnNode.keySet())
-                .addAll(columnsThatDependOnTree.keySet())
-                .build();
-        XSV.writeXSVHeaders(nodesTable, allColumnNames, "\t");
+    class Debug(val treesBeforeDecisionsWriter: PrintStream, val treesAfterDecisionsWriter: PrintStream) {
+        companion object {
+            const val BEFORE_DECISIONS_SUFFIX = "before_decisions"
+            const val AFTER_DECISIONS_SUFFIX = "after_decisions"
+        }
+    }
 
-        var printer = new NewickTreePrinter<CloneOrFoundAncestor>(it -> Integer.toString(it.getContent().getId()), true, false);
+    companion object {
+        const val BUILD_SHM_TREE_COMMAND_NAME = "shm_tree"
+        private val columnsThatDependOnNode: Map<String, (NodeWithParent<CloneOrFoundAncestor>) -> Any?> =
+            ImmutableMap.builder<String, (NodeWithParent<CloneOrFoundAncestor>) -> Any?>()
+                .put("id") { it.node.content.id }
+                .put("parentId") { it.parent?.content?.id }
+                .put("cloneId") { it.node.content.cloneId }
+                .put("count") { it.node.content.count }
+                .put("distanceFromGermline") { it.node.content.distanceFromGermline }
+                .put("distanceFromReconstructedRoot") { it.node.content.distanceFromReconstructedRoot }
+                .put("distanceFromParent") { it.distance }
+                .put("CDR3") { it.node.content.CDR3 }
+                .put("CDR3_AA") {
+                    val CDR3 = it.node.content.CDR3
+                    return@put when {
+                        CDR3.size() % 3 == 0 -> AminoAcidSequence.translate(CDR3)
+                        else -> ""
+                    }
+                }
+                .put("CDR3_VMutations_FromGermline") {
+                    it.node.content.CDR3_VMutations(CloneOrFoundAncestor.Base.FromGermline)
+                }
+                .put("CDR3_VMutations_FromParent") {
+                    it.node.content.CDR3_VMutations(CloneOrFoundAncestor.Base.FromParent)
+                }
+                .put("CDR3_VMutations_FromRoot") {
+                    it.node.content.CDR3_VMutations(CloneOrFoundAncestor.Base.FromReconstructedRoot)
+                }
+                .put("CDR3_AA_VMutations_FromGermline") {
+                    it.node.content.CDR3_AA_VMutations(CloneOrFoundAncestor.Base.FromGermline).asString()
+                }
+                .put("CDR3_AA_VMutations_FromParent") {
+                    it.node.content.CDR3_AA_VMutations(CloneOrFoundAncestor.Base.FromParent).asString()
+                }
+                .put("CDR3_AA_VMutations_FromRoot") {
+                    it.node.content.CDR3_AA_VMutations(CloneOrFoundAncestor.Base.FromReconstructedRoot).asString()
+                }
+                .put("CDR3_JMutations_FromGermline") {
+                    it.node.content.CDR3_JMutations(CloneOrFoundAncestor.Base.FromGermline)
+                }
+                .put("CDR3_JMutations_FromParent") {
+                    it.node.content.CDR3_JMutations(CloneOrFoundAncestor.Base.FromParent)
+                }
+                .put("CDR3_JMutations_FromRoot") {
+                    it.node.content.CDR3_JMutations(CloneOrFoundAncestor.Base.FromReconstructedRoot)
+                }
+                .put("CDR3_AA_JMutations_FromGermline") {
+                    it.node.content.CDR3_AA_JMutations(CloneOrFoundAncestor.Base.FromGermline).asString()
+                }
+                .put("CDR3_AA_JMutations_FromParent") {
+                    it.node.content.CDR3_AA_JMutations(CloneOrFoundAncestor.Base.FromParent).asString()
+                }
+                .put("CDR3_AA_JMutations_FromRoot") {
+                    it.node.content.CDR3_AA_JMutations(CloneOrFoundAncestor.Base.FromReconstructedRoot).asString()
+                }
+                .put("CDR3_NDN_FromGermline") {
+                    it.node.content.CDR3_NDNMutations(CloneOrFoundAncestor.Base.FromGermline)
+                }
+                .put("CDR3_NDN_FromParent") {
+                    it.node.content.CDR3_NDNMutations(CloneOrFoundAncestor.Base.FromParent)
+                }
+                .put("CDR3_NDN_FromRoot") {
+                    it.node.content.CDR3_NDNMutations(CloneOrFoundAncestor.Base.FromReconstructedRoot)
+                }
+                .put("CGene") { it.node.content.CGeneName }
+                .build()
 
-        for (Cluster<CloneWrapper> cluster : CUtils.it(shmTreeBuilder.buildClusters(sortedClones))) {
-            var result = shmTreeBuilder.getResult(cluster, previousStepDebug.treesAfterDecisionsWriter).stream()
-                    .sorted(Comparator.comparing(it -> it.getTreeId().encode()))
-                    .collect(Collectors.toList());
-            for (TreeWithMeta treeWithMeta : result) {
-                var columnsBuilder = ImmutableMap.<String, Function<Tree.NodeWithParent<CloneOrFoundAncestor>, Object>>builder()
-                        .putAll(columnsThatDependOnNode);
-                columnsThatDependOnTree.forEach((key, function) -> columnsBuilder.put(key, __ -> function.apply(treeWithMeta)));
-                var columns = columnsBuilder.build();
-
-                var nodes = treeWithMeta.getTree()
-                        .allNodes()
-                        .collect(Collectors.toList());
-                XSV.writeXSVBody(nodesTable, nodes, columns, "\t");
-
-                var treeFile = outputDirInTmp.toPath().resolve(treeWithMeta.getTreeId().encode() + ".tree").toFile();
-                Files.writeString(treeFile.toPath(), printer.print(treeWithMeta.getTree()));
+        private fun Array<MutationNt2AADescriptor>?.asString(): String {
+            return when (this) {
+                null -> ""
+                else -> Arrays.stream(this).map { obj: MutationNt2AADescriptor -> obj.toString() }
+                    .collect(Collectors.joining())
             }
         }
 
-        zip(outputDirInTmp.toPath(), Path.of(getOutputZipPath()));
-
-        for (int i = 0; i <= shmTreeBuilderParameters.stepsOrder.size(); i++) {
-            stepNumber = i + 1;
-            File treesBeforeDecisions = debugFile(stepNumber, Debug.BEFORE_DECISIONS_SUFFIX);
-            File treesAfterDecisions = debugFile(stepNumber, Debug.AFTER_DECISIONS_SUFFIX);
-            report.addStatsForStep(i, treesBeforeDecisions, treesAfterDecisions);
-        }
-
-        System.out.println("============= Report ==============");
-        Util.writeReportToStdout(report);
-        Util.writeJsonReport(getReport(), report);
-        if (reportPdf != null) {
-            report.writePdfReport(Paths.get(reportPdf));
-        }
-    }
-
-    private static void zip(Path sourceDir, Path destination) throws IOException {
-        try (ZipOutputStream zs = new ZipOutputStream(Files.newOutputStream(destination))) {
-            Files.walk(sourceDir)
-                    .filter(path -> !Files.isDirectory(path))
-                    .forEach(path -> {
-                        ZipEntry zipEntry = new ZipEntry(sourceDir.relativize(path).toString());
+        @Throws(IOException::class)
+        private fun zip(sourceDir: Path, destination: Path) {
+            ZipOutputStream(Files.newOutputStream(destination)).use { zs ->
+                Files.walk(sourceDir)
+                    .filter { path -> !Files.isDirectory(path) }
+                    .forEach { path ->
+                        val zipEntry = ZipEntry(sourceDir.relativize(path).toString())
                         try {
-                            zs.putNextEntry(zipEntry);
-                            Files.copy(path, zs);
-                            zs.closeEntry();
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
+                            zs.putNextEntry(zipEntry)
+                            Files.copy(path, zs)
+                            zs.closeEntry()
+                        } catch (e: IOException) {
+                            throw RuntimeException(e)
                         }
-                    });
-        }
-    }
-
-    private Debug createDebug(int stepNumber) throws IOException {
-        return new Debug(
-                prepareDebugFile(stepNumber, Debug.BEFORE_DECISIONS_SUFFIX),
-                prepareDebugFile(stepNumber, Debug.AFTER_DECISIONS_SUFFIX)
-        );
-    }
-
-    private PrintStream prepareDebugFile(int stepNumber, String suffix) throws IOException {
-        File debugFile = debugFile(stepNumber, suffix);
-        debugFile.delete();
-        debugFile.createNewFile();
-        PrintStream debugWriter = new PrintStream(debugFile);
-        XSV.writeXSVHeaders(debugWriter, DebugInfo.COLUMNS_FOR_XSV.keySet(), ";");
-        return debugWriter;
-    }
-
-    private File debugFile(int stepNumber, String suffix) {
-        return debugDirectory.resolve("step_" + stepNumber + "_" + suffix + ".csv").toFile();
-    }
-
-    public static class Debug {
-        private static final String BEFORE_DECISIONS_SUFFIX = "before_decisions";
-        private static final String AFTER_DECISIONS_SUFFIX = "after_decisions";
-
-        private final PrintStream treesBeforeDecisionsWriter;
-        private final PrintStream treesAfterDecisionsWriter;
-
-        private Debug(PrintStream treesBeforeDecisionsWriter, PrintStream treesAfterDecisionsWriter) {
-            this.treesBeforeDecisionsWriter = treesBeforeDecisionsWriter;
-            this.treesAfterDecisionsWriter = treesAfterDecisionsWriter;
+                    }
+            }
         }
     }
 }

@@ -1,29 +1,9 @@
-package com.milaboratory.mixcr.trees;
+package com.milaboratory.mixcr.trees
 
-public class TreeWithMeta {
-    private final Tree<CloneOrFoundAncestor> tree;
-    private final RootInfo rootInfo;
-    private final TreeWithMetaBuilder.TreeId treeId;
+import com.milaboratory.mixcr.trees.TreeWithMetaBuilder.TreeId
 
-    public TreeWithMeta(
-            Tree<CloneOrFoundAncestor> tree,
-            RootInfo rootInfo,
-            TreeWithMetaBuilder.TreeId treeId
-    ) {
-        this.tree = tree;
-        this.rootInfo = rootInfo;
-        this.treeId = treeId;
-    }
-
-    public TreeWithMetaBuilder.TreeId getTreeId() {
-        return treeId;
-    }
-
-    public Tree<CloneOrFoundAncestor> getTree() {
-        return tree;
-    }
-
-    public RootInfo getRootInfo() {
-        return rootInfo;
-    }
-}
+class TreeWithMeta(
+    val tree: Tree<CloneOrFoundAncestor>,
+    val rootInfo: RootInfo,
+    val treeId: TreeId
+)

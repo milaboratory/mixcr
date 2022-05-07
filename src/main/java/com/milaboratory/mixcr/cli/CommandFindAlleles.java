@@ -53,6 +53,7 @@ import gnu.trove.map.hash.TObjectFloatHashMap;
 import io.repseq.core.*;
 import io.repseq.dto.VDJCGeneData;
 import io.repseq.dto.VDJCLibraryData;
+import kotlin.jvm.functions.Function1;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.math3.util.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -64,7 +65,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -212,7 +212,7 @@ public class CommandFindAlleles extends ACommandWithOutputMiXCR {
 
     private void printAllelesMutationsOutput(VDJCLibrary resultLibrary) throws FileNotFoundException {
         try (PrintStream output = new PrintStream(allelesMutationsOutput)) {
-            var columns = ImmutableMap.<String, Function<VDJCGene, Object>>builder()
+            var columns = ImmutableMap.<String, Function1<VDJCGene, Object>>builder()
                     .put("geneName", VDJCGene::getName)
                     .put("type", VDJCGene::getGeneType)
                     .put("regions", gene -> Optional.ofNullable(gene.getData().getBaseSequence().getRegions())

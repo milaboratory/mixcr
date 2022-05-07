@@ -1,295 +1,330 @@
-package com.milaboratory.mixcr.trees;
+@file:Suppress("FunctionName")
 
-import com.milaboratory.core.Range;
-import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
-import com.milaboratory.core.alignment.AlignmentScoring;
-import com.milaboratory.core.mutations.Mutation;
-import com.milaboratory.core.mutations.Mutations;
-import com.milaboratory.core.mutations.MutationsBuilder;
-import com.milaboratory.core.sequence.NucleotideAlphabet;
-import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.core.sequence.Wildcard;
-import com.milaboratory.mixcr.util.RangeInfo;
+package com.milaboratory.mixcr.trees
 
-import java.util.*;
-import java.util.function.BiFunction;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import com.milaboratory.core.Range
+import com.milaboratory.core.alignment.AffineGapAlignmentScoring
+import com.milaboratory.core.alignment.AlignmentScoring
+import com.milaboratory.core.mutations.Mutation
+import com.milaboratory.core.mutations.Mutations
+import com.milaboratory.core.mutations.MutationsBuilder
+import com.milaboratory.core.sequence.NucleotideAlphabet
+import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.core.sequence.Wildcard
+import com.milaboratory.mixcr.util.RangeInfo
+import java.util.*
+import java.util.function.BiFunction
+import java.util.stream.Collectors
+import java.util.stream.IntStream
+import kotlin.math.abs
 
-final class MutationsUtils {
-    private MutationsUtils() {
-    }
-
+internal object MutationsUtils {
     /**
      * Mutate and get result by range in original sequence
      */
-    static NucleotideSequence buildSequence(NucleotideSequence sequence1, Mutations<NucleotideSequence> mutations, RangeInfo rangeInfo) {
-        return mutations.mutate(sequence1).getRange(projectRange(mutations, rangeInfo));
-    }
+    fun buildSequence(
+        sequence1: NucleotideSequence,
+        mutations: Mutations<NucleotideSequence>,
+        rangeInfo: RangeInfo
+    ): NucleotideSequence = mutations.mutate(sequence1).getRange(projectRange(mutations, rangeInfo))
 
-    static Range projectRange(Mutations<NucleotideSequence> mutations, RangeInfo rangeInfo) {
+    fun projectRange(mutations: Mutations<NucleotideSequence>, rangeInfo: RangeInfo?): Range {
         //for including inclusions before position one must step left before conversion and step right after
-        int from = positionIfNucleotideWasDeleted(mutations.convertToSeq2Position(rangeInfo.getRange().getLower()));
-        if (rangeInfo.isIncludeFirstInserts()) {
-            from -= IntStream.of(mutations.getRAWMutations())
-                    .filter(mutation -> Mutation.getPosition(mutation) == rangeInfo.getRange().getLower() && Mutation.isInsertion(mutation))
-                    .count();
+        var from = positionIfNucleotideWasDeleted(mutations.convertToSeq2Position(rangeInfo!!.range.lower))
+        if (rangeInfo.isIncludeFirstInserts) {
+            from -= IntStream.of(*mutations.rawMutations)
+                .filter { mutation: Int ->
+                    Mutation.getPosition(mutation) == rangeInfo.range.lower && Mutation.isInsertion(
+                        mutation
+                    )
+                }
+                .count().toInt()
         }
-
-        int to = positionIfNucleotideWasDeleted(mutations.convertToSeq2Position(rangeInfo.getRange().getUpper()));
-        return new Range(from, to);
+        val to = positionIfNucleotideWasDeleted(
+            mutations.convertToSeq2Position(
+                rangeInfo.range.upper
+            )
+        )
+        return Range(from, to)
     }
 
-    static MutationsDescription mutationsBetween(MutationsDescription first, MutationsDescription second) {
-        return new MutationsDescription(
-                mutationsBetween(first.getVMutationsWithoutCDR3(), second.getVMutationsWithoutCDR3()),
-                first.getVMutationsInCDR3WithoutNDN().differenceWith(second.getVMutationsInCDR3WithoutNDN()),
-                first.getKnownNDN().differenceWith(second.getKnownNDN()),
-                first.getJMutationsInCDR3WithoutNDN().differenceWith(second.getJMutationsInCDR3WithoutNDN()),
-                mutationsBetween(first.getJMutationsWithoutCDR3(), second.getJMutationsWithoutCDR3())
-        );
+    fun mutationsBetween(first: MutationsDescription, second: MutationsDescription): MutationsDescription {
+        return MutationsDescription(
+            mutationsBetween(first.VMutationsWithoutCDR3, second.VMutationsWithoutCDR3),
+            first.VMutationsInCDR3WithoutNDN.differenceWith(second.VMutationsInCDR3WithoutNDN),
+            first.knownNDN.differenceWith(second.knownNDN),
+            first.JMutationsInCDR3WithoutNDN.differenceWith(second.JMutationsInCDR3WithoutNDN),
+            mutationsBetween(first.JMutationsWithoutCDR3, second.JMutationsWithoutCDR3)
+        )
     }
 
-    private static List<MutationsWithRange> mutationsBetween(List<MutationsWithRange> firstMutations, List<MutationsWithRange> secondMutations) {
-        return fold(firstMutations, secondMutations, MutationsWithRange::differenceWith);
+    private fun mutationsBetween(
+        firstMutations: List<MutationsWithRange>,
+        secondMutations: List<MutationsWithRange>
+    ): List<MutationsWithRange> {
+        return fold(
+            firstMutations,
+            secondMutations
+        ) { obj, comparison -> obj.differenceWith(comparison) }
     }
 
-    static MutationsWithRange intersection(MutationsWithRange base, MutationsWithRange comparison, RangeInfo intersection) {
-        return new MutationsWithRange(
-                base.getSequence1(),
-                MutationsUtils.intersection(
-                        base.getMutations(),
-                        comparison.getMutations(),
-                        intersection
-                ),
+    fun intersection(
+        base: MutationsWithRange,
+        comparison: MutationsWithRange,
+        intersection: RangeInfo
+    ): MutationsWithRange {
+        return MutationsWithRange(
+            base.sequence1,
+            intersection(
+                base.mutations,
+                comparison.mutations,
                 intersection
-        );
+            ),
+            intersection
+        )
     }
 
-    static MutationsWithRange intersection(MutationsWithRange from, MutationsWithRange to) {
-        if (!from.getRangeInfo().equals(to.getRangeInfo())) {
-            throw new IllegalArgumentException();
+    fun intersection(from: MutationsWithRange, to: MutationsWithRange): MutationsWithRange {
+        require(from.rangeInfo == to.rangeInfo)
+        return MutationsWithRange(
+            from.sequence1,
+            intersection(
+                from.mutations,
+                to.mutations,
+                from.rangeInfo
+            ),
+            from.rangeInfo
+        )
+    }
+
+    fun intersection(from: List<MutationsWithRange>, to: List<MutationsWithRange>): List<MutationsWithRange> {
+        return fold(from, to) { a, b ->
+            intersection(
+                a,
+                b,
+                a.rangeInfo.intersection(b.rangeInfo)!!
+            )
         }
-        return new MutationsWithRange(
-                from.getSequence1(),
-                MutationsUtils.intersection(
-                        from.getMutations(),
-                        to.getMutations(),
-                        from.getRangeInfo()
-                ),
-                from.getRangeInfo()
-        );
     }
 
-    static List<MutationsWithRange> intersection(List<MutationsWithRange> from, List<MutationsWithRange> to) {
-        return fold(from, to, (a, b) -> intersection(a, b, a.getRangeInfo().intersection(b.getRangeInfo())));
+    fun <T> fold(
+        firstMutations: List<MutationsWithRange>,
+        secondMutations: List<MutationsWithRange>,
+        folder: BiFunction<MutationsWithRange, MutationsWithRange, T>
+    ): List<T> {
+        require(firstMutations.size == secondMutations.size)
+        return IntStream.range(0, firstMutations.size)
+            .mapToObj { folder.apply(firstMutations[0], secondMutations[0]) }
+            .collect(Collectors.toList())
     }
 
-    static <T> List<T> fold(
-            List<MutationsWithRange> firstMutations,
-            List<MutationsWithRange> secondMutations,
-            BiFunction<MutationsWithRange, MutationsWithRange, T> folder
-    ) {
-        if (firstMutations.size() != secondMutations.size()) {
-            throw new IllegalArgumentException();
-        }
-        return IntStream.range(0, firstMutations.size())
-                .mapToObj(i -> folder.apply(firstMutations.get(0), secondMutations.get(0)))
-                .collect(Collectors.toList());
+    private fun positionIfNucleotideWasDeleted(position: Int): Int = when {
+        position < -1 -> abs(position + 1)
+        (position == -1) -> 0
+        else -> position
     }
 
-    static int positionIfNucleotideWasDeleted(int position) {
-        if (position < -1) {
-            return Math.abs(position + 1);
-        }
-        if (position == -1) {
-            return 0;
-        }
-        return position;
+    fun NDNScoring(): AlignmentScoring<NucleotideSequence> = AffineGapAlignmentScoring(
+        NucleotideSequence.ALPHABET,
+        calculateSubstitutionMatrix(5, -4, 4, NucleotideSequence.ALPHABET),
+        -10,
+        -1
+    )
+
+    private fun calculateSubstitutionMatrix(
+        match: Int,
+        mismatch: Int,
+        multiplierOfAsymmetry: Int,
+        alphabet: NucleotideAlphabet
+    ): IntArray {
+        val codes = alphabet.size()
+        val matrix = IntArray(codes * codes)
+        Arrays.fill(matrix, mismatch)
+        for (i in 0 until codes) matrix[i + codes * i] = match
+        return fillWildcardScoresMatches(matrix, alphabet, match, mismatch, multiplierOfAsymmetry)
     }
 
-    static AlignmentScoring<NucleotideSequence> NDNScoring() {
-        return new AffineGapAlignmentScoring<>(
-                NucleotideSequence.ALPHABET,
-                calculateSubstitutionMatrix(5, -4, 4, NucleotideSequence.ALPHABET),
-                -10,
-                -1
-        );
-    }
-
-    private static int[] calculateSubstitutionMatrix(int match, int mismatch, int multiplierOfAsymmetry, NucleotideAlphabet alphabet) {
-        int codes = alphabet.size();
-        int[] matrix = new int[codes * codes];
-        Arrays.fill(matrix, mismatch);
-        for (int i = 0; i < codes; ++i)
-            matrix[i + codes * i] = match;
-        return fillWildcardScoresMatches(matrix, alphabet, match, mismatch, multiplierOfAsymmetry);
-    }
-
-    private static int[] fillWildcardScoresMatches(int[] matrix, NucleotideAlphabet alphabet, int match, int mismatch, int multiplierOfAsymmetry) {
-        int alSize = alphabet.size();
-
-        if (matrix.length != alSize * alSize)
-            throw new IllegalArgumentException("Wrong matrix size.");
+    private fun fillWildcardScoresMatches(
+        matrix: IntArray,
+        alphabet: NucleotideAlphabet,
+        match: Int,
+        mismatch: Int,
+        multiplierOfAsymmetry: Int
+    ): IntArray {
+        val alSize = alphabet.size()
+        require(matrix.size == alSize * alSize) { "Wrong matrix size." }
 
         //TODO remove excludeSet from milib
-        for (Wildcard wc1 : alphabet.getAllWildcards())
-            for (Wildcard wc2 : alphabet.getAllWildcards()) {
-                if (wc1.isBasic() && wc2.isBasic())
-                    continue;
-                int sumScore = 0;
-                for (int i = 0; i < wc1.basicSize(); i++) {
-                    if (wc2.matches(wc1.getMatchingCode(i))) {
-                        sumScore += match;
-                    } else {
-                        sumScore += mismatch;
-                    }
+        for (wc1 in alphabet.allWildcards) for (wc2 in alphabet.allWildcards) {
+            if (wc1.isBasic && wc2.isBasic) continue
+            var sumScore = 0
+            for (i in 0 until wc1.basicSize()) {
+                sumScore += if (wc2.matches(wc1.getMatchingCode(i))) {
+                    match
+                } else {
+                    mismatch
                 }
-                for (int i = 0; i < wc2.basicSize(); i++) {
-                    if (wc1.matches(wc2.getMatchingCode(i))) {
-                        sumScore += match * multiplierOfAsymmetry;
-                    } else {
-                        sumScore += mismatch * multiplierOfAsymmetry;
-                    }
-                }
-                sumScore /= wc1.basicSize() + wc2.basicSize() * multiplierOfAsymmetry;
-                matrix[wc1.getCode() + wc2.getCode() * alSize] = sumScore;
             }
-
-        return matrix;
+            for (i in 0 until wc2.basicSize()) {
+                sumScore += if (wc1.matches(wc2.getMatchingCode(i))) {
+                    match * multiplierOfAsymmetry
+                } else {
+                    mismatch * multiplierOfAsymmetry
+                }
+            }
+            sumScore /= wc1.basicSize() + wc2.basicSize() * multiplierOfAsymmetry
+            matrix[wc1.code + wc2.code * alSize] = sumScore
+        }
+        return matrix
     }
 
-    static Mutations<NucleotideSequence> intersection(
-            Mutations<NucleotideSequence> first,
-            Mutations<NucleotideSequence> second,
-            RangeInfo rangeInfo
-    ) {
-        return simpleIntersection(
-                first,
-                second,
-                rangeInfo.getRange()
-        );
-    }
+    fun intersection(
+        first: Mutations<NucleotideSequence>,
+        second: Mutations<NucleotideSequence>,
+        rangeInfo: RangeInfo
+    ): Mutations<NucleotideSequence> = simpleIntersection(
+        first,
+        second,
+        rangeInfo.range
+    )
 
     //TODO removals and inserts
-    private static Mutations<NucleotideSequence> simpleIntersection(
-            Mutations<NucleotideSequence> first,
-            Mutations<NucleotideSequence> second,
-            Range range
-    ) {
-        Set<Integer> mutationsOfFirstAsSet = Arrays.stream(first.getRAWMutations()).boxed().collect(Collectors.toSet());
-
-        MutationsBuilder<NucleotideSequence> mutationsBuilder = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
-        for (int i = 0; i < second.size(); i++) {
-            int mutation = second.getMutation(i);
-            int position = Mutation.getPosition(mutation);
+    private fun simpleIntersection(
+        first: Mutations<NucleotideSequence>,
+        second: Mutations<NucleotideSequence>,
+        range: Range
+    ): Mutations<NucleotideSequence> {
+        val mutationsOfFirstAsSet = Arrays.stream(first.rawMutations).boxed().collect(Collectors.toSet())
+        val mutationsBuilder = MutationsBuilder(NucleotideSequence.ALPHABET)
+        for (i in 0 until second.size()) {
+            val mutation = second.getMutation(i)
+            val position = Mutation.getPosition(mutation)
             if (range.contains(position)) {
                 if (mutationsOfFirstAsSet.contains(mutation)) {
-                    mutationsBuilder.append(mutation);
+                    mutationsBuilder.append(mutation)
                 }
             }
         }
-        return mutationsBuilder.createAndDestroy();
+        return mutationsBuilder.createAndDestroy()
     }
 
     //TODO removals and inserts
-    static Mutations<NucleotideSequence> concreteNDNChild(Mutations<NucleotideSequence> parent, Mutations<NucleotideSequence> child) {
-        Map<Integer, Set<Integer>> mutationsOfParentByPositions = Arrays.stream(parent.getRAWMutations())
-                .boxed()
-                .collect(Collectors.groupingBy(Mutation::getPosition, Collectors.toSet()));
-        MutationsBuilder<NucleotideSequence> mutationsBuilder = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
-        for (int i = 0; i < child.size(); i++) {
-            int mutationOfChild = child.getMutation(i);
+    fun concreteNDNChild(
+        parent: Mutations<NucleotideSequence>,
+        child: Mutations<NucleotideSequence>
+    ): Mutations<NucleotideSequence> {
+        val mutationsOfParentByPositions = Arrays.stream(
+            parent.rawMutations
+        )
+            .boxed()
+            .collect(
+                Collectors.groupingBy(
+                    { code -> Mutation.getPosition(code) }, Collectors.toSet()
+                )
+            )
+        val mutationsBuilder = MutationsBuilder(NucleotideSequence.ALPHABET)
+        for (i in 0 until child.size()) {
+            val mutationOfChild = child.getMutation(i)
             if (Mutation.isInDel(mutationOfChild)) {
-                mutationsBuilder.append(mutationOfChild);
+                mutationsBuilder.append(mutationOfChild)
             } else {
-                int position = Mutation.getPosition(mutationOfChild);
-                Optional<Integer> mutationsOfParent = mutationsOfParentByPositions.getOrDefault(position, Collections.emptySet()).stream()
-                        .filter(Mutation::isSubstitution)
-                        .findFirst();
-                if (!mutationsOfParent.isPresent()) {
-                    mutationsBuilder.append(mutationOfChild);
+                val position = Mutation.getPosition(mutationOfChild)
+                val mutationsOfParent = (mutationsOfParentByPositions[position] ?: emptySet()).stream()
+                    .filter { code -> Mutation.isSubstitution(code) }
+                    .findFirst()
+                if (!mutationsOfParent.isPresent) {
+                    mutationsBuilder.append(mutationOfChild)
                 } else {
-                    byte from = Mutation.getFrom(mutationOfChild);
-                    byte to = concreteChild(Mutation.getTo(mutationsOfParent.get()), Mutation.getTo(mutationOfChild));
+                    val from = Mutation.getFrom(mutationOfChild)
+                    val to = concreteChild(Mutation.getTo(mutationsOfParent.get()), Mutation.getTo(mutationOfChild))
                     if (from != to) {
-                        mutationsBuilder.append(Mutation.createSubstitution(position, from, to));
+                        mutationsBuilder.append(Mutation.createSubstitution(position, from.toInt(), to.toInt()))
                     }
                 }
             }
         }
-
-        return mutationsBuilder.createAndDestroy();
+        return mutationsBuilder.createAndDestroy()
     }
 
-    private static byte concreteChild(byte parentSymbol, byte childSymbol) {
-        if (parentSymbol == childSymbol) {
-            return childSymbol;
+    private fun concreteChild(parentSymbol: Byte, childSymbol: Byte): Byte {
+        return if (parentSymbol == childSymbol) {
+            childSymbol
         } else if (NucleotideSequence.ALPHABET.isWildcard(childSymbol)) {
             if (matchesStrictly(NucleotideSequence.ALPHABET.codeToWildcard(childSymbol), parentSymbol)) {
-                return parentSymbol;
+                parentSymbol
             } else {
-                long basicMask = NucleotideSequence.ALPHABET.codeToWildcard(parentSymbol).getBasicMask()
-                        | NucleotideSequence.ALPHABET.codeToWildcard(childSymbol).getBasicMask();
-                return NucleotideSequence.ALPHABET.maskToWildcard(basicMask).getCode();
+                val basicMask = (NucleotideSequence.ALPHABET.codeToWildcard(parentSymbol).basicMask
+                    or NucleotideSequence.ALPHABET.codeToWildcard(childSymbol).basicMask)
+                NucleotideSequence.ALPHABET.maskToWildcard(basicMask).code
             }
         } else {
-            return childSymbol;
+            childSymbol
         }
     }
 
     //TODO removals and inserts
-    static Mutations<NucleotideSequence> findNDNCommonAncestor(Mutations<NucleotideSequence> first, Mutations<NucleotideSequence> second) {
-        Map<Integer, Set<Integer>> mutationsOfFirstByPositions = Arrays.stream(first.getRAWMutations())
-                .boxed()
-                .collect(Collectors.groupingBy(Mutation::getPosition, Collectors.toSet()));
-
-        MutationsBuilder<NucleotideSequence> mutationsBuilder = new MutationsBuilder<>(NucleotideSequence.ALPHABET);
-        for (int i = 0; i < second.size(); i++) {
-            int mutationOfSecond = second.getMutation(i);
-            int position = Mutation.getPosition(mutationOfSecond);
-            Set<Integer> mutationsOfFirst = mutationsOfFirstByPositions.getOrDefault(position, Collections.emptySet());
+    fun findNDNCommonAncestor(
+        first: Mutations<NucleotideSequence>,
+        second: Mutations<NucleotideSequence>
+    ): Mutations<NucleotideSequence> {
+        val mutationsOfFirstByPositions = Arrays.stream(
+            first.rawMutations
+        )
+            .boxed()
+            .collect(
+                Collectors.groupingBy(
+                    { code -> Mutation.getPosition(code) }, Collectors.toSet()
+                )
+            )
+        val mutationsBuilder = MutationsBuilder(NucleotideSequence.ALPHABET)
+        for (i in 0 until second.size()) {
+            val mutationOfSecond = second.getMutation(i)
+            val position = Mutation.getPosition(mutationOfSecond)
+            val mutationsOfFirst = mutationsOfFirstByPositions[position] ?: emptySet()
             if (mutationsOfFirst.contains(mutationOfSecond)) {
-                mutationsBuilder.append(mutationOfSecond);
+                mutationsBuilder.append(mutationOfSecond)
             } else if (Mutation.isSubstitution(mutationOfSecond)) {
                 mutationsOfFirst.stream()
-                        .filter(Mutation::isSubstitution)
-                        .findFirst()
-                        .map(otherSubstitution -> Mutation.createSubstitution(
-                                position,
-                                Mutation.getFrom(mutationOfSecond),
-                                combine(Mutation.getTo(mutationOfSecond), Mutation.getTo(otherSubstitution))
-                        ))
-                        .ifPresent(mutationsBuilder::append);
+                    .filter { code -> Mutation.isSubstitution(code) }
+                    .findFirst()
+                    .map { otherSubstitution ->
+                        Mutation.createSubstitution(
+                            position,
+                            Mutation.getFrom(mutationOfSecond).toInt(),
+                            combine(Mutation.getTo(mutationOfSecond), Mutation.getTo(otherSubstitution)).toInt()
+                        )
+                    }
+                    .ifPresent { mutation: Int? -> mutationsBuilder.append(mutation!!) }
             }
         }
-        return mutationsBuilder.createAndDestroy();
+        return mutationsBuilder.createAndDestroy()
     }
 
-    private static byte combine(byte firstSymbol, byte secondSymbol) {
-        if (firstSymbol == secondSymbol) {
-            return firstSymbol;
-        } else if (NucleotideSequence.ALPHABET.isWildcard(firstSymbol) && matchesStrictly(NucleotideSequence.ALPHABET.codeToWildcard(firstSymbol), secondSymbol)) {
-            return secondSymbol;
-        } else if (NucleotideSequence.ALPHABET.isWildcard(secondSymbol) && matchesStrictly(NucleotideSequence.ALPHABET.codeToWildcard(secondSymbol), firstSymbol)) {
-            return firstSymbol;
-        } else {
-            long basicMask = NucleotideSequence.ALPHABET.codeToWildcard(firstSymbol).getBasicMask()
-                    | NucleotideSequence.ALPHABET.codeToWildcard(secondSymbol).getBasicMask();
-            return NucleotideSequence.ALPHABET.maskToWildcard(basicMask).getCode();
+    private fun combine(firstSymbol: Byte, secondSymbol: Byte): Byte = when {
+        firstSymbol == secondSymbol -> firstSymbol
+        NucleotideSequence.ALPHABET.isWildcard(firstSymbol)
+            && matchesStrictly(NucleotideSequence.ALPHABET.codeToWildcard(firstSymbol), secondSymbol) -> secondSymbol
+        NucleotideSequence.ALPHABET.isWildcard(secondSymbol)
+            && matchesStrictly(NucleotideSequence.ALPHABET.codeToWildcard(secondSymbol), firstSymbol) -> firstSymbol
+        else -> {
+            val basicMask = (NucleotideSequence.ALPHABET.codeToWildcard(firstSymbol).basicMask
+                or NucleotideSequence.ALPHABET.codeToWildcard(secondSymbol).basicMask)
+            NucleotideSequence.ALPHABET.maskToWildcard(basicMask).code
         }
     }
 
-    private static boolean matchesStrictly(Wildcard wildcard, byte secondSymbol) {
-        if (!NucleotideSequence.ALPHABET.isWildcard(secondSymbol)) {
-            return wildcard.matches(secondSymbol);
-        } else {
-            Wildcard secondAsWildcard = NucleotideSequence.ALPHABET.codeToWildcard(secondSymbol);
-            return ((wildcard.getBasicMask() ^ secondAsWildcard.getBasicMask()) & secondAsWildcard.getBasicMask()) == 0;
+    private fun matchesStrictly(wildcard: Wildcard, secondSymbol: Byte): Boolean = when {
+        !NucleotideSequence.ALPHABET.isWildcard(secondSymbol) -> wildcard.matches(secondSymbol)
+        else -> {
+            val secondAsWildcard = NucleotideSequence.ALPHABET.codeToWildcard(secondSymbol)
+            wildcard.basicMask xor secondAsWildcard.basicMask and secondAsWildcard.basicMask == 0L
         }
     }
 
-    static List<MutationsWithRange> combine(List<MutationsWithRange> base, List<MutationsWithRange> combineWith) {
-        return fold(base, combineWith, MutationsWithRange::combineWith);
+    fun combine(base: List<MutationsWithRange>, combineWith: List<MutationsWithRange>): List<MutationsWithRange> {
+        return fold(
+            base,
+            combineWith
+        ) { obj, next -> obj.combineWith(next) }
     }
 }

@@ -27,52 +27,36 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.trees;
+package com.milaboratory.mixcr.trees
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.milaboratory.util.GlobalObjectMappers;
+import com.fasterxml.jackson.core.type.TypeReference
+import com.milaboratory.util.GlobalObjectMappers
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+object SHMTreeBuilderParametersPresets {
+    private var knownParameters: Map<String, SHMTreeBuilderParameters>? = null
+    private fun ensureInitialized() {
+        if (knownParameters == null) synchronized(SHMTreeBuilderParametersPresets::class.java) {
+            if (knownParameters == null) {
 
-public final class SHMTreeBuilderParametersPresets {
-    private SHMTreeBuilderParametersPresets() {
-    }
-
-    private static Map<String, SHMTreeBuilderParameters> knownParameters;
-
-    private static void ensureInitialized() {
-        if (knownParameters == null)
-            synchronized (SHMTreeBuilderParametersPresets.class) {
-                if (knownParameters == null) {
-                    Map<String, SHMTreeBuilderParameters> map;
-                    try {
-                        InputStream is = SHMTreeBuilderParameters.class.getClassLoader().getResourceAsStream("parameters/shm_tree_parameters.json");
-                        TypeReference<HashMap<String, SHMTreeBuilderParameters>> typeRef
-                                = new TypeReference<HashMap<String, SHMTreeBuilderParameters>>() {
-                        };
-                        map = GlobalObjectMappers.ONE_LINE.readValue(is, typeRef);
-                    } catch (IOException ioe) {
-                        throw new RuntimeException(ioe);
-                    }
-                    knownParameters = map;
-                }
+                val `is` =
+                    SHMTreeBuilderParameters::class.java.classLoader.getResourceAsStream("parameters/shm_tree_parameters.json")
+                val typeRef: TypeReference<HashMap<String, SHMTreeBuilderParameters>> =
+                    object : TypeReference<HashMap<String, SHMTreeBuilderParameters>>() {}
+                val map = GlobalObjectMappers.ONE_LINE.readValue(`is`, typeRef)
+                knownParameters = map
             }
+        }
     }
 
-    public static Set<String> getAvailableParameterNames() {
-        ensureInitialized();
-        return knownParameters.keySet();
-    }
+    val availableParameterNames: Set<String>
+        get() {
+            ensureInitialized()
+            return knownParameters!!.keys
+        }
 
-    public static SHMTreeBuilderParameters getByName(String name) {
-        ensureInitialized();
-        SHMTreeBuilderParameters params = knownParameters.get(name);
-        if (params == null)
-            return null;
-        return params.clone();
+    fun getByName(name: String): SHMTreeBuilderParameters? {
+        ensureInitialized()
+        val params = knownParameters!![name] ?: return null
+        return params.copy()
     }
 }

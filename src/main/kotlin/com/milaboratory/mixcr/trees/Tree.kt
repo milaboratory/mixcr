@@ -27,150 +27,98 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.trees;
+package com.milaboratory.mixcr.trees
 
-import javax.annotation.Nullable;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.BiFunction;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.math.BigDecimal
+import java.util.function.Consumer
+import java.util.stream.Collectors
+import java.util.stream.Stream
 
 /**
  *
  */
-public class Tree<T> {
-    private final Node<T> root;
-
-    public Tree(Node<T> root) {
-        this.root = root;
+class Tree<T : Any>(
+    val root: Node<T>
+) {
+    fun copy(): Tree<T> {
+        return Tree(root.copy())
     }
 
-    public Node<T> getRoot() {
-        return root;
-    }
-
-    public Tree<T> copy() {
-        return new Tree<>(root.copy());
-    }
-
-    public Stream<NodeWithParent<T>> allNodes() {
+    fun allNodes(): Stream<NodeWithParent<T>> {
         return Stream.concat(
-                Stream.of(new NodeWithParent<>(null, root, null)),
-                root.allDescendants()
-        );
+            Stream.of(NodeWithParent(null, root, null)),
+            root.allDescendants()
+        )
     }
 
-    public <R> Tree<R> map(BiFunction<T, T, R> mapper) {
-        return new Tree<>(root.map(null, mapper));
+    fun <R : Any> map(mapper: (T?, T) -> R): Tree<R> {
+        return Tree(root.map(null, mapper))
     }
 
-    public static class Node<T> {
-        private final T content;
-        private final List<NodeLink<T>> children;
+    class Node<T> {
+        val content: T
+        private val children: MutableList<NodeLink<T>>
 
-        protected Node(T content) {
-            this.content = content;
-            children = new ArrayList<>();
+        constructor(content: T) {
+            this.content = content
+            children = ArrayList()
         }
 
-        protected Node(T content, List<NodeLink<T>> children) {
-            this.content = content;
-            this.children = children;
+        constructor(content: T, children: MutableList<NodeLink<T>>) {
+            this.content = content
+            this.children = children
         }
 
-        public Node<T> copy() {
-            List<NodeLink<T>> childrenCopy = this.children.stream()
-                    .map(it -> new NodeLink<>(it.getNode().copy(), it.getDistance()))
-                    .collect(Collectors.toList());
-            return new Node<>(content, childrenCopy);
+        fun copy(): Node<T> {
+            val childrenCopy = children.stream()
+                .map { NodeLink(it.node.copy(), it.distance) }
+                .collect(Collectors.toList())
+            return Node(content, childrenCopy)
         }
 
-        public List<NodeLink<T>> getLinks() {
-            return children;
+        val links: List<NodeLink<T>>
+            get() = children
+
+        fun addChild(node: Node<T>, distance: BigDecimal): Node<T> {
+            children.add(NodeLink(node, distance))
+            return this
         }
 
-        public Node<T> addChild(Node<T> node) {
-            return addChild(node, null);
+        fun replaceChild(what: Node<T>, substitution: Node<T>, distance: BigDecimal) {
+            require(children.removeIf { it.node === what })
+            children.add(NodeLink(substitution, distance))
         }
 
-        public Node<T> addChild(Node<T> node, @Nullable BigDecimal distance) {
-            children.add(new NodeLink<>(node, distance));
-            return this;
-        }
-
-        public T getContent() {
-            return content;
-        }
-
-        public void replaceChild(Node<T> what, Node<T> substitution, @Nullable BigDecimal distance) {
-            if (!children.removeIf(it -> it.node == what)) {
-                throw new IllegalArgumentException();
-            }
-            children.add(new NodeLink<>(substitution, distance));
-        }
-
-        public Stream<NodeWithParent<T>> allDescendants() {
+        fun allDescendants(): Stream<NodeWithParent<T>> {
             return children.stream()
-                    .flatMap(link -> Stream.concat(
-                            Stream.of(new NodeWithParent<>(this, link.getNode(), link.getDistance())),
-                            link.getNode().allDescendants())
-                    );
+                .flatMap { link: NodeLink<T> ->
+                    Stream.concat(
+                        Stream.of(NodeWithParent(this, link.node, link.distance)),
+                        link.node.allDescendants()
+                    )
+                }
         }
 
-        public <R> Node<R> map(T parent, BiFunction<T, T, R> mapper) {
-            Node<R> mappedNode = new Node<>(mapper.apply(parent, content));
-            children.forEach(child -> mappedNode.addChild(child.node.map(content, mapper), child.distance));
-            return mappedNode;
-        }
-    }
-
-    static class NodeLink<T> {
-        private final Node<T> node;
-        @Nullable
-        private final BigDecimal distance;
-
-        public NodeLink(Node<T> node, @Nullable BigDecimal distance) {
-            this.node = node;
-            this.distance = distance;
-        }
-
-        public Node<T> getNode() {
-            return node;
-        }
-
-        @Nullable
-        public BigDecimal getDistance() {
-            return distance;
+        fun <R> map(parent: T?, mapper: (T?, T) -> R): Node<R> {
+            val mappedNode = Node(mapper(parent, content))
+            children.forEach(Consumer { child: NodeLink<T> ->
+                mappedNode.addChild(
+                    child.node.map(content, mapper),
+                    child.distance
+                )
+            })
+            return mappedNode
         }
     }
 
-    public static class NodeWithParent<T> {
-        @Nullable
-        private final Node<T> parent;
-        private final Node<T> node;
-        @Nullable
-        private final BigDecimal distance;
+    class NodeLink<T>(
+        val node: Node<T>,
+        val distance: BigDecimal
+    )
 
-        public NodeWithParent(@Nullable Node<T> parent, Node<T> node, @Nullable BigDecimal distance) {
-            this.parent = parent;
-            this.node = node;
-            this.distance = distance;
-        }
-
-        @Nullable
-        public BigDecimal getDistance() {
-            return distance;
-        }
-
-        @Nullable
-        public Node<T> getParent() {
-            return parent;
-        }
-
-        public Node<T> getNode() {
-            return node;
-        }
-    }
+    class NodeWithParent<T>(
+        val parent: Node<T>?,
+        val node: Node<T>,
+        val distance: BigDecimal?
+    )
 }

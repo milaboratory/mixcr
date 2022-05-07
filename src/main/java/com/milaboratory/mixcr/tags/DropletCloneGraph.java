@@ -29,6 +29,7 @@
  */
 package com.milaboratory.mixcr.tags;
 
+import com.google.common.collect.Lists;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.TagTuple;
@@ -152,7 +153,7 @@ public final class DropletCloneGraph {
             // searching all cliques in tags
             while (!tagToIndex.isEmpty()) {
                 if (tagCliques == null) {
-                    tagCliques = tagMatrix.calculateMaximalCliques();
+                    tagCliques = Lists.newArrayList(tagMatrix.calculateMaximalCliques().iterator());
                     tagCliqueInfos = new ArrayList<>();
                     for (BitArrayInt clique : tagCliques) {
                         int[] bits = clique.getBits();
@@ -233,7 +234,7 @@ public final class DropletCloneGraph {
                         }
                 }
 
-                List<BitArrayInt> cloneCliques = clonesMatrix.calculateMaximalCliques();
+                List<BitArrayInt> cloneCliques = Lists.newArrayList(clonesMatrix.calculateMaximalCliques().iterator());
                 List<CliqueInfo> cloneCliqueInfos = new ArrayList<>();
 
                 for (BitArrayInt clique : cloneCliques) {

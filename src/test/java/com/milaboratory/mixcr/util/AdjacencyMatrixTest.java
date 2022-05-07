@@ -29,6 +29,7 @@
  */
 package com.milaboratory.mixcr.util;
 
+import com.google.common.collect.Lists;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 import org.apache.commons.math3.random.Well19937c;
@@ -53,7 +54,7 @@ public class AdjacencyMatrixTest {
         matrix.setConnected(2, 3);
         matrix.setConnected(3, 4);
         matrix.setConnected(3, 5);
-        List<BitArrayInt> cliques = matrix.calculateMaximalCliques();
+        List<BitArrayInt> cliques = Lists.newArrayList(matrix.calculateMaximalCliques().iterator());
         HashSet<BitArrayInt> set = new HashSet<>(cliques);
 
         Assert.assertEquals(cliques.size(), set.size());
@@ -79,7 +80,7 @@ public class AdjacencyMatrixTest {
         for (int i = 0; i < 6; i++)
             matrix.setConnected(i, i);
 
-        List<BitArrayInt> cliques = matrix.calculateMaximalCliques();
+        List<BitArrayInt> cliques = Lists.newArrayList(matrix.calculateMaximalCliques().iterator());
         HashSet<BitArrayInt> set = new HashSet<>(cliques);
 
         Assert.assertEquals(cliques.size(), set.size());
@@ -104,7 +105,7 @@ public class AdjacencyMatrixTest {
         for (int i = 0; i < 6; i++)
             matrix.setConnected(i, i);
 
-        List<BitArrayInt> cliques = matrix.calculateMaximalCliques();
+        List<BitArrayInt> cliques = Lists.newArrayList(matrix.calculateMaximalCliques().iterator());
         HashSet<BitArrayInt> set = new HashSet<>(cliques);
 
         Assert.assertEquals(cliques.size(), set.size());
@@ -121,7 +122,7 @@ public class AdjacencyMatrixTest {
     public void test2() throws Exception {
         TestData testData = generateTestData(130, 5, 5, 10, 10);
         AdjacencyMatrix matrix = testData.matrix;
-        for (BitArrayInt bitArrayInt : matrix.calculateMaximalCliques()) {
+        for (BitArrayInt bitArrayInt : Lists.newArrayList(matrix.calculateMaximalCliques().iterator())) {
             if (bitArrayInt.bitCount() >= 5)
                 System.out.println(bitArrayInt);
         }
@@ -137,7 +138,7 @@ public class AdjacencyMatrixTest {
 
     static void assertTestData(TestData testData, int minCliqueSize) {
         HashSet<BitArrayInt> actual = new HashSet<>();
-        List<BitArrayInt> cliques = testData.matrix.calculateMaximalCliques();
+        List<BitArrayInt> cliques = Lists.newArrayList(testData.matrix.calculateMaximalCliques().iterator());
         for (BitArrayInt clique : cliques)
             if (clique.bitCount() >= minCliqueSize)
                 actual.add(clique);

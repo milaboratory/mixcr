@@ -27,8 +27,8 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.trees;
+package com.milaboratory.mixcr.trees
 
-public interface TreePrinter<T> {
-    String print(Tree<T> tree);
+interface TreePrinter<T : Any> {
+    fun print(tree: Tree<T>): String
 }

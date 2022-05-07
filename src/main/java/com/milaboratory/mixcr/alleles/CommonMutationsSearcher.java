@@ -16,6 +16,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS;
 
@@ -283,8 +284,8 @@ class CommonMutationsSearcher {
                     indexesByMutations.get(pair.getSecond())
             );
         }
-        List<BitArrayInt> cliques = matrix.calculateMaximalCliques();
-        return cliques.stream()
+        var cliques = matrix.calculateMaximalCliques().iterator();
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(cliques, Spliterator.SORTED), false)
                 .sorted(Comparator.comparing(BitArrayInt::bitCount).reversed())
                 .map(clique -> IntStream.of(clique.getBits()).map(it -> allMutations[it]));
     }

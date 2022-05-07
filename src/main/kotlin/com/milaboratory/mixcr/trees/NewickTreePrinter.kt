@@ -27,52 +27,40 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.trees;
+package com.milaboratory.mixcr.trees
 
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.stream.Collectors
 
 /**
  * https://en.wikipedia.org/wiki/Newick_format
  */
-public class NewickTreePrinter<T> implements TreePrinter<T> {
-    private final Function<Tree.Node<T>, String> nameExtractor;
-    private final boolean printDistances;
-    private final boolean printOnlyLeafNames;
-
-    public NewickTreePrinter(
-            Function<Tree.Node<T>, String> nameExtractor,
-            boolean printDistances,
-            boolean printOnlyLeafNames
-    ) {
-        this.nameExtractor = nameExtractor;
-        this.printDistances = printDistances;
-        this.printOnlyLeafNames = printOnlyLeafNames;
+class NewickTreePrinter<T : Any>(
+    private val nameExtractor: (Tree.Node<T>) -> String,
+    private val printDistances: Boolean,
+    private val printOnlyLeafNames: Boolean
+) : TreePrinter<T> {
+    override fun print(tree: Tree<T>): String {
+        return printNode(tree.root) + ";"
     }
 
-    @Override
-    public String print(Tree<T> tree) {
-        return printNode(tree.getRoot()) + ";";
-    }
-
-    private String printNode(Tree.Node<T> node) {
-        StringBuilder sb = new StringBuilder();
-        if (!node.getLinks().isEmpty()) {
-            sb.append(node.getLinks().stream()
-                    .map(link -> {
-                        String printedNode = printNode(link.getNode());
-                        if (printDistances && link.getDistance() != null) {
-                            return printedNode + ":" + link.getDistance();
-                        } else {
-                            return printedNode;
-                        }
-                    })
-                    .sorted()
-                    .collect(Collectors.joining(",", "(", ")")));
+    private fun printNode(node: Tree.Node<T>): String {
+        val sb = StringBuilder()
+        if (node.links.isNotEmpty()) {
+            sb.append(node.links.stream()
+                .map { link ->
+                    val printedNode = printNode(link.node)
+                    if (printDistances) {
+                        return@map printedNode + ":" + link.distance
+                    } else {
+                        return@map printedNode
+                    }
+                }
+                .sorted()
+                .collect(Collectors.joining(",", "(", ")")))
         }
-        if (!printOnlyLeafNames || node.getLinks().isEmpty()) {
-            sb.append(nameExtractor.apply(node));
+        if (!printOnlyLeafNames || node.links.isEmpty()) {
+            sb.append(nameExtractor(node))
         }
-        return sb.toString();
+        return sb.toString()
     }
 }
