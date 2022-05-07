@@ -2,8 +2,12 @@
 
 script_dir=$(dirname "${0}")
 
-# downloadable test data
-"${script_dir}/../../ensure-test-data.sh"
+cd "${script_dir}/../.." || exit
 
-# builds predprocessed test data
-"${script_dir}/../../prepare-test-data.sh"
+#export MI_LICENSE_DEBUG=MI_LICENSE_DEBUG
+
+# Downloadable test data
+./ensure-test-data.sh
+
+# Builds pre-processed test data
+./prepare-test-data.sh
