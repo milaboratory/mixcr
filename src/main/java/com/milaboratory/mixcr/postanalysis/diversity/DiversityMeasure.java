@@ -1,15 +1,22 @@
 package com.milaboratory.mixcr.postanalysis.diversity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Objects;
 
 /**
  *
  */
 public final class DiversityMeasure {
+    @JsonProperty("measure")
     public final Measure measure;
+    @JsonProperty("name")
     public final String name;
 
-    public DiversityMeasure(Measure measure, String name) {
+    @JsonCreator
+    public DiversityMeasure(@JsonProperty("measure") Measure measure,
+                            @JsonProperty("name") String name) {
         this.measure = measure;
         this.name = name;
     }
