@@ -6,11 +6,17 @@ import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroupResult;
 import com.milaboratory.mixcr.postanalysis.ui.OutputTable;
 import picocli.CommandLine;
 
-@CommandLine.Command(name = "tables",
+@CommandLine.Command(name = "exportTables",
         sortOptions = false,
         separator = " ",
         description = "Biophysics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype, Overlap")
 public final class CommandPaExportTables extends CommandPaExportTablesBase {
+    public CommandPaExportTables() {}
+
+    public CommandPaExportTables(PaResult paResult, String out) {
+        super(paResult, out);
+    }
+
     @Override
     void run1(PaResultByGroup result) {
         for (CharacteristicGroup<?, ?> table : result.schema.tables) {

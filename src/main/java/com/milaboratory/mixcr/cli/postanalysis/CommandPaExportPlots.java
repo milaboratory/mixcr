@@ -1,14 +1,13 @@
 package com.milaboratory.mixcr.cli.postanalysis;
 
 import com.milaboratory.miplots.ExportKt;
-import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessorSummary;
 import com.milaboratory.mixcr.postanalysis.plots.Filter;
 import com.milaboratory.mixcr.postanalysis.plots.MetadataKt;
-import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import jetbrains.letsPlot.intern.Plot;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
 import org.jetbrains.kotlinx.dataframe.api.DataFrameIterableKt;
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
@@ -17,10 +16,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
-abstract class CommandPaExportPlots extends CommandPaExport {
+@Command(name = "exportPlots",
+        separator = " ",
+        description = "Export postanalysis plots.")
+public abstract class CommandPaExportPlots extends CommandPaExport {
     @Option(description = "Plot width", names = {"--width"})
     public int width = 0;
     @Option(description = "Plot height", names = {"--height"})
@@ -68,14 +69,6 @@ abstract class CommandPaExportPlots extends CommandPaExport {
         return Paths.get(plotDestStr(group));
     }
 
-    String tablesDestStr(IsolationGroup group) {
-        return out.substring(0, out.length() - 3) + "preproc" + group.extension() + ".tsv";
-    }
-
-    Path tablesDestPath(IsolationGroup group) {
-        return Paths.get(tablesDestStr(group));
-    }
-
     protected void ensureOutputPathExists() {
         try {
             Files.createDirectories(Paths.get(out).toAbsolutePath().getParent());
@@ -84,9 +77,9 @@ abstract class CommandPaExportPlots extends CommandPaExport {
         }
     }
 
-    void writeTables(IsolationGroup group, List<byte[]> tables) {
+    void writePlotsAndSummary(IsolationGroup group, List<byte[]> plots) {
         ensureOutputPathExists();
-        ExportKt.writePDF(tablesDestPath(group), tables);
+        ExportKt.writePDF(plotDestPath(group), plots);
     }
 
     void writePlots(IsolationGroup group, List<Plot> plots) {
@@ -96,18 +89,15 @@ abstract class CommandPaExportPlots extends CommandPaExport {
 
     void writePlots(IsolationGroup group, Plot plot) {
         ensureOutputPathExists();
-        ExportKt.writePDF(tablesDestPath(group), plot);
+        ExportKt.writePDF(plotDestPath(group), plot);
     }
 
-    void writePlotsAndSummary(CharacteristicGroup<Clone, ?> ch,
-                              IsolationGroup group,
-                              List<byte[]> plotsAndSummary,
-                              Map<String, SetPreprocessorSummary> preprocSummary
-    ) {
-        ensureOutputPathExists();
-        ExportKt.writePDF(plotDestPath(group), plotsAndSummary);
-        SetPreprocessorSummary.writeCSV(tablesDestPath(group),
-                ch, preprocSummary,
-                "\t");
-    }
+
+    @CommandLine.Command(name = "exportPlots",
+            separator = " ",
+            description = "Export postanalysis results.",
+            subcommands = {
+                    CommandLine.HelpCommand.class
+            })
+    public static class CommandExportPlotsMain {}
 }

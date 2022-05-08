@@ -71,6 +71,11 @@ public class PostanalysisResult {
         return SetPreprocessorStat.cumulative(preprocSummary.get(data.get(charId).preproc).result.get(sampleId));
     }
 
+    /** Returns a set of characteristics */
+    public Set<String> getCharacteristics() {
+        return data.keySet();
+    }
+
     /** project result on a specific char group */
     @SuppressWarnings({"unchecked"})
     public <K, T> CharacteristicGroupResult<K> getTable(CharacteristicGroup<K, T> group) {

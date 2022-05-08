@@ -148,7 +148,10 @@ public final class Main {
                 .addSubcommand("help", CommandLine.HelpCommand.class)
                 .addSubcommand("analyze", CommandAnalyze.CommandAnalyzeMain.class)
                 .addSubcommand("postanalysis", CommandPa.CommandPostanalysisMain.class)
-                .addSubcommand("exportPa", CommandPaExport.CommandExportPaMain.class)
+                .addSubcommand("exportPlots", CommandPaExportPlots.CommandExportPlotsMain.class)
+                .addSubcommand("exportTables", CommandPaExportTables.class)
+                .addSubcommand("exportPreprocTables", CommandPaExportTablesPreprocSummary.class)
+
 
                 .addSubcommand("align", CommandAlign.class)
                 .addSubcommand("assemble", CommandAssemble.class)
@@ -195,18 +198,14 @@ public final class Main {
                 .addSubcommand("overlap", CommandSpec.forAnnotatedObject(CommandPaOverlap.class));
 
         cmd.getSubcommands()
-                .get("exportPa")
-                .addSubcommand("tables", CommandSpec.forAnnotatedObject(CommandPaExportTables.class))
-                .addSubcommand("preprocSummary", CommandSpec.forAnnotatedObject(CommandPaExportTablesPreprocSummary.class))
+                .get("exportPlots")
                 .addSubcommand("listMetrics", CommandSpec.forAnnotatedObject(CommandPaListMetrics.class))
                 .addSubcommand("biophysics", CommandSpec.forAnnotatedObject(CommandPaExportPlotsBasicStatistics.ExportBiophysics.class))
                 .addSubcommand("diversity", CommandSpec.forAnnotatedObject(CommandPaExportPlotsBasicStatistics.ExportDiversity.class))
-
                 .addSubcommand("vUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsGeneUsage.ExportVUsage.class))
                 .addSubcommand("jUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsGeneUsage.ExportJUsage.class))
                 .addSubcommand("isotypeUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsGeneUsage.ExportIsotypeUsage.class))
                 .addSubcommand("vjUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsVJUsage.class))
-
                 .addSubcommand("overlap", CommandSpec.forAnnotatedObject(CommandPaExportPlotsOverlap.class));
 
         cmd.setSeparator(" ");

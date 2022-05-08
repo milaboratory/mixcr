@@ -3,11 +3,10 @@ package com.milaboratory.mixcr.cli.postanalysis;
 import com.milaboratory.mixcr.cli.ACommandWithOutputMiXCR;
 import io.repseq.core.Chains;
 import io.repseq.core.Chains.NamedChains;
-import picocli.CommandLine;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
-import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -25,6 +24,17 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
     @Option(description = "Export for specific chains only",
             names = {"--chains"})
     public List<String> chains;
+    /**
+     * Cached PA result
+     */
+    private PaResult paResult = null;
+
+    public CommandPaExport() {}
+
+    /** Constructor used to export tables from code */
+    CommandPaExport(PaResult paResult) {
+        this.paResult = paResult;
+    }
 
     @Override
     protected List<String> getInputFiles() {
@@ -38,10 +48,6 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
             throwValidationException("Metadata should be .csv or .tsv");
     }
 
-    /**
-     * Cached PA result
-     */
-    private PaResult paResult = null;
 
     /**
      * Get full PA result
@@ -49,7 +55,7 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
     protected PaResult getPaResult() {
         if (paResult != null)
             return paResult;
-        return paResult = PaResult.readJson(Path.of(in).toAbsolutePath());
+        return paResult = PaResult.readJson(Paths.get(in).toAbsolutePath());
     }
 
     @Override
@@ -65,12 +71,4 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
     }
 
     abstract void run(PaResultByGroup result);
-
-    @CommandLine.Command(name = "exportPa",
-            separator = " ",
-            description = "Export postanalysis results.",
-            subcommands = {
-                    CommandLine.HelpCommand.class
-            })
-    public static class CommandExportPaMain {}
 }

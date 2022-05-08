@@ -5,10 +5,18 @@ import picocli.CommandLine.Parameters;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 abstract class CommandPaExportTablesBase extends CommandPaExport {
     @Parameters(description = "Path for output files", index = "1", defaultValue = "path/table.tsv")
     public String out;
+
+    public CommandPaExportTablesBase() {}
+
+    CommandPaExportTablesBase(PaResult paResult, String out) {
+        super(paResult);
+        this.out = out;
+    }
 
     @Override
     public void validate() {
@@ -18,11 +26,11 @@ abstract class CommandPaExportTablesBase extends CommandPaExport {
     }
 
     protected Path outDir() {
-        return Path.of(out).toAbsolutePath().getParent();
+        return Paths.get(out).toAbsolutePath().getParent();
     }
 
     protected String outPrefix() {
-        String fName = Path.of(out).getFileName().toString();
+        String fName = Paths.get(out).getFileName().toString();
         return fName.substring(0, fName.length() - 4);
     }
 

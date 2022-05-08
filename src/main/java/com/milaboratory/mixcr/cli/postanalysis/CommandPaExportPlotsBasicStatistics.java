@@ -82,7 +82,7 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
         );
 
         List<byte[]> plots = BasicStatistics.INSTANCE.plotsAndSummary(df, par);
-        writePlotsAndSummary(ch, result.group, plots, paResult.preprocSummary);
+        writePlotsAndSummary(result.group, plots);
     }
 
     @CommandLine.Command(name = "biophysics",

@@ -56,7 +56,7 @@ public abstract class CommandPaExportPlotsGeneUsage extends CommandPaExportPlots
                         height
                 ));
 
-        writePlotsAndSummary(ch, result.group, plot, paResult.preprocSummary);
+        writePlotsAndSummary(result.group, plot);
     }
 
     @CommandLine.Command(name = "vUsage",

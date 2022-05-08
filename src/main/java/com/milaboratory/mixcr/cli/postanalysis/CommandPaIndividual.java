@@ -19,7 +19,7 @@ import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCLibraryRegistry;
-import picocli.CommandLine;
+import picocli.CommandLine.Command;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 import static com.milaboratory.mixcr.postanalysis.additive.AdditiveCharacteristics.*;
 
 @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
-@CommandLine.Command(name = "individual",
+@Command(name = "individual",
         sortOptions = false,
         separator = " ",
         description = "Biophysics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype")

@@ -40,7 +40,7 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
     public boolean onlyProductive = false;
 
     @Option(description = "Choose downsampling. Possible values: umi-count-[1000|auto]|cumulative-top-[percent]|top-[number]|no-downsampling",
-            names = {"-d", "--downsampling"},
+            names = {"--downsampling"},
             required = true)
     public String downsampling;
 
@@ -51,14 +51,22 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
     @Option(description = "Metadata file (csv/tsv). Must have \"sample\" column.",
             names = {"-m", "--meta", "--metadata"})
     public String metadata;
-
-    @Option(description = "Metadata column for chains.",
-            names = {"--chains-column"})
-    public String chainsColumn;
+//
+//    @Option(description = "Metadata column for chains.",
+//            names = {"--chains-column"})
+//    public String chainsColumn;
 
     @Option(description = "Metadata categories used to isolate samples into separate groups",
             names = {"-g", "--group"})
     public List<String> isolationGroups;
+
+    @Option(description = "Tabular results output path.",
+            names = {"--tables"})
+    public String tablesOut;
+
+    @Option(description = "Preprocessor summary output path.",
+            names = {"--preproc-tables"})
+    public String preprocOut;
 
     @Override
     protected List<String> getInputFiles() {
@@ -80,7 +88,7 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
 
     @Override
     protected List<String> getOutputFiles() {
-        return Collections.singletonList(outputFile());
+        return Collections.singletonList(out());
     }
 
     @Override
@@ -88,16 +96,34 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
         super.validate();
         if (metadata != null && !metadata.endsWith(".csv") && !metadata.endsWith(".tsv"))
             throwValidationException("Metadata should be .csv or .tsv");
-        if (!outputFile().endsWith(".json") && !outputFile().endsWith(".json.gz"))
+        if (!out().endsWith(".json") && !out().endsWith(".json.gz"))
             throwValidationException("Output file name should ends with .json.gz or .json");
     }
 
-    private String outputFile() {
+    private String outBase() {
+        String out = out();
+        if (out.endsWith(".json.gz"))
+            return out.substring(0, out.length() - 8);
+        else if (out.endsWith(".json"))
+            return out.substring(0, out.length() - 5);
+        else
+            throw new IllegalArgumentException("output extension is illegal");
+    }
+
+    private String out() {
         return inOut.get(inOut.size() - 1);
     }
 
+    private String tablesOut() {
+        return tablesOut == null ? outBase() + ".tsv" : tablesOut;
+    }
+
+    private String preprocOut() {
+        return preprocOut == null ? outBase() + ".preproc.tsv" : preprocOut;
+    }
+
     private Path outputPath() {
-        return Paths.get(outputFile()).toAbsolutePath();
+        return Paths.get(out()).toAbsolutePath();
     }
 
     /** Get sample id from file name */
@@ -150,7 +176,7 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
 
     private Map<String, List<Object>> _metadata = null;
 
-    protected Map<String, List<Object>> readMetadata() {
+    protected Map<String, List<Object>> metadata() {
         if (metadata == null)
             return null;
         if (_metadata != null)
@@ -197,13 +223,25 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
         }
     }
 
+    private static final String[] CHAINS_COLUMN_NAMES = {"chain", "chains"};
+
+    private String chainsColumn() {
+        Map<String, List<Object>> metadata = metadata();
+        if (metadata == null)
+            return null;
+        return metadata.keySet().stream().filter(
+                col -> Arrays.stream(CHAINS_COLUMN_NAMES).anyMatch(col::equalsIgnoreCase)
+        ).findFirst().orElse(null);
+    }
+
     /** group samples into isolated groups */
     protected List<SamplesGroup> groupSamples() {
+        String chainsColumn = chainsColumn();
         if ((isolationGroups == null || isolationGroups.isEmpty()) && chainsColumn == null) {
             return Collections.singletonList(new SamplesGroup(getInputFiles(), Collections.emptyMap()));
         }
 
-        Map<String, List<Object>> metadata = readMetadata();
+        Map<String, List<Object>> metadata = metadata();
         @SuppressWarnings({"unchecked", "rawtypes"})
         List<String> mSamples = (List) metadata.get("sample");
         List<String> qSamples = getInputFiles();
@@ -242,6 +280,7 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
     public void run0() throws Exception {
         List<PaResultByGroup> results = new ArrayList<>();
         Chains c = Chains.parse(chains);
+        String chainsColumn = chainsColumn();
         for (SamplesGroup group : groupSamples()) {
             if (chainsColumn != null)
                 results.add(run(new IsolationGroup(
@@ -253,17 +292,20 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
                     }
                 }
         }
-        PaResult result = new PaResult(readMetadata(), isolationGroups, results);
+        PaResult result = new PaResult(metadata(), isolationGroups, results);
         try {
             Files.createDirectories(outputPath().getParent());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         PaResult.writeJson(outputPath(), result);
+
+        // export tables & preprocessing summary
+        new CommandPaExportTables(result, tablesOut()).run0();
+        new CommandPaExportTablesPreprocSummary(result, preprocOut()).run0();
     }
 
     abstract PaResultByGroup run(IsolationGroup group, List<String> samples);
-
 
     @CommandLine.Command(name = "postanalysis",
             separator = " ",

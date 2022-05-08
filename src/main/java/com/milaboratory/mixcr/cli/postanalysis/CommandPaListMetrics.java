@@ -4,14 +4,14 @@ import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.cli.ACommandMiXCR;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.util.GlobalObjectMappers;
-import picocli.CommandLine;
+import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
-@CommandLine.Command(name = "listMetrics",
+@Command(name = "listMetrics",
         sortOptions = false,
         separator = " ",
         description = "List available metrics")

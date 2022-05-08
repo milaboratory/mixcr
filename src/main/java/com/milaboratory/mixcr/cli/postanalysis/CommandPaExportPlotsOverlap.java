@@ -75,6 +75,6 @@ public class CommandPaExportPlotsOverlap extends CommandPaExportPlotsHeatmapWith
         );
 
         List<byte[]> plotsAndSummary = Overlap.INSTANCE.plotsAndSummary(df, par);
-        writePlotsAndSummary(ch, result.group, plotsAndSummary, preprocSummary);
+        writePlotsAndSummary(result.group, plotsAndSummary);
     }
 }
