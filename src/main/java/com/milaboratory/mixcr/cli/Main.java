@@ -31,6 +31,9 @@ package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.cli.ValidationException;
 import com.milaboratory.mixcr.cli.postanalysis.*;
+import com.milaboratory.milm.LM;
+import com.milaboratory.milm.LicenseError;
+import com.milaboratory.milm.LicenseErrorType;
 import com.milaboratory.util.TempFileManager;
 import com.milaboratory.util.VersionInfo;
 import io.repseq.core.VDJCLibraryRegistry;
@@ -46,17 +49,86 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.Scanner;
+import java.util.function.Consumer;
+import java.util.prefs.Preferences;
 
 public final class Main {
 
     private static boolean initialized = false;
+    public static final LM lm = new LM(Main.class);
+
+    public static final String MI_LICENSE_PREFERENCES_KEY = "mi_license";
 
     public static void main(String... args) {
+        Preferences prefs = Preferences.userNodeForPackage(Main.class);
+        if (args.length > 0 && "activate-license".equals(args[0])) {
+            try (Scanner reader = new Scanner(System.in)) {
+                System.out.println("Please enter the license:");
+                String envelope = reader.nextLine();
+                System.out.println("Checking the license...");
+                lm.addStringLicenseSource(envelope);
+                lm.setWarningHandler(warning -> System.err.println("License Warning:\n" + warning));
+                Consumer<LicenseError> errorHandler = err -> System.err.println("License Error:\n" + err.getType() + "\n" + err.getMessage());
+                lm.setAsyncErrorHandler(errorHandler);
+                LicenseError err = lm.init();
+                if (err != null) {
+                    errorHandler.accept(err);
+                    System.exit(LM.LicenseErrorExitCode);
+                }
+                System.out.println("Ok");
+                prefs.put(MI_LICENSE_PREFERENCES_KEY, envelope);
+                System.out.println("License activated successfully.");
+                System.exit(0);
+            }
+        }
+
+        if (args.length > 0 && "deactivate-license".equals(args[0])) {
+            prefs.remove(MI_LICENSE_PREFERENCES_KEY);
+            System.out.println("License successfully deactivated.");
+            System.exit(0);
+        }
+
+        lm.addPreferenceLicenseSource(prefs, MI_LICENSE_PREFERENCES_KEY);
+        lm.addDefaultSources();
+
+        Consumer<LicenseError> licenseErrorHandler = licenseError -> {
+            if (licenseError.getType() == LicenseErrorType.NoLicense) {
+                System.err.println("=== No License ===");
+                System.err.println();
+                System.err.println("To use MiXCR, please, provide a valid license.");
+                System.err.println();
+                System.err.println("If you already have a license, activate it by calling:");
+                System.err.println("  mixcr activate-license");
+                System.err.println();
+                System.err.println("You can also activate the license via a special file, environment");
+                System.err.println("variable or other means, please check the docs."); // TODO provide a link
+                System.err.println();
+                System.err.println("If you don't have a license check https://licensing.milaboratories.com/.");
+                System.err.println("Free license is provided for academic users and non-profit organisations.");
+            } else
+                System.err.println("License error: " + licenseError);
+            System.exit(LM.LicenseErrorExitCode);
+        };
+
+        lm.setAsyncErrorHandler(licenseErrorHandler);
+        lm.setWarningHandler(warning -> System.err.println("License Warning: " + warning));
+        LicenseError lmError = lm.init();
+        if (lmError != null) licenseErrorHandler.accept(lmError);
+
+        VersionInfo versionInfo = VersionInfo.getVersionInfoForArtifact("mixcr");
+        lm.sendGenericStats("mixcr." +
+                        versionInfo.getVersion() + "." +
+                        versionInfo.getBranch() + "." +
+                        versionInfo.getRevision() + "." +
+                        versionInfo.getTimestamp().toInstant().getEpochSecond(),
+                args);
+
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
             e.printStackTrace();
             System.exit(2);
         });
+
         handleParseResult(parseArgs(args).getParseResult(), args);
     }
 

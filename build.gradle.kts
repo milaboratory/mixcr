@@ -3,18 +3,27 @@ import com.palantir.gradle.gitversion.VersionDetails
 import groovy.lang.Closure
 import java.net.InetAddress
 
-gradle.startParameter.excludedTaskNames += listOf("assembleDist", "assembleShadowDist", "distTar", "distZip", "installDist", "installShadowDist", "shadowDistTar", "shadowDistZip")
+gradle.startParameter.excludedTaskNames += listOf(
+    "assembleDist",
+    "assembleShadowDist",
+    "distTar",
+    "distZip",
+    "installDist",
+    "installShadowDist",
+    "shadowDistTar",
+    "shadowDistZip"
+)
 
-val dataframeVersion = "0.8.0-rc-7"
+val dataframeVersion = "0.8.0-rc-8"
 
 plugins {
     `java-library`
     application
     `maven-publish`
-    id("com.github.johnrengelman.shadow") version "7.0.0"
-    kotlin("jvm") version "1.6.10"
-    id("org.jetbrains.kotlin.plugin.dataframe") version "0.8.0-rc-7"
-    id("com.palantir.git-version") version "0.13.0"
+    kotlin("jvm") version "1.6.21"
+    id("org.jetbrains.kotlin.plugin.dataframe") version "0.8.0-rc-8"
+    id("com.palantir.git-version") version "0.15.0"
+    id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 // Make IDE aware of the generated code:
 kotlin.sourceSets.getByName("main").kotlin.srcDir("build/generated/ksp/main/kotlin/")
@@ -52,10 +61,15 @@ tasks.withType<JavaCompile> {
 }
 
 tasks.withType<Javadoc> {
-    (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
+    options {
+        this as StandardJavadocDocletOptions
+        addStringOption("Xdoclint:none", "-quiet")
+    }
 }
 
 repositories {
+    // mavenLocal()
+
     mavenCentral()
 
     // Snapshot versions of redberry-pipe, milib and repseqio distributed via this repo
@@ -65,7 +79,7 @@ repositories {
 }
 
 val miplotsVersion = "0.1-19-master"
-val milibVersion = "1.15.0-23-master"
+val milibVersion = "1.15.0-29-master"
 val repseqioVersion = "1.3.5-25-master"
 val jacksonVersion = "2.13.2.2"
 
@@ -75,6 +89,9 @@ dependencies {
         exclude("com.milaboratory", "milib")
     }
     api("com.milaboratory:miplots:$miplotsVersion")
+
+    // implementation("com.milaboratory:milm2-jvm:0.2.0-test-2") { isChanging = true }
+    implementation("com.milaboratory:milm2-jvm:1.1.0")
 
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("commons-io:commons-io:2.11.0")
@@ -156,6 +173,10 @@ tasks.test {
     useJUnit()
     minHeapSize = "1024m"
     maxHeapSize = "2048m"
+
+    testLogging {
+        showStandardStreams = true
+    }
 
     miCiStage?.let {
         if (it == "test") {

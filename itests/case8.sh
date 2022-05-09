@@ -23,9 +23,9 @@ mixcr analyze amplicon \
   --impute-germline-on-export --json-report case8 \
   CD4M1_test_R1.fastq.gz CD4M1_test_R2.fastq.gz case8
 
-assert "cat case8.align.jsonl | head -n 1 | jq -r .chainUsage.chains.TRA" "197562"
-assert "cat case8.assemble.jsonl | head -n 1 | jq -r .readsInClones" "161627"
-assert "cat case8.assembleContigs.jsonl | head -n 1 | jq -r .longestContigLength" "223"
-assert "cat case8.assembleContigs.jsonl | head -n 1 | jq -r .clonesWithAmbiguousLetters" "1378"
+assert "cat case8.align.jsonl | head -n 1 | jq -r .chainUsage.chains.TRA" "197642"
+assert "cat case8.assemble.jsonl | head -n 1 | jq -r .readsInClones" "161771"
+assert "cat case8.assembleContigs.jsonl | head -n 1 | jq -r .longestContigLength" "227"
+assert "cat case8.assembleContigs.jsonl | head -n 1 | jq -r .clonesWithAmbiguousLetters" "978"
 assert "cat case8.assembleContigs.jsonl | head -n 1 | jq -r .assemblePrematureTerminationEvents" "1"
-assert "cat case8.assembleContigs.jsonl | head -n 1 | jq -r .finalCloneCount" "22402"
+assert "cat case8.assembleContigs.jsonl | head -n 1 | jq -r .finalCloneCount" "22384"
