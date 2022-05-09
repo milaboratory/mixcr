@@ -359,7 +359,7 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
                 }
             } else
                 try (ClnsWriter writer = new ClnsWriter(out)) {
-                    writer.writeCloneSet(getFullPipelineConfiguration(), cloneSet);
+                    writer.writeCloneSet(pipelineConfiguration, cloneSet);
                 }
 
             // Writing report

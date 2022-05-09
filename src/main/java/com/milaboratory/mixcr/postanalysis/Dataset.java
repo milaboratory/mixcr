@@ -1,16 +1,20 @@
 package com.milaboratory.mixcr.postanalysis;
 
-import cc.redberry.pipe.OutputPortCloseable;
+import com.milaboratory.mixcr.util.OutputPortWithProgress;
 
 /**
  *
  */
 public interface Dataset<T> {
-    /** Unique dataset identifier */
+    /**
+     * Unique dataset identifier
+     */
     String id();
 
-    /** Closeable port of dataset elements */
-    OutputPortCloseable<T> mkElementsPort();
+    /**
+     * Closeable port of dataset elements
+     */
+    OutputPortWithProgress<T> mkElementsPort();
 
     static <K> Dataset<K> empty(String id) {
         return new Dataset<K>() {
@@ -20,10 +24,26 @@ public interface Dataset<T> {
             }
 
             @Override
-            public OutputPortCloseable<K> mkElementsPort() {
-                return new OutputPortCloseable<K>() {
+            public OutputPortWithProgress<K> mkElementsPort() {
+                return new OutputPortWithProgress<K>() {
                     @Override
-                    public void close() {}
+                    public long index() {
+                        return 0;
+                    }
+
+                    @Override
+                    public double getProgress() {
+                        return 0.0;
+                    }
+
+                    @Override
+                    public boolean isFinished() {
+                        return true;
+                    }
+
+                    @Override
+                    public void close() {
+                    }
 
                     @Override
                     public K take() {

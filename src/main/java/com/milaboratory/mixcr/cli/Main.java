@@ -30,6 +30,7 @@
 package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.cli.ValidationException;
+import com.milaboratory.mixcr.cli.postanalysis.*;
 import com.milaboratory.milm.LM;
 import com.milaboratory.milm.LicenseError;
 import com.milaboratory.milm.LicenseErrorType;
@@ -146,9 +147,7 @@ public final class Main {
                         return new ArrayList<>();
                     }
                     return super.handle(parseResult);
-                } catch (ParameterException ex) {
-                    throw ex;
-                } catch (CommandLine.ExecutionException ex) {
+                } catch (ParameterException | CommandLine.ExecutionException ex) {
                     throw ex;
                 } catch (Exception ex) {
                     throw new CommandLine.ExecutionException(commandLine,
@@ -220,7 +219,11 @@ public final class Main {
                 .setCommandName(command)
                 .addSubcommand("help", CommandLine.HelpCommand.class)
                 .addSubcommand("analyze", CommandAnalyze.CommandAnalyzeMain.class)
-                .addSubcommand("postanalysis", CommandPostanalysis.CommandPostanalysisMain.class)
+                .addSubcommand("postanalysis", CommandPa.CommandPostanalysisMain.class)
+                .addSubcommand("exportPlots", CommandPaExportPlots.CommandExportPlotsMain.class)
+                .addSubcommand("exportTables", CommandPaExportTables.class)
+                .addSubcommand("exportPreprocTables", CommandPaExportTablesPreprocSummary.class)
+
 
                 .addSubcommand("align", CommandAlign.class)
                 .addSubcommand("assemble", CommandAssemble.class)
@@ -244,6 +247,7 @@ public final class Main {
                 .addSubcommand("mergeAlignments", CommandMergeAlignments.class)
                 .addSubcommand("filterAlignments", CommandFilterAlignments.class)
                 .addSubcommand("sortAlignments", CommandSortAlignments.class)
+                .addSubcommand("sortClones", CommandSortClones.class)
 
                 .addSubcommand("alignmentsDiff", CommandAlignmentsDiff.class)
                 .addSubcommand("clonesDiff", CommandClonesDiff.class)
@@ -262,8 +266,19 @@ public final class Main {
 
         cmd.getSubcommands()
                 .get("postanalysis")
-                .addSubcommand("individual", CommandSpec.forAnnotatedObject(CommandPostanalysis.CommandIndividual.class))
-                .addSubcommand("overlap", CommandSpec.forAnnotatedObject(CommandPostanalysis.CommandOverlap.class));
+                .addSubcommand("individual", CommandSpec.forAnnotatedObject(CommandPaIndividual.class))
+                .addSubcommand("overlap", CommandSpec.forAnnotatedObject(CommandPaOverlap.class));
+
+        cmd.getSubcommands()
+                .get("exportPlots")
+                .addSubcommand("listMetrics", CommandSpec.forAnnotatedObject(CommandPaListMetrics.class))
+                .addSubcommand("biophysics", CommandSpec.forAnnotatedObject(CommandPaExportPlotsBasicStatistics.ExportBiophysics.class))
+                .addSubcommand("diversity", CommandSpec.forAnnotatedObject(CommandPaExportPlotsBasicStatistics.ExportDiversity.class))
+                .addSubcommand("vUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsGeneUsage.ExportVUsage.class))
+                .addSubcommand("jUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsGeneUsage.ExportJUsage.class))
+                .addSubcommand("isotypeUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsGeneUsage.ExportIsotypeUsage.class))
+                .addSubcommand("vjUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsVJUsage.class))
+                .addSubcommand("overlap", CommandSpec.forAnnotatedObject(CommandPaExportPlotsOverlap.class));
 
         cmd.setSeparator(" ");
         return cmd;
@@ -272,7 +287,7 @@ public final class Main {
     public static CommandLine parseArgs(String... args) {
         if (args.length == 0)
             args = new String[]{"help"};
-        ExceptionHandler exHandler = new ExceptionHandler();
+        ExceptionHandler<?> exHandler = new ExceptionHandler<>();
         exHandler.andExit(1);
         CommandLine cmd = mkCmd();
         try {

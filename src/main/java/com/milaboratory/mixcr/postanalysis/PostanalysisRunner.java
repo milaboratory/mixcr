@@ -3,8 +3,13 @@ package com.milaboratory.mixcr.postanalysis;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.InputPort;
 import cc.redberry.pipe.OutputPortCloseable;
+import com.milaboratory.mixcr.postanalysis.overlap.OverlapDataset;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
+import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.util.CanReportProgressAndStage;
+import gnu.trove.iterator.TIntObjectIterator;
+import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -16,13 +21,15 @@ import java.util.stream.IntStream;
 public class PostanalysisRunner<T> implements CanReportProgressAndStage {
     private final List<Characteristic<?, T>> characteristics = new ArrayList<>();
 
-    public void addCharacteristics(CharacteristicGroup<?, T>... groups) {
+    @SafeVarargs
+    public final void addCharacteristics(CharacteristicGroup<?, T>... groups) {
         for (CharacteristicGroup<?, T> g : groups) {
             addCharacteristics(g.characteristics);
         }
     }
 
-    public void addCharacteristics(Characteristic<?, T>... chs) {
+    @SafeVarargs
+    public final void addCharacteristics(Characteristic<?, T>... chs) {
         addCharacteristics(Arrays.asList(chs));
     }
 
@@ -30,7 +37,7 @@ public class PostanalysisRunner<T> implements CanReportProgressAndStage {
         characteristics.addAll(chs);
     }
 
-    private volatile String stage;
+    private volatile String stage = "Initializing";
     private volatile double progress = 0.0;
     private volatile boolean isFinished = false;
 
@@ -54,21 +61,27 @@ public class PostanalysisRunner<T> implements CanReportProgressAndStage {
         return run(datasets.toArray(new Dataset[0]));
     }
 
-    /** Run PA for a given datasets */
+    /**
+     * Run PA for a given datasets
+     */
     @SuppressWarnings("unchecked")
     public PostanalysisResult run(Dataset<T>... datasets) {
-        stage = "Preparing";
-        progress = 0.0;
+        stage = "Preprocessing datasets";
+        progress = Double.NaN;
         isFinished = false;
 
+        // save char indices in array for faster access
+        Map<Characteristic<?, T>, Integer> char2idx = new HashMap<>();
+        for (int i = 0; i < characteristics.size(); i++)
+            char2idx.put(characteristics.get(i), i);
         // charID -> proc (deduplicated)
         Map<String, SetPreprocessor<T>> id2proc = new HashMap<>();
         Map<SetPreprocessorFactory<T>, SetPreprocessor<T>> distinctProcs = new HashMap<>();
-        Map<SetPreprocessor<T>, List<Characteristic<?, T>>> proc2char = new HashMap<>();
+        Map<SetPreprocessor<T>, TIntArrayList> proc2char = new IdentityHashMap<>();
         for (Characteristic<?, T> ch : characteristics) {
-            id2proc.put(ch.name, distinctProcs.computeIfAbsent(ch.preprocessor, __ -> ch.preprocessor.getInstance()));
+            id2proc.put(ch.name, distinctProcs.computeIfAbsent(ch.preprocessor, __ -> ch.preprocessor.newInstance()));
             SetPreprocessor<T> proc = distinctProcs.get(ch.preprocessor);
-            proc2char.computeIfAbsent(proc, __ -> new ArrayList<>()).add(ch);
+            proc2char.computeIfAbsent(proc, __ -> new TIntArrayList()).add(char2idx.get(ch));
         }
         List<SetPreprocessor<T>> procs = id2proc.values().stream().distinct().collect(Collectors.toList());
 
@@ -121,19 +134,23 @@ public class PostanalysisRunner<T> implements CanReportProgressAndStage {
         Map<Characteristic<?, T>, Map<String, MetricValue<?>[]>> result = new IdentityHashMap<>();
         for (int i = 0; i < datasets.length; i++) {
             Dataset<T> dataset = datasets[i];
+            if (datasets.length == 1)
+                stage = "Processing";
+            else
+                stage = "Processing: " + dataset.id();
 
-            Map<Characteristic<?, T>, Aggregator<?, T>> aggregators = characteristics.stream()
-                    .collect(Collectors.toMap(c -> c, c -> c.createAggregator(dataset)));
+            Aggregator<?, T>[] aggregators = characteristics.stream()
+                    .map(c -> c.createAggregator(dataset)).toArray(Aggregator[]::new);
 
-            try (OutputPortCloseable<T> port = dataset.mkElementsPort()) {
+            try (OutputPortWithProgress<T> port = dataset.mkElementsPort()) {
                 for (T o : CUtils.it(port)) {
+                    progress = port.getProgress();
                     for (Map.Entry<SetPreprocessor<T>, MappingFunction<T>> e : mappingFunctions[i].entrySet()) {
                         MappingFunction<T> mapper = e.getValue();
                         T oMapped = mapper.apply(o);
                         if (oMapped != null)
-                            for (Characteristic<?, T> ch : proc2char.get(e.getKey())) {
-                                aggregators.get(ch).consume(oMapped);
-                            }
+                            for (int ch : proc2char.get(e.getKey()).toArray())
+                                aggregators[ch].consume(oMapped);
                     }
                 }
             }
@@ -144,7 +161,7 @@ public class PostanalysisRunner<T> implements CanReportProgressAndStage {
                         __ -> new HashMap<>());
                 if (charValues.containsKey(dataset.id()))
                     throw new IllegalArgumentException("Dataset occurred twice.");
-                charValues.put(dataset.id(), aggregators.get(characteristic).result());
+                charValues.put(dataset.id(), aggregators[char2idx.get(characteristic)].result());
             }
         }
 
@@ -152,6 +169,27 @@ public class PostanalysisRunner<T> implements CanReportProgressAndStage {
         Set<String> datasetIds = Arrays.stream(datasets)
                 .map(Dataset::id)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
-        return PostanalysisResult.create(datasetIds, result);
+
+        // collect summary by preprocessor
+        Map<String, SetPreprocessorSummary> preprocResult = procs.stream().collect(Collectors.toMap(SetPreprocessor::id, p -> {
+            TIntObjectHashMap<List<SetPreprocessorStat>> stat = p.getStat();
+            List<String> datasetIdsActual;
+            if (datasets.length == 1 && datasets[0] instanceof OverlapDataset) {
+                datasetIdsActual = ((OverlapDataset<T>) datasets[0]).datasetIds;
+            } else {
+                datasetIdsActual = Arrays
+                        .stream(datasets)
+                        .map(Dataset::id)
+                        .collect(Collectors.toList());
+            }
+            Map<String, List<SetPreprocessorStat>> r = new HashMap<>();
+            TIntObjectIterator<List<SetPreprocessorStat>> it = stat.iterator();
+            while (it.hasNext()) {
+                it.advance();
+                r.put(datasetIdsActual.get(it.key()), it.value());
+            }
+            return new SetPreprocessorSummary(r);
+        }));
+        return PostanalysisResult.create(datasetIds, result, preprocResult);
     }
 }

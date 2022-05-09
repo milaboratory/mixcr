@@ -30,15 +30,19 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPortCloseable;
+import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.util.sorting.MergeStrategy;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public final class CloneSetOverlap {
-    private CloneSetOverlap() {}
+    private CloneSetOverlap() {
+    }
 
-    public static OutputPortCloseable<List<List<Clone>>> overlap(
+    public static OutputPortWithProgress<List<List<Clone>>> overlap(
             List<? extends VDJCSProperties.VDJCSProperty<? super Clone>> by,
             List<? extends CloneReader> readers) {
         VDJCSProperties.CloneOrdering ordering = readers.get(0).ordering();
@@ -48,8 +52,48 @@ public final class CloneSetOverlap {
         MergeStrategy<Clone> strategy = MergeStrategy.calculateStrategy(ordering.getProperties(), by);
         if (!strategy.usesStreamOrdering())
             throw new RuntimeException("Clone sorting is incompatible with overlap criteria.");
-        return strategy.join(readers.stream()
-                .map(CloneReader::readClones)
-                .collect(Collectors.toList()));
+
+        List<OutputPortWithProgress<Clone>> individualPorts = readers
+                .stream()
+                .map(r -> OutputPortWithProgress.wrap(r.numberOfClones(), r.readClones()))
+                .collect(Collectors.toList());
+
+        OutputPortCloseable<List<List<Clone>>> joinedPort = strategy.join(individualPorts);
+
+        AtomicLong index = new AtomicLong(0);
+        AtomicBoolean isFinished = new AtomicBoolean(false);
+        long totalClones = readers.stream().mapToLong(CloneReader::numberOfClones).sum();
+        return new OutputPortWithProgress<List<List<Clone>>>() {
+            @Override
+            public long index() {
+                return index.get();
+            }
+
+            @Override
+            public void close() {
+                joinedPort.close();
+            }
+
+            @Override
+            public List<List<Clone>> take() {
+                List<List<Clone>> t = joinedPort.take();
+                if (t == null) {
+                    isFinished.set(true);
+                    return null;
+                }
+                index.incrementAndGet();
+                return t;
+            }
+
+            @Override
+            public double getProgress() {
+                return 1.0 * individualPorts.stream().mapToLong(OutputPortWithProgress::index).sum() / totalClones;
+            }
+
+            @Override
+            public boolean isFinished() {
+                return isFinished.get();
+            }
+        };
     }
 }

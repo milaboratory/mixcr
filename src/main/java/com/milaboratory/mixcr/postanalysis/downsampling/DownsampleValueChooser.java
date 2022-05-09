@@ -3,6 +3,7 @@ package com.milaboratory.mixcr.postanalysis.downsampling;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 
 import java.util.Arrays;
@@ -26,9 +27,8 @@ import java.util.stream.LongStream;
 public interface DownsampleValueChooser {
     long compute(long[] totalCounts);
 
-    default String description() {
-        return "";
-    }
+    /** Used for {@link SetPreprocessorFactory#id()} */
+    default String id() {return "";}
 
     class Fixed implements DownsampleValueChooser {
         public long value;
@@ -40,8 +40,8 @@ public interface DownsampleValueChooser {
         }
 
         @Override
-        public String description() {
-            return "Downsample to a fixed count = " + value;
+        public String id() {
+            return "to count " + value;
         }
 
         @Override
@@ -65,8 +65,8 @@ public interface DownsampleValueChooser {
 
     class Minimal implements DownsampleValueChooser {
         @Override
-        public String description() {
-            return "Downsample to the minimal dataset";
+        public String id() {
+            return "to minimal count";
         }
 
         @Override
@@ -101,8 +101,9 @@ public interface DownsampleValueChooser {
         }
 
         @Override
-        public String description() {
-            return String.format("Downsample to the min(%s * percentile(%s), %s))", scale, quantile, threshold);
+        public String id() {
+//            return String.format("min(%s*percentile(%s),%s))", scale, quantile, threshold);
+            return "automatic";
         }
 
         @Override

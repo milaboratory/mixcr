@@ -1,9 +1,10 @@
 package com.milaboratory.mixcr.postanalysis.ui;
 
-import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.basictypes.CloneReader;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.postanalysis.Dataset;
+import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.util.LambdaSemaphore;
 import io.repseq.core.VDJCLibraryRegistry;
 
@@ -45,9 +46,10 @@ public class ClonotypeDataset implements Dataset<Clone> {
     }
 
     @Override
-    public OutputPortCloseable<Clone> mkElementsPort() {
+    public OutputPortWithProgress<Clone> mkElementsPort() {
         try {
-            return CloneSetIO.mkReader(path, registry, concurrencyLimiter).readClones();
+            CloneReader reader = CloneSetIO.mkReader(path, registry, concurrencyLimiter);
+            return OutputPortWithProgress.wrap(reader.numberOfClones(), reader.readClones());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

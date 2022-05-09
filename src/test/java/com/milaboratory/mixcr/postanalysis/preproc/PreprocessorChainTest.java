@@ -3,6 +3,7 @@ package com.milaboratory.mixcr.postanalysis.preproc;
 import cc.redberry.pipe.InputPort;
 import com.milaboratory.mixcr.postanalysis.*;
 import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.map.hash.TIntObjectHashMap;
 import org.apache.commons.math3.random.RandomDataGenerator;
 import org.apache.commons.math3.random.Well512a;
 import org.junit.Assert;
@@ -10,6 +11,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -37,7 +39,7 @@ public class PreprocessorChainTest {
         RandomDataGenerator rng = new RandomDataGenerator(new Well512a(System.currentTimeMillis()));
         TestDataset<TestObject> ds = rndDataset(rng, 10000);
 
-        TestDataset<TestObject> r = new TestDataset<>(SetPreprocessorFactory.processDatasets(preproc.getInstance(), ds)[0]);
+        TestDataset<TestObject> r = new TestDataset<>(SetPreprocessorFactory.processDatasets(preproc.newInstance(), ds)[0]);
 
         List<TestObject> expected = new ArrayList<>();
         for (TestObject c : ds) {
@@ -56,8 +58,13 @@ public class PreprocessorChainTest {
         }
 
         @Override
-        public SetPreprocessor<TestObject> getInstance() {
+        public SetPreprocessor<TestObject> newInstance() {
             return new TestPreproc(modulus);
+        }
+
+        @Override
+        public String id() {
+            return "";
         }
     }
 
@@ -93,16 +100,29 @@ public class PreprocessorChainTest {
         }
 
 
+        private final SetPreprocessorStat.Builder<TestObject> stats = new SetPreprocessorStat.Builder<>("", t -> t.weight);
+
         @Override
         public MappingFunction<TestObject> getMapper(int iDataset) {
             AtomicInteger idx = new AtomicInteger(0);
             return element -> {
+                stats.before(iDataset, element);
                 if (l.get(idx.getAndIncrement()) % modulus == 0)
                     return null;
+                stats.after(iDataset, element);
                 return element;
             };
         }
 
+        @Override
+        public TIntObjectHashMap<List<SetPreprocessorStat>> getStat() {
+            return stats.getStatMap();
+        }
+
+        @Override
+        public String id() {
+            return "";
+        }
     }
 
     public static TestDataset<TestObject> rndDataset(RandomDataGenerator rng, int size) {

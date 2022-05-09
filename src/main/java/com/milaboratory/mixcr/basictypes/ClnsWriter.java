@@ -55,10 +55,7 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
 
-    final String stage = "Writing clones";
     final PrimitivOHybrid output;
-
-    private volatile int current;
 
     public ClnsWriter(String fileName) throws IOException {
         this(new PrimitivOHybrid(Paths.get(fileName)));
@@ -80,7 +77,8 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
                 cloneSet.getAssemblerParameters(),
                 cloneSet.getOrdering(),
                 cloneSet.getUsedGenes(),
-                cloneSet);
+                cloneSet,
+                cloneSet.size());
     }
 
     public void writeHeader(
@@ -89,7 +87,8 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
             CloneAssemblerParameters assemblerParameters,
             VDJCSProperties.CloneOrdering ordering,
             List<VDJCGene> genes,
-            HasFeatureToAlign featureToAlign
+            HasFeatureToAlign featureToAlign,
+            int numberOfClones
     ) {
         try (PrimitivO o = output.beginPrimitivO(true)) {
             // Writing magic bytes
@@ -105,6 +104,7 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
             o.writeObject(alignmentParameters);
             o.writeObject(assemblerParameters);
             o.writeObject(ordering);
+            o.writeInt(numberOfClones);
 
             IOUtil.stdVDJCPrimitivOStateInit(o, genes, featureToAlign);
         }

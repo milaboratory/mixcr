@@ -19,9 +19,7 @@ import java.util.function.Predicate;
         @JsonSubTypes.Type(value = ElementPredicate.IncludeChains.class, name = "includesChains"),
 })
 public interface ElementPredicate<T> extends Predicate<T> {
-    default String description() {
-        return "";
-    }
+    String id();
 
     @JsonAutoDetect
     final class NoOutOfFrames implements ElementPredicate<Clone> {
@@ -34,8 +32,8 @@ public interface ElementPredicate<T> extends Predicate<T> {
         }
 
         @Override
-        public String description() {
-            return "Exclude out-of-frames";
+        public String id() {
+            return "OOF in " + GeneFeature.encode(feature);
         }
 
         @Override
@@ -68,10 +66,9 @@ public interface ElementPredicate<T> extends Predicate<T> {
         }
 
         @Override
-        public String description() {
-            return "Exclude stop-codons in " + GeneFeature.encode(feature);
+        public String id() {
+            return "stops in " + GeneFeature.encode(feature);
         }
-
 
         @Override
         public boolean test(Clone clone) {
@@ -102,8 +99,8 @@ public interface ElementPredicate<T> extends Predicate<T> {
         }
 
         @Override
-        public String description() {
-            return "Select chains: " + chains;
+        public String id() {
+            return chains + " chains";
         }
 
         @Override

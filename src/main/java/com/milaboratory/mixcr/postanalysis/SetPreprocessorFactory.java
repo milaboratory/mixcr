@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.milaboratory.mixcr.postanalysis.downsampling.ClonesDownsamplingPreprocessorFactory;
 import com.milaboratory.mixcr.postanalysis.preproc.*;
+import com.milaboratory.mixcr.util.OutputPortWithProgress;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,11 +36,10 @@ import java.util.stream.IntStream;
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public interface SetPreprocessorFactory<T> {
-    SetPreprocessor<T> getInstance();
+    SetPreprocessor<T> newInstance();
 
-    default String[] description() {
-        return new String[0];
-    }
+    /** Descriptive unique identifier */
+    String id();
 
     @SuppressWarnings("unchecked")
     default SetPreprocessorFactory<T> filter(boolean before, ElementPredicate<T>... predicates) {
@@ -56,9 +56,15 @@ public interface SetPreprocessorFactory<T> {
             }
             return new PreprocessorChain.Factory<>(list);
         } else
-            return before
-                    ? new PreprocessorChain.Factory<>(filter, this)
-                    : new PreprocessorChain.Factory<>(this, filter);
+            return before ? before(filter) : then(filter);
+    }
+
+    default SetPreprocessorFactory<T> then(SetPreprocessorFactory<T> then) {
+        return new PreprocessorChain.Factory<T>(this, then);
+    }
+
+    default SetPreprocessorFactory<T> before(SetPreprocessorFactory<T> before) {
+        return new PreprocessorChain.Factory<T>(before, this);
     }
 
     default SetPreprocessorFactory<T> filterAfter(ElementPredicate<T>... predicates) {
@@ -95,9 +101,24 @@ public interface SetPreprocessorFactory<T> {
                         }
 
                         @Override
-                        public OutputPortCloseable<T> mkElementsPort() {
-                            OutputPortCloseable<T> inner = initial[datasetIdx].mkElementsPort();
-                            return new OutputPortCloseable<T>() {
+                        public OutputPortWithProgress<T> mkElementsPort() {
+                            OutputPortWithProgress<T> inner = initial[datasetIdx].mkElementsPort();
+                            return new OutputPortWithProgress<T>() {
+                                @Override
+                                public double getProgress() {
+                                    return inner.getProgress();
+                                }
+
+                                @Override
+                                public boolean isFinished() {
+                                    return inner.isFinished();
+                                }
+
+                                @Override
+                                public long index() {
+                                    return inner.index();
+                                }
+
                                 @Override
                                 public void close() {
                                     inner.close();

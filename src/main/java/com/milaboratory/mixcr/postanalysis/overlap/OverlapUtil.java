@@ -29,17 +29,18 @@
  */
 package com.milaboratory.mixcr.postanalysis.overlap;
 
-import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.SimpleProcessorWrapper;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneReader;
 import com.milaboratory.mixcr.basictypes.CloneSetOverlap;
 import com.milaboratory.mixcr.basictypes.VDJCSProperties;
+import com.milaboratory.mixcr.util.OutputPortWithProgress;
 
 import java.util.List;
 
 public final class OverlapUtil {
-    private OverlapUtil() {}
+    private OverlapUtil() {
+    }
 
     public static OverlapDataset<Clone> overlap(
             List<String> datasetIds,
@@ -47,8 +48,35 @@ public final class OverlapUtil {
             List<? extends CloneReader> readers) {
         return new OverlapDataset<Clone>(datasetIds) {
             @Override
-            public OutputPortCloseable<OverlapGroup<Clone>> mkElementsPort() {
-                return new SimpleProcessorWrapper<>(CloneSetOverlap.overlap(by, readers), OverlapGroup::new);
+            public OutputPortWithProgress<OverlapGroup<Clone>> mkElementsPort() {
+                OutputPortWithProgress<List<List<Clone>>> port = CloneSetOverlap.overlap(by, readers);
+                SimpleProcessorWrapper<List<List<Clone>>, OverlapGroup<Clone>> processor = new SimpleProcessorWrapper<>(port, OverlapGroup::new);
+                return new OutputPortWithProgress<OverlapGroup<Clone>>() {
+                    @Override
+                    public long index() {
+                        return port.index();
+                    }
+
+                    @Override
+                    public void close() {
+                        processor.close();
+                    }
+
+                    @Override
+                    public OverlapGroup<Clone> take() {
+                        return processor.take();
+                    }
+
+                    @Override
+                    public double getProgress() {
+                        return port.getProgress();
+                    }
+
+                    @Override
+                    public boolean isFinished() {
+                        return port.isFinished();
+                    }
+                };
             }
         };
     }
