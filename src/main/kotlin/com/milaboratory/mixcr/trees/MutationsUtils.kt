@@ -113,9 +113,7 @@ internal object MutationsUtils {
         folder: BiFunction<MutationsWithRange, MutationsWithRange, T>
     ): List<T> {
         require(firstMutations.size == secondMutations.size)
-        return IntStream.range(0, firstMutations.size)
-            .mapToObj { folder.apply(firstMutations[0], secondMutations[0]) }
-            .collect(Collectors.toList())
+        return (firstMutations.indices).map { folder.apply(firstMutations[it], secondMutations[it]) }
     }
 
     private fun positionIfNucleotideWasDeleted(position: Int): Int = when {
@@ -194,9 +192,9 @@ internal object MutationsUtils {
         second: Mutations<NucleotideSequence>,
         range: Range
     ): Mutations<NucleotideSequence> {
-        val mutationsOfFirstAsSet = Arrays.stream(first.rawMutations).boxed().collect(Collectors.toSet())
+        val mutationsOfFirstAsSet = first.rawMutations.toSet()
         val mutationsBuilder = MutationsBuilder(NucleotideSequence.ALPHABET)
-        for (i in 0 until second.size()) {
+        (0 until second.size()).forEach { i ->
             val mutation = second.getMutation(i)
             val position = Mutation.getPosition(mutation)
             if (range.contains(position)) {

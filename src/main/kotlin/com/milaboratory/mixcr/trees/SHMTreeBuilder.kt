@@ -253,22 +253,17 @@ class SHMTreeBuilder(
         XSV.writeXSVBody(debug, result.nodesDebugInfo, DebugInfo.COLUMNS_FOR_XSV, ";")
     }
 
-    fun zeroStep_monitorMemory(clusterBySameVAndJ: Cluster<CloneWrapper>, debug: PrintStream?) {
+    fun zeroStep_monitorMemory(clusterBySameVAndJ: Cluster<CloneWrapper>, debug: PrintStream) {
         val VJBase = clusterVJBase(clusterBySameVAndJ)
-        //        if (!VJBase.toString().equals("VJBase{VGeneName='IGHV3-30*00', JGeneName='IGHJ3*00', cdr3length=45}")) {
-        if (VJBase.toString() != "VJBase{VGeneName='IGHV3-30*00', JGeneName='IGHJ4*00', cdr3length=42}") {
+        if (VJBase.toString() != "VJBase(VGeneName=IGHV3-30*00, JGeneName=IGHJ4*00, CDR3length=42)") {
             return
         }
         val runtime = Runtime.getRuntime()
         val clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase)
-        for (i in 0..4) {
+        repeat(5) {
             val begin = Instant.now()
             runtime.gc()
-            try {
-                Thread.sleep(100)
-            } catch (e: InterruptedException) {
-                throw RuntimeException(e)
-            }
+            Thread.sleep(300)
             println("begin $VJBase")
             val usedMemoryBefore = runtime.totalMemory() - runtime.freeMemory()
             clusterProcessor.buildTreeTopParts()

@@ -8,12 +8,12 @@ import com.milaboratory.core.alignment.Alignment
 import com.milaboratory.core.alignment.AlignmentScoring
 import com.milaboratory.core.alignment.AlignmentUtils
 import com.milaboratory.core.mutations.Mutations
-import com.milaboratory.core.mutations.MutationsBuilder
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.cli.BuildSHMTreeStep
 import com.milaboratory.mixcr.trees.DebugInfo.MutationsSet
+import com.milaboratory.mixcr.trees.MutationsUtils.intersection
 import com.milaboratory.mixcr.trees.Tree.NodeWithParent
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.Reconstructed
@@ -35,7 +35,6 @@ import java.util.function.Supplier
 import java.util.stream.Collectors
 import java.util.stream.IntStream
 import java.util.stream.Stream
-import java.util.stream.StreamSupport
 import kotlin.math.max
 import kotlin.math.min
 
@@ -161,11 +160,11 @@ internal class ClusterProcessor private constructor(
 
     private fun rebaseFromGermline(clones: Stream<CloneWrapper>): List<CloneWithMutationsFromVJGermline> {
         return clones
-            .filter { cloneWrapper: CloneWrapper? ->
+            .filter { cloneWrapper ->
                 (clusterInfo.commonVAlignmentRanges.containsCloneWrapper(cloneWrapper)
                     && clusterInfo.commonJAlignmentRanges.containsCloneWrapper(cloneWrapper))
             }
-            .map { cloneWrapper: CloneWrapper? -> this.rebaseFromGermline(cloneWrapper) }
+            .map { cloneWrapper -> rebaseFromGermline(cloneWrapper) }
             .collect(Collectors.toList())
     }
 
@@ -356,11 +355,10 @@ internal class ClusterProcessor private constructor(
             }
         }
         val notOverlappedCliques: MutableList<BitArrayInt> = ArrayList()
-        val cliques = matrix.calculateMaximalCliques().iterator()
-        StreamSupport.stream(Spliterators.spliteratorUnknownSize(cliques, Spliterator.SORTED), false)
+        matrix.calculateMaximalCliques()
             .filter { it.bitCount() > 1 }
-            .sorted(Comparator.comparing { obj: BitArrayInt -> obj.bitCount() }.reversed())
-            .forEach { clique: BitArrayInt ->
+            .sortedByDescending { it.bitCount() }
+            .forEach { clique ->
                 if (notOverlappedCliques.stream().noneMatch { it.intersects(clique) }) {
                     notOverlappedCliques.add(clique)
                 }
@@ -404,86 +402,68 @@ internal class ClusterProcessor private constructor(
         first: List<MutationsWithRange>,
         second: List<MutationsWithRange>,
         allelesMutations: List<Mutations<NucleotideSequence>>
-    ): Int {
-        return Stream.concat(
-            allelesMutations.stream(),
-            Stream.of(Mutations.EMPTY_NUCLEOTIDE_MUTATIONS)
-        )
-            .distinct()
-            .mapToInt { alleleMutations: Mutations<NucleotideSequence> ->
-                commonMutationsCount(
-                    without(first, alleleMutations),
-                    without(second, alleleMutations)
-                )
-            }
-            .min().orElseThrow { IllegalStateException() }
-    }
+    ): Int = (allelesMutations.asSequence() + Mutations.EMPTY_NUCLEOTIDE_MUTATIONS)
+        .distinct()
+        .map { alleleMutations ->
+            commonMutationsCount(without(first, alleleMutations), without(second, alleleMutations))
+        }
+        .minOrNull()!!
 
     private fun without(
         cloneMutations: List<MutationsWithRange>,
         alleleMutations: Mutations<NucleotideSequence>
     ): List<MutationsWithRange> {
-        val alleleMutationsSet = Arrays.stream(alleleMutations.rawMutations).boxed().collect(Collectors.toSet())
-        return cloneMutations.stream()
-            .map { mutations ->
-                val builder = MutationsBuilder(NucleotideSequence.ALPHABET)
-                Arrays.stream(mutations.mutations.rawMutations)
-                    .filter { mutation: Int -> !alleleMutationsSet.contains(mutation) }
-                    .forEach { mutation: Int -> builder.append(mutation) }
-                MutationsWithRange(
-                    mutations.sequence1,
-                    builder.createAndDestroy(),
-                    mutations.rangeInfo
-                )
-            }
-            .collect(Collectors.toList())
+        if (alleleMutations.rawMutations.isEmpty()) return cloneMutations
+        val alleleMutationsSet = alleleMutations.rawMutations.toSet()
+        return cloneMutations.map { mutations ->
+            MutationsWithRange(
+                mutations.sequence1,
+                Mutations(
+                    NucleotideSequence.ALPHABET,
+                    *mutations.mutations.rawMutations
+                        .filter { !alleleMutationsSet.contains(it) }
+                        .toIntArray()
+                ),
+                mutations.rangeInfo
+            )
+        }
     }
 
     private fun mutationsFromThisAlleleToOthers(
         geneType: GeneType,
-        vararg clones: CloneWithMutationsFromVJGermline
+        first: CloneWithMutationsFromVJGermline,
+        second: CloneWithMutationsFromVJGermline,
     ): List<Mutations<NucleotideSequence>> {
-        val baseGenes = Arrays.stream(clones)
-            .map { it.cloneWrapper.getHit(geneType).gene }
-            .distinct()
-            .collect(Collectors.toList())
-        require(baseGenes.size == 1)
-        val baseGene = baseGenes[0]
+        require(first.cloneWrapper.getHit(geneType).gene == second.cloneWrapper.getHit(geneType).gene)
+        val baseGene = first.cloneWrapper.getHit(geneType).gene
         val mutationsOfCurrentAllele = alleleMutations(baseGene)
-        return Arrays.stream(clones)
-            .flatMap { clone: CloneWithMutationsFromVJGermline ->
-                Arrays.stream(
-                    clone.cloneWrapper.clone.getHits(
-                        geneType
-                    )
-                )
-            }
-            .map { obj: VDJCHit -> obj.gene }
+        return sequenceOf(first, second)
+            .flatMap { clone -> clone.cloneWrapper.clone.getHits(geneType).asSequence() }
+            .map { it.gene }
             .distinct()
-            .filter { gene: VDJCGene -> gene.geneName == baseGene.geneName }
-            .filter { gene: VDJCGene -> gene.name != baseGene.name }
-            .map { gene: VDJCGene -> alleleMutations(gene) }
-            .map { alleleMutations: Mutations<NucleotideSequence>? ->
-                mutationsOfCurrentAllele.invert().combineWith(alleleMutations)
-            }
-            .collect(Collectors.toList())
+            .filter { gene -> gene.geneName == baseGene.geneName }
+            .filter { gene -> gene.name != baseGene.name }
+            .map { gene -> alleleMutations(gene) }
+            .map { alleleMutations -> mutationsOfCurrentAllele.invert().combineWith(alleleMutations) }
+            .toList()
     }
 
     private fun alleleMutations(gene: VDJCGene): Mutations<NucleotideSequence> {
-        val result = gene.data.baseSequence.mutations
-        return Objects.requireNonNullElse(result, Mutations.EMPTY_NUCLEOTIDE_MUTATIONS)
+        return gene.data.baseSequence.mutations ?: Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
     }
 
     private fun commonMutationsCount(first: List<MutationsWithRange>, second: List<MutationsWithRange>): Int =
         MutationsUtils.fold(
             first, second
         ) { a, b ->
-            MutationsUtils.intersection(
-                a,
-                b,
-                a.rangeInfo.intersection(b.rangeInfo)!!
-            ).mutationsCount()
-        }.stream().mapToInt { it!! }.sum()
+            val intersection = a.rangeInfo.intersection(b.rangeInfo)!!
+            val mutations = intersection(
+                a.mutations,
+                b.mutations,
+                intersection
+            )
+            mutations.size()
+        }.sum()
 
     private fun buildATreeWithDecisionsInfo(cluster: Cluster<CloneWithMutationsFromVJGermline>): Pair<List<Pair<Int, TreeWithMetaBuilder.DecisionInfo>>, TreeWithMetaBuilder> {
         val treeWithMetaBuilder = buildATree(cluster)

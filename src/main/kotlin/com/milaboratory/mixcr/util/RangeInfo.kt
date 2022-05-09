@@ -3,8 +3,8 @@ package com.milaboratory.mixcr.util
 import com.milaboratory.core.Range
 import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.mutations.Mutations
+import com.milaboratory.core.mutations.MutationsBuilder
 import com.milaboratory.core.sequence.NucleotideSequence
-import java.util.stream.IntStream
 
 data class RangeInfo(
     val range: Range,
@@ -12,15 +12,10 @@ data class RangeInfo(
 ) {
 
     fun intersection(another: RangeInfo): RangeInfo? {
-        val intersection: Range?
-        if (range == another.range) {
-            intersection = range
-        } else {
-            intersection = range.intersection(another.range)
-            if (intersection == null) {
-                return null
-            }
-        }
+        val intersection: Range = when (range) {
+            another.range -> range
+            else -> range.intersection(another.range)
+        } ?: return null
         val includeFirstInserts = when (intersection.lower) {
             range.lower -> isIncludeFirstInserts
             another.range.lower -> isIncludeFirstInserts || another.isIncludeFirstInserts
@@ -33,10 +28,15 @@ data class RangeInfo(
     }
 
     fun extractAbsoluteMutations(mutations: Mutations<NucleotideSequence>): Mutations<NucleotideSequence> {
-        val filteredMutations = IntStream.of(*mutations.rawMutations)
-            .filter { mutation: Int -> this.contains(mutation) }
-            .toArray()
-        return Mutations(NucleotideSequence.ALPHABET, *filteredMutations)
+        val builder = MutationsBuilder(NucleotideSequence.ALPHABET)
+        builder.ensureCapacity(mutations.size())
+        (0 until mutations.size()).forEach { i ->
+            val mutation = mutations.getMutation(i)
+            if (this.contains(mutation)) {
+                builder.append(mutation)
+            }
+        }
+        return builder.createAndDestroy()
     }
 
     operator fun contains(mutation: Int): Boolean =
