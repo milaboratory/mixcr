@@ -43,6 +43,7 @@ import com.milaboratory.mixcr.basictypes.tag.TagCounter;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.ArraysUtils;
+import com.milaboratory.util.JsonOverrider;
 import com.milaboratory.util.SmartProgressReporter;
 import gnu.trove.iterator.TObjectDoubleIterator;
 import io.repseq.core.*;
@@ -342,7 +343,7 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
                 }
             } else
                 try (ClnsWriter writer = new ClnsWriter(out)) {
-                    writer.writeCloneSet(getFullPipelineConfiguration(), cloneSet);
+                    writer.writeCloneSet(pipelineConfiguration, cloneSet);
                 }
 
             // Writing report

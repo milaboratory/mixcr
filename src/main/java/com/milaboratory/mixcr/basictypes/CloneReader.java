@@ -40,4 +40,6 @@ public interface CloneReader extends AutoCloseable {
     VDJCSProperties.CloneOrdering ordering();
 
     OutputPortCloseable<Clone> readClones();
+
+    int numberOfClones();
 }

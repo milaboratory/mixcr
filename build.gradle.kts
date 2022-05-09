@@ -3,16 +3,34 @@ import com.palantir.gradle.gitversion.VersionDetails
 import groovy.lang.Closure
 import java.net.InetAddress
 
+gradle.startParameter.excludedTaskNames += listOf(
+    "assembleDist",
+    "assembleShadowDist",
+    "distTar",
+    "distZip",
+    "installDist",
+    "installShadowDist",
+    "shadowDistTar",
+    "shadowDistZip"
+)
+
+val dataframeVersion = "0.8.0-rc-8"
+
 plugins {
     `java-library`
     application
     `maven-publish`
-    id("com.palantir.git-version") version "0.13.0"
+    kotlin("jvm") version "1.6.21"
+    id("org.jetbrains.kotlin.plugin.dataframe") version "0.8.0-rc-8"
+    id("com.palantir.git-version") version "0.15.0"
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
+// Make IDE aware of the generated code:
+kotlin.sourceSets.getByName("main").kotlin.srcDir("build/generated/ksp/main/kotlin/")
 
-val miRepoAccessKeyId: String by project
-val miRepoSecretAccessKey: String by project
+
+val miRepoAccessKeyId: String? by project
+val miRepoSecretAccessKey: String? by project
 
 val productionBuild: Boolean? by project
 
@@ -45,10 +63,15 @@ tasks.withType<JavaCompile> {
 }
 
 tasks.withType<Javadoc> {
-    (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
+    options {
+        this as StandardJavadocDocletOptions
+        addStringOption("Xdoclint:none", "-quiet")
+    }
 }
 
 repositories {
+    // mavenLocal()
+
     mavenCentral()
 
     // Snapshot versions of redberry-pipe, milib and repseqio distributed via this repo
@@ -57,26 +80,33 @@ repositories {
     }
 }
 
-val milibVersion = "1.15.0"
-val repseqioVersion = "1.3.5-23-master"
-val jacksonVersion = "2.13.2"
+val miplotsVersion = "0.1-19-master"
+val milibVersion = "1.15.0-29-master"
+val repseqioVersion = "1.3.5-25-master"
+val jacksonVersion = "2.13.2.2"
 
 dependencies {
     api("com.milaboratory:milib:$milibVersion")
     api("io.repseq:repseqio:$repseqioVersion") {
         exclude("com.milaboratory", "milib")
     }
+    api("com.milaboratory:miplots:$miplotsVersion")
+
+    // implementation("com.milaboratory:milm2-jvm:0.2.0-test-2") { isChanging = true }
+    implementation("com.milaboratory:milm2-jvm:1.1.0")
 
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
-    implementation("commons-io:commons-io:2.7")
-    implementation("org.lz4:lz4-java:1.4.1")
+    implementation("commons-io:commons-io:2.11.0")
+    implementation("org.lz4:lz4-java:1.8.0")
     implementation("net.sf.trove4j:trove4j:3.0.3")
     implementation("info.picocli:picocli:4.1.1")
     implementation("com.google.guava:guava:31.1-jre")
+    implementation("com.itextpdf:itext7-core:7.2.1")
+    implementation("com.itextpdf:layout:7.2.1")
 
     testImplementation("junit:junit:4.13.2")
     implementation(testFixtures("com.milaboratory:milib:$milibVersion"))
-    testImplementation("org.mockito:mockito-all:1.9.5")
+    testImplementation("org.mockito:mockito-all:1.10.19")
 }
 
 val writeBuildProperties by tasks.registering(WriteProperties::class) {
@@ -95,21 +125,22 @@ tasks.processResources {
 }
 
 val shadowJar = tasks.withType<ShadowJar> {
-    minimize {
-        exclude(dependency("io.repseq:repseqio"))
-        exclude(dependency("com.milaboratory:milib"))
-        exclude(dependency("org.lz4:lz4-java"))
-        exclude(dependency("com.fasterxml.jackson.core:jackson-databind"))
-
-        exclude(dependency("log4j:log4j"))
-        exclude(dependency("org.slf4j:slf4j-api"))
-        exclude(dependency("commons-logging:commons-logging"))
-        exclude(dependency("ch.qos.logback:logback-core"))
-        exclude(dependency("ch.qos.logback:logback-classic"))
-    }
+//    minimize {
+//        exclude(dependency("io.repseq:repseqio"))
+//        exclude(dependency("com.milaboratory:milib"))
+//        exclude(dependency("org.lz4:lz4-java"))
+//        exclude(dependency("com.fasterxml.jackson.core:jackson-databind"))
+//
+//        exclude(dependency("log4j:log4j"))
+//        exclude(dependency("org.slf4j:slf4j-api"))
+//        exclude(dependency("commons-logging:commons-logging"))
+//        exclude(dependency("ch.qos.logback:logback-core"))
+//        exclude(dependency("ch.qos.logback:logback-classic"))
+//    }
 }
 
 val distributionZip by tasks.registering(Zip::class) {
+    group = "distribution"
     archiveFileName.set("${project.name}.zip")
     destinationDirectory.set(file("$buildDir/distributions"))
     from(shadowJar) {
@@ -121,14 +152,16 @@ val distributionZip by tasks.registering(Zip::class) {
 
 publishing {
     repositories {
-        maven {
-            name = "mipriv"
-            url = uri("s3://milaboratory-artefacts-private-files.s3.eu-central-1.amazonaws.com/maven")
+        if (miRepoAccessKeyId != null) {
+            maven {
+                name = "mipriv"
+                url = uri("s3://milaboratory-artefacts-private-files.s3.eu-central-1.amazonaws.com/maven")
 
-            authentication {
-                credentials(AwsCredentials::class) {
-                    accessKey = miRepoAccessKeyId
-                    secretKey = miRepoSecretAccessKey
+                authentication {
+                    credentials(AwsCredentials::class) {
+                        accessKey = miRepoAccessKeyId!!
+                        secretKey = miRepoSecretAccessKey!!
+                    }
                 }
             }
         }
@@ -144,10 +177,14 @@ tasks.test {
     minHeapSize = "1024m"
     maxHeapSize = "2048m"
 
-//    miCiStage?.let {
-//        if (it == "test") {
-//            systemProperty("longTests", "true");
-//        }
-//    }
+    testLogging {
+        showStandardStreams = true
+    }
+
+    miCiStage?.let {
+        if (it == "test") {
+            systemProperty("longTests", "true")
+        }
+    }
     longTests?.let { systemProperty("longTests", it) }
 }

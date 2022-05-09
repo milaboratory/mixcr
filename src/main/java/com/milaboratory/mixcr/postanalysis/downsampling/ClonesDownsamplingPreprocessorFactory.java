@@ -31,18 +31,15 @@ public class ClonesDownsamplingPreprocessorFactory implements SetPreprocessorFac
     }
 
     @Override
-    public String[] description() {
-        String ch = downsampleValueChooser.description();
-        if (ch == null || ch.isEmpty())
-            return new String[0];
-        return new String[]{ch};
+    public String id() {
+        return "Downsample " + downsampleValueChooser.id();
     }
 
     @Override
-    public SetPreprocessor<Clone> getInstance() {
+    public SetPreprocessor<Clone> newInstance() {
         return new DownsamplingPreprocessor<>(
                 c -> Math.round(c.getCount()),
-                Clone::setCount, downsampleValueChooser, seed);
+                Clone::setCount, downsampleValueChooser, seed, id());
     }
 
     @Override

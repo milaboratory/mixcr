@@ -36,7 +36,7 @@ import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler.VariantBranch;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCObject;
 import com.milaboratory.mixcr.cli.Report;
-import com.milaboratory.mixcr.cli.ReportHelper;
+import com.milaboratory.util.ReportHelper;
 import io.repseq.core.GeneFeature;
 
 import java.util.Arrays;

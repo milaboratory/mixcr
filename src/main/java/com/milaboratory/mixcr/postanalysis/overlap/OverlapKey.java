@@ -15,7 +15,7 @@ import java.util.Objects;
         getterVisibility = JsonAutoDetect.Visibility.NONE,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE
 )
-public final class OverlapKey<K> {
+public final class OverlapKey<K>  {
     @JsonProperty("key")
     @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "type")
     public final K key;

@@ -1,12 +1,11 @@
 package com.milaboratory.mixcr.postanalysis.downsampling;
 
 import cc.redberry.pipe.CUtils;
-import com.milaboratory.mixcr.postanalysis.Dataset;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
-import com.milaboratory.mixcr.postanalysis.TestDataset;
-import com.milaboratory.mixcr.postanalysis.TestObject;
+import com.milaboratory.mixcr.postanalysis.*;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup;
 import com.milaboratory.mixcr.postanalysis.preproc.OverlapPreprocessorAdapter;
+import gnu.trove.iterator.TIntObjectIterator;
+import gnu.trove.map.hash.TIntObjectHashMap;
 import org.apache.commons.math3.random.RandomDataGenerator;
 import org.apache.commons.math3.random.Well512a;
 import org.junit.Assert;
@@ -39,7 +38,8 @@ public class OverlapDownsamplingPreprocessorTest {
                     t -> Math.round(t.weight),
                     (t, newW) -> new TestObject(t.value, newW),
                     chooser,
-                    System.currentTimeMillis()
+                    System.currentTimeMillis(),
+                    ""
             );
 
             Dataset<OverlapGroup<TestObject>>[] downsampled = SetPreprocessorFactory.processDatasets(new OverlapPreprocessorAdapter<>(proc), datasets);
@@ -61,6 +61,20 @@ public class OverlapDownsamplingPreprocessorTest {
                         }
                     }
                 }
+            }
+
+            TIntObjectHashMap<List<SetPreprocessorStat>> stat = proc.getStat();
+            Assert.assertEquals(dataset.sets.length, stat.size());
+            TIntObjectIterator<List<SetPreprocessorStat>> it = stat.iterator();
+            double wtAfter = -1;
+            while (it.hasNext()) {
+                it.advance();
+                Assert.assertEquals(1, it.value().size());
+                SetPreprocessorStat istat = it.value().get(0);
+                if (wtAfter == -1)
+                    wtAfter = istat.sumWeightAfter;
+                else
+                    Assert.assertEquals(wtAfter, istat.sumWeightAfter, 1e-5);
             }
         }
     }

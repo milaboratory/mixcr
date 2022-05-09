@@ -31,6 +31,7 @@ package com.milaboratory.mixcr.cli;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.milaboratory.util.GlobalObjectMappers;
+import com.milaboratory.util.ReportHelper;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.io.ByteArrayOutputStream;
@@ -50,17 +51,6 @@ import java.util.List;
 
 public final class Util {
     private Util() {
-    }
-
-    private static final DecimalFormatSymbols DFS;
-
-    public static final DecimalFormat PERCENT_FORMAT;
-
-    static {
-        DFS = new DecimalFormatSymbols();
-        DFS.setNaN("NaN");
-        DFS.setInfinity("Inf");
-        PERCENT_FORMAT = new DecimalFormat("#.##", DFS);
     }
 
     public static void writeReportToStdout(Report report) {

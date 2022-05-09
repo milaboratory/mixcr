@@ -30,8 +30,8 @@
 package com.milaboratory.mixcr.vdjaligners;
 
 import com.milaboratory.core.io.sequence.SequenceRead;
-import com.milaboratory.mixcr.basictypes.TagTuple;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import io.repseq.core.GeneType;
 
 import java.util.Set;
@@ -69,9 +69,9 @@ public final class VDJCAlignmentResult<R extends SequenceRead> {
         return new VDJCAlignmentResult<>(read, alignment, tagTuple);
     }
 
-    public VDJCAlignmentResult<R> shiftIndelsAtHomopolymers(Set<GeneType> geneTypes) {
+    public VDJCAlignmentResult<R> shiftIndelsAtHomopolymers(Set<GeneType> gts) {
         if (alignment == null)
             return this;
-        return new VDJCAlignmentResult<>(read, alignment.shiftIndelsAtHomopolymers(geneTypes), tagTuple);
+        return new VDJCAlignmentResult<>(read, alignment.shiftIndelsAtHomopolymers(gts), tagTuple);
     }
 }

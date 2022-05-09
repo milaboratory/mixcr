@@ -9,6 +9,7 @@ import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroupResult;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroupResultCell;
 import com.milaboratory.mixcr.postanalysis.ui.GroupSummary;
+import com.milaboratory.util.RandomUtil;
 import org.apache.commons.math3.random.RandomDataGenerator;
 import org.apache.commons.math3.random.Well512a;
 import org.junit.Assert;

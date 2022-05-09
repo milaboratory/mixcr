@@ -43,9 +43,6 @@ import java.util.List;
 public class VDJCAlignmentsDifferenceReaderTest {
     @Test
     public void test1() throws Exception {
-//        "/Users/poslavsky/Projects/milab/temp/al_1.vdjca",
-//        "/Users/poslavsky/Projects/milab/temp/al_2.vdjca"
-
         RunMiXCR.RunMiXCRAnalysis params = new RunMiXCR.RunMiXCRAnalysis(
                 RunMiXCR.class.getResource("/sequences/test_R1.fastq").getFile(),
                 RunMiXCR.class.getResource("/sequences/test_R2.fastq").getFile()

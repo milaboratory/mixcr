@@ -174,9 +174,14 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
                     reader.getParameters().getVAlignerParameters().getParameters().getScoring(),
                     reader.getParameters().getJAlignerParameters().getParameters().getScoring());
 
-            Set<GeneType> genesToShiftIndels = reader.getParameters().getGeneTypesWithLinearScoring();
+            // Shifting indels in homopolymers is effective only for alignments build with linear gap scoring,
+            // consolidating some gaps, on the contrary, for alignments obtained with affine scoring such procedure
+            // may break the alignment (gaps there are already consolidated as much as possible)
+            Set<GeneType> gtRequiringIndelShifts = reader.getParameters().getGeneTypesWithLinearScoring();
+
             for (VDJCAlignments alignments : CUtils.it(new OrderedOutputPort<>(process.getOutput(), VDJCAlignments::getAlignmentsIndex)))
-                writer.write(alignments.shiftIndelsAtHomopolymers(genesToShiftIndels));
+                writer.write(alignments.shiftIndelsAtHomopolymers(gtRequiringIndelShifts));
+
             writer.setNumberOfProcessedReads(reader.getNumberOfReads());
 
             process.finish();

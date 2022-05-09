@@ -84,7 +84,7 @@ public class VDJCAlignerWithMergeTest {
                 if (result.alignment != null) {
                     alignemntsList.add(result.alignment);
                     for (VDJCHit hit : result.alignment.getHits(GeneType.Variable))
-                        if (hit.getAlignment(0) != null && hit.getAlignment(1) != null)
+                        if (hit.getAlignment(0) != null && hit.numberOfTargets() > 1 && hit.getAlignment(1) != null)
                             ++leftHit;
                 }
             }

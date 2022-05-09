@@ -11,13 +11,13 @@ import java.util.*;
 import java.util.function.ToLongFunction;
 import java.util.stream.IntStream;
 
-import static com.milaboratory.mixcr.postanalysis.diversity.DiversityMeasure.*;
+import static com.milaboratory.mixcr.postanalysis.diversity.DiversityMeasure.Measure.*;
 
 /**
  *
  */
 public class DiversityAggregator<T> implements Aggregator<DiversityMeasure, T> {
-    private final Set<DiversityMeasure> measures;
+    private final Map<DiversityMeasure.Measure, DiversityMeasure> measures;
     /** number of clonotypes */
     private int diversity = 0;
     /** total count across all clonotypes */
@@ -29,8 +29,10 @@ public class DiversityAggregator<T> implements Aggregator<DiversityMeasure, T> {
     /** @param count returns count of element */
     public DiversityAggregator(ToLongFunction<T> count, DiversityMeasure[] measures) {
         this.count = count;
-        this.measures = EnumSet.noneOf(DiversityMeasure.class);
-        this.measures.addAll(Arrays.asList(measures));
+        this.measures = new HashMap<>();
+        for (DiversityMeasure m : measures) {
+            this.measures.put(m.measure, m);
+        }
     }
 
     @Override
@@ -43,23 +45,32 @@ public class DiversityAggregator<T> implements Aggregator<DiversityMeasure, T> {
 
     /** Chao1 */
     private List<MetricValue<DiversityMeasure>> computeChao1() {
-        if (!measures.contains(Chao1) && !measures.contains(Chao1Std))
+        if (!measures.containsKey(Chao1) && !measures.containsKey(Chao1Std))
             return Collections.emptyList();
         int sobs = diversity;
         double f1 = freqTable.get(1); // singletons
         double f2 = freqTable.get(2); // doubletons
         double f0 = f1 * (f1 - 1) / 2 / (f2 + 1);
         double chao1 = sobs + f0;
+        if (!measures.containsKey(Chao1Std))
+            return Collections.singletonList(new MetricValue<>(measures.get(Chao1), chao1));
+
         double chao1std = Math.sqrt(
                 f0 + f1 * (2 * f1 - 1) * (2 * f1 - 1) / 4 / (f2 + 1) / (f2 + 1) +
                         f1 * f1 * f2 * (f1 - 1) * (f1 - 1) / 4 / (f2 + 1) / (f2 + 1) / (f2 + 1) / (f2 + 1));
 
-        return Arrays.asList(new MetricValue<>(Chao1, chao1), new MetricValue<>(Chao1Std, chao1std));
+        return Arrays.asList(
+                new MetricValue<>(measures.get(Chao1), chao1),
+                new MetricValue<>(measures.get(Chao1Std), chao1std)
+        );
     }
 
     /** Clonality, Gini and Shannon-Weiner */
     private List<MetricValue<DiversityMeasure>> computeClonality() {
-        if (!(measures.contains(ShannonWeiner) || measures.contains(Clonality) || measures.contains(InverseSimpson) || measures.contains(Gini)))
+        if (!(measures.containsKey(ShannonWeiner)
+                || measures.containsKey(Clonality)
+                || measures.containsKey(InverseSimpson)
+                || measures.containsKey(Gini)))
             return Collections.emptyList();
         double shannonWeiner = 0;
         double gini = 0;
@@ -77,14 +88,14 @@ public class DiversityAggregator<T> implements Aggregator<DiversityMeasure, T> {
         }
 
         List<MetricValue<DiversityMeasure>> result = new ArrayList<>();
-        if (measures.contains(ShannonWeiner))
-            result.add(new MetricValue<>(ShannonWeiner, shannonWeiner));
-        if (measures.contains(Clonality))
-            result.add(new MetricValue<>(Clonality, 1 - shannonWeiner / Math.log(diversity)));
-        if (measures.contains(InverseSimpson))
-            result.add(new MetricValue<>(InverseSimpson, -1 / gini));
-        if (measures.contains(Gini))
-            result.add(new MetricValue<>(Gini, 1 - gini));
+        if (measures.containsKey(ShannonWeiner))
+            result.add(new MetricValue<>(measures.get(ShannonWeiner), shannonWeiner));
+        if (measures.containsKey(Clonality))
+            result.add(new MetricValue<>(measures.get(Clonality), 1 - shannonWeiner / Math.log(diversity)));
+        if (measures.containsKey(InverseSimpson))
+            result.add(new MetricValue<>(measures.get(InverseSimpson), -1 / gini));
+        if (measures.containsKey(Gini))
+            result.add(new MetricValue<>(measures.get(Gini), 1 - gini));
         return result;
     }
 
@@ -97,7 +108,7 @@ public class DiversityAggregator<T> implements Aggregator<DiversityMeasure, T> {
 
     /** Efron-Thisted */
     private List<MetricValue<DiversityMeasure>> computeEfronThisted(int maxDepth, double cvThreshold) {
-        if (!measures.contains(EfronThisted) && !measures.contains(EfronThistedStd))
+        if (!measures.containsKey(EfronThisted) && !measures.containsKey(EfronThistedStd))
             return Collections.emptyList();
 
         double S = -1, D = -1, CV;
@@ -127,17 +138,17 @@ public class DiversityAggregator<T> implements Aggregator<DiversityMeasure, T> {
         }
 
         List<MetricValue<DiversityMeasure>> result = new ArrayList<>();
-        if (measures.contains(EfronThisted))
-            result.add(new MetricValue<>(EfronThisted, S));
-        if (measures.contains(EfronThistedStd))
-            result.add(new MetricValue<>(EfronThistedStd, D));
+        if (measures.containsKey(EfronThisted))
+            result.add(new MetricValue<>(measures.get(EfronThisted), S));
+        if (measures.containsKey(EfronThistedStd))
+            result.add(new MetricValue<>(measures.get(EfronThistedStd), D));
         return result;
     }
 
     private List<MetricValue<DiversityMeasure>> computeObserved() {
-        if (!measures.contains(Observed))
+        if (!measures.containsKey(Observed))
             return Collections.emptyList();
-        return Collections.singletonList(new MetricValue<>(Observed, diversity));
+        return Collections.singletonList(new MetricValue<>(measures.get(Observed), diversity));
     }
 
     @Override

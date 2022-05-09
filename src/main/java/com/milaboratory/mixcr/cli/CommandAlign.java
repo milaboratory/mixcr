@@ -71,9 +71,7 @@ import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.mixcr.tags.WhitelistReader;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.*;
-import com.milaboratory.util.CanReportProgress;
-import com.milaboratory.util.GlobalObjectMappers;
-import com.milaboratory.util.SmartProgressReporter;
+import com.milaboratory.util.*;
 import io.repseq.core.*;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -255,6 +253,14 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                 throwValidationException("Unknown aligner parameters: " + alignerParametersName);
 
             if (!overrides.isEmpty()) {
+                // Printing warning message for some common mistakes in parameter overrides
+                for (Map.Entry<String, String> o : overrides.entrySet())
+                    if ("Parameters.parameters.relativeMinScore".equals(o.getKey().substring(1)))
+                        warn("WARNING: most probably you want to change \"" + o.getKey().charAt(0) +
+                                "Parameters.relativeMinScore\" instead of \"" + o.getKey().charAt(0) +
+                                "Parameters.parameters.relativeMinScore\". " +
+                                "The latter should be touched only in a very specific cases.");
+
                 // Perform parameters overriding
                 alignerParameters = JsonOverrider.override(alignerParameters, VDJCAlignerParameters.class, overrides);
                 if (alignerParameters == null)
@@ -285,7 +291,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
         if (totalVErrors > totalV * 0.9 && hasVRegion > totalVErrors * 0.8) {
             warn("WARNING: forcing -OvParameters.geneFeatureToAlign=" + GeneFeature.encode(correctingFeature) +
                     " since current gene feature (" + GeneFeature.encode(alignerParameters.getVAlignerParameters().getGeneFeatureToAlign()) + ") is absent in " +
-                    Util.PERCENT_FORMAT.format(100.0 * totalVErrors / totalV) + "% of V genes.");
+                    ReportHelper.PERCENT_FORMAT.format(100.0 * totalVErrors / totalV) + "% of V genes.");
             alignerParameters.getVAlignerParameters().setGeneFeatureToAlign(correctingFeature);
         }
 
@@ -565,6 +571,11 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                 progress = SmartProgressReporter.extractProgress((CountLimitingOutputPort<?>) sReads);
             }
 
+            // Shifting indels in homopolymers is effective only for alignments build with linear gap scoring,
+            // consolidating some gaps, on the contrary, for alignments obtained with affine scoring such procedure
+            // may break the alignment (gaps there are already consolidated as much as possible)
+            Set<GeneType> gtRequiringIndelShifts = alignerParameters.getGeneTypesWithLinearScoring();
+
             EnumMap<GeneType, VDJCHit[]> emptyHits = new EnumMap<>(GeneType.class);
             for (GeneType gt : GeneType.values())
                 if (alignerParameters.getGeneAlignerParameters(gt) != null)
@@ -643,11 +654,10 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                 reporter.start();
             }
 
-            Set<GeneType> genesToShiftIndels = alignerParameters.getGeneTypesWithLinearScoring();
             OutputPort<VDJCAlignmentResult> alignments = unchunked(
                     CUtils.wrap(alignedChunks,
-                            CUtils.<VDJCAlignmentResult, VDJCAlignmentResult>chunked(
-                                    a -> a.shiftIndelsAtHomopolymers(genesToShiftIndels))));
+                            CUtils.<VDJCAlignmentResult, VDJCAlignmentResult>chunked(al -> al.shiftIndelsAtHomopolymers(gtRequiringIndelShifts))));
+
             for (VDJCAlignmentResult result : CUtils.it(new OrderedOutputPort<>(alignments, o -> o.read.getId()))) {
                 VDJCAlignments alignment = result.alignment;
                 SequenceRead read = result.read;

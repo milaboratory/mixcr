@@ -3,6 +3,7 @@ package com.milaboratory.mixcr.postanalysis;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.IteratorOutputPortAdapter;
+import com.milaboratory.mixcr.util.OutputPortWithProgress;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -47,16 +48,17 @@ public class TestDataset<T> implements Dataset<T>, Iterable<T> {
     }
 
     @Override
-    public OutputPortCloseable<T> mkElementsPort() {
+    public OutputPortWithProgress<T> mkElementsPort() {
         final IteratorOutputPortAdapter<T> adapter = new IteratorOutputPortAdapter<>(data);
-        return new OutputPortCloseable<T>() {
+        return OutputPortWithProgress.wrap(data.size(), new OutputPortCloseable<T>() {
             @Override
-            public void close() { }
+            public void close() {
+            }
 
             @Override
             public T take() {
                 return adapter.take();
             }
-        };
+        });
     }
 }

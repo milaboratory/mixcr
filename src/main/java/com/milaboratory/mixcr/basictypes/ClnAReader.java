@@ -207,6 +207,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
     /**
      * Returns number of clones in the file
      */
+    @Override
     public int numberOfClones() {
         return numberOfClones;
     }
@@ -260,7 +261,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
      */
     @Override
     public OutputPortCloseable<Clone> readClones() {
-        return input.beginPrimitivIBlocks(Clone.class);
+        return input.beginRandomAccessPrimitivIBlocks(Clone.class, firstClonePosition);
     }
 
     /**

@@ -3,9 +3,11 @@ name: "Build"
 on:
   push:
     tags: [ '*' ]
-    branches: [ 'pmaster' ]
+    branches: [ '*' ]
+  schedule:
+    - cron: '10 1 * * *'
 
-  workflow_dispatch: {}
+  workflow_dispatch: { }
 
 jobs:
   init:
@@ -31,14 +33,30 @@ jobs:
       app-name: MiXCR
       app-name-slug: 'mixcr'
 
+      # Tests
+      test-unit: true
+      test-unit-before-tasks: shadowJar
+      test-unit-cache: true
+      test-unit-cache-paths: |
+        ./src/test/resources/sequences/big/**
+      test-unit-cache-key: 'tests-sequences-v1'
+
+      test-integration: true
+      test-integration-before-tasks: shadowJar
+      test-integration-tasks: ''
+      test-integration-cache: true
+      test-integration-cache-paths: |
+        ./src/test/resources/sequences/big/**
+      test-integration-cache-key: 'tests-sequences-v1'
+
       # Distribution
       dist-docker: false
-      dist-archive: true
+      dist-archive: ${{ github.event_name != 'schedule' }}
       dist-archive-tasks: 'distributionZip'
       dist-archive-paths: './distributions/*.zip'
 
       # Release to S3
-      release-to-s3: true
+      release-to-s3: ${{ github.event_name != 'schedule' }}
       release-s3-add-version: true
       release-s3-add-sha: ${{ fromJSON(needs.init.outputs.is-release) && 'false' || '8' }}
 
@@ -46,9 +64,15 @@ jobs:
       notify-telegram: true
 
     secrets:
+      env: |
+        { "MI_LICENSE": ${{ toJSON(secrets.MI_LICENSE) }} }
+
       GRADLE_PROPERTIES: |
         miRepoAccessKeyId=${{ secrets.AWS_CI_ACCESS_KEY_ID }}
         miRepoSecretAccessKey= ${{ secrets.AWS_CI_SECRET_ACCESS_KEY }}
+
+        miGitHubMavenUser=${{ github.actor }}
+        miGitHubMavenToken=${{ secrets.GITHUB_TOKEN }}
 
       AWS_KEY_ID: ${{ secrets.AWS_CI_ACCESS_KEY_ID }}
       AWS_KEY_SECRET: ${{ secrets.AWS_CI_SECRET_ACCESS_KEY }}

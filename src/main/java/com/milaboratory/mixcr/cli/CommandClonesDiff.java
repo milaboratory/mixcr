@@ -33,6 +33,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
+import com.milaboratory.util.ReportHelper;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGeneId;
 import picocli.CommandLine.Command;
@@ -125,11 +126,11 @@ public class CommandClonesDiff extends ACommandWithOutputMiXCR {
                 }
             }
 
-            report.println("Unique clones in cloneset 1: " + newClones1 + " (" + Util.PERCENT_FORMAT.format(100.0 * newClones1 / cs1.size()) + "%)");
-            report.println("Reads in unique clones in cloneset 1: " + newClones1Reads + " (" + Util.PERCENT_FORMAT.format(100.0 * newClones1Reads / cs1.getTotalCount()) + "%)");
+            report.println("Unique clones in cloneset 1: " + newClones1 + " (" + ReportHelper.PERCENT_FORMAT.format(100.0 * newClones1 / cs1.size()) + "%)");
+            report.println("Reads in unique clones in cloneset 1: " + newClones1Reads + " (" + ReportHelper.PERCENT_FORMAT.format(100.0 * newClones1Reads / cs1.getTotalCount()) + "%)");
 
-            report.println("Unique clones in cloneset 2: " + newClones2 + " (" + Util.PERCENT_FORMAT.format(100.0 * newClones2 / cs2.size()) + "%)");
-            report.println("Reads in unique clones in cloneset 2: " + newClones2Reads + " (" + Util.PERCENT_FORMAT.format(100.0 * newClones2Reads / cs2.getTotalCount()) + "%)");
+            report.println("Unique clones in cloneset 2: " + newClones2 + " (" + ReportHelper.PERCENT_FORMAT.format(100.0 * newClones2 / cs2.size()) + "%)");
+            report.println("Reads in unique clones in cloneset 2: " + newClones2Reads + " (" + ReportHelper.PERCENT_FORMAT.format(100.0 * newClones2Reads / cs2.getTotalCount()) + "%)");
         }
     }
 
