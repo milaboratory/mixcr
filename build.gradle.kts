@@ -1,6 +1,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.palantir.gradle.gitversion.VersionDetails
 import groovy.lang.Closure
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 import java.net.InetAddress
 
 gradle.startParameter.excludedTaskNames += listOf(
@@ -182,6 +183,7 @@ tasks.test {
 
     testLogging {
         showStandardStreams = true
+        exceptionFormat = FULL
     }
 
     miCiStage?.let {
