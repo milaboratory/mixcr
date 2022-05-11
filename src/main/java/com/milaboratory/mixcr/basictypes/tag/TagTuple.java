@@ -12,16 +12,16 @@ import java.util.Arrays;
  * Tag may be a sample name, cell marker or unique molecular identifier.
  */
 public final class TagTuple implements Comparable<TagTuple> {
-    public final ByteString[] tags;
+    public final TagValue[] tags;
     private final int hash;
 
     @SuppressWarnings("UnstableApiUsage")
-    public TagTuple(ByteString... tags) {
+    public TagTuple(TagValue... tags) {
         if (tags.length == 0)
             throw new IllegalArgumentException();
         this.tags = tags;
         Hasher hasher = Hashing.murmur3_32_fixed().newHasher();
-        for (ByteString tag : tags)
+        for (TagValue tag : tags)
             hasher.putInt(tag.hashCode());
         this.hash = hasher.hash().hashCode();
     }
@@ -52,7 +52,7 @@ public final class TagTuple implements Comparable<TagTuple> {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (ByteString tag : tags) {
+        for (TagValue tag : tags) {
             if (sb.length() != 0)
                 sb.append('+');
             sb.append(tag.toString());

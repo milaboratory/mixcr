@@ -78,7 +78,7 @@ public class IOTest {
 
 
             try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tmpFile)) {
-                writer.header(aligner, null);
+                writer.header(aligner, null, null);
 
                 header = writer.getPosition();
 

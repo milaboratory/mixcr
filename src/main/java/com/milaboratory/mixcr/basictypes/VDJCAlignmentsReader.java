@@ -31,6 +31,7 @@ package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.cli.PipelineConfiguration;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.PrimitivIBlocks;
@@ -66,6 +67,7 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
     VDJCAlignerParameters parameters;
     PipelineConfiguration pipelineConfiguration;
     List<VDJCGene> usedGenes;
+    TagsInfo tagsInfo;
 
     String versionInfo;
     String magic;
@@ -154,6 +156,7 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
 
             parameters = i.readObject(VDJCAlignerParameters.class);
             pipelineConfiguration = i.readObject(PipelineConfiguration.class);
+            tagsInfo = i.readObject(TagsInfo.class);
 
             this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(i, parameters, vdjcRegistry);
         }
@@ -181,6 +184,11 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
     public synchronized PipelineConfiguration getPipelineConfiguration() {
         init();
         return pipelineConfiguration;
+    }
+
+    public TagsInfo getTagsInfo() {
+        init();
+        return tagsInfo;
     }
 
     /**

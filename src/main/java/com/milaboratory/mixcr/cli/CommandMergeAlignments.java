@@ -31,10 +31,16 @@ package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.cli.PipelineConfiguration;
-import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.PipelineConfigurationReaderMiXCR;
+import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.SmartProgressReporter;
@@ -92,7 +98,8 @@ public class CommandMergeAlignments extends ACommandWithSmartOverwriteMiXCR {
              VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(getOutput())) {
             reader.initNextReader();
             SmartProgressReporter.startProgressReport("Merging", reader);
-            writer.header(reader.currentInnerReader.getParameters(), reader.currentInnerReader.getUsedGenes(), getFullPipelineConfiguration());
+            writer.header(reader.currentInnerReader.getParameters(), reader.currentInnerReader.getUsedGenes(),
+                    getFullPipelineConfiguration(), reader.currentInnerReader.getTagsInfo());
             for (VDJCAlignments record : CUtils.it(reader))
                 writer.write(record);
             writer.setNumberOfProcessedReads(reader.readIdOffset.get());
@@ -136,7 +143,7 @@ public class CommandMergeAlignments extends ACommandWithSmartOverwriteMiXCR {
 
     // Not thread-safe !
     private static final class MultiReader implements
-                                           OutputPort<VDJCAlignments>, CanReportProgress, AutoCloseable {
+            OutputPort<VDJCAlignments>, CanReportProgress, AutoCloseable {
         final VDJCLibraryRegistry registry = VDJCLibraryRegistry.getDefault();
         final List<String> files;
         final AtomicInteger fileId = new AtomicInteger(0);

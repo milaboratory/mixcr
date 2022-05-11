@@ -35,6 +35,7 @@ import cc.redberry.pipe.util.CountingOutputPort;
 import com.milaboratory.cli.AppVersionInfo;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.cli.PipelineConfigurationWriter;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.util.MiXCRDebug;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
@@ -74,8 +75,8 @@ import java.util.function.ToIntFunction;
 public final class ClnAWriter implements PipelineConfigurationWriter,
         AutoCloseable,
         CanReportProgressAndStage {
-    static final String MAGIC_V5 = "MiXCR.CLNA.V05";
-    static final String MAGIC = MAGIC_V5;
+    static final String MAGIC_V6 = "MiXCR.CLNA.V06";
+    static final String MAGIC = MAGIC_V6;
     static final int MAGIC_LENGTH = MAGIC.length(); //14
 
     /**
@@ -174,8 +175,9 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
                 o.writeObject(cloneSet.alignmentParameters);
                 featureToAlignProvider = cloneSet.alignmentParameters;
 
-                // Writing assembler parameters and cloneset ordering
+                // Writing assembler parameters, tags info and cloneset ordering
                 o.writeObject(cloneSet.assemblerParameters);
+                o.writeObject(cloneSet.tagsInfo);
                 o.writeObject(cloneSet.ordering);
 
                 // During deserialization, the same procedure (in the same order) will be applied to

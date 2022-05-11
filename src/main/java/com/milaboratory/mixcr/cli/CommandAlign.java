@@ -47,10 +47,7 @@ import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.core.PairedEndReadsLayout;
 import com.milaboratory.core.Target;
 import com.milaboratory.core.io.CompressionType;
-import com.milaboratory.core.io.sequence.SequenceRead;
-import com.milaboratory.core.io.sequence.SequenceReaderCloseable;
-import com.milaboratory.core.io.sequence.SequenceWriter;
-import com.milaboratory.core.io.sequence.SingleRead;
+import com.milaboratory.core.io.sequence.*;
 import com.milaboratory.core.io.sequence.fasta.FastaReader;
 import com.milaboratory.core.io.sequence.fasta.FastaSequenceReaderWrapper;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
@@ -58,24 +55,21 @@ import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.core.sequence.ShortSequenceSet;
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters;
 import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor;
 import com.milaboratory.core.sequence.quality.ReadTrimmerReport;
+import com.milaboratory.mitool.pattern.search.*;
+import com.milaboratory.mitool.report.ParseReport;
 import com.milaboratory.mixcr.basictypes.SequenceHistory;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.basictypes.tag.TagCounter;
-import com.milaboratory.mixcr.basictypes.tag.TagTuple;
-import com.milaboratory.mixcr.tags.WhitelistReader;
+import com.milaboratory.mixcr.basictypes.tag.*;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.*;
 import com.milaboratory.util.*;
 import io.repseq.core.*;
-import picocli.CommandLine;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.ExecutionException;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
@@ -90,6 +84,8 @@ import java.util.stream.Collectors;
 import static cc.redberry.pipe.CUtils.chunked;
 import static cc.redberry.pipe.CUtils.unchunked;
 import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.DEFAULT_ALIGNMENTS_IN_BLOCK;
+import static com.milaboratory.mixcr.basictypes.tag.TagType.*;
+import static com.milaboratory.mixcr.basictypes.tag.TagValueType.SequenceAndQuality;
 import static com.milaboratory.mixcr.cli.CommandAlign.ALIGN_COMMAND_NAME;
 
 @Command(name = ALIGN_COMMAND_NAME,
@@ -225,14 +221,23 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
             names = {"--buffers"}, hidden = true)
     public boolean reportBuffers = false;
 
-    // @Option(description = "Names for groups that contain barcodes, for MiNNN FASTQ input file.",
-    //         names = {"--tag"})
-    // public List<String> tags = new ArrayList<>();
+    // @Option(description = "Specify this option for 10x datasets to extract cell and UMI barcode information from " +
+    //         "the first read",
+    //         names = {"--10x"})
+    // public boolean tenX = false;
 
-    @Option(description = "Specify this option for 10x datasets to extract cell and UMI barcode information from " +
-            "the first read",
-            names = {"--10x"})
-    public boolean tenX = false;
+    @Option(description = "Tag pattern to extract from the read.",
+            names = {"--tag-pattern"})
+    public String tagPattern;
+
+    @Option(description = "If paired-end input is used, determines whether to try all combinations of mate-pairs or only match " +
+            "reads to the corresponding pattern sections (i.e. first file to first section, etc...)",
+            names = {"--tag-parse-unstranded"})
+    public boolean tagUnstranded = false;
+
+    @Option(description = "Maximal bit budget, higher values allows more substitutions in small letters.",
+            names = {"--tag-max-budget"})
+    public double tagMaxBudget = 10.0;
 
     private VDJCAlignerParameters vdjcAlignerParameters = null;
 
@@ -429,6 +434,29 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
         }
     }
 
+    public TagSearchPlan getTagPattern() {
+        if (tagPattern == null)
+            return null;
+
+        ReadSearchSettings searchSettings = new ReadSearchSettings(new SearchSettings(tagMaxBudget, 0.1,
+                new MatcherSettings(3, 7)),
+                isInputPaired()
+                        ? tagUnstranded
+                        ? ReadSearchMode.PairedUnknown
+                        : ReadSearchMode.PairedDirect
+                        : ReadSearchMode.Single);
+        ReadSearchPlan readSearchPlan = ReadSearchPlan.Companion.create(tagPattern, searchSettings);
+        ParseInfo parseInfo = ParseInfo.fromSet(readSearchPlan.getAllTags());
+        List<ReadTagShortcut> tagShortcuts = parseInfo.getTags().stream()
+                .map(t -> readSearchPlan.tagShortcut(t.getName()))
+                .collect(Collectors.toList());
+        List<ReadTagShortcut> readShortcuts = parseInfo.getReadTags().stream()
+                .map(readSearchPlan::tagShortcut)
+                .collect(Collectors.toList());
+
+        return new TagSearchPlan(readSearchPlan, tagShortcuts, readShortcuts, parseInfo.getTags());
+    }
+
     @Override
     public void validate() {
         super.validate();
@@ -448,20 +476,6 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
 
     /** Alignment report */
     public final AlignerReport report = new AlignerReport();
-
-    static TagTuple parseTags(CommandLine commandLine, List<String> tags, SequenceRead r) {
-        String description = r.getRead(0).getDescription();
-        String descTrimmed = description.replaceAll("[|~]*$", "").replaceAll("\\{[^}]*}", "");
-        Map<String, String> matchedGroups = Arrays.stream(descTrimmed.split("\\|"))
-                .map(str -> str.split("~")).filter(tokens -> tokens.length >= 3)
-                .collect(Collectors.toMap(tokens -> tokens[tokens.length - 3], tokens -> tokens[tokens.length - 2]));
-        return new TagTuple(tags.stream().map(tag -> {
-            String tagSeq = matchedGroups.get(tag);
-            if (tagSeq == null)
-                throw new ExecutionException(commandLine, "Group " + tag + " not found in FASTQ description!");
-            return tagSeq;
-        }).toArray(String[]::new));
-    }
 
     private QualityTrimmerParameters getQualityTrimmerParameters() {
         return new QualityTrimmerParameters(trimmingQualityThreshold,
@@ -542,11 +556,13 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
         report.setOutputFiles(getOutput());
         report.setCommandLine(getCommandLineArguments());
 
+        // Tags
+        TagSearchPlan tagSearchPlan = getTagPattern();
+        if (tagSearchPlan != null)
+            report.setTagReport(tagSearchPlan.report);
+
         // Attaching report to aligner
         aligner.setEventsListener(report);
-
-        if (tenX && !isInputPaired())
-            throwValidationException("Option \"--10x\" requires paired-end input data");
 
         try (SequenceReaderCloseable<? extends SequenceRead> reader = createReader();
 
@@ -562,7 +578,10 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                      : new SingleFastqWriter(failedReadsR1));
         ) {
             if (writer != null)
-                writer.header(aligner, getFullPipelineConfiguration());
+                writer.header(aligner, getFullPipelineConfiguration(),
+                        tagSearchPlan != null
+                                ? new TagsInfo(tagSearchPlan.tagInfos.toArray(new TagInfo[0]))
+                                : null);
 
             OutputPort<? extends SequenceRead> sReads = reader;
             CanReportProgress progress = (CanReportProgress) reader;
@@ -586,44 +605,36 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
             Merger<Chunk<? extends SequenceRead>> mainInputReads = CUtils.buffered((OutputPort) chunked(sReads, 64), Math.max(16, threads));
 
             OutputPort<Chunk<? extends SequenceRead>> mainInputReadsPreprocessed = mainInputReads;
-            // TODO do this after barcode extraction
+
+            ReadTrimmerProcessor readTrimmerProcessor;
             if (trimmingQualityThreshold > 0) {
                 ReadTrimmerReport rep = new ReadTrimmerReport();
-                mainInputReadsPreprocessed = CUtils.wrap(
-                        mainInputReadsPreprocessed,
-                        CUtils.chunked(new ReadTrimmerProcessor(getQualityTrimmerParameters(), rep)));
+                readTrimmerProcessor = new ReadTrimmerProcessor(getQualityTrimmerParameters(), rep);
                 report.setTrimmingReport(rep);
-            }
+            } else
+                readTrimmerProcessor = null;
 
             // Creating processor from aligner
             Processor<SequenceRead, VDJCAlignmentResult<SequenceRead>> processor = aligner;
-            if (tenX) {
-                final ShortSequenceSet whitelist = WhitelistReader.Whitelist10X2016();
+            if (tagSearchPlan != null) {
                 final Processor<SequenceRead, VDJCAlignmentResult<SequenceRead>> oldProcessor = processor;
                 processor = input -> {
-                    SingleRead r1 = input.getRead(0);
-                    NucleotideSequence seq = r1.getData().getSequence();
-                    if (seq.size() < 26) {
+                    TaggedSequence parsed = tagSearchPlan.parse(input);
+
+                    if (parsed == null) {
                         report.onFailedAlignment(input, VDJCAlignmentFailCause.NoBarcode);
                         return new VDJCAlignmentResult(input);
                     }
 
-                    if (!whitelist.contains(seq.getRange(0, 16))) {
-                        report.onFailedAlignment(input, VDJCAlignmentFailCause.BarcodeNotInWhitelist);
-                        return new VDJCAlignmentResult(input);
-                    }
+                    SequenceRead read = parsed.read;
+                    if (readTrimmerProcessor != null)
+                        read = readTrimmerProcessor.process(read);
 
-                    String seqString = seq.toString();
-                    TagTuple tt = new TagTuple(seqString.substring(0, 16), seqString.substring(16, 26));
-
-                    SequenceRead trimmed = input.mapReadsWithIndex((index, val) -> index == 0
-                            ? val.mapSequence(s -> s.getRange(26, s.size()))
-                            : val);
-
-                    VDJCAlignmentResult<SequenceRead> alignmentResult = oldProcessor.process(trimmed);
-                    return alignmentResult.withTagTuple(tt);
+                    VDJCAlignmentResult<SequenceRead> alignmentResult = oldProcessor.process(read);
+                    return alignmentResult.withTagTuple(parsed.tags);
                 };
-            }
+            } else if (readTrimmerProcessor != null)
+                mainInputReadsPreprocessed = CUtils.wrap(mainInputReadsPreprocessed, CUtils.chunked(readTrimmerProcessor));
 
             ParallelProcessor alignedChunks = new ParallelProcessor(mainInputReadsPreprocessed, chunked(processor), Math.max(16, threads), threads);
             if (reportBuffers) {
@@ -700,5 +711,113 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
 
         if (jsonReport != null)
             Util.writeJsonReport(jsonReport, report);
+    }
+
+    static final class TaggedSequence {
+        final TagTuple tags;
+        final SequenceRead read;
+
+        public TaggedSequence(TagTuple tags, SequenceRead read) {
+            this.tags = tags;
+            this.read = read;
+        }
+    }
+
+    static final class TagSearchPlan {
+        final ReadSearchPlan plan;
+        final List<ReadTagShortcut> tagShortcuts;
+        final List<ReadTagShortcut> readShortcuts;
+        final List<TagInfo> tagInfos;
+
+        final ParseReport report;
+
+        public TagSearchPlan(ReadSearchPlan plan,
+                             List<ReadTagShortcut> tagShortcuts, List<ReadTagShortcut> readShortcuts,
+                             List<TagInfo> tagInfos) {
+            this.plan = plan;
+            this.tagShortcuts = tagShortcuts;
+            this.readShortcuts = readShortcuts;
+            this.tagInfos = tagInfos;
+            this.report = new ParseReport(plan);
+        }
+
+        public TaggedSequence parse(SequenceRead read) {
+            ReadSearchResult result = plan.search(read);
+            report.consume(result);
+            ReadSearchHit hit = result.getHit();
+            if (hit == null)
+                return null;
+
+            TagValue[] tags = tagShortcuts.stream()
+                    .map(s -> new SequenceAndQualityTagValue(result.getTagValue(s).getValue()))
+                    .toArray(TagValue[]::new);
+
+            SingleRead[] reads = new SingleRead[readShortcuts.size()];
+            for (int i = 0; i < reads.length; i++) {
+                reads[i] = new SingleReadImpl(
+                        read.getId(),
+                        result.getTagValue(readShortcuts.get(i)).getValue(),
+                        read.numberOfReads() <= i
+                                ? read.getRead(0).getDescription()
+                                : read.getRead(i).getDescription());
+            }
+
+            return new TaggedSequence(new TagTuple(tags), SequenceReadUtil.construct(reads));
+        }
+    }
+
+    public static final class ParseInfo {
+        private final List<TagInfo> tags;
+        private final List<String> readTags;
+
+        public ParseInfo(List<TagInfo> tags, List<String> readTags) {
+            Objects.requireNonNull(tags);
+            Objects.requireNonNull(readTags);
+            this.tags = tags;
+            this.readTags = readTags;
+        }
+
+        public List<TagInfo> getTags() {
+            return tags;
+        }
+
+        public List<String> getReadTags() {
+            return readTags;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ParseInfo parseInfo = (ParseInfo) o;
+            return tags.equals(parseInfo.tags) && readTags.equals(parseInfo.readTags);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(tags, readTags);
+        }
+
+        public static ParseInfo fromSet(Set<String> names) {
+            List<TagInfo> tags = new ArrayList<>();
+            List<String> readTags = new ArrayList<>();
+            for (String name : names) {
+                if (name.startsWith("S"))
+                    tags.add(new TagInfo(SampleTag, SequenceAndQuality, name, 0));
+                else if (name.startsWith("CELL"))
+                    tags.add(new TagInfo(CellTag, SequenceAndQuality, name, 0));
+                else if (name.startsWith("UMI") || name.startsWith("MI"))
+                    tags.add(new TagInfo(MoleculeTag, SequenceAndQuality, name, 0));
+                else if (name.startsWith("R"))
+                    readTags.add(name);
+                else
+                    throw new IllegalArgumentException("Can't recognize tag type for name: " + name);
+            }
+            Collections.sort(tags);
+            for (int i = 0; i < tags.size(); i++)
+                tags.set(i, tags.get(i).withIndex(i));
+            Collections.sort(readTags);
+            return new ParseInfo(tags, readTags);
+        }
     }
 }

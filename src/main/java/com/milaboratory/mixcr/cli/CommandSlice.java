@@ -94,7 +94,7 @@ public class CommandSlice extends ACommandWithSmartOverwriteWithSingleInputMiXCR
 
         try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(in);
              VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)) {
-            writer.header(reader, getFullPipelineConfiguration());
+            writer.header(reader, getFullPipelineConfiguration(), reader.getTagsInfo());
             for (VDJCAlignments alignments : CUtils.it(reader)) {
                 if (set.removeAll(alignments.getReadIds()))
                     writer.write(alignments);
@@ -138,7 +138,7 @@ public class CommandSlice extends ACommandWithSmartOverwriteWithSingleInputMiXCR
             }
 
             CloneSet newCloneSet = new CloneSet(clones, cloneSet.getUsedGenes(), cloneSet.getAlignmentParameters(),
-                    cloneSet.getAssemblerParameters(), cloneSet.getOrdering());
+                    cloneSet.getAssemblerParameters(), cloneSet.getTagsInfo(), cloneSet.getOrdering());
 
             OutputPort<VDJCAlignments> allAlignmentsPortRaw = new FlatteningOutputPort<>(CUtils.asOutputPort(allAlignmentsList));
             AtomicLong idGen = new AtomicLong();

@@ -39,8 +39,8 @@ import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.basictypes.tag.TagCounter;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.mixcr.cli.Report;
-import com.milaboratory.util.ReportHelper;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
+import com.milaboratory.util.ReportHelper;
 import gnu.trove.iterator.TObjectDoubleIterator;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.hash.TLongHashSet;
@@ -117,7 +117,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
 
     public void buildLeftPartsIndex(VDJCAlignmentsReader reader) {
         geneTypesToShiftIndels = reader.getParameters().getGeneTypesWithLinearScoring();
-        writer.header(reader.getParameters(), reader.getUsedGenes(), null);
+        writer.header(reader.getParameters(), reader.getUsedGenes(), null, reader.getTagsInfo());
         for (VDJCAlignments alignment : CUtils.it(reader)) {
             if (alignment.getFeature(GeneFeature.CDR3) != null)
                 continue;

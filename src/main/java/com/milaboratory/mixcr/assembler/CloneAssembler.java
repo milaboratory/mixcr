@@ -42,6 +42,7 @@ import com.milaboratory.core.tree.MutationGuide;
 import com.milaboratory.core.tree.NeighborhoodIterator;
 import com.milaboratory.core.tree.SequenceTreeMap;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.Factory;
@@ -54,7 +55,6 @@ import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.map.hash.TObjectFloatHashMap;
-import gnu.trove.procedure.TObjectProcedure;
 import io.repseq.core.*;
 
 import java.util.*;
@@ -374,8 +374,8 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         }
     }
 
-    public CloneSet getCloneSet(VDJCAlignerParameters alignerParameters) {
-        return new CloneSet(Arrays.asList(realClones), usedGenes.values(), alignerParameters, parameters, new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount()));
+    public CloneSet getCloneSet(VDJCAlignerParameters alignerParameters, TagsInfo tagsInfo) {
+        return new CloneSet(Arrays.asList(realClones), usedGenes.values(), alignerParameters, parameters, tagsInfo, new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount()));
     }
 
     public OutputPortCloseable<ReadToCloneMapping> getAssembledReadsPort() {

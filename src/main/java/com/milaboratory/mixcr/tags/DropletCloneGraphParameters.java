@@ -29,54 +29,47 @@
  */
 package com.milaboratory.mixcr.tags;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.util.GlobalObjectMappers;
-
-import java.io.IOException;
-import java.util.Objects;
-
-public class DropletCloneGraphParameters {
-    @JsonProperty("tagCliqueScorePower")
-    public final double tagCliqueScorePower;
-    @JsonProperty("cloneCliqueScorePower")
-    public final double cloneCliqueScorePower;
-    @JsonProperty("filter")
-    public final CloneTagTupleFilter filter;
-    @JsonProperty("maxTagCountRatio")
-    public final double maxTagCountRatio;
-
-    @JsonCreator
-    public DropletCloneGraphParameters(@JsonProperty("tagCliqueScorePower") double tagCliqueScorePower,
-                                       @JsonProperty("cloneCliqueScorePower") double cloneCliqueScorePower,
-                                       @JsonProperty("filter") CloneTagTupleFilter filter,
-                                       @JsonProperty("maxTagCountRatio") double maxTagCountRatio) {
-        this.tagCliqueScorePower = tagCliqueScorePower;
-        this.cloneCliqueScorePower = cloneCliqueScorePower;
-        this.filter = filter;
-        this.maxTagCountRatio = maxTagCountRatio;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        DropletCloneGraphParameters that = (DropletCloneGraphParameters) o;
-        return Double.compare(that.tagCliqueScorePower, tagCliqueScorePower) == 0 &&
-                Double.compare(that.cloneCliqueScorePower, cloneCliqueScorePower) == 0 &&
-                Objects.equals(filter, that.filter);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(tagCliqueScorePower, cloneCliqueScorePower, filter);
-    }
-
-    public static DropletCloneGraphParameters getDefault() {
-        try {
-            return GlobalObjectMappers.ONE_LINE.readValue(CloneTagTupleFilter.class.getClassLoader().getResourceAsStream("parameters/droplet_clone_graph_parameters.json"), DropletCloneGraphParameters.class);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-}
+// public class DropletCloneGraphParameters {
+//     @JsonProperty("tagCliqueScorePower")
+//     public final double tagCliqueScorePower;
+//     @JsonProperty("cloneCliqueScorePower")
+//     public final double cloneCliqueScorePower;
+//     @JsonProperty("filter")
+//     public final CloneTagTupleFilter filter;
+//     @JsonProperty("maxTagCountRatio")
+//     public final double maxTagCountRatio;
+//
+//     @JsonCreator
+//     public DropletCloneGraphParameters(@JsonProperty("tagCliqueScorePower") double tagCliqueScorePower,
+//                                        @JsonProperty("cloneCliqueScorePower") double cloneCliqueScorePower,
+//                                        @JsonProperty("filter") CloneTagTupleFilter filter,
+//                                        @JsonProperty("maxTagCountRatio") double maxTagCountRatio) {
+//         this.tagCliqueScorePower = tagCliqueScorePower;
+//         this.cloneCliqueScorePower = cloneCliqueScorePower;
+//         this.filter = filter;
+//         this.maxTagCountRatio = maxTagCountRatio;
+//     }
+//
+//     @Override
+//     public boolean equals(Object o) {
+//         if (this == o) return true;
+//         if (o == null || getClass() != o.getClass()) return false;
+//         DropletCloneGraphParameters that = (DropletCloneGraphParameters) o;
+//         return Double.compare(that.tagCliqueScorePower, tagCliqueScorePower) == 0 &&
+//                 Double.compare(that.cloneCliqueScorePower, cloneCliqueScorePower) == 0 &&
+//                 Objects.equals(filter, that.filter);
+//     }
+//
+//     @Override
+//     public int hashCode() {
+//         return Objects.hash(tagCliqueScorePower, cloneCliqueScorePower, filter);
+//     }
+//
+//     public static DropletCloneGraphParameters getDefault() {
+//         try {
+//             return GlobalObjectMappers.ONE_LINE.readValue(CloneTagTupleFilter.class.getClassLoader().getResourceAsStream("parameters/droplet_clone_graph_parameters.json"), DropletCloneGraphParameters.class);
+//         } catch (IOException e) {
+//             throw new RuntimeException(e);
+//         }
+//     }
+// }

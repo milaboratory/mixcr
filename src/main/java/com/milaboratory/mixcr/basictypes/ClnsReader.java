@@ -33,6 +33,7 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid;
@@ -59,6 +60,7 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
     private final PipelineConfiguration pipelineConfiguration;
     private final VDJCAlignerParameters alignerParameters;
     private final CloneAssemblerParameters assemblerParameters;
+    private final TagsInfo tagsInfo;
     private final VDJCSProperties.CloneOrdering ordering;
     private final String versionInfo;
     private final List<VDJCGene> genes;
@@ -113,6 +115,7 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
             pipelineConfiguration = i.readObject(PipelineConfiguration.class);
             alignerParameters = i.readObject(VDJCAlignerParameters.class);
             assemblerParameters = i.readObject(CloneAssemblerParameters.class);
+            tagsInfo = i.readObject(TagsInfo.class);
             ordering = i.readObject(VDJCSProperties.CloneOrdering.class);
             numberOfClones = i.readInt();
 
@@ -131,7 +134,7 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
         List<Clone> clones = new ArrayList<>();
         for (Clone clone : CUtils.it(readClones()))
             clones.add(clone);
-        CloneSet cloneSet = new CloneSet(clones, genes, alignerParameters, assemblerParameters, ordering);
+        CloneSet cloneSet = new CloneSet(clones, genes, alignerParameters, assemblerParameters, tagsInfo, ordering);
         cloneSet.versionInfo = versionInfo;
         return cloneSet;
     }

@@ -41,11 +41,11 @@ import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.TranslationParameters;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
-import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.basictypes.tag.TagCounter;
-import com.milaboratory.mixcr.basictypes.tag.TagTuple;
+import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.basictypes.VDJCObject;
 import com.milaboratory.util.GlobalObjectMappers;
-import gnu.trove.iterator.TObjectDoubleIterator;
 import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.map.hash.TObjectFloatHashMap;
 import io.repseq.core.GeneFeature;
@@ -54,8 +54,9 @@ import io.repseq.core.ReferencePoint;
 import io.repseq.core.SequencePartitioning;
 
 import java.text.DecimalFormat;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public final class FieldExtractors {
     static final String NULL = "";
@@ -686,75 +687,75 @@ public final class FieldExtractors {
                 }
             });
 
-            descriptorsList.add(new WP_O<Integer>("-tag", "Tag value", 1) {
-                @Override
-                protected Integer getParameters(String[] string) {
-                    return Integer.parseInt(string[0]);
-                }
+            // descriptorsList.add(new WP_O<String>("-tag", "Tag value", 1) {
+            //     @Override
+            //     protected String getParameters(String[] string) {
+            //         return string[0];
+            //     }
+            //
+            //     @Override
+            //     protected String getHeader(OutputMode outputMode, String name) {
+            //         switch (outputMode) {
+            //             case HumanFriendly: return "Tag" + name;
+            //             case ScriptingFriendly: return "tag" + name;
+            //         }
+            //         throw new RuntimeException();
+            //     }
+            //
+            //     @Override
+            //     protected String extractValue(VDJCObject object, String name) {
+            //         TagCounter tc = object.getTagCounter();
+            //         Set<String> set = tc.tags(name);
+            //         if (set.size() == 0)
+            //             return NULL;
+            //         if (set.size() > 1)
+            //             throw new IllegalArgumentException("object has multiple tag tuples: " + tc);
+            //         return set.iterator().next();
+            //     }
+            //
+            //     @Override
+            //     public String metaVars() {
+            //         return "index";
+            //     }
+            // });
 
-                @Override
-                protected String getHeader(OutputMode outputMode, Integer index) {
-                    switch (outputMode) {
-                        case HumanFriendly: return "Tag" + index;
-                        case ScriptingFriendly: return "tag" + index;
-                    }
-                    throw new RuntimeException();
-                }
-
-                @Override
-                protected String extractValue(VDJCObject object, Integer index) {
-                    TagCounter tc = object.getTagCounter();
-                    Set<String> set = tc.tags(index);
-                    if (set.size() == 0)
-                        return NULL;
-                    if (set.size() > 1)
-                        throw new IllegalArgumentException("object has multiple tag tuples: " + tc);
-                    return set.iterator().next();
-                }
-
-                @Override
-                public String metaVars() {
-                    return "index";
-                }
-            });
-
-            descriptorsList.add(new WP_O<int[]>("-uniqueTagCount", "Unique tag count", 1) {
-                @Override
-                protected int[] getParameters(String[] string) {
-                    return Arrays.stream(string[0].split("\\+")).mapToInt(Integer::parseInt).toArray();
-                }
-
-                @Override
-                protected String getHeader(OutputMode outputMode, int[] index) {
-                    String str = Arrays.stream(index).mapToObj(Integer::toString).collect(Collectors.joining("+"));
-                    switch (outputMode) {
-                        case HumanFriendly: return "Unique Tag Count " + str;
-                        case ScriptingFriendly: return "uniqueTagCount" + str;
-                    }
-                    throw new RuntimeException();
-                }
-
-                @Override
-                protected String extractValue(VDJCObject object, int[] indices) {
-                    TagCounter tc = object.getTagCounter();
-                    Set<String> set = new HashSet<>();
-                    TObjectDoubleIterator<TagTuple> it = tc.iterator();
-                    while (it.hasNext()) {
-                        it.advance();
-                        StringBuilder sb = new StringBuilder();
-                        TagTuple t = it.key();
-                        for (int i : indices)
-                            sb.append(t.tags[i]).append("+");
-                        set.add(sb.toString());
-                    }
-                    return "" + set.size();
-                }
-
-                @Override
-                public String metaVars() {
-                    return "Tags";
-                }
-            });
+            // descriptorsList.add(new WP_O<int[]>("-uniqueTagCount", "Unique tag count", 1) {
+            //     @Override
+            //     protected int[] getParameters(String[] string) {
+            //         return Arrays.stream(string[0].split("\\+")).mapToInt(Integer::parseInt).toArray();
+            //     }
+            //
+            //     @Override
+            //     protected String getHeader(OutputMode outputMode, int[] index) {
+            //         String str = Arrays.stream(index).mapToObj(Integer::toString).collect(Collectors.joining("+"));
+            //         switch (outputMode) {
+            //             case HumanFriendly: return "Unique Tag Count " + str;
+            //             case ScriptingFriendly: return "uniqueTagCount" + str;
+            //         }
+            //         throw new RuntimeException();
+            //     }
+            //
+            //     @Override
+            //     protected String extractValue(VDJCObject object, int[] indices) {
+            //         TagCounter tc = object.getTagCounter();
+            //         Set<String> set = new HashSet<>();
+            //         TObjectDoubleIterator<TagTuple> it = tc.iterator();
+            //         while (it.hasNext()) {
+            //             it.advance();
+            //             StringBuilder sb = new StringBuilder();
+            //             TagTuple t = it.key();
+            //             for (int i : indices)
+            //                 sb.append(t.tags[i]).append("+");
+            //             set.add(sb.toString());
+            //         }
+            //         return "" + set.size();
+            //     }
+            //
+            //     @Override
+            //     public String metaVars() {
+            //         return "Tags";
+            //     }
+            // });
 
             descriptorsList.add(new PL_C("-cellGroup", "Cell group", "Cell group", "cellGroup") {
                 @Override

@@ -41,6 +41,7 @@ import com.milaboratory.mixcr.assembler.*;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.basictypes.tag.TagCounter;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.ArraysUtils;
 import com.milaboratory.util.JsonOverrider;
@@ -105,7 +106,7 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
             "This file then can be used to build wider contigs for clonal sequence and extract original " +
             "reads for each clone (if -OsaveOriginalReads=true was use on 'align' stage).",
             names = {"-a", "--write-alignments"})
-    public boolean clna = false;
+    public boolean isClnaOutput = false;
 
     @Option(description = "Enable tag-based read to clone assignment",
             names = {"--attach-reads-by-tags"})
@@ -119,12 +120,13 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
     @Override
     public ActionConfiguration getConfiguration() {
         ensureParametersInitialized();
-        return new AssembleConfiguration(getCloneAssemblerParameters(), clna, ordering);
+        return new AssembleConfiguration(getCloneAssemblerParameters(), isClnaOutput, ordering);
     }
 
     // Extracting V/D/J/C gene list from input vdjca file
     private List<VDJCGene> genes = null;
     private VDJCAlignerParameters alignerParameters = null;
+    private TagsInfo tagsInfo = null;
     private CloneAssemblerParameters assemblerParameters = null;
     private VDJCSProperties.CloneOrdering ordering = null;
 
@@ -137,6 +139,7 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
             genes = reader.getUsedGenes();
             // Saving aligner parameters to correct assembler parameters
             alignerParameters = reader.getParameters();
+            tagsInfo = reader.getTagsInfo();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -192,6 +195,11 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
         return alignerParameters;
     }
 
+    public TagsInfo getTagsInfo() {
+        ensureParametersInitialized();
+        return tagsInfo;
+    }
+
     public VDJCSProperties.CloneOrdering getOrdering() {
         ensureParametersInitialized();
         return ordering;
@@ -208,8 +216,8 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
         long beginTimestamp = System.currentTimeMillis();
 
         // Checking consistency between actionParameters.doWriteClnA() value and file extension
-        if ((getOutput().toLowerCase().endsWith(".clna") && !clna) ||
-                (getOutput().toLowerCase().endsWith(".clns") && clna))
+        if ((getOutput().toLowerCase().endsWith(".clna") && !isClnaOutput) ||
+                (getOutput().toLowerCase().endsWith(".clns") && isClnaOutput))
             warn("WARNING: Unexpected file extension, use .clns extension for clones-only (normal) output and\n" +
                     ".clna if -a / --write-alignments options specified.");
 
@@ -220,10 +228,11 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
         CloneAssemblerParameters assemblerParameters = getCloneAssemblerParameters();
         List<VDJCGene> genes = getGenes();
         VDJCAlignerParameters alignerParameters = getAlignerParameters();
+        TagsInfo tagsInfo = getTagsInfo();
 
         // Performing assembly
         try (CloneAssembler assembler = new CloneAssembler(assemblerParameters,
-                clna,
+                isClnaOutput,
                 genes, alignerParameters.getFeaturesToAlignMap())) {
             // Creating event listener to collect run statistics
             report.setStartMillis(beginTimestamp);
@@ -250,14 +259,14 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
             assemblerRunner.run();
 
             // Getting results
-            final CloneSet cloneSet = CloneSet.reorder(assemblerRunner.getCloneSet(alignerParameters), getOrdering());
+            final CloneSet cloneSet = CloneSet.reorder(assemblerRunner.getCloneSet(alignerParameters, tagsInfo), getOrdering());
 
             // Passing final cloneset to assemble last pieces of statistics for report
             report.onClonesetFinished(cloneSet);
 
             // Writing results
             PipelineConfiguration pipelineConfiguration = getFullPipelineConfiguration();
-            if (clna) {
+            if (isClnaOutput) {
 
                 try (ClnAWriter writer = new ClnAWriter(pipelineConfiguration, out, highCompression)) {
                     // writer will supply current stage and completion percent to the progress reporter

@@ -92,7 +92,7 @@ public class CloneAssemblerRunnerTest {
         //write alignments to byte array
         File vdjcaFile = TempFileManager.getTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(vdjcaFile)) {
-            writer.header(aligner, null);
+            writer.header(aligner, null, null);
             for (Object read : CUtils.it(reader)) {
                 VDJCAlignmentResult result = (VDJCAlignmentResult) aligner.process((SequenceRead) read);
                 if (result.alignment != null)
@@ -125,7 +125,7 @@ public class CloneAssemblerRunnerTest {
         SmartProgressReporter.startProgressReport(assemblerRunner);
         assemblerRunner.run();
 
-        CloneSet cloneSet = assemblerRunner.getCloneSet(null);
+        CloneSet cloneSet = assemblerRunner.getCloneSet(null, null);
 
         File tmpClnsFile = TempFileManager.getTempFile();
 

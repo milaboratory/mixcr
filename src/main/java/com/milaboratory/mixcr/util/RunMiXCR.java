@@ -48,6 +48,7 @@ import com.milaboratory.mixcr.assembler.*;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.cli.AlignerReport;
 import com.milaboratory.mixcr.cli.CloneAssemblerReport;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
@@ -109,7 +110,7 @@ public final class RunMiXCR {
 
             assemblerRunner.run();
 
-            CloneSet cloneSet = assemblerRunner.getCloneSet(align.parameters.alignerParameters);
+            CloneSet cloneSet = assemblerRunner.getCloneSet(align.parameters.alignerParameters, align.tagsInfo);
             return new AssembleResult(align, cloneSet, report, assembler);
         } finally {
             if (close)
@@ -187,7 +188,7 @@ public final class RunMiXCR {
         }
 
         CloneSet cloneSet = new CloneSet(Arrays.asList(clones), align.usedGenes, align.parameters.alignerParameters,
-                align.parameters.cloneAssemblerParameters, VDJCSProperties.CO_BY_COUNT);
+                align.parameters.cloneAssemblerParameters, align.tagsInfo, VDJCSProperties.CO_BY_COUNT);
 
         return new FullSeqAssembleResult(assemble, cloneSet);
     }
@@ -234,7 +235,7 @@ public final class RunMiXCR {
                     als.add(t.alignment);
                 }
             }
-            return new AlignResult(parameters, reader.getNumberOfReads(), report, als, genes, aligner);
+            return new AlignResult(parameters, reader.getNumberOfReads(), report, als, genes, null, aligner);
         }
     }
 
@@ -268,15 +269,17 @@ public final class RunMiXCR {
         public final AlignerReport report;
         public final List<VDJCAlignments> alignments;
         public final List<VDJCGene> usedGenes;
+        public final TagsInfo tagsInfo;
         public final VDJCAligner aligner;
 
         public AlignResult(RunMiXCRAnalysis parameters, long totalNumberOfReads, AlignerReport report,
-                           List<VDJCAlignments> alignments, List<VDJCGene> usedGenes, VDJCAligner aligner) {
+                           List<VDJCAlignments> alignments, List<VDJCGene> usedGenes, TagsInfo tagsInfo, VDJCAligner aligner) {
             this.parameters = parameters;
             this.totalNumberOfReads = totalNumberOfReads;
             this.report = report;
             this.alignments = alignments;
             this.usedGenes = usedGenes;
+            this.tagsInfo = tagsInfo;
             this.aligner = aligner;
         }
 
@@ -286,7 +289,7 @@ public final class RunMiXCR {
             if (alignmentsFile == null) {
                 alignmentsFile = TempFileManager.getTempFile();
                 try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(alignmentsFile)) {
-                    writer.header(aligner, null);
+                    writer.header(aligner, null, tagsInfo);
                     for (VDJCAlignments alignment : alignments)
                         writer.write(alignment);
                     writer.setNumberOfProcessedReads(totalNumberOfReads);

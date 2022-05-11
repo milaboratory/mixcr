@@ -96,6 +96,7 @@ public class ClnAReaderTest {
                 modifyClones.apply(newClones), align.usedGenes,
                 align.parameters.alignerParameters,
                 CloneAssemblerParametersPresets.getByName("default"),
+                null,
                 new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount()));
         writer.writeClones(newCloneSet);
         OutputPort<VDJCAlignments> als = modifyAlignments.apply(merged);
@@ -139,6 +140,7 @@ public class ClnAReaderTest {
         writer.writeClones(new CloneSet(Collections.EMPTY_LIST, align.usedGenes,
                 align.parameters.alignerParameters,
                 CloneAssemblerParametersPresets.getByName("default"),
+                null,
                 new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount())));
         writer.collateAlignments(CUtils.asOutputPort(align.alignments), align.alignments.size());
         writer.writeAlignmentsAndIndex();

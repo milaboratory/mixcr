@@ -34,6 +34,7 @@ import com.milaboratory.cli.AppVersionInfo;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.cli.PipelineConfigurationWriter;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivO;
@@ -50,8 +51,8 @@ import java.util.List;
  *
  */
 public final class ClnsWriter implements PipelineConfigurationWriter, AutoCloseable {
-    static final String MAGIC_V10 = "MiXCR.CLNS.V10";
-    static final String MAGIC = MAGIC_V10;
+    static final String MAGIC_V11 = "MiXCR.CLNS.V11";
+    static final String MAGIC = MAGIC_V11;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
 
@@ -75,6 +76,7 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
         writeHeader(configuration,
                 cloneSet.getAlignmentParameters(),
                 cloneSet.getAssemblerParameters(),
+                cloneSet.getTagsInfo(),
                 cloneSet.getOrdering(),
                 cloneSet.getUsedGenes(),
                 cloneSet,
@@ -85,6 +87,7 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
             PipelineConfiguration configuration,
             VDJCAlignerParameters alignmentParameters,
             CloneAssemblerParameters assemblerParameters,
+            TagsInfo tagsInfo,
             VDJCSProperties.CloneOrdering ordering,
             List<VDJCGene> genes,
             HasFeatureToAlign featureToAlign,
@@ -103,6 +106,7 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
             o.writeObject(configuration);
             o.writeObject(alignmentParameters);
             o.writeObject(assemblerParameters);
+            o.writeObject(tagsInfo);
             o.writeObject(ordering);
             o.writeInt(numberOfClones);
 

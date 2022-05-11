@@ -1,6 +1,5 @@
 package com.milaboratory.mixcr.basictypes.tag;
 
-import com.milaboratory.mixcr.basictypes.IO;
 import com.milaboratory.primitivio.annotations.Serializable;
 import gnu.trove.TDoubleCollection;
 import gnu.trove.iterator.TDoubleIterator;
@@ -146,7 +145,7 @@ public final class TagCounter {
     }
 
     public TagCounter[] splitBy(int index) {
-        Map<String, TagCounterBuilder> map = new HashMap<>();
+        Map<TagValue, TagCounterBuilder> map = new HashMap<>();
         TObjectDoubleIterator<TagTuple> it = iterator();
         while (it.hasNext()) {
             it.advance();
@@ -182,8 +181,8 @@ public final class TagCounter {
         return new TagCounter(result);
     }
 
-    public Set<String> tags(int index) {
-        Set<String> set = new HashSet<>();
+    public Set<TagValue> tags(int index) {
+        Set<TagValue> set = new HashSet<>();
         TObjectDoubleIterator<TagTuple> it = iterator();
         while (it.hasNext()) {
             it.advance();

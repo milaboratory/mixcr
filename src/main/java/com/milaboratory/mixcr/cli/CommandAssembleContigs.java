@@ -43,6 +43,8 @@ import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerReport;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.tag.TagCounter;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.util.Concurrency;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PipeDataInputReader;
@@ -126,6 +128,7 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
         List<VDJCGene> genes;
         VDJCAlignerParameters alignerParameters;
         CloneAssemblerParameters cloneAssemblerParameters;
+        TagsInfo tagsInfo;
         VDJCSProperties.CloneOrdering ordering;
         try (ClnAReader reader = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4));
              PrimitivO tmpOut = new PrimitivO(new BufferedOutputStream(new FileOutputStream(out))); // TODO ????
@@ -138,6 +141,7 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
 
             alignerParameters = reader.getAlignerParameters();
             cloneAssemblerParameters = reader.getAssemblerParameters();
+            tagsInfo = reader.getTagsInfo();
             genes = reader.getGenes();
             IOUtil.registerGeneReferences(tmpOut, genes, alignerParameters);
 
@@ -265,7 +269,8 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
                 clones[i++] = clone.setId(cloneId++);
         }
 
-        CloneSet cloneSet = new CloneSet(Arrays.asList(clones), genes, alignerParameters, cloneAssemblerParameters, ordering);
+        CloneSet cloneSet = new CloneSet(Arrays.asList(clones), genes, alignerParameters, cloneAssemblerParameters,
+                tagsInfo, ordering);
 
         try (ClnsWriter writer = new ClnsWriter(out)) {
             writer.writeCloneSet(getFullPipelineConfiguration(), cloneSet);

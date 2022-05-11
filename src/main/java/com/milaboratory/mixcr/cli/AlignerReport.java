@@ -32,6 +32,7 @@ package com.milaboratory.mixcr.cli;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.sequence.quality.ReadTrimmerReport;
+import com.milaboratory.mitool.report.ParseReport;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerEventListener;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause;
@@ -63,6 +64,8 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
     private final AtomicLong realignedWithForcedNonFloatingLeftBoundInRightRead = new AtomicLong(0);
     private ReadTrimmerReport trimmingReport;
 
+    private ParseReport tagReport;
+
     public AlignerReport() {
     }
 
@@ -82,6 +85,15 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
 
     public void setTrimmingReport(ReadTrimmerReport trimmingReport) {
         this.trimmingReport = trimmingReport;
+    }
+
+    // @JsonProperty("trimmingReport")
+    public ParseReport getTagReport() {
+        return tagReport;
+    }
+
+    public void setTagReport(ParseReport tagReport) {
+        this.tagReport = tagReport;
     }
 
     @JsonProperty("totalReadsProcessed")
@@ -344,5 +356,8 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
                 helper.writeField("Average R2 Nucleotides Trimmed Right", 1.0 * trimmingReport.getR2RightTrimmedNucleotides() / total);
             }
         }
+
+        if (tagReport != null)
+            helper.println(tagReport.humanReadable());
     }
 }
