@@ -112,7 +112,7 @@ public class DownsamplingPreprocessorTest {
         }
         long dsValue = dsChooser.compute(Arrays.stream(initial).mapToLong(d -> d.count).toArray());
 
-        DatasetSupport[] downsampled = Arrays.stream(SetPreprocessorFactory.processDatasets(proc, initial))
+        DatasetSupport[] downsampled = Arrays.stream(SetPreprocessor.processDatasets(proc, initial))
                 .map(DatasetSupport::new)
                 .toArray(DatasetSupport[]::new);
 

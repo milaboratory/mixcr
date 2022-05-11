@@ -11,8 +11,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-import static java.lang.Math.round;
-
 /**
  *
  */
@@ -67,15 +65,15 @@ public class SelectTop<T> implements SetPreprocessor<T> {
 
         return t -> {
             stats.before(iDataset, t);
-            long wt = Math.round(this.weight.weight(t));
-            long n = hist.get(wt);
+            long lwt = round(weight.weight(t));
+            long n = hist.get(lwt);
             if (n == -1)
                 return null;
             assert n != 0;
             if (n == 1)
-                hist.remove(wt);
+                hist.remove(lwt);
             else
-                hist.adjustValue(wt, -1);
+                hist.adjustValue(lwt, -1);
 
             stats.after(iDataset, t);
             return t;
@@ -123,8 +121,6 @@ public class SelectTop<T> implements SetPreprocessor<T> {
                     return;
                 totals[i] += dwt;
                 long lwt = round(dwt);
-                if (lwt == 0)
-                    lwt = 1;
                 hists[i].adjustOrPutValue(lwt, 1, 1);
             };
         }
@@ -160,9 +156,8 @@ public class SelectTop<T> implements SetPreprocessor<T> {
                         downHist.put(wt, nToLeave);
                         break;
                     }
-                    assert nToLeave == n;
+                    assert nToLeave == n; // this case will be processed below
                 }
-
 
                 nTotal += n;
                 sumTotal += n * wt;
@@ -171,6 +166,13 @@ public class SelectTop<T> implements SetPreprocessor<T> {
 
             return downHist;
         }
+    }
+
+    static long round(double wt) {
+        long lwt = Math.round(wt);
+        if (lwt == 0)
+            lwt = 1;
+        return lwt;
     }
 
     public static final class Factory<T> implements SetPreprocessorFactory<T> {

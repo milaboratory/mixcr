@@ -59,7 +59,7 @@ public class AdditiveCharacteristicsTest {
 
         RandomDataGenerator rng = new RandomDataGenerator(new Well44497a());
         int nDatasets = 1000;
-        TestDataset<TestObject>[] datasets = TestObject.generateDatasets(nDatasets, rng);
+        TestDataset<TestObject>[] datasets = TestDataset.generateDatasets(nDatasets, rng);
 
         PostanalysisRunner<TestObject> runner = new PostanalysisRunner<>();
         runner.addCharacteristics(sum, mean, std);

@@ -18,10 +18,12 @@ public class FilterPreprocessor<T> implements SetPreprocessor<T> {
     final String id;
     final SetPreprocessorStat.Builder<T> stats;
 
-    public FilterPreprocessor(List<ElementPredicate<T>> predicates, String id) {
+    public FilterPreprocessor(List<ElementPredicate<T>> predicates,
+                              WeightFunction<T> weightFunction,
+                              String id) {
         this.predicates = predicates;
         this.id = id;
-        this.stats = new SetPreprocessorStat.Builder<>(id, WeightFunctions.Default());
+        this.stats = new SetPreprocessorStat.Builder<>(id, weightFunction);
     }
 
     @Override
@@ -53,15 +55,19 @@ public class FilterPreprocessor<T> implements SetPreprocessor<T> {
     public static final class Factory<T> implements SetPreprocessorFactory<T> {
         @JsonProperty("predicates")
         public final List<ElementPredicate<T>> predicates;
+        @JsonProperty("weightFunction")
+        public final WeightFunction<T> weightFunction;
 
         @JsonCreator
-        public Factory(@JsonProperty("predicates") List<ElementPredicate<T>> predicates) {
+        public Factory(@JsonProperty("predicates") List<ElementPredicate<T>> predicates,
+                       @JsonProperty("weightFunction") WeightFunction<T> weightFunction) {
             this.predicates = predicates;
+            this.weightFunction = weightFunction;
         }
 
         @SafeVarargs
-        public Factory(ElementPredicate<T>... predicates) {
-            this(Arrays.asList(predicates));
+        public Factory(WeightFunction<T> weightFunction, ElementPredicate<T>... predicates) {
+            this(Arrays.asList(predicates), weightFunction);
         }
 
         @Override
@@ -73,20 +79,20 @@ public class FilterPreprocessor<T> implements SetPreprocessor<T> {
 
         @Override
         public SetPreprocessor<T> newInstance() {
-            return new FilterPreprocessor<>(predicates, id());
+            return new FilterPreprocessor<>(predicates, weightFunction, id());
         }
 
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            Factory<?> that = (Factory<?>) o;
-            return Objects.equals(predicates, that.predicates);
+            Factory<?> factory = (Factory<?>) o;
+            return Objects.equals(predicates, factory.predicates) && Objects.equals(weightFunction, factory.weightFunction);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(predicates);
+            return Objects.hash(predicates, weightFunction);
         }
     }
 }
