@@ -60,7 +60,6 @@ import java.util.Objects;
 import static com.milaboratory.mixcr.cli.CommandAssemble.ASSEMBLE_COMMAND_NAME;
 
 @Command(name = ASSEMBLE_COMMAND_NAME,
-        sortOptions = true,
         separator = " ",
         description = "Assemble clones.")
 public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
@@ -70,15 +69,11 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
             names = {"-p", "--preset"})
     public String assemblerParametersName = "default";
 
-    // public int threads = Runtime.getRuntime().availableProcessors();
-    //
-    // @Option(description = "Processing threads",
-    //         names = {"-t", "--threads"})
-    // public void setThreads(int threads) {
-    //     if (threads <= 0)
-    //         throwValidationException("-t / --threads must be positive");
-    //     this.threads = threads;
-    // }
+    @Option(description = "Processing threads",
+            names = {"-t", "--threads"})
+    public void setThreads(int threads) {
+        System.out.println("-t / --threads is deprecated for \"mixcr assemble ...\" and ignored for this call...");
+    }
 
     @Option(description = "Use higher compression for output file.",
             names = {"--high-compression"})
