@@ -44,7 +44,6 @@ public class CommandPaExportPlotsOverlap extends CommandPaExportPlotsHeatmapWith
     void run(PaResultByGroup result) {
         CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(CommandPaOverlap.Overlap);
         PostanalysisResult paResult = result.result.forGroup(ch);
-        Map<String, SetPreprocessorSummary> preprocSummary = paResult.preprocSummary;
         DataFrame<?> metadata = metadata();
 
         DataFrame<OverlapRow> df = Overlap.INSTANCE.dataFrame(

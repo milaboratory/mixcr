@@ -44,7 +44,7 @@ public abstract class CommandPaExportPlots extends CommandPaExport {
         super.validate();
         if (!out.endsWith(".pdf"))
             throwValidationException("Output file must ends with .pdf extension");
-        if (filterByMetadata != null && metadata == null)
+        if (filterByMetadata != null && metadata() == null)
             throwValidationException("Filter is specified by metadata is not.");
     }
 
