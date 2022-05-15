@@ -13,6 +13,7 @@ import com.milaboratory.mixcr.tags.DropletCloneGraphParameters;
 import com.milaboratory.mixcr.tags.DropletCloneGraphReport;
 import com.milaboratory.util.JsonOverrider;
 import com.milaboratory.util.ProgressAndStage;
+import com.milaboratory.util.ReportUtil;
 import com.milaboratory.util.SmartProgressReporter;
 import gnu.trove.impl.Constants;
 import gnu.trove.map.hash.TIntObjectHashMap;
@@ -102,13 +103,13 @@ public class CommandGroupCells extends ACommandWithSmartOverwriteWithSingleInput
 
         // Writing report to stout
         System.out.println("============= Report ==============");
-        Util.writeReportToStdout(report);
+        ReportUtil.writeReportToStdout(report);
 
         if (reportFile != null)
-            Util.writeReport(reportFile, report);
+            ReportUtil.appendReport(reportFile, report);
 
         if (jsonReportFile != null)
-            Util.writeJsonReport(jsonReportFile, report);
+            ReportUtil.appendJsonReport(jsonReportFile, report);
     }
 
     private static final class CloneIdWithTag {

@@ -30,6 +30,7 @@
 package com.milaboratory.mixcr.cli;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import com.milaboratory.util.Report;
 import com.milaboratory.util.ReportHelper;
 
 public final class ReportWrapper extends AbstractCommandReport {

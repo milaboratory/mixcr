@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
-import com.milaboratory.mixcr.cli.Report;
+import com.milaboratory.util.Report;
 import com.milaboratory.util.ReportHelper;
 import gnu.trove.map.hash.TIntObjectHashMap;
 

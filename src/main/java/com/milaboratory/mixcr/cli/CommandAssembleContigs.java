@@ -50,6 +50,7 @@ import com.milaboratory.primitivio.PipeDataInputReader;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.util.JsonOverrider;
+import com.milaboratory.util.ReportUtil;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
@@ -272,13 +273,13 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
 
         // Writing report to stout
         System.out.println("============= Report ==============");
-        Util.writeReportToStdout(report);
+        ReportUtil.writeReportToStdout(report);
 
         if (reportFile != null)
-            Util.writeReport(reportFile, reportWrapper);
+            ReportUtil.appendReport(reportFile, reportWrapper);
 
         if (jsonReport != null)
-            Util.writeJsonReport(jsonReport, reportWrapper);
+            ReportUtil.appendJsonReport(jsonReport, reportWrapper);
     }
 
     @JsonAutoDetect(
