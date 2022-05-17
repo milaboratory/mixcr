@@ -60,7 +60,7 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
             names = {"-g", "--group"})
     public List<String> isolationGroups;
 
-    @Option(description = "Tabular results output path.",
+    @Option(description = "Tabular results output path (path/table.tsv).",
             names = {"--tables"})
     public String tablesOut;
 
