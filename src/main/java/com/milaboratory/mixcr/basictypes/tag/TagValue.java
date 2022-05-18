@@ -1,5 +1,6 @@
 package com.milaboratory.mixcr.basictypes.tag;
 
+// @Serializable(custom = {@CustomSerializer(id = 1, type = )})
 public interface TagValue extends Comparable<TagValue> {
     /**
      * Returns true for tag values that can be used as a grouping key,

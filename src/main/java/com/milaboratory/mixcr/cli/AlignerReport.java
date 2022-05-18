@@ -358,6 +358,6 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
         }
 
         if (tagReport != null)
-            helper.println(tagReport.humanReadable());
+            tagReport.writeReport(helper);
     }
 }
