@@ -65,6 +65,8 @@ public class DownsamplingPreprocessor<T> implements SetPreprocessor<T> {
 
     @Override
     public MappingFunction<T> getMapper(int iDataset) {
+        stats.clear(iDataset);
+
         if (downsampling == -1)
             downsampling = downsampleValueChooser.compute(setup.counts);
 
@@ -78,7 +80,6 @@ public class DownsamplingPreprocessor<T> implements SetPreprocessor<T> {
         long[] countsDownsampled = downsample_mvhg(counts, downsampling, rnd);
 
         AtomicInteger idx = new AtomicInteger(0);
-        stats.clear(iDataset);
         return t -> {
             stats.before(iDataset, t);
             int i = idx.getAndIncrement();

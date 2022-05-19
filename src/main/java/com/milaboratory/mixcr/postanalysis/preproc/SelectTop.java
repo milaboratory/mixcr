@@ -57,6 +57,7 @@ public class SelectTop<T> implements SetPreprocessor<T> {
 
     @Override
     public MappingFunction<T> getMapper(int iDataset) {
+        stats.clear(iDataset);
         TLongLongHashMap hist = computeHists.downsampledHist(iDataset);
         if (hist.isEmpty()) {
             stats.drop(iDataset);

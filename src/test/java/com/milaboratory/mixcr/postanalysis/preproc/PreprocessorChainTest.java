@@ -102,6 +102,35 @@ public class PreprocessorChainTest {
         Assert.assertEquals(expected, result.data);
     }
 
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testStat1() {
+        long p1 = 17;
+        long p2 = 13;
+        long p3 = 11;
+        long p4 = 7;
+
+        SetPreprocessor<TestObject> preproc = new PreprocessorChain.Factory<>(
+                new TestPreprocFactory(p1),
+                new TestPreprocFactory(p2),
+                new TestPreprocFactory(p3),
+                new TestPreprocFactory(p4)
+        ).newInstance();
+
+        RandomDataGenerator rng = new RandomDataGenerator(new Well512a(System.currentTimeMillis()));
+        TestDataset<TestObject> ds = rndDataset(rng, 10000);
+        SetPreprocessor.processDatasets(preproc, ds);
+
+        for (List<SetPreprocessorStat> stat : preproc.getStat().valueCollection()) {
+            Assert.assertEquals(4, stat.size());
+            for (int i = 0; i < stat.size() - 1; i++) {
+                Assert.assertEquals(stat.get(i).nElementsAfter, stat.get(i + 1).nElementsBefore);
+                Assert.assertEquals(stat.get(i).sumWeightAfter, stat.get(i + 1).sumWeightBefore, 1e-10);
+            }
+        }
+    }
+
+
     public static final class TestPreprocFactory implements SetPreprocessorFactory<TestObject> {
         final long modulus;
 
@@ -116,16 +145,18 @@ public class PreprocessorChainTest {
 
         @Override
         public String id() {
-            return "";
+            return "" + modulus;
         }
     }
 
     public static final class TestPreproc implements SetPreprocessor<TestObject> {
         final TLongArrayList l = new TLongArrayList();
         final long modulus;
+        private final SetPreprocessorStat.Builder<TestObject> stats;
 
         public TestPreproc(long modulus) {
             this.modulus = modulus;
+            this.stats = new SetPreprocessorStat.Builder<>("" + modulus, t -> t.weight);
         }
 
         boolean initialized = false;
@@ -151,11 +182,9 @@ public class PreprocessorChainTest {
             return null;
         }
 
-
-        private final SetPreprocessorStat.Builder<TestObject> stats = new SetPreprocessorStat.Builder<>("", t -> t.weight);
-
         @Override
         public MappingFunction<TestObject> getMapper(int iDataset) {
+            stats.clear(iDataset);
             AtomicInteger idx = new AtomicInteger(0);
             return element -> {
                 stats.before(iDataset, element);
@@ -173,7 +202,7 @@ public class PreprocessorChainTest {
 
         @Override
         public String id() {
-            return "";
+            return "" + modulus;
         }
     }
 

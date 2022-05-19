@@ -33,6 +33,7 @@ public class FilterPreprocessor<T> implements SetPreprocessor<T> {
 
     @Override
     public MappingFunction<T> getMapper(int iDataset) {
+        stats.clear(iDataset);
         return t -> {
             stats.before(iDataset, t);
             if (!predicates.stream().allMatch(p -> p.test(t)))
