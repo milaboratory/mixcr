@@ -10,12 +10,13 @@ import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.mutations.MutationsBuilder
 import com.milaboratory.core.sequence.NucleotideAlphabet
 import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.core.sequence.NucleotideSequence.ALPHABET
 import com.milaboratory.core.sequence.Wildcard
 import com.milaboratory.mixcr.util.RangeInfo
+import com.milaboratory.mixcr.util.asMutations
+import com.milaboratory.mixcr.util.asSequence
 import java.util.*
 import java.util.function.BiFunction
-import java.util.stream.Collectors
-import java.util.stream.IntStream
 import kotlin.math.abs
 
 internal object MutationsUtils {
@@ -28,23 +29,31 @@ internal object MutationsUtils {
         rangeInfo: RangeInfo
     ): NucleotideSequence = mutations.mutate(sequence1).getRange(projectRange(mutations, rangeInfo))
 
-    fun projectRange(mutations: Mutations<NucleotideSequence>, rangeInfo: RangeInfo?): Range {
+    fun buildSequence(
+        sequence1: NucleotideSequence,
+        mutations: Mutations<NucleotideSequence>,
+        rangeInfo: Range
+    ): NucleotideSequence = mutations.mutate(sequence1).getRange(projectRange(mutations, rangeInfo))
+
+    fun projectRange(mutations: Mutations<NucleotideSequence>, rangeInfo: RangeInfo): Range {
         //for including inclusions before position one must step left before conversion and step right after
-        var from = positionIfNucleotideWasDeleted(mutations.convertToSeq2Position(rangeInfo!!.range.lower))
+        var from = positionIfNucleotideWasDeleted(mutations.convertToSeq2Position(rangeInfo.range.lower))
         if (rangeInfo.isIncludeFirstInserts) {
-            from -= IntStream.of(*mutations.rawMutations)
-                .filter { mutation: Int ->
-                    Mutation.getPosition(mutation) == rangeInfo.range.lower && Mutation.isInsertion(
-                        mutation
-                    )
+            from -= mutations.asSequence()
+                .count { mutation ->
+                    Mutation.getPosition(mutation) == rangeInfo.range.lower && Mutation.isInsertion(mutation)
                 }
-                .count().toInt()
         }
-        val to = positionIfNucleotideWasDeleted(
-            mutations.convertToSeq2Position(
-                rangeInfo.range.upper
-            )
-        )
+        val to = positionIfNucleotideWasDeleted(mutations.convertToSeq2Position(rangeInfo.range.upper))
+        return Range(from, to)
+    }
+
+    fun projectRange(mutations: Mutations<NucleotideSequence>, range: Range): Range {
+        //for including inclusions before position one must step left before conversion and step right after
+        val from = positionIfNucleotideWasDeleted(mutations.convertToSeq2Position(range.lower)) -
+            mutations.asSequence()
+                .count { mutation -> Mutation.getPosition(mutation) == range.lower && Mutation.isInsertion(mutation) }
+        val to = positionIfNucleotideWasDeleted(mutations.convertToSeq2Position(range.upper))
         return Range(from, to)
     }
 
@@ -123,8 +132,8 @@ internal object MutationsUtils {
     }
 
     fun NDNScoring(): AlignmentScoring<NucleotideSequence> = AffineGapAlignmentScoring(
-        NucleotideSequence.ALPHABET,
-        calculateSubstitutionMatrix(5, -4, 4, NucleotideSequence.ALPHABET),
+        ALPHABET,
+        calculateSubstitutionMatrix(5, -4, 4, ALPHABET),
         -10,
         -1
     )
@@ -180,11 +189,7 @@ internal object MutationsUtils {
         first: Mutations<NucleotideSequence>,
         second: Mutations<NucleotideSequence>,
         rangeInfo: RangeInfo
-    ): Mutations<NucleotideSequence> = simpleIntersection(
-        first,
-        second,
-        rangeInfo.range
-    )
+    ): Mutations<NucleotideSequence> = simpleIntersection(first, second, rangeInfo.range)
 
     //TODO removals and inserts
     private fun simpleIntersection(
@@ -192,18 +197,13 @@ internal object MutationsUtils {
         second: Mutations<NucleotideSequence>,
         range: Range
     ): Mutations<NucleotideSequence> {
-        val mutationsOfFirstAsSet = first.rawMutations.toSet()
-        val mutationsBuilder = MutationsBuilder(NucleotideSequence.ALPHABET)
-        (0 until second.size()).forEach { i ->
-            val mutation = second.getMutation(i)
-            val position = Mutation.getPosition(mutation)
-            if (range.contains(position)) {
-                if (mutationsOfFirstAsSet.contains(mutation)) {
-                    mutationsBuilder.append(mutation)
-                }
+        val mutationsOfFirstAsSet = first.asSequence().toSet()
+        return second.asSequence()
+            .filter { mutation ->
+                val position = Mutation.getPosition(mutation)
+                range.contains(position) && mutationsOfFirstAsSet.contains(mutation)
             }
-        }
-        return mutationsBuilder.createAndDestroy()
+            .asMutations(ALPHABET)
     }
 
     //TODO removals and inserts
@@ -211,30 +211,20 @@ internal object MutationsUtils {
         parent: Mutations<NucleotideSequence>,
         child: Mutations<NucleotideSequence>
     ): Mutations<NucleotideSequence> {
-        val mutationsOfParentByPositions = Arrays.stream(
-            parent.rawMutations
-        )
-            .boxed()
-            .collect(
-                Collectors.groupingBy(
-                    { code -> Mutation.getPosition(code) }, Collectors.toSet()
-                )
-            )
-        val mutationsBuilder = MutationsBuilder(NucleotideSequence.ALPHABET)
-        for (i in 0 until child.size()) {
-            val mutationOfChild = child.getMutation(i)
+        val mutationsOfParentByPositions = parent.asSequence().groupBy { Mutation.getPosition(it) }
+        val mutationsBuilder = MutationsBuilder(ALPHABET)
+        child.asSequence().forEach { mutationOfChild ->
             if (Mutation.isInDel(mutationOfChild)) {
                 mutationsBuilder.append(mutationOfChild)
             } else {
                 val position = Mutation.getPosition(mutationOfChild)
-                val mutationsOfParent = (mutationsOfParentByPositions[position] ?: emptySet()).stream()
-                    .filter { code -> Mutation.isSubstitution(code) }
-                    .findFirst()
-                if (!mutationsOfParent.isPresent) {
+                val mutationsOfParent =
+                    mutationsOfParentByPositions[position]?.firstOrNull { Mutation.isSubstitution(it) }
+                if (mutationsOfParent == null) {
                     mutationsBuilder.append(mutationOfChild)
                 } else {
                     val from = Mutation.getFrom(mutationOfChild)
-                    val to = concreteChild(Mutation.getTo(mutationsOfParent.get()), Mutation.getTo(mutationOfChild))
+                    val to = concreteChild(Mutation.getTo(mutationsOfParent), Mutation.getTo(mutationOfChild))
                     if (from != to) {
                         mutationsBuilder.append(Mutation.createSubstitution(position, from.toInt(), to.toInt()))
                     }
@@ -244,20 +234,17 @@ internal object MutationsUtils {
         return mutationsBuilder.createAndDestroy()
     }
 
-    private fun concreteChild(parentSymbol: Byte, childSymbol: Byte): Byte {
-        return if (parentSymbol == childSymbol) {
-            childSymbol
-        } else if (NucleotideSequence.ALPHABET.isWildcard(childSymbol)) {
-            if (matchesStrictly(NucleotideSequence.ALPHABET.codeToWildcard(childSymbol), parentSymbol)) {
-                parentSymbol
-            } else {
-                val basicMask = (NucleotideSequence.ALPHABET.codeToWildcard(parentSymbol).basicMask
-                    or NucleotideSequence.ALPHABET.codeToWildcard(childSymbol).basicMask)
-                NucleotideSequence.ALPHABET.maskToWildcard(basicMask).code
+    private fun concreteChild(parentSymbol: Byte, childSymbol: Byte): Byte = when {
+        parentSymbol == childSymbol -> childSymbol
+        ALPHABET.isWildcard(childSymbol) -> when {
+            matchesStrictly(ALPHABET.codeToWildcard(childSymbol), parentSymbol) -> parentSymbol
+            else -> {
+                val basicMask = (ALPHABET.codeToWildcard(parentSymbol).basicMask
+                    or ALPHABET.codeToWildcard(childSymbol).basicMask)
+                ALPHABET.maskToWildcard(basicMask).code
             }
-        } else {
-            childSymbol
         }
+        else -> childSymbol
     }
 
     //TODO removals and inserts
@@ -265,34 +252,23 @@ internal object MutationsUtils {
         first: Mutations<NucleotideSequence>,
         second: Mutations<NucleotideSequence>
     ): Mutations<NucleotideSequence> {
-        val mutationsOfFirstByPositions = Arrays.stream(
-            first.rawMutations
-        )
-            .boxed()
-            .collect(
-                Collectors.groupingBy(
-                    { code -> Mutation.getPosition(code) }, Collectors.toSet()
-                )
-            )
-        val mutationsBuilder = MutationsBuilder(NucleotideSequence.ALPHABET)
-        for (i in 0 until second.size()) {
-            val mutationOfSecond = second.getMutation(i)
+        val mutationsOfFirstByPositions = first.asSequence().groupBy { code -> Mutation.getPosition(code) }
+        val mutationsBuilder = MutationsBuilder(ALPHABET)
+        second.asSequence().forEach { mutationOfSecond ->
             val position = Mutation.getPosition(mutationOfSecond)
-            val mutationsOfFirst = mutationsOfFirstByPositions[position] ?: emptySet()
+            val mutationsOfFirst = mutationsOfFirstByPositions[position] ?: emptyList()
             if (mutationsOfFirst.contains(mutationOfSecond)) {
                 mutationsBuilder.append(mutationOfSecond)
             } else if (Mutation.isSubstitution(mutationOfSecond)) {
-                mutationsOfFirst.stream()
-                    .filter { code -> Mutation.isSubstitution(code) }
-                    .findFirst()
-                    .map { otherSubstitution ->
-                        Mutation.createSubstitution(
-                            position,
-                            Mutation.getFrom(mutationOfSecond).toInt(),
-                            combine(Mutation.getTo(mutationOfSecond), Mutation.getTo(otherSubstitution)).toInt()
-                        )
-                    }
-                    .ifPresent { mutation: Int? -> mutationsBuilder.append(mutation!!) }
+                val otherSubstitution = mutationsOfFirst.firstOrNull { code -> Mutation.isSubstitution(code) }
+                if (otherSubstitution != null) {
+                    val mutation = Mutation.createSubstitution(
+                        position,
+                        Mutation.getFrom(mutationOfSecond).toInt(),
+                        combine(Mutation.getTo(mutationOfSecond), Mutation.getTo(otherSubstitution)).toInt()
+                    )
+                    mutationsBuilder.append(mutation)
+                }
             }
         }
         return mutationsBuilder.createAndDestroy()
@@ -300,21 +276,21 @@ internal object MutationsUtils {
 
     private fun combine(firstSymbol: Byte, secondSymbol: Byte): Byte = when {
         firstSymbol == secondSymbol -> firstSymbol
-        NucleotideSequence.ALPHABET.isWildcard(firstSymbol)
-            && matchesStrictly(NucleotideSequence.ALPHABET.codeToWildcard(firstSymbol), secondSymbol) -> secondSymbol
-        NucleotideSequence.ALPHABET.isWildcard(secondSymbol)
-            && matchesStrictly(NucleotideSequence.ALPHABET.codeToWildcard(secondSymbol), firstSymbol) -> firstSymbol
+        ALPHABET.isWildcard(firstSymbol)
+            && matchesStrictly(ALPHABET.codeToWildcard(firstSymbol), secondSymbol) -> secondSymbol
+        ALPHABET.isWildcard(secondSymbol)
+            && matchesStrictly(ALPHABET.codeToWildcard(secondSymbol), firstSymbol) -> firstSymbol
         else -> {
-            val basicMask = (NucleotideSequence.ALPHABET.codeToWildcard(firstSymbol).basicMask
-                or NucleotideSequence.ALPHABET.codeToWildcard(secondSymbol).basicMask)
-            NucleotideSequence.ALPHABET.maskToWildcard(basicMask).code
+            val basicMask = (ALPHABET.codeToWildcard(firstSymbol).basicMask
+                or ALPHABET.codeToWildcard(secondSymbol).basicMask)
+            ALPHABET.maskToWildcard(basicMask).code
         }
     }
 
     private fun matchesStrictly(wildcard: Wildcard, secondSymbol: Byte): Boolean = when {
-        !NucleotideSequence.ALPHABET.isWildcard(secondSymbol) -> wildcard.matches(secondSymbol)
+        !ALPHABET.isWildcard(secondSymbol) -> wildcard.matches(secondSymbol)
         else -> {
-            val secondAsWildcard = NucleotideSequence.ALPHABET.codeToWildcard(secondSymbol)
+            val secondAsWildcard = ALPHABET.codeToWildcard(secondSymbol)
             wildcard.basicMask xor secondAsWildcard.basicMask and secondAsWildcard.basicMask == 0L
         }
     }

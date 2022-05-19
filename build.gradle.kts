@@ -58,6 +58,8 @@ tasks.withType<KotlinCompile> { // this affects to all kotlinCompilation tasks
 
 application {
     mainClass.set("com.milaboratory.mixcr.cli.Main")
+    applicationDefaultJvmArgs =
+        listOf("-Xms6g", "-Xmx6g", "-XX:FlightRecorderOptions=stackdepth=512", "-Xlog:gc:${project.buildDir}/gc.log")
 }
 
 tasks.withType<Javadoc> {

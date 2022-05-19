@@ -10,26 +10,23 @@ import java.util.stream.Collectors
 class SyntheticNode private constructor(
     val fromRootToThis: MutationsDescription
 ) {
-
-    fun mutate(fromParentToThis: MutationsDescription): SyntheticNode {
-        return SyntheticNode(
-            MutationsDescription(
-                MutationsUtils.combine(
-                    fromRootToThis.VMutationsWithoutCDR3,
-                    fromParentToThis.VMutationsWithoutCDR3
-                ),
-                fromRootToThis.VMutationsInCDR3WithoutNDN
-                    .combineWith(fromParentToThis.VMutationsInCDR3WithoutNDN),
-                fromRootToThis.knownNDN.combineWith(fromParentToThis.knownNDN),
-                fromRootToThis.JMutationsInCDR3WithoutNDN
-                    .combineWith(fromParentToThis.JMutationsInCDR3WithoutNDN),
-                MutationsUtils.combine(
-                    fromRootToThis.JMutationsWithoutCDR3,
-                    fromParentToThis.JMutationsWithoutCDR3
-                )
+    fun mutate(fromParentToThis: MutationsDescription) = SyntheticNode(
+        MutationsDescription(
+            MutationsUtils.combine(
+                fromRootToThis.VMutationsWithoutCDR3,
+                fromParentToThis.VMutationsWithoutCDR3
+            ),
+            fromRootToThis.VMutationsInCDR3WithoutNDN
+                .combineWith(fromParentToThis.VMutationsInCDR3WithoutNDN),
+            fromRootToThis.knownNDN.combineWith(fromParentToThis.knownNDN),
+            fromRootToThis.JMutationsInCDR3WithoutNDN
+                .combineWith(fromParentToThis.JMutationsInCDR3WithoutNDN),
+            MutationsUtils.combine(
+                fromRootToThis.JMutationsWithoutCDR3,
+                fromParentToThis.JMutationsWithoutCDR3
             )
         )
-    }
+    )
 
     companion object {
         fun createFromMutations(fromRootToThis: MutationsDescription): SyntheticNode {

@@ -34,7 +34,6 @@ package com.milaboratory.mixcr.cli
 import cc.redberry.pipe.CUtils
 import cc.redberry.pipe.util.CountingOutputPort
 import com.google.common.collect.ImmutableMap
-import com.google.common.collect.ImmutableSet
 import com.milaboratory.core.mutations.MutationsUtil.MutationNt2AADescriptor
 import com.milaboratory.core.sequence.AminoAcidSequence
 import com.milaboratory.mixcr.basictypes.CloneReader
@@ -54,16 +53,22 @@ import io.repseq.core.VDJCLibraryRegistry
 import org.apache.commons.io.FilenameUtils
 import picocli.CommandLine
 import java.io.File
+import java.io.FileInputStream
 import java.io.IOException
 import java.io.PrintStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.security.MessageDigest
+import java.time.Duration
+import java.time.Instant
 import java.util.*
 import java.util.function.Function
 import java.util.stream.Collectors
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import kotlin.system.exitProcess
+
 
 @CommandLine.Command(
     name = CommandBuildSHMTree.BUILD_SHM_TREE_COMMAND_NAME,
@@ -111,14 +116,14 @@ class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
 
     @Throws(IOException::class)
     private fun ensureParametersInitialized() {
-        if (shmTreeBuilderParameters != null) return
-        shmTreeBuilderParameters = SHMTreeBuilderParametersPresets.getByName(shmTreeBuilderParametersName)
-        if (shmTreeBuilderParameters == null) throwValidationException("Unknown parameters: $shmTreeBuilderParametersName")
+        if (shmTreeBuilderParameters == null) {
+            shmTreeBuilderParameters = SHMTreeBuilderParametersPresets.getByName(shmTreeBuilderParametersName)
+            if (shmTreeBuilderParameters == null) throwValidationException("Unknown parameters: $shmTreeBuilderParametersName")
+        }
         if (debugDirectory == null) {
-            debugDirectory = if (debugDirectoryPath == null) {
-                Files.createTempDirectory("debug")
-            } else {
-                Paths.get(debugDirectoryPath!!)
+            debugDirectory = when (debugDirectoryPath) {
+                null -> Files.createTempDirectory("debug")
+                else -> Paths.get(debugDirectoryPath!!)
             }
         }
         debugDirectory!!.toFile().mkdirs()
@@ -169,48 +174,56 @@ class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
             SmartProgressReporter.extractProgress(sortedClones, cloneWrappersCount.toLong())
         )
         var currentStepDebug = createDebug(stepNumber)
-        val finalCurrentStepDebug = currentStepDebug
+        val begin = Instant.now()
+        val relatedAllelesMutations = shmTreeBuilder.relatedAllelesMutations()
         CUtils.processAllInParallel(
             shmTreeBuilder.buildClusters(sortedClones),
             { cluster ->
                 shmTreeBuilder.zeroStep(
                     cluster,
-                    finalCurrentStepDebug.treesBeforeDecisionsWriter
+                    currentStepDebug.treesBeforeDecisionsWriter,
+                    relatedAllelesMutations
                 )
             },
             threads
         )
         val clonesWasAddedOnInit = shmTreeBuilder.makeDecisions()
+        Runtime.getRuntime().gc()
+        Thread.sleep(300)
+        println(Duration.between(begin, Instant.now()))
+        shmTreeBuilder.makeDecisions()
+//        exitProcess(0)
+
         //TODO check that all trees has minimum common mutations in VJ
         report.onStepEnd(BuildSHMTreeStep.BuildingInitialTrees, clonesWasAddedOnInit, shmTreeBuilder.treesCount())
         var previousStepDebug = currentStepDebug
-        for (step in shmTreeBuilderParameters!!.stepsOrder) {
-            stepNumber++
-            currentStepDebug = createDebug(stepNumber)
-            val treesCountBefore = shmTreeBuilder.treesCount()
-            sortedClones = CountingOutputPort(shmTreeBuilder.sortedClones())
-            stepDescription = "Step " + stepNumber + "/" + stepsCount + ", " + step.forPrint
-            SmartProgressReporter.startProgressReport(
-                stepDescription,
-                SmartProgressReporter.extractProgress(sortedClones, cloneWrappersCount.toLong())
-            )
-            val finalPreviousStepDebug = previousStepDebug
-            val finalCurrentStepDebug2 = currentStepDebug
-            CUtils.processAllInParallel(
-                shmTreeBuilder.buildClusters(sortedClones),
-                { cluster ->
-                    shmTreeBuilder.applyStep(
-                        cluster,
-                        step,
-                        finalPreviousStepDebug.treesAfterDecisionsWriter,
-                        finalCurrentStepDebug2.treesBeforeDecisionsWriter
-                    )
-                },
-                threads
-            )
-            val clonesWasAdded = shmTreeBuilder.makeDecisions()
-            report.onStepEnd(step, clonesWasAdded, shmTreeBuilder.treesCount() - treesCountBefore)
-            previousStepDebug = currentStepDebug
+        if (false) {
+            for (step in shmTreeBuilderParameters!!.stepsOrder) {
+                stepNumber++
+                currentStepDebug = createDebug(stepNumber)
+                val treesCountBefore = shmTreeBuilder.treesCount()
+                sortedClones = CountingOutputPort(shmTreeBuilder.sortedClones())
+                stepDescription = "Step " + stepNumber + "/" + stepsCount + ", " + step.forPrint
+                SmartProgressReporter.startProgressReport(
+                    stepDescription,
+                    SmartProgressReporter.extractProgress(sortedClones, cloneWrappersCount.toLong())
+                )
+                CUtils.processAllInParallel(
+                    shmTreeBuilder.buildClusters(sortedClones),
+                    { cluster ->
+                        shmTreeBuilder.applyStep(
+                            cluster,
+                            step,
+                            previousStepDebug.treesAfterDecisionsWriter,
+                            currentStepDebug.treesBeforeDecisionsWriter
+                        )
+                    },
+                    threads
+                )
+                val clonesWasAdded = shmTreeBuilder.makeDecisions()
+                report.onStepEnd(step, clonesWasAdded, shmTreeBuilder.treesCount() - treesCountBefore)
+                previousStepDebug = currentStepDebug
+            }
         }
         sortedClones = CountingOutputPort(shmTreeBuilder.sortedClones())
         SmartProgressReporter.startProgressReport(
@@ -219,18 +232,15 @@ class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
         )
         val outputDirInTmp = Files.createTempDirectory("tree_outputs").toFile()
         outputDirInTmp.deleteOnExit()
-        val columnsThatDependOnTree = ImmutableMap.builder<String, Function<TreeWithMeta, Any>>()
-            .put("treeId", Function { it.treeId.encode() })
-            .put("VGene", Function { it.rootInfo.VJBase.VGeneName })
-            .put("JGene", Function { it.rootInfo.VJBase.JGeneName })
-            .build()
+        val columnsThatDependOnTree = buildMap<String, Function<TreeWithMeta, Any?>> {
+            put("treeId", Function { it.treeId.encode() })
+            put("VGene", Function { it.rootInfo.VJBase.VGeneName })
+            put("JGene", Function { it.rootInfo.VJBase.JGeneName })
+        }
         val nodesTableFile = outputDirInTmp.toPath().resolve("nodes.tsv").toFile()
         nodesTableFile.createNewFile()
         val nodesTable = PrintStream(nodesTableFile)
-        val allColumnNames = ImmutableSet.builder<String>()
-            .addAll(columnsThatDependOnNode.keys)
-            .addAll(columnsThatDependOnTree.keys)
-            .build()
+        val allColumnNames = columnsThatDependOnNode.keys + columnsThatDependOnTree.keys
         XSV.writeXSVHeaders(nodesTable, allColumnNames, "\t")
         val printer = NewickTreePrinter<CloneOrFoundAncestor>(
             nameExtractor = { it.content.id.toString() },
@@ -242,13 +252,8 @@ class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
                 .sorted(Comparator.comparing { it.treeId.encode() })
                 .collect(Collectors.toList())
             for (treeWithMeta in result) {
-                val columnsBuilder =
-                    ImmutableMap.builder<String, (NodeWithParent<CloneOrFoundAncestor>) -> Any?>()
-                        .putAll(columnsThatDependOnNode)
-                columnsThatDependOnTree.forEach { (key: String, function: Function<TreeWithMeta, Any>) ->
-                    columnsBuilder.put(key) { function.apply(treeWithMeta) }
-                }
-                val columns = columnsBuilder.build()
+                val columns = columnsThatDependOnNode + columnsThatDependOnTree
+                    .mapValues { (_, function) -> { function.apply(treeWithMeta) } }
                 val nodes = treeWithMeta.tree
                     .allNodes()
                     .collect(Collectors.toList())
@@ -258,6 +263,8 @@ class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
             }
         }
         zip(outputDirInTmp.toPath(), Path.of(outputZipPath))
+        println(String(Base64.getEncoder().encode(createChecksum(nodesTableFile.absolutePath))))
+        exitProcess(0)
         for (i in 0..shmTreeBuilderParameters!!.stepsOrder.size) {
             stepNumber = i + 1
             val treesBeforeDecisions = debugFile(stepNumber, Debug.BEFORE_DECISIONS_SUFFIX)
@@ -270,6 +277,21 @@ class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
         if (reportPdf != null) {
             report.writePdfReport(Paths.get(reportPdf!!))
         }
+    }
+
+    private fun createChecksum(filename: String): ByteArray {
+        val fis = FileInputStream(filename)
+        val buffer = ByteArray(1024)
+        val complete = MessageDigest.getInstance("MD5")
+        var numRead: Int
+        do {
+            numRead = fis.read(buffer)
+            if (numRead > 0) {
+                complete.update(buffer, 0, numRead)
+            }
+        } while (numRead != -1)
+        fis.close()
+        return complete.digest()
     }
 
     @Throws(IOException::class)

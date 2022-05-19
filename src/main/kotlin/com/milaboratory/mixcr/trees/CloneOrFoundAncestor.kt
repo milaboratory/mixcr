@@ -5,11 +5,14 @@ import com.milaboratory.core.mutations.MutationsUtil
 import com.milaboratory.core.mutations.MutationsUtil.MutationNt2AADescriptor
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.TranslationParameters
+import com.milaboratory.mixcr.trees.CloneOrFoundAncestor.Base.FromGermline
+import com.milaboratory.mixcr.trees.CloneOrFoundAncestor.Base.FromParent
+import com.milaboratory.mixcr.trees.CloneOrFoundAncestor.Base.FromReconstructedRoot
 import io.repseq.core.GeneType
 import java.math.BigDecimal
 
 @Suppress("FunctionName", "PropertyName")
-abstract class CloneOrFoundAncestor protected constructor(
+sealed class CloneOrFoundAncestor(
     val id: Int,
     private val fromGermlineToThis: MutationsDescription,
     private val fromGermlineToReconstructedRoot: MutationsDescription,
@@ -62,13 +65,13 @@ abstract class CloneOrFoundAncestor protected constructor(
         base: Base,
         supplier: (MutationsDescription) -> MutationsWithRange
     ): Mutations<NucleotideSequence>? = when (base) {
-        Base.FromGermline -> supplier(fromGermlineToThis).mutationsForRange()
-        Base.FromParent -> when (fromGermlineToParent) {
+        FromGermline -> supplier(fromGermlineToThis).mutationsForRange()
+        FromParent -> when (fromGermlineToParent) {
             null -> null
             else -> supplier(fromGermlineToParent).mutationsForRange().invert()
                 .combineWith(supplier(fromGermlineToThis).mutationsForRange())
         }
-        Base.FromReconstructedRoot -> when (fromGermlineToParent) {
+        FromReconstructedRoot -> when (fromGermlineToParent) {
             null -> null
             else -> supplier(fromGermlineToReconstructedRoot).mutationsForRange().invert()
                 .combineWith(supplier(fromGermlineToThis).mutationsForRange())
@@ -95,9 +98,9 @@ abstract class CloneOrFoundAncestor protected constructor(
     }
 
     private fun fromBaseToThis(base: Base): MutationsDescription? = when (base) {
-        Base.FromGermline -> fromGermlineToThis
-        Base.FromParent -> fromParentToThis
-        Base.FromReconstructedRoot -> fromReconstructedRootToThis
+        FromGermline -> fromGermlineToThis
+        FromParent -> fromParentToThis
+        FromReconstructedRoot -> fromReconstructedRootToThis
     }
 
     abstract val cloneId: Int?

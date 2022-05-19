@@ -37,6 +37,7 @@ import cc.redberry.pipe.OutputPortCloseable
 import cc.redberry.pipe.blocks.FilteringPort
 import cc.redberry.pipe.util.FlatteningOutputPort
 import com.milaboratory.core.alignment.AlignmentScoring
+import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
@@ -50,6 +51,7 @@ import com.milaboratory.util.sorting.HashSorter
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.ReferencePoint
+import io.repseq.core.VDJCGene
 import java.io.IOException
 import java.io.PrintStream
 import java.nio.file.Files
@@ -182,9 +184,10 @@ class SHMTreeBuilder(
                         continue
                     }
                     val lastAdded = cluster[cluster.size - 1]
-                    if (clusteringCriteria.clusteringComparator()
-                            .compare(lastAdded, clone) == 0
-                    ) cluster.add(clone) else {
+                    if (clusteringCriteria.clusteringComparator().compare(lastAdded, clone) == 0) {
+                        // new cluster
+                        cluster.add(clone)
+                    } else {
                         val copy = ArrayList(cluster)
 
                         // new cluster
@@ -235,15 +238,16 @@ class SHMTreeBuilder(
         return clonesWasAdded
     }
 
-    fun treesCount(): Int =
-        currentTrees.values.stream()
-            .mapToInt { it.size }
-            .sum()
+    fun treesCount(): Int = currentTrees.values.sumOf { it.size }
 
-    fun zeroStep(clusterBySameVAndJ: Cluster<CloneWrapper>, debug: PrintStream) {
+    fun zeroStep(
+        clusterBySameVAndJ: Cluster<CloneWrapper>,
+        debug: PrintStream,
+        relatedAllelesMutations: Map<String, List<Mutations<NucleotideSequence>>>
+    ) {
         val VJBase = clusterVJBase(clusterBySameVAndJ)
         val clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase)
-        val result = clusterProcessor.buildTreeTopParts()
+        val result = clusterProcessor.buildTreeTopParts(relatedAllelesMutations)
         currentTrees[VJBase] = result.snapshots
         result.decisions.forEach { (cloneId, decision) ->
             decisions.computeIfAbsent(
@@ -253,7 +257,11 @@ class SHMTreeBuilder(
         XSV.writeXSVBody(debug, result.nodesDebugInfo, DebugInfo.COLUMNS_FOR_XSV, ";")
     }
 
-    fun zeroStep_monitorMemory(clusterBySameVAndJ: Cluster<CloneWrapper>, debug: PrintStream) {
+    fun zeroStep_monitorMemory(
+        clusterBySameVAndJ: Cluster<CloneWrapper>,
+        debug: PrintStream,
+        relatedAllelesMutations: Map<String, List<Mutations<NucleotideSequence>>>
+    ) {
         val VJBase = clusterVJBase(clusterBySameVAndJ)
         if (VJBase.toString() != "VJBase(VGeneName=IGHV3-30*00, JGeneName=IGHJ4*00, CDR3length=42)") {
             return
@@ -266,7 +274,7 @@ class SHMTreeBuilder(
             Thread.sleep(300)
             println("begin $VJBase")
             val usedMemoryBefore = runtime.totalMemory() - runtime.freeMemory()
-            clusterProcessor.buildTreeTopParts()
+            clusterProcessor.buildTreeTopParts(relatedAllelesMutations)
             val usedMemoryAfter = runtime.totalMemory() - runtime.freeMemory()
             println(
                 Duration.between(begin, Instant.now())
@@ -338,5 +346,27 @@ class SHMTreeBuilder(
             clusterBySameVAndJ,
             parameters.minPortionOfClonesForCommonAlignmentRanges
         )
+    }
+
+    fun relatedAllelesMutations(): Map<String, List<Mutations<NucleotideSequence>>> = datasets
+        .flatMap { it.genes }
+        .groupBy { it.geneName }
+        .values
+        .flatMap { genes ->
+            if (genes.size == 1) {
+                emptyList()
+            } else {
+                genes.map { gene ->
+                    val currentAlleleMutations = alleleMutations(gene)
+                    gene.name to genes
+                        .filter { it != gene }
+                        .map { currentAlleleMutations.invert().combineWith(alleleMutations(it)) }
+                }
+            }
+        }
+        .toMap()
+
+    private fun alleleMutations(gene: VDJCGene): Mutations<NucleotideSequence> {
+        return gene.data.baseSequence.mutations ?: Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
     }
 }

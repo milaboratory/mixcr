@@ -11,10 +11,6 @@ class MutationsWithRange(
     val rangeInfo: RangeInfo
 ) {
     private var result: NucleotideSequence? = null
-    fun mutationsCount(): Int {
-        return mutationsForRange().size()
-    }
-
     fun differenceWith(comparison: MutationsWithRange): MutationsWithRange {
         require(rangeInfo.range == comparison.rangeInfo.range)
         require(sequence1 == comparison.sequence1)
@@ -37,13 +33,6 @@ class MutationsWithRange(
         )
     }
 
-    fun lengthDelta(): Int = projectedRange().range.length() - rangeInfo.range.length()
-
-    private fun projectedRange(): RangeInfo = RangeInfo(
-        MutationsUtils.projectRange(mutations, rangeInfo),
-        rangeInfo.isIncludeFirstInserts
-    )
-
     fun combineWithMutationsToTheRight(mutations: Mutations<NucleotideSequence>, range: Range): MutationsWithRange {
         require(rangeInfo.range.upper == range.lower)
         return MutationsWithRange(
@@ -58,39 +47,12 @@ class MutationsWithRange(
 
     fun combineWithMutationsToTheLeft(mutations: Mutations<NucleotideSequence>, range: Range): MutationsWithRange {
         require(range.upper == rangeInfo.range.lower)
-        val mutationsBefore = mutationsForRange()
         return MutationsWithRange(
             sequence1,
-            mutations.concat(mutationsBefore),
+            mutations.concat(this.mutations),
             RangeInfo(
                 rangeInfo.range.setLower(range.lower),
                 true
-            )
-        )
-    }
-
-    fun combineWithTheSameMutationsRight(another: MutationsWithRange): MutationsWithRange {
-        require(rangeInfo.range.upper == another.rangeInfo.range.lower)
-        require(mutations == another.mutations)
-        return MutationsWithRange(
-            sequence1,
-            mutations,
-            RangeInfo(
-                rangeInfo.range.setUpper(another.rangeInfo.range.upper),
-                false
-            )
-        )
-    }
-
-    fun combineWithTheSameMutationsLeft(another: MutationsWithRange): MutationsWithRange {
-        require(rangeInfo.range.lower == another.rangeInfo.range.upper)
-        require(mutations == another.mutations)
-        return MutationsWithRange(
-            sequence1,
-            mutations,
-            RangeInfo(
-                rangeInfo.range.setLower(another.rangeInfo.range.lower),
-                another.rangeInfo.isIncludeFirstInserts
             )
         )
     }

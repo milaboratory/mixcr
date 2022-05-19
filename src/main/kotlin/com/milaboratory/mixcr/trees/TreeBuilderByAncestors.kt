@@ -3,33 +3,32 @@ package com.milaboratory.mixcr.trees
 import com.milaboratory.mixcr.trees.Tree.NodeLink
 import java.math.BigDecimal
 import java.util.*
-import java.util.function.BiFunction
 import java.util.function.Function
 import java.util.stream.Collectors
 import java.util.stream.Stream
 
 class TreeBuilderByAncestors<T, E, M> private constructor(
-    val distance: BiFunction<E, M, BigDecimal>,
+    val distance: (E, M) -> BigDecimal,
     /**
      * parent, observed -> reconstructed
      */
-    private val asAncestor: Function<T, E>,
-    private val mutationsBetween: BiFunction<E, E, M>,
-    private val mutate: BiFunction<E, M, E>,
-    private val findCommonMutations: BiFunction<M, M, M>,
-    private val postprocessDescendants: BiFunction<E, E, E>,
+    private val asAncestor: (T) -> E,
+    private val mutationsBetween: (E, E) -> M,
+    private val mutate: (E, M) -> E,
+    private val findCommonMutations: (M, M) -> M,
+    private val postprocessDescendants: (E, E) -> E,
     val tree: Tree<ObservedOrReconstructed<T, E>>,
     private val countOfNodesToProbe: Int,
     private var counter: Int
 ) {
     constructor(
         root: E,
-        distance: BiFunction<E, M, BigDecimal>,
-        mutationsBetween: BiFunction<E, E, M>,
-        mutate: BiFunction<E, M, E>,
-        asAncestor: Function<T, E>,
-        findCommonMutations: BiFunction<M, M, M>,
-        postprocessDescendants: BiFunction<E, E, E>,
+        distance: (E, M) -> BigDecimal,
+        mutationsBetween: (E, E) -> M,
+        mutate: (E, M) -> E,
+        asAncestor: (T) -> E,
+        findCommonMutations: (M, M) -> M,
+        postprocessDescendants: (E, E) -> E,
         countOfNodesToProbe: Int
     ) : this(
         distance,
@@ -38,33 +37,22 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
         mutate,
         findCommonMutations,
         postprocessDescendants,
-        Tree<ObservedOrReconstructed<T, E>>(
-            Tree.Node<ObservedOrReconstructed<T, E>>(
-                Reconstructed<T, E>(
-                    root,
-                    BigDecimal.ZERO,
-                    0
-                )
-            )
-        ),
+        Tree(Tree.Node(Reconstructed(root, BigDecimal.ZERO, 0))),
         countOfNodesToProbe,
         1
-    ) {
-    }
+    )
 
-    fun copy(): TreeBuilderByAncestors<T, E, M> {
-        return TreeBuilderByAncestors(
-            distance,
-            asAncestor,
-            mutationsBetween,
-            mutate,
-            findCommonMutations,
-            postprocessDescendants,
-            tree.copy(),
-            countOfNodesToProbe,
-            counter
-        )
-    }
+    fun copy(): TreeBuilderByAncestors<T, E, M> = TreeBuilderByAncestors(
+        distance,
+        asAncestor,
+        mutationsBetween,
+        mutate,
+        findCommonMutations,
+        postprocessDescendants,
+        tree.copy(),
+        countOfNodesToProbe,
+        counter
+    )
 
     fun addNode(toAdd: T): TreeBuilderByAncestors<T, E, M> {
         val bestAction = bestActionForObserved(toAdd)
@@ -73,7 +61,7 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
     }
 
     fun bestActionForObserved(toAdd: T): Action {
-        val addedAsAncestor = asAncestor.apply(toAdd)
+        val addedAsAncestor = asAncestor(toAdd)
         return bestAction(addedAsAncestor) { distanceFromParent: BigDecimal ->
             val nodeToAdd: Tree.Node<ObservedOrReconstructed<T, E>>
             if (distanceFromParent.compareTo(BigDecimal.ZERO) == 0) {
@@ -110,9 +98,9 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
             .sorted(Comparator.comparing { compareWith ->
                 val reconstructed = compareWith.node.content as Reconstructed<T, E>
                 val nodeContent = reconstructed.content
-                distance.apply(
+                distance(
                     nodeContent,
-                    mutationsBetween.apply(nodeContent, addedAsAncestor)
+                    mutationsBetween(nodeContent, addedAsAncestor)
                 ).add(reconstructed.minDistanceFromObserved)
             })
             .limit(countOfNodesToProbe.toLong())
@@ -187,15 +175,14 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
                 }
             }
         //optimize sum of distances from observed nodes
-        val temp = possibleActions.collect(Collectors.toList())
-        return temp.stream().min(ACTION_COMPARATOR).orElseThrow { IllegalArgumentException() }!!
+        return possibleActions.min(ACTION_COMPARATOR).orElseThrow { IllegalArgumentException() }!!
     }
 
     fun distanceFromRootToObserved(node: T): BigDecimal {
         val rootContent = (tree.root.content as Reconstructed<T, E>).content
-        return distance.apply(
+        return distance(
             rootContent,
-            mutationsBetween.apply(rootContent, asAncestor.apply(node))
+            mutationsBetween(rootContent, asAncestor(node))
         )
     }
 
@@ -206,7 +193,7 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
     ): Insert {
         val contentOfParent = (parent.content as Reconstructed<T, E>).content
         val distanceBetweenParentAndAdded =
-            distance.apply(contentOfParent, mutationsBetween.apply(contentOfParent, toAdd))
+            distance(contentOfParent, mutationsBetween(contentOfParent, toAdd))
         val nodeToInsert = nodeGenerator(distanceBetweenParentAndAdded)
         return Insert(
             parent,
@@ -244,23 +231,22 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
         val parentAsReconstructed = parent.content as Reconstructed<T, E>
         val parentContent = parentAsReconstructed.content
         val childContent = (child.content as Reconstructed<T, E>).content
-        val mutationsToAdded = mutationsBetween.apply(parentContent, addedAsAncestor)
-        val mutationsToChild = mutationsBetween.apply(parentContent, childContent)
-        val commonMutations = findCommonMutations.apply(mutationsToAdded, mutationsToChild)
-        val distanceFromParentToCommon = distance.apply(parentContent, commonMutations)
+        val mutationsToAdded = mutationsBetween(parentContent, addedAsAncestor)
+        val mutationsToChild = mutationsBetween(parentContent, childContent)
+        val commonMutations = findCommonMutations(mutationsToAdded, mutationsToChild)
+        val distanceFromParentToCommon = distance(parentContent, commonMutations)
         //if distance is zero than there is no common mutations
         if (distanceFromParentToCommon.compareTo(BigDecimal.ZERO) == 0) {
             return null
         }
-        val commonAncestor = mutate.apply(parentContent, commonMutations)
-        val fromCommonToChild = mutationsBetween.apply(commonAncestor, childContent)
-        val distanceFromCommonAncestorToChild = distance.apply(commonAncestor, fromCommonToChild)
+        val commonAncestor = mutate(parentContent, commonMutations)
+        val fromCommonToChild = mutationsBetween(commonAncestor, childContent)
+        val distanceFromCommonAncestorToChild = distance(commonAncestor, fromCommonToChild)
         //if distance is zero than result of replacement equals to insertion
         if (distanceFromCommonAncestorToChild.compareTo(BigDecimal.ZERO) == 0) {
             return null
         }
-        val distanceFromCommonToAdded =
-            distance.apply(commonAncestor, mutationsBetween.apply(commonAncestor, addedAsAncestor))
+        val distanceFromCommonToAdded = distance(commonAncestor, mutationsBetween(commonAncestor, addedAsAncestor))
         val minDistanceFromObserved = Stream.of(
             distanceFromCommonToAdded,
             distanceFromCommonAncestorToChild,
@@ -275,7 +261,7 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
         )
         val rebuiltChild = Tree.Node<ObservedOrReconstructed<T, E>>(
             Reconstructed(
-                mutate.apply(commonAncestor, fromCommonToChild),
+                mutate(commonAncestor, fromCommonToChild),
                 child.content.minDistanceFromObserved,
                 ++counter
             )
@@ -365,7 +351,7 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
                     val child = link.node
                     if (child.content is Reconstructed<*, *>) {
                         val childContent = child.content as Reconstructed<T, E>
-                        val mapped = postprocessDescendants.apply(parentContent, childContent.content)
+                        val mapped = postprocessDescendants(parentContent, childContent.content)
                         return@map NodeLink(
                             Tree.Node(
                                 Reconstructed(
@@ -375,7 +361,7 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
                                 ),
                                 postprocess(mapped, child.links)
                             ),
-                            distance.apply(parentContent, mutationsBetween.apply(parentContent, mapped))
+                            distance(parentContent, mutationsBetween(parentContent, mapped))
                         )
                     } else {
                         return@map link
@@ -389,20 +375,22 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
         fun <R1, R2> map(
             mapObserved: Function<T, R1>,
             mapReconstructed: Function<E, R2>
-        ): ObservedOrReconstructed<R1, R2> {
-            return when (this) {
-                is Observed -> Observed(mapObserved.apply(content), id)
-                is Reconstructed -> Reconstructed(mapReconstructed.apply(content), minDistanceFromObserved, id)
-            }
+        ): ObservedOrReconstructed<R1, R2> = when (this) {
+            is Observed -> Observed(mapObserved.apply(content), id)
+            is Reconstructed -> Reconstructed(mapReconstructed.apply(content), minDistanceFromObserved, id)
         }
 
         fun <R> convert(mapObserved: (T) -> R, mapReconstructed: (E) -> R): R = when (this) {
-            is Observed -> mapObserved(this.content)
-            is Reconstructed -> mapReconstructed(this.content)
+            is Observed -> mapObserved(content)
+            is Reconstructed -> mapReconstructed(content)
         }
     }
 
-    internal class Observed<T, E>(val content: T, id: Int) : ObservedOrReconstructed<T, E>(id)
+    internal class Observed<T, E>(
+        val content: T,
+        id: Int
+    ) : ObservedOrReconstructed<T, E>(id)
+
     internal class Reconstructed<T, E>(
         val content: E,
         /**
@@ -413,7 +401,8 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
          * zero if had an observed child with distance zero
          * otherwise it is a distance from the nearest parent with minDistanceFromObserved equals zero
          */
-        var minDistanceFromObserved: BigDecimal, id: Int
+        var minDistanceFromObserved: BigDecimal,
+        id: Int
     ) : ObservedOrReconstructed<T, E>(id)
 
     companion object {

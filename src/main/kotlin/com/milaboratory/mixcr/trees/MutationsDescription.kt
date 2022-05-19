@@ -12,15 +12,13 @@ class MutationsDescription(
     val JMutationsWithoutCDR3: List<MutationsWithRange>
 ) {
 
-    fun withKnownNDNMutations(mutations: MutationsWithRange): MutationsDescription {
-        return MutationsDescription(
-            VMutationsWithoutCDR3,
-            VMutationsInCDR3WithoutNDN,
-            mutations,
-            JMutationsInCDR3WithoutNDN,
-            JMutationsWithoutCDR3
-        )
-    }
+    fun withKnownNDNMutations(mutations: MutationsWithRange): MutationsDescription = MutationsDescription(
+        VMutationsWithoutCDR3,
+        VMutationsInCDR3WithoutNDN,
+        mutations,
+        JMutationsInCDR3WithoutNDN,
+        JMutationsWithoutCDR3
+    )
 
     fun combinedVMutations(): Mutations<NucleotideSequence> {
         val allBasedOnTheSameSequence = VMutationsWithoutCDR3.stream()

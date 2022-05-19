@@ -49,7 +49,14 @@ class TreeWithMetaBuilder(
         .orElseThrow { IllegalStateException() }
 
     fun rebaseClone(clone: CloneWithMutationsFromVJGermline): CloneWithMutationsFromReconstructedRoot {
-        return clonesRebase.rebaseClone(rootInfo, clone.mutations, clone.cloneWrapper)
+        val result = clonesRebase.rebaseClone(rootInfo, clone.mutations, clone.cloneWrapper)
+        assertClone(
+            clone.cloneWrapper,
+            result.mutationsSet.VMutations,
+            result.mutationsSet.JMutations,
+            result.mutationsSet.NDNMutations.mutations.mutate(result.mutationsSet.NDNMutations.base)
+        )
+        return result
     }
 
     fun addClone(rebasedClone: CloneWithMutationsFromReconstructedRoot) {
@@ -73,23 +80,15 @@ class TreeWithMetaBuilder(
             .map { parent, node ->
                 val fromGermlineToParent = parent?.let { asMutations(it) }
                 val nodeAsMutationsFromGermline = asMutations(node)
-                val distanceFromReconstructedRootToNode = if (parent != null) {
-                    treeBuilder.distance.apply(
+                val distanceFromReconstructedRootToNode = when {
+                    parent != null -> treeBuilder.distance(
                         reconstructedRoot,
-                        MutationsUtils.mutationsBetween(
-                            reconstructedRoot.fromRootToThis,
-                            nodeAsMutationsFromGermline
-                        )
+                        MutationsUtils.mutationsBetween(reconstructedRoot.fromRootToThis, nodeAsMutationsFromGermline)
                     )
-                } else {
-                    null
+                    else -> null
                 }
-                val rootAsNode = treeBuilder.tree.root.content
-                    .convert(
-                        { Optional.empty() },
-                        { Optional.of(it) })
-                    .orElseThrow()
-                val distanceFromGermlineToNode = treeBuilder.distance.apply(rootAsNode, nodeAsMutationsFromGermline)
+                val rootAsNode = (treeBuilder.tree.root.content as Reconstructed).content
+                val distanceFromGermlineToNode = treeBuilder.distance(rootAsNode, nodeAsMutationsFromGermline)
                 node.convert(
                     { c ->
                         CloneInfo(
@@ -149,9 +148,7 @@ class TreeWithMetaBuilder(
         fun encode(): String {
             val result = StringBuilder()
                 .append(VJBase.VGeneName)
-            if (VJBase.CDR3length != null) {
-                result.append("-").append(VJBase.CDR3length)
-            }
+            result.append("-").append(VJBase.CDR3length)
             result.append("-").append(VJBase.JGeneName)
                 .append("-").append(id)
             return result.toString()
