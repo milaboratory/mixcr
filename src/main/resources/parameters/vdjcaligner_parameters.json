@@ -1,518 +1,518 @@
 {
-    "default": {
-        "fixSeed" : true,
-        "libraryStructure": "Unknown",
-        "vParameters": {
-            "geneFeatureToAlign": "VRegionWithP",
-            "minSumScore" : 50,
-            "relativeMinScore" : 0.87,
-            "parameters": {
-                "type": "kaligner",
-                "mapperKValue": 5,
-                "floatingLeftBound": true,
-                "floatingRightBound": true,
-                "mapperAbsoluteMinScore": 1.5,
-                "mapperRelativeMinScore": 0.7,
-                "mapperMatchScore": 1.0,
-                "mapperMismatchPenalty": -0.1,
-                "mapperOffsetShiftPenalty": -0.3,
-                "mapperMinSeedsDistance": 4,
-                "mapperMaxSeedsDistance": 10,
-                "minAlignmentLength": 15,
-                "maxAdjacentIndels": 2,
-                "alignmentStopPenalty": -1000,
-                "absoluteMinScore": 40.0,
-                "relativeMinScore": 0.87,
-                "maxHits": 7,
-                "scoring": {
-                    "type": "linear",
-                    "subsMatrix": "simple(match = 5, mismatch = -9)",
-                    "gapPenalty": -12
-                }
-            }
-        },
-        "dParameters": {
-            "geneFeatureToAlign": "DRegionWithP",
-            "absoluteMinScore": 25.0,
-            "relativeMinScore": 0.85,
-            "maxHits": 3,
-            "scoring": {
-                "type": "linear",
-                "subsMatrix": "simple(match = 5, mismatch = -9)",
-                "gapPenalty": -12
-            }
-        },
-        "jParameters": {
-            "geneFeatureToAlign": "JRegionWithP",
-            "minSumScore" : 40,
-            "relativeMinScore" : 0.87,
-            "parameters": {
-                "type": "kaligner",
-                "mapperKValue": 5,
-                "floatingLeftBound": true,
-                "floatingRightBound": false,
-                "mapperAbsoluteMinScore": 1.5,
-                "mapperRelativeMinScore": 0.75,
-                "mapperMatchScore": 1.0,
-                "mapperMismatchPenalty": -0.1,
-                "mapperOffsetShiftPenalty": -0.3,
-                "mapperMinSeedsDistance": 4,
-                "mapperMaxSeedsDistance": 10,
-                "minAlignmentLength": 15,
-                "maxAdjacentIndels": 2,
-                "alignmentStopPenalty": -1000,
-                "absoluteMinScore": 40.0,
-                "relativeMinScore": 0.87,
-                "maxHits": 7,
-                "scoring": {
-                    "type": "linear",
-                    "subsMatrix": "simple(match = 5, mismatch = -9)",
-                    "gapPenalty": -12
-                }
-            }
-        },
-        "cParameters": {
-            "geneFeatureToAlign": "CExon1",
-            "minSumScore" : 40,
-            "relativeMinScore" : 0.87,
-            "parameters": {
-                "type": "kaligner",
-                "mapperKValue": 5,
-                "floatingLeftBound": false,
-                "floatingRightBound": false,
-                "mapperAbsoluteMinScore": 1.5,
-                "mapperRelativeMinScore": 0.75,
-                "mapperMatchScore": 1.0,
-                "mapperMismatchPenalty": -0.1,
-                "mapperOffsetShiftPenalty": -0.3,
-                "mapperMinSeedsDistance": 4,
-                "mapperMaxSeedsDistance": 10,
-                "minAlignmentLength": 15,
-                "maxAdjacentIndels": 2,
-                "alignmentStopPenalty": -1000,
-                "absoluteMinScore": 40.0,
-                "relativeMinScore": 0.87,
-                "maxHits": 7,
-                "scoring": {
-                    "type": "linear",
-                    "subsMatrix": "simple(match = 5, mismatch = -9)",
-                    "gapPenalty": -12
-                }
-            }
-        },
-        "vjAlignmentOrder": "VThenJ",
-        "includeDScore": false,
-        "includeCScore": false,
-        "mergerParameters": {
-            "qualityMergingAlgorithm" : "MaxSubtraction",
-            "minimalOverlap": 17,
-            "minimalIdentity": 0.9,
-            "identityType": "Unweighted"
-        },
-        "minSumScore": 120.0,
-        "maxHits": 5,
-        "relativeMinVFR3CDR3Score": 0.7,
-        "allowPartialAlignments": false,
-        "allowNoCDR3PartAlignments": false,
-        "allowChimeras": false,
-        "alignmentBoundaryTolerance": 5,
-        "minChimeraDetectionScore": 120,
-        "vjOverlapWindow": 3,
-        "readsLayout": "Opposite",
-        "saveOriginalReads": false,
-        "smartForceEdgeAlignments": true
+  "default": {
+    "fixSeed": true,
+    "libraryStructure": "Unknown",
+    "vParameters": {
+      "geneFeatureToAlign": "VRegionWithP",
+      "minSumScore": 50,
+      "relativeMinScore": 0.97,
+      "parameters": {
+        "type": "kaligner",
+        "mapperKValue": 5,
+        "floatingLeftBound": true,
+        "floatingRightBound": true,
+        "mapperAbsoluteMinScore": 1.5,
+        "mapperRelativeMinScore": 0.7,
+        "mapperMatchScore": 1.0,
+        "mapperMismatchPenalty": -0.1,
+        "mapperOffsetShiftPenalty": -0.3,
+        "mapperMinSeedsDistance": 4,
+        "mapperMaxSeedsDistance": 10,
+        "minAlignmentLength": 15,
+        "maxAdjacentIndels": 2,
+        "alignmentStopPenalty": -1000,
+        "absoluteMinScore": 40.0,
+        "relativeMinScore": 0.87,
+        "maxHits": 7,
+        "scoring": {
+          "type": "linear",
+          "subsMatrix": "simple(match = 5, mismatch = -9)",
+          "gapPenalty": -12
+        }
+      }
     },
-    "kaligner2": {
-        "fixSeed" : true,
-        "libraryStructure": "Unknown",
-        "vParameters": {
-            "geneFeatureToAlign": "VRegionWithP",
-            "minSumScore" : 150,
-            "relativeMinScore" : 0.8,
-            "parameters":{
-                "type" : "kaligner2",
-                "mapperNValue" : 8,
-                "mapperKValue" : 1,
-                "floatingLeftBound" : true,
-                "floatingRightBound" : true,
-                "mapperAbsoluteMinClusterScore" : 102,
-                "mapperExtraClusterScore" : -38,
-                "mapperMatchScore" : 95,
-                "mapperMismatchScore" : -14,
-                "mapperOffsetShiftScore" : -82,
-                "mapperSlotCount" : 6,
-                "mapperMaxClusters" : 4,
-                "mapperMaxClusterIndels" : 4,
-                "mapperKMersPerPosition" : 4,
-                "mapperAbsoluteMinScore" : 100,
-                "mapperRelativeMinScore" : 0.8,
-                "mapperMinSeedsDistance" : 5,
-                "mapperMaxSeedsDistance" : 5,
-                "alignmentStopPenalty" : 0,
-                "absoluteMinScore" : 150,
-                "relativeMinScore" : 0.8,
-                "maxHits" : 3,
-                "scoring" : {
-                    "type" : "affine",
-                    "subsMatrix" : "simple(match = 10, mismatch = -19)",
-                    "gapOpenPenalty" : -40,
-                    "gapExtensionPenalty" : -11
-                }
-            }
-        },
-        "dParameters": {
-            "geneFeatureToAlign": "DRegionWithP",
-            "absoluteMinScore": 25.0,
-            "relativeMinScore": 0.85,
-            "maxHits": 3,
-            "scoring": {
-                "type": "linear",
-                "subsMatrix": "simple(match = 5, mismatch = -9)",
-                "gapPenalty": -12
-            }
-        },
-        "jParameters": {
-            "geneFeatureToAlign": "JRegionWithP",
-            "minSumScore" : 150,
-            "relativeMinScore" : 0.8,
-            "parameters": {
-                "type" : "kaligner2",
-                "mapperNValue" : 8,
-                "mapperKValue" : 1,
-                "floatingLeftBound" : true,
-                "floatingRightBound" : false,
-                "mapperAbsoluteMinClusterScore" : 102,
-                "mapperExtraClusterScore" : -38,
-                "mapperMatchScore" : 95,
-                "mapperMismatchScore" : -14,
-                "mapperOffsetShiftScore" : -82,
-                "mapperSlotCount" : 6,
-                "mapperMaxClusters" : 4,
-                "mapperMaxClusterIndels" : 4,
-                "mapperKMersPerPosition" : 4,
-                "mapperAbsoluteMinScore" : 100,
-                "mapperRelativeMinScore" : 0.8,
-                "mapperMinSeedsDistance" : 5,
-                "mapperMaxSeedsDistance" : 5,
-                "alignmentStopPenalty" : 0,
-                "absoluteMinScore" : 150,
-                "relativeMinScore" : 0.8,
-                "maxHits" : 3,
-                "scoring" : {
-                    "type" : "affine",
-                    "subsMatrix" : "simple(match = 10, mismatch = -19)",
-                    "gapOpenPenalty" : -40,
-                    "gapExtensionPenalty" : -11
-                }
-            }
-        },
-        "cParameters": {
-            "geneFeatureToAlign": "CExon1",
-            "minSumScore" : 40,
-            "relativeMinScore" : 0.8,
-            "parameters": {
-                "type": "kaligner",
-                "mapperKValue": 5,
-                "floatingLeftBound": false,
-                "floatingRightBound": false,
-                "mapperAbsoluteMinScore": 1.5,
-                "mapperRelativeMinScore": 0.75,
-                "mapperMatchScore": 1.0,
-                "mapperMismatchPenalty": -0.1,
-                "mapperOffsetShiftPenalty": -0.3,
-                "mapperMinSeedsDistance": 4,
-                "mapperMaxSeedsDistance": 10,
-                "minAlignmentLength": 15,
-                "maxAdjacentIndels": 2,
-                "alignmentStopPenalty": -1000,
-                "absoluteMinScore": 40.0,
-                "relativeMinScore": 0.87,
-                "maxHits": 7,
-                "scoring": {
-                    "type": "linear",
-                    "subsMatrix": "simple(match = 5, mismatch = -9)",
-                    "gapPenalty": -12
-                }
-            }
-        },
-        "vjAlignmentOrder": "VThenJ",
-        "includeDScore": false,
-        "includeCScore": false,
-        "mergerParameters": {
-            "qualityMergingAlgorithm" : "MaxSubtraction",
-            "minimalOverlap": 17,
-            "minimalIdentity": 0.9,
-            "identityType": "Unweighted"
-        },
-        "minSumScore": 120.0,
-        "maxHits": 5,
-        "relativeMinVFR3CDR3Score": 0.7,
-        "allowPartialAlignments": false,
-        "allowNoCDR3PartAlignments": false,
-        "allowChimeras": false,
-        "alignmentBoundaryTolerance": 5,
-        "minChimeraDetectionScore": 120,
-        "vjOverlapWindow": 3,
-        "readsLayout": "Opposite",
-        "saveOriginalReads": false,
-        "smartForceEdgeAlignments": true
+    "dParameters": {
+      "geneFeatureToAlign": "DRegionWithP",
+      "absoluteMinScore": 25.0,
+      "relativeMinScore": 0.85,
+      "maxHits": 3,
+      "scoring": {
+        "type": "linear",
+        "subsMatrix": "simple(match = 5, mismatch = -9)",
+        "gapPenalty": -12
+      }
     },
-    "rna-seq": {
-        "fixSeed" : true,
-        "libraryStructure": "Unknown",
-        "vParameters": {
-            "geneFeatureToAlign": "VTranscriptWithP",
-            "minSumScore" : 80,
-            "relativeMinScore" : 0.87,
-            "parameters": {
-                "type": "kaligner",
-                "mapperKValue": 5,
-                "floatingLeftBound": false,
-                "floatingRightBound": true,
-                "mapperAbsoluteMinScore": 1.5,
-                "mapperRelativeMinScore": 0.7,
-                "mapperMatchScore": 1.0,
-                "mapperMismatchPenalty": -0.1,
-                "mapperOffsetShiftPenalty": -0.3,
-                "mapperMinSeedsDistance": 4,
-                "mapperMaxSeedsDistance": 10,
-                "minAlignmentLength": 15,
-                "maxAdjacentIndels": 2,
-                "alignmentStopPenalty": -1000,
-                "absoluteMinScore": 55.0,
-                "relativeMinScore": 0.87,
-                "maxHits": 7,
-                "scoring": {
-                    "type": "linear",
-                    "subsMatrix": "simple(match = 5, mismatch = -11)",
-                    "gapPenalty": -21
-                }
-            }
-        },
-        "dParameters": {
-            "geneFeatureToAlign": "DRegionWithP",
-            "absoluteMinScore": 25.0,
-            "relativeMinScore": 0.85,
-            "maxHits": 3,
-            "scoring": {
-                "type": "linear",
-                "subsMatrix": "simple(match = 5, mismatch = -11)",
-                "gapPenalty": -21
-            }
-        },
-        "jParameters": {
-            "geneFeatureToAlign": "JRegionWithP",
-            "minSumScore" : 60,
-            "relativeMinScore" : 0.87,
-            "parameters": {
-                "type": "kaligner",
-                "mapperKValue": 5,
-                "floatingLeftBound": true,
-                "floatingRightBound": false,
-                "mapperAbsoluteMinScore": 1.5,
-                "mapperRelativeMinScore": 0.75,
-                "mapperMatchScore": 1.0,
-                "mapperMismatchPenalty": -0.1,
-                "mapperOffsetShiftPenalty": -0.3,
-                "mapperMinSeedsDistance": 4,
-                "mapperMaxSeedsDistance": 8,
-                "minAlignmentLength": 15,
-                "maxAdjacentIndels": 2,
-                "alignmentStopPenalty": -1000,
-                "absoluteMinScore": 50.0,
-                "relativeMinScore": 0.87,
-                "maxHits": 7,
-                "scoring": {
-                    "type": "linear",
-                    "subsMatrix": "simple(match = 5, mismatch = -11)",
-                    "gapPenalty": -21
-                }
-            }
-        },
-        "cParameters": {
-            "geneFeatureToAlign": "CExon1",
-            "minSumScore" : 40,
-            "relativeMinScore" : 0.87,
-            "parameters": {
-                "type": "kaligner",
-                "mapperKValue": 5,
-                "floatingLeftBound": false,
-                "floatingRightBound": false,
-                "mapperAbsoluteMinScore": 1.5,
-                "mapperRelativeMinScore": 0.75,
-                "mapperMatchScore": 1.0,
-                "mapperMismatchPenalty": -0.1,
-                "mapperOffsetShiftPenalty": -0.3,
-                "mapperMinSeedsDistance": 4,
-                "mapperMaxSeedsDistance": 10,
-                "minAlignmentLength": 15,
-                "maxAdjacentIndels": 2,
-                "alignmentStopPenalty": -1000,
-                "absoluteMinScore": 40.0,
-                "relativeMinScore": 0.87,
-                "maxHits": 7,
-                "scoring": {
-                    "type": "linear",
-                    "subsMatrix": "simple(match = 5, mismatch = -11)",
-                    "gapPenalty": -21
-                }
-            }
-        },
-        "vjAlignmentOrder": "VThenJ",
-        "includeDScore": true,
-        "includeCScore": true,
-        "mergerParameters": {
-            "qualityMergingAlgorithm" : "MaxSubtraction",
-            "minimalOverlap": 17,
-            "minimalIdentity": 0.9,
-            "identityType": "Unweighted"
-        },
-        "minSumScore": 200.0,
-        "maxHits": 5,
-        "relativeMinVFR3CDR3Score": 0.7,
-        "allowPartialAlignments": false,
-        "allowNoCDR3PartAlignments": false,
-        "allowChimeras": false,
-        "alignmentBoundaryTolerance": 5,
-        "minChimeraDetectionScore": 120,
-        "vjOverlapWindow": 3,
-        "readsLayout": "Opposite",
-        "saveOriginalReads": false,
-        "smartForceEdgeAlignments": true
+    "jParameters": {
+      "geneFeatureToAlign": "JRegionWithP",
+      "minSumScore": 40,
+      "relativeMinScore": 0.97,
+      "parameters": {
+        "type": "kaligner",
+        "mapperKValue": 5,
+        "floatingLeftBound": true,
+        "floatingRightBound": false,
+        "mapperAbsoluteMinScore": 1.5,
+        "mapperRelativeMinScore": 0.75,
+        "mapperMatchScore": 1.0,
+        "mapperMismatchPenalty": -0.1,
+        "mapperOffsetShiftPenalty": -0.3,
+        "mapperMinSeedsDistance": 4,
+        "mapperMaxSeedsDistance": 10,
+        "minAlignmentLength": 15,
+        "maxAdjacentIndels": 2,
+        "alignmentStopPenalty": -1000,
+        "absoluteMinScore": 40.0,
+        "relativeMinScore": 0.87,
+        "maxHits": 7,
+        "scoring": {
+          "type": "linear",
+          "subsMatrix": "simple(match = 5, mismatch = -9)",
+          "gapPenalty": -12
+        }
+      }
     },
-    "dna.multiplex.rstrand.v1": {
-        "fixSeed": true,
-        "libraryStructure": "R1V",
-        "vParameters": {
-            "geneFeatureToAlign": "VRegionWithP",
-            "minSumScore": 200,
-            "relativeMinScore": 0.9,
-            "parameters": {
-                "type": "kaligner2",
-                "mapperNValue": 10,
-                "mapperKValue": 1,
-                "floatingLeftBound": false,
-                "floatingRightBound": true,
-                "mapperAbsoluteMinClusterScore": 102,
-                "mapperExtraClusterScore": -38,
-                "mapperMatchScore": 95,
-                "mapperMismatchScore": -14,
-                "mapperOffsetShiftScore": -82,
-                "mapperSlotCount": 6,
-                "mapperMaxClusters": 4,
-                "mapperMaxClusterIndels": 4,
-                "mapperKMersPerPosition": 4,
-                "mapperAbsoluteMinScore": 100,
-                "mapperRelativeMinScore": 0.8,
-                "mapperMinSeedsDistance": 5,
-                "mapperMaxSeedsDistance": 15,
-                "alignmentStopPenalty": 0,
-                "absoluteMinScore": 150,
-                "relativeMinScore": 0.8,
-                "maxHits": 4,
-                "scoring": {
-                    "type": "affine",
-                    "subsMatrix": "simple(match = 10, mismatch = -19)",
-                    "gapOpenPenalty": -40,
-                    "gapExtensionPenalty": -11
-                }
-            }
-        },
-        "dParameters": {
-            "geneFeatureToAlign": "DRegionWithP",
-            "absoluteMinScore": 25.0,
-            "relativeMinScore": 0.85,
-            "maxHits": 3,
-            "scoring": {
-                "type": "linear",
-                "subsMatrix": "simple(match = 5, mismatch = -9)",
-                "gapPenalty": -12
-            }
-        },
-        "jParameters": {
-            "geneFeatureToAlign": "JRegionWithP",
-            "minSumScore": 140,
-            "relativeMinScore": 0.8,
-            "parameters": {
-                "type": "kaligner2",
-                "mapperNValue": 7,
-                "mapperKValue": 1,
-                "floatingLeftBound": true,
-                "floatingRightBound": false,
-                "mapperAbsoluteMinClusterScore": 102,
-                "mapperExtraClusterScore": -38,
-                "mapperMatchScore": 95,
-                "mapperMismatchScore": -14,
-                "mapperOffsetShiftScore": -82,
-                "mapperSlotCount": 6,
-                "mapperMaxClusters": 4,
-                "mapperMaxClusterIndels": 4,
-                "mapperKMersPerPosition": 4,
-                "mapperAbsoluteMinScore": 100,
-                "mapperRelativeMinScore": 0.8,
-                "mapperMinSeedsDistance": 5,
-                "mapperMaxSeedsDistance": 5,
-                "alignmentStopPenalty": 0,
-                "absoluteMinScore": 140,
-                "relativeMinScore": 0.8,
-                "maxHits": 3,
-                "scoring": {
-                    "type": "affine",
-                    "subsMatrix": "simple(match = 10, mismatch = -19)",
-                    "gapOpenPenalty": -40,
-                    "gapExtensionPenalty": -11
-                }
-            }
-        },
-        "cParameters": {
-            "geneFeatureToAlign": "CExon1",
-            "minSumScore": 40,
-            "relativeMinScore": 0.8,
-            "parameters": {
-                "type": "kaligner",
-                "mapperKValue": 5,
-                "floatingLeftBound": false,
-                "floatingRightBound": false,
-                "mapperAbsoluteMinScore": 1.5,
-                "mapperRelativeMinScore": 0.75,
-                "mapperMatchScore": 1.0,
-                "mapperMismatchPenalty": -0.1,
-                "mapperOffsetShiftPenalty": -0.3,
-                "mapperMinSeedsDistance": 4,
-                "mapperMaxSeedsDistance": 10,
-                "minAlignmentLength": 15,
-                "maxAdjacentIndels": 2,
-                "alignmentStopPenalty": -1000,
-                "absoluteMinScore": 40.0,
-                "relativeMinScore": 0.87,
-                "maxHits": 7,
-                "scoring": {
-                    "type": "linear",
-                    "subsMatrix": "simple(match = 5, mismatch = -9)",
-                    "gapPenalty": -12
-                }
-            }
-        },
-        "vjAlignmentOrder": "VThenJ",
-        "includeDScore": false,
-        "includeCScore": false,
-        "mergerParameters": {
-            "qualityMergingAlgorithm": "MaxSubtraction",
-            "minimalOverlap": 17,
-            "minimalIdentity": 0.9,
-            "identityType": "Unweighted"
-        },
-        "minSumScore": 300,
-        "maxHits": 5,
-        "relativeMinVFR3CDR3Score": 0.7,
-        "allowPartialAlignments": false,
-        "allowNoCDR3PartAlignments": false,
-        "allowChimeras": false,
-        "alignmentBoundaryTolerance": 5,
-        "minChimeraDetectionScore": 120,
-        "vjOverlapWindow": 3,
-        "readsLayout": "ReverseOnly",
-        "saveOriginalReads": false,
-        "smartForceEdgeAlignments": true
-    }
+    "cParameters": {
+      "geneFeatureToAlign": "CExon1",
+      "minSumScore": 40,
+      "relativeMinScore": 0.97,
+      "parameters": {
+        "type": "kaligner",
+        "mapperKValue": 5,
+        "floatingLeftBound": false,
+        "floatingRightBound": false,
+        "mapperAbsoluteMinScore": 1.5,
+        "mapperRelativeMinScore": 0.75,
+        "mapperMatchScore": 1.0,
+        "mapperMismatchPenalty": -0.1,
+        "mapperOffsetShiftPenalty": -0.3,
+        "mapperMinSeedsDistance": 4,
+        "mapperMaxSeedsDistance": 10,
+        "minAlignmentLength": 15,
+        "maxAdjacentIndels": 2,
+        "alignmentStopPenalty": -1000,
+        "absoluteMinScore": 40.0,
+        "relativeMinScore": 0.87,
+        "maxHits": 7,
+        "scoring": {
+          "type": "linear",
+          "subsMatrix": "simple(match = 5, mismatch = -9)",
+          "gapPenalty": -12
+        }
+      }
+    },
+    "vjAlignmentOrder": "VThenJ",
+    "includeDScore": false,
+    "includeCScore": false,
+    "mergerParameters": {
+      "qualityMergingAlgorithm": "MaxSubtraction",
+      "minimalOverlap": 17,
+      "minimalIdentity": 0.9,
+      "identityType": "Unweighted"
+    },
+    "minSumScore": 120.0,
+    "maxHits": 5,
+    "relativeMinVFR3CDR3Score": 0.7,
+    "allowPartialAlignments": false,
+    "allowNoCDR3PartAlignments": false,
+    "allowChimeras": false,
+    "alignmentBoundaryTolerance": 5,
+    "minChimeraDetectionScore": 120,
+    "vjOverlapWindow": 3,
+    "readsLayout": "Opposite",
+    "saveOriginalReads": false,
+    "smartForceEdgeAlignments": true
+  },
+  "kaligner2": {
+    "fixSeed": true,
+    "libraryStructure": "Unknown",
+    "vParameters": {
+      "geneFeatureToAlign": "VRegionWithP",
+      "minSumScore": 150,
+      "relativeMinScore": 0.97,
+      "parameters": {
+        "type": "kaligner2",
+        "mapperNValue": 8,
+        "mapperKValue": 1,
+        "floatingLeftBound": true,
+        "floatingRightBound": true,
+        "mapperAbsoluteMinClusterScore": 102,
+        "mapperExtraClusterScore": -38,
+        "mapperMatchScore": 95,
+        "mapperMismatchScore": -14,
+        "mapperOffsetShiftScore": -82,
+        "mapperSlotCount": 6,
+        "mapperMaxClusters": 4,
+        "mapperMaxClusterIndels": 4,
+        "mapperKMersPerPosition": 4,
+        "mapperAbsoluteMinScore": 100,
+        "mapperRelativeMinScore": 0.8,
+        "mapperMinSeedsDistance": 5,
+        "mapperMaxSeedsDistance": 5,
+        "alignmentStopPenalty": 0,
+        "absoluteMinScore": 150,
+        "relativeMinScore": 0.8,
+        "maxHits": 3,
+        "scoring": {
+          "type": "affine",
+          "subsMatrix": "simple(match = 10, mismatch = -19)",
+          "gapOpenPenalty": -40,
+          "gapExtensionPenalty": -11
+        }
+      }
+    },
+    "dParameters": {
+      "geneFeatureToAlign": "DRegionWithP",
+      "absoluteMinScore": 25.0,
+      "relativeMinScore": 0.85,
+      "maxHits": 3,
+      "scoring": {
+        "type": "linear",
+        "subsMatrix": "simple(match = 5, mismatch = -9)",
+        "gapPenalty": -12
+      }
+    },
+    "jParameters": {
+      "geneFeatureToAlign": "JRegionWithP",
+      "minSumScore": 150,
+      "relativeMinScore": 0.97,
+      "parameters": {
+        "type": "kaligner2",
+        "mapperNValue": 8,
+        "mapperKValue": 1,
+        "floatingLeftBound": true,
+        "floatingRightBound": false,
+        "mapperAbsoluteMinClusterScore": 102,
+        "mapperExtraClusterScore": -38,
+        "mapperMatchScore": 95,
+        "mapperMismatchScore": -14,
+        "mapperOffsetShiftScore": -82,
+        "mapperSlotCount": 6,
+        "mapperMaxClusters": 4,
+        "mapperMaxClusterIndels": 4,
+        "mapperKMersPerPosition": 4,
+        "mapperAbsoluteMinScore": 100,
+        "mapperRelativeMinScore": 0.8,
+        "mapperMinSeedsDistance": 5,
+        "mapperMaxSeedsDistance": 5,
+        "alignmentStopPenalty": 0,
+        "absoluteMinScore": 150,
+        "relativeMinScore": 0.8,
+        "maxHits": 3,
+        "scoring": {
+          "type": "affine",
+          "subsMatrix": "simple(match = 10, mismatch = -19)",
+          "gapOpenPenalty": -40,
+          "gapExtensionPenalty": -11
+        }
+      }
+    },
+    "cParameters": {
+      "geneFeatureToAlign": "CExon1",
+      "minSumScore": 40,
+      "relativeMinScore": 0.97,
+      "parameters": {
+        "type": "kaligner",
+        "mapperKValue": 5,
+        "floatingLeftBound": false,
+        "floatingRightBound": false,
+        "mapperAbsoluteMinScore": 1.5,
+        "mapperRelativeMinScore": 0.75,
+        "mapperMatchScore": 1.0,
+        "mapperMismatchPenalty": -0.1,
+        "mapperOffsetShiftPenalty": -0.3,
+        "mapperMinSeedsDistance": 4,
+        "mapperMaxSeedsDistance": 10,
+        "minAlignmentLength": 15,
+        "maxAdjacentIndels": 2,
+        "alignmentStopPenalty": -1000,
+        "absoluteMinScore": 40.0,
+        "relativeMinScore": 0.87,
+        "maxHits": 7,
+        "scoring": {
+          "type": "linear",
+          "subsMatrix": "simple(match = 5, mismatch = -9)",
+          "gapPenalty": -12
+        }
+      }
+    },
+    "vjAlignmentOrder": "VThenJ",
+    "includeDScore": false,
+    "includeCScore": false,
+    "mergerParameters": {
+      "qualityMergingAlgorithm": "MaxSubtraction",
+      "minimalOverlap": 17,
+      "minimalIdentity": 0.9,
+      "identityType": "Unweighted"
+    },
+    "minSumScore": 120.0,
+    "maxHits": 5,
+    "relativeMinVFR3CDR3Score": 0.7,
+    "allowPartialAlignments": false,
+    "allowNoCDR3PartAlignments": false,
+    "allowChimeras": false,
+    "alignmentBoundaryTolerance": 5,
+    "minChimeraDetectionScore": 120,
+    "vjOverlapWindow": 3,
+    "readsLayout": "Opposite",
+    "saveOriginalReads": false,
+    "smartForceEdgeAlignments": true
+  },
+  "rna-seq": {
+    "fixSeed": true,
+    "libraryStructure": "Unknown",
+    "vParameters": {
+      "geneFeatureToAlign": "VTranscriptWithP",
+      "minSumScore": 80,
+      "relativeMinScore": 0.97,
+      "parameters": {
+        "type": "kaligner",
+        "mapperKValue": 5,
+        "floatingLeftBound": false,
+        "floatingRightBound": true,
+        "mapperAbsoluteMinScore": 1.5,
+        "mapperRelativeMinScore": 0.7,
+        "mapperMatchScore": 1.0,
+        "mapperMismatchPenalty": -0.1,
+        "mapperOffsetShiftPenalty": -0.3,
+        "mapperMinSeedsDistance": 4,
+        "mapperMaxSeedsDistance": 10,
+        "minAlignmentLength": 15,
+        "maxAdjacentIndels": 2,
+        "alignmentStopPenalty": -1000,
+        "absoluteMinScore": 55.0,
+        "relativeMinScore": 0.87,
+        "maxHits": 7,
+        "scoring": {
+          "type": "linear",
+          "subsMatrix": "simple(match = 5, mismatch = -11)",
+          "gapPenalty": -21
+        }
+      }
+    },
+    "dParameters": {
+      "geneFeatureToAlign": "DRegionWithP",
+      "absoluteMinScore": 25.0,
+      "relativeMinScore": 0.85,
+      "maxHits": 3,
+      "scoring": {
+        "type": "linear",
+        "subsMatrix": "simple(match = 5, mismatch = -11)",
+        "gapPenalty": -21
+      }
+    },
+    "jParameters": {
+      "geneFeatureToAlign": "JRegionWithP",
+      "minSumScore": 60,
+      "relativeMinScore": 0.97,
+      "parameters": {
+        "type": "kaligner",
+        "mapperKValue": 5,
+        "floatingLeftBound": true,
+        "floatingRightBound": false,
+        "mapperAbsoluteMinScore": 1.5,
+        "mapperRelativeMinScore": 0.75,
+        "mapperMatchScore": 1.0,
+        "mapperMismatchPenalty": -0.1,
+        "mapperOffsetShiftPenalty": -0.3,
+        "mapperMinSeedsDistance": 4,
+        "mapperMaxSeedsDistance": 8,
+        "minAlignmentLength": 15,
+        "maxAdjacentIndels": 2,
+        "alignmentStopPenalty": -1000,
+        "absoluteMinScore": 50.0,
+        "relativeMinScore": 0.87,
+        "maxHits": 7,
+        "scoring": {
+          "type": "linear",
+          "subsMatrix": "simple(match = 5, mismatch = -11)",
+          "gapPenalty": -21
+        }
+      }
+    },
+    "cParameters": {
+      "geneFeatureToAlign": "CExon1",
+      "minSumScore": 40,
+      "relativeMinScore": 0.97,
+      "parameters": {
+        "type": "kaligner",
+        "mapperKValue": 5,
+        "floatingLeftBound": false,
+        "floatingRightBound": false,
+        "mapperAbsoluteMinScore": 1.5,
+        "mapperRelativeMinScore": 0.75,
+        "mapperMatchScore": 1.0,
+        "mapperMismatchPenalty": -0.1,
+        "mapperOffsetShiftPenalty": -0.3,
+        "mapperMinSeedsDistance": 4,
+        "mapperMaxSeedsDistance": 10,
+        "minAlignmentLength": 15,
+        "maxAdjacentIndels": 2,
+        "alignmentStopPenalty": -1000,
+        "absoluteMinScore": 40.0,
+        "relativeMinScore": 0.87,
+        "maxHits": 7,
+        "scoring": {
+          "type": "linear",
+          "subsMatrix": "simple(match = 5, mismatch = -11)",
+          "gapPenalty": -21
+        }
+      }
+    },
+    "vjAlignmentOrder": "VThenJ",
+    "includeDScore": true,
+    "includeCScore": true,
+    "mergerParameters": {
+      "qualityMergingAlgorithm": "MaxSubtraction",
+      "minimalOverlap": 17,
+      "minimalIdentity": 0.9,
+      "identityType": "Unweighted"
+    },
+    "minSumScore": 200.0,
+    "maxHits": 5,
+    "relativeMinVFR3CDR3Score": 0.7,
+    "allowPartialAlignments": false,
+    "allowNoCDR3PartAlignments": false,
+    "allowChimeras": false,
+    "alignmentBoundaryTolerance": 5,
+    "minChimeraDetectionScore": 120,
+    "vjOverlapWindow": 3,
+    "readsLayout": "Opposite",
+    "saveOriginalReads": false,
+    "smartForceEdgeAlignments": true
+  },
+  "dna.multiplex.rstrand.v1": {
+    "fixSeed": true,
+    "libraryStructure": "R1V",
+    "vParameters": {
+      "geneFeatureToAlign": "VRegionWithP",
+      "minSumScore": 200,
+      "relativeMinScore": 0.97,
+      "parameters": {
+        "type": "kaligner2",
+        "mapperNValue": 10,
+        "mapperKValue": 1,
+        "floatingLeftBound": false,
+        "floatingRightBound": true,
+        "mapperAbsoluteMinClusterScore": 102,
+        "mapperExtraClusterScore": -38,
+        "mapperMatchScore": 95,
+        "mapperMismatchScore": -14,
+        "mapperOffsetShiftScore": -82,
+        "mapperSlotCount": 6,
+        "mapperMaxClusters": 4,
+        "mapperMaxClusterIndels": 4,
+        "mapperKMersPerPosition": 4,
+        "mapperAbsoluteMinScore": 100,
+        "mapperRelativeMinScore": 0.8,
+        "mapperMinSeedsDistance": 5,
+        "mapperMaxSeedsDistance": 15,
+        "alignmentStopPenalty": 0,
+        "absoluteMinScore": 150,
+        "relativeMinScore": 0.8,
+        "maxHits": 4,
+        "scoring": {
+          "type": "affine",
+          "subsMatrix": "simple(match = 10, mismatch = -19)",
+          "gapOpenPenalty": -40,
+          "gapExtensionPenalty": -11
+        }
+      }
+    },
+    "dParameters": {
+      "geneFeatureToAlign": "DRegionWithP",
+      "absoluteMinScore": 25.0,
+      "relativeMinScore": 0.85,
+      "maxHits": 3,
+      "scoring": {
+        "type": "linear",
+        "subsMatrix": "simple(match = 5, mismatch = -9)",
+        "gapPenalty": -12
+      }
+    },
+    "jParameters": {
+      "geneFeatureToAlign": "JRegionWithP",
+      "minSumScore": 140,
+      "relativeMinScore": 0.97,
+      "parameters": {
+        "type": "kaligner2",
+        "mapperNValue": 7,
+        "mapperKValue": 1,
+        "floatingLeftBound": true,
+        "floatingRightBound": false,
+        "mapperAbsoluteMinClusterScore": 102,
+        "mapperExtraClusterScore": -38,
+        "mapperMatchScore": 95,
+        "mapperMismatchScore": -14,
+        "mapperOffsetShiftScore": -82,
+        "mapperSlotCount": 6,
+        "mapperMaxClusters": 4,
+        "mapperMaxClusterIndels": 4,
+        "mapperKMersPerPosition": 4,
+        "mapperAbsoluteMinScore": 100,
+        "mapperRelativeMinScore": 0.8,
+        "mapperMinSeedsDistance": 5,
+        "mapperMaxSeedsDistance": 5,
+        "alignmentStopPenalty": 0,
+        "absoluteMinScore": 140,
+        "relativeMinScore": 0.8,
+        "maxHits": 3,
+        "scoring": {
+          "type": "affine",
+          "subsMatrix": "simple(match = 10, mismatch = -19)",
+          "gapOpenPenalty": -40,
+          "gapExtensionPenalty": -11
+        }
+      }
+    },
+    "cParameters": {
+      "geneFeatureToAlign": "CExon1",
+      "minSumScore": 40,
+      "relativeMinScore": 0.97,
+      "parameters": {
+        "type": "kaligner",
+        "mapperKValue": 5,
+        "floatingLeftBound": false,
+        "floatingRightBound": false,
+        "mapperAbsoluteMinScore": 1.5,
+        "mapperRelativeMinScore": 0.75,
+        "mapperMatchScore": 1.0,
+        "mapperMismatchPenalty": -0.1,
+        "mapperOffsetShiftPenalty": -0.3,
+        "mapperMinSeedsDistance": 4,
+        "mapperMaxSeedsDistance": 10,
+        "minAlignmentLength": 15,
+        "maxAdjacentIndels": 2,
+        "alignmentStopPenalty": -1000,
+        "absoluteMinScore": 40.0,
+        "relativeMinScore": 0.87,
+        "maxHits": 7,
+        "scoring": {
+          "type": "linear",
+          "subsMatrix": "simple(match = 5, mismatch = -9)",
+          "gapPenalty": -12
+        }
+      }
+    },
+    "vjAlignmentOrder": "VThenJ",
+    "includeDScore": false,
+    "includeCScore": false,
+    "mergerParameters": {
+      "qualityMergingAlgorithm": "MaxSubtraction",
+      "minimalOverlap": 17,
+      "minimalIdentity": 0.9,
+      "identityType": "Unweighted"
+    },
+    "minSumScore": 300,
+    "maxHits": 5,
+    "relativeMinVFR3CDR3Score": 0.7,
+    "allowPartialAlignments": false,
+    "allowNoCDR3PartAlignments": false,
+    "allowChimeras": false,
+    "alignmentBoundaryTolerance": 5,
+    "minChimeraDetectionScore": 120,
+    "vjOverlapWindow": 3,
+    "readsLayout": "ReverseOnly",
+    "saveOriginalReads": false,
+    "smartForceEdgeAlignments": true
+  }
 }
