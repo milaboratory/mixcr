@@ -38,8 +38,8 @@ public class ClusteringFilterTest {
     @Test
     public void test1() throws Exception {
         ClusteringFilter paramentrs = new RelativeConcentrationFilter(1E-6);
-        String str = GlobalObjectMappers.PRETTY.writeValueAsString(paramentrs);
-        ClusteringFilter deser = GlobalObjectMappers.PRETTY.readValue(str, ClusteringFilter.class);
+        String str = GlobalObjectMappers.getPretty().writeValueAsString(paramentrs);
+        ClusteringFilter deser = GlobalObjectMappers.getPretty().readValue(str, ClusteringFilter.class);
         assertEquals(paramentrs, deser);
     }
 }

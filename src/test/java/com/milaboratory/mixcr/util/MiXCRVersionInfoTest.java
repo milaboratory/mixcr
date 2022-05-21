@@ -49,8 +49,8 @@ public class MiXCRVersionInfoTest {
         Assert.assertTrue(versionString.contains("RepSeq.IO"));
         Assert.assertTrue(versionString.contains("MiLib"));
         Assert.assertTrue(versionString.contains("MiXCR"));
-        String pretty = GlobalObjectMappers.PRETTY.writeValueAsString(version);
-        MiXCRVersionInfo v = GlobalObjectMappers.PRETTY.readValue(pretty, MiXCRVersionInfo.class);
+        String pretty = GlobalObjectMappers.getPretty().writeValueAsString(version);
+        MiXCRVersionInfo v = GlobalObjectMappers.getPretty().readValue(pretty, MiXCRVersionInfo.class);
         assertEquals(version, v);
     }
 }

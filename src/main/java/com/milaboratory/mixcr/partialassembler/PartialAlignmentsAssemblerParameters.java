@@ -156,7 +156,7 @@ public class PartialAlignmentsAssemblerParameters {
     @Override
     public String toString() {
         try {
-            return GlobalObjectMappers.PRETTY.writeValueAsString(this);
+            return GlobalObjectMappers.getPretty().writeValueAsString(this);
         } catch (JsonProcessingException e) {
             throw new RuntimeException();
         }
@@ -164,7 +164,7 @@ public class PartialAlignmentsAssemblerParameters {
 
     public static PartialAlignmentsAssemblerParameters getDefault() {
         try {
-            return GlobalObjectMappers.ONE_LINE.readValue(
+            return GlobalObjectMappers.getOneLine().readValue(
                     PartialAlignmentsAssemblerParameters.class.getClassLoader().getResourceAsStream("parameters/partial_assembler_parameters.json")
                     , PartialAlignmentsAssemblerParameters.class);
         } catch (IOException e) {

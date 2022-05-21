@@ -34,10 +34,12 @@ import com.milaboratory.milm.LM;
 import com.milaboratory.milm.LicenseError;
 import com.milaboratory.milm.LicenseErrorType;
 import com.milaboratory.mixcr.cli.postanalysis.*;
+import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.TempFileManager;
 import com.milaboratory.util.VersionInfo;
 import io.repseq.core.VDJCLibraryRegistry;
 import io.repseq.seqbase.SequenceResolvers;
+import kotlin.Unit;
 import picocli.CommandLine;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.ParameterException;
@@ -53,6 +55,7 @@ import java.util.Scanner;
 import java.util.function.Consumer;
 import java.util.prefs.Preferences;
 
+import static com.fasterxml.jackson.module.kotlin.ExtensionsKt.kotlinModule;
 import static com.milaboratory.mixcr.cli.CommandCorrectTags.CORRECT_TAGS_COMMAND_NAME;
 
 public final class Main {
@@ -130,6 +133,8 @@ public final class Main {
             e.printStackTrace();
             System.exit(2);
         });
+
+        GlobalObjectMappers.addModifier(om -> om.registerModule(kotlinModule(builder -> Unit.INSTANCE)));
 
         handleParseResult(parseArgs(args).getParseResult(), args);
     }

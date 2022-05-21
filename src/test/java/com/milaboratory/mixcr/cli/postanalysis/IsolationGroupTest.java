@@ -13,8 +13,8 @@ public class IsolationGroupTest {
     @Test
     public void test1() throws JsonProcessingException {
         IsolationGroup expected = new IsolationGroup(Chains.TRA_NAMED, new HashMap<>());
-        String str = GlobalObjectMappers.PRETTY.writeValueAsString(expected);
-        IsolationGroup actual = GlobalObjectMappers.PRETTY.readValue(str, IsolationGroup.class);
+        String str = GlobalObjectMappers.getPretty().writeValueAsString(expected);
+        IsolationGroup actual = GlobalObjectMappers.getPretty().readValue(str, IsolationGroup.class);
         Assert.assertEquals(expected, actual);
     }
 }

@@ -39,6 +39,6 @@ public class AlignerReportTest {
     @Test
     public void test1() throws Exception {
         AlignerReport rep = new AlignerReport();
-        assertNotNull(GlobalObjectMappers.PRETTY.writeValueAsString(rep));
+        assertNotNull(GlobalObjectMappers.getPretty().writeValueAsString(rep));
     }
 }

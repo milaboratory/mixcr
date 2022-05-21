@@ -64,7 +64,7 @@ public class CommandPipelineInfo extends ACommandMiXCR {
     }
 
     public static void analysisPipelineInfoJson(String file) throws JsonProcessingException {
-        System.out.println(GlobalObjectMappers.PRETTY.writeValueAsString(PipelineConfigurationReaderMiXCR
+        System.out.println(GlobalObjectMappers.getPretty().writeValueAsString(PipelineConfigurationReaderMiXCR
                 .sFromFile(file)));
     }
 
