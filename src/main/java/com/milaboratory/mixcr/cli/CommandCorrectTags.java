@@ -5,6 +5,8 @@ import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.Processor;
 import cc.redberry.pipe.blocks.FilteringPort;
 import cc.redberry.pipe.util.CountingOutputPort;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.milaboratory.cli.ActionConfiguration;
@@ -126,11 +128,6 @@ public class CommandCorrectTags extends ACommandWithSmartOverwriteWithSingleInpu
         CorrectionReport report;
         int[] targetTagIndices;
         try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(in)) {
-            TagCorrector corrector = new TagCorrector(getParameters(),
-                    tempFolder(), "",
-                    memoryBudget,
-                    4, 4);
-            SmartProgressReporter.startProgressReport(corrector);
             TagsInfo tagsInfo = reader.getTagsInfo();
 
             List<String> tagNames = new ArrayList<>();
@@ -145,6 +142,12 @@ public class CommandCorrectTags extends ACommandWithSmartOverwriteWithSingleInpu
             targetTagIndices = indicesBuilder.toArray();
 
             System.out.println("Correction will be applied to the following tags: " + String.join(", ", tagNames));
+
+            TagCorrector corrector = new TagCorrector(getParameters(),
+                    tempFolder(), "",
+                    memoryBudget,
+                    4, 4);
+            SmartProgressReporter.startProgressReport(corrector);
 
             // Extractor of tag information from the alignments for the tag corrector
             Processor<VDJCAlignments, NSequenceWithQuality[]> mapper = input -> {
@@ -238,10 +241,11 @@ public class CommandCorrectTags extends ACommandWithSmartOverwriteWithSingleInpu
     }
 
     public static final class CorrectTagsConfiguration implements ActionConfiguration<CorrectTagsConfiguration> {
-        final TagCorrectorParameters params;
+        final TagCorrectorParameters parameters;
 
-        public CorrectTagsConfiguration(TagCorrectorParameters params) {
-            this.params = params;
+        @JsonCreator
+        public CorrectTagsConfiguration(@JsonProperty("parameters") TagCorrectorParameters parameters) {
+            this.parameters = parameters;
         }
 
         @Override
@@ -254,12 +258,12 @@ public class CommandCorrectTags extends ACommandWithSmartOverwriteWithSingleInpu
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             CorrectTagsConfiguration that = (CorrectTagsConfiguration) o;
-            return params.equals(that.params);
+            return parameters.equals(that.parameters);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(params);
+            return Objects.hash(parameters);
         }
     }
 }
