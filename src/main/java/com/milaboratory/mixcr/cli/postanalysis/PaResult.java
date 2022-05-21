@@ -39,14 +39,14 @@ public final class PaResult {
     public static void writeJson(Path path, PaResult paResult) {
         if (path.getFileName().toString().endsWith(".json")) {
             try {
-                GlobalObjectMappers.PRETTY.writeValue(path.toFile(), paResult);
+                GlobalObjectMappers.getPretty().writeValue(path.toFile(), paResult);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         } else if (path.getFileName().toString().endsWith(".json.gz")) {
             try (FileOutputStream fs = new FileOutputStream(path.toFile());
                  GZIPOutputStream zs = new GZIPOutputStream(new BufferedOutputStream(fs))) {
-                GlobalObjectMappers.ONE_LINE.writeValue(zs, paResult);
+                GlobalObjectMappers.getOneLine().writeValue(zs, paResult);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -57,14 +57,14 @@ public final class PaResult {
     public static PaResult readJson(Path path) {
         if (path.getFileName().toString().endsWith(".json")) {
             try {
-                return GlobalObjectMappers.PRETTY.readValue(path.toFile(), PaResult.class);
+                return GlobalObjectMappers.getPretty().readValue(path.toFile(), PaResult.class);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         } else if (path.getFileName().toString().endsWith(".json.gz"))
             try (FileInputStream fs = new FileInputStream(path.toFile());
                  GZIPInputStream zs = new GZIPInputStream(new BufferedInputStream(fs))) {
-                return GlobalObjectMappers.ONE_LINE.readValue(zs, PaResult.class);
+                return GlobalObjectMappers.getOneLine().readValue(zs, PaResult.class);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

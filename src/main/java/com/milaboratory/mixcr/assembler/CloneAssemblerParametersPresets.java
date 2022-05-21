@@ -54,7 +54,7 @@ public final class CloneAssemblerParametersPresets {
                         TypeReference<HashMap<String, CloneAssemblerParameters>> typeRef
                                 = new TypeReference<HashMap<String, CloneAssemblerParameters>>() {
                         };
-                        map = GlobalObjectMappers.ONE_LINE.readValue(is, typeRef);
+                        map = GlobalObjectMappers.getOneLine().readValue(is, typeRef);
                     } catch (IOException ioe) {
                         throw new RuntimeException(ioe);
                     }

@@ -78,10 +78,11 @@ repositories {
     }
 }
 
-val miplotsVersion = "0.1-19-master"
-val milibVersion = "1.15.0-32-master"
+val milibVersion = "1.15.0-38-master"
 val repseqioVersion = "1.3.5-26-master"
-val jacksonVersion = "2.13.2.2"
+val mitoolVersion = "1.3.5-25-master"
+val miplotsVersion = "0.1-19-master"
+val jacksonBomVersion = "2.13.3"
 
 dependencies {
     api("com.milaboratory:milib:$milibVersion")
@@ -93,7 +94,9 @@ dependencies {
     // implementation("com.milaboratory:milm2-jvm:0.2.0-test-2") { isChanging = true }
     implementation("com.milaboratory:milm2-jvm:1.1.0")
 
-    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+    implementation(platform("com.fasterxml.jackson:jackson-bom:$jacksonBomVersion"))
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+
     implementation("commons-io:commons-io:2.11.0")
     implementation("org.lz4:lz4-java:1.8.0")
     implementation("net.sf.trove4j:trove4j:3.0.3")

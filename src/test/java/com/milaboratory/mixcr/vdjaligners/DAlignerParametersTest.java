@@ -42,8 +42,8 @@ public class DAlignerParametersTest {
     public void test1() throws Exception {
         DAlignerParameters paramentrs = new DAlignerParameters(GeneFeature.DRegion,
                 0.85f, 30.0f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring());
-        String str = GlobalObjectMappers.PRETTY.writeValueAsString(paramentrs);
-        DAlignerParameters deser = GlobalObjectMappers.PRETTY.readValue(str, DAlignerParameters.class);
+        String str = GlobalObjectMappers.getPretty().writeValueAsString(paramentrs);
+        DAlignerParameters deser = GlobalObjectMappers.getPretty().readValue(str, DAlignerParameters.class);
         assertEquals(paramentrs, deser);
         DAlignerParameters clone = deser.clone();
         assertEquals(paramentrs, clone);

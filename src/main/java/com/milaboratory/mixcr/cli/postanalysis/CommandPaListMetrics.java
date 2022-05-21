@@ -23,7 +23,7 @@ public class CommandPaListMetrics extends ACommandMiXCR {
     public void run0() {
         PaResult paResult;
         try {
-            paResult = GlobalObjectMappers.PRETTY.readValue(new File(in), PaResult.class);
+            paResult = GlobalObjectMappers.getPretty().readValue(new File(in), PaResult.class);
         } catch (IOException e) {
             throwValidationException("Corrupted PA file.");
             throw new RuntimeException();

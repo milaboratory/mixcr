@@ -232,7 +232,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
         VDJCAlignerParameters alignerParameters;
         if (alignerParametersName.endsWith(".json")) {
             try {
-                alignerParameters = GlobalObjectMappers.ONE_LINE.readValue(new File(alignerParametersName), VDJCAlignerParameters.class);
+                alignerParameters = GlobalObjectMappers.getOneLine().readValue(new File(alignerParametersName), VDJCAlignerParameters.class);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
