@@ -29,6 +29,8 @@
  */
 package com.milaboratory.mixcr.export;
 
+import com.milaboratory.mixcr.basictypes.VDJCFileHeaderData;
+
 public interface Field<T> {
     boolean canExtractFrom(Class type);
 
@@ -40,5 +42,5 @@ public interface Field<T> {
 
     String metaVars();
 
-    FieldExtractor<T> create(OutputMode outputMode, String[] args);
+    FieldExtractor<T> create(OutputMode outputMode, VDJCFileHeaderData headerData, String[] args);
 }

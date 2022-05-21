@@ -59,7 +59,7 @@ import java.util.function.Function;
 /**
  * Reader of CLNA file format.
  */
-public final class ClnAReader extends PipelineConfigurationReaderMiXCR implements CloneReader, AutoCloseable {
+public final class ClnAReader extends PipelineConfigurationReaderMiXCR implements CloneReader, VDJCFileHeaderData, AutoCloseable {
     final PrimitivIHybrid input;
 
     // Index data
@@ -198,6 +198,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
     /**
      * Tags info
      */
+    @Override
     public TagsInfo getTagsInfo() {
         return tagsInfo;
     }

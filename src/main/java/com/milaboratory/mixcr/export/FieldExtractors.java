@@ -41,10 +41,11 @@ import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.TranslationParameters;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
-import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.basictypes.VDJCObject;
+import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.tag.TagCounter;
+import com.milaboratory.mixcr.basictypes.tag.TagInfo;
+import com.milaboratory.mixcr.basictypes.tag.TagTuple;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.util.GlobalObjectMappers;
 import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.map.hash.TObjectFloatHashMap;
@@ -57,6 +58,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 public final class FieldExtractors {
     static final String NULL = "";
@@ -448,9 +450,9 @@ public final class FieldExtractors {
                 }
 
                 @Override
-                public FieldExtractor<VDJCAlignments> create(OutputMode outputMode, String[] args) {
+                public FieldExtractor<VDJCAlignments> create(OutputMode outputMode, VDJCFileHeaderData headerData, String[] args) {
                     System.out.println("WARNING: -readId is deprecated. Use -readIds");
-                    return super.create(outputMode, args);
+                    return super.create(outputMode, headerData, args);
                 }
             });
 
@@ -510,9 +512,9 @@ public final class FieldExtractors {
                 }
 
                 @Override
-                public FieldExtractor<VDJCAlignments> create(OutputMode outputMode, String[] args) {
+                public FieldExtractor<VDJCAlignments> create(OutputMode outputMode, VDJCFileHeaderData headerData, String[] args) {
                     System.out.println("WARNING: -descrR1 is deprecated. Use -descrsR1");
-                    return super.create(outputMode, args);
+                    return super.create(outputMode, headerData, args);
                 }
             });
 
@@ -532,9 +534,9 @@ public final class FieldExtractors {
                 }
 
                 @Override
-                public FieldExtractor<VDJCAlignments> create(OutputMode outputMode, String[] args) {
+                public FieldExtractor<VDJCAlignments> create(OutputMode outputMode, VDJCFileHeaderData headerData, String[] args) {
                     System.out.println("WARNING: -descrR2 is deprecated. Use -descrsR2");
-                    return super.create(outputMode, args);
+                    return super.create(outputMode, headerData, args);
                 }
             });
 
@@ -687,6 +689,56 @@ public final class FieldExtractors {
                 }
             });
 
+            descriptorsList.add(new AbstractField<VDJCObject>(VDJCObject.class, "-tag",
+                    "Tag value (i.e. CELL barcode or UMI sequence)") {
+                @Override
+                public int nArguments() {
+                    return 1;
+                }
+
+                @Override
+                public String metaVars() {
+                    return "tag_name";
+                }
+
+                private String getHeader(OutputMode outputMode, String name) {
+                    switch (outputMode) {
+                        case HumanFriendly:
+                            return "Tag Value " + name;
+                        case ScriptingFriendly:
+                            return "tagValue" + name;
+                    }
+                    throw new RuntimeException();
+                }
+
+                @Override
+                public FieldExtractor<VDJCObject> create(OutputMode outputMode, VDJCFileHeaderData headerData, String[] args) {
+                    String tagName = args[0];
+                    TagsInfo tagsInfo = headerData.getTagsInfo();
+                    int idx = -1;
+                    for (TagInfo ti : tagsInfo.tags)
+                        if (ti.getName().equals(tagName)) {
+                            idx = ti.getIndex();
+                            break;
+                        }
+                    if (idx == -1)
+                        throw new IllegalArgumentException("No tag with name " + tagName);
+                    int finalIdx = idx;
+                    return new AbstractFieldExtractor<VDJCObject>(getHeader(outputMode, tagName), this) {
+                        @Override
+                        public String extractValue(VDJCObject object) {
+                            TagCounter tc = object.getTagCounter();
+                            Set<TagTuple> keys = tc.keys();
+                            if (keys.size() == 0)
+                                return NULL;
+                            if (keys.size() > 1)
+                                throw new IllegalArgumentException("object has multiple tag tuples: " + tc);
+                            return keys.iterator().next().tags[finalIdx].extractKey().toString();
+                        }
+                    };
+                }
+            });
+
             // descriptorsList.add(new WP_O<String>("-tag", "Tag value", 1) {
             //     @Override
             //     protected String getParameters(String[] string) {
@@ -696,8 +748,10 @@ public final class FieldExtractors {
             //     @Override
             //     protected String getHeader(OutputMode outputMode, String name) {
             //         switch (outputMode) {
-            //             case HumanFriendly: return "Tag" + name;
-            //             case ScriptingFriendly: return "tag" + name;
+            //             case HumanFriendly:
+            //                 return "Tag" + name;
+            //             case ScriptingFriendly:
+            //                 return "tag" + name;
             //         }
             //         throw new RuntimeException();
             //     }
@@ -729,8 +783,10 @@ public final class FieldExtractors {
             //     protected String getHeader(OutputMode outputMode, int[] index) {
             //         String str = Arrays.stream(index).mapToObj(Integer::toString).collect(Collectors.joining("+"));
             //         switch (outputMode) {
-            //             case HumanFriendly: return "Unique Tag Count " + str;
-            //             case ScriptingFriendly: return "uniqueTagCount" + str;
+            //             case HumanFriendly:
+            //                 return "Unique Tag Count " + str;
+            //             case ScriptingFriendly:
+            //                 return "uniqueTagCount" + str;
             //         }
             //         throw new RuntimeException();
             //     }
@@ -777,12 +833,12 @@ public final class FieldExtractors {
         return false;
     }
 
-    public static FieldExtractor parse(OutputMode outputMode, Class clazz, String[] args) {
-        for (Field field : getFields())
-            if (field.canExtractFrom(clazz) && args[0].equalsIgnoreCase(field.getCommand()))
-                return field.create(outputMode, Arrays.copyOfRange(args, 1, args.length));
-        throw new IllegalArgumentException("Not a valid options: " + Arrays.toString(args));
-    }
+    // public static FieldExtractor parse(OutputMode outputMode, Class clazz, String[] args) {
+    //     for (Field field : getFields())
+    //         if (field.canExtractFrom(clazz) && args[0].equalsIgnoreCase(field.getCommand()))
+    //             return field.create(outputMode, , Arrays.copyOfRange(args, 1, args.length));
+    //     throw new IllegalArgumentException("Not a valid options: " + Arrays.toString(args));
+    // }
 
     public static ArrayList<String>[] getDescription(Class clazz) {
         ArrayList<String>[] description = new ArrayList[]{new ArrayList(), new ArrayList()};

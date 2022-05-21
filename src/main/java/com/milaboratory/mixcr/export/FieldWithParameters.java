@@ -29,6 +29,8 @@
  */
 package com.milaboratory.mixcr.export;
 
+import com.milaboratory.mixcr.basictypes.VDJCFileHeaderData;
+
 public abstract class FieldWithParameters<T, P> extends AbstractField<T> {
     final int nArguments;
 
@@ -49,7 +51,7 @@ public abstract class FieldWithParameters<T, P> extends AbstractField<T> {
     protected abstract String extractValue(T object, P parameters);
 
     @Override
-    public FieldExtractor<T> create(OutputMode outputMode, String[] args) {
+    public FieldExtractor<T> create(OutputMode outputMode, VDJCFileHeaderData headerData, String[] args) {
         final P params = getParameters(args);
         String header = getHeader(outputMode, params);
         return new AbstractFieldExtractor<T>(header, this) {

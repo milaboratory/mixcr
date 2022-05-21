@@ -55,6 +55,7 @@ import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.*;
 
 public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR implements
         OutputPortCloseable<VDJCAlignments>,
+        VDJCFileHeaderData,
         CanReportProgress {
     public static final int DEFAULT_CONCURRENCY = 4;
     public static final int DEFAULT_READ_AHEAD_BLOCKS = 5;
@@ -186,6 +187,7 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
         return pipelineConfiguration;
     }
 
+    @Override
     public TagsInfo getTagsInfo() {
         ensureInitialized();
         return tagsInfo;

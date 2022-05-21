@@ -53,7 +53,7 @@ import static com.milaboratory.mixcr.basictypes.ClnsWriter.MAGIC_LENGTH;
 /**
  *
  */
-public class ClnsReader extends PipelineConfigurationReaderMiXCR implements CloneReader, AutoCloseable {
+public class ClnsReader extends PipelineConfigurationReaderMiXCR implements CloneReader, VDJCFileHeaderData, AutoCloseable {
     private final PrimitivIHybrid input;
     private final VDJCLibraryRegistry libraryRegistry;
 
@@ -142,6 +142,11 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
     @Override
     public PipelineConfiguration getPipelineConfiguration() {
         return pipelineConfiguration;
+    }
+
+    @Override
+    public TagsInfo getTagsInfo() {
+        return tagsInfo;
     }
 
     public VDJCAlignerParameters getAlignerParameters() {

@@ -45,7 +45,7 @@ import java.util.*;
 /**
  * Created by poslavsky on 10/07/14.
  */
-public final class CloneSet implements Iterable<Clone>, HasFeatureToAlign {
+public final class CloneSet implements Iterable<Clone>, VDJCFileHeaderData, HasFeatureToAlign {
     String versionInfo;
     final CloneAssemblerParameters assemblerParameters;
     final VDJCAlignerParameters alignmentParameters;
@@ -134,6 +134,7 @@ public final class CloneSet implements Iterable<Clone>, HasFeatureToAlign {
         return alignmentParameters;
     }
 
+    @Override
     public TagsInfo getTagsInfo() {
         return tagsInfo;
     }
