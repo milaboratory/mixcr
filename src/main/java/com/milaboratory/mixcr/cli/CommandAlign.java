@@ -364,7 +364,8 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                 !noMerge,
                 getLibrary().getLibraryId(),
                 limit,
-                getQualityTrimmerParameters());
+                getQualityTrimmerParameters(),
+                tagPattern);
     }
 
     /** Set of parameters that completely (uniquely) determine align action */
@@ -375,7 +376,8 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
     @JsonTypeInfo(
             use = JsonTypeInfo.Id.CLASS,
             include = JsonTypeInfo.As.PROPERTY,
-            property = "type")
+            property = "type"
+    )
     public static class AlignConfiguration implements ActionConfiguration<AlignConfiguration> {
         /**
          * Aligner parameters
@@ -397,18 +399,22 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
          * Trimming parameters (null if trimming is not enabled)
          */
         public final QualityTrimmerParameters trimmerParameters;
+        /** Tag extraction pattern */
+        public final String tagPattern;
 
         @JsonCreator
         public AlignConfiguration(@JsonProperty("alignerParameters") VDJCAlignerParameters alignerParameters,
                                   @JsonProperty("mergeReads") boolean mergeReads,
                                   @JsonProperty("libraryId") VDJCLibraryId libraryId,
                                   @JsonProperty("limit") long limit,
-                                  @JsonProperty("trimmerParameters") QualityTrimmerParameters trimmerParameters) {
+                                  @JsonProperty("trimmerParameters") QualityTrimmerParameters trimmerParameters,
+                                  @JsonProperty("tagPattern") String tagPattern) {
             this.alignerParameters = alignerParameters;
             this.mergeReads = mergeReads;
             this.libraryId = libraryId;
             this.limit = limit;
             this.trimmerParameters = trimmerParameters;
+            this.tagPattern = tagPattern;
         }
 
         @Override
@@ -421,16 +427,12 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             AlignConfiguration that = (AlignConfiguration) o;
-            return mergeReads == that.mergeReads &&
-                    limit == that.limit &&
-                    Objects.equals(alignerParameters, that.alignerParameters) &&
-                    Objects.equals(libraryId, that.libraryId) &&
-                    Objects.equals(trimmerParameters, that.trimmerParameters);
+            return mergeReads == that.mergeReads && limit == that.limit && Objects.equals(alignerParameters, that.alignerParameters) && Objects.equals(libraryId, that.libraryId) && Objects.equals(trimmerParameters, that.trimmerParameters) && Objects.equals(tagPattern, that.tagPattern);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(alignerParameters, mergeReads, libraryId, limit, trimmerParameters);
+            return Objects.hash(alignerParameters, mergeReads, libraryId, limit, trimmerParameters, tagPattern);
         }
     }
 
@@ -453,6 +455,12 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
         List<ReadTagShortcut> readShortcuts = parseInfo.getReadTags().stream()
                 .map(readSearchPlan::tagShortcut)
                 .collect(Collectors.toList());
+
+        if (readShortcuts.size() == 0)
+            throwValidationException("Tag pattern has no read (payload) groups, nothing to align.", false);
+
+        if (readShortcuts.size() > 2)
+            throwValidationException("Tag pattern contains too many read groups, only R1 or R1+R2 combinations are supported.", false);
 
         return new TagSearchPlan(readSearchPlan, tagShortcuts, readShortcuts, parseInfo.getTags());
     }
@@ -508,9 +516,12 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                 warn(l);
         }
 
+        // Tags
+        TagSearchPlan tagSearchPlan = getTagPattern();
+
         // Creating aligner
         VDJCAligner aligner = VDJCAligner.createAligner(alignerParameters,
-                isInputPaired(), !noMerge);
+                tagSearchPlan.readShortcuts.size() == 2, !noMerge);
 
         int numberOfExcludedNFGenes = 0;
         int numberOfExcludedFGenes = 0;
@@ -556,8 +567,6 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
         report.setOutputFiles(getOutput());
         report.setCommandLine(getCommandLineArguments());
 
-        // Tags
-        TagSearchPlan tagSearchPlan = getTagPattern();
         if (tagSearchPlan != null)
             report.setTagReport(tagSearchPlan.report);
 

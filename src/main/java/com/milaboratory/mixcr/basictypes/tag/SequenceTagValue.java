@@ -1,10 +1,12 @@
 package com.milaboratory.mixcr.basictypes.tag;
 
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.primitivio.annotations.Serializable;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
+@Serializable(by = IO.SequenceTagValueSerializer.class)
 public final class SequenceTagValue implements TagValue {
     public final NucleotideSequence sequence;
 

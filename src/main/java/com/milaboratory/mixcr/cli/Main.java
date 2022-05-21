@@ -30,10 +30,10 @@
 package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.cli.ValidationException;
-import com.milaboratory.mixcr.cli.postanalysis.*;
 import com.milaboratory.milm.LM;
 import com.milaboratory.milm.LicenseError;
 import com.milaboratory.milm.LicenseErrorType;
+import com.milaboratory.mixcr.cli.postanalysis.*;
 import com.milaboratory.util.TempFileManager;
 import com.milaboratory.util.VersionInfo;
 import io.repseq.core.VDJCLibraryRegistry;
@@ -52,6 +52,8 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.function.Consumer;
 import java.util.prefs.Preferences;
+
+import static com.milaboratory.mixcr.cli.CommandCorrectTags.CORRECT_TAGS_COMMAND_NAME;
 
 public final class Main {
 
@@ -224,11 +226,12 @@ public final class Main {
                 .addSubcommand("exportTables", CommandPaExportTables.class)
                 .addSubcommand("exportPreprocTables", CommandPaExportTablesPreprocSummary.class)
 
-
                 .addSubcommand("align", CommandAlign.class)
                 .addSubcommand("assemble", CommandAssemble.class)
                 // .addSubcommand("groupCells", CommandGroupCells.class)
                 .addSubcommand("assembleContigs", CommandAssembleContigs.class)
+
+                .addSubcommand(CORRECT_TAGS_COMMAND_NAME, CommandCorrectTags.class)
 
                 .addSubcommand("assemblePartial", CommandAssemblePartialAlignments.class)
                 .addSubcommand("extend", CommandExtend.class)

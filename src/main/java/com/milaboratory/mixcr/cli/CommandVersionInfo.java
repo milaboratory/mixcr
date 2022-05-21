@@ -49,7 +49,7 @@ public class CommandVersionInfo extends ACommandMiXCR {
         String i = inputFile.toLowerCase();
         if (i.endsWith(".vdjca.gz") || i.endsWith(".vdjca")) {
             try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(inputFile)) {
-                reader.init();
+                reader.ensureInitialized();
                 System.out.println("MagicBytes = " + reader.getMagic());
                 System.out.println(reader.getVersionInfo());
             }

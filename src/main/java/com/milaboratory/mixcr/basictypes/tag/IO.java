@@ -5,7 +5,6 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.Serializer;
-import com.milaboratory.util.ByteString;
 import gnu.trove.impl.Constants;
 import gnu.trove.iterator.TObjectDoubleIterator;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
@@ -16,30 +15,37 @@ public final class IO {
     private IO() {
     }
 
-    public static class TagValueSerializer implements Serializer<TagValue> {
+    public static class SequenceAndQualityTagValueSerializer implements Serializer<SequenceAndQualityTagValue> {
         @Override
-        public void write(PrimitivO output, TagValue obj) {
-            if (obj instanceof SequenceTagValue) {
-                output.writeByte(0);
-                output.writeObject(((SequenceTagValue) obj).sequence);
-            } else if (obj instanceof SequenceAndQualityTagValue) {
-                output.writeByte(1);
-                output.writeObject(((SequenceAndQualityTagValue) obj).data);
-            } else
-                throw new IllegalArgumentException("Unsupported type.");
+        public void write(PrimitivO output, SequenceAndQualityTagValue obj) {
+            output.writeObject(obj.data);
         }
 
         @Override
-        public TagValue read(PrimitivI input) {
-            byte t = input.readByte();
-            switch (t) {
-                case 0:
-                    return new SequenceTagValue(input.readObject(NucleotideSequence.class));
-                case 1:
-                    return new SequenceAndQualityTagValue(input.readObject(NSequenceWithQuality.class));
-                default:
-                    throw new IllegalArgumentException("Malformed data.");
-            }
+        public SequenceAndQualityTagValue read(PrimitivI input) {
+            return new SequenceAndQualityTagValue(input.readObject(NSequenceWithQuality.class));
+        }
+
+        @Override
+        public boolean isReference() {
+            return true;
+        }
+
+        @Override
+        public boolean handlesReference() {
+            return false;
+        }
+    }
+
+    public static class SequenceTagValueSerializer implements Serializer<SequenceTagValue> {
+        @Override
+        public void write(PrimitivO output, SequenceTagValue obj) {
+            output.writeObject(obj.sequence);
+        }
+
+        @Override
+        public SequenceTagValue read(PrimitivI input) {
+            return new SequenceTagValue(input.readObject(NucleotideSequence.class));
         }
 
         @Override

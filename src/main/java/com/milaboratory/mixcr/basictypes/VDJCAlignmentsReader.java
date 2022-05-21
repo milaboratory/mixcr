@@ -34,6 +34,7 @@ import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
+import com.milaboratory.primitivio.PrimitivIState;
 import com.milaboratory.primitivio.blocks.PrimitivIBlocks;
 import com.milaboratory.primitivio.blocks.PrimitivIBlocksStats;
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid;
@@ -68,6 +69,8 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
     PipelineConfiguration pipelineConfiguration;
     List<VDJCGene> usedGenes;
     TagsInfo tagsInfo;
+
+    PrimitivIState iState;
 
     String versionInfo;
     String magic;
@@ -128,11 +131,7 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
         }
     }
 
-    // public void init() {
-    //     init(null);
-    // }
-
-    public void init() {
+    public void ensureInitialized() {
         if (reader != null)
             return;
 
@@ -159,6 +158,7 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
             tagsInfo = i.readObject(TagsInfo.class);
 
             this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(i, parameters, vdjcRegistry);
+            this.iState = i.getState();
         }
 
         this.reader = input.beginPrimitivIBlocks(VDJCAlignments.class, readAheadBlocks);
@@ -171,23 +171,23 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
     }
 
     public synchronized VDJCAlignerParameters getParameters() {
-        init();
+        ensureInitialized();
         return parameters;
     }
 
     public synchronized List<VDJCGene> getUsedGenes() {
-        init();
+        ensureInitialized();
         return usedGenes;
     }
 
     @Override
     public synchronized PipelineConfiguration getPipelineConfiguration() {
-        init();
+        ensureInitialized();
         return pipelineConfiguration;
     }
 
     public TagsInfo getTagsInfo() {
-        init();
+        ensureInitialized();
         return tagsInfo;
     }
 
@@ -197,7 +197,7 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
      * @return information about version of MiXCR which produced this file
      */
     public String getVersionInfo() {
-        init();
+        ensureInitialized();
         return versionInfo;
     }
 
@@ -207,8 +207,14 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
      * @return magic bytes of this file
      */
     public String getMagic() {
-        init();
+        ensureInitialized();
         return magic;
+    }
+
+    /** Return primitivI state that can be used to read or write alignments returned by the reader */
+    public PrimitivIState getIState() {
+        ensureInitialized();
+        return iState;
     }
 
     public long getNumberOfReads() {
@@ -252,7 +258,7 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
         if (closed)
             return null;
 
-        init();
+        ensureInitialized();
 
         VDJCAlignments al = reader.take();
 

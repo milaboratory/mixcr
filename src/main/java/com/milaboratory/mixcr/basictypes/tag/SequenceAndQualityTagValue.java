@@ -1,10 +1,12 @@
 package com.milaboratory.mixcr.basictypes.tag;
 
 import com.milaboratory.core.sequence.NSequenceWithQuality;
+import com.milaboratory.primitivio.annotations.Serializable;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
+@Serializable(by = IO.SequenceAndQualityTagValueSerializer.class)
 public final class SequenceAndQualityTagValue implements TagValue {
     public final NSequenceWithQuality data;
 
