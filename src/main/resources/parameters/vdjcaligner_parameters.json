@@ -155,7 +155,7 @@
         "scoring": {
           "type": "affine",
           "subsMatrix": "simple(match = 10, mismatch = -19)",
-          "gapOpenPenalty": -40,
+          "gapOpenPenalty": -62,
           "gapExtensionPenalty": -11
         }
       }
@@ -201,7 +201,7 @@
         "scoring": {
           "type": "affine",
           "subsMatrix": "simple(match = 10, mismatch = -19)",
-          "gapOpenPenalty": -40,
+          "gapOpenPenalty": -62,
           "gapExtensionPenalty": -11
         }
       }
