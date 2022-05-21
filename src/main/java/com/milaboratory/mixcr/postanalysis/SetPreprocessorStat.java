@@ -3,6 +3,7 @@ package com.milaboratory.mixcr.postanalysis;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.util.concurrent.AtomicDouble;
+import gnu.trove.impl.Constants;
 import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
@@ -141,7 +142,7 @@ public class SetPreprocessorStat {
 
     public static final class Builder<T> {
         final String preprocId;
-        final TIntObjectHashMap<BuilderForSample<T>> map = new TIntObjectHashMap<>();
+        final TIntObjectHashMap<BuilderForSample<T>> map = new TIntObjectHashMap<>(Constants.DEFAULT_CAPACITY, Constants.DEFAULT_LOAD_FACTOR, -1);
         final WeightFunction<T> wtFunc;
 
         public Builder(String preprocId,
@@ -159,6 +160,10 @@ public class SetPreprocessorStat {
 
         public void drop(int iDataset) {
             builder(iDataset).drop();
+        }
+
+        public void clear(int iDataset) {
+            map.remove(iDataset);
         }
 
         public void before(int iDataset, T t) {

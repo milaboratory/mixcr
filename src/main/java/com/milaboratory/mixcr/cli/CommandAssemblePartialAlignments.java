@@ -36,6 +36,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssembler;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParameters;
 import com.milaboratory.util.JsonOverrider;
+import com.milaboratory.util.ReportUtil;
 import com.milaboratory.util.SmartProgressReporter;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -131,7 +132,7 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
 
             // Writing report to stout
             System.out.println("============= Report ==============");
-            Util.writeReportToStdout(report);
+            ReportUtil.writeReportToStdout(report);
 
             if (assembler.leftPartsLimitReached()) {
                 warn("WARNING: too many partial alignments detected, consider skipping assemblePartial (enriched library?). /leftPartsLimitReached/");
@@ -144,10 +145,10 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
             }
 
             if (reportFile != null)
-                Util.writeReport(reportFile, report);
+                ReportUtil.appendReport(reportFile, report);
 
             if (jsonReport != null)
-                Util.writeJsonReport(jsonReport, report);
+                ReportUtil.appendJsonReport(jsonReport, report);
         }
     }
 

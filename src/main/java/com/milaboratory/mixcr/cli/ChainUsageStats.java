@@ -35,6 +35,7 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.milaboratory.mixcr.basictypes.VDJCObject;
+import com.milaboratory.util.Report;
 import com.milaboratory.util.ReportHelper;
 import io.repseq.core.Chains;
 

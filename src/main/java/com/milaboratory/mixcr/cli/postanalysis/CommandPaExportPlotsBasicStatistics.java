@@ -8,6 +8,7 @@ import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatRow;
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics;
+import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics.PlotType;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
 import picocli.CommandLine;
@@ -19,6 +20,8 @@ import java.util.Objects;
 public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExportPlots {
     abstract String group();
 
+    @Option(description = "Plot type", names = {"--plot-type"})
+    public String plotType;
     @Option(description = "Primary group", names = {"-p", "--primary-group"})
     public String primaryGroup;
     @Option(description = "Secondary group", names = {"-s", "--secondary-group"})
@@ -63,7 +66,12 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
         else if (refGroup != null)
             rg = RefGroup.Companion.of(refGroup);
 
+        PlotType plotType = this.plotType == null
+                ? PlotType.Auto
+                : PlotType.Companion.parse(this.plotType);
+
         BasicStatistics.PlotParameters par = new BasicStatistics.PlotParameters(
+                plotType,
                 primaryGroup,
                 secondaryGroup,
                 facetBy,

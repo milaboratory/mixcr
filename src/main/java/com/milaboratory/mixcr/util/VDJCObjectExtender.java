@@ -41,7 +41,7 @@ import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.cli.Report;
+import com.milaboratory.util.Report;
 import com.milaboratory.util.ReportHelper;
 import io.repseq.core.*;
 

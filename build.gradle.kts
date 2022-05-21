@@ -81,8 +81,8 @@ repositories {
     }
 }
 
-val milibVersion = "1.15.0-29-master"
-val repseqioVersion = "1.3.5-25-master"
+val milibVersion = "1.15.0-32-master"
+val repseqioVersion = "1.3.5-26-master"
 val mitoolVersion = "1.3.5-25-master"
 val miplotsVersion = "0.1-19-master"
 val jacksonVersion = "2.13.2.2"

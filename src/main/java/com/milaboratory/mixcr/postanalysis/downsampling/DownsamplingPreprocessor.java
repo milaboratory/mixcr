@@ -65,6 +65,8 @@ public class DownsamplingPreprocessor<T> implements SetPreprocessor<T> {
 
     @Override
     public MappingFunction<T> getMapper(int iDataset) {
+        stats.clear(iDataset);
+
         if (downsampling == -1)
             downsampling = downsampleValueChooser.compute(setup.counts);
 

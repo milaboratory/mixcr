@@ -34,11 +34,15 @@ public class PreprocessorChain<T> implements SetPreprocessor<T> {
 
     private final AtomicReference<Function<Integer, MappingFunction<T>>> mapperRef = new AtomicReference<>(i -> t -> t);
     private int lastActive = 0;
+    private boolean setupDone;
 
     @Override
     public SetPreprocessorSetup<T> nextSetupStep() {
+        if (setupDone)
+            return null;
         SetPreprocessorSetup<T> innerStep = null;
-        for (int i = lastActive; i < chain.size(); i++) {
+        int i = lastActive;
+        for (; i < chain.size(); i++) {
             SetPreprocessor<T> p = chain.get(i);
             SetPreprocessorSetup<T> step = p.nextSetupStep();
             if (step != null) {
@@ -67,6 +71,7 @@ public class PreprocessorChain<T> implements SetPreprocessor<T> {
                 }
             }
         }
+        assert innerStep != null || i == chain.size();
 
         Function<Integer, MappingFunction<T>> mapper = mapperRef.get();
         if (innerStep != null) {
@@ -100,6 +105,8 @@ public class PreprocessorChain<T> implements SetPreprocessor<T> {
                 }
             };
         }
+
+        setupDone = true;
         return null;
     }
 

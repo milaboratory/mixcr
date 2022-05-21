@@ -704,13 +704,13 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
 
         // Writing report to stout
         System.out.println("============= Report ==============");
-        Util.writeReportToStdout(report);
+        ReportUtil.writeReportToStdout(report);
 
         if (reportFile != null)
-            Util.writeReport(reportFile, report);
+            ReportUtil.appendReport(reportFile, report);
 
         if (jsonReport != null)
-            Util.writeJsonReport(jsonReport, report);
+            ReportUtil.appendJsonReport(jsonReport, report);
     }
 
     static final class TaggedSequence {

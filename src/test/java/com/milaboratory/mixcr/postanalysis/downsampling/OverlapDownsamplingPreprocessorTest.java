@@ -42,7 +42,7 @@ public class OverlapDownsamplingPreprocessorTest {
                     ""
             );
 
-            Dataset<OverlapGroup<TestObject>>[] downsampled = SetPreprocessorFactory.processDatasets(new OverlapPreprocessorAdapter<>(proc), datasets);
+            Dataset<OverlapGroup<TestObject>>[] downsampled = SetPreprocessor.processDatasets(new OverlapPreprocessorAdapter<>(proc), datasets);
 
             for (int i = 0; i < datasets.length; i++) {
                 DatasetSupport in = datasets[i];
