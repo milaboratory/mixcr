@@ -58,6 +58,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters;
 import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor;
 import com.milaboratory.core.sequence.quality.ReadTrimmerReport;
+import com.milaboratory.mitool.helpers.FSKt;
 import com.milaboratory.mitool.pattern.search.*;
 import com.milaboratory.mitool.report.ParseReport;
 import com.milaboratory.mixcr.basictypes.SequenceHistory;
@@ -76,8 +77,10 @@ import picocli.CommandLine.Parameters;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -95,10 +98,11 @@ import static com.milaboratory.mixcr.cli.CommandAlign.ALIGN_COMMAND_NAME;
 public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
     static final String ALIGN_COMMAND_NAME = "align";
     @Parameters(arity = "2..3",
-            descriptionKey = "file",
             paramLabel = "files",
             hideParamSyntax = true,
-            description = "file_R1.(fastq[.gz]|fasta) [file_R2.fastq[.gz]] alignments.vdjca")
+            description = "file_R1.(fastq[.gz]|fasta) [file_R2.fastq[.gz]] alignments.vdjca\n" +
+                    "Use \"{{n}}\" if you want to concatenate files from multiple lanes, like:\n" +
+                    "my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz")
     private List<String> inOut = new ArrayList<>();
 
     @Override
@@ -113,7 +117,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
 
     @Option(description = CommonDescriptions.SPECIES,
             names = {"--read-buffer"})
-    public int readBufferSize = 1 << 20;
+    public int readBufferSize = 1 << 22;
 
     @Option(description = CommonDescriptions.SPECIES,
             names = {"-s", "--species"},
@@ -326,14 +330,31 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
     }
 
     public SequenceReaderCloseable<? extends SequenceRead> createReader() throws IOException {
-        if (isInputPaired())
-            return new PairedFastqReader(new FileInputStream(getInputFiles().get(0)), new FileInputStream(getInputFiles().get(1)),
-                    SingleFastqReader.DEFAULT_QUALITY_FORMAT,
-                    CompressionType.detectCompressionType(getInputFiles().get(0)),
-                    true,
-                    readBufferSize,
-                    true, true);
-        else {
+        // Common single fastq reader constructor
+        Function<Path, SingleFastqReader> readerFactory = r -> {
+            try {
+                return new SingleFastqReader(
+                        new FileInputStream(r.toFile()),
+                        SingleFastqReader.DEFAULT_QUALITY_FORMAT,
+                        CompressionType.detectCompressionType(getInputFiles().get(0)),
+                        false, readBufferSize,
+                        true, true);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        };
+
+        if (isInputPaired()) {
+            List<ConcatenatingSingleReader> readers = getInputFiles().stream()
+                    .map(rf -> FSKt.expandPathNPattern(Paths.get(rf)))
+                    .map(rs -> new ConcatenatingSingleReader(
+                            rs.stream()
+                                    .map(readerFactory)
+                                    .collect(Collectors.toList())
+                    ))
+                    .collect(Collectors.toList());
+            return new PairedFastqReader(readers.get(0), readers.get(1));
+        } else {
             String in = getInputFiles().get(0);
             String[] s = in.split("\\.");
             if (s[s.length - 1].equals("fasta") || s[s.length - 1].equals("fa"))
@@ -342,12 +363,9 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                         true
                 );
             else
-                return new SingleFastqReader(new FileInputStream(in),
-                        SingleFastqReader.DEFAULT_QUALITY_FORMAT,
-                        CompressionType.detectCompressionType(in),
-                        true,
-                        readBufferSize,
-                        true, true);
+                return new ConcatenatingSingleReader(FSKt.expandPathNPattern(Paths.get(in)).stream()
+                        .map(readerFactory)
+                        .collect(Collectors.toList()));
         }
     }
 
@@ -463,6 +481,11 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
             throwValidationException("Tag pattern contains too many read groups, only R1 or R1+R2 combinations are supported.", false);
 
         return new TagSearchPlan(readSearchPlan, tagShortcuts, readShortcuts, parseInfo.getTags());
+    }
+
+    @Override
+    protected boolean inputsMustExist() {
+        return false;
     }
 
     @Override
