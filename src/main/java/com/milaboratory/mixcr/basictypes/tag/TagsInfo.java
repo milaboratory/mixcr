@@ -9,13 +9,20 @@ import java.util.Objects;
 
 @Serializable(asJson = true)
 public final class TagsInfo {
+    @JsonProperty("sorted")
+    public final boolean sorted;
     @JsonProperty("tags")
     public final TagInfo[] tags;
 
     @JsonCreator
-    public TagsInfo(@JsonProperty("tags") TagInfo... tags) {
+    public TagsInfo(@JsonProperty("sorted") boolean sorted, @JsonProperty("tags") TagInfo... tags) {
         Objects.requireNonNull(tags);
+        this.sorted = sorted;
         this.tags = tags;
+    }
+
+    public TagsInfo setSorted(boolean sorted){
+        return new TagsInfo(sorted, tags);
     }
 
     @Override
@@ -23,11 +30,13 @@ public final class TagsInfo {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         TagsInfo tagsInfo = (TagsInfo) o;
-        return Arrays.equals(tags, tagsInfo.tags);
+        return sorted == tagsInfo.sorted && Arrays.equals(tags, tagsInfo.tags);
     }
 
     @Override
     public int hashCode() {
-        return Arrays.hashCode(tags);
+        int result = Objects.hash(sorted);
+        result = 31 * result + Arrays.hashCode(tags);
+        return result;
     }
 }

@@ -56,7 +56,7 @@ import java.util.function.Consumer;
 import java.util.prefs.Preferences;
 
 import static com.fasterxml.jackson.module.kotlin.ExtensionsKt.kotlinModule;
-import static com.milaboratory.mixcr.cli.CommandCorrectTags.CORRECT_TAGS_COMMAND_NAME;
+import static com.milaboratory.mixcr.cli.CommandCorrectAndSortTags.CORRECT_AND_SORT_TAGS_COMMAND_NAME;
 
 public final class Main {
 
@@ -236,7 +236,7 @@ public final class Main {
                 // .addSubcommand("groupCells", CommandGroupCells.class)
                 .addSubcommand("assembleContigs", CommandAssembleContigs.class)
 
-                .addSubcommand(CORRECT_TAGS_COMMAND_NAME, CommandCorrectTags.class)
+                .addSubcommand(CORRECT_AND_SORT_TAGS_COMMAND_NAME, CommandCorrectAndSortTags.class)
 
                 .addSubcommand("assemblePartial", CommandAssemblePartialAlignments.class)
                 .addSubcommand("extend", CommandExtend.class)
