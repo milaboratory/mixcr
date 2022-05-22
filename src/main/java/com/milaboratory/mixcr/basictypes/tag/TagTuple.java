@@ -2,7 +2,6 @@ package com.milaboratory.mixcr.basictypes.tag;
 
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import com.milaboratory.util.ByteString;
 
 import java.util.Arrays;
 
@@ -24,6 +23,21 @@ public final class TagTuple implements Comparable<TagTuple> {
         for (TagValue tag : tags)
             hasher.putInt(tag.hashCode());
         this.hash = hasher.hash().hashCode();
+    }
+
+    public TagTuple toKeys() {
+        boolean hasNonKey = false;
+        for (TagValue tag : tags)
+            if (!tag.isKey()) {
+                hasNonKey = true;
+                break;
+            }
+        if (!hasNonKey)
+            return this;
+        TagValue[] newTags = tags.clone();
+        for (int i = 0; i < newTags.length; i++)
+            newTags[i] = newTags[i].extractKey();
+        return new TagTuple(newTags);
     }
 
     @Override

@@ -44,9 +44,9 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequencesUtils;
 import com.milaboratory.mixcr.basictypes.SequenceHistory;
 import com.milaboratory.mixcr.basictypes.SequenceHistory.OverlapType;
-import com.milaboratory.mixcr.basictypes.tag.TagCounterBuilder;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.basictypes.tag.TagCounterBuilder;
 import com.milaboratory.mixcr.vdjaligners.KGeneAlignmentParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import io.repseq.core.GeneFeature;
@@ -57,19 +57,16 @@ import io.repseq.core.VDJCGeneId;
 import java.util.*;
 
 public class TargetMerger {
-    final MismatchOnlyPairedReadMerger merger;
-    final IdentityType identityType;
-    private volatile VDJCAlignerParameters alignerParameters;
-    final float minimalAlignmentMergeIdentity;
+    private final MismatchOnlyPairedReadMerger merger;
+    private final IdentityType identityType;
+    private final VDJCAlignerParameters alignerParameters;
+    private final float minimalAlignmentMergeIdentity;
 
-    public TargetMerger(MergerParameters mergerParameters, float minimalAlignmentMergeIdentity) {
+    public TargetMerger(MergerParameters mergerParameters, VDJCAlignerParameters alignerParameters, float minimalAlignmentMergeIdentity) {
         this.merger = new MismatchOnlyPairedReadMerger(mergerParameters);
         this.identityType = mergerParameters.getIdentityType();
-        this.minimalAlignmentMergeIdentity = minimalAlignmentMergeIdentity;
-    }
-
-    public void setAlignerParameters(VDJCAlignerParameters alignerParameters) {
         this.alignerParameters = alignerParameters;
+        this.minimalAlignmentMergeIdentity = minimalAlignmentMergeIdentity;
     }
 
     @SuppressWarnings("unchecked")
@@ -365,14 +362,6 @@ public class TargetMerger {
         private final int score;
         private final int matched, mismatched;
         private final int offset;
-
-//        public TargetMergingResult(AlignedTarget result, int score, boolean usingAlignments, int matched, int mismatched) {
-//            this.result = result;
-//            this.score = score;
-//            this.usingAlignments = usingAlignments;
-//            this.matched = matched;
-//            this.mismatched = mismatched;
-//        }
 
         private TargetMergingResult() {
             this(false, null, null, 0, 0, 0, 0);

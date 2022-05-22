@@ -43,6 +43,13 @@ public final class TagCounter {
         return it.key();
     }
 
+    public TagTuple singleOrError() {
+        TagTuple result = singleOrNull();
+        if (result == null)
+            throw new IllegalStateException("Aggregated tag information, single tag tuple expected.");
+        return result;
+    }
+
     public Set<TagTuple> keys() {
         return tags.keySet();
     }

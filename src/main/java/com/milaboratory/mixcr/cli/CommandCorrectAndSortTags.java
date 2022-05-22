@@ -226,8 +226,7 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
             Processor<VDJCAlignments, VDJCAlignments> mapper = !noCorrect
                     ?
                     al -> {
-                        TagTuple tt = al.getTagCounter().keys().iterator().next();
-                        TagValue[] newTags = tt.tags.clone();
+                        TagValue[] newTags = al.getTagCounter().singleOrError().tags.clone();
                         CorrectionNode cn = correctionResult;
                         for (int i : targetTagIndices) {
                             NucleotideSequence current = ((SequenceAndQualityTagValue) newTags[i]).data.getSequence();
@@ -305,15 +304,15 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
 
         public ToIntFunction<VDJCAlignments> getHashFunction() {
             return al -> {
-                TagValue[] tags = al.getTagCounter().keys().iterator().next().tags;
+                TagValue[] tags = al.getTagCounter().singleOrError().tags;
                 return ((SequenceAndQualityTagValue) tags[tagIdx]).data.getSequence().hashCode();
             };
         }
 
         public Comparator<VDJCAlignments> getComparator() {
             return (al1, al2) -> {
-                TagValue[] tags1 = al1.getTagCounter().keys().iterator().next().tags;
-                TagValue[] tags2 = al2.getTagCounter().keys().iterator().next().tags;
+                TagValue[] tags1 = al1.getTagCounter().singleOrError().tags;
+                TagValue[] tags2 = al2.getTagCounter().singleOrError().tags;
                 return ((SequenceAndQualityTagValue) tags1[tagIdx]).data.getSequence().compareTo(
                         ((SequenceAndQualityTagValue) tags2[tagIdx]).data.getSequence());
             };

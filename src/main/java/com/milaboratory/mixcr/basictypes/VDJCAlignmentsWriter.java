@@ -127,19 +127,9 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
         header(aligner.getParameters(), aligner.getUsedGenes(), pipelineConfiguration, tagsInfo);
     }
 
-    /** History to write in the header */
-    private PipelineConfiguration pipelineConfiguration = null;
-
-    public synchronized void setPipelineConfiguration(PipelineConfiguration configuration) {
-        if (pipelineConfiguration == null)
-            pipelineConfiguration = configuration;
-        else if (!configuration.equals(this.pipelineConfiguration))
-            throw new IllegalStateException();
-    }
-
     @Override
     public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes,
-                       PipelineConfiguration ppConfiguration, TagsInfo tags) {
+                       PipelineConfiguration pipelineConfiguration, TagsInfo tags) {
         if (parameters == null || genes == null)
             throw new IllegalArgumentException();
 
@@ -161,8 +151,6 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
             o.writeObject(parameters);
 
             // Writing history
-            if (ppConfiguration != null)
-                this.pipelineConfiguration = ppConfiguration;
             o.writeObject(pipelineConfiguration);
 
             // Information about tags
