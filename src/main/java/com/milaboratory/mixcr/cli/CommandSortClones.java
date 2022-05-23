@@ -13,6 +13,7 @@ import picocli.CommandLine;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
 
 import static com.milaboratory.mixcr.basictypes.IOUtil.MAGIC_CLNA;
@@ -36,7 +37,7 @@ public class CommandSortClones extends ACommandWithSmartOverwriteWithSingleInput
     public void run1() throws Exception {
         switch (Objects.requireNonNull(IOUtil.fileInfoExtractorInstance.getFileInfo(new File(in))).fileType) {
             case MAGIC_CLNS:
-                try (ClnsReader reader = new ClnsReader(Path.of(in), VDJCLibraryRegistry.getDefault());
+                try (ClnsReader reader = new ClnsReader(Paths.get(in), VDJCLibraryRegistry.getDefault());
                      ClnsWriter writer = new ClnsWriter(out)) {
 
                     GeneFeature[] assemblingFeatures = reader.getAssemblerParameters().getAssemblingFeatures();
@@ -57,7 +58,7 @@ public class CommandSortClones extends ACommandWithSmartOverwriteWithSingleInput
                 return;
 
             case MAGIC_CLNA:
-                try (ClnAReader reader = new ClnAReader(Path.of(in), VDJCLibraryRegistry.getDefault(), Runtime.getRuntime().availableProcessors());
+                try (ClnAReader reader = new ClnAReader(Paths.get(in), VDJCLibraryRegistry.getDefault(), Runtime.getRuntime().availableProcessors());
                      ClnAWriter writer = new ClnAWriter(getFullPipelineConfiguration(), out)) {
                     SmartProgressReporter.startProgressReport(writer);
 

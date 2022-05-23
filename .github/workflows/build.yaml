@@ -29,7 +29,7 @@ jobs:
     uses: milaboratory/github-ci/.github/workflows/java-gradle-app.yaml@v2
     with:
       # Environment
-      java-version: '11'
+      java-version: '8'
       app-name: MiXCR
       app-name-slug: 'mixcr'
 
