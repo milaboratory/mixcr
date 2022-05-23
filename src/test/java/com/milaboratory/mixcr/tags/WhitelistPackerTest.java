@@ -79,7 +79,7 @@ public class WhitelistPackerTest {
         Assert.assertEquals(expectedWhitelist, whitelist);
     }
 
-    // @Ignore
+    @Ignore
     @Test
     public void test1() throws IOException {
         importWL("/Volumes/Data/Projects/MiLaboratory/data/10x/3M-february-2018.txt", "10x-3M-february-2018.bin");
