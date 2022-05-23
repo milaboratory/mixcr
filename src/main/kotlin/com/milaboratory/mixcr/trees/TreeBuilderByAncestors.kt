@@ -9,9 +9,6 @@ import java.util.stream.Stream
 
 class TreeBuilderByAncestors<T, E, M> private constructor(
     val distance: (E, M) -> BigDecimal,
-    /**
-     * parent, observed -> reconstructed
-     */
     private val asAncestor: (T) -> E,
     private val mutationsBetween: (E, E) -> M,
     private val mutate: (E, M) -> E,

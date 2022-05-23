@@ -2,6 +2,7 @@ package com.milaboratory.mixcr.trees
 
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.trees.CloneOrFoundAncestor.CloneInfo
+import com.milaboratory.mixcr.trees.MutationsUtils.mutationsBetween
 import com.milaboratory.mixcr.trees.Tree.NodeWithParent
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.Reconstructed
@@ -54,7 +55,7 @@ class TreeWithMetaBuilder(
             clone.cloneWrapper,
             result.mutationsSet.VMutations,
             result.mutationsSet.JMutations,
-            result.mutationsSet.NDNMutations.mutations.mutate(result.mutationsSet.NDNMutations.base)
+            result.mutationsSet.NDNMutations.buildSequence()
         )
         return result
     }
@@ -83,14 +84,26 @@ class TreeWithMetaBuilder(
                 val distanceFromReconstructedRootToNode = when {
                     parent != null -> treeBuilder.distance(
                         reconstructedRoot,
-                        MutationsUtils.mutationsBetween(reconstructedRoot.fromRootToThis, nodeAsMutationsFromGermline)
+                        mutationsBetween(reconstructedRoot.fromRootToThis, nodeAsMutationsFromGermline)
                     )
                     else -> null
                 }
                 val rootAsNode = (treeBuilder.tree.root.content as Reconstructed).content
-                val distanceFromGermlineToNode = treeBuilder.distance(rootAsNode, nodeAsMutationsFromGermline)
+                val distanceFromGermlineToNode = treeBuilder.distance(
+                    rootAsNode,
+                    mutationsBetween(
+                        rootAsNode.fromRootToThis,
+                        nodeAsMutationsFromGermline
+                    )
+                )
                 node.convert(
                     { c ->
+                        assertClone(
+                            c.clone,
+                            c.mutationsSet.VMutations,
+                            c.mutationsSet.JMutations,
+                            c.mutationsSet.NDNMutations.buildSequence()
+                        )
                         CloneInfo(
                             c.clone,
                             node.id,
@@ -114,8 +127,8 @@ class TreeWithMetaBuilder(
             }
     }
 
-    private fun asMutations(parent: ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, SyntheticNode>): MutationsDescription {
-        return parent.convert({ it.mutationsFromRoot }) { it.fromRootToThis }
+    private fun asMutations(parent: ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, SyntheticNode>): MutationsSet {
+        return parent.convert({ it.mutationsSet }) { it.fromRootToThis }
     }
 
     fun allNodes(): Stream<NodeWithParent<ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, SyntheticNode>>> {

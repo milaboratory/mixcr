@@ -1,35 +1,47 @@
+@file:Suppress("LocalVariableName")
+
 package com.milaboratory.mixcr.trees
 
-import com.milaboratory.core.Range
 import com.milaboratory.core.mutations.Mutations
+import com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.util.ClonesAlignmentRanges
-import com.milaboratory.mixcr.util.RangeInfo
-import java.util.stream.Collectors
+import com.milaboratory.util.RangeMap
 
 class SyntheticNode private constructor(
-    val fromRootToThis: MutationsDescription
+    val fromRootToThis: MutationsSet,
 ) {
-    fun mutate(fromParentToThis: MutationsDescription) = SyntheticNode(
-        MutationsDescription(
-            MutationsUtils.combine(
-                fromRootToThis.VMutationsWithoutCDR3,
-                fromParentToThis.VMutationsWithoutCDR3
+    fun mutate(mutations: MutationsDescription): SyntheticNode = SyntheticNode(
+        MutationsSet(
+            fromRootToThis.VMutations.copy(
+                mutations = fromRootToThis.VMutations.mutations.map { (range, value) ->
+                    value.combineWith(mutations.VMutationsWithoutCDR3[range].mutations.move(range.lower))
+                },
+                partInCDR3 = fromRootToThis.VMutations.partInCDR3.copy(
+                    mutations = fromRootToThis.VMutations.partInCDR3.mutations
+                        .combineWith(mutations.VMutationsInCDR3WithoutNDN.mutations.move(fromRootToThis.VMutations.partInCDR3.range.lower))
+                )
             ),
-            fromRootToThis.VMutationsInCDR3WithoutNDN
-                .combineWith(fromParentToThis.VMutationsInCDR3WithoutNDN),
-            fromRootToThis.knownNDN.combineWith(fromParentToThis.knownNDN),
-            fromRootToThis.JMutationsInCDR3WithoutNDN
-                .combineWith(fromParentToThis.JMutationsInCDR3WithoutNDN),
-            MutationsUtils.combine(
-                fromRootToThis.JMutationsWithoutCDR3,
-                fromParentToThis.JMutationsWithoutCDR3
+            fromRootToThis.NDNMutations.copy(
+                mutations = fromRootToThis.NDNMutations.mutations
+                    .combineWith(mutations.knownNDN.mutations)
+            ),
+            fromRootToThis.JMutations.copy(
+                mutations = fromRootToThis.JMutations.mutations.map { (range, value) ->
+                    value.combineWith(mutations.JMutationsWithoutCDR3[range].mutations.move(range.lower))
+                },
+                partInCDR3 = fromRootToThis.JMutations.partInCDR3.copy(
+                    mutations = fromRootToThis.JMutations.partInCDR3.mutations
+                        .combineWith(mutations.JMutationsInCDR3WithoutNDN.mutations.move(fromRootToThis.JMutations.partInCDR3.range.lower))
+                )
             )
         )
     )
 
     companion object {
-        fun createFromMutations(fromRootToThis: MutationsDescription): SyntheticNode {
+        fun createFromMutations(
+            fromRootToThis: MutationsSet
+        ): SyntheticNode {
             return SyntheticNode(fromRootToThis)
         }
 
@@ -39,43 +51,24 @@ class SyntheticNode private constructor(
             rootInfo: RootInfo,
             JRanges: ClonesAlignmentRanges,
             JSequence1: NucleotideSequence
-        ): SyntheticNode {
-            val emptyMutations = MutationsDescription(
-                VRanges.commonRanges.stream() //TODO includeFirstInserts for first range
-                    .map {
-                        MutationsWithRange(
-                            VSequence1,
-                            Mutations.EMPTY_NUCLEOTIDE_MUTATIONS,
-                            RangeInfo(it, false)
-                        )
-                    }
-                    .collect(Collectors.toList()),
-                MutationsWithRange(
+        ): SyntheticNode = SyntheticNode(
+            MutationsSet(
+                VGeneMutations(
                     VSequence1,
-                    Mutations.EMPTY_NUCLEOTIDE_MUTATIONS,
-                    RangeInfo(rootInfo.VRangeInCDR3, false)
+                    RangeMap<Mutations<NucleotideSequence>>().also { map ->
+                        VRanges.commonRanges.forEach { range -> map.put(range, EMPTY_NUCLEOTIDE_MUTATIONS) }
+                    },
+                    PartInCDR3(rootInfo.VRangeInCDR3, EMPTY_NUCLEOTIDE_MUTATIONS)
                 ),
-                MutationsWithRange(
-                    rootInfo.reconstructedNDN,
-                    Mutations.EMPTY_NUCLEOTIDE_MUTATIONS,
-                    RangeInfo(Range(0, rootInfo.reconstructedNDN.size()), true)
-                ),
-                MutationsWithRange(
+                NDNMutations(rootInfo.reconstructedNDN, EMPTY_NUCLEOTIDE_MUTATIONS),
+                JGeneMutations(
                     JSequence1,
-                    Mutations.EMPTY_NUCLEOTIDE_MUTATIONS,
-                    RangeInfo(rootInfo.JRangeInCDR3, true)
-                ),
-                JRanges.commonRanges.stream()
-                    .map {
-                        MutationsWithRange(
-                            JSequence1,
-                            Mutations.EMPTY_NUCLEOTIDE_MUTATIONS,
-                            RangeInfo(it, false)
-                        )
+                    PartInCDR3(rootInfo.JRangeInCDR3, EMPTY_NUCLEOTIDE_MUTATIONS),
+                    RangeMap<Mutations<NucleotideSequence>>().also { map ->
+                        JRanges.commonRanges.forEach { range -> map.put(range, EMPTY_NUCLEOTIDE_MUTATIONS) }
                     }
-                    .collect(Collectors.toList())
+                )
             )
-            return SyntheticNode(emptyMutations)
-        }
+        )
     }
 }

@@ -1,5 +1,6 @@
 package com.milaboratory.mixcr.trees
 
+import com.milaboratory.core.Range
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.mutations.MutationsUtil
 import com.milaboratory.core.mutations.MutationsUtil.MutationNt2AADescriptor
@@ -8,26 +9,51 @@ import com.milaboratory.core.sequence.TranslationParameters
 import com.milaboratory.mixcr.trees.CloneOrFoundAncestor.Base.FromGermline
 import com.milaboratory.mixcr.trees.CloneOrFoundAncestor.Base.FromParent
 import com.milaboratory.mixcr.trees.CloneOrFoundAncestor.Base.FromReconstructedRoot
+import com.milaboratory.mixcr.trees.MutationsUtils.mutationsBetween
+import com.milaboratory.mixcr.util.RangeInfo
 import io.repseq.core.GeneType
 import java.math.BigDecimal
 
 @Suppress("FunctionName", "PropertyName")
 sealed class CloneOrFoundAncestor(
     val id: Int,
-    private val fromGermlineToThis: MutationsDescription,
-    private val fromGermlineToReconstructedRoot: MutationsDescription,
-    private val fromGermlineToParent: MutationsDescription?,
+    private val fromGermlineToThis: MutationsSet,
+    private val fromGermlineToReconstructedRoot: MutationsSet,
+    private val fromGermlineToParent: MutationsSet?,
     val distanceFromReconstructedRoot: BigDecimal?,
     val distanceFromGermline: BigDecimal
 ) {
+    private val fromGermlineToThisAsMutationsDescription: MutationsDescription
     private val fromReconstructedRootToThis: MutationsDescription?
     private val fromParentToThis: MutationsDescription?
 
     init {
+        fromGermlineToThisAsMutationsDescription = MutationsDescription(
+            fromGermlineToThis.VMutations.mutations.map { (range, mutations) ->
+                MutationsWithRange(fromGermlineToThis.VMutations.sequence1, mutations, RangeInfo(range, true))
+            },
+            MutationsWithRange(
+                fromGermlineToThis.VMutations.sequence1,
+                fromGermlineToThis.VMutations.partInCDR3.mutations,
+                RangeInfo(fromGermlineToThis.VMutations.partInCDR3.range, true)
+            ),
+            MutationsWithRange(
+                fromGermlineToThis.NDNMutations.base,
+                fromGermlineToThis.NDNMutations.mutations,
+                RangeInfo(Range(0, fromGermlineToThis.NDNMutations.base.size()), true)
+            ),
+            MutationsWithRange(
+                fromGermlineToThis.JMutations.sequence1,
+                fromGermlineToThis.JMutations.partInCDR3.mutations,
+                RangeInfo(fromGermlineToThis.JMutations.partInCDR3.range, true)
+            ),
+            fromGermlineToThis.JMutations.mutations.map { (range, mutations) ->
+                MutationsWithRange(fromGermlineToThis.JMutations.sequence1, mutations, RangeInfo(range, true))
+            }
+        )
         if (fromGermlineToParent != null) {
-            fromReconstructedRootToThis =
-                MutationsUtils.mutationsBetween(fromGermlineToReconstructedRoot, fromGermlineToThis)
-            fromParentToThis = MutationsUtils.mutationsBetween(fromGermlineToParent, fromGermlineToThis)
+            fromReconstructedRootToThis = mutationsBetween(fromGermlineToReconstructedRoot, fromGermlineToThis)
+            fromParentToThis = mutationsBetween(fromGermlineToParent, fromGermlineToThis)
         } else {
             fromReconstructedRootToThis = null
             fromParentToThis = null
@@ -35,12 +61,12 @@ sealed class CloneOrFoundAncestor(
     }
 
     val CDR3: NucleotideSequence
-        get() = fromGermlineToThis.VMutationsInCDR3WithoutNDN.buildSequence()
-            .concatenate(fromGermlineToThis.knownNDN.buildSequence())
-            .concatenate(fromGermlineToThis.JMutationsInCDR3WithoutNDN.buildSequence())
+        get() = fromGermlineToThis.VMutations.buildPartInCDR3()
+            .concatenate(fromGermlineToThis.NDNMutations.buildSequence())
+            .concatenate(fromGermlineToThis.JMutations.buildPartInCDR3())
 
     fun CDR3_VMutations(base: Base): Mutations<NucleotideSequence>? =
-        getMutations(base) { it.VMutationsInCDR3WithoutNDN }
+        getMutations(base) { it.VMutations.partInCDR3.mutations }
 
     fun CDR3_AA_VMutations(base: Base): Array<MutationNt2AADescriptor>? = getAAMutations(
         base,
@@ -50,7 +76,7 @@ sealed class CloneOrFoundAncestor(
     )
 
     fun CDR3_JMutations(base: Base): Mutations<NucleotideSequence>? =
-        getMutations(base) { it.JMutationsInCDR3WithoutNDN }
+        getMutations(base) { it.JMutations.partInCDR3.mutations }
 
     fun CDR3_AA_JMutations(base: Base): Array<MutationNt2AADescriptor>? = getAAMutations(
         base,
@@ -59,22 +85,22 @@ sealed class CloneOrFoundAncestor(
         TranslationParameters.FromRightWithIncompleteCodon
     )
 
-    fun CDR3_NDNMutations(base: Base): Mutations<NucleotideSequence>? = getMutations(base) { it.knownNDN }
+    fun CDR3_NDNMutations(base: Base): Mutations<NucleotideSequence>? = getMutations(base) { it.NDNMutations.mutations }
 
     private fun getMutations(
         base: Base,
-        supplier: (MutationsDescription) -> MutationsWithRange
+        supplier: (MutationsSet) -> Mutations<NucleotideSequence>
     ): Mutations<NucleotideSequence>? = when (base) {
-        FromGermline -> supplier(fromGermlineToThis).mutationsForRange()
+        FromGermline -> supplier(fromGermlineToThis)
         FromParent -> when (fromGermlineToParent) {
             null -> null
-            else -> supplier(fromGermlineToParent).mutationsForRange().invert()
-                .combineWith(supplier(fromGermlineToThis).mutationsForRange())
+            else -> supplier(fromGermlineToParent).invert()
+                .combineWith(supplier(fromGermlineToThis))
         }
         FromReconstructedRoot -> when (fromGermlineToParent) {
             null -> null
-            else -> supplier(fromGermlineToReconstructedRoot).mutationsForRange().invert()
-                .combineWith(supplier(fromGermlineToThis).mutationsForRange())
+            else -> supplier(fromGermlineToReconstructedRoot).invert()
+                .combineWith(supplier(fromGermlineToThis))
         }
     }
 
@@ -90,7 +116,7 @@ sealed class CloneOrFoundAncestor(
             nucleotidesLeft != null && mutations.buildSequence().size() % 3 != nucleotidesLeft -> null
             else -> MutationsUtil.nt2aaDetailed(
                 mutations.sequence1.getRange(mutations.rangeInfo.range),
-                mutations.mutationsForRange().move(-mutations.rangeInfo.range.lower),
+                mutations.mutations.move(-mutations.rangeInfo.range.lower),
                 translationParameters,
                 3
             )
@@ -98,7 +124,7 @@ sealed class CloneOrFoundAncestor(
     }
 
     private fun fromBaseToThis(base: Base): MutationsDescription? = when (base) {
-        FromGermline -> fromGermlineToThis
+        FromGermline -> fromGermlineToThisAsMutationsDescription
         FromParent -> fromParentToThis
         FromReconstructedRoot -> fromReconstructedRootToThis
     }
@@ -114,9 +140,9 @@ sealed class CloneOrFoundAncestor(
     internal class CloneInfo(
         private val cloneWrapper: CloneWrapper,
         id: Int,
-        mutationsFromRoot: MutationsDescription,
-        fromGermlineToReconstructedRoot: MutationsDescription,
-        fromGermlineToParent: MutationsDescription?,
+        mutationsFromRoot: MutationsSet,
+        fromGermlineToReconstructedRoot: MutationsSet,
+        fromGermlineToParent: MutationsSet?,
         distanceFromReconstructedRoot: BigDecimal?,
         distanceFromGermline: BigDecimal
     ) : CloneOrFoundAncestor(
@@ -139,9 +165,9 @@ sealed class CloneOrFoundAncestor(
 
     internal class AncestorInfo(
         id: Int,
-        mutationsFromRoot: MutationsDescription,
-        fromGermlineToReconstructedRoot: MutationsDescription,
-        fromGermlineToParent: MutationsDescription?,
+        mutationsFromRoot: MutationsSet,
+        fromGermlineToReconstructedRoot: MutationsSet,
+        fromGermlineToParent: MutationsSet?,
         distanceFromReconstructedRoot: BigDecimal?,
         distanceFromGermline: BigDecimal
     ) : CloneOrFoundAncestor(

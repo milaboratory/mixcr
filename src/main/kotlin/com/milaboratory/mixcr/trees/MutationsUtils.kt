@@ -15,8 +15,8 @@ import com.milaboratory.core.sequence.Wildcard
 import com.milaboratory.mixcr.util.RangeInfo
 import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
+import com.milaboratory.util.RangeMap
 import java.util.*
-import java.util.function.BiFunction
 import kotlin.math.abs
 
 internal object MutationsUtils {
@@ -26,29 +26,10 @@ internal object MutationsUtils {
     fun buildSequence(
         sequence1: NucleotideSequence,
         mutations: Mutations<NucleotideSequence>,
-        rangeInfo: RangeInfo
-    ): NucleotideSequence = mutations.mutate(sequence1).getRange(projectRange(mutations, rangeInfo))
+        range: Range
+    ): NucleotideSequence = mutations.mutate(sequence1).getRange(projectRange(mutations, range))
 
-    fun buildSequence(
-        sequence1: NucleotideSequence,
-        mutations: Mutations<NucleotideSequence>,
-        rangeInfo: Range
-    ): NucleotideSequence = mutations.mutate(sequence1).getRange(projectRange(mutations, rangeInfo))
-
-    fun projectRange(mutations: Mutations<NucleotideSequence>, rangeInfo: RangeInfo): Range {
-        //for including inclusions before position one must step left before conversion and step right after
-        var from = positionIfNucleotideWasDeleted(mutations.convertToSeq2Position(rangeInfo.range.lower))
-        if (rangeInfo.isIncludeFirstInserts) {
-            from -= mutations.asSequence()
-                .count { mutation ->
-                    Mutation.getPosition(mutation) == rangeInfo.range.lower && Mutation.isInsertion(mutation)
-                }
-        }
-        val to = positionIfNucleotideWasDeleted(mutations.convertToSeq2Position(rangeInfo.range.upper))
-        return Range(from, to)
-    }
-
-    fun projectRange(mutations: Mutations<NucleotideSequence>, range: Range): Range {
+    private fun projectRange(mutations: Mutations<NucleotideSequence>, range: Range): Range {
         //for including inclusions before position one must step left before conversion and step right after
         val from = positionIfNucleotideWasDeleted(mutations.convertToSeq2Position(range.lower)) -
             mutations.asSequence()
@@ -57,41 +38,67 @@ internal object MutationsUtils {
         return Range(from, to)
     }
 
-    fun mutationsBetween(first: MutationsDescription, second: MutationsDescription): MutationsDescription {
-        return MutationsDescription(
-            mutationsBetween(first.VMutationsWithoutCDR3, second.VMutationsWithoutCDR3),
-            first.VMutationsInCDR3WithoutNDN.differenceWith(second.VMutationsInCDR3WithoutNDN),
-            first.knownNDN.differenceWith(second.knownNDN),
-            first.JMutationsInCDR3WithoutNDN.differenceWith(second.JMutationsInCDR3WithoutNDN),
-            mutationsBetween(first.JMutationsWithoutCDR3, second.JMutationsWithoutCDR3)
+    fun mutationsBetween(first: MutationsSet, second: MutationsSet): MutationsDescription = MutationsDescription(
+        mutationsBetween(first.VMutations, second.VMutations),
+        difference(
+            first.VMutations.partInCDR3.mutations,
+            second.VMutations.partInCDR3.mutations,
+            first.VMutations.sequence1,
+            first.VMutations.partInCDR3.range
+        ),
+        difference(
+            first.NDNMutations.mutations,
+            second.NDNMutations.mutations,
+            first.NDNMutations.base,
+            Range(0, first.NDNMutations.base.size())
+        ),
+        difference(
+            first.JMutations.partInCDR3.mutations,
+            second.JMutations.partInCDR3.mutations,
+            first.JMutations.sequence1,
+            first.JMutations.partInCDR3.range
+        ),
+        mutationsBetween(first.JMutations, second.JMutations)
+    )
+
+    private fun mutationsBetween(
+        firstMutations: GeneMutations,
+        secondMutations: GeneMutations
+    ): RangeMap<MutationsWithRange> {
+        return fold3(firstMutations.mutations, secondMutations.mutations) { base, comparison, range ->
+            difference(base, comparison, firstMutations.sequence1, range)
+        }
+    }
+
+    private fun difference(
+        base: Mutations<NucleotideSequence>,
+        comparison: Mutations<NucleotideSequence>,
+        sequence: NucleotideSequence,
+        range: Range
+    ): MutationsWithRange {
+        val sequence1 = buildSequence(sequence, base, range)
+        return MutationsWithRange(
+            sequence1,
+            base.invert()
+                .combineWith(comparison)
+                .move(-range.lower),
+            RangeInfo(Range(0, sequence1.size()), true)
         )
     }
 
-    private fun mutationsBetween(
-        firstMutations: List<MutationsWithRange>,
-        secondMutations: List<MutationsWithRange>
-    ): List<MutationsWithRange> {
-        return fold(
-            firstMutations,
-            secondMutations
-        ) { obj, comparison -> obj.differenceWith(comparison) }
-    }
-
-    fun intersection(
+    private fun intersection(
         base: MutationsWithRange,
         comparison: MutationsWithRange,
         intersection: RangeInfo
-    ): MutationsWithRange {
-        return MutationsWithRange(
-            base.sequence1,
-            intersection(
-                base.mutations,
-                comparison.mutations,
-                intersection
-            ),
+    ): MutationsWithRange = MutationsWithRange(
+        base.sequence1,
+        intersection(
+            base.mutations,
+            comparison.mutations,
             intersection
-        )
-    }
+        ),
+        intersection
+    )
 
     fun intersection(from: MutationsWithRange, to: MutationsWithRange): MutationsWithRange {
         require(from.rangeInfo == to.rangeInfo)
@@ -106,7 +113,10 @@ internal object MutationsUtils {
         )
     }
 
-    fun intersection(from: List<MutationsWithRange>, to: List<MutationsWithRange>): List<MutationsWithRange> {
+    fun intersection(
+        from: RangeMap<MutationsWithRange>,
+        to: RangeMap<MutationsWithRange>
+    ): RangeMap<MutationsWithRange> {
         return fold(from, to) { a, b ->
             intersection(
                 a,
@@ -117,12 +127,30 @@ internal object MutationsUtils {
     }
 
     fun <T> fold(
-        firstMutations: List<MutationsWithRange>,
-        secondMutations: List<MutationsWithRange>,
-        folder: BiFunction<MutationsWithRange, MutationsWithRange, T>
-    ): List<T> {
-        require(firstMutations.size == secondMutations.size)
-        return (firstMutations.indices).map { folder.apply(firstMutations[it], secondMutations[it]) }
+        firstMutations: RangeMap<MutationsWithRange>,
+        secondMutations: RangeMap<MutationsWithRange>,
+        folder: (MutationsWithRange, MutationsWithRange) -> T
+    ): RangeMap<T> {
+        require(firstMutations.keySet() == secondMutations.keySet())
+        return firstMutations.map { (range, _) -> folder(firstMutations[range], secondMutations[range]) }
+    }
+
+    fun <T> fold2(
+        firstMutations: RangeMap<Mutations<NucleotideSequence>>,
+        secondMutations: RangeMap<MutationsWithRange>,
+        folder: (Mutations<NucleotideSequence>, MutationsWithRange, Range) -> T
+    ): RangeMap<T> {
+        require(firstMutations.keySet() == secondMutations.keySet())
+        return firstMutations.map { (range, _) -> folder(firstMutations[range], secondMutations[range], range) }
+    }
+
+    fun <T> fold3(
+        firstMutations: RangeMap<Mutations<NucleotideSequence>>,
+        secondMutations: RangeMap<Mutations<NucleotideSequence>>,
+        folder: (Mutations<NucleotideSequence>, Mutations<NucleotideSequence>, Range) -> T
+    ): RangeMap<T> {
+        require(firstMutations.keySet() == secondMutations.keySet())
+        return firstMutations.map { (range, _) -> folder(firstMutations[range], secondMutations[range], range) }
     }
 
     private fun positionIfNucleotideWasDeleted(position: Int): Int = when {
@@ -293,12 +321,5 @@ internal object MutationsUtils {
             val secondAsWildcard = ALPHABET.codeToWildcard(secondSymbol)
             wildcard.basicMask xor secondAsWildcard.basicMask and secondAsWildcard.basicMask == 0L
         }
-    }
-
-    fun combine(base: List<MutationsWithRange>, combineWith: List<MutationsWithRange>): List<MutationsWithRange> {
-        return fold(
-            base,
-            combineWith
-        ) { obj, next -> obj.combineWith(next) }
     }
 }

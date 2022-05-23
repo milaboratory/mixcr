@@ -15,7 +15,6 @@ import com.milaboratory.mixcr.cli.BuildSHMTreeStep
 import com.milaboratory.mixcr.cli.BuildSHMTreeStep.AttachClonesByDistanceChange
 import com.milaboratory.mixcr.cli.BuildSHMTreeStep.AttachClonesByNDN
 import com.milaboratory.mixcr.cli.BuildSHMTreeStep.CombineTrees
-import com.milaboratory.mixcr.trees.DebugInfo.MutationsSet
 import com.milaboratory.mixcr.trees.MutationsUtils.intersection
 import com.milaboratory.mixcr.trees.Tree.NodeWithParent
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed
@@ -198,6 +197,12 @@ internal class ClusterProcessor private constructor(
                 },
                 PartInCDR3(VMutationsInCDR3WithoutNDN.rangeInfo.range, VMutationsInCDR3WithoutNDN.mutations)
             ),
+            getVMutationsWithinNDN(cloneWrapper, clusterInfo.VRangeInCDR3.upper),
+            CDR3.getRange(
+                clusterInfo.VRangeInCDR3.length() + VMutationsInCDR3WithoutNDN.mutations.lengthDelta,
+                CDR3.size() - (clusterInfo.JRangeInCDR3.length() + JMutationsInCDR3WithoutNDN.mutations.lengthDelta)
+            ),
+            getJMutationsWithinNDN(cloneWrapper, clusterInfo.JRangeInCDR3.lower),
             JGeneMutations(
                 JSequence1,
                 PartInCDR3(JMutationsInCDR3WithoutNDN.rangeInfo.range, JMutationsInCDR3WithoutNDN.mutations),
@@ -206,17 +211,7 @@ internal class ClusterProcessor private constructor(
                         map.put(it.rangeInfo.range, it.mutations)
                     }
                 }
-            ),
-            VMutationsWithoutCDR3,
-            VMutationsInCDR3WithoutNDN,
-            getVMutationsWithinNDN(cloneWrapper, clusterInfo.VRangeInCDR3.upper),
-            CDR3.getRange(
-                clusterInfo.VRangeInCDR3.length() + VMutationsInCDR3WithoutNDN.mutations.lengthDelta,
-                CDR3.size() - (clusterInfo.JRangeInCDR3.length() + JMutationsInCDR3WithoutNDN.mutations.lengthDelta)
-            ),
-            getJMutationsWithinNDN(cloneWrapper, clusterInfo.JRangeInCDR3.lower),
-            JMutationsInCDR3WithoutNDN,
-            JMutationsWithoutCDR3
+            )
         )
 
         //TODO remove
@@ -281,25 +276,29 @@ internal class ClusterProcessor private constructor(
             destination.rootInfo,
             from.rootInfo
         )
-        return distance(MutationsUtils.mutationsBetween(oldestAncestorOfFrom.fromRootToThis, destinationRebasedOnFrom))
+        return distance(
+            MutationsUtils.mutationsBetween(
+                oldestAncestorOfFrom.fromRootToThis,
+                destinationRebasedOnFrom
+            )
+        )
     }
 
     private fun attachClonesByNDN(
         originalTrees: List<TreeWithMetaBuilder>, clonesNotInClusters: Supplier<List<CloneWithMutationsFromVJGermline>>
     ): StepResult {
         val decisions: MutableMap<Int, TreeWithMetaBuilder.DecisionInfo> = HashMap()
-        val resultTrees =
-            originalTrees.stream().map { obj: TreeWithMetaBuilder -> obj.copy() }.collect(Collectors.toList())
+        val resultTrees = originalTrees.map { it.copy() }
         clonesNotInClusters.get().stream()
             .filter { clone -> clone.mutations.VJMutationsCount < parameters.commonMutationsCountForClustering }
             .forEach { clone ->
                 val bestTreeToAttach = resultTrees.stream()
-                    .map { tree: TreeWithMetaBuilder? ->
-                        val rebasedClone = tree!!.rebaseClone(clone)
+                    .map { tree: TreeWithMetaBuilder ->
+                        val rebasedClone = tree.rebaseClone(clone)
                         val oldestAncestorOfTreeToGrow = tree.oldestReconstructedAncestor()
-                        val nodeToAttach = SyntheticNode.createFromMutations(rebasedClone.mutationsFromRoot)
-                        val NDNOfTreeToGrow = oldestAncestorOfTreeToGrow.fromRootToThis.knownNDN.buildSequence()
-                        val NDNOfNodeToAttach = nodeToAttach.fromRootToThis.knownNDN.buildSequence()
+                        //TODO check also every clone with minimum mutations from germline (align with oldest and use diff)
+                        val NDNOfTreeToGrow = oldestAncestorOfTreeToGrow.fromRootToThis.NDNMutations.buildSequence()
+                        val NDNOfNodeToAttach = rebasedClone.mutationsSet.NDNMutations.buildSequence()
                         val score_1 = Aligner.alignGlobal(
                             NDNScoring,
                             NDNOfNodeToAttach,
@@ -489,19 +488,6 @@ internal class ClusterProcessor private constructor(
         return relatedAllelesMutations[baseGene.name] ?: emptyList()
     }
 
-    private fun commonMutationsCount(first: List<MutationsWithRange>, second: List<MutationsWithRange>): Int =
-        MutationsUtils.fold(
-            first, second
-        ) { a, b ->
-            val intersection = a.rangeInfo.intersection(b.rangeInfo)!!
-            val mutations = intersection(
-                a.mutations,
-                b.mutations,
-                intersection
-            )
-            mutations.size()
-        }.sum()
-
     private fun buildATreeWithDecisionsInfo(cluster: Cluster<CloneWithMutationsFromVJGermline>): Pair<List<Pair<Int, TreeWithMetaBuilder.DecisionInfo>>, TreeWithMetaBuilder> {
         val treeWithMetaBuilder = buildATree(cluster)
         val decisionsInfo = cluster.cluster.stream()
@@ -512,8 +498,8 @@ internal class ClusterProcessor private constructor(
                 Pair(
                     it.cloneWrapper.clone.id,
                     ZeroStepDecisionInfo(
-                        effectiveParent.fromRootToThis.combinedVMutations().size() +
-                            effectiveParent.fromRootToThis.combinedJMutations().size(),
+                        effectiveParent.fromRootToThis.VMutations.mutationsCount() +
+                            effectiveParent.fromRootToThis.JMutations.mutationsCount(),
                         VHit.gene.geneName,
                         JHit.gene.geneName,
                         VHit.score,
@@ -539,11 +525,11 @@ internal class ClusterProcessor private constructor(
                     clone.cloneWrapper,
                     result.mutationsSet.VMutations,
                     result.mutationsSet.JMutations,
-                    result.mutationsSet.NDNMutations.mutations.mutate(result.mutationsSet.NDNMutations.base)
+                    result.mutationsSet.NDNMutations.buildSequence()
                 )
                 result
             }
-            .sortedByDescending { distance(it.mutationsFromRoot) }
+            .sortedBy { score(it.mutationsSet) }
             .toList()
         val treeBuilder = createTreeBuilder(rootInfo)
         val treeWithMetaBuilder = TreeWithMetaBuilder(
@@ -569,31 +555,26 @@ internal class ClusterProcessor private constructor(
         )
         return TreeBuilderByAncestors(
             root,
-            { base, mutations -> distance(mutations) + penaltyForReversedMutations(base, mutations) },
-            { first, second ->
-                MutationsUtils.mutationsBetween(
-                    first.fromRootToThis,
-                    second.fromRootToThis
-                )
+            distance = { base, mutations -> distance(mutations) + penaltyForReversedMutations(base, mutations) },
+            mutationsBetween = { first, second ->
+                MutationsUtils.mutationsBetween(first.fromRootToThis, second.fromRootToThis)
             },
-            { parent, fromParentToThis -> parent.mutate(fromParentToThis) },
-            { observed -> SyntheticNode.createFromMutations(observed.mutationsFromRoot) },
-            { first, second -> commonMutations(first, second) },
-            { parent, child ->
+            mutate = { parent, fromParentToThis -> parent.mutate(fromParentToThis) },
+            asAncestor = { observed -> SyntheticNode.createFromMutations(observed.mutationsSet) },
+            findCommonMutations = { first, second -> commonMutations(first, second) },
+            postprocessDescendants = { parent, child ->
                 SyntheticNode.createFromMutations(
-                    child.fromRootToThis.withKnownNDNMutations(
-                        MutationsWithRange(
-                            child.fromRootToThis.knownNDN.sequence1,
-                            MutationsUtils.concreteNDNChild(
-                                parent.fromRootToThis.knownNDN.mutations,
-                                child.fromRootToThis.knownNDN.mutations
-                            ),
-                            child.fromRootToThis.knownNDN.rangeInfo
+                    child.fromRootToThis.copy(
+                        NDNMutations = child.fromRootToThis.NDNMutations.copy(
+                            mutations = MutationsUtils.concreteNDNChild(
+                                parent.fromRootToThis.NDNMutations.mutations,
+                                child.fromRootToThis.NDNMutations.mutations
+                            )
                         )
                     )
                 )
             },
-            parameters.countOfNodesToProbe
+            countOfNodesToProbe = parameters.countOfNodesToProbe
         )
     }
 
@@ -707,29 +688,46 @@ internal class ClusterProcessor private constructor(
     }
 
     private fun distance(mutations: MutationsDescription): BigDecimal {
-        val VPenalties = maxScore(mutations.VMutationsWithoutCDR3, VScoring) - score(
-            mutations.VMutationsWithoutCDR3,
-            VScoring
-        ) +
-            maxScore(
-                mutations.VMutationsInCDR3WithoutNDN,
-                VScoring
-            ) - score(mutations.VMutationsInCDR3WithoutNDN, VScoring)
-        val VLength = mutations.VMutationsWithoutCDR3.stream()
+        val VPenalties = maxScore(mutations.VMutationsWithoutCDR3.values(), VScoring) -
+            score(mutations.VMutationsWithoutCDR3.values(), VScoring) +
+            maxScore(mutations.VMutationsInCDR3WithoutNDN, VScoring) -
+            score(mutations.VMutationsInCDR3WithoutNDN, VScoring)
+        val VLength = mutations.VMutationsWithoutCDR3.values().stream()
             .mapToInt { it.rangeInfo.range.length() }.sum() +
             mutations.VMutationsInCDR3WithoutNDN.rangeInfo.range.length()
-        val JPenalties = maxScore(mutations.JMutationsWithoutCDR3, JScoring) -
-            score(mutations.JMutationsWithoutCDR3, JScoring) +
+        val JPenalties = maxScore(mutations.JMutationsWithoutCDR3.values(), JScoring) -
+            score(mutations.JMutationsWithoutCDR3.values(), JScoring) +
             maxScore(mutations.JMutationsInCDR3WithoutNDN, JScoring) -
             score(mutations.JMutationsInCDR3WithoutNDN, JScoring)
-        val JLength = mutations.JMutationsWithoutCDR3.stream()
+        val JLength = mutations.JMutationsWithoutCDR3.values().stream()
             .mapToInt { it.rangeInfo.range.length() }.sum() +
             mutations.JMutationsInCDR3WithoutNDN.rangeInfo.range.length()
         val NDNPenalties = maxScore(mutations.knownNDN, NDNScoring) - score(mutations.knownNDN, NDNScoring)
-        val NDNLength = mutations.knownNDN.rangeInfo.range.length().toDouble()
+        val NDNLength = mutations.knownNDN.rangeInfo.range.length()
 
-//        return BigDecimal.valueOf(NDNPenalties / NDNLength + (VPenalties + JPenalties) / (VLength + JLength));
-        return BigDecimal.valueOf((NDNPenalties * parameters.NDNScoreMultiplier + VPenalties + JPenalties) / (NDNLength + VLength + JLength))
+        return BigDecimal.valueOf(
+            (NDNPenalties * parameters.NDNScoreMultiplier + VPenalties + JPenalties) /
+                (NDNLength + VLength + JLength).toDouble()
+        )
+    }
+
+    private fun score(mutations: MutationsSet): Int {
+        val VScore = AlignmentUtils.calculateScore(
+            mutations.VMutations.sequence1,
+            mutations.VMutations.combinedMutations(),
+            VScoring
+        )
+        val JScore = AlignmentUtils.calculateScore(
+            mutations.JMutations.sequence1,
+            mutations.JMutations.combinedMutations(),
+            JScoring
+        )
+        val NDNScore = AlignmentUtils.calculateScore(
+            mutations.NDNMutations.base,
+            mutations.NDNMutations.mutations,
+            NDNScoring
+        )
+        return VScore + JScore + NDNScore
     }
 
     private fun commonMutations(first: MutationsDescription, second: MutationsDescription): MutationsDescription {
@@ -826,36 +824,19 @@ internal class ClusterProcessor private constructor(
                     { Optional.empty() },
                     { Optional.of(it) })
             }
-            .map { parent ->
-                MutationsSet(
-                    parent.fromRootToThis.combinedVMutations().invert()
-                        .combineWith(nodeContent.fromRootToThis.combinedVMutations()),
-                    parent.fromRootToThis.knownNDN.mutations.invert()
-                        .combineWith(nodeContent.fromRootToThis.knownNDN.mutations),
-                    parent.fromRootToThis.combinedJMutations().invert()
-                        .combineWith(nodeContent.fromRootToThis.combinedJMutations())
-                )
-            }
+            .map { parent -> parent.fromRootToThis }
         return DebugInfo(
             tree.treeId,
             tree.rootInfo,
-            nodeContent.fromRootToThis.VMutationsWithoutCDR3.stream()
-                .map { it.rangeInfo.range }
-                .collect(Collectors.toList()),
-            nodeContent.fromRootToThis.JMutationsWithoutCDR3.stream()
-                .map { it.rangeInfo.range }
-                .collect(Collectors.toList()),
+            nodeContent.fromRootToThis.VMutations.mutations.keySet(),
+            nodeContent.fromRootToThis.JMutations.mutations.keySet(),
             cloneId,
             nodeWithParent.node.content.id,
             Optional.ofNullable(nodeWithParent.parent)
                 .map { it.content.id }
                 .orElse(null),
-            nodeContent.fromRootToThis.knownNDN.buildSequence(),
-            MutationsSet(
-                nodeContent.fromRootToThis.combinedVMutations(),
-                nodeContent.fromRootToThis.knownNDN.mutations,
-                nodeContent.fromRootToThis.combinedJMutations()
-            ),
+            nodeContent.fromRootToThis.NDNMutations.buildSequence(),
+            nodeContent.fromRootToThis,
             parentMutations.orElse(null),
             metric,
             isPublic(tree.rootInfo)
@@ -988,33 +969,37 @@ internal class ClusterProcessor private constructor(
         }
 
         private fun reversedVMutationsCount(fromRootToBase: SyntheticNode, mutations: MutationsDescription): Int {
-            val reversedMutationsNotInCDR3 = MutationsUtils.fold(
-                fromRootToBase.fromRootToThis.VMutationsWithoutCDR3,
+            //TODO don't reconstruct map
+            val reversedMutationsNotInCDR3 = MutationsUtils.fold2(
+                fromRootToBase.fromRootToThis.VMutations.mutations,
                 mutations.VMutationsWithoutCDR3
-            ) { a, b -> reversedMutationsCount(a, b) }.sum()
+            ) { a, b, range -> reversedMutationsCount(a, b, range) }.values().sum()
             val reversedMutationsInCDR3 = reversedMutationsCount(
-                fromRootToBase.fromRootToThis.VMutationsInCDR3WithoutNDN,
-                mutations.VMutationsInCDR3WithoutNDN
+                fromRootToBase.fromRootToThis.VMutations.partInCDR3.mutations,
+                mutations.VMutationsInCDR3WithoutNDN,
+                fromRootToBase.fromRootToThis.VMutations.partInCDR3.range
             )
             return reversedMutationsInCDR3 + reversedMutationsNotInCDR3
         }
 
         private fun reversedJMutationsCount(fromRootToBase: SyntheticNode, mutations: MutationsDescription): Int {
-            val reversedMutationsNotInCDR3 = MutationsUtils.fold(
-                fromRootToBase.fromRootToThis.JMutationsWithoutCDR3,
+            //TODO don't reconstruct map
+            val reversedMutationsNotInCDR3 = MutationsUtils.fold2(
+                fromRootToBase.fromRootToThis.JMutations.mutations,
                 mutations.JMutationsWithoutCDR3
-            ) { a, b -> reversedMutationsCount(a, b) }.sum()
+            ) { a, b, range -> reversedMutationsCount(a, b, range) }.values().sum()
             val reversedMutationsInCDR3 = reversedMutationsCount(
-                fromRootToBase.fromRootToThis.JMutationsInCDR3WithoutNDN,
-                mutations.JMutationsInCDR3WithoutNDN
+                fromRootToBase.fromRootToThis.JMutations.partInCDR3.mutations,
+                mutations.JMutationsInCDR3WithoutNDN,
+                fromRootToBase.fromRootToThis.JMutations.partInCDR3.range
             )
             return reversedMutationsInCDR3 + reversedMutationsNotInCDR3
         }
 
-        private fun reversedMutationsCount(a: MutationsWithRange, b: MutationsWithRange): Int {
-            val reversedMutations = b.mutationsForRange().move(a.rangeInfo.range.lower).invert()
-            val asSet = reversedMutations.rawMutations.asSequence().toSet()
-            return a.mutations.asSequence().count { asSet.contains(it) }
+        private fun reversedMutationsCount(a: Mutations<NucleotideSequence>, b: MutationsWithRange, range: Range): Int {
+            val reversedMutations = b.mutations.move(range.lower).invert()
+            val asSet = reversedMutations.asSequence().toSet()
+            return a.asSequence().count { asSet.contains(it) }
         }
 
         private fun minRangeInCDR3(
@@ -1047,7 +1032,7 @@ internal class ClusterProcessor private constructor(
          * sum score of given mutations
          */
         private fun score(
-            mutationsWithRanges: List<MutationsWithRange>,
+            mutationsWithRanges: Collection<MutationsWithRange>,
             scoring: AlignmentScoring<NucleotideSequence>
         ): Double = mutationsWithRanges.stream()
             .mapToDouble { mutations -> score(mutations, scoring).toDouble() }
@@ -1056,14 +1041,14 @@ internal class ClusterProcessor private constructor(
         private fun score(mutations: MutationsWithRange, scoring: AlignmentScoring<NucleotideSequence>): Int =
             AlignmentUtils.calculateScore(
                 mutations.sequence1,
-                mutations.mutationsForRange(),
+                mutations.mutations,
                 scoring
             )
 
         private fun maxScore(
-            vMutationsBetween: List<MutationsWithRange>,
+            mutationsBetween: Collection<MutationsWithRange>,
             scoring: AlignmentScoring<NucleotideSequence>
-        ): Double = vMutationsBetween.stream()
+        ): Double = mutationsBetween.stream()
             .mapToDouble { mutations -> maxScore(mutations, scoring).toDouble() }
             .sum()
 

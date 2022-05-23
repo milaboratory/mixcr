@@ -9,7 +9,6 @@ data class RangeInfo(
     val range: Range,
     val isIncludeFirstInserts: Boolean
 ) {
-
     fun intersection(another: RangeInfo): RangeInfo? {
         val intersection: Range = when (range) {
             another.range -> range
@@ -25,21 +24,6 @@ data class RangeInfo(
             includeFirstInserts
         )
     }
-
-    fun extractAbsoluteMutations(mutations: Mutations<NucleotideSequence>): Mutations<NucleotideSequence> =
-        mutations.asSequence()
-            .filter { contains(it) }
-            .asMutations(NucleotideSequence.ALPHABET)
-
-    operator fun contains(mutation: Int): Boolean =
-        when (val position = Mutation.getPosition(mutation)) {
-            range.lower -> when {
-                Mutation.isInsertion(mutation) -> isIncludeFirstInserts
-                else -> position < range.upper
-            }
-            range.upper -> Mutation.isInsertion(mutation)
-            else -> range.lower < position && position < range.upper
-        }
 }
 
 fun Mutations<NucleotideSequence>.extractAbsoluteMutations(
