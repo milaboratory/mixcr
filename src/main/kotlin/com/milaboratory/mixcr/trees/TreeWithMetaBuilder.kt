@@ -49,16 +49,8 @@ class TreeWithMetaBuilder(
             { Optional.of(it) })
         .orElseThrow { IllegalStateException() }
 
-    fun rebaseClone(clone: CloneWithMutationsFromVJGermline): CloneWithMutationsFromReconstructedRoot {
-        val result = clonesRebase.rebaseClone(rootInfo, clone.mutations, clone.cloneWrapper)
-        assertClone(
-            clone.cloneWrapper,
-            result.mutationsSet.VMutations,
-            result.mutationsSet.JMutations,
-            result.mutationsSet.NDNMutations.buildSequence()
-        )
-        return result
-    }
+    fun rebaseClone(clone: CloneWithMutationsFromVJGermline): CloneWithMutationsFromReconstructedRoot =
+        clonesRebase.rebaseClone(rootInfo, clone.mutations, clone.cloneWrapper)
 
     fun addClone(rebasedClone: CloneWithMutationsFromReconstructedRoot) {
         treeBuilder.addNode(rebasedClone)
@@ -98,12 +90,6 @@ class TreeWithMetaBuilder(
                 )
                 node.convert(
                     { c ->
-                        assertClone(
-                            c.clone,
-                            c.mutationsSet.VMutations,
-                            c.mutationsSet.JMutations,
-                            c.mutationsSet.NDNMutations.buildSequence()
-                        )
                         CloneInfo(
                             c.clone,
                             node.id,
