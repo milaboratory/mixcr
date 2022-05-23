@@ -23,7 +23,7 @@ plugins {
     `maven-publish`
     kotlin("jvm") version "1.6.21"
     id("org.jetbrains.kotlin.plugin.dataframe") version "0.8.0-rc-8"
-    id("com.palantir.git-version") version "0.15.0"
+    id("com.palantir.git-version") version "0.13.0" // don't upgrade, latest version that runs on Java 8
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 // Make IDE aware of the generated code:
@@ -81,20 +81,21 @@ repositories {
     }
 }
 
-val milibVersion = "1.15.0-38-master"
-val repseqioVersion = "1.3.5-27-master"
-val mitoolVersion = "1.3.5-25-master"
+val milibVersion = "1.15.0-42-master"
+val repseqioVersion = "1.3.5-28-master"
+val mitoolVersion = "0.9.1-7-main"
 val miplotsVersion = "0.1-19-master"
 val jacksonBomVersion = "2.13.3"
 
 dependencies {
-    api("com.milaboratory:milib:$milibVersion")
-    api("io.repseq:repseqio:$repseqioVersion") {
+    implementation("com.milaboratory:milib:$milibVersion")
+    implementation("io.repseq:repseqio:$repseqioVersion") {
         exclude("com.milaboratory", "milib")
     }
-    api("com.milaboratory:miplots:$miplotsVersion")
-
-    api("com.milaboratory:mitool:$miplotsVersion")
+    implementation("com.milaboratory:mitool:$mitoolVersion"){
+        exclude("com.milaboratory", "milib")
+    }
+    implementation("com.milaboratory:miplots:$miplotsVersion")
 
     // implementation("com.milaboratory:milm2-jvm:0.2.0-test-2") { isChanging = true }
     implementation("com.milaboratory:milm2-jvm:1.1.0")

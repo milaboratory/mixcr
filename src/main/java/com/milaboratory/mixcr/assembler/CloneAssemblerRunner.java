@@ -72,7 +72,7 @@ public class CloneAssemblerRunner implements CanReportProgressAndStage {
     }
 
     public void run() {
-        //run initial assembler
+        // run initial assembler
         try (OutputPortCloseable<VDJCAlignments> alignmentsPort = alignmentsProvider.create()) {
             if (alignmentsPort instanceof VDJCAlignmentsReaderWrapper.OP)
                 alignmentReader = ((VDJCAlignmentsReaderWrapper.OP) alignmentsPort).reader;
