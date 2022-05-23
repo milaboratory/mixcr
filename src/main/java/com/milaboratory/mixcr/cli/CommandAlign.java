@@ -59,6 +59,7 @@ import com.milaboratory.core.sequence.quality.QualityTrimmerParameters;
 import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor;
 import com.milaboratory.core.sequence.quality.ReadTrimmerReport;
 import com.milaboratory.mitool.helpers.FSKt;
+import com.milaboratory.mitool.pattern.PatternCollection;
 import com.milaboratory.mitool.pattern.search.*;
 import com.milaboratory.mitool.report.ParseReport;
 import com.milaboratory.mixcr.basictypes.SequenceHistory;
@@ -77,6 +78,7 @@ import picocli.CommandLine.Parameters;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -233,6 +235,14 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
     @Option(description = "Tag pattern to extract from the read.",
             names = {"--tag-pattern"})
     public String tagPattern;
+
+    @Option(description = "Tag pattern name from the built-in list.",
+            names = {"--tag-pattern-name"})
+    public String tagPatternName;
+
+    @Option(description = "Read tag pattern from a file.",
+            names = {"--tag-pattern-file"})
+    public String tagPatternFile;
 
     @Option(description = "If paired-end input is used, determines whether to try all combinations of mate-pairs or only match " +
             "reads to the corresponding pattern sections (i.e. first file to first section, etc...)",
@@ -455,8 +465,29 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
     }
 
     public TagSearchPlan getTagPattern() {
-        if (tagPattern == null)
+        if (tagPattern == null && tagPatternName == null && tagPatternFile == null)
             return null;
+
+        if ((tagPattern != null ? 1 : 0) + (tagPatternName != null ? 1 : 0) + (tagPatternFile != null ? 1 : 0) != 1)
+            throwValidationException("--tag-pattern, --tag-pattern-name and --tag-pattern-file can't be used together");
+
+        String tagPattern;
+        if (this.tagPattern != null)
+            tagPattern = this.tagPattern;
+        else if (this.tagPatternName != null)
+            tagPattern = PatternCollection.INSTANCE.getPatternByName(this.tagPatternName);
+        else if (this.tagPatternFile != null)
+            try {
+                tagPattern = new String(Files.readAllBytes(Paths.get(this.tagPatternFile)));
+            } catch (IOException e) {
+                throwValidationException(e.getMessage());
+                throw new AssertionError();
+            }
+        else
+            throw new AssertionError();
+
+        System.out.println("Tags will be extracted using the following pattern:");
+        System.out.println(tagPattern);
 
         ReadSearchSettings searchSettings = new ReadSearchSettings(new SearchSettings(tagMaxBudget, 0.1,
                 new MatcherSettings(3, 7)),
