@@ -575,7 +575,8 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
 
         // Creating aligner
         VDJCAligner aligner = VDJCAligner.createAligner(alignerParameters,
-                tagSearchPlan.readShortcuts.size() == 2, !noMerge);
+                tagSearchPlan != null ? tagSearchPlan.readShortcuts.size() == 2 : isInputPaired(),
+                !noMerge);
 
         int numberOfExcludedNFGenes = 0;
         int numberOfExcludedFGenes = 0;
