@@ -179,8 +179,7 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
             if (jsonReport != null)
                 ReportUtil.appendJsonReport(jsonReport, report);
 
-            // TODO ????
-            // output.setNumberOfProcessedReads(input.getNumberOfReads() - overlapped.get());
+            writer.setNumberOfProcessedReads(reader1.getNumberOfReads() - assembler.overlapped.get());
         }
     }
 

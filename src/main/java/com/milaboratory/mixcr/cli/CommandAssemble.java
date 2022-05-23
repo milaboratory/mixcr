@@ -438,7 +438,6 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
 
         @Override
         public int hashCode() {
-
             return Objects.hash(assemblerParameters, clna);
         }
     }

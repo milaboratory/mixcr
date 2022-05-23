@@ -58,7 +58,7 @@ public interface AlignmentsProvider {
             });
         }
 
-        public static AlignmentsProvider createProvider(String file, final VDJCLibraryRegistry geneResolver) {
+        public static AlignmentsProvider createProvider(String file, VDJCLibraryRegistry geneResolver) {
             return new VDJCAlignmentsReaderWrapper(() -> {
                 try {
                     return new VDJCAlignmentsReader(file, geneResolver);
