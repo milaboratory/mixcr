@@ -78,35 +78,35 @@ public class PostanalysisSchemaIntegrationTest {
                         weightedBiophysics(AAProperties.AAProperty.N2Volume, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5),
                         weightedBiophysics(AAProperties.AAProperty.Charge, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5)
                 ),
-                Arrays.asList(new GroupSummary<>())
+                Arrays.asList(new GroupSummary.Simple<>())
         ));
         groups.add(new CharacteristicGroup<>(
                 "diversity",
                 Arrays.asList(new DiversityCharacteristic<>("diversity", new WeightFunctions.Count(), new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Auto(), 314, true))),
-                Arrays.asList(new GroupSummary<>())
+                Arrays.asList(new GroupSummary.Simple<>())
         ));
 
         groups.add(new CharacteristicGroup<>(
                 "vUsage",
                 Arrays.asList(AdditiveCharacteristics.segmentUsage(GeneType.Variable)),
-                Arrays.asList(new GroupSummary<>())
+                Arrays.asList(new GroupSummary.Simple<>())
         ));
         groups.add(new CharacteristicGroup<>(
                 "jUsage",
                 Arrays.asList(AdditiveCharacteristics.segmentUsage(GeneType.Joining)),
-                Arrays.asList(new GroupSummary<>())
+                Arrays.asList(new GroupSummary.Simple<>())
         ));
         groups.add(new CharacteristicGroup<>(
                 "vjUsage",
                 Arrays.asList(AdditiveCharacteristics.vjSegmentUsage()),
-                Arrays.asList(new GroupSummary<>(), new GroupMelt.VJUsageMelt<>())
+                Arrays.asList(new GroupSummary.VJUsage<>())
         ));
 
 
         groups.add(new CharacteristicGroup<>(
                 "isotypeUsage",
                 Arrays.asList(AdditiveCharacteristics.isotypeUsage()),
-                Arrays.asList(new GroupSummary<>())
+                Arrays.asList(new GroupSummary.Simple<>())
         ));
 
         groups.add(new CharacteristicGroup<>(
@@ -114,12 +114,12 @@ public class PostanalysisSchemaIntegrationTest {
                 Arrays.asList(new SpectratypeCharacteristic("cdr3Spectratype",
                         NoPreprocessing.factory(), 10,
                         new SpectratypeKeyFunction<>(new KeyFunctions.NTFeature(GeneFeature.CDR3), GeneFeature.CDR3, false))),
-                Collections.singletonList(new GroupSummary<>())));
+                Collections.singletonList(new GroupSummary.Simple<>())));
 
         groups.add(new CharacteristicGroup<>(
                 "VSpectratype",
                 Arrays.asList(AdditiveCharacteristics.VSpectratype()),
-                Collections.singletonList(new GroupSummary<>())));
+                Collections.singletonList(new GroupSummary.Simple<>())));
 
         PostanalysisSchema<Clone> individualPA = new PostanalysisSchema<>(groups);
 
@@ -145,6 +145,10 @@ public class PostanalysisSchemaIntegrationTest {
                 .values().stream().allMatch(l -> l.size() <= 11));
 
         System.out.println(result.getTable(individualPA.getGroup("VSpectratype")));
+
+
+        Object[][] vjUsages = result.getTable(individualPA.getGroup("vjUsage")).getOutputs().get(GroupSummary.key).rows();
+        System.out.println(Arrays.deepToString(vjUsages));
     }
 
     @Test

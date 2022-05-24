@@ -40,7 +40,7 @@ public class DiversityCharacteristicTest {
 
         CharacteristicGroup<DiversityMeasure, TestObject> group = new CharacteristicGroup<>("diversity",
                 Arrays.asList(diversity),
-                Arrays.asList(new GroupSummary<>()));
+                Arrays.asList(new GroupSummary.Simple<>()));
 
         CharacteristicGroupResult<DiversityMeasure> table = result.getTable(group);
         for (CharacteristicGroupResultCell<DiversityMeasure> cell : table.cells) {

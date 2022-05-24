@@ -50,37 +50,37 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters<Clo
                 diversity.getGroup(this),
                 new CharacteristicGroup<>(VUsage,
                         Arrays.asList(AdditiveCharacteristics.segmentUsage(vUsage.preproc(this), GeneType.Variable)),
-                        Arrays.asList(new GroupSummary<>())
+                        Arrays.asList(new GroupSummary.Simple<>())
                 ),
 
                 new CharacteristicGroup<>(JUsage,
                         Arrays.asList(AdditiveCharacteristics.segmentUsage(jUsage.preproc(this), GeneType.Joining)),
-                        Arrays.asList(new GroupSummary<>())
+                        Arrays.asList(new GroupSummary.Simple<>())
                 ),
 
                 new CharacteristicGroup<>(VJUsage,
                         Arrays.asList(AdditiveCharacteristics.vjSegmentUsage(vjUsage.preproc(this))),
-                        Arrays.asList(new GroupSummary<>(), new GroupMelt.VJUsageMelt<>())
+                        Arrays.asList(new GroupSummary.VJUsage<>())
                 ),
 
                 new CharacteristicGroup<>(IsotypeUsage,
                         Arrays.asList(AdditiveCharacteristics.isotypeUsage(isotypeUsage.preproc(this))),
-                        Arrays.asList(new GroupSummary<>())
+                        Arrays.asList(new GroupSummary.Simple<>())
                 ),
 
                 new CharacteristicGroup<>(CDR3Spectratype,
                         Arrays.asList(new SpectratypeCharacteristic("CDR3 spectratype",
                                 cdr3Spectratype.preproc(this), 10,
                                 new SpectratypeKeyFunction<>(new KeyFunctions.AAFeature(GeneFeature.CDR3), GeneFeature.CDR3, false))),
-                        Collections.singletonList(new GroupSummary<>())),
+                        Collections.singletonList(new GroupSummary.Simple<>())),
 
                 new CharacteristicGroup<>(VSpectratype,
                         Arrays.asList(AdditiveCharacteristics.VSpectratype(vSpectratype.preproc(this))),
-                        Collections.singletonList(new GroupSummary<>())),
+                        Collections.singletonList(new GroupSummary.Simple<>())),
 
                 new CharacteristicGroup<>(VSpectratypeMean,
                         Arrays.asList(AdditiveCharacteristics.VSpectratypeMean(vSpectratypeMean.preproc(this))),
-                        Collections.singletonList(new GroupSummary<>()))
+                        Collections.singletonList(new GroupSummary.Simple<>()))
         );
     }
 
@@ -112,7 +112,7 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters<Clo
                             weightedBiophysics(Volume.preproc(base), AAProperties.AAProperty.N2Volume, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Volume"),
                             weightedBiophysics(Charge.preproc(base), AAProperties.AAProperty.Charge, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Charge")
                     ),
-                    Collections.singletonList(new GroupSummary<>()));
+                    Collections.singletonList(new GroupSummary.Simple<>()));
         }
 
         @Override
@@ -166,7 +166,7 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters<Clo
             //noinspection unchecked,rawtypes
             return new CharacteristicGroup(Diversity,
                     chars,
-                    Arrays.asList(new GroupSummary<>())
+                    Arrays.asList(new GroupSummary.Simple<>())
             );
         }
 

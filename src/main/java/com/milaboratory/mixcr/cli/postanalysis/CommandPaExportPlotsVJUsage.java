@@ -8,16 +8,17 @@ import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual;
 import jetbrains.letsPlot.intern.Plot;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
-import picocli.CommandLine;
+import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 import java.util.Collections;
 import java.util.List;
 
-@CommandLine.Command(name = "vjUsage",
+@Command(name = "vjUsage",
         sortOptions = false,
         separator = " ",
-        description = "Export V-J usage heatmap")
+        description = "Export V-J usage heatmap",
+        hidden = true)
 public class CommandPaExportPlotsVJUsage extends CommandPaExportPlotsHeatmap {
     @Option(description = "Plot dendrogram for hierarchical clusterization of V genes.", names = {"--no-v-dendro"})
     public boolean noVDendro;
@@ -46,7 +47,7 @@ public class CommandPaExportPlotsVJUsage extends CommandPaExportPlotsHeatmap {
                         null,
                         hLabelsSize,
                         vLabelsSize,
-                        false,
+                        true,
                         width,
                         height
                 ));

@@ -39,6 +39,7 @@ public abstract class PostanalysisParameters<T> {
         public String downsampling;
         public Boolean onlyProductive;
         public Boolean dropOutliers;
+        public Long seed;
 
         public SetPreprocessorFactory<Clone> preproc(PostanalysisParameters<?> base) {
             SetPreprocessorFactory<Clone> p = parseDownsampling(base);

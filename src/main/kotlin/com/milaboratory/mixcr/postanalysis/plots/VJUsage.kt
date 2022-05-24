@@ -35,7 +35,7 @@ object VJUsage {
             for ((sampleId, keys) in charData.data) {
                 for (metric in keys.data) {
                     val key = metric.key as? KeyFunctions.VJGenes<String> ?: throw RuntimeException()
-                    data += VJUsageRow(sampleId, key.vGene, key.jJene, metric.value)
+                    data += VJUsageRow(sampleId, key.vGene, key.jGene, metric.value)
                 }
             }
         }
