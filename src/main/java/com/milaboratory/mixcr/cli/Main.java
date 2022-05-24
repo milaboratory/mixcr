@@ -226,6 +226,7 @@ public final class Main {
                 .addSubcommand("help", CommandLine.HelpCommand.class)
                 .addSubcommand("analyze", CommandAnalyze.CommandAnalyzeMain.class)
                 .addSubcommand("postanalysis", CommandPa.CommandPostanalysisMain.class)
+                .addSubcommand("downsample", CommandDownsample.class)
                 .addSubcommand("exportPlots", CommandPaExportPlots.CommandExportPlotsMain.class)
                 .addSubcommand("exportTables", CommandPaExportTables.class)
                 .addSubcommand("exportPreprocTables", CommandPaExportTablesPreprocSummary.class)

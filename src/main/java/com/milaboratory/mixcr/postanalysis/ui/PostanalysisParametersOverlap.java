@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
-public class PostanalysisParametersOverlap extends PostanalysisParameters<OverlapGroup<Clone>> {
+public class PostanalysisParametersOverlap extends PostanalysisParameters {
     public static final String Overlap = "Overlap";
 
     public PreprocessorParameters d = new PreprocessorParameters();
@@ -25,7 +25,8 @@ public class PostanalysisParametersOverlap extends PostanalysisParameters<Overla
 
     public List<CharacteristicGroup<?, OverlapGroup<Clone>>> getGroups(int nSamples) {
         PostanalysisParametersOverlap base = this;
-        List<Characteristic<?, OverlapGroup<Clone>>> chars = groupByPreproc(this, new HashMap<OverlapType, SetPreprocessorFactory<OverlapGroup<Clone>>>() {{
+        List<Characteristic<?, OverlapGroup<Clone>>> chars = groupByPreproc(
+                new HashMap<OverlapType, SetPreprocessorFactory<OverlapGroup<Clone>>>() {{
                     put(OverlapType.D, d.overlapPreproc(base));
                     put(OverlapType.SharedClonotypes, sharedClonotypes.overlapPreproc(base));
                     put(OverlapType.F1, f1.overlapPreproc(base));

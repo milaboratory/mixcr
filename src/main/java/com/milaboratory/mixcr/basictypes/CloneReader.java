@@ -30,6 +30,7 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPortCloseable;
+import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import io.repseq.core.VDJCGene;
 
@@ -50,4 +51,6 @@ public interface CloneReader extends AutoCloseable {
     List<VDJCGene> getUsedGenes();
 
     VDJCAlignerParameters getAlignerParameters();
+
+    CloneAssemblerParameters getAssemblerParameters();
 }

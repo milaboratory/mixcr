@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 import static com.milaboratory.mixcr.postanalysis.additive.AdditiveCharacteristics.*;
 
 @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
-public class PostanalysisParametersIndividual extends PostanalysisParameters<Clone> {
+public class PostanalysisParametersIndividual extends PostanalysisParameters {
     public static final String
             Biophysics = "biophysics",
             Diversity = "diversity",
@@ -99,7 +99,7 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters<Clo
         public PreprocessorParameters Volume = new PreprocessorParameters();
         public PreprocessorParameters Charge = new PreprocessorParameters();
 
-        public CharacteristicGroup<?, Clone> getGroup(PostanalysisParameters<?> base) {
+        public CharacteristicGroup<?, Clone> getGroup(PostanalysisParameters base) {
             return new CharacteristicGroup<>(Biophysics,
                     Arrays.asList(
                             weightedLengthOf(cdr3lenNT.preproc(base), GeneFeature.CDR3, false).setName("CDR3 length, nt"),
@@ -142,9 +142,8 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters<Clo
         public PreprocessorParameters gini = new PreprocessorParameters();
         public PreprocessorParameters d50 = new PreprocessorParameters();
 
-        public CharacteristicGroup<?, Clone> getGroup(PostanalysisParameters<?> base) {
+        public CharacteristicGroup<?, Clone> getGroup(PostanalysisParameters base) {
             List<Characteristic<?, Clone>> chars = new ArrayList<>(groupByPreproc(
-                    base,
                     new HashMap<DiversityMeasure, SetPreprocessorFactory<Clone>>() {{
                         put(DiversityMeasure.Observed, observed.preproc(base));
                         put(DiversityMeasure.ShannonWeiner, shannonWeiner.preproc(base));

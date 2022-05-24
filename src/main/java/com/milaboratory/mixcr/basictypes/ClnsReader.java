@@ -42,6 +42,7 @@ import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -65,6 +66,10 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
     private final int numberOfClones;
 
     private final long clonesPosition;
+
+    public ClnsReader(String file, VDJCLibraryRegistry libraryRegistry) throws IOException {
+        this(Paths.get(file), libraryRegistry, 3);
+    }
 
     public ClnsReader(Path file, VDJCLibraryRegistry libraryRegistry) throws IOException {
         this(file, libraryRegistry, 3);
@@ -146,6 +151,7 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
         return alignerParameters;
     }
 
+    @Override
     public CloneAssemblerParameters getAssemblerParameters() {
         return assemblerParameters;
     }
