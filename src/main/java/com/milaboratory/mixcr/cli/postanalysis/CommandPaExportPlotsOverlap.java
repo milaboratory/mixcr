@@ -3,16 +3,15 @@ package com.milaboratory.mixcr.cli.postanalysis;
 import com.milaboratory.miplots.Position;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessorSummary;
 import com.milaboratory.mixcr.postanalysis.plots.*;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
+import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersOverlap;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @CommandLine.Command(name = "overlap",
@@ -42,7 +41,7 @@ public class CommandPaExportPlotsOverlap extends CommandPaExportPlotsHeatmapWith
 
     @Override
     void run(PaResultByGroup result) {
-        CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(CommandPaOverlap.Overlap);
+        CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(PostanalysisParametersOverlap.Overlap);
         PostanalysisResult paResult = result.result.forGroup(ch);
         DataFrame<?> metadata = metadata();
 

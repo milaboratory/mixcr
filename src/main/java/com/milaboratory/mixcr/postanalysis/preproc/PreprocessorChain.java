@@ -113,8 +113,7 @@ public class PreprocessorChain<T> implements SetPreprocessor<T> {
     @Override
     public MappingFunction<T> getMapper(int iDataset) {
         Function<Integer, MappingFunction<T>> mapper = mapperRef.get();
-        if (mapper == null)
-            return MappingFunction.identity();
+        assert (mapper != null);
         return mapper.apply(iDataset);
     }
 

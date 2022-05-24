@@ -3,6 +3,7 @@ package com.milaboratory.mixcr.cli.postanalysis;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.cli.ACommandMiXCR;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
+import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual;
 import com.milaboratory.util.GlobalObjectMappers;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
@@ -31,8 +32,8 @@ public class CommandPaListMetrics extends ACommandMiXCR {
 
         PaResultByGroup result = paResult.results.get(0);
         CharacteristicGroup<Clone, ?>
-                biophys = result.schema.getGroup(CommandPaIndividual.Biophysics),
-                diversity = result.schema.getGroup(CommandPaIndividual.Diversity);
+                biophys = result.schema.getGroup(PostanalysisParametersIndividual.Biophysics),
+                diversity = result.schema.getGroup(PostanalysisParametersIndividual.Diversity);
 
         for (int i = 0; i < 2; i++) {
             System.out.println();

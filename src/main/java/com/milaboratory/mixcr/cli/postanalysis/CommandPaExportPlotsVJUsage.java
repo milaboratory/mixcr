@@ -5,6 +5,7 @@ import com.milaboratory.mixcr.postanalysis.plots.HeatmapParameters;
 import com.milaboratory.mixcr.postanalysis.plots.VJUsage;
 import com.milaboratory.mixcr.postanalysis.plots.VJUsageRow;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
+import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual;
 import jetbrains.letsPlot.intern.Plot;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
 import picocli.CommandLine;
@@ -25,7 +26,7 @@ public class CommandPaExportPlotsVJUsage extends CommandPaExportPlotsHeatmap {
 
     @Override
     void run(PaResultByGroup result) {
-        CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(CommandPaIndividual.VJUsage);
+        CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(PostanalysisParametersIndividual.VJUsage);
 
         DataFrame<?> metadata = metadata();
         DataFrame<VJUsageRow> df = VJUsage.INSTANCE.dataFrame(

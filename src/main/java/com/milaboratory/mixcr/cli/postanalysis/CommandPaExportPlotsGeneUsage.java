@@ -8,6 +8,7 @@ import com.milaboratory.mixcr.postanalysis.plots.GeneUsage;
 import com.milaboratory.mixcr.postanalysis.plots.GeneUsageRow;
 import com.milaboratory.mixcr.postanalysis.plots.HeatmapParameters;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
+import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
@@ -66,7 +67,7 @@ public abstract class CommandPaExportPlotsGeneUsage extends CommandPaExportPlots
     public static class ExportVUsage extends CommandPaExportPlotsGeneUsage {
         @Override
         String group() {
-            return CommandPaIndividual.VUsage;
+            return PostanalysisParametersIndividual.VUsage;
         }
     }
 
@@ -77,7 +78,7 @@ public abstract class CommandPaExportPlotsGeneUsage extends CommandPaExportPlots
     public static class ExportJUsage extends CommandPaExportPlotsGeneUsage {
         @Override
         String group() {
-            return CommandPaIndividual.JUsage;
+            return PostanalysisParametersIndividual.JUsage;
         }
     }
 
@@ -88,7 +89,7 @@ public abstract class CommandPaExportPlotsGeneUsage extends CommandPaExportPlots
     public static class ExportIsotypeUsage extends CommandPaExportPlotsGeneUsage {
         @Override
         String group() {
-            return CommandPaIndividual.IsotypeUsage;
+            return PostanalysisParametersIndividual.IsotypeUsage;
         }
     }
 }

@@ -36,7 +36,10 @@ import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.milaboratory.mixcr.postanalysis.additive.AdditiveCharacteristics.weightedBiophysics;
@@ -79,7 +82,7 @@ public class PostanalysisSchemaIntegrationTest {
         ));
         groups.add(new CharacteristicGroup<>(
                 "diversity",
-                Arrays.asList(new DiversityCharacteristic<>("diversity", new WeightFunctions.Count(), new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Auto(), 314))),
+                Arrays.asList(new DiversityCharacteristic<>("diversity", new WeightFunctions.Count(), new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Auto(), 314, true))),
                 Arrays.asList(new GroupSummary<>())
         ));
 
@@ -183,7 +186,7 @@ public class PostanalysisSchemaIntegrationTest {
 
             ClonesDownsamplingPreprocessorFactory downsamplePreprocessor = new ClonesDownsamplingPreprocessorFactory(
                     new DownsampleValueChooser.Minimal(),
-                    332142);
+                    332142, true);
 
             List<OverlapCharacteristic<Clone>> overlaps = new ArrayList<>();
             for (int i = 0; i < readers.size(); ++i) {

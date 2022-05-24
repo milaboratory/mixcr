@@ -132,11 +132,11 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
             ordering = reader.ordering();
 
             final CloneFactory cloneFactory = new CloneFactory(reader.getAssemblerParameters().getCloneFactoryParameters(),
-                    reader.getAssemblingFeatures(), reader.getGenes(), reader.getAlignerParameters().getFeaturesToAlignMap());
+                    reader.getAssemblingFeatures(), reader.getUsedGenes(), reader.getAlignerParameters().getFeaturesToAlignMap());
 
             alignerParameters = reader.getAlignerParameters();
             cloneAssemblerParameters = reader.getAssemblerParameters();
-            genes = reader.getGenes();
+            genes = reader.getUsedGenes();
             IOUtil.registerGeneReferences(tmpOut, genes, alignerParameters);
 
             ClnAReader.CloneAlignmentsPort cloneAlignmentsPort = reader.clonesAndAlignments();

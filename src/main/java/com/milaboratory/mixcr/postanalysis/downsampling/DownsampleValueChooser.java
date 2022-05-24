@@ -111,7 +111,9 @@ public interface DownsampleValueChooser {
             long q = (long) (new Percentile(quantile).evaluate(Arrays.stream(totalCounts).mapToDouble(l -> l).toArray()) * scale);
             long min = Arrays.stream(totalCounts).min().orElse(0);
             long d = Math.max(q, min);
-            return Math.max(d, threshold);
+            long max = Math.max(d, threshold);
+            long r = Arrays.stream(totalCounts).filter(l -> l > max).min().orElse(0);
+            return Math.max(r, max);
         }
 
         @Override

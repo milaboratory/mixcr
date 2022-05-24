@@ -49,8 +49,8 @@ public final class DiversityMeasure {
                 Chao1,
                 Chao1Std,
                 ShannonWeiner,
-                Clonality,
-                Gini,
+                NormalizedShannonWeinerIndex,
+                GiniIndex,
                 InverseSimpson,
                 EfronThisted,
                 EfronThistedStd,
@@ -61,19 +61,20 @@ public final class DiversityMeasure {
     public static final DiversityMeasure Chao1 = Measure.Chao1.toDiversityMeasure();
     public static final DiversityMeasure Chao1Std = Measure.Chao1Std.toDiversityMeasure();
     public static final DiversityMeasure ShannonWeiner = Measure.ShannonWeiner.toDiversityMeasure();
-    public static final DiversityMeasure Clonality = Measure.Clonality.toDiversityMeasure();
-    public static final DiversityMeasure Gini = Measure.Gini.toDiversityMeasure();
+    public static final DiversityMeasure NormalizedShannonWeinerIndex = Measure.NormalizedShannonWeinerIndex.toDiversityMeasure();
+    public static final DiversityMeasure GiniIndex = Measure.Gini.toDiversityMeasure();
     public static final DiversityMeasure InverseSimpson = Measure.InverseSimpson.toDiversityMeasure();
     public static final DiversityMeasure EfronThisted = Measure.EfronThisted.toDiversityMeasure();
     public static final DiversityMeasure EfronThistedStd = Measure.EfronThistedStd.toDiversityMeasure();
 
-    enum Measure {
+    public enum Measure {
         Observed,
         Chao1,
         Chao1Std,
         ShannonWeiner,
-        Clonality,
+        NormalizedShannonWeinerIndex,
         Gini,
+        GiniDiversity,
         InverseSimpson,
         EfronThisted,
         EfronThistedStd;

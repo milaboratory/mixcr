@@ -38,6 +38,7 @@ public class OverlapDownsamplingPreprocessorTest {
                     t -> Math.round(t.weight),
                     (t, newW) -> new TestObject(t.value, newW),
                     chooser,
+                    true,
                     System.currentTimeMillis(),
                     ""
             );

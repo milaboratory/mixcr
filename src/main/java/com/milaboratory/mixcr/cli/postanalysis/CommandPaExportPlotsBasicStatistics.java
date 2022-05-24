@@ -10,6 +10,7 @@ import com.milaboratory.mixcr.postanalysis.plots.BasicStatRow;
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics;
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics.PlotType;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
+import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
@@ -100,7 +101,7 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
     public static class ExportBiophysics extends CommandPaExportPlotsBasicStatistics {
         @Override
         String group() {
-            return CommandPaIndividual.Biophysics;
+            return PostanalysisParametersIndividual.Biophysics;
         }
     }
 
@@ -111,7 +112,7 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
     public static class ExportDiversity extends CommandPaExportPlotsBasicStatistics {
         @Override
         String group() {
-            return CommandPaIndividual.Diversity;
+            return PostanalysisParametersIndividual.Diversity;
         }
     }
 }
