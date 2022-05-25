@@ -30,10 +30,10 @@
 package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.cli.ValidationException;
-import com.milaboratory.mixcr.cli.postanalysis.*;
 import com.milaboratory.milm.LM;
 import com.milaboratory.milm.LicenseError;
 import com.milaboratory.milm.LicenseErrorType;
+import com.milaboratory.mixcr.cli.postanalysis.*;
 import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.TempFileManager;
 import com.milaboratory.util.VersionInfo;
@@ -225,6 +225,7 @@ public final class Main {
                 .setCommandName(command)
                 .addSubcommand("help", CommandLine.HelpCommand.class)
                 .addSubcommand("analyze", CommandAnalyze.CommandAnalyzeMain.class)
+
                 .addSubcommand("postanalysis", CommandPa.CommandPostanalysisMain.class)
                 .addSubcommand("downsample", CommandDownsample.class)
                 .addSubcommand("exportPlots", CommandPaExportPlots.CommandExportPlotsMain.class)

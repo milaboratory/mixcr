@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @Command(name = "individual",
         sortOptions = false,
         separator = " ",
-        description = "Biophysics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype")
+        description = "Run postanalysis for biophysics, diversity, V/J/VJ-usage, CDR3/V-Spectratype metrics")
 public class CommandPaIndividual extends CommandPa {
     public CommandPaIndividual() {}
 

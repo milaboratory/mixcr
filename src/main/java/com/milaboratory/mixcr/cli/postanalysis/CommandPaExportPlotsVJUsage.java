@@ -20,9 +20,11 @@ import java.util.List;
         description = "Export V-J usage heatmap",
         hidden = true)
 public class CommandPaExportPlotsVJUsage extends CommandPaExportPlotsHeatmap {
-    @Option(description = "Plot dendrogram for hierarchical clusterization of V genes.", names = {"--no-v-dendro"})
+    @Option(description = "Don't add V genes dendrogram",
+            names = {"--no-v-dendro"})
     public boolean noVDendro;
-    @Option(description = "Plot dendrogram for hierarchical clusterization of genes.", names = {"--no-j-dendro"})
+    @Option(description = "Don't add J genes dendrogram",
+            names = {"--no-j-dendro"})
     public boolean noJDendro;
 
     @Override
@@ -47,7 +49,7 @@ public class CommandPaExportPlotsVJUsage extends CommandPaExportPlotsHeatmap {
                         null,
                         hLabelsSize,
                         vLabelsSize,
-                        true,
+                        false,
                         width,
                         height
                 ));

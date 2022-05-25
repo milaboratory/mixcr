@@ -1,6 +1,7 @@
 package com.milaboratory.mixcr.cli.postanalysis;
 
 import com.milaboratory.mixcr.cli.ACommandWithOutputMiXCR;
+import com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingUtil;
 import com.milaboratory.util.StringUtil;
 import io.repseq.core.Chains;
 import picocli.CommandLine;
@@ -26,29 +27,29 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
     @Parameters(description = "cloneset.{clns|clna}... result.json.gz|result.json")
     public List<String> inOut;
 
-    @Option(description = "Use only productive CDR3s.",
+    @Option(description = "Filter out-of-frame sequences and clonotypes with stop-codons",
             names = {"--only-productive"})
     public boolean onlyProductive = false;
 
-    @Option(description = "Drop outliers.",
+    @Option(description = "Drop samples which have less abundance than the computed downsampling threshold.",
             names = {"--drop-outliers"})
     public boolean dropOutliers = false;
 
-    @Option(description = "Choose downsampling. Possible values: umi-count-[1000|auto]|cumulative-top-[percent]|top-[number]|no-downsampling",
+    @Option(description = "Default downsampling. Possible values: umi-count-[1000|auto|min]|cumulative-top-[percent]|top-[number]|no-downsampling",
             names = {"--default-downsampling"},
             required = true)
     public String defaultDownsampling;
 
-    @Option(description = "Filter specific chains",
-            names = {"-c", "--chains"})
+    @Option(description = "Filter specified chains",
+            names = {"--chains"})
     public String chains = "ALL";
 
     @Option(description = "Metadata file (csv/tsv). Must have \"sample\" column.",
-            names = {"-m", "--meta", "--metadata"})
+            names = {"--metadata"})
     public String metadata;
 
     @Option(description = "Metadata categories used to isolate samples into separate groups",
-            names = {"-g", "--group"})
+            names = {"--group"})
     public List<String> isolationGroups;
 
     @Option(description = "Tabular results output path (path/table.tsv).",
@@ -88,10 +89,27 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
     @Override
     public void validate() {
         super.validate();
-        if (metadata != null && !metadata.endsWith(".csv") && !metadata.endsWith(".tsv"))
-            throwValidationException("Metadata should be .csv or .tsv");
         if (!out().endsWith(".json") && !out().endsWith(".json.gz"))
             throwValidationException("Output file name should ends with .json.gz or .json");
+        try {
+            DownsamplingUtil.parseDownsampling(defaultDownsampling, dropOutliers, 0);
+        } catch (Throwable t) {
+            throwValidationException("Illegal downsampling string: " + defaultDownsampling);
+        }
+        if (metadata != null && !metadata.endsWith(".csv") && !metadata.endsWith(".tsv"))
+            throwValidationException("Metadata should be .csv or .tsv");
+        if (metadata != null) {
+            if (!metadata().containsKey("sample"))
+                throwValidationException("Metadata must contain 'sample' column");
+            List<String> samples = getInputFiles();
+            Map<String, String> mapping = StringUtil.matchLists(
+                    samples,
+                    metadata().get("sample").stream()
+                            .map(Object::toString).collect(toList())
+            );
+            if (mapping.size() < samples.size() || mapping.values().stream().anyMatch(Objects::isNull))
+                throwValidationException("Metadata samples does not match input file names.");
+        }
     }
 
     private String outBase() {

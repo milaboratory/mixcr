@@ -7,24 +7,26 @@ import com.milaboratory.mixcr.postanalysis.plots.*;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersOverlap;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
-import picocli.CommandLine;
+import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@CommandLine.Command(name = "overlap",
+@Command(name = "overlap",
         sortOptions = false,
         separator = " ",
-        description = "Export overlap heatmap")
+        description = "Export overlap heatmaps")
 public class CommandPaExportPlotsOverlap extends CommandPaExportPlotsHeatmapWithGroupBy {
-    @Option(description = "Plot dendrogram for hierarchical clusterization of V genes.",
+    @Option(description = "Don't add dendrograms",
             names = {"--no-dendro"})
     public boolean noDendro;
-    @Option(description = "Add color key layer.",
+
+    @Option(description = "Add color key layer; prefix 'x_' (add to the bottom) or 'y_' (add to the left) should be used.",
             names = {"--color-key"})
     public List<String> colorKey = new ArrayList<>();
+
     @Option(description = "Select specific metrics to export.",
             names = {"--metric"})
     public List<String> metrics;

@@ -124,13 +124,13 @@ object BasicStatistics {
         }
     }
 
-    private fun isCategorial(t: PlotType) = when (t) {
+    private fun isCategorical(t: PlotType) = when (t) {
         Scatter, LinePlot -> false
         else -> true
     }
 
     private fun guessPlotType(par: PlotParameters, meta: Metadata?) =
-        if (par.primaryGroup == null || meta == null || meta.isCategorial(par.primaryGroup))
+        if (par.primaryGroup == null || meta == null || meta.isCategorical(par.primaryGroup))
             BoxPlot
         else
             Scatter
@@ -185,7 +185,7 @@ object BasicStatistics {
         val type = if (par.plotType == Auto) guessPlotType(par, df) else par.plotType
 
         val dfRefined = (
-                if (isCategorial(type)) {
+                if (isCategorical(type)) {
                     if (par.primaryGroup == null)
                         df.add(List(df.rowsCount()) { "" }.toColumn("__x__"))
                     else if (df.isNumeric(par.primaryGroup) || (par.secondaryGroup != null && df.isNumeric(par.secondaryGroup))) {
@@ -197,7 +197,7 @@ object BasicStatistics {
                 }
                 )
 
-        if (isCategorial(type)) {
+        if (isCategorical(type)) {
             val plt = when (type) {
                 BoxPlot -> GGBoxPlot(
                     dfRefined,

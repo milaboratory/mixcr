@@ -79,6 +79,8 @@ public final class DownsamplingUtil {
         } else if (downsampling.startsWith("umi-count")) {
             if (downsampling.endsWith("auto"))
                 return new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Auto(), seed, dropOutliers);
+            else if (downsampling.endsWith("min"))
+                return new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Minimal(), seed, dropOutliers);
             else {
                 return new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Fixed(downsamplingValue(downsampling)), seed, dropOutliers);
             }

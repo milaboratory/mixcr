@@ -9,7 +9,7 @@ import org.jetbrains.kotlinx.dataframe.io.read
 import org.jetbrains.kotlinx.dataframe.io.readTSV
 
 fun AnyFrame.isNumeric(col: String) = this[col].all { it == null || it is Number }
-fun AnyFrame.isCategorial(col: String) = !isNumeric(col)
+fun AnyFrame.isCategorical(col: String) = !isNumeric(col)
 
 typealias Metadata = AnyFrame
 
