@@ -3,29 +3,30 @@ package com.milaboratory.mixcr.cli.postanalysis;
 import com.milaboratory.miplots.Position;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessorSummary;
 import com.milaboratory.mixcr.postanalysis.plots.*;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
+import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersOverlap;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
-import picocli.CommandLine;
+import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
-@CommandLine.Command(name = "overlap",
+@Command(name = "overlap",
         sortOptions = false,
         separator = " ",
-        description = "Export overlap heatmap")
+        description = "Export overlap heatmaps")
 public class CommandPaExportPlotsOverlap extends CommandPaExportPlotsHeatmapWithGroupBy {
-    @Option(description = "Plot dendrogram for hierarchical clusterization of V genes.",
+    @Option(description = "Don't add dendrograms",
             names = {"--no-dendro"})
     public boolean noDendro;
-    @Option(description = "Add color key layer.",
+
+    @Option(description = "Add color key layer; prefix 'x_' (add to the bottom) or 'y_' (add to the left) should be used.",
             names = {"--color-key"})
     public List<String> colorKey = new ArrayList<>();
+
     @Option(description = "Select specific metrics to export.",
             names = {"--metric"})
     public List<String> metrics;
@@ -42,7 +43,7 @@ public class CommandPaExportPlotsOverlap extends CommandPaExportPlotsHeatmapWith
 
     @Override
     void run(PaResultByGroup result) {
-        CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(CommandPaOverlap.Overlap);
+        CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(PostanalysisParametersOverlap.Overlap);
         PostanalysisResult paResult = result.result.forGroup(ch);
         DataFrame<?> metadata = metadata();
 

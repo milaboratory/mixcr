@@ -1,17 +1,9 @@
 package com.milaboratory.mixcr.cli.postanalysis;
 
-import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.cli.ACommandWithOutputMiXCR;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
-import com.milaboratory.mixcr.postanalysis.WeightFunctions;
-import com.milaboratory.mixcr.postanalysis.downsampling.ClonesDownsamplingPreprocessorFactory;
-import com.milaboratory.mixcr.postanalysis.downsampling.DownsampleValueChooser;
-import com.milaboratory.mixcr.postanalysis.preproc.ElementPredicate;
-import com.milaboratory.mixcr.postanalysis.preproc.NoPreprocessing;
-import com.milaboratory.mixcr.postanalysis.preproc.SelectTop;
+import com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingUtil;
 import com.milaboratory.util.StringUtil;
 import io.repseq.core.Chains;
-import io.repseq.core.GeneFeature;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
@@ -35,29 +27,29 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
     @Parameters(description = "cloneset.{clns|clna}... result.json.gz|result.json")
     public List<String> inOut;
 
-    @Option(description = "Use only productive CDR3s.",
+    @Option(description = "Filter out-of-frame sequences and clonotypes with stop-codons",
             names = {"--only-productive"})
     public boolean onlyProductive = false;
 
-    @Option(description = "Choose downsampling. Possible values: umi-count-[1000|auto]|cumulative-top-[percent]|top-[number]|no-downsampling",
-            names = {"--downsampling"},
-            required = true)
-    public String downsampling;
+    @Option(description = "Drop samples which have less abundance than the computed downsampling threshold.",
+            names = {"--drop-outliers"})
+    public boolean dropOutliers = false;
 
-    @Option(description = "Filter specific chains",
-            names = {"-c", "--chains"})
+    @Option(description = "Default downsampling. Possible values: umi-count-[1000|auto|min]|cumulative-top-[percent]|top-[number]|no-downsampling",
+            names = {"--default-downsampling"},
+            required = true)
+    public String defaultDownsampling;
+
+    @Option(description = "Filter specified chains",
+            names = {"--chains"})
     public String chains = "ALL";
 
     @Option(description = "Metadata file (csv/tsv). Must have \"sample\" column.",
-            names = {"-m", "--meta", "--metadata"})
+            names = {"--metadata"})
     public String metadata;
-//
-//    @Option(description = "Metadata column for chains.",
-//            names = {"--chains-column"})
-//    public String chainsColumn;
 
     @Option(description = "Metadata categories used to isolate samples into separate groups",
-            names = {"-g", "--group"})
+            names = {"--group"})
     public List<String> isolationGroups;
 
     @Option(description = "Tabular results output path (path/table.tsv).",
@@ -67,6 +59,9 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
     @Option(description = "Preprocessor summary output path.",
             names = {"--preproc-tables"})
     public String preprocOut;
+
+    @Option(names = {"-O"}, description = "Overrides default postanalysis settings")
+    public Map<String, String> overrides = new HashMap<>();
 
     @Override
     protected List<String> getInputFiles() {
@@ -94,10 +89,27 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
     @Override
     public void validate() {
         super.validate();
-        if (metadata != null && !metadata.endsWith(".csv") && !metadata.endsWith(".tsv"))
-            throwValidationException("Metadata should be .csv or .tsv");
         if (!out().endsWith(".json") && !out().endsWith(".json.gz"))
             throwValidationException("Output file name should ends with .json.gz or .json");
+        try {
+            DownsamplingUtil.parseDownsampling(defaultDownsampling, dropOutliers, 0);
+        } catch (Throwable t) {
+            throwValidationException("Illegal downsampling string: " + defaultDownsampling);
+        }
+        if (metadata != null && !metadata.endsWith(".csv") && !metadata.endsWith(".tsv"))
+            throwValidationException("Metadata should be .csv or .tsv");
+        if (metadata != null) {
+            if (!metadata().containsKey("sample"))
+                throwValidationException("Metadata must contain 'sample' column");
+            List<String> samples = getInputFiles();
+            Map<String, String> mapping = StringUtil.matchLists(
+                    samples,
+                    metadata().get("sample").stream()
+                            .map(Object::toString).collect(toList())
+            );
+            if (mapping.size() < samples.size() || mapping.values().stream().anyMatch(Objects::isNull))
+                throwValidationException("Metadata samples does not match input file names.");
+        }
     }
 
     private String outBase() {
@@ -129,49 +141,6 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
     /** Get sample id from file name */
     static String getSampleId(String file) {
         return Paths.get(file).getFileName().toString();
-    }
-
-    private static int downsamplingValue(String downsampling) {
-        return Integer.parseInt(downsampling.substring(downsampling.lastIndexOf("-") + 1));
-    }
-
-    private static SetPreprocessorFactory<Clone> parseDownsampling(String downsampling) {
-        if (downsampling.equalsIgnoreCase("no-downsampling")) {
-            return new NoPreprocessing.Factory<>();
-        } else if (downsampling.startsWith("umi-count")) {
-            if (downsampling.endsWith("auto"))
-                return new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Auto(), 314);
-            else {
-                return new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Fixed(downsamplingValue(downsampling)), 314);
-            }
-        } else {
-            int value = downsamplingValue(downsampling);
-            if (downsampling.startsWith("cumulative-top")) {
-                return new SelectTop.Factory<>(WeightFunctions.Count, 1.0 * value / 100.0);
-            } else if (downsampling.startsWith("top")) {
-                return new SelectTop.Factory<>(WeightFunctions.Count, value);
-            } else {
-                throw new IllegalArgumentException("Illegal downsampling string: " + downsampling);
-            }
-        }
-    }
-
-    protected SetPreprocessorFactory<Clone> downsampling() {
-        return downsampling(this.downsampling);
-    }
-
-    protected SetPreprocessorFactory<Clone> downsampling(String downsamplingStr) {
-        SetPreprocessorFactory<Clone> downsampling =
-                parseDownsampling(downsamplingStr);
-
-        if (onlyProductive) {
-            List<ElementPredicate<Clone>> filters = new ArrayList<>();
-            filters.add(new ElementPredicate.NoStops(GeneFeature.CDR3));
-            filters.add(new ElementPredicate.NoOutOfFrames(GeneFeature.CDR3));
-            downsampling = downsampling.filterFirst(filters);
-        }
-
-        return downsampling;
     }
 
     private Map<String, List<Object>> _metadata = null;

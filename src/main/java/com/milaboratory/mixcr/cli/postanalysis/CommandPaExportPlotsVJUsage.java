@@ -5,27 +5,31 @@ import com.milaboratory.mixcr.postanalysis.plots.HeatmapParameters;
 import com.milaboratory.mixcr.postanalysis.plots.VJUsage;
 import com.milaboratory.mixcr.postanalysis.plots.VJUsageRow;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
+import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual;
 import jetbrains.letsPlot.intern.Plot;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
-import picocli.CommandLine;
+import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 import java.util.Collections;
 import java.util.List;
 
-@CommandLine.Command(name = "vjUsage",
+@Command(name = "vjUsage",
         sortOptions = false,
         separator = " ",
-        description = "Export V-J usage heatmap")
+        description = "Export V-J usage heatmap",
+        hidden = true)
 public class CommandPaExportPlotsVJUsage extends CommandPaExportPlotsHeatmap {
-    @Option(description = "Plot dendrogram for hierarchical clusterization of V genes.", names = {"--no-v-dendro"})
+    @Option(description = "Don't add V genes dendrogram",
+            names = {"--no-v-dendro"})
     public boolean noVDendro;
-    @Option(description = "Plot dendrogram for hierarchical clusterization of genes.", names = {"--no-j-dendro"})
+    @Option(description = "Don't add J genes dendrogram",
+            names = {"--no-j-dendro"})
     public boolean noJDendro;
 
     @Override
     void run(PaResultByGroup result) {
-        CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(CommandPaIndividual.VJUsage);
+        CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(PostanalysisParametersIndividual.VJUsage);
 
         DataFrame<?> metadata = metadata();
         DataFrame<VJUsageRow> df = VJUsage.INSTANCE.dataFrame(

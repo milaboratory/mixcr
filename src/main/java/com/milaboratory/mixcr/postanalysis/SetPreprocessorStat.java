@@ -163,7 +163,7 @@ public class SetPreprocessorStat {
         }
 
         public void clear(int iDataset) {
-            map.remove(iDataset);
+            map.put(iDataset, new BuilderForSample<>(preprocId, wtFunc));
         }
 
         public void before(int iDataset, T t) {
@@ -172,6 +172,11 @@ public class SetPreprocessorStat {
 
         public void after(int iDataset, T t) {
             builder(iDataset).after(t);
+        }
+
+        public void asis(int iDataset, T t) {
+            before(iDataset, t);
+            after(iDataset, t);
         }
 
         public SetPreprocessorStat getStat(int iDataset) {

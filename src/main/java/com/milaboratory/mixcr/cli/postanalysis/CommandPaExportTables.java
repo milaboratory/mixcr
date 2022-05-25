@@ -5,8 +5,9 @@ import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroupOutputExtractor
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroupResult;
 import com.milaboratory.mixcr.postanalysis.ui.OutputTable;
 import picocli.CommandLine;
+import picocli.CommandLine.Command;
 
-@CommandLine.Command(name = "exportTables",
+@Command(name = "exportTables",
         sortOptions = false,
         separator = " ",
         description = "Biophysics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype, Overlap")

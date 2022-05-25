@@ -40,7 +40,7 @@ public class DiversityCharacteristicTest {
 
         CharacteristicGroup<DiversityMeasure, TestObject> group = new CharacteristicGroup<>("diversity",
                 Arrays.asList(diversity),
-                Arrays.asList(new GroupSummary<>()));
+                Arrays.asList(new GroupSummary.Simple<>()));
 
         CharacteristicGroupResult<DiversityMeasure> table = result.getTable(group);
         for (CharacteristicGroupResultCell<DiversityMeasure> cell : table.cells) {
@@ -48,7 +48,7 @@ public class DiversityCharacteristicTest {
             if (cell.key == DiversityMeasure.InverseSimpson)
                 Assert.assertEquals(SimpsonIndex(ds.data), cell.value, 1e-6);
             if (cell.key == DiversityMeasure.ShannonWeiner)
-                Assert.assertEquals(ShannonEntropy(ds.data), cell.value, 1e-6);
+                Assert.assertEquals(Math.exp(ShannonEntropy(ds.data)), cell.value, 1e-6);
         }
     }
 

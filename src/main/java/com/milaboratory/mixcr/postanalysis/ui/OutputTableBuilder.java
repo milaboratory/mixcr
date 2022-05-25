@@ -21,10 +21,14 @@ final class OutputTableBuilder {
         add(coords.iRow, coords.iCol, original);
     }
 
-    synchronized void add(Object iRow, Object iCol, CharacteristicGroupResultCell<?> original) {
-        cells.add(new OutputTableCell(iRow, iCol, original.value));
+    synchronized void add(Object iRow, Object iCol, Object value) {
+        cells.add(new OutputTableCell(iRow, iCol, value));
         rows.add(iRow);
         cols.add(iCol);
+    }
+
+    synchronized void add(Object iRow, Object iCol, CharacteristicGroupResultCell<?> original) {
+        add(iRow, iCol, original.value);
     }
 
     OutputTable build() {

@@ -1,18 +1,28 @@
 package com.milaboratory.mixcr.cli.postanalysis;
 
 import cc.redberry.pipe.OutputPortCloseable;
+import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.postanalysis.*;
-import com.milaboratory.mixcr.postanalysis.overlap.*;
+import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
+import com.milaboratory.mixcr.postanalysis.PostanalysisRunner;
+import com.milaboratory.mixcr.postanalysis.WeightFunctions;
+import com.milaboratory.mixcr.postanalysis.overlap.OverlapDataset;
+import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup;
+import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil;
 import com.milaboratory.mixcr.postanalysis.preproc.ElementPredicate;
+import com.milaboratory.mixcr.postanalysis.preproc.FilterPreprocessor;
 import com.milaboratory.mixcr.postanalysis.preproc.OverlapPreprocessorAdapter;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
-import com.milaboratory.mixcr.postanalysis.ui.OverlapSummary;
+import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersOverlap;
+import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersPreset;
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisSchema;
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
+import com.milaboratory.util.JsonOverrider;
 import com.milaboratory.util.LambdaSemaphore;
 import com.milaboratory.util.SmartProgressReporter;
-import io.repseq.core.Chains;
 import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
+import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -20,44 +30,77 @@ import picocli.CommandLine.Option;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toList;
 
 @Command(name = "overlap",
         sortOptions = false,
         separator = " ",
         description = "Overlap analysis")
 public class CommandPaOverlap extends CommandPa {
-    public static String Overlap = "overlap";
-
-    @Option(description = "Override downsampling for F2 umi|d[number]|f[number]",
-            names = {"--f2-downsampling"})
-    public String f2downsampling;
+    @Option(description = "Overlap criteria. Default CDR|AA|V|J",
+            names = {"--criteria"})
+    public String overlapCriteria = "CDR3|AA|V|J";
 
     public CommandPaOverlap() {}
+
+    private PostanalysisParametersOverlap _parameters;
+
+    private PostanalysisParametersOverlap getParameters() {
+        if (_parameters != null)
+            return _parameters;
+        _parameters = PostanalysisParametersPreset.getByNameOverlap("default");
+        _parameters.defaultDownsampling = defaultDownsampling;
+        _parameters.defaultDropOutliers = dropOutliers;
+        _parameters.defaultOnlyProductive = onlyProductive;
+        if (!overrides.isEmpty()) {
+            for (Map.Entry<String, String> o : overrides.entrySet())
+                _parameters = JsonOverrider.override(_parameters, PostanalysisParametersOverlap.class, overrides);
+            if (_parameters == null)
+                throwValidationException("Failed to override some parameter: " + overrides);
+        }
+        return _parameters;
+    }
+
+    private List<VDJCSProperties.VDJCSProperty<VDJCObject>> parseCriteria() {
+        String[] parts = overlapCriteria.toLowerCase().split("\\|");
+        if (parts.length < 2)
+            throwValidationException("Illegal criteria input: " + overlapCriteria);
+        GeneFeature feature = GeneFeature.parse(parts[0]);
+        if (!parts[1].equals("aa") && !parts[1].equals("nt"))
+            throwValidationException("Illegal criteria input: " + overlapCriteria);
+        boolean isAA = parts[1].equals("aa");
+        List<GeneType> geneTypes = new ArrayList<>();
+        if (parts.length > 2)
+            if (!parts[2].equals("v"))
+                throwValidationException("Illegal criteria input: " + overlapCriteria);
+            else
+                geneTypes.add(GeneType.Variable);
+        if (parts.length > 3)
+            if (!parts[3].equals("j"))
+                throwValidationException("Illegal criteria input: " + overlapCriteria);
+            else
+                geneTypes.add(GeneType.Joining);
+
+        if (isAA)
+            return VDJCSProperties.orderingByAminoAcid(new GeneFeature[]{feature}, geneTypes.toArray(new GeneType[0]));
+        else
+            return VDJCSProperties.orderingByNucleotide(new GeneFeature[]{feature}, geneTypes.toArray(new GeneType[0]));
+    }
 
     @Override
     @SuppressWarnings("unchecked")
     PaResultByGroup run(IsolationGroup group, List<String> samples) {
-        SetPreprocessorFactory<Clone> downsampling = downsampling();
-
-        Map<OverlapType, SetPreprocessorFactory<Clone>> downsamplingByType = new HashMap<>();
-        downsamplingByType.put(OverlapType.D, downsampling);
-        downsamplingByType.put(OverlapType.F2, f2downsampling == null
-                ? downsampling
-                : downsampling(f2downsampling));
-        downsamplingByType.put(OverlapType.R_Intersection, downsampling);
-
-        List<VDJCSProperties.VDJCSProperty<VDJCObject>> ordering = VDJCSProperties.orderingByAminoAcid(new GeneFeature[]{GeneFeature.CDR3});
-        OverlapPostanalysisSettings overlapPA = new OverlapPostanalysisSettings(
-                ordering,
-                new WeightFunctions.Count(),
-                downsamplingByType
-        );
-
-        PostanalysisSchema<OverlapGroup<Clone>> schema = overlapPA.getSchema(samples.size(), group.chains.chains);
+        List<CharacteristicGroup<?, OverlapGroup<Clone>>> groups = getParameters().getGroups(samples.size());
+        PostanalysisSchema<OverlapGroup<Clone>> schema = new PostanalysisSchema<>(groups)
+                .transform(ch -> ch.override(ch.name,
+                        ch.preprocessor
+                                .before(new OverlapPreprocessorAdapter.Factory<>(new FilterPreprocessor.Factory<>(WeightFunctions.Count, new ElementPredicate.IncludeChains(group.chains.chains)))))
+                );
 
         // Limits concurrency across all readers
         LambdaSemaphore concurrencyLimiter = new LambdaSemaphore(32);
@@ -76,7 +119,7 @@ public class CommandPaOverlap extends CommandPa {
 
         OverlapDataset<Clone> overlapDataset = OverlapUtil.overlap(
                 samples.stream().map(CommandPa::getSampleId).collect(toList()),
-                ordering,
+                parseCriteria(),
                 readers);
 
         PostanalysisRunner<OverlapGroup<Clone>> runner = new PostanalysisRunner<>();
@@ -131,48 +174,21 @@ public class CommandPaOverlap extends CommandPa {
             public int numberOfClones() {
                 return inner.numberOfClones();
             }
+
+            @Override
+            public List<VDJCGene> getUsedGenes() {
+                return inner.getUsedGenes();
+            }
+
+            @Override
+            public VDJCAlignerParameters getAlignerParameters() {
+                return inner.getAlignerParameters();
+            }
+
+            @Override
+            public CloneAssemblerParameters getAssemblerParameters() {
+                return inner.getAssemblerParameters();
+            }
         };
-    }
-
-    @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
-    static final class OverlapPostanalysisSettings {
-        final List<VDJCSProperties.VDJCSProperty<VDJCObject>> ordering;
-        final WeightFunction<Clone> weight;
-        final Map<OverlapType, SetPreprocessorFactory<Clone>> preprocessors;
-        final Map<SetPreprocessorFactory<Clone>, List<OverlapType>> groupped;
-
-        OverlapPostanalysisSettings(List<VDJCSProperties.VDJCSProperty<VDJCObject>> ordering,
-                                    WeightFunction<Clone> weight,
-                                    Map<OverlapType, SetPreprocessorFactory<Clone>> preprocessors) {
-            this.ordering = ordering;
-            this.weight = weight;
-            this.preprocessors = preprocessors;
-            this.groupped = preprocessors.entrySet().stream().collect(groupingBy(Map.Entry::getValue, mapping(Map.Entry::getKey, toList())));
-        }
-
-        private SetPreprocessorFactory<OverlapGroup<Clone>> getPreprocessor(OverlapType type, Chains chain) {
-            return new OverlapPreprocessorAdapter.Factory<>(preprocessors.get(type).filterFirst(new ElementPredicate.IncludeChains(chain)));
-        }
-
-        //fixme only productive??
-        public List<OverlapCharacteristic<Clone>> getCharacteristics(int i, int j, Chains chain) {
-            return groupped.entrySet().stream().map(e -> new OverlapCharacteristic<>("overlap_" + i + "_" + j + " / " + e.getValue().stream().map(t -> t.name).collect(Collectors.joining(" / ")), weight,
-                    new OverlapPreprocessorAdapter.Factory<>(e.getKey().filterFirst(new ElementPredicate.IncludeChains(chain))),
-                    e.getValue().toArray(new OverlapType[0]),
-                    i, j)).collect(toList());
-        }
-
-        public PostanalysisSchema<OverlapGroup<Clone>> getSchema(int nSamples, Chains chain) {
-            List<OverlapCharacteristic<Clone>> overlaps = new ArrayList<>();
-            for (int i = 0; i < nSamples; ++i)
-                for (int j = i; j < nSamples; ++j) // j=i to include diagonal elements
-                    overlaps.addAll(getCharacteristics(i, j, chain));
-
-            return new PostanalysisSchema<>(Collections.singletonList(
-                    new CharacteristicGroup<>(Overlap,
-                            overlaps,
-                            Arrays.asList(new OverlapSummary<>())
-                    )));
-        }
     }
 }

@@ -10,42 +10,68 @@ import com.milaboratory.mixcr.postanalysis.plots.BasicStatRow;
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics;
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics.PlotType;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
+import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
-import picocli.CommandLine;
+import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 import java.util.List;
 import java.util.Objects;
 
 public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExportPlots {
-    abstract String group();
-
-    @Option(description = "Plot type", names = {"--plot-type"})
+    @Option(description = "Plot type. Possible values: auto, boxplot, barplot, dotplot, lineplot, scatter.",
+            names = {"--plot-type"})
     public String plotType;
-    @Option(description = "Primary group", names = {"-p", "--primary-group"})
+
+    @Option(description = "Primary group",
+            names = {"-p", "--primary-group"})
     public String primaryGroup;
-    @Option(description = "Secondary group", names = {"-s", "--secondary-group"})
+
+    @Option(description = "Secondary group",
+            names = {"-s", "--secondary-group"})
     public String secondaryGroup;
-    @Option(description = "Facet by", names = {"--facet-by"})
+
+    @Option(description = "Facet by",
+            names = {"--facet-by"})
     public String facetBy;
-    @Option(description = "Select specific metrics to export.", names = {"--metric"})
+
+    @Option(description = "Select specific metrics to export.",
+            names = {"--metric"})
     public List<String> metrics;
-    @Option(description = "Hide overall p-value.", names = {"--hide-overall-p-value"})
+
+    @Option(description = "Hide overall p-value",
+            names = {"--hide-overall-p-value"})
     public boolean hideOverallPValue;
-    @Option(description = "Hide pairwise p-values.", names = {"--hide-pairwise-p-value"})
+
+    @Option(description = "Hide pairwise p-values",
+            names = {"--hide-pairwise-p-value"})
     public boolean hidePairwisePValue;
-    @Option(description = "Reference group. Can be \"all\" or some specific value.", names = {"--ref-group"})
+
+    @Option(description = "Reference group. Can be \"all\" or some specific value.",
+            names = {"--ref-group"})
     public String refGroup;
-    @Option(description = "Hide non-significant observations.", names = {"--hide-ns"})
+
+    @Option(description = "Hide non-significant observations",
+            names = {"--hide-ns"})
     public boolean hideNS;
-    @Option(description = "Do paired analysis.", names = {"--paired"})
+
+    @Option(description = "Do paired analysis",
+            names = {"--paired"})
     public boolean paired;
-    @Option(description = "Test method. Default is Wilcoxon. Available methods: Wilcoxon, ANOVA, TTest, KruskalWallis, KolmogorovSmirnov", names = {"--method"})
+
+    @Option(description = "Test method. Default is Wilcoxon. Available methods: Wilcoxon, ANOVA, TTest, KruskalWallis, KolmogorovSmirnov",
+            names = {"--method"})
     public String method = "Wilcoxon";
-    @Option(description = "Test method for multiple groups comparison. Default is KruskalWallis. Available methods: ANOVA, KruskalWallis, KolmogorovSmirnov", names = {"--method-multiple-groups"})
+
+    @Option(description = "Test method for multiple groups comparison. Default is KruskalWallis. Available methods: ANOVA, KruskalWallis, KolmogorovSmirnov",
+            names = {"--method-multiple-groups"})
     public String methodForMultipleGroups = "KruskalWallis";
-    @Option(description = "Test method for multiple groups comparison. Default is KruskalWallis. Available methods: none, BenjaminiHochberg, BenjaminiYekutieli, Bonferroni, Hochberg, Holm, Hommel", names = {"--p-adjust-method"})
+
+    @Option(description = "Method used to adjust p-values. Default is Holm. Available methods: none, BenjaminiHochberg, BenjaminiYekutieli, Bonferroni, Hochberg, Holm, Hommel",
+            names = {"--p-adjust-method"})
     public String pAdjustMethod = "Holm";
+
+    abstract String group();
 
     @Override
     void run(PaResultByGroup result) {
@@ -93,25 +119,25 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
         writePlotsAndSummary(result.group, plots);
     }
 
-    @CommandLine.Command(name = "biophysics",
+    @Command(name = "biophysics",
             sortOptions = false,
             separator = " ",
-            description = "Export biophysical characteristics")
+            description = "Export biophysics metrics")
     public static class ExportBiophysics extends CommandPaExportPlotsBasicStatistics {
         @Override
         String group() {
-            return CommandPaIndividual.Biophysics;
+            return PostanalysisParametersIndividual.Biophysics;
         }
     }
 
-    @CommandLine.Command(name = "diversity",
+    @Command(name = "diversity",
             sortOptions = false,
             separator = " ",
-            description = "Export diversity characteristics")
+            description = "Export diversity metrics")
     public static class ExportDiversity extends CommandPaExportPlotsBasicStatistics {
         @Override
         String group() {
-            return CommandPaIndividual.Diversity;
+            return PostanalysisParametersIndividual.Diversity;
         }
     }
 }

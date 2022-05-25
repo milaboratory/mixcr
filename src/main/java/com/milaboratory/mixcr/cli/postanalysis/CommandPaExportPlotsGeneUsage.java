@@ -8,8 +8,9 @@ import com.milaboratory.mixcr.postanalysis.plots.GeneUsage;
 import com.milaboratory.mixcr.postanalysis.plots.GeneUsageRow;
 import com.milaboratory.mixcr.postanalysis.plots.HeatmapParameters;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
+import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
-import picocli.CommandLine;
+import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 import java.util.ArrayList;
@@ -19,12 +20,14 @@ import java.util.stream.Collectors;
 public abstract class CommandPaExportPlotsGeneUsage extends CommandPaExportPlotsHeatmapWithGroupBy {
     abstract String group();
 
-    @Option(description = "Do not plot dendrogram for hierarchical clusterization of samples.",
+    @Option(description = "Don't add samples dendrogram.",
             names = {"--no-samples-dendro"})
     public boolean noSamplesDendro;
-    @Option(description = "Do not plot dendrogram for hierarchical clusterization of genes.",
+
+    @Option(description = "Don't add genes dendrogram.",
             names = {"--no-genes-dendro"})
     public boolean noGenesDendro;
+
     @Option(description = "Add color key layer.",
             names = {"--color-key"})
     public List<String> colorKey = new ArrayList<>();
@@ -59,36 +62,36 @@ public abstract class CommandPaExportPlotsGeneUsage extends CommandPaExportPlots
         writePlotsAndSummary(result.group, plot);
     }
 
-    @CommandLine.Command(name = "vUsage",
+    @Command(name = "vUsage",
             sortOptions = false,
             separator = " ",
             description = "Export V gene usage heatmap")
     public static class ExportVUsage extends CommandPaExportPlotsGeneUsage {
         @Override
         String group() {
-            return CommandPaIndividual.VUsage;
+            return PostanalysisParametersIndividual.VUsage;
         }
     }
 
-    @CommandLine.Command(name = "jUsage",
+    @Command(name = "jUsage",
             sortOptions = false,
             separator = " ",
             description = "Export J gene usage heatmap")
     public static class ExportJUsage extends CommandPaExportPlotsGeneUsage {
         @Override
         String group() {
-            return CommandPaIndividual.JUsage;
+            return PostanalysisParametersIndividual.JUsage;
         }
     }
 
-    @CommandLine.Command(name = "isotypeUsage",
+    @Command(name = "isotypeUsage",
             sortOptions = false,
             separator = " ",
             description = "Export isotype usage heatmap")
     public static class ExportIsotypeUsage extends CommandPaExportPlotsGeneUsage {
         @Override
         String group() {
-            return CommandPaIndividual.IsotypeUsage;
+            return PostanalysisParametersIndividual.IsotypeUsage;
         }
     }
 }

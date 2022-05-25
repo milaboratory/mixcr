@@ -41,6 +41,7 @@ public class PostanalysisRunnerTest {
         DownsamplingPreprocessorFactory<TestObject> downsamplingPreproc = new DownsamplingPreprocessorFactory<>(
                 new DownsampleValueChooser.Fixed(downsampling),
                 314,
+                true,
                 c -> (long) c.weight,
                 TestObject::setWeight);
         SetPreprocessorFactory<TestObject> preproc = filter.then(downsamplingPreproc);

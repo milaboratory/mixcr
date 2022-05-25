@@ -31,9 +31,18 @@ package com.milaboratory.mixcr.postanalysis.downsampling;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
+import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.postanalysis.Dataset;
+import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
+import com.milaboratory.mixcr.postanalysis.WeightFunctions;
+import com.milaboratory.mixcr.postanalysis.preproc.ElementPredicate;
+import com.milaboratory.mixcr.postanalysis.preproc.NoPreprocessing;
+import com.milaboratory.mixcr.postanalysis.preproc.SelectTop;
+import io.repseq.core.GeneFeature;
 import org.apache.commons.math3.random.RandomGenerator;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.ToLongFunction;
 import java.util.stream.LongStream;
 
@@ -62,5 +71,39 @@ public final class DownsamplingUtil {
         long[] result = new long[counts.length];
         RandomMvhgCounts.random_multivariate_hypergeometric_count(rnd, total, counts, downSampleSize, result);
         return result;
+    }
+
+    public static SetPreprocessorFactory<Clone> parseDownsampling(String downsampling, boolean dropOutliers, long seed) {
+        if (downsampling.equalsIgnoreCase("no-downsampling")) {
+            return new NoPreprocessing.Factory<>();
+        } else if (downsampling.startsWith("umi-count")) {
+            if (downsampling.endsWith("auto"))
+                return new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Auto(), seed, dropOutliers);
+            else if (downsampling.endsWith("min"))
+                return new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Minimal(), seed, dropOutliers);
+            else {
+                return new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Fixed(downsamplingValue(downsampling)), seed, dropOutliers);
+            }
+        } else {
+            int value = downsamplingValue(downsampling);
+            if (downsampling.startsWith("cumulative-top")) {
+                return new SelectTop.Factory<>(WeightFunctions.Count, 1.0 * value / 100.0);
+            } else if (downsampling.startsWith("top")) {
+                return new SelectTop.Factory<>(WeightFunctions.Count, value);
+            } else {
+                throw new IllegalArgumentException("Illegal downsampling string: " + downsampling);
+            }
+        }
+    }
+
+    public static SetPreprocessorFactory<Clone> filterOnlyProductive(SetPreprocessorFactory<Clone> p) {
+        List<ElementPredicate<Clone>> filters = new ArrayList<>();
+        filters.add(new ElementPredicate.NoStops(GeneFeature.CDR3));
+        filters.add(new ElementPredicate.NoOutOfFrames(GeneFeature.CDR3));
+        return p.filterFirst(filters);
+    }
+
+    private static int downsamplingValue(String downsampling) {
+        return Integer.parseInt(downsampling.substring(downsampling.lastIndexOf("-") + 1));
     }
 }

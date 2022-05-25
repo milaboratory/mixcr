@@ -2,7 +2,6 @@ package com.milaboratory.mixcr.postanalysis.downsampling;
 
 
 import cc.redberry.pipe.InputPort;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.mixcr.postanalysis.MappingFunction;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorSetup;
@@ -25,9 +24,8 @@ import static com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingUtil.
 public class DownsamplingPreprocessor<T> implements SetPreprocessor<T> {
     public final ToLongFunction<T> getCount;
     public final BiFunction<T, Long, T> setCount;
-    @JsonProperty("downsampleValueChooser")
     public final DownsampleValueChooser downsampleValueChooser;
-    @JsonProperty("seed")
+    public final boolean dropOutliers;
     public final long seed;
     final String id;
     private final SetPreprocessorStat.Builder<T> stats;
@@ -35,11 +33,13 @@ public class DownsamplingPreprocessor<T> implements SetPreprocessor<T> {
     public DownsamplingPreprocessor(ToLongFunction<T> getCount,
                                     BiFunction<T, Long, T> setCount,
                                     DownsampleValueChooser downsampleValueChooser,
+                                    boolean dropOutliers,
                                     long seed,
                                     String id) {
         this.getCount = getCount;
         this.setCount = setCount;
         this.downsampleValueChooser = downsampleValueChooser;
+        this.dropOutliers = dropOutliers;
         this.seed = seed;
         this.id = id;
         this.stats = new SetPreprocessorStat.Builder<>(id, getCount::applyAsLong);
@@ -71,8 +71,14 @@ public class DownsamplingPreprocessor<T> implements SetPreprocessor<T> {
             downsampling = downsampleValueChooser.compute(setup.counts);
 
         if (downsampling > setup.counts[iDataset]) {
-            stats.drop(iDataset);
-            return t -> null;
+            if (dropOutliers) {
+                stats.drop(iDataset);
+                return t -> null;
+            } else
+                return t -> {
+                    stats.asis(iDataset, t);
+                    return t;
+                };
         }
 
         long[] counts = setup.countLists[iDataset].toArray();

@@ -60,7 +60,7 @@ public class CommandExportAlignmentsForClones extends ACommandWithSmartOverwrite
     public void run1() throws Exception {
         try (ClnAReader clna = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4));
              VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(getOutput())) {
-            writer.header(clna.getAlignerParameters(), clna.getGenes(),
+            writer.header(clna.getAlignerParameters(), clna.getUsedGenes(),
                     getFullPipelineConfiguration(), clna.getTagsInfo());
 
             long count = 0;

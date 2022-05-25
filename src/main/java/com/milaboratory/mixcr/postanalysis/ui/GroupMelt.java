@@ -51,7 +51,7 @@ public class GroupMelt<K> implements CharacteristicGroupOutputExtractor<K> {
         public VJUsageMelt() {
             super("vjUsage.",
                     (result, cell) -> cell.datasetId,
-                    () -> key -> new Coordinates(key.key.vGene, key.key.jJene));
+                    () -> key -> new Coordinates(key.key.vGene, key.key.jGene));
         }
 
         @Override

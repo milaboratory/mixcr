@@ -8,9 +8,9 @@ import java.util.Objects;
 public final class OutputTableCell {
     /** row & col keys */
     public final Object iRow, iCol;
-    public final double value;
+    public final Object value;
 
-    public OutputTableCell(Object iRow, Object iCol, double value) {
+    public OutputTableCell(Object iRow, Object iCol, Object value) {
         this.iRow = iRow;
         this.iCol = iCol;
         this.value = value;
@@ -26,7 +26,7 @@ public final class OutputTableCell {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OutputTableCell that = (OutputTableCell) o;
-        return Double.compare(that.value, value) == 0 && Objects.equals(iRow, that.iRow) && Objects.equals(iCol, that.iCol);
+        return Objects.equals(iRow, that.iRow) && Objects.equals(iCol, that.iCol) && Objects.equals(value, that.value);
     }
 
     @Override

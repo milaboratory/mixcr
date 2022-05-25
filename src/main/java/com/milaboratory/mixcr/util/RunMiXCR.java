@@ -147,7 +147,7 @@ public final class RunMiXCR {
             IOUtil.registerGeneReferences(tmpOut, align.usedGenes, align.parameters.alignerParameters);
 
             final CloneFactory cloneFactory = new CloneFactory(reader.getAssemblerParameters().getCloneFactoryParameters(),
-                    reader.getAssemblingFeatures(), reader.getGenes(), reader.getAlignerParameters().getFeaturesToAlignMap());
+                    reader.getAssemblingFeatures(), reader.getUsedGenes(), reader.getAlignerParameters().getFeaturesToAlignMap());
 
             ClnAReader.CloneAlignmentsPort cloneAlignmentsPort = reader.clonesAndAlignments();
             SmartProgressReporter.startProgressReport("Assembling", cloneAlignmentsPort);

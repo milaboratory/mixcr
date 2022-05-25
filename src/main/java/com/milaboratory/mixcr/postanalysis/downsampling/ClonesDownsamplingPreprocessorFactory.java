@@ -18,9 +18,10 @@ import java.util.Objects;
 public class ClonesDownsamplingPreprocessorFactory extends DownsamplingPreprocessorFactory<Clone> {
     @JsonCreator
     public ClonesDownsamplingPreprocessorFactory(@JsonProperty("downsampleValueChooser") DownsampleValueChooser downsampleValueChooser,
-                                                 @JsonProperty("seed") long seed) {
-        super(downsampleValueChooser, seed, c -> Math.round(c.getCount()),
-                Clone::setCount);
+                                                 @JsonProperty("seed") long seed,
+                                                 @JsonProperty("dropOutliers") boolean dropOutliers) {
+        super(downsampleValueChooser, seed, dropOutliers,
+                c -> Math.round(c.getCount()), Clone::setCount);
     }
 
     @Override

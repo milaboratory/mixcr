@@ -1,0 +1,43 @@
+{
+  "default": {
+    "defaultDownsampling": null,
+    "defaultOnlyProductive": false,
+    "defaultDropOutliers": false,
+    "randomSeed": 111,
+    "d": {
+      "downsampling": null,
+      "onlyProductive": null,
+      "dropOutliers": null
+    },
+    "sharedClonotypes": {
+      "downsampling": null,
+      "onlyProductive": null,
+      "dropOutliers": null
+    },
+    "f1": {
+      "downsampling": null,
+      "onlyProductive": null,
+      "dropOutliers": null
+    },
+    "f2": {
+      "downsampling": null,
+      "onlyProductive": null,
+      "dropOutliers": null
+    },
+    "jaccard": {
+      "downsampling": null,
+      "onlyProductive": null,
+      "dropOutliers": null
+    },
+    "rIntersection": {
+      "downsampling": null,
+      "onlyProductive": null,
+      "dropOutliers": null
+    },
+    "rAll": {
+      "downsampling": null,
+      "onlyProductive": null,
+      "dropOutliers": null
+    }
+  }
+}

@@ -68,11 +68,11 @@ public class DiversityAggregator<T> implements Aggregator<DiversityMeasure, T> {
     /** Clonality, Gini and Shannon-Weiner */
     private List<MetricValue<DiversityMeasure>> computeClonality() {
         if (!(measures.containsKey(ShannonWeiner)
-                || measures.containsKey(Clonality)
+                || measures.containsKey(NormalizedShannonWeinerIndex)
                 || measures.containsKey(InverseSimpson)
                 || measures.containsKey(Gini)))
             return Collections.emptyList();
-        double shannonWeiner = 0;
+        double shannonWeinerIndex = 0;
         double gini = 0;
 
         TLongIntIterator it = freqTable.iterator();
@@ -84,14 +84,14 @@ public class DiversityAggregator<T> implements Aggregator<DiversityMeasure, T> {
             double cloneFreq = cloneCount / countSum;
 
             gini += -nClones * cloneFreq * cloneFreq;
-            shannonWeiner += -nClones * cloneFreq * Math.log(cloneFreq);
+            shannonWeinerIndex += -nClones * cloneFreq * Math.log(cloneFreq);
         }
 
         List<MetricValue<DiversityMeasure>> result = new ArrayList<>();
         if (measures.containsKey(ShannonWeiner))
-            result.add(new MetricValue<>(measures.get(ShannonWeiner), shannonWeiner));
-        if (measures.containsKey(Clonality))
-            result.add(new MetricValue<>(measures.get(Clonality), 1 - shannonWeiner / Math.log(diversity)));
+            result.add(new MetricValue<>(measures.get(ShannonWeiner), Math.exp(shannonWeinerIndex)));
+        if (measures.containsKey(NormalizedShannonWeinerIndex))
+            result.add(new MetricValue<>(measures.get(NormalizedShannonWeinerIndex), shannonWeinerIndex / Math.log(diversity)));
         if (measures.containsKey(InverseSimpson))
             result.add(new MetricValue<>(measures.get(InverseSimpson), -1 / gini));
         if (measures.containsKey(Gini))
