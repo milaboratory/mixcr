@@ -3,6 +3,7 @@ package com.milaboratory.mixcr.cli.postanalysis;
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
 import com.milaboratory.mixcr.postanalysis.PostanalysisRunner;
 import com.milaboratory.mixcr.postanalysis.WeightFunctions;
@@ -178,6 +179,11 @@ public class CommandPaOverlap extends CommandPa {
             @Override
             public List<VDJCGene> getUsedGenes() {
                 return inner.getUsedGenes();
+            }
+
+            @Override
+            public TagsInfo getTagsInfo() {
+                return inner.getTagsInfo();
             }
 
             @Override
