@@ -117,7 +117,7 @@ internal object MutationsUtils {
         return first.map { (range, value) -> folder(value, second[range], range) }
     }
 
-    private fun positionIfNucleotideWasDeleted(position: Int): Int = when {
+    fun positionIfNucleotideWasDeleted(position: Int): Int = when {
         position < -1 -> abs(position + 1)
         (position == -1) -> 0
         else -> position

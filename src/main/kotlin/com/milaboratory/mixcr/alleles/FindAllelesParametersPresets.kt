@@ -27,20 +27,20 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.trees
+package com.milaboratory.mixcr.alleles
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.milaboratory.util.GlobalObjectMappers
 
-object SHMTreeBuilderParametersPresets {
-    private var knownParameters: Map<String, SHMTreeBuilderParameters>? = null
+object FindAllelesParametersPresets {
+    private var knownParameters: Map<String, FindAllelesParameters>? = null
     private fun ensureInitialized() {
-        if (knownParameters == null) synchronized(SHMTreeBuilderParametersPresets::class.java) {
+        if (knownParameters == null) synchronized(FindAllelesParametersPresets::class.java) {
             if (knownParameters == null) {
                 val `is` =
-                    SHMTreeBuilderParameters::class.java.classLoader.getResourceAsStream("parameters/shm_tree_parameters.json")
-                val typeRef: TypeReference<HashMap<String, SHMTreeBuilderParameters>> =
-                    object : TypeReference<HashMap<String, SHMTreeBuilderParameters>>() {}
+                    FindAllelesParameters::class.java.classLoader.getResourceAsStream("parameters/find_alleles_parameters.json")
+                val typeRef: TypeReference<HashMap<String, FindAllelesParameters>> =
+                    object : TypeReference<HashMap<String, FindAllelesParameters>>() {}
                 knownParameters = GlobalObjectMappers.ONE_LINE.readValue(`is`, typeRef)
             }
         }
@@ -52,7 +52,8 @@ object SHMTreeBuilderParametersPresets {
             return knownParameters!!.keys
         }
 
-    fun getByName(name: String): SHMTreeBuilderParameters? {
+    @JvmStatic
+    fun getByName(name: String): FindAllelesParameters? {
         ensureInitialized()
         val params = knownParameters!![name] ?: return null
         return params.copy()

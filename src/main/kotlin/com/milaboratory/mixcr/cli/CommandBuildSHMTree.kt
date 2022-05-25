@@ -53,13 +53,11 @@ import io.repseq.core.VDJCLibraryRegistry
 import org.apache.commons.io.FilenameUtils
 import picocli.CommandLine
 import java.io.File
-import java.io.FileInputStream
 import java.io.IOException
 import java.io.PrintStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.security.MessageDigest
 import java.time.Duration
 import java.time.Instant
 import java.util.*
@@ -67,7 +65,6 @@ import java.util.function.Function
 import java.util.stream.Collectors
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
-import kotlin.system.exitProcess
 
 
 @CommandLine.Command(
@@ -145,15 +142,9 @@ class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
     @Throws(Exception::class)
     override fun run0() {
         ensureParametersInitialized()
-        val cloneReaders = clnsFiles.stream()
-            .map { path ->
-                CloneSetIO.mkReader(
-                    Paths.get(path),
-                    VDJCLibraryRegistry.getDefault()
-                )
-            }
-            .collect(Collectors.toList())
-        require(cloneReaders.size != 0) { "there is no files to process" }
+        val cloneReaders =
+            clnsFiles.map { path -> CloneSetIO.mkReader(Paths.get(path), VDJCLibraryRegistry.getDefault()) }
+        require(cloneReaders.isNotEmpty()) { "there is no files to process" }
         require(
             cloneReaders.stream().map { obj: CloneReader -> obj.assemblerParameters }.distinct().count() == 1L
         ) { "input files must have the same assembler parameters" }
@@ -197,33 +188,31 @@ class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
         //TODO check that all trees has minimum common mutations in VJ
         report.onStepEnd(BuildSHMTreeStep.BuildingInitialTrees, clonesWasAddedOnInit, shmTreeBuilder.treesCount())
         var previousStepDebug = currentStepDebug
-        if (false) {
-            for (step in shmTreeBuilderParameters!!.stepsOrder) {
-                stepNumber++
-                currentStepDebug = createDebug(stepNumber)
-                val treesCountBefore = shmTreeBuilder.treesCount()
-                sortedClones = CountingOutputPort(shmTreeBuilder.sortedClones())
-                stepDescription = "Step " + stepNumber + "/" + stepsCount + ", " + step.forPrint
-                SmartProgressReporter.startProgressReport(
-                    stepDescription,
-                    SmartProgressReporter.extractProgress(sortedClones, cloneWrappersCount.toLong())
-                )
-                CUtils.processAllInParallel(
-                    shmTreeBuilder.buildClusters(sortedClones),
-                    { cluster ->
-                        shmTreeBuilder.applyStep(
-                            cluster,
-                            step,
-                            previousStepDebug.treesAfterDecisionsWriter,
-                            currentStepDebug.treesBeforeDecisionsWriter
-                        )
-                    },
-                    threads
-                )
-                val clonesWasAdded = shmTreeBuilder.makeDecisions()
-                report.onStepEnd(step, clonesWasAdded, shmTreeBuilder.treesCount() - treesCountBefore)
-                previousStepDebug = currentStepDebug
-            }
+        for (step in shmTreeBuilderParameters!!.stepsOrder) {
+            stepNumber++
+            currentStepDebug = createDebug(stepNumber)
+            val treesCountBefore = shmTreeBuilder.treesCount()
+            sortedClones = CountingOutputPort(shmTreeBuilder.sortedClones())
+            stepDescription = "Step " + stepNumber + "/" + stepsCount + ", " + step.forPrint
+            SmartProgressReporter.startProgressReport(
+                stepDescription,
+                SmartProgressReporter.extractProgress(sortedClones, cloneWrappersCount.toLong())
+            )
+            CUtils.processAllInParallel(
+                shmTreeBuilder.buildClusters(sortedClones),
+                { cluster ->
+                    shmTreeBuilder.applyStep(
+                        cluster,
+                        step,
+                        previousStepDebug.treesAfterDecisionsWriter,
+                        currentStepDebug.treesBeforeDecisionsWriter
+                    )
+                },
+                threads
+            )
+            val clonesWasAdded = shmTreeBuilder.makeDecisions()
+            report.onStepEnd(step, clonesWasAdded, shmTreeBuilder.treesCount() - treesCountBefore)
+            previousStepDebug = currentStepDebug
         }
         sortedClones = CountingOutputPort(shmTreeBuilder.sortedClones())
         SmartProgressReporter.startProgressReport(
@@ -248,9 +237,8 @@ class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
             printOnlyLeafNames = false
         )
         for (cluster in CUtils.it(shmTreeBuilder.buildClusters(sortedClones))) {
-            val result = shmTreeBuilder.getResult(cluster, previousStepDebug.treesAfterDecisionsWriter).stream()
-                .sorted(Comparator.comparing { it.treeId.encode() })
-                .collect(Collectors.toList())
+            val result = shmTreeBuilder.getResult(cluster, previousStepDebug.treesAfterDecisionsWriter)
+                .sortedBy { it.treeId.encode() }
             for (treeWithMeta in result) {
                 val columns = columnsThatDependOnNode + columnsThatDependOnTree
                     .mapValues { (_, function) -> { function.apply(treeWithMeta) } }
@@ -263,8 +251,6 @@ class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
             }
         }
         zip(outputDirInTmp.toPath(), Path.of(outputZipPath))
-        println(String(Base64.getEncoder().encode(createChecksum(nodesTableFile.absolutePath))))
-        exitProcess(0)
         for (i in 0..shmTreeBuilderParameters!!.stepsOrder.size) {
             stepNumber = i + 1
             val treesBeforeDecisions = debugFile(stepNumber, Debug.BEFORE_DECISIONS_SUFFIX)
@@ -277,21 +263,6 @@ class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
         if (reportPdf != null) {
             report.writePdfReport(Paths.get(reportPdf!!))
         }
-    }
-
-    private fun createChecksum(filename: String): ByteArray {
-        val fis = FileInputStream(filename)
-        val buffer = ByteArray(1024)
-        val complete = MessageDigest.getInstance("MD5")
-        var numRead: Int
-        do {
-            numRead = fis.read(buffer)
-            if (numRead > 0) {
-                complete.update(buffer, 0, numRead)
-            }
-        } while (numRead != -1)
-        fis.close()
-        return complete.digest()
     }
 
     @Throws(IOException::class)
@@ -393,8 +364,7 @@ class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
         private fun Array<MutationNt2AADescriptor>?.asString(): String {
             return when (this) {
                 null -> ""
-                else -> Arrays.stream(this).map { obj: MutationNt2AADescriptor -> obj.toString() }
-                    .collect(Collectors.joining())
+                else -> this.joinToString { obj: MutationNt2AADescriptor -> obj.toString() }
             }
         }
 

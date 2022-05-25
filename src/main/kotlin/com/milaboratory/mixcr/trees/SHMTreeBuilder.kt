@@ -176,9 +176,8 @@ class SHMTreeBuilder(
             }
 
             override fun take(): Cluster<CloneWrapper>? {
-                var clone: CloneWrapper
                 while (true) {
-                    clone = sortedClones.take() ?: return null
+                    val clone = sortedClones.take() ?: return null
                     if (cluster.isEmpty()) {
                         cluster.add(clone)
                         continue

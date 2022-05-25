@@ -1,11 +1,8 @@
 {
   "default": {
-    "filterClonesWithCountLessThan": 3,
+    "minDiversityForNativeAlleles": 5,
     "productiveOnly": true,
-    "minDiversityForAlgorithm": 3,
-    "minDiversityToFindAllele": 5,
-    "minPartOfClonesToDeterminateAllele": 0.95,
-    "maxPenaltyByAlleleMutation": 5.0,
+    "filterClonesWithCountLessThan": 3,
     "minPortionOfClonesForCommonAlignmentRanges": 0.95
   }
 }

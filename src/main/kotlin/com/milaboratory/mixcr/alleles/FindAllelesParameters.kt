@@ -27,34 +27,36 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package com.milaboratory.mixcr.trees
+package com.milaboratory.mixcr.alleles
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.milaboratory.util.GlobalObjectMappers
+import com.fasterxml.jackson.annotation.JsonAutoDetect
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.milaboratory.primitivio.annotations.Serializable
 
-object SHMTreeBuilderParametersPresets {
-    private var knownParameters: Map<String, SHMTreeBuilderParameters>? = null
-    private fun ensureInitialized() {
-        if (knownParameters == null) synchronized(SHMTreeBuilderParametersPresets::class.java) {
-            if (knownParameters == null) {
-                val `is` =
-                    SHMTreeBuilderParameters::class.java.classLoader.getResourceAsStream("parameters/shm_tree_parameters.json")
-                val typeRef: TypeReference<HashMap<String, SHMTreeBuilderParameters>> =
-                    object : TypeReference<HashMap<String, SHMTreeBuilderParameters>>() {}
-                knownParameters = GlobalObjectMappers.ONE_LINE.readValue(`is`, typeRef)
-            }
-        }
-    }
+/**
+ *
+ */
+@JsonAutoDetect(
+    fieldVisibility = JsonAutoDetect.Visibility.ANY,
+    isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+    getterVisibility = JsonAutoDetect.Visibility.NONE
+)
+@Serializable(asJson = true)
+data class FindAllelesParameters @JsonCreator constructor(
+    /**
+     * Min diversity for clones with the same mutations to be considered as an allele.
+     */
+    @param:JsonProperty("minDiversityForNativeAlleles") val minDiversityForNativeAlleles: Int,
+    @param:JsonProperty("filterClonesWithCountLessThan") val filterClonesWithCountLessThan: Int,
+    /**
+     * Use only productive clonotypes (no OOF, no stops).
+     */
+    @param:JsonProperty("productiveOnly") val productiveOnly: Boolean,
+    /**
+     * Min portion of clones to determinate common alignment ranges.
+     */
+    @param:JsonProperty("minPortionOfClonesForCommonAlignmentRanges") val minPortionOfClonesForCommonAlignmentRanges: Double,
 
-    val availableParameterNames: Set<String>
-        get() {
-            ensureInitialized()
-            return knownParameters!!.keys
-        }
 
-    fun getByName(name: String): SHMTreeBuilderParameters? {
-        ensureInitialized()
-        val params = knownParameters!![name] ?: return null
-        return params.copy()
-    }
-}
+    ) : java.io.Serializable

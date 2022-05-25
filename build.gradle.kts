@@ -58,8 +58,6 @@ tasks.withType<KotlinCompile> { // this affects to all kotlinCompilation tasks
 
 application {
     mainClass.set("com.milaboratory.mixcr.cli.Main")
-    applicationDefaultJvmArgs =
-        listOf("-Xms6g", "-Xmx6g", "-XX:FlightRecorderOptions=stackdepth=512", "-Xlog:gc:${project.buildDir}/gc.log")
 }
 
 tasks.withType<Javadoc> {
@@ -100,6 +98,7 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     implementation(testFixtures("com.milaboratory:milib:$milibVersion"))
     testImplementation("org.mockito:mockito-all:1.10.19")
+    testImplementation("io.kotest:kotest-assertions-core:5.3.0")
 }
 
 val writeBuildProperties by tasks.registering(WriteProperties::class) {
