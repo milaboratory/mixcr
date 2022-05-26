@@ -37,18 +37,13 @@ import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.core.sequence.quality.QualityAggregationType;
 import com.milaboratory.core.sequence.quality.QualityAggregator;
 import com.milaboratory.mixcr.basictypes.ClonalSequence;
-import com.milaboratory.mixcr.basictypes.tag.TagCounterBuilder;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCHit;
-import gnu.trove.iterator.TObjectFloatIterator;
-import gnu.trove.map.hash.TObjectFloatHashMap;
+import com.milaboratory.mixcr.basictypes.tag.TagCounterBuilder;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGeneId;
 
-import java.util.EnumMap;
-
 public final class CloneAccumulator {
-    final EnumMap<GeneType, TObjectFloatHashMap<VDJCGeneId>> geneScores = new EnumMap<>(GeneType.class);
+    final VDJCGeneScoreAccumulator geneScoreAccumulator = new VDJCGeneScoreAccumulator();
     private ClonalSequence sequence;
     private final QualityAggregator aggregator;
     private long coreCount = 0, mappedCount = 0, initialCoreCount = -1;
@@ -77,7 +72,6 @@ public final class CloneAccumulator {
             pointer += s.size();
         }
         sequence = new ClonalSequence(updated);
-        return;
     }
 
     public void onBeforeMapping() {
@@ -85,34 +79,13 @@ public final class CloneAccumulator {
     }
 
     public float getBestScore(GeneType geneType) {
-        TObjectFloatHashMap<VDJCGeneId> scores = geneScores.get(geneType);
-        if (scores == null)
-            return 0;
-        float maxScore = 0;
-        TObjectFloatIterator<VDJCGeneId> iterator = scores.iterator();
-        while (iterator.hasNext()) {
-            iterator.advance();
-            if (maxScore < iterator.value())
-                maxScore = iterator.value();
-        }
-        return maxScore;
+        VDJCGeneScoreAccumulator.GeneAndScore bestGene = geneScoreAccumulator.getBestGene(geneType);
+        return bestGene == null ? 0 : bestGene.score;
     }
 
     public VDJCGeneId getBestGene(GeneType geneType) {
-        TObjectFloatHashMap<VDJCGeneId> scores = geneScores.get(geneType);
-        if (scores == null)
-            return null;
-        float maxScore = 0;
-        VDJCGeneId maxAllele = null;
-        TObjectFloatIterator<VDJCGeneId> iterator = scores.iterator();
-        while (iterator.hasNext()) {
-            iterator.advance();
-            if (maxAllele == null || maxScore < iterator.value()) {
-                maxAllele = iterator.key();
-                maxScore = iterator.value();
-            }
-        }
-        return maxAllele;
+        VDJCGeneScoreAccumulator.GeneAndScore bestGene = geneScoreAccumulator.getBestGene(geneType);
+        return bestGene == null ? null : bestGene.geneId;
     }
 
     public Range[] getNRegions() {
@@ -145,37 +118,6 @@ public final class CloneAccumulator {
         return mappedCount;
     }
 
-    public void calculateScores(CloneFactoryParameters parameters) {
-        for (GeneType geneType : GeneType.VJC_REFERENCE) {
-            VJCClonalAlignerParameters vjcParameters = parameters.getVJCParameters(geneType);
-            if (vjcParameters == null)
-                continue;
-
-            TObjectFloatHashMap<VDJCGeneId> accumulatorGeneIds = geneScores.get(geneType);
-            if (accumulatorGeneIds == null)
-                continue;
-
-            TObjectFloatIterator<VDJCGeneId> iterator = accumulatorGeneIds.iterator();
-            float maxScore = 0;
-            while (iterator.hasNext()) {
-                iterator.advance();
-                float value = iterator.value();
-                if (value > maxScore)
-                    maxScore = value;
-            }
-
-            maxScore = maxScore * vjcParameters.getRelativeMinScore();
-            iterator = accumulatorGeneIds.iterator();
-            while (iterator.hasNext()) {
-                iterator.advance();
-                if (maxScore > iterator.value())
-                    iterator.remove();
-                else
-                    iterator.setValue(Math.round(iterator.value() * 10f / coreCount) / 10f);
-            }
-        }
-    }
-
     public void mergeCounts(CloneAccumulator acc) {
         coreCount += acc.coreCount;
         mappedCount += acc.mappedCount;
@@ -190,22 +132,7 @@ public final class CloneAccumulator {
 
             // Accumulate information about V-D-J alignments only for strictly clustered reads
             // (only for core clonotypes members)
-            float score;
-
-            // Accumulate information about all genes
-            for (GeneType geneType : GeneType.VJC_REFERENCE) {
-                TObjectFloatHashMap<VDJCGeneId> geneScores = this.geneScores.get(geneType);
-                VDJCHit[] hits = alignment.getHits(geneType);
-                if (hits.length == 0)
-                    continue;
-                if (geneScores == null)
-                    this.geneScores.put(geneType, geneScores = new TObjectFloatHashMap<>());
-                for (VDJCHit hit : hits) {
-                    // Calculating sum of natural logarithms of scores
-                    score = hit.getScore();
-                    geneScores.adjustOrPutValue(hit.getGene().getId(), score, score);
-                }
-            }
+            geneScoreAccumulator.accumulate(alignment);
 
             aggregator.aggregate(data.getConcatenated().getQuality());
         } else // Mapped sequence accumulation

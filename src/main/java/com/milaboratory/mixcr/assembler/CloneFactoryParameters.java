@@ -36,6 +36,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.milaboratory.mixcr.basictypes.ClonalUpdatableParameters;
+import com.milaboratory.mixcr.basictypes.HasRelativeMinScore;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import io.repseq.core.GeneType;
 
@@ -44,7 +45,7 @@ import java.util.Map;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
-public final class CloneFactoryParameters implements java.io.Serializable {
+public final class CloneFactoryParameters implements HasRelativeMinScore, java.io.Serializable {
     EnumMap<GeneType, VJCClonalAlignerParameters> vdcParameters = new EnumMap<>(GeneType.class);
     @JsonSerialize(as = DClonalAlignerParameters.class)
     DClonalAlignerParameters dParameters;
@@ -143,6 +144,14 @@ public final class CloneFactoryParameters implements java.io.Serializable {
     public CloneFactoryParameters setDParameters(DClonalAlignerParameters dParameters) {
         this.dParameters = dParameters;
         return this;
+    }
+
+    @Override
+    public float getRelativeMinScore(GeneType gt) {
+        if (gt == GeneType.Diversity)
+            return getDParameters().getRelativeMinScore();
+        VJCClonalAlignerParameters geneSpecificParameters = getVJCParameters(gt);
+        return geneSpecificParameters == null ? Float.NaN : geneSpecificParameters.getRelativeMinScore();
     }
 
     @Override

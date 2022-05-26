@@ -34,8 +34,8 @@ import com.milaboratory.core.alignment.*;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.basictypes.tag.TagCounter;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.basictypes.tag.TagCounter;
 import com.milaboratory.mixcr.vdjaligners.SingleDAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import gnu.trove.iterator.TObjectFloatIterator;
@@ -254,7 +254,7 @@ public final class CloneFactory {
     }
 
     public Clone create(int id, CloneAccumulator accumulator) {
-        return create(id, accumulator.getCount(), accumulator.geneScores, accumulator.tagBuilder.createAndDestroy(), accumulator.getSequence().sequences, null);
+        return create(id, accumulator.getCount(), accumulator.geneScoreAccumulator.geneScores, accumulator.tagBuilder.createAndDestroy(), accumulator.getSequence().sequences, null);
     }
 
     private static boolean containsD(GeneFeature feature) {

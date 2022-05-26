@@ -50,7 +50,6 @@ import com.milaboratory.util.HashFunctions;
 import com.milaboratory.util.RandomUtil;
 import gnu.trove.iterator.TIntIntIterator;
 import gnu.trove.iterator.TIntIterator;
-import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
@@ -656,7 +655,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         public List<CloneAccumulator> build() {
             CloneAccumulator[] accs = accumulators.values().toArray(new CloneAccumulator[0]);
             for (CloneAccumulator acc : accs)
-                acc.calculateScores(parameters.cloneFactoryParameters);
+                acc.geneScoreAccumulator.aggregateInformation(parameters.cloneFactoryParameters);
 
             // Stores list of clonotypes clustered into specific clonotype
             final TIntObjectHashMap<TIntArrayList> reversePreClustered = new TIntObjectHashMap<>();
@@ -813,11 +812,11 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         );
     }
 
-    VJCSignature extractSignature(CloneAccumulator alignments) {
+    VJCSignature extractSignature(CloneAccumulator cloneAccumulator) {
         return new VJCSignature(
-                parameters.getSeparateByV() ? getGeneId(alignments, GeneType.Variable) : DO_NOT_CHECK,
-                parameters.getSeparateByJ() ? getGeneId(alignments, GeneType.Joining) : DO_NOT_CHECK,
-                parameters.getSeparateByC() ? getGeneId(alignments, GeneType.Constant) : DO_NOT_CHECK
+                parameters.getSeparateByV() ? cloneAccumulator.getBestGene(GeneType.Variable) : DO_NOT_CHECK,
+                parameters.getSeparateByJ() ? cloneAccumulator.getBestGene(GeneType.Joining) : DO_NOT_CHECK,
+                parameters.getSeparateByC() ? cloneAccumulator.getBestGene(GeneType.Constant) : DO_NOT_CHECK
         );
     }
 
@@ -842,7 +841,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             TObjectFloatHashMap<VDJCGeneId> minor;
 
             if (vGene != DO_NOT_CHECK) {
-                minor = acc.geneScores.get(GeneType.Variable);
+                minor = acc.geneScoreAccumulator.geneScores.get(GeneType.Variable);
                 if (vGene == null && (minor != null && !minor.isEmpty()))
                     return false;
                 if (vGene != null && minor != null && !minor.containsKey(vGene))
@@ -850,7 +849,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             }
 
             if (jGene != DO_NOT_CHECK) {
-                minor = acc.geneScores.get(GeneType.Joining);
+                minor = acc.geneScoreAccumulator.geneScores.get(GeneType.Joining);
                 if (jGene == null && (minor != null && !minor.isEmpty()))
                     return false;
                 if (jGene != null && minor != null && !minor.containsKey(jGene))
@@ -858,7 +857,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             }
 
             if (cGene != DO_NOT_CHECK) {
-                minor = acc.geneScores.get(GeneType.Constant);
+                minor = acc.geneScoreAccumulator.geneScores.get(GeneType.Constant);
                 if (cGene == null && (minor != null && !minor.isEmpty()))
                     return false;
                 if (cGene != null && minor != null && !minor.containsKey(cGene))
@@ -893,23 +892,6 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     static VDJCGeneId getGeneId(VDJCAlignments alignments, GeneType type) {
         VDJCHit hit = alignments.getBestHit(type);
         return hit == null ? null : hit.getGene().getId();
-    }
-
-    static VDJCGeneId getGeneId(CloneAccumulator acc, GeneType type) {
-        TObjectFloatHashMap<VDJCGeneId> aScores = acc.geneScores.get(type);
-        if (aScores == null || aScores.isEmpty())
-            return null;
-        VDJCGeneId id = null;
-        float maxScore = Float.MIN_VALUE;
-        TObjectFloatIterator<VDJCGeneId> it = aScores.iterator();
-        while (it.hasNext()) {
-            it.advance();
-            if (maxScore < it.value()) {
-                maxScore = it.value();
-                id = it.key();
-            }
-        }
-        return id;
     }
 
     static final Comparator<CloneAccumulator> CLONE_ACCUMULATOR_COMPARATOR = new Comparator<CloneAccumulator>() {
