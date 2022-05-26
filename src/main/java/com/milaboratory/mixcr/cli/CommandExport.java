@@ -361,7 +361,7 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
     }
 
     @SuppressWarnings("unchecked")
-    <E> List<FieldExtractor<E>> extractor(FieldData fd, Class<E> clazz, OutputMode m) {
+    public static <E> List<FieldExtractor<E>> extractor(FieldData fd, Class<E> clazz, OutputMode m) {
         for (Field f : FieldExtractors.getFields()) {
             if (fd.field.equalsIgnoreCase(f.getCommand()) && f.canExtractFrom(clazz)) {
                 if (f.nArguments() == 0) {
@@ -380,11 +380,10 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                 }
             }
         }
-        throwValidationException("illegal field: " + fd.field);
-        return null;
+        throw new IllegalArgumentException("illegal field: " + fd.field);
     }
 
-    private static final class FieldData {
+    public static final class FieldData {
         final String field;
         final String[] args;
 
@@ -527,8 +526,13 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
     public static <T extends VDJCObject> CommandSpec mkCommandSpec(CommandExport<T> export) {
         CommandSpec spec = CommandSpec.forAnnotatedObject(export);
         export.spec = spec; // inject spec manually
-        for (Field field : FieldExtractors.getFields()) {
-            if (!field.canExtractFrom(export.clazz))
+        addOptionsToSpec(spec, export.clazz);
+        return spec;
+    }
+
+    public static void addOptionsToSpec(CommandSpec spec, Class<?> clazz) {
+        for (Field<?> field : FieldExtractors.getFields()) {
+            if (!field.canExtractFrom(clazz))
                 continue;
             spec.addOption(OptionSpec
                     .builder(field.getCommand())
@@ -539,7 +543,6 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                     .descriptionKey(field.getCommand() + " " + field.metaVars())
                     .build());
         }
-        return spec;
     }
 
     /**

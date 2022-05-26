@@ -38,7 +38,7 @@ public final class OverlapGroup<T> implements Iterable<List<T>> {
     /**
      * Elements in group separated by sample
      */
-    final List<List<T>> elements;
+    public final List<List<T>> elements;
 
     public OverlapGroup(List<List<T>> elements) {
         this.elements = elements;
