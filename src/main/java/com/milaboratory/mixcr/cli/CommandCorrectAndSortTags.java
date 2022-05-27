@@ -259,7 +259,7 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
                     SmartProgressReporter.extractProgress(sorted, reader.getNumberOfReads()));
 
             // Initializing and writing results to the output file
-            writer.header(reader, getFullPipelineConfiguration(), reader.getTagsInfo().setSorted(true));
+            writer.header(reader, getFullPipelineConfiguration(), reader.getTagsInfo().setSorted(reader.getTagsInfo().tags.length));
             for (VDJCAlignments al : CUtils.it(sorted))
                 writer.write(al);
         }

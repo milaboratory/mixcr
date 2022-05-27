@@ -23,9 +23,10 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class PreCloneAssembler {
-    final AtomicInteger idGenerator = new AtomicInteger();
-    final PreCloneAssemblerParameters parameters;
-    final OutputPort<GroupOP<VDJCAlignments, TagTuple>> alignmentsReader1, alignmentsReader2;
+    private final PreCloneAssemblerReport report = new PreCloneAssemblerReport();
+    private final AtomicInteger idGenerator = new AtomicInteger();
+    private final PreCloneAssemblerParameters parameters;
+    private final OutputPort<GroupOP<VDJCAlignments, TagTuple>> alignmentsReader1, alignmentsReader2;
 
     public PreCloneAssembler(PreCloneAssemblerParameters parameters,
                              OutputPort<VDJCAlignments> alignmentsReader1,
@@ -37,8 +38,18 @@ public final class PreCloneAssembler {
         this.alignmentsReader2 = PipeKt.group(alignmentsReader2, gFunction);
     }
 
+    public PreCloneAssemblerReport getReport() {
+        return report;
+    }
+
     public List<PreClone> getForNextGroup() {
         GroupOP<VDJCAlignments, TagTuple> grp1 = alignmentsReader1.take();
+
+        if (grp1 == null)
+            return null;
+
+        report.inputGroups.incrementAndGet();
+
         List<NSequenceWithQuality[]> assemblerInput = new ArrayList<>();
         // Alignment infos for alignments containing all assembling features
         // (i.e. for the rows from assemblerInput)
@@ -77,6 +88,8 @@ public final class PreCloneAssembler {
             row = new NSequenceWithQuality[parameters.assemblingFeatures.length];
         }
 
+        report.inputAlignments.addAndGet(localIdx);
+
         // Step #2
         // Building consensuses from the records collected on the step #1, and creating indices for
         // clonotype assignment of alignments left after the previous step
@@ -84,6 +97,8 @@ public final class PreCloneAssembler {
         GConsensusAssembler gAssembler = new GConsensusAssembler(parameters.assemblerParameters, assemblerInput);
         List<ConsensusResult> consensuses = gAssembler.calculateConsensuses();
         int numberOfClones = consensuses.size();
+        report.clonotypes.addAndGet(numberOfClones);
+        report.clonotypesPerGroup.get(numberOfClones).incrementAndGet();
 
         // Accumulates V, J and C gene information for each consensus
         // noinspection unchecked
@@ -120,6 +135,7 @@ public final class PreCloneAssembler {
                 content.set(ai.localIdx);
                 tagSuffixes.addAll(ai.tagSuffixes);
                 alignmentIndexToClonotypeIndex[ai.localIdx] = cIdx + 1;
+                report.coreAlignments.incrementAndGet();
             }
 
             // allAssignedToClonotypes.or(content);
@@ -153,6 +169,8 @@ public final class PreCloneAssembler {
                 continue;
 
             alignmentIndexToClonotypeIndex[ai.localIdx] = -1;
+
+            report.discardedCoreAlignments.incrementAndGet();
 
             for (TagTuple ts : ai.tagSuffixes)
                 tagSuffixToCloneId.put(ts, -1);
@@ -210,9 +228,11 @@ public final class PreCloneAssembler {
                         cIdx = -1;
                 }
 
-                if (cIdx > 0)
+                if (cIdx > 0) {
                     // Adding alignment to the clone
                     contents[cIdx - 1].set(localIdx);
+                    report.empiricallyAssignedAlignments.incrementAndGet();
+                }
             } else if (cIdx > 0)
                 // Using second iteration over the alignments to assemble TagCounters from the alignments assigned to
                 // clonotypes based on their contig assignment
@@ -220,6 +240,8 @@ public final class PreCloneAssembler {
 
             if (cIdx > 0)
                 fullTagCounterBuilders[cIdx].add(al.getTagCounter());
+            else
+                report.unassignedAlignments.incrementAndGet();
         }
 
         List<PreClone> result = new ArrayList<>();
@@ -229,6 +251,7 @@ public final class PreCloneAssembler {
             for (int i = 0; i < cs.length; i++)
                 clonalSequence[i] = cs[i].consensus;
             result.add(new PreClone(
+                    idGenerator.incrementAndGet(),
                     coreTagCounterBuilders[cIdx].createAndDestroy(),
                     fullTagCounterBuilders[cIdx].createAndDestroy(),
                     clonalSequence,

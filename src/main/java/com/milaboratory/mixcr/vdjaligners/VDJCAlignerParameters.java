@@ -35,6 +35,7 @@ import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
 import com.milaboratory.core.merger.MergerParameters;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign;
+import com.milaboratory.mixcr.basictypes.HasRelativeMinScore;
 import com.milaboratory.primitivio.annotations.Serializable;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
@@ -46,7 +47,7 @@ import java.util.*;
         getterVisibility = JsonAutoDetect.Visibility.NONE)
 @Serializable(asJson = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.Serializable {
+public final class VDJCAlignerParameters implements HasRelativeMinScore, HasFeatureToAlign, java.io.Serializable {
     @JsonIgnore
     private final EnumMap<GeneType, GeneAlignmentParameters> alignmentParameters;
     private VJAlignmentOrder vjAlignmentOrder;
@@ -374,6 +375,12 @@ public final class VDJCAlignerParameters implements HasFeatureToAlign, java.io.S
                 gtRequiringIndelShifts.add(gt);
         }
         return Collections.unmodifiableSet(gtRequiringIndelShifts);
+    }
+
+    @Override
+    public float getRelativeMinScore(GeneType gt) {
+        GeneAlignmentParameters ap = getGeneAlignerParameters(gt);
+        return ap == null ? Float.NaN : ap.getRelativeMinScore();
     }
 
     @Override

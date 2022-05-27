@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 
 public final class PreClone {
+    /** Pre-clonotype id */
+    public long id;
     /** Tag counter aggregating information about alignments with clonal sequence */
     public final TagCounter coreTagCounter;
     /** Tag counter aggregating information across all alignments assigned to this pre-clone */
@@ -21,8 +23,9 @@ public final class PreClone {
     /** Ids of alignments assigned to this pre-clone */
     public final BitArray alignments;
 
-    public PreClone(TagCounter coreTagCounter, TagCounter fullTagCounter, NSequenceWithQuality[] clonalSequence,
+    public PreClone(long id, TagCounter coreTagCounter, TagCounter fullTagCounter, NSequenceWithQuality[] clonalSequence,
                     Map<GeneType, List<GeneAndScore>> geneScores, BitArray alignments) {
+        this.id = id;
         this.coreTagCounter = coreTagCounter;
         this.fullTagCounter = fullTagCounter;
         this.clonalSequence = clonalSequence;

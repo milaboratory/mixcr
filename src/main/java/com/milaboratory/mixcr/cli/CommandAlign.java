@@ -644,7 +644,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
             if (writer != null)
                 writer.header(aligner, getFullPipelineConfiguration(),
                         tagSearchPlan != null
-                                ? new TagsInfo(false, tagSearchPlan.tagInfos.toArray(new TagInfo[0]))
+                                ? new TagsInfo(0, tagSearchPlan.tagInfos.toArray(new TagInfo[0]))
                                 : null);
 
             OutputPort<? extends SequenceRead> sReads = reader;

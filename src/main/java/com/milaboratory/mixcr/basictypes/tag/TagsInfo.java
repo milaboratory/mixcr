@@ -9,20 +9,39 @@ import java.util.Objects;
 
 @Serializable(asJson = true)
 public final class TagsInfo {
-    @JsonProperty("sorted")
-    public final boolean sorted;
+    @JsonProperty("sortingLevel")
+    public final int sortingLevel;
     @JsonProperty("tags")
     public final TagInfo[] tags;
 
     @JsonCreator
-    public TagsInfo(@JsonProperty("sorted") boolean sorted, @JsonProperty("tags") TagInfo... tags) {
+    public TagsInfo(@JsonProperty("sortingLevel") int sortingLevel, @JsonProperty("tags") TagInfo... tags) {
         Objects.requireNonNull(tags);
-        this.sorted = sorted;
+        this.sortingLevel = sortingLevel;
         this.tags = tags;
     }
 
-    public TagsInfo setSorted(boolean sorted){
-        return new TagsInfo(sorted, tags);
+    public int getDepthFor(TagType groupingLevel) {
+        for (int i = 0; i < tags.length; i++)
+            if (tags[i].getType().ordinal() > groupingLevel.ordinal())
+                return i;
+        return tags.length;
+    }
+
+    public TagInfo get(int idx) {
+        return tags[idx];
+    }
+
+    public int size() {
+        return tags.length;
+    }
+
+    public int getSortingLevel() {
+        return sortingLevel;
+    }
+
+    public TagsInfo setSorted(int sortedLevel) {
+        return new TagsInfo(sortedLevel, tags);
     }
 
     @Override
@@ -30,12 +49,12 @@ public final class TagsInfo {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         TagsInfo tagsInfo = (TagsInfo) o;
-        return sorted == tagsInfo.sorted && Arrays.equals(tags, tagsInfo.tags);
+        return sortingLevel == tagsInfo.sortingLevel && Arrays.equals(tags, tagsInfo.tags);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(sorted);
+        int result = Objects.hash(sortingLevel);
         result = 31 * result + Arrays.hashCode(tags);
         return result;
     }

@@ -124,6 +124,7 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
              VDJCAlignmentsReader reader2 = new VDJCAlignmentsReader(in);
              VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)) {
 
+            // FIXME sorting level !!!!!
             writer.header(reader1.getParameters(), reader1.getUsedGenes(), getFullPipelineConfiguration(), reader1.getTagsInfo());
 
             PartialAlignmentsAssembler assembler = new PartialAlignmentsAssembler(assemblerParameters, reader1.getParameters(),
