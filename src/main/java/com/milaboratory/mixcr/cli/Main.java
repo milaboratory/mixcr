@@ -248,6 +248,8 @@ public final class Main {
                 .addSubcommand("exportClones", CommandExport.mkClonesSpec())
                 .addSubcommand("exportClonesPretty", CommandExportClonesPretty.class)
 
+                .addSubcommand("exportClonesOverlap", CommandExportOverlap.mkSpec())
+
                 .addSubcommand("exportAirr", CommandExportAirr.class)
 
                 .addSubcommand("exportReadsForClones", CommandExportReadsForClones.class)
