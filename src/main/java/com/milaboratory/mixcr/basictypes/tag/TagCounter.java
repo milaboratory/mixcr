@@ -6,11 +6,9 @@ import gnu.trove.iterator.TDoubleIterator;
 import gnu.trove.iterator.TObjectDoubleIterator;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -34,20 +32,48 @@ public final class TagCounter {
         this(tags, 1.0);
     }
 
-    public TagTuple singleOrNull() {
+    public TagTuple asKeyPrefixOrNull(int level) {
+        TagTuple fullKey = asKeyOrNull();
+        if (fullKey != null)
+            return fullKey.keyPrefix(level);
+        Set<TagTuple> keySet = tags.keySet().stream()
+                .map(t -> t.keyPrefix(level))
+                .collect(Collectors.toSet());
+        if (keySet.size() != 1)
+            return null;
+        return keySet.iterator().next();
+    }
+
+    public TagTuple asKeyOrNull() {
         if (size() > 1 || size() == 0)
             return null;
 
         TObjectDoubleIterator<TagTuple> it = iterator();
         it.advance();
-        return it.key();
+        return it.key().key();
     }
 
-    public TagTuple singleOrError() {
-        TagTuple result = singleOrNull();
+    public TagTuple asKeyPrefixOrError(int level) {
+        TagTuple result = asKeyPrefixOrNull(level);
         if (result == null)
             throw new IllegalStateException("Aggregated tag information, single tag tuple expected.");
         return result;
+    }
+
+    public TagTuple asKeyOrError() {
+        TagTuple result = asKeyOrNull();
+        if (result == null)
+            throw new IllegalStateException("Aggregated tag information, single tag tuple expected.");
+        return result;
+    }
+
+    public Set<TagTuple> keySuffixes(int depth) {
+        TagTuple fullKey = asKeyOrNull();
+        if (fullKey != null)
+            return Collections.singleton(fullKey.keySuffix(depth));
+        return tags.keySet().stream()
+                .map(t -> t.keySuffix(depth))
+                .collect(Collectors.toSet());
     }
 
     public Set<TagTuple> keys() {
@@ -160,7 +186,7 @@ public final class TagCounter {
             TagTuple t = it.key();
             double count = it.value();
 
-            TagCounterBuilder tb = map.computeIfAbsent(t.tags[index], __ -> new TagCounterBuilder());
+            TagCounterBuilder tb = map.computeIfAbsent(t.get(index), __ -> new TagCounterBuilder());
             tb.add(t, count);
         }
         return map.values().stream().map(TagCounterBuilder::createAndDestroy).toArray(TagCounter[]::new);
@@ -193,7 +219,7 @@ public final class TagCounter {
         TObjectDoubleIterator<TagTuple> it = iterator();
         while (it.hasNext()) {
             it.advance();
-            set.add(it.key().tags[index]);
+            set.add(it.key().get(index));
         }
         return set;
     }

@@ -11,13 +11,13 @@ import java.util.Arrays;
  * Tag may be a sample name, cell marker or unique molecular identifier.
  */
 public final class TagTuple implements Comparable<TagTuple> {
-    public final TagValue[] tags;
+    public static final TagTuple EMPTY = new TagTuple();
+
+    final TagValue[] tags;
     private final int hash;
 
     @SuppressWarnings("UnstableApiUsage")
     public TagTuple(TagValue... tags) {
-        if (tags.length == 0)
-            throw new IllegalArgumentException();
         this.tags = tags;
         Hasher hasher = Hashing.murmur3_32_fixed().newHasher();
         for (TagValue tag : tags)
@@ -25,7 +25,11 @@ public final class TagTuple implements Comparable<TagTuple> {
         this.hash = hasher.hash().hashCode();
     }
 
-    public TagTuple toKeys() {
+    /**
+     * Strips all non-key information (i.e. quality scores) from tags inside the tuple,
+     * and returns tag tuple intended to be used as a grouping key.
+     */
+    public TagTuple key() {
         boolean hasNonKey = false;
         for (TagValue tag : tags)
             if (!tag.isKey()) {
@@ -38,6 +42,49 @@ public final class TagTuple implements Comparable<TagTuple> {
         for (int i = 0; i < newTags.length; i++)
             newTags[i] = newTags[i].extractKey();
         return new TagTuple(newTags);
+    }
+
+    /**
+     * Strips all non-key information (i.e. quality scores) from tags inside the tuple,
+     * and returns tag tuple prefix of a specified depth, intended to be used as a grouping key.
+     */
+    public TagTuple keyPrefix(int depth) {
+        if (depth == tags.length)
+            return key();
+        if (depth == 0)
+            return EMPTY;
+        TagValue[] newTags = Arrays.copyOf(tags, depth);
+        for (int i = 0; i < newTags.length; i++)
+            newTags[i] = newTags[i].extractKey();
+        return new TagTuple(newTags);
+    }
+
+    /**
+     * Strips all non-key information from tags inside the tuple,
+     * and returns tag tuple suffix, by discarding a specified number of tuple elements from the left.
+     */
+    public TagTuple keySuffix(int depth) {
+        if (depth == 0)
+            return key();
+        if (depth == tags.length)
+            return EMPTY;
+        TagValue[] newTags = Arrays.copyOfRange(tags, depth + 1, tags.length);
+        for (int i = 0; i < newTags.length; i++)
+            newTags[i] = newTags[i].extractKey();
+        return new TagTuple(newTags);
+    }
+
+    public TagValue get(int idx) {
+        return tags[idx];
+    }
+
+    public int size() {
+        return tags.length;
+    }
+
+    /** Returns clone of internal array */
+    public TagValue[] asArray() {
+        return tags.clone();
     }
 
     @Override

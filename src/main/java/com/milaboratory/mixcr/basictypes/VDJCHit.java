@@ -32,6 +32,7 @@ package com.milaboratory.mixcr.basictypes;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.AlignmentHelper;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.assembler.GeneAndScore;
 import com.milaboratory.primitivio.annotations.Serializable;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
@@ -111,6 +112,10 @@ public final class VDJCHit implements Comparable<VDJCHit>, HasGene {
     @Override
     public VDJCGene getGene() {
         return gene;
+    }
+
+    public GeneAndScore getGeneAndScore() {
+        return new GeneAndScore(getGene().getId(), getScore());
     }
 
     public GeneFeature getAlignedFeature() {

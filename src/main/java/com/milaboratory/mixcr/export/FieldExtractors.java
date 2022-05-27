@@ -733,7 +733,7 @@ public final class FieldExtractors {
                                 return NULL;
                             if (keys.size() > 1)
                                 throw new IllegalArgumentException("object has multiple tag tuples: " + tc);
-                            return keys.iterator().next().tags[finalIdx].extractKey().toString();
+                            return keys.iterator().next().get(finalIdx).extractKey().toString();
                         }
                     };
                 }

@@ -53,7 +53,6 @@ import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import gnu.trove.map.hash.TObjectFloatHashMap;
 import io.repseq.core.*;
 
 import java.util.*;
@@ -655,7 +654,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         public List<CloneAccumulator> build() {
             CloneAccumulator[] accs = accumulators.values().toArray(new CloneAccumulator[0]);
             for (CloneAccumulator acc : accs)
-                acc.geneScoreAccumulator.aggregateInformation(parameters.cloneFactoryParameters);
+                acc.aggregateGeneInfo(parameters.cloneFactoryParameters);
 
             // Stores list of clonotypes clustered into specific clonotype
             final TIntObjectHashMap<TIntArrayList> reversePreClustered = new TIntObjectHashMap<>();
@@ -806,87 +805,18 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
 
     VJCSignature extractSignature(VDJCAlignments alignments) {
         return new VJCSignature(
-                parameters.getSeparateByV() ? getGeneId(alignments, GeneType.Variable) : DO_NOT_CHECK,
-                parameters.getSeparateByJ() ? getGeneId(alignments, GeneType.Joining) : DO_NOT_CHECK,
-                parameters.getSeparateByC() ? getGeneId(alignments, GeneType.Constant) : DO_NOT_CHECK
+                parameters.getSeparateByV() ? getGeneId(alignments, GeneType.Variable) : VJCSignature.DO_NOT_CHECK,
+                parameters.getSeparateByJ() ? getGeneId(alignments, GeneType.Joining) : VJCSignature.DO_NOT_CHECK,
+                parameters.getSeparateByC() ? getGeneId(alignments, GeneType.Constant) : VJCSignature.DO_NOT_CHECK
         );
     }
 
     VJCSignature extractSignature(CloneAccumulator cloneAccumulator) {
         return new VJCSignature(
-                parameters.getSeparateByV() ? cloneAccumulator.getBestGene(GeneType.Variable) : DO_NOT_CHECK,
-                parameters.getSeparateByJ() ? cloneAccumulator.getBestGene(GeneType.Joining) : DO_NOT_CHECK,
-                parameters.getSeparateByC() ? cloneAccumulator.getBestGene(GeneType.Constant) : DO_NOT_CHECK
+                parameters.getSeparateByV() ? cloneAccumulator.getBestGene(GeneType.Variable) : VJCSignature.DO_NOT_CHECK,
+                parameters.getSeparateByJ() ? cloneAccumulator.getBestGene(GeneType.Joining) : VJCSignature.DO_NOT_CHECK,
+                parameters.getSeparateByC() ? cloneAccumulator.getBestGene(GeneType.Constant) : VJCSignature.DO_NOT_CHECK
         );
-    }
-
-    /**
-     * Special marker GeneID used to make matchHits procedure to ignore V, J or C genes during matchHits procedure
-     */
-    private static final VDJCGeneId DO_NOT_CHECK = new VDJCGeneId(new VDJCLibraryId("NO_LIBRARY", 0), "DO_NOT_CHECK");
-
-    static final class VJCSignature {
-        final VDJCGeneId vGene, jGene, cGene;
-
-        /**
-         * null for absent hits, DO_NOT_CHECK to ignore corresponding gene
-         */
-        VJCSignature(VDJCGeneId vGene, VDJCGeneId jGene, VDJCGeneId cGene) {
-            this.vGene = vGene;
-            this.jGene = jGene;
-            this.cGene = cGene;
-        }
-
-        boolean matchHits(CloneAccumulator acc) {
-            TObjectFloatHashMap<VDJCGeneId> minor;
-
-            if (vGene != DO_NOT_CHECK) {
-                minor = acc.geneScoreAccumulator.geneScores.get(GeneType.Variable);
-                if (vGene == null && (minor != null && !minor.isEmpty()))
-                    return false;
-                if (vGene != null && minor != null && !minor.containsKey(vGene))
-                    return false;
-            }
-
-            if (jGene != DO_NOT_CHECK) {
-                minor = acc.geneScoreAccumulator.geneScores.get(GeneType.Joining);
-                if (jGene == null && (minor != null && !minor.isEmpty()))
-                    return false;
-                if (jGene != null && minor != null && !minor.containsKey(jGene))
-                    return false;
-            }
-
-            if (cGene != DO_NOT_CHECK) {
-                minor = acc.geneScoreAccumulator.geneScores.get(GeneType.Constant);
-                if (cGene == null && (minor != null && !minor.isEmpty()))
-                    return false;
-                if (cGene != null && minor != null && !minor.containsKey(cGene))
-                    return false;
-            }
-
-            return true;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            VJCSignature that = (VJCSignature) o;
-
-            if (vGene != null ? !vGene.equals(that.vGene) : that.vGene != null) return false;
-            if (jGene != null ? !jGene.equals(that.jGene) : that.jGene != null) return false;
-            return !(cGene != null ? !cGene.equals(that.cGene) : that.cGene != null);
-
-        }
-
-        @Override
-        public int hashCode() {
-            int result = vGene != null ? vGene.hashCode() : 0;
-            result = 31 * result + (jGene != null ? jGene.hashCode() : 0);
-            result = 31 * result + (cGene != null ? cGene.hashCode() : 0);
-            return result;
-        }
     }
 
     static VDJCGeneId getGeneId(VDJCAlignments alignments, GeneType type) {

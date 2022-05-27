@@ -37,13 +37,18 @@ import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.core.sequence.quality.QualityAggregationType;
 import com.milaboratory.core.sequence.quality.QualityAggregator;
 import com.milaboratory.mixcr.basictypes.ClonalSequence;
+import com.milaboratory.mixcr.basictypes.HasRelativeMinScore;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.tag.TagCounterBuilder;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGeneId;
 
+import java.util.List;
+import java.util.Map;
+
 public final class CloneAccumulator {
-    final VDJCGeneScoreAccumulator geneScoreAccumulator = new VDJCGeneScoreAccumulator();
+    VDJCGeneAccumulator geneAccumulator = new VDJCGeneAccumulator();
+    Map<GeneType, List<GeneAndScore>> genes;
     private ClonalSequence sequence;
     private final QualityAggregator aggregator;
     private long coreCount = 0, mappedCount = 0, initialCoreCount = -1;
@@ -79,14 +84,38 @@ public final class CloneAccumulator {
     }
 
     public float getBestScore(GeneType geneType) {
-        VDJCGeneScoreAccumulator.GeneAndScore bestGene = geneScoreAccumulator.getBestGene(geneType);
-        return bestGene == null ? 0 : bestGene.score;
+        if (genes == null)
+            throw new IllegalStateException("Gene information not aggregated");
+        List<GeneAndScore> genes = this.genes.get(geneType);
+        return genes == null || genes.isEmpty() ? Float.NaN : genes.get(0).score;
     }
 
     public VDJCGeneId getBestGene(GeneType geneType) {
-        VDJCGeneScoreAccumulator.GeneAndScore bestGene = geneScoreAccumulator.getBestGene(geneType);
-        return bestGene == null ? null : bestGene.geneId;
+        if (genes == null)
+            throw new IllegalStateException("Gene information not aggregated");
+        List<GeneAndScore> genes = this.genes.get(geneType);
+        return genes == null || genes.isEmpty() ? null : genes.get(0).geneId;
     }
+
+    public boolean hasInfoFor(GeneType geneType) {
+        if (genes == null)
+            throw new IllegalStateException("Gene information not aggregated");
+        List<GeneAndScore> genes = this.genes.get(geneType);
+        return genes != null && !genes.isEmpty();
+    }
+
+    public boolean hasInfoFor(GeneType geneType, VDJCGeneId gene) {
+        if (genes == null)
+            throw new IllegalStateException("Gene information not aggregated");
+        List<GeneAndScore> genes = this.genes.get(geneType);
+        if (genes == null)
+            return false;
+        for (GeneAndScore gs : genes)
+            if (gs.geneId.equals(gene))
+                return true;
+        return false;
+    }
+
 
     public Range[] getNRegions() {
         return nRegions;
@@ -124,7 +153,15 @@ public final class CloneAccumulator {
         tagBuilder.add(acc.tagBuilder);
     }
 
+    public void aggregateGeneInfo(HasRelativeMinScore geneParameters) {
+        genes = geneAccumulator.aggregateInformation(geneParameters);
+        geneAccumulator = null;
+    }
+
     public synchronized void accumulate(ClonalSequence data, VDJCAlignments alignment, boolean mapped) {
+        if (geneAccumulator == null)
+            throw new IllegalStateException("Gene information already aggregated");
+
         if (!mapped) { // Core sequence accumulation
             coreCount += alignment.getNumberOfReads();
 
@@ -132,7 +169,7 @@ public final class CloneAccumulator {
 
             // Accumulate information about V-D-J alignments only for strictly clustered reads
             // (only for core clonotypes members)
-            geneScoreAccumulator.accumulate(alignment);
+            geneAccumulator.accumulate(alignment);
 
             aggregator.aggregate(data.getConcatenated().getQuality());
         } else // Mapped sequence accumulation

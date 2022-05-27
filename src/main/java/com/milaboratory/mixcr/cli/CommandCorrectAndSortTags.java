@@ -162,7 +162,7 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
                     TagTuple tagTuple = input.getTagCounter().keys().iterator().next();
                     NSequenceWithQuality[] tags = new NSequenceWithQuality[targetTagIndices.length];
                     for (int i = 0; i < targetTagIndices.length; i++)
-                        tags[i] = ((SequenceAndQualityTagValue) tagTuple.tags[targetTagIndices[i]]).data;
+                        tags[i] = ((SequenceAndQualityTagValue) tagTuple.get(targetTagIndices[i])).data;
                     return tags;
                 };
                 OutputPort<NSequenceWithQuality[]> cInput = CUtils.wrap(reader, mapper);
@@ -226,7 +226,7 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
             Processor<VDJCAlignments, VDJCAlignments> mapper = !noCorrect
                     ?
                     al -> {
-                        TagValue[] newTags = al.getTagCounter().singleOrError().tags.clone();
+                        TagValue[] newTags = al.getTagCounter().asKeyOrError().asArray();
                         CorrectionNode cn = correctionResult;
                         for (int i : targetTagIndices) {
                             NucleotideSequence current = ((SequenceAndQualityTagValue) newTags[i]).data.getSequence();
@@ -304,17 +304,17 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
 
         public ToIntFunction<VDJCAlignments> getHashFunction() {
             return al -> {
-                TagValue[] tags = al.getTagCounter().singleOrError().tags;
-                return ((SequenceAndQualityTagValue) tags[tagIdx]).data.getSequence().hashCode();
+                TagTuple tagTuple = al.getTagCounter().asKeyOrError();
+                return ((SequenceAndQualityTagValue) tagTuple.get(tagIdx)).data.getSequence().hashCode();
             };
         }
 
         public Comparator<VDJCAlignments> getComparator() {
             return (al1, al2) -> {
-                TagValue[] tags1 = al1.getTagCounter().singleOrError().tags;
-                TagValue[] tags2 = al2.getTagCounter().singleOrError().tags;
-                return ((SequenceAndQualityTagValue) tags1[tagIdx]).data.getSequence().compareTo(
-                        ((SequenceAndQualityTagValue) tags2[tagIdx]).data.getSequence());
+                TagTuple tagTuple1 = al1.getTagCounter().asKeyOrError();
+                TagTuple tagTuple2 = al2.getTagCounter().asKeyOrError();
+                return ((SequenceAndQualityTagValue) tagTuple1.get(tagIdx)).data.getSequence().compareTo(
+                        ((SequenceAndQualityTagValue) tagTuple2.get(tagIdx)).data.getSequence());
             };
         }
     }

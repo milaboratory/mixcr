@@ -38,7 +38,11 @@ import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.sequence.*;
 import com.milaboratory.core.sequence.quality.QualityTrimmer;
 import com.milaboratory.mixcr.assembler.CloneFactory;
-import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.assembler.GeneAndScore;
+import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence;
 import com.milaboratory.mixcr.basictypes.tag.TagCounter;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
@@ -48,7 +52,6 @@ import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import gnu.trove.map.hash.TObjectFloatHashMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 import gnu.trove.set.hash.TIntHashSet;
 import io.repseq.core.*;
@@ -245,15 +248,15 @@ public final class FullSeqAssembler {
         return report;
     }
 
-    private EnumMap<GeneType, TObjectFloatHashMap<VDJCGeneId>> originalGeneScores = null;
+    private EnumMap<GeneType, List<GeneAndScore>> originalGeneScores = null;
 
-    private EnumMap<GeneType, TObjectFloatHashMap<VDJCGeneId>> getOriginalGeneScores() {
+    private EnumMap<GeneType, List<GeneAndScore>> getOriginalGeneScores() {
         if (originalGeneScores == null) {
             originalGeneScores = new EnumMap<>(GeneType.class);
             for (GeneType gt : GeneType.VDJC_REFERENCE) {
-                TObjectFloatHashMap<VDJCGeneId> scores = new TObjectFloatHashMap<>();
+                List<GeneAndScore> scores = new ArrayList<>();
                 for (VDJCHit hit : clone.getHits(gt))
-                    scores.put(hit.getGene().getId(), hit.getScore());
+                    scores.add(new GeneAndScore(hit.getGene().getId(), hit.getScore()));
                 originalGeneScores.put(gt, scores);
             }
         }
@@ -1426,7 +1429,7 @@ public final class FullSeqAssembler {
         int groupCounter = 0;
         for (VDJCAlignments al : CUtils.it(alignments.get())) {
             if (taggedAnalysis()) {
-                TagTuple tagTuple = al.getTagCounter().singleOrNull();
+                TagTuple tagTuple = al.getTagCounter().asKeyOrNull();
                 int grp = tagTupleToGroup.get(tagTuple);
                 if (grp == -1) {
                     grp = groupCounter++;
@@ -1725,13 +1728,13 @@ public final class FullSeqAssembler {
             assemblingFeaturePointSeq = Stream.empty();
 
         return Stream.concat(
-                assemblingFeaturePointSeq,
-                IntStream.range(0, alignments.numberOfTargets())
-                        .mapToObj(i -> toPointSequences(alignments, i))
-                        .flatMap(Collection::stream)
-                        .collect(Collectors.groupingBy(s -> s.point))
-                        .values().stream()
-                        .map(l -> l.stream().max(Comparator.comparingInt(a -> a.quality)).get()))
+                        assemblingFeaturePointSeq,
+                        IntStream.range(0, alignments.numberOfTargets())
+                                .mapToObj(i -> toPointSequences(alignments, i))
+                                .flatMap(Collection::stream)
+                                .collect(Collectors.groupingBy(s -> s.point))
+                                .values().stream()
+                                .map(l -> l.stream().max(Comparator.comparingInt(a -> a.quality)).get()))
                 .toArray(PointSequence[]::new);
     }
 

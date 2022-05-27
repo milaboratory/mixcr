@@ -38,8 +38,6 @@ import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.tag.TagCounter;
 import com.milaboratory.mixcr.vdjaligners.SingleDAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
-import gnu.trove.iterator.TObjectFloatIterator;
-import gnu.trove.map.hash.TObjectFloatHashMap;
 import io.repseq.core.*;
 
 import java.util.*;
@@ -83,7 +81,7 @@ public final class CloneFactory {
     }
 
     public Clone create(int id, double count,
-                        EnumMap<GeneType, TObjectFloatHashMap<VDJCGeneId>> geneScores,
+                        Map<GeneType, List<GeneAndScore>> geneScores,
                         TagCounter tagCounter,
                         NSequenceWithQuality[] targets,
                         Integer group) {
@@ -95,7 +93,7 @@ public final class CloneFactory {
 
             GeneFeature featureToAlign = featuresToAlign.get(geneType);
 
-            TObjectFloatHashMap<VDJCGeneId> gtGeneScores = geneScores.get(geneType);
+            List<GeneAndScore> gtGeneScores = geneScores.get(geneType);
             if (gtGeneScores == null)
                 continue;
 
@@ -118,10 +116,8 @@ public final class CloneFactory {
 
             VDJCHit[] result = new VDJCHit[gtGeneScores.size()];
             int pointer = 0;
-            TObjectFloatIterator<VDJCGeneId> iterator = gtGeneScores.iterator();
-            while (iterator.hasNext()) {
-                iterator.advance();
-                VDJCGene gene = usedGenes.get(iterator.key());
+            for (GeneAndScore gs : gtGeneScores) {
+                VDJCGene gene = usedGenes.get(gs.geneId);
                 Alignment<NucleotideSequence>[] alignments = new Alignment[assemblingFeatures.length];
                 for (int i = 0; i < assemblingFeatures.length; ++i) {
                     if (intersectingFeatures[i] == null)
@@ -206,8 +202,9 @@ public final class CloneFactory {
                         }
                     }
                 }
-                result[pointer++] = new VDJCHit(gene, alignments, featureToAlign, iterator.value());
+                result[pointer++] = new VDJCHit(gene, alignments, featureToAlign, gs.score);
             }
+            // might actually not be needed
             Arrays.sort(result, 0, pointer);
             hits.put(geneType, pointer < result.length ? Arrays.copyOf(result, pointer) : result);
         }
@@ -254,7 +251,7 @@ public final class CloneFactory {
     }
 
     public Clone create(int id, CloneAccumulator accumulator) {
-        return create(id, accumulator.getCount(), accumulator.geneScoreAccumulator.geneScores, accumulator.tagBuilder.createAndDestroy(), accumulator.getSequence().sequences, null);
+        return create(id, accumulator.getCount(), accumulator.genes, accumulator.tagBuilder.createAndDestroy(), accumulator.getSequence().sequences, null);
     }
 
     private static boolean containsD(GeneFeature feature) {
