@@ -2,21 +2,18 @@ package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
 import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.basictypes.CloneReader;
-import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.export.FieldExtractor;
 import com.milaboratory.mixcr.export.OutputMode;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapDataset;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil;
+import com.milaboratory.mixcr.postanalysis.util.OverlapBrowser;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
-import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.Chains;
 import io.repseq.core.Chains.NamedChains;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
-import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -28,7 +25,6 @@ import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -75,54 +71,10 @@ public class CommandExportOverlap extends ACommandWithOutputMiXCR {
     public void run0() throws Exception {
         List<String> samples = getInputFiles();
         boolean needRecalculateCount = this.chains != null || onlyProductive;
-
         List<NamedChains> chains = this.chains == null
                 ? Collections.singletonList(Chains.ALL_NAMED)
                 : this.chains.stream().map(Chains::getNamedChains).collect(Collectors.toList());
-        Map<NamedChains, double[]> counts = null;
-        if (needRecalculateCount) {
-            counts = new HashMap<>();
-            AtomicInteger sampleIndex = new AtomicInteger(0);
-            SmartProgressReporter.startProgressReport("Calculating samples counts", new CanReportProgress() {
-                @Override
-                public double getProgress() {
-                    return 1.0 * sampleIndex.get() / samples.size();
-                }
 
-                @Override
-                public boolean isFinished() {
-                    return sampleIndex.get() == samples.size();
-                }
-            });
-            for (int i = 0; i < samples.size(); i++) {
-                try (CloneReader reader = CloneSetIO.mkReader(Paths.get(samples.get(i)), VDJCLibraryRegistry.getDefault())) {
-                    for (Clone cl : CUtils.it(reader.readClones())) {
-                        if (!isProductive(cl))
-                            continue;
-                        for (NamedChains ch : chains) {
-                            if (!hasChains(cl, ch))
-                                continue;
-                            counts.computeIfAbsent(ch, __ -> new double[samples.size()])[i] += cl.getCount();
-                        }
-                    }
-                }
-                sampleIndex.set(i + 1);
-            }
-        }
-
-//        try (OutputPortWithProgress<OverlapGroup<Clone>> port = overlap.mkElementsPort()) {
-//            SmartProgressReporter.startProgressReport("Computing total counts", port);
-//            for (OverlapGroup<Clone> row : CUtils.it(port)) {
-//                filterProductive(row, true);
-//                for (NamedChains ch : chains) {
-//                    double[] c = counts.computeIfAbsent(ch.chains, __ -> new double[getInputFiles().size()]);
-//                    OverlapGroup<Clone> projected = forChains(row, ch.chains);
-//                    for (int i = 0; i < projected.size(); i++) {
-//                        c[i] += projected.getBySample(i).stream().mapToDouble(Clone::getCount).sum();
-//                    }
-//                }
-//            }
-//        }
         OverlapUtil.OverlapCriteria criteria = OverlapUtil.parseCriteria(this.overlapCriteria);
         List<OverlapFieldExtractor> extractors = new ArrayList<>();
 
@@ -189,27 +141,18 @@ public class CommandExportOverlap extends ACommandWithOutputMiXCR {
             writer.writeHeader();
             writers.put(chain, writer);
         }
+
+        OverlapBrowser overlapBrowser = new OverlapBrowser(chains, onlyProductive);
+        SmartProgressReporter.startProgressReport(overlapBrowser);
+        Map<NamedChains, double[]> counts = null;
+        if (needRecalculateCount)
+            counts = overlapBrowser.computeCounts(samples);
+
         OverlapDataset<Clone> overlap = OverlapUtil.overlap(samples, criteria.ordering());
         try (OutputPortWithProgress<OverlapGroup<Clone>> port = overlap.mkElementsPort()) {
-            SmartProgressReporter.startProgressReport("Calculating overlap", port);
-            for (OverlapGroup<Clone> row : CUtils.it(port)) {
-                row = filterProductive(row, true);
-                if (row == null)
-                    continue;
-
-                for (NamedChains ch : chains) {
-                    OverlapGroup<Clone> forChain = forChains(row, ch);
-                    if (forChain == null)
-                        continue;
-
-                    if (needRecalculateCount) {
-                        double[] cs = counts.get(ch);
-                        for (int i = 0; i < forChain.size(); i++)
-                            for (Clone cl : forChain.getBySample(i))
-                                cl.overrideFraction(cl.getCount() / cs[i]);
-                    }
-
-                    writers.get(ch).writeRow(forChain);
+            for (Map<NamedChains, OverlapGroup<Clone>> row : CUtils.it(overlapBrowser.overlap(counts, port))) {
+                for (Map.Entry<NamedChains, OverlapGroup<Clone>> e : row.entrySet()) {
+                    writers.get(e.getKey()).writeRow(e.getValue());
                 }
             }
         }
@@ -375,6 +318,7 @@ public class CommandExportOverlap extends ACommandWithOutputMiXCR {
                     s.stream().map(extractor::extractValue).collect(Collectors.joining(","))
             ).collect(Collectors.toList());
         }
+
     }
 
     public static CommandSpec mkSpec() {
