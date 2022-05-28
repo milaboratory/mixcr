@@ -9,6 +9,8 @@ import java.util.Objects;
 
 @Serializable(asJson = true)
 public final class TagsInfo {
+    public static final TagsInfo NO_TAGS = new TagsInfo(0);
+
     @JsonProperty("sortingLevel")
     public final int sortingLevel;
     @JsonProperty("tags")

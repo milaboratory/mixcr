@@ -645,7 +645,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                 writer.header(aligner, getFullPipelineConfiguration(),
                         tagSearchPlan != null
                                 ? new TagsInfo(0, tagSearchPlan.tagInfos.toArray(new TagInfo[0]))
-                                : null);
+                                : TagsInfo.NO_TAGS);
 
             OutputPort<? extends SequenceRead> sReads = reader;
             CanReportProgress progress = (CanReportProgress) reader;
@@ -751,8 +751,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                     }
                 }
 
-                if (result.tagTuple != null)
-                    alignment = alignment.setTagCount(new TagCount(result.tagTuple));
+                alignment = alignment.setTagCount(result.tagTuple == null ? TagCount.NO_TAGS_1 : new TagCount(result.tagTuple));
 
                 if (alignment.isChimera())
                     report.onChimera();
