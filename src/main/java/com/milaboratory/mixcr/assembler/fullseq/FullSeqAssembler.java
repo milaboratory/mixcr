@@ -43,7 +43,7 @@ import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence;
-import com.milaboratory.mixcr.basictypes.tag.TagCounter;
+import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import gnu.trove.impl.Constants;
@@ -149,7 +149,7 @@ public final class FullSeqAssembler {
         this.parameters = parameters;
         this.clone = clone;
 
-        if (clone.getTagCounter() == null || clone.getTagCounter().isEmpty()) {
+        if (clone.getTagCount() == null || clone.getTagCount().isNoTag()) {
             this.tagTupleToGroup = null;
             this.groupToTagTuple = null;
         } else {
@@ -944,7 +944,7 @@ public final class FullSeqAssembler {
         NSequenceWithQuality assemblingFeatureSeq = targets.sequences[targets.assemblingFeatureTargetId]
                 .getRange(targets.assemblingFeatureOffset, targets.assemblingFeatureOffset + targets.assemblingFeatureLength);
 
-        Clone clone = cloneFactory.create(0, targets.count, getOriginalGeneScores(), this.clone.getTagCounter(),
+        Clone clone = cloneFactory.create(0, targets.count, getOriginalGeneScores(), this.clone.getTagCount(),
                 new NSequenceWithQuality[]{assemblingFeatureSeq}, this.clone.getGroup());
 
         vHitAlignments[targets.assemblingFeatureTargetId] =
@@ -980,16 +980,16 @@ public final class FullSeqAssembler {
         } else
             tmp[0] = substituteAlignments(tmp[0], jHitAlignments);
 
-        TagCounter tagCounter = this.clone.getTagCounter();
-        if (tagCounter != null && targets.groups != null) {
+        TagCount tagCount = this.clone.getTagCount();
+        if (tagCount != null && targets.groups != null) {
             Set<TagTuple> tagTuples = new HashSet<>();
             TIntIterator it = targets.groups.iterator();
             while (it.hasNext())
                 tagTuples.add(groupToTagTuple.get(it.next()));
-            tagCounter = tagCounter.filter(tagTuples::contains);
+            tagCount = tagCount.filter(tagTuples::contains);
         }
 
-        return new Clone(targets.sequences, hits, tagCounter, targets.count, 0, clone.getGroup());
+        return new Clone(targets.sequences, hits, tagCount, targets.count, 0, clone.getGroup());
     }
 
     static int indexOfGene(VDJCHit[] hits, VDJCGeneId gene) {
@@ -1429,7 +1429,7 @@ public final class FullSeqAssembler {
         int groupCounter = 0;
         for (VDJCAlignments al : CUtils.it(alignments.get())) {
             if (taggedAnalysis()) {
-                TagTuple tagTuple = al.getTagCounter().asKeyOrNull();
+                TagTuple tagTuple = al.getTagCount().asKeyOrNull();
                 int grp = tagTupleToGroup.get(tagTuple);
                 if (grp == -1) {
                     grp = groupCounter++;

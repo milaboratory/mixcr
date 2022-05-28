@@ -41,8 +41,8 @@ import com.milaboratory.mixcr.basictypes.SequenceHistory;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence;
-import com.milaboratory.mixcr.basictypes.tag.TagCounter;
-import com.milaboratory.mixcr.basictypes.tag.TagCounterBuilder;
+import com.milaboratory.mixcr.basictypes.tag.TagCount;
+import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.Report;
 import com.milaboratory.util.ReportHelper;
@@ -183,7 +183,7 @@ public class PartialAlignmentsAssembler implements Report {
             VDJCMultiRead mRead = new VDJCMultiRead(mergedTargets);
 
             // Both parts have the same tag tuple
-            final VDJCAlignments mAlignment = aligner.process(mRead).alignment.setTagCounter(searchResult.tagCounter);
+            final VDJCAlignments mAlignment = aligner.process(mRead).alignment.setTagCounter(searchResult.tagCount);
 
             // Checking number of overlapped non-template (NRegion) letters
             int overlapTargetId = -1;
@@ -276,13 +276,13 @@ public class PartialAlignmentsAssembler implements Report {
         final List<KMerInfo> originKMerList;
         final KMerInfo KMerInfo;
         final List<AlignedTarget> result;
-        final TagCounter tagCounter;
+        final TagCount tagCount;
 
-        public OverlapSearchResult(List<KMerInfo> originKMerList, KMerInfo KMerInfo, List<AlignedTarget> result, TagCounter tagCounter) {
+        public OverlapSearchResult(List<KMerInfo> originKMerList, KMerInfo KMerInfo, List<AlignedTarget> result, TagCount tagCount) {
             this.originKMerList = originKMerList;
             this.KMerInfo = KMerInfo;
             this.result = result;
-            this.tagCounter = tagCounter;
+            this.tagCount = tagCount;
         }
 
         void cancel() {
@@ -311,7 +311,7 @@ public class PartialAlignmentsAssembler implements Report {
         else
             stop -= kOffset;
 
-        TagCounter rightTagCounter = rightAl.getTagCounter();
+        TagCount rightTagCount = rightAl.getTagCount();
 
         // black list of left parts failed due to inconsistent overlapped alignments (failed AMerge)
         TLongHashSet blackList = new TLongHashSet();
@@ -398,7 +398,7 @@ public class PartialAlignmentsAssembler implements Report {
             final KMerInfo left = maxOverlapList.remove(maxOverlapIndexInList);
             VDJCAlignments leftAl = left.alignments;
 
-            TagCounter leftTagCounter = leftAl.getTagCounter();
+            TagCount leftTagCount = leftAl.getTagCount();
 
             //final long readId = rightAl.getReadId();
 
@@ -486,9 +486,9 @@ public class PartialAlignmentsAssembler implements Report {
             result.add(central);
             result.addAll(rightDescriptors);
 
-            TagCounterBuilder tcBuilder = new TagCounterBuilder();
-            tcBuilder.add(leftTagCounter);
-            tcBuilder.add(rightTagCounter);
+            TagCountAggregator tcBuilder = new TagCountAggregator();
+            tcBuilder.add(leftTagCount);
+            tcBuilder.add(rightTagCount);
 
             // Ordering and filtering final targets
             return new OverlapSearchResult(maxOverlapList, left, AlignedTarget.orderTargets(result), tcBuilder.createAndDestroy());

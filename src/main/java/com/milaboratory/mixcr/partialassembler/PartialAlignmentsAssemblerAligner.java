@@ -38,7 +38,7 @@ import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.core.alignment.kaligner2.KAlignerParameters2;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.basictypes.tag.TagCounter;
+import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerAbstract;
@@ -309,7 +309,7 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
                 dResult,
                 jResult,
                 cutRelativeScore(vdjcHits.get(GeneType.Constant), parameters.getCAlignerParameters().getRelativeMinScore(), parameters.getMaxHits()),
-                TagCounter.EMPTY,
+                TagCount.NO_TAGS_1,
                 targets,
                 input.getHistory(),
                 input.getOriginalReads()

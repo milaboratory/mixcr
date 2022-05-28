@@ -59,11 +59,11 @@ public final class IO {
         }
     }
 
-    public static class TagCounterSerializer implements Serializer<TagCounter> {
+    public static class TagCounterSerializer implements Serializer<TagCount> {
         @Override
-        public void write(PrimitivO output, TagCounter object) {
-            output.writeInt(object.tags.size());
-            TObjectDoubleIterator<TagTuple> it = object.tags.iterator();
+        public void write(PrimitivO output, TagCount object) {
+            output.writeInt(object.size());
+            TObjectDoubleIterator<TagTuple> it = object.iterator();
             while (it.hasNext()) {
                 it.advance();
                 output.writeObject(it.key().tags);
@@ -72,18 +72,25 @@ public final class IO {
         }
 
         @Override
-        public TagCounter read(PrimitivI input) {
+        public TagCount read(PrimitivI input) {
             int len = input.readInt();
             if (len == 0)
-                return TagCounter.EMPTY;
-            TObjectDoubleHashMap<TagTuple> r = new TObjectDoubleHashMap<>(len, Constants.DEFAULT_LOAD_FACTOR, 0.0);
-            for (int i = 0; i < len; ++i) {
+                throw new IllegalArgumentException();
+            else if (len == 1) {
                 TagValue[] tags = input.readObject(TagValue[].class);
                 Objects.requireNonNull(tags);
                 double count = input.readDouble();
-                r.put(new TagTuple(tags), count);
+                return new TagCount(tags.length == 0 ? TagTuple.NO_TAGS : new TagTuple(tags), count);
+            } else {
+                TObjectDoubleHashMap<TagTuple> r = new TObjectDoubleHashMap<>(len, Constants.DEFAULT_LOAD_FACTOR, 0.0);
+                for (int i = 0; i < len; ++i) {
+                    TagValue[] tags = input.readObject(TagValue[].class);
+                    Objects.requireNonNull(tags);
+                    double count = input.readDouble();
+                    r.put(new TagTuple(tags), count);
+                }
+                return new TagCount(r);
             }
-            return new TagCounter(r);
         }
 
         @Override

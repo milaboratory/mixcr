@@ -740,7 +740,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                     if (writeAllResults) { // Creating empty alignment object if alignment for current read failed
                         Target target = readsLayout.createTargets(read)[0];
                         alignment = new VDJCAlignments(emptyHits,
-                                result.tagTuple == null ? TagCounter.EMPTY : new TagCounter(result.tagTuple),
+                                result.tagTuple == null ? TagCount.NO_TAGS_1 : new TagCount(result.tagTuple),
                                 target.targets,
                                 SequenceHistory.RawSequence.of(read.getId(), target),
                                 alignerParameters.isSaveOriginalReads() ? new SequenceRead[]{read} : null);
@@ -752,7 +752,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                 }
 
                 if (result.tagTuple != null)
-                    alignment = alignment.setTagCounter(new TagCounter(result.tagTuple));
+                    alignment = alignment.setTagCounter(new TagCount(result.tagTuple));
 
                 if (alignment.isChimera())
                     report.onChimera();

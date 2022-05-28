@@ -35,7 +35,7 @@ import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.basictypes.tag.TagCounter;
+import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.mixcr.vdjaligners.SingleDAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import io.repseq.core.*;
@@ -82,7 +82,7 @@ public final class CloneFactory {
 
     public Clone create(int id, double count,
                         Map<GeneType, List<GeneAndScore>> geneScores,
-                        TagCounter tagCounter,
+                        TagCount tagCount,
                         NSequenceWithQuality[] targets,
                         Integer group) {
         EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
@@ -247,7 +247,7 @@ public final class CloneFactory {
         else
             hits.put(GeneType.Diversity, new VDJCHit[0]);
 
-        return new Clone(targets, hits, tagCounter, count, id, group);
+        return new Clone(targets, hits, tagCount, count, id, group);
     }
 
     public Clone create(int id, CloneAccumulator accumulator) {

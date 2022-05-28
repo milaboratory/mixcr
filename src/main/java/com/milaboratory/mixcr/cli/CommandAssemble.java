@@ -39,7 +39,7 @@ import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.*;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.basictypes.tag.TagCounter;
+import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
@@ -279,7 +279,7 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
                             for (int i = 0; i < cloneSet.size(); i++) {
                                 Clone clone = cloneSet.get(i);
                                 assert i == clone.getId();
-                                TagCounter tags = clone.getTagCounter();
+                                TagCount tags = clone.getTagCount();
                                 TObjectDoubleIterator<TagTuple> it = tags.iterator();
                                 while (it.hasNext()) {
                                     it.advance();
@@ -308,7 +308,7 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
 
                                 // <-- Only dropped alignments not covering CDR3
 
-                                TagCounter tg = al.getTagCounter();
+                                TagCount tg = al.getTagCount();
                                 assert tg.size() == 1; // Both "align" and "assemblePartial" produces such alignments
                                 TObjectDoubleIterator<TagTuple> it = tg.iterator();
                                 it.advance();

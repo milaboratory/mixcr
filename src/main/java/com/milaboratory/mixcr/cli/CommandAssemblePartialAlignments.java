@@ -141,7 +141,7 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
             if (reader1.getTagsInfo() != null && reader1.getTagsInfo().tags.length > 0) {
                 SmartProgressReporter.startProgressReport("Running assemble partial", reader1);
 
-                Function1<VDJCAlignments, TagTuple> key = al -> al.getTagCounter().asKeyOrError().key();
+                Function1<VDJCAlignments, TagTuple> key = al -> al.getTagCount().asKeyOrError().key();
                 OutputPort<GroupOP<VDJCAlignments, TagTuple>> groups1 = PipeKt.group(reader1, key);
                 OutputPort<GroupOP<VDJCAlignments, TagTuple>> groups2 = PipeKt.group(reader2, key);
 

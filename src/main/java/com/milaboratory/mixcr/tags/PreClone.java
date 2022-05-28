@@ -2,7 +2,7 @@ package com.milaboratory.mixcr.tags;
 
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.mixcr.assembler.GeneAndScore;
-import com.milaboratory.mixcr.basictypes.tag.TagCounter;
+import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.util.BitArray;
 import io.repseq.core.GeneType;
 
@@ -13,9 +13,9 @@ public final class PreClone {
     /** Pre-clonotype id */
     public long id;
     /** Tag counter aggregating information about alignments with clonal sequence */
-    public final TagCounter coreTagCounter;
+    public final TagCount coreTagCount;
     /** Tag counter aggregating information across all alignments assigned to this pre-clone */
-    public final TagCounter fullTagCounter;
+    public final TagCount fullTagCount;
     /** Assembled clonal sequence */
     public final NSequenceWithQuality[] clonalSequence;
     /** Aggregated V, J, C gene scoring and content information */
@@ -23,11 +23,11 @@ public final class PreClone {
     /** Ids of alignments assigned to this pre-clone */
     public final BitArray alignments;
 
-    public PreClone(long id, TagCounter coreTagCounter, TagCounter fullTagCounter, NSequenceWithQuality[] clonalSequence,
+    public PreClone(long id, TagCount coreTagCount, TagCount fullTagCount, NSequenceWithQuality[] clonalSequence,
                     Map<GeneType, List<GeneAndScore>> geneScores, BitArray alignments) {
         this.id = id;
-        this.coreTagCounter = coreTagCounter;
-        this.fullTagCounter = fullTagCounter;
+        this.coreTagCount = coreTagCount;
+        this.fullTagCount = fullTagCount;
         this.clonalSequence = clonalSequence;
         this.geneScores = geneScores;
         this.alignments = alignments;

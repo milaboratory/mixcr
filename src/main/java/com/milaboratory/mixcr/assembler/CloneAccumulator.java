@@ -39,7 +39,7 @@ import com.milaboratory.core.sequence.quality.QualityAggregator;
 import com.milaboratory.mixcr.basictypes.ClonalSequence;
 import com.milaboratory.mixcr.basictypes.HasRelativeMinScore;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.tag.TagCounterBuilder;
+import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGeneId;
 
@@ -54,7 +54,7 @@ public final class CloneAccumulator {
     private long coreCount = 0, mappedCount = 0, initialCoreCount = -1;
     private volatile int cloneIndex = -1;
     final Range[] nRegions;
-    final TagCounterBuilder tagBuilder = new TagCounterBuilder();
+    final TagCountAggregator tagBuilder = new TagCountAggregator();
 
     public CloneAccumulator(ClonalSequence sequence, Range[] nRegions, QualityAggregationType qualityAggregationType) {
         this.sequence = sequence;
@@ -165,7 +165,7 @@ public final class CloneAccumulator {
         if (!mapped) { // Core sequence accumulation
             coreCount += alignment.getNumberOfReads();
 
-            tagBuilder.add(alignment.getTagCounter());
+            tagBuilder.add(alignment.getTagCount());
 
             // Accumulate information about V-D-J alignments only for strictly clustered reads
             // (only for core clonotypes members)

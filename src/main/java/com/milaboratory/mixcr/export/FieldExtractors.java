@@ -42,7 +42,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.TranslationParameters;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.basictypes.tag.TagCounter;
+import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.mixcr.basictypes.tag.TagInfo;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
@@ -678,7 +678,7 @@ public final class FieldExtractors {
             descriptorsList.add(new PL_O("-tagCounts", "All tags with counts", "All tags counts", "taqCounts") {
                 @Override
                 protected String extract(VDJCObject object) {
-                    return object.getTagCounter().toString();
+                    return object.getTagCount().toString();
                 }
             });
 
@@ -727,8 +727,8 @@ public final class FieldExtractors {
                     return new AbstractFieldExtractor<VDJCObject>(getHeader(outputMode, tagName), this) {
                         @Override
                         public String extractValue(VDJCObject object) {
-                            TagCounter tc = object.getTagCounter();
-                            Set<TagTuple> keys = tc.keys();
+                            TagCount tc = object.getTagCount();
+                            Set<TagTuple> keys = tc.tuples();
                             if (keys.size() == 0)
                                 return NULL;
                             if (keys.size() > 1)

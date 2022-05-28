@@ -156,10 +156,10 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
 
                 // Extractor of tag information from the alignments for the tag corrector
                 Processor<VDJCAlignments, NSequenceWithQuality[]> mapper = input -> {
-                    if (input.getTagCounter().size() != 1)
+                    if (input.getTagCount().size() != 1)
                         throwExecutionException("This procedure don't support aggregated tags. " +
                                 "Please run tag correction for *.vdjca files produced by 'align'.");
-                    TagTuple tagTuple = input.getTagCounter().keys().iterator().next();
+                    TagTuple tagTuple = input.getTagCount().tuples().iterator().next();
                     NSequenceWithQuality[] tags = new NSequenceWithQuality[targetTagIndices.length];
                     for (int i = 0; i < targetTagIndices.length; i++)
                         tags[i] = ((SequenceAndQualityTagValue) tagTuple.get(targetTagIndices[i])).data;
@@ -226,7 +226,7 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
             Processor<VDJCAlignments, VDJCAlignments> mapper = !noCorrect
                     ?
                     al -> {
-                        TagValue[] newTags = al.getTagCounter().asKeyOrError().asArray();
+                        TagValue[] newTags = al.getTagCount().asKeyOrError().asArray();
                         CorrectionNode cn = correctionResult;
                         for (int i : targetTagIndices) {
                             NucleotideSequence current = ((SequenceAndQualityTagValue) newTags[i]).data.getSequence();
@@ -237,13 +237,13 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
                             }
                             newTags[i] = new SequenceAndQualityTagValue(cn.getCorrectValue());
                         }
-                        return al.setTagCounter(new TagCounter(new TagTuple(newTags)));
+                        return al.setTagCounter(new TagCount(new TagTuple(newTags)));
                     }
                     : al -> al;
 
             // Creating output port with corrected and filtered tags
             OutputPort<VDJCAlignments> hsInput = new FilteringPort<>(
-                    CUtils.wrap(reader, mapper), al -> al.getTagCounter() != null);
+                    CUtils.wrap(reader, mapper), al -> al.getTagCount() != null);
 
             // Running initial hash sorter
             CountingOutputPort<VDJCAlignments> sorted = new CountingOutputPort<>(initialHashSorter.port(hsInput));
@@ -304,15 +304,15 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
 
         public ToIntFunction<VDJCAlignments> getHashFunction() {
             return al -> {
-                TagTuple tagTuple = al.getTagCounter().asKeyOrError();
+                TagTuple tagTuple = al.getTagCount().asKeyOrError();
                 return ((SequenceAndQualityTagValue) tagTuple.get(tagIdx)).data.getSequence().hashCode();
             };
         }
 
         public Comparator<VDJCAlignments> getComparator() {
             return (al1, al2) -> {
-                TagTuple tagTuple1 = al1.getTagCounter().asKeyOrError();
-                TagTuple tagTuple2 = al2.getTagCounter().asKeyOrError();
+                TagTuple tagTuple1 = al1.getTagCount().asKeyOrError();
+                TagTuple tagTuple2 = al2.getTagCount().asKeyOrError();
                 return ((SequenceAndQualityTagValue) tagTuple1.get(tagIdx)).data.getSequence().compareTo(
                         ((SequenceAndQualityTagValue) tagTuple2.get(tagIdx)).data.getSequence());
             };

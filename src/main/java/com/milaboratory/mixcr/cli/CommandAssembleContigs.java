@@ -43,7 +43,8 @@ import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerReport;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.basictypes.tag.TagCounter;
+import com.milaboratory.mixcr.basictypes.tag.TagCount;
+import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.util.Concurrency;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
@@ -153,7 +154,7 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
                 Clone clone = cloneAlignments.clone;
 
                 if (ignoreTags)
-                    clone = clone.setTagCounts(TagCounter.EMPTY);
+                    clone = clone.setTagCount(new TagCount(TagTuple.NO_TAGS, clone.getTagCount().sum()));
 
                 try {
                     // Collecting statistics

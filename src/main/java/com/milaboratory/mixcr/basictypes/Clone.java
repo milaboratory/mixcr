@@ -30,8 +30,8 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.sequence.NSequenceWithQuality;
-import com.milaboratory.mixcr.basictypes.tag.TagCounter;
-import com.milaboratory.mixcr.basictypes.tag.TagCounterBuilder;
+import com.milaboratory.mixcr.basictypes.tag.TagCount;
+import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.primitivio.annotations.Serializable;
 import gnu.trove.iterator.TObjectDoubleIterator;
@@ -47,19 +47,19 @@ public final class Clone extends VDJCObject {
     CloneSet parent = null;
     final Integer group;
 
-    public Clone(NSequenceWithQuality[] targets, EnumMap<GeneType, VDJCHit[]> hits, TagCounter tagCounter, double count, int id, Integer group) {
-        super(hits, tagCounter, targets);
+    public Clone(NSequenceWithQuality[] targets, EnumMap<GeneType, VDJCHit[]> hits, TagCount tagCount, double count, int id, Integer group) {
+        super(hits, tagCount, targets);
         this.count = count;
         this.id = id;
         this.group = group;
     }
 
     public Clone setCount(double count) {
-        return new Clone(targets, hits, tagCounter, count, id, group);
+        return new Clone(targets, hits, tagCount, count, id, group);
     }
 
     public Clone setGroup(Integer group) {
-        return new Clone(targets, hits, tagCounter, count, id, group);
+        return new Clone(targets, hits, tagCount, count, id, group);
     }
 
     public Integer getGroup() {
@@ -67,14 +67,14 @@ public final class Clone extends VDJCObject {
     }
 
     public Clone setId(int id) {
-        Clone r = new Clone(targets, hits, tagCounter, count, id, group);
+        Clone r = new Clone(targets, hits, tagCount, count, id, group);
         r.setParentCloneSet(parent);
         return r;
     }
 
     /** Returns new instance with parent clone set set to null */
     public Clone resetParentCloneSet() {
-        return new Clone(targets, hits, tagCounter, count, id, group);
+        return new Clone(targets, hits, tagCount, count, id, group);
     }
 
     public void setParentCloneSet(CloneSet set) {
@@ -87,7 +87,7 @@ public final class Clone extends VDJCObject {
         return parent;
     }
 
-    public Clone setTagCounts(TagCounter tc) {
+    public Clone setTagCount(TagCount tc) {
         Objects.requireNonNull(tc);
         Clone c = new Clone(targets, hits, tc, count, id, group);
         c.setParentCloneSet(getParentCloneSet());
@@ -109,13 +109,13 @@ public final class Clone extends VDJCObject {
         return getFraction(parent.getTotalCount());
     }
 
-    public TagCounter getTagFractions() {
+    public TagCount getTagFractions() {
         if (parent == null)
             return null;
-        TagCounter totalFractions = parent.getTotalTagCounts();
+        TagCount totalFractions = parent.getTotalTagCounts();
 
-        TagCounterBuilder result = new TagCounterBuilder();
-        TObjectDoubleIterator<TagTuple> it = tagCounter.iterator();
+        TagCountAggregator result = new TagCountAggregator();
+        TObjectDoubleIterator<TagTuple> it = tagCount.iterator();
         while (it.hasNext()) {
             it.advance();
             TagTuple tt = it.key();

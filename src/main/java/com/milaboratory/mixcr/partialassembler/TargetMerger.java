@@ -46,7 +46,7 @@ import com.milaboratory.mixcr.basictypes.SequenceHistory;
 import com.milaboratory.mixcr.basictypes.SequenceHistory.OverlapType;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.basictypes.tag.TagCounterBuilder;
+import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator;
 import com.milaboratory.mixcr.vdjaligners.KGeneAlignmentParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import io.repseq.core.GeneFeature;
@@ -109,7 +109,7 @@ public class TargetMerger {
 
 
         VDJCAlignments alignments = new VDJCAlignments(result,
-                TagCounterBuilder.merge(targetLeft.getAlignments().getTagCounter(), targetRight.getAlignments().getTagCounter()),
+                TagCountAggregator.merge(targetLeft.getAlignments().getTagCount(), targetRight.getAlignments().getTagCount()),
                 new NSequenceWithQuality[]{mergedTarget},
                 new SequenceHistory[]{
                         new SequenceHistory.Merge(overlapType, targetLeft.getHistory(), targetRight.getHistory(), offset, nMismatches)

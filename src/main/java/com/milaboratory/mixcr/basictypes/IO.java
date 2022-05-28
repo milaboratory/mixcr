@@ -34,14 +34,10 @@ import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
-import com.milaboratory.mixcr.basictypes.tag.TagCounter;
-import com.milaboratory.mixcr.basictypes.tag.TagTuple;
+import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.Serializer;
-import gnu.trove.impl.Constants;
-import gnu.trove.iterator.TObjectDoubleIterator;
-import gnu.trove.map.hash.TObjectDoubleHashMap;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
@@ -90,7 +86,7 @@ class IO {
             output.writeObject(object.targets);
             output.writeObject(object.originalReads);
             output.writeObject(object.history);
-            output.writeObject(object.tagCounter);
+            output.writeObject(object.tagCount);
             output.writeByte(object.hits.size());
             for (Map.Entry<GeneType, VDJCHit[]> entry : object.hits.entrySet()) {
                 output.writeObject(entry.getKey());
@@ -106,7 +102,7 @@ class IO {
             NSequenceWithQuality[] targets = input.readObject(NSequenceWithQuality[].class);
             SequenceRead[] originalReads = input.readObject(SequenceRead[].class);
             SequenceHistory[] history = input.readObject(SequenceHistory[].class);
-            TagCounter tagCounter = input.readObject(TagCounter.class);
+            TagCount tagCount = input.readObject(TagCount.class);
             int size = input.readByte();
             EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
             for (int i = 0; i < size; i++) {
@@ -119,7 +115,7 @@ class IO {
             int cloneIndex = -1;
             if (!ReadToCloneMapping.isDropped(mappingType))
                 cloneIndex = input.readVarInt();
-            return new VDJCAlignments(hits, tagCounter, targets, history, originalReads, mappingType, cloneIndex);
+            return new VDJCAlignments(hits, tagCount, targets, history, originalReads, mappingType, cloneIndex);
         }
 
         @Override
@@ -137,7 +133,7 @@ class IO {
         @Override
         public void write(PrimitivO output, Clone object) {
             output.writeObject(object.targets);
-            output.writeObject(object.tagCounter);
+            output.writeObject(object.tagCount);
             output.writeByte(object.hits.size());
             for (Map.Entry<GeneType, VDJCHit[]> entry : object.hits.entrySet()) {
                 output.writeObject(entry.getKey());
@@ -151,7 +147,7 @@ class IO {
         @Override
         public Clone read(PrimitivI input) {
             NSequenceWithQuality[] targets = input.readObject(NSequenceWithQuality[].class);
-            TagCounter tagCounter = input.readObject(TagCounter.class);
+            TagCount tagCount = input.readObject(TagCount.class);
             int size = input.readByte();
             EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
             for (int i = 0; i < size; i++) {
@@ -161,7 +157,7 @@ class IO {
             double count = input.readDouble();
             int id = input.readInt();
             Integer group = input.readObject(Integer.class);
-            return new Clone(targets, hits, tagCounter, count, id, group);
+            return new Clone(targets, hits, tagCount, count, id, group);
         }
 
         @Override

@@ -40,9 +40,9 @@ import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.SequenceHistory;
-import com.milaboratory.mixcr.basictypes.tag.TagCounter;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.util.BitArray;
 import io.repseq.core.*;
 
@@ -367,8 +367,8 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
                 List<PreVDJCHit> dResult = from > to ?
                         Collections.<PreVDJCHit>emptyList() :
                         singleDAligner.align0(sequence, getPossibleDLoci(
-                                wrapAlignmentHits(vHits),
-                                wrapAlignmentHits(jHits), cHits),
+                                        wrapAlignmentHits(vHits),
+                                        wrapAlignmentHits(jHits), cHits),
                                 from, to);
                 dHits = PreVDJCHit.convert(getDGenesToAlign(),
                         parameters.getFeatureToAlign(GeneType.Diversity), dResult);
@@ -430,7 +430,7 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
             if (cHits != null)
                 hits.put(GeneType.Constant, cHits);
 
-            return new VDJCAlignments(hits, TagCounter.EMPTY, target.targets,
+            return new VDJCAlignments(hits, TagCount.NO_TAGS_1, target.targets,
                     new SequenceHistory[]{
                             new SequenceHistory.RawSequence(inputId, (byte) 0, target.getRCStateOfTarget(0), target.targets[0].size())},
                     parameters.isSaveOriginalReads() ? new SequenceRead[]{input} : null);

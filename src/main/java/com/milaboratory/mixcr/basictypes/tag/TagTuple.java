@@ -11,7 +11,7 @@ import java.util.Arrays;
  * Tag may be a sample name, cell marker or unique molecular identifier.
  */
 public final class TagTuple implements Comparable<TagTuple> {
-    public static final TagTuple EMPTY = new TagTuple();
+    public static final TagTuple NO_TAGS = new TagTuple();
 
     final TagValue[] tags;
     private final int hash;
@@ -23,6 +23,14 @@ public final class TagTuple implements Comparable<TagTuple> {
         for (TagValue tag : tags)
             hasher.putInt(tag.hashCode());
         this.hash = hasher.hash().hashCode();
+    }
+
+    /** Returns whether the tag tuple contains only key tag values, so can be used as a grouping key. */
+    public boolean isKey() {
+        for (TagValue tag : tags)
+            if (!tag.isKey())
+                return false;
+        return true;
     }
 
     /**
@@ -52,7 +60,7 @@ public final class TagTuple implements Comparable<TagTuple> {
         if (depth == tags.length)
             return key();
         if (depth == 0)
-            return EMPTY;
+            return NO_TAGS;
         TagValue[] newTags = Arrays.copyOf(tags, depth);
         for (int i = 0; i < newTags.length; i++)
             newTags[i] = newTags[i].extractKey();
@@ -67,7 +75,7 @@ public final class TagTuple implements Comparable<TagTuple> {
         if (depth == 0)
             return key();
         if (depth == tags.length)
-            return EMPTY;
+            return NO_TAGS;
         TagValue[] newTags = Arrays.copyOfRange(tags, depth + 1, tags.length);
         for (int i = 0; i < newTags.length; i++)
             newTags[i] = newTags[i].extractKey();

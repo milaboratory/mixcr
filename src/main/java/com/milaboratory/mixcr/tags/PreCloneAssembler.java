@@ -11,7 +11,7 @@ import com.milaboratory.mixcr.assembler.GeneAndScore;
 import com.milaboratory.mixcr.assembler.VDJCGeneAccumulator;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.basictypes.tag.TagCounterBuilder;
+import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.util.BitArray;
 import gnu.trove.map.hash.TObjectIntHashMap;
@@ -33,7 +33,7 @@ public final class PreCloneAssembler {
                              OutputPort<VDJCAlignments> alignmentsReader2) {
         this.parameters = parameters;
         Function1<VDJCAlignments, TagTuple> gFunction =
-                vdjcAlignments -> vdjcAlignments.getTagCounter().asKeyPrefixOrError(parameters.groupingLevel);
+                vdjcAlignments -> vdjcAlignments.getTagCount().asKeyPrefixOrError(parameters.groupingLevel);
         this.alignmentsReader1 = PipeKt.group(alignmentsReader1, gFunction);
         this.alignmentsReader2 = PipeKt.group(alignmentsReader2, gFunction);
     }
@@ -82,7 +82,7 @@ public final class PreCloneAssembler {
                 geneAndScores.put(gt, gss);
             }
             alignmentInfos.add(new AlignmentInfo(localIdx,
-                    al.getTagCounter().keySuffixes(parameters.groupingLevel), geneAndScores));
+                    al.getTagCount().keySuffixes(parameters.groupingLevel), geneAndScores));
 
             // Allocating array for the next data row
             row = new NSequenceWithQuality[parameters.assemblingFeatures.length];
@@ -187,11 +187,11 @@ public final class PreCloneAssembler {
         // Step #3
         // Assigning leftover alignments
 
-        TagCounterBuilder[] coreTagCounterBuilders = new TagCounterBuilder[numberOfClones];
-        TagCounterBuilder[] fullTagCounterBuilders = new TagCounterBuilder[numberOfClones];
+        TagCountAggregator[] coreTagCountAggregators = new TagCountAggregator[numberOfClones];
+        TagCountAggregator[] fullTagCountAggregators = new TagCountAggregator[numberOfClones];
         for (int cIdx = 0; cIdx < numberOfClones; cIdx++) {
-            coreTagCounterBuilders[cIdx] = new TagCounterBuilder();
-            fullTagCounterBuilders[cIdx] = new TagCounterBuilder();
+            coreTagCountAggregators[cIdx] = new TagCountAggregator();
+            fullTagCountAggregators[cIdx] = new TagCountAggregator();
         }
 
         GroupOP<VDJCAlignments, TagTuple> grp2 = alignmentsReader2.take();
@@ -218,7 +218,7 @@ public final class PreCloneAssembler {
                     }
 
                 // TagSuffix based assignment
-                for (TagTuple ts : al.getTagCounter().keySuffixes(parameters.groupingLevel)) {
+                for (TagTuple ts : al.getTagCount().keySuffixes(parameters.groupingLevel)) {
                     int c = tagSuffixToCloneId.get(ts);
                     if (c <= 0)
                         continue;
@@ -236,10 +236,10 @@ public final class PreCloneAssembler {
             } else if (cIdx > 0)
                 // Using second iteration over the alignments to assemble TagCounters from the alignments assigned to
                 // clonotypes based on their contig assignment
-                coreTagCounterBuilders[cIdx - 1].add(al.getTagCounter());
+                coreTagCountAggregators[cIdx - 1].add(al.getTagCount());
 
             if (cIdx > 0)
-                fullTagCounterBuilders[cIdx].add(al.getTagCounter());
+                fullTagCountAggregators[cIdx].add(al.getTagCount());
             else
                 report.unassignedAlignments.incrementAndGet();
         }
@@ -252,8 +252,8 @@ public final class PreCloneAssembler {
                 clonalSequence[i] = cs[i].consensus;
             result.add(new PreClone(
                     idGenerator.incrementAndGet(),
-                    coreTagCounterBuilders[cIdx].createAndDestroy(),
-                    fullTagCounterBuilders[cIdx].createAndDestroy(),
+                    coreTagCountAggregators[cIdx].createAndDestroy(),
+                    fullTagCountAggregators[cIdx].createAndDestroy(),
                     clonalSequence,
                     geneInfos[cIdx],
                     contents[cIdx]

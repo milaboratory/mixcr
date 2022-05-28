@@ -34,7 +34,7 @@ import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.blocks.FilteringPort;
 import cc.redberry.primitives.Filter;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.basictypes.tag.TagCounter;
+import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.mixcr.export.*;
 import com.milaboratory.mixcr.util.Concurrency;
 import com.milaboratory.util.CanReportProgress;
@@ -349,9 +349,9 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
 
                     for (int tagIndex : splitByTags) {
                         stream = stream.flatMap(cl -> {
-                            TagCounter tagCounter = cl.getTagCounter();
-                            double sum = tagCounter.sum();
-                            return Arrays.stream(tagCounter.splitBy(tagIndex))
+                            TagCount tagCount = cl.getTagCount();
+                            double sum = tagCount.sum();
+                            return Arrays.stream(tagCount.splitBy(tagIndex))
                                     .map(tc -> new Clone(clone.getTargets(), clone.getHits(),
                                             tc, 1.0 * cl.getCount() * tc.sum() / sum, clone.getId(), clone.getGroup()));
                         });
