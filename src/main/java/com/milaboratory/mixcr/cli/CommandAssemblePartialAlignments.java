@@ -42,6 +42,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
+import com.milaboratory.mixcr.basictypes.tag.TagType;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssembler;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParameters;
 import com.milaboratory.util.JsonOverrider;
@@ -84,6 +85,10 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
             names = {"-d", "--drop-partial"})
     public boolean dropPartial = false;
 
+    @Option(description = "Overlap sequences on the cell level instead of UMIs for tagged data with molecular and cell barcodes",
+            names = {"--cell-level"})
+    public boolean cellLevel = false;
+
     private PartialAlignmentsAssemblerParameters assemblerParameters;
 
     public PartialAlignmentsAssemblerParameters getPartialAlignmentsAssemblerParameters() {
@@ -124,8 +129,11 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
              VDJCAlignmentsReader reader2 = new VDJCAlignmentsReader(in);
              VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)) {
 
-            // FIXME sorting level !!!!!
-            writer.header(reader1.getParameters(), reader1.getUsedGenes(), getFullPipelineConfiguration(), reader1.getTagsInfo());
+            int groupingDepth = reader1.getTagsInfo().getDepthFor(cellLevel ? TagType.CellTag : TagType.MoleculeTag);
+
+            writer.header(reader1.getParameters(), reader1.getUsedGenes(), getFullPipelineConfiguration(),
+                    // output data will be grouped only up to a groupingDepth
+                    reader1.getTagsInfo().setSorted(groupingDepth));
 
             PartialAlignmentsAssembler assembler = new PartialAlignmentsAssembler(assemblerParameters, reader1.getParameters(),
                     reader1.getUsedGenes(), !dropPartial, overlappedOnly,
@@ -141,9 +149,12 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
             if (reader1.getTagsInfo() != null && reader1.getTagsInfo().tags.length > 0) {
                 SmartProgressReporter.startProgressReport("Running assemble partial", reader1);
 
-                Function1<VDJCAlignments, TagTuple> key = al -> al.getTagCount().asKeyOrError().key();
-                OutputPort<GroupOP<VDJCAlignments, TagTuple>> groups1 = PipeKt.group(reader1, key);
-                OutputPort<GroupOP<VDJCAlignments, TagTuple>> groups2 = PipeKt.group(reader2, key);
+                // This processor strips all non-key information from the
+                Function1<VDJCAlignments, TagTuple> key = al -> al.getTagCount().asKeyPrefixOrError(groupingDepth);
+                OutputPort<GroupOP<VDJCAlignments, TagTuple>> groups1 = PipeKt.group(
+                        CUtils.wrap(reader1, VDJCAlignments::ensureKeyTags), key);
+                OutputPort<GroupOP<VDJCAlignments, TagTuple>> groups2 = PipeKt.group(
+                        CUtils.wrap(reader2, VDJCAlignments::ensureKeyTags), key);
 
                 for (GroupOP<VDJCAlignments, TagTuple> grp1 : CUtils.it(groups1)) {
                     assembler.buildLeftPartsIndex(grp1);

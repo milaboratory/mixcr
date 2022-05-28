@@ -1,8 +1,10 @@
 package com.milaboratory.mixcr.cli;
 
+import cc.redberry.pipe.CUtils;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
 import com.milaboratory.mitool.consensus.AAssemblerParameters;
 import com.milaboratory.mitool.consensus.GConsensusAssemblerParameters;
+import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.tag.TagType;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
@@ -57,7 +59,10 @@ public class CommandAssemblePreClones extends ACommandMiXCR {
                     gAssemblerParams, reader1.getParameters(),
                     new GeneFeature[]{GeneFeature.CDR3},
                     depth);
-            PreCloneAssembler assembler = new PreCloneAssembler(params, reader1, reader2);
+            PreCloneAssembler assembler = new PreCloneAssembler(params,
+                    CUtils.wrap(reader1, VDJCAlignments::ensureKeyTags),
+                    CUtils.wrap(reader2, VDJCAlignments::ensureKeyTags)
+            );
             List<PreClone> clones;
             while ((clones = assembler.getForNextGroup()) != null) {
             }

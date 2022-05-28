@@ -116,6 +116,10 @@ public final class TagCount {
             return tagMap.keySet();
     }
 
+    public boolean isNonKeySingleton() {
+        return isSingleton() && !getSingletonTuple().isKey();
+    }
+
     public boolean isSingleton() {
         return singletonTuple != null;
     }

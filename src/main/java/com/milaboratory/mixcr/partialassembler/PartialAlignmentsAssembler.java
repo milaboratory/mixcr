@@ -183,7 +183,7 @@ public class PartialAlignmentsAssembler implements Report {
             VDJCMultiRead mRead = new VDJCMultiRead(mergedTargets);
 
             // Both parts have the same tag tuple
-            final VDJCAlignments mAlignment = aligner.process(mRead).alignment.setTagCounter(searchResult.tagCount);
+            final VDJCAlignments mAlignment = aligner.process(mRead).alignment.setTagCount(searchResult.tagCount);
 
             // Checking number of overlapped non-template (NRegion) letters
             int overlapTargetId = -1;

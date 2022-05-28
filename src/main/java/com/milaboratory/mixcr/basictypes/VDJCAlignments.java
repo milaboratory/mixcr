@@ -149,8 +149,17 @@ public final class VDJCAlignments extends VDJCObject {
         return cloneIndex;
     }
 
-    public VDJCAlignments setTagCounter(TagCount tc) {
+    public VDJCAlignments setTagCount(TagCount tc) {
         return new VDJCAlignments(alignmentsIndex, hits, tc, targets, history, originalReads, mappingType, cloneIndex);
+    }
+
+    /** This strips all non-key information from tags */
+    public VDJCAlignments ensureKeyTags() {
+        TagCount count = getTagCount();
+        if (count.isNonKeySingleton())
+            return setTagCount(count.ensureIsKey());
+        else
+            return this;
     }
 
     public VDJCAlignments setMapping(ReadToCloneMapping mapping) {

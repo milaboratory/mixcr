@@ -93,24 +93,29 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
             names = {"-r", "--report"})
     public String reportFile;
 
+    private Path tempFolder = null;
+
     private Path tempFolder() {
-        try {
-            File tempFolder;
-            if (useSystemTemp)
-                tempFolder = Paths.get(System.getProperty("java.io.tmpdir"))
-                        .resolve(Paths.get(out).getFileName().getFileName() + "." +
-                                Long.toString(System.nanoTime(), 36))
-                        .toFile();
-            else
-                tempFolder = new File(out + ".tmp");
-            if (tempFolder.exists())
-                FileUtils.deleteDirectory(tempFolder);
-            Files.createDirectory(tempFolder.toPath());
-            TempFileManager.register(tempFolder);
-            return tempFolder.toPath();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        if (tempFolder == null) {
+            try {
+                File tempFolderF;
+                if (useSystemTemp)
+                    tempFolderF = Paths.get(System.getProperty("java.io.tmpdir"))
+                            .resolve(Paths.get(out).getFileName().getFileName() + "." +
+                                    Long.toString(System.nanoTime(), 36))
+                            .toFile();
+                else
+                    tempFolderF = new File(out + ".tmp");
+                if (tempFolderF.exists())
+                    FileUtils.deleteDirectory(tempFolderF);
+                Files.createDirectory(tempFolderF.toPath());
+                TempFileManager.register(tempFolderF);
+                tempFolder = tempFolderF.toPath();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
+        return tempFolder;
     }
 
     TagCorrectorParameters getParameters() {
@@ -209,7 +214,7 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
                 return new HashSorter<>(
                         VDJCAlignments.class,
                         sortingStep.getHashFunction(), sortingStep.getComparator(),
-                        4, tempFolder().resolve("hashsorter." + tagIdx + "."),
+                        4, tempFolder().resolve("hashsorter." + tagIdx),
                         4, 4,
                         stateBuilder.getOState(), stateBuilder.getIState(),
                         memoryBudget, 10000
@@ -226,18 +231,18 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
             Processor<VDJCAlignments, VDJCAlignments> mapper = !noCorrect
                     ?
                     al -> {
-                        TagValue[] newTags = al.getTagCount().asKeyOrError().asArray();
+                        TagValue[] newTags = al.getTagCount().getSingletonTuple().asArray();
                         CorrectionNode cn = correctionResult;
                         for (int i : targetTagIndices) {
                             NucleotideSequence current = ((SequenceAndQualityTagValue) newTags[i]).data.getSequence();
                             cn = cn.getNextLevel().get(current);
                             if (cn == null) {
                                 report.setFilteredRecords(report.getFilteredRecords() + 1);
-                                return al.setTagCounter(null); // will be filtered right before hash sorter
+                                return al.setTagCount(null); // will be filtered right before hash sorter
                             }
                             newTags[i] = new SequenceAndQualityTagValue(cn.getCorrectValue());
                         }
-                        return al.setTagCounter(new TagCount(new TagTuple(newTags)));
+                        return al.setTagCount(new TagCount(new TagTuple(newTags)));
                     }
                     : al -> al;
 
@@ -304,15 +309,15 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
 
         public ToIntFunction<VDJCAlignments> getHashFunction() {
             return al -> {
-                TagTuple tagTuple = al.getTagCount().asKeyOrError();
+                TagTuple tagTuple = al.getTagCount().getSingletonTuple();
                 return ((SequenceAndQualityTagValue) tagTuple.get(tagIdx)).data.getSequence().hashCode();
             };
         }
 
         public Comparator<VDJCAlignments> getComparator() {
             return (al1, al2) -> {
-                TagTuple tagTuple1 = al1.getTagCount().asKeyOrError();
-                TagTuple tagTuple2 = al2.getTagCount().asKeyOrError();
+                TagTuple tagTuple1 = al1.getTagCount().getSingletonTuple();
+                TagTuple tagTuple2 = al2.getTagCount().getSingletonTuple();
                 return ((SequenceAndQualityTagValue) tagTuple1.get(tagIdx)).data.getSequence().compareTo(
                         ((SequenceAndQualityTagValue) tagTuple2.get(tagIdx)).data.getSequence());
             };

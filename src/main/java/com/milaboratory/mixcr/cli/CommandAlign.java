@@ -752,7 +752,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                 }
 
                 if (result.tagTuple != null)
-                    alignment = alignment.setTagCounter(new TagCount(result.tagTuple));
+                    alignment = alignment.setTagCount(new TagCount(result.tagTuple));
 
                 if (alignment.isChimera())
                     report.onChimera();

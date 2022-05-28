@@ -198,7 +198,7 @@ public final class PreCloneAssembler {
         assert grp1.getKey().equals(grp2.getKey());
 
         localIdx = -1;
-        for (VDJCAlignments al : CUtils.it(grp1)) {
+        for (VDJCAlignments al : CUtils.it(grp2)) {
             localIdx++;
 
             int cIdx = alignmentIndexToClonotypeIndex[localIdx];

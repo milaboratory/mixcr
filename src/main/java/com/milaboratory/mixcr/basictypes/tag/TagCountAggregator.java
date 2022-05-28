@@ -28,10 +28,14 @@ public final class TagCountAggregator {
                 singletonCount = count;
                 return this;
             } else if (singletonTuple.equals(tc)) {
+                if (!singletonTuple.isKey())
+                    throw new IllegalStateException("Non-trivial accumulation of non-key tag count.");
                 singletonCount += count;
                 return this;
             } else {
                 tagMap = new TObjectDoubleHashMap<>();
+                if (!singletonTuple.isKey() || !tc.isKey())
+                    throw new IllegalStateException("Non-trivial accumulation of non-key tag count.");
                 tagMap.put(singletonTuple, singletonCount);
                 tagMap.put(tc, count);
                 return this;
