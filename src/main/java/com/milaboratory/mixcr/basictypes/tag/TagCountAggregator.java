@@ -38,6 +38,8 @@ public final class TagCountAggregator {
                     throw new IllegalStateException("Non-trivial accumulation of non-key tag count.");
                 tagMap.put(singletonTuple, singletonCount);
                 tagMap.put(tc, count);
+                singletonTuple = null;
+                singletonCount = Double.NaN;
                 return this;
             }
         } else {

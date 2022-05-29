@@ -111,6 +111,10 @@ public class CommandExportAlignmentsPretty extends ACommandSimpleExportMiXCR {
             names = {"-i", "--read-ids"})
     public List<Long> readIds = new ArrayList<>();
 
+    @Option(description = "Alignment index",
+            names = {"--alignment-idx"})
+    public List<Long> alignmentIdx = new ArrayList<>();
+
     @Option(description = "List of clone ids to export",
             names = {"--clone-ids"})
     public List<Long> cloneIds = new ArrayList<>();
@@ -119,6 +123,12 @@ public class CommandExportAlignmentsPretty extends ACommandSimpleExportMiXCR {
         if (readIds.isEmpty())
             return null;
         return new TLongHashSet(readIds);
+    }
+
+    TLongHashSet getAlignmentIdx() {
+        if (alignmentIdx.isEmpty())
+            return null;
+        return new TLongHashSet(alignmentIdx);
     }
 
     TLongHashSet getCloneIds() {

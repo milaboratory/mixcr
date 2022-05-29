@@ -76,7 +76,7 @@ public final class TagTuple implements Comparable<TagTuple> {
             return key();
         if (depth == tags.length)
             return NO_TAGS;
-        TagValue[] newTags = Arrays.copyOfRange(tags, depth + 1, tags.length);
+        TagValue[] newTags = Arrays.copyOfRange(tags, depth, tags.length);
         for (int i = 0; i < newTags.length; i++)
             newTags[i] = newTags[i].extractKey();
         return new TagTuple(newTags);

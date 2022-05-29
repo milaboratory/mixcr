@@ -35,6 +35,5 @@ mixcr align -f \
 mixcr correctAndSortTags case10.aligned-vdjca case10.corrected-vdjca
 
 mixcr assemblePartial case10.corrected-vdjca case10.part-assembled-molecule-vdjca
-
 mixcr assemblePartial --cell-level case10.corrected-vdjca case10.part-assembled-cell-vdjca
 

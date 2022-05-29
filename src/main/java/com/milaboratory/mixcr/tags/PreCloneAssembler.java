@@ -2,6 +2,7 @@ package com.milaboratory.mixcr.tags;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
+import cc.redberry.pipe.util.DummyInputPort;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.mitool.consensus.ConsensusResult;
 import com.milaboratory.mitool.consensus.GConsensusAssembler;
@@ -13,8 +14,8 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
-import com.milaboratory.util.BitArray;
 import gnu.trove.map.hash.TObjectIntHashMap;
+import gnu.trove.set.hash.TIntHashSet;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGeneId;
 import kotlin.jvm.functions.Function1;
@@ -32,8 +33,7 @@ public final class PreCloneAssembler {
                              OutputPort<VDJCAlignments> alignmentsReader1,
                              OutputPort<VDJCAlignments> alignmentsReader2) {
         this.parameters = parameters;
-        Function1<VDJCAlignments, TagTuple> gFunction =
-                vdjcAlignments -> vdjcAlignments.getTagCount().asKeyPrefixOrError(parameters.groupingLevel);
+        Function1<VDJCAlignments, TagTuple> gFunction = a -> a.getTagCount().asKeyPrefixOrError(parameters.groupingLevel);
         this.alignmentsReader1 = PipeKt.group(alignmentsReader1, gFunction);
         this.alignmentsReader2 = PipeKt.group(alignmentsReader2, gFunction);
     }
@@ -81,14 +81,21 @@ public final class PreCloneAssembler {
                     gss[i] = hits[i].getGeneAndScore();
                 geneAndScores.put(gt, gss);
             }
-            alignmentInfos.add(new AlignmentInfo(localIdx,
+            alignmentInfos.add(new AlignmentInfo(localIdx, al.getAlignmentsIndex(), al.getMinReadId(),
                     al.getTagCount().keySuffixes(parameters.groupingLevel), geneAndScores));
 
             // Allocating array for the next data row
             row = new NSequenceWithQuality[parameters.assemblingFeatures.length];
         }
 
+        assert alignmentInfos.size() == assemblerInput.size();
+
         report.inputAlignments.addAndGet(localIdx);
+
+        if (assemblerInput.isEmpty()) {
+            CUtils.drainWithoutClose(alignmentsReader2.take(), DummyInputPort.INSTANCE);
+            return Collections.emptyList();
+        }
 
         // Step #2
         // Building consensuses from the records collected on the step #1, and creating indices for
@@ -96,6 +103,7 @@ public final class PreCloneAssembler {
 
         GConsensusAssembler gAssembler = new GConsensusAssembler(parameters.assemblerParameters, assemblerInput);
         List<ConsensusResult> consensuses = gAssembler.calculateConsensuses();
+        // TODO <-- leave only top consensus for UMI-based analysis
         int numberOfClones = consensuses.size();
         report.clonotypes.addAndGet(numberOfClones);
         report.clonotypesPerGroup.get(numberOfClones).incrementAndGet();
@@ -104,9 +112,9 @@ public final class PreCloneAssembler {
         // noinspection unchecked
         Map<GeneType, List<GeneAndScore>>[] geneInfos = new Map[numberOfClones];
         // Saves local record indices, assigned to each of the consensuses
-        BitArray[] contents = new BitArray[numberOfClones];
-        // I.e. UMIs for sole cell-barcode assembly use-case
-        Set<TagTuple>[] tagSuffixess = new Set[numberOfClones];
+        TIntHashSet[] contents = new TIntHashSet[numberOfClones];
+        // I.e. UMIs for CELL-barcode-only assembly use-case
+        // Set<TagTuple>[] tagSuffixess = new Set[numberOfClones];
 
         // Union of all contents
         // BitArray allAssignedToClonotypes = new BitArray((int) grp1.getCount());
@@ -125,14 +133,14 @@ public final class PreCloneAssembler {
         for (int cIdx = 0; cIdx < numberOfClones; cIdx++) {
             ConsensusResult c = consensuses.get(cIdx);
             VDJCGeneAccumulator acc = new VDJCGeneAccumulator();
-            BitArray content = new BitArray((int) grp1.getCount());
+            TIntHashSet content = new TIntHashSet();
             Set<TagTuple> tagSuffixes = new HashSet<>();
 
             int rIdx = -1;
             while ((rIdx = c.recordsUsed.nextBit(rIdx + 1)) != -1) {
                 AlignmentInfo ai = alignmentInfos.get(rIdx);
                 acc.accumulate(ai.genesAndScores);
-                content.set(ai.localIdx);
+                content.add(ai.localIdx);
                 tagSuffixes.addAll(ai.tagSuffixes);
                 alignmentIndexToClonotypeIndex[ai.localIdx] = cIdx + 1;
                 report.coreAlignments.incrementAndGet();
@@ -142,7 +150,7 @@ public final class PreCloneAssembler {
 
             geneInfos[cIdx] = acc.aggregateInformation(parameters.relativeMinScores);
             contents[cIdx] = content;
-            tagSuffixess[cIdx] = tagSuffixes;
+            // tagSuffixess[cIdx] = tagSuffixes;
 
             for (TagTuple ts : tagSuffixes)
                 if (tagSuffixToCloneId.get(ts) > 0)
@@ -150,7 +158,7 @@ public final class PreCloneAssembler {
                 else
                     tagSuffixToCloneId.put(ts, cIdx + 1);
 
-            for (GeneType gt : GeneType.VJC_REFERENCE) {
+            for (GeneType gt : GeneType.VJ_REFERENCE) {
                 List<GeneAndScore> gss = geneInfos[cIdx].get(gt);
                 if (gss == null)
                     continue;
@@ -175,7 +183,7 @@ public final class PreCloneAssembler {
             for (TagTuple ts : ai.tagSuffixes)
                 tagSuffixToCloneId.put(ts, -1);
 
-            for (GeneType gt : GeneType.VJC_REFERENCE) {
+            for (GeneType gt : GeneType.VJ_REFERENCE) {
                 GeneAndScore[] gss = ai.genesAndScores.get(gt);
                 if (gss == null)
                     continue;
@@ -195,51 +203,52 @@ public final class PreCloneAssembler {
         }
 
         GroupOP<VDJCAlignments, TagTuple> grp2 = alignmentsReader2.take();
-        assert grp1.getKey().equals(grp2.getKey());
+        assert grp1.getKey().equals(grp2.getKey()) : "" + grp1.getKey() + " != " + grp2.getKey();
 
         localIdx = -1;
         for (VDJCAlignments al : CUtils.it(grp2)) {
             localIdx++;
 
-            int cIdx = alignmentIndexToClonotypeIndex[localIdx];
+            int cIdxP1 = alignmentIndexToClonotypeIndex[localIdx];
 
             // Running empirical assignment for the alignments not yet assigned
-            if (cIdx == 0) {
-                // V, J and C gene based assignment
-                for (GeneType gt : GeneType.VJC_REFERENCE)
+            if (cIdxP1 == 0) {
+                // V and J gene based assignment
+                for (GeneType gt : GeneType.VJ_REFERENCE)
                     for (VDJCHit hit : al.getHits(gt)) {
-                        int c = vjcGenesToCloneId.get(hit.getGene().getId());
-                        if (c <= 0)
+                        int cp1 = vjcGenesToCloneId.get(hit.getGene().getId());
+                        if (cp1 <= 0)
                             continue;
-                        if (cIdx == 0)
-                            cIdx = c;
-                        else if (cIdx != c)
-                            cIdx = -1;
+                        if (cIdxP1 == 0)
+                            cIdxP1 = cp1;
+                        else if (cIdxP1 != cp1)
+                            cIdxP1 = -1;
                     }
 
                 // TagSuffix based assignment
                 for (TagTuple ts : al.getTagCount().keySuffixes(parameters.groupingLevel)) {
-                    int c = tagSuffixToCloneId.get(ts);
-                    if (c <= 0)
+                    int cp1 = tagSuffixToCloneId.get(ts);
+                    if (cp1 <= 0)
                         continue;
-                    if (cIdx == 0)
-                        cIdx = c;
-                    else if (cIdx != c)
-                        cIdx = -1;
+                    if (cIdxP1 == 0)
+                        cIdxP1 = cp1;
+                    else if (cIdxP1 != cp1)
+                        cIdxP1 = -1;
                 }
 
-                if (cIdx > 0) {
+                if (cIdxP1 > 0) {
                     // Adding alignment to the clone
-                    contents[cIdx - 1].set(localIdx);
+                    contents[cIdxP1 - 1].add(localIdx);
                     report.empiricallyAssignedAlignments.incrementAndGet();
-                }
-            } else if (cIdx > 0)
+                } else if (cIdxP1 == -1)
+                    report.empiricalAssignmentConflicts.incrementAndGet();
+            } else if (cIdxP1 > 0)
                 // Using second iteration over the alignments to assemble TagCounters from the alignments assigned to
                 // clonotypes based on their contig assignment
-                coreTagCountAggregators[cIdx - 1].add(al.getTagCount());
+                coreTagCountAggregators[cIdxP1 - 1].add(al.getTagCount());
 
-            if (cIdx > 0)
-                fullTagCountAggregators[cIdx].add(al.getTagCount());
+            if (cIdxP1 > 0)
+                fullTagCountAggregators[cIdxP1 - 1].add(al.getTagCount());
             else
                 report.unassignedAlignments.incrementAndGet();
         }
@@ -252,6 +261,7 @@ public final class PreCloneAssembler {
                 clonalSequence[i] = cs[i].consensus;
             result.add(new PreClone(
                     idGenerator.incrementAndGet(),
+                    grp1.getKey(),
                     coreTagCountAggregators[cIdx].createAndDestroy(),
                     fullTagCountAggregators[cIdx].createAndDestroy(),
                     clonalSequence,
@@ -265,11 +275,15 @@ public final class PreCloneAssembler {
 
     private static final class AlignmentInfo {
         final int localIdx;
+        final long alignmentId, minReadId;
         final Set<TagTuple> tagSuffixes;
         final EnumMap<GeneType, GeneAndScore[]> genesAndScores;
 
-        public AlignmentInfo(int localIdx, Set<TagTuple> tagSuffixes, EnumMap<GeneType, GeneAndScore[]> genesAndScores) {
+        public AlignmentInfo(int localIdx, long alignmentId, long minReadId,
+                             Set<TagTuple> tagSuffixes, EnumMap<GeneType, GeneAndScore[]> genesAndScores) {
             this.localIdx = localIdx;
+            this.alignmentId = alignmentId;
+            this.minReadId = minReadId;
             this.tagSuffixes = tagSuffixes;
             this.genesAndScores = genesAndScores;
         }

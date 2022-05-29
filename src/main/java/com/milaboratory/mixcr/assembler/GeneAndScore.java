@@ -36,4 +36,9 @@ public final class GeneAndScore implements Comparable<GeneAndScore> {
     public int hashCode() {
         return Objects.hash(geneId, score);
     }
+
+    @Override
+    public String toString() {
+        return "" + geneId.getName() + '(' + score + ')';
+    }
 }
