@@ -74,7 +74,7 @@ public final class DownsamplingUtil {
     }
 
     public static SetPreprocessorFactory<Clone> parseDownsampling(String downsampling, boolean dropOutliers, long seed) {
-        if (downsampling.equalsIgnoreCase("no-downsampling")) {
+        if (downsampling.equalsIgnoreCase("none")) {
             return new NoPreprocessing.Factory<>();
         } else if (downsampling.startsWith("umi-count")) {
             if (downsampling.endsWith("auto"))

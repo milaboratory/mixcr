@@ -231,6 +231,7 @@ public final class Main {
                 .addSubcommand("exportPlots", CommandPaExportPlots.CommandExportPlotsMain.class)
                 .addSubcommand("exportTables", CommandPaExportTables.class)
                 .addSubcommand("exportPreprocTables", CommandPaExportTablesPreprocSummary.class)
+                .addSubcommand("overlapScatterPlot", CommandOverlapScatter.class)
 
                 .addSubcommand("align", CommandAlign.class)
                 .addSubcommand("assemble", CommandAssemble.class)

@@ -1,6 +1,7 @@
 package com.milaboratory.mixcr.cli.postanalysis;
 
 import com.milaboratory.mixcr.cli.ACommandWithOutputMiXCR;
+import com.milaboratory.mixcr.cli.CommonDescriptions;
 import com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingUtil;
 import com.milaboratory.util.StringUtil;
 import io.repseq.core.Chains;
@@ -27,15 +28,15 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
     @Parameters(description = "cloneset.{clns|clna}... result.json.gz|result.json")
     public List<String> inOut;
 
-    @Option(description = "Filter out-of-frame sequences and clonotypes with stop-codons",
+    @Option(description = CommonDescriptions.ONLY_PRODUCTIVE,
             names = {"--only-productive"})
     public boolean onlyProductive = false;
 
-    @Option(description = "Drop samples which have less abundance than the computed downsampling threshold.",
+    @Option(description = CommonDescriptions.DOWNSAMPLING_DROPO_UTLIERS,
             names = {"--drop-outliers"})
     public boolean dropOutliers = false;
 
-    @Option(description = "Default downsampling. Possible values: umi-count-[1000|auto|min]|cumulative-top-[percent]|top-[number]|no-downsampling",
+    @Option(description = CommonDescriptions.DOWNSAMPLING,
             names = {"--default-downsampling"},
             required = true)
     public String defaultDownsampling;
@@ -44,7 +45,7 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
             names = {"--chains"})
     public String chains = "ALL";
 
-    @Option(description = "Metadata file (csv/tsv). Must have \"sample\" column.",
+    @Option(description = CommonDescriptions.METADATA,
             names = {"--metadata"})
     public String metadata;
 

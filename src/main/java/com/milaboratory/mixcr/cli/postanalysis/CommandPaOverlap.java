@@ -1,6 +1,7 @@
 package com.milaboratory.mixcr.cli.postanalysis;
 
 import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.cli.CommonDescriptions;
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
 import com.milaboratory.mixcr.postanalysis.PostanalysisRunner;
 import com.milaboratory.mixcr.postanalysis.WeightFunctions;
@@ -27,7 +28,7 @@ import java.util.Map;
         separator = " ",
         description = "Overlap analysis")
 public class CommandPaOverlap extends CommandPa {
-    @Option(description = "Overlap criteria. Default CDR|AA|V|J",
+    @Option(description = CommonDescriptions.OVERLAP_CRITERIA,
             names = {"--criteria"})
     public String overlapCriteria = "CDR3|AA|V|J";
 

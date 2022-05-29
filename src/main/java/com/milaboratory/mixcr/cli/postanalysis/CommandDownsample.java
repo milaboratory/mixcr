@@ -4,6 +4,7 @@ import cc.redberry.pipe.CUtils;
 import com.milaboratory.mixcr.basictypes.ClnsWriter;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.cli.ACommandWithOutputMiXCR;
+import com.milaboratory.mixcr.cli.CommonDescriptions;
 import com.milaboratory.mixcr.postanalysis.Dataset;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
@@ -36,11 +37,11 @@ public class CommandDownsample extends ACommandWithOutputMiXCR {
             required = true)
     public String chains = "ALL";
 
-    @Option(description = "Use only productive CDR3s.",
+    @Option(description = CommonDescriptions.ONLY_PRODUCTIVE,
             names = {"--only-productive"})
     public boolean onlyProductive = false;
 
-    @Option(description = "Choose downsampling. Possible values: umi-count-[1000|auto]|cumulative-top-[percent]|top-[number]|no-downsampling",
+    @Option(description = CommonDescriptions.DOWNSAMPLING,
             names = {"--downsampling"},
             required = true)
     public String downsampling;
