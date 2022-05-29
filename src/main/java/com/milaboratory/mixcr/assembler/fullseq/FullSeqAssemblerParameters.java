@@ -281,7 +281,7 @@ public class FullSeqAssemblerParameters {
                         TypeReference<HashMap<String, FullSeqAssemblerParameters>> typeRef
                                 = new TypeReference<HashMap<String, FullSeqAssemblerParameters>>() {
                         };
-                        map = GlobalObjectMappers.ONE_LINE.readValue(is, typeRef);
+                        map = GlobalObjectMappers.getOneLine().readValue(is, typeRef);
                     } catch (IOException ioe) {
                         throw new RuntimeException(ioe);
                     }

@@ -43,17 +43,16 @@ import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.util.VDJCObjectExtender;
+import com.milaboratory.util.ReportUtil;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.Chains;
+import io.repseq.core.GeneType;
 import io.repseq.core.ReferencePoint;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import static com.milaboratory.mixcr.basictypes.IOUtil.*;
 import static com.milaboratory.mixcr.cli.CommandExtend.EXTEND_COMMAND_NAME;
@@ -176,8 +175,13 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
                     reader.getParameters().getVAlignerParameters().getParameters().getScoring(),
                     reader.getParameters().getJAlignerParameters().getParameters().getScoring());
 
+            // Shifting indels in homopolymers is effective only for alignments build with linear gap scoring,
+            // consolidating some gaps, on the contrary, for alignments obtained with affine scoring such procedure
+            // may break the alignment (gaps there are already consolidated as much as possible)
+            Set<GeneType> gtRequiringIndelShifts = reader.getParameters().getGeneTypesWithLinearScoring();
+
             for (VDJCAlignments alignments : CUtils.it(new OrderedOutputPort<>(process.getOutput(), VDJCAlignments::getAlignmentsIndex)))
-                writer.write(alignments.shiftIndelsAtHomopolymers());
+                writer.write(alignments.shiftIndelsAtHomopolymers(gtRequiringIndelShifts));
             writer.setNumberOfProcessedReads(reader.getNumberOfReads());
 
             process.finish();
@@ -212,13 +216,13 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
 
             // Writing report to stout
             System.out.println("============= Report ==============");
-            Util.writeReportToStdout(report);
+            ReportUtil.writeReportToStdout(report);
 
             if (reportFile != null)
-                Util.writeReport(reportFile, report);
+                ReportUtil.appendReport(reportFile, report);
 
             if (jsonReport != null)
-                Util.writeJsonReport(jsonReport, report);
+                ReportUtil.appendJsonReport(jsonReport, report);
         }
     }
 

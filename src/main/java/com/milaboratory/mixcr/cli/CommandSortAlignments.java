@@ -67,7 +67,7 @@ public class CommandSortAlignments extends ACommandWithSmartOverwriteWithSingleI
     static final String SORT_ALIGNMENTS_COMMAND_NAME = "sortAlignments";
 
     @Override
-    public ActionConfiguration getConfiguration() {
+    public ActionConfiguration<SortConfiguration> getConfiguration() {
         return new SortConfiguration();
     }
 
@@ -142,7 +142,7 @@ public class CommandSortAlignments extends ACommandWithSmartOverwriteWithSingleI
             use = JsonTypeInfo.Id.CLASS,
             include = JsonTypeInfo.As.PROPERTY,
             property = "type")
-    public static class SortConfiguration implements ActionConfiguration {
+    public static class SortConfiguration implements ActionConfiguration<SortConfiguration> {
         @Override
         public String actionName() {
             return "sortAlignments";

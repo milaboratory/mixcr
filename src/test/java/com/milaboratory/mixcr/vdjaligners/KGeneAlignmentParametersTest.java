@@ -44,9 +44,9 @@ public class KGeneAlignmentParametersTest {
                 new KAlignerParameters(5, false, false,
                         1.5f, 0.75f, 1.0f, -0.1f, -0.3f, 4, 10, 15, 2, -10, 40.0f, 0.87f, 7,
                         LinearGapAlignmentScoring.getNucleotideBLASTScoring()));
-        String str = GlobalObjectMappers.PRETTY.writeValueAsString(paramentrs);
+        String str = GlobalObjectMappers.getPretty().writeValueAsString(paramentrs);
         System.out.println(str);
-        KGeneAlignmentParameters deser = GlobalObjectMappers.PRETTY.readValue(str, KGeneAlignmentParameters.class);
+        KGeneAlignmentParameters deser = GlobalObjectMappers.getPretty().readValue(str, KGeneAlignmentParameters.class);
         assertEquals(paramentrs, deser);
         KGeneAlignmentParameters clone = deser.clone();
         assertEquals(paramentrs, clone);

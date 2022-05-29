@@ -1,10 +1,9 @@
 package com.milaboratory.mixcr.postanalysis.downsampling;
 
 import cc.redberry.pipe.CUtils;
-import com.milaboratory.mixcr.postanalysis.Dataset;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
-import com.milaboratory.mixcr.postanalysis.TestDataset;
-import com.milaboratory.mixcr.postanalysis.TestObject;
+import com.milaboratory.mixcr.postanalysis.*;
+import gnu.trove.iterator.TIntObjectIterator;
+import gnu.trove.map.hash.TIntObjectHashMap;
 import org.apache.commons.math3.random.RandomDataGenerator;
 import org.apache.commons.math3.random.Well512a;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
@@ -102,7 +101,9 @@ public class DownsamplingPreprocessorTest {
                 t -> Math.round(t.weight),
                 (t, w) -> new TestObject(t.value, 1d * w),
                 dsChooser,
-                rng.nextLong(0, Long.MAX_VALUE / 2)
+                true,
+                rng.nextLong(0, Long.MAX_VALUE / 2),
+                ""
         );
 
         int nDatasets = 10;
@@ -112,7 +113,7 @@ public class DownsamplingPreprocessorTest {
         }
         long dsValue = dsChooser.compute(Arrays.stream(initial).mapToLong(d -> d.count).toArray());
 
-        DatasetSupport[] downsampled = Arrays.stream(SetPreprocessorFactory.processDatasets(proc, initial))
+        DatasetSupport[] downsampled = Arrays.stream(SetPreprocessor.processDatasets(proc, initial))
                 .map(DatasetSupport::new)
                 .toArray(DatasetSupport[]::new);
 
@@ -122,6 +123,20 @@ public class DownsamplingPreprocessorTest {
 
             Assert.assertTrue(in.set.containsAll(dw.set));
             Assert.assertEquals(dsValue, dw.count);
+        }
+
+        TIntObjectHashMap<List<SetPreprocessorStat>> stat = proc.getStat();
+        Assert.assertEquals(nDatasets, stat.size());
+        TIntObjectIterator<List<SetPreprocessorStat>> it = stat.iterator();
+        double wtAfter = -1;
+        while (it.hasNext()) {
+            it.advance();
+            Assert.assertEquals(1, it.value().size());
+            SetPreprocessorStat istat = it.value().get(0);
+            if (wtAfter == -1)
+                wtAfter = istat.sumWeightAfter;
+            else
+                Assert.assertEquals(wtAfter, istat.sumWeightAfter, 1e-5);
         }
     }
 

@@ -1,20 +1,27 @@
 package com.milaboratory.mixcr.postanalysis.ui;
 
 import cc.redberry.pipe.OutputPortCloseable;
+import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.basictypes.CloneReader;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
+import com.milaboratory.mixcr.basictypes.VDJCSProperties;
 import com.milaboratory.mixcr.postanalysis.Dataset;
+import com.milaboratory.mixcr.util.OutputPortWithProgress;
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.LambdaSemaphore;
+import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 /**
  *
  */
-public class ClonotypeDataset implements Dataset<Clone> {
+public class ClonotypeDataset implements Dataset<Clone>, CloneReader {
     final String id;
     final Path path;
     final VDJCLibraryRegistry registry;
@@ -44,12 +51,55 @@ public class ClonotypeDataset implements Dataset<Clone> {
         return id;
     }
 
+    private volatile CloneReader reader;
+
     @Override
-    public OutputPortCloseable<Clone> mkElementsPort() {
-        try {
-            return CloneSetIO.mkReader(path, registry, concurrencyLimiter).readClones();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    public OutputPortWithProgress<Clone> mkElementsPort() {
+        if (reader == null) {
+            synchronized (this) {
+                if (reader == null)
+                    try {
+                        reader = CloneSetIO.mkReader(path, registry, concurrencyLimiter);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+            }
         }
+        return OutputPortWithProgress.wrap(reader.numberOfClones(), reader.readClones());
+    }
+
+    @Override
+    public VDJCSProperties.CloneOrdering ordering() {
+        return reader.ordering();
+    }
+
+    @Override
+    public OutputPortCloseable<Clone> readClones() {
+        return mkElementsPort();
+    }
+
+    @Override
+    public int numberOfClones() {
+        return reader.numberOfClones();
+    }
+
+    @Override
+    public List<VDJCGene> getUsedGenes() {
+        return reader.getUsedGenes();
+    }
+
+    @Override
+    public VDJCAlignerParameters getAlignerParameters() {
+        return reader.getAlignerParameters();
+    }
+
+    @Override
+    public void close() throws Exception {
+        reader.close();
+    }
+
+    @Override
+    public CloneAssemblerParameters getAssemblerParameters() {
+        return reader.getAssemblerParameters();
     }
 }

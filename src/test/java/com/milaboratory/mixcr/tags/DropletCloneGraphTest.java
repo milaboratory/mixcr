@@ -2,18 +2,14 @@ package com.milaboratory.mixcr.tags;
 
 import com.milaboratory.mixcr.basictypes.ClnAReader;
 import com.milaboratory.mixcr.basictypes.CloneSet;
-import com.milaboratory.mixcr.cli.ReportHelper;
+import com.milaboratory.util.ReportHelper;
 import com.milaboratory.util.ProgressAndStage;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.VDJCLibraryRegistry;
-import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  *

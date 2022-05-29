@@ -3,7 +3,7 @@
     "branchingMinimalQualityShare": 0.1,
     "branchingMinimalSumQuality": 60,
     "decisiveBranchingSumQualityThreshold": 120,
-    "outputMinimalQualityShare": 0.8,
+    "outputMinimalQualityShare": 0.75,
     "outputMinimalSumQuality": 0,
     "alignedSequenceEdgeDelta": 3,
     "minimalMeanNormalizedQuality": 5.0,

@@ -42,6 +42,6 @@ public class ChainUsageStatsTest {
         stats.total.incrementAndGet();
         stats.chimeras.incrementAndGet();
         stats.getCounter(Chains.TRB).incrementAndGet();
-        System.out.println(GlobalObjectMappers.PRETTY.writeValueAsString(stats));
+        System.out.println(GlobalObjectMappers.getPretty().writeValueAsString(stats));
     }
 }

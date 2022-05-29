@@ -27,7 +27,8 @@ public final class CharacteristicGroupResult<K> {
     public final List<CharacteristicGroupResultCell<K>> cells;
 
     public CharacteristicGroupResult(CharacteristicGroup<K, ?> group,
-                                     Set<String> datasetIds, Set<K> keys,
+                                     Set<String> datasetIds,
+                                     Set<K> keys,
                                      List<CharacteristicGroupResultCell<K>> cells) {
         this.group = group;
         this.datasetIds = datasetIds;

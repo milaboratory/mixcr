@@ -1,8 +1,5 @@
 package com.milaboratory.mixcr.postanalysis;
 
-import cc.redberry.pipe.CUtils;
-import cc.redberry.pipe.InputPort;
-import cc.redberry.pipe.OutputPortCloseable;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -13,8 +10,6 @@ import com.milaboratory.mixcr.postanalysis.preproc.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  *
@@ -35,15 +30,14 @@ import java.util.stream.IntStream;
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public interface SetPreprocessorFactory<T> {
-    SetPreprocessor<T> getInstance();
+    SetPreprocessor<T> newInstance();
 
-    default String[] description() {
-        return new String[0];
-    }
+    /** Descriptive unique identifier */
+    String id();
 
     @SuppressWarnings("unchecked")
     default SetPreprocessorFactory<T> filter(boolean before, ElementPredicate<T>... predicates) {
-        FilterPreprocessor.Factory<T> filter = new FilterPreprocessor.Factory<>(Arrays.asList(predicates));
+        FilterPreprocessor.Factory<T> filter = new FilterPreprocessor.Factory<>(Arrays.asList(predicates), WeightFunctions.Default());
         if (this instanceof PreprocessorChain.Factory) {
             PreprocessorChain.Factory<T> p = (PreprocessorChain.Factory<T>) this;
             List<SetPreprocessorFactory<T>> list = new ArrayList<>();
@@ -56,9 +50,15 @@ public interface SetPreprocessorFactory<T> {
             }
             return new PreprocessorChain.Factory<>(list);
         } else
-            return before
-                    ? new PreprocessorChain.Factory<>(filter, this)
-                    : new PreprocessorChain.Factory<>(this, filter);
+            return before ? before(filter) : then(filter);
+    }
+
+    default SetPreprocessorFactory<T> then(SetPreprocessorFactory<T> then) {
+        return new PreprocessorChain.Factory<T>(this, then);
+    }
+
+    default SetPreprocessorFactory<T> before(SetPreprocessorFactory<T> before) {
+        return new PreprocessorChain.Factory<T>(before, this);
     }
 
     default SetPreprocessorFactory<T> filterAfter(ElementPredicate<T>... predicates) {
@@ -70,64 +70,13 @@ public interface SetPreprocessorFactory<T> {
     }
 
     @SuppressWarnings("unchecked")
-    static <T> Dataset<T>[] processDatasets(SetPreprocessor<T> proc, Dataset<T>... initial) {
-        while (true) {
-            SetPreprocessorSetup<T> setup = proc.nextSetupStep();
-            if (setup == null) {
-                Dataset<T>[] result = new Dataset[initial.length];
-                for (int i = 0; i < initial.length; i++) {
-                    int datasetIdx = i;
-                    MappingFunction<T> mapper = proc.getMapper(datasetIdx);
-                    result[i] = new Dataset<T>() {
-                        @Override
-                        public String id() {
-                            return initial[datasetIdx].id();
-                        }
-
-                        @Override
-                        public OutputPortCloseable<T> mkElementsPort() {
-                            OutputPortCloseable<T> inner = initial[datasetIdx].mkElementsPort();
-                            return new OutputPortCloseable<T>() {
-                                @Override
-                                public void close() {
-                                    inner.close();
-                                }
-
-                                @Override
-                                public T take() {
-                                    while (true) {
-                                        T t = inner.take();
-                                        if (t == null)
-                                            return null;
-
-                                        T r = mapper.apply(t);
-                                        if (r == null)
-                                            continue;
-                                        return r;
-                                    }
-                                }
-                            };
-                        }
-                    };
-                }
-                return result;
-            }
-            setup.initialize(initial.length);
-
-            List<InputPort<T>> consumers = IntStream.range(0, initial.length)
-                    .mapToObj(setup::consumer)
-                    .collect(Collectors.toList());
-
-            for (int i = 0; i < initial.length; i++) {
-                try (OutputPortCloseable<T> port = initial[i].mkElementsPort()) {
-                    for (T t : CUtils.it(port)) {
-                        consumers.get(i).put(t);
-                    }
-                }
-            }
-            for (InputPort<T> c : consumers) {
-                c.put(null);
-            }
-        }
+    default SetPreprocessorFactory<T> filterAfter(List<ElementPredicate<T>> predicates) {
+        return filter(false, predicates.toArray(new ElementPredicate[0]));
     }
+
+    @SuppressWarnings("unchecked")
+    default SetPreprocessorFactory<T> filterFirst(List<ElementPredicate<T>> predicates) {
+        return filter(true, predicates.toArray(new ElementPredicate[0]));
+    }
+
 }

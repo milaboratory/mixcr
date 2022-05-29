@@ -59,7 +59,7 @@ public class AdditiveCharacteristicsTest {
 
         RandomDataGenerator rng = new RandomDataGenerator(new Well44497a());
         int nDatasets = 1000;
-        TestDataset<TestObject>[] datasets = TestObject.generateDatasets(nDatasets, rng);
+        TestDataset<TestObject>[] datasets = TestDataset.generateDatasets(nDatasets, rng);
 
         PostanalysisRunner<TestObject> runner = new PostanalysisRunner<>();
         runner.addCharacteristics(sum, mean, std);
@@ -67,14 +67,14 @@ public class AdditiveCharacteristicsTest {
 
         CharacteristicGroup<String, TestObject> group = new CharacteristicGroup<>("stat",
                 Arrays.asList(mean, std),
-                Arrays.asList(new GroupSummary<>()));
+                Arrays.asList(new GroupSummary.Simple<>()));
 
         CharacteristicGroupResult<String> table = result.getTable(group);
         OutputTable summary = table.getOutputs().get(GroupSummary.key);
 
-        Double[][] rows = summary.rows();
+        Object[][] rows = summary.rows();
         for (int i = 0; i < nDatasets; i++) {
-            Double[] metrics = rows[i];
+            Double[] metrics = Arrays.stream(rows[i]).map(d -> (Double) d).toArray(Double[]::new);
 
             double[] vals = datasets[i].stream().mapToDouble(o -> o.value).toArray();
             double[] weights = datasets[i].stream().mapToDouble(o -> o.weight).toArray();

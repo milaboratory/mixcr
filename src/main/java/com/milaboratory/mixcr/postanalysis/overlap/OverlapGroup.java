@@ -35,8 +35,10 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 public final class OverlapGroup<T> implements Iterable<List<T>> {
-    /** Elements in group separated by sample */
-    final List<List<T>> elements;
+    /**
+     * Elements in group separated by sample
+     */
+    public final List<List<T>> elements;
 
     public OverlapGroup(List<List<T>> elements) {
         this.elements = elements;
@@ -50,8 +52,12 @@ public final class OverlapGroup<T> implements Iterable<List<T>> {
         return elements.get(sampleIndex);
     }
 
+    public boolean isEmpty() {
+        return elements.stream().allMatch(List::isEmpty);
+    }
+
     public boolean notEmpty() {
-        return !elements.stream().allMatch(List::isEmpty);
+        return !isEmpty();
     }
 
     @Override

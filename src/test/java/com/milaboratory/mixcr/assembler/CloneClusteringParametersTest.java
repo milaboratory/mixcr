@@ -39,8 +39,8 @@ public class CloneClusteringParametersTest {
     @Test
     public void test1() throws Exception {
         CloneClusteringParameters paramentrs = new CloneClusteringParameters(2, 1, -1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6));
-        String str = GlobalObjectMappers.PRETTY.writeValueAsString(paramentrs);
-        CloneClusteringParameters deser = GlobalObjectMappers.PRETTY.readValue(str, CloneClusteringParameters.class);
+        String str = GlobalObjectMappers.getPretty().writeValueAsString(paramentrs);
+        CloneClusteringParameters deser = GlobalObjectMappers.getPretty().readValue(str, CloneClusteringParameters.class);
         assertEquals(paramentrs, deser);
         CloneClusteringParameters clone = deser.clone();
         assertEquals(paramentrs, clone);

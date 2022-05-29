@@ -35,6 +35,7 @@ import com.milaboratory.core.sequence.quality.ReadTrimmerReport;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerEventListener;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause;
+import com.milaboratory.util.ReportHelper;
 import io.repseq.core.GeneType;
 
 import java.util.HashMap;

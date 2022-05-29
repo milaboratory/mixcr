@@ -41,8 +41,8 @@ public class VJCClonalAlignerParametersTest {
     public void test1() throws Exception {
         VJCClonalAlignerParameters paramentrs = new VJCClonalAlignerParameters(0.3f,
                 LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3);
-        String str = GlobalObjectMappers.PRETTY.writeValueAsString(paramentrs);
-        VJCClonalAlignerParameters deser = GlobalObjectMappers.PRETTY.readValue(str, VJCClonalAlignerParameters.class);
+        String str = GlobalObjectMappers.getPretty().writeValueAsString(paramentrs);
+        VJCClonalAlignerParameters deser = GlobalObjectMappers.getPretty().readValue(str, VJCClonalAlignerParameters.class);
         assertEquals(paramentrs, deser);
         assertEquals(paramentrs, deser.clone());
     }

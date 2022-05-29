@@ -12,9 +12,7 @@ import java.util.List;
 import java.util.function.ToDoubleBiFunction;
 
 public final class HierarchicalClustering {
-
-    private HierarchicalClustering() {
-    }
+    private HierarchicalClustering() {}
 
     public static double EuclideanDistance(double[] vectori, double[] vectorj) {
         double diff_square_sum = 0.0;

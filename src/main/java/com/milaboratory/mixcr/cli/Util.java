@@ -29,79 +29,16 @@
  */
 package com.milaboratory.mixcr.cli;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.milaboratory.util.GlobalObjectMappers;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.List;
 
 public final class Util {
     private Util() {
     }
-
-    private static final DecimalFormatSymbols DFS;
-
-    public static final DecimalFormat PERCENT_FORMAT;
-
-    static {
-        DFS = new DecimalFormatSymbols();
-        DFS.setNaN("NaN");
-        DFS.setInfinity("Inf");
-        PERCENT_FORMAT = new DecimalFormat("#.##", DFS);
-    }
-
-    public static void writeReportToStdout(Report report) {
-        report.writeReport(new ReportHelper(System.out, true));
-    }
-
-    static void appendAtomically(String fileName, byte[] content) {
-        appendAtomically(new File(fileName), content);
-    }
-
-    static void appendAtomically(File file, byte[] content) {
-        try (FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
-             FileLock lock = lockIfPossible(channel)) {
-            channel.position(channel.size());
-            channel.write(ByteBuffer.wrap(content));
-        } catch (IOException ioe) {
-            throw new RuntimeException(ioe);
-        }
-    }
-
-    static FileLock lockIfPossible(FileChannel channel) {
-        try {
-            return channel.lock();
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    public static void writeReport(String reportFileName, Report report) {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ReportHelper helper = new ReportHelper(bos, false);
-        report.writeReport(helper);
-        helper.end();
-        appendAtomically(reportFileName, bos.toByteArray());
-    }
-
-    public static void writeJsonReport(String reportFileName, Report report) throws JsonProcessingException {
-        String content = GlobalObjectMappers.toOneLine(report) + "\n";
-        appendAtomically(reportFileName, content.getBytes(StandardCharsets.UTF_8));
-    }
-
 
     public static String printTwoColumns(List<String> left, List<String> right, int leftWidth, int rightWidth, int sep) {
         return printTwoColumns(left, right, leftWidth, rightWidth, sep, "");

@@ -30,11 +30,8 @@
 package com.milaboratory.mixcr.assembler;
 
 import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
-import com.milaboratory.core.alignment.BandedAlignerParameters;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
-import com.milaboratory.mixcr.vdjaligners.DAlignerParameters;
 import com.milaboratory.util.GlobalObjectMappers;
-import io.repseq.core.GeneFeature;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -52,9 +49,9 @@ public class CloneFactoryParametersTest {
                         LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 9),
                 new DClonalAlignerParameters(0.85f, 30.0f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
         );
-        String str = GlobalObjectMappers.PRETTY.writeValueAsString(paramentrs);
+        String str = GlobalObjectMappers.getPretty().writeValueAsString(paramentrs);
         //System.out.println(str);
-        CloneFactoryParameters deser = GlobalObjectMappers.PRETTY.readValue(str, CloneFactoryParameters.class);
+        CloneFactoryParameters deser = GlobalObjectMappers.getPretty().readValue(str, CloneFactoryParameters.class);
         assertEquals(paramentrs, deser);
         CloneFactoryParameters clone = deser.clone();
         assertEquals(paramentrs, clone);
@@ -71,9 +68,9 @@ public class CloneFactoryParametersTest {
                         LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 5),
                 null, new DClonalAlignerParameters(0.85f, 30.0f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
         );
-        String str = GlobalObjectMappers.PRETTY.writeValueAsString(paramentrs);
+        String str = GlobalObjectMappers.getPretty().writeValueAsString(paramentrs);
         //System.out.println(str);
-        CloneFactoryParameters deser = GlobalObjectMappers.PRETTY.readValue(str, CloneFactoryParameters.class);
+        CloneFactoryParameters deser = GlobalObjectMappers.getPretty().readValue(str, CloneFactoryParameters.class);
         assertEquals(paramentrs, deser);
         CloneFactoryParameters clone = deser.clone();
         assertEquals(paramentrs, clone);

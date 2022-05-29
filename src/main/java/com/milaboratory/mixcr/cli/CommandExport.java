@@ -30,6 +30,7 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.OutputPort;
+import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.blocks.FilteringPort;
 import cc.redberry.primitives.Filter;
 import com.milaboratory.mixcr.basictypes.*;
@@ -37,6 +38,7 @@ import com.milaboratory.mixcr.export.*;
 import com.milaboratory.mixcr.util.Concurrency;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.CanReportProgressAndStage;
+import com.milaboratory.util.ReportHelper;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.Chains;
 import io.repseq.core.GeneFeature;
@@ -181,40 +183,19 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
 
         @Override
         void run1(List<FieldExtractor<? super VDJCAlignments>> exporters) throws Exception {
-            AutoCloseable reader = null;
-            OutputPort<VDJCAlignments> source = null;
-
-            switch (fileInfoExtractorInstance.getFileInfo(in).fileType) {
-                case MAGIC_VDJC:
-                    VDJCAlignmentsReader vdjcaReader = new VDJCAlignmentsReader(in, VDJCLibraryRegistry.getDefault());
-                    reader = vdjcaReader;
-                    source = vdjcaReader;
-                    break;
-                case MAGIC_CLNA:
-                    ClnAReader clnaReader = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4));
-                    reader = clnaReader;
-                    source = clnaReader.readAllAlignments();
-                    break;
-                case MAGIC_CLNS:
-                    throwExecutionException("Can't export alignments from *.clns file: " + in);
-                default:
-                    throwExecutionException("Unknown file type: " + in);
-            }
-
-            try (InfoWriter<VDJCAlignments> writer = new InfoWriter<>(out)) {
-                if (source instanceof CanReportProgress)
-                    SmartProgressReporter.startProgressReport("Exporting alignments", (CanReportProgress) source, System.err);
+            try (OutputPortCloseable<VDJCAlignments> reader = openAlignmentsPort(in);
+                 InfoWriter<VDJCAlignments> writer = new InfoWriter<>(out)) {
+                if (reader instanceof CanReportProgress)
+                    SmartProgressReporter.startProgressReport("Exporting alignments", (CanReportProgress) reader, System.err);
                 writer.attachInfoProviders(exporters);
                 writer.ensureHeader();
                 VDJCAlignments alignments;
                 long count = 0;
-                OutputPort<VDJCAlignments> alignmentsPort = new FilteringPort<>(source, mkFilter());
+                OutputPort<VDJCAlignments> alignmentsPort = new FilteringPort<>(reader, mkFilter());
                 while ((alignments = alignmentsPort.take()) != null && count < limit) {
                     writer.put(alignments);
                     ++count;
                 }
-            } finally {
-                reader.close();
             }
         }
     }
@@ -279,8 +260,8 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                             count = set.getClones().stream().mapToDouble(Clone::getCount).sum();
                     int di = initialSet.size() - set.size();
                     double cdi = initialCount - count;
-                    warn("Filtered " + set.size() + " of " + initialSet.size() + " clones (" + Util.PERCENT_FORMAT.format(100.0 * di / initialSet.size()) + "%).");
-                    warn("Filtered " + count + " of " + initialCount + " reads (" + Util.PERCENT_FORMAT.format(100.0 * cdi / initialCount) + "%).");
+                    warn("Filtered " + set.size() + " of " + initialSet.size() + " clones (" + ReportHelper.PERCENT_FORMAT.format(100.0 * di / initialSet.size()) + "%).");
+                    warn("Filtered " + count + " of " + initialCount + " reads (" + ReportHelper.PERCENT_FORMAT.format(100.0 * cdi / initialCount) + "%).");
                 }
             }
         }
@@ -380,7 +361,7 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
     }
 
     @SuppressWarnings("unchecked")
-    <E> List<FieldExtractor<E>> extractor(FieldData fd, Class<E> clazz, OutputMode m) {
+    public static <E> List<FieldExtractor<E>> extractor(FieldData fd, Class<E> clazz, OutputMode m) {
         for (Field f : FieldExtractors.getFields()) {
             if (fd.field.equalsIgnoreCase(f.getCommand()) && f.canExtractFrom(clazz)) {
                 if (f.nArguments() == 0) {
@@ -399,11 +380,10 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                 }
             }
         }
-        throwValidationException("illegal field: " + fd.field);
-        return null;
+        throw new IllegalArgumentException("illegal field: " + fd.field);
     }
 
-    private static final class FieldData {
+    public static final class FieldData {
         final String field;
         final String[] args;
 
@@ -546,8 +526,13 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
     public static <T extends VDJCObject> CommandSpec mkCommandSpec(CommandExport<T> export) {
         CommandSpec spec = CommandSpec.forAnnotatedObject(export);
         export.spec = spec; // inject spec manually
-        for (Field field : FieldExtractors.getFields()) {
-            if (!field.canExtractFrom(export.clazz))
+        addOptionsToSpec(spec, export.clazz);
+        return spec;
+    }
+
+    public static void addOptionsToSpec(CommandSpec spec, Class<?> clazz) {
+        for (Field<?> field : FieldExtractors.getFields()) {
+            if (!field.canExtractFrom(clazz))
                 continue;
             spec.addOption(OptionSpec
                     .builder(field.getCommand())
@@ -558,7 +543,6 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                     .descriptionKey(field.getCommand() + " " + field.metaVars())
                     .build());
         }
-        return spec;
     }
 
     /**
@@ -573,5 +557,44 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
      */
     public static CommandSpec mkClonesSpec() {
         return mkCommandSpec(new CommandExportClones());
+    }
+
+    public interface OPAWithReport extends OutputPortCloseable<VDJCAlignments>, CanReportProgress {
+    }
+
+    public static OutputPortCloseable<VDJCAlignments> openAlignmentsPort(String in) {
+        try {
+            switch (fileInfoExtractorInstance.getFileInfo(in).fileType) {
+                case MAGIC_VDJC:
+                    VDJCAlignmentsReader vdjcaReader = null;
+                    vdjcaReader = new VDJCAlignmentsReader(in, VDJCLibraryRegistry.getDefault());
+                    return vdjcaReader;
+                case MAGIC_CLNA:
+                    ClnAReader clnaReader = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4));
+                    OutputPortCloseable<VDJCAlignments> source = clnaReader.readAllAlignments();
+                    return new OutputPortCloseable<VDJCAlignments>() {
+                        @Override
+                        public void close() {
+                            try {
+                                source.close();
+                                clnaReader.close();
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+
+                        @Override
+                        public VDJCAlignments take() {
+                            return source.take();
+                        }
+                    };
+                case MAGIC_CLNS:
+                    throw new RuntimeException("Can't export alignments from *.clns file: " + in);
+                default:
+                    throw new RuntimeException("Unknown file type: " + in);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

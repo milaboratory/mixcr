@@ -14,8 +14,12 @@ public abstract class OverlapDataset<T> implements Dataset<OverlapGroup<T>> {
         this.datasetIds = datasetIds;
     }
 
+    public int nSamples() {
+        return datasetIds.size();
+    }
+
     @Override
     public String id() {
-        return String.join("_", datasetIds);
+        return "overlap";
     }
 }
