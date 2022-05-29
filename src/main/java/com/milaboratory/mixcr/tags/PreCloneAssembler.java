@@ -219,6 +219,7 @@ public final class PreCloneAssembler {
                         int cp1 = vjcGenesToCloneId.get(hit.getGene().getId());
                         if (cp1 <= 0)
                             continue;
+                        report.vjEmpiricallyAssignedAlignments.incrementAndGet();
                         if (cIdxP1 == 0)
                             cIdxP1 = cp1;
                         else if (cIdxP1 != cp1)
@@ -230,6 +231,7 @@ public final class PreCloneAssembler {
                     int cp1 = tagSuffixToCloneId.get(ts);
                     if (cp1 <= 0)
                         continue;
+                    report.umiEmpiricallyAssignedAlignments.incrementAndGet();
                     if (cIdxP1 == 0)
                         cIdxP1 = cp1;
                     else if (cIdxP1 != cp1)
@@ -239,7 +241,6 @@ public final class PreCloneAssembler {
                 if (cIdxP1 > 0) {
                     // Adding alignment to the clone
                     contents[cIdxP1 - 1].add(localIdx);
-                    report.empiricallyAssignedAlignments.incrementAndGet();
                 } else if (cIdxP1 == -1)
                     report.empiricalAssignmentConflicts.incrementAndGet();
             } else if (cIdxP1 > 0)

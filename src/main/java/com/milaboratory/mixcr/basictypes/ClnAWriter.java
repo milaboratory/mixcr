@@ -232,7 +232,7 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
 
             // Dirty heuristic to optimize trade-off between memory usage and number of random access places in a file
             // to read from
-            int chunkSize = (int) Math.min(Math.max(16384, numberOfAlignments / 8), 1048576);
+            // int chunkSize = (int) Math.min(Math.max(16384, numberOfAlignments / 8), 1048576);
 
             // Sorting alignments by cloneId and then by mapping type (core alignments will be written before all others)
             // and saving sorting output port
