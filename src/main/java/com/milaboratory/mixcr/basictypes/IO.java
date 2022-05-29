@@ -41,11 +41,37 @@ import com.milaboratory.primitivio.Serializer;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
+import io.repseq.core.VDJCGeneId;
 
 import java.util.EnumMap;
 import java.util.Map;
 
 class IO {
+    public static class GeneAndScoreSerializer implements Serializer<GeneAndScore> {
+        @Override
+        public void write(PrimitivO output, GeneAndScore obj) {
+            output.writeObject(obj.geneId);
+            output.writeFloat(obj.score);
+        }
+
+        @Override
+        public GeneAndScore read(PrimitivI input) {
+            VDJCGeneId gene = input.readObject(VDJCGeneId.class);
+            float score = input.readFloat();
+            return new GeneAndScore(gene, score);
+        }
+
+        @Override
+        public boolean isReference() {
+            return true;
+        }
+
+        @Override
+        public boolean handlesReference() {
+            return false;
+        }
+    }
+
     public static class VDJCHitSerializer implements Serializer<VDJCHit> {
         @Override
         public void write(PrimitivO output, VDJCHit object) {

@@ -35,7 +35,6 @@ import cc.redberry.pipe.util.CountingOutputPort;
 import com.milaboratory.cli.AppVersionInfo;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.cli.PipelineConfigurationWriter;
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.util.MiXCRDebug;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
@@ -45,7 +44,6 @@ import com.milaboratory.primitivio.blocks.PrimitivIOBlocksUtil;
 import com.milaboratory.primitivio.blocks.PrimitivOBlocks;
 import com.milaboratory.primitivio.blocks.PrimitivOHybrid;
 import com.milaboratory.util.CanReportProgressAndStage;
-import com.milaboratory.util.HashFunctions;
 import com.milaboratory.util.TempFileManager;
 import com.milaboratory.util.io.HasPosition;
 import com.milaboratory.util.sorting.HashSorter;
@@ -60,11 +58,12 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ForkJoinPool;
-import java.util.function.ToIntFunction;
+
+import static com.milaboratory.mixcr.basictypes.FieldCollection.VDJCACloneIdComparator;
+import static com.milaboratory.mixcr.basictypes.FieldCollection.VDJCACloneIdHash;
 
 /**
  * Writer for CLNA file format.
@@ -251,7 +250,7 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
                             : 1 << 28 /* 256 Mb */;
             collator = new HashSorter<>(
                     VDJCAlignments.class,
-                    new CloneIdHash(), CloneIdComparator,
+                    VDJCACloneIdHash, VDJCACloneIdComparator,
                     5, tempFolder, 4, 6,
                     stateBuilder.getOState(), stateBuilder.getIState(),
                     memoryBudget, 1 << 18 /* 256 Kb */);
@@ -435,14 +434,4 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
         finished = true;
         output.close();
     }
-
-    private static class CloneIdHash implements ToIntFunction<VDJCAlignments> {
-        @Override
-        public int applyAsInt(VDJCAlignments value) {
-            return HashFunctions.JenkinWang32shift(value.getCloneIndex());
-        }
-    }
-
-    private static final Comparator<VDJCAlignments> CloneIdComparator =
-            Comparator.comparing(VDJCAlignments::getCloneIndex);
 }

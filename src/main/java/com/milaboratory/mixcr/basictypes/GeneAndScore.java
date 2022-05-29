@@ -1,9 +1,11 @@
-package com.milaboratory.mixcr.assembler;
+package com.milaboratory.mixcr.basictypes;
 
+import com.milaboratory.primitivio.annotations.Serializable;
 import io.repseq.core.VDJCGeneId;
 
 import java.util.Objects;
 
+@Serializable(by = IO.GeneAndScoreSerializer.class)
 public final class GeneAndScore implements Comparable<GeneAndScore> {
     public final VDJCGeneId geneId;
     public final float score;

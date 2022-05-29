@@ -8,7 +8,7 @@ import com.milaboratory.mitool.consensus.ConsensusResult;
 import com.milaboratory.mitool.consensus.GConsensusAssembler;
 import com.milaboratory.mitool.helpers.GroupOP;
 import com.milaboratory.mitool.helpers.PipeKt;
-import com.milaboratory.mixcr.assembler.GeneAndScore;
+import com.milaboratory.mixcr.basictypes.GeneAndScore;
 import com.milaboratory.mixcr.assembler.VDJCGeneAccumulator;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
@@ -42,7 +42,7 @@ public final class PreCloneAssembler {
         return report;
     }
 
-    public List<PreClone> getForNextGroup() {
+    public List<PreCloneWithAlignments> getForNextGroup() {
         GroupOP<VDJCAlignments, TagTuple> grp1 = alignmentsReader1.take();
 
         if (grp1 == null)
@@ -254,19 +254,20 @@ public final class PreCloneAssembler {
                 report.unassignedAlignments.incrementAndGet();
         }
 
-        List<PreClone> result = new ArrayList<>();
+        List<PreCloneWithAlignments> result = new ArrayList<>();
         for (int cIdx = 0; cIdx < numberOfClones; cIdx++) {
             ConsensusResult.SingleConsensus[] cs = consensuses.get(cIdx).consensuses;
             NSequenceWithQuality[] clonalSequence = new NSequenceWithQuality[cs.length];
             for (int i = 0; i < cs.length; i++)
                 clonalSequence[i] = cs[i].consensus;
-            result.add(new PreClone(
-                    idGenerator.incrementAndGet(),
-                    grp1.getKey(),
-                    coreTagCountAggregators[cIdx].createAndDestroy(),
-                    fullTagCountAggregators[cIdx].createAndDestroy(),
-                    clonalSequence,
-                    geneInfos[cIdx],
+            result.add(new PreCloneWithAlignments(
+                    new PreClone(
+                            idGenerator.incrementAndGet(),
+                            grp1.getKey(),
+                            coreTagCountAggregators[cIdx].createAndDestroy(),
+                            fullTagCountAggregators[cIdx].createAndDestroy(),
+                            clonalSequence,
+                            geneInfos[cIdx]),
                     contents[cIdx]
             ));
         }

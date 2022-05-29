@@ -32,7 +32,6 @@ package com.milaboratory.mixcr.basictypes;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.AlignmentHelper;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.assembler.GeneAndScore;
 import com.milaboratory.primitivio.annotations.Serializable;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
