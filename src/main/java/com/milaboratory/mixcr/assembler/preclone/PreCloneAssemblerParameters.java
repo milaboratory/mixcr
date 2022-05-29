@@ -1,4 +1,4 @@
-package com.milaboratory.mixcr.tags;
+package com.milaboratory.mixcr.assembler.preclone;
 
 import com.milaboratory.mitool.consensus.GConsensusAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.HasRelativeMinScore;

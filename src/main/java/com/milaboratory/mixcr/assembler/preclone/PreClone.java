@@ -1,4 +1,4 @@
-package com.milaboratory.mixcr.tags;
+package com.milaboratory.mixcr.assembler.preclone;
 
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.mixcr.assembler.GeneAndScore;

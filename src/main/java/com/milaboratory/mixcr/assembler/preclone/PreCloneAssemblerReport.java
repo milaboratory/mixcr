@@ -1,4 +1,4 @@
-package com.milaboratory.mixcr.tags;
+package com.milaboratory.mixcr.assembler.preclone;
 
 import com.milaboratory.mitool.pattern.search.FormatSettings;
 import com.milaboratory.mitool.pattern.search.ReportKt;

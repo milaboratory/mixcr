@@ -1,4 +1,4 @@
-package com.milaboratory.mixcr.tags;
+package com.milaboratory.mixcr.assembler.preclone;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
