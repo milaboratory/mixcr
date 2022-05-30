@@ -58,8 +58,6 @@ import java.io.PrintStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.time.Duration
-import java.time.Instant
 import java.util.*
 import java.util.function.Function
 import java.util.stream.Collectors
@@ -165,7 +163,6 @@ class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
             SmartProgressReporter.extractProgress(sortedClones, cloneWrappersCount.toLong())
         )
         var currentStepDebug = createDebug(stepNumber)
-        val begin = Instant.now()
         val relatedAllelesMutations = shmTreeBuilder.relatedAllelesMutations()
         CUtils.processAllInParallel(
             shmTreeBuilder.buildClusters(sortedClones),
@@ -179,11 +176,7 @@ class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
             threads
         )
         val clonesWasAddedOnInit = shmTreeBuilder.makeDecisions()
-        Runtime.getRuntime().gc()
-        Thread.sleep(300)
-        println(Duration.between(begin, Instant.now()))
         shmTreeBuilder.makeDecisions()
-//        exitProcess(0)
 
         //TODO check that all trees has minimum common mutations in VJ
         report.onStepEnd(BuildSHMTreeStep.BuildingInitialTrees, clonesWasAddedOnInit, shmTreeBuilder.treesCount())

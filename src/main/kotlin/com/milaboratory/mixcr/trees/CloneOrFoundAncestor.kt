@@ -23,7 +23,7 @@ sealed class CloneOrFoundAncestor(
     val distanceFromGermline: BigDecimal
 ) {
     private val fromGermlineToThisAsMutationsDescription: MutationsDescription = MutationsDescription(
-        fromGermlineToThis.VMutations.mutations.map { (range, mutations) ->
+        fromGermlineToThis.VMutations.mutations.mapValues { (range, mutations) ->
             MutationsWithRange(fromGermlineToThis.VMutations.sequence1, mutations, range)
         },
         MutationsWithRange(
@@ -41,7 +41,7 @@ sealed class CloneOrFoundAncestor(
             fromGermlineToThis.JMutations.partInCDR3.mutations,
             fromGermlineToThis.JMutations.partInCDR3.range
         ),
-        fromGermlineToThis.JMutations.mutations.map { (range, mutations) ->
+        fromGermlineToThis.JMutations.mutations.mapValues { (range, mutations) ->
             MutationsWithRange(fromGermlineToThis.JMutations.sequence1, mutations, range)
         }
     )

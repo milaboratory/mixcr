@@ -6,14 +6,13 @@ import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
-import com.milaboratory.util.RangeMap
 
 sealed interface GeneMutations {
     val sequence1: NucleotideSequence
     val partInCDR3: PartInCDR3
-    val mutations: RangeMap<Mutations<NucleotideSequence>>
+    val mutations: Map<Range, Mutations<NucleotideSequence>>
 
-    fun mutationsCount() = partInCDR3.mutations.size() + mutations.values().sumOf { it.size() }
+    fun mutationsCount() = partInCDR3.mutations.size() + mutations.values.sumOf { it.size() }
     fun combinedMutations(): Mutations<NucleotideSequence>
 
     fun buildPartInCDR3(): NucleotideSequence =
@@ -22,21 +21,21 @@ sealed interface GeneMutations {
 
 data class VGeneMutations(
     override val sequence1: NucleotideSequence,
-    override val mutations: RangeMap<Mutations<NucleotideSequence>>,
+    override val mutations: Map<Range, Mutations<NucleotideSequence>>,
     override val partInCDR3: PartInCDR3
 ) : GeneMutations {
     override fun combinedMutations(): Mutations<NucleotideSequence> =
-        (mutations.values().asSequence().flatMap { it.asSequence() } + partInCDR3.mutations.asSequence())
+        (mutations.values.asSequence().flatMap { it.asSequence() } + partInCDR3.mutations.asSequence())
             .asMutations(NucleotideSequence.ALPHABET)
 }
 
 data class JGeneMutations(
     override val sequence1: NucleotideSequence,
     override val partInCDR3: PartInCDR3,
-    override val mutations: RangeMap<Mutations<NucleotideSequence>>
+    override val mutations: Map<Range, Mutations<NucleotideSequence>>
 ) : GeneMutations {
     override fun combinedMutations(): Mutations<NucleotideSequence> =
-        (partInCDR3.mutations.asSequence() + mutations.values().asSequence().flatMap { it.asSequence() })
+        (partInCDR3.mutations.asSequence() + mutations.values.asSequence().flatMap { it.asSequence() })
             .asMutations(NucleotideSequence.ALPHABET)
 }
 

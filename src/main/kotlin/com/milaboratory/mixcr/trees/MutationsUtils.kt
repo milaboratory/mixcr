@@ -12,9 +12,8 @@ import com.milaboratory.core.sequence.NucleotideAlphabet
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.NucleotideSequence.ALPHABET
 import com.milaboratory.core.sequence.Wildcard
-import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
-import com.milaboratory.util.RangeMap
+import com.milaboratory.mixcr.util.intersection
 import java.util.*
 import kotlin.math.abs
 
@@ -63,7 +62,7 @@ internal object MutationsUtils {
     private fun mutationsBetween(
         firstMutations: GeneMutations,
         secondMutations: GeneMutations
-    ): RangeMap<MutationsWithRange> {
+    ): Map<Range, MutationsWithRange> {
         return fold(firstMutations.mutations, secondMutations.mutations) { base, comparison, range ->
             difference(base, comparison, firstMutations.sequence1, range)
         }
@@ -85,36 +84,21 @@ internal object MutationsUtils {
         )
     }
 
-    fun intersection(from: MutationsWithRange, to: MutationsWithRange): MutationsWithRange {
-        require(from.range == to.range)
-        return MutationsWithRange(
-            from.sequence1,
-            simpleIntersection(from.mutations, to.mutations),
-            from.range
-        )
-    }
+    fun intersection(from: MutationsWithRange, to: MutationsWithRange): MutationsWithRange =
+        from.copy(mutations = from.mutations.intersection(to.mutations))
 
     fun intersection(
-        from: RangeMap<MutationsWithRange>,
-        to: RangeMap<MutationsWithRange>
-    ): RangeMap<MutationsWithRange> = fold(from, to) { a, b, _ ->
-        MutationsWithRange(
-            a.sequence1,
-            simpleIntersection(
-                a.mutations,
-                b.mutations
-            ),
-            a.range
-        )
-    }
+        from: Map<Range, MutationsWithRange>,
+        to: Map<Range, MutationsWithRange>
+    ): Map<Range, MutationsWithRange> = fold(from, to) { a, b, _ -> intersection(a, b) }
 
     fun <R, V1, V2> fold(
-        first: RangeMap<V1>,
-        second: RangeMap<V2>,
+        first: Map<Range, V1>,
+        second: Map<Range, V2>,
         folder: (V1, V2, Range) -> R
-    ): RangeMap<R> {
-        require(first.keySet() == second.keySet())
-        return first.map { (range, value) -> folder(value, second[range], range) }
+    ): Map<Range, R> {
+        require(first.keys == second.keys)
+        return first.mapValues { (range, value) -> folder(value, second[range]!!, range) }
     }
 
     fun positionIfNucleotideWasDeleted(position: Int): Int = when {
@@ -176,17 +160,6 @@ internal object MutationsUtils {
             matrix[wc1.code + wc2.code * alSize] = sumScore
         }
         return matrix
-    }
-
-    //TODO removals and inserts
-    private fun simpleIntersection(
-        first: Mutations<NucleotideSequence>,
-        second: Mutations<NucleotideSequence>
-    ): Mutations<NucleotideSequence> {
-        val mutationsOfFirstAsSet = first.asSequence().toSet()
-        return second.asSequence()
-            .filter { mutation -> mutationsOfFirstAsSet.contains(mutation) }
-            .asMutations(ALPHABET)
     }
 
     //TODO removals and inserts

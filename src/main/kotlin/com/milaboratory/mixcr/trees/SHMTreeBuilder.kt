@@ -38,6 +38,7 @@ import cc.redberry.pipe.blocks.FilteringPort
 import cc.redberry.pipe.util.FlatteningOutputPort
 import com.milaboratory.core.alignment.AlignmentScoring
 import com.milaboratory.core.mutations.Mutations
+import com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
@@ -55,8 +56,6 @@ import io.repseq.core.VDJCGene
 import java.io.IOException
 import java.io.PrintStream
 import java.nio.file.Files
-import java.time.Duration
-import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Consumer
@@ -256,38 +255,6 @@ class SHMTreeBuilder(
         XSV.writeXSVBody(debug, result.nodesDebugInfo, DebugInfo.COLUMNS_FOR_XSV, ";")
     }
 
-    fun zeroStep_monitorMemory(
-        clusterBySameVAndJ: Cluster<CloneWrapper>,
-        debug: PrintStream,
-        relatedAllelesMutations: Map<String, List<Mutations<NucleotideSequence>>>
-    ) {
-        val VJBase = clusterVJBase(clusterBySameVAndJ)
-        if (VJBase.toString() != "VJBase(VGeneName=IGHV3-30*00, JGeneName=IGHJ4*00, CDR3length=42)") {
-            return
-        }
-        val runtime = Runtime.getRuntime()
-        val clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase)
-        repeat(5) {
-            val begin = Instant.now()
-            runtime.gc()
-            Thread.sleep(300)
-            println("begin $VJBase")
-            val usedMemoryBefore = runtime.totalMemory() - runtime.freeMemory()
-            clusterProcessor.buildTreeTopParts(relatedAllelesMutations)
-            val usedMemoryAfter = runtime.totalMemory() - runtime.freeMemory()
-            println(
-                Duration.between(begin, Instant.now())
-                    .toString() + " " + (usedMemoryAfter - usedMemoryBefore) / 1024.0 / 1024.0
-            )
-        }
-        System.exit(0)
-        //        currentTrees.put(VJBase, result.getSnapshots());
-//        result.getDecisions().forEach((cloneId, decision) ->
-//                decisions.computeIfAbsent(cloneId, __ -> new ConcurrentHashMap<>()).put(VJBase, decision)
-//        );
-//        XSV.writeXSVBody(debug, result.getNodesDebugInfo(), DebugInfo.COLUMNS_FOR_XSV, ";");
-    }
-
     fun applyStep(
         clusterBySameVAndJ: Cluster<CloneWrapper>,
         step: BuildSHMTreeStep,
@@ -332,7 +299,8 @@ class SHMTreeBuilder(
             JScoring,
             clusterBySameVAndJ,
             getOrCalculateClusterInfo(VJBase, clusterBySameVAndJ),
-            idGenerators.computeIfAbsent(VJBase) { IdGenerator() }
+            idGenerators.computeIfAbsent(VJBase) { IdGenerator() },
+            VJBase
         )
     }
 
@@ -353,20 +321,19 @@ class SHMTreeBuilder(
         .groupBy { it.geneName }
         .values
         .flatMap { genes ->
-            if (genes.size == 1) {
-                emptyList()
-            } else {
-                genes.map { gene ->
+            when (genes.size) {
+                1 -> emptyList()
+                else -> genes.map { gene ->
                     val currentAlleleMutations = alleleMutations(gene)
                     gene.name to genes
                         .filter { it != gene }
                         .map { currentAlleleMutations.invert().combineWith(alleleMutations(it)) }
+                        .filter { it != EMPTY_NUCLEOTIDE_MUTATIONS }
                 }
             }
         }
         .toMap()
 
-    private fun alleleMutations(gene: VDJCGene): Mutations<NucleotideSequence> {
-        return gene.data.baseSequence.mutations ?: Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
-    }
+    private fun alleleMutations(gene: VDJCGene): Mutations<NucleotideSequence> =
+        gene.data.baseSequence.mutations ?: EMPTY_NUCLEOTIDE_MUTATIONS
 }

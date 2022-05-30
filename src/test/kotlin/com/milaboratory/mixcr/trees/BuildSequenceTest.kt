@@ -1,12 +1,10 @@
 package com.milaboratory.mixcr.trees
 
-import com.google.common.primitives.Bytes
 import com.milaboratory.core.Range
 import com.milaboratory.core.alignment.Aligner
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
-import com.milaboratory.mixcr.trees.MutationsGenerator.generateMutations
 import com.milaboratory.mixcr.trees.MutationsUtils.buildSequence
 import com.milaboratory.mixcr.util.extractAbsoluteMutations
 import org.junit.Assert.assertEquals
@@ -196,12 +194,12 @@ class BuildSequenceTest {
 
     private fun testBuildSequence(seed: Long, print: Boolean): Boolean = try {
         val random = Random(seed)
-        val part1 = generate(random, 5 + random.nextInt(5))
-        val part2 = generate(random, 5 + random.nextInt(5))
-        val part3 = generate(random, 5 + random.nextInt(5))
-        val mutatedPart1: NucleotideSequence = generateMutations(part1, random).mutate(part1)
-        val mutatedPart2: NucleotideSequence = generateMutations(part2, random).mutate(part2)
-        val mutatedPart3: NucleotideSequence = generateMutations(part3, random).mutate(part3)
+        val part1 = random.generateSequence(5 + random.nextInt(5))
+        val part2 = random.generateSequence(5 + random.nextInt(5))
+        val part3 = random.generateSequence(5 + random.nextInt(5))
+        val mutatedPart1: NucleotideSequence = random.generateMutations(part1).mutate(part1)
+        val mutatedPart2: NucleotideSequence = random.generateMutations(part2).mutate(part2)
+        val mutatedPart3: NucleotideSequence = random.generateMutations(part3).mutate(part3)
         val parent = NucleotideSequence.ALPHABET.createBuilder()
             .append(part1)
             .append(part2)
@@ -280,11 +278,11 @@ class BuildSequenceTest {
 
     private fun testBuildSequencesByCuttingMutations(seed: Long, print: Boolean): Boolean = try {
         val random = Random(seed)
-        val parent = generate(random, 15)
+        val parent = random.generateSequence(15)
         val range1 = Range(0, 5)
         val range2 = Range(5, 10)
         val range3 = Range(10, 15)
-        val mutations: Mutations<NucleotideSequence> = generateMutations(parent, random)
+        val mutations: Mutations<NucleotideSequence> = random.generateMutations(parent)
         val child = mutations.mutate(parent)
         val mutatedPart1 = buildSequence(parent, mutations.extractAbsoluteMutations(range1, true), range1)
         val mutatedPart2 = buildSequence(parent, mutations.extractAbsoluteMutations(range2, false), range2)
@@ -314,22 +312,4 @@ class BuildSequenceTest {
         }
         true
     }
-
-    private fun generate(random: Random, size: Int): NucleotideSequence {
-        val chars = IntStream.range(0, size)
-            .mapToObj { random.nextInt(4).toByte() }
-            .collect(Collectors.toList())
-        return NucleotideSequence(Bytes.toArray(chars))
-    }
-
-    private fun buildSequence(
-        sequence1: NucleotideSequence,
-        mutations: Mutations<NucleotideSequence>,
-        range: Range,
-        isIncludeFirstInserts: Boolean
-    ): NucleotideSequence = buildSequence(
-        sequence1,
-        mutations.extractAbsoluteMutations(range, isIncludeFirstInserts),
-        range
-    )
 }
