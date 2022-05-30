@@ -97,6 +97,10 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
         } catch (Throwable t) {
             throwValidationException("Illegal downsampling string: " + defaultDownsampling);
         }
+        if (preprocOut != null && !preprocOut.endsWith(".tsv") && !preprocOut.endsWith(".csv"))
+            throwValidationException("--preproc-tables: table name should ends with .csv or .tsv");
+        if (tablesOut != null && !tablesOut.endsWith(".tsv") && !tablesOut.endsWith(".csv"))
+            throwValidationException("--tables: table name should ends with .csv or .tsv");
         if (metadata != null && !metadata.endsWith(".csv") && !metadata.endsWith(".tsv"))
             throwValidationException("Metadata should be .csv or .tsv");
         if (metadata != null) {
