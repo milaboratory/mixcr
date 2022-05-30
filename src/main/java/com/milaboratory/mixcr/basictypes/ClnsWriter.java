@@ -112,7 +112,7 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
             o.writeObject(alignmentParameters);
             o.writeObject(assemblerParameters);
             o.writeObject(ordering);
-//            o.writeInt(numberOfClones);
+            o.writeInt(numberOfClones);
             Util.writeMap(libraries.stream().collect(Collectors.toMap(VDJCLibrary::getName, VDJCLibrary::getData)), o);
 
             IOUtil.stdVDJCPrimitivOStateInit(o, genes, featureToAlign);

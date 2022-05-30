@@ -1,14 +1,8 @@
-package com.milaboratory.mixcr.cli;
+package com.milaboratory.mixcr.cli
 
-public enum BuildSHMTreeStep {
+enum class BuildSHMTreeStep(val forPrint: String) {
     BuildingInitialTrees("Building initial trees"),
     AttachClonesByDistanceChange("Attaching clones by distance change"),
     CombineTrees("Combining trees"),
     AttachClonesByNDN("Attaching clones by NDN");
-
-    public final String forPrint;
-
-    BuildSHMTreeStep(String forPrint) {
-        this.forPrint = forPrint;
-    }
 }

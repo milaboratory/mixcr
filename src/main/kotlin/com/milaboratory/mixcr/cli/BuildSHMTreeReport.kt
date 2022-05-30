@@ -14,6 +14,7 @@ import com.milaboratory.miplots.toSvg
 import com.milaboratory.miplots.writePDF
 import com.milaboratory.mixcr.trees.DebugInfo
 import com.milaboratory.mixcr.util.XSV
+import com.milaboratory.util.ReportHelper
 import jetbrains.letsPlot.geom.geomBar
 import jetbrains.letsPlot.geom.geomHistogram
 import jetbrains.letsPlot.geom.geomVLine
@@ -128,12 +129,6 @@ class BuildSHMTreeReport : AbstractCommandReport() {
         )
     }
 
-    data class PageDescription(
-        val title: String,
-        val field: StepResult.Stats.() -> Collection<Any>,
-        val plotBuilder: StepResult.Stats.(Plot) -> Plot = { plot -> plot + ggsize(500, 250) + geomBar() }
-    )
-
     fun writePdfReport(output: Path) {
         val pages = mutableListOf<ByteArray>()
         val commonPageDescriptions = listOf(
@@ -184,6 +179,21 @@ class BuildSHMTreeReport : AbstractCommandReport() {
         writePDF(output, pages)
     }
 
+    override fun writeReport(helper: ReportHelper) {
+        for (i in stepResults.indices) {
+            val stepResult = stepResults[i]
+            helper.writeField("step ${i + 1}", stepResult.step.forPrint)
+            if (stepResult.step != BuildSHMTreeStep.CombineTrees) {
+                helper.writeField("Clones was added", stepResult.clonesWasAdded)
+            }
+            if (stepResult.step == BuildSHMTreeStep.BuildingInitialTrees) {
+                helper.writeField("Trees created", stepResult.treesCountDelta)
+            } else if (stepResult.step == BuildSHMTreeStep.CombineTrees) {
+                helper.writeField("Trees combined", -stepResult.treesCountDelta)
+            }
+        }
+    }
+
     private fun printPages(
         pageDescriptionsForNotPublic: List<PageDescription>,
         pagesGroupTitle: String,
@@ -219,20 +229,11 @@ class BuildSHMTreeReport : AbstractCommandReport() {
         bs.toByteArray()
     }
 
-    override fun writeReport(helper: ReportHelper) {
-        for (i in stepResults.indices) {
-            val stepResult = stepResults[i]
-            helper.writeField("step ${i + 1}", stepResult.step.forPrint)
-            if (stepResult.step != BuildSHMTreeStep.CombineTrees) {
-                helper.writeField("Clones was added", stepResult.clonesWasAdded)
-            }
-            if (stepResult.step == BuildSHMTreeStep.BuildingInitialTrees) {
-                helper.writeField("Trees created", stepResult.treesCountDelta)
-            } else if (stepResult.step == BuildSHMTreeStep.CombineTrees) {
-                helper.writeField("Trees combined", -stepResult.treesCountDelta)
-            }
-        }
-    }
+    data class PageDescription(
+        val title: String,
+        val field: StepResult.Stats.() -> Collection<Any>,
+        val plotBuilder: StepResult.Stats.(Plot) -> Plot = { plot -> plot + ggsize(500, 250) + geomBar() }
+    )
 
     class StepResult(
         @get:JsonProperty("step") val step: BuildSHMTreeStep,

@@ -48,6 +48,7 @@ import com.milaboratory.mixcr.trees.SHMTreeBuilderParametersPresets
 import com.milaboratory.mixcr.trees.Tree.NodeWithParent
 import com.milaboratory.mixcr.trees.TreeWithMeta
 import com.milaboratory.mixcr.util.XSV
+import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.VDJCLibraryRegistry
 import org.apache.commons.io.FilenameUtils
@@ -251,8 +252,8 @@ class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
             report.addStatsForStep(i, treesBeforeDecisions, treesAfterDecisions)
         }
         println("============= Report ==============")
-        Util.writeReportToStdout(report)
-        Util.writeJsonReport(getReportFileName(), report)
+        ReportUtil.writeReportToStdout(report)
+        ReportUtil.writeJsonReport(getReportFileName(), report)
         if (reportPdf != null) {
             report.writePdfReport(Paths.get(reportPdf!!))
         }

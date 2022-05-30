@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -103,8 +104,14 @@ public class CommandDownsample extends ACommandWithOutputMiXCR {
 
                 ClonotypeDataset r = datasets.get(i);
                 clnsWriter.writeHeader(null,
-                        r.getAlignerParameters(), r.getAssemblerParameters(),
-                        r.ordering(), r.getUsedGenes(), r.getAlignerParameters(), downsampled.size());
+                        r.getAlignerParameters(),
+                        r.getAssemblerParameters(),
+                        r.ordering(),
+                        r.getUsedGenes(),
+                        r.getAlignerParameters(),
+                        Collections.emptyList(),
+                        downsampled.size()
+                );
 
                 CUtils.drain(CUtils.asOutputPort(downsampled), clnsWriter.cloneWriter());
             }

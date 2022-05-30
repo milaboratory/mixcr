@@ -31,6 +31,7 @@ package com.milaboratory.mixcr.postanalysis.overlap;
 
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.SimpleProcessorWrapper;
+import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
@@ -180,6 +181,11 @@ public final class OverlapUtil {
             @Override
             public CloneAssemblerParameters getAssemblerParameters() {
                 return inner.getAssemblerParameters();
+            }
+
+            @Override
+            public PipelineConfiguration getPipelineConfiguration() {
+                return inner.getPipelineConfiguration();
             }
         };
     }

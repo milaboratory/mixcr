@@ -125,8 +125,7 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
             alignerParameters = i.readObject(VDJCAlignerParameters.class);
             assemblerParameters = i.readObject(CloneAssemblerParameters.class);
             ordering = i.readObject(VDJCSProperties.CloneOrdering.class);
-//            numberOfClones = i.readInt();
-            numberOfClones = 0;
+            numberOfClones = i.readInt();
             if (readLibraries) {
                 Map<String, VDJCLibraryData> liberalise = Util.readMap(i, String.class, VDJCLibraryData.class);
                 liberalise.forEach((name, libraryData) -> libraryRegistry.registerLibrary(null, name, libraryData));
@@ -170,11 +169,6 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
     @Override
     public VDJCSProperties.CloneOrdering ordering() {
         return ordering;
-    }
-
-    @Override
-    public List<VDJCGene> getGenes() {
-        return genes;
     }
 
     @Override

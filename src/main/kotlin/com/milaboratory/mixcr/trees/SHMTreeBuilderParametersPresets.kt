@@ -41,7 +41,7 @@ object SHMTreeBuilderParametersPresets {
                     SHMTreeBuilderParameters::class.java.classLoader.getResourceAsStream("parameters/shm_tree_parameters.json")
                 val typeRef: TypeReference<HashMap<String, SHMTreeBuilderParameters>> =
                     object : TypeReference<HashMap<String, SHMTreeBuilderParameters>>() {}
-                knownParameters = GlobalObjectMappers.ONE_LINE.readValue(`is`, typeRef)
+                knownParameters = GlobalObjectMappers.getOneLine().readValue(`is`, typeRef)
             }
         }
     }

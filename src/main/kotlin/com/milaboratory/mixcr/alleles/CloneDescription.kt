@@ -3,7 +3,7 @@ package com.milaboratory.mixcr.alleles
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
 
-class CloneDescription private constructor(
+data class CloneDescription(
     val mutations: Mutations<NucleotideSequence>,
     val clusterIdentity: ClusterIdentity
 ) {

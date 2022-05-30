@@ -107,6 +107,7 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     implementation(testFixtures("com.milaboratory:milib:$milibVersion"))
     testImplementation("org.mockito:mockito-all:1.10.19")
+    testImplementation("io.kotest:kotest-assertions-core:5.3.0")
 }
 
 val writeBuildProperties by tasks.registering(WriteProperties::class) {

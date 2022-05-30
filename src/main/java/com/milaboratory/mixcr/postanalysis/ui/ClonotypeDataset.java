@@ -1,6 +1,7 @@
 package com.milaboratory.mixcr.postanalysis.ui;
 
 import cc.redberry.pipe.OutputPortCloseable;
+import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneReader;
@@ -101,5 +102,10 @@ public class ClonotypeDataset implements Dataset<Clone>, CloneReader {
     @Override
     public CloneAssemblerParameters getAssemblerParameters() {
         return reader.getAssemblerParameters();
+    }
+
+    @Override
+    public PipelineConfiguration getPipelineConfiguration() {
+        return reader.getPipelineConfiguration();
     }
 }

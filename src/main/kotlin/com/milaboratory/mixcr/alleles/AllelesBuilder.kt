@@ -24,6 +24,8 @@ import com.milaboratory.util.sorting.HashSorter
 import io.repseq.core.BaseSequence
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
+import io.repseq.core.GeneType.Joining
+import io.repseq.core.GeneType.Variable
 import io.repseq.core.ReferencePoint
 import io.repseq.core.VDJCGene
 import io.repseq.dto.VDJCGeneData
@@ -31,6 +33,7 @@ import java.nio.file.Files
 import java.util.*
 import java.util.function.Consumer
 import java.util.function.Supplier
+import kotlin.collections.set
 
 class AllelesBuilder(
     private val parameters: FindAllelesParameters,
@@ -45,7 +48,7 @@ class AllelesBuilder(
         datasets.forEach(Consumer { dataset: CloneReader ->
             IOUtil.registerGeneReferences(
                 stateBuilder,
-                dataset.genes,
+                dataset.usedGenes,
                 dataset.alignerParameters
             )
         })
@@ -85,8 +88,8 @@ class AllelesBuilder(
             )
         }
         return SortedClonotypes(
-            sorterSupplier.apply(GeneType.Variable).port(clonesSupplier.get()),
-            sorterSupplier.apply(GeneType.Joining).port(clonesSupplier.get())
+            sorterSupplier.apply(Variable).port(clonesSupplier.get()),
+            sorterSupplier.apply(Joining).port(clonesSupplier.get())
         )
     }
 
@@ -192,14 +195,14 @@ class AllelesBuilder(
     }
 
     private fun complimentaryGene(geneType: GeneType): GeneType = when (geneType) {
-        GeneType.Variable -> GeneType.Joining
-        GeneType.Joining -> GeneType.Variable
+        Variable -> Joining
+        Joining -> Variable
         else -> throw IllegalArgumentException()
     }
 
     private fun scoring(geneType: GeneType): AlignmentScoring<NucleotideSequence> = when (geneType) {
-        GeneType.Variable -> VScoring
-        GeneType.Joining -> JScoring
+        Variable -> VScoring
+        Joining -> JScoring
         else -> throw IllegalArgumentException()
     }
 
@@ -252,8 +255,8 @@ class AllelesBuilder(
         private val sortedByJ: OutputPortCloseable<Clone>
     ) {
         fun getSortedBy(geneType: GeneType): OutputPortCloseable<Clone> = when (geneType) {
-            GeneType.Variable -> sortedByV
-            GeneType.Joining -> sortedByJ
+            Variable -> sortedByV
+            Joining -> sortedByJ
             else -> throw IllegalArgumentException()
         }
     }

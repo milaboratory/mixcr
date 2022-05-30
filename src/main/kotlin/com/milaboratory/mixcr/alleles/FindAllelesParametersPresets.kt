@@ -41,7 +41,7 @@ object FindAllelesParametersPresets {
                     FindAllelesParameters::class.java.classLoader.getResourceAsStream("parameters/find_alleles_parameters.json")
                 val typeRef: TypeReference<HashMap<String, FindAllelesParameters>> =
                     object : TypeReference<HashMap<String, FindAllelesParameters>>() {}
-                knownParameters = GlobalObjectMappers.ONE_LINE.readValue(`is`, typeRef)
+                knownParameters = GlobalObjectMappers.getOneLine().readValue(`is`, typeRef)
             }
         }
     }

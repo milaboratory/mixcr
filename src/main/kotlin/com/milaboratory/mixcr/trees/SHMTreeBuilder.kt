@@ -95,7 +95,7 @@ class SHMTreeBuilder(
         datasets.forEach(Consumer { dataset: CloneReader ->
             IOUtil.registerGeneReferences(
                 stateBuilder,
-                dataset.genes,
+                dataset.usedGenes,
                 dataset.alignerParameters
             )
         })
@@ -317,7 +317,7 @@ class SHMTreeBuilder(
     }
 
     fun relatedAllelesMutations(): Map<String, List<Mutations<NucleotideSequence>>> = datasets
-        .flatMap { it.genes }
+        .flatMap { it.usedGenes }
         .groupBy { it.geneName }
         .values
         .flatMap { genes ->

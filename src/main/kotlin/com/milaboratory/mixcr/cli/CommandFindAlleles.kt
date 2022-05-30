@@ -47,12 +47,16 @@ import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.trees.MutationsUtils.positionIfNucleotideWasDeleted
-import com.milaboratory.mixcr.util.Cluster
 import com.milaboratory.mixcr.util.XSV.writeXSVBody
 import com.milaboratory.mixcr.util.XSV.writeXSVHeaders
 import com.milaboratory.util.GlobalObjectMappers
 import gnu.trove.map.hash.TObjectFloatHashMap
 import io.repseq.core.GeneType
+import io.repseq.core.GeneType.Constant
+import io.repseq.core.GeneType.Diversity
+import io.repseq.core.GeneType.Joining
+import io.repseq.core.GeneType.VDJC_REFERENCE
+import io.repseq.core.GeneType.Variable
 import io.repseq.core.VDJCGene
 import io.repseq.core.VDJCGeneId
 import io.repseq.core.VDJCLibrary
@@ -68,6 +72,9 @@ import java.io.PrintStream
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.set
 
 @CommandLine.Command(
     name = CommandFindAlleles.FIND_ALLELES_COMMAND_NAME,
@@ -160,8 +167,8 @@ Resulted outputs must be uniq"""]
         val allelesBuilder = AllelesBuilder(findAllelesParameters!!, cloneReaders)
         val sortedClonotypes = allelesBuilder.sortClonotypes()
         val alleles = (
-            buildAlleles(allelesBuilder, sortedClonotypes, GeneType.Variable) +
-                buildAlleles(allelesBuilder, sortedClonotypes, GeneType.Joining)
+            buildAlleles(allelesBuilder, sortedClonotypes, Variable) +
+                buildAlleles(allelesBuilder, sortedClonotypes, Joining)
             ).toMap().toMutableMap()
         val usedGenes = collectUsedGenes(cloneReaders, alleles)
         registerNotProcessedVJ(alleles, usedGenes)
@@ -169,7 +176,7 @@ Resulted outputs must be uniq"""]
         if (libraryOutput != null) {
             val libraryOutputFile = File(libraryOutput!!)
             libraryOutputFile.parentFile.mkdirs()
-            GlobalObjectMappers.ONE_LINE.writeValue(libraryOutputFile, resultLibrary.data)
+            GlobalObjectMappers.getOneLine().writeValue(libraryOutputFile, resultLibrary.data)
         }
         if (allelesMutationsOutput != null) {
             File(allelesMutationsOutput!!).parentFile.mkdirs()
@@ -235,7 +242,7 @@ Resulted outputs must be uniq"""]
         cloneReaders: List<CloneReader>,
         usedGenes: Map<String, VDJCGeneData>
     ): VDJCLibrary {
-        val originalLibrary = anyClone(cloneReaders).getBestHit(GeneType.Variable).gene.parentLibrary
+        val originalLibrary = anyClone(cloneReaders).getBestHit(Variable).gene.parentLibrary
         val resultLibrary = VDJCLibrary(
             VDJCLibraryData(originalLibrary.data, ArrayList(usedGenes.values)),
             originalLibrary.name + "_with_found_alleles",
@@ -251,7 +258,7 @@ Resulted outputs must be uniq"""]
         usedGenes: Map<String, VDJCGeneData>
     ) {
         usedGenes.forEach { (name, geneData) ->
-            if (geneData.geneType == GeneType.Joining || geneData.geneType == GeneType.Variable) {
+            if (geneData.geneType == Joining || geneData.geneType == Variable) {
                 //if gene wasn't processed in alleles search, then register it as a single allele
                 if (!alleles.containsKey(name)) {
                     alleles[geneData.name] = listOf(geneData)
@@ -271,7 +278,7 @@ Resulted outputs must be uniq"""]
         for (cloneReader in cloneReaders) {
             cloneReader.readClones().use { port ->
                 CUtils.it(port).forEach { clone ->
-                    for (gt in GeneType.VDJC_REFERENCE) {
+                    for (gt in VDJC_REFERENCE) {
                         for (hit in clone.getHits(gt)) {
                             val geneName = hit.gene.name
                             if (geneName !in alleles && geneName !in usedGenes) {
@@ -315,7 +322,7 @@ Resulted outputs must be uniq"""]
             GeneType::class.java
         )
         //copy D and C
-        for (gt in listOf(GeneType.Diversity, GeneType.Constant)) {
+        for (gt in listOf(Diversity, Constant)) {
             val scores = TObjectFloatHashMap<VDJCGeneId>()
             for (hit in clone.getHits(gt)) {
                 val mappedGeneId = VDJCGeneId(resultLibrary.libraryId, hit.gene.name)
@@ -323,7 +330,7 @@ Resulted outputs must be uniq"""]
             }
             originalGeneScores[gt] = scores
         }
-        for (gt in listOf(GeneType.Variable, GeneType.Joining)) {
+        for (gt in listOf(Variable, Joining)) {
             val scores = TObjectFloatHashMap<VDJCGeneId>()
             for (hit in clone.getHits(gt)) {
                 for (foundAlleleId in allelesMapping[hit.gene.name]!!) {
@@ -359,7 +366,7 @@ Resulted outputs must be uniq"""]
         val clusters = allelesBuilder.buildClusters(sortedClones, geneType)
         val result = CUtils.orderedParallelProcessor(
             clusters,
-            { cluster: Cluster<Clone> ->
+            { cluster ->
                 val geneId = cluster.cluster[0].getBestHit(geneType).gene.name
                 val resultGenes = allelesBuilder.allelesGeneData(cluster, geneType)
                 geneId to resultGenes
