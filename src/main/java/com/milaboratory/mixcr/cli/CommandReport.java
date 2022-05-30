@@ -30,6 +30,7 @@
 package com.milaboratory.mixcr.cli;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.milaboratory.util.Report;
 
 public interface CommandReport extends Report {
     /**

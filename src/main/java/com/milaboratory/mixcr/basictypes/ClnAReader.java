@@ -85,7 +85,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
     final CloneAssemblerParameters assemblerParameters;
     final VDJCSProperties.CloneOrdering ordering;
 
-    final List<VDJCGene> genes;
+    final List<VDJCGene> usedGenes;
 
     final int numberOfClones;
 
@@ -165,7 +165,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
             this.alignerParameters = pi.readObject(VDJCAlignerParameters.class);
             this.assemblerParameters = pi.readObject(CloneAssemblerParameters.class);
             this.ordering = pi.readObject(VDJCSProperties.CloneOrdering.class);
-            this.genes = IOUtil.stdVDJCPrimitivIStateInit(pi, this.alignerParameters, libraryRegistry);
+            this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(pi, this.alignerParameters, libraryRegistry);
         }
     }
 
@@ -215,8 +215,8 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
     }
 
     @Override
-    public List<VDJCGene> getGenes() {
-        return genes;
+    public List<VDJCGene> getUsedGenes() {
+        return usedGenes;
     }
 
     /**
@@ -256,7 +256,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
                 clones.add(reader.take());
         }
 
-        return new CloneSet(clones, genes, alignerParameters, assemblerParameters, ordering);
+        return new CloneSet(clones, usedGenes, alignerParameters, assemblerParameters, ordering);
     }
 
     /**
@@ -264,7 +264,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
      */
     @Override
     public OutputPortCloseable<Clone> readClones() {
-        return input.beginPrimitivIBlocks(Clone.class);
+        return input.beginRandomAccessPrimitivIBlocks(Clone.class, firstClonePosition);
     }
 
     /**
@@ -314,7 +314,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
 
         CloneAlignmentsPort() {
             this.clones = input.beginRandomAccessPrimitivIBlocks(Clone.class, firstClonePosition);
-            this.fakeCloneSet = new CloneSet(Collections.EMPTY_LIST, genes, alignerParameters, assemblerParameters, ordering);
+            this.fakeCloneSet = new CloneSet(Collections.EMPTY_LIST, usedGenes, alignerParameters, assemblerParameters, ordering);
         }
 
         @Override

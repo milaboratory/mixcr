@@ -28,7 +28,7 @@ public class OverlapCharacteristic<T> extends Characteristic<OverlapKey<OverlapT
                                  @JsonProperty("overlapTypes") OverlapType[] overlapTypes,
                                  @JsonProperty("i1") int i1,
                                  @JsonProperty("i2") int i2) {
-        super(name, preprocessor, __ -> 1L);
+        super(name, preprocessor, new WeightFunctions.NoWeight<>());
         this.overlapTypes = overlapTypes;
         this.i1 = i1;
         this.i2 = i2;

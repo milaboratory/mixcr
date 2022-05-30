@@ -2,5 +2,9 @@
 
 script_dir=$(dirname "${0}")
 
+cd "${script_dir}/../.." || exit
+
+#export MI_LICENSE_DEBUG=MI_LICENSE_DEBUG
+
 # Run integration tests
-"${script_dir}/../../itests.sh"
+./itests.sh test

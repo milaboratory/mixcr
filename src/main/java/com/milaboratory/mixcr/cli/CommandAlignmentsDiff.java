@@ -34,6 +34,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriterI;
 import com.milaboratory.mixcr.util.VDJCAlignmentsDifferenceReader;
+import com.milaboratory.util.ReportHelper;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
@@ -153,8 +154,8 @@ public class CommandAlignmentsDiff extends ACommandWithOutputMiXCR {
             report.println("First  file: " + in1);
             report.println("Second file: " + in2);
             report.println("Completely same reads: " + same);
-            report.println("Aligned reads present only in the FIRST  file: " + onlyIn1 + " (" + Util.PERCENT_FORMAT.format(100. * onlyIn1 / reader1.getNumberOfReads()) + ")%");
-            report.println("Aligned reads present only in the SECOND file: " + onlyIn2 + " (" + Util.PERCENT_FORMAT.format(100. * onlyIn2 / reader2.getNumberOfReads()) + ")%");
+            report.println("Aligned reads present only in the FIRST  file: " + onlyIn1 + " (" + ReportHelper.PERCENT_FORMAT.format(100. * onlyIn1 / reader1.getNumberOfReads()) + ")%");
+            report.println("Aligned reads present only in the SECOND file: " + onlyIn2 + " (" + ReportHelper.PERCENT_FORMAT.format(100. * onlyIn2 / reader2.getNumberOfReads()) + ")%");
             report.println("Total number of different reads: " + justDiff);
             report.println("Reads with not same " + geneFeatureToMatch + ": " + diffFeature);
 

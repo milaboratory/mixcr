@@ -27,10 +27,13 @@ public class SelectTopTest {
         RandomDataGenerator rng = new RandomDataGenerator(new Well512a());
         int nIterations = 10;
         for (int i = 0; i < nIterations; i++) {
-            TestDataset<TestObject> dataset = rndDataset(rng, 10000);
-            double total = 0;
+            TestDataset<TestObject> dataset = TestDataset.generateDataset(rng,
+                    10000,
+                    r -> r.nextInt(10, 1000),
+                    r -> r.nextUniform(1, 50));
+            double sumWeight = 0;
             for (TestObject d : dataset) {
-                total += d.weight;
+                sumWeight += d.weight;
             }
 
             double topFraction = 0.5 + (1.0 * i / nIterations / 10);
@@ -40,41 +43,43 @@ public class SelectTopTest {
             list.sort(Comparator.comparing(t -> -t.weight));
             double expectedSumCum = 0;
             double expectedSumFixed = 0;
-            boolean sumDone = false;
             int counter = 0;
+            double roundErr = 0.0;
             for (TestObject o : list) {
-                if (!sumDone && expectedSumCum < topFraction * total)
+                if (expectedSumCum < topFraction * sumWeight) {
                     expectedSumCum += o.weight;
-                else
-                    sumDone = true;
+                }
 
                 if (counter < nTop) {
                     expectedSumFixed += o.weight;
                     ++counter;
                 }
+                roundErr += Math.abs(SelectTop.round(o.weight) - o.weight);
 
-                if (expectedSumCum > topFraction * total && counter > nTop)
+                if (expectedSumCum > topFraction * sumWeight && counter > nTop)
                     break;
+
             }
+            Assert.assertTrue(roundErr / expectedSumCum < 3e-2);
 
             SelectTop<TestObject> cumulativeTopProc = new SelectTop<>(o -> o.weight, topFraction, -1, "");
-            Dataset<TestObject> topCumulative = SetPreprocessorFactory.processDatasets(cumulativeTopProc, dataset)[0];
+            Dataset<TestObject> topCumulative = SetPreprocessor.processDatasets(cumulativeTopProc, dataset)[0];
 
-            double actualCum = 0;
+            double actualSumCum = 0;
             for (TestObject o : CUtils.it(topCumulative.mkElementsPort())) {
-                actualCum += o.weight;
+                actualSumCum += o.weight;
             }
-            Assert.assertEquals(expectedSumCum, actualCum, 1e-5);
+            Assert.assertEquals(expectedSumCum, actualSumCum, roundErr);
 
             SelectTop<TestObject> fixedTopProc = new SelectTop<>(o -> o.weight, Double.NaN, nTop, "");
-            Dataset<TestObject> topFixed = SetPreprocessorFactory.processDatasets(fixedTopProc, dataset)[0];
+            Dataset<TestObject> topFixed = SetPreprocessor.processDatasets(fixedTopProc, dataset)[0];
             double actualFixed = 0;
             int actualNTop = 0;
             for (TestObject o : CUtils.it(topFixed.mkElementsPort())) {
                 actualFixed += o.weight;
                 ++actualNTop;
             }
-            Assert.assertEquals(expectedSumFixed, actualFixed, 1e-5);
+            Assert.assertEquals(expectedSumFixed, actualFixed, roundErr);
             Assert.assertEquals(nTop, actualNTop);
         }
     }
@@ -135,23 +140,13 @@ public class SelectTopTest {
         list.sort(Comparator.comparing(t -> -t.weight));
 
         SelectTop<TestObject> cumulativeTopProc = new SelectTop<>(o -> o.weight, topFraction, -1, "");
-        Dataset<TestObject> topCumulative = SetPreprocessorFactory.processDatasets(cumulativeTopProc, dataset)[0];
+        Dataset<TestObject> topCumulative = SetPreprocessor.processDatasets(cumulativeTopProc, dataset)[0];
 
         double actualCum = 0;
         for (TestObject o : CUtils.it(topCumulative.mkElementsPort())) {
             actualCum += o.weight;
         }
         Assert.assertEquals(expectedSum, actualCum, 1e-5);
-    }
-
-    public static TestDataset<TestObject> rndDataset(RandomDataGenerator rng, int size) {
-        TestObject[] r = new TestObject[size];
-        for (int i = 0; i < size; i++) {
-            r[i] = new TestObject(
-                    rng.nextUniform(0, 1),
-                    Math.round(rng.nextUniform(1, 100)));
-        }
-        return new TestDataset<>(Arrays.asList(r));
     }
 
     @Test

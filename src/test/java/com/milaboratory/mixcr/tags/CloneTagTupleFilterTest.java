@@ -11,6 +11,6 @@ public class CloneTagTupleFilterTest {
 
     @Test
     public void name() throws JsonProcessingException {
-        System.out.println(GlobalObjectMappers.PRETTY.writeValueAsString(new CloneTagTupleFilter(0, 0, 0, 0, 0, 0, 0.0 / 0.0, 0)));
+        System.out.println(GlobalObjectMappers.getPretty().writeValueAsString(new CloneTagTupleFilter(0, 0, 0, 0, 0, 0, 0.0 / 0.0, 0)));
     }
 }

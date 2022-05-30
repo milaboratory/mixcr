@@ -56,9 +56,9 @@ public class CloneAssemblerParametersTest {
                 new CloneClusteringParameters(2, 1,-1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
                 factoryParameters, true, true, false, 0.4, 2.0, 2.0, true, (byte) 20, .8, "2", (byte) 15);
 
-        String str = GlobalObjectMappers.PRETTY.writeValueAsString(params);
+        String str = GlobalObjectMappers.getPretty().writeValueAsString(params);
         //System.out.println(str);
-        CloneAssemblerParameters deser = GlobalObjectMappers.PRETTY.readValue(str, CloneAssemblerParameters.class);
+        CloneAssemblerParameters deser = GlobalObjectMappers.getPretty().readValue(str, CloneAssemblerParameters.class);
         assertEquals(params, deser);
         CloneAssemblerParameters clone = deser.clone();
         assertEquals(params, clone);
@@ -84,9 +84,9 @@ public class CloneAssemblerParametersTest {
                 new CloneClusteringParameters(2, 1, -1,TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
                 factoryParameters, true, true, false, 0.4, 2.0, 2.0, true, (byte) 20, .8, "2of6", (byte) 15);
 
-        String str = GlobalObjectMappers.PRETTY.writeValueAsString(params);
+        String str = GlobalObjectMappers.getPretty().writeValueAsString(params);
         //System.out.println(str);
-        CloneAssemblerParameters deser = GlobalObjectMappers.PRETTY.readValue(str, CloneAssemblerParameters.class);
+        CloneAssemblerParameters deser = GlobalObjectMappers.getPretty().readValue(str, CloneAssemblerParameters.class);
         assertEquals(params, deser);
         CloneAssemblerParameters clone = deser.clone();
         assertEquals(params, clone);

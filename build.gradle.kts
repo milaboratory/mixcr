@@ -1,36 +1,39 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.palantir.gradle.gitversion.VersionDetails
 import groovy.lang.Closure
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.InetAddress
 
-gradle.startParameter.excludedTaskNames += listOf("assembleDist", "assembleShadowDist", "distTar", "distZip", "installDist", "installShadowDist", "shadowDistTar", "shadowDistZip")
+gradle.startParameter.excludedTaskNames += listOf(
+    "assembleDist",
+    "assembleShadowDist",
+    "distTar",
+    "distZip",
+    "installDist",
+    "installShadowDist",
+    "shadowDistTar",
+    "shadowDistZip"
+)
+
+val dataframeVersion = "0.8.0-rc-8"
 
 plugins {
     `java-library`
     application
     `maven-publish`
-    id("com.palantir.git-version") version "0.13.0"
+    kotlin("jvm") version "1.6.21"
+    id("org.jetbrains.kotlin.plugin.dataframe") version "0.8.0-rc-8"
+    id("com.palantir.git-version") version "0.13.0" // don't upgrade, latest version that runs on Java 8
     id("com.github.johnrengelman.shadow") version "7.1.2"
-    kotlin("jvm") version "1.6.10"
-    id("org.jetbrains.kotlin.plugin.dataframe") version "0.8.0-rc-7"
 }
-
 // Make IDE aware of the generated code:
 kotlin.sourceSets.getByName("main").kotlin.srcDir("build/generated/ksp/main/kotlin/")
+
 
 val miRepoAccessKeyId: String? by project
 val miRepoSecretAccessKey: String? by project
 
-// val miGitHubMavenUser: String by project
-// val miGitHubMavenToken: String by project
-
 val versionDetails: Closure<VersionDetails> by extra
 val gitDetails = versionDetails()
-
-group = "com.milaboratory"
-version = if (version != "unspecified") version else ""
-description = "MiXCR"
 
 fun boolProperty(name: String): Boolean {
     return ((properties[name] as String?) ?: "false").toBoolean()
@@ -41,30 +44,32 @@ val isRelease = boolProperty("mi-release")
 
 val longTests: String? by project
 val miCiStage = properties["mi-ci-stage"] as String?
+description = "MiXCR"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_1_8
     withSourcesJar()
     withJavadocJar()
-}
-
-tasks.withType<JavaCompile> {
-    options.encoding = "UTF-8"
-}
-
-tasks.withType<KotlinCompile> { // this affects to all kotlinCompilation tasks
-    kotlinOptions.jvmTarget = "11"
 }
 
 application {
     mainClass.set("com.milaboratory.mixcr.cli.Main")
 }
 
+tasks.withType<JavaCompile> {
+    options.encoding = "UTF-8"
+}
+
 tasks.withType<Javadoc> {
-    (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
+    options {
+        this as StandardJavadocDocletOptions
+        addStringOption("Xdoclint:none", "-quiet")
+    }
 }
 
 repositories {
+    // mavenLocal()
+
     mavenCentral()
 
     // Snapshot versions of redberry-pipe, milib and repseqio distributed via this repo
@@ -73,20 +78,24 @@ repositories {
     }
 }
 
-val miplotsVersion = "0.1-19-master"
-val milibVersion = "1.15.0-16-master"
-val dataframeVersion = "0.8.0-rc-7"
-val repseqioVersion = "1.3.5-24-master"
-val jacksonVersion = "2.13.2.2"
+val milibVersion = "1.15.0-44-master"
+val repseqioVersion = "1.3.5-30-master"
+val miplotsVersion = "0.1-22-master"
+val jacksonBomVersion = "2.13.3"
 
 dependencies {
-    api("com.milaboratory:milib:$milibVersion")
-    api("com.milaboratory:miplots:$miplotsVersion")
-    api("io.repseq:repseqio:$repseqioVersion") {
+    implementation("com.milaboratory:milib:$milibVersion")
+    implementation("io.repseq:repseqio:$repseqioVersion") {
         exclude("com.milaboratory", "milib")
     }
+    implementation("com.milaboratory:miplots:$miplotsVersion")
 
-    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+    // implementation("com.milaboratory:milm2-jvm:0.2.0-test-2") { isChanging = true }
+    implementation("com.milaboratory:milm2-jvm:1.1.0")
+
+    implementation(platform("com.fasterxml.jackson:jackson-bom:$jacksonBomVersion"))
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+
     implementation("commons-io:commons-io:2.11.0")
     implementation("org.lz4:lz4-java:1.8.0")
     implementation("net.sf.trove4j:trove4j:3.0.3")
@@ -98,7 +107,6 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     implementation(testFixtures("com.milaboratory:milib:$milibVersion"))
     testImplementation("org.mockito:mockito-all:1.10.19")
-    testImplementation("io.kotest:kotest-assertions-core:5.3.0")
 }
 
 val writeBuildProperties by tasks.registering(WriteProperties::class) {
@@ -127,12 +135,6 @@ val shadowJar = tasks.withType<ShadowJar> {
 //        exclude(dependency("commons-logging:commons-logging"))
 //        exclude(dependency("ch.qos.logback:logback-core"))
 //        exclude(dependency("ch.qos.logback:logback-classic"))
-//
-//        exclude("org.apache.xmlgraphics:.*")
-//        exclude("org.apache.pdfbox:pdfbox:2.0.24")
-//        exclude("org.apache.commons:commons-csv:1.9.0")
-//        exclude(dependency("org.jetbrains.kotlin:.*"))
-//        exclude(dependency("org.apache.batik:.*"))
 //    }
 }
 
@@ -173,6 +175,10 @@ tasks.test {
     useJUnit()
     minHeapSize = "1024m"
     maxHeapSize = "2048m"
+
+    testLogging {
+        showStandardStreams = true
+    }
 
     miCiStage?.let {
         if (it == "test") {

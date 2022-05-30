@@ -32,7 +32,7 @@ package com.milaboratory.mixcr.info;
 import com.milaboratory.core.Range;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.cli.Util;
+import com.milaboratory.util.ReportHelper;
 import io.repseq.core.ReferencePoint;
 
 import java.io.PrintStream;
@@ -62,9 +62,9 @@ public class ReferencePointCoverageCollector implements AlignmentInfoCollector {
         writer.println();
         writer.println("Coverage of " + refPoint + ":");
         for (int i = leftHist.length() - 1; i > 0; --i)
-            writer.println("-" + i + "\t" + leftHist.get(i) + "\t" + Util.PERCENT_FORMAT.format(100.0 * leftHist.get(i) / totalCount.get()) + "%");
+            writer.println("-" + i + "\t" + leftHist.get(i) + "\t" + ReportHelper.PERCENT_FORMAT.format(100.0 * leftHist.get(i) / totalCount.get()) + "%");
         for (int i = 0; i < rightHist.length(); ++i)
-            writer.println(i + "\t" + rightHist.get(i) + "\t" + Util.PERCENT_FORMAT.format(100.0 * rightHist.get(i) / totalCount.get()) + "%");
+            writer.println(i + "\t" + rightHist.get(i) + "\t" + ReportHelper.PERCENT_FORMAT.format(100.0 * rightHist.get(i) / totalCount.get()) + "%");
     }
 
     @Override

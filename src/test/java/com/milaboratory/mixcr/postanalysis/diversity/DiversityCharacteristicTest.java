@@ -9,7 +9,6 @@ import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroupResult;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroupResultCell;
 import com.milaboratory.mixcr.postanalysis.ui.GroupSummary;
-import com.milaboratory.util.RandomUtil;
 import org.apache.commons.math3.random.RandomDataGenerator;
 import org.apache.commons.math3.random.Well512a;
 import org.junit.Assert;
@@ -30,7 +29,7 @@ public class DiversityCharacteristicTest {
 
         RandomDataGenerator rng = new RandomDataGenerator(new Well512a());
         int nDatasets = 100;
-        TestDataset<TestObject>[] datasets = TestObject.generateDatasets(nDatasets, rng,
+        TestDataset<TestObject>[] datasets = TestDataset.generateDatasets(nDatasets, rng,
                 r -> r.nextInt(1000, 10000),
                 r -> r.nextUniform(0, 1),
                 r -> r.nextInt(10, 20));
@@ -41,7 +40,7 @@ public class DiversityCharacteristicTest {
 
         CharacteristicGroup<DiversityMeasure, TestObject> group = new CharacteristicGroup<>("diversity",
                 Arrays.asList(diversity),
-                Arrays.asList(new GroupSummary<>()));
+                Arrays.asList(new GroupSummary.Simple<>()));
 
         CharacteristicGroupResult<DiversityMeasure> table = result.getTable(group);
         for (CharacteristicGroupResultCell<DiversityMeasure> cell : table.cells) {
@@ -49,7 +48,7 @@ public class DiversityCharacteristicTest {
             if (cell.key == DiversityMeasure.InverseSimpson)
                 Assert.assertEquals(SimpsonIndex(ds.data), cell.value, 1e-6);
             if (cell.key == DiversityMeasure.ShannonWeiner)
-                Assert.assertEquals(ShannonEntropy(ds.data), cell.value, 1e-6);
+                Assert.assertEquals(Math.exp(ShannonEntropy(ds.data)), cell.value, 1e-6);
         }
     }
 

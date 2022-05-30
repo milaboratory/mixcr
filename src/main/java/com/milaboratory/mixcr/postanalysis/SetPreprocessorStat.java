@@ -3,6 +3,7 @@ package com.milaboratory.mixcr.postanalysis;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.util.concurrent.AtomicDouble;
+import gnu.trove.impl.Constants;
 import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
@@ -48,7 +49,7 @@ public class SetPreprocessorStat {
                                double sumWeightBefore,
                                double sumWeightAfter) {
         this.preprocId = preprocId;
-        this.dropped = false;
+        this.dropped = nElementsAfter == 0;
         this.nElementsBefore = nElementsBefore;
         this.nElementsAfter = nElementsAfter;
         this.sumWeightBefore = sumWeightBefore;
@@ -57,6 +58,10 @@ public class SetPreprocessorStat {
 
     public SetPreprocessorStat(String preprocId) {
         this(preprocId, true, -1, -1, Double.NaN, Double.NaN);
+    }
+
+    public SetPreprocessorStat setPreprocId(String newId) {
+        return new SetPreprocessorStat(newId, dropped, nElementsBefore, nElementsAfter, sumWeightBefore, sumWeightAfter);
     }
 
     @Override
@@ -72,11 +77,23 @@ public class SetPreprocessorStat {
         return Objects.hash(preprocId, dropped, nElementsBefore, nElementsAfter, sumWeightBefore, sumWeightAfter);
     }
 
+    @Override
+    public String toString() {
+        return "SetPreprocessorStat{" +
+                "preprocId='" + preprocId + '\'' +
+                ", dropped=" + dropped +
+                ", nElementsBefore=" + nElementsBefore +
+                ", nElementsAfter=" + nElementsAfter +
+                ", sumWeightBefore=" + sumWeightBefore +
+                ", sumWeightAfter=" + sumWeightAfter +
+                '}';
+    }
+
     public static SetPreprocessorStat cumulative(List<SetPreprocessorStat> stats) {
         SetPreprocessorStat first = stats.get(0);
         SetPreprocessorStat last = stats.get(stats.size() - 1);
         return new SetPreprocessorStat(
-                stats.stream().map(s -> s.preprocId).collect(Collectors.joining("_")),
+                stats.stream().map(s -> s.preprocId).collect(Collectors.joining(" | ")),
                 first.nElementsBefore,
                 last.nElementsAfter,
                 first.sumWeightBefore,
@@ -125,7 +142,7 @@ public class SetPreprocessorStat {
 
     public static final class Builder<T> {
         final String preprocId;
-        final TIntObjectHashMap<BuilderForSample<T>> map = new TIntObjectHashMap<>();
+        final TIntObjectHashMap<BuilderForSample<T>> map = new TIntObjectHashMap<>(Constants.DEFAULT_CAPACITY, Constants.DEFAULT_LOAD_FACTOR, -1);
         final WeightFunction<T> wtFunc;
 
         public Builder(String preprocId,
@@ -145,12 +162,21 @@ public class SetPreprocessorStat {
             builder(iDataset).drop();
         }
 
+        public void clear(int iDataset) {
+            map.put(iDataset, new BuilderForSample<>(preprocId, wtFunc));
+        }
+
         public void before(int iDataset, T t) {
             builder(iDataset).before(t);
         }
 
         public void after(int iDataset, T t) {
             builder(iDataset).after(t);
+        }
+
+        public void asis(int iDataset, T t) {
+            before(iDataset, t);
+            after(iDataset, t);
         }
 
         public SetPreprocessorStat getStat(int iDataset) {

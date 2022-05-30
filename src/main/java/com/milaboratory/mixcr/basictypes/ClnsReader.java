@@ -44,6 +44,7 @@ import io.repseq.dto.VDJCLibraryData;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -63,10 +64,14 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
     private final CloneAssemblerParameters assemblerParameters;
     private final VDJCSProperties.CloneOrdering ordering;
     private final String versionInfo;
-    private final List<VDJCGene> genes;
+    private final List<VDJCGene> usedGenes;
     private final int numberOfClones;
 
     private final long clonesPosition;
+
+    public ClnsReader(String file, VDJCLibraryRegistry libraryRegistry) throws IOException {
+        this(Paths.get(file), libraryRegistry, 3);
+    }
 
     public ClnsReader(Path file, VDJCLibraryRegistry libraryRegistry) throws IOException {
         this(file, libraryRegistry, 3);
@@ -127,7 +132,7 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
                 liberalise.forEach((name, libraryData) -> libraryRegistry.registerLibrary(null, name, libraryData));
             }
 
-            genes = IOUtil.stdVDJCPrimitivIStateInit(i, alignerParameters, libraryRegistry);
+            usedGenes = IOUtil.stdVDJCPrimitivIStateInit(i, alignerParameters, libraryRegistry);
         }
 
         this.clonesPosition = input.getPosition();
@@ -142,7 +147,7 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
         List<Clone> clones = new ArrayList<>();
         for (Clone clone : CUtils.it(readClones()))
             clones.add(clone);
-        CloneSet cloneSet = new CloneSet(clones, genes, alignerParameters, assemblerParameters, ordering);
+        CloneSet cloneSet = new CloneSet(clones, usedGenes, alignerParameters, assemblerParameters, ordering);
         cloneSet.versionInfo = versionInfo;
         return cloneSet;
     }
@@ -152,10 +157,12 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
         return pipelineConfiguration;
     }
 
+    @Override
     public VDJCAlignerParameters getAlignerParameters() {
         return alignerParameters;
     }
 
+    @Override
     public CloneAssemblerParameters getAssemblerParameters() {
         return assemblerParameters;
     }
@@ -173,6 +180,11 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
     @Override
     public int numberOfClones() {
         return numberOfClones;
+    }
+
+    @Override
+    public List<VDJCGene> getUsedGenes() {
+        return usedGenes;
     }
 
     @Override

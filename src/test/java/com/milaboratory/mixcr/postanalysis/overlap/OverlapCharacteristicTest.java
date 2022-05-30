@@ -125,7 +125,7 @@ public class OverlapCharacteristicTest {
         }
 
         CharacteristicGroup<OverlapKey<OverlapType>, OverlapGroup<Element>> chGroup =
-                new CharacteristicGroup<>("overlap", chars, Arrays.asList(new OverlapSummary<>()));
+                new CharacteristicGroup<>("overlap", chars, Collections.singletonList(new OverlapSummary<>()));
 
         PostanalysisRunner<OverlapGroup<Element>> runner = new PostanalysisRunner<>();
         runner.addCharacteristics(chGroup);
@@ -220,19 +220,19 @@ public class OverlapCharacteristicTest {
         System.out.println(Arrays.stream(expectedSharedElements).map(Arrays::toString).collect(Collectors.joining("\n")));
         assert2dEquals(expectedSharedElements, outputs.get(OverlapType.SharedClonotypes)
                 .reorder(datasetIds, datasetIds)
-                .rows(0, 0));
+                .drows(0, 0));
         assert2dEquals(expectedD, outputs.get(OverlapType.D)
                 .reorder(datasetIds, datasetIds)
-                .rows(0, 0));
+                .drows(0, 0));
         assert2dEquals(expectedF1, outputs.get(OverlapType.F1)
                 .reorder(datasetIds, datasetIds)
-                .rows(0, 0));
+                .drows(0, 0));
         assert2dEquals(expectedF2, outputs.get(OverlapType.F2)
                 .reorder(datasetIds, datasetIds)
-                .rows(0, 0));
+                .drows(0, 0));
         assert2dEquals(expectedR, outputs.get(OverlapType.R_Intersection)
                 .reorder(datasetIds, datasetIds)
-                .rows(0, 0));
+                .drows(0, 0));
     }
 
     interface OverlapScanFunction {

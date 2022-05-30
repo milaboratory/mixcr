@@ -118,7 +118,7 @@ public class VDJCSProperties {
         @Override
         public String toString() {
             try {
-                return GlobalObjectMappers.PRETTY.writeValueAsString(this);
+                return GlobalObjectMappers.getPretty().writeValueAsString(this);
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);
             }

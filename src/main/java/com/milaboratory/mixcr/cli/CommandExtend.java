@@ -43,6 +43,7 @@ import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.util.VDJCObjectExtender;
+import com.milaboratory.util.ReportUtil;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.Chains;
 import io.repseq.core.GeneType;
@@ -215,13 +216,13 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
 
             // Writing report to stout
             System.out.println("============= Report ==============");
-            Util.writeReportToStdout(report);
+            ReportUtil.writeReportToStdout(report);
 
             if (reportFile != null)
-                Util.writeReport(reportFile, report);
+                ReportUtil.appendReport(reportFile, report);
 
             if (jsonReport != null)
-                Util.writeJsonReport(jsonReport, report);
+                ReportUtil.appendJsonReport(jsonReport, report);
         }
     }
 

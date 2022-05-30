@@ -7,10 +7,9 @@ import org.jetbrains.kotlinx.dataframe.RowFilter
 import org.jetbrains.kotlinx.dataframe.api.*
 import org.jetbrains.kotlinx.dataframe.io.read
 import org.jetbrains.kotlinx.dataframe.io.readTSV
-import java.util.*
 
 fun AnyFrame.isNumeric(col: String) = this[col].all { it == null || it is Number }
-fun AnyFrame.isCategorial(col: String) = !isNumeric(col)
+fun AnyFrame.isCategorical(col: String) = !isNumeric(col)
 
 typealias Metadata = AnyFrame
 
@@ -41,13 +40,13 @@ fun <T> DataFrame<T>.withMetadata(metadata: Metadata) = run {
 /**
  * Attaches metadata to statistics
  **/
-fun attachMetadata(
-    data: AnyFrame,
+fun <T> attachMetadata(
+    data: DataFrame<T>,
     dataCol: String,
     meta: Metadata,
     metaCol: String
 ) = run {
-    val m = matchLists(
+    val m = StringUtil.matchLists(
         data[dataCol].distinct().cast<String>().toList(),
         meta[metaCol].distinct().cast<String>().toList(),
     )
@@ -61,48 +60,6 @@ fun attachMetadata(
         .leftJoin(meta) { "_meta_join_" match metaCol }
         .remove("_meta_join_")
 }
-
-fun matchLists(target: List<String>, query: List<String>): Map<String, String?> {
-    val matched: MutableMap<String, PriorityQueue<Pair<String, Double>>> = HashMap()
-    for (t in target) {
-        val matchedForKey = PriorityQueue<Pair<String, Double>>(
-            Comparator.comparing { -it.second }
-        )
-
-        for (q in query) {
-            val a = t.lowercase(Locale.getDefault())
-            val b = q.lowercase(Locale.getDefault())
-            val match = StringUtil.longestCommonSubstring(a, b)
-            val score = 2.0 * (0.5 + match) / (1 + a.length + b.length)
-            matchedForKey.add(q to score)
-        }
-
-        matched[t] = matchedForKey
-    }
-
-    val unmatchedQ = query.toMutableSet()
-    val r = mutableMapOf<String, String?>()
-
-    for ((t, q) in matched.toList().sortedBy { kv -> -kv.second.maxOf { it.second } }) {
-        if (q.isEmpty()) {
-            r[t] = null
-            continue
-        }
-        var m: String? = null
-        while (!q.isEmpty()) {
-            val candidate = q.poll()
-            val wasUnmatched = unmatchedQ.remove(candidate.first)
-            if (wasUnmatched) {
-                m = candidate.first
-                break
-            }
-        }
-        r[t] = m
-    }
-
-    return r
-}
-
 
 fun Metadata.parseFilter(expr: String) =
     // equality

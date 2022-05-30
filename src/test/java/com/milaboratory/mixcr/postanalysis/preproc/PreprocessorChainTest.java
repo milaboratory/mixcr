@@ -1,5 +1,6 @@
 package com.milaboratory.mixcr.postanalysis.preproc;
 
+import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.InputPort;
 import com.milaboratory.mixcr.postanalysis.*;
 import gnu.trove.list.array.TLongArrayList;
@@ -11,7 +12,6 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -39,7 +39,7 @@ public class PreprocessorChainTest {
         RandomDataGenerator rng = new RandomDataGenerator(new Well512a(System.currentTimeMillis()));
         TestDataset<TestObject> ds = rndDataset(rng, 10000);
 
-        TestDataset<TestObject> r = new TestDataset<>(SetPreprocessorFactory.processDatasets(preproc.newInstance(), ds)[0]);
+        TestDataset<TestObject> r = new TestDataset<>(SetPreprocessor.processDatasets(preproc.newInstance(), ds)[0]);
 
         List<TestObject> expected = new ArrayList<>();
         for (TestObject c : ds) {
@@ -49,6 +49,87 @@ public class PreprocessorChainTest {
 
         Assert.assertEquals(expected, r.data);
     }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testSetupDuplication1() {
+        long p1 = 17;
+        long p2 = 13;
+        long p3 = 11;
+        long p4 = 7;
+
+        SetPreprocessor<TestObject> preproc = new PreprocessorChain.Factory<>(
+                new TestPreprocFactory(p1),
+                new TestPreprocFactory(p2),
+                new TestPreprocFactory(p3),
+                new TestPreprocFactory(p4)
+        ).newInstance();
+
+        RandomDataGenerator rng = new RandomDataGenerator(new Well512a(System.currentTimeMillis()));
+        TestDataset<TestObject> ds = rndDataset(rng, 10000);
+
+        while (true) {
+            SetPreprocessorSetup<TestObject> setup = preproc.nextSetupStep();
+            if (setup == null)
+                break;
+            setup.initialize(1);
+            InputPort<TestObject> consumer = setup.consumer(0);
+            for (TestObject t : CUtils.it(ds.mkElementsPort())) {
+                consumer.put(t);
+            }
+            consumer.put(null);
+        }
+        // excessive setup call
+        SetPreprocessorSetup<TestObject> nullSetup = preproc.nextSetupStep();
+        Assert.assertNull(nullSetup);
+
+        MappingFunction<TestObject> m = preproc.getMapper(0);
+        List<TestObject> r = new ArrayList<>();
+        for (TestObject t : CUtils.it(ds.mkElementsPort())) {
+            TestObject t1 = m.apply(t);
+            if (t1 != null)
+                r.add(t1);
+        }
+
+        TestDataset<TestObject> result = new TestDataset<>(r);
+
+        List<TestObject> expected = new ArrayList<>();
+        for (TestObject c : ds) {
+            if (Stream.of(p1, p2, p3, p4).allMatch(mod -> ((long) c.weight) % mod != 0))
+                expected.add(c);
+        }
+
+        Assert.assertEquals(expected, result.data);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testStat1() {
+        long p1 = 17;
+        long p2 = 13;
+        long p3 = 11;
+        long p4 = 7;
+
+        SetPreprocessor<TestObject> preproc = new PreprocessorChain.Factory<>(
+                new TestPreprocFactory(p1),
+                new TestPreprocFactory(p2),
+                new TestPreprocFactory(p3),
+                new TestPreprocFactory(p4)
+        ).newInstance();
+
+        RandomDataGenerator rng = new RandomDataGenerator(new Well512a(System.currentTimeMillis()));
+        TestDataset<TestObject> ds = rndDataset(rng, 10000);
+        SetPreprocessor.processDatasets(preproc, ds);
+
+        for (List<SetPreprocessorStat> stat : preproc.getStat().valueCollection()) {
+            Assert.assertEquals(4, stat.size());
+            for (int i = 0; i < stat.size() - 1; i++) {
+                Assert.assertEquals(stat.get(i).nElementsAfter, stat.get(i + 1).nElementsBefore);
+                Assert.assertEquals(stat.get(i).sumWeightAfter, stat.get(i + 1).sumWeightBefore, 1e-10);
+            }
+        }
+    }
+
 
     public static final class TestPreprocFactory implements SetPreprocessorFactory<TestObject> {
         final long modulus;
@@ -64,16 +145,18 @@ public class PreprocessorChainTest {
 
         @Override
         public String id() {
-            return "";
+            return "" + modulus;
         }
     }
 
     public static final class TestPreproc implements SetPreprocessor<TestObject> {
         final TLongArrayList l = new TLongArrayList();
         final long modulus;
+        private final SetPreprocessorStat.Builder<TestObject> stats;
 
         public TestPreproc(long modulus) {
             this.modulus = modulus;
+            this.stats = new SetPreprocessorStat.Builder<>("" + modulus, t -> t.weight);
         }
 
         boolean initialized = false;
@@ -99,11 +182,9 @@ public class PreprocessorChainTest {
             return null;
         }
 
-
-        private final SetPreprocessorStat.Builder<TestObject> stats = new SetPreprocessorStat.Builder<>("", t -> t.weight);
-
         @Override
         public MappingFunction<TestObject> getMapper(int iDataset) {
+            stats.clear(iDataset);
             AtomicInteger idx = new AtomicInteger(0);
             return element -> {
                 stats.before(iDataset, element);
@@ -121,7 +202,7 @@ public class PreprocessorChainTest {
 
         @Override
         public String id() {
-            return "";
+            return "" + modulus;
         }
     }
 

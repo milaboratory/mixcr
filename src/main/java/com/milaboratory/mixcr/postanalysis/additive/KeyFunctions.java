@@ -135,22 +135,22 @@ public final class KeyFunctions {
 
     public static final class VJGenes<Gene> implements JsonSupport {
         public Gene vGene;
-        public Gene jJene;
+        public Gene jGene;
 
         public VJGenes() {}
 
-        public VJGenes(Gene vGene, Gene jJene) {
+        public VJGenes(Gene vGene, Gene jGene) {
             this.vGene = vGene;
-            this.jJene = jJene;
+            this.jGene = jGene;
         }
 
         public <K> VJGenes<K> map(Function<Gene, K> mapper) {
-            return new VJGenes<>(mapper.apply(vGene), mapper.apply(jJene));
+            return new VJGenes<>(mapper.apply(vGene), mapper.apply(jGene));
         }
 
         @Override
         public String toString() {
-            return vGene + "+" + jJene;
+            return vGene + "+" + jGene;
         }
 
         @Override
@@ -159,12 +159,12 @@ public final class KeyFunctions {
             if (o == null || getClass() != o.getClass()) return false;
             VJGenes<?> vjGenes = (VJGenes<?>) o;
             return Objects.equals(vGene, vjGenes.vGene) &&
-                    Objects.equals(jJene, vjGenes.jJene);
+                    Objects.equals(jGene, vjGenes.jGene);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(vGene, jJene);
+            return Objects.hash(vGene, jGene);
         }
     }
 

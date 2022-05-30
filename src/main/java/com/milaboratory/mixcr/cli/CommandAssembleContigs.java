@@ -49,6 +49,8 @@ import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PipeDataInputReader;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
+import com.milaboratory.util.JsonOverrider;
+import com.milaboratory.util.ReportUtil;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
@@ -130,11 +132,11 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
             ordering = reader.ordering();
 
             final CloneFactory cloneFactory = new CloneFactory(reader.getAssemblerParameters().getCloneFactoryParameters(),
-                    reader.getAssemblingFeatures(), reader.getGenes(), reader.getAlignerParameters().getFeaturesToAlignMap());
+                    reader.getAssemblingFeatures(), reader.getUsedGenes(), reader.getAlignerParameters().getFeaturesToAlignMap());
 
             alignerParameters = reader.getAlignerParameters();
             cloneAssemblerParameters = reader.getAssemblerParameters();
-            genes = reader.getGenes();
+            genes = reader.getUsedGenes();
             IOUtil.registerGeneReferences(tmpOut, genes, alignerParameters);
 
             ClnAReader.CloneAlignmentsPort cloneAlignmentsPort = reader.clonesAndAlignments();
@@ -271,13 +273,13 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
 
         // Writing report to stout
         System.out.println("============= Report ==============");
-        Util.writeReportToStdout(report);
+        ReportUtil.writeReportToStdout(report);
 
         if (reportFile != null)
-            Util.writeReport(reportFile, reportWrapper);
+            ReportUtil.appendReport(reportFile, reportWrapper);
 
         if (jsonReport != null)
-            Util.writeJsonReport(jsonReport, reportWrapper);
+            ReportUtil.appendJsonReport(jsonReport, reportWrapper);
     }
 
     @JsonAutoDetect(

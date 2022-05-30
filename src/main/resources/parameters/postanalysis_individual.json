@@ -1,0 +1,112 @@
+{
+  "default": {
+    "defaultDownsampling": null,
+    "defaultOnlyProductive": true,
+    "defaultDropOutliers": false,
+    "randomSeed": 111,
+    "biophysics": {
+      "cdr3lenAA": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null
+      },
+      "cdr3lenNT": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null
+      },
+      "ndnLenNT": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null
+      },
+      "addedNNT": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null
+      },
+      "Strength": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null
+      },
+      "Hydrophobicity": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null
+      },
+      "Surface": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null
+      },
+      "Volume": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null
+      },
+      "Charge": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null
+      }
+    },
+    "diversity": {
+      "observed": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null
+      },
+      "shannonWeiner": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null
+      },
+      "chao1": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null
+      },
+      "clonality": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null
+      },
+      "inverseSimpson": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null
+      },
+      "gini": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null
+      },
+      "d50": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null
+      }
+    },
+    "vUsage": {
+      "downsampling": null,
+      "onlyProductive": null,
+      "dropOutliers": null
+    },
+    "jUsage": {
+      "downsampling": null,
+      "onlyProductive": null,
+      "dropOutliers": null
+    },
+    "vjUsage": {
+      "downsampling": null,
+      "onlyProductive": null,
+      "dropOutliers": null
+    },
+    "isotypeUsage": {
+      "downsampling": null,
+      "onlyProductive": null,
+      "dropOutliers": null
+    }
+  }
+}

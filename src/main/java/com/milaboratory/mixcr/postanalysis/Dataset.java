@@ -25,7 +25,7 @@ public interface Dataset<T> {
 
             @Override
             public OutputPortWithProgress<K> mkElementsPort() {
-                return new OutputPortWithProgress<>() {
+                return new OutputPortWithProgress<K>() {
                     @Override
                     public long index() {
                         return 0;

@@ -28,7 +28,7 @@ public class NoPreprocessing<T> implements SetPreprocessor<T> {
     @Override
     public TIntObjectHashMap<List<SetPreprocessorStat>> getStat() {
         //noinspection ExternalizableWithoutPublicNoArgConstructor
-        return new TIntObjectHashMap<>() {
+        return new TIntObjectHashMap<List<SetPreprocessorStat>>() {
             @Override
             public List<SetPreprocessorStat> get(int key) {
                 return Collections.emptyList();

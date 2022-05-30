@@ -74,7 +74,10 @@ public class DropletCloneGraphParameters {
 
     public static DropletCloneGraphParameters getDefault() {
         try {
-            return GlobalObjectMappers.ONE_LINE.readValue(CloneTagTupleFilter.class.getClassLoader().getResourceAsStream("parameters/droplet_clone_graph_parameters.json"), DropletCloneGraphParameters.class);
+            return GlobalObjectMappers.getOneLine()
+                    .readValue(CloneTagTupleFilter.class.getClassLoader()
+                            .getResourceAsStream("parameters/droplet_clone_graph_parameters.json"),
+                            DropletCloneGraphParameters.class);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

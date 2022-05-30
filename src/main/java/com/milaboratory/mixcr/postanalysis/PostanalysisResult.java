@@ -25,14 +25,14 @@ public class PostanalysisResult {
     public final Set<String> datasetIds;
     /** Characteristic Id -> characteristic data */
     @JsonProperty("data")
-    public final Map<String, Array2d> data;
+    public final Map<String, ChData> data;
     /** Preprocessor Id -> Preprocessors summary */
     @JsonProperty("preprocSummary")
     public final Map<String, SetPreprocessorSummary> preprocSummary;
 
     @JsonCreator
     public PostanalysisResult(@JsonProperty("datasetIds") Set<String> datasetIds,
-                              @JsonProperty("data") Map<String, Array2d> data,
+                              @JsonProperty("data") Map<String, ChData> data,
                               @JsonProperty("preprocSummary") Map<String, SetPreprocessorSummary> preprocSummary) {
         this.datasetIds = datasetIds;
         this.data = data;
@@ -42,9 +42,9 @@ public class PostanalysisResult {
     static <T> PostanalysisResult create(Set<String> datasetIds,
                                          Map<Characteristic<?, T>, Map<String, MetricValue<?>[]>> data,
                                          Map<String, SetPreprocessorSummary> preprocSummary) {
-        Map<String, Array2d> d = new HashMap<>();
+        Map<String, ChData> d = new HashMap<>();
         for (Map.Entry<Characteristic<?, T>, Map<String, MetricValue<?>[]>> e : data.entrySet())
-            d.put(e.getKey().name, new Array2d(e.getValue()));
+            d.put(e.getKey().name, new ChData(e.getKey().preprocessor.id(), e.getValue()));
         return new PostanalysisResult(datasetIds, d, preprocSummary);
     }
 
@@ -62,6 +62,18 @@ public class PostanalysisResult {
                         .map(c -> c.preprocessor.id())
                         .distinct()
                         .collect(Collectors.toMap(c -> c, preprocSummary::get)));
+    }
+
+    /**
+     * Get preprocessor statistics for specified characteristic for spaecified sample
+     */
+    public SetPreprocessorStat getPreprocStat(String charId, String sampleId) {
+        return SetPreprocessorStat.cumulative(preprocSummary.get(data.get(charId).preproc).result.get(sampleId));
+    }
+
+    /** Returns a set of characteristics */
+    public Set<String> getCharacteristics() {
+        return data.keySet();
     }
 
     /** project result on a specific char group */
@@ -107,13 +119,18 @@ public class PostanalysisResult {
             getterVisibility = JsonAutoDetect.Visibility.NONE,
             isGetterVisibility = JsonAutoDetect.Visibility.NONE
     )
-    public static final class Array2d {
+    public static final class ChData {
+        /** Preprocessor Id */
+        @JsonProperty("preproc")
+        public final String preproc;
         /** Dataset Id -> Metric values */
         @JsonProperty("2darray")
         public final Map<String, MetricsArray> data;
 
         @JsonCreator
-        Array2d(@JsonProperty("2darray") Map<String, MetricValue<?>[]> data) {
+        ChData(@JsonProperty("preproc") String preproc,
+               @JsonProperty("2darray") Map<String, MetricValue<?>[]> data) {
+            this.preproc = preproc;
             this.data = data.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> new MetricsArray(e.getValue())));
         }
 
@@ -121,8 +138,8 @@ public class PostanalysisResult {
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            Array2d array2d = (Array2d) o;
-            return Objects.equals(data, array2d.data);
+            ChData chData = (ChData) o;
+            return Objects.equals(data, chData.data);
         }
 
         @Override
