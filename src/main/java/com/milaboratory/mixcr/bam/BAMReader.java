@@ -8,6 +8,7 @@ import com.milaboratory.core.io.sequence.*;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
 import com.milaboratory.util.CanReportProgress;
+import com.milaboratory.util.TempFileManager;
 import com.milaboratory.util.sorting.HashSorter;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
@@ -16,7 +17,6 @@ import htsjdk.samtools.SamReaderFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class BAMReader implements SequenceReaderCloseable<SequenceRead>, CanReportProgress {
@@ -92,7 +92,8 @@ public class BAMReader implements SequenceReaderCloseable<SequenceRead>, CanRepo
                     (l, r) -> l.getDescription().equals(r.getDescription()) ?
                             Long.compare(l.getId(), r.getId()) :
                             l.getDescription().compareTo(r.getDescription()),
-                    5, Paths.get("/tmp/bam_sort"), 4, 4,
+                    5, TempFileManager.getTempFile().toPath(),
+                    4, 4,
                     stateBuilder.getOState(), stateBuilder.getIState(),
                     memoryBudget, 1 << 17);
             singleReadImplOutputPort = sorter.port(singleReadImplOutputPort);
