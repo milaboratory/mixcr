@@ -103,6 +103,7 @@ dependencies {
     implementation("com.google.guava:guava:31.1-jre")
     implementation("com.itextpdf:itext7-core:7.2.1")
     implementation("com.itextpdf:layout:7.2.1")
+    implementation("com.github.samtools:htsjdk:2.24.1")
 
     testImplementation("junit:junit:4.13.2")
     implementation(testFixtures("com.milaboratory:milib:$milibVersion"))

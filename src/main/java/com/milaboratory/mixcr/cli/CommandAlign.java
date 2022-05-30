@@ -190,7 +190,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
     public boolean noMerge = false;
 
     @Option(description = "Drop reads from bam file mapped on human chromosomes except with VDJ region (2, 7, 14, 22)",
-            names = {"-v", "--drop-non-vdj"},
+            names = {"--drop-non-vdj"},
             hidden = true)
     public boolean dropNonVDJ = false;
 
@@ -322,7 +322,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
     }
 
     public SequenceReaderCloseable<? extends SequenceRead> createReader() throws IOException {
-        if (isInputBAM()){
+        if (isInputBAM()) {
             List<String> bamNames = getInputFiles();
             Path[] readers = new Path[bamNames.size()];
             for (int i = 0; i < bamNames.size(); i++) {
@@ -361,7 +361,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
     }
 
     @Override
-    public ActionConfiguration getConfiguration() {
+    public ActionConfiguration<?> getConfiguration() {
         return new AlignConfiguration(
                 getAlignerParameters(),
                 !noMerge,
@@ -379,7 +379,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
             use = JsonTypeInfo.Id.CLASS,
             include = JsonTypeInfo.As.PROPERTY,
             property = "type")
-    public static class AlignConfiguration implements ActionConfiguration {
+    public static class AlignConfiguration implements ActionConfiguration<AlignConfiguration> {
         /**
          * Aligner parameters
          */
