@@ -254,7 +254,7 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
         for (SamplesGroup group : groupSamples()) {
             if (chainsColumn != null)
                 results.add(run(new IsolationGroup(
-                        Chains.getNamedChains(group.group.get(chainsColumn).toString()), group.group), group.samples));
+                        Chains.getNamedChains(group.group.get(chainsColumn).toString().toUpperCase()), group.group), group.samples));
             else
                 for (NamedChains knownChains : CHAINS) {
                     if (c.intersects(knownChains.chains)) {
