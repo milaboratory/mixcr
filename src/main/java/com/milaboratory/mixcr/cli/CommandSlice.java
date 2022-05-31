@@ -53,6 +53,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static com.milaboratory.mixcr.basictypes.IOUtil.*;
 import static com.milaboratory.mixcr.cli.CommandSlice.SLICE_COMMAND_NAME;
+import static com.milaboratory.util.TempFileManager.smartTempDestination;
 
 @Command(name = SLICE_COMMAND_NAME,
         sortOptions = true,
@@ -106,7 +107,8 @@ public class CommandSlice extends ACommandWithSmartOverwriteWithSingleInputMiXCR
 
     void sliceClnA() throws Exception {
         try (ClnAReader reader = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4));
-             ClnAWriter writer = new ClnAWriter(getFullPipelineConfiguration(), out)) {
+             ClnAWriter writer = new ClnAWriter(getFullPipelineConfiguration(), out,
+                     smartTempDestination(out, "", false))) {
 
             // Getting full clone set
             CloneSet cloneSet = reader.readCloneSet();

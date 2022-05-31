@@ -1,12 +1,13 @@
 package com.milaboratory.mixcr.cli.postanalysis;
 
 import com.milaboratory.mixcr.cli.ACommandWithOutputMiXCR;
+import com.milaboratory.mixcr.cli.CommonDescriptions;
 import com.milaboratory.mixcr.postanalysis.plots.MetadataKt;
 import com.milaboratory.util.StringUtil;
 import io.repseq.core.Chains;
 import io.repseq.core.Chains.NamedChains;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
-import org.jetbrains.kotlinx.dataframe.api.DataFrameIterableKt;
+import org.jetbrains.kotlinx.dataframe.api.ToDataFrameKt;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
@@ -22,7 +23,7 @@ import static java.util.stream.Collectors.toList;
 public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
     @Parameters(description = "Input file with postanalysis results.", index = "0", defaultValue = "pa.json.gz")
     public String in;
-    @Option(description = "Metadata file (csv/tsv). Must have 'sample' column.",
+    @Option(description = CommonDescriptions.METADATA,
             names = {"--metadata"})
     public String metadata;
     @Option(description = "Export for specific chains only",
@@ -52,7 +53,7 @@ public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
         if (metadata != null)
             return metadataDf = MetadataKt.readMetadata(metadata);
         if (getPaResult().metadata != null)
-            return metadataDf = DataFrameIterableKt.toDataFrame(getPaResult().metadata);
+            return metadataDf = ToDataFrameKt.toDataFrame(getPaResult().metadata);
         return null;
     }
 

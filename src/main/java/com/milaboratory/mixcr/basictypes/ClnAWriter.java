@@ -44,20 +44,17 @@ import com.milaboratory.primitivio.blocks.PrimitivIOBlocksUtil;
 import com.milaboratory.primitivio.blocks.PrimitivOBlocks;
 import com.milaboratory.primitivio.blocks.PrimitivOHybrid;
 import com.milaboratory.util.CanReportProgressAndStage;
-import com.milaboratory.util.TempFileManager;
+import com.milaboratory.util.TempFileDest;
 import com.milaboratory.util.io.HasPosition;
 import com.milaboratory.util.sorting.HashSorter;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.set.hash.TIntHashSet;
 import io.repseq.core.VDJCGene;
-import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ForkJoinPool;
@@ -88,7 +85,7 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
     /**
      * Will be used for alignments pre-sorting
      */
-    private final Path tempFolder;
+    private final TempFileDest tempDest;
 
     private final boolean highCompression;
 
@@ -109,29 +106,22 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
     private volatile long numberOfAlignments = -1, numberOfAlignmentsWritten = 0;
     private volatile boolean finished = false;
 
-    public ClnAWriter(PipelineConfiguration configuration, String fileName) throws IOException {
-        this(configuration, fileName, false);
+    public ClnAWriter(PipelineConfiguration configuration, String fileName, TempFileDest tempDest) throws IOException {
+        this(configuration, fileName, tempDest, false);
     }
 
-    public ClnAWriter(PipelineConfiguration configuration, String fileName, boolean highCompression) throws IOException {
-        this(configuration, new File(fileName), highCompression);
+    public ClnAWriter(PipelineConfiguration configuration, String fileName, TempFileDest tempDest, boolean highCompression) throws IOException {
+        this(configuration, new File(fileName), tempDest, highCompression);
     }
 
-    public ClnAWriter(PipelineConfiguration configuration, File file) throws IOException {
-        this(configuration, file, false);
+    public ClnAWriter(PipelineConfiguration configuration, File file, TempFileDest tempDest) throws IOException {
+        this(configuration, file, tempDest, false);
     }
 
-    public ClnAWriter(PipelineConfiguration configuration, File file, boolean highCompression) throws IOException {
+    public ClnAWriter(PipelineConfiguration configuration, File file, TempFileDest tempDest, boolean highCompression) throws IOException {
         this.configuration = configuration;
         this.highCompression = highCompression;
-
-        File tempFolder = new File(file.getAbsolutePath() + ".presorted");
-        if (tempFolder.exists())
-            FileUtils.deleteDirectory(tempFolder);
-        TempFileManager.register(tempFolder);
-        this.tempFolder = tempFolder.toPath();
-        Files.createDirectory(this.tempFolder);
-
+        this.tempDest = tempDest;
         this.output = new PrimitivOHybrid(ForkJoinPool.commonPool(), file.toPath());
         try (PrimitivO o = this.output.beginPrimitivO()) {
             o.write(MAGIC.getBytes(StandardCharsets.US_ASCII));
@@ -251,7 +241,7 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
             collator = new HashSorter<>(
                     VDJCAlignments.class,
                     VDJCACloneIdHash, VDJCACloneIdComparator,
-                    5, tempFolder, 4, 6,
+                    5, tempDest, 4, 6,
                     stateBuilder.getOState(), stateBuilder.getIState(),
                     memoryBudget, 1 << 18 /* 256 Kb */);
 
@@ -301,7 +291,7 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
 
                         // No synchronization here
 
-                        if (alignments != null && !cloneIds.remove(alignments.cloneIndex))
+                        if (alignments != null && !cloneIds.remove((int)alignments.cloneIndex))
                             throw new IllegalArgumentException("Alignment for a wrong clonotype " +
                                     alignments.cloneIndex);
 
@@ -323,8 +313,8 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
                             break;
 
                         // Saving clone groups sequence
-                        cloneIdsIndex.add(alignments.cloneIndex);
-                        currentCloneIndex = alignments.cloneIndex;
+                        cloneIdsIndex.add((int) alignments.cloneIndex);
+                        currentCloneIndex = (int) alignments.cloneIndex;
                     }
 
                     o.write(alignments);

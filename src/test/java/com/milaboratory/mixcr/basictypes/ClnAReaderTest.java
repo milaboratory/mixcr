@@ -51,6 +51,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.milaboratory.util.TempFileManager.smartTempDestination;
 import static org.junit.Assert.assertEquals;
 
 public class ClnAReaderTest {
@@ -87,7 +88,7 @@ public class ClnAReaderTest {
         AlignmentsMappingMerger merged = new AlignmentsMappingMerger(align.resultReader(), assemble.cloneAssembler.getAssembledReadsPort());
 
         File file = TempFileManager.getTempFile();
-        ClnAWriter writer = new ClnAWriter(null, file);
+        ClnAWriter writer = new ClnAWriter(null, file, smartTempDestination(file, "", false));
 
         List<Clone> newClones = assemble.cloneSet.getClones().stream()
                 .map(Clone::resetParentCloneSet)
@@ -136,7 +137,7 @@ public class ClnAReaderTest {
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
 
         File file = TempFileManager.getTempFile();
-        ClnAWriter writer = new ClnAWriter(null, file);
+        ClnAWriter writer = new ClnAWriter(null, file, smartTempDestination(file, "", false));
         writer.writeClones(new CloneSet(Collections.EMPTY_LIST, align.usedGenes,
                 align.parameters.alignerParameters,
                 CloneAssemblerParametersPresets.getByName("default"),

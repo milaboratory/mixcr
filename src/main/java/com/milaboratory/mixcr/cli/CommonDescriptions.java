@@ -41,4 +41,13 @@ public class CommonDescriptions {
 
     public static final String JSON_REPORT = "JSON formatted report file";
 
+    public static final String DOWNSAMPLING = "Choose downsampling. Possible values: umi-count-[1000|auto]|cumulative-top-[percent]|top-[number]|none";
+
+    public static final String METADATA = "Metadata file (csv/tsv). Must have \"sample\" column.";
+
+    public static final String DOWNSAMPLING_DROPO_UTLIERS = "Drop samples which have less abundance than the computed downsampling threshold.";
+
+    public static final String OVERLAP_CRITERIA = "Overlap criteria. Default CDR3|AA|V|J";
+
+    public static final String ONLY_PRODUCTIVE = "Filter out-of-frame sequences and sequences with stop-codons";
 }

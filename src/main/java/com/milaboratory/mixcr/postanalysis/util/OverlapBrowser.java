@@ -116,7 +116,6 @@ public class OverlapBrowser implements CanReportProgressAndStage {
         };
     }
 
-
     private static OverlapGroup<Clone> filter(OverlapGroup<Clone> row, Predicate<Clone> criteria, boolean inPlace) {
         if (inPlace) {
             boolean empty = true;

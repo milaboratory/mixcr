@@ -59,6 +59,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import static com.milaboratory.mixcr.cli.CommandAssemble.ASSEMBLE_COMMAND_NAME;
+import static com.milaboratory.util.TempFileManager.smartTempDestination;
 
 @Command(name = ASSEMBLE_COMMAND_NAME,
         separator = " ",
@@ -75,6 +76,10 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
     public void setThreads(int threads) {
         System.out.println("-t / --threads is deprecated for \"mixcr assemble ...\" and ignored for this call...");
     }
+
+    @Option(description = "Use system temp folder for temporary files, the output folder will be used if this option is omitted.",
+            names = {"--use-system-temp"})
+    public boolean useSystemTemp = false;
 
     @Option(description = "Use higher compression for output file.",
             names = {"--high-compression"})
@@ -264,7 +269,9 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
             PipelineConfiguration pipelineConfiguration = getFullPipelineConfiguration();
             if (isClnaOutput) {
 
-                try (ClnAWriter writer = new ClnAWriter(pipelineConfiguration, out, highCompression)) {
+                try (ClnAWriter writer = new ClnAWriter(pipelineConfiguration, out,
+                        smartTempDestination(out, "", useSystemTemp),highCompression)) {
+
                     // writer will supply current stage and completion percent to the progress reporter
                     SmartProgressReporter.startProgressReport(writer);
                     // Writing clone block

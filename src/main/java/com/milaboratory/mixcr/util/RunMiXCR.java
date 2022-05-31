@@ -72,6 +72,7 @@ import java.util.List;
 
 import static cc.redberry.pipe.CUtils.chunked;
 import static cc.redberry.pipe.CUtils.unchunked;
+import static com.milaboratory.util.TempFileManager.*;
 
 /**
  * @author Dmitry Bolotin
@@ -121,8 +122,8 @@ public final class RunMiXCR {
     public static FullSeqAssembleResult assembleContigs(final AssembleResult assemble) {
         AlignResult align = assemble.alignResult;
 
-        File clnaFile = TempFileManager.getTempFile();
-        try (ClnAWriter writer = new ClnAWriter(null, clnaFile)) {
+        File clnaFile = getTempFile();
+        try (ClnAWriter writer = new ClnAWriter(null, clnaFile, systemTempFolderDestination("runmixcr.assembleContigs"))) {
             // writer will supply current stage and completion percent to the progress reporter
             SmartProgressReporter.startProgressReport(writer);
             // Writing clone block
@@ -140,7 +141,7 @@ public final class RunMiXCR {
         }
 
         int totalClonesCount = 0;
-        File tmpFile = TempFileManager.getTempFile();
+        File tmpFile = getTempFile();
         try (ClnAReader reader = new ClnAReader(clnaFile.toPath(), VDJCLibraryRegistry.getDefault(), 2);  // TODO concurrency ???
              PrimitivO tmpOut = new PrimitivO(new BufferedOutputStream(new FileOutputStream(tmpFile)));) {
 
@@ -287,7 +288,7 @@ public final class RunMiXCR {
 
         public VDJCAlignmentsReader resultReader() throws IOException {
             if (alignmentsFile == null) {
-                alignmentsFile = TempFileManager.getTempFile();
+                alignmentsFile = getTempFile();
                 try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(alignmentsFile)) {
                     writer.header(aligner, null, tagsInfo);
                     for (VDJCAlignments alignment : alignments)
