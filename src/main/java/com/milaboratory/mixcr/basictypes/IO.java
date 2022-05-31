@@ -120,7 +120,7 @@ class IO {
             }
             output.writeByte(object.mappingType);
             if (!ReadToCloneMapping.isDropped(object.mappingType))
-                output.writeVarInt(object.cloneIndex);
+                output.writeVarLong(object.cloneIndex);
         }
 
         @Override
@@ -138,9 +138,9 @@ class IO {
                 hits.put(key, input.readObject(VDJCHit[].class));
             }
             byte mappingType = input.readByte();
-            int cloneIndex = -1;
+            long cloneIndex = -1;
             if (!ReadToCloneMapping.isDropped(mappingType))
-                cloneIndex = input.readVarInt();
+                cloneIndex = input.readVarLong();
             return new VDJCAlignments(hits, tagCount, targets, history, originalReads, mappingType, cloneIndex);
         }
 

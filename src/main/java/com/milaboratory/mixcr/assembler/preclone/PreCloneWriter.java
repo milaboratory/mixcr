@@ -15,21 +15,20 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.ForkJoinPool;
 
-import static com.milaboratory.mixcr.basictypes.FieldCollection.VDJCACloneIdComparator;
-import static com.milaboratory.mixcr.basictypes.FieldCollection.VDJCACloneIdHash;
+import static com.milaboratory.mixcr.basictypes.FieldCollection.*;
 
 public final class PreCloneWriter {
-    private final Path tempFolder;
+    private final Path alignmentPresortFolder;
     private final PrimitivOHybrid output;
     private volatile HashSorter<VDJCAlignments> alignmentCollator;
-    private volatile HashSorter<VDJCAlignments> cloneCollator;
+    private volatile HashSorter<PreClone> cloneCollator;
 
     public PreCloneWriter(Path file) throws IOException {
-        this.tempFolder = file.toAbsolutePath().resolveSibling(file.getFileName().toString() + ".presorted");
-        if (Files.exists(tempFolder))
-            FileUtils.deleteDirectory(tempFolder.toFile());
-        TempFileManager.register(tempFolder.toFile());
-        Files.createDirectory(this.tempFolder);
+        this.alignmentPresortFolder = file.toAbsolutePath().resolveSibling(file.getFileName().toString() + ".presorted");
+        if (Files.exists(alignmentPresortFolder))
+            FileUtils.deleteDirectory(alignmentPresortFolder.toFile());
+        TempFileManager.register(alignmentPresortFolder.toFile());
+        Files.createDirectory(this.alignmentPresortFolder);
         this.output = new PrimitivOHybrid(ForkJoinPool.commonPool(), file);
     }
 
@@ -51,6 +50,12 @@ public final class PreCloneWriter {
         alignmentCollator = new HashSorter<>(
                 VDJCAlignments.class,
                 VDJCACloneIdHash, VDJCACloneIdComparator,
+                5, tempFolder, 4, 6,
+                stateBuilder.getOState(), stateBuilder.getIState(),
+                memoryBudget, 1 << 18 /* 256 Kb */);
+        cloneCollator = new HashSorter<>(
+                PreClone.class,
+                PreCloneIdHash, PreCloneIdComparator,
                 5, tempFolder, 4, 6,
                 stateBuilder.getOState(), stateBuilder.getIState(),
                 memoryBudget, 1 << 18 /* 256 Kb */);

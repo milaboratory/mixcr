@@ -35,4 +35,8 @@ public final class PreClone {
         this.clonalSequence = clonalSequence;
         this.geneScores = geneScores;
     }
+
+    public long getId() {
+        return id;
+    }
 }

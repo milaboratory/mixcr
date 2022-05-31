@@ -50,7 +50,7 @@ public final class VDJCAlignments extends VDJCObject {
     final SequenceHistory[] history;
     final SequenceRead[] originalReads;
     final byte mappingType;
-    final int cloneIndex;
+    final long cloneIndex;
     private volatile long alignmentsIndex = -1;
 
     public VDJCAlignments(long alignmentsIndex,
@@ -59,7 +59,7 @@ public final class VDJCAlignments extends VDJCObject {
                           NSequenceWithQuality[] targets,
                           SequenceHistory[] history,
                           SequenceRead[] originalReads,
-                          byte mappingType, int cloneIndex) {
+                          byte mappingType, long cloneIndex) {
         super(hits, tagCount, targets);
 
         if (!ReadToCloneMapping.isCorrect(mappingType) ||
@@ -88,7 +88,7 @@ public final class VDJCAlignments extends VDJCObject {
                           NSequenceWithQuality[] targets,
                           SequenceHistory[] history,
                           SequenceRead[] originalReads,
-                          byte mappingType, int cloneIndex) {
+                          byte mappingType, long cloneIndex) {
         this(-1, hits, tagCount, targets, history, originalReads, mappingType, cloneIndex);
     }
 
@@ -145,7 +145,7 @@ public final class VDJCAlignments extends VDJCObject {
         return ReadToCloneMapping.getMappingType(mappingType);
     }
 
-    public int getCloneIndex() {
+    public long getCloneIndex() {
         return cloneIndex;
     }
 

@@ -1,5 +1,6 @@
 package com.milaboratory.mixcr.basictypes;
 
+import com.milaboratory.mixcr.assembler.preclone.PreClone;
 import com.milaboratory.util.HashFunctions;
 
 import java.util.Comparator;
@@ -10,5 +11,11 @@ public final class FieldCollection {
             Comparator.comparing(VDJCAlignments::getCloneIndex);
 
     public static final ToIntFunction<VDJCAlignments> VDJCACloneIdHash =
-            a -> HashFunctions.JenkinWang32shift(a.getCloneIndex());
+            a -> HashFunctions.Wang64to32shift(a.getCloneIndex());
+
+    public static final Comparator<PreClone> PreCloneIdComparator =
+            Comparator.comparing(PreClone::getId);
+
+    public static final ToIntFunction<PreClone> PreCloneIdHash =
+            a -> HashFunctions.Wang64to32shift(a.getId());
 }
