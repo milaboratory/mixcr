@@ -83,7 +83,7 @@ public final class CloneSetOverlap {
                             .collect(Collectors.toList()),
                     by,
                     5,
-                    TempFileManager.getTempDir().toPath(),
+                    TempFileManager.systemTempFolderDestination("mixcr.overlap."),
                     4, 6,
                     memoryBudget, 1 << 18 /* 256 Kb */, stateBuilder);
             merger.loadData();

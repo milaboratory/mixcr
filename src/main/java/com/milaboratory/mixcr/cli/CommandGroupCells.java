@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import static com.milaboratory.mixcr.basictypes.IOUtil.*;
+import static com.milaboratory.util.TempFileManager.smartTempDestination;
 
 /**
  *
@@ -151,7 +152,8 @@ public class CommandGroupCells extends ACommandWithSmartOverwriteWithSingleInput
 
     private void runClna() throws Exception {
         try (ClnAReader reader = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), 3);
-             ClnAWriter writer = new ClnAWriter(getFullPipelineConfiguration(), out)) {
+             ClnAWriter writer = new ClnAWriter(getFullPipelineConfiguration(), out,
+                     smartTempDestination(out, "", false))) {
 
             CloneSet cloneSet = reader.readCloneSet();
 

@@ -12,13 +12,13 @@ import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine;
 
 import java.io.File;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 
 import static com.milaboratory.mixcr.basictypes.IOUtil.MAGIC_CLNA;
 import static com.milaboratory.mixcr.basictypes.IOUtil.MAGIC_CLNS;
 import static com.milaboratory.mixcr.cli.CommandSortClones.SORT_CLONES_COMMAND_NAME;
+import static com.milaboratory.util.TempFileManager.smartTempDestination;
 
 
 @CommandLine.Command(name = SORT_CLONES_COMMAND_NAME,
@@ -27,6 +27,10 @@ import static com.milaboratory.mixcr.cli.CommandSortClones.SORT_CLONES_COMMAND_N
         description = "Sort clones by sequence. Clones in the output file will be sorted by clonal sequence, which allows to build overlaps between clonesets.")
 public class CommandSortClones extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
     static final String SORT_CLONES_COMMAND_NAME = "sortClones";
+
+    @CommandLine.Option(description = "Use system temp folder for temporary files, the output folder will be used if this option is omitted.",
+            names = {"--use-system-temp"})
+    public boolean useSystemTemp = false;
 
     @Override
     public ActionConfiguration<SortConfiguration> getConfiguration() {
@@ -59,7 +63,7 @@ public class CommandSortClones extends ACommandWithSmartOverwriteWithSingleInput
 
             case MAGIC_CLNA:
                 try (ClnAReader reader = new ClnAReader(Paths.get(in), VDJCLibraryRegistry.getDefault(), Runtime.getRuntime().availableProcessors());
-                     ClnAWriter writer = new ClnAWriter(getFullPipelineConfiguration(), out)) {
+                     ClnAWriter writer = new ClnAWriter(getFullPipelineConfiguration(), out, smartTempDestination(out, "", useSystemTemp))) {
                     SmartProgressReporter.startProgressReport(writer);
 
                     GeneFeature[] assemblingFeatures = reader.getAssemblerParameters().getAssemblingFeatures();

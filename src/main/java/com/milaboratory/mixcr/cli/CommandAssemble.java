@@ -56,6 +56,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import static com.milaboratory.mixcr.cli.CommandAssemble.ASSEMBLE_COMMAND_NAME;
+import static com.milaboratory.util.TempFileManager.smartTempDestination;
 
 @Command(name = ASSEMBLE_COMMAND_NAME,
         sortOptions = true,
@@ -77,6 +78,10 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
             throwValidationException("-t / --threads must be positive");
         this.threads = threads;
     }
+
+    @Option(description = "Use system temp folder for temporary files, the output folder will be used if this option is omitted.",
+            names = {"--use-system-temp"})
+    public boolean useSystemTemp = false;
 
     @Option(description = "Use higher compression for output file.",
             names = {"--high-compression"})
@@ -259,29 +264,30 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
             if (clna) {
 
 
-//
-//                    try (AlignmentsMappingMerger merged = new AlignmentsMappingMerger(alignmentsProvider.create(),
-//                            assembler.getAssembledReadsPort())) {
-//
-//                        VDJCAlignments al;
-//                        while ((al = merged.take()) != null) {
-//                            if (al.getCloneIndex() != -1)
-//                                continue;
-//
-//                            TagCounter tg = al.getTagCounter();
-//                            assert tg.size() == 1;
-//                            TagTuple tags = tg.iterator().key();
-//                            if (al.getBestHit(GeneType.Variable) != null) {
-//                                TagSignature sig = new TagSignature(tags, al.getBestHit(GeneType.Variable).getGene().getId());
-//                                Integer cloneId = tagsToClones.get(sig);
-//                                if (cloneId != null) {
-//
-//                                }
-//                            }
-//                        }
-//                    }
+                //
+                //                    try (AlignmentsMappingMerger merged = new AlignmentsMappingMerger(alignmentsProvider.create(),
+                //                            assembler.getAssembledReadsPort())) {
+                //
+                //                        VDJCAlignments al;
+                //                        while ((al = merged.take()) != null) {
+                //                            if (al.getCloneIndex() != -1)
+                //                                continue;
+                //
+                //                            TagCounter tg = al.getTagCounter();
+                //                            assert tg.size() == 1;
+                //                            TagTuple tags = tg.iterator().key();
+                //                            if (al.getBestHit(GeneType.Variable) != null) {
+                //                                TagSignature sig = new TagSignature(tags, al.getBestHit(GeneType.Variable).getGene().getId());
+                //                                Integer cloneId = tagsToClones.get(sig);
+                //                                if (cloneId != null) {
+                //
+                //                                }
+                //                            }
+                //                        }
+                //                    }
 
-                try (ClnAWriter writer = new ClnAWriter(pipelineConfiguration, out, highCompression)) {
+                try (ClnAWriter writer = new ClnAWriter(pipelineConfiguration, out,
+                        smartTempDestination(out, "", useSystemTemp), highCompression)) {
                     // writer will supply current stage and completion percent to the progress reporter
                     SmartProgressReporter.startProgressReport(writer);
                     // Writing clone block
