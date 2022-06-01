@@ -172,7 +172,7 @@ public final class VDJCAlignments extends VDJCObject {
                 mappingType, newCloneIndex);
     }
 
-    public VDJCAlignments withCloneIndexAndMappingType(int newCloneIndex, byte newMappingType) {
+    public VDJCAlignments withCloneIndexAndMappingType(long newCloneIndex, byte newMappingType) {
         return new VDJCAlignments(alignmentsIndex, hits, tagCount, targets, history, originalReads,
                 newMappingType, newCloneIndex);
     }

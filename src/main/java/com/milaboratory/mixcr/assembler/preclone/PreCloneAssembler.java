@@ -8,24 +8,23 @@ import com.milaboratory.mitool.consensus.ConsensusResult;
 import com.milaboratory.mitool.consensus.GConsensusAssembler;
 import com.milaboratory.mitool.helpers.GroupOP;
 import com.milaboratory.mitool.helpers.PipeKt;
-import com.milaboratory.mixcr.basictypes.GeneAndScore;
 import com.milaboratory.mixcr.assembler.VDJCGeneAccumulator;
+import com.milaboratory.mixcr.basictypes.GeneAndScore;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import gnu.trove.map.hash.TObjectIntHashMap;
-import gnu.trove.set.hash.TIntHashSet;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGeneId;
 import kotlin.jvm.functions.Function1;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public final class PreCloneAssembler {
     private final PreCloneAssemblerReport report = new PreCloneAssemblerReport();
-    private final AtomicInteger idGenerator = new AtomicInteger();
+    private final AtomicLong idGenerator = new AtomicLong();
     private final PreCloneAssemblerParameters parameters;
     private final OutputPort<GroupOP<VDJCAlignments, TagTuple>> alignmentsReader1, alignmentsReader2;
 
@@ -42,7 +41,7 @@ public final class PreCloneAssembler {
         return report;
     }
 
-    public List<PreCloneWithAlignments> getForNextGroup() {
+    public PreCloneAssemblerResult getForNextGroup() {
         GroupOP<VDJCAlignments, TagTuple> grp1 = alignmentsReader1.take();
 
         if (grp1 == null)
@@ -68,8 +67,8 @@ public final class PreCloneAssembler {
         outer:
         for (VDJCAlignments al : CUtils.it(grp1)) {
             localIdx++;
-            for (int i = 0; i < parameters.assemblingFeatures.length; i++)
-                if ((row[i] = al.getFeature(parameters.assemblingFeatures[i])) == null)
+            for (int sr = 0; sr < parameters.assemblingFeatures.length; sr++)
+                if ((row[sr] = al.getFeature(parameters.assemblingFeatures[sr])) == null)
                     continue outer;
 
             assemblerInput.add(row);
@@ -94,12 +93,12 @@ public final class PreCloneAssembler {
 
         if (assemblerInput.isEmpty()) {
             CUtils.drainWithoutClose(alignmentsReader2.take(), DummyInputPort.INSTANCE);
-            return Collections.emptyList();
+            return new PreCloneAssemblerResult(Collections.emptyList(), null);
         }
 
         // Step #2
-        // Building consensuses from the records collected on the step #1, and creating indices for
-        // clonotype assignment of alignments left after the previous step
+        // Building consensuses from the records collected on the step #1, and creating indices for empirical
+        // clonotype assignment for alignments left after the previous step
 
         GConsensusAssembler gAssembler = new GConsensusAssembler(parameters.assemblerParameters, assemblerInput);
         List<ConsensusResult> consensuses = gAssembler.calculateConsensuses();
@@ -111,46 +110,40 @@ public final class PreCloneAssembler {
         // Accumulates V, J and C gene information for each consensus
         // noinspection unchecked
         Map<GeneType, List<GeneAndScore>>[] geneInfos = new Map[numberOfClones];
+
         // Saves local record indices, assigned to each of the consensuses
-        TIntHashSet[] contents = new TIntHashSet[numberOfClones];
-        // I.e. UMIs for CELL-barcode-only assembly use-case
-        // Set<TagTuple>[] tagSuffixess = new Set[numberOfClones];
+        // TIntHashSet[] contents = new TIntHashSet[numberOfClones];
+        // long[] alignmentToClone = new long[(int) grp1.getCount()];
+        // Arrays.fill(alignmentToClone, -1);
 
-        // Union of all contents
-        // BitArray allAssignedToClonotypes = new BitArray((int) grp1.getCount());
-
-        // Tag suffixes unambiguously linked to a clonotype (store cloneId+1; -1 for ambiguous cases; 0 - not found)
+        // Tag suffixes unambiguously linked to a clonotype
+        // (store cloneIdx+1; -1 for ambiguous cases; 0 - not found)
         TObjectIntHashMap<TagTuple> tagSuffixToCloneId = new TObjectIntHashMap<>();
-        // V, J and C genes unambiguously linked to a clonotype (store cloneId+1; -1 for ambiguous cases; 0 - not found)
+        // V, J and C genes unambiguously linked to a clonotype
+        // (store cloneIdx+1; -1 for ambiguous cases; 0 - not found)
         TObjectIntHashMap<VDJCGeneId> vjcGenesToCloneId = new TObjectIntHashMap<>();
 
         // Special map to simplify collection of additional information from already assigned alignment
         // -1 = not assigned to any consensus / clonotype
         // 0  = no assembling feature (target for empirical assignment)
-        // >0 = assigned to a specific consensus / clonotype (store cloneId+1)
-        int[] alignmentIndexToClonotypeIndex = new int[(int) grp1.getCount()];
+        // >0 = assigned to a specific consensus / clonotype (store cloneIdx+1)
+        int[] alignmentIdxToCloneIdxP1 = new int[(int) grp1.getCount()];
 
         for (int cIdx = 0; cIdx < numberOfClones; cIdx++) {
             ConsensusResult c = consensuses.get(cIdx);
             VDJCGeneAccumulator acc = new VDJCGeneAccumulator();
-            TIntHashSet content = new TIntHashSet();
             Set<TagTuple> tagSuffixes = new HashSet<>();
 
             int rIdx = -1;
             while ((rIdx = c.recordsUsed.nextBit(rIdx + 1)) != -1) {
                 AlignmentInfo ai = alignmentInfos.get(rIdx);
                 acc.accumulate(ai.genesAndScores);
-                content.add(ai.localIdx);
                 tagSuffixes.addAll(ai.tagSuffixes);
-                alignmentIndexToClonotypeIndex[ai.localIdx] = cIdx + 1;
+                alignmentIdxToCloneIdxP1[ai.localIdx] = cIdx + 1;
                 report.coreAlignments.incrementAndGet();
             }
 
-            // allAssignedToClonotypes.or(content);
-
             geneInfos[cIdx] = acc.aggregateInformation(parameters.relativeMinScores);
-            contents[cIdx] = content;
-            // tagSuffixess[cIdx] = tagSuffixes;
 
             for (TagTuple ts : tagSuffixes)
                 if (tagSuffixToCloneId.get(ts) > 0)
@@ -171,12 +164,14 @@ public final class PreCloneAssembler {
         }
 
         // Information from the alignments with assembling features, but not assigned to any contigs interpreted as
-        // ambiguous
+        // indeed ambiguous
         for (AlignmentInfo ai : alignmentInfos) {
-            if (alignmentIndexToClonotypeIndex[ai.localIdx] > 0)
+            if (alignmentIdxToCloneIdxP1[ai.localIdx] > 0)
+                // This alignment was assigned to a clone
                 continue;
 
-            alignmentIndexToClonotypeIndex[ai.localIdx] = -1;
+            // Will not participate in empirical alignment assignment
+            alignmentIdxToCloneIdxP1[ai.localIdx] = -1;
 
             report.discardedCoreAlignments.incrementAndGet();
 
@@ -209,7 +204,7 @@ public final class PreCloneAssembler {
         for (VDJCAlignments al : CUtils.it(grp2)) {
             localIdx++;
 
-            int cIdxP1 = alignmentIndexToClonotypeIndex[localIdx];
+            int cIdxP1 = alignmentIdxToCloneIdxP1[localIdx];
 
             // Running empirical assignment for the alignments not yet assigned
             if (cIdxP1 == 0) {
@@ -238,10 +233,10 @@ public final class PreCloneAssembler {
                         cIdxP1 = -1;
                 }
 
-                if (cIdxP1 > 0) {
+                if (cIdxP1 > 0)
                     // Adding alignment to the clone
-                    contents[cIdxP1 - 1].add(localIdx);
-                } else if (cIdxP1 == -1)
+                    alignmentIdxToCloneIdxP1[localIdx] = cIdxP1;
+                else if (cIdxP1 == -1)
                     report.empiricalAssignmentConflicts.incrementAndGet();
             } else if (cIdxP1 > 0)
                 // Using second iteration over the alignments to assemble TagCounters from the alignments assigned to
@@ -254,25 +249,29 @@ public final class PreCloneAssembler {
                 report.unassignedAlignments.incrementAndGet();
         }
 
-        List<PreCloneWithAlignments> result = new ArrayList<>();
+        long cloneIdOffset = idGenerator.getAndAdd(numberOfClones);
+        List<PreClone> result = new ArrayList<>(numberOfClones);
         for (int cIdx = 0; cIdx < numberOfClones; cIdx++) {
             ConsensusResult.SingleConsensus[] cs = consensuses.get(cIdx).consensuses;
             NSequenceWithQuality[] clonalSequence = new NSequenceWithQuality[cs.length];
-            for (int i = 0; i < cs.length; i++)
-                clonalSequence[i] = cs[i].consensus;
-            result.add(new PreCloneWithAlignments(
-                    new PreClone(
-                            idGenerator.incrementAndGet(),
-                            grp1.getKey(),
-                            coreTagCountAggregators[cIdx].createAndDestroy(),
-                            fullTagCountAggregators[cIdx].createAndDestroy(),
-                            clonalSequence,
-                            geneInfos[cIdx]),
-                    contents[cIdx]
-            ));
+            for (int sr = 0; sr < cs.length; sr++)
+                clonalSequence[sr] = cs[sr].consensus;
+            result.add(new PreClone(
+                    cloneIdOffset + cIdx,
+                    grp1.getKey(),
+                    coreTagCountAggregators[cIdx].createAndDestroy(),
+                    fullTagCountAggregators[cIdx].createAndDestroy(),
+                    clonalSequence,
+                    geneInfos[cIdx]));
         }
 
-        return result;
+        long[] resultAlToClone = new long[alignmentIdxToCloneIdxP1.length];
+        for (int i = 0; i < resultAlToClone.length; i++)
+            resultAlToClone[i] = alignmentIdxToCloneIdxP1[i] <= 0
+                    ? -1
+                    : cloneIdOffset + alignmentIdxToCloneIdxP1[i] - 1;
+
+        return new PreCloneAssemblerResult(result, resultAlToClone);
     }
 
     private static final class AlignmentInfo {

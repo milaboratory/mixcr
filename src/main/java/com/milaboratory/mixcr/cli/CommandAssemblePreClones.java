@@ -15,8 +15,6 @@ import com.milaboratory.mixcr.basictypes.tag.TagType;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.util.ReportHelper;
 import com.milaboratory.util.TempFileManager;
-import gnu.trove.iterator.TIntIterator;
-import gnu.trove.map.hash.TIntLongHashMap;
 import io.repseq.core.GeneFeature;
 import kotlin.jvm.functions.Function1;
 import picocli.CommandLine;
@@ -92,21 +90,24 @@ public class CommandAssemblePreClones extends ACommandMiXCR {
                     VDJCAlignments::ensureKeyTags), gFunction);
 
             // TODO array?
-            TIntLongHashMap alToCloneMapping = new TIntLongHashMap();
-            List<PreCloneWithAlignments> clones;
-            while ((clones = assembler.getForNextGroup()) != null) {
+            // TIntLongHashMap alToCloneMapping = new TIntLongHashMap(Constants.DEFAULT_CAPACITY,
+            //         Constants.DEFAULT_LOAD_FACTOR, -1, -1);
+            // long[] alToClone = null;
+            PreCloneAssemblerResult result;
+            while ((result = assembler.getForNextGroup()) != null) {
                 GroupOP<VDJCAlignments, TagTuple> grp = alGroups.take();
-                assert clones.isEmpty() || clones.get(0).preClone.coreKey.equals(grp.getKey());
+                List<PreClone> clones = result.getClones();
+                assert clones.isEmpty() || clones.get(0).coreKey.equals(grp.getKey());
 
-                alToCloneMapping.clear();
-                for (PreCloneWithAlignments cloneWA : clones) {
-                    PreClone clone = cloneWA.preClone;
-                    TIntIterator it = cloneWA.alignments.iterator();
-                    while (it.hasNext())
-                        alToCloneMapping.put(it.next(), clone.id);
+
+                for (PreClone clone : clones) {
+                    // PreClone clone = cloneWA.preClone;
+                    // TIntIterator it = cloneWA.alignments.iterator();
+                    // while (it.hasNext())
+                    //     alToCloneMapping.put(it.next(), clone.id);
 
                     writer.putClone(clone);
-                    //
+
                     // out.println(
                     //         clone.clonalSequence[0].getSequence().toString() + "\t" +
                     //                 cloneWA.alignments.size() + "\t" +
@@ -119,8 +120,12 @@ public class CommandAssemblePreClones extends ACommandMiXCR {
                 }
 
                 int localId = 0;
-                for (VDJCAlignments al : CUtils.it(grp))
-                    writer.putAlignment(al.withCloneIndex(alToCloneMapping.get(localId++)));
+                for (VDJCAlignments al : CUtils.it(grp)) {
+                    long cloneMapping = result.getCloneForAlignment(localId++);
+                    writer.putAlignment(cloneMapping != -1
+                            ? al.withCloneIndexAndMappingType(cloneMapping, (byte) 0)
+                            : al);
+                }
             }
 
             writer.finishWrite();

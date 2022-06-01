@@ -2,6 +2,7 @@ package com.milaboratory.mixcr.basictypes.tag;
 
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import com.milaboratory.primitivio.annotations.Serializable;
 
 import java.util.Arrays;
 
@@ -10,6 +11,7 @@ import java.util.Arrays;
  *
  * Tag may be a sample name, cell marker or unique molecular identifier.
  */
+@Serializable(by = IO.TagTupleSerializer.class)
 public final class TagTuple implements Comparable<TagTuple> {
     public static final TagTuple NO_TAGS = new TagTuple();
 

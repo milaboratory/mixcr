@@ -59,6 +59,29 @@ public final class IO {
         }
     }
 
+    public static class TagTupleSerializer implements Serializer<TagTuple> {
+        @Override
+        public void write(PrimitivO output, TagTuple obj) {
+            output.writeObject(obj.tags);
+        }
+
+        @Override
+        public TagTuple read(PrimitivI input) {
+            //noinspection ConstantConditions
+            return new TagTuple(input.readObject(TagValue[].class));
+        }
+
+        @Override
+        public boolean isReference() {
+            return true;
+        }
+
+        @Override
+        public boolean handlesReference() {
+            return false;
+        }
+    }
+
     public static class TagCounterSerializer implements Serializer<TagCount> {
         @Override
         public void write(PrimitivO output, TagCount object) {
