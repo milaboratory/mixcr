@@ -606,7 +606,7 @@ public final class FieldExtractors {
             descriptorsList.add(new PL_A("-cloneIdWithMappingType", "To which clone alignment was attached with additional info on mapping type (make sure using .clna file as input for exportAlignments)", "Clone mapping", "cloneMapping") {
                 @Override
                 protected String extract(VDJCAlignments object) {
-                    int ci = object.getCloneIndex();
+                    long ci = object.getCloneIndex();
                     ReadToCloneMapping.MappingType mt = object.getMappingType();
                     return "" + ci + ":" + mt;
 

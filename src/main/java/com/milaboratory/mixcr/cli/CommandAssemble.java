@@ -379,7 +379,7 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
     }
 
     private static VDJCAlignments setMappingCloneIndex(VDJCAlignments al, int cloneIndex) {
-        return al.updateCloneIndexAndMappingType(cloneIndex, ReadToCloneMapping.ADDITIONAL_MAPPING_MASK);
+        return al.withCloneIndexAndMappingType(cloneIndex, ReadToCloneMapping.ADDITIONAL_MAPPING_MASK);
     }
 
     private static final class TagSignature {

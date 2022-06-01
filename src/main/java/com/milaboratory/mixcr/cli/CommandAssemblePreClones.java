@@ -7,26 +7,20 @@ import com.milaboratory.mitool.consensus.AAssemblerParameters;
 import com.milaboratory.mitool.consensus.GConsensusAssemblerParameters;
 import com.milaboratory.mitool.helpers.GroupOP;
 import com.milaboratory.mitool.helpers.PipeKt;
+import com.milaboratory.mixcr.assembler.preclone.*;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.mixcr.basictypes.tag.TagType;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
-import com.milaboratory.mixcr.assembler.preclone.PreClone;
-import com.milaboratory.mixcr.assembler.preclone.PreCloneAssembler;
-import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerParameters;
 import com.milaboratory.util.ReportHelper;
+import com.milaboratory.util.TempFileManager;
 import gnu.trove.iterator.TIntIterator;
-import gnu.trove.list.array.TLongArrayList;
-import gnu.trove.map.TIntLongMap;
 import gnu.trove.map.hash.TIntLongHashMap;
 import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
 import kotlin.jvm.functions.Function1;
+import picocli.CommandLine;
 
-import java.io.BufferedOutputStream;
-import java.io.PrintStream;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -39,6 +33,11 @@ import static picocli.CommandLine.Parameters;
 public class CommandAssemblePreClones extends ACommandMiXCR {
     @Parameters(arity = "2", description = "input_file output_file")
     public List<String> files;
+
+    @CommandLine.Option(description = "Use system temp folder for temporary files, the output folder will be used if this option is omitted.",
+            names = {"--use-system-temp"})
+    public boolean useSystemTemp = false;
+
 
     private static final AAssemblerParameters aAssemblerParams = AAssemblerParameters.builder()
             .bandWidth(4)
@@ -65,9 +64,14 @@ public class CommandAssemblePreClones extends ACommandMiXCR {
                 VDJCAlignmentsReader reader2 = new VDJCAlignmentsReader(files.get(0));
                 // For export
                 VDJCAlignmentsReader reader3 = new VDJCAlignmentsReader(files.get(0));
-                PrintStream out = new PrintStream(new BufferedOutputStream(
-                        Files.newOutputStream(Paths.get(files.get(1))), 1 << 20))
+                PreCloneWriter writer = new PreCloneWriter(Paths.get(files.get(1)),
+                        TempFileManager.smartTempDestination(files.get(1), "", useSystemTemp))
+                // //
+                // PrintStream out = new PrintStream(new BufferedOutputStream(
+                //         Files.newOutputStream(Paths.get(files.get(1))), 1 << 20))
         ) {
+            writer.init(reader1);
+
             TagsInfo tagsInfo = reader1.getTagsInfo();
             int depth = tagsInfo.getDepthFor(TagType.CellTag);
             // int depth = tagsInfo.getDepthFor(TagType.MoleculeTag);
@@ -87,33 +91,40 @@ public class CommandAssemblePreClones extends ACommandMiXCR {
             OutputPort<GroupOP<VDJCAlignments, TagTuple>> alGroups = PipeKt.group(CUtils.wrap(reader3,
                     VDJCAlignments::ensureKeyTags), gFunction);
 
-            List<PreClone> clones;
+            // TODO array?
+            TIntLongHashMap alToCloneMapping = new TIntLongHashMap();
+            List<PreCloneWithAlignments> clones;
             while ((clones = assembler.getForNextGroup()) != null) {
                 GroupOP<VDJCAlignments, TagTuple> grp = alGroups.take();
-                assert clones.isEmpty() || clones.get(0).coreKey.equals(grp.getKey());
-                TIntLongMap localToMitReadIndex = new TIntLongHashMap();
+                assert clones.isEmpty() || clones.get(0).preClone.coreKey.equals(grp.getKey());
+
+                alToCloneMapping.clear();
+                for (PreCloneWithAlignments cloneWA : clones) {
+                    PreClone clone = cloneWA.preClone;
+                    TIntIterator it = cloneWA.alignments.iterator();
+                    while (it.hasNext())
+                        alToCloneMapping.put(it.next(), clone.id);
+
+                    writer.putClone(clone);
+                    //
+                    // out.println(
+                    //         clone.clonalSequence[0].getSequence().toString() + "\t" +
+                    //                 cloneWA.alignments.size() + "\t" +
+                    //                 clone.geneScores.get(GeneType.Variable) + "\t" +
+                    //                 clone.geneScores.get(GeneType.Joining) + "\t" +
+                    //                 clone.geneScores.get(GeneType.Constant) + "\t" +
+                    //                 clone.coreTagCount + "\t" +
+                    //                 clone.fullTagCount + "\t" +
+                    //                 rIds);
+                }
+
                 int localId = 0;
                 for (VDJCAlignments al : CUtils.it(grp))
-                    localToMitReadIndex.put(localId++, al.getMinReadId());
-
-                for (PreClone clone : clones) {
-
-                    TLongArrayList rIds = new TLongArrayList();
-                    TIntIterator it = clone.alignments.iterator();
-                    while (it.hasNext())
-                        rIds.add(localToMitReadIndex.get(it.next()));
-
-                    out.println(
-                            clone.clonalSequence[0].getSequence().toString() + "\t" +
-                                    clone.alignments.size() + "\t" +
-                                    clone.geneScores.get(GeneType.Variable) + "\t" +
-                                    clone.geneScores.get(GeneType.Joining) + "\t" +
-                                    clone.geneScores.get(GeneType.Constant) + "\t" +
-                                    clone.coreTagCount + "\t" +
-                                    clone.fullTagCount + "\t" +
-                                    rIds);
-                }
+                    writer.putAlignment(al.withCloneIndex(alToCloneMapping.get(localId++)));
             }
+
+            writer.finishWrite();
+
             assembler.getReport().writeReport(ReportHelper.STDOUT);
         }
     }

@@ -13,7 +13,7 @@ import java.util.Map;
 @Serializable(by = IO.PreCloneSerializer.class)
 public final class PreClone {
     /** Pre-clonotype id */
-    public long id;
+    public final long id;
     /** Core key of the alignments group */
     public final TagTuple coreKey;
     /** Tag counter aggregating information about alignments with clonal sequence */
@@ -38,5 +38,9 @@ public final class PreClone {
 
     public long getId() {
         return id;
+    }
+
+    public PreClone withId(long id) {
+        return new PreClone(id, coreKey, coreTagCount, fullTagCount, clonalSequence, geneScores);
     }
 }

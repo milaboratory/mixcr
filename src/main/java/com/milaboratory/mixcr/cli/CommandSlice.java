@@ -134,7 +134,7 @@ public class CommandSlice extends ACommandWithSmartOverwriteWithSingleInputMiXCR
                     VDJCAlignments al = als.take();
                     if (al == null)
                         return null;
-                    return al.updateCloneIndex(ii);
+                    return al.withCloneIndex(ii);
                 });
                 i++;
             }

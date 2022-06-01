@@ -22,17 +22,12 @@ import com.milaboratory.mixcr.basictypes.tag.*;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
 import com.milaboratory.util.ReportHelper;
 import com.milaboratory.util.SmartProgressReporter;
+import com.milaboratory.util.TempFileDest;
 import com.milaboratory.util.TempFileManager;
 import com.milaboratory.util.sorting.HashSorter;
 import gnu.trove.list.array.TIntArrayList;
-import org.apache.commons.io.FileUtils;
 import picocli.CommandLine;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -93,31 +88,6 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
             names = {"-r", "--report"})
     public String reportFile;
 
-    private Path tempFolder = null;
-
-    private Path tempFolder() {
-        if (tempFolder == null) {
-            try {
-                File tempFolderF;
-                if (useSystemTemp)
-                    tempFolderF = Paths.get(System.getProperty("java.io.tmpdir"))
-                            .resolve(Paths.get(out).getFileName().getFileName() + "." +
-                                    Long.toString(System.nanoTime(), 36))
-                            .toFile();
-                else
-                    tempFolderF = new File(out + ".tmp");
-                if (tempFolderF.exists())
-                    FileUtils.deleteDirectory(tempFolderF);
-                Files.createDirectory(tempFolderF.toPath());
-                TempFileManager.register(tempFolderF);
-                tempFolder = tempFolderF.toPath();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return tempFolder;
-    }
-
     TagCorrectorParameters getParameters() {
         return new TagCorrectorParameters(
                 power, backgroundSubstitutionRate, backgroundIndelRate,
@@ -132,6 +102,8 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
 
     @Override
     public void run1() throws Exception {
+        TempFileDest tempDest = TempFileManager.smartTempDestination(out, "", useSystemTemp);
+
         final CorrectionNode correctionResult;
         final CorrectionReport report;
         final int[] targetTagIndices;
@@ -154,7 +126,7 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
 
             if (!noCorrect) {
                 TagCorrector corrector = new TagCorrector(getParameters(),
-                        tempFolder(), "",
+                        tempDest.addSuffix("tags"),
                         memoryBudget,
                         4, 4);
                 SmartProgressReporter.startProgressReport(corrector);
@@ -214,7 +186,7 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
                 return new HashSorter<>(
                         VDJCAlignments.class,
                         sortingStep.getHashFunction(), sortingStep.getComparator(),
-                        4, tempFolder().resolve("hashsorter." + tagIdx),
+                        4, tempDest.addSuffix("hashsorter." + tagIdx),
                         4, 4,
                         stateBuilder.getOState(), stateBuilder.getIState(),
                         memoryBudget, 10000
