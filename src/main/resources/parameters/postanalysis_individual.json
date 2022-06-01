@@ -56,7 +56,7 @@
         "onlyProductive": null,
         "dropOutliers": null
       },
-      "shannonWeiner": {
+      "shannonWiener": {
         "downsampling": null,
         "onlyProductive": null,
         "dropOutliers": null
