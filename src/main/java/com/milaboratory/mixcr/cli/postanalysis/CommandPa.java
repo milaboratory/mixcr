@@ -6,6 +6,7 @@ import com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingUtil;
 import com.milaboratory.util.StringUtil;
 import io.repseq.core.Chains;
 import picocli.CommandLine;
+import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
@@ -14,6 +15,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.repseq.core.Chains.*;
@@ -93,7 +96,7 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
         if (!out().endsWith(".json") && !out().endsWith(".json.gz"))
             throwValidationException("Output file name should ends with .json.gz or .json");
         try {
-            DownsamplingUtil.parseDownsampling(defaultDownsampling, dropOutliers, 0);
+            DownsamplingUtil.parseDownsampling(defaultDownsampling, dropOutliers);
         } catch (Throwable t) {
             throwValidationException("Illegal downsampling string: " + defaultDownsampling);
         }
@@ -103,6 +106,11 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
             throwValidationException("--tables: table name should ends with .csv or .tsv");
         if (metadata != null && !metadata.endsWith(".csv") && !metadata.endsWith(".tsv"))
             throwValidationException("Metadata should be .csv or .tsv");
+        List<String> duplicates = getInputFiles().stream()
+                .collect(Collectors.groupingBy(Function.identity())).entrySet().stream().filter(e -> e.getValue().size() > 1).map(Map.Entry::getKey)
+                .collect(toList());
+        if (duplicates.size() > 0)
+            throwValidationException("Duplicated samples detected: " + String.join(",", duplicates));
         if (metadata != null) {
             if (!metadata().containsKey("sample"))
                 throwValidationException("Metadata must contain 'sample' column");
@@ -112,8 +120,9 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
                     metadata().get("sample").stream()
                             .map(Object::toString).collect(toList())
             );
-            if (mapping.size() < samples.size() || mapping.values().stream().anyMatch(Objects::isNull))
-                throwValidationException("Metadata samples does not match input file names.");
+            if (mapping.size() < samples.size() || mapping.values().stream().anyMatch(Objects::isNull)) {
+                throwValidationException("Metadata samples does not match input file names: " + samples.stream().filter(s -> mapping.get(s) == null).collect(Collectors.joining(",")));
+            }
         }
     }
 
@@ -256,13 +265,14 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
         Chains c = Chains.parse(chains);
         String chainsColumn = chainsColumn();
         for (SamplesGroup group : groupSamples()) {
-            if (chainsColumn != null)
-                results.add(run(new IsolationGroup(
-                        Chains.getNamedChains(group.group.get(chainsColumn).toString().toUpperCase()), group.group), group.samples));
-            else
+            if (chainsColumn != null) {
+                NamedChains mc = getNamedChains(group.group.get(chainsColumn).toString().toUpperCase());
+                if (c.intersects(mc.chains))
+                    results.add(run0(new IsolationGroup(mc, group.group), group.samples));
+            } else
                 for (NamedChains knownChains : CHAINS) {
                     if (c.intersects(knownChains.chains)) {
-                        results.add(run(new IsolationGroup(knownChains, group.group), group.samples));
+                        results.add(run0(new IsolationGroup(knownChains, group.group), group.samples));
                     }
                 }
         }
@@ -279,9 +289,14 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
         new CommandPaExportTablesPreprocSummary(result, preprocOut()).run0();
     }
 
+    private PaResultByGroup run0(IsolationGroup group, List<String> samples) {
+        System.out.println("Running for " + group.toString(chainsColumn() == null));
+        return run(group, samples);
+    }
+
     abstract PaResultByGroup run(IsolationGroup group, List<String> samples);
 
-    @CommandLine.Command(name = "postanalysis",
+    @Command(name = "postanalysis",
             separator = " ",
             description = "Run postanalysis routines.",
             subcommands = {

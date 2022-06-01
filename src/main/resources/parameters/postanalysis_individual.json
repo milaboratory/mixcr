@@ -3,7 +3,6 @@
     "defaultDownsampling": null,
     "defaultOnlyProductive": true,
     "defaultDropOutliers": false,
-    "randomSeed": 111,
     "biophysics": {
       "cdr3lenAA": {
         "downsampling": null,

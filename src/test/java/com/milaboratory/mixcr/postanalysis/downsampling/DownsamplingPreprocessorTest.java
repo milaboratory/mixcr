@@ -98,11 +98,9 @@ public class DownsamplingPreprocessorTest {
         DownsampleValueChooser dsChooser = counts -> Arrays.stream(counts).min().orElse(0);
 
         DownsamplingPreprocessor<TestObject> proc = new DownsamplingPreprocessor<>(
-                t -> Math.round(t.weight),
+                dsChooser, t -> Math.round(t.weight),
                 (t, w) -> new TestObject(t.value, 1d * w),
-                dsChooser,
                 true,
-                rng.nextLong(0, Long.MAX_VALUE / 2),
                 ""
         );
 

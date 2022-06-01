@@ -70,10 +70,6 @@ public class CommandOverlapScatter extends ACommandWithOutputMiXCR {
             names = {"--no-log"})
     public boolean noLog;
 
-    @Option(description = "Random seed",
-            names = {"--random-seed"})
-    public long randomSeed = 111;
-
     private static String fName(String file) {
         return Paths.get(file).toAbsolutePath().getFileName().toString();
     }
@@ -88,7 +84,7 @@ public class CommandOverlapScatter extends ACommandWithOutputMiXCR {
     @Override
     public void run0() throws Exception {
         SetPreprocessorFactory<Clone> preproc = DownsamplingUtil.
-                parseDownsampling(downsampling, false, randomSeed);
+                parseDownsampling(downsampling, false);
 
         for (NamedChains curChains : this.chains == null
                 ? Arrays.asList(TRAD_NAMED, TRB_NAMED, TRG_NAMED, IGH_NAMED, IGKL_NAMED)

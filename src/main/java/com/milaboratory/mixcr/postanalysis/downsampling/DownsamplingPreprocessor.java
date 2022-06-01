@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.ToLongFunction;
+import java.util.stream.LongStream;
 
 import static com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingUtil.downsample_mvhg;
 
@@ -26,21 +27,18 @@ public class DownsamplingPreprocessor<T> implements SetPreprocessor<T> {
     public final BiFunction<T, Long, T> setCount;
     public final DownsampleValueChooser downsampleValueChooser;
     public final boolean dropOutliers;
-    public final long seed;
     final String id;
     private final SetPreprocessorStat.Builder<T> stats;
 
-    public DownsamplingPreprocessor(ToLongFunction<T> getCount,
+    public DownsamplingPreprocessor(DownsampleValueChooser downsampleValueChooser,
+                                    ToLongFunction<T> getCount,
                                     BiFunction<T, Long, T> setCount,
-                                    DownsampleValueChooser downsampleValueChooser,
                                     boolean dropOutliers,
-                                    long seed,
                                     String id) {
         this.getCount = getCount;
         this.setCount = setCount;
         this.downsampleValueChooser = downsampleValueChooser;
         this.dropOutliers = dropOutliers;
-        this.seed = seed;
         this.id = id;
         this.stats = new SetPreprocessorStat.Builder<>(id, getCount::applyAsLong);
     }
@@ -82,8 +80,9 @@ public class DownsamplingPreprocessor<T> implements SetPreprocessor<T> {
         }
 
         long[] counts = setup.countLists[iDataset].toArray();
-        RandomGenerator rnd = new Well19937c(seed);
-        long[] countsDownsampled = downsample_mvhg(counts, downsampling, rnd);
+        long total = LongStream.of(counts).sum();
+        RandomGenerator rnd = new Well19937c(total);
+        long[] countsDownsampled = downsample_mvhg(counts, total, downsampling, rnd);
 
         AtomicInteger idx = new AtomicInteger(0);
         return t -> {

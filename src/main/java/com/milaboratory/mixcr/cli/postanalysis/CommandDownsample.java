@@ -46,10 +46,6 @@ public class CommandDownsample extends ACommandWithOutputMiXCR {
             required = true)
     public String downsampling;
 
-    @Option(description = "Random seed.",
-            names = {"--random-seed"})
-    public long seed = 111;
-
     @Option(description = "Suffix to add to output clns file.",
             names = {"--suffix"})
     public String suffix = "downsampled";
@@ -86,7 +82,7 @@ public class CommandDownsample extends ACommandWithOutputMiXCR {
                 ).collect(Collectors.toList());
 
         SetPreprocessorFactory<Clone> preproc = DownsamplingUtil
-                .parseDownsampling(this.downsampling, false, seed)
+                .parseDownsampling(this.downsampling, false)
                 .filterFirst(new ElementPredicate.IncludeChains(Chains.getByName(chains)));
         if (onlyProductive)
             preproc = DownsamplingUtil.filterOnlyProductive(preproc);

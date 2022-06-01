@@ -39,14 +39,17 @@ public class IsolationGroup {
         ));
     }
 
+    public String toString(boolean withChains) {
+        String str = group.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue()).collect(Collectors.joining(","));
+        if (withChains)
+            return "chains=" + chains.name + (str.isEmpty() ? "" : "," + str);
+        else
+            return str;
+    }
+
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("chains=").append(chains.name);
-        for (Map.Entry<String, Object> e : group.entrySet()) {
-            sb.append(",").append(e.getKey()).append("=").append(e.getValue());
-        }
-        return sb.toString();
+        return toString(true);
     }
 
     /**

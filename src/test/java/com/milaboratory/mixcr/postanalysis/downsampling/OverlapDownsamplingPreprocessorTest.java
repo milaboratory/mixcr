@@ -3,6 +3,8 @@ package com.milaboratory.mixcr.postanalysis.downsampling;
 import cc.redberry.pipe.CUtils;
 import com.milaboratory.mixcr.postanalysis.*;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup;
+import com.milaboratory.mixcr.postanalysis.preproc.ElementPredicate;
+import com.milaboratory.mixcr.postanalysis.preproc.FilterPreprocessor;
 import com.milaboratory.mixcr.postanalysis.preproc.OverlapPreprocessorAdapter;
 import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.map.hash.TIntObjectHashMap;
@@ -11,10 +13,8 @@ import org.apache.commons.math3.random.Well512a;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingPreprocessorTest.toList;
 
@@ -35,11 +35,9 @@ public class OverlapDownsamplingPreprocessorTest {
             DatasetSupport[] datasets = new DatasetSupport[]{dataset};
 
             DownsamplingPreprocessor<TestObject> proc = new DownsamplingPreprocessor<>(
-                    t -> Math.round(t.weight),
+                    chooser, t -> Math.round(t.weight),
                     (t, newW) -> new TestObject(t.value, newW),
-                    chooser,
                     true,
-                    System.currentTimeMillis(),
                     ""
             );
 
@@ -78,6 +76,58 @@ public class OverlapDownsamplingPreprocessorTest {
                     Assert.assertEquals(wtAfter, istat.sumWeightAfter, 1e-5);
             }
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void test2() {
+        RandomDataGenerator rng = new RandomDataGenerator(new Well512a());
+        int nDatasets = 50;
+        DatasetSupport dataset = rndDataset(rng, nDatasets, 10000);
+        List<TestDataset<TestObject>> individual = o2i(nDatasets, dataset);
+
+        long[] totals = individual
+                .stream()
+                .mapToLong(it -> (long) CUtils.stream(it.mkElementsPort()).mapToDouble(c -> c.weight).sum())
+                .toArray();
+        Arrays.stream(totals).forEach(System.out::println);
+        System.out.println(">>> " + new DownsampleValueChooser.Auto().compute(totals));
+
+
+        SetPreprocessorFactory<TestObject> proc = new DownsamplingPreprocessorFactory<>(
+                new DownsampleValueChooser.Auto(),
+                t -> Math.round(t.weight),
+                TestObject::setWeight,
+                true
+        );
+
+        FilterPreprocessor.Factory<TestObject> filter = new FilterPreprocessor.Factory<>(t -> t.weight, ElementPredicate.mk("", t -> Double.toString(t.value).hashCode() % 3 == 1));
+        SetPreprocessorFactory<TestObject> iProc = proc.before(filter);
+        SetPreprocessorFactory<OverlapGroup<TestObject>> oProc = new OverlapPreprocessorAdapter.Factory<>(proc)
+                .before(new OverlapPreprocessorAdapter.Factory<>(filter));
+
+        Dataset<TestObject>[] expected = SetPreprocessor.processDatasets(iProc.newInstance(), individual);
+        Dataset<OverlapGroup<TestObject>> overlapDownsampled = SetPreprocessor.processDatasets(oProc.newInstance(), dataset)[0];
+
+        List<TestDataset<TestObject>> actual = o2i(nDatasets, overlapDownsampled);
+
+        List<List<TestObject>> e = Arrays.stream(expected).map(d -> CUtils.toList(d.mkElementsPort())).collect(Collectors.toList());
+        List<List<TestObject>> a = actual.stream().map(d -> CUtils.toList(d.mkElementsPort())).collect(Collectors.toList());
+
+        Assert.assertEquals(e, a);
+    }
+
+
+    @SuppressWarnings("unchecked")
+    private static List<TestDataset<TestObject>> o2i(int nDatasets, Dataset<OverlapGroup<TestObject>> od) {
+        List<TestObject>[] ids = new List[nDatasets];
+        for (int i = 0; i < nDatasets; i++)
+            ids[i] = new ArrayList<>();
+        for (OverlapGroup<TestObject> row : CUtils.it(od.mkElementsPort()))
+            for (int i = 0; i < row.size(); i++)
+                for (TestObject o : row.getBySample(i))
+                    ids[i].add(o);
+        return Arrays.stream(ids).map(TestDataset::new).collect(Collectors.toList());
     }
 
     private static long[] sum(long[] a, long[] b) {
@@ -132,7 +182,9 @@ public class OverlapDownsamplingPreprocessorTest {
                     added = true;
                     ArrayList<TestObject> cell = new ArrayList<>();
                     for (int k = 0; k < rng.nextInt(1, 2); k++) {
-                        cell.add(new TestObject(rng.nextUniform(0, 1), rng.nextInt(1, 1000)));
+                        cell.add(
+                                new TestObject(rng.nextUniform(0, 1),
+                                        rng.nextInt(1, 1000)));
                     }
                     row.add(cell);
                 } else {

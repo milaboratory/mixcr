@@ -21,6 +21,20 @@ import java.util.function.Predicate;
 public interface ElementPredicate<T> extends Predicate<T> {
     String id();
 
+    static <T> ElementPredicate<T> mk(String id, Predicate<T> predicate) {
+        return new ElementPredicate<T>() {
+            @Override
+            public String id() {
+                return id;
+            }
+
+            @Override
+            public boolean test(T t) {
+                return predicate.test(t);
+            }
+        };
+    }
+
     @JsonAutoDetect
     final class NoOutOfFrames implements ElementPredicate<Clone> {
         @JsonProperty("feature")

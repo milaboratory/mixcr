@@ -82,7 +82,7 @@ public class PostanalysisSchemaIntegrationTest {
         ));
         groups.add(new CharacteristicGroup<>(
                 "diversity",
-                Arrays.asList(new DiversityCharacteristic<>("diversity", new WeightFunctions.Count(), new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Auto(), 314, true))),
+                Arrays.asList(new DiversityCharacteristic<>("diversity", new WeightFunctions.Count(), new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Auto(), true))),
                 Arrays.asList(new GroupSummary.Simple<>())
         ));
 
@@ -121,7 +121,7 @@ public class PostanalysisSchemaIntegrationTest {
                 Arrays.asList(AdditiveCharacteristics.VSpectratype()),
                 Collections.singletonList(new GroupSummary.Simple<>())));
 
-        PostanalysisSchema<Clone> individualPA = new PostanalysisSchema<>(groups);
+        PostanalysisSchema<Clone> individualPA = new PostanalysisSchema<>(false, groups);
 
         ObjectMapper OM = new ObjectMapper();
         String individualPAStr = OM.writeValueAsString(individualPA);
@@ -190,7 +190,7 @@ public class PostanalysisSchemaIntegrationTest {
 
             ClonesDownsamplingPreprocessorFactory downsamplePreprocessor = new ClonesDownsamplingPreprocessorFactory(
                     new DownsampleValueChooser.Minimal(),
-                    332142, true);
+                    true);
 
             List<OverlapCharacteristic<Clone>> overlaps = new ArrayList<>();
             for (int i = 0; i < readers.size(); ++i) {
@@ -209,7 +209,7 @@ public class PostanalysisSchemaIntegrationTest {
                     Arrays.asList(new OverlapSummary<>())
             ));
 
-            PostanalysisSchema<OverlapGroup<Clone>> overlapPA = new PostanalysisSchema<>(groups);
+            PostanalysisSchema<OverlapGroup<Clone>> overlapPA = new PostanalysisSchema<>(true, groups);
             ObjectMapper OM = new ObjectMapper();
             String overlapPAStr = OM.writeValueAsString(overlapPA);
             System.out.println(overlapPAStr);

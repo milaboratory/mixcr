@@ -24,7 +24,6 @@ public abstract class PostanalysisParameters {
     public String defaultDownsampling;
     public boolean defaultOnlyProductive;
     public boolean defaultDropOutliers;
-    public long randomSeed;
 
     @JsonAutoDetect(
             fieldVisibility = JsonAutoDetect.Visibility.ANY,
@@ -34,7 +33,6 @@ public abstract class PostanalysisParameters {
         public String downsampling;
         public Boolean onlyProductive;
         public Boolean dropOutliers;
-        public Long randomSeed;
 
         public SetPreprocessorFactory<Clone> preproc(PostanalysisParameters base) {
             SetPreprocessorFactory<Clone> p = parseDownsampling(base);
@@ -52,8 +50,7 @@ public abstract class PostanalysisParameters {
         SetPreprocessorFactory<Clone> parseDownsampling(PostanalysisParameters base) {
             return DownsamplingUtil.parseDownsampling(
                     this.downsampling == null ? base.defaultDownsampling : this.downsampling,
-                    this.dropOutliers == null ? base.defaultDropOutliers : this.dropOutliers,
-                    this.randomSeed == null ? base.randomSeed : this.randomSeed
+                    this.dropOutliers == null ? base.defaultDropOutliers : this.dropOutliers
             );
         }
 
