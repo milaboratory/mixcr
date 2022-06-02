@@ -265,7 +265,7 @@ public final class Main {
                 .addSubcommand("alignmentsDiff", CommandAlignmentsDiff.class)
                 .addSubcommand("clonesDiff", CommandClonesDiff.class)
 
-                .addSubcommand("assemblePreClones", CommandAssemblePreClones.class)
+                .addSubcommand("itestAssemblePreClones", ITestCommandAssemblePreClones.class)
 
                 .addSubcommand("alignmentsStat", CommandAlignmentsStats.class)
                 .addSubcommand("listLibraries", CommandListLibraries.class)

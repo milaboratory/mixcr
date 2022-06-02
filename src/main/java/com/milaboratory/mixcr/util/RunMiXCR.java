@@ -225,12 +225,7 @@ public final class RunMiXCR {
             OutputPort<VDJCAlignmentResult> alignments = unchunked(new ParallelProcessor(mainInputReads, chunked(aligner), parameters.threads));
             List<VDJCAlignments> als = new ArrayList<>();
             int ind = 0;
-            for (VDJCAlignmentResult t : CUtils.it(new OrderedOutputPort<>(alignments, new Indexer<VDJCAlignmentResult>() {
-                @Override
-                public long getIndex(VDJCAlignmentResult r) {
-                    return r.read.getId();
-                }
-            }))) {
+            for (VDJCAlignmentResult t : CUtils.it(new OrderedOutputPort<>(alignments, r -> r.read.getId()))) {
                 if (t.alignment != null) {
                     t.alignment.setAlignmentsIndex(ind++);
                     als.add(t.alignment);
