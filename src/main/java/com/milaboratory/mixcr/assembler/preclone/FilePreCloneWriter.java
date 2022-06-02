@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static com.milaboratory.mixcr.basictypes.FieldCollection.*;
 
-public final class PreCloneWriter implements AutoCloseable, CanReportProgressAndStage {
+public final class FilePreCloneWriter implements AutoCloseable, CanReportProgressAndStage {
     // Headers marking special positions in file
     public static final byte UNASSIGNED_ALIGNMENTS_END_MARK_BYTE_0 = 1;
     public static final byte ALIGNMENTS_END_MARK_BYTE_0 = 2;
@@ -60,7 +60,7 @@ public final class PreCloneWriter implements AutoCloseable, CanReportProgressAnd
     private volatile HashSorter<PreClone> cloneCollator;
     private volatile OutputPortCloseable<PreClone> sortedClones;
 
-    public PreCloneWriter(Path file, TempFileDest tempDest) throws IOException {
+    public FilePreCloneWriter(Path file, TempFileDest tempDest) throws IOException {
         this.output = new PrimitivOHybrid(ForkJoinPool.commonPool(), file);
         this.tempDest = tempDest;
         this.alignmentBuffer = new Buffer<>(1 << 14);
@@ -209,6 +209,9 @@ public final class PreCloneWriter implements AutoCloseable, CanReportProgressAnd
             o.writeLong(alignmentsStartPosition);
             o.writeLong(assignedAlignmentsStartPosition);
             o.writeLong(clonesStartPosition);
+            o.writeLong(numberOfAlignments.get());
+            o.writeLong(numberOfAssignedAlignments.get());
+            o.writeLong(numberOfClones.get());
         }
 
         ps.finish();

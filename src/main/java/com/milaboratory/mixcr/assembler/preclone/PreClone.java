@@ -2,13 +2,15 @@ package com.milaboratory.mixcr.assembler.preclone;
 
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.mixcr.basictypes.GeneAndScore;
+import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.primitivio.annotations.Serializable;
+import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Serializable(by = IO.PreCloneSerializer.class)
 public final class PreClone {
@@ -42,5 +44,27 @@ public final class PreClone {
 
     public PreClone withId(long id) {
         return new PreClone(id, coreKey, coreTagCount, fullTagCount, clonalSequence, geneScores);
+    }
+
+    /** Converts alignment to a pre-clone, given the clonal gene features (features to align) */
+    public static PreClone fromAlignment(long id, VDJCAlignments alignment, GeneFeature... geneFeatures) {
+        NSequenceWithQuality[] clonalSequences = new NSequenceWithQuality[geneFeatures.length];
+
+        for (int i = 0; i < geneFeatures.length; i++)
+            clonalSequences[i] = Objects.requireNonNull(alignment.getFeature(geneFeatures[i]));
+
+        Map<GeneType, List<GeneAndScore>> geneScores = new EnumMap<>(GeneType.class);
+        EnumMap<GeneType, VDJCHit[]> hitsMap = alignment.getHitsMap();
+        for (GeneType gt : GeneType.VDJC_REFERENCE) {
+            VDJCHit[] hits = hitsMap.get(gt);
+            List<GeneAndScore> gss = new ArrayList<>(hits.length);
+            for (int i = 0; i < hits.length; i++) {
+                VDJCHit hit = hits[i];
+                gss.add(new GeneAndScore(hit.getGene().getId(), hit.getScore()));
+            }
+            geneScores.put(gt, gss);
+        }
+        return new PreClone(id, TagTuple.NO_TAGS, alignment.getTagCount(), alignment.getTagCount(),
+                clonalSequences, geneScores);
     }
 }

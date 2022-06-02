@@ -10,14 +10,14 @@ public interface OutputPortWithProgress<T> extends OutputPortCloseable<T>, CanRe
     /**
      * @return number of returned elemens so far
      */
-    long index();
+    long currentIndex();
 
-    static <T> OutputPortWithProgress<T> wrap(int size, OutputPortCloseable<T> inner) {
+    static <T> OutputPortWithProgress<T> wrap(CanReportProgress progressReporter, OutputPortCloseable<T> inner) {
         final AtomicBoolean isFinished = new AtomicBoolean(false);
         final AtomicLong index = new AtomicLong(0);
         return new OutputPortWithProgress<T>() {
             @Override
-            public long index() {
+            public long currentIndex() {
                 return index.get();
             }
 
@@ -34,7 +34,45 @@ public interface OutputPortWithProgress<T> extends OutputPortCloseable<T>, CanRe
 
             @Override
             public double getProgress() {
-                return (index.get() + 1.0) / size;
+                return progressReporter.getProgress();
+            }
+
+            @Override
+            public boolean isFinished() {
+                return isFinished.get() || progressReporter.isFinished();
+            }
+
+            @Override
+            public void close() {
+                isFinished.set(true);
+                inner.close();
+            }
+        };
+    }
+
+    static <T> OutputPortWithProgress<T> wrap(long expectedSize, OutputPortCloseable<T> inner) {
+        final AtomicBoolean isFinished = new AtomicBoolean(false);
+        final AtomicLong index = new AtomicLong(0);
+        return new OutputPortWithProgress<T>() {
+            @Override
+            public long currentIndex() {
+                return index.get();
+            }
+
+            @Override
+            public T take() {
+                T t = inner.take();
+                if (t == null) {
+                    isFinished.set(true);
+                    return null;
+                }
+                index.incrementAndGet();
+                return t;
+            }
+
+            @Override
+            public double getProgress() {
+                return 1.0 * index.get() / expectedSize;
             }
 
             @Override
@@ -44,6 +82,7 @@ public interface OutputPortWithProgress<T> extends OutputPortCloseable<T>, CanRe
 
             @Override
             public void close() {
+                isFinished.set(true);
                 inner.close();
             }
         };

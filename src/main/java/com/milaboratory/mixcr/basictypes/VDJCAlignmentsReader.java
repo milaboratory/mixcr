@@ -32,6 +32,7 @@ package com.milaboratory.mixcr.basictypes;
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivIState;
@@ -284,42 +285,67 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
 
     public SecondaryReader createSecondaryReader() {
         ensureInitialized();
-        return new SecondaryReader();
+        return new SecondaryReader(false);
     }
 
-    public class SecondaryReader implements OutputPortCloseable<VDJCAlignments>, CanReportProgress {
-        private volatile boolean closed = false;
-        private final AtomicLong alignmentsServed = new AtomicLong();
+    public SecondaryReader createRawSecondaryReader() {
+        ensureInitialized();
+        return new SecondaryReader(true);
+    }
+
+    public class SecondaryReader implements OutputPortWithProgress<VDJCAlignments> {
+        private final boolean raw;
+        private final Object sync = new Object();
+        private volatile boolean finished = false;
+        private final AtomicLong counter = new AtomicLong();
         private final PrimitivIBlocks<VDJCAlignments>.Reader reader;
 
-        private SecondaryReader() {
+        private SecondaryReader(boolean raw) {
+            this.raw = raw;
             this.reader = input.beginRandomAccessPrimitivIBlocks(VDJCAlignments.class, alignmentsBegin);
         }
 
         @Override
+        public VDJCAlignments take() {
+            if (raw) {
+                VDJCAlignments al = reader.take();
+                if (al == null) {
+                    finished = true;
+                    return null;
+                }
+                counter.incrementAndGet();
+                return al;
+            } else {
+                synchronized (sync) {
+                    VDJCAlignments al = reader.take();
+                    if (al == null) {
+                        finished = true;
+                        return null;
+                    }
+                    return al.setAlignmentsIndex(counter.getAndIncrement());
+                }
+            }
+        }
+
+        @Override
+        public long currentIndex() {
+            return counter.get();
+        }
+
+        @Override
         public double getProgress() {
-            return 1.0 * alignmentsServed.get() / numberOfAlignments;
+            return 1.0 * counter.get() / numberOfAlignments;
         }
 
         @Override
         public boolean isFinished() {
-            return closed;
-        }
-
-        @Override
-        public VDJCAlignments take() {
-            VDJCAlignments al = reader.take();
-            if (al != null)
-                alignmentsServed.incrementAndGet();
-            else
-                closed = true;
-            return al;
+            return finished;
         }
 
         @Override
         public synchronized void close() {
             reader.close();
-            closed = true;
+            finished = true;
         }
     }
 }

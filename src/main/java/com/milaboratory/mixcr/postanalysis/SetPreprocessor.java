@@ -62,8 +62,8 @@ public interface SetPreprocessor<T> {
                                 }
 
                                 @Override
-                                public long index() {
-                                    return inner.index();
+                                public long currentIndex() {
+                                    return inner.currentIndex();
                                 }
 
                                 @Override

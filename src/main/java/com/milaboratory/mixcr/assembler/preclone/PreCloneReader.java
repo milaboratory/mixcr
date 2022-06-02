@@ -1,84 +1,108 @@
 package com.milaboratory.mixcr.assembler.preclone;
 
-
-import cc.redberry.pipe.OutputPortCloseable;
-import com.milaboratory.mixcr.basictypes.IOUtil;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
-import com.milaboratory.primitivio.PrimitivI;
-import com.milaboratory.primitivio.blocks.PrimitivIHeaderActions;
-import com.milaboratory.primitivio.blocks.PrimitivIHybrid;
-import io.repseq.core.VDJCGene;
-import io.repseq.core.VDJCLibraryRegistry;
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
+import com.milaboratory.mixcr.util.OutputPortWithProgress;
+import io.repseq.core.GeneFeature;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
-import static com.milaboratory.mixcr.assembler.preclone.PreCloneWriter.*;
+public interface PreCloneReader {
+    /** Creates streamed pre-clone reader. */
+    OutputPortWithProgress<PreClone> readPreClones();
 
-public final class PreCloneReader implements AutoCloseable {
-    private final PrimitivIHybrid input;
-    private final VDJCAlignerParameters alignmentParameters;
-    private final List<VDJCGene> usedGenes;
-    private final long alignmentsStartPosition,
-            assignedAlignmentsStartPosition,
-            clonesStartPosition;
+    /**
+     * Creates streamed alignments reader.
+     * Must output at least one alignment assigned for each of the pre-clones returned by a pre-clone reader.
+     * Alignments must be ordered the same way as pre-clones.
+     * Must output all unassigned alignments before all assigned.
+     */
+    OutputPortWithProgress<VDJCAlignments> readAlignments();
 
-    public PreCloneReader(Path file) throws IOException {
-        this.input = new PrimitivIHybrid(file, 4);
-        try (PrimitivI i = input.beginPrimitivI(true)) {
-            this.alignmentParameters = i.readObject(VDJCAlignerParameters.class);
-            this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(i, alignmentParameters,
-                    VDJCLibraryRegistry.getDefault());
-        }
-        try (PrimitivI i = input.beginRandomAccessPrimitivI(-8 * 3)) {
-            alignmentsStartPosition = i.readLong();
-            assignedAlignmentsStartPosition = i.readLong();
-            clonesStartPosition = i.readLong();
-        }
-    }
+    static PreCloneReader fromAlignments(VDJCAlignmentsReader alignmentsReader, GeneFeature[] geneFeatures) {
+        return new PreCloneReader() {
+            private boolean alignmentPredicate(VDJCAlignments al) {
+                for (GeneFeature geneFeature : geneFeatures)
+                    if (!al.isAvailable(geneFeature))
+                        return false;
+                return true;
+            }
 
-    public VDJCAlignerParameters getAlignmentParameters() {
-        return alignmentParameters;
-    }
+            @Override
+            public OutputPortWithProgress<PreClone> readPreClones() {
+                //noinspection resource
+                OutputPortWithProgress<VDJCAlignments> alignmentReader = readAlignments();
+                return new OutputPortWithProgress<PreClone>() {
+                    @Override
+                    public long currentIndex() {
+                        return alignmentReader.currentIndex();
+                    }
 
-    public List<VDJCGene> getUsedGenes() {
-        return usedGenes;
-    }
+                    @Override
+                    public void close() {
+                        alignmentReader.close();
+                    }
 
-    public OutputPortCloseable<VDJCAlignments> readAllAlignments() {
-        return input.beginRandomAccessPrimitivIBlocks(VDJCAlignments.class, alignmentsStartPosition,
-                h -> h.getSpecialByte(0) == UNASSIGNED_ALIGNMENTS_END_MARK_BYTE_0
-                        ? PrimitivIHeaderActions.skip()
-                        : h.getSpecialByte(0) == ALIGNMENTS_END_MARK_BYTE_0
-                        ? PrimitivIHeaderActions.stopReading()
-                        : PrimitivIHeaderActions.error());
-    }
+                    @Override
+                    public PreClone take() {
+                        VDJCAlignments al = alignmentReader.take();
+                        if (al == null)
+                            return null;
+                        return PreClone.fromAlignment(al.getAlignmentsIndex(), al, geneFeatures);
+                    }
 
-    public OutputPortCloseable<VDJCAlignments> readUnassignedAlignments() {
-        return input.beginRandomAccessPrimitivIBlocks(VDJCAlignments.class, alignmentsStartPosition,
-                h -> h.getSpecialByte(0) == UNASSIGNED_ALIGNMENTS_END_MARK_BYTE_0
-                        ? PrimitivIHeaderActions.stopReading()
-                        : PrimitivIHeaderActions.error());
-    }
+                    @Override
+                    public double getProgress() {
+                        return alignmentReader.getProgress();
+                    }
 
-    public OutputPortCloseable<VDJCAlignments> readAssignedAlignments() {
-        return input.beginRandomAccessPrimitivIBlocks(VDJCAlignments.class, assignedAlignmentsStartPosition,
-                h -> h.getSpecialByte(0) == ALIGNMENTS_END_MARK_BYTE_0
-                        ? PrimitivIHeaderActions.stopReading()
-                        : PrimitivIHeaderActions.error());
-    }
+                    @Override
+                    public boolean isFinished() {
+                        return alignmentReader.isFinished();
+                    }
+                };
+            }
 
-    public OutputPortCloseable<PreClone> readClones() {
-        return input.beginRandomAccessPrimitivIBlocks(PreClone.class, clonesStartPosition,
-                h -> h.getSpecialByte(0) == CLONES_END_MARK_BYTE_0
-                        ? PrimitivIHeaderActions.stopReading()
-                        : PrimitivIHeaderActions.error());
-    }
+            @Override
+            public OutputPortWithProgress<VDJCAlignments> readAlignments() {
+                Object sync = new Object();
+                AtomicLong idGenerator = new AtomicLong();
+                VDJCAlignmentsReader.SecondaryReader reader = alignmentsReader.createRawSecondaryReader();
+                return new OutputPortWithProgress<VDJCAlignments>() {
+                    @Override
+                    public long currentIndex() {
+                        return reader.currentIndex();
+                    }
 
-    @Override
-    public void close() throws Exception {
-        input.close();
+                    @Override
+                    public void close() {
+                        reader.close();
+                    }
+
+                    @Override
+                    public VDJCAlignments take() {
+                        synchronized (sync) {
+                            VDJCAlignments al;
+                            //noinspection StatementWithEmptyBody
+                            while ((al = reader.take()) != null && !alignmentPredicate(al)) ;
+                            if (al == null)
+                                return null;
+                            long id = idGenerator.getAndIncrement();
+                            return al.withCloneIndexAndMappingType(id, (byte) 0).setAlignmentsIndex(id);
+                        }
+                    }
+
+                    @Override
+                    public double getProgress() {
+                        return reader.getProgress();
+                    }
+
+                    @Override
+                    public boolean isFinished() {
+                        return reader.isFinished();
+                    }
+                };
+            }
+        };
     }
 }

@@ -67,8 +67,8 @@ public final class OverlapUtil {
                 SimpleProcessorWrapper<List<List<Clone>>, OverlapGroup<Clone>> processor = new SimpleProcessorWrapper<>(port, OverlapGroup::new);
                 return new OutputPortWithProgress<OverlapGroup<Clone>>() {
                     @Override
-                    public long index() {
-                        return port.index();
+                    public long currentIndex() {
+                        return port.currentIndex();
                     }
 
                     @Override
