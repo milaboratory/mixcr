@@ -50,6 +50,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.*;
 
@@ -64,6 +65,8 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
     final int readAheadBlocks;
     final VDJCLibraryRegistry vdjcRegistry;
 
+    /** Start position of the payload in the input file, used to create secondary readers */
+    long alignmentsBegin;
     PrimitivIBlocks<VDJCAlignments>.Reader reader;
 
     VDJCAlignerParameters parameters;
@@ -162,7 +165,10 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
             this.iState = i.getState();
         }
 
-        this.reader = input.beginPrimitivIBlocks(VDJCAlignments.class, readAheadBlocks);
+        // Saving alignments begin position
+        alignmentsBegin = input.getPosition();
+
+        this.reader = input.beginRandomAccessPrimitivIBlocks(VDJCAlignments.class, alignmentsBegin, readAheadBlocks);
     }
 
     public PrimitivIBlocksStats getStats() {
@@ -219,6 +225,10 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
         return iState;
     }
 
+    public long getNumberOfAlignments() {
+        return numberOfAlignments;
+    }
+
     public long getNumberOfReads() {
         return numberOfReads;
     }
@@ -265,10 +275,51 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
         VDJCAlignments al = reader.take();
 
         if (al == null) {
-            close(true);
+            // close(true);
             return null;
         }
 
         return al.setAlignmentsIndex(counter++);
+    }
+
+    public SecondaryReader createSecondaryReader() {
+        ensureInitialized();
+        return new SecondaryReader();
+    }
+
+    public class SecondaryReader implements OutputPortCloseable<VDJCAlignments>, CanReportProgress {
+        private volatile boolean closed = false;
+        private final AtomicLong alignmentsServed = new AtomicLong();
+        private final PrimitivIBlocks<VDJCAlignments>.Reader reader;
+
+        private SecondaryReader() {
+            this.reader = input.beginRandomAccessPrimitivIBlocks(VDJCAlignments.class, alignmentsBegin);
+        }
+
+        @Override
+        public double getProgress() {
+            return 1.0 * alignmentsServed.get() / numberOfAlignments;
+        }
+
+        @Override
+        public boolean isFinished() {
+            return closed;
+        }
+
+        @Override
+        public VDJCAlignments take() {
+            VDJCAlignments al = reader.take();
+            if (al != null)
+                alignmentsServed.incrementAndGet();
+            else
+                closed = true;
+            return al;
+        }
+
+        @Override
+        public synchronized void close() {
+            reader.close();
+            closed = true;
+        }
     }
 }

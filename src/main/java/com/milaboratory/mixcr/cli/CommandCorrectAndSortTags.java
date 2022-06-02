@@ -108,8 +108,8 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
         final CorrectionReport report;
         final int[] targetTagIndices;
         final List<String> tagNames;
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(in)) {
-            TagsInfo tagsInfo = reader.getTagsInfo();
+        try (VDJCAlignmentsReader mainReader = new VDJCAlignmentsReader(in)) {
+            TagsInfo tagsInfo = mainReader.getTagsInfo();
 
             tagNames = new ArrayList<>();
             TIntArrayList indicesBuilder = new TIntArrayList();
@@ -142,103 +142,80 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
                         tags[i] = ((SequenceAndQualityTagValue) tagTuple.get(targetTagIndices[i])).data;
                     return tags;
                 };
-                OutputPort<NSequenceWithQuality[]> cInput = CUtils.wrap(reader, mapper);
-                correctionResult = corrector.correct(cInput, tagNames, reader);
+                OutputPort<NSequenceWithQuality[]> cInput = CUtils.wrap(mainReader, mapper);
+                correctionResult = corrector.correct(cInput, tagNames, mainReader);
                 report = corrector.getReport();
             } else {
                 correctionResult = null;
                 report = null;
             }
-        }
 
-        // ToIntFunction<VDJCAlignments> hashFunction = al -> {
-        //     TagValue[] tags = al.getTagCounter().keys().iterator().next().tags;
-        //     //noinspection UnstableApiUsage
-        //     Hasher hasher = Hashing.murmur3_32_fixed().newHasher();
-        //     for (int i : targetTagIndices)
-        //         //noinspection UnstableApiUsage
-        //         hasher.putInt(((SequenceAndQualityTagValue) tags[i]).data.getSequence().hashCode());
-        //     //noinspection UnstableApiUsage
-        //     return hasher.hash().hashCode();
-        // };
-        //
-        // Comparator<VDJCAlignments> comparator = (al1, al2) -> {
-        //     TagValue[] tags1 = al1.getTagCounter().keys().iterator().next().tags;
-        //     TagValue[] tags2 = al2.getTagCounter().keys().iterator().next().tags;
-        //     int c;
-        //     for (int i : targetTagIndices)
-        //         if ((c = ((SequenceAndQualityTagValue) tags1[i]).data.getSequence().compareTo(
-        //                 ((SequenceAndQualityTagValue) tags2[i]).data.getSequence())) != 0)
-        //             return c;
-        //     return 0;
-        // };
+            try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)) {
+                VDJCAlignmentsReader.SecondaryReader secondaryReader = mainReader.createSecondaryReader();
 
+                PrimitivIOStateBuilder stateBuilder = new PrimitivIOStateBuilder();
+                IOUtil.registerGeneReferences(stateBuilder, mainReader.getUsedGenes(), mainReader.getParameters());
 
-        try (
-                VDJCAlignmentsReader reader = new VDJCAlignmentsReader(in);
-                VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)
-        ) {
-            PrimitivIOStateBuilder stateBuilder = new PrimitivIOStateBuilder();
-            IOUtil.registerGeneReferences(stateBuilder, reader.getUsedGenes(), reader.getParameters());
+                IntFunction<HashSorter<VDJCAlignments>> hashSorterFactory = tagIdx -> {
+                    SortingStep sortingStep = new SortingStep(tagIdx);
+                    return new HashSorter<>(
+                            VDJCAlignments.class,
+                            sortingStep.getHashFunction(), sortingStep.getComparator(),
+                            4, tempDest.addSuffix("hashsorter." + tagIdx),
+                            4, 4,
+                            stateBuilder.getOState(), stateBuilder.getIState(),
+                            memoryBudget, 10000
+                    );
+                };
 
-            IntFunction<HashSorter<VDJCAlignments>> hashSorterFactory = tagIdx -> {
-                SortingStep sortingStep = new SortingStep(tagIdx);
-                return new HashSorter<>(
-                        VDJCAlignments.class,
-                        sortingStep.getHashFunction(), sortingStep.getComparator(),
-                        4, tempDest.addSuffix("hashsorter." + tagIdx),
-                        4, 4,
-                        stateBuilder.getOState(), stateBuilder.getIState(),
-                        memoryBudget, 10000
-                );
-            };
+                HashSorter<VDJCAlignments> initialHashSorter = hashSorterFactory.apply(targetTagIndices[targetTagIndices.length - 1]);
 
-            HashSorter<VDJCAlignments> initialHashSorter = hashSorterFactory.apply(targetTagIndices[targetTagIndices.length - 1]);
+                SmartProgressReporter.startProgressReport(!noCorrect
+                                ? "Applying correction & sorting alignments by " + tagNames.get(targetTagIndices.length - 1)
+                                : "Sorting alignments by " + tagNames.get(targetTagIndices.length - 1),
+                        secondaryReader);
 
-            SmartProgressReporter.startProgressReport(!noCorrect
-                            ? "Applying correction & sorting alignments by " + tagNames.get(targetTagIndices.length - 1)
-                            : "Sorting alignments by " + tagNames.get(targetTagIndices.length - 1),
-                    reader);
-
-            Processor<VDJCAlignments, VDJCAlignments> mapper = !noCorrect
-                    ?
-                    al -> {
-                        TagValue[] newTags = al.getTagCount().getSingletonTuple().asArray();
-                        CorrectionNode cn = correctionResult;
-                        for (int i : targetTagIndices) {
-                            NucleotideSequence current = ((SequenceAndQualityTagValue) newTags[i]).data.getSequence();
-                            cn = cn.getNextLevel().get(current);
-                            if (cn == null) {
-                                report.setFilteredRecords(report.getFilteredRecords() + 1);
-                                return al.setTagCount(null); // will be filtered right before hash sorter
+                Processor<VDJCAlignments, VDJCAlignments> mapper = !noCorrect
+                        ?
+                        al -> {
+                            TagValue[] newTags = al.getTagCount().getSingletonTuple().asArray();
+                            CorrectionNode cn = correctionResult;
+                            for (int i : targetTagIndices) {
+                                NucleotideSequence current = ((SequenceAndQualityTagValue) newTags[i]).data.getSequence();
+                                cn = cn.getNextLevel().get(current);
+                                if (cn == null) {
+                                    report.setFilteredRecords(report.getFilteredRecords() + 1);
+                                    return al.setTagCount(null); // will be filtered right before hash sorter
+                                }
+                                newTags[i] = new SequenceAndQualityTagValue(cn.getCorrectValue());
                             }
-                            newTags[i] = new SequenceAndQualityTagValue(cn.getCorrectValue());
+                            return al.setTagCount(new TagCount(new TagTuple(newTags)));
                         }
-                        return al.setTagCount(new TagCount(new TagTuple(newTags)));
-                    }
-                    : al -> al;
+                        : al -> al;
 
-            // Creating output port with corrected and filtered tags
-            OutputPort<VDJCAlignments> hsInput = new FilteringPort<>(
-                    CUtils.wrap(reader, mapper), al -> al.getTagCount() != null);
+                // Creating output port with corrected and filtered tags
+                OutputPort<VDJCAlignments> hsInput = new FilteringPort<>(
+                        CUtils.wrap(secondaryReader, mapper), al -> al.getTagCount() != null);
 
-            // Running initial hash sorter
-            CountingOutputPort<VDJCAlignments> sorted = new CountingOutputPort<>(initialHashSorter.port(hsInput));
+                // Running initial hash sorter
+                CountingOutputPort<VDJCAlignments> sorted = new CountingOutputPort<>(initialHashSorter.port(hsInput));
 
-            // Sorting by other tags
-            for (int tagIdxIdx = targetTagIndices.length - 2; tagIdxIdx >= 0; tagIdxIdx--) {
-                SmartProgressReporter.startProgressReport("Sorting alignments by " + tagNames.get(tagIdxIdx),
-                        SmartProgressReporter.extractProgress(sorted, reader.getNumberOfReads()));
-                sorted = new CountingOutputPort<>(hashSorterFactory.apply(targetTagIndices[tagIdxIdx]).port(sorted));
+                // Sorting by other tags
+                for (int tagIdxIdx = targetTagIndices.length - 2; tagIdxIdx >= 0; tagIdxIdx--) {
+                    SmartProgressReporter.startProgressReport("Sorting alignments by " + tagNames.get(tagIdxIdx),
+                            SmartProgressReporter.extractProgress(sorted, mainReader.getNumberOfAlignments()));
+                    sorted = new CountingOutputPort<>(hashSorterFactory.apply(targetTagIndices[tagIdxIdx]).port(sorted));
+                }
+
+                SmartProgressReporter.startProgressReport("Writing result",
+                        SmartProgressReporter.extractProgress(sorted, mainReader.getNumberOfAlignments()));
+
+                // Initializing and writing results to the output file
+                writer.header(mainReader, getFullPipelineConfiguration(),
+                        mainReader.getTagsInfo().setSorted(mainReader.getTagsInfo().tags.length));
+                for (VDJCAlignments al : CUtils.it(sorted))
+                    writer.write(al);
             }
-
-            SmartProgressReporter.startProgressReport("Writing result",
-                    SmartProgressReporter.extractProgress(sorted, reader.getNumberOfReads()));
-
-            // Initializing and writing results to the output file
-            writer.header(reader, getFullPipelineConfiguration(), reader.getTagsInfo().setSorted(reader.getTagsInfo().tags.length));
-            for (VDJCAlignments al : CUtils.it(sorted))
-                writer.write(al);
         }
 
         if (report != null)

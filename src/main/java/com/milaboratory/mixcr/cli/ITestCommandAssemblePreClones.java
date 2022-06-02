@@ -64,12 +64,13 @@ public class ITestCommandAssemblePreClones extends ACommandMiXCR {
         long totalClones = 0;
         try (
                 VDJCAlignmentsReader reader1 = new VDJCAlignmentsReader(files.get(0));
-                VDJCAlignmentsReader reader2 = new VDJCAlignmentsReader(files.get(0));
-                // For export
-                VDJCAlignmentsReader reader3 = new VDJCAlignmentsReader(files.get(0));
                 PreCloneWriter writer = new PreCloneWriter(Paths.get(files.get(1)),
                         TempFileManager.smartTempDestination(files.get(1), "", useSystemTemp))
         ) {
+            VDJCAlignmentsReader.SecondaryReader reader2 = reader1.createSecondaryReader();
+            // For export
+            VDJCAlignmentsReader.SecondaryReader reader3 = reader1.createSecondaryReader();
+
             writer.init(reader1);
 
             TagsInfo tagsInfo = reader1.getTagsInfo();
