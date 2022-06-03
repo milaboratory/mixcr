@@ -58,7 +58,6 @@ import java.io.PrintStream
 import java.nio.file.Files
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import java.util.function.Consumer
 import java.util.stream.Collectors
 
 /**
@@ -92,13 +91,15 @@ class SHMTreeBuilder(
     private fun createSorter(): HashSorter<CloneWrapper> {
         // todo pre-build state, fill with references if possible
         val stateBuilder = PrimitivIOStateBuilder()
-        datasets.forEach(Consumer { dataset: CloneReader ->
+        val registeredGenes = mutableSetOf<String>()
+        datasets.forEach { dataset ->
             IOUtil.registerGeneReferences(
                 stateBuilder,
-                dataset.usedGenes,
+                dataset.usedGenes.filter { it.name !in registeredGenes },
                 dataset.alignerParameters
             )
-        })
+            registeredGenes += dataset.usedGenes.map { it.name }
+        }
 
 
         // todo check memory budget

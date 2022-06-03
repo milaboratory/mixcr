@@ -215,10 +215,10 @@ Resulted outputs must be uniq"""]
         val allelesMapping = alleles.mapValues { (_, value) ->
             value.map { resultLibrary[it.name].id }
         }
-        for (i in cloneReaders.indices) {
-            val cloneReader = cloneReaders[i]
-            val outputFile = outputClnsFiles()[i]
-            File(outputFile).parentFile.mkdirs()
+        val outputClnsFiles = outputClnsFiles()
+        cloneReaders.forEachIndexed { i, cloneReader ->
+            val outputFile = File(outputClnsFiles[i])
+            outputFile.parentFile.mkdirs()
             val mapperClones = rebuildClones(resultLibrary, allelesMapping, cloneReader)
             val cloneSet = CloneSet(
                 mapperClones,
