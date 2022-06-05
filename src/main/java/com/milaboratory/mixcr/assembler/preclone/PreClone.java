@@ -7,30 +7,32 @@ import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.primitivio.annotations.Serializable;
+import com.milaboratory.util.CollectionUtils;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
+import io.repseq.core.VDJCGeneId;
 
 import java.util.*;
 
 @Serializable(by = IO.PreCloneSerializer.class)
 public final class PreClone {
     /** Pre-clonotype id */
-    public final long id;
+    final long index;
     /** Core key of the alignments group */
-    public final TagTuple coreKey;
+    final TagTuple coreKey;
     /** Tag counter aggregating information about alignments with clonal sequence */
-    public final TagCount coreTagCount;
+    final TagCount coreTagCount;
     /** Tag counter aggregating information across all alignments assigned to this pre-clone */
-    public final TagCount fullTagCount;
+    final TagCount fullTagCount;
     /** Assembled clonal sequence */
-    public final NSequenceWithQuality[] clonalSequence;
+    final NSequenceWithQuality[] clonalSequence;
     /** Aggregated V, J, C gene scoring and content information */
-    public final Map<GeneType, List<GeneAndScore>> geneScores;
+    final Map<GeneType, List<GeneAndScore>> geneScores;
 
-    public PreClone(long id, TagTuple coreKey, TagCount coreTagCount, TagCount fullTagCount,
+    public PreClone(long index, TagTuple coreKey, TagCount coreTagCount, TagCount fullTagCount,
                     NSequenceWithQuality[] clonalSequence,
                     Map<GeneType, List<GeneAndScore>> geneScores) {
-        this.id = id;
+        this.index = index;
         this.coreKey = coreKey;
         this.coreTagCount = coreTagCount;
         this.fullTagCount = fullTagCount;
@@ -38,16 +40,52 @@ public final class PreClone {
         this.geneScores = geneScores;
     }
 
-    public long getId() {
-        return id;
+    public long getIndex() {
+        return index;
     }
 
-    public PreClone withId(long id) {
-        return new PreClone(id, coreKey, coreTagCount, fullTagCount, clonalSequence, geneScores);
+    public TagTuple getCoreKey() {
+        return coreKey;
     }
 
-    /** Converts alignment to a pre-clone, given the clonal gene features (features to align) */
-    public static PreClone fromAlignment(long id, VDJCAlignments alignment, GeneFeature... geneFeatures) {
+    public TagCount getCoreTagCount() {
+        return coreTagCount;
+    }
+
+    public TagCount getFullTagCount() {
+        return fullTagCount;
+    }
+
+    public NSequenceWithQuality[] getClonalSequence() {
+        return clonalSequence;
+    }
+
+    public Map<GeneType, List<GeneAndScore>> getGeneScores() {
+        return geneScores;
+    }
+
+    public List<GeneAndScore> getGeneScores(GeneType geneType) {
+        return geneScores.get(geneType);
+    }
+
+    public GeneAndScore getBestHit(GeneType geneType) {
+        List<GeneAndScore> gss = geneScores.get(geneType);
+        return gss == null || gss.isEmpty()
+                ? null
+                : gss.get(0);
+    }
+
+    public VDJCGeneId getBestGene(GeneType geneType) {
+        GeneAndScore gs = getBestHit(geneType);
+        return gs == null ? null : gs.geneId;
+    }
+
+    public PreClone withIndex(long index) {
+        return new PreClone(index, coreKey, coreTagCount, fullTagCount, clonalSequence, geneScores);
+    }
+
+    /** Converts alignment to a pre-clone, given the clonal gene features (assemblingFeatures) */
+    public static PreClone fromAlignment(long index, VDJCAlignments alignment, GeneFeature... geneFeatures) {
         NSequenceWithQuality[] clonalSequences = new NSequenceWithQuality[geneFeatures.length];
 
         for (int i = 0; i < geneFeatures.length; i++)
@@ -58,13 +96,13 @@ public final class PreClone {
         for (GeneType gt : GeneType.VDJC_REFERENCE) {
             VDJCHit[] hits = hitsMap.get(gt);
             List<GeneAndScore> gss = new ArrayList<>(hits.length);
-            for (int i = 0; i < hits.length; i++) {
-                VDJCHit hit = hits[i];
+            for (VDJCHit hit : hits)
                 gss.add(new GeneAndScore(hit.getGene().getId(), hit.getScore()));
-            }
+            assert CollectionUtils.isSorted(gss);
             geneScores.put(gt, gss);
         }
-        return new PreClone(id, TagTuple.NO_TAGS, alignment.getTagCount(), alignment.getTagCount(),
+
+        return new PreClone(index, TagTuple.NO_TAGS, alignment.getTagCount(), alignment.getTagCount(),
                 clonalSequences, geneScores);
     }
 }

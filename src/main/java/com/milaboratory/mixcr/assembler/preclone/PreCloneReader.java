@@ -7,7 +7,7 @@ import io.repseq.core.GeneFeature;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-public interface PreCloneReader {
+public interface PreCloneReader extends AutoCloseable {
     /** Creates streamed pre-clone reader. */
     OutputPortWithProgress<PreClone> readPreClones();
 
@@ -19,6 +19,13 @@ public interface PreCloneReader {
      */
     OutputPortWithProgress<VDJCAlignments> readAlignments();
 
+    /** Total number of reads (not alignments). Used for reporting. */
+    long getTotalNumberOfReads();
+
+    /**
+     * Returns a PreCloneReader view of a given VDJCAlignmentsReader representing a set of pre-clones that are formed as
+     * a one-to-one image of alignments that completely covers provided set of gene features
+     */
     static PreCloneReader fromAlignments(VDJCAlignmentsReader alignmentsReader, GeneFeature[] geneFeatures) {
         return new PreCloneReader() {
             private boolean alignmentPredicate(VDJCAlignments al) {
@@ -39,16 +46,18 @@ public interface PreCloneReader {
                     }
 
                     @Override
-                    public void close() {
-                        alignmentReader.close();
+                    public PreClone take() {
+                        VDJCAlignments al;
+                        //noinspection StatementWithEmptyBody
+                        while ((al = alignmentReader.take()) != null && al.getCloneIndex() == -1) ;
+                        if (al == null)
+                            return null;
+                        return PreClone.fromAlignment(al.getCloneIndex(), al, geneFeatures);
                     }
 
                     @Override
-                    public PreClone take() {
-                        VDJCAlignments al = alignmentReader.take();
-                        if (al == null)
-                            return null;
-                        return PreClone.fromAlignment(al.getAlignmentsIndex(), al, geneFeatures);
+                    public void close() {
+                        alignmentReader.close();
                     }
 
                     @Override
@@ -75,21 +84,24 @@ public interface PreCloneReader {
                     }
 
                     @Override
-                    public void close() {
-                        reader.close();
+                    public VDJCAlignments take() {
+                        synchronized (sync) {
+                            VDJCAlignments al = reader.take();
+                            if (al == null)
+                                return null;
+
+
+                            if(!alignmentPredicate(al))
+                                al = al.withCloneIndexAndMappingType(idGenerator.getAndIncrement(), (byte) 0)
+                                        .setAlignmentsIndex(al.getAlignmentsIndex());
+
+                            return al;
+                        }
                     }
 
                     @Override
-                    public VDJCAlignments take() {
-                        synchronized (sync) {
-                            VDJCAlignments al;
-                            //noinspection StatementWithEmptyBody
-                            while ((al = reader.take()) != null && !alignmentPredicate(al)) ;
-                            if (al == null)
-                                return null;
-                            long id = idGenerator.getAndIncrement();
-                            return al.withCloneIndexAndMappingType(id, (byte) 0).setAlignmentsIndex(id);
-                        }
+                    public void close() {
+                        reader.close();
                     }
 
                     @Override
@@ -102,6 +114,16 @@ public interface PreCloneReader {
                         return reader.isFinished();
                     }
                 };
+            }
+
+            @Override
+            public long getTotalNumberOfReads() {
+                return alignmentsReader.getNumberOfReads();
+            }
+
+            @Override
+            public void close() {
+                alignmentsReader.close();
             }
         };
     }

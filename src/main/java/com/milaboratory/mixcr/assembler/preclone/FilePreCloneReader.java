@@ -17,13 +17,14 @@ import java.util.List;
 
 import static com.milaboratory.mixcr.assembler.preclone.FilePreCloneWriter.*;
 
-public final class FilePreCloneReader implements PreCloneReader, AutoCloseable {
+public final class FilePreCloneReader implements PreCloneReader {
     private final PrimitivIHybrid input;
     private final VDJCAlignerParameters alignmentParameters;
     private final List<VDJCGene> usedGenes;
     private final long alignmentsStartPosition,
             assignedAlignmentsStartPosition,
             clonesStartPosition,
+            numberOfReads,
             numberOfAlignments,
             numberOfAssignedAlignments,
             numberOfClones;
@@ -32,16 +33,17 @@ public final class FilePreCloneReader implements PreCloneReader, AutoCloseable {
         this.input = new PrimitivIHybrid(file, 4);
         try (PrimitivI i = input.beginPrimitivI(true)) {
             this.alignmentParameters = i.readObject(VDJCAlignerParameters.class);
+            this.numberOfReads = i.readLong();
             this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(i, alignmentParameters,
                     VDJCLibraryRegistry.getDefault());
         }
         try (PrimitivI i = input.beginRandomAccessPrimitivI(-8 * 3)) {
-            alignmentsStartPosition = i.readLong();
-            assignedAlignmentsStartPosition = i.readLong();
-            clonesStartPosition = i.readLong();
-            numberOfAlignments = i.readLong();
-            numberOfAssignedAlignments = i.readLong();
-            numberOfClones = i.readLong();
+            this.alignmentsStartPosition = i.readLong();
+            this.assignedAlignmentsStartPosition = i.readLong();
+            this.clonesStartPosition = i.readLong();
+            this.numberOfAlignments = i.readLong();
+            this.numberOfAssignedAlignments = i.readLong();
+            this.numberOfClones = i.readLong();
         }
     }
 
@@ -87,6 +89,11 @@ public final class FilePreCloneReader implements PreCloneReader, AutoCloseable {
                         h -> h.getSpecialByte(0) == CLONES_END_MARK_BYTE_0
                                 ? PrimitivIHeaderActions.stopReading()
                                 : PrimitivIHeaderActions.error()));
+    }
+
+    @Override
+    public long getTotalNumberOfReads() {
+        return numberOfReads;
     }
 
     @Override

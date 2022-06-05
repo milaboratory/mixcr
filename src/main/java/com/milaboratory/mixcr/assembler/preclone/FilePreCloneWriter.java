@@ -73,6 +73,7 @@ public final class FilePreCloneWriter implements AutoCloseable, CanReportProgres
         // Writing header in raw primitivIO mode and initializing primitivIO state
         try (PrimitivO o = this.output.beginPrimitivO(true)) {
             o.writeObject(alignmentReader.getParameters());
+            o.writeLong(alignmentReader.getNumberOfReads());
             IOUtil.stdVDJCPrimitivOStateInit(o, alignmentReader.getUsedGenes(), alignmentReader.getParameters());
         }
 
@@ -191,7 +192,7 @@ public final class FilePreCloneWriter implements AutoCloseable, CanReportProgres
                 cloneChecksum = cloneChecksum * 71 + preClone.id;
                 cloneChecksum = cloneChecksum * 71 + newCloneIdx;
 
-                writer.write(preClone.withId(newCloneIdx));
+                writer.write(preClone.withIndex(newCloneIdx));
                 clones++;
                 ps.setProgress(1.0 * clones / numberOfClones.get());
             }

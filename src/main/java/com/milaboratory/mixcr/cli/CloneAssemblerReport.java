@@ -32,9 +32,9 @@ package com.milaboratory.mixcr.cli;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.mixcr.assembler.CloneAccumulator;
 import com.milaboratory.mixcr.assembler.CloneAssemblerListener;
+import com.milaboratory.mixcr.assembler.preclone.PreClone;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.util.ReportHelper;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -182,35 +182,35 @@ public final class CloneAssemblerReport extends AbstractCommandReport implements
     }
 
     @Override
-    public void onFailedToExtractTarget(VDJCAlignments alignments) {
-        failedToExtractTarget.addAndGet(alignments.getNumberOfReads());
+    public void onFailedToExtractTarget(PreClone preClone) {
+        failedToExtractTarget.addAndGet(preClone.getNumberOfReads());
     }
 
     @Override
-    public void onTooManyLowQualityPoints(VDJCAlignments alignments) {
-        droppedAsLowQuality.addAndGet(alignments.getNumberOfReads());
+    public void onTooManyLowQualityPoints(PreClone preClone) {
+        droppedAsLowQuality.addAndGet(preClone.getNumberOfReads());
     }
 
     @Override
-    public void onAlignmentDeferred(VDJCAlignments alignments) {
-        deferred.addAndGet(alignments.getNumberOfReads());
+    public void onAlignmentDeferred(PreClone preClone) {
+        deferred.addAndGet(preClone.getNumberOfReads());
     }
 
     @Override
-    public void onAlignmentAddedToClone(VDJCAlignments alignments, CloneAccumulator accumulator) {
-        coreAlignments.addAndGet(alignments.getNumberOfReads());
-        alignmentsInClones.addAndGet(alignments.getNumberOfReads());
+    public void onAlignmentAddedToClone(PreClone preClone, CloneAccumulator accumulator) {
+        coreAlignments.addAndGet(preClone.getNumberOfReads());
+        alignmentsInClones.addAndGet(preClone.getNumberOfReads());
     }
 
     @Override
-    public void onNoCandidateFoundForDeferredAlignment(VDJCAlignments alignments) {
-        deferredAlignmentsDropped.addAndGet(alignments.getNumberOfReads());
+    public void onNoCandidateFoundForDeferredAlignment(PreClone preClone) {
+        deferredAlignmentsDropped.addAndGet(preClone.getNumberOfReads());
     }
 
     @Override
-    public void onDeferredAlignmentMappedToClone(VDJCAlignments alignments, CloneAccumulator accumulator) {
-        deferredAlignmentsMapped.addAndGet(alignments.getNumberOfReads());
-        alignmentsInClones.addAndGet(alignments.getNumberOfReads());
+    public void onDeferredAlignmentMappedToClone(PreClone preClone, CloneAccumulator accumulator) {
+        deferredAlignmentsMapped.addAndGet(preClone.getNumberOfReads());
+        alignmentsInClones.addAndGet(preClone.getNumberOfReads());
     }
 
     @Override

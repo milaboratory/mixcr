@@ -29,26 +29,26 @@
  */
 package com.milaboratory.mixcr.assembler;
 
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.assembler.preclone.PreClone;
 
 public interface CloneAssemblerListener {
     /* Initial Assembly */
 
     void onNewCloneCreated(CloneAccumulator accumulator);
 
-    void onFailedToExtractTarget(VDJCAlignments alignments);
+    void onFailedToExtractTarget(PreClone preClone);
 
-    void onTooManyLowQualityPoints(VDJCAlignments alignments);
+    void onTooManyLowQualityPoints(PreClone preClone);
 
-    void onAlignmentDeferred(VDJCAlignments alignments);
+    void onAlignmentDeferred(PreClone preClone);
 
-    void onAlignmentAddedToClone(VDJCAlignments alignments, CloneAccumulator accumulator);
+    void onAlignmentAddedToClone(PreClone preClone, CloneAccumulator accumulator);
 
     /* Mapping */
 
-    void onNoCandidateFoundForDeferredAlignment(VDJCAlignments alignments);
+    void onNoCandidateFoundForDeferredAlignment(PreClone preClone);
 
-    void onDeferredAlignmentMappedToClone(VDJCAlignments alignments, CloneAccumulator accumulator);
+    void onDeferredAlignmentMappedToClone(PreClone preClone, CloneAccumulator accumulator);
 
     /* Clustering */
 

@@ -14,8 +14,8 @@ public final class FieldCollection {
             a -> HashFunctions.Wang64to32shift(a.getCloneIndex());
 
     public static final Comparator<PreClone> PreCloneIdComparator =
-            Comparator.comparing(PreClone::getId);
+            Comparator.comparing(PreClone::getIndex);
 
     public static final ToIntFunction<PreClone> PreCloneIdHash =
-            a -> HashFunctions.Wang64to32shift(a.getId());
+            a -> HashFunctions.Wang64to32shift(a.getIndex());
 }

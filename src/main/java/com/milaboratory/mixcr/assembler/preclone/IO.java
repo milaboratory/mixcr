@@ -21,7 +21,7 @@ public final class IO {
     public static final class PreCloneSerializer implements Serializer<PreClone> {
         @Override
         public void write(PrimitivO output, PreClone obj) {
-            output.writeLong(obj.id);
+            output.writeLong(obj.index);
             output.writeObject(obj.coreKey);
             output.writeObject(obj.clonalSequence);
             output.writeObject(obj.coreTagCount);
@@ -37,7 +37,7 @@ public final class IO {
 
         @Override
         public PreClone read(PrimitivI input) {
-            long id = input.readLong();
+            long index = input.readLong();
             TagTuple coreKey = input.readObject(TagTuple.class);
             NSequenceWithQuality[] clonalSequence = input.readObject(NSequenceWithQuality[].class);
             TagCount coreTagCount = input.readObject(TagCount.class);
@@ -52,7 +52,7 @@ public final class IO {
                     gss.add(input.readObject(GeneAndScore.class));
                 gsss.put(gt, gss);
             }
-            return new PreClone(id, coreKey, coreTagCount, fullTagCount, clonalSequence, gsss);
+            return new PreClone(index, coreKey, coreTagCount, fullTagCount, clonalSequence, gsss);
         }
 
         @Override
