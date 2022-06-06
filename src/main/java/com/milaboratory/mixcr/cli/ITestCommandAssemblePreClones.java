@@ -40,12 +40,11 @@ public class ITestCommandAssemblePreClones extends ACommandMiXCR {
             names = {"--use-system-temp"})
     public boolean useSystemTemp = false;
 
-
     private static final AAssemblerParameters aAssemblerParams = AAssemblerParameters.builder()
             .bandWidth(4)
-            .scoring(LinearGapAlignmentScoring.getNucleotideBLASTScoring())
+            .scoring(LinearGapAlignmentScoring.getNucleotideBLASTScoring(-14))
             .minAlignmentScore(40)
-            .maxAlignmentPenalty(90)
+            .maxAlignmentPenalty(33)
             .trimMinimalSumQuality(20)
             .trimReferenceRegion(false)
             .maxQuality((byte) 45)
@@ -54,7 +53,7 @@ public class ITestCommandAssemblePreClones extends ACommandMiXCR {
             .aAssemblerParameters(aAssemblerParams)
             .maxIterations(4)
             .minAltSeedQualityScore((byte) 11)
-            .minimalRecordShare(0.001)
+            .minimalRecordShare(0.1)
             .minimalRecordCount(2)
             .build();
 

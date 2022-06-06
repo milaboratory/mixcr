@@ -15,7 +15,7 @@ assert() {
   exit 1
 }
 
-set -e
+set -euxo pipefail
 
 mixcr align -f \
     --tag-pattern '^(CELL:N{16})(UMI:N{10})\^(R2:*)' \

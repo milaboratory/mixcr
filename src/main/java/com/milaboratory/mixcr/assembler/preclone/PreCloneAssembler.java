@@ -3,7 +3,10 @@ package com.milaboratory.mixcr.assembler.preclone;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.util.DummyInputPort;
+import com.milaboratory.core.alignment.Alignment;
+import com.milaboratory.core.alignment.BandedLinearAligner;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
+import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mitool.consensus.ConsensusResult;
 import com.milaboratory.mitool.consensus.GConsensusAssembler;
 import com.milaboratory.mitool.helpers.GroupOP;
@@ -14,15 +17,27 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
+import gnu.trove.iterator.TIntIntIterator;
+import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
-import io.repseq.core.GeneType;
-import io.repseq.core.VDJCGeneId;
+import io.repseq.core.*;
 import kotlin.jvm.functions.Function1;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 public final class PreCloneAssembler {
+    /**
+     * Reference points that will be projected onto the assembled consensus / pre-clone.
+     * Important Note: all the points are alignment attached and not checked for continuity.
+     */
+    private static final ReferencePoint[] ReferencePointsToProject = {
+            ReferencePoint.VEndTrimmed,
+            ReferencePoint.DBeginTrimmed,
+            ReferencePoint.DEndTrimmed,
+            ReferencePoint.JBeginTrimmed
+    };
+
     private final PreCloneAssemblerReport report = new PreCloneAssemblerReport();
     private final AtomicLong idGenerator = new AtomicLong();
     private final PreCloneAssemblerParameters parameters;
@@ -111,6 +126,13 @@ public final class PreCloneAssembler {
         // noinspection unchecked
         Map<GeneType, List<GeneAndScore>>[] geneInfos = new Map[numberOfClones];
 
+        // Accumulators of reference points positions
+        // rp[cloneIdx][assemblingFeatureIdx][refPointIdx]
+        TIntIntHashMap[][][] referencePointStats =
+                new TIntIntHashMap[numberOfClones]
+                        [parameters.assemblingFeatures.length]
+                        [ReferencePointsToProject.length];
+
         // Saves local record indices, assigned to each of the consensuses
         // TIntHashSet[] contents = new TIntHashSet[numberOfClones];
         // long[] alignmentToClone = new long[(int) grp1.getCount()];
@@ -188,7 +210,7 @@ public final class PreCloneAssembler {
         }
 
         // Step #3
-        // Assigning leftover alignments
+        // Assigning leftover alignments and collecting reference point positions
 
         TagCountAggregator[] coreTagCountAggregators = new TagCountAggregator[numberOfClones];
         TagCountAggregator[] fullTagCountAggregators = new TagCountAggregator[numberOfClones];
@@ -238,10 +260,40 @@ public final class PreCloneAssembler {
                     alignmentIdxToCloneIdxP1[localIdx] = cIdxP1;
                 else if (cIdxP1 == -1)
                     report.empiricalAssignmentConflicts.incrementAndGet();
-            } else if (cIdxP1 > 0)
+            } else if (cIdxP1 > 0) {
+                int cIdx = cIdxP1 - 1;
                 // Using second iteration over the alignments to assemble TagCounters from the alignments assigned to
                 // clonotypes based on their contig assignment
-                coreTagCountAggregators[cIdxP1 - 1].add(al.getTagCount());
+                coreTagCountAggregators[cIdx].add(al.getTagCount());
+
+                // and collect statistics on the reference point positions
+                GeneFeature[] gfs = parameters.assemblingFeatures;
+                for (int gfi = 0; gfi < gfs.length; gfi++) {
+                    GeneFeature gf = gfs[gfi];
+                    NucleotideSequence seq = al.getFeature(gf).getSequence();
+                    // Alignment to project alignment positions onto the consensus
+                    Alignment<NucleotideSequence> a = BandedLinearAligner.align(
+                            parameters.assemblerParameters.aAssemblerParameters.scoring,
+                            seq.getSequence(),
+                            consensuses.get(cIdx).consensuses[gfi].consensus.getSequence(),
+                            parameters.assemblerParameters.aAssemblerParameters.bandWidth);
+                    for (int rpi = 0; rpi < ReferencePointsToProject.length; rpi++) {
+                        ReferencePoint rp = ReferencePointsToProject[rpi];
+                        int positionInAlignment = al.getRelativePosition(gf, rp);
+                        if (positionInAlignment == -1)
+                            continue;
+                        int positionInConsensus = a.convertToSeq1Position(positionInAlignment);
+                        if (positionInConsensus == -1)
+                            continue;
+                        if (positionInConsensus < -1)
+                            positionInConsensus = -2 - positionInConsensus;
+                        TIntIntHashMap map = referencePointStats[cIdx][gfi][rpi];
+                        if (map == null) // lazy initialization
+                            referencePointStats[cIdx][gfi][rpi] = map = new TIntIntHashMap();
+                        map.adjustOrPutValue(positionInConsensus, 1, 1);
+                    }
+                }
+            }
 
             if (cIdxP1 > 0)
                 fullTagCountAggregators[cIdxP1 - 1].add(al.getTagCount());
@@ -254,15 +306,36 @@ public final class PreCloneAssembler {
         for (int cIdx = 0; cIdx < numberOfClones; cIdx++) {
             ConsensusResult.SingleConsensus[] cs = consensuses.get(cIdx).consensuses;
             NSequenceWithQuality[] clonalSequence = new NSequenceWithQuality[cs.length];
-            for (int sr = 0; sr < cs.length; sr++)
+            ExtendedReferencePoints[] referencePoints = new ExtendedReferencePoints[cs.length];
+            for (int sr = 0; sr < cs.length; sr++) {
                 clonalSequence[sr] = cs[sr].consensus;
+                ExtendedReferencePointsBuilder rpb = new ExtendedReferencePointsBuilder();
+                for (int rpi = 0; rpi < ReferencePointsToProject.length; rpi++) {
+                    TIntIntHashMap map = referencePointStats[cIdx][sr][rpi];
+                    if (map == null)
+                        continue;
+                    int maxCount = -1;
+                    int maxPosition = -1;
+                    TIntIntIterator it = map.iterator();
+                    while (it.hasNext()) {
+                        it.advance();
+                        if (maxCount < it.value()) {
+                            maxCount = it.value();
+                            maxPosition = it.key();
+                        }
+                    }
+                    rpb.setPosition(ReferencePointsToProject[rpi], maxPosition);
+                }
+                referencePoints[sr] = rpb.build();
+            }
             result.add(new PreClone(
                     cloneIdOffset + cIdx,
                     grp1.getKey(),
                     coreTagCountAggregators[cIdx].createAndDestroy(),
                     fullTagCountAggregators[cIdx].createAndDestroy(),
                     clonalSequence,
-                    geneInfos[cIdx]));
+                    geneInfos[cIdx],
+                    referencePoints));
         }
 
         long[] resultAlToClone = new long[alignmentIdxToCloneIdxP1.length];

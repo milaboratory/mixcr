@@ -1,5 +1,6 @@
 package com.milaboratory.mixcr.assembler.preclone;
 
+import com.milaboratory.core.Range;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.mixcr.basictypes.GeneAndScore;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
@@ -8,6 +9,7 @@ import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.primitivio.annotations.Serializable;
 import com.milaboratory.util.CollectionUtils;
+import io.repseq.core.ExtendedReferencePoints;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGeneId;
@@ -27,17 +29,22 @@ public final class PreClone {
     /** Assembled clonal sequence */
     final NSequenceWithQuality[] clonalSequence;
     /** Aggregated V, J, C gene scoring and content information */
+
     final Map<GeneType, List<GeneAndScore>> geneScores;
+    /** Reference point for each of the clonal sequences */
+    final ExtendedReferencePoints[] referencePoints;
 
     public PreClone(long index, TagTuple coreKey, TagCount coreTagCount, TagCount fullTagCount,
                     NSequenceWithQuality[] clonalSequence,
-                    Map<GeneType, List<GeneAndScore>> geneScores) {
+                    Map<GeneType, List<GeneAndScore>> geneScores,
+                    ExtendedReferencePoints[] referencePoints) {
         this.index = index;
-        this.coreKey = coreKey;
-        this.coreTagCount = coreTagCount;
-        this.fullTagCount = fullTagCount;
-        this.clonalSequence = clonalSequence;
-        this.geneScores = geneScores;
+        this.coreKey = Objects.requireNonNull(coreKey);
+        this.coreTagCount = Objects.requireNonNull(coreTagCount);
+        this.fullTagCount = Objects.requireNonNull(fullTagCount);
+        this.clonalSequence = Objects.requireNonNull(clonalSequence);
+        this.geneScores = Objects.requireNonNull(geneScores);
+        this.referencePoints = Objects.requireNonNull(referencePoints);
     }
 
     public long getIndex() {
@@ -80,8 +87,12 @@ public final class PreClone {
         return gs == null ? null : gs.geneId;
     }
 
+    public Range getRange(int csIdx, GeneFeature feature) {
+        return referencePoints[csIdx].getRange(feature);
+    }
+
     public PreClone withIndex(long index) {
-        return new PreClone(index, coreKey, coreTagCount, fullTagCount, clonalSequence, geneScores);
+        return new PreClone(index, coreKey, coreTagCount, fullTagCount, clonalSequence, geneScores, referencePoints);
     }
 
     /** Converts alignment to a pre-clone, given the clonal gene features (assemblingFeatures) */
@@ -101,8 +112,7 @@ public final class PreClone {
             assert CollectionUtils.isSorted(gss);
             geneScores.put(gt, gss);
         }
-
         return new PreClone(index, TagTuple.NO_TAGS, alignment.getTagCount(), alignment.getTagCount(),
-                clonalSequences, geneScores);
+                clonalSequences, geneScores, null);
     }
 }

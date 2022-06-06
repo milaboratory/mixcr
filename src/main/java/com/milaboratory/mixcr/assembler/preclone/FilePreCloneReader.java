@@ -37,7 +37,8 @@ public final class FilePreCloneReader implements PreCloneReader {
             this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(i, alignmentParameters,
                     VDJCLibraryRegistry.getDefault());
         }
-        try (PrimitivI i = input.beginRandomAccessPrimitivI(-8 * 3)) {
+
+        try (PrimitivI i = input.beginRandomAccessPrimitivI(-8 * 6)) {
             this.alignmentsStartPosition = i.readLong();
             this.assignedAlignmentsStartPosition = i.readLong();
             this.clonesStartPosition = i.readLong();
