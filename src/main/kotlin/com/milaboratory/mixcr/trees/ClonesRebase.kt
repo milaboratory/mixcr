@@ -8,6 +8,7 @@ import com.milaboratory.core.alignment.AlignmentScoring
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.util.extractAbsoluteMutations
 import kotlin.math.max
+import kotlin.math.min
 
 @Suppress("LocalVariableName")
 class ClonesRebase(
@@ -114,101 +115,90 @@ class ClonesRebase(
         originalRoot: RootInfo,
         rebaseTo: RootInfo
     ): MutationsSet {
-        val originalKnownNDN = originalNode.NDNMutations.buildSequence()
-        val VMutationsInCDR3WithoutNDN = if (originalRoot.VRangeInCDR3.length() < rebaseTo.VRangeInCDR3.length()) {
-            val difference = Range(originalRoot.VRangeInCDR3.upper, rebaseTo.VRangeInCDR3.upper)
-            originalNode.VMutations.partInCDR3
-                .combineWithMutationsToTheRight(
-                    difference,
-                    Aligner.alignGlobal(
-                        VScoring,
-                        VSequence1,
-                        originalKnownNDN,
-                        difference.lower,
-                        difference.length(),
-                        0,
-                        difference.length()
-                    ).absoluteMutations
-                )
-        } else if (rebaseTo.VRangeInCDR3.length() < originalRoot.VRangeInCDR3.length()) {
-            PartInCDR3(
-                rebaseTo.VRangeInCDR3,
-                originalNode.VMutations.partInCDR3.mutations
-                    .extractAbsoluteMutations(rebaseTo.VRangeInCDR3, false)
-            )
-        } else {
-            originalNode.VMutations.partInCDR3
-        }
-        val knownNDNBuilder = NucleotideSequence.ALPHABET.createBuilder()
-        if (rebaseTo.VRangeInCDR3.length() < originalRoot.VRangeInCDR3.length()) {
-            val VRangeInNDN = Range(rebaseTo.VRangeInCDR3.upper, originalRoot.VRangeInCDR3.upper)
-            knownNDNBuilder.append(
-                MutationsUtils.buildSequence(
-                    VSequence1,
-                    originalNode.VMutations.partInCDR3.mutations
-                        .extractAbsoluteMutations(VRangeInNDN, false),
-                    VRangeInNDN
-                )
-            )
-        }
-        knownNDNBuilder.append(
-            originalKnownNDN.getRange(
-                max(0, rebaseTo.VRangeInCDR3.length() - originalRoot.VRangeInCDR3.length()),
-                originalKnownNDN.size() - max(0, rebaseTo.JRangeInCDR3.length() - originalRoot.JRangeInCDR3.length())
-            )
+        val commonVRange = Range(
+            originalRoot.VRangeInCDR3.lower,
+            min(originalRoot.VRangeInCDR3.upper, rebaseTo.VRangeInCDR3.upper)
         )
-        if (rebaseTo.JRangeInCDR3.length() < originalRoot.JRangeInCDR3.length()) {
-            knownNDNBuilder.append(
+        val commonJRange = Range(
+            max(originalRoot.JRangeInCDR3.lower, rebaseTo.JRangeInCDR3.lower),
+            rebaseTo.JRangeInCDR3.upper
+        )
+
+        val VRangeLeft = originalRoot.VRangeInCDR3.setLower(commonVRange.upper)
+        val JRangeLeft = originalRoot.JRangeInCDR3.setUpper(commonJRange.lower)
+        val toAlign = MutationsUtils.buildSequence(
+            originalNode.VMutations.sequence1,
+            originalNode.VMutations.partInCDR3.mutations.extractAbsoluteMutations(VRangeLeft, false),
+            VRangeLeft
+        ).concatenate(originalNode.NDNMutations.buildSequence())
+            .concatenate(
                 MutationsUtils.buildSequence(
-                    JSequence1,
-                    originalNode.JMutations.partInCDR3.mutations,
-                    Range(originalRoot.JRangeInCDR3.lower, rebaseTo.JRangeInCDR3.lower)
+                    originalNode.JMutations.sequence1,
+                    originalNode.JMutations.partInCDR3.mutations.extractAbsoluteMutations(JRangeLeft, true),
+                    JRangeLeft
                 )
             )
-        }
-        val rebasedKnownNDN = knownNDNBuilder.createAndDestroy()
-        val JMutationsInCDR3WithoutNDN = if (originalRoot.JRangeInCDR3.length() < rebaseTo.JRangeInCDR3.length()) {
-            val difference = Range(rebaseTo.JRangeInCDR3.lower, originalRoot.JRangeInCDR3.lower)
-            originalNode.JMutations.partInCDR3
-                .combineWithMutationsToTheLeft(
-                    difference,
-                    Aligner.alignGlobal(
-                        JScoring,
-                        JSequence1,
-                        originalKnownNDN,
-                        difference.lower,
-                        difference.length(),
-                        originalKnownNDN.size() - difference.length(),
-                        difference.length()
-                    ).absoluteMutations
-                )
-        } else if (rebaseTo.JRangeInCDR3.length() < originalRoot.JRangeInCDR3.length()) {
-            PartInCDR3(
-                rebaseTo.JRangeInCDR3,
-                originalNode.JMutations.partInCDR3.mutations
-                    .extractAbsoluteMutations(rebaseTo.JRangeInCDR3, false)
-            )
-        } else {
-            originalNode.JMutations.partInCDR3
-        }
+
+        val VRangeToAlign = rebaseTo.VRangeInCDR3.setLower(commonVRange.upper)
+        val JRangeToAlign = rebaseTo.JRangeInCDR3.setUpper(commonJRange.lower)
+        //TODO try to align with fewer indels
+        val part =
+            toAlign.size() / (VRangeToAlign.length() + rebaseTo.reconstructedNDN.size() + JRangeToAlign.length()).toDouble()
+        val VPartToAlign = Range(0, (VRangeToAlign.length() * part).toInt())
+        val JPartToAlign = Range((toAlign.size() - JRangeToAlign.length() * part).toInt(), toAlign.size())
+        val NDNPartToAlign = Range(VPartToAlign.upper, JPartToAlign.lower)
+
+        val VMutationsToAdd = Aligner.alignGlobal(
+            VScoring,
+            VSequence1,
+            toAlign,
+            VRangeToAlign.lower,
+            VRangeToAlign.length(),
+            VPartToAlign.lower,
+            VPartToAlign.length()
+        ).absoluteMutations
+
+        val JMutationsToAdd = Aligner.alignGlobal(
+            JScoring,
+            JSequence1,
+            toAlign,
+            JRangeToAlign.lower,
+            JRangeToAlign.length(),
+            JPartToAlign.lower,
+            JPartToAlign.length()
+        ).absoluteMutations
+
+        val NDNMutations = Aligner.alignGlobal(
+            NDNScoring,
+            rebaseTo.reconstructedNDN,
+            toAlign,
+            0,
+            rebaseTo.reconstructedNDN.size(),
+            NDNPartToAlign.lower,
+            NDNPartToAlign.length()
+        ).absoluteMutations
+
         return MutationsSet(
             originalNode.VMutations.copy(
-                partInCDR3 = VMutationsInCDR3WithoutNDN
+                partInCDR3 = PartInCDR3(
+                    rebaseTo.VRangeInCDR3,
+                    originalNode.VMutations.partInCDR3.mutations.extractAbsoluteMutations(commonVRange, false)
+                        .concat(VMutationsToAdd)
+                )
             ),
             NDNMutations(
                 rebaseTo.reconstructedNDN,
-                Aligner.alignGlobal(
-                    NDNScoring,
-                    rebaseTo.reconstructedNDN,
-                    rebasedKnownNDN
-                ).absoluteMutations
+                NDNMutations
             ),
             originalNode.JMutations.copy(
-                partInCDR3 = JMutationsInCDR3WithoutNDN
+                partInCDR3 = PartInCDR3(
+                    rebaseTo.JRangeInCDR3, JMutationsToAdd.concat(
+                        originalNode.JMutations.partInCDR3.mutations.extractAbsoluteMutations(commonJRange, false)
+                    )
+                )
             )
         )
     }
-
 }
 
 fun NDNRangeInKnownNDN(mutations: MutationsFromVJGermline, VRangeInCDR3: Range, JRangeInCDR3: Range): Range =

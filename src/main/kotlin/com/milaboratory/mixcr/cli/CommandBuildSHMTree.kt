@@ -59,11 +59,11 @@ import java.io.PrintStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.*
 import java.util.function.Function
 import java.util.stream.Collectors
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import kotlin.io.path.writeText
 
 
 @CommandLine.Command(
@@ -130,12 +130,8 @@ class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
         if (report == null) warn("NOTE: report file is not specified, using " + getReportFileName() + " to write report.")
     }
 
-    private fun getReportFileName(): String? {
-        return Objects.requireNonNullElseGet(report) {
-            FilenameUtils.removeExtension(
-                outputZipPath
-            ) + ".report"
-        }
+    private fun getReportFileName(): String {
+        return report ?: (FilenameUtils.removeExtension(outputZipPath) + ".report")
     }
 
     @Throws(Exception::class)
@@ -241,10 +237,10 @@ class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
                     .collect(Collectors.toList())
                 XSV.writeXSVBody(nodesTable, nodes, columns, "\t")
                 val treeFile = outputDirInTmp.toPath().resolve(treeWithMeta.treeId.encode() + ".tree").toFile()
-                Files.writeString(treeFile.toPath(), printer.print(treeWithMeta.tree))
+                treeFile.toPath().writeText(printer.print(treeWithMeta.tree))
             }
         }
-        zip(outputDirInTmp.toPath(), Path.of(outputZipPath))
+        zip(outputDirInTmp.toPath(), Paths.get(outputZipPath))
         for (i in 0..shmTreeBuilderParameters!!.stepsOrder.size) {
             stepNumber = i + 1
             val treesBeforeDecisions = debugFile(stepNumber, Debug.BEFORE_DECISIONS_SUFFIX)
@@ -260,12 +256,10 @@ class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
     }
 
     @Throws(IOException::class)
-    private fun createDebug(stepNumber: Int): Debug {
-        return Debug(
-            prepareDebugFile(stepNumber, Debug.BEFORE_DECISIONS_SUFFIX),
-            prepareDebugFile(stepNumber, Debug.AFTER_DECISIONS_SUFFIX)
-        )
-    }
+    private fun createDebug(stepNumber: Int) = Debug(
+        prepareDebugFile(stepNumber, Debug.BEFORE_DECISIONS_SUFFIX),
+        prepareDebugFile(stepNumber, Debug.AFTER_DECISIONS_SUFFIX)
+    )
 
     @Throws(IOException::class)
     private fun prepareDebugFile(stepNumber: Int, suffix: String): PrintStream {
@@ -277,9 +271,8 @@ class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
         return debugWriter
     }
 
-    private fun debugFile(stepNumber: Int, suffix: String): File {
-        return debugDirectory!!.resolve("step_" + stepNumber + "_" + suffix + ".csv").toFile()
-    }
+    private fun debugFile(stepNumber: Int, suffix: String): File =
+        debugDirectory!!.resolve("step_" + stepNumber + "_" + suffix + ".csv").toFile()
 
     class Debug(val treesBeforeDecisionsWriter: PrintStream, val treesAfterDecisionsWriter: PrintStream) {
         companion object {
@@ -355,13 +348,6 @@ class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
                 .put("CGene") { it.node.content.CGeneName }
                 .build()
 
-        private fun Array<MutationNt2AADescriptor>?.asString(): String {
-            return when (this) {
-                null -> ""
-                else -> this.joinToString { obj: MutationNt2AADescriptor -> obj.toString() }
-            }
-        }
-
         @Throws(IOException::class)
         private fun zip(sourceDir: Path, destination: Path) {
             ZipOutputStream(Files.newOutputStream(destination)).use { zs ->
@@ -381,3 +367,9 @@ class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
         }
     }
 }
+
+private fun Array<MutationNt2AADescriptor>?.asString(): String = when (this) {
+    null -> ""
+    else -> this.joinToString { obj: MutationNt2AADescriptor -> obj.toString() }
+}
+

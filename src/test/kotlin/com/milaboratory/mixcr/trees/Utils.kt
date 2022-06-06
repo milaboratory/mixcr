@@ -9,9 +9,9 @@ import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.mutations.MutationsBuilder
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.util.extractAbsoluteMutations
-import java.util.*
 import java.util.stream.Collectors
 import java.util.stream.IntStream
+import kotlin.random.Random
 
 fun Random.generateMutations(
     parent: NucleotideSequence,

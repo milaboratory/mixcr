@@ -8,10 +8,10 @@ import com.milaboratory.mixcr.trees.generateSequence
 import io.kotest.matchers.shouldBe
 import org.junit.Ignore
 import org.junit.Test
-import java.util.*
 import java.util.concurrent.ThreadLocalRandom
 import java.util.stream.Collectors
 import java.util.stream.IntStream
+import kotlin.random.Random
 
 class MutationsExtensionsTest {
     @Test

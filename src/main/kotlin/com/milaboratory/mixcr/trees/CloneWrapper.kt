@@ -90,7 +90,7 @@ class SerializerImpl : Serializer<CloneWrapper> {
         output.writeInt(`object`.datasetId)
         output.writeUTF(`object`.VJBase.VGeneName)
         output.writeUTF(`object`.VJBase.JGeneName)
-        output.writeInt(`object`.VJBase.CDR3length!!)
+        output.writeInt(`object`.VJBase.CDR3length)
     }
 
     override fun read(input: PrimitivI): CloneWrapper = CloneWrapper(
