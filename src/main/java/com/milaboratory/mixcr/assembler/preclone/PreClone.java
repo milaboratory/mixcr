@@ -7,6 +7,7 @@ import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.primitivio.annotations.Serializable;
+import io.repseq.core.ExtendedReferencePoints;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 
@@ -26,16 +27,20 @@ public final class PreClone {
     public final NSequenceWithQuality[] clonalSequence;
     /** Aggregated V, J, C gene scoring and content information */
     public final Map<GeneType, List<GeneAndScore>> geneScores;
+    /** Reference point for each of the clonal sequences */
+    public final ExtendedReferencePoints[] referencePoints;
 
     public PreClone(long id, TagTuple coreKey, TagCount coreTagCount, TagCount fullTagCount,
                     NSequenceWithQuality[] clonalSequence,
-                    Map<GeneType, List<GeneAndScore>> geneScores) {
+                    Map<GeneType, List<GeneAndScore>> geneScores,
+                    ExtendedReferencePoints[] referencePoints) {
         this.id = id;
-        this.coreKey = coreKey;
-        this.coreTagCount = coreTagCount;
-        this.fullTagCount = fullTagCount;
-        this.clonalSequence = clonalSequence;
-        this.geneScores = geneScores;
+        this.coreKey = Objects.requireNonNull(coreKey);
+        this.coreTagCount = Objects.requireNonNull(coreTagCount);
+        this.fullTagCount = Objects.requireNonNull(fullTagCount);
+        this.clonalSequence = Objects.requireNonNull(clonalSequence);
+        this.geneScores = Objects.requireNonNull(geneScores);
+        this.referencePoints = Objects.requireNonNull(referencePoints);
     }
 
     public long getId() {
@@ -43,7 +48,7 @@ public final class PreClone {
     }
 
     public PreClone withId(long id) {
-        return new PreClone(id, coreKey, coreTagCount, fullTagCount, clonalSequence, geneScores);
+        return new PreClone(id, coreKey, coreTagCount, fullTagCount, clonalSequence, geneScores, referencePoints);
     }
 
     /** Converts alignment to a pre-clone, given the clonal gene features (features to align) */
@@ -65,6 +70,6 @@ public final class PreClone {
             geneScores.put(gt, gss);
         }
         return new PreClone(id, TagTuple.NO_TAGS, alignment.getTagCount(), alignment.getTagCount(),
-                clonalSequences, geneScores);
+                clonalSequences, geneScores, null);
     }
 }

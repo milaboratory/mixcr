@@ -35,7 +35,7 @@ public final class FilePreCloneReader implements PreCloneReader, AutoCloseable {
             this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(i, alignmentParameters,
                     VDJCLibraryRegistry.getDefault());
         }
-        try (PrimitivI i = input.beginRandomAccessPrimitivI(-8 * 3)) {
+        try (PrimitivI i = input.beginRandomAccessPrimitivI(-8 * 6)) {
             alignmentsStartPosition = i.readLong();
             assignedAlignmentsStartPosition = i.readLong();
             clonesStartPosition = i.readLong();

@@ -7,6 +7,7 @@ import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.Serializer;
+import io.repseq.core.ExtendedReferencePoints;
 import io.repseq.core.GeneType;
 
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ public final class IO {
                 for (GeneAndScore gs : e.getValue())
                     output.writeObject(gs);
             }
+            output.writeObject(obj.referencePoints);
         }
 
         @Override
@@ -52,7 +54,8 @@ public final class IO {
                     gss.add(input.readObject(GeneAndScore.class));
                 gsss.put(gt, gss);
             }
-            return new PreClone(id, coreKey, coreTagCount, fullTagCount, clonalSequence, gsss);
+            ExtendedReferencePoints[] referencePoints = input.readObject(ExtendedReferencePoints[].class);
+            return new PreClone(id, coreKey, coreTagCount, fullTagCount, clonalSequence, gsss, referencePoints);
         }
 
         @Override
