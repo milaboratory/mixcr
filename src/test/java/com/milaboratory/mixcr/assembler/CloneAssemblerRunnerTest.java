@@ -39,6 +39,7 @@ import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.quality.QualityAggregationType;
 import com.milaboratory.core.tree.TreeSearchParameters;
+import com.milaboratory.mixcr.assembler.preclone.PreCloneReader;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.vdjaligners.*;
 import com.milaboratory.util.GlobalObjectMappers;
@@ -100,7 +101,7 @@ public class CloneAssemblerRunnerTest {
             }
         }
 
-        AlignmentsProvider alignmentsProvider = AlignmentsProvider.Util.createProvider(vdjcaFile, VDJCLibraryRegistry.getDefault());
+        AlignmentsProvider alignmentsProvider = new VDJCAlignmentsReader(vdjcaFile);
 
         LinearGapAlignmentScoring<NucleotideSequence> scoring = new LinearGapAlignmentScoring<>(NucleotideSequence.ALPHABET, 5, -9, -12);
         CloneFactoryParameters factoryParameters = new CloneFactoryParameters(
@@ -120,7 +121,8 @@ public class CloneAssemblerRunnerTest {
 
         System.out.println(GlobalObjectMappers.toOneLine(assemblerParameters));
 
-        CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(alignmentsProvider,
+        CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(
+                PreCloneReader.fromAlignments(alignmentsProvider, assemblerParameters.getAssemblingFeatures()),
                 new CloneAssembler(assemblerParameters, true, aligner.getUsedGenes(), alignerParameters));
         SmartProgressReporter.startProgressReport(assemblerRunner);
         assemblerRunner.run();

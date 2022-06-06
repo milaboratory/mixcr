@@ -66,9 +66,9 @@ public class ITestCommandAssemblePreClones extends ACommandMiXCR {
                 FilePreCloneWriter writer = new FilePreCloneWriter(Paths.get(files.get(1)),
                         TempFileManager.smartTempDestination(files.get(1), "", useSystemTemp))
         ) {
-            VDJCAlignmentsReader.SecondaryReader reader2 = reader1.createSecondaryReader();
+            VDJCAlignmentsReader.SecondaryReader reader2 = reader1.readAlignments();
             // For export
-            VDJCAlignmentsReader.SecondaryReader reader3 = reader1.createSecondaryReader();
+            VDJCAlignmentsReader.SecondaryReader reader3 = reader1.readAlignments();
 
             writer.init(reader1);
 
@@ -98,7 +98,7 @@ public class ITestCommandAssemblePreClones extends ACommandMiXCR {
             while ((result = assembler.getForNextGroup()) != null) {
                 GroupOP<VDJCAlignments, TagTuple> grp = alGroups.take();
                 List<PreCloneImpl> clones = result.getClones();
-                assert clones.isEmpty() || clones.get(0).coreKey.equals(grp.getKey());
+                assert clones.isEmpty() || clones.get(0).getCoreKey().equals(grp.getKey());
                 totalClones += clones.size();
 
                 for (PreCloneImpl clone : clones)
@@ -141,7 +141,7 @@ public class ITestCommandAssemblePreClones extends ACommandMiXCR {
                         numberOfAlignmentsCheck + " != 0)");
 
             long numberOfClonesCheck = 0;
-            for (PreCloneImpl c : CUtils.it(reader.readPreClones()))
+            for (PreClone c : CUtils.it(reader.readPreClones()))
                 numberOfClonesCheck++;
 
             if (numberOfClonesCheck != totalClones)

@@ -189,7 +189,7 @@ public final class FilePreCloneWriter implements AutoCloseable, CanReportProgres
                 newCloneIdx++;
 
                 // preClone.id will be mapped to newCloneIdx
-                cloneChecksum = cloneChecksum * 71 + preClone.id;
+                cloneChecksum = cloneChecksum * 71 + preClone.index;
                 cloneChecksum = cloneChecksum * 71 + newCloneIdx;
 
                 writer.write(preClone.withIndex(newCloneIdx));

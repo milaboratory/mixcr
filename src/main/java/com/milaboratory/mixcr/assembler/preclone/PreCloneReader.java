@@ -1,5 +1,6 @@
 package com.milaboratory.mixcr.assembler.preclone;
 
+import com.milaboratory.mixcr.assembler.AlignmentsProvider;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
@@ -9,7 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public interface PreCloneReader extends AutoCloseable {
     /** Creates streamed pre-clone reader. */
-    OutputPortWithProgress<PreCloneImpl> readPreClones();
+    OutputPortWithProgress<PreClone> readPreClones();
 
     /**
      * Creates streamed alignments reader.
@@ -26,7 +27,7 @@ public interface PreCloneReader extends AutoCloseable {
      * Returns a PreCloneReader view of a given VDJCAlignmentsReader representing a set of pre-clones that are formed as
      * a one-to-one image of alignments that completely covers provided set of gene features
      */
-    static PreCloneReader fromAlignments(VDJCAlignmentsReader alignmentsReader, GeneFeature[] geneFeatures) {
+    static PreCloneReader fromAlignments(AlignmentsProvider alignmentsReader, GeneFeature[] geneFeatures) {
         return new PreCloneReader() {
             private boolean alignmentPredicate(VDJCAlignments al) {
                 for (GeneFeature geneFeature : geneFeatures)
@@ -36,23 +37,23 @@ public interface PreCloneReader extends AutoCloseable {
             }
 
             @Override
-            public OutputPortWithProgress<PreCloneImpl> readPreClones() {
+            public OutputPortWithProgress<PreClone> readPreClones() {
                 //noinspection resource
                 OutputPortWithProgress<VDJCAlignments> alignmentReader = readAlignments();
-                return new OutputPortWithProgress<PreCloneImpl>() {
+                return new OutputPortWithProgress<PreClone>() {
                     @Override
                     public long currentIndex() {
                         return alignmentReader.currentIndex();
                     }
 
                     @Override
-                    public PreCloneImpl take() {
+                    public PreClone take() {
                         VDJCAlignments al;
                         //noinspection StatementWithEmptyBody
                         while ((al = alignmentReader.take()) != null && al.getCloneIndex() == -1) ;
                         if (al == null)
                             return null;
-                        return PreCloneImpl.fromAlignment(al.getCloneIndex(), al, geneFeatures);
+                        return PreClone.fromAlignment(al.getCloneIndex(), al, geneFeatures);
                     }
 
                     @Override
@@ -76,7 +77,8 @@ public interface PreCloneReader extends AutoCloseable {
             public OutputPortWithProgress<VDJCAlignments> readAlignments() {
                 Object sync = new Object();
                 AtomicLong idGenerator = new AtomicLong();
-                VDJCAlignmentsReader.SecondaryReader reader = alignmentsReader.createRawSecondaryReader();
+                // noinspection resource
+                OutputPortWithProgress<VDJCAlignments> reader = alignmentsReader.readAlignments();
                 return new OutputPortWithProgress<VDJCAlignments>() {
                     @Override
                     public long currentIndex() {

@@ -15,29 +15,29 @@ public final class VDJCGeneAccumulator {
     private final int[] observations = new int[GeneType.values().length];
     private final EnumMap<GeneType, TObjectFloatHashMap<VDJCGeneId>> geneScores = new EnumMap<>(GeneType.class);
 
-    public synchronized void accumulate(VDJCAlignments alignment) {
-        // Accumulate information about all genes
-        for (GeneType geneType : GeneType.VJC_REFERENCE) {
-            TObjectFloatHashMap<VDJCGeneId> geneScores = this.geneScores.get(geneType);
-            VDJCHit[] hits = alignment.getHits(geneType);
-            if (hits.length == 0)
-                continue;
-            observations[geneType.ordinal()]++;
-            if (geneScores == null)
-                this.geneScores.put(geneType, geneScores = new TObjectFloatHashMap<>());
-            for (VDJCHit hit : hits) {
-                // Calculating sum of natural logarithms of scores
-                geneScores.adjustOrPutValue(hit.getGene().getId(), hit.getScore(), hit.getScore());
-            }
-        }
-    }
+    // public synchronized void accumulate(VDJCAlignments alignment) {
+    //     // Accumulate information about all genes
+    //     for (GeneType geneType : GeneType.VJC_REFERENCE) {
+    //         TObjectFloatHashMap<VDJCGeneId> geneScores = this.geneScores.get(geneType);
+    //         VDJCHit[] hits = alignment.getHits(geneType);
+    //         if (hits.length == 0)
+    //             continue;
+    //         observations[geneType.ordinal()]++;
+    //         if (geneScores == null)
+    //             this.geneScores.put(geneType, geneScores = new TObjectFloatHashMap<>());
+    //         for (VDJCHit hit : hits) {
+    //             // Calculating sum of natural logarithms of scores
+    //             geneScores.adjustOrPutValue(hit.getGene().getId(), hit.getScore(), hit.getScore());
+    //         }
+    //     }
+    // }
 
-    public synchronized void accumulate(EnumMap<GeneType, GeneAndScore[]> genesAndScores) {
+    public synchronized void accumulate(Map<GeneType, List<GeneAndScore>> genesAndScores) {
         // Accumulate information about all genes
         for (GeneType geneType : GeneType.VJC_REFERENCE) {
             TObjectFloatHashMap<VDJCGeneId> geneScores = this.geneScores.get(geneType);
-            GeneAndScore[] data = genesAndScores.get(geneType);
-            if (data == null || data.length == 0)
+            List<GeneAndScore> data = genesAndScores.get(geneType);
+            if (data == null || data.isEmpty())
                 continue;
             observations[geneType.ordinal()]++;
             if (geneScores == null)

@@ -36,6 +36,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.core.sequence.quality.QualityAggregationType;
 import com.milaboratory.core.sequence.quality.QualityAggregator;
+import com.milaboratory.mixcr.assembler.preclone.PreClone;
 import com.milaboratory.mixcr.basictypes.ClonalSequence;
 import com.milaboratory.mixcr.basictypes.GeneAndScore;
 import com.milaboratory.mixcr.basictypes.HasRelativeMinScore;
@@ -159,21 +160,22 @@ public final class CloneAccumulator {
         geneAccumulator = null;
     }
 
-    public synchronized void accumulate(ClonalSequence data, VDJCAlignments alignment, boolean mapped) {
+    public synchronized void accumulate(ClonalSequence data, PreClone preClone, boolean mapped) {
         if (geneAccumulator == null)
             throw new IllegalStateException("Gene information already aggregated");
 
         if (!mapped) { // Core sequence accumulation
-            coreCount += alignment.getNumberOfReads();
+            coreCount += preClone.getNumberOfReads();
 
-            tagBuilder.add(alignment.getTagCount());
+            // TODO or core tag count ???
+            tagBuilder.add(preClone.getFullTagCount());
 
             // Accumulate information about V-D-J alignments only for strictly clustered reads
             // (only for core clonotypes members)
-            geneAccumulator.accumulate(alignment);
+            geneAccumulator.accumulate(preClone.getGeneScores());
 
             aggregator.aggregate(data.getConcatenated().getQuality());
         } else // Mapped sequence accumulation
-            mappedCount += alignment.getNumberOfReads();
+            mappedCount += preClone.getNumberOfReads();
     }
 }

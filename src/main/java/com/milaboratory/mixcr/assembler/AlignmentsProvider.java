@@ -29,43 +29,20 @@
  */
 package com.milaboratory.mixcr.assembler;
 
-import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
-import io.repseq.core.VDJCLibraryRegistry;
+import com.milaboratory.mixcr.util.OutputPortWithProgress;
 
-import java.io.File;
-import java.io.IOException;
-
-public interface AlignmentsProvider {
-    OutputPortCloseable<VDJCAlignments> create();
+public interface AlignmentsProvider extends AutoCloseable {
+    /** Creates new alignments reader */
+    OutputPortWithProgress<VDJCAlignments> readAlignments();
 
     /**
      * Should return total number of reads (not alignments) after whole analysis if such information available.
      *
      * @return total number of reads
      */
-    long getTotalNumberOfReads();
+    long getNumberOfReads();
 
-    final class Util {
-        public static AlignmentsProvider createProvider(File file, final VDJCLibraryRegistry geneResolver) {
-            return new VDJCAlignmentsReaderWrapper(() -> {
-                try {
-                    return new VDJCAlignmentsReader(file, geneResolver);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
-        }
-
-        public static AlignmentsProvider createProvider(String file, VDJCLibraryRegistry geneResolver) {
-            return new VDJCAlignmentsReaderWrapper(() -> {
-                try {
-                    return new VDJCAlignmentsReader(file, geneResolver);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
-        }
-    }
+    // this override strips out exceptions form the method signature (see raw AutoCloseable for comparison)
+    void close();
 }

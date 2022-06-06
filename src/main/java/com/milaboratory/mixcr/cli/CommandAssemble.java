@@ -38,6 +38,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.*;
+import com.milaboratory.mixcr.assembler.preclone.PreCloneReader;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
@@ -223,158 +224,161 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
                     ".clna if -a / --write-alignments options specified.");
 
 
-        AlignmentsProvider alignmentsProvider = AlignmentsProvider.Util.createProvider(
-                in, VDJCLibraryRegistry.getDefault());
+        try (VDJCAlignmentsReader aReader = new VDJCAlignmentsReader(in)) {
 
-        CloneAssemblerParameters assemblerParameters = getCloneAssemblerParameters();
-        List<VDJCGene> genes = getGenes();
-        VDJCAlignerParameters alignerParameters = getAlignerParameters();
-        TagsInfo tagsInfo = getTagsInfo();
+            CloneAssemblerParameters assemblerParameters = getCloneAssemblerParameters();
+            List<VDJCGene> genes = getGenes();
+            VDJCAlignerParameters alignerParameters = getAlignerParameters();
+            TagsInfo tagsInfo = getTagsInfo();
 
-        // Performing assembly
-        try (CloneAssembler assembler = new CloneAssembler(assemblerParameters,
-                isClnaOutput,
-                genes, alignerParameters.getFeaturesToAlignMap())) {
-            // Creating event listener to collect run statistics
-            report.setStartMillis(beginTimestamp);
-            report.setInputFiles(in);
-            report.setOutputFiles(out);
-            report.setCommandLine(getCommandLineArguments());
+            // Performing assembly
+            try (CloneAssembler assembler = new CloneAssembler(assemblerParameters,
+                    isClnaOutput,
+                    genes, alignerParameters.getFeaturesToAlignMap())) {
+                // Creating event listener to collect run statistics
+                report.setStartMillis(beginTimestamp);
+                report.setInputFiles(in);
+                report.setOutputFiles(out);
+                report.setCommandLine(getCommandLineArguments());
 
-            assembler.setListener(report);
+                assembler.setListener(report);
 
-            // Running assembler
-            CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(
-                    alignmentsProvider,
-                    assembler);
-            SmartProgressReporter.startProgressReport(assemblerRunner);
+                // TODO >>>>>>>>>>>>>>
+                PreCloneReader preClones = PreCloneReader.fromAlignments(aReader, assemblerParameters.getAssemblingFeatures());
 
-            if (reportBuffers) {
-                StatusReporter reporter = new StatusReporter();
-                reporter.addCustomProviderFromLambda(() ->
-                        new StatusReporter.Status(
-                                "Reader buffer: FIXME " /*+ assemblerRunner.getQueueSize()*/,
-                                assemblerRunner.isFinished()));
-                reporter.start();
-            }
-            assemblerRunner.run();
+                // Running assembler
+                CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(
+                        preClones,
+                        assembler);
+                SmartProgressReporter.startProgressReport(assemblerRunner);
 
-            // Getting results
-            final CloneSet cloneSet = CloneSet.reorder(assemblerRunner.getCloneSet(alignerParameters, tagsInfo), getOrdering());
+                if (reportBuffers) {
+                    StatusReporter reporter = new StatusReporter();
+                    reporter.addCustomProviderFromLambda(() ->
+                            new StatusReporter.Status(
+                                    "Reader buffer: FIXME " /*+ assemblerRunner.getQueueSize()*/,
+                                    assemblerRunner.isFinished()));
+                    reporter.start();
+                }
+                assemblerRunner.run();
 
-            // Passing final cloneset to assemble last pieces of statistics for report
-            report.onClonesetFinished(cloneSet);
+                // Getting results
+                final CloneSet cloneSet = CloneSet.reorder(assemblerRunner.getCloneSet(alignerParameters, tagsInfo), getOrdering());
 
-            // Writing results
-            PipelineConfiguration pipelineConfiguration = getFullPipelineConfiguration();
-            if (isClnaOutput) {
+                // Passing final cloneset to assemble last pieces of statistics for report
+                report.onClonesetFinished(cloneSet);
 
-                try (ClnAWriter writer = new ClnAWriter(pipelineConfiguration, out,
-                        smartTempDestination(out, "", useSystemTemp),highCompression)) {
+                // Writing results
+                PipelineConfiguration pipelineConfiguration = getFullPipelineConfiguration();
+                if (isClnaOutput) {
 
-                    // writer will supply current stage and completion percent to the progress reporter
-                    SmartProgressReporter.startProgressReport(writer);
-                    // Writing clone block
+                    try (ClnAWriter writer = new ClnAWriter(pipelineConfiguration, out,
+                            smartTempDestination(out, "", useSystemTemp), highCompression)) {
 
-                    writer.writeClones(cloneSet);
-                    // Pre-soring alignments
-                    try (AlignmentsMappingMerger merged = new AlignmentsMappingMerger(alignmentsProvider.create(),
-                            assembler.getAssembledReadsPort())) {
-                        OutputPort<VDJCAlignments> port = merged;
-                        if (attachReadsByTags) {
-                            Map<TagSignature, Integer> tagsToClones = new HashMap<>();
-                            for (int i = 0; i < cloneSet.size(); i++) {
-                                Clone clone = cloneSet.get(i);
-                                assert i == clone.getId();
-                                TagCount tags = clone.getTagCount();
-                                TObjectDoubleIterator<TagTuple> it = tags.iterator();
-                                while (it.hasNext()) {
-                                    it.advance();
-                                    TagTuple tag = it.key();
-                                    for (GeneType gt : new GeneType[]{GeneType.Variable, GeneType.Joining}) {
-                                        TagSignature sig = new TagSignature(tag, clone.getBestHit(gt).getGene().getId());
-                                        Integer id = tagsToClones.get(sig);
-                                        if (id != null)
-                                            // Ambiguity (two or more clones with the same tag+gene signature)
-                                            tagsToClones.put(sig, -1);
-                                        else
-                                            tagsToClones.put(sig, clone.getId());
+                        // writer will supply current stage and completion percent to the progress reporter
+                        SmartProgressReporter.startProgressReport(writer);
+                        // Writing clone block
+
+                        writer.writeClones(cloneSet);
+                        // Pre-soring alignments
+                        try (AlignmentsMappingMerger merged = new AlignmentsMappingMerger(preClones.readAlignments(),
+                                assembler.getAssembledReadsPort())) {
+                            OutputPort<VDJCAlignments> port = merged;
+                            if (attachReadsByTags) {
+                                Map<TagSignature, Integer> tagsToClones = new HashMap<>();
+                                for (int i = 0; i < cloneSet.size(); i++) {
+                                    Clone clone = cloneSet.get(i);
+                                    assert i == clone.getId();
+                                    TagCount tags = clone.getTagCount();
+                                    TObjectDoubleIterator<TagTuple> it = tags.iterator();
+                                    while (it.hasNext()) {
+                                        it.advance();
+                                        TagTuple tag = it.key();
+                                        for (GeneType gt : new GeneType[]{GeneType.Variable, GeneType.Joining}) {
+                                            TagSignature sig = new TagSignature(tag, clone.getBestHit(gt).getGene().getId());
+                                            Integer id = tagsToClones.get(sig);
+                                            if (id != null)
+                                                // Ambiguity (two or more clones with the same tag+gene signature)
+                                                tagsToClones.put(sig, -1);
+                                            else
+                                                tagsToClones.put(sig, clone.getId());
+                                        }
                                     }
                                 }
+
+                                // Remove ambiguous mappings
+                                tagsToClones.entrySet().removeIf(e -> e.getValue() < 0);
+
+                                port = () -> {
+                                    VDJCAlignments al = merged.take();
+                                    if (al == null
+                                            || al.getMappingType() != ReadToCloneMapping.MappingType.Dropped
+                                            || al.getFeature(new GeneFeature(assemblerParameters.getAssemblingFeatures())) != null) // Dropped but has assembling feature
+                                        return al;
+
+                                    // <-- Only dropped alignments not covering CDR3
+
+                                    TagCount tg = al.getTagCount();
+                                    assert tg.size() == 1; // Both "align" and "assemblePartial" produces such alignments
+                                    TObjectDoubleIterator<TagTuple> it = tg.iterator();
+                                    it.advance();
+                                    TagTuple tags = it.key();
+
+                                    VDJCHit hit;
+
+                                    int cloneMapping = -1; // -1 for not assigned, -2 for ambiguous
+                                    for (GeneType gt : new GeneType[]{GeneType.Variable, GeneType.Joining}) {
+                                        if ((hit = al.getBestHit(gt)) != null) {
+                                            TagSignature sig = new TagSignature(tags, hit.getGene().getId());
+                                            Integer cloneId = tagsToClones.get(sig);
+                                            if (cloneId != null)
+                                                if (cloneMapping != -1 && cloneMapping != cloneId)
+                                                    cloneMapping = -2; // V+Tag has different mapping than J+Tag
+                                                else
+                                                    cloneMapping = cloneId;
+                                        }
+                                    }
+
+                                    if (cloneMapping >= 0) {
+                                        report.onReadAttachedByTags();
+                                        // TODO add count
+                                        return setMappingCloneIndex(al, cloneMapping);
+                                    } else if (cloneMapping == -2)
+                                        report.onReadWithAmbiguousAttachmentsByTags();
+                                    else
+                                        report.onReadsFailedToAttachedByTags();
+
+                                    return al;
+                                };
                             }
 
-                            // Remove ambiguous mappings
-                            tagsToClones.entrySet().removeIf(e -> e.getValue() < 0);
-
-                            port = () -> {
-                                VDJCAlignments al = merged.take();
-                                if (al == null
-                                        || al.getMappingType() != ReadToCloneMapping.MappingType.Dropped
-                                        || al.getFeature(new GeneFeature(assemblerParameters.getAssemblingFeatures())) != null) // Dropped but has assembling feature
-                                    return al;
-
-                                // <-- Only dropped alignments not covering CDR3
-
-                                TagCount tg = al.getTagCount();
-                                assert tg.size() == 1; // Both "align" and "assemblePartial" produces such alignments
-                                TObjectDoubleIterator<TagTuple> it = tg.iterator();
-                                it.advance();
-                                TagTuple tags = it.key();
-
-                                VDJCHit hit;
-
-                                int cloneMapping = -1; // -1 for not assigned, -2 for ambiguous
-                                for (GeneType gt : new GeneType[]{GeneType.Variable, GeneType.Joining}) {
-                                    if ((hit = al.getBestHit(gt)) != null) {
-                                        TagSignature sig = new TagSignature(tags, hit.getGene().getId());
-                                        Integer cloneId = tagsToClones.get(sig);
-                                        if (cloneId != null)
-                                            if (cloneMapping != -1 && cloneMapping != cloneId)
-                                                cloneMapping = -2; // V+Tag has different mapping than J+Tag
-                                            else
-                                                cloneMapping = cloneId;
-                                    }
-                                }
-
-                                if (cloneMapping >= 0) {
-                                    report.onReadAttachedByTags();
-                                    // TODO add count
-                                    return setMappingCloneIndex(al, cloneMapping);
-                                } else if (cloneMapping == -2)
-                                    report.onReadWithAmbiguousAttachmentsByTags();
-                                else
-                                    report.onReadsFailedToAttachedByTags();
-
-                                return al;
-                            };
+                            writer.collateAlignments(port, assembler.getAlignmentsCount());
                         }
-
-                        writer.collateAlignments(port, assembler.getAlignmentsCount());
+                        writer.writeAlignmentsAndIndex();
                     }
-                    writer.writeAlignmentsAndIndex();
-                }
-            } else
-                try (ClnsWriter writer = new ClnsWriter(out)) {
-                    writer.writeCloneSet(pipelineConfiguration, cloneSet);
-                }
+                } else
+                    try (ClnsWriter writer = new ClnsWriter(out)) {
+                        writer.writeCloneSet(pipelineConfiguration, cloneSet);
+                    }
 
-            // Writing report
+                // Writing report
 
-            report.setFinishMillis(System.currentTimeMillis());
+                report.setFinishMillis(System.currentTimeMillis());
 
-            assert cloneSet.getClones().size() == report.getCloneCount();
+                assert cloneSet.getClones().size() == report.getCloneCount();
 
-            report.setTotalReads(alignmentsProvider.getTotalNumberOfReads());
+                report.setTotalReads(aReader.getNumberOfReads());
 
-            // Writing report to stout
-            System.out.println("============= Report ==============");
-            ReportUtil.writeReportToStdout(report);
+                // Writing report to stout
+                System.out.println("============= Report ==============");
+                ReportUtil.writeReportToStdout(report);
 
-            if (reportFile != null)
-                ReportUtil.appendReport(reportFile, report);
+                if (reportFile != null)
+                    ReportUtil.appendReport(reportFile, report);
 
-            if (jsonReport != null)
-                ReportUtil.appendJsonReport(jsonReport, report);
+                if (jsonReport != null)
+                    ReportUtil.appendJsonReport(jsonReport, report);
+            }
         }
     }
 

@@ -47,6 +47,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.assembler.*;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters;
+import com.milaboratory.mixcr.assembler.preclone.PreCloneReader;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.cli.AlignerReport;
@@ -94,17 +95,24 @@ public final class RunMiXCR {
             CloneAssemblerReport report = new CloneAssemblerReport();
             assembler.setListener(report);
 
-            CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(new AlignmentsProvider() {
+            AlignmentsProvider aProvider = new AlignmentsProvider() {
                 @Override
-                public OutputPortCloseable<VDJCAlignments> create() {
-                    return opCloseable(CUtils.asOutputPort(align.alignments));
+                public OutputPortWithProgress<VDJCAlignments> readAlignments() {
+                    return OutputPortWithProgress.wrap(align.alignments.size(), CUtils.asOutputPort(align.alignments));
+                }
+                @Override
+                public long getNumberOfReads() {
+                    return align.alignments.size();
                 }
 
                 @Override
-                public long getTotalNumberOfReads() {
-                    return align.alignments.size();
+                public void close() {
                 }
-            }, assembler);
+            };
+
+            PreCloneReader preClones = PreCloneReader.fromAlignments(aProvider,
+                    parameters.cloneAssemblerParameters.getAssemblingFeatures());
+            CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(preClones, assembler);
 
             //start progress reporting
             SmartProgressReporter.startProgressReport(assemblerRunner);

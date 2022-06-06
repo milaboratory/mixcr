@@ -41,8 +41,11 @@ import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.core.tree.MutationGuide;
 import com.milaboratory.core.tree.NeighborhoodIterator;
 import com.milaboratory.core.tree.SequenceTreeMap;
-import com.milaboratory.mixcr.assembler.preclone.PreCloneImpl;
-import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.assembler.preclone.PreClone;
+import com.milaboratory.mixcr.basictypes.ClonalSequence;
+import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.basictypes.CloneSet;
+import com.milaboratory.mixcr.basictypes.VDJCSProperties;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.CanReportProgress;
@@ -157,37 +160,37 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             listener.onNewCloneCreated(accumulator);
     }
 
-    void onFailedToExtractTarget(PreCloneImpl alignments) {
+    void onFailedToExtractTarget(PreClone preClone) {
         if (listener != null)
-            listener.onFailedToExtractTarget(alignments);
+            listener.onFailedToExtractTarget(preClone);
     }
 
-    void onTooManyLowQualityPoints(PreCloneImpl alignments) {
+    void onTooManyLowQualityPoints(PreClone preClone) {
         if (listener != null)
-            listener.onTooManyLowQualityPoints(alignments);
+            listener.onTooManyLowQualityPoints(preClone);
     }
 
-    void onAlignmentDeferred(PreCloneImpl alignments) {
+    void onAlignmentDeferred(PreClone preClone) {
         deferredExists = true;
         if (listener != null)
-            listener.onAlignmentDeferred(alignments);
+            listener.onAlignmentDeferred(preClone);
     }
 
-    void onAlignmentAddedToClone(PreCloneImpl alignments, CloneAccumulator accumulator) {
+    void onAlignmentAddedToClone(PreClone preClone, CloneAccumulator accumulator) {
         if (listener != null)
-            listener.onAlignmentAddedToClone(alignments, accumulator);
+            listener.onAlignmentAddedToClone(preClone, accumulator);
     }
 
     /* Mapping Events */
 
-    void onNoCandidateFoundForDefferedAlignment(PreCloneImpl alignments) {
+    void onNoCandidateFoundForDefferedAlignment(PreClone preClone) {
         if (listener != null)
-            listener.onNoCandidateFoundForDeferredAlignment(alignments);
+            listener.onNoCandidateFoundForDeferredAlignment(preClone);
     }
 
-    void onDeferredAlignmentMappedToClone(PreCloneImpl alignments, CloneAccumulator accumulator) {
+    void onDeferredAlignmentMappedToClone(PreClone preClone, CloneAccumulator accumulator) {
         if (listener != null)
-            listener.onDeferredAlignmentMappedToClone(alignments, accumulator);
+            listener.onDeferredAlignmentMappedToClone(preClone, accumulator);
     }
 
     /* Clustering Events */
@@ -220,7 +223,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         this.listener = listener;
     }
 
-    private ClonalSequence extractClonalSequence(PreCloneImpl preClone) {
+    private ClonalSequence extractClonalSequence(PreClone preClone) {
         // final NSequenceWithQuality[] targets = new NSequenceWithQuality[parameters.assemblingFeatures.length];
         // int totalLength = 0;
         // for (int i = 0; i < targets.length; ++i)
@@ -233,7 +236,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         return new ClonalSequence(preClone.getClonalSequence());
     }
 
-    public VoidProcessor<PreCloneImpl> getInitialAssembler() {
+    public VoidProcessor<PreClone> getInitialAssembler() {
         return new InitialAssembler();
     }
 
@@ -258,11 +261,11 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         return true;
     }
 
-    public Filter<VDJCAlignments> getDeferredAlignmentsFilter() {
+    public Filter<PreClone> getDeferredAlignmentsFilter() {
         return new DeferredAlignmentsFilter();
     }
 
-    public VoidProcessor<VDJCAlignments> getDeferredAlignmentsMapper() {
+    public VoidProcessor<PreClone> getDeferredAlignmentsMapper() {
         if (mappingTree == null)
             throw new IllegalStateException("Mapping tree not yet created.");
         return new DeferredAlignmentsMapper();
@@ -395,14 +398,14 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         return badPoints;
     }
 
-    private final class InitialAssembler implements VoidProcessor<PreCloneImpl> {
+    private final class InitialAssembler implements VoidProcessor<PreClone> {
         private void log(AssemblerEvent event) {
             if (globalLogger != null)
                 globalLogger.newEvent(event);
         }
 
         @Override
-        public void process(PreCloneImpl input) {
+        public void process(PreClone input) {
             totalAlignments.incrementAndGet();
             final ClonalSequence target = extractClonalSequence(input);
 
@@ -413,7 +416,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             //     return;
             // }
 
-            //Calculating number of bad points
+            // Calculating number of bad points
             int badPoints = numberOfBadPoints(target);
 
             if (badPoints > target.getConcatenated().size() * parameters.getMaxBadPointsPercent()) {
@@ -436,23 +439,23 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             // Preforming alignment accumulation
             CloneAccumulator acc = container.accumulate(target, input, false);
             // Logging assembler events for subsequent index creation and mapping filtering
-            log(new AssemblerEvent(input.getAlignmentsIndex(), acc.getCloneIndex()));
+            log(new AssemblerEvent(input.getIndex(), acc.getCloneIndex()));
             // Incrementing corresponding counter
             successfullyAssembledAlignments.incrementAndGet();
             onAlignmentAddedToClone(input, acc);
         }
     }
 
-    private final class DeferredAlignmentsFilter implements Filter<VDJCAlignments> {
+    private final class DeferredAlignmentsFilter implements Filter<PreClone> {
         final Iterator<AssemblerEvent> events = globalLogger.events().iterator();
 
         @Override
-        public boolean accept(VDJCAlignments alignment) {
+        public boolean accept(PreClone alignment) {
             if (!events.hasNext())
                 throw new IllegalArgumentException("This filter can not be used in concurrent " +
                         "environment. Perform pre-filtering in a single thread.");
             AssemblerEvent event = events.next();
-            if (alignment.getAlignmentsIndex() != event.preCloneIndex)
+            if (alignment.getIndex() != event.preCloneIndex)
                 throw new IllegalArgumentException("This filter can not be used in concurrent " +
                         "environment. Perform pre-filtering in a single thread.");
             if (event.cloneIndex != AssemblerEvent.DEFERRED) {
@@ -463,17 +466,15 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         }
     }
 
-    private final class DeferredAlignmentsMapper implements VoidProcessor<VDJCAlignments> {
+    private final class DeferredAlignmentsMapper implements VoidProcessor<PreClone> {
         final AssemblerUtils.MappingThresholdCalculator thresholdCalculator = parameters.getThresholdCalculator();
 
         @Override
-        public void process(VDJCAlignments input) {
+        public void process(PreClone input) {
             final ClonalSequence clonalSequence = extractClonalSequence(input);
 
-            // The sequence was deferred on the initial step, so it must contain clonal sequence
-            assert clonalSequence != null;
-
-            RandomUtil.reseedThreadLocal(HashFunctions.JenkinWang64shift(Arrays.hashCode(input.getReadIds())));
+            // Seeding random generator to make ambiguous mappings below reproducible
+            RandomUtil.reseedThreadLocal(HashFunctions.JenkinWang64shift(input.getIndex()));
 
             int badPoints = numberOfBadPoints(clonalSequence);
             // Implements the algorithm to control the number of possible matching sequences
@@ -506,7 +507,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 }
 
             if (candidates.isEmpty()) {
-                deferredAlignmentsLogger.newEvent(new AssemblerEvent(input.getAlignmentsIndex(),
+                deferredAlignmentsLogger.newEvent(new AssemblerEvent(input.getIndex(),
                         AssemblerEvent.DROPPED));
                 droppedAlignments.incrementAndGet();
                 onNoCandidateFoundForDefferedAlignment(input);
@@ -524,7 +525,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
 
             mappedAlignments.incrementAndGet();
             successfullyAssembledAlignments.incrementAndGet();
-            deferredAlignmentsLogger.newEvent(new AssemblerEvent(input.getAlignmentsIndex(),
+            deferredAlignmentsLogger.newEvent(new AssemblerEvent(input.getIndex(),
                     minMismatches == 0 ? accumulator.getCloneIndex() : -4 - accumulator.getCloneIndex()));
 
             if (minMismatches > 0) {
@@ -640,7 +641,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     public final class CloneAccumulatorContainer {
         final HashMap<VJCSignature, CloneAccumulator> accumulators = new HashMap<>();
 
-        synchronized CloneAccumulator accumulate(ClonalSequence sequence, PreCloneImpl preClone, boolean mapped) {
+        synchronized CloneAccumulator accumulate(ClonalSequence sequence, PreClone preClone, boolean mapped) {
             VJCSignature vjcSignature = extractSignature(preClone);
             CloneAccumulator acc = accumulators.get(vjcSignature);
             if (acc == null) {
@@ -774,7 +775,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             return accumulators.values().iterator().next().getSequence();
         }
 
-        private Range[] extractNRegions(ClonalSequence clonalSequence, PreCloneImpl preClone) {
+        private Range[] extractNRegions(ClonalSequence clonalSequence, PreClone preClone) {
             boolean dFound;
             ArrayList<Range> result = new ArrayList<>();
             Range range;
@@ -809,7 +810,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         }
     }
 
-    VJCSignature extractSignature(PreCloneImpl preClone) {
+    VJCSignature extractSignature(PreClone preClone) {
         return new VJCSignature(
                 parameters.getSeparateByV() ? preClone.getBestGene(GeneType.Variable) : VJCSignature.DO_NOT_CHECK,
                 parameters.getSeparateByJ() ? preClone.getBestGene(GeneType.Joining) : VJCSignature.DO_NOT_CHECK,

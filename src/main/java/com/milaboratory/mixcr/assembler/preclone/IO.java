@@ -35,6 +35,7 @@ public final class IO {
                     output.writeObject(gs);
             }
             output.writeObject(obj.referencePoints);
+            output.writeInt(obj.numberOfReads);
         }
 
         @Override
@@ -55,7 +56,8 @@ public final class IO {
                 gsss.put(gt, gss);
             }
             ExtendedReferencePoints[] referencePoints = input.readObject(ExtendedReferencePoints[].class);
-            return new PreCloneImpl(index, coreKey, coreTagCount, fullTagCount, clonalSequence, gsss, referencePoints);
+            int numberOfReads = input.readInt();
+            return new PreCloneImpl(index, coreKey, coreTagCount, fullTagCount, clonalSequence, gsss, referencePoints, numberOfReads);
         }
 
         @Override

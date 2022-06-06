@@ -30,113 +30,86 @@
 package com.milaboratory.mixcr.assembler;
 
 import cc.redberry.pipe.CUtils;
-import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.blocks.FilteringPort;
+import com.milaboratory.mixcr.assembler.preclone.PreClone;
+import com.milaboratory.mixcr.assembler.preclone.PreCloneReader;
 import com.milaboratory.mixcr.basictypes.CloneSet;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
-import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.CanReportProgressAndStage;
+import com.milaboratory.util.ProgressAndStage;
 
 public class CloneAssemblerRunner implements CanReportProgressAndStage {
-    final AlignmentsProvider alignmentsProvider;
+    final PreCloneReader preCloneReader;
     final CloneAssembler assembler;
-    final int threads = 1;
-    volatile String stage = "Initialization";
-    volatile CanReportProgress innerProgress;
-    volatile VDJCAlignmentsReader alignmentReader = null;
-    volatile boolean isFinished = false;
+    final ProgressAndStage ps = new ProgressAndStage("Initialization");
 
-    public CloneAssemblerRunner(AlignmentsProvider alignmentsProvider, CloneAssembler assembler) {
-        this.alignmentsProvider = alignmentsProvider;
+    public CloneAssemblerRunner(PreCloneReader preCloneReader, CloneAssembler assembler) {
+        this.preCloneReader = preCloneReader;
         this.assembler = assembler;
     }
 
     @Override
     public String getStage() {
-        return stage;
+        return ps.getStage();
     }
 
     @Override
     public double getProgress() {
-        if (innerProgress == null)
-            return Double.NaN;
-        return innerProgress.getProgress();
+        return ps.getProgress();
     }
 
     @Override
     public boolean isFinished() {
-        return isFinished;
+        return ps.isFinished();
     }
 
     public void run() {
         // run initial assembler
-        try (OutputPortCloseable<VDJCAlignments> alignmentsPort = alignmentsProvider.create()) {
-            if (alignmentsPort instanceof VDJCAlignmentsReaderWrapper.OP)
-                alignmentReader = ((VDJCAlignmentsReaderWrapper.OP) alignmentsPort).reader;
-            synchronized (this) {
-                stage = "Assembling initial clonotypes";
-                if (alignmentsPort instanceof CanReportProgress)
-                    innerProgress = (CanReportProgress) alignmentsPort;
-            }
+        try (OutputPortWithProgress<PreClone> preClones = preCloneReader.readPreClones()) {
+            ps.setStage("Assembling initial clonotypes");
+            ps.delegate(preClones);
             try {
-                CUtils.processAllInParallel(CUtils.buffered(alignmentsPort, 128), assembler.getInitialAssembler(), threads);
+                CUtils.processAll(CUtils.buffered(preClones, 128),
+                        assembler.getInitialAssembler());
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            alignmentReader = null;
         }
+
         // run mapping if required
         if (assembler.beginMapping()) {
-            synchronized (this) {
-                stage = "Preparing for mapping of low quality reads";
-                innerProgress = null;
-            }
-            try (OutputPortCloseable<VDJCAlignments> alignmentsPort = alignmentsProvider.create()) {
-                if (alignmentsPort instanceof VDJCAlignmentsReaderWrapper.OP)
-                    alignmentReader = ((VDJCAlignmentsReaderWrapper.OP) alignmentsPort).reader;
-                synchronized (this) {
-                    stage = "Mapping low quality reads";
-                    if (alignmentsPort instanceof CanReportProgress)
-                        innerProgress = (CanReportProgress) alignmentsPort;
-                }
+            ps.unDelegate();
+            ps.setStage("Preparing for mapping of low quality reads");
+            try (OutputPortWithProgress<PreClone> preClones = preCloneReader.readPreClones()) {
+                ps.delegate("Mapping low quality reads", preClones);
                 try {
-                    CUtils.processAllInParallel(CUtils.buffered(
-                                    new FilteringPort<>(alignmentsPort,
+                    CUtils.processAll(CUtils.buffered(
+                                    new FilteringPort<>(preClones,
                                             assembler.getDeferredAlignmentsFilter()), 128),
-                            assembler.getDeferredAlignmentsMapper(), threads);
+                            assembler.getDeferredAlignmentsMapper());
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
             }
-            alignmentReader = null;
             assembler.endMapping();
         }
+
+        ps.unDelegate();
+        ps.setStage("Pre-clustering");
         assembler.preClustering();
-        //run clustering
+
+        // run clustering
         if (assembler.parameters.isClusteringEnabled()) {
-            synchronized (this) {
-                stage = "Clustering";
-                innerProgress = assembler;
-            }
+            ps.delegate("Clustering", assembler);
             assembler.runClustering();
         }
-        //build clones
-        synchronized (this) {
-            stage = "Building clones";
-            innerProgress = assembler;
-        }
+        // build clones
+        ps.delegate("Building clones", assembler);
         assembler.buildClones();
-        isFinished = true;
+        ps.finish();
     }
-
-    // public int getQueueSize() {
-    //     if (alignmentReader == null)
-    //         return -1;
-    //     return alignmentReader.getQueueSize();
-    // }
 
     public CloneSet getCloneSet(VDJCAlignerParameters alignerParameters, TagsInfo tagsInfo) {
         return assembler.getCloneSet(alignerParameters, tagsInfo);

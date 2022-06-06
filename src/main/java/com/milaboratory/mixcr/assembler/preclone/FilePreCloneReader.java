@@ -84,7 +84,7 @@ public final class FilePreCloneReader implements PreCloneReader {
     }
 
     @Override
-    public OutputPortWithProgress<PreCloneImpl> readPreClones() {
+    public OutputPortWithProgress<PreClone> readPreClones() {
         return OutputPortWithProgress.wrap(numberOfClones,
                 input.beginRandomAccessPrimitivIBlocks(PreCloneImpl.class, clonesStartPosition,
                         h -> h.getSpecialByte(0) == CLONES_END_MARK_BYTE_0

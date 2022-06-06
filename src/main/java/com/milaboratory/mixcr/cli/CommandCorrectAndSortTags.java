@@ -151,7 +151,7 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
             }
 
             try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)) {
-                VDJCAlignmentsReader.SecondaryReader secondaryReader = mainReader.createSecondaryReader();
+                VDJCAlignmentsReader.SecondaryReader secondaryReader = mainReader.readAlignments();
 
                 PrimitivIOStateBuilder stateBuilder = new PrimitivIOStateBuilder();
                 IOUtil.registerGeneReferences(stateBuilder, mainReader.getUsedGenes(), mainReader.getParameters());

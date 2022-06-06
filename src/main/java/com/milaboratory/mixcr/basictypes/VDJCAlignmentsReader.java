@@ -31,6 +31,7 @@ package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.cli.PipelineConfiguration;
+import com.milaboratory.mixcr.assembler.AlignmentsProvider;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
@@ -57,6 +58,7 @@ import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.*;
 
 public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR implements
         OutputPortCloseable<VDJCAlignments>,
+        AlignmentsProvider,
         VDJCFileHeaderData,
         CanReportProgress {
     public static final int DEFAULT_CONCURRENCY = 4;
@@ -230,6 +232,7 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
         return numberOfAlignments;
     }
 
+    @Override
     public long getNumberOfReads() {
         return numberOfReads;
     }
@@ -283,7 +286,8 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
         return al.setAlignmentsIndex(counter++);
     }
 
-    public SecondaryReader createSecondaryReader() {
+    @Override
+    public SecondaryReader readAlignments() {
         ensureInitialized();
         return new SecondaryReader(false);
     }
