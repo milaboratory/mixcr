@@ -3,15 +3,15 @@ package com.milaboratory.mixcr.assembler.preclone;
 import java.util.List;
 
 public final class PreCloneAssemblerResult {
-    private final List<PreClone> clones;
+    private final List<PreCloneImpl> clones;
     private final long[] alignmentToClone;
 
-    public PreCloneAssemblerResult(List<PreClone> clones, long[] alignmentToClone) {
+    public PreCloneAssemblerResult(List<PreCloneImpl> clones, long[] alignmentToClone) {
         this.clones = clones;
         this.alignmentToClone = alignmentToClone;
     }
 
-    public List<PreClone> getClones() {
+    public List<PreCloneImpl> getClones() {
         return clones;
     }
 

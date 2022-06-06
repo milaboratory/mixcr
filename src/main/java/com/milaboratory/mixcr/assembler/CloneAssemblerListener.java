@@ -29,26 +29,26 @@
  */
 package com.milaboratory.mixcr.assembler;
 
-import com.milaboratory.mixcr.assembler.preclone.PreClone;
+import com.milaboratory.mixcr.assembler.preclone.PreCloneImpl;
 
 public interface CloneAssemblerListener {
     /* Initial Assembly */
 
     void onNewCloneCreated(CloneAccumulator accumulator);
 
-    void onFailedToExtractTarget(PreClone preClone);
+    void onFailedToExtractTarget(PreCloneImpl preClone);
 
-    void onTooManyLowQualityPoints(PreClone preClone);
+    void onTooManyLowQualityPoints(PreCloneImpl preClone);
 
-    void onAlignmentDeferred(PreClone preClone);
+    void onAlignmentDeferred(PreCloneImpl preClone);
 
-    void onAlignmentAddedToClone(PreClone preClone, CloneAccumulator accumulator);
+    void onAlignmentAddedToClone(PreCloneImpl preClone, CloneAccumulator accumulator);
 
     /* Mapping */
 
-    void onNoCandidateFoundForDeferredAlignment(PreClone preClone);
+    void onNoCandidateFoundForDeferredAlignment(PreCloneImpl preClone);
 
-    void onDeferredAlignmentMappedToClone(PreClone preClone, CloneAccumulator accumulator);
+    void onDeferredAlignmentMappedToClone(PreCloneImpl preClone, CloneAccumulator accumulator);
 
     /* Clustering */
 

@@ -302,7 +302,7 @@ public final class PreCloneAssembler {
         }
 
         long cloneIdOffset = idGenerator.getAndAdd(numberOfClones);
-        List<PreClone> result = new ArrayList<>(numberOfClones);
+        List<PreCloneImpl> result = new ArrayList<>(numberOfClones);
         for (int cIdx = 0; cIdx < numberOfClones; cIdx++) {
             ConsensusResult.SingleConsensus[] cs = consensuses.get(cIdx).consensuses;
             NSequenceWithQuality[] clonalSequence = new NSequenceWithQuality[cs.length];
@@ -328,7 +328,7 @@ public final class PreCloneAssembler {
                 }
                 referencePoints[sr] = rpb.build();
             }
-            result.add(new PreClone(
+            result.add(new PreCloneImpl(
                     cloneIdOffset + cIdx,
                     grp1.getKey(),
                     coreTagCountAggregators[cIdx].createAndDestroy(),

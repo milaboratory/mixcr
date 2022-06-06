@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public interface PreCloneReader extends AutoCloseable {
     /** Creates streamed pre-clone reader. */
-    OutputPortWithProgress<PreClone> readPreClones();
+    OutputPortWithProgress<PreCloneImpl> readPreClones();
 
     /**
      * Creates streamed alignments reader.
@@ -36,23 +36,23 @@ public interface PreCloneReader extends AutoCloseable {
             }
 
             @Override
-            public OutputPortWithProgress<PreClone> readPreClones() {
+            public OutputPortWithProgress<PreCloneImpl> readPreClones() {
                 //noinspection resource
                 OutputPortWithProgress<VDJCAlignments> alignmentReader = readAlignments();
-                return new OutputPortWithProgress<PreClone>() {
+                return new OutputPortWithProgress<PreCloneImpl>() {
                     @Override
                     public long currentIndex() {
                         return alignmentReader.currentIndex();
                     }
 
                     @Override
-                    public PreClone take() {
+                    public PreCloneImpl take() {
                         VDJCAlignments al;
                         //noinspection StatementWithEmptyBody
                         while ((al = alignmentReader.take()) != null && al.getCloneIndex() == -1) ;
                         if (al == null)
                             return null;
-                        return PreClone.fromAlignment(al.getCloneIndex(), al, geneFeatures);
+                        return PreCloneImpl.fromAlignment(al.getCloneIndex(), al, geneFeatures);
                     }
 
                     @Override

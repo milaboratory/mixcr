@@ -41,7 +41,7 @@ import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.core.tree.MutationGuide;
 import com.milaboratory.core.tree.NeighborhoodIterator;
 import com.milaboratory.core.tree.SequenceTreeMap;
-import com.milaboratory.mixcr.assembler.preclone.PreClone;
+import com.milaboratory.mixcr.assembler.preclone.PreCloneImpl;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
@@ -54,7 +54,10 @@ import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import io.repseq.core.*;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
+import io.repseq.core.VDJCGene;
+import io.repseq.core.VDJCGeneId;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -154,35 +157,35 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             listener.onNewCloneCreated(accumulator);
     }
 
-    void onFailedToExtractTarget(PreClone alignments) {
+    void onFailedToExtractTarget(PreCloneImpl alignments) {
         if (listener != null)
             listener.onFailedToExtractTarget(alignments);
     }
 
-    void onTooManyLowQualityPoints(PreClone alignments) {
+    void onTooManyLowQualityPoints(PreCloneImpl alignments) {
         if (listener != null)
             listener.onTooManyLowQualityPoints(alignments);
     }
 
-    void onAlignmentDeferred(PreClone alignments) {
+    void onAlignmentDeferred(PreCloneImpl alignments) {
         deferredExists = true;
         if (listener != null)
             listener.onAlignmentDeferred(alignments);
     }
 
-    void onAlignmentAddedToClone(PreClone alignments, CloneAccumulator accumulator) {
+    void onAlignmentAddedToClone(PreCloneImpl alignments, CloneAccumulator accumulator) {
         if (listener != null)
             listener.onAlignmentAddedToClone(alignments, accumulator);
     }
 
     /* Mapping Events */
 
-    void onNoCandidateFoundForDefferedAlignment(PreClone alignments) {
+    void onNoCandidateFoundForDefferedAlignment(PreCloneImpl alignments) {
         if (listener != null)
             listener.onNoCandidateFoundForDeferredAlignment(alignments);
     }
 
-    void onDeferredAlignmentMappedToClone(PreClone alignments, CloneAccumulator accumulator) {
+    void onDeferredAlignmentMappedToClone(PreCloneImpl alignments, CloneAccumulator accumulator) {
         if (listener != null)
             listener.onDeferredAlignmentMappedToClone(alignments, accumulator);
     }
@@ -217,7 +220,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         this.listener = listener;
     }
 
-    private ClonalSequence extractClonalSequence(PreClone preClone) {
+    private ClonalSequence extractClonalSequence(PreCloneImpl preClone) {
         // final NSequenceWithQuality[] targets = new NSequenceWithQuality[parameters.assemblingFeatures.length];
         // int totalLength = 0;
         // for (int i = 0; i < targets.length; ++i)
@@ -230,7 +233,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         return new ClonalSequence(preClone.getClonalSequence());
     }
 
-    public VoidProcessor<PreClone> getInitialAssembler() {
+    public VoidProcessor<PreCloneImpl> getInitialAssembler() {
         return new InitialAssembler();
     }
 
@@ -392,14 +395,14 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         return badPoints;
     }
 
-    private final class InitialAssembler implements VoidProcessor<PreClone> {
+    private final class InitialAssembler implements VoidProcessor<PreCloneImpl> {
         private void log(AssemblerEvent event) {
             if (globalLogger != null)
                 globalLogger.newEvent(event);
         }
 
         @Override
-        public void process(PreClone input) {
+        public void process(PreCloneImpl input) {
             totalAlignments.incrementAndGet();
             final ClonalSequence target = extractClonalSequence(input);
 
@@ -637,7 +640,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     public final class CloneAccumulatorContainer {
         final HashMap<VJCSignature, CloneAccumulator> accumulators = new HashMap<>();
 
-        synchronized CloneAccumulator accumulate(ClonalSequence sequence, PreClone preClone, boolean mapped) {
+        synchronized CloneAccumulator accumulate(ClonalSequence sequence, PreCloneImpl preClone, boolean mapped) {
             VJCSignature vjcSignature = extractSignature(preClone);
             CloneAccumulator acc = accumulators.get(vjcSignature);
             if (acc == null) {
@@ -771,42 +774,42 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             return accumulators.values().iterator().next().getSequence();
         }
 
-        private Range[] extractNRegions(ClonalSequence clonalSequence, VDJCAlignments alignments) {
+        private Range[] extractNRegions(ClonalSequence clonalSequence, PreCloneImpl preClone) {
             boolean dFound;
             ArrayList<Range> result = new ArrayList<>();
             Range range;
             int offset = 0;
-            for (int i = 0; i < parameters.assemblingFeatures.length; ++i) {
-                GeneFeature assemblingFeature = parameters.assemblingFeatures[i];
+            for (int csIdx = 0; csIdx < parameters.assemblingFeatures.length; ++csIdx) {
+                GeneFeature assemblingFeature = parameters.assemblingFeatures[csIdx];
                 if (!assemblingFeature.contains(VDJunction) && !assemblingFeature.contains(DJJunction))
                     continue;
                 dFound = false;
 
-                range = alignments.getRelativeRange(assemblingFeature, VDJunction);
+                range = preClone.getRange(csIdx, VDJunction);
                 if (range != null) {
                     result.add(range.move(offset));
                     dFound = true;
                 }
 
-                range = alignments.getRelativeRange(assemblingFeature, DJJunction);
+                range = preClone.getRange(csIdx, DJJunction);
                 if (range != null) {
                     result.add(range.move(offset));
                     dFound = true;
                 }
 
                 if (!dFound) {
-                    range = alignments.getRelativeRange(assemblingFeature, VJJunction);
+                    range = preClone.getRange(csIdx, VJJunction);
                     if (range != null)
                         result.add(range.move(offset));
                 }
 
-                offset += clonalSequence.get(i).size();
+                offset += clonalSequence.get(csIdx).size();
             }
-            return result.toArray(new Range[result.size()]);
+            return result.toArray(new Range[0]);
         }
     }
 
-    VJCSignature extractSignature(PreClone preClone) {
+    VJCSignature extractSignature(PreCloneImpl preClone) {
         return new VJCSignature(
                 parameters.getSeparateByV() ? preClone.getBestGene(GeneType.Variable) : VJCSignature.DO_NOT_CHECK,
                 parameters.getSeparateByJ() ? preClone.getBestGene(GeneType.Joining) : VJCSignature.DO_NOT_CHECK,

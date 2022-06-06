@@ -97,11 +97,11 @@ public class ITestCommandAssemblePreClones extends ACommandMiXCR {
             PreCloneAssemblerResult result;
             while ((result = assembler.getForNextGroup()) != null) {
                 GroupOP<VDJCAlignments, TagTuple> grp = alGroups.take();
-                List<PreClone> clones = result.getClones();
+                List<PreCloneImpl> clones = result.getClones();
                 assert clones.isEmpty() || clones.get(0).coreKey.equals(grp.getKey());
                 totalClones += clones.size();
 
-                for (PreClone clone : clones)
+                for (PreCloneImpl clone : clones)
                     writer.putClone(clone);
 
                 int localId = 0;
@@ -141,7 +141,7 @@ public class ITestCommandAssemblePreClones extends ACommandMiXCR {
                         numberOfAlignmentsCheck + " != 0)");
 
             long numberOfClonesCheck = 0;
-            for (PreClone c : CUtils.it(reader.readPreClones()))
+            for (PreCloneImpl c : CUtils.it(reader.readPreClones()))
                 numberOfClonesCheck++;
 
             if (numberOfClonesCheck != totalClones)

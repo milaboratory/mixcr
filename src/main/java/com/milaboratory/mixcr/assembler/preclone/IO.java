@@ -19,9 +19,9 @@ public final class IO {
     private IO() {
     }
 
-    public static final class PreCloneSerializer implements Serializer<PreClone> {
+    public static final class PreCloneImplSerializer implements Serializer<PreCloneImpl> {
         @Override
-        public void write(PrimitivO output, PreClone obj) {
+        public void write(PrimitivO output, PreCloneImpl obj) {
             output.writeLong(obj.index);
             output.writeObject(obj.coreKey);
             output.writeObject(obj.clonalSequence);
@@ -38,7 +38,7 @@ public final class IO {
         }
 
         @Override
-        public PreClone read(PrimitivI input) {
+        public PreCloneImpl read(PrimitivI input) {
             long index = input.readLong();
             TagTuple coreKey = input.readObject(TagTuple.class);
             NSequenceWithQuality[] clonalSequence = input.readObject(NSequenceWithQuality[].class);
@@ -55,7 +55,7 @@ public final class IO {
                 gsss.put(gt, gss);
             }
             ExtendedReferencePoints[] referencePoints = input.readObject(ExtendedReferencePoints[].class);
-            return new PreClone(index, coreKey, coreTagCount, fullTagCount, clonalSequence, gsss, referencePoints);
+            return new PreCloneImpl(index, coreKey, coreTagCount, fullTagCount, clonalSequence, gsss, referencePoints);
         }
 
         @Override

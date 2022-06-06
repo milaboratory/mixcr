@@ -46,8 +46,8 @@ public final class FilePreCloneWriter implements AutoCloseable, CanReportProgres
 
     private final Buffer<VDJCAlignments> alignmentBuffer;
     private final InputPort<VDJCAlignments> alignmentSorterInput;
-    private final Buffer<PreClone> cloneBuffer;
-    private final InputPort<PreClone> cloneSorterInput;
+    private final Buffer<PreCloneImpl> cloneBuffer;
+    private final InputPort<PreCloneImpl> cloneSorterInput;
 
     private final AtomicLong
             numberOfAlignments = new AtomicLong(),
@@ -57,8 +57,8 @@ public final class FilePreCloneWriter implements AutoCloseable, CanReportProgres
     private volatile Thread alignmentSortingThread, cloneSortingThread;
     private volatile HashSorter<VDJCAlignments> alignmentCollator;
     private volatile OutputPortCloseable<VDJCAlignments> sortedAlignments;
-    private volatile HashSorter<PreClone> cloneCollator;
-    private volatile OutputPortCloseable<PreClone> sortedClones;
+    private volatile HashSorter<PreCloneImpl> cloneCollator;
+    private volatile OutputPortCloseable<PreCloneImpl> sortedClones;
 
     public FilePreCloneWriter(Path file, TempFileDest tempDest) throws IOException {
         this.output = new PrimitivOHybrid(ForkJoinPool.commonPool(), file);
@@ -95,7 +95,7 @@ public final class FilePreCloneWriter implements AutoCloseable, CanReportProgres
                 "alignment-sorting");
         alignmentSortingThread.start();
         cloneCollator = new HashSorter<>(
-                PreClone.class,
+                PreCloneImpl.class,
                 PreCloneIdHash, PreCloneIdComparator,
                 5, tempDest.addSuffix("cl.pre."), 4, 6,
                 stateBuilder.getOState(), stateBuilder.getIState(),
@@ -110,7 +110,7 @@ public final class FilePreCloneWriter implements AutoCloseable, CanReportProgres
         alignmentWriter = output.beginPrimitivOBlocks(4, 1024);
     }
 
-    public void putClone(PreClone clone) {
+    public void putClone(PreCloneImpl clone) {
         numberOfClones.incrementAndGet();
         cloneSorterInput.put(clone);
     }
@@ -182,10 +182,10 @@ public final class FilePreCloneWriter implements AutoCloseable, CanReportProgres
         long clonesStartPosition = output.getPosition();
         long cloneChecksum = 17;
         long clones = 0;
-        try (PrimitivOBlocks<PreClone>.Writer writer = output.beginPrimitivOBlocks(4, 1024)) {
+        try (PrimitivOBlocks<PreCloneImpl>.Writer writer = output.beginPrimitivOBlocks(4, 1024)) {
             // resulting clone id generator
             long newCloneIdx = -1;
-            for (PreClone preClone : CUtils.it(sortedClones)) {
+            for (PreCloneImpl preClone : CUtils.it(sortedClones)) {
                 newCloneIdx++;
 
                 // preClone.id will be mapped to newCloneIdx

@@ -32,7 +32,7 @@ package com.milaboratory.mixcr.cli;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.mixcr.assembler.CloneAccumulator;
 import com.milaboratory.mixcr.assembler.CloneAssemblerListener;
-import com.milaboratory.mixcr.assembler.preclone.PreClone;
+import com.milaboratory.mixcr.assembler.preclone.PreCloneImpl;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.util.ReportHelper;
@@ -182,33 +182,33 @@ public final class CloneAssemblerReport extends AbstractCommandReport implements
     }
 
     @Override
-    public void onFailedToExtractTarget(PreClone preClone) {
+    public void onFailedToExtractTarget(PreCloneImpl preClone) {
         failedToExtractTarget.addAndGet(preClone.getNumberOfReads());
     }
 
     @Override
-    public void onTooManyLowQualityPoints(PreClone preClone) {
+    public void onTooManyLowQualityPoints(PreCloneImpl preClone) {
         droppedAsLowQuality.addAndGet(preClone.getNumberOfReads());
     }
 
     @Override
-    public void onAlignmentDeferred(PreClone preClone) {
+    public void onAlignmentDeferred(PreCloneImpl preClone) {
         deferred.addAndGet(preClone.getNumberOfReads());
     }
 
     @Override
-    public void onAlignmentAddedToClone(PreClone preClone, CloneAccumulator accumulator) {
+    public void onAlignmentAddedToClone(PreCloneImpl preClone, CloneAccumulator accumulator) {
         coreAlignments.addAndGet(preClone.getNumberOfReads());
         alignmentsInClones.addAndGet(preClone.getNumberOfReads());
     }
 
     @Override
-    public void onNoCandidateFoundForDeferredAlignment(PreClone preClone) {
+    public void onNoCandidateFoundForDeferredAlignment(PreCloneImpl preClone) {
         deferredAlignmentsDropped.addAndGet(preClone.getNumberOfReads());
     }
 
     @Override
-    public void onDeferredAlignmentMappedToClone(PreClone preClone, CloneAccumulator accumulator) {
+    public void onDeferredAlignmentMappedToClone(PreCloneImpl preClone, CloneAccumulator accumulator) {
         deferredAlignmentsMapped.addAndGet(preClone.getNumberOfReads());
         alignmentsInClones.addAndGet(preClone.getNumberOfReads());
     }
