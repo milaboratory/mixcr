@@ -111,13 +111,11 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
             names = {"-a", "--write-alignments"})
     public boolean isClnaOutput = false;
 
-    @Option(description = "If tags are present assemble pre-clones on the cell level rather than on the molecule level. " +
+    @Option(description = "If tags are present, do assemble pre-clones on the cell level rather than on the molecule level. " +
             "If there are no molecular tags in the data, but cell tags are present, this option will be used by default. " +
             "This option has no effect on the data without tags.",
             names = {"--cell-level"})
     public boolean cellLevel = false;
-
-    private static final double DEFAULT_MINIMAL_TAG_SET_OVERLAP = 0.7;
 
     @Option(names = "-O", description = "Overrides default parameter values.")
     private Map<String, String> overrides = new HashMap<>();

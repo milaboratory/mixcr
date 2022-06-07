@@ -117,7 +117,7 @@ public final class PreCloneAssembler {
 
         assert alignmentInfos.size() == assemblerInput.size();
 
-        report.inputAlignments.addAndGet(localIdx);
+        report.inputAlignments.addAndGet(localIdx + 1);
 
         if (assemblerInput.isEmpty()) {
             CUtils.drainWithoutClose(alignmentsReader2.take(), DummyInputPort.INSTANCE);
@@ -149,9 +149,13 @@ public final class PreCloneAssembler {
         // Tag suffixes unambiguously linked to a clonotype
         // (store cloneIdx+1; -1 for ambiguous cases; 0 - not found)
         TObjectIntHashMap<TagTuple> tagSuffixToCloneId = new TObjectIntHashMap<>();
+        assert tagSuffixToCloneId.get(1) == 0;
         // V, J and C genes unambiguously linked to a clonotype
         // (store cloneIdx+1; -1 for ambiguous cases; 0 - not found)
         TObjectIntHashMap<VDJCGeneId> vjcGenesToCloneId = new TObjectIntHashMap<>();
+        // V, J and C genes + tags unambiguously linked to a clonotype
+        // (store cloneIdx+1; -1 for ambiguous cases; 0 - not found)
+        TObjectIntHashMap<GeneAndTagSuffix> gatToCloneId = new TObjectIntHashMap<>();
 
         // Special map to simplify collection of additional information from already assigned alignment
         // -1 = not assigned to any consensus / clonotype
@@ -175,21 +179,41 @@ public final class PreCloneAssembler {
 
             geneInfos[cIdx] = acc.aggregateInformation(parameters.relativeMinScores);
 
-            for (TagTuple ts : tagSuffixes)
-                if (tagSuffixToCloneId.get(ts) > 0)
+            for (TagTuple ts : tagSuffixes) {
+                int valueInMap = tagSuffixToCloneId.get(ts);
+                if (valueInMap > 0) {
+                    assert cIdx + 1 != valueInMap;
+                    report.umiConflicts.incrementAndGet();
                     tagSuffixToCloneId.put(ts, -1); // ambiguity detected
-                else
+                } else if (valueInMap == 0)
                     tagSuffixToCloneId.put(ts, cIdx + 1);
+            }
 
             for (GeneType gt : GeneType.VJ_REFERENCE) {
                 List<GeneAndScore> gss = geneInfos[cIdx].get(gt);
                 if (gss == null)
                     continue;
-                for (GeneAndScore gs : gss)
-                    if (vjcGenesToCloneId.get(gs.geneId) > 0)
+                for (GeneAndScore gs : gss) {
+                    int valueInMap = vjcGenesToCloneId.get(gs.geneId);
+                    if (valueInMap > 0) {
+                        assert cIdx + 1 != valueInMap;
+                        report.geneConflicts.incrementAndGet(gt.ordinal());
                         vjcGenesToCloneId.put(gs.geneId, -1);
-                    else
+                    } else if (valueInMap == 0)
                         vjcGenesToCloneId.put(gs.geneId, cIdx + 1);
+
+                    // In combination with tags
+                    for (TagTuple ts : tagSuffixes) {
+                        GeneAndTagSuffix gat = new GeneAndTagSuffix(gs.geneId, ts);
+                        valueInMap = gatToCloneId.get(gat);
+                        if (valueInMap > 0) {
+                            assert cIdx + 1 != valueInMap;
+                            report.gatConflicts.incrementAndGet();
+                            gatToCloneId.put(gat, -1); // ambiguity detected
+                        } else if (valueInMap == 0)
+                            gatToCloneId.put(gat, cIdx + 1);
+                    }
+                }
             }
         }
 
@@ -205,6 +229,8 @@ public final class PreCloneAssembler {
 
             report.discardedCoreAlignments.incrementAndGet();
 
+            // TODO add reports here
+
             for (TagTuple ts : ai.tagSuffixes)
                 tagSuffixToCloneId.put(ts, -1);
 
@@ -212,8 +238,11 @@ public final class PreCloneAssembler {
                 List<GeneAndScore> gss = ai.genesAndScores.get(gt);
                 if (gss == null || gss.isEmpty())
                     continue;
-                for (GeneAndScore gs : gss)
+                for (GeneAndScore gs : gss) {
                     vjcGenesToCloneId.put(gs.geneId, -1);
+                    for (TagTuple ts : ai.tagSuffixes)
+                        gatToCloneId.put(new GeneAndTagSuffix(gs.geneId, ts), -1);
+                }
             }
         }
 
@@ -240,34 +269,53 @@ public final class PreCloneAssembler {
             // Running empirical assignment for the alignments not yet assigned
             if (cIdxP1 == 0) {
                 // V and J gene based assignment
-                for (GeneType gt : GeneType.VJ_REFERENCE)
+                for (GeneType gt : GeneType.VJ_REFERENCE) {
                     for (VDJCHit hit : al.getHits(gt)) {
+                        // TagSuffix + V/J-gene based assignment
+                        for (TagTuple ts : al.getTagCount().keySuffixes(parameters.groupingLevel)) {
+                            int cp1 = gatToCloneId.get(new GeneAndTagSuffix(hit.getGene().getId(), ts));
+                            if (cp1 <= 0)
+                                continue;
+                            if (cIdxP1 == 0) {
+                                cIdxP1 = cp1;
+                                report.gatEmpiricallyAssignedAlignments.incrementAndGet();
+                            } else if (cIdxP1 != cp1)
+                                cIdxP1 = -1;
+                        }
+
+                        // Back to V and J gene based assignment
                         int cp1 = vjcGenesToCloneId.get(hit.getGene().getId());
                         if (cp1 <= 0)
                             continue;
-                        report.vjEmpiricallyAssignedAlignments.incrementAndGet();
-                        if (cIdxP1 == 0)
+
+                        if (cIdxP1 == 0) {
                             cIdxP1 = cp1;
-                        else if (cIdxP1 != cp1)
+                            report.vjEmpiricallyAssignedAlignments.incrementAndGet();
+                        } else if (cIdxP1 != cp1)
                             cIdxP1 = -1;
                     }
+                }
 
                 // TagSuffix based assignment
                 for (TagTuple ts : al.getTagCount().keySuffixes(parameters.groupingLevel)) {
                     int cp1 = tagSuffixToCloneId.get(ts);
                     if (cp1 <= 0)
                         continue;
-                    report.umiEmpiricallyAssignedAlignments.incrementAndGet();
-                    if (cIdxP1 == 0)
+                    if (cIdxP1 == 0) {
                         cIdxP1 = cp1;
-                    else if (cIdxP1 != cp1)
+                        report.umiEmpiricallyAssignedAlignments.incrementAndGet();
+                    } else if (cIdxP1 != cp1)
                         cIdxP1 = -1;
                 }
 
-                if (cIdxP1 > 0)
+                // Here cIdxP1 > 0 if any of the empirical methods produced a hit
+                // and no conflicts were encountered between methods
+
+                if (cIdxP1 > 0) {
                     // Adding alignment to the clone
                     alignmentIdxToCloneIdxP1[localIdx] = cIdxP1;
-                else if (cIdxP1 == -1)
+                    report.empiricallyAssignedAlignments.incrementAndGet();
+                } else if (cIdxP1 == -1)
                     report.empiricalAssignmentConflicts.incrementAndGet();
             } else if (cIdxP1 > 0) {
                 int cIdx = cIdxP1 - 1;
@@ -361,6 +409,29 @@ public final class PreCloneAssembler {
                     : cloneIdOffset + alignmentIdxToCloneIdxP1[i] - 1;
 
         return new PreCloneAssemblerResult(result, resultAlToClone);
+    }
+
+    private static final class GeneAndTagSuffix {
+        final VDJCGeneId gene;
+        final TagTuple tag;
+
+        public GeneAndTagSuffix(VDJCGeneId gene, TagTuple tag) {
+            this.gene = gene;
+            this.tag = tag;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            GeneAndTagSuffix that = (GeneAndTagSuffix) o;
+            return gene.equals(that.gene) && tag.equals(that.tag);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(gene, tag);
+        }
     }
 
     private static final class AlignmentInfo {
