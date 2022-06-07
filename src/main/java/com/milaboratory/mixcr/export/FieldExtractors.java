@@ -43,10 +43,10 @@ import com.milaboratory.core.sequence.TranslationParameters;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.basictypes.tag.TagCount;
-import com.milaboratory.mixcr.basictypes.tag.TagInfo;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.mixcr.basictypes.tag.TagValue;
 import com.milaboratory.util.GlobalObjectMappers;
+import gnu.trove.iterator.TObjectDoubleIterator;
 import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.map.hash.TObjectFloatHashMap;
 import io.repseq.core.GeneFeature;
@@ -55,10 +55,7 @@ import io.repseq.core.ReferencePoint;
 import io.repseq.core.SequencePartitioning;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public final class FieldExtractors {
     static final String NULL = "";
@@ -714,104 +711,68 @@ public final class FieldExtractors {
                 @Override
                 public FieldExtractor<VDJCObject> create(OutputMode outputMode, VDJCFileHeaderData headerData, String[] args) {
                     String tagName = args[0];
-                    TagsInfo tagsInfo = headerData.getTagsInfo();
-                    int idx = -1;
-                    for (TagInfo ti : tagsInfo)
-                        if (ti.getName().equals(tagName)) {
-                            idx = ti.getIndex();
-                            break;
-                        }
+                    int idx = headerData.getTagsInfo().indexOf(tagName);
                     if (idx == -1)
                         throw new IllegalArgumentException("No tag with name " + tagName);
-                    int finalIdx = idx;
                     return new AbstractFieldExtractor<VDJCObject>(getHeader(outputMode, tagName), this) {
                         @Override
                         public String extractValue(VDJCObject object) {
-                            TagCount tc = object.getTagCount();
-                            Set<TagTuple> keys = tc.tuples();
-                            if (keys.size() == 0)
+                            TagValue tagValue = object.getTagCount().singleOrNull(idx);
+                            if (tagValue == null)
                                 return NULL;
-                            if (keys.size() > 1)
-                                throw new IllegalArgumentException("object has multiple tag tuples: " + tc);
-                            return keys.iterator().next().get(finalIdx).extractKey().toString();
+                            return tagValue.toString();
                         }
                     };
                 }
             });
 
-            // descriptorsList.add(new WP_O<String>("-tag", "Tag value", 1) {
-            //     @Override
-            //     protected String getParameters(String[] string) {
-            //         return string[0];
-            //     }
-            //
-            //     @Override
-            //     protected String getHeader(OutputMode outputMode, String name) {
-            //         switch (outputMode) {
-            //             case HumanFriendly:
-            //                 return "Tag" + name;
-            //             case ScriptingFriendly:
-            //                 return "tag" + name;
-            //         }
-            //         throw new RuntimeException();
-            //     }
-            //
-            //     @Override
-            //     protected String extractValue(VDJCObject object, String name) {
-            //         TagCounter tc = object.getTagCounter();
-            //         Set<String> set = tc.tags(name);
-            //         if (set.size() == 0)
-            //             return NULL;
-            //         if (set.size() > 1)
-            //             throw new IllegalArgumentException("object has multiple tag tuples: " + tc);
-            //         return set.iterator().next();
-            //     }
-            //
-            //     @Override
-            //     public String metaVars() {
-            //         return "index";
-            //     }
-            // });
+            descriptorsList.add(new AbstractField<VDJCObject>(VDJCObject.class, "-uniqueTagCount", "Unique tag count") {
+                @Override
+                public int nArguments() {
+                    return 1;
+                }
 
-            // descriptorsList.add(new WP_O<int[]>("-uniqueTagCount", "Unique tag count", 1) {
-            //     @Override
-            //     protected int[] getParameters(String[] string) {
-            //         return Arrays.stream(string[0].split("\\+")).mapToInt(Integer::parseInt).toArray();
-            //     }
-            //
-            //     @Override
-            //     protected String getHeader(OutputMode outputMode, int[] index) {
-            //         String str = Arrays.stream(index).mapToObj(Integer::toString).collect(Collectors.joining("+"));
-            //         switch (outputMode) {
-            //             case HumanFriendly:
-            //                 return "Unique Tag Count " + str;
-            //             case ScriptingFriendly:
-            //                 return "uniqueTagCount" + str;
-            //         }
-            //         throw new RuntimeException();
-            //     }
-            //
-            //     @Override
-            //     protected String extractValue(VDJCObject object, int[] indices) {
-            //         TagCounter tc = object.getTagCounter();
-            //         Set<String> set = new HashSet<>();
-            //         TObjectDoubleIterator<TagTuple> it = tc.iterator();
-            //         while (it.hasNext()) {
-            //             it.advance();
-            //             StringBuilder sb = new StringBuilder();
-            //             TagTuple t = it.key();
-            //             for (int i : indices)
-            //                 sb.append(t.tags[i]).append("+");
-            //             set.add(sb.toString());
-            //         }
-            //         return "" + set.size();
-            //     }
-            //
-            //     @Override
-            //     public String metaVars() {
-            //         return "Tags";
-            //     }
-            // });
+                @Override
+                public String metaVars() {
+                    return "tag_names";
+                }
+
+                private String getHeader(OutputMode outputMode, String name) {
+                    switch (outputMode) {
+                        case HumanFriendly:
+                            return "Unique Tag Count " + name;
+                        case ScriptingFriendly:
+                            return "uniqueTagCount" + name;
+                    }
+                    throw new RuntimeException();
+                }
+
+                @Override
+                public FieldExtractor<VDJCObject> create(OutputMode outputMode, VDJCFileHeaderData headerData, String[] args) {
+                    String tagNames = args[0];
+
+                    int[] indices = Arrays.stream(tagNames.split("\\+")).mapToInt(tagName -> {
+                        int idx = headerData.getTagsInfo().indexOf(tagName);
+                        if (idx == -1)
+                            throw new IllegalArgumentException("No tag with name " + tagName);
+                        return idx;
+                    }).toArray();
+
+                    return new AbstractFieldExtractor<VDJCObject>(getHeader(outputMode, tagNames), this) {
+                        @Override
+                        public String extractValue(VDJCObject object) {
+                            TagCount tc = object.getTagCount();
+                            Set<TagTuple> set = new HashSet<>();
+                            TObjectDoubleIterator<TagTuple> it = tc.iterator();
+                            while (it.hasNext()) {
+                                it.advance();
+                                set.add(it.key().project(indices));
+                            }
+                            return "" + set.size();
+                        }
+                    };
+                }
+            });
 
             descriptorsList.add(new PL_C("-cellGroup", "Cell group", "Cell group", "cellGroup") {
                 @Override

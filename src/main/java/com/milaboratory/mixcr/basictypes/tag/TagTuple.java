@@ -27,6 +27,13 @@ public final class TagTuple implements Comparable<TagTuple> {
         this.hash = hasher.hash().hashCode();
     }
 
+    public TagTuple project(int... idxs) {
+        TagValue[] t = new TagValue[idxs.length];
+        for (int i = 0; i < idxs.length; i++)
+            t[i] = tags[idxs[i]];
+        return new TagTuple(t);
+    }
+
     /** Returns whether the tag tuple contains only key tag values, so can be used as a grouping key. */
     public boolean isKey() {
         for (TagValue tag : tags)

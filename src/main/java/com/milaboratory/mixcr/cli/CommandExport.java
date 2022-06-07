@@ -35,6 +35,7 @@ import cc.redberry.pipe.blocks.FilteringPort;
 import cc.redberry.primitives.Filter;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.basictypes.tag.TagCount;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.export.*;
 import com.milaboratory.mixcr.util.Concurrency;
 import com.milaboratory.util.CanReportProgress;
@@ -223,7 +224,7 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
 
         @Option(description = "Split clones by tag values",
                 names = {"--split-by-tag"})
-        public List<Integer> splitByTag = new ArrayList<>();
+        public List<String> splitByTag = new ArrayList<>();
 
         public CommandExportClones() {
             super(Clone.class);
@@ -255,7 +256,11 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                         break;
                     }
                 }
-                ExportClones exportClones = new ExportClones(set, writer, limit, splitByTag.stream().mapToInt(i -> i).toArray());
+                TagsInfo tagsInfo = set.getTagsInfo();
+                ExportClones exportClones = new ExportClones(set, writer, limit,
+                        splitByTag.stream()
+                                .mapToInt(tagsInfo::indexOf)
+                                .toArray());
                 SmartProgressReporter.startProgressReport(exportClones, System.err);
                 exportClones.run();
                 if (initialSet.size() > set.size()) {

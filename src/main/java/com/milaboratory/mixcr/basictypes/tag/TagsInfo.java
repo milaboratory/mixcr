@@ -58,6 +58,16 @@ public final class TagsInfo implements Iterable<TagInfo> {
         return new TagsInfo(sortedLevel, tags);
     }
 
+    public int indexOf(String tagName){
+        int idx = -1;
+        for (TagInfo ti : this)
+            if (ti.getName().equals(tagName)) {
+                idx = ti.getIndex();
+                break;
+            }
+        return idx;
+    }
+
     @Override
     @SuppressWarnings("NullableProblems")
     public Iterator<TagInfo> iterator() {

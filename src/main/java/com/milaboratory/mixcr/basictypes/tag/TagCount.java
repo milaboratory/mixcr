@@ -109,6 +109,23 @@ public final class TagCount {
                 .collect(Collectors.toSet());
     }
 
+    public TagValue singleOrNull(int idx) {
+        if (singletonTuple != null)
+            return singletonTuple.get(idx);
+
+        TagValue value = null;
+        TObjectDoubleIterator<TagTuple> it = tagMap.iterator();
+        while (it.hasNext()) {
+            it.advance();
+            TagValue tv = it.key().get(idx);
+            if (value == null) {
+                value = tv;
+            } else if (!value.equals(tv))
+                return null;
+        }
+        return value;
+    }
+
     public Set<TagTuple> tuples() {
         if (singletonTuple != null)
             return Collections.singleton(singletonTuple);
