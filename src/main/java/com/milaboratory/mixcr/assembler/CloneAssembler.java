@@ -224,16 +224,12 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     }
 
     private ClonalSequence extractClonalSequence(PreClone preClone) {
-        // final NSequenceWithQuality[] targets = new NSequenceWithQuality[parameters.assemblingFeatures.length];
-        // int totalLength = 0;
-        // for (int i = 0; i < targets.length; ++i)
-        //     if ((targets[i] = alignments.getFeature(parameters.assemblingFeatures[i])) == null)
-        //         return null;
-        //     else
-        //         totalLength += targets[i].size();
-        // if (totalLength < parameters.minimalClonalSequenceLength)
-        //     return null;
-        return new ClonalSequence(preClone.getClonalSequence());
+        NSequenceWithQuality[] clonalSequence = preClone.getClonalSequence();
+        int totalLength = 0;
+        for (NSequenceWithQuality s : clonalSequence) totalLength += s.size();
+        if (totalLength < parameters.minimalClonalSequenceLength)
+            return null;
+        return new ClonalSequence(clonalSequence);
     }
 
     public VoidProcessor<PreClone> getInitialAssembler() {
@@ -409,12 +405,12 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             totalAlignments.incrementAndGet();
             final ClonalSequence target = extractClonalSequence(input);
 
-            // if (target == null) {
-            //     log(new AssemblerEvent(input.getId(), AssemblerEvent.DROPPED));
-            //     droppedAlignments.incrementAndGet();
-            //     onFailedToExtractTarget(input);
-            //     return;
-            // }
+            if (target == null) {
+                log(new AssemblerEvent(input.getIndex(), AssemblerEvent.DROPPED));
+                droppedAlignments.incrementAndGet();
+                onFailedToExtractTarget(input);
+                return;
+            }
 
             // Calculating number of bad points
             int badPoints = numberOfBadPoints(target);
@@ -472,6 +468,9 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         @Override
         public void process(PreClone input) {
             final ClonalSequence clonalSequence = extractClonalSequence(input);
+
+            // The sequence was deferred on the initial step, so it must contain clonal sequence
+            assert clonalSequence != null;
 
             // Seeding random generator to make ambiguous mappings below reproducible
             RandomUtil.reseedThreadLocal(HashFunctions.JenkinWang64shift(input.getIndex()));
