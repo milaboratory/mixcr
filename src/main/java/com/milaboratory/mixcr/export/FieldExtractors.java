@@ -716,7 +716,7 @@ public final class FieldExtractors {
                     String tagName = args[0];
                     TagsInfo tagsInfo = headerData.getTagsInfo();
                     int idx = -1;
-                    for (TagInfo ti : tagsInfo.tags)
+                    for (TagInfo ti : tagsInfo)
                         if (ti.getName().equals(tagName)) {
                             idx = ti.getIndex();
                             break;

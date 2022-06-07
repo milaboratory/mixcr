@@ -5,22 +5,30 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.primitivio.annotations.Serializable;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Objects;
 
 @Serializable(asJson = true)
-public final class TagsInfo {
+public final class TagsInfo implements Iterable<TagInfo> {
     public static final TagsInfo NO_TAGS = new TagsInfo(0);
 
     @JsonProperty("sortingLevel")
-    public final int sortingLevel;
+    final int sortingLevel;
     @JsonProperty("tags")
-    public final TagInfo[] tags;
+    final TagInfo[] tags;
 
     @JsonCreator
     public TagsInfo(@JsonProperty("sortingLevel") int sortingLevel, @JsonProperty("tags") TagInfo... tags) {
         Objects.requireNonNull(tags);
         this.sortingLevel = sortingLevel;
         this.tags = tags;
+    }
+
+    public boolean hasTagsWithType(TagType groupingLevel) {
+        for (TagInfo tag : tags)
+            if (tag.getType() == groupingLevel)
+                return true;
+        return false;
     }
 
     public int getDepthFor(TagType groupingLevel) {
@@ -42,8 +50,18 @@ public final class TagsInfo {
         return sortingLevel;
     }
 
+    public boolean hasNoTags() {
+        return tags.length == 0;
+    }
+
     public TagsInfo setSorted(int sortedLevel) {
         return new TagsInfo(sortedLevel, tags);
+    }
+
+    @Override
+    @SuppressWarnings("NullableProblems")
+    public Iterator<TagInfo> iterator() {
+        return Arrays.asList(tags).iterator();
     }
 
     @Override

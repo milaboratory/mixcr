@@ -60,6 +60,8 @@ public final class FilePreCloneWriter implements AutoCloseable, CanReportProgres
     private volatile HashSorter<PreCloneImpl> cloneCollator;
     private volatile OutputPortCloseable<PreCloneImpl> sortedClones;
 
+    private volatile boolean finished = false;
+
     public FilePreCloneWriter(Path file, TempFileDest tempDest) throws IOException {
         this.output = new PrimitivOHybrid(ForkJoinPool.commonPool(), file);
         this.tempDest = tempDest;
@@ -216,6 +218,8 @@ public final class FilePreCloneWriter implements AutoCloseable, CanReportProgres
         }
 
         ps.finish();
+
+        finished = true;
     }
 
     @Override
@@ -234,7 +238,10 @@ public final class FilePreCloneWriter implements AutoCloseable, CanReportProgres
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() throws IOException {
+        if (!finished)
+            throw new IllegalStateException("Closing writer without calling finish() first.");
+
         if (alignmentSortingThread != null) {
             alignmentSorterInput.put(null);
             try {

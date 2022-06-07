@@ -113,11 +113,11 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
 
             tagNames = new ArrayList<>();
             TIntArrayList indicesBuilder = new TIntArrayList();
-            for (int i = 0; i < tagsInfo.tags.length; i++) {
-                TagInfo tag = tagsInfo.tags[i];
-                assert i == tag.getIndex(); // just in case
+            for (int ti = 0; ti < tagsInfo.size(); ti++) {
+                TagInfo tag = tagsInfo.get(ti);
+                assert ti == tag.getIndex(); // just in case
                 if (tag.getValueType() == TagValueType.SequenceAndQuality)
-                    indicesBuilder.add(i);
+                    indicesBuilder.add(ti);
                 tagNames.add(tag.getName());
             }
             targetTagIndices = indicesBuilder.toArray();
@@ -212,7 +212,7 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
 
                 // Initializing and writing results to the output file
                 writer.header(mainReader, getFullPipelineConfiguration(),
-                        mainReader.getTagsInfo().setSorted(mainReader.getTagsInfo().tags.length));
+                        mainReader.getTagsInfo().setSorted(mainReader.getTagsInfo().size()));
                 for (VDJCAlignments al : CUtils.it(sorted))
                     writer.write(al);
             }

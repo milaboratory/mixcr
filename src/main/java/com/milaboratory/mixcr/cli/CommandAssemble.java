@@ -38,22 +38,23 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.*;
+import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerParameters;
+import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerRunner;
 import com.milaboratory.mixcr.assembler.preclone.PreCloneReader;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
+import com.milaboratory.mixcr.basictypes.tag.TagType;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
-import com.milaboratory.util.ArraysUtils;
-import com.milaboratory.util.JsonOverrider;
-import com.milaboratory.util.ReportUtil;
-import com.milaboratory.util.SmartProgressReporter;
+import com.milaboratory.util.*;
 import gnu.trove.iterator.TObjectDoubleIterator;
 import io.repseq.core.*;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -110,9 +111,11 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
             names = {"-a", "--write-alignments"})
     public boolean isClnaOutput = false;
 
-    @Option(description = "Enable tag-based read to clone assignment",
-            names = {"--attach-reads-by-tags"})
-    public boolean attachReadsByTags = false;
+    @Option(description = "If tags are present assemble pre-clones on the cell level rather than on the molecule level. " +
+            "If there are no molecular tags in the data, but cell tags are present, this option will be used by default. " +
+            "This option has no effect on the data without tags.",
+            names = {"--cell-level"})
+    public boolean cellLevel = false;
 
     private static final double DEFAULT_MINIMAL_TAG_SET_OVERLAP = 0.7;
 
@@ -151,10 +154,11 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
         assemblerParameters = CloneAssemblerParametersPresets.getByName(assemblerParametersName);
         if (assemblerParameters == null)
             throwValidationException("Unknown parameters: " + assemblerParametersName);
+        // noinspection ConstantConditions
         assemblerParameters = assemblerParameters.updateFrom(alignerParameters);
 
-        if (attachReadsByTags)
-            assemblerParameters = assemblerParameters.setCloneClusteringParameters(assemblerParameters.getCloneClusteringParameters().setMinimalTagSetOverlap(DEFAULT_MINIMAL_TAG_SET_OVERLAP));
+        // TODO 4.0 ???
+        // assemblerParameters = assemblerParameters.setCloneClusteringParameters(assemblerParameters.getCloneClusteringParameters().setMinimalTagSetOverlap(DEFAULT_MINIMAL_TAG_SET_OVERLAP));
 
         // Overriding JSON parameters
         if (!overrides.isEmpty()) {
@@ -217,19 +221,23 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
         // Saving initial timestamp
         long beginTimestamp = System.currentTimeMillis();
 
+        // Will be used for several operations requiring disk offloading
+        TempFileDest tempDest = smartTempDestination(out, "", useSystemTemp);
+
         // Checking consistency between actionParameters.doWriteClnA() value and file extension
         if ((getOutput().toLowerCase().endsWith(".clna") && !isClnaOutput) ||
                 (getOutput().toLowerCase().endsWith(".clns") && isClnaOutput))
             warn("WARNING: Unexpected file extension, use .clns extension for clones-only (normal) output and\n" +
                     ".clna if -a / --write-alignments options specified.");
 
-
-        try (VDJCAlignmentsReader aReader = new VDJCAlignmentsReader(in)) {
+        try (VDJCAlignmentsReader alignmentsReader = new VDJCAlignmentsReader(in)) {
 
             CloneAssemblerParameters assemblerParameters = getCloneAssemblerParameters();
             List<VDJCGene> genes = getGenes();
             VDJCAlignerParameters alignerParameters = getAlignerParameters();
             TagsInfo tagsInfo = getTagsInfo();
+
+            // tagsInfo.getSortingLevel()
 
             // Performing assembly
             try (CloneAssembler assembler = new CloneAssembler(assemblerParameters,
@@ -244,7 +252,36 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
                 assembler.setListener(report);
 
                 // TODO >>>>>>>>>>>>>>
-                PreCloneReader preClones = PreCloneReader.fromAlignments(aReader, assemblerParameters.getAssemblingFeatures());
+                PreCloneReader preClones;
+                if (tagsInfo.hasTagsWithType(TagType.CellTag) || tagsInfo.hasTagsWithType(TagType.MoleculeTag)) {
+                    int depth = tagsInfo.getDepthFor(cellLevel ? TagType.CellTag : TagType.MoleculeTag);
+                    if (tagsInfo.getSortingLevel() < depth)
+                        throwValidationException("Input file has insufficient sorting level");
+                    PreCloneAssemblerParameters preAssemblerParams = new PreCloneAssemblerParameters(
+                            PreCloneAssemblerParameters.DefaultGConsensusAssemblerParameters,
+                            alignmentsReader.getParameters(),
+                            assemblerParameters.getAssemblingFeatures(),
+                            depth);
+                    Path preClonesFile = tempDest.resolvePath("preclones.pc");
+
+                    PreCloneAssemblerRunner assemblerRunner = new PreCloneAssemblerRunner(
+                            alignmentsReader,
+                            cellLevel ? TagType.CellTag : TagType.MoleculeTag,
+                            new GeneFeature[]{GeneFeature.CDR3},
+                            PreCloneAssemblerParameters.DefaultGConsensusAssemblerParameters,
+                            preClonesFile, tempDest.addSuffix("pc.tmp"));
+                    SmartProgressReporter.startProgressReport(assemblerRunner);
+
+                    // Pre-clone assembly happens here (file with pre-clones and alignments written as a result)
+                    assemblerRunner.run();
+
+                    // Setting report into a big report object
+                    report.setPreCloneAssemblerReport(assemblerRunner.getReport());
+
+                    preClones = assemblerRunner.createReader();
+                } else
+                    // If there are no tags in the data, alignments are just wrapped into pre-clones
+                    preClones = PreCloneReader.fromAlignments(alignmentsReader, assemblerParameters.getAssemblingFeatures());
 
                 // Running assembler
                 CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(
@@ -271,89 +308,22 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
                 // Writing results
                 PipelineConfiguration pipelineConfiguration = getFullPipelineConfiguration();
                 if (isClnaOutput) {
-
                     try (ClnAWriter writer = new ClnAWriter(pipelineConfiguration, out,
-                            smartTempDestination(out, "", useSystemTemp), highCompression)) {
+                            tempDest, highCompression)) {
 
                         // writer will supply current stage and completion percent to the progress reporter
                         SmartProgressReporter.startProgressReport(writer);
                         // Writing clone block
 
                         writer.writeClones(cloneSet);
+
                         // Pre-soring alignments
-                        try (AlignmentsMappingMerger merged = new AlignmentsMappingMerger(preClones.readAlignments(),
+                        try (AlignmentsMappingMerger merged = new AlignmentsMappingMerger(
+                                preClones.readAlignments(),
                                 assembler.getAssembledReadsPort())) {
-                            OutputPort<VDJCAlignments> port = merged;
-                            if (attachReadsByTags) {
-                                Map<TagSignature, Integer> tagsToClones = new HashMap<>();
-                                for (int i = 0; i < cloneSet.size(); i++) {
-                                    Clone clone = cloneSet.get(i);
-                                    assert i == clone.getId();
-                                    TagCount tags = clone.getTagCount();
-                                    TObjectDoubleIterator<TagTuple> it = tags.iterator();
-                                    while (it.hasNext()) {
-                                        it.advance();
-                                        TagTuple tag = it.key();
-                                        for (GeneType gt : new GeneType[]{GeneType.Variable, GeneType.Joining}) {
-                                            TagSignature sig = new TagSignature(tag, clone.getBestHit(gt).getGene().getId());
-                                            Integer id = tagsToClones.get(sig);
-                                            if (id != null)
-                                                // Ambiguity (two or more clones with the same tag+gene signature)
-                                                tagsToClones.put(sig, -1);
-                                            else
-                                                tagsToClones.put(sig, clone.getId());
-                                        }
-                                    }
-                                }
-
-                                // Remove ambiguous mappings
-                                tagsToClones.entrySet().removeIf(e -> e.getValue() < 0);
-
-                                port = () -> {
-                                    VDJCAlignments al = merged.take();
-                                    if (al == null
-                                            || al.getMappingType() != ReadToCloneMapping.MappingType.Dropped
-                                            || al.getFeature(new GeneFeature(assemblerParameters.getAssemblingFeatures())) != null) // Dropped but has assembling feature
-                                        return al;
-
-                                    // <-- Only dropped alignments not covering CDR3
-
-                                    TagCount tg = al.getTagCount();
-                                    assert tg.size() == 1; // Both "align" and "assemblePartial" produces such alignments
-                                    TObjectDoubleIterator<TagTuple> it = tg.iterator();
-                                    it.advance();
-                                    TagTuple tags = it.key();
-
-                                    VDJCHit hit;
-
-                                    int cloneMapping = -1; // -1 for not assigned, -2 for ambiguous
-                                    for (GeneType gt : new GeneType[]{GeneType.Variable, GeneType.Joining}) {
-                                        if ((hit = al.getBestHit(gt)) != null) {
-                                            TagSignature sig = new TagSignature(tags, hit.getGene().getId());
-                                            Integer cloneId = tagsToClones.get(sig);
-                                            if (cloneId != null)
-                                                if (cloneMapping != -1 && cloneMapping != cloneId)
-                                                    cloneMapping = -2; // V+Tag has different mapping than J+Tag
-                                                else
-                                                    cloneMapping = cloneId;
-                                        }
-                                    }
-
-                                    if (cloneMapping >= 0) {
-                                        report.onReadAttachedByTags();
-                                        // TODO add count
-                                        return setMappingCloneIndex(al, cloneMapping);
-                                    } else if (cloneMapping == -2)
-                                        report.onReadWithAmbiguousAttachmentsByTags();
-                                    else
-                                        report.onReadsFailedToAttachedByTags();
-
-                                    return al;
-                                };
-                            }
-
-                            writer.collateAlignments(port, assembler.getAlignmentsCount());
+                            writer.collateAlignments(merged, assembler.getAlignmentsCount());
                         }
+
                         writer.writeAlignmentsAndIndex();
                     }
                 } else
@@ -367,7 +337,7 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
 
                 assert cloneSet.getClones().size() == report.getCloneCount();
 
-                report.setTotalReads(aReader.getNumberOfReads());
+                report.setTotalReads(alignmentsReader.getNumberOfReads());
 
                 // Writing report to stout
                 System.out.println("============= Report ==============");

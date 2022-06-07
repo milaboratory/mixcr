@@ -36,6 +36,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 public final class AlignmentsMappingMerger implements OutputPortCloseable<VDJCAlignments> {
     final OutputPort<VDJCAlignments> alignments;
     final OutputPort<ReadToCloneMapping> readToCloneMappings;
+    ReadToCloneMapping lastMapping;
 
     public AlignmentsMappingMerger(OutputPort<VDJCAlignments> alignments, OutputPort<ReadToCloneMapping> readToCloneMappings) {
         this.alignments = alignments;
@@ -55,10 +56,12 @@ public final class AlignmentsMappingMerger implements OutputPortCloseable<VDJCAl
 
         if (al.getCloneIndex() == -1)
             return al;
-        ReadToCloneMapping m = readToCloneMappings.take();
-        assert m.getPreCloneIdx() == al.getCloneIndex();
 
-        return al.setMapping(m);
+        if(lastMapping == null || lastMapping.getPreCloneIdx() != al.getCloneIndex())
+            lastMapping = readToCloneMappings.take();
+        assert lastMapping.getPreCloneIdx() == al.getCloneIndex();
+
+        return al.setMapping(lastMapping);
     }
 
     @Override

@@ -198,6 +198,7 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
 
     @Override
     public TagsInfo getTagsInfo() {
+        // TODO 4.0 ensure not null everywhere
         ensureInitialized();
         return tagsInfo;
     }

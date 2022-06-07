@@ -1,24 +1,21 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
-import cc.redberry.pipe.OutputPort;
-import cc.redberry.pipe.util.CountingOutputPort;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
 import com.milaboratory.mitool.consensus.AAssemblerParameters;
 import com.milaboratory.mitool.consensus.GConsensusAssemblerParameters;
-import com.milaboratory.mitool.helpers.GroupOP;
-import com.milaboratory.mitool.helpers.PipeKt;
-import com.milaboratory.mixcr.assembler.preclone.*;
+import com.milaboratory.mixcr.assembler.preclone.FilePreCloneReader;
+import com.milaboratory.mixcr.assembler.preclone.PreClone;
+import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerParameters;
+import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerRunner;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
-import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.mixcr.basictypes.tag.TagType;
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.util.ReportHelper;
 import com.milaboratory.util.SmartProgressReporter;
+import com.milaboratory.util.TempFileDest;
 import com.milaboratory.util.TempFileManager;
 import io.repseq.core.GeneFeature;
-import kotlin.jvm.functions.Function1;
 
 import java.nio.file.Paths;
 import java.util.List;
@@ -61,63 +58,19 @@ public class ITestCommandAssemblePreClones extends ACommandMiXCR {
     public void run0() throws Exception {
         long totalAlignments;
         long totalClones = 0;
-        try (
-                VDJCAlignmentsReader reader1 = new VDJCAlignmentsReader(files.get(0));
-                FilePreCloneWriter writer = new FilePreCloneWriter(Paths.get(files.get(1)),
-                        TempFileManager.smartTempDestination(files.get(1), "", useSystemTemp))
-        ) {
-            VDJCAlignmentsReader.SecondaryReader reader2 = reader1.readAlignments();
-            // For export
-            VDJCAlignmentsReader.SecondaryReader reader3 = reader1.readAlignments();
-
-            writer.init(reader1);
-
-            TagsInfo tagsInfo = reader1.getTagsInfo();
-            int depth = tagsInfo.getDepthFor(cellLevel ? TagType.CellTag : TagType.MoleculeTag);
-            // int depth = tagsInfo.getDepthFor(TagType.MoleculeTag);
-            if (tagsInfo.getSortingLevel() < depth)
-                throwValidationException("Input file has insufficient sorting level");
-
-            PreCloneAssemblerParameters params = new PreCloneAssemblerParameters(
-                    gAssemblerParams, reader1.getParameters(),
+        TempFileDest tmp = TempFileManager.smartTempDestination(files.get(1), "", useSystemTemp);
+        try (VDJCAlignmentsReader alignmentsReader = new VDJCAlignmentsReader(files.get(0))) {
+            totalAlignments = alignmentsReader.getNumberOfAlignments();
+            PreCloneAssemblerRunner assemblerRunner = new PreCloneAssemblerRunner(
+                    alignmentsReader,
+                    cellLevel ? TagType.CellTag : TagType.MoleculeTag,
                     new GeneFeature[]{GeneFeature.CDR3},
-                    depth);
-            CountingOutputPort<VDJCAlignments> reader1c = new CountingOutputPort<>(reader1);
-            PreCloneAssembler assembler = new PreCloneAssembler(params,
-                    CUtils.wrap(reader1c, VDJCAlignments::ensureKeyTags),
-                    CUtils.wrap(reader2, VDJCAlignments::ensureKeyTags)
-            );
-
-            Function1<VDJCAlignments, TagTuple> gFunction = a -> a.getTagCount().asKeyPrefixOrError(depth);
-            OutputPort<GroupOP<VDJCAlignments, TagTuple>> alGroups = PipeKt.group(
-                    CUtils.wrap(reader3, VDJCAlignments::ensureKeyTags), gFunction);
-
-            SmartProgressReporter.startProgressReport("Building pre-clones", reader1);
-
-            PreCloneAssemblerResult result;
-            while ((result = assembler.getForNextGroup()) != null) {
-                GroupOP<VDJCAlignments, TagTuple> grp = alGroups.take();
-                List<PreCloneImpl> clones = result.getClones();
-                assert clones.isEmpty() || clones.get(0).getCoreKey().equals(grp.getKey());
-                totalClones += clones.size();
-
-                for (PreCloneImpl clone : clones)
-                    writer.putClone(clone);
-
-                int localId = 0;
-                for (VDJCAlignments al : CUtils.it(grp)) {
-                    long cloneMapping = result.getCloneForAlignment(localId++);
-                    writer.putAlignment(cloneMapping != -1
-                            ? al.withCloneIndexAndMappingType(cloneMapping, (byte) 0)
-                            : al);
-                }
-            }
-
-            totalAlignments = reader1c.getCount();
-
-            writer.finish();
-
-            assembler.getReport().writeReport(ReportHelper.STDOUT);
+                    PreCloneAssemblerParameters.DefaultGConsensusAssemblerParameters,
+                    Paths.get(files.get(1)),
+                    tmp);
+            SmartProgressReporter.startProgressReport(assemblerRunner);
+            assemblerRunner.run();
+            assemblerRunner.getReport().writeReport(ReportHelper.STDOUT);
         }
 
         try (FilePreCloneReader reader = new FilePreCloneReader(Paths.get(files.get(1)))) {

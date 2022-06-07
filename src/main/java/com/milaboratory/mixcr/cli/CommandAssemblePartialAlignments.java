@@ -146,7 +146,7 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
             report.setOutputFiles(out);
             report.setCommandLine(getCommandLineArguments());
 
-            if (reader1.getTagsInfo() != null && reader1.getTagsInfo().tags.length > 0) {
+            if (reader1.getTagsInfo() != null && reader1.getTagsInfo().hasNoTags()) {
                 SmartProgressReporter.startProgressReport("Running assemble partial", reader1);
 
                 // This processor strips all non-key information from the

@@ -42,15 +42,28 @@ public final class PreCloneAssembler {
     private final PreCloneAssemblerReport report = new PreCloneAssemblerReport();
     private final AtomicLong idGenerator = new AtomicLong();
     private final PreCloneAssemblerParameters parameters;
+    private final Function1<VDJCAlignments, TagTuple> groupingFunction;
     private final OutputPort<GroupOP<VDJCAlignments, TagTuple>> alignmentsReader1, alignmentsReader2;
 
     public PreCloneAssembler(PreCloneAssemblerParameters parameters,
                              OutputPort<VDJCAlignments> alignmentsReader1,
                              OutputPort<VDJCAlignments> alignmentsReader2) {
         this.parameters = parameters;
-        Function1<VDJCAlignments, TagTuple> gFunction = a -> a.getTagCount().asKeyPrefixOrError(parameters.groupingLevel);
-        this.alignmentsReader1 = PipeKt.group(alignmentsReader1, gFunction);
-        this.alignmentsReader2 = PipeKt.group(alignmentsReader2, gFunction);
+        this.groupingFunction = groupingFunction(parameters.groupingLevel);
+        this.alignmentsReader1 = PipeKt.group(alignmentsReader1, groupingFunction);
+        this.alignmentsReader2 = PipeKt.group(alignmentsReader2, groupingFunction);
+    }
+
+    private static Function1<VDJCAlignments, TagTuple> groupingFunction(int depth) {
+        return a -> a.getTagCount().asKeyPrefixOrError(depth);
+    }
+
+    public Function1<VDJCAlignments, TagTuple> getGroupingFunction() {
+        return groupingFunction;
+    }
+
+    public PreCloneAssemblerParameters getParameters() {
+        return parameters;
     }
 
     public PreCloneAssemblerReport getReport() {
