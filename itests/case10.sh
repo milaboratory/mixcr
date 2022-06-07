@@ -39,3 +39,6 @@ mixcr assemblePartial --cell-level case10.corrected-vdjca case10.part-assembled-
 
 mixcr itestAssemblePreClones case10.part-assembled-molecule-vdjca case10.part-assembled-molecule-vdjca.pc
 mixcr itestAssemblePreClones --cell-level case10.part-assembled-cell-vdjca case10.part-assembled-cell-vdjca.pc
+
+mixcr assemble -a case10.part-assembled-molecule-vdjca case10.molecule-clna
+mixcr assemble -a --cell-level case10.part-assembled-cell-vdjca case10.cell-clna

@@ -57,7 +57,6 @@ public class ITestCommandAssemblePreClones extends ACommandMiXCR {
     @Override
     public void run0() throws Exception {
         long totalAlignments;
-        long totalClones = 0;
         TempFileDest tmp = TempFileManager.smartTempDestination(files.get(1), "", useSystemTemp);
         try (VDJCAlignmentsReader alignmentsReader = new VDJCAlignmentsReader(files.get(0))) {
             totalAlignments = alignmentsReader.getNumberOfAlignments();
@@ -74,6 +73,8 @@ public class ITestCommandAssemblePreClones extends ACommandMiXCR {
         }
 
         try (FilePreCloneReader reader = new FilePreCloneReader(Paths.get(files.get(1)))) {
+            long totalClones = reader.getNumberOfClones();
+
             long numberOfAlignmentsCheck = 0;
             for (VDJCAlignments al : CUtils.it(reader.readAlignments()))
                 numberOfAlignmentsCheck++;

@@ -48,6 +48,22 @@ public final class FilePreCloneReader implements PreCloneReader {
         }
     }
 
+    public long getNumberOfReads() {
+        return numberOfReads;
+    }
+
+    public long getNumberOfAlignments() {
+        return numberOfAlignments;
+    }
+
+    public long getNumberOfAssignedAlignments() {
+        return numberOfAssignedAlignments;
+    }
+
+    public long getNumberOfClones() {
+        return numberOfClones;
+    }
+
     public VDJCAlignerParameters getAlignmentParameters() {
         return alignmentParameters;
     }
