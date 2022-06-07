@@ -41,6 +41,7 @@ import com.milaboratory.core.sequence.quality.QualityAggregationType;
 import com.milaboratory.core.tree.TreeSearchParameters;
 import com.milaboratory.mixcr.assembler.preclone.PreCloneReader;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.*;
 import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.SmartProgressReporter;
@@ -55,7 +56,6 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class CloneAssemblerRunnerTest {
-    @Ignore
     @Test
     public void test1() throws Exception {
         String[] str = {"sequences/sample_IGH_R1.fastq", "sequences/sample_IGH_R2.fastq"};
@@ -78,7 +78,7 @@ public class CloneAssemblerRunnerTest {
         VDJCAlignerParameters alignerParameters = VDJCParametersPresets.getByName("default");
         VDJCAligner aligner = fastqFiles.length == 1 ? new VDJCAlignerS(alignerParameters) : new VDJCAlignerWithMerge(alignerParameters);
 
-        for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("mi", "hs").getGenes(Chains.IGH))
+        for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("default", "hs").getGenes(Chains.IGH))
             if (alignerParameters.containsRequiredFeature(gene))
                 aligner.addGene(gene);
 
@@ -110,7 +110,7 @@ public class CloneAssemblerRunnerTest {
                 new VJCClonalAlignerParameters(0.8f,
                         scoring, 5),
                 null,
-                new DAlignerParameters(GeneFeature.DRegion, 0.85f, 30.0f, 3, scoring)
+                new DClonalAlignerParameters(0.85f, 30.0f, 3, scoring)
         );
 
         CloneAssemblerParameters assemblerParameters = new CloneAssemblerParameters(
@@ -127,7 +127,7 @@ public class CloneAssemblerRunnerTest {
         SmartProgressReporter.startProgressReport(assemblerRunner);
         assemblerRunner.run();
 
-        CloneSet cloneSet = assemblerRunner.getCloneSet(null, null);
+        CloneSet cloneSet = assemblerRunner.getCloneSet(alignerParameters, TagsInfo.NO_TAGS);
 
         File tmpClnsFile = TempFileManager.getTempFile();
 

@@ -34,7 +34,6 @@ import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.blocks.ParallelProcessor;
 import cc.redberry.pipe.util.Chunk;
-import cc.redberry.pipe.util.Indexer;
 import cc.redberry.pipe.util.OrderedOutputPort;
 import com.milaboratory.core.io.sequence.PairedRead;
 import com.milaboratory.core.io.sequence.SequenceRead;
@@ -61,7 +60,6 @@ import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.SmartProgressReporter;
-import com.milaboratory.util.TempFileManager;
 import io.repseq.core.Chains;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
@@ -73,7 +71,8 @@ import java.util.List;
 
 import static cc.redberry.pipe.CUtils.chunked;
 import static cc.redberry.pipe.CUtils.unchunked;
-import static com.milaboratory.util.TempFileManager.*;
+import static com.milaboratory.util.TempFileManager.getTempFile;
+import static com.milaboratory.util.TempFileManager.systemTempFolderDestination;
 
 /**
  * @author Dmitry Bolotin
@@ -100,6 +99,7 @@ public final class RunMiXCR {
                 public OutputPortWithProgress<VDJCAlignments> readAlignments() {
                     return OutputPortWithProgress.wrap(align.alignments.size(), CUtils.asOutputPort(align.alignments));
                 }
+
                 @Override
                 public long getNumberOfReads() {
                     return align.alignments.size();
@@ -137,9 +137,10 @@ public final class RunMiXCR {
             // Writing clone block
 
             writer.writeClones(assemble.cloneSet);
+            PreCloneReader preCloneReader = align.asPreCloneReader();
             // Pre-soring alignments
             try (AlignmentsMappingMerger merged = new AlignmentsMappingMerger(
-                    CUtils.asOutputPort(align.alignments),
+                    preCloneReader.readAlignments(),
                     assemble.cloneAssembler.getAssembledReadsPort())) {
                 writer.collateAlignments(merged, assemble.cloneAssembler.getAlignmentsCount());
             }
@@ -300,6 +301,11 @@ public final class RunMiXCR {
                 }
             }
             return new VDJCAlignmentsReader(alignmentsFile);
+        }
+
+        public PreCloneReader asPreCloneReader() throws IOException {
+            return PreCloneReader.fromAlignments(resultReader(),
+                    parameters.cloneAssemblerParameters.getAssemblingFeatures());
         }
     }
 

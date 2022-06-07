@@ -38,14 +38,14 @@ public final class ReadToCloneMapping {
     public static final byte DROPPED_WITH_CLONE_MASK = 1 << 2;
     public static final byte PRE_CLUSTERED_MASK = 1 << 3;
     public static final byte DROPPED_MASK = 1 << 4;
-    final long alignmentsId;
+    final long preCloneIdx;
     final int cloneIndex;
     final byte mappingType;
 
-    public ReadToCloneMapping(long alignmentsId, int cloneIndex, boolean clustered, boolean additionalMapping, boolean droppedWithClone, boolean preClustered) {
+    public ReadToCloneMapping(long preCloneIdx, int cloneIndex, boolean clustered, boolean additionalMapping, boolean droppedWithClone, boolean preClustered) {
         if (cloneIndex < 0)
             cloneIndex = -1;
-        this.alignmentsId = alignmentsId;
+        this.preCloneIdx = preCloneIdx;
         this.cloneIndex = cloneIndex;
         assert !droppedWithClone || cloneIndex < 0;
         this.mappingType = (byte) ((clustered ? CLUSTERED_MASK : 0)
@@ -59,8 +59,8 @@ public final class ReadToCloneMapping {
         return cloneIndex;
     }
 
-    public long getAlignmentsId() {
-        return alignmentsId;
+    public long getPreCloneIdx() {
+        return preCloneIdx;
     }
 
     public boolean isClustered() {
@@ -93,7 +93,7 @@ public final class ReadToCloneMapping {
 
     @Override
     public String toString() {
-        return isDropped() ? "" : "" + alignmentsId + " -> " + cloneIndex + " " + (isPreClustered() ? "p" : "") + (isClustered() ? "c" : "") + (isMapped() ? "m" : "");
+        return isDropped() ? "" : "" + preCloneIdx + " -> " + cloneIndex + " " + (isPreClustered() ? "p" : "") + (isClustered() ? "c" : "") + (isMapped() ? "m" : "");
     }
 
     @Override
@@ -103,14 +103,14 @@ public final class ReadToCloneMapping {
 
         ReadToCloneMapping that = (ReadToCloneMapping) o;
 
-        if (alignmentsId != that.alignmentsId) return false;
+        if (preCloneIdx != that.preCloneIdx) return false;
         if (cloneIndex != that.cloneIndex) return false;
         return mappingType == that.mappingType;
     }
 
     @Override
     public int hashCode() {
-        int result = (int) (alignmentsId ^ (alignmentsId >>> 32));
+        int result = (int) (preCloneIdx ^ (preCloneIdx >>> 32));
         result = 31 * result + cloneIndex;
         result = 31 * result + (int) mappingType;
         return result;
@@ -217,7 +217,7 @@ public final class ReadToCloneMapping {
             int c;
             if ((c = Integer.compare(o1.cloneIndex, o2.cloneIndex)) != 0)
                 return c;
-            if ((c = Long.compare(o1.alignmentsId, o2.alignmentsId)) != 0)
+            if ((c = Long.compare(o1.preCloneIdx, o2.preCloneIdx)) != 0)
                 return c;
             return Byte.compare(o1.mappingType, o2.mappingType);
         }
@@ -238,7 +238,7 @@ public final class ReadToCloneMapping {
         @Override
         public int compare(ReadToCloneMapping o1, ReadToCloneMapping o2) {
             int c;
-            if ((c = Long.compare(o1.alignmentsId, o2.alignmentsId)) != 0)
+            if ((c = Long.compare(o1.preCloneIdx, o2.preCloneIdx)) != 0)
                 return c;
             if ((c = Integer.compare(o1.cloneIndex, o2.cloneIndex)) != 0)
                 return c;

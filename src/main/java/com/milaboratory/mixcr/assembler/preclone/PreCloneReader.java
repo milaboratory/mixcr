@@ -77,7 +77,6 @@ public interface PreCloneReader extends AutoCloseable {
             public OutputPortWithProgress<VDJCAlignments> readAlignments() {
                 Object sync = new Object();
                 AtomicLong idGenerator = new AtomicLong();
-                // noinspection resource
                 OutputPortWithProgress<VDJCAlignments> reader = alignmentsReader.readAlignments();
                 return new OutputPortWithProgress<VDJCAlignments>() {
                     @Override
@@ -93,7 +92,7 @@ public interface PreCloneReader extends AutoCloseable {
                                 return null;
 
 
-                            if(!alignmentPredicate(al))
+                            if(alignmentPredicate(al))
                                 al = al.withCloneIndexAndMappingType(idGenerator.getAndIncrement(), (byte) 0)
                                         .setAlignmentsIndex(al.getAlignmentsIndex());
 

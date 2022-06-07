@@ -49,8 +49,15 @@ public final class AlignmentsMappingMerger implements OutputPortCloseable<VDJCAl
             assert readToCloneMappings.take() == null;
             return null;
         }
+
+        // here cloneIndex is set by a pre-clone block
+        // -1 == clone not included into any pre-clone
+
+        if (al.getCloneIndex() == -1)
+            return al;
         ReadToCloneMapping m = readToCloneMappings.take();
-        assert m.alignmentsId == al.getAlignmentsIndex();
+        assert m.getPreCloneIdx() == al.getCloneIndex();
+
         return al.setMapping(m);
     }
 
