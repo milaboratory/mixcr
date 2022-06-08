@@ -1,7 +1,6 @@
 package com.milaboratory.mixcr.trees
 
 import com.google.common.collect.Lists
-import com.milaboratory.mixcr.trees.Tree.NodeLink
 import com.milaboratory.mixcr.trees.Tree.NodeWithParent
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.Observed
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed
@@ -370,8 +369,7 @@ class TreeBuilderByAncestorsTest {
             .map { it.node }
             .filter { it.content is Reconstructed<*, *> }
             .filter { (it.content as Reconstructed).content == parseNode("454") }
-            .findFirst()
-            .orElseThrow { IllegalArgumentException() }
+            .first()
         val observedChild = reconstructedNodeEqualToObserved.links.stream()
             .filter { it.distance == BigDecimal.ZERO }
             .map { it.node }
@@ -444,7 +442,7 @@ class TreeBuilderByAncestorsTest {
         val treeBuilder = treeBuilder(root.size)
         original.allNodes()
             .map { it.node.content }
-            .sorted(Comparator.comparing { lead: List<Int> -> distance(root, lead) }
+            .sortedWith(Comparator.comparing { lead: List<Int> -> distance(root, lead) }
                 .reversed())
             .forEach { toAdd: List<Int> ->
                 if (print) {
@@ -635,7 +633,7 @@ class TreeBuilderByAncestorsTest {
             .map { it.distance }
             .filter { obj -> Objects.nonNull(obj) }
             .map { it!! }
-            .reduce(BigDecimal.ZERO) { obj: BigDecimal, augend: BigDecimal? -> obj.add(augend) }
+            .fold(BigDecimal.ZERO) { obj: BigDecimal, toAdd: BigDecimal -> obj.add(toAdd) }
     }
 
     private fun withoutReconstructed(original: Tree<ObservedOrReconstructed<List<Int>, List<Int>>>): Tree<List<Int>> {
@@ -678,8 +676,8 @@ class TreeBuilderByAncestorsTest {
                 copyTo.addChild(Tree.Node(content))
             } else if (node.content is Reconstructed<*, *>) {
                 val realWithDistanceZero = node.links.stream()
-                    .filter { it: NodeLink<ObservedOrReconstructed<List<Int>, List<Int>>> -> it.distance == BigDecimal.ZERO }
-                    .map { it: NodeLink<ObservedOrReconstructed<List<Int>, List<Int>>> -> it.node.content as Observed<List<Int>, List<Int>> }
+                    .filter { it.distance == BigDecimal.ZERO }
+                    .map { it.node.content as Observed<List<Int>, List<Int>> }
                     .findAny()
                 var nextNode: Tree.Node<List<Int>>
                 if (realWithDistanceZero.isPresent) {
@@ -705,11 +703,11 @@ class TreeBuilderByAncestorsTest {
     }
 
     private fun treeBuilder(sizeOfNode: Int): TreeBuilderByAncestors<List<Int>, List<Int>, List<Int>> {
-        val root = IntStream.range(0, sizeOfNode).mapToObj { it: Int -> 0 }.collect(Collectors.toList())
+        val root = IntStream.range(0, sizeOfNode).mapToObj { 0 }.collect(Collectors.toList())
         return TreeBuilderByAncestors(
             root,
-            { parent: List<Int>?, mutation: List<Int> ->
-                BigDecimal.valueOf(mutation.stream().filter { it: Int -> it != -1 }
+            { _, mutation: List<Int> ->
+                BigDecimal.valueOf(mutation.stream().filter { it != -1 }
                     .count())
             },
             { from: List<Int>, to: List<Int> ->
@@ -746,7 +744,7 @@ class TreeBuilderByAncestorsTest {
                 }
                 result
             },
-            { parent: List<Int>?, child: List<Int> -> child }, 3
+            { _, child: List<Int> -> child }, 3
         )
     }
 

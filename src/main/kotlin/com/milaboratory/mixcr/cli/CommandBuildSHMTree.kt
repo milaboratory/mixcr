@@ -38,7 +38,7 @@ import com.milaboratory.core.mutations.MutationsUtil.MutationNt2AADescriptor
 import com.milaboratory.core.sequence.AminoAcidSequence
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSetIO
-import com.milaboratory.mixcr.trees.CloneOrFoundAncestor
+import com.milaboratory.mixcr.trees.CloneOrFoundAncestorOld
 import com.milaboratory.mixcr.trees.ClusteringCriteria.DefaultClusteringCriteria
 import com.milaboratory.mixcr.trees.DebugInfo
 import com.milaboratory.mixcr.trees.NewickTreePrinter
@@ -60,7 +60,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.function.Function
-import java.util.stream.Collectors
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import kotlin.io.path.writeText
@@ -221,7 +220,7 @@ class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
         val nodesTable = PrintStream(nodesTableFile)
         val allColumnNames = columnsThatDependOnNode.keys + columnsThatDependOnTree.keys
         XSV.writeXSVHeaders(nodesTable, allColumnNames, "\t")
-        val printer = NewickTreePrinter<CloneOrFoundAncestor>(
+        val printer = NewickTreePrinter<CloneOrFoundAncestorOld>(
             nameExtractor = { it.content.id.toString() },
             printDistances = true,
             printOnlyLeafNames = false
@@ -234,7 +233,7 @@ class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
                     .mapValues { (_, function) -> { function.apply(treeWithMeta) } }
                 val nodes = treeWithMeta.tree
                     .allNodes()
-                    .collect(Collectors.toList())
+                    .toList()
                 XSV.writeXSVBody(nodesTable, nodes, columns, "\t")
                 val treeFile = outputDirInTmp.toPath().resolve(treeWithMeta.treeId.encode() + ".tree").toFile()
                 treeFile.toPath().writeText(printer.print(treeWithMeta.tree))
@@ -283,8 +282,8 @@ class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
 
     companion object {
         const val BUILD_SHM_TREE_COMMAND_NAME = "shm_tree"
-        private val columnsThatDependOnNode: Map<String, (NodeWithParent<CloneOrFoundAncestor>) -> Any?> =
-            ImmutableMap.builder<String, (NodeWithParent<CloneOrFoundAncestor>) -> Any?>()
+        private val columnsThatDependOnNode: Map<String, (NodeWithParent<CloneOrFoundAncestorOld>) -> Any?> =
+            ImmutableMap.builder<String, (NodeWithParent<CloneOrFoundAncestorOld>) -> Any?>()
                 .put("id") { it.node.content.id }
                 .put("parentId") { it.parent?.content?.id }
                 .put("cloneId") { it.node.content.cloneId }
@@ -301,49 +300,49 @@ class CommandBuildSHMTree : ACommandWithOutputMiXCR() {
                     }
                 }
                 .put("CDR3_VMutations_FromGermline") {
-                    it.node.content.CDR3_VMutations(CloneOrFoundAncestor.Base.FromGermline)
+                    it.node.content.CDR3_VMutations(CloneOrFoundAncestorOld.Base.FromGermline)
                 }
                 .put("CDR3_VMutations_FromParent") {
-                    it.node.content.CDR3_VMutations(CloneOrFoundAncestor.Base.FromParent)
+                    it.node.content.CDR3_VMutations(CloneOrFoundAncestorOld.Base.FromParent)
                 }
                 .put("CDR3_VMutations_FromRoot") {
-                    it.node.content.CDR3_VMutations(CloneOrFoundAncestor.Base.FromReconstructedRoot)
+                    it.node.content.CDR3_VMutations(CloneOrFoundAncestorOld.Base.FromReconstructedRoot)
                 }
                 .put("CDR3_AA_VMutations_FromGermline") {
-                    it.node.content.CDR3_AA_VMutations(CloneOrFoundAncestor.Base.FromGermline).asString()
+                    it.node.content.CDR3_AA_VMutations(CloneOrFoundAncestorOld.Base.FromGermline).asString()
                 }
                 .put("CDR3_AA_VMutations_FromParent") {
-                    it.node.content.CDR3_AA_VMutations(CloneOrFoundAncestor.Base.FromParent).asString()
+                    it.node.content.CDR3_AA_VMutations(CloneOrFoundAncestorOld.Base.FromParent).asString()
                 }
                 .put("CDR3_AA_VMutations_FromRoot") {
-                    it.node.content.CDR3_AA_VMutations(CloneOrFoundAncestor.Base.FromReconstructedRoot).asString()
+                    it.node.content.CDR3_AA_VMutations(CloneOrFoundAncestorOld.Base.FromReconstructedRoot).asString()
                 }
                 .put("CDR3_JMutations_FromGermline") {
-                    it.node.content.CDR3_JMutations(CloneOrFoundAncestor.Base.FromGermline)
+                    it.node.content.CDR3_JMutations(CloneOrFoundAncestorOld.Base.FromGermline)
                 }
                 .put("CDR3_JMutations_FromParent") {
-                    it.node.content.CDR3_JMutations(CloneOrFoundAncestor.Base.FromParent)
+                    it.node.content.CDR3_JMutations(CloneOrFoundAncestorOld.Base.FromParent)
                 }
                 .put("CDR3_JMutations_FromRoot") {
-                    it.node.content.CDR3_JMutations(CloneOrFoundAncestor.Base.FromReconstructedRoot)
+                    it.node.content.CDR3_JMutations(CloneOrFoundAncestorOld.Base.FromReconstructedRoot)
                 }
                 .put("CDR3_AA_JMutations_FromGermline") {
-                    it.node.content.CDR3_AA_JMutations(CloneOrFoundAncestor.Base.FromGermline).asString()
+                    it.node.content.CDR3_AA_JMutations(CloneOrFoundAncestorOld.Base.FromGermline).asString()
                 }
                 .put("CDR3_AA_JMutations_FromParent") {
-                    it.node.content.CDR3_AA_JMutations(CloneOrFoundAncestor.Base.FromParent).asString()
+                    it.node.content.CDR3_AA_JMutations(CloneOrFoundAncestorOld.Base.FromParent).asString()
                 }
                 .put("CDR3_AA_JMutations_FromRoot") {
-                    it.node.content.CDR3_AA_JMutations(CloneOrFoundAncestor.Base.FromReconstructedRoot).asString()
+                    it.node.content.CDR3_AA_JMutations(CloneOrFoundAncestorOld.Base.FromReconstructedRoot).asString()
                 }
                 .put("CDR3_NDN_FromGermline") {
-                    it.node.content.CDR3_NDNMutations(CloneOrFoundAncestor.Base.FromGermline)
+                    it.node.content.CDR3_NDNMutations(CloneOrFoundAncestorOld.Base.FromGermline)
                 }
                 .put("CDR3_NDN_FromParent") {
-                    it.node.content.CDR3_NDNMutations(CloneOrFoundAncestor.Base.FromParent)
+                    it.node.content.CDR3_NDNMutations(CloneOrFoundAncestorOld.Base.FromParent)
                 }
                 .put("CDR3_NDN_FromRoot") {
-                    it.node.content.CDR3_NDNMutations(CloneOrFoundAncestor.Base.FromReconstructedRoot)
+                    it.node.content.CDR3_NDNMutations(CloneOrFoundAncestorOld.Base.FromReconstructedRoot)
                 }
                 .put("CGene") { it.node.content.CGeneName }
                 .build()

@@ -92,7 +92,7 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
     ): Action {
         val nearestNodes = tree.allNodes()
             .filter { it.node.content is Reconstructed<*, *> }
-            .sorted(Comparator.comparing { compareWith ->
+            .sortedWith(Comparator.comparing { compareWith ->
                 val reconstructed = compareWith.node.content as Reconstructed<T, E>
                 val nodeContent = reconstructed.content
                 distance(
@@ -100,79 +100,76 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
                     mutationsBetween(nodeContent, addedAsAncestor)
                 ).add(reconstructed.minDistanceFromObserved)
             })
-            .limit(countOfNodesToProbe.toLong())
-            .collect(Collectors.toList())
-        val possibleActions =
-            nearestNodes.stream().flatMap { nodeWithParent ->
-                val chosenNode = nodeWithParent.node
-                //search for siblings with common mutations with the added node
-                val siblingToMergeWith: Optional<Replace?> = chosenNode.links.stream()
-                    .filter { it.node.content is Reconstructed<*, *> }
-                    .map { link ->
-                        replaceChild(
-                            chosenNode,
-                            link.node,
-                            link.distance,
-                            addedAsAncestor,
-                            nodeGenerator
-                        )
-                    }
-                    .filter { Objects.nonNull(it) } //choose a sibling with max score of common mutations
-                    .max(
-                        Comparator.comparing<Replace, BigDecimal> { it.distanceFromParentToCommon }
-                    )
-                if (siblingToMergeWith.isPresent) {
-                    //the added node (A), the chosen node (B), the sibling (D) has common ancestor (C) with A
-                    //
-                    //       P                   P
-                    //       |                   |
-                    //     --*--               --*--
-                    //     |   |               |   |
-                    //     K   B      ==>      K   B
-                    //         |                   |
-                    //       --*--               --*--
-                    //       |   |               |   |
-                    //       R   D               R   C
-                    //                               |
-                    //                             --*--
-                    //                             |   |
-                    //                             A   D
-                    //
-                    // R and C has no common ancestors because R and D haven't one
-                    return@flatMap siblingToMergeWith.stream()
-                } else {
-                    //the added node (A), the chosen node (B), no siblings with common ancestors
-                    //
-                    //       P                   P
-                    //       |                   |
-                    //     --*--               --*--
-                    //     |   |               |   |
-                    //     K   B      ==>      K   B
-                    //         |                   |
-                    //       --*--               --*-----
-                    //       |   |               |   |  |
-                    //       R   T               R   T  A
-                    val insertAsParent = if (nodeWithParent.parent != null) {
-                        Stream.of(
-                            replaceChild(
-                                nodeWithParent.parent,
-                                chosenNode,
-                                nodeWithParent.distance!!,
-                                addedAsAncestor,
-                                nodeGenerator
-                            )
-                        ).filter { Objects.nonNull(it) }
-                    } else {
-                        Stream.empty()
-                    }
-                    return@flatMap Stream.concat(
-                        Stream.of(insertAsDirectDescendant(chosenNode, addedAsAncestor, nodeGenerator)),
-                        insertAsParent
+            .take(countOfNodesToProbe)
+            .toList()
+        val possibleActions = nearestNodes.flatMap { nodeWithParent ->
+            val chosenNode = nodeWithParent.node
+            //search for siblings with common mutations with the added node
+            val siblingToMergeWith: Replace? = chosenNode.links
+                .filter { it.node.content is Reconstructed<*, *> }
+                .map { link ->
+                    replaceChild(
+                        chosenNode,
+                        link.node,
+                        link.distance,
+                        addedAsAncestor,
+                        nodeGenerator
                     )
                 }
+                .filter { Objects.nonNull(it) } //choose a sibling with max score of common mutations
+                .maxWithOrNull(
+                    Comparator.comparing<Replace, BigDecimal> { it.distanceFromParentToCommon }
+                )
+            if (siblingToMergeWith != null) {
+                //the added node (A), the chosen node (B), the sibling (D) has common ancestor (C) with A
+                //
+                //       P                   P
+                //       |                   |
+                //     --*--               --*--
+                //     |   |               |   |
+                //     K   B      ==>      K   B
+                //         |                   |
+                //       --*--               --*--
+                //       |   |               |   |
+                //       R   D               R   C
+                //                               |
+                //                             --*--
+                //                             |   |
+                //                             A   D
+                //
+                // R and C has no common ancestors because R and D haven't one
+                return@flatMap listOf(siblingToMergeWith)
+            } else {
+                //the added node (A), the chosen node (B), no siblings with common ancestors
+                //
+                //       P                   P
+                //       |                   |
+                //     --*--               --*--
+                //     |   |               |   |
+                //     K   B      ==>      K   B
+                //         |                   |
+                //       --*--               --*-----
+                //       |   |               |   |  |
+                //       R   T               R   T  A
+                val insertAsParent = if (nodeWithParent.parent != null) {
+                    replaceChild(
+                        nodeWithParent.parent,
+                        chosenNode,
+                        nodeWithParent.distance!!,
+                        addedAsAncestor,
+                        nodeGenerator
+                    )
+                } else {
+                    null
+                }
+                return@flatMap listOfNotNull(
+                    insertAsDirectDescendant(chosenNode, addedAsAncestor, nodeGenerator),
+                    insertAsParent
+                )
             }
+        }
         //optimize sum of distances from observed nodes
-        return possibleActions.min(ACTION_COMPARATOR).orElseThrow { IllegalArgumentException() }!!
+        return possibleActions.minWithOrNull(ACTION_COMPARATOR)!!
     }
 
     fun distanceFromRootToObserved(node: T): BigDecimal {

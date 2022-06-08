@@ -32,7 +32,6 @@ package com.milaboratory.mixcr.trees
 import java.math.BigDecimal
 import java.util.function.Consumer
 import java.util.stream.Collectors
-import java.util.stream.Stream
 
 /**
  *
@@ -44,12 +43,7 @@ class Tree<T : Any>(
         return Tree(root.copy())
     }
 
-    fun allNodes(): Stream<NodeWithParent<T>> {
-        return Stream.concat(
-            Stream.of(NodeWithParent(null, root, null)),
-            root.allDescendants()
-        )
-    }
+    fun allNodes(): Sequence<NodeWithParent<T>> = sequenceOf(NodeWithParent(null, root, null)) + root.allDescendants()
 
     fun <R : Any> map(mapper: (T?, T) -> R): Tree<R> {
         return Tree(root.map(null, mapper))
@@ -89,14 +83,8 @@ class Tree<T : Any>(
             children.add(NodeLink(substitution, distance))
         }
 
-        fun allDescendants(): Stream<NodeWithParent<T>> {
-            return children.stream()
-                .flatMap { link: NodeLink<T> ->
-                    Stream.concat(
-                        Stream.of(NodeWithParent(this, link.node, link.distance)),
-                        link.node.allDescendants()
-                    )
-                }
+        fun allDescendants(): Sequence<NodeWithParent<T>> = children.asSequence().flatMap { link ->
+            sequenceOf(NodeWithParent(this, link.node, link.distance)) + link.node.allDescendants()
         }
 
         fun <R> map(parent: T?, mapper: (T?, T) -> R): Node<R> {

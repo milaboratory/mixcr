@@ -164,7 +164,10 @@ class AllelesBuilder(
                 )
             }
             .toList()
-        val allelesSearcher: AllelesSearcher = TIgGERAllelesSearcher()
+        val allelesSearcher: AllelesSearcher = TIgGERAllelesSearcher(
+            scoring(geneType),
+            clusterByTheSameGene.cluster.first().getBestHit(geneType).alignments[0].sequence1
+        )
 
         //TODO search for mutations in CDR3
         // iterate over positions in CDR3 and align every clone to germline

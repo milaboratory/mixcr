@@ -1,7 +1,7 @@
 package com.milaboratory.mixcr.trees
 
 import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.trees.CloneOrFoundAncestor.CloneInfo
+import com.milaboratory.mixcr.trees.CloneOrFoundAncestorOld.CloneInfo
 import com.milaboratory.mixcr.trees.MutationsUtils.mutationsBetween
 import com.milaboratory.mixcr.trees.Tree.NodeWithParent
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed
@@ -10,7 +10,6 @@ import io.repseq.core.GeneType
 import java.math.BigDecimal
 import java.util.*
 import java.util.stream.Collectors
-import java.util.stream.Stream
 
 class TreeWithMetaBuilder(
     private val treeBuilder: TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, SyntheticNode, MutationsDescription>,
@@ -32,22 +31,18 @@ class TreeWithMetaBuilder(
      */
     fun getEffectiveParent(clone: Clone): SyntheticNode = treeBuilder.tree.allNodes()
         .filter { nodeWithParent ->
-            nodeWithParent.node.links.stream()
-                .map { link ->
+            nodeWithParent.node.links
+                .mapNotNull { link ->
                     link.node.content.convert(
-                        { Optional.of(it.clone.clone.id) },
-                        { Optional.empty() })
+                        { it.clone.clone.id },
+                        { null })
                 }
-                .flatMap { obj: Optional<Int> -> obj.stream() }
-                .anyMatch { cloneId: Int -> clone.id == cloneId }
+                .any { cloneId: Int -> clone.id == cloneId }
         }
         .map { it.parent }
-        .findAny()
-        .orElseThrow { IllegalStateException("clone not found in the tree") }!!
-        .content.convert(
-            { Optional.empty() },
-            { Optional.of(it) })
-        .orElseThrow { IllegalStateException() }
+        .filterNotNull()
+        .first()
+        .content.convert({ null }, { it })!!
 
     fun rebaseClone(clone: CloneWithMutationsFromVJGermline): CloneWithMutationsFromReconstructedRoot =
         clonesRebase.rebaseClone(rootInfo, clone.mutations, clone.cloneWrapper)
@@ -66,7 +61,7 @@ class TreeWithMetaBuilder(
         return oldestReconstructedAncestor.content
     }
 
-    fun buildResult(): Tree<CloneOrFoundAncestor> {
+    fun buildResult(): Tree<CloneOrFoundAncestorOld> {
         val reconstructedRoot = oldestReconstructedAncestor()
         val fromGermlineToReconstructedRoot = reconstructedRoot.fromRootToThis
         return treeBuilder.tree
@@ -101,7 +96,7 @@ class TreeWithMetaBuilder(
                         )
                     }
                 ) {
-                    CloneOrFoundAncestor.AncestorInfo(
+                    CloneOrFoundAncestorOld.AncestorInfo(
                         node.id,
                         nodeAsMutationsFromGermline,
                         fromGermlineToReconstructedRoot,
@@ -117,9 +112,8 @@ class TreeWithMetaBuilder(
         return parent.convert({ it.mutationsSet }) { it.fromRootToThis }
     }
 
-    fun allNodes(): Stream<NodeWithParent<ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, SyntheticNode>>> {
-        return treeBuilder.tree.allNodes()
-    }
+    fun allNodes(): Sequence<NodeWithParent<ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, SyntheticNode>>> =
+        treeBuilder.tree.allNodes()
 
     fun bestAction(rebasedClone: CloneWithMutationsFromReconstructedRoot): TreeBuilderByAncestors.Action {
         val bestAction = treeBuilder.bestActionForObserved(rebasedClone)

@@ -68,8 +68,7 @@ class BuildSHMTreeReport : AbstractCommandReport() {
             }
         val clonesCountInTrees = debugInfosAfter
             .filter { it["cloneId"] != null }
-            .groupingBy { it.treeId() }
-            .eachCount()
+            .groupingBy { it.treeId() }.eachCount()
             .values
         val NDNsByTrees = debugInfosAfter
             .filter { it["id"] != "0" }

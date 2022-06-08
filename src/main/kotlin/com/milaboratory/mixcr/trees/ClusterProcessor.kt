@@ -37,11 +37,8 @@ import io.repseq.core.ReferencePoint
 import java.math.BigDecimal
 import java.util.*
 import java.util.concurrent.ThreadLocalRandom
-import java.util.function.Function
 import java.util.function.Supplier
-import java.util.stream.Collectors
 import java.util.stream.IntStream
-import java.util.stream.Stream
 import kotlin.math.max
 import kotlin.math.min
 
@@ -59,10 +56,10 @@ internal class ClusterProcessor private constructor(
 ) {
     fun applyStep(stepName: BuildSHMTreeStep, currentTrees: List<TreeWithMetaBuilder>): StepResult =
         stepByName(stepName).next(currentTrees) {
-            val clonesInTrees = currentTrees.stream()
-                .flatMap { it.clonesAdditionHistory.stream() }
-                .collect(Collectors.toSet())
-            rebaseFromGermline(originalCluster.cluster.stream().filter { !clonesInTrees.contains(it.clone.id) })
+            val clonesInTrees = currentTrees
+                .flatMap { it.clonesAdditionHistory }
+                .toSet()
+            rebaseFromGermline(originalCluster.cluster.asSequence().filter { !clonesInTrees.contains(it.clone.id) })
         }
 
     private fun stepByName(stepName: BuildSHMTreeStep): Step = when (stepName) {
@@ -100,36 +97,28 @@ internal class ClusterProcessor private constructor(
      */
     fun buildTreeTopParts(relatedAllelesMutations: Map<String, List<Mutations<NucleotideSequence>>>): StepResult {
         //use only clones that are at long distance from any germline
-        val clonesThatNotMatchAnyGermline = originalCluster.cluster.stream()
+        val clonesThatNotMatchAnyGermline = originalCluster.cluster.asSequence()
             .filter { !hasVJPairThatMatchesWithGermline(it.clone) }
         val clones = rebaseFromGermline(clonesThatNotMatchAnyGermline)
-        val result = clusterByCommonMutations(clones, relatedAllelesMutations)
-            .stream()
+        val result = clusterByCommonMutations(clones, relatedAllelesMutations).asSequence()
             .filter { it.cluster.size > 1 }
-            .map { cluster: Cluster<CloneWithMutationsFromVJGermline> -> buildATreeWithDecisionsInfo(cluster) }
-            .collect(Collectors.toList())
+            .map { cluster -> buildATreeWithDecisionsInfo(cluster) }
+            .toList()
         return buildStepResult(
             result.flatMap { it.first }.toMap(),
             result.map { it.second }.toList()
         )
     }
 
-    private fun hasVJPairThatMatchesWithGermline(clone: Clone?): Boolean {
-        return Arrays.stream(clone!!.getHits(Variable))
-            .flatMap { VHit: VDJCHit ->
-                Arrays.stream(
-                    clone.getHits(Joining)
-                )
-                    .map { JHit: VDJCHit -> mutationsCount(VHit) + mutationsCount(JHit) }
+    private fun hasVJPairThatMatchesWithGermline(clone: Clone): Boolean {
+        return clone.getHits(Variable)
+            .flatMap { VHit ->
+                clone.getHits(Joining).map { JHit -> mutationsCount(VHit) + mutationsCount(JHit) }
             }
-            .anyMatch { it < parameters.commonMutationsCountForClustering }
+            .any { it < parameters.commonMutationsCountForClustering }
     }
 
-    private fun mutationsCount(hit: VDJCHit): Int {
-        return Arrays.stream(hit.alignments)
-            .mapToInt { it.absoluteMutations.size() }
-            .sum()
-    }
+    private fun mutationsCount(hit: VDJCHit): Int = hit.alignments.sumOf { it.absoluteMutations.size() }
 
     fun restore(resultTrees: List<TreeWithMetaBuilder.Snapshot>): List<TreeWithMetaBuilder> {
         val clonesInTrees = resultTrees
@@ -154,15 +143,13 @@ internal class ClusterProcessor private constructor(
         }
     }
 
-    private fun rebaseFromGermline(clones: Stream<CloneWrapper>): List<CloneWithMutationsFromVJGermline> {
-        return clones
-            .filter { cloneWrapper ->
-                (clusterInfo.commonVAlignmentRanges.containsCloneWrapper(cloneWrapper)
-                    && clusterInfo.commonJAlignmentRanges.containsCloneWrapper(cloneWrapper))
-            }
-            .map { cloneWrapper -> rebaseFromGermline(cloneWrapper) }
-            .collect(Collectors.toList())
-    }
+    private fun rebaseFromGermline(clones: Sequence<CloneWrapper>): List<CloneWithMutationsFromVJGermline> = clones
+        .filter { cloneWrapper ->
+            (clusterInfo.commonVAlignmentRanges.containsCloneWrapper(cloneWrapper)
+                && clusterInfo.commonJAlignmentRanges.containsCloneWrapper(cloneWrapper))
+        }
+        .map { cloneWrapper -> rebaseFromGermline(cloneWrapper) }
+        .toList()
 
     private fun rebaseFromGermline(cloneWrapper: CloneWrapper): CloneWithMutationsFromVJGermline {
         val CDR3 = cloneWrapper.getFeature(GeneFeature.CDR3)!!.sequence
@@ -209,9 +196,9 @@ internal class ClusterProcessor private constructor(
     private fun combineTrees(originalTrees: List<TreeWithMetaBuilder>): StepResult {
         val clonesRebase = ClonesRebase(VSequence1, VScoring, NDNScoring, JSequence1, JScoring)
         val result: MutableList<TreeWithMetaBuilder> = ArrayList()
-        val originalTreesCopy = originalTrees.stream()
-            .sorted(Comparator.comparingInt { obj: TreeWithMetaBuilder -> obj.clonesCount() }.reversed())
-            .collect(Collectors.toList())
+        val originalTreesCopy = originalTrees
+            .sortedByDescending { it.clonesCount() }
+            .toMutableList()
         //trying to grow the biggest trees first
         while (originalTreesCopy.isNotEmpty()) {
             var treeToGrow = originalTreesCopy[0]
@@ -225,22 +212,18 @@ internal class ClusterProcessor private constructor(
                 val metric = min(distance_1.toDouble(), distance_2.toDouble())
                 if (metric <= parameters.thresholdForCombineTrees) {
                     treeToGrow = buildATree(Cluster(
-                        Stream.of(treeToGrow, treeToAttach)
-                            .flatMap { treeWithMetaBuilder ->
-                                treeWithMetaBuilder.allNodes()
-                                    .map { it.node }
-                                    .map { node ->
-                                        node.content.convert({ value -> Optional.of(value) }) { Optional.empty() }
-                                    }
-                                    .flatMap { it.stream() }
-                                    .map {
-                                        CloneWithMutationsFromVJGermline(
-                                            it.mutationsFromVJGermline,
-                                            it.clone
-                                        )
-                                    }
-                            }
-                            .collect(Collectors.toList())
+                        listOf(treeToGrow, treeToAttach).flatMap { treeWithMetaBuilder ->
+                            treeWithMetaBuilder.allNodes()
+                                .map { it.node }
+                                .map { node -> node.content.convert({ it }) { null } }
+                                .filterNotNull()
+                                .map {
+                                    CloneWithMutationsFromVJGermline(
+                                        it.mutationsFromVJGermline,
+                                        it.clone
+                                    )
+                                }
+                        }
                     ))
                     originalTreesCopy.removeAt(i)
                 }
@@ -275,10 +258,10 @@ internal class ClusterProcessor private constructor(
     ): StepResult {
         val decisions: MutableMap<Int, TreeWithMetaBuilder.DecisionInfo> = HashMap()
         val resultTrees = originalTrees.map { it.copy() }
-        clonesNotInClusters.get().stream()
+        clonesNotInClusters.get().asSequence()
             .filter { clone -> clone.mutations.VJMutationsCount < parameters.commonMutationsCountForClustering }
             .forEach { clone ->
-                val bestTreeToAttach = resultTrees.stream()
+                val bestTreeToAttach = resultTrees
                     .map { tree: TreeWithMetaBuilder ->
                         val rebasedClone = tree.rebaseClone(clone)
                         val oldestAncestorOfTreeToGrow = tree.oldestReconstructedAncestor()
@@ -301,11 +284,11 @@ internal class ClusterProcessor private constructor(
                         val metric_2 = (maxScore - score_2) / NDNLength.toDouble()
                         Pair(min(metric_1, metric_2)) { tree.addClone(rebasedClone) }
                     }
-                    .min(Comparator.comparing { it.first })
-                if (bestTreeToAttach.isPresent) {
-                    val metric = bestTreeToAttach.get().first
+                    .minByOrNull { it.first }
+                if (bestTreeToAttach != null) {
+                    val metric = bestTreeToAttach.first
                     if (metric <= parameters.thresholdForCombineByNDN) {
-                        bestTreeToAttach.get().second()
+                        bestTreeToAttach.second()
                         decisions[clone.cloneWrapper.clone.id] = MetricDecisionInfo(metric)
                     }
                 }
@@ -317,14 +300,14 @@ internal class ClusterProcessor private constructor(
         originalTrees: List<TreeWithMetaBuilder>,
         clonesNotInClustersSupplier: Supplier<List<CloneWithMutationsFromVJGermline>>
     ): StepResult {
-        val result = originalTrees.stream().map { obj: TreeWithMetaBuilder -> obj.copy() }.collect(Collectors.toList())
+        val result = originalTrees.map { it.copy() }
         val decisions: MutableMap<Int, TreeWithMetaBuilder.DecisionInfo> = HashMap()
         val clonesNotInClusters = clonesNotInClustersSupplier.get()
         //try to add as nodes clones that wasn't picked up by clustering
         for (i in clonesNotInClusters.indices.reversed()) {
             val clone = clonesNotInClusters[i]
             if (clone.mutations.VJMutationsCount >= parameters.commonMutationsCountForClustering) {
-                val bestActionAndDistanceFromRoot = result.stream()
+                val bestActionAndDistanceFromRoot = result
                     .map { treeWithMeta: TreeWithMetaBuilder? ->
                         val rebasedClone = treeWithMeta!!.rebaseClone(clone)
                         Pair(
@@ -332,10 +315,10 @@ internal class ClusterProcessor private constructor(
                             treeWithMeta.distanceFromRootToClone(rebasedClone)
                         )
                     }
-                    .min(Comparator.comparing { p -> p.first.changeOfDistance() })
-                if (bestActionAndDistanceFromRoot.isPresent) {
-                    val bestAction = bestActionAndDistanceFromRoot.get().first
-                    val distanceFromRoot = bestActionAndDistanceFromRoot.get().second
+                    .minByOrNull { p -> p.first.changeOfDistance() }
+                if (bestActionAndDistanceFromRoot != null) {
+                    val bestAction = bestActionAndDistanceFromRoot.first
+                    val distanceFromRoot = bestActionAndDistanceFromRoot.second
                     val metric = bestAction.changeOfDistance().toDouble() / distanceFromRoot
                     if (metric <= parameters.thresholdForFreeClones) {
                         decisions[clone.cloneWrapper.clone.id] = MetricDecisionInfo(metric)
@@ -374,16 +357,13 @@ internal class ClusterProcessor private constructor(
             .filter { it.bitCount() > 1 }
             .sortedByDescending { it.bitCount() }
             .forEach { clique ->
-                if (notOverlappedCliques.stream().noneMatch { it.intersects(clique) }) {
+                if (notOverlappedCliques.none { it.intersects(clique) }) {
                     notOverlappedCliques.add(clique)
                 }
             }
         val clusters: MutableList<Cluster<CloneWithMutationsFromVJGermline>> = ArrayList()
         for (clique in notOverlappedCliques) {
-            clusters.add(Cluster(Arrays.stream(clique.bits)
-                .mapToObj { index: Int -> clones[index] }
-                .collect(Collectors.toList())
-            ))
+            clusters.add(Cluster(clique.bits.map { index: Int -> clones[index] }))
         }
         return clusters
     }
@@ -457,24 +437,22 @@ internal class ClusterProcessor private constructor(
 
     private fun buildATreeWithDecisionsInfo(cluster: Cluster<CloneWithMutationsFromVJGermline>): Pair<List<Pair<Int, TreeWithMetaBuilder.DecisionInfo>>, TreeWithMetaBuilder> {
         val treeWithMetaBuilder = buildATree(cluster)
-        val decisionsInfo = cluster.cluster.stream()
-            .map {
-                val effectiveParent = treeWithMetaBuilder.getEffectiveParent(it.cloneWrapper.clone)
-                val VHit = it.cloneWrapper.getHit(Variable)
-                val JHit = it.cloneWrapper.getHit(Joining)
-                Pair(
-                    it.cloneWrapper.clone.id,
-                    ZeroStepDecisionInfo(
-                        effectiveParent.fromRootToThis.VMutations.mutationsCount() +
-                            effectiveParent.fromRootToThis.JMutations.mutationsCount(),
-                        VHit.gene.geneName,
-                        JHit.gene.geneName,
-                        VHit.score,
-                        JHit.score
-                    )
+        val decisionsInfo = cluster.cluster.map {
+            val effectiveParent = treeWithMetaBuilder.getEffectiveParent(it.cloneWrapper.clone)
+            val VHit = it.cloneWrapper.getHit(Variable)
+            val JHit = it.cloneWrapper.getHit(Joining)
+            Pair(
+                it.cloneWrapper.clone.id,
+                ZeroStepDecisionInfo(
+                    effectiveParent.fromRootToThis.VMutations.mutationsCount() +
+                        effectiveParent.fromRootToThis.JMutations.mutationsCount(),
+                    VHit.gene.geneName,
+                    JHit.gene.geneName,
+                    VHit.score,
+                    JHit.score
                 )
-            }
-            .collect(Collectors.toList())
+            )
+        }
         return Pair(decisionsInfo, treeWithMetaBuilder)
     }
 
@@ -648,15 +626,13 @@ internal class ClusterProcessor private constructor(
             score(mutations.VMutationsWithoutCDR3.values, VScoring) +
             maxScore(mutations.VMutationsInCDR3WithoutNDN, VScoring) -
             score(mutations.VMutationsInCDR3WithoutNDN, VScoring)
-        val VLength = mutations.VMutationsWithoutCDR3.values.stream()
-            .mapToInt { it.range.length() }.sum() +
+        val VLength = mutations.VMutationsWithoutCDR3.values.sumOf { it.range.length() } +
             mutations.VMutationsInCDR3WithoutNDN.range.length()
         val JPenalties = maxScore(mutations.JMutationsWithoutCDR3.values, JScoring) -
             score(mutations.JMutationsWithoutCDR3.values, JScoring) +
             maxScore(mutations.JMutationsInCDR3WithoutNDN, JScoring) -
             score(mutations.JMutationsInCDR3WithoutNDN, JScoring)
-        val JLength = mutations.JMutationsWithoutCDR3.values.stream()
-            .mapToInt { it.range.length() }.sum() +
+        val JLength = mutations.JMutationsWithoutCDR3.values.sumOf { it.range.length() } +
             mutations.JMutationsInCDR3WithoutNDN.range.length()
         val NDNPenalties = maxScore(mutations.knownNDN, NDNScoring) - score(mutations.knownNDN, NDNScoring)
         val NDNLength = mutations.knownNDN.range.length()
@@ -706,45 +682,30 @@ internal class ClusterProcessor private constructor(
     private fun mostLikableRangeInCDR3(
         cluster: Cluster<CloneWithMutationsFromVJGermline>,
         rangeSupplier: (CloneWrapper) -> Range
-    ): Range {
-        return cluster.cluster.stream()
-            .sorted(Comparator.comparing { it.mutations.VJMutationsCount })
-            .limit(parameters.topToVoteOnNDNSize.toLong())
-            .map { obj: CloneWithMutationsFromVJGermline -> obj.cloneWrapper }
-            .map(rangeSupplier)
-            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
-            .entries.stream()
-            .max(java.util.Map.Entry.comparingByValue<Range, Long>()
-                .thenComparing(Comparator.comparingInt { (key, _): Map.Entry<Range, Long> -> key.length() }
-                    .reversed()))
-            .map { (key, _) -> key }
-            .orElseThrow { IllegalStateException() }
-    }
+    ): Range = cluster.cluster.asSequence()
+        .sortedBy { it.mutations.VJMutationsCount }
+        .take(parameters.topToVoteOnNDNSize)
+        .map { obj: CloneWithMutationsFromVJGermline -> obj.cloneWrapper }
+        .map(rangeSupplier)
+        .groupingBy { it }.eachCount()
+        .entries
+        .maxWithOrNull(java.util.Map.Entry.comparingByValue<Range, Int>()
+            .thenComparing(Comparator.comparingInt { (key, _): Map.Entry<Range, Int> -> key.length() }
+                .reversed()))!!
+        .key
 
     private fun buildStepResult(
         decisions: Map<Int, TreeWithMetaBuilder.DecisionInfo>,
         trees: List<TreeWithMetaBuilder>
-    ): StepResult {
-        return StepResult(
-            decisions,
-            trees.stream()
-                .map { obj: TreeWithMetaBuilder? -> obj!!.snapshot() }
-                .collect(Collectors.toList()),
-            trees.stream()
-                .flatMap { tree: TreeWithMetaBuilder ->
-                    tree.allNodes()
-                        .filter { it.node.content is Reconstructed<*, *> }
-                        .map { nodeWithParent ->
-                            buildDebugInfo(
-                                decisions,
-                                tree,
-                                nodeWithParent
-                            )
-                        }
-                }
-                .collect(Collectors.toList())
-        )
-    }
+    ): StepResult = StepResult(
+        decisions,
+        trees.map { it.snapshot() },
+        trees.flatMap { tree: TreeWithMetaBuilder ->
+            tree.allNodes()
+                .filter { it.node.content is Reconstructed<*, *> }
+                .map { nodeWithParent -> buildDebugInfo(decisions, tree, nodeWithParent) }
+        }
+    )
 
     private fun buildDebugInfo(
         decisions: Map<Int, TreeWithMetaBuilder.DecisionInfo>,
@@ -753,19 +714,10 @@ internal class ClusterProcessor private constructor(
     ): DebugInfo {
         val nodeContent = nodeWithParent.node
             .content
-            .convert(
-                { Optional.empty() },
-                { Optional.of(it) })
-            .orElseThrow { IllegalArgumentException() }
-        val cloneId = nodeWithParent.node.links.stream()
+            .convert({ null }, { it })!!
+        val cloneId = nodeWithParent.node.links
             .map { it.node }
-            .map { child: Tree.Node<ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, SyntheticNode>> ->
-                child.content.convert(
-                    { Optional.of(it.clone.clone.id) },
-                    { Optional.empty() })
-            }
-            .flatMap { obj -> obj.stream() }
-            .findAny().orElse(null)
+            .firstNotNullOfOrNull { child -> child.content.convert({ it.clone.clone.id }, { null }) }
         var metric: Double? = null
         if (cloneId != null) {
             val decision = decisions[cloneId]
@@ -773,13 +725,9 @@ internal class ClusterProcessor private constructor(
                 metric = decision.metric
             }
         }
-        val parentMutations = Optional.ofNullable(nodeWithParent.parent)
-            .flatMap { parent ->
-                parent.content.convert(
-                    { Optional.empty() },
-                    { Optional.of(it) })
-            }
-            .map { parent -> parent.fromRootToThis }
+        val parentMutations = nodeWithParent.parent
+            ?.content?.convert({ null }, { it })
+            ?.fromRootToThis
         return DebugInfo(
             tree.treeId,
             tree.rootInfo,
@@ -787,12 +735,10 @@ internal class ClusterProcessor private constructor(
             nodeContent.fromRootToThis.JMutations.mutations.keys,
             cloneId,
             nodeWithParent.node.content.id,
-            Optional.ofNullable(nodeWithParent.parent)
-                .map { it.content.id }
-                .orElse(null),
+            nodeWithParent.parent?.content?.id,
             nodeContent.fromRootToThis.NDNMutations.buildSequence(),
             nodeContent.fromRootToThis,
-            parentMutations.orElse(null),
+            parentMutations,
             metric,
             isPublic(tree.rootInfo)
         )
@@ -801,20 +747,10 @@ internal class ClusterProcessor private constructor(
     private fun isPublic(rootInfo: RootInfo): Boolean =
         rootInfo.reconstructedNDN.size() <= parameters.NDNSizeLimitForPublicClones
 
-    fun debugInfos(currentTrees: List<TreeWithMetaBuilder?>?): List<DebugInfo> {
-        return currentTrees!!.stream()
-            .flatMap { tree: TreeWithMetaBuilder? ->
-                tree!!.allNodes()
-                    .filter { it.node.content is Reconstructed }
-                    .map { nodeWithParent ->
-                        buildDebugInfo(
-                            emptyMap(),
-                            tree,
-                            nodeWithParent
-                        )
-                    }
-            }
-            .collect(Collectors.toList())
+    fun debugInfos(currentTrees: List<TreeWithMetaBuilder>): List<DebugInfo> = currentTrees.flatMap { tree ->
+        tree.allNodes()
+            .filter { it.node.content is Reconstructed }
+            .map { nodeWithParent -> buildDebugInfo(emptyMap(), tree, nodeWithParent) }
     }
 
     private interface Step {
@@ -885,7 +821,7 @@ internal class ClusterProcessor private constructor(
                 return chooses.keys.iterator().next()
             }
             val decisionType = chooses.values.iterator().next().javaClass
-            require(chooses.values.stream().allMatch { obj: E -> decisionType.isInstance(obj) })
+            require(chooses.values.all { decisionType.isInstance(it) })
             return when (decisionType) {
                 ZeroStepDecisionInfo::class.java -> makeDecisionForZero(chooses as Map<VJBase, ZeroStepDecisionInfo>)
                 MetricDecisionInfo::class.java -> makeDecisionByMetric(chooses as Map<VJBase, MetricDecisionInfo>)
@@ -893,36 +829,26 @@ internal class ClusterProcessor private constructor(
             }
         }
 
-        private fun makeDecisionByMetric(chooses: Map<VJBase, MetricDecisionInfo>): VJBase {
-            return chooses.entries.stream()
-                .min(Comparator.comparing { (_, value): Map.Entry<VJBase, MetricDecisionInfo> -> value.metric })
-                .orElseThrow { IllegalStateException() }!!
-                .key
-        }
+        private fun makeDecisionByMetric(chooses: Map<VJBase, MetricDecisionInfo>): VJBase = chooses.entries
+            .minByOrNull { (_, value): Map.Entry<VJBase, MetricDecisionInfo> -> value.metric }!!
+            .key
 
         private fun makeDecisionForZero(chooses: Map<VJBase, ZeroStepDecisionInfo>): VJBase {
             val filteredByAlleles =
-                chooses.entries.stream() //group by the same origin VJ pair - group decisions by related alleles
-                    .collect(
-                        Collectors.groupingBy { (_, value) ->
-                            Pair(
-                                value.getGeneName(Variable),
-                                value.getGeneName(Joining)
-                            )
-                        })
-                    .values.stream() //choose allele pair with decision that is most closed to germline
-                    .map { withTheSameGeneBase ->
-                        withTheSameGeneBase.stream()
-                            .min(Comparator.comparing { (_, value) -> value.commonMutationsCount })
+                chooses.entries //group by the same origin VJ pair - group decisions by related alleles
+                    .groupBy { (_, value) ->
+                        Pair(value.getGeneName(Variable), value.getGeneName(Joining))
                     }
-                    .flatMap { obj -> obj.stream() }
+                    .values
+                    .mapNotNull { withTheSameGeneBase ->
+                        withTheSameGeneBase.minByOrNull { (_, value) -> value.commonMutationsCount }
+                    }
                     .map { (key, _) -> key }
-                    .collect(Collectors.toSet())
-            return filteredByAlleles.stream()
-                .max(Comparator.comparing {
+                    .toSet()
+            return filteredByAlleles
+                .maxByOrNull {
                     chooses[it]!!.getScore(Variable) + chooses[it]!!.getScore(Joining)
-                })
-                .orElseThrow { IllegalStateException() }!!
+                }!!
         }
 
         private fun reversedVMutationsCount(fromRootToBase: SyntheticNode, mutations: MutationsDescription): Int {
@@ -961,13 +887,12 @@ internal class ClusterProcessor private constructor(
 
         private fun minRangeInCDR3(
             cluster: Cluster<CloneWrapper>,
-            rangeSupplier: Function<CloneWrapper, Range>
+            rangeSupplier: (CloneWrapper) -> Range
         ): Range {
-            //TODO try to use alignment to calculate most possible position
-            return cluster.cluster.stream()
+            //TODO try to align to calculate most possible position
+            return cluster.cluster
                 .map(rangeSupplier)
-                .min(Comparator.comparing { obj: Range -> obj.length() })
-                .orElseThrow { IllegalStateException() }
+                .minByOrNull { it.length() }!!
         }
 
         private fun VRangeInCDR3(clone: CloneWrapper): Range {
@@ -978,12 +903,10 @@ internal class ClusterProcessor private constructor(
             )
         }
 
-        private fun JRangeInCDR3(clone: CloneWrapper): Range {
-            return Range(
-                clone.getHit(Joining).getAlignment(0).sequence1Range.lower,
-                clone.getRelativePosition(Joining, ReferencePoint.CDR3End)
-            )
-        }
+        private fun JRangeInCDR3(clone: CloneWrapper): Range = Range(
+            clone.getHit(Joining).getAlignment(0).sequence1Range.lower,
+            clone.getRelativePosition(Joining, ReferencePoint.CDR3End)
+        )
 
         /**
          * sum score of given mutations
@@ -991,9 +914,7 @@ internal class ClusterProcessor private constructor(
         private fun score(
             mutationsWithRanges: Collection<MutationsWithRange>,
             scoring: AlignmentScoring<NucleotideSequence>
-        ): Double = mutationsWithRanges.stream()
-            .mapToDouble { mutations -> score(mutations, scoring).toDouble() }
-            .sum()
+        ): Double = mutationsWithRanges.sumOf { mutations -> score(mutations, scoring).toDouble() }
 
         private fun score(mutations: MutationsWithRange, scoring: AlignmentScoring<NucleotideSequence>): Int =
             AlignmentUtils.calculateScore(
@@ -1005,9 +926,7 @@ internal class ClusterProcessor private constructor(
         private fun maxScore(
             mutationsBetween: Collection<MutationsWithRange>,
             scoring: AlignmentScoring<NucleotideSequence>
-        ): Double = mutationsBetween.stream()
-            .mapToDouble { mutations -> maxScore(mutations, scoring).toDouble() }
-            .sum()
+        ): Double = mutationsBetween.sumOf { mutations -> maxScore(mutations, scoring).toDouble() }
 
         private fun maxScore(mutations: MutationsWithRange, scoring: AlignmentScoring<NucleotideSequence>): Int =
             maxScore(mutations.sequence1, scoring)
