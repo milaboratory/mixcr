@@ -29,7 +29,6 @@
  */
 package com.milaboratory.mixcr.cli;
 
-import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.util.StatusReporter;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -42,13 +41,11 @@ import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerParameters;
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerRunner;
 import com.milaboratory.mixcr.assembler.preclone.PreCloneReader;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.mixcr.basictypes.tag.TagType;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.*;
-import gnu.trove.iterator.TObjectDoubleIterator;
 import io.repseq.core.*;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -251,8 +248,8 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
 
                 // TODO >>>>>>>>>>>>>>
                 PreCloneReader preClones;
-                if (tagsInfo.hasTagsWithType(TagType.CellTag) || tagsInfo.hasTagsWithType(TagType.MoleculeTag)) {
-                    int depth = tagsInfo.getDepthFor(cellLevel ? TagType.CellTag : TagType.MoleculeTag);
+                if (tagsInfo.hasTagsWithType(TagType.Cell) || tagsInfo.hasTagsWithType(TagType.Molecule)) {
+                    int depth = tagsInfo.getDepthFor(cellLevel ? TagType.Cell : TagType.Molecule);
                     if (tagsInfo.getSortingLevel() < depth)
                         throwValidationException("Input file has insufficient sorting level");
                     PreCloneAssemblerParameters preAssemblerParams = new PreCloneAssemblerParameters(
@@ -264,7 +261,7 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
 
                     PreCloneAssemblerRunner assemblerRunner = new PreCloneAssemblerRunner(
                             alignmentsReader,
-                            cellLevel ? TagType.CellTag : TagType.MoleculeTag,
+                            cellLevel ? TagType.Cell : TagType.Molecule,
                             new GeneFeature[]{GeneFeature.CDR3},
                             PreCloneAssemblerParameters.DefaultGConsensusAssemblerParameters,
                             preClonesFile, tempDest.addSuffix("pc.tmp"));

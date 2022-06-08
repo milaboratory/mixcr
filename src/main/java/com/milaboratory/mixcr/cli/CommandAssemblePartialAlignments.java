@@ -129,7 +129,7 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
              VDJCAlignmentsReader reader2 = new VDJCAlignmentsReader(in);
              VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)) {
 
-            int groupingDepth = reader1.getTagsInfo().getDepthFor(cellLevel ? TagType.CellTag : TagType.MoleculeTag);
+            int groupingDepth = reader1.getTagsInfo().getDepthFor(cellLevel ? TagType.Cell : TagType.Molecule);
 
             writer.header(reader1.getParameters(), reader1.getUsedGenes(), getFullPipelineConfiguration(),
                     // output data will be grouped only up to a groupingDepth

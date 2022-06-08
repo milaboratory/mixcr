@@ -4,12 +4,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.primitivio.annotations.Serializable;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.Objects;
+import java.util.*;
 
 @Serializable(asJson = true)
-public final class TagsInfo implements Iterable<TagInfo> {
+public final class TagsInfo extends AbstractCollection<TagInfo> {
     public static final TagsInfo NO_TAGS = new TagsInfo(0);
 
     @JsonProperty("sortingLevel")
@@ -42,6 +40,7 @@ public final class TagsInfo implements Iterable<TagInfo> {
         return tags[idx];
     }
 
+    @Override
     public int size() {
         return tags.length;
     }

@@ -62,7 +62,7 @@ public class ITestCommandAssemblePreClones extends ACommandMiXCR {
             totalAlignments = alignmentsReader.getNumberOfAlignments();
             PreCloneAssemblerRunner assemblerRunner = new PreCloneAssemblerRunner(
                     alignmentsReader,
-                    cellLevel ? TagType.CellTag : TagType.MoleculeTag,
+                    cellLevel ? TagType.Cell : TagType.Molecule,
                     new GeneFeature[]{GeneFeature.CDR3},
                     PreCloneAssemblerParameters.DefaultGConsensusAssemblerParameters,
                     Paths.get(files.get(1)),

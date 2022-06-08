@@ -497,7 +497,15 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                         : ReadSearchMode.PairedDirect
                         : ReadSearchMode.Single);
         ReadSearchPlan readSearchPlan = ReadSearchPlan.Companion.create(tagPattern, searchSettings);
-        ParseInfo parseInfo = ParseInfo.fromSet(readSearchPlan.getAllTags());
+        ParseInfo parseInfo = parseTagsFromSet(readSearchPlan.getAllTags());
+
+        System.out.println("The following tags and their roles were recognised:");
+        System.out.println("  Payload tags: " + String.join(", ", parseInfo.getReadTags()));
+        parseInfo.tags.stream().collect(Collectors.groupingBy(TagInfo::getType))
+                .forEach((tagType, tagInfos) ->
+                        System.out.println("  " + tagType + " tags: " + tagInfos.stream().map(TagInfo::getName).collect(Collectors.joining()))
+                );
+
         List<ReadTagShortcut> tagShortcuts = parseInfo.getTags().stream()
                 .map(t -> readSearchPlan.tagShortcut(t.getName()))
                 .collect(Collectors.toList());
@@ -829,7 +837,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
         }
     }
 
-    public static final class ParseInfo {
+    public final class ParseInfo {
         private final List<TagInfo> tags;
         private final List<String> readTags;
 
@@ -860,27 +868,27 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
         public int hashCode() {
             return Objects.hash(tags, readTags);
         }
+    }
 
-        public static ParseInfo fromSet(Set<String> names) {
-            List<TagInfo> tags = new ArrayList<>();
-            List<String> readTags = new ArrayList<>();
-            for (String name : names) {
-                if (name.startsWith("S"))
-                    tags.add(new TagInfo(SampleTag, SequenceAndQuality, name, 0));
-                else if (name.startsWith("CELL"))
-                    tags.add(new TagInfo(CellTag, SequenceAndQuality, name, 0));
-                else if (name.startsWith("UMI") || name.startsWith("MI"))
-                    tags.add(new TagInfo(MoleculeTag, SequenceAndQuality, name, 0));
-                else if (name.startsWith("R"))
-                    readTags.add(name);
-                else
-                    throw new IllegalArgumentException("Can't recognize tag type for name: " + name);
-            }
-            Collections.sort(tags);
-            for (int i = 0; i < tags.size(); i++)
-                tags.set(i, tags.get(i).withIndex(i));
-            Collections.sort(readTags);
-            return new ParseInfo(tags, readTags);
+    public ParseInfo parseTagsFromSet(Set<String> names) {
+        List<TagInfo> tags = new ArrayList<>();
+        List<String> readTags = new ArrayList<>();
+        for (String name : names) {
+            if (name.startsWith("S"))
+                tags.add(new TagInfo(Sample, SequenceAndQuality, name, 0));
+            else if (name.startsWith("CELL"))
+                tags.add(new TagInfo(Cell, SequenceAndQuality, name, 0));
+            else if (name.startsWith("UMI") || name.startsWith("MI"))
+                tags.add(new TagInfo(Molecule, SequenceAndQuality, name, 0));
+            else if (name.matches("R\\d+"))
+                readTags.add(name);
+            else
+                warn("Can't recognize tag type for name \"" + name + "\", this tag will be ignored during analysis.");
         }
+        Collections.sort(tags);
+        for (int i = 0; i < tags.size(); i++)
+            tags.set(i, tags.get(i).withIndex(i));
+        Collections.sort(readTags);
+        return new ParseInfo(tags, readTags);
     }
 }
