@@ -31,10 +31,10 @@ package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.cli.PipelineConfigurationWriter;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import io.repseq.core.VDJCGene;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -44,7 +44,7 @@ import java.util.List;
 public interface VDJCAlignmentsWriterI extends PipelineConfigurationWriter, AutoCloseable {
     void setNumberOfProcessedReads(long numberOfProcessedReads);
 
-    void header(VDJCAlignerParameters parameters, List<VDJCGene> genes, PipelineConfiguration pipelineConfiguration);
+    void header(VDJCAlignerParameters parameters, List<VDJCGene> genes, PipelineConfiguration pipelineConfiguration, TagsInfo tagsInfo);
 
     void write(VDJCAlignments alignment);
 
@@ -62,7 +62,7 @@ public interface VDJCAlignmentsWriterI extends PipelineConfigurationWriter, Auto
         }
 
         @Override
-        public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes, PipelineConfiguration pipelineConfiguration) {
+        public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes, PipelineConfiguration pipelineConfiguration, TagsInfo tagsInfo) {
         }
 
         @Override
@@ -72,41 +72,5 @@ public interface VDJCAlignmentsWriterI extends PipelineConfigurationWriter, Auto
         @Override
         public void close() {
         }
-    }
-
-    final class ArrayWriter implements VDJCAlignmentsWriterI {
-        public long numberOfProcessedReads;
-        public VDJCAlignerParameters parameters;
-        public List<VDJCGene> genes;
-        public PipelineConfiguration pipelineConfiguration;
-        public final ArrayList<VDJCAlignments> data;
-
-        public ArrayWriter(int capacity) {
-            data = new ArrayList<>(capacity);
-        }
-
-        public ArrayWriter() {
-            this(10);
-        }
-
-        @Override
-        public void setNumberOfProcessedReads(long numberOfProcessedReads) {
-            this.numberOfProcessedReads = numberOfProcessedReads;
-        }
-
-        @Override
-        public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes, PipelineConfiguration pipelineConfiguration) {
-            this.parameters = parameters;
-            this.genes = genes;
-            this.pipelineConfiguration = pipelineConfiguration;
-        }
-
-        @Override
-        public synchronized void write(VDJCAlignments alignment) {
-            data.add(alignment);
-        }
-
-        @Override
-        public void close() {}
     }
 }

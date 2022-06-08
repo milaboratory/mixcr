@@ -55,6 +55,14 @@ if [[ ! -f CD4M1_test_R2.fastq.gz ]]; then
     curl -sS -O https://s3.amazonaws.com/files.milaboratory.com/test-data/CD4M1_test_R2.fastq.gz
 fi
 
+if [[ ! -f single_cell_vdj_t_subset_R1.fastq.gz ]]; then
+    curl -sS -O https://s3.amazonaws.com/files.milaboratory.com/test-data/single_cell_vdj_t_subset_R1.fastq.gz
+fi
+
+if [[ ! -f single_cell_vdj_t_subset_R2.fastq.gz ]]; then
+    curl -sS -O https://s3.amazonaws.com/files.milaboratory.com/test-data/single_cell_vdj_t_subset_R2.fastq.gz
+fi
+
 if [[ ! -d yf_sample_data ]]; then
   curl -sS https://s3.amazonaws.com/files.milaboratory.com/test-data/yf_sample_data.tar | tar -xv
 fi

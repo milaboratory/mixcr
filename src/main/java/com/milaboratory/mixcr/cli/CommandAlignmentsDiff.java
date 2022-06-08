@@ -112,10 +112,10 @@ public class CommandAlignmentsDiff extends ACommandWithOutputMiXCR {
             long same = 0, onlyIn1 = 0, onlyIn2 = 0, diffFeature = 0, justDiff = 0;
             long[] diffHits = new long[GeneType.NUMBER_OF_TYPES];
 
-            only1.header(reader1.getParameters(), reader1.getUsedGenes(), null);
-            diff1.header(reader1.getParameters(), reader1.getUsedGenes(), null);
-            only2.header(reader2.getParameters(), reader2.getUsedGenes(), null);
-            diff2.header(reader2.getParameters(), reader2.getUsedGenes(), null);
+            only1.header(reader1.getParameters(), reader1.getUsedGenes(), null, reader1.getTagsInfo());
+            diff1.header(reader1.getParameters(), reader1.getUsedGenes(), null, reader1.getTagsInfo());
+            only2.header(reader2.getParameters(), reader2.getUsedGenes(), null, reader2.getTagsInfo());
+            diff2.header(reader2.getParameters(), reader2.getUsedGenes(), null, reader2.getTagsInfo());
 
             VDJCAlignmentsDifferenceReader diffReader = new VDJCAlignmentsDifferenceReader(reader1, reader2,
                     getFeature(), hitsCompareLevel);

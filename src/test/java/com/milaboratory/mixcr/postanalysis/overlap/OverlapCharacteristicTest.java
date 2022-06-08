@@ -141,7 +141,7 @@ public class OverlapCharacteristicTest {
 
                 return new OutputPortWithProgress<OverlapGroup<Element>>() {
                     @Override
-                    public long index() {
+                    public long currentIndex() {
                         return 0;
                     }
 

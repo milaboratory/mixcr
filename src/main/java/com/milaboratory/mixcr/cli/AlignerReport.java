@@ -32,6 +32,7 @@ package com.milaboratory.mixcr.cli;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.sequence.quality.ReadTrimmerReport;
+import com.milaboratory.mitool.report.ParseReport;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerEventListener;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause;
@@ -47,6 +48,8 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
     private final ChainUsageStats chainStats = new ChainUsageStats();
     private final AtomicLongArray fails = new AtomicLongArray(VDJCAlignmentFailCause.values().length);
     private final AtomicLong successes = new AtomicLong(0);
+    // private final AtomicLong droppedNoBarcode = new AtomicLong(0);
+    // private final AtomicLong droppedBarcodeNotInWhitelist = new AtomicLong(0);
     private final AtomicLong chimeras = new AtomicLong(0);
     private final AtomicLong alignedSequenceOverlap = new AtomicLong(0);
     private final AtomicLong alignedAlignmentOverlap = new AtomicLong(0);
@@ -60,6 +63,8 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
     private final AtomicLong realignedWithForcedNonFloatingRightBoundInLeftRead = new AtomicLong(0);
     private final AtomicLong realignedWithForcedNonFloatingLeftBoundInRightRead = new AtomicLong(0);
     private ReadTrimmerReport trimmingReport;
+
+    private ParseReport tagReport;
 
     public AlignerReport() {
     }
@@ -80,6 +85,15 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
 
     public void setTrimmingReport(ReadTrimmerReport trimmingReport) {
         this.trimmingReport = trimmingReport;
+    }
+
+    // @JsonProperty("trimmingReport")
+    public ParseReport getTagReport() {
+        return tagReport;
+    }
+
+    public void setTagReport(ParseReport tagReport) {
+        this.tagReport = tagReport;
     }
 
     @JsonProperty("totalReadsProcessed")
@@ -138,6 +152,16 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
         return successes.get();
     }
 
+    // @JsonProperty("droppedNoBarcode")
+    // public long getDroppedNoBarcode() {
+    //     return droppedNoBarcode.get();
+    // }
+    //
+    // @JsonProperty("droppedBarcodeNotInWhitelist")
+    // public long getDroppedBarcodeNotInWhitelist() {
+    //     return droppedBarcodeNotInWhitelist.get();
+    // }
+
     @JsonProperty("alignmentAidedOverlaps")
     public long getAlignmentOverlaps() {
         return alignedAlignmentOverlap.get();
@@ -187,6 +211,14 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
     public long getRealignedWithForcedNonFloatingLeftBoundInRightRead() {
         return realignedWithForcedNonFloatingLeftBoundInRightRead.get();
     }
+
+    // public void onNoBarcode(SequenceRead read) {
+    //     droppedNoBarcode.incrementAndGet();
+    // }
+    //
+    // public void onBarcodeNotInWhitelist(SequenceRead read) {
+    //     droppedBarcodeNotInWhitelist.incrementAndGet();
+    // }
 
     @Override
     public void onFailedAlignment(SequenceRead read, VDJCAlignmentFailCause cause) {
@@ -276,6 +308,11 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
         helper.writeField("Total sequencing reads", total);
         helper.writePercentAndAbsoluteField("Successfully aligned reads", success, total);
 
+        // if (getDroppedBarcodeNotInWhitelist() != 0 || getDroppedNoBarcode() != 0) {
+        //     helper.writePercentAndAbsoluteField("Absent barcode", getDroppedNoBarcode(), total);
+        //     helper.writePercentAndAbsoluteField("Barcode not in whitelist", getDroppedBarcodeNotInWhitelist(), total);
+        // }
+
         if (getChimeras() != 0)
             helper.writePercentAndAbsoluteField("Chimeras", getChimeras(), total);
 
@@ -319,5 +356,8 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
                 helper.writeField("Average R2 Nucleotides Trimmed Right", 1.0 * trimmingReport.getR2RightTrimmedNucleotides() / total);
             }
         }
+
+        if (tagReport != null)
+            tagReport.writeReport(helper);
     }
 }

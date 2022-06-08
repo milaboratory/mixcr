@@ -1,6 +1,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.palantir.gradle.gitversion.VersionDetails
 import groovy.lang.Closure
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 import java.net.InetAddress
 
 gradle.startParameter.excludedTaskNames += listOf(
@@ -31,6 +32,8 @@ kotlin.sourceSets.getByName("main").kotlin.srcDir("build/generated/ksp/main/kotl
 
 val miRepoAccessKeyId: String? by project
 val miRepoSecretAccessKey: String? by project
+
+val productionBuild: Boolean? by project
 
 val versionDetails: Closure<VersionDetails> by extra
 val gitDetails = versionDetails()
@@ -78,14 +81,18 @@ repositories {
     }
 }
 
-val milibVersion = "1.15.0-51-master"
-val repseqioVersion = "1.3.5-33-master"
+val milibVersion = "1.15.0-54-master"
+val repseqioVersion = "1.3.5-34-master"
+val mitoolVersion = "0.9.1-16-main"
 val miplotsVersion = "0.1-26-master"
 val jacksonBomVersion = "2.13.3"
 
 dependencies {
     implementation("com.milaboratory:milib:$milibVersion")
     implementation("io.repseq:repseqio:$repseqioVersion") {
+        exclude("com.milaboratory", "milib")
+    }
+    implementation("com.milaboratory:mitool:$mitoolVersion"){
         exclude("com.milaboratory", "milib")
     }
     implementation("com.milaboratory:miplots:$miplotsVersion")
@@ -116,6 +123,7 @@ val writeBuildProperties by tasks.registering(WriteProperties::class) {
     property("revision", gitDetails.gitHash)
     property("branch", gitDetails.branchName ?: "no_branch")
     property("host", InetAddress.getLocalHost().hostName)
+    property("production", productionBuild == true)
     property("timestamp", System.currentTimeMillis())
 }
 
@@ -178,6 +186,7 @@ tasks.test {
 
     testLogging {
         showStandardStreams = true
+        exceptionFormat = FULL
     }
 
     miCiStage?.let {

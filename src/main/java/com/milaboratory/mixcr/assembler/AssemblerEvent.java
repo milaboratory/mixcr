@@ -29,24 +29,22 @@
  */
 package com.milaboratory.mixcr.assembler;
 
-import java.util.Arrays;
-
 public final class AssemblerEvent implements Comparable<AssemblerEvent> {
-    //auxiliary status codes used instead of cloneIndex
+    // auxiliary status codes used in place of cloneIndex
     public static final int DROPPED = -2, DEFERRED = -3, EOF = -1;
-    public final long alignmentsIndex;
+    public final long preCloneIndex;
     public final int cloneIndex;
 
-    public AssemblerEvent(long alignmentsIndex, int cloneIndex) {
+    public AssemblerEvent(long preCloneIndex, int cloneIndex) {
         if (cloneIndex == EOF)
             throw new IllegalArgumentException();
-        this.alignmentsIndex = alignmentsIndex;
+        this.preCloneIndex = preCloneIndex;
         this.cloneIndex = cloneIndex;
     }
 
     @Override
     public int compareTo(AssemblerEvent o) {
-        return Long.compare(alignmentsIndex, o.alignmentsIndex);
+        return Long.compare(preCloneIndex, o.preCloneIndex);
     }
 
     @Override
@@ -56,13 +54,13 @@ public final class AssemblerEvent implements Comparable<AssemblerEvent> {
 
         AssemblerEvent that = (AssemblerEvent) o;
 
-        if (alignmentsIndex != that.alignmentsIndex) return false;
+        if (preCloneIndex != that.preCloneIndex) return false;
         return cloneIndex == that.cloneIndex;
     }
 
     @Override
     public int hashCode() {
-        int result = (int) (alignmentsIndex ^ (alignmentsIndex >>> 32));
+        int result = (int) (preCloneIndex ^ (preCloneIndex >>> 32));
         result = 31 * result + cloneIndex;
         return result;
     }

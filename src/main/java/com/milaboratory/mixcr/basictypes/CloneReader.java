@@ -31,12 +31,13 @@ package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import io.repseq.core.VDJCGene;
 
 import java.util.List;
 
-public interface CloneReader extends AutoCloseable {
+public interface CloneReader extends VDJCFileHeaderData, AutoCloseable {
     /**
      * Sequence of properties the stream is sorted by.
      *
@@ -47,6 +48,8 @@ public interface CloneReader extends AutoCloseable {
     OutputPortCloseable<Clone> readClones();
 
     int numberOfClones();
+
+    TagsInfo getTagsInfo();
 
     List<VDJCGene> getUsedGenes();
 

@@ -90,7 +90,7 @@ public final class CloneSetOverlap {
             AtomicLong index = new AtomicLong(0);
             return new OutputPortWithProgress<List<List<Clone>>>() {
                 @Override
-                public long index() {
+                public long currentIndex() {
                     return index.get();
                 }
 
@@ -127,7 +127,7 @@ public final class CloneSetOverlap {
             long totalClones = readers.stream().mapToLong(CloneReader::numberOfClones).sum();
             return new OutputPortWithProgress<List<List<Clone>>>() {
                 @Override
-                public long index() {
+                public long currentIndex() {
                     return index.get();
                 }
 
@@ -149,7 +149,7 @@ public final class CloneSetOverlap {
 
                 @Override
                 public double getProgress() {
-                    return 1.0 * individualPorts.stream().mapToLong(OutputPortWithProgress::index).sum() / totalClones;
+                    return 1.0 * individualPorts.stream().mapToLong(OutputPortWithProgress::currentIndex).sum() / totalClones;
                 }
 
                 @Override

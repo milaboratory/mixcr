@@ -34,6 +34,7 @@ import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.*;
@@ -58,7 +59,7 @@ import java.util.function.Function;
 /**
  * Reader of CLNA file format.
  */
-public final class ClnAReader extends PipelineConfigurationReaderMiXCR implements CloneReader, AutoCloseable {
+public final class ClnAReader extends PipelineConfigurationReaderMiXCR implements CloneReader, VDJCFileHeaderData, AutoCloseable {
     final PrimitivIHybrid input;
 
     // Index data
@@ -83,6 +84,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
     final PipelineConfiguration configuration;
     final VDJCAlignerParameters alignerParameters;
     final CloneAssemblerParameters assemblerParameters;
+    final TagsInfo tagsInfo;
     final VDJCSProperties.CloneOrdering ordering;
 
     final List<VDJCGene> usedGenes;
@@ -164,6 +166,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
             this.configuration = pi.readObject(PipelineConfiguration.class);
             this.alignerParameters = pi.readObject(VDJCAlignerParameters.class);
             this.assemblerParameters = pi.readObject(CloneAssemblerParameters.class);
+            this.tagsInfo = pi.readObject(TagsInfo.class);
             this.ordering = pi.readObject(VDJCSProperties.CloneOrdering.class);
             this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(pi, this.alignerParameters, libraryRegistry);
         }
@@ -192,6 +195,14 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
     @Override
     public CloneAssemblerParameters getAssemblerParameters() {
         return assemblerParameters;
+    }
+
+    /**
+     * Tags info
+     */
+    @Override
+    public TagsInfo getTagsInfo() {
+        return tagsInfo;
     }
 
     /**
@@ -256,7 +267,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
                 clones.add(reader.take());
         }
 
-        return new CloneSet(clones, usedGenes, alignerParameters, assemblerParameters, ordering);
+        return new CloneSet(clones, usedGenes, alignerParameters, assemblerParameters, tagsInfo, ordering);
     }
 
     /**
@@ -314,7 +325,7 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
 
         CloneAlignmentsPort() {
             this.clones = input.beginRandomAccessPrimitivIBlocks(Clone.class, firstClonePosition);
-            this.fakeCloneSet = new CloneSet(Collections.EMPTY_LIST, usedGenes, alignerParameters, assemblerParameters, ordering);
+            this.fakeCloneSet = new CloneSet(Collections.EMPTY_LIST, usedGenes, alignerParameters, assemblerParameters, tagsInfo, ordering);
         }
 
         @Override

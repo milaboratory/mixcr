@@ -31,7 +31,6 @@ package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
-import cc.redberry.pipe.blocks.ParallelProcessor;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -44,6 +43,9 @@ import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerReport;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.tag.TagCount;
+import com.milaboratory.mixcr.basictypes.tag.TagTuple;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.util.Concurrency;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PipeDataInputReader;
@@ -90,6 +92,10 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
             names = {"-r", "--report"})
     public String reportFile;
 
+    @Option(description = "Ignore tags",
+            names = {"--ignore-tags"})
+    public boolean ignoreTags;
+
     @Option(description = "Report file.",
             names = {"--debug-report"}, hidden = true)
     public String debugReportFile;
@@ -124,6 +130,7 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
         List<VDJCGene> genes;
         VDJCAlignerParameters alignerParameters;
         CloneAssemblerParameters cloneAssemblerParameters;
+        TagsInfo tagsInfo;
         VDJCSProperties.CloneOrdering ordering;
         try (ClnAReader reader = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4));
              PrimitivO tmpOut = new PrimitivO(new BufferedOutputStream(new FileOutputStream(out))); // TODO ????
@@ -136,17 +143,23 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
 
             alignerParameters = reader.getAlignerParameters();
             cloneAssemblerParameters = reader.getAssemblerParameters();
+            tagsInfo = reader.getTagsInfo();
             genes = reader.getUsedGenes();
             IOUtil.registerGeneReferences(tmpOut, genes, alignerParameters);
 
             ClnAReader.CloneAlignmentsPort cloneAlignmentsPort = reader.clonesAndAlignments();
             SmartProgressReporter.startProgressReport("Assembling contigs", cloneAlignmentsPort);
 
-            OutputPort<Clone[]> parallelProcessor = new ParallelProcessor<>(cloneAlignmentsPort, cloneAlignments -> {
+            OutputPort<Clone[]> parallelProcessor = CUtils.orderedParallelProcessor(cloneAlignmentsPort, cloneAlignments -> {
+                Clone clone = cloneAlignments.clone;
+
+                if (ignoreTags)
+                    clone = clone.setTagCount(new TagCount(TagTuple.NO_TAGS, clone.getTagCount().sum()));
+
                 try {
                     // Collecting statistics
 
-                    EnumMap<GeneType, Map<VDJCGeneId, CoverageAccumulator>> coverages = cloneAlignments.clone.getHitsMap()
+                    EnumMap<GeneType, Map<VDJCGeneId, CoverageAccumulator>> coverages = clone.getHitsMap()
                             .entrySet().stream()
                             .filter(e -> e.getValue() != null && e.getValue().length > 0)
                             .collect(Collectors.toMap(
@@ -176,8 +189,8 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
 
                     if (!coverages.containsKey(GeneType.Variable) || !coverages.containsKey(GeneType.Joining)) {
                         // Something went really wrong
-                        report.onAssemblyCanceled(cloneAlignments.clone);
-                        return new Clone[]{cloneAlignments.clone};
+                        report.onAssemblyCanceled(clone);
+                        return new Clone[]{clone};
                     }
 
                     for (VDJCAlignments alignments : CUtils.it(cloneAlignments.alignments()))
@@ -201,7 +214,7 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
 
                     FullSeqAssembler fullSeqAssembler = new FullSeqAssembler(
                             cloneFactory, assemblerParameters,
-                            cloneAlignments.clone, alignerParameters,
+                            clone, alignerParameters,
                             bestGenes.get(GeneType.Variable), bestGenes.get(GeneType.Joining)
                     );
 
@@ -211,13 +224,13 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
 
                     if (debugReport != null) {
                         synchronized (debugReport) {
-                            try (FileOutputStream fos = new FileOutputStream(debugReportFile + "." + cloneAlignments.clone.getId())) {
+                            try (FileOutputStream fos = new FileOutputStream(debugReportFile + "." + clone.getId())) {
                                 final String content = rawVariantsData.toCsv((byte) 10);
                                 fos.write(content.getBytes());
                             }
 
                             try {
-                                debugReport.write("Clone: " + cloneAlignments.clone.getId());
+                                debugReport.write("Clone: " + clone.getId());
                                 debugReport.newLine();
                                 debugReport.write(rawVariantsData.toString());
                                 debugReport.newLine();
@@ -233,9 +246,9 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
 
                     return fullSeqAssembler.callVariants(rawVariantsData);
                 } catch (Throwable re) {
-                    throw new RuntimeException("While processing clone #" + cloneAlignments.clone.getId(), re);
+                    throw new RuntimeException("While processing clone #" + clone.getId(), re);
                 }
-            }, threads);
+            }, 1024, threads);
 
             for (Clone[] clones : CUtils.it(parallelProcessor)) {
                 totalClonesCount += clones.length;
@@ -258,7 +271,8 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
                 clones[i++] = clone.setId(cloneId++);
         }
 
-        CloneSet cloneSet = new CloneSet(Arrays.asList(clones), genes, alignerParameters, cloneAssemblerParameters, ordering);
+        CloneSet cloneSet = new CloneSet(Arrays.asList(clones), genes, alignerParameters, cloneAssemblerParameters,
+                tagsInfo, ordering);
 
         try (ClnsWriter writer = new ClnsWriter(out)) {
             writer.writeCloneSet(getFullPipelineConfiguration(), cloneSet);

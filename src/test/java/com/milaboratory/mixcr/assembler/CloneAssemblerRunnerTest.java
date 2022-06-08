@@ -39,7 +39,9 @@ import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.quality.QualityAggregationType;
 import com.milaboratory.core.tree.TreeSearchParameters;
+import com.milaboratory.mixcr.assembler.preclone.PreCloneReader;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.*;
 import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.SmartProgressReporter;
@@ -54,7 +56,6 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class CloneAssemblerRunnerTest {
-    @Ignore
     @Test
     public void test1() throws Exception {
         String[] str = {"sequences/sample_IGH_R1.fastq", "sequences/sample_IGH_R2.fastq"};
@@ -77,7 +78,7 @@ public class CloneAssemblerRunnerTest {
         VDJCAlignerParameters alignerParameters = VDJCParametersPresets.getByName("default");
         VDJCAligner aligner = fastqFiles.length == 1 ? new VDJCAlignerS(alignerParameters) : new VDJCAlignerWithMerge(alignerParameters);
 
-        for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("mi", "hs").getGenes(Chains.IGH))
+        for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("default", "hs").getGenes(Chains.IGH))
             if (alignerParameters.containsRequiredFeature(gene))
                 aligner.addGene(gene);
 
@@ -92,7 +93,7 @@ public class CloneAssemblerRunnerTest {
         //write alignments to byte array
         File vdjcaFile = TempFileManager.getTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(vdjcaFile)) {
-            writer.header(aligner, null);
+            writer.header(aligner, null, null);
             for (Object read : CUtils.it(reader)) {
                 VDJCAlignmentResult result = (VDJCAlignmentResult) aligner.process((SequenceRead) read);
                 if (result.alignment != null)
@@ -100,7 +101,7 @@ public class CloneAssemblerRunnerTest {
             }
         }
 
-        AlignmentsProvider alignmentsProvider = AlignmentsProvider.Util.createProvider(vdjcaFile, VDJCLibraryRegistry.getDefault());
+        AlignmentsProvider alignmentsProvider = new VDJCAlignmentsReader(vdjcaFile);
 
         LinearGapAlignmentScoring<NucleotideSequence> scoring = new LinearGapAlignmentScoring<>(NucleotideSequence.ALPHABET, 5, -9, -12);
         CloneFactoryParameters factoryParameters = new CloneFactoryParameters(
@@ -109,7 +110,7 @@ public class CloneAssemblerRunnerTest {
                 new VJCClonalAlignerParameters(0.8f,
                         scoring, 5),
                 null,
-                new DAlignerParameters(GeneFeature.DRegion, 0.85f, 30.0f, 3, scoring)
+                new DClonalAlignerParameters(0.85f, 30.0f, 3, scoring)
         );
 
         CloneAssemblerParameters assemblerParameters = new CloneAssemblerParameters(
@@ -120,12 +121,13 @@ public class CloneAssemblerRunnerTest {
 
         System.out.println(GlobalObjectMappers.toOneLine(assemblerParameters));
 
-        CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(alignmentsProvider,
-                new CloneAssembler(assemblerParameters, true, aligner.getUsedGenes(), alignerParameters), 2);
+        CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(
+                PreCloneReader.fromAlignments(alignmentsProvider, assemblerParameters.getAssemblingFeatures()),
+                new CloneAssembler(assemblerParameters, true, aligner.getUsedGenes(), alignerParameters));
         SmartProgressReporter.startProgressReport(assemblerRunner);
         assemblerRunner.run();
 
-        CloneSet cloneSet = assemblerRunner.getCloneSet(null);
+        CloneSet cloneSet = assemblerRunner.getCloneSet(alignerParameters, TagsInfo.NO_TAGS);
 
         File tmpClnsFile = TempFileManager.getTempFile();
 

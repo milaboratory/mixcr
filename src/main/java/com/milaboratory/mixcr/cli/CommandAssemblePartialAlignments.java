@@ -29,15 +29,26 @@
  */
 package com.milaboratory.mixcr.cli;
 
-import com.fasterxml.jackson.annotation.*;
+import cc.redberry.pipe.CUtils;
+import cc.redberry.pipe.OutputPort;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.milaboratory.cli.ActionConfiguration;
+import com.milaboratory.mitool.helpers.GroupOP;
+import com.milaboratory.mitool.helpers.PipeKt;
+import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
+import com.milaboratory.mixcr.basictypes.tag.TagTuple;
+import com.milaboratory.mixcr.basictypes.tag.TagType;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssembler;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParameters;
 import com.milaboratory.util.JsonOverrider;
 import com.milaboratory.util.ReportUtil;
 import com.milaboratory.util.SmartProgressReporter;
+import kotlin.jvm.functions.Function1;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
@@ -74,6 +85,10 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
             names = {"-d", "--drop-partial"})
     public boolean dropPartial = false;
 
+    @Option(description = "Overlap sequences on the cell level instead of UMIs for tagged data with molecular and cell barcodes",
+            names = {"--cell-level"})
+    public boolean cellLevel = false;
+
     private PartialAlignmentsAssemblerParameters assemblerParameters;
 
     public PartialAlignmentsAssemblerParameters getPartialAlignmentsAssemblerParameters() {
@@ -108,10 +123,22 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
         long beginTimestamp = System.currentTimeMillis();
 
         PartialAlignmentsAssemblerParameters assemblerParameters = getPartialAlignmentsAssemblerParameters();
-        VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out);
-        writer.setPipelineConfiguration(getFullPipelineConfiguration());
-        try (PartialAlignmentsAssembler assembler = new PartialAlignmentsAssembler(assemblerParameters,
-                writer, !dropPartial, overlappedOnly)) {
+
+        // Two readers will be used to feed two-pass assemble partial algorithm
+        try (VDJCAlignmentsReader reader1 = new VDJCAlignmentsReader(in);
+             VDJCAlignmentsReader reader2 = new VDJCAlignmentsReader(in);
+             VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)) {
+
+            int groupingDepth = reader1.getTagsInfo().getDepthFor(cellLevel ? TagType.Cell : TagType.Molecule);
+
+            writer.header(reader1.getParameters(), reader1.getUsedGenes(), getFullPipelineConfiguration(),
+                    // output data will be grouped only up to a groupingDepth
+                    reader1.getTagsInfo().setSorted(groupingDepth));
+
+            PartialAlignmentsAssembler assembler = new PartialAlignmentsAssembler(assemblerParameters, reader1.getParameters(),
+                    reader1.getUsedGenes(), !dropPartial, overlappedOnly,
+                    writer::write);
+
             this.report = assembler;
             ReportWrapper report = new ReportWrapper(ASSEMBLE_PARTIAL_COMMAND_NAME, assembler);
             report.setStartMillis(beginTimestamp);
@@ -119,13 +146,27 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
             report.setOutputFiles(out);
             report.setCommandLine(getCommandLineArguments());
 
-            try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(in)) {
-                SmartProgressReporter.startProgressReport("Building index", reader);
-                assembler.buildLeftPartsIndex(reader);
-            }
-            try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(in)) {
-                SmartProgressReporter.startProgressReport("Searching for overlaps", reader);
-                assembler.searchOverlaps(reader);
+            if (reader1.getTagsInfo() != null && !reader1.getTagsInfo().hasNoTags()) {
+                SmartProgressReporter.startProgressReport("Running assemble partial", reader1);
+
+                // This processor strips all non-key information from the
+                Function1<VDJCAlignments, TagTuple> key = al -> al.getTagCount().asKeyPrefixOrError(groupingDepth);
+                OutputPort<GroupOP<VDJCAlignments, TagTuple>> groups1 = PipeKt.group(
+                        CUtils.wrap(reader1, VDJCAlignments::ensureKeyTags), key);
+                OutputPort<GroupOP<VDJCAlignments, TagTuple>> groups2 = PipeKt.group(
+                        CUtils.wrap(reader2, VDJCAlignments::ensureKeyTags), key);
+
+                for (GroupOP<VDJCAlignments, TagTuple> grp1 : CUtils.it(groups1)) {
+                    assembler.buildLeftPartsIndex(grp1);
+                    GroupOP<VDJCAlignments, TagTuple> grp2 = groups2.take();
+                    assert grp2.getKey().equals(grp1.getKey()) : grp1.getKey() + " != " + grp2.getKey();
+                    assembler.searchOverlaps(grp2);
+                }
+            } else {
+                SmartProgressReporter.startProgressReport("Building index", reader1);
+                assembler.buildLeftPartsIndex(reader1);
+                SmartProgressReporter.startProgressReport("Searching for overlaps", reader2);
+                assembler.searchOverlaps(reader2);
             }
 
             report.setFinishMillis(System.currentTimeMillis());
@@ -149,6 +190,8 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
 
             if (jsonReport != null)
                 ReportUtil.appendJsonReport(jsonReport, report);
+
+            writer.setNumberOfProcessedReads(reader1.getNumberOfReads() - assembler.overlapped.get());
         }
     }
 

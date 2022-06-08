@@ -31,7 +31,8 @@ public class CommandPaOverlap extends CommandPa {
             names = {"--criteria"})
     public String overlapCriteria = "CDR3|AA|V|J";
 
-    public CommandPaOverlap() {}
+    public CommandPaOverlap() {
+    }
 
     private PostanalysisParametersOverlap _parameters;
 

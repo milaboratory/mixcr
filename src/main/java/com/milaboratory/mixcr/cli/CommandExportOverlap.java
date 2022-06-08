@@ -2,6 +2,8 @@ package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
 import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.basictypes.CloneReader;
+import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.export.FieldExtractor;
 import com.milaboratory.mixcr.export.OutputMode;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapDataset;
@@ -14,6 +16,7 @@ import io.repseq.core.Chains;
 import io.repseq.core.Chains.NamedChains;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
+import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -126,11 +129,14 @@ public class CommandExportOverlap extends ACommandWithOutputMiXCR {
         extractors.add(new TotalCount());
         extractors.add(new TotalFraction());
 
-        List<FieldExtractor<Clone>> fieldExtractors = CommandExport
-                .parseSpec(spec.commandLine().getParseResult())
-                .stream()
-                .flatMap(f -> CommandExport.extractor(f, Clone.class, OutputMode.ScriptingFriendly).stream())
-                .collect(Collectors.toList());
+        List<FieldExtractor<Clone>> fieldExtractors;
+        try (CloneReader cReader = CloneSetIO.mkReader(Paths.get(samples.get(0)), VDJCLibraryRegistry.getDefault())) {
+            fieldExtractors = CommandExport
+                    .parseSpec(spec.commandLine().getParseResult())
+                    .stream()
+                    .flatMap(f -> CommandExport.extractor(f, Clone.class, cReader, OutputMode.ScriptingFriendly).stream())
+                    .collect(Collectors.toList());
+        }
 
         for (FieldExtractor<? super Clone> fe : fieldExtractors)
             extractors.add(new ExtractorPerSample(fe));

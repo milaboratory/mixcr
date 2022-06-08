@@ -45,8 +45,8 @@ import com.milaboratory.primitivio.PipeReader;
 import com.milaboratory.primitivio.PipeWriter;
 import com.milaboratory.util.ObjectSerializer;
 import com.milaboratory.util.SmartProgressReporter;
-import com.milaboratory.util.sorting.Sorter;
 import com.milaboratory.util.TempFileManager;
+import com.milaboratory.util.sorting.Sorter;
 import io.repseq.core.VDJCGene;
 import picocli.CommandLine.Command;
 
@@ -80,7 +80,8 @@ public class CommandSortAlignments extends ACommandWithSmartOverwriteWithSingleI
                                  new VDJCAlignmentsSerializer(reader), TempFileManager.getTempFile());
                  VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)) {
 
-                writer.header(reader.getParameters(), reader.getUsedGenes(), getFullPipelineConfiguration());
+                writer.header(reader.getParameters(), reader.getUsedGenes(),
+                        getFullPipelineConfiguration(), reader.getTagsInfo());
 
                 final long nReads = reader.getNumberOfReads();
                 final CountingOutputPort<VDJCAlignments> counter = new CountingOutputPort<>(sorted);

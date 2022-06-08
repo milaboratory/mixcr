@@ -37,6 +37,7 @@ import com.milaboratory.cli.AppVersionInfo;
 import com.milaboratory.mixcr.assembler.AlignmentsMappingMerger;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParametersPresets;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
+import com.milaboratory.mixcr.assembler.preclone.PreCloneReader;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.util.RunMiXCR;
 import com.milaboratory.util.TempFileManager;
@@ -85,7 +86,9 @@ public class ClnAReaderTest {
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
         RunMiXCR.AssembleResult assemble = RunMiXCR.assemble(align, false);
 
-        AlignmentsMappingMerger merged = new AlignmentsMappingMerger(align.resultReader(), assemble.cloneAssembler.getAssembledReadsPort());
+        PreCloneReader preCloneReader = align.asPreCloneReader();
+        AlignmentsMappingMerger merged = new AlignmentsMappingMerger(preCloneReader.readAlignments(),
+                assemble.cloneAssembler.getAssembledReadsPort());
 
         File file = TempFileManager.getTempFile();
         ClnAWriter writer = new ClnAWriter(null, file, smartTempDestination(file, "", false));
@@ -97,8 +100,10 @@ public class ClnAReaderTest {
                 modifyClones.apply(newClones), align.usedGenes,
                 align.parameters.alignerParameters,
                 CloneAssemblerParametersPresets.getByName("default"),
+                null,
                 new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount()));
         writer.writeClones(newCloneSet);
+
         OutputPort<VDJCAlignments> als = modifyAlignments.apply(merged);
         CountingOutputPort<VDJCAlignments> alsc = new CountingOutputPort<>(als);
         writer.collateAlignments(alsc, align.alignments.size());
@@ -140,6 +145,7 @@ public class ClnAReaderTest {
         writer.writeClones(new CloneSet(Collections.EMPTY_LIST, align.usedGenes,
                 align.parameters.alignerParameters,
                 CloneAssemblerParametersPresets.getByName("default"),
+                null,
                 new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount())));
         writer.collateAlignments(CUtils.asOutputPort(align.alignments), align.alignments.size());
         writer.writeAlignmentsAndIndex();

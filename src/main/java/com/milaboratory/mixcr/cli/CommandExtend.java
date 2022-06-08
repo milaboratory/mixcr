@@ -156,7 +156,7 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
         clones.sort(Comparator.comparing(Clone::getId));
 
         CloneSet newCloneSet = new CloneSet(clones, cloneSet.getUsedGenes(), cloneSet.getAlignmentParameters(),
-                cloneSet.getAssemblerParameters(), cloneSet.getOrdering());
+                cloneSet.getAssemblerParameters(), cloneSet.getTagsInfo(), cloneSet.getOrdering());
 
         try (ClnsWriter writer = new ClnsWriter(out)) {
             writer.writeCloneSet(getFullPipelineConfiguration(), newCloneSet);
@@ -169,7 +169,8 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
              final VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)) {
             SmartProgressReporter.startProgressReport("Extending alignments", reader);
 
-            writer.header(reader.getParameters(), reader.getUsedGenes(), getFullPipelineConfiguration());
+            writer.header(reader.getParameters(), reader.getUsedGenes(),
+                    getFullPipelineConfiguration(), reader.getTagsInfo());
 
             ProcessWrapper<VDJCAlignments> process = new ProcessWrapper<>(reader,
                     reader.getParameters().getVAlignerParameters().getParameters().getScoring(),
@@ -182,6 +183,7 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
 
             for (VDJCAlignments alignments : CUtils.it(new OrderedOutputPort<>(process.getOutput(), VDJCAlignments::getAlignmentsIndex)))
                 writer.write(alignments.shiftIndelsAtHomopolymers(gtRequiringIndelShifts));
+
             writer.setNumberOfProcessedReads(reader.getNumberOfReads());
 
             process.finish();

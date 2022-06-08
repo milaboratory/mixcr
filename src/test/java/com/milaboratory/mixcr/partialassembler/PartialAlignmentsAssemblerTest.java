@@ -130,8 +130,8 @@ public class PartialAlignmentsAssemblerTest {
         final TestResult testResult = processData(data, input);
         for (VDJCAlignments al : testResult.assembled) {
             MiXCRTestUtils.printAlignment(al);
-//            System.out.println(input.VJJunction);
-//            System.out.println(al.getFeature(GeneFeature.VJJunction).getSequence());
+            //            System.out.println(input.VJJunction);
+            //            System.out.println(al.getFeature(GeneFeature.VJJunction).getSequence());
             Assert.assertTrue(input.VJJunction.toString().contains(al.getFeature(GeneFeature.VJJunction).getSequence().toString()));
         }
     }
@@ -154,9 +154,9 @@ public class PartialAlignmentsAssemblerTest {
         final TestResult testResult = processData(data, input);
         for (VDJCAlignments al : testResult.assembled) {
             MiXCRTestUtils.printAlignment(al);
-//            System.out.println(input.VJJunction);
-//            System.out.println(al.getFeature(GeneFeature.VJJunction).getSequence());
-//            Assert.assertTrue(input.VJJunction.toString().contains(al.getFeature(GeneFeature.VJJunction).getSequence().toString()));
+            //            System.out.println(input.VJJunction);
+            //            System.out.println(al.getFeature(GeneFeature.VJJunction).getSequence());
+            //            Assert.assertTrue(input.VJJunction.toString().contains(al.getFeature(GeneFeature.VJJunction).getSequence().toString()));
         }
     }
 
@@ -164,7 +164,7 @@ public class PartialAlignmentsAssemblerTest {
     public void test3() throws Exception {
         for (int i = 0; i < 100; i++) {
             RandomUtil.reseedThreadLocal(i);
-//            System.out.println(i);
+            //            System.out.println(i);
             final InputTestData input = createTestData(i);
             final NucleotideSequence reference = input.reference;
             final EnumMap<GeneType, int[]> refPositions = input.refPositions;
@@ -175,10 +175,10 @@ public class PartialAlignmentsAssemblerTest {
 
             final TestResult testResult = processData(data, input);
             for (VDJCAlignments al : testResult.assembled) {
-//                printAlignment(al);
+                //                printAlignment(al);
                 if (al.numberOfTargets() == 1) {
-//                    System.out.println(input.VJJunction);
-//                    System.out.println(al.getFeature(GeneFeature.VJJunction).getSequence());
+                    //                    System.out.println(input.VJJunction);
+                    //                    System.out.println(al.getFeature(GeneFeature.VJJunction).getSequence());
                     Assert.assertTrue(input.VJJunction.toString().contains(al.getFeature(GeneFeature.VJJunction).getSequence().toString()));
                 }
             }
@@ -241,20 +241,22 @@ public class PartialAlignmentsAssemblerTest {
                         break;
                     }
                 }
-//                Assert.assertTrue(yes);
+                // Assert.assertTrue(yes);
             }
 
-//            if (al.getFeature(GeneFeature.VJJunction) != null)
-//                Assert.assertTrue(input.VJJunction.toString().contains(al.getFeature(GeneFeature.VJJunction).getSequence().toString()));
+            // if (al.getFeature(GeneFeature.VJJunction) != null)
+            //     Assert.assertTrue(input.VJJunction.toString().contains(al.getFeature(GeneFeature.VJJunction).getSequence().toString()));
         }
 
         File overlappedAlignments = TempFileManager.getTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(overlappedAlignments)) {
             final PartialAlignmentsAssemblerParameters pParameters = PartialAlignmentsAssemblerParameters.getDefault();
             pParameters.setMergerParameters(pParameters.getMergerParameters().overrideMinimalIdentity(0.0));
-            PartialAlignmentsAssembler assembler = new PartialAlignmentsAssembler(pParameters, writer, true, false);
+            PartialAlignmentsAssembler assembler = new PartialAlignmentsAssembler(pParameters, inputAlignments.parameters.alignerParameters,
+                    inputAlignments.usedGenes, true, false, writer::write);
 
             try (final VDJCAlignmentsReader reader = inputAlignments.resultReader()) {
+                writer.header(reader.getParameters(), reader.getUsedGenes(), null, reader.getTagsInfo());
                 assembler.buildLeftPartsIndex(reader);
             }
             try (final VDJCAlignmentsReader reader = inputAlignments.resultReader()) {

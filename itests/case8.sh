@@ -24,8 +24,8 @@ mixcr analyze amplicon \
   CD4M1_test_R1.fastq.gz CD4M1_test_R2.fastq.gz case8
 
 assert "cat case8.align.jsonl | head -n 1 | jq -r .chainUsage.chains.TRA" "198684"
-assert "cat case8.assemble.jsonl | head -n 1 | jq -r .readsInClones" "162731"
+assert "cat case8.assemble.jsonl | head -n 1 | jq -r .readsInClones" "162874"
 assert "cat case8.assembleContigs.jsonl | head -n 1 | jq -r .longestContigLength" "227"
-assert "cat case8.assembleContigs.jsonl | head -n 1 | jq -r .clonesWithAmbiguousLetters" "978"
-assert "cat case8.assembleContigs.jsonl | head -n 1 | jq -r .assemblePrematureTerminationEvents" "1"
-assert "cat case8.assembleContigs.jsonl | head -n 1 | jq -r .finalCloneCount" "22477"
+assert "cat case8.assembleContigs.jsonl | head -n 1 | jq -r .clonesWithAmbiguousLetters" "981"
+assert "cat case8.assembleContigs.jsonl | head -n 1 | jq -r .assemblePrematureTerminationEvents" "3"
+assert "cat case8.assembleContigs.jsonl | head -n 1 | jq -r .finalCloneCount" "22559"

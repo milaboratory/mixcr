@@ -31,7 +31,6 @@ package com.milaboratory.mixcr.assembler;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
-import com.milaboratory.core.io.util.IOUtil;
 import com.milaboratory.util.TempFileManager;
 
 import java.io.*;
@@ -70,8 +69,8 @@ public final class AssemblerEventLogger {
     }
 
     public synchronized void newEvent(AssemblerEvent event) {
-        if (event.alignmentsIndex != counter) {
-            if (event.alignmentsIndex < counter)
+        if (event.preCloneIndex != counter) {
+            if (event.preCloneIndex < counter)
                 throw new IllegalArgumentException("Duplicate event detected.");
             eventsBuffer.add(event);
             if (eventsBuffer.size() > MAX_BUFFER_SIZE)
@@ -84,7 +83,7 @@ public final class AssemblerEventLogger {
         if (!eventsBuffer.isEmpty()) {
             Collections.sort(eventsBuffer);
             while (!eventsBuffer.isEmpty()) {
-                if (eventsBuffer.get(0).alignmentsIndex != counter)
+                if (eventsBuffer.get(0).preCloneIndex != counter)
                     return;
                 write(eventsBuffer.remove(0));
                 ++counter;

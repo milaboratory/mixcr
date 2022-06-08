@@ -111,6 +111,10 @@ public class CommandExportAlignmentsPretty extends ACommandSimpleExportMiXCR {
             names = {"-i", "--read-ids"})
     public List<Long> readIds = new ArrayList<>();
 
+    @Option(description = "Alignment index",
+            names = {"--alignment-idx"})
+    public List<Long> alignmentIdx = new ArrayList<>();
+
     @Option(description = "List of clone ids to export",
             names = {"--clone-ids"})
     public List<Long> cloneIds = new ArrayList<>();
@@ -119,6 +123,12 @@ public class CommandExportAlignmentsPretty extends ACommandSimpleExportMiXCR {
         if (readIds.isEmpty())
             return null;
         return new TLongHashSet(readIds);
+    }
+
+    TLongHashSet getAlignmentIdx() {
+        if (alignmentIdx.isEmpty())
+            return null;
+        return new TLongHashSet(alignmentIdx);
     }
 
     TLongHashSet getCloneIds() {
@@ -200,10 +210,11 @@ public class CommandExportAlignmentsPretty extends ACommandSimpleExportMiXCR {
     public void run0() throws Exception {
         Filter<VDJCAlignments> filter = mkFilter();
         long total = 0, filtered = 0;
-        try (OutputPortCloseable<VDJCAlignments> reader = CommandExport.openAlignmentsPort(in);
+        try (CommandExport.AlignmentsAndHeader readerAndHeader = CommandExport.openAlignmentsPort(in);
              PrintStream output = out == null ? System.out :
                      new PrintStream(new BufferedOutputStream(new FileOutputStream(out), 32768))
         ) {
+            OutputPortCloseable<VDJCAlignments> reader = readerAndHeader.port;
             long countBefore = limitBefore == null ? Long.MAX_VALUE : limitBefore;
             long countAfter = limitAfter == null ? Long.MAX_VALUE : limitAfter;
             long skipAfter = this.skipAfter == null ? 0 : this.skipAfter;

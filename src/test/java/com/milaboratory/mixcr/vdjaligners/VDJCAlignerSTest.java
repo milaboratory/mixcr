@@ -72,7 +72,7 @@ public class VDJCAlignerSTest {
                 if (parameters.containsRequiredFeature(gene))
                     aligner.addGene(gene);
             try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tmpFile)) {
-                writer.header(aligner, null);
+                writer.header(aligner, null, null);
                 header = writer.getPosition();
                 for (SingleRead read : CUtils.it(reader)) {
                     VDJCAlignmentResult<SingleRead> result = aligner.process(read);
@@ -97,10 +97,10 @@ public class VDJCAlignerSTest {
     @Test
     @Ignore
     public void test2() throws Exception {
-//        @
-//                GCTGTGTATTACTGTGCAAGAGGGCCCCAAGAAAATAGTGGTTATTACTACGGGTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCAGCCTCCACCAAGGGCCCATCGGTCTTCCCCCTGGCGCC
-//        +
-//                CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+        //        @
+        //                GCTGTGTATTACTGTGCAAGAGGGCCCCAAGAAAATAGTGGTTATTACTACGGGTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCAGCCTCCACCAAGGGCCCATCGGTCTTCCCCCTGGCGCC
+        //        +
+        //                CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 
         VDJCAlignerParameters parameters =
                 VDJCParametersPresets.getByName("default");

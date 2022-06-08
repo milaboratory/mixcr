@@ -56,6 +56,7 @@ import java.util.function.Consumer;
 import java.util.prefs.Preferences;
 
 import static com.fasterxml.jackson.module.kotlin.ExtensionsKt.kotlinModule;
+import static com.milaboratory.mixcr.cli.CommandCorrectAndSortTags.CORRECT_AND_SORT_TAGS_COMMAND_NAME;
 
 public final class Main {
 
@@ -182,8 +183,8 @@ public final class Main {
         String command = System.getProperty("mixcr.command", "java -jar mixcr.jar");
 
         if (!initialized) {
-            // Checking whether we are running a snapshot version
-            if (!assertionsDisabled() && VersionInfo.getVersionInfoForArtifact("mixcr").getVersion().contains("SNAPSHOT"))
+            // Checking whether we are running a test version
+            if (!assertionsDisabled() && !VersionInfo.getVersionInfoForArtifact("mixcr").isProductionBuild())
                 // If so, enable asserts
                 ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(true);
 
@@ -235,8 +236,10 @@ public final class Main {
 
                 .addSubcommand("align", CommandAlign.class)
                 .addSubcommand("assemble", CommandAssemble.class)
-                .addSubcommand("groupCells", CommandGroupCells.class)
+                // .addSubcommand("groupCells", CommandGroupCells.class)
                 .addSubcommand("assembleContigs", CommandAssembleContigs.class)
+
+                .addSubcommand(CORRECT_AND_SORT_TAGS_COMMAND_NAME, CommandCorrectAndSortTags.class)
 
                 .addSubcommand("assemblePartial", CommandAssemblePartialAlignments.class)
                 .addSubcommand("extend", CommandExtend.class)
@@ -261,6 +264,8 @@ public final class Main {
 
                 .addSubcommand("alignmentsDiff", CommandAlignmentsDiff.class)
                 .addSubcommand("clonesDiff", CommandClonesDiff.class)
+
+                .addSubcommand("itestAssemblePreClones", ITestCommandAssemblePreClones.class)
 
                 .addSubcommand("alignmentsStat", CommandAlignmentsStats.class)
                 .addSubcommand("listLibraries", CommandListLibraries.class)

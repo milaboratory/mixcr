@@ -33,6 +33,7 @@ import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.SimpleProcessorWrapper;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.LambdaSemaphore;
@@ -66,8 +67,8 @@ public final class OverlapUtil {
                 SimpleProcessorWrapper<List<List<Clone>>, OverlapGroup<Clone>> processor = new SimpleProcessorWrapper<>(port, OverlapGroup::new);
                 return new OutputPortWithProgress<OverlapGroup<Clone>>() {
                     @Override
-                    public long index() {
-                        return port.index();
+                    public long currentIndex() {
+                        return port.currentIndex();
                     }
 
                     @Override
@@ -160,6 +161,11 @@ public final class OverlapUtil {
             @Override
             public void close() throws Exception {
                 inner.close();
+            }
+
+            @Override
+            public TagsInfo getTagsInfo() {
+                return inner.getTagsInfo();
             }
 
             @Override

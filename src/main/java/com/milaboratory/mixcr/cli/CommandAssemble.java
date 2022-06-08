@@ -29,7 +29,6 @@
  */
 package com.milaboratory.mixcr.cli;
 
-import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.util.StatusReporter;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -38,18 +37,21 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.*;
+import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerParameters;
+import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerRunner;
+import com.milaboratory.mixcr.assembler.preclone.PreCloneReader;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.tag.TagTuple;
+import com.milaboratory.mixcr.basictypes.tag.TagType;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
-import com.milaboratory.util.ArraysUtils;
-import com.milaboratory.util.JsonOverrider;
-import com.milaboratory.util.ReportUtil;
-import com.milaboratory.util.SmartProgressReporter;
-import gnu.trove.iterator.TObjectDoubleIterator;
+import com.milaboratory.util.*;
 import io.repseq.core.*;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +61,6 @@ import static com.milaboratory.mixcr.cli.CommandAssemble.ASSEMBLE_COMMAND_NAME;
 import static com.milaboratory.util.TempFileManager.smartTempDestination;
 
 @Command(name = ASSEMBLE_COMMAND_NAME,
-        sortOptions = true,
         separator = " ",
         description = "Assemble clones.")
 public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
@@ -69,14 +70,10 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
             names = {"-p", "--preset"})
     public String assemblerParametersName = "default";
 
-    public int threads = Runtime.getRuntime().availableProcessors();
-
     @Option(description = "Processing threads",
             names = {"-t", "--threads"})
     public void setThreads(int threads) {
-        if (threads <= 0)
-            throwValidationException("-t / --threads must be positive");
-        this.threads = threads;
+        System.out.println("-t / --threads is deprecated for \"mixcr assemble ...\" and ignored for this call...");
     }
 
     @Option(description = "Use system temp folder for temporary files, the output folder will be used if this option is omitted.",
@@ -109,13 +106,13 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
             "This file then can be used to build wider contigs for clonal sequence and extract original " +
             "reads for each clone (if -OsaveOriginalReads=true was use on 'align' stage).",
             names = {"-a", "--write-alignments"})
-    public boolean clna = false;
+    public boolean isClnaOutput = false;
 
-    @Option(description = "Enable tag-based read to clone assignment",
-            names = {"--attach-reads-by-tags"})
-    public boolean attachReadsByTags = false;
-
-    private static final double DEFAULT_MINIMAL_TAG_SET_OVERLAP = 0.7;
+    @Option(description = "If tags are present, do assemble pre-clones on the cell level rather than on the molecule level. " +
+            "If there are no molecular tags in the data, but cell tags are present, this option will be used by default. " +
+            "This option has no effect on the data without tags.",
+            names = {"--cell-level"})
+    public boolean cellLevel = false;
 
     @Option(names = "-O", description = "Overrides default parameter values.")
     private Map<String, String> overrides = new HashMap<>();
@@ -123,12 +120,13 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
     @Override
     public ActionConfiguration getConfiguration() {
         ensureParametersInitialized();
-        return new AssembleConfiguration(getCloneAssemblerParameters(), clna, ordering);
+        return new AssembleConfiguration(getCloneAssemblerParameters(), isClnaOutput, ordering);
     }
 
     // Extracting V/D/J/C gene list from input vdjca file
     private List<VDJCGene> genes = null;
     private VDJCAlignerParameters alignerParameters = null;
+    private TagsInfo tagsInfo = null;
     private CloneAssemblerParameters assemblerParameters = null;
     private VDJCSProperties.CloneOrdering ordering = null;
 
@@ -141,6 +139,7 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
             genes = reader.getUsedGenes();
             // Saving aligner parameters to correct assembler parameters
             alignerParameters = reader.getParameters();
+            tagsInfo = reader.getTagsInfo();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -150,10 +149,8 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
         assemblerParameters = CloneAssemblerParametersPresets.getByName(assemblerParametersName);
         if (assemblerParameters == null)
             throwValidationException("Unknown parameters: " + assemblerParametersName);
+        // noinspection ConstantConditions
         assemblerParameters = assemblerParameters.updateFrom(alignerParameters);
-
-        if (attachReadsByTags)
-            assemblerParameters = assemblerParameters.setCloneClusteringParameters(assemblerParameters.getCloneClusteringParameters().setMinimalTagSetOverlap(DEFAULT_MINIMAL_TAG_SET_OVERLAP));
 
         // Overriding JSON parameters
         if (!overrides.isEmpty()) {
@@ -196,6 +193,11 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
         return alignerParameters;
     }
 
+    public TagsInfo getTagsInfo() {
+        ensureParametersInitialized();
+        return tagsInfo;
+    }
+
     public VDJCSProperties.CloneOrdering getOrdering() {
         ensureParametersInitialized();
         return ordering;
@@ -211,186 +213,131 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
         // Saving initial timestamp
         long beginTimestamp = System.currentTimeMillis();
 
+        // Will be used for several operations requiring disk offloading
+        TempFileDest tempDest = smartTempDestination(out, "", useSystemTemp);
+
         // Checking consistency between actionParameters.doWriteClnA() value and file extension
-        if ((getOutput().toLowerCase().endsWith(".clna") && !clna) ||
-                (getOutput().toLowerCase().endsWith(".clns") && clna))
+        if ((getOutput().toLowerCase().endsWith(".clna") && !isClnaOutput) ||
+                (getOutput().toLowerCase().endsWith(".clns") && isClnaOutput))
             warn("WARNING: Unexpected file extension, use .clns extension for clones-only (normal) output and\n" +
                     ".clna if -a / --write-alignments options specified.");
 
+        try (VDJCAlignmentsReader alignmentsReader = new VDJCAlignmentsReader(in)) {
 
-        AlignmentsProvider alignmentsProvider = AlignmentsProvider.Util.createProvider(
-                in, VDJCLibraryRegistry.getDefault());
+            CloneAssemblerParameters assemblerParameters = getCloneAssemblerParameters();
+            List<VDJCGene> genes = getGenes();
+            VDJCAlignerParameters alignerParameters = getAlignerParameters();
+            TagsInfo tagsInfo = getTagsInfo();
 
-        CloneAssemblerParameters assemblerParameters = getCloneAssemblerParameters();
-        List<VDJCGene> genes = getGenes();
-        VDJCAlignerParameters alignerParameters = getAlignerParameters();
+            // tagsInfo.getSortingLevel()
 
-        // Performing assembly
-        try (CloneAssembler assembler = new CloneAssembler(assemblerParameters,
-                clna,
-                genes, alignerParameters.getFeaturesToAlignMap())) {
-            // Creating event listener to collect run statistics
-            report.setStartMillis(beginTimestamp);
-            report.setInputFiles(in);
-            report.setOutputFiles(out);
-            report.setCommandLine(getCommandLineArguments());
+            // Performing assembly
+            try (CloneAssembler assembler = new CloneAssembler(assemblerParameters,
+                    isClnaOutput,
+                    genes, alignerParameters.getFeaturesToAlignMap())) {
+                // Creating event listener to collect run statistics
+                report.setStartMillis(beginTimestamp);
+                report.setInputFiles(in);
+                report.setOutputFiles(out);
+                report.setCommandLine(getCommandLineArguments());
 
-            assembler.setListener(report);
+                assembler.setListener(report);
 
-            // Running assembler
-            CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(
-                    alignmentsProvider,
-                    assembler, threads);
-            SmartProgressReporter.startProgressReport(assemblerRunner);
+                // TODO >>>>>>>>>>>>>>
+                PreCloneReader preClones;
+                if (tagsInfo.hasTagsWithType(TagType.Cell) || tagsInfo.hasTagsWithType(TagType.Molecule)) {
+                    Path preClonesFile = tempDest.resolvePath("preclones.pc");
 
-            if (reportBuffers) {
-                StatusReporter reporter = new StatusReporter();
-                reporter.addCustomProviderFromLambda(() ->
-                        new StatusReporter.Status(
-                                "Reader buffer: FIXME " /*+ assemblerRunner.getQueueSize()*/,
-                                assemblerRunner.isFinished()));
-                reporter.start();
-            }
-            assemblerRunner.run();
+                    PreCloneAssemblerRunner assemblerRunner = new PreCloneAssemblerRunner(
+                            alignmentsReader,
+                            cellLevel ? TagType.Cell : TagType.Molecule,
+                            assemblerParameters.getAssemblingFeatures(),
+                            PreCloneAssemblerParameters.DefaultGConsensusAssemblerParameters,
+                            preClonesFile, tempDest.addSuffix("pc.tmp"));
+                    SmartProgressReporter.startProgressReport(assemblerRunner);
 
-            // Getting results
-            final CloneSet cloneSet = CloneSet.reorder(assemblerRunner.getCloneSet(alignerParameters), getOrdering());
+                    // Pre-clone assembly happens here (file with pre-clones and alignments written as a result)
+                    assemblerRunner.run();
 
-            // Passing final cloneset to assemble last pieces of statistics for report
-            report.onClonesetFinished(cloneSet);
+                    // Setting report into a big report object
+                    report.setPreCloneAssemblerReport(assemblerRunner.getReport());
 
-            // Writing results
-            PipelineConfiguration pipelineConfiguration = getFullPipelineConfiguration();
-            if (clna) {
+                    preClones = assemblerRunner.createReader();
+                } else
+                    // If there are no tags in the data, alignments are just wrapped into pre-clones
+                    preClones = PreCloneReader.fromAlignments(alignmentsReader, assemblerParameters.getAssemblingFeatures());
 
+                // Running assembler
+                CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(
+                        preClones,
+                        assembler);
+                SmartProgressReporter.startProgressReport(assemblerRunner);
 
-                //
-                //                    try (AlignmentsMappingMerger merged = new AlignmentsMappingMerger(alignmentsProvider.create(),
-                //                            assembler.getAssembledReadsPort())) {
-                //
-                //                        VDJCAlignments al;
-                //                        while ((al = merged.take()) != null) {
-                //                            if (al.getCloneIndex() != -1)
-                //                                continue;
-                //
-                //                            TagCounter tg = al.getTagCounter();
-                //                            assert tg.size() == 1;
-                //                            TagTuple tags = tg.iterator().key();
-                //                            if (al.getBestHit(GeneType.Variable) != null) {
-                //                                TagSignature sig = new TagSignature(tags, al.getBestHit(GeneType.Variable).getGene().getId());
-                //                                Integer cloneId = tagsToClones.get(sig);
-                //                                if (cloneId != null) {
-                //
-                //                                }
-                //                            }
-                //                        }
-                //                    }
+                if (reportBuffers) {
+                    StatusReporter reporter = new StatusReporter();
+                    reporter.addCustomProviderFromLambda(() ->
+                            new StatusReporter.Status(
+                                    "Reader buffer: FIXME " /*+ assemblerRunner.getQueueSize()*/,
+                                    assemblerRunner.isFinished()));
+                    reporter.start();
+                }
+                assemblerRunner.run();
 
-                try (ClnAWriter writer = new ClnAWriter(pipelineConfiguration, out,
-                        smartTempDestination(out, "", useSystemTemp), highCompression)) {
-                    // writer will supply current stage and completion percent to the progress reporter
-                    SmartProgressReporter.startProgressReport(writer);
-                    // Writing clone block
+                // Getting results
+                final CloneSet cloneSet = CloneSet.reorder(assemblerRunner.getCloneSet(alignerParameters, tagsInfo), getOrdering());
 
-                    writer.writeClones(cloneSet);
-                    // Pre-soring alignments
-                    try (AlignmentsMappingMerger merged = new AlignmentsMappingMerger(alignmentsProvider.create(),
-                            assembler.getAssembledReadsPort())) {
-                        OutputPort<VDJCAlignments> port = merged;
-                        if (attachReadsByTags) {
-                            Map<TagSignature, Integer> tagsToClones = new HashMap<>();
-                            for (int i = 0; i < cloneSet.size(); i++) {
-                                Clone clone = cloneSet.get(i);
-                                assert i == clone.getId();
-                                TagCounter tags = clone.getTagCounter();
-                                TObjectDoubleIterator<TagTuple> it = tags.iterator();
-                                while (it.hasNext()) {
-                                    it.advance();
-                                    TagTuple tag = it.key();
-                                    for (GeneType gt : new GeneType[]{GeneType.Variable, GeneType.Joining}) {
-                                        TagSignature sig = new TagSignature(tag, clone.getBestHit(gt).getGene().getId());
-                                        Integer id = tagsToClones.get(sig);
-                                        if (id != null)
-                                            tagsToClones.put(sig, -1);
-                                        else
-                                            tagsToClones.put(sig, clone.getId());
-                                    }
-                                }
-                            }
+                // Passing final cloneset to assemble last pieces of statistics for report
+                report.onClonesetFinished(cloneSet);
 
-                            tagsToClones.entrySet().removeIf(e -> e.getValue() < 0);
+                // Writing results
+                PipelineConfiguration pipelineConfiguration = getFullPipelineConfiguration();
+                if (isClnaOutput) {
+                    try (ClnAWriter writer = new ClnAWriter(pipelineConfiguration, out,
+                            tempDest, highCompression)) {
 
-                            port = () -> {
-                                VDJCAlignments al = merged.take();
-                                if (al == null
-                                        || al.getMappingType() != ReadToCloneMapping.MappingType.Dropped
-                                        || al.getFeature(new GeneFeature(assemblerParameters.getAssemblingFeatures())) != null)
-                                    return al;
+                        // writer will supply current stage and completion percent to the progress reporter
+                        SmartProgressReporter.startProgressReport(writer);
+                        // Writing clone block
 
-                                TagCounter tg = al.getTagCounter();
-                                assert tg.size() == 1;
-                                TObjectDoubleIterator<TagTuple> it = tg.iterator();
-                                it.advance();
-                                TagTuple tags = it.key();
+                        writer.writeClones(cloneSet);
 
-                                VDJCHit hit;
-
-                                int cloneMapping = -1; // -1 for not assigned, -2 for ambiguous
-                                for (GeneType gt : new GeneType[]{GeneType.Variable, GeneType.Joining}) {
-                                    if ((hit = al.getBestHit(gt)) != null) {
-                                        TagSignature sig = new TagSignature(tags, hit.getGene().getId());
-                                        Integer cloneId = tagsToClones.get(sig);
-                                        if (cloneId != null)
-                                            if (cloneMapping != -1 && cloneMapping != cloneId)
-                                                cloneMapping = -2;
-                                            else
-                                                cloneMapping = cloneId;
-                                    }
-                                }
-
-                                if (cloneMapping >= 0) {
-                                    report.onReadAttachedByTags();
-                                    return setMappingCloneIndex(al, cloneMapping);
-                                } else if (cloneMapping == -2)
-                                    report.onReadWithAmbiguousAttachmentsByTags();
-                                else
-                                    report.onReadsFailedToAttachedByTags();
-
-                                return al;
-                            };
+                        // Pre-soring alignments
+                        try (AlignmentsMappingMerger merged = new AlignmentsMappingMerger(
+                                preClones.readAlignments(),
+                                assembler.getAssembledReadsPort())) {
+                            writer.collateAlignments(merged, assembler.getAlignmentsCount());
                         }
 
-                        writer.collateAlignments(port, assembler.getAlignmentsCount());
+                        writer.writeAlignmentsAndIndex();
                     }
-                    writer.writeAlignmentsAndIndex();
-                }
-            } else
-                try (ClnsWriter writer = new ClnsWriter(out)) {
-                    writer.writeCloneSet(pipelineConfiguration, cloneSet);
-                }
+                } else
+                    try (ClnsWriter writer = new ClnsWriter(out)) {
+                        writer.writeCloneSet(pipelineConfiguration, cloneSet);
+                    }
 
-            // Writing report
+                // Writing report
 
-            report.setFinishMillis(System.currentTimeMillis());
+                report.setFinishMillis(System.currentTimeMillis());
 
-            assert cloneSet.getClones().size() == report.getCloneCount();
+                assert cloneSet.getClones().size() == report.getCloneCount();
 
-            report.setTotalReads(alignmentsProvider.getTotalNumberOfReads());
+                report.setTotalReads(alignmentsReader.getNumberOfReads());
 
-            // Writing report to stout
-            System.out.println("============= Report ==============");
-            ReportUtil.writeReportToStdout(report);
+                // Writing report to stout
+                System.out.println("============= Report ==============");
+                ReportUtil.writeReportToStdout(report);
 
-            if (reportFile != null)
-                ReportUtil.appendReport(reportFile, report);
+                if (reportFile != null)
+                    ReportUtil.appendReport(reportFile, report);
 
-            if (jsonReport != null)
-                ReportUtil.appendJsonReport(jsonReport, report);
+                if (jsonReport != null)
+                    ReportUtil.appendJsonReport(jsonReport, report);
+            }
         }
     }
 
     private static VDJCAlignments setMappingCloneIndex(VDJCAlignments al, int cloneIndex) {
-        return al.updateCloneIndexAndMappingType(cloneIndex, ReadToCloneMapping.ADDITIONAL_MAPPING_MASK);
+        return al.withCloneIndexAndMappingType(cloneIndex, ReadToCloneMapping.ADDITIONAL_MAPPING_MASK);
     }
 
     private static final class TagSignature {
@@ -425,7 +372,7 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
             use = JsonTypeInfo.Id.CLASS,
             include = JsonTypeInfo.As.PROPERTY,
             property = "type")
-    public static class AssembleConfiguration implements ActionConfiguration {
+    public static class AssembleConfiguration implements ActionConfiguration<AssembleConfiguration> {
         public final CloneAssemblerParameters assemblerParameters;
         public final boolean clna;
         public final VDJCSProperties.CloneOrdering ordering;
@@ -456,7 +403,6 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
 
         @Override
         public int hashCode() {
-
             return Objects.hash(assemblerParameters, clna);
         }
     }

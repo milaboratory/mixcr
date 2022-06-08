@@ -100,7 +100,7 @@ public class CommandDownsample extends ACommandWithOutputMiXCR {
                 ClonotypeDataset r = datasets.get(i);
                 clnsWriter.writeHeader(null,
                         r.getAlignerParameters(), r.getAssemblerParameters(),
-                        r.ordering(), r.getUsedGenes(), r.getAlignerParameters(), downsampled.size());
+                        r.getTagsInfo(), r.ordering(), r.getUsedGenes(), r.getAlignerParameters(), downsampled.size());
 
                 CUtils.drain(CUtils.asOutputPort(downsampled), clnsWriter.cloneWriter());
             }

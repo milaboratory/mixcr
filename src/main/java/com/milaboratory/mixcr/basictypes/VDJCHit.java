@@ -113,6 +113,10 @@ public final class VDJCHit implements Comparable<VDJCHit>, HasGene {
         return gene;
     }
 
+    public GeneAndScore getGeneAndScore() {
+        return new GeneAndScore(getGene().getId(), getScore());
+    }
+
     public GeneFeature getAlignedFeature() {
         return alignedFeature;
     }

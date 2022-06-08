@@ -31,6 +31,7 @@ package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.cli.AppVersionInfo;
 import com.milaboratory.cli.PipelineConfiguration;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.util.MiXCRDebug;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
@@ -52,8 +53,8 @@ import java.util.List;
 public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPosition {
     public static final int DEFAULT_ENCODER_THREADS = 3;
     public static final int DEFAULT_ALIGNMENTS_IN_BLOCK = 1 << 10; // 805-1024 bytes per alignment
-    static final String MAGIC_V15 = "MiXCR.VDJC.V15";
-    static final String MAGIC = MAGIC_V15;
+    static final String MAGIC_V16 = "MiXCR.VDJC.V16";
+    static final String MAGIC = MAGIC_V16;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
 
@@ -118,27 +119,17 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
         this.numberOfProcessedReads = numberOfProcessedReads;
     }
 
-    public void header(VDJCAlignmentsReader reader, PipelineConfiguration pipelineConfiguration) {
-        header(reader.getParameters(), reader.getUsedGenes(), pipelineConfiguration);
+    public void header(VDJCAlignmentsReader reader, PipelineConfiguration pipelineConfiguration, TagsInfo tagsInfo) {
+        header(reader.getParameters(), reader.getUsedGenes(), pipelineConfiguration, tagsInfo);
     }
 
-    public void header(VDJCAligner aligner, PipelineConfiguration pipelineConfiguration) {
-        header(aligner.getParameters(), aligner.getUsedGenes(), pipelineConfiguration);
-    }
-
-    /** History to write in the header */
-    private PipelineConfiguration pipelineConfiguration = null;
-
-    public synchronized void setPipelineConfiguration(PipelineConfiguration configuration) {
-        if (pipelineConfiguration == null)
-            pipelineConfiguration = configuration;
-        else if (!configuration.equals(this.pipelineConfiguration))
-            throw new IllegalStateException();
+    public void header(VDJCAligner aligner, PipelineConfiguration pipelineConfiguration, TagsInfo tagsInfo) {
+        header(aligner.getParameters(), aligner.getUsedGenes(), pipelineConfiguration, tagsInfo);
     }
 
     @Override
     public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes,
-                       PipelineConfiguration ppConfiguration) {
+                       PipelineConfiguration pipelineConfiguration, TagsInfo tags) {
         if (parameters == null || genes == null)
             throw new IllegalArgumentException();
 
@@ -160,9 +151,10 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
             o.writeObject(parameters);
 
             // Writing history
-            if (ppConfiguration != null)
-                this.pipelineConfiguration = ppConfiguration;
             o.writeObject(pipelineConfiguration);
+
+            // Information about tags
+            o.writeObject(tags);
 
             IOUtil.stdVDJCPrimitivOStateInit(o, genes, parameters);
         }

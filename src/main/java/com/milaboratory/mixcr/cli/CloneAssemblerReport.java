@@ -32,9 +32,10 @@ package com.milaboratory.mixcr.cli;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.mixcr.assembler.CloneAccumulator;
 import com.milaboratory.mixcr.assembler.CloneAssemblerListener;
+import com.milaboratory.mixcr.assembler.preclone.PreClone;
+import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerReport;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.util.ReportHelper;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -42,6 +43,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public final class CloneAssemblerReport extends AbstractCommandReport implements CloneAssemblerListener {
     private final ChainUsageStats chainStats = new ChainUsageStats();
+    private PreCloneAssemblerReport preCloneAssemblerReport;
     long totalReads = -1;
     final AtomicInteger clonesCreated = new AtomicInteger();
     final AtomicLong failedToExtractTarget = new AtomicLong();
@@ -65,6 +67,18 @@ public final class CloneAssemblerReport extends AbstractCommandReport implements
     @Override
     public String getCommand() {
         return "assemble";
+    }
+
+    // TODO 4.0
+    // @JsonProperty("preCloneAssemblerReport")
+    public PreCloneAssemblerReport getPreCloneAssemblerReport() {
+        return preCloneAssemblerReport;
+    }
+
+    public void setPreCloneAssemblerReport(PreCloneAssemblerReport preCloneAssemblerReport) {
+        if (this.preCloneAssemblerReport != null)
+            throw new IllegalStateException("Pre-clone assembler report already set.");
+        this.preCloneAssemblerReport = preCloneAssemblerReport;
     }
 
     @JsonProperty("totalReadsProcessed")
@@ -182,35 +196,35 @@ public final class CloneAssemblerReport extends AbstractCommandReport implements
     }
 
     @Override
-    public void onFailedToExtractTarget(VDJCAlignments alignments) {
-        failedToExtractTarget.addAndGet(alignments.getNumberOfReads());
+    public void onFailedToExtractTarget(PreClone preClone) {
+        failedToExtractTarget.addAndGet(preClone.getNumberOfReads());
     }
 
     @Override
-    public void onTooManyLowQualityPoints(VDJCAlignments alignments) {
-        droppedAsLowQuality.addAndGet(alignments.getNumberOfReads());
+    public void onTooManyLowQualityPoints(PreClone preClone) {
+        droppedAsLowQuality.addAndGet(preClone.getNumberOfReads());
     }
 
     @Override
-    public void onAlignmentDeferred(VDJCAlignments alignments) {
-        deferred.addAndGet(alignments.getNumberOfReads());
+    public void onAlignmentDeferred(PreClone preClone) {
+        deferred.addAndGet(preClone.getNumberOfReads());
     }
 
     @Override
-    public void onAlignmentAddedToClone(VDJCAlignments alignments, CloneAccumulator accumulator) {
-        coreAlignments.addAndGet(alignments.getNumberOfReads());
-        alignmentsInClones.addAndGet(alignments.getNumberOfReads());
+    public void onAlignmentAddedToClone(PreClone preClone, CloneAccumulator accumulator) {
+        coreAlignments.addAndGet(preClone.getNumberOfReads());
+        alignmentsInClones.addAndGet(preClone.getNumberOfReads());
     }
 
     @Override
-    public void onNoCandidateFoundForDeferredAlignment(VDJCAlignments alignments) {
-        deferredAlignmentsDropped.addAndGet(alignments.getNumberOfReads());
+    public void onNoCandidateFoundForDeferredAlignment(PreClone preClone) {
+        deferredAlignmentsDropped.addAndGet(preClone.getNumberOfReads());
     }
 
     @Override
-    public void onDeferredAlignmentMappedToClone(VDJCAlignments alignments, CloneAccumulator accumulator) {
-        deferredAlignmentsMapped.addAndGet(alignments.getNumberOfReads());
-        alignmentsInClones.addAndGet(alignments.getNumberOfReads());
+    public void onDeferredAlignmentMappedToClone(PreClone preClone, CloneAccumulator accumulator) {
+        deferredAlignmentsMapped.addAndGet(preClone.getNumberOfReads());
+        alignmentsInClones.addAndGet(preClone.getNumberOfReads());
     }
 
     @Override
@@ -268,6 +282,10 @@ public final class CloneAssemblerReport extends AbstractCommandReport implements
     public void writeReport(ReportHelper helper) {
         // Writing common analysis information
         writeSuperReport(helper);
+
+        // Writing pre-clone assembler report (should be present for barcoded analysis)
+        if (preCloneAssemblerReport != null)
+            preCloneAssemblerReport.writeReport(helper);
 
         if (totalReads == -1)
             throw new IllegalStateException("TotalReads count not set.");

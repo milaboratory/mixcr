@@ -32,6 +32,7 @@ package com.milaboratory.mixcr.basictypes;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.sequence.*;
+import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.util.Cache;
 import io.repseq.core.*;
 import io.repseq.gen.VDJCGenes;
@@ -47,21 +48,21 @@ public abstract class VDJCObject {
     protected final EnumMap<GeneType, VDJCHit[]> hits;
     protected volatile EnumMap<GeneType, Chains> allChains;
     protected VDJCPartitionedSequence[] partitionedTargets;
-    protected final TagCounter tagCounter;
+    protected final TagCount tagCount;
     protected final Cache cache = new Cache();
 
-    public VDJCObject(EnumMap<GeneType, VDJCHit[]> hits, TagCounter tagCounter, NSequenceWithQuality... targets) {
+    public VDJCObject(EnumMap<GeneType, VDJCHit[]> hits, TagCount tagCount, NSequenceWithQuality... targets) {
         this.targets = targets;
         this.hits = hits;
-        this.tagCounter = tagCounter;
+        this.tagCount = tagCount;
 
         // Sorting hits
         for (VDJCHit[] h : hits.values())
             Arrays.sort(h);
     }
 
-    public TagCounter getTagCounter() {
-        return tagCounter;
+    public TagCount getTagCount() {
+        return tagCount;
     }
 
     protected static EnumMap<GeneType, VDJCHit[]> createHits(VDJCHit[] vHits, VDJCHit[] dHits,
@@ -278,6 +279,13 @@ public abstract class VDJCObject {
         if (targetIndex == -1)
             return null;
         return getPartitionedTarget(targetIndex).getPartitioning().getRelativeRange(big, subfeature);
+    }
+
+    public final int getRelativePosition(GeneFeature big, ReferencePoint point) {
+        int targetIndex = getTargetContainingFeature(big);
+        if (targetIndex == -1)
+            return -1;
+        return getPartitionedTarget(targetIndex).getPartitioning().getRelativePosition(big, point);
     }
 
     public final int getTargetContainingFeature(GeneFeature feature) {
@@ -569,17 +577,17 @@ public abstract class VDJCObject {
                         if (lLast.germline || rLast.germline)
                             return null;
 
-//                    assert lHit.getGene().getGeneType() == GeneType.Variable;
-//                    if (!lHit
-//                            .getPartitioningForTarget(lLast.iTarget)
-//                            .isAvailable(ReferencePoint.CDR3Begin))
-//                        return null;
-//
-//                    assert rHit.getGene().getGeneType() == GeneType.Joining;
-//                    if (!rHit
-//                            .getPartitioningForTarget(rLast.iTarget)
-//                            .isAvailable(ReferencePoint.CDR3End))
-//                        return null;
+                        //                    assert lHit.getGene().getGeneType() == GeneType.Variable;
+                        //                    if (!lHit
+                        //                            .getPartitioningForTarget(lLast.iTarget)
+                        //                            .isAvailable(ReferencePoint.CDR3Begin))
+                        //                        return null;
+                        //
+                        //                    assert rHit.getGene().getGeneType() == GeneType.Joining;
+                        //                    if (!rHit
+                        //                            .getPartitioningForTarget(rLast.iTarget)
+                        //                            .isAvailable(ReferencePoint.CDR3End))
+                        //                        return null;
 
                         IncompleteSequencePart
                                 merged = new IncompleteSequencePart(lHit, false, lLast.iTarget, lLast.begin, rLast.end);
@@ -847,7 +855,7 @@ public abstract class VDJCObject {
                 return false;
         }
 
-        if (!tagCounter.equals(that.tagCounter)) return false;
+        if (!tagCount.equals(that.tagCount)) return false;
         if (!Arrays.equals(targets, that.targets)) return false;
 
         return true;
@@ -857,7 +865,7 @@ public abstract class VDJCObject {
     public int hashCode() {
         int result = Arrays.hashCode(targets);
         result = 31 * result + hits.hashCode();
-        result = 29 * result + tagCounter.hashCode();
+        result = 29 * result + tagCount.hashCode();
         return result;
     }
 }
