@@ -152,9 +152,6 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
         // noinspection ConstantConditions
         assemblerParameters = assemblerParameters.updateFrom(alignerParameters);
 
-        // TODO 4.0 ???
-        // assemblerParameters = assemblerParameters.setCloneClusteringParameters(assemblerParameters.getCloneClusteringParameters().setMinimalTagSetOverlap(DEFAULT_MINIMAL_TAG_SET_OVERLAP));
-
         // Overriding JSON parameters
         if (!overrides.isEmpty()) {
             assemblerParameters = JsonOverrider.override(assemblerParameters, CloneAssemblerParameters.class,
@@ -249,20 +246,12 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
                 // TODO >>>>>>>>>>>>>>
                 PreCloneReader preClones;
                 if (tagsInfo.hasTagsWithType(TagType.Cell) || tagsInfo.hasTagsWithType(TagType.Molecule)) {
-                    int depth = tagsInfo.getDepthFor(cellLevel ? TagType.Cell : TagType.Molecule);
-                    if (tagsInfo.getSortingLevel() < depth)
-                        throwValidationException("Input file has insufficient sorting level");
-                    PreCloneAssemblerParameters preAssemblerParams = new PreCloneAssemblerParameters(
-                            PreCloneAssemblerParameters.DefaultGConsensusAssemblerParameters,
-                            alignmentsReader.getParameters(),
-                            assemblerParameters.getAssemblingFeatures(),
-                            depth);
                     Path preClonesFile = tempDest.resolvePath("preclones.pc");
 
                     PreCloneAssemblerRunner assemblerRunner = new PreCloneAssemblerRunner(
                             alignmentsReader,
                             cellLevel ? TagType.Cell : TagType.Molecule,
-                            new GeneFeature[]{GeneFeature.CDR3},
+                            assemblerParameters.getAssemblingFeatures(),
                             PreCloneAssemblerParameters.DefaultGConsensusAssemblerParameters,
                             preClonesFile, tempDest.addSuffix("pc.tmp"));
                     SmartProgressReporter.startProgressReport(assemblerRunner);

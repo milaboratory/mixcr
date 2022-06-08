@@ -1,12 +1,23 @@
 package com.milaboratory.mixcr.basictypes.tag;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.primitivio.annotations.Serializable;
 
-import java.util.*;
+import java.util.AbstractCollection;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Objects;
 
 @Serializable(asJson = true)
+@JsonFormat(shape = JsonFormat.Shape.OBJECT)
+@JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.NON_PRIVATE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE
+)
 public final class TagsInfo extends AbstractCollection<TagInfo> {
     public static final TagsInfo NO_TAGS = new TagsInfo(0);
 
@@ -57,7 +68,7 @@ public final class TagsInfo extends AbstractCollection<TagInfo> {
         return new TagsInfo(sortedLevel, tags);
     }
 
-    public int indexOf(String tagName){
+    public int indexOf(String tagName) {
         int idx = -1;
         for (TagInfo ti : this)
             if (ti.getName().equals(tagName)) {

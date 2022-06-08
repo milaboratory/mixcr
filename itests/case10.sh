@@ -40,8 +40,20 @@ mixcr assemblePartial --cell-level case10.corrected-vdjca case10.part-assembled-
 mixcr itestAssemblePreClones case10.part-assembled-molecule-vdjca case10.part-assembled-molecule-vdjca.pc
 mixcr itestAssemblePreClones --cell-level case10.part-assembled-cell-vdjca case10.part-assembled-cell-vdjca.pc
 
-mixcr assemble -f -a case10.part-assembled-molecule-vdjca case10.molecule-clna
-mixcr assemble -f -a --cell-level case10.part-assembled-cell-vdjca case10.cell-clna
+mixcr assemble -f -a case10.part-assembled-molecule-vdjca case10.cdr3-molecule-clna
+mixcr assemble -f -a --cell-level case10.part-assembled-cell-vdjca case10.cdr3-cell-clna
 
-mixcr assembleContigs -f case10.molecule-clna case10.molecule-clns
-mixcr assembleContigs -f case10.cell-clna case10.cell-clns
+mixcr assembleContigs -f case10.cdr3-molecule-clna case10.cdr3-molecule-clns
+mixcr assembleContigs -f case10.cdr3-cell-clna case10.cdr3-cell-clns
+
+#mixcr assemble -f -OassemblingFeatures='VDJRegion' case10.part-assembled-molecule-vdjca case10.vdjregion-molecule-clns
+#mixcr assemble -f -OassemblingFeatures='VDJRegion' --cell-level case10.part-assembled-cell-vdjca case10.vdjregion-cell-clns
+
+for f in *-clns; do
+  # -count -uniqueTagCount UMI
+  mixcr exportClones -f --split-by-tag CELL -tag CELL -nFeature CDR3 -nFeature VDJRegion ${f} ${f}.txt
+  grep -E 'TGTGCTGTGCAGGCGGTACTTCAACAAATTTTACTTT|TGTGCCAGCACAAACAGTCATGGCTACACCTTC|TGCCTCGTGGGTGACTCCGGTGGCCAGAAGCTGCTCTTT|TGTGCCAGCAGCTTAGGGGGGACAGGGGACCAAGAGACCCAGTACTTC|TGTGCAGCACCTCGTACGTTAAACGACTACAAGCTCAGCTTT|TGTGTTGTGAGTCTTCTGGTGGCTACAATAAGCTGATTTTT' ${f}.txt > ${f}.txt.g
+  sort ${f}.txt.g > ${f}.txt.g.s
+done
+
+cmp case10.cdr3-cell-clns.txt.g.s case10.cdr3-molecule-clns.txt.g.s

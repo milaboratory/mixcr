@@ -213,6 +213,7 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
                 // Initializing and writing results to the output file
                 writer.header(mainReader, getFullPipelineConfiguration(),
                         mainReader.getTagsInfo().setSorted(mainReader.getTagsInfo().size()));
+                writer.setNumberOfProcessedReads(mainReader.getNumberOfReads());
                 for (VDJCAlignments al : CUtils.it(sorted))
                     writer.write(al);
             }

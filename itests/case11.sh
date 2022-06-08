@@ -36,4 +36,15 @@ mixcr correctAndSortTags case11.aligned-vdjca case11.corrected-vdjca
 
 mixcr itestAssemblePreClones case11.corrected-vdjca case11.corrected-vdjca.pc
 
-mixcr assemble -f -a case11.corrected-vdjca case11.clna
+mixcr assemble -f -a case11.corrected-vdjca case11.cdr3-clna
+mixcr assembleContigs -f case11.cdr3-clna case11.cdr3-clns
+
+mixcr assemble -f -OassemblingFeatures='VDJRegion' case11.corrected-vdjca case11.vdjregion-clns
+
+mixcr exportClones -nFeature VDJRegion case11.vdjregion-clns case11.vdjregion-clns.txt
+mixcr exportClones -nFeature VDJRegion case11.cdr3-clns case11.cdr3-clns.txt
+
+sort case11.vdjregion-clns.txt > case11.vdjregion-clns.txt.s
+sort case11.cdr3-clns.txt > case11.cdr3-clns.txt.s
+
+cmp case11.vdjregion-clns.txt.s case11.cdr3-clns.txt.s
