@@ -48,7 +48,7 @@ public final class DiversityMeasure {
                 Observed,
                 Chao1,
                 Chao1Std,
-                ShannonWeiner,
+                ShannonWiener,
                 NormalizedShannonWeinerIndex,
                 GiniIndex,
                 InverseSimpson,
@@ -60,7 +60,7 @@ public final class DiversityMeasure {
     public static final DiversityMeasure Observed = Measure.Observed.toDiversityMeasure();
     public static final DiversityMeasure Chao1 = Measure.Chao1.toDiversityMeasure();
     public static final DiversityMeasure Chao1Std = Measure.Chao1Std.toDiversityMeasure();
-    public static final DiversityMeasure ShannonWeiner = Measure.ShannonWeiner.toDiversityMeasure();
+    public static final DiversityMeasure ShannonWiener = Measure.ShannonWiener.toDiversityMeasure();
     public static final DiversityMeasure NormalizedShannonWeinerIndex = Measure.NormalizedShannonWeinerIndex.toDiversityMeasure();
     public static final DiversityMeasure GiniIndex = Measure.Gini.toDiversityMeasure();
     public static final DiversityMeasure InverseSimpson = Measure.InverseSimpson.toDiversityMeasure();
@@ -71,7 +71,7 @@ public final class DiversityMeasure {
         Observed,
         Chao1,
         Chao1Std,
-        ShannonWeiner,
+        ShannonWiener,
         NormalizedShannonWeinerIndex,
         Gini,
         GiniDiversity,

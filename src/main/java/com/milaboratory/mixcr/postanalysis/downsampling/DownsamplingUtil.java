@@ -61,6 +61,10 @@ public final class DownsamplingUtil {
 
     public static long[] downsample_mvhg(long[] counts, long downSampleSize, RandomGenerator rnd) {
         long total = LongStream.of(counts).sum();
+        return downsample_mvhg(counts, total, downSampleSize, rnd);
+    }
+
+    static long[] downsample_mvhg(long[] counts, long total, long downSampleSize, RandomGenerator rnd) {
         long[] result = new long[counts.length];
         RandomMvhgMarginals.random_multivariate_hypergeometric_marginals(rnd, total, counts, downSampleSize, result);
         return result;
@@ -73,16 +77,16 @@ public final class DownsamplingUtil {
         return result;
     }
 
-    public static SetPreprocessorFactory<Clone> parseDownsampling(String downsampling, boolean dropOutliers, long seed) {
+    public static SetPreprocessorFactory<Clone> parseDownsampling(String downsampling, boolean dropOutliers) {
         if (downsampling.equalsIgnoreCase("none")) {
             return new NoPreprocessing.Factory<>();
         } else if (downsampling.startsWith("umi-count")) {
             if (downsampling.endsWith("auto"))
-                return new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Auto(), seed, dropOutliers);
+                return new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Auto(), dropOutliers);
             else if (downsampling.endsWith("min"))
-                return new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Minimal(), seed, dropOutliers);
+                return new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Minimal(), dropOutliers);
             else {
-                return new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Fixed(downsamplingValue(downsampling)), seed, dropOutliers);
+                return new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Fixed(downsamplingValue(downsampling)), dropOutliers);
             }
         } else {
             int value = downsamplingValue(downsampling);

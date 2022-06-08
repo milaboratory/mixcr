@@ -3,7 +3,6 @@
     "defaultDownsampling": null,
     "defaultOnlyProductive": true,
     "defaultDropOutliers": false,
-    "randomSeed": 111,
     "biophysics": {
       "cdr3lenAA": {
         "downsampling": null,
@@ -57,7 +56,7 @@
         "onlyProductive": null,
         "dropOutliers": null
       },
-      "shannonWeiner": {
+      "shannonWiener": {
         "downsampling": null,
         "onlyProductive": null,
         "dropOutliers": null
@@ -86,6 +85,11 @@
         "downsampling": null,
         "onlyProductive": null,
         "dropOutliers": null
+      },
+      "efronThisted": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null
       }
     },
     "vUsage": {
@@ -104,6 +108,21 @@
       "dropOutliers": null
     },
     "isotypeUsage": {
+      "downsampling": null,
+      "onlyProductive": null,
+      "dropOutliers": null
+    },
+    "cdr3Spectratype": {
+      "downsampling": null,
+      "onlyProductive": null,
+      "dropOutliers": null
+    },
+    "vSpectratype": {
+      "downsampling": null,
+      "onlyProductive": null,
+      "dropOutliers": null
+    },
+    "vSpectratypeMean": {
       "downsampling": null,
       "onlyProductive": null,
       "dropOutliers": null

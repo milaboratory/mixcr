@@ -14,20 +14,16 @@ import java.util.function.ToLongFunction;
 public class DownsamplingPreprocessorFactory<T> implements SetPreprocessorFactory<T> {
     @JsonProperty("downsampleValueChooser")
     public final DownsampleValueChooser downsampleValueChooser;
-    @JsonProperty("seed")
-    public final long seed;
     @JsonProperty("dropOutliers")
     public final boolean dropOutliers;
     public final ToLongFunction<T> getCount;
     public final BiFunction<T, Long, T> setCount;
 
     public DownsamplingPreprocessorFactory(DownsampleValueChooser downsampleValueChooser,
-                                           long seed,
-                                           boolean dropOutliers,
                                            ToLongFunction<T> getCount,
-                                           BiFunction<T, Long, T> setCount) {
+                                           BiFunction<T, Long, T> setCount,
+                                           boolean dropOutliers) {
         this.downsampleValueChooser = downsampleValueChooser;
-        this.seed = seed;
         this.dropOutliers = dropOutliers;
         this.getCount = getCount;
         this.setCount = setCount;
@@ -41,9 +37,9 @@ public class DownsamplingPreprocessorFactory<T> implements SetPreprocessorFactor
     @Override
     public SetPreprocessor<T> newInstance() {
         return new DownsamplingPreprocessor<T>(
-                getCount,
-                setCount, downsampleValueChooser,
-                dropOutliers, seed, id());
+                downsampleValueChooser, getCount,
+                setCount,
+                dropOutliers, id());
     }
 
     @Override
@@ -51,11 +47,11 @@ public class DownsamplingPreprocessorFactory<T> implements SetPreprocessorFactor
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         DownsamplingPreprocessorFactory<?> that = (DownsamplingPreprocessorFactory<?>) o;
-        return seed == that.seed && Objects.equals(downsampleValueChooser, that.downsampleValueChooser) && Objects.equals(dropOutliers, that.dropOutliers) && Objects.equals(getCount, that.getCount) && Objects.equals(setCount, that.setCount);
+        return Objects.equals(downsampleValueChooser, that.downsampleValueChooser) && Objects.equals(dropOutliers, that.dropOutliers) && Objects.equals(getCount, that.getCount) && Objects.equals(setCount, that.setCount);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(downsampleValueChooser, seed, dropOutliers, getCount, setCount);
+        return Objects.hash(downsampleValueChooser, dropOutliers, getCount, setCount);
     }
 }

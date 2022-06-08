@@ -18,10 +18,8 @@ import java.util.Objects;
 public class ClonesDownsamplingPreprocessorFactory extends DownsamplingPreprocessorFactory<Clone> {
     @JsonCreator
     public ClonesDownsamplingPreprocessorFactory(@JsonProperty("downsampleValueChooser") DownsampleValueChooser downsampleValueChooser,
-                                                 @JsonProperty("seed") long seed,
                                                  @JsonProperty("dropOutliers") boolean dropOutliers) {
-        super(downsampleValueChooser, seed, dropOutliers,
-                c -> Math.round(c.getCount()), Clone::setCount);
+        super(downsampleValueChooser, c -> Math.round(c.getCount()), Clone::setCount, dropOutliers);
     }
 
     @Override
@@ -29,12 +27,11 @@ public class ClonesDownsamplingPreprocessorFactory extends DownsamplingPreproces
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ClonesDownsamplingPreprocessorFactory that = (ClonesDownsamplingPreprocessorFactory) o;
-        return Objects.equals(downsampleValueChooser, that.downsampleValueChooser)
-                && Objects.equals(seed, that.seed);
+        return Objects.equals(downsampleValueChooser, that.downsampleValueChooser);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(downsampleValueChooser, seed);
+        return Objects.hash(downsampleValueChooser);
     }
 }

@@ -1,5 +1,6 @@
 package com.milaboratory.mixcr.cli.postanalysis;
 
+import com.milaboratory.miplots.StandardPlots.PlotType;
 import com.milaboratory.miplots.stat.util.PValueCorrection;
 import com.milaboratory.miplots.stat.util.RefGroup;
 import com.milaboratory.miplots.stat.util.TestMethod;
@@ -8,7 +9,6 @@ import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatRow;
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics;
-import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics.PlotType;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
@@ -19,7 +19,10 @@ import java.util.List;
 import java.util.Objects;
 
 public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExportPlots {
-    @Option(description = "Plot type. Possible values: auto, boxplot, barplot, dotplot, lineplot, scatter.",
+    @Option(description = "Plot type. Possible values: boxplot, boxplot-bindot, boxplot-jitter, " +
+            "lineplot, lineplot-bindot, lineplot-jitter, " +
+            "violin, violin-bindot, barplot, barplot-stacked, " +
+            "scatter",
             names = {"--plot-type"})
     public String plotType;
 
@@ -92,9 +95,7 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
         else if (refGroup != null)
             rg = RefGroup.Companion.of(refGroup);
 
-        PlotType plotType = this.plotType == null
-                ? PlotType.Auto
-                : PlotType.Companion.parse(this.plotType);
+        PlotType plotType = BasicStatistics.INSTANCE.parsePlotType(this.plotType);
 
         BasicStatistics.PlotParameters par = new BasicStatistics.PlotParameters(
                 plotType,

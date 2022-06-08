@@ -135,22 +135,24 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
             getterVisibility = JsonAutoDetect.Visibility.NONE)
     public static class DiversityParameters {
         public PreprocessorParameters observed = new PreprocessorParameters();
-        public PreprocessorParameters shannonWeiner = new PreprocessorParameters();
+        public PreprocessorParameters shannonWiener = new PreprocessorParameters();
         public PreprocessorParameters chao1 = new PreprocessorParameters();
         public PreprocessorParameters clonality = new PreprocessorParameters();
         public PreprocessorParameters inverseSimpson = new PreprocessorParameters();
         public PreprocessorParameters gini = new PreprocessorParameters();
         public PreprocessorParameters d50 = new PreprocessorParameters();
+        public PreprocessorParameters efronThisted = new PreprocessorParameters();
 
         public CharacteristicGroup<?, Clone> getGroup(PostanalysisParameters base) {
             List<Characteristic<?, Clone>> chars = new ArrayList<>(groupByPreproc(
                     new HashMap<DiversityMeasure, SetPreprocessorFactory<Clone>>() {{
                         put(DiversityMeasure.Observed, observed.preproc(base));
-                        put(DiversityMeasure.ShannonWeiner, shannonWeiner.preproc(base));
+                        put(DiversityMeasure.ShannonWiener, shannonWiener.preproc(base));
                         put(DiversityMeasure.Chao1, chao1.preproc(base));
                         put(DiversityMeasure.NormalizedShannonWeinerIndex, clonality.preproc(base));
                         put(DiversityMeasure.InverseSimpson, inverseSimpson.preproc(base));
                         put(DiversityMeasure.GiniIndex, gini.preproc(base));
+                        put(DiversityMeasure.EfronThisted, efronThisted.preproc(base));
                     }},
                     (p, l) -> Collections.singletonList(new DiversityCharacteristic<>("Diversity "
                             + l.stream().map(m -> m.name).collect(Collectors.joining("/")),
@@ -174,12 +176,12 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             DiversityParameters that = (DiversityParameters) o;
-            return Objects.equals(observed, that.observed) && Objects.equals(shannonWeiner, that.shannonWeiner) && Objects.equals(chao1, that.chao1) && Objects.equals(clonality, that.clonality) && Objects.equals(inverseSimpson, that.inverseSimpson) && Objects.equals(gini, that.gini) && Objects.equals(d50, that.d50);
+            return Objects.equals(observed, that.observed) && Objects.equals(shannonWiener, that.shannonWiener) && Objects.equals(chao1, that.chao1) && Objects.equals(clonality, that.clonality) && Objects.equals(inverseSimpson, that.inverseSimpson) && Objects.equals(gini, that.gini) && Objects.equals(d50, that.d50);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(observed, shannonWeiner, chao1, clonality, inverseSimpson, gini, d50);
+            return Objects.hash(observed, shannonWiener, chao1, clonality, inverseSimpson, gini, d50);
         }
     }
 
