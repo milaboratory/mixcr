@@ -141,6 +141,7 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
         public PreprocessorParameters inverseSimpson = new PreprocessorParameters();
         public PreprocessorParameters gini = new PreprocessorParameters();
         public PreprocessorParameters d50 = new PreprocessorParameters();
+        public PreprocessorParameters efronThisted = new PreprocessorParameters();
 
         public CharacteristicGroup<?, Clone> getGroup(PostanalysisParameters base) {
             List<Characteristic<?, Clone>> chars = new ArrayList<>(groupByPreproc(
@@ -151,6 +152,7 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
                         put(DiversityMeasure.NormalizedShannonWeinerIndex, clonality.preproc(base));
                         put(DiversityMeasure.InverseSimpson, inverseSimpson.preproc(base));
                         put(DiversityMeasure.GiniIndex, gini.preproc(base));
+                        put(DiversityMeasure.EfronThisted, efronThisted.preproc(base));
                     }},
                     (p, l) -> Collections.singletonList(new DiversityCharacteristic<>("Diversity "
                             + l.stream().map(m -> m.name).collect(Collectors.joining("/")),
