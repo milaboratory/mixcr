@@ -81,6 +81,11 @@ public class CommandOverlapScatter extends ACommandWithOutputMiXCR {
             names = {"--no-log"})
     public boolean noLog;
 
+    @Override
+    protected List<String> getInputFiles() {
+        return Arrays.asList(in1, in2);
+    }
+
     private static String fName(String file) {
         return Paths.get(file).toAbsolutePath().getFileName().toString();
     }
