@@ -30,11 +30,19 @@ public class SpectratypeCharacteristic extends Characteristic<SpectratypeKey<Str
     @JsonCreator
     public SpectratypeCharacteristic(@JsonProperty("name") String name,
                                      @JsonProperty("preprocessor") SetPreprocessorFactory<Clone> preprocessor,
+                                     @JsonProperty("weight") WeightFunction<Clone> weight,
                                      @JsonProperty("nTopClonotypes") int nTopClonotypes,
                                      @JsonProperty("keyFunction") SpectratypeKeyFunction<String, Clone> keyFunction) {
-        super(name, preprocessor, new WeightFunctions.Count());
+        super(name, preprocessor, weight);
         this.nTopClonotypes = nTopClonotypes;
         this.keyFunction = keyFunction;
+    }
+
+    public SpectratypeCharacteristic(String name,
+                                     SetPreprocessorFactory<Clone> preprocessor,
+                                     int nTopClonotypes,
+                                     SpectratypeKeyFunction<String, Clone> keyFunction) {
+        this(name, preprocessor, WeightFunctions.Count, nTopClonotypes, keyFunction);
     }
 
     @Override

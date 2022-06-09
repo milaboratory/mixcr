@@ -39,9 +39,9 @@ public class DiversityCharacteristic<T> extends Characteristic<DiversityMeasure,
         this.measures = measures;
     }
 
-    public DiversityCharacteristic(@JsonProperty("name") String name,
-                                   @JsonProperty("weight") WeightFunction<T> weight,
-                                   @JsonProperty("preproc") SetPreprocessorFactory<T> preprocessor) {
+    public DiversityCharacteristic(String name,
+                                   WeightFunction<T> weight,
+                                   SetPreprocessorFactory<T> preprocessor) {
         this(name, weight, preprocessor, DiversityMeasure.basic());
     }
 

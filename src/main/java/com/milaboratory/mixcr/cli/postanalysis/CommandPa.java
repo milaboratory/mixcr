@@ -11,11 +11,14 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis;
 
+import com.milaboratory.mixcr.basictypes.CloneSetIO;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.cli.ACommandWithOutputMiXCR;
 import com.milaboratory.mixcr.cli.CommonDescriptions;
-import com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingUtil;
+import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParameters;
 import com.milaboratory.util.StringUtil;
 import io.repseq.core.Chains;
+import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -46,7 +49,7 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
             names = {"--only-productive"})
     public boolean onlyProductive = false;
 
-    @Option(description = CommonDescriptions.DOWNSAMPLING_DROPO_UTLIERS,
+    @Option(description = CommonDescriptions.DOWNSAMPLING_DROP_OUTLIERS,
             names = {"--drop-outliers"})
     public boolean dropOutliers = false;
 
@@ -54,6 +57,11 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
             names = {"--default-downsampling"},
             required = true)
     public String defaultDownsampling;
+
+    @Option(description = CommonDescriptions.WEIGHT_FUNCTION,
+            names = {"--default-weight-function"},
+            required = false)
+    public String defaultWeightFunction;
 
     @Option(description = "Filter specified chains",
             names = {"--chains"})
@@ -101,15 +109,41 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
         return Collections.singletonList(out());
     }
 
+    private boolean tagsInfoInitialized;
+    private TagsInfo tagsInfo;
+
+    protected TagsInfo getTagsInfo() {
+        if (!tagsInfoInitialized) {
+            tagsInfoInitialized = true;
+            this.tagsInfo = extractTagsInfo(getInputFiles());
+        }
+        return tagsInfo;
+    }
+
+    static TagsInfo extractTagsInfo(List<String> l) {
+        Set<TagsInfo> set = new HashSet<>();
+        for (String in : l) {
+            try {
+                set.add(CloneSetIO.mkReader(Paths.get(in), VDJCLibraryRegistry.getDefault()).getTagsInfo());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        if (set.size() != 1) {
+            throw new IllegalArgumentException("Input files have different tags structure");
+        } else
+            return set.iterator().next();
+    }
+
     @Override
     public void validate() {
         super.validate();
         if (!out().endsWith(".json") && !out().endsWith(".json.gz"))
             throwValidationException("Output file name should ends with .json.gz or .json");
         try {
-            DownsamplingUtil.parseDownsampling(defaultDownsampling, dropOutliers);
+            PostanalysisParameters.parseDownsampling(defaultDownsampling, getTagsInfo(), dropOutliers);
         } catch (Throwable t) {
-            throwValidationException("Illegal downsampling string: " + defaultDownsampling);
+            throwValidationException(t.getMessage());
         }
         if (preprocOut != null && !preprocOut.endsWith(".tsv") && !preprocOut.endsWith(".csv"))
             throwValidationException("--preproc-tables: table name should ends with .csv or .tsv");

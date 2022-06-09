@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.postanalysis.ui;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -49,7 +50,7 @@ interface OutputTableExtractor<K> {
 
             return new OutputTable(result.group.name,
                     new ArrayList<>(result.datasetIds),
-                    columns, cells);
+                    columns == null ? Collections.emptyList() : columns, cells);
         };
     }
 }

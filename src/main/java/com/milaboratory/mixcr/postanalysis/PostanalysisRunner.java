@@ -98,6 +98,9 @@ public class PostanalysisRunner<T> implements CanReportProgressAndStage {
         }
         // distinct processors
         List<SetPreprocessor<T>> procs = new ArrayList<>(distinctProcs.values());
+        if (distinctProcs.values().stream().map(SetPreprocessor::id).collect(Collectors.toSet()).size() != distinctProcs.size()) {
+            throw new IllegalArgumentException("Duplicates proc id");
+        }
 
         while (true) {
             // next setup iterations

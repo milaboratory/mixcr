@@ -68,8 +68,8 @@ public final class TagCount {
     }
 
     /**
-     * If this is a singleton non-key counter, converts it to a singleton key counter;
-     * returns this for all other cases.
+     * If this is a singleton non-key counter, converts it to a singleton key counter; returns this for all other
+     * cases.
      */
     public TagCount ensureIsKey() {
         if (singletonTuple != null && !singletonTuple.isKey()) {
@@ -168,6 +168,16 @@ public final class TagCount {
         return isSingleton()
                 ? 1
                 : tagMap.size();
+    }
+
+    public int projectionSize(int... idxs) {
+        Set<TagTuple> set = new HashSet<>();
+        TObjectDoubleIterator<TagTuple> it = iterator();
+        while (it.hasNext()) {
+            it.advance();
+            set.add(it.key().project(idxs));
+        }
+        return set.size();
     }
 
     public double get(TagTuple tt) {

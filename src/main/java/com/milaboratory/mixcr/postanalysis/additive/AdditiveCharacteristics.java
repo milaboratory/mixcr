@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.postanalysis.additive;
 
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
+import com.milaboratory.mixcr.postanalysis.WeightFunction;
 import com.milaboratory.mixcr.postanalysis.WeightFunctions;
 import com.milaboratory.mixcr.postanalysis.additive.KeyFunctions.VJGenes;
 import com.milaboratory.mixcr.postanalysis.preproc.NoPreprocessing;
@@ -54,11 +55,15 @@ public final class AdditiveCharacteristics {
     }
 
     public static AdditiveCharacteristic<String, Clone> weightedLengthOf(SetPreprocessorFactory<Clone> preproc, GeneFeature gf, boolean aa) {
+        return lengthOf(preproc, WeightFunctions.Count, gf, aa);
+    }
+
+    public static AdditiveCharacteristic<String, Clone> lengthOf(SetPreprocessorFactory<Clone> preproc, WeightFunction<Clone> wt, GeneFeature gf, boolean aa) {
         String name = (aa ? "aa" : "nt") + "LengthOf" + GeneFeature.encode(gf);
         return new AdditiveCharacteristic<>(
                 name,
                 preproc,
-                new WeightFunctions.Count(),
+                wt,
                 new KeyFunctions.Named<>(name),
                 new AdditiveMetrics.GeneFeatureLength<>(gf, aa),
                 AggregationType.Mean,
@@ -67,11 +72,16 @@ public final class AdditiveCharacteristics {
     }
 
     public static AdditiveCharacteristic<String, Clone> weightedAddedNucleotides(SetPreprocessorFactory<Clone> preproc) {
+        return addedNucleotides(preproc, WeightFunctions.Count);
+    }
+
+
+    public static AdditiveCharacteristic<String, Clone> addedNucleotides(SetPreprocessorFactory<Clone> preproc, WeightFunction<Clone> wt) {
         String name = "AddedNucleotides";
         return new AdditiveCharacteristic<>(
                 name,
                 preproc,
-                new WeightFunctions.Count(),
+                wt,
                 new KeyFunctions.Named<>(name),
                 new AdditiveMetrics.AddedNucleotides<>(),
                 AggregationType.Mean,
@@ -84,11 +94,18 @@ public final class AdditiveCharacteristics {
     }
 
     public static AdditiveCharacteristic<String, Clone> weightedBbiophysicsNormalized(SetPreprocessorFactory<Clone> preproc, AAProperties.AAProperty property, GeneFeature gf) {
+        return biophysicsNormalized(preproc, WeightFunctions.Count, property, gf);
+    }
+
+    public static AdditiveCharacteristic<String, Clone> biophysicsNormalized(SetPreprocessorFactory<Clone> preproc,
+                                                                             WeightFunction<Clone> wt,
+                                                                             AAProperties.AAProperty property,
+                                                                             GeneFeature gf) {
         String name = property.name() + "of" + GeneFeature.encode(gf) + "Normalized";
         return new AdditiveCharacteristic<>(
                 name,
                 preproc,
-                new WeightFunctions.Count(),
+                wt,
                 new KeyFunctions.Named<>(name),
                 new AdditiveMetrics.AAPropertyNormalized(property, gf),
                 AggregationType.Mean,
@@ -101,11 +118,20 @@ public final class AdditiveCharacteristics {
     }
 
     public static AdditiveCharacteristic<String, Clone> weightedBiophysics(SetPreprocessorFactory<Clone> preproc, AAProperties.AAProperty property, GeneFeature gf, AAProperties.Adjustment adjustment, int nLetters) {
+        return biophysics(preproc, WeightFunctions.Count, property, gf, adjustment, nLetters);
+    }
+
+    public static AdditiveCharacteristic<String, Clone> biophysics(SetPreprocessorFactory<Clone> preproc,
+                                                                   WeightFunction<Clone> wt,
+                                                                   AAProperties.AAProperty property,
+                                                                   GeneFeature gf,
+                                                                   AAProperties.Adjustment adjustment,
+                                                                   int nLetters) {
         String name = property.name() + "of" + GeneFeature.encode(gf);
         return new AdditiveCharacteristic<>(
                 name,
                 preproc,
-                new WeightFunctions.Count(),
+                wt,
                 new KeyFunctions.Named<>(name),
                 new AdditiveMetrics.AAPropertySum(property, gf, adjustment, nLetters),
                 AggregationType.Mean,
@@ -118,11 +144,18 @@ public final class AdditiveCharacteristics {
     }
 
     public static AdditiveCharacteristic<String, Clone> segmentUsage(SetPreprocessorFactory<Clone> preproc, GeneType geneType, KeyFunction<String, Clone> keyFunction) {
+        return segmentUsage(preproc, WeightFunctions.Count, geneType, keyFunction);
+    }
+
+    public static AdditiveCharacteristic<String, Clone> segmentUsage(SetPreprocessorFactory<Clone> preproc,
+                                                                     WeightFunction<Clone> wt,
+                                                                     GeneType geneType,
+                                                                     KeyFunction<String, Clone> keyFunction) {
         String name = geneType.getLetter() + "Usage";
         return new AdditiveCharacteristic<>(
                 name,
                 preproc,
-                new WeightFunctions.Count(),
+                wt,
                 keyFunction,
                 new AdditiveMetrics.Constant(1),
                 AggregationType.Mean,
@@ -136,6 +169,13 @@ public final class AdditiveCharacteristics {
 
     public static AdditiveCharacteristic<String, Clone> segmentUsage(SetPreprocessorFactory<Clone> preproc, GeneType geneType) {
         return segmentUsage(preproc, geneType, new KeyFunctions.SegmentUsage<>(geneType))
+                .setName(geneType.getLetter() + "SegmentUsage");
+    }
+
+    public static AdditiveCharacteristic<String, Clone> segmentUsage(SetPreprocessorFactory<Clone> preproc,
+                                                                     WeightFunction<Clone> wt,
+                                                                     GeneType geneType) {
+        return segmentUsage(preproc, wt, geneType, new KeyFunctions.SegmentUsage<>(geneType))
                 .setName(geneType.getLetter() + "SegmentUsage");
     }
 
@@ -162,10 +202,16 @@ public final class AdditiveCharacteristics {
     }
 
     public static AdditiveCharacteristic<VJGenes<String>, Clone> vjUsage(SetPreprocessorFactory<Clone> preproc, KeyFunction<VJGenes<String>, Clone> keyFunction) {
+        return vjUsage(preproc, WeightFunctions.Count, keyFunction);
+    }
+
+    public static AdditiveCharacteristic<VJGenes<String>, Clone> vjUsage(SetPreprocessorFactory<Clone> preproc,
+                                                                         WeightFunction<Clone> wt,
+                                                                         KeyFunction<VJGenes<String>, Clone> keyFunction) {
         return new AdditiveCharacteristic<>(
                 "VJUsage",
                 preproc,
-                new WeightFunctions.Count(),
+                wt,
                 keyFunction,
                 new AdditiveMetrics.Constant(1),
                 AggregationType.Mean,
@@ -179,6 +225,11 @@ public final class AdditiveCharacteristics {
 
     public static AdditiveCharacteristic<VJGenes<String>, Clone> vjSegmentUsage(SetPreprocessorFactory<Clone> preproc) {
         return vjUsage(preproc, new KeyFunctions.VJSegmentUsage<>()).setName("VJSegmentUsage");
+    }
+
+    public static AdditiveCharacteristic<VJGenes<String>, Clone> vjSegmentUsage(SetPreprocessorFactory<Clone> preproc,
+                                                                                WeightFunction<Clone> wt) {
+        return vjUsage(preproc, wt, new KeyFunctions.VJSegmentUsage<>()).setName("VJSegmentUsage");
     }
 
     public static AdditiveCharacteristic<VJGenes<String>, Clone> vjGeneUsage() {
@@ -202,10 +253,14 @@ public final class AdditiveCharacteristics {
     }
 
     public static AdditiveCharacteristic<KeyFunctions.Isotype, Clone> isotypeUsage(SetPreprocessorFactory<Clone> preproc) {
+        return isotypeUsage(preproc, WeightFunctions.Count);
+    }
+
+    public static AdditiveCharacteristic<KeyFunctions.Isotype, Clone> isotypeUsage(SetPreprocessorFactory<Clone> preproc, WeightFunction<Clone> wt) {
         return new AdditiveCharacteristic<>(
                 "IsotypeUsage",
                 preproc,
-                new WeightFunctions.Count(),
+                wt,
                 new KeyFunctions.IsotypeUsage<>(),
                 new AdditiveMetrics.Constant(1),
                 AggregationType.Mean,
@@ -218,18 +273,28 @@ public final class AdditiveCharacteristics {
     }
 
     public static AdditiveCharacteristic<SpectratypeKey<String>, Clone> VSpectratype(SetPreprocessorFactory<Clone> preproc) {
+        return VSpectratype(preproc, WeightFunctions.Count);
+    }
+
+    public static AdditiveCharacteristic<SpectratypeKey<String>, Clone> VSpectratype(SetPreprocessorFactory<Clone> preproc,
+                                                                                     WeightFunction<Clone> wt) {
         return new AdditiveCharacteristic<>("VSpectratype",
                 preproc,
-                new WeightFunctions.Count(),
+                wt,
                 new SpectratypeKeyFunction<>(new KeyFunctions.SegmentUsage<>(GeneType.Variable), GeneFeature.CDR3, false),
                 new AdditiveMetrics.Constant(), AggregationType.Sum, false);
     }
 
     public static AdditiveCharacteristic<String, Clone> VSpectratypeMean(SetPreprocessorFactory<Clone> preproc) {
+        return VSpectratypeMean(preproc, WeightFunctions.Count);
+    }
+
+    public static AdditiveCharacteristic<String, Clone> VSpectratypeMean(SetPreprocessorFactory<Clone> preproc,
+                                                                         WeightFunction<Clone> wt) {
         return new AdditiveCharacteristic<>(
                 "VSpectratypeMean",
                 preproc,
-                new WeightFunctions.Count(),
+                wt,
                 new KeyFunctions.SegmentUsage<>(GeneType.Variable),
                 new AdditiveMetrics.GeneFeatureLength<>(GeneFeature.CDR3, false),
                 AggregationType.Mean,

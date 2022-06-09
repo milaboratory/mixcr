@@ -3,40 +3,48 @@
     "defaultDownsampling": null,
     "defaultOnlyProductive": false,
     "defaultDropOutliers": false,
+    "defaultWeightFunction": "read-count",
     "d": {
       "downsampling": null,
       "onlyProductive": null,
-      "dropOutliers": null
+      "dropOutliers": null,
+      "weightFunction": null
     },
     "sharedClonotypes": {
       "downsampling": null,
       "onlyProductive": null,
-      "dropOutliers": null
+      "dropOutliers": null,
+      "weightFunction": null
     },
     "f1": {
       "downsampling": null,
       "onlyProductive": null,
-      "dropOutliers": null
+      "dropOutliers": null,
+      "weightFunction": null
     },
     "f2": {
       "downsampling": null,
       "onlyProductive": null,
-      "dropOutliers": null
+      "dropOutliers": null,
+      "weightFunction": null
     },
     "jaccard": {
       "downsampling": null,
       "onlyProductive": null,
-      "dropOutliers": null
+      "dropOutliers": null,
+      "weightFunction": null
     },
     "rIntersection": {
       "downsampling": null,
       "onlyProductive": null,
-      "dropOutliers": null
+      "dropOutliers": null,
+      "weightFunction": null
     },
     "rAll": {
       "downsampling": null,
       "onlyProductive": null,
-      "dropOutliers": null
+      "dropOutliers": null,
+      "weightFunction": null
     }
   }
 }

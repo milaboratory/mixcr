@@ -36,10 +36,7 @@ public class SelectTop<T> implements SetPreprocessor<T> {
               double abundanceFraction,
               int numberOfTop,
               String id) {
-        if (!Double.isNaN(abundanceFraction) && (abundanceFraction <= 0 || abundanceFraction > 1.0))
-            throw new IllegalArgumentException();
-        if (numberOfTop != -1 && numberOfTop <= 0)
-            throw new IllegalArgumentException();
+        checkInput(abundanceFraction, numberOfTop);
 
         this.weight = weight;
         this.abundanceFraction = abundanceFraction;
@@ -187,6 +184,13 @@ public class SelectTop<T> implements SetPreprocessor<T> {
         return lwt;
     }
 
+    private static void checkInput(double abundanceFraction, int numberOfTop) {
+        if (!Double.isNaN(abundanceFraction) && (abundanceFraction <= 0 || abundanceFraction > 1.0))
+            throw new IllegalArgumentException("Illegal abundance: " + abundanceFraction);
+        if (numberOfTop != -1 && numberOfTop <= 0)
+            throw new IllegalArgumentException("Illegal numberOfTop: " + numberOfTop);
+    }
+
     public static final class Factory<T> implements SetPreprocessorFactory<T> {
         @JsonProperty("weight")
         private WeightFunction<T> weight;
@@ -200,11 +204,13 @@ public class SelectTop<T> implements SetPreprocessor<T> {
         public Factory(WeightFunction<T> weight, double abundanceFraction) {
             this.weight = weight;
             this.abundanceFraction = abundanceFraction;
+            checkInput(abundanceFraction, numberOfTop);
         }
 
         public Factory(WeightFunction<T> weight, int numberOfTop) {
             this.weight = weight;
             this.numberOfTop = numberOfTop;
+            checkInput(abundanceFraction, numberOfTop);
         }
 
         @Override

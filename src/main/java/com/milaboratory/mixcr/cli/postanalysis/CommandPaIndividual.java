@@ -40,6 +40,7 @@ public class CommandPaIndividual extends CommandPa {
         _parameters.defaultDownsampling = defaultDownsampling;
         _parameters.defaultDropOutliers = dropOutliers;
         _parameters.defaultOnlyProductive = onlyProductive;
+        _parameters.defaultWeightFunction = defaultWeightFunction;
         if (!overrides.isEmpty()) {
             _parameters = JsonOverrider.override(_parameters, PostanalysisParametersIndividual.class, overrides);
             if (_parameters == null)
@@ -51,7 +52,7 @@ public class CommandPaIndividual extends CommandPa {
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     PaResultByGroup run(IsolationGroup group, List<String> samples) {
-        List<CharacteristicGroup<?, Clone>> groups = getParameters().getGroups();
+        List<CharacteristicGroup<?, Clone>> groups = getParameters().getGroups(getTagsInfo());
         PostanalysisSchema<Clone> schema = new PostanalysisSchema<>(false, groups)
                 .transform(ch -> ch.override(ch.name,
                         ch.preprocessor

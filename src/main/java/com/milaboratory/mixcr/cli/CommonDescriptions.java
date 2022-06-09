@@ -23,11 +23,13 @@ public class CommonDescriptions {
 
     public static final String JSON_REPORT = "JSON formatted report file";
 
-    public static final String DOWNSAMPLING = "Choose downsampling. Possible values: umi-count-[1000|auto]|cumulative-top-[percent]|top-[number]|none";
+    public static final String DOWNSAMPLING = "Choose downsampling. Possible values: \n count-[reads|TAG]-[auto|min|number]\n top-[reads|TAG]-[number]\n cumtop-[reads|TAG]-[fraction]";
+
+    public static final String WEIGHT_FUNCTION = "Weight function: [read|TAG]-count";
 
     public static final String METADATA = "Metadata file (csv/tsv). Must have \"sample\" column.";
 
-    public static final String DOWNSAMPLING_DROPO_UTLIERS = "Drop samples which have less abundance than the computed downsampling threshold.";
+    public static final String DOWNSAMPLING_DROP_OUTLIERS = "Drop samples which have less abundance than the computed downsampling threshold.";
 
     public static final String OVERLAP_CRITERIA = "Overlap criteria. Default CDR3|AA|V|J";
 

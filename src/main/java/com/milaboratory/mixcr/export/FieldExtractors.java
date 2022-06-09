@@ -24,11 +24,8 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.TranslationParameters;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.basictypes.tag.TagCount;
-import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.mixcr.basictypes.tag.TagValue;
 import com.milaboratory.util.GlobalObjectMappers;
-import gnu.trove.iterator.TObjectDoubleIterator;
 import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.map.hash.TObjectFloatHashMap;
 import io.repseq.core.GeneFeature;
@@ -37,7 +34,9 @@ import io.repseq.core.ReferencePoint;
 import io.repseq.core.SequencePartitioning;
 
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public final class FieldExtractors {
     static final String NULL = "";
@@ -743,14 +742,7 @@ public final class FieldExtractors {
                     return new AbstractFieldExtractor<VDJCObject>(getHeader(outputMode, tagNames), this) {
                         @Override
                         public String extractValue(VDJCObject object) {
-                            TagCount tc = object.getTagCount();
-                            Set<TagTuple> set = new HashSet<>();
-                            TObjectDoubleIterator<TagTuple> it = tc.iterator();
-                            while (it.hasNext()) {
-                                it.advance();
-                                set.add(it.key().project(indices));
-                            }
-                            return "" + set.size();
+                            return "" + object.getTagCount().projectionSize(indices);
                         }
                     };
                 }

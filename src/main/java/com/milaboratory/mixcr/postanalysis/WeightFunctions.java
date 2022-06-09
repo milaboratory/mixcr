@@ -11,7 +11,11 @@
  */
 package com.milaboratory.mixcr.postanalysis;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.milaboratory.mixcr.basictypes.Clone;
+
+import java.util.Objects;
 
 /**
  *
@@ -37,6 +41,38 @@ public final class WeightFunctions {
         @Override
         public int hashCode() {
             return 17;
+        }
+    }
+
+    public static final class TagCount implements WeightFunction<Clone> {
+        final int tagIndex;
+        @JsonIgnore
+        final int[] indices;
+
+        @JsonCreator
+        public TagCount(int tagIndex) {
+            this.tagIndex = tagIndex;
+            this.indices = new int[tagIndex + 1];
+            for (int i = 0; i < tagIndex + 1; i++)
+                indices[i] = i;
+        }
+
+        @Override
+        public double weight(Clone clone) {
+            return 1.0 * clone.getTagCount().projectionSize(indices);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            TagCount tagCount = (TagCount) o;
+            return tagIndex == tagCount.tagIndex;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(tagIndex);
         }
     }
 

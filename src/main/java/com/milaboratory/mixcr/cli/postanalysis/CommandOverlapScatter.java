@@ -19,13 +19,13 @@ import com.milaboratory.mixcr.cli.CommonDescriptions;
 import com.milaboratory.mixcr.postanalysis.Dataset;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
-import com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingUtil;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil;
 import com.milaboratory.mixcr.postanalysis.plots.OverlapScatter;
 import com.milaboratory.mixcr.postanalysis.plots.OverlapScatterRow;
 import com.milaboratory.mixcr.postanalysis.preproc.ElementPredicate;
 import com.milaboratory.mixcr.postanalysis.preproc.OverlapPreprocessorAdapter;
+import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParameters;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.Chains;
@@ -94,8 +94,8 @@ public class CommandOverlapScatter extends ACommandWithOutputMiXCR {
 
     @Override
     public void run0() throws Exception {
-        SetPreprocessorFactory<Clone> preproc = DownsamplingUtil.
-                parseDownsampling(downsampling, false);
+        SetPreprocessorFactory<Clone> preproc = PostanalysisParameters.
+                parseDownsampling(downsampling, CommandPa.extractTagsInfo(getInputFiles()), false);
 
         for (NamedChains curChains : this.chains == null
                 ? Arrays.asList(TRAD_NAMED, TRB_NAMED, TRG_NAMED, IGH_NAMED, IGKL_NAMED)

@@ -54,6 +54,7 @@ public class CommandPaOverlap extends CommandPa {
         _parameters.defaultDownsampling = defaultDownsampling;
         _parameters.defaultDropOutliers = dropOutliers;
         _parameters.defaultOnlyProductive = onlyProductive;
+        _parameters.defaultWeightFunction = defaultWeightFunction;
         if (!overrides.isEmpty()) {
             _parameters = JsonOverrider.override(_parameters, PostanalysisParametersOverlap.class, overrides);
             if (_parameters == null)
@@ -65,7 +66,7 @@ public class CommandPaOverlap extends CommandPa {
     @Override
     @SuppressWarnings("unchecked")
     PaResultByGroup run(IsolationGroup group, List<String> samples) {
-        List<CharacteristicGroup<?, OverlapGroup<Clone>>> groups = getParameters().getGroups(samples.size());
+        List<CharacteristicGroup<?, OverlapGroup<Clone>>> groups = getParameters().getGroups(samples.size(), getTagsInfo());
         PostanalysisSchema<OverlapGroup<Clone>> schema = new PostanalysisSchema<>(true, groups)
                 .transform(ch -> ch.override(ch.name,
                         ch.preprocessor

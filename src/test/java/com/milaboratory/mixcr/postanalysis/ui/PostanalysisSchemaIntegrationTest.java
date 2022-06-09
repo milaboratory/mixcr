@@ -37,6 +37,7 @@ import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeCharacteristic
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeKey;
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeKeyFunction;
 import com.milaboratory.mixcr.tests.IntegrationTest;
+import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.LambdaSemaphore;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
@@ -56,11 +57,20 @@ import java.util.stream.Collectors;
 import static com.milaboratory.mixcr.postanalysis.additive.AdditiveCharacteristics.weightedBiophysics;
 import static com.milaboratory.mixcr.postanalysis.additive.AdditiveCharacteristics.weightedLengthOf;
 
-@Category(IntegrationTest.class)
+//@Category(IntegrationTest.class)
 public class PostanalysisSchemaIntegrationTest {
 
     private static ClonotypeDataset getClones(String sample) {
         return new ClonotypeDataset(sample, PostanalysisSchemaIntegrationTest.class.getResource("/sequences/big/yf_sample_data/" + sample + ".contigs.clns").getFile(), VDJCLibraryRegistry.getDefault());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testJson1() throws JsonProcessingException {
+        DiversityCharacteristic<Clone> expected = new DiversityCharacteristic<>("diversity", new WeightFunctions.Count(), new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Auto(), true, WeightFunctions.Count));
+        String str = GlobalObjectMappers.getPretty().writeValueAsString(expected);
+        DiversityCharacteristic<Clone> actual = GlobalObjectMappers.getPretty().readValue(str, DiversityCharacteristic.class);
+        Assert.assertEquals(expected, actual);
     }
 
     @Test
@@ -93,7 +103,7 @@ public class PostanalysisSchemaIntegrationTest {
         ));
         groups.add(new CharacteristicGroup<>(
                 "diversity",
-                Arrays.asList(new DiversityCharacteristic<>("diversity", new WeightFunctions.Count(), new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Auto(), true))),
+                Arrays.asList(new DiversityCharacteristic<>("diversity", new WeightFunctions.Count(), new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Auto(), true, WeightFunctions.Count))),
                 Arrays.asList(new GroupSummary.Simple<>())
         ));
 
@@ -201,7 +211,8 @@ public class PostanalysisSchemaIntegrationTest {
 
             ClonesDownsamplingPreprocessorFactory downsamplePreprocessor = new ClonesDownsamplingPreprocessorFactory(
                     new DownsampleValueChooser.Minimal(),
-                    true);
+                    true,
+                    WeightFunctions.Count);
 
             List<OverlapCharacteristic<Clone>> overlaps = new ArrayList<>();
             for (int i = 0; i < readers.size(); ++i) {
