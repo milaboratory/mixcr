@@ -82,8 +82,8 @@ repositories {
 
 val milibVersion = "2.0.0"
 val repseqioVersion = "1.4.0"
-val mitoolVersion = "0.9.1-16-main"
-val miplotsVersion = "0.1-26-master"
+val mitoolVersion = "1.0.0"
+val miplotsVersion = "1.0.0"
 val jacksonBomVersion = "2.13.3"
 
 dependencies {
