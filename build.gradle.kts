@@ -29,7 +29,6 @@ plugins {
 // Make IDE aware of the generated code:
 kotlin.sourceSets.getByName("main").kotlin.srcDir("build/generated/ksp/main/kotlin/")
 
-
 val miRepoAccessKeyId: String? by project
 val miRepoSecretAccessKey: String? by project
 
@@ -81,8 +80,8 @@ repositories {
     }
 }
 
-val milibVersion = "1.15.0-54-master"
-val repseqioVersion = "1.3.5-34-master"
+val milibVersion = "2.0.0"
+val repseqioVersion = "1.4.0"
 val mitoolVersion = "0.9.1-16-main"
 val miplotsVersion = "0.1-26-master"
 val jacksonBomVersion = "2.13.3"
