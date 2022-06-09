@@ -326,7 +326,7 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
         helper.writePercentAndAbsoluteField("Realigned with forced non-floating left bound in right read", getRealignedWithForcedNonFloatingLeftBoundInRightRead(), total);
 
         if (trimmingReport != null) {
-            assert trimmingReport.getAlignments() == total;
+            // assert trimmingReport.getAlignments() == total;
             helper.writePercentAndAbsoluteField("R1 Reads Trimmed Left", trimmingReport.getR1LeftTrimmedEvents(), total);
             helper.writePercentAndAbsoluteField("R1 Reads Trimmed Right", trimmingReport.getR1RightTrimmedEvents(), total);
             helper.writeField("Average R1 Nucleotides Trimmed Left", 1.0 * trimmingReport.getR1LeftTrimmedNucleotides() / total);

@@ -47,7 +47,7 @@ FreeBSD)
   ;;
 esac
 
-tests=("case1" "case2" "case3" "case4" "case5" "case6" "case7" "case8" "case9" "case10" "case11")
+tests=("case1" "case2" "case3" "case4" "case5" "case6" "case7" "case8" "case9" "case10" "case11" "case12")
 
 create_standard_results=false
 run_tests=false
@@ -81,8 +81,10 @@ ln -s ../src/test/resources/sequences/big/CD4M1_test_R1.fastq.gz ${dir}/test_tar
 ln -s ../src/test/resources/sequences/big/CD4M1_test_R2.fastq.gz ${dir}/test_target/CD4M1_test_R2.fastq.gz
 ln -s ../src/test/resources/sequences/big/single_cell_vdj_t_subset_R1.fastq.gz ${dir}/test_target/single_cell_vdj_t_subset_R1.fastq.gz
 ln -s ../src/test/resources/sequences/big/single_cell_vdj_t_subset_R2.fastq.gz ${dir}/test_target/single_cell_vdj_t_subset_R2.fastq.gz
-ln -s ../src/test/resources/sequences/umi_ig_data_2_subset_R1.fastq.gz ${dir}/test_target/umi_ig_data_2_subset_R1.fastq.gz
-ln -s ../src/test/resources/sequences/umi_ig_data_2_subset_R2.fastq.gz ${dir}/test_target/umi_ig_data_2_subset_R2.fastq.gz
+#ln -s ../src/test/resources/sequences/umi_ig_data_2_subset_R1.fastq.gz ${dir}/test_target/umi_ig_data_2_subset_R1.fastq.gz
+#ln -s ../src/test/resources/sequences/umi_ig_data_2_subset_R2.fastq.gz ${dir}/test_target/umi_ig_data_2_subset_R2.fastq.gz
+#ln -s ../src/test/resources/sequences/umi_single_read_R1.fastq ${dir}/test_target/umi_single_read_R1.fastq
+#ln -s ../src/test/resources/sequences/umi_single_read_R2.fastq ${dir}/test_target/umi_single_read_R2.fastq
 
 PATH=${dir}:${PATH}
 

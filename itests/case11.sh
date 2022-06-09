@@ -15,7 +15,7 @@ assert() {
   exit 1
 }
 
-set -euxo pipefail
+set -eux
 
 mixcr align -f \
     --tag-pattern-name mikelov_et_al_2021 \
@@ -27,7 +27,7 @@ mixcr align -f \
     -OallowPartialAlignments=true \
     -OallowNoCDR3PartAlignments=true \
     -OsaveOriginalReads=true \
-    --report case10.align.report \
+    --report case11.align.report \
     umi_ig_data_2_subset_R1.fastq.gz \
     umi_ig_data_2_subset_R2.fastq.gz \
     case11.aligned-vdjca

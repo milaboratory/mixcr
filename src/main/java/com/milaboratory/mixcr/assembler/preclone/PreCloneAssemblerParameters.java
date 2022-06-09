@@ -47,6 +47,6 @@ public final class PreCloneAssemblerParameters {
             .maxIterations(4)
             .minAltSeedQualityScore((byte) 11)
             .minimalRecordShare(0.1)
-            .minimalRecordCount(2)
+            .minimalRecordCount(1)
             .build();
 }
