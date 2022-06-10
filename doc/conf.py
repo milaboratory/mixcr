@@ -50,7 +50,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'mixcr'
-copyright = u'2021, MiLaboratories Inc'
+copyright = u'2022, MiLaboratories Inc'
 author = u'MiLaboratories Inc'
 
 # The version info for the project you're documenting, acts as replacement for
