@@ -89,10 +89,12 @@ public final class Main {
                 System.err.println("  mixcr activate-license");
                 System.err.println();
                 System.err.println("You can also activate the license via a special file, environment");
-                System.err.println("variable or other means, please check the docs."); // TODO provide a link
+                System.err.println("variable or other means, please check the docs at");
+                System.err.println("  https://github.com/milaboratory/mixcr/wiki/Using-license");
                 System.err.println();
-                System.err.println("If you don't have a license check https://licensing.milaboratories.com/.");
-                System.err.println("Free license is provided for academic users and non-profit organisations.");
+                System.err.println("Academic users can quickly get a license at\n  https://licensing.milaboratories.com.");
+                System.err.println();
+                System.err.println("Commercial trial license may be requested at\n  https://licensing.milaboratories.com\nor by email to\n  licensing@milaboratories.com.");
             } else
                 System.err.println("License error: " + licenseError);
             System.exit(LM.LicenseErrorExitCode);
