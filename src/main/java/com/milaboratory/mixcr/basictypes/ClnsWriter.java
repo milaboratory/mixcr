@@ -1,132 +1,122 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.basictypes;
 
+import cc.redberry.pipe.InputPort;
 import com.milaboratory.cli.AppVersionInfo;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.cli.PipelineConfigurationWriter;
+import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivO;
-import com.milaboratory.util.CanReportProgressAndStage;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneFeatureSerializer;
+import com.milaboratory.primitivio.blocks.PrimitivOHybrid;
+import io.repseq.core.VDJCGene;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.util.List;
 
 /**
  *
  */
-public class ClnsWriter implements PipelineConfigurationWriter,
-        CanReportProgressAndStage,
-        Closeable {
-    static final String MAGIC_V7 = "MiXCR.CLNS.V07";
-    static final String MAGIC_V8 = "MiXCR.CLNS.V08";
-    static final String MAGIC = MAGIC_V8;
+public final class ClnsWriter implements PipelineConfigurationWriter, AutoCloseable {
+    static final String MAGIC_V11 = "MiXCR.CLNS.V11";
+    static final String MAGIC = MAGIC_V11;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
 
-    final String stage = "Writing clones";
-    final PrimitivO output;
-    final CloneSet cloneSet;
-    final int size;
-    final PipelineConfiguration configuration;
+    final PrimitivOHybrid output;
 
-    private volatile int current;
-
-    public ClnsWriter(PipelineConfiguration configuration, CloneSet cloneSet, String fileName) throws IOException {
-        this(configuration, cloneSet, new File(fileName));
+    public ClnsWriter(String fileName) throws IOException {
+        this(new PrimitivOHybrid(Paths.get(fileName)));
     }
 
-    public ClnsWriter(PipelineConfiguration configuration, CloneSet cloneSet, File file) throws IOException {
-        this(configuration, cloneSet, IOUtil.createOS(file));
+    public ClnsWriter(File file) throws IOException {
+        this(new PrimitivOHybrid(file.toPath()));
     }
 
-    public ClnsWriter(PipelineConfiguration configuration, CloneSet cloneSet, OutputStream outputStream) {
-        this.output = new PrimitivO(outputStream);
-        this.configuration = configuration;
-        this.cloneSet = cloneSet;
-        this.size = cloneSet.size();
+    public ClnsWriter(PrimitivOHybrid output) {
+        this.output = output;
     }
 
-    @Override
-    public String getStage() {
-        return stage;
+    public void writeHeaderFromCloneSet(
+            PipelineConfiguration configuration,
+            CloneSet cloneSet) {
+        writeHeader(configuration,
+                cloneSet.getAlignmentParameters(),
+                cloneSet.getAssemblerParameters(),
+                cloneSet.getTagsInfo(),
+                cloneSet.getOrdering(),
+                cloneSet.getUsedGenes(),
+                cloneSet,
+                cloneSet.size());
     }
 
-    @Override
-    public double getProgress() {
-        return (1.0 * current) / size;
-    }
+    public void writeHeader(
+            PipelineConfiguration configuration,
+            VDJCAlignerParameters alignmentParameters,
+            CloneAssemblerParameters assemblerParameters,
+            TagsInfo tagsInfo,
+            VDJCSProperties.CloneOrdering ordering,
+            List<VDJCGene> genes,
+            HasFeatureToAlign featureToAlign,
+            int numberOfClones
+    ) {
+        try (PrimitivO o = output.beginPrimitivO(true)) {
+            // Writing magic bytes
+            o.write(MAGIC_BYTES);
 
-    @Override
-    public boolean isFinished() {
-        return current == size;
-    }
+            // Writing version information
+            o.writeUTF(
+                    MiXCRVersionInfo.get().getVersionString(
+                            AppVersionInfo.OutputType.ToFile));
 
-    public void write() {
-        // Registering custom serializer
-        output.getSerializersManager().registerCustomSerializer(GeneFeature.class, new GeneFeatureSerializer(true));
+            // Writing analysis meta-information
+            o.writeObject(configuration);
+            o.writeObject(alignmentParameters);
+            o.writeObject(assemblerParameters);
+            o.writeObject(tagsInfo);
+            o.writeObject(ordering);
+            o.writeInt(numberOfClones);
 
-        // Writing magic bytes
-        output.write(MAGIC_BYTES);
-
-        // Writing version information
-        output.writeUTF(
-                MiXCRVersionInfo.get().getVersionString(
-                        AppVersionInfo.OutputType.ToFile));
-
-        // Writing analysis meta-information
-        output.writeObject(configuration);
-        output.writeObject(cloneSet.alignmentParameters);
-        output.writeObject(cloneSet.assemblerParameters);
-
-        IO.writeGT2GFMap(output, cloneSet.alignedFeatures);
-        IOUtil.writeAndRegisterGeneReferences(output, cloneSet.getUsedGenes(), new ClnsReader.GT2GFAdapter(cloneSet.alignedFeatures));
-
-        output.writeInt(cloneSet.getClones().size());
-
-        for (Clone clone : cloneSet) {
-            output.writeObject(clone);
-            ++current;
+            IOUtil.stdVDJCPrimitivOStateInit(o, genes, featureToAlign);
         }
+    }
 
-        // Writing end-magic as a file integrity sign
-        output.write(IOUtil.getEndMagicBytes());
+    /**
+     * Must be closed by putting null
+     */
+    public InputPort<Clone> cloneWriter() {
+        return output.beginPrimitivOBlocks(3, 512);
+    }
+
+    public void writeCloneSet(PipelineConfiguration configuration, CloneSet cloneSet) {
+        writeHeaderFromCloneSet(configuration, cloneSet);
+        InputPort<Clone> cloneIP = cloneWriter();
+        for (Clone clone : cloneSet)
+            cloneIP.put(clone);
+        cloneIP.put(null);
     }
 
     @Override
-    public void close() {
+    public void close() throws IOException {
+        try (PrimitivO o = output.beginPrimitivO()) {
+            // Writing end-magic as a file integrity sign
+            o.write(IOUtil.getEndMagicBytes());
+        }
         output.close();
     }
 }

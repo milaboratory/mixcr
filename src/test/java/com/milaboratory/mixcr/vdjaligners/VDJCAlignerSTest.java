@@ -1,31 +1,13 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.vdjaligners;
 
@@ -40,6 +22,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.util.RandomUtil;
+import com.milaboratory.util.TempFileManager;
 import io.repseq.core.Chains;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
@@ -47,8 +30,8 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,9 +41,10 @@ public class VDJCAlignerSTest {
         VDJCAlignerParameters parameters =
                 VDJCParametersPresets.getByName("default");
         //LociLibrary ll = LociLibraryManager.getDefault().getLibrary("mi");
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        File tmpFile = TempFileManager.getTempFile();
+
         List<VDJCAlignments> alignemntsList = new ArrayList<>();
-        int header;
+        long header;
         try (SingleFastqReader reader =
                      new SingleFastqReader(
                              VDJCAlignerSTest.class.getClassLoader()
@@ -69,9 +53,9 @@ public class VDJCAlignerSTest {
             for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("default", "hs").getGenes(Chains.IGH))
                 if (parameters.containsRequiredFeature(gene))
                     aligner.addGene(gene);
-            try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(bos)) {
-                writer.header(aligner, null);
-                header = bos.size();
+            try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tmpFile)) {
+                writer.header(aligner, null, null);
+                header = writer.getPosition();
                 for (SingleRead read : CUtils.it(reader)) {
                     VDJCAlignmentResult<SingleRead> result = aligner.process(read);
                     if (result.alignment != null) {
@@ -82,21 +66,23 @@ public class VDJCAlignerSTest {
             }
         }
         Assert.assertTrue(alignemntsList.size() > 10);
-        System.out.println("Bytes per alignment: " + (bos.size() - header) / alignemntsList.size());
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(new ByteArrayInputStream(bos.toByteArray()))) {
+        System.out.println("Bytes per alignment: " + (Files.size(tmpFile.toPath()) - header) / alignemntsList.size());
+        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tmpFile)) {
             int i = 0;
             for (VDJCAlignments alignments : CUtils.it(reader))
                 Assert.assertEquals(alignemntsList.get(i++), alignments);
         }
+
+        tmpFile.delete();
     }
 
     @Test
     @Ignore
     public void test2() throws Exception {
-//        @
-//                GCTGTGTATTACTGTGCAAGAGGGCCCCAAGAAAATAGTGGTTATTACTACGGGTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCAGCCTCCACCAAGGGCCCATCGGTCTTCCCCCTGGCGCC
-//        +
-//                CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+        //        @
+        //                GCTGTGTATTACTGTGCAAGAGGGCCCCAAGAAAATAGTGGTTATTACTACGGGTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCAGCCTCCACCAAGGGCCCATCGGTCTTCCCCCTGGCGCC
+        //        +
+        //                CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 
         VDJCAlignerParameters parameters =
                 VDJCParametersPresets.getByName("default");

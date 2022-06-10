@@ -1,31 +1,13 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.assembler.fullseq;
 
@@ -75,11 +57,18 @@ public class FullSeqAssemblerParameters {
      */
     int alignmentEdgeRegionSize;
     /**
+     * Positions having mean normalized quality
+     * (sum of quality scores for the variant / read count for the whole clonotype;
+     * position coverage not taken into account) less then this value, will not be used for sub-cloning
+     */
+    double minimalMeanNormalizedQuality;
+    /**
      * Minimal fraction of non edge points in variant that must be reached to consider the variant significant
      */
     double minimalNonEdgePointsFraction;
     /**
-     * Positions having quality share less then this value, will not be represented in the output
+     * Positions having quality share less then this value, will not be represented in the output; used if no variants
+     * are detected with standard pipeline
      */
     double outputMinimalQualityShare;
     /**
@@ -111,6 +100,7 @@ public class FullSeqAssemblerParameters {
             @JsonProperty("alignedSequenceEdgeDelta") int alignedSequenceEdgeDelta,
             @JsonProperty("alignmentEdgeRegionSize") int alignmentEdgeRegionSize,
             @JsonProperty("minimalNonEdgePointsFraction") double minimalNonEdgePointsFraction,
+            @JsonProperty("minimalMeanNormalizedQuality") double minimalMeanNormalizedQuality,
             @JsonProperty("outputMinimalQualityShare") double outputMinimalQualityShare,
             @JsonProperty("outputMinimalSumQuality") long outputMinimalSumQuality,
             @JsonProperty("subCloningRegion") GeneFeature subCloningRegion,
@@ -123,6 +113,7 @@ public class FullSeqAssemblerParameters {
         this.alignedSequenceEdgeDelta = alignedSequenceEdgeDelta;
         this.alignmentEdgeRegionSize = alignmentEdgeRegionSize;
         this.minimalNonEdgePointsFraction = minimalNonEdgePointsFraction;
+        this.minimalMeanNormalizedQuality = minimalMeanNormalizedQuality;
         this.outputMinimalQualityShare = outputMinimalQualityShare;
         this.outputMinimalSumQuality = outputMinimalSumQuality;
         this.subCloningRegion = subCloningRegion;
@@ -219,10 +210,18 @@ public class FullSeqAssemblerParameters {
         this.minimalContigLength = minimalContigLength;
     }
 
+    public double getMinimalMeanNormalizedQuality() {
+        return minimalMeanNormalizedQuality;
+    }
+
+    public void setMinimalMeanNormalizedQuality(double minimalMeanNormalizedQuality) {
+        this.minimalMeanNormalizedQuality = minimalMeanNormalizedQuality;
+    }
+
     @Override
     public FullSeqAssemblerParameters clone() {
         return new FullSeqAssemblerParameters(branchingMinimalQualityShare, branchingMinimalSumQuality, decisiveBranchingSumQualityThreshold,
-                alignedSequenceEdgeDelta, alignmentEdgeRegionSize, minimalNonEdgePointsFraction,
+                alignedSequenceEdgeDelta, alignmentEdgeRegionSize, minimalNonEdgePointsFraction, minimalMeanNormalizedQuality,
                 outputMinimalQualityShare, outputMinimalSumQuality, subCloningRegion,
                 trimmingParameters, minimalContigLength, alignedRegionsOnly);
     }
@@ -230,13 +229,14 @@ public class FullSeqAssemblerParameters {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof FullSeqAssemblerParameters)) return false;
         FullSeqAssemblerParameters that = (FullSeqAssemblerParameters) o;
         return Double.compare(that.branchingMinimalQualityShare, branchingMinimalQualityShare) == 0 &&
                 branchingMinimalSumQuality == that.branchingMinimalSumQuality &&
                 decisiveBranchingSumQualityThreshold == that.decisiveBranchingSumQualityThreshold &&
                 alignedSequenceEdgeDelta == that.alignedSequenceEdgeDelta &&
                 alignmentEdgeRegionSize == that.alignmentEdgeRegionSize &&
+                Double.compare(that.minimalMeanNormalizedQuality, minimalMeanNormalizedQuality) == 0 &&
                 Double.compare(that.minimalNonEdgePointsFraction, minimalNonEdgePointsFraction) == 0 &&
                 Double.compare(that.outputMinimalQualityShare, outputMinimalQualityShare) == 0 &&
                 outputMinimalSumQuality == that.outputMinimalSumQuality &&
@@ -248,7 +248,7 @@ public class FullSeqAssemblerParameters {
 
     @Override
     public int hashCode() {
-        return Objects.hash(branchingMinimalQualityShare, branchingMinimalSumQuality, decisiveBranchingSumQualityThreshold, alignedSequenceEdgeDelta, alignmentEdgeRegionSize, minimalNonEdgePointsFraction, outputMinimalQualityShare, outputMinimalSumQuality, subCloningRegion, trimmingParameters, minimalContigLength, alignedRegionsOnly);
+        return Objects.hash(branchingMinimalQualityShare, branchingMinimalSumQuality, decisiveBranchingSumQualityThreshold, alignedSequenceEdgeDelta, alignmentEdgeRegionSize, minimalMeanNormalizedQuality, minimalNonEdgePointsFraction, outputMinimalQualityShare, outputMinimalSumQuality, subCloningRegion, trimmingParameters, minimalContigLength, alignedRegionsOnly);
     }
 
     private static Map<String, FullSeqAssemblerParameters> knownParameters;
@@ -263,7 +263,7 @@ public class FullSeqAssemblerParameters {
                         TypeReference<HashMap<String, FullSeqAssemblerParameters>> typeRef
                                 = new TypeReference<HashMap<String, FullSeqAssemblerParameters>>() {
                         };
-                        map = GlobalObjectMappers.ONE_LINE.readValue(is, typeRef);
+                        map = GlobalObjectMappers.getOneLine().readValue(is, typeRef);
                     } catch (IOException ioe) {
                         throw new RuntimeException(ioe);
                     }

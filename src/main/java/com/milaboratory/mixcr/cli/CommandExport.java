@@ -1,44 +1,28 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.OutputPort;
+import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.blocks.FilteringPort;
 import cc.redberry.primitives.Filter;
-import com.milaboratory.core.sequence.AminoAcidSequence;
-import com.milaboratory.core.sequence.NSequenceWithQuality;
-import com.milaboratory.core.sequence.TranslationParameters;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.tag.TagCount;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.export.*;
+import com.milaboratory.mixcr.util.Concurrency;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.CanReportProgressAndStage;
+import com.milaboratory.util.ReportHelper;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.Chains;
 import io.repseq.core.GeneFeature;
@@ -55,6 +39,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static cc.redberry.primitives.FilterUtil.ACCEPT_ALL;
 import static cc.redberry.primitives.FilterUtil.and;
@@ -160,16 +145,10 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
         if (fields.isEmpty())
             fields.addAll(presets.get(clazz).get(DEFAULT_PRESET));
 
-        OutputMode oMode = humanReadable ? OutputMode.HumanFriendly : OutputMode.ScriptingFriendly;
-        List<FieldExtractor<? super T>> extractors = fields
-                .stream()
-                .flatMap(f -> extractor(f, clazz, oMode).stream())
-                .collect(Collectors.toList());
-
-        run1(extractors);
+        run1(fields, humanReadable ? OutputMode.HumanFriendly : OutputMode.ScriptingFriendly);
     }
 
-    abstract void run1(List<FieldExtractor<? super T>> extractors) throws Exception;
+    abstract void run1(List<FieldData> fields, OutputMode oMode) throws Exception;
 
     @Command(name = "exportAlignments",
             separator = " ",
@@ -181,41 +160,25 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
         }
 
         @Override
-        void run1(List<FieldExtractor<? super VDJCAlignments>> exporters) throws Exception {
-            AutoCloseable reader = null;
-            OutputPort<VDJCAlignments> source = null;
-
-            switch (fileInfoExtractorInstance.getFileInfo(in).fileType) {
-                case MAGIC_VDJC:
-                    VDJCAlignmentsReader vdjcaReader = new VDJCAlignmentsReader(in, VDJCLibraryRegistry.getDefault());
-                    reader = vdjcaReader;
-                    source = vdjcaReader;
-                    break;
-                case MAGIC_CLNA:
-                    ClnAReader clnaReader = new ClnAReader(in, VDJCLibraryRegistry.getDefault());
-                    reader = clnaReader;
-                    source = clnaReader.readAllAlignments();
-                    break;
-                case MAGIC_CLNS:
-                    throwExecutionException("Can't export alignments from *.clns file: " + in);
-                default:
-                    throwExecutionException("Unknown file type: " + in);
-            }
-
-            try (InfoWriter<VDJCAlignments> writer = new InfoWriter<>(out)) {
-                if (source instanceof CanReportProgress)
-                    SmartProgressReporter.startProgressReport("Exporting alignments", (CanReportProgress) source, System.err);
+        void run1(List<FieldData> fields, OutputMode oMode) throws Exception {
+            try (AlignmentsAndHeader readerAndHeader = openAlignmentsPort(in);
+                 InfoWriter<VDJCAlignments> writer = new InfoWriter<>(out)) {
+                OutputPortCloseable<VDJCAlignments> reader = readerAndHeader.port;
+                List<FieldExtractor<? super VDJCAlignments>> exporters = fields
+                        .stream()
+                        .flatMap(f -> extractor(f, VDJCAlignments.class, readerAndHeader.header, oMode).stream())
+                        .collect(Collectors.toList());
+                if (reader instanceof CanReportProgress)
+                    SmartProgressReporter.startProgressReport("Exporting alignments", (CanReportProgress) reader, System.err);
                 writer.attachInfoProviders(exporters);
                 writer.ensureHeader();
                 VDJCAlignments alignments;
                 long count = 0;
-                OutputPort<VDJCAlignments> alignmentsPort = new FilteringPort<>(source, mkFilter());
+                OutputPort<VDJCAlignments> alignmentsPort = new FilteringPort<>(reader, mkFilter());
                 while ((alignments = alignmentsPort.take()) != null && count < limit) {
                     writer.put(alignments);
                     ++count;
                 }
-            } finally {
-                reader.close();
             }
         }
     }
@@ -241,6 +204,10 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                 names = {"-m", "--minimal-clone-count"})
         public long minCount = 0;
 
+        @Option(description = "Split clones by tag values",
+                names = {"--split-by-tag"})
+        public List<String> splitByTag = new ArrayList<>();
+
         public CommandExportClones() {
             super(Clone.class);
         }
@@ -253,10 +220,14 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
         }
 
         @Override
-        void run1(List<FieldExtractor<? super Clone>> exporters) throws Exception {
+        void run1(List<FieldData> fields, OutputMode oMode) throws Exception {
             try (InfoWriter<Clone> writer = new InfoWriter<>(out)) {
                 CloneSet initialSet = CloneSetIO.read(in, VDJCLibraryRegistry.getDefault());
                 CloneSet set = CloneSet.transform(initialSet, mkFilter());
+                List<FieldExtractor<? super Clone>> exporters = fields
+                        .stream()
+                        .flatMap(f -> extractor(f, Clone.class, initialSet, oMode).stream())
+                        .collect(Collectors.toList());
 
                 writer.attachInfoProviders(exporters);
                 writer.ensureHeader();
@@ -267,7 +238,11 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                         break;
                     }
                 }
-                ExportClones exportClones = new ExportClones(set, writer, limit);
+                TagsInfo tagsInfo = set.getTagsInfo();
+                ExportClones exportClones = new ExportClones(set, writer, limit,
+                        splitByTag.stream()
+                                .mapToInt(tagsInfo::indexOf)
+                                .toArray());
                 SmartProgressReporter.startProgressReport(exportClones, System.err);
                 exportClones.run();
                 if (initialSet.size() > set.size()) {
@@ -276,8 +251,8 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                             count = set.getClones().stream().mapToDouble(Clone::getCount).sum();
                     int di = initialSet.size() - set.size();
                     double cdi = initialCount - count;
-                    warn("Filtered " + set.size() + " of " + initialSet.size() + " clones (" + Util.PERCENT_FORMAT.format(100.0 * di / initialSet.size()) + "%).");
-                    warn("Filtered " + count + " of " + initialCount + " reads (" + Util.PERCENT_FORMAT.format(100.0 * cdi / initialCount) + "%).");
+                    warn("Filtered " + set.size() + " of " + initialSet.size() + " clones (" + ReportHelper.PERCENT_FORMAT.format(100.0 * di / initialSet.size()) + "%).");
+                    warn("Filtered " + count + " of " + initialCount + " reads (" + ReportHelper.PERCENT_FORMAT.format(100.0 * cdi / initialCount) + "%).");
                 }
             }
         }
@@ -293,29 +268,14 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
             @Override
             public boolean accept(Clone clone) {
                 if (filterOutOfFrames) {
-                    NSequenceWithQuality cdr3 = clone.getFeature(GeneFeature.CDR3);
-                    if (cdr3 == null || cdr3.size() % 3 != 0)
+                    if (clone.isOutOfFrame(GeneFeature.CDR3))
                         return false;
                 }
 
-                if (filterStopCodons) {
-                    for (GeneFeature assemblingFeature : clone.getParentCloneSet().getAssemblingFeatures()) {
-                        GeneFeature codingFeature = GeneFeature.getCodingGeneFeature(assemblingFeature);
-                        if (codingFeature == null)
-                            continue;
-
-                        for (int i = 0; i < clone.numberOfTargets(); ++i) {
-                            NSequenceWithQuality codingSeq = clone.getPartitionedTarget(i).getFeature(codingFeature);
-                            if (codingSeq == null)
-                                continue;
-                            TranslationParameters tr = clone.getPartitionedTarget(i).getPartitioning().getTranslationParameters(codingFeature);
-                            if (tr == null)
-                                return false;
-                            if (AminoAcidSequence.translate(codingSeq.getSequence(), tr).containStops())
-                                return false;
-                        }
-                    }
-                }
+                if (filterStopCodons)
+                    for (GeneFeature assemblingFeature : clone.getParentCloneSet().getAssemblingFeatures())
+                        if (clone.containsStops(assemblingFeature))
+                            return false;
 
                 return true;
             }
@@ -342,12 +302,14 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
             final long size;
             volatile long current = 0;
             final long limit;
+            final int[] splitByTags;
 
-            private ExportClones(CloneSet clones, InfoWriter<Clone> writer, long limit) {
+            private ExportClones(CloneSet clones, InfoWriter<Clone> writer, long limit, int[] splitByTags) {
                 this.clones = clones;
                 this.writer = writer;
                 this.size = clones.size();
                 this.limit = limit;
+                this.splitByTags = splitByTags;
             }
 
             @Override
@@ -369,7 +331,20 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                 for (Clone clone : clones.getClones()) {
                     if (current == limit)
                         break;
-                    writer.put(clone);
+
+                    Stream<Clone> stream = Stream.of(clone);
+
+                    for (int tagIndex : splitByTags) {
+                        stream = stream.flatMap(cl -> {
+                            TagCount tagCount = cl.getTagCount();
+                            double sum = tagCount.sum();
+                            return Arrays.stream(tagCount.splitBy(tagIndex))
+                                    .map(tc -> new Clone(clone.getTargets(), clone.getHits(),
+                                            tc, 1.0 * cl.getCount() * tc.sum() / sum, clone.getId(), clone.getGroup()));
+                        });
+                    }
+                    stream.forEach(writer::put);
+
                     ++current;
                 }
             }
@@ -377,30 +352,29 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
     }
 
     @SuppressWarnings("unchecked")
-    <E> List<FieldExtractor<E>> extractor(FieldData fd, Class<E> clazz, OutputMode m) {
+    public static <E> List<FieldExtractor<E>> extractor(FieldData fd, Class<E> clazz, VDJCFileHeaderData header, OutputMode m) {
         for (Field f : FieldExtractors.getFields()) {
             if (fd.field.equalsIgnoreCase(f.getCommand()) && f.canExtractFrom(clazz)) {
                 if (f.nArguments() == 0) {
                     if (!(fd.args.length == 0 || (
                             fd.args.length == 1 && (fd.args[0].equalsIgnoreCase("true") || fd.args[0].equalsIgnoreCase("false")))))
                         throw new RuntimeException();
-                    return Collections.singletonList(f.create(m, new String[0]));
+                    return Collections.singletonList(f.create(m, header, new String[0]));
                 } else {
                     int i = 0;
                     ArrayList<FieldExtractor<E>> extractors = new ArrayList<>();
                     while (i < fd.args.length) {
-                        extractors.add(f.create(m, Arrays.copyOfRange(fd.args, i, i + f.nArguments())));
+                        extractors.add(f.create(m, header, Arrays.copyOfRange(fd.args, i, i + f.nArguments())));
                         i += f.nArguments();
                     }
                     return extractors;
                 }
             }
         }
-        throwValidationException("illegal field: " + fd.field);
-        return null;
+        throw new IllegalArgumentException("illegal field: " + fd.field);
     }
 
-    private static final class FieldData {
+    public static final class FieldData {
         final String field;
         final String[] args;
 
@@ -434,7 +408,15 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
         for (OptionSpec opt : parseResult.matchedOptions()) {
             if (!FieldExtractors.hasField(opt.names()[0]))
                 continue;
-            r.add(new FieldData(opt.names()[0], opt.originalStringValues().toArray(new String[opt.originalStringValues().size()])));
+
+            int arity = opt.arity().min();
+            String[] actualValue = new String[0];
+            if (arity > 0) {
+                String[] value = opt.getValue();
+                actualValue = Arrays.copyOf(value, arity);
+                opt.setValue(Arrays.copyOfRange(value, arity, value.length));
+            }
+            r.add(new FieldData(opt.names()[0], actualValue));
         }
         return r;
     }
@@ -535,8 +517,13 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
     public static <T extends VDJCObject> CommandSpec mkCommandSpec(CommandExport<T> export) {
         CommandSpec spec = CommandSpec.forAnnotatedObject(export);
         export.spec = spec; // inject spec manually
-        for (Field field : FieldExtractors.getFields()) {
-            if (!field.canExtractFrom(export.clazz))
+        addOptionsToSpec(spec, export.clazz);
+        return spec;
+    }
+
+    public static void addOptionsToSpec(CommandSpec spec, Class<?> clazz) {
+        for (Field<?> field : FieldExtractors.getFields()) {
+            if (!field.canExtractFrom(clazz))
                 continue;
             spec.addOption(OptionSpec
                     .builder(field.getCommand())
@@ -547,7 +534,6 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                     .descriptionKey(field.getCommand() + " " + field.metaVars())
                     .build());
         }
-        return spec;
     }
 
     /**
@@ -562,5 +548,60 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
      */
     public static CommandSpec mkClonesSpec() {
         return mkCommandSpec(new CommandExportClones());
+    }
+
+    public interface OPAWithReport extends OutputPortCloseable<VDJCAlignments>, CanReportProgress {
+    }
+
+    public static class AlignmentsAndHeader implements AutoCloseable {
+        public final OutputPortCloseable<VDJCAlignments> port;
+        public final VDJCFileHeaderData header;
+
+        public AlignmentsAndHeader(OutputPortCloseable<VDJCAlignments> port, VDJCFileHeaderData header) {
+            this.port = port;
+            this.header = header;
+        }
+
+        @Override
+        public void close() {
+            port.close();
+        }
+    }
+
+    public static AlignmentsAndHeader openAlignmentsPort(String in) {
+        try {
+            switch (fileInfoExtractorInstance.getFileInfo(in).fileType) {
+                case MAGIC_VDJC:
+                    VDJCAlignmentsReader vdjcaReader = null;
+                    vdjcaReader = new VDJCAlignmentsReader(in, VDJCLibraryRegistry.getDefault());
+                    return new AlignmentsAndHeader(vdjcaReader, vdjcaReader);
+                case MAGIC_CLNA:
+                    ClnAReader clnaReader = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4));
+                    OutputPortCloseable<VDJCAlignments> source = clnaReader.readAllAlignments();
+                    return new AlignmentsAndHeader(
+                            new OutputPortCloseable<VDJCAlignments>() {
+                                @Override
+                                public void close() {
+                                    try {
+                                        source.close();
+                                        clnaReader.close();
+                                    } catch (IOException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                }
+
+                                @Override
+                                public VDJCAlignments take() {
+                                    return source.take();
+                                }
+                            }, clnaReader);
+                case MAGIC_CLNS:
+                    throw new RuntimeException("Can't export alignments from *.clns file: " + in);
+                default:
+                    throw new RuntimeException("Unknown file type: " + in);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

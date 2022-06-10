@@ -1,161 +1,167 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.basictypes;
 
+import cc.redberry.pipe.CUtils;
+import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
-import io.repseq.core.*;
+import com.milaboratory.primitivio.blocks.PrimitivIHybrid;
+import com.milaboratory.util.LambdaSemaphore;
+import io.repseq.core.VDJCGene;
+import io.repseq.core.VDJCLibraryRegistry;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.EnumMap;
+import java.util.Arrays;
 import java.util.List;
 
-import static com.milaboratory.mixcr.basictypes.ClnsWriter.*;
-import static com.milaboratory.mixcr.cli.SerializerCompatibilityUtil.add_v3_0_3_CustomSerializers;
+import static com.milaboratory.mixcr.basictypes.ClnsWriter.MAGIC;
+import static com.milaboratory.mixcr.basictypes.ClnsWriter.MAGIC_LENGTH;
 
 /**
  *
  */
-public class ClnsReader extends PipelineConfigurationReaderMiXCR implements AutoCloseable {
-    private final PrimitivI input;
+public class ClnsReader extends PipelineConfigurationReaderMiXCR implements CloneReader, VDJCFileHeaderData, AutoCloseable {
+    private final PrimitivIHybrid input;
     private final VDJCLibraryRegistry libraryRegistry;
 
-    private ClnsReader(PrimitivI input, VDJCLibraryRegistry libraryRegistry) {
-        this.input = input;
-        this.libraryRegistry = libraryRegistry;
-    }
+    private final PipelineConfiguration pipelineConfiguration;
+    private final VDJCAlignerParameters alignerParameters;
+    private final CloneAssemblerParameters assemblerParameters;
+    private final TagsInfo tagsInfo;
+    private final VDJCSProperties.CloneOrdering ordering;
+    private final String versionInfo;
+    private final List<VDJCGene> usedGenes;
+    private final int numberOfClones;
 
-    public ClnsReader(InputStream inputStream, VDJCLibraryRegistry libraryRegistry) {
-        this(new PrimitivI(inputStream), libraryRegistry);
-    }
-
-    public ClnsReader(File file, VDJCLibraryRegistry libraryRegistry) throws IOException {
-        this(IOUtil.createIS(file), libraryRegistry);
-    }
+    private final long clonesPosition;
 
     public ClnsReader(String file, VDJCLibraryRegistry libraryRegistry) throws IOException {
-        this(new File(file), libraryRegistry);
+        this(Paths.get(file), libraryRegistry, 3);
     }
 
-    private boolean initialized = false;
-    private CloneSet cloneSet = null;
-    private PipelineConfiguration pipelineConfiguration = null;
-    private VDJCAlignerParameters alignerParameters = null;
-    private CloneAssemblerParameters assemblerParameters = null;
+    public ClnsReader(Path file, VDJCLibraryRegistry libraryRegistry) throws IOException {
+        this(file, libraryRegistry, 3);
+    }
 
-    private synchronized void init() {
-        if (initialized)
-            return;
+    public ClnsReader(Path file, VDJCLibraryRegistry libraryRegistry, int concurrency) throws IOException {
+        this(file, libraryRegistry, new LambdaSemaphore(concurrency));
+    }
 
-        // Registering custom serializer
-        input.getSerializersManager().registerCustomSerializer(GeneFeature.class, new GeneFeatureSerializer(true));
+    public ClnsReader(Path file, VDJCLibraryRegistry libraryRegistry, LambdaSemaphore concurrencyLimiter) throws IOException {
+        this(new PrimitivIHybrid(file, concurrencyLimiter), libraryRegistry);
+    }
 
-        byte[] magicBytes = new byte[MAGIC_LENGTH];
-        input.readFully(magicBytes);
+    private ClnsReader(PrimitivIHybrid input, VDJCLibraryRegistry libraryRegistry) {
+        this.input = input;
+        this.libraryRegistry = libraryRegistry;
 
-        String magicString = new String(magicBytes);
+        try (PrimitivI i = input.beginPrimitivI(true)) {
+            byte[] magicBytes = new byte[MAGIC_LENGTH];
+            i.readFully(magicBytes);
 
-        // SerializersManager serializersManager = input.getSerializersManager();
+            String magicString = new String(magicBytes);
 
-        switch (magicString) {
-            case MAGIC_V7:
-                add_v3_0_3_CustomSerializers(input);
-                break;
-            case MAGIC:
-                break;
-            default:
-                throw new RuntimeException("Unsupported file format; .clns file of version " + magicString +
-                        " while you are running MiXCR " + MAGIC);
+            // SerializersManager serializersManager = input.getSerializersManager();
+
+            switch (magicString) {
+                case MAGIC:
+                    break;
+                default:
+                    throw new RuntimeException("Unsupported file format; .clns file of version " + magicString +
+                            " while you are running MiXCR " + MAGIC);
+            }
         }
 
-        String versionInfo = input.readUTF();
+        try (PrimitivI pi = this.input.beginRandomAccessPrimitivI(-IOUtil.END_MAGIC_LENGTH)) {
+            // Checking file consistency
+            byte[] endMagic = new byte[IOUtil.END_MAGIC_LENGTH];
+            pi.readFully(endMagic);
+            if (!Arrays.equals(IOUtil.getEndMagicBytes(), endMagic))
+                throw new RuntimeException("Corrupted file.");
+        }
 
-        pipelineConfiguration = input.readObject(PipelineConfiguration.class);
-        alignerParameters = input.readObject(VDJCAlignerParameters.class);
-        assemblerParameters = input.readObject(CloneAssemblerParameters.class);
+        // read header
+        try (PrimitivI i = input.beginPrimitivI(true)) {
+            versionInfo = i.readUTF();
+            pipelineConfiguration = i.readObject(PipelineConfiguration.class);
+            alignerParameters = i.readObject(VDJCAlignerParameters.class);
+            assemblerParameters = i.readObject(CloneAssemblerParameters.class);
+            tagsInfo = i.readObject(TagsInfo.class);
+            ordering = i.readObject(VDJCSProperties.CloneOrdering.class);
+            numberOfClones = i.readInt();
 
-        EnumMap<GeneType, GeneFeature> alignedFeatures = IO.readGF2GTMap(input);
-        List<VDJCGene> genes = IOUtil.readAndRegisterGeneReferences(input, libraryRegistry, new GT2GFAdapter(alignedFeatures));
+            usedGenes = IOUtil.stdVDJCPrimitivIStateInit(i, alignerParameters, libraryRegistry);
+        }
 
-        int count = input.readInt();
-        List<Clone> clones = new ArrayList<>(count);
-        for (int i = 0; i < count; i++)
-            clones.add(input.readObject(Clone.class));
+        this.clonesPosition = input.getPosition();
+    }
 
-        this.cloneSet = new CloneSet(clones, genes, alignedFeatures, alignerParameters, assemblerParameters);
-        cloneSet.versionInfo = versionInfo;
-
-        initialized = true;
+    @Override
+    public OutputPortCloseable<Clone> readClones() {
+        return input.beginRandomAccessPrimitivIBlocks(Clone.class, clonesPosition);
     }
 
     public CloneSet getCloneSet() {
-        init();
+        List<Clone> clones = new ArrayList<>();
+        for (Clone clone : CUtils.it(readClones()))
+            clones.add(clone);
+        CloneSet cloneSet = new CloneSet(clones, usedGenes, alignerParameters, assemblerParameters, tagsInfo, ordering);
+        cloneSet.versionInfo = versionInfo;
         return cloneSet;
     }
 
     @Override
     public PipelineConfiguration getPipelineConfiguration() {
-        init();
         return pipelineConfiguration;
     }
 
+    @Override
+    public TagsInfo getTagsInfo() {
+        return tagsInfo;
+    }
+
     public VDJCAlignerParameters getAlignerParameters() {
-        init();
         return alignerParameters;
     }
 
+    @Override
     public CloneAssemblerParameters getAssemblerParameters() {
-        init();
         return assemblerParameters;
     }
 
     @Override
-    public void close() {
-        input.close();
+    public VDJCSProperties.CloneOrdering ordering() {
+        return ordering;
     }
 
-    public static class GT2GFAdapter implements HasFeatureToAlign {
-        public final EnumMap<GeneType, GeneFeature> map;
+    @Override
+    public int numberOfClones() {
+        return numberOfClones;
+    }
 
-        public GT2GFAdapter(EnumMap<GeneType, GeneFeature> map) {
-            this.map = map;
-        }
+    @Override
+    public List<VDJCGene> getUsedGenes() {
+        return usedGenes;
+    }
 
-        @Override
-        public GeneFeature getFeatureToAlign(GeneType geneType) {
-            return map.get(geneType);
-        }
+    @Override
+    public void close() throws IOException {
+        input.close();
     }
 }

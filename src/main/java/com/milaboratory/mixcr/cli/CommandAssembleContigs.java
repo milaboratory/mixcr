@@ -1,37 +1,18 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
-import cc.redberry.pipe.blocks.ParallelProcessor;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -44,10 +25,16 @@ import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerReport;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.tag.TagCount;
+import com.milaboratory.mixcr.basictypes.tag.TagTuple;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.mixcr.util.Concurrency;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PipeDataInputReader;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
+import com.milaboratory.util.JsonOverrider;
+import com.milaboratory.util.ReportUtil;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
@@ -87,6 +74,10 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
             names = {"-r", "--report"})
     public String reportFile;
 
+    @Option(description = "Ignore tags",
+            names = {"--ignore-tags"})
+    public boolean ignoreTags;
+
     @Option(description = "Report file.",
             names = {"--debug-report"}, hidden = true)
     public String debugReportFile;
@@ -121,26 +112,36 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
         List<VDJCGene> genes;
         VDJCAlignerParameters alignerParameters;
         CloneAssemblerParameters cloneAssemblerParameters;
-        try (ClnAReader reader = new ClnAReader(in, VDJCLibraryRegistry.getDefault());
-             PrimitivO tmpOut = new PrimitivO(new BufferedOutputStream(new FileOutputStream(out)));
+        TagsInfo tagsInfo;
+        VDJCSProperties.CloneOrdering ordering;
+        try (ClnAReader reader = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4));
+             PrimitivO tmpOut = new PrimitivO(new BufferedOutputStream(new FileOutputStream(out))); // TODO ????
              BufferedWriter debugReport = debugReportFile == null ? null : new BufferedWriter(new OutputStreamWriter(new FileOutputStream(debugReportFile)))) {
 
+            ordering = reader.ordering();
+
             final CloneFactory cloneFactory = new CloneFactory(reader.getAssemblerParameters().getCloneFactoryParameters(),
-                    reader.getAssemblingFeatures(), reader.getGenes(), reader.getAlignerParameters().getFeaturesToAlignMap());
+                    reader.getAssemblingFeatures(), reader.getUsedGenes(), reader.getAlignerParameters().getFeaturesToAlignMap());
 
             alignerParameters = reader.getAlignerParameters();
             cloneAssemblerParameters = reader.getAssemblerParameters();
-            genes = reader.getGenes();
+            tagsInfo = reader.getTagsInfo();
+            genes = reader.getUsedGenes();
             IOUtil.registerGeneReferences(tmpOut, genes, alignerParameters);
 
             ClnAReader.CloneAlignmentsPort cloneAlignmentsPort = reader.clonesAndAlignments();
-            SmartProgressReporter.startProgressReport("Assembling", cloneAlignmentsPort);
+            SmartProgressReporter.startProgressReport("Assembling contigs", cloneAlignmentsPort);
 
-            OutputPort<Clone[]> parallelProcessor = new ParallelProcessor<>(cloneAlignmentsPort, cloneAlignments -> {
+            OutputPort<Clone[]> parallelProcessor = CUtils.orderedParallelProcessor(cloneAlignmentsPort, cloneAlignments -> {
+                Clone clone = cloneAlignments.clone;
+
+                if (ignoreTags)
+                    clone = clone.setTagCount(new TagCount(TagTuple.NO_TAGS, clone.getTagCount().sum()));
+
                 try {
                     // Collecting statistics
 
-                    EnumMap<GeneType, Map<VDJCGeneId, CoverageAccumulator>> coverages = cloneAlignments.clone.getHitsMap()
+                    EnumMap<GeneType, Map<VDJCGeneId, CoverageAccumulator>> coverages = clone.getHitsMap()
                             .entrySet().stream()
                             .filter(e -> e.getValue() != null && e.getValue().length > 0)
                             .collect(Collectors.toMap(
@@ -170,8 +171,8 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
 
                     if (!coverages.containsKey(GeneType.Variable) || !coverages.containsKey(GeneType.Joining)) {
                         // Something went really wrong
-                        report.onAssemblyCanceled(cloneAlignments.clone);
-                        return new Clone[]{cloneAlignments.clone};
+                        report.onAssemblyCanceled(clone);
+                        return new Clone[]{clone};
                     }
 
                     for (VDJCAlignments alignments : CUtils.it(cloneAlignments.alignments()))
@@ -195,7 +196,7 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
 
                     FullSeqAssembler fullSeqAssembler = new FullSeqAssembler(
                             cloneFactory, assemblerParameters,
-                            cloneAlignments.clone, alignerParameters,
+                            clone, alignerParameters,
                             bestGenes.get(GeneType.Variable), bestGenes.get(GeneType.Joining)
                     );
 
@@ -205,13 +206,13 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
 
                     if (debugReport != null) {
                         synchronized (debugReport) {
-                            try (FileOutputStream fos = new FileOutputStream(debugReportFile + "." + cloneAlignments.clone.getId())) {
+                            try (FileOutputStream fos = new FileOutputStream(debugReportFile + "." + clone.getId())) {
                                 final String content = rawVariantsData.toCsv((byte) 10);
                                 fos.write(content.getBytes());
                             }
 
                             try {
-                                debugReport.write("Clone: " + cloneAlignments.clone.getId());
+                                debugReport.write("Clone: " + clone.getId());
                                 debugReport.newLine();
                                 debugReport.write(rawVariantsData.toString());
                                 debugReport.newLine();
@@ -227,9 +228,9 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
 
                     return fullSeqAssembler.callVariants(rawVariantsData);
                 } catch (Throwable re) {
-                    throw new RuntimeException("While processing clone #" + cloneAlignments.clone.getId(), re);
+                    throw new RuntimeException("While processing clone #" + clone.getId(), re);
                 }
-            }, threads);
+            }, 1024, threads);
 
             for (Clone[] clones : CUtils.it(parallelProcessor)) {
                 totalClonesCount += clones.length;
@@ -243,23 +244,20 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
         assert report.getFinalCloneCount() == totalClonesCount;
         assert report.getFinalCloneCount() >= report.getInitialCloneCount();
 
+        int cloneId = 0;
         Clone[] clones = new Clone[totalClonesCount];
         try (PrimitivI tmpIn = new PrimitivI(new BufferedInputStream(new FileInputStream(out)))) {
             IOUtil.registerGeneReferences(tmpIn, genes, alignerParameters);
             int i = 0;
             for (Clone clone : CUtils.it(new PipeDataInputReader<>(Clone.class, tmpIn, totalClonesCount)))
-                clones[i++] = clone;
+                clones[i++] = clone.setId(cloneId++);
         }
 
-        Arrays.sort(clones, Comparator.comparingDouble(c -> -c.getCount()));
-        for (int i = 0; i < clones.length; i++)
-            clones[i] = clones[i].setId(i);
-        CloneSet cloneSet = new CloneSet(Arrays.asList(clones), genes, alignerParameters.getFeaturesToAlignMap(),
-                alignerParameters, cloneAssemblerParameters);
+        CloneSet cloneSet = new CloneSet(Arrays.asList(clones), genes, alignerParameters, cloneAssemblerParameters,
+                tagsInfo, ordering);
 
-        try (ClnsWriter writer = new ClnsWriter(getFullPipelineConfiguration(), cloneSet, out)) {
-            SmartProgressReporter.startProgressReport(writer);
-            writer.write();
+        try (ClnsWriter writer = new ClnsWriter(out)) {
+            writer.writeCloneSet(getFullPipelineConfiguration(), cloneSet);
         }
 
         ReportWrapper reportWrapper = new ReportWrapper(ASSEMBLE_CONTIGS_COMMAND_NAME, report);
@@ -271,13 +269,13 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
 
         // Writing report to stout
         System.out.println("============= Report ==============");
-        Util.writeReportToStdout(report);
+        ReportUtil.writeReportToStdout(report);
 
         if (reportFile != null)
-            Util.writeReport(reportFile, reportWrapper);
+            ReportUtil.appendReport(reportFile, reportWrapper);
 
         if (jsonReport != null)
-            Util.writeJsonReport(jsonReport, reportWrapper);
+            ReportUtil.appendJsonReport(jsonReport, reportWrapper);
     }
 
     @JsonAutoDetect(

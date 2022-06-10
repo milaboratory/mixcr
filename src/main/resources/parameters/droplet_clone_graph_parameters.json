@@ -1,0 +1,15 @@
+{
+  "tagCliqueScorePower": 3.0,
+  "cloneCliqueScorePower": 3.0,
+  "maxTagCountRatio": 2.0,
+  "filter": {
+    "minReadFractionInTag": 0.0,
+    "maxCloneRankInTag": 3,
+    "minTagReads": "NaN",
+    "minTagUMIs": "NaN",
+    "tagReadsQuantile": 0.9,
+    "tagReadsQuantileCoefficient": 0.5,
+    "tagUMIsQuantile": "NaN",
+    "tagUMIsQuantileCoefficient": "NaN"
+  }
+}

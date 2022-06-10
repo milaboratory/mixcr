@@ -1,31 +1,13 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.export;
 
@@ -36,14 +18,13 @@ import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.mutations.MutationsUtil;
 import com.milaboratory.core.sequence.AminoAcidSequence;
+import com.milaboratory.core.sequence.AminoAcidSequence.AminoAcidSequencePosition;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.TranslationParameters;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
-import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.basictypes.VDJCObject;
+import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.tag.TagValue;
 import com.milaboratory.util.GlobalObjectMappers;
 import gnu.trove.iterator.TObjectFloatIterator;
 import gnu.trove.map.hash.TObjectFloatHashMap;
@@ -60,6 +41,7 @@ import java.util.List;
 public final class FieldExtractors {
     static final String NULL = "";
     private static final DecimalFormat SCORE_FORMAT = new DecimalFormat("#.#");
+    private static final int MAX_SHIFTED_TRIPLETS = 3;
 
     static Field[] descriptors = null;
 
@@ -323,25 +305,6 @@ public final class FieldExtractors {
                 }
             });
 
-
-//            descriptorsList.add(new FeatureExtractorDescriptor("-aaFeatureFromLeft", "Export amino acid sequence of " +
-//                    "specified gene feature starting from the leftmost nucleotide (differs from -aaFeature only for " +
-//                    "sequences which length are not multiple of 3)", "AA. Seq.", "aaSeq") {
-//                @Override
-//                public String convert(NSequenceWithQuality seq) {
-//                    return AminoAcidSequence.translate(seq.getSequence(), FromLeftWithoutIncompleteCodon).toString();
-//                }
-//            });
-//
-//            descriptorsList.add(new FeatureExtractorDescriptor("-aaFeatureFromRight", "Export amino acid sequence of " +
-//                    "specified gene feature starting from the rightmost nucleotide (differs from -aaFeature only for " +
-//                    "sequences which length are not multiple of 3)", "AA. Seq.", "aaSeq") {
-//                @Override
-//                public String convert(NSequenceWithQuality seq) {
-//                    return AminoAcidSequence.translate(seq.getSequence(), FromRightWithoutIncompleteCodon).toString();
-//                }
-//            });
-
             descriptorsList.add(new FeatureExtractors.NSeqExtractor("-minFeatureQuality", "Export minimal quality of specified gene feature", "Min. qual. ", "minQual") {
                 @Override
                 public String convert(NSequenceWithQuality seq) {
@@ -368,7 +331,7 @@ public final class FieldExtractors {
                     new String[]{"N. Mutations in "}, new String[]{"nMutations"}) {
                 @Override
                 String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1,
-                               NucleotideSequence seq2, TranslationParameters tr) {
+                               NucleotideSequence seq2, Range range, TranslationParameters tr) {
                     return mutations.encode(",");
                 }
             });
@@ -378,7 +341,7 @@ public final class FieldExtractors {
                     new String[]{"N. Mutations in ", " relative to "}, new String[]{"nMutationsIn", "Relative"}) {
                 @Override
                 String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1,
-                               NucleotideSequence seq2, TranslationParameters tr) {
+                               NucleotideSequence seq2, Range range, TranslationParameters tr) {
                     return mutations.encode(",");
                 }
             });
@@ -390,11 +353,23 @@ public final class FieldExtractors {
 
                 @Override
                 String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1,
-                               NucleotideSequence seq2, TranslationParameters tr) {
+                               NucleotideSequence seq2, Range range, TranslationParameters tr) {
                     if (tr == null) return "-";
-                    Mutations<AminoAcidSequence> aaMuts = MutationsUtil.nt2aa(seq1, mutations, tr);
+                    Mutations<AminoAcidSequence> aaMuts = MutationsUtil.nt2aa(seq1, mutations, tr, MAX_SHIFTED_TRIPLETS);
                     if (aaMuts == null)
                         return "-";
+
+                    AminoAcidSequencePosition aaPos = AminoAcidSequence.convertNtPositionToAA(range.getFrom(), seq1.size(), tr);
+                    if (aaPos == null)
+                        return "-";
+                    int aaFromP1 = aaPos.floor();
+                    aaPos = AminoAcidSequence.convertNtPositionToAA(range.getTo(), seq1.size(), tr);
+                    if (aaPos == null)
+                        return "-";
+                    int aaToP1 = aaPos.ceil();
+
+                    aaMuts = aaMuts.extractAbsoluteMutationsForRange(aaFromP1, aaToP1);
+
                     return aaMuts.encode(",");
                 }
             }
@@ -413,9 +388,9 @@ public final class FieldExtractors {
                 }
 
                 @Override
-                String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1, NucleotideSequence seq2, TranslationParameters tr) {
+                String convert(Mutations<NucleotideSequence> mutations, NucleotideSequence seq1, NucleotideSequence seq2, Range range, TranslationParameters tr) {
                     if (tr == null) return "-";
-                    MutationsUtil.MutationNt2AADescriptor[] descriptors = MutationsUtil.nt2aaDetailed(seq1, mutations, tr, 10);
+                    MutationsUtil.MutationNt2AADescriptor[] descriptors = MutationsUtil.nt2aaDetailed(seq1, mutations, tr, MAX_SHIFTED_TRIPLETS);
                     if (descriptors == null)
                         return "-";
                     StringBuilder sb = new StringBuilder();
@@ -453,9 +428,9 @@ public final class FieldExtractors {
                 }
 
                 @Override
-                public FieldExtractor<VDJCAlignments> create(OutputMode outputMode, String[] args) {
+                public FieldExtractor<VDJCAlignments> create(OutputMode outputMode, VDJCFileHeaderData headerData, String[] args) {
                     System.out.println("WARNING: -readId is deprecated. Use -readIds");
-                    return super.create(outputMode, args);
+                    return super.create(outputMode, headerData, args);
                 }
             });
 
@@ -515,9 +490,9 @@ public final class FieldExtractors {
                 }
 
                 @Override
-                public FieldExtractor<VDJCAlignments> create(OutputMode outputMode, String[] args) {
+                public FieldExtractor<VDJCAlignments> create(OutputMode outputMode, VDJCFileHeaderData headerData, String[] args) {
                     System.out.println("WARNING: -descrR1 is deprecated. Use -descrsR1");
-                    return super.create(outputMode, args);
+                    return super.create(outputMode, headerData, args);
                 }
             });
 
@@ -537,9 +512,9 @@ public final class FieldExtractors {
                 }
 
                 @Override
-                public FieldExtractor<VDJCAlignments> create(OutputMode outputMode, String[] args) {
+                public FieldExtractor<VDJCAlignments> create(OutputMode outputMode, VDJCFileHeaderData headerData, String[] args) {
                     System.out.println("WARNING: -descrR2 is deprecated. Use -descrsR2");
-                    return super.create(outputMode, args);
+                    return super.create(outputMode, headerData, args);
                 }
             });
 
@@ -609,7 +584,7 @@ public final class FieldExtractors {
             descriptorsList.add(new PL_A("-cloneIdWithMappingType", "To which clone alignment was attached with additional info on mapping type (make sure using .clna file as input for exportAlignments)", "Clone mapping", "cloneMapping") {
                 @Override
                 protected String extract(VDJCAlignments object) {
-                    int ci = object.getCloneIndex();
+                    long ci = object.getCloneIndex();
                     ReadToCloneMapping.MappingType mt = object.getMappingType();
                     return "" + ci + ":" + mt;
 
@@ -678,6 +653,108 @@ public final class FieldExtractors {
                 }
             });
 
+            descriptorsList.add(new PL_O("-tagCounts", "All tags with counts", "All tags counts", "taqCounts") {
+                @Override
+                protected String extract(VDJCObject object) {
+                    return object.getTagCount().toString();
+                }
+            });
+
+            descriptorsList.add(new PL_C("-tagFractions", "All tags with fractions", "All tags", "taqFractions") {
+                @Override
+                protected String extract(Clone object) {
+                    return object.getTagFractions().toString();
+                }
+            });
+
+            descriptorsList.add(new AbstractField<VDJCObject>(VDJCObject.class, "-tag",
+                    "Tag value (i.e. CELL barcode or UMI sequence)") {
+                @Override
+                public int nArguments() {
+                    return 1;
+                }
+
+                @Override
+                public String metaVars() {
+                    return "tag_name";
+                }
+
+                private String getHeader(OutputMode outputMode, String name) {
+                    switch (outputMode) {
+                        case HumanFriendly:
+                            return "Tag Value " + name;
+                        case ScriptingFriendly:
+                            return "tagValue" + name;
+                    }
+                    throw new RuntimeException();
+                }
+
+                @Override
+                public FieldExtractor<VDJCObject> create(OutputMode outputMode, VDJCFileHeaderData headerData, String[] args) {
+                    String tagName = args[0];
+                    int idx = headerData.getTagsInfo().indexOf(tagName);
+                    if (idx == -1)
+                        throw new IllegalArgumentException("No tag with name " + tagName);
+                    return new AbstractFieldExtractor<VDJCObject>(getHeader(outputMode, tagName), this) {
+                        @Override
+                        public String extractValue(VDJCObject object) {
+                            TagValue tagValue = object.getTagCount().singleOrNull(idx);
+                            if (tagValue == null)
+                                return NULL;
+                            return tagValue.toString();
+                        }
+                    };
+                }
+            });
+
+            descriptorsList.add(new AbstractField<VDJCObject>(VDJCObject.class, "-uniqueTagCount", "Unique tag count") {
+                @Override
+                public int nArguments() {
+                    return 1;
+                }
+
+                @Override
+                public String metaVars() {
+                    return "tag_names";
+                }
+
+                private String getHeader(OutputMode outputMode, String name) {
+                    switch (outputMode) {
+                        case HumanFriendly:
+                            return "Unique Tag Count " + name;
+                        case ScriptingFriendly:
+                            return "uniqueTagCount" + name;
+                    }
+                    throw new RuntimeException();
+                }
+
+                @Override
+                public FieldExtractor<VDJCObject> create(OutputMode outputMode, VDJCFileHeaderData headerData, String[] args) {
+                    String tagNames = args[0];
+
+                    int[] indices = Arrays.stream(tagNames.split("\\+")).mapToInt(tagName -> {
+                        int idx = headerData.getTagsInfo().indexOf(tagName);
+                        if (idx == -1)
+                            throw new IllegalArgumentException("No tag with name " + tagName);
+                        return idx;
+                    }).toArray();
+
+                    return new AbstractFieldExtractor<VDJCObject>(getHeader(outputMode, tagNames), this) {
+                        @Override
+                        public String extractValue(VDJCObject object) {
+                            return "" + object.getTagCount().projectionSize(indices);
+                        }
+                    };
+                }
+            });
+
+            descriptorsList.add(new PL_C("-cellGroup", "Cell group", "Cell group", "cellGroup") {
+                @Override
+                protected String extract(Clone object) {
+                    return String.valueOf(object.getGroup());
+                }
+            });
+
             descriptors = descriptorsList.toArray(new Field[descriptorsList.size()]);
         }
 
@@ -691,12 +768,12 @@ public final class FieldExtractors {
         return false;
     }
 
-    public static FieldExtractor parse(OutputMode outputMode, Class clazz, String[] args) {
-        for (Field field : getFields())
-            if (field.canExtractFrom(clazz) && args[0].equalsIgnoreCase(field.getCommand()))
-                return field.create(outputMode, Arrays.copyOfRange(args, 1, args.length));
-        throw new IllegalArgumentException("Not a valid options: " + Arrays.toString(args));
-    }
+    // public static FieldExtractor parse(OutputMode outputMode, Class clazz, String[] args) {
+    //     for (Field field : getFields())
+    //         if (field.canExtractFrom(clazz) && args[0].equalsIgnoreCase(field.getCommand()))
+    //             return field.create(outputMode, , Arrays.copyOfRange(args, 1, args.length));
+    //     throw new IllegalArgumentException("Not a valid options: " + Arrays.toString(args));
+    // }
 
     public static ArrayList<String>[] getDescription(Class clazz) {
         ArrayList<String>[] description = new ArrayList[]{new ArrayList(), new ArrayList()};

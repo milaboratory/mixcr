@@ -1,31 +1,13 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.basictypes;
 
@@ -36,6 +18,7 @@ import com.milaboratory.core.io.sequence.SequenceReadUtil;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
+import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.primitivio.annotations.Serializable;
 import com.milaboratory.util.ArraysUtils;
 import gnu.trove.map.hash.TLongObjectHashMap;
@@ -49,16 +32,17 @@ public final class VDJCAlignments extends VDJCObject {
     final SequenceHistory[] history;
     final SequenceRead[] originalReads;
     final byte mappingType;
-    final int cloneIndex;
+    final long cloneIndex;
     private volatile long alignmentsIndex = -1;
 
     public VDJCAlignments(long alignmentsIndex,
                           EnumMap<GeneType, VDJCHit[]> hits,
+                          TagCount tagCount,
                           NSequenceWithQuality[] targets,
                           SequenceHistory[] history,
                           SequenceRead[] originalReads,
-                          byte mappingType, int cloneIndex) {
-        super(hits, targets);
+                          byte mappingType, long cloneIndex) {
+        super(hits, tagCount, targets);
 
         if (!ReadToCloneMapping.isCorrect(mappingType) ||
                 (ReadToCloneMapping.isDropped(mappingType) && cloneIndex != -1))
@@ -73,44 +57,50 @@ public final class VDJCAlignments extends VDJCObject {
 
     public VDJCAlignments(long alignmentsIndex,
                           EnumMap<GeneType, VDJCHit[]> hits,
+                          TagCount tagCount,
                           NSequenceWithQuality[] targets,
                           SequenceHistory[] history,
                           SequenceRead[] originalReads) {
-        this(alignmentsIndex, hits, targets, history, originalReads,
+        this(alignmentsIndex, hits, tagCount, targets, history, originalReads,
                 ReadToCloneMapping.DROPPED_MASK, -1);
     }
 
     public VDJCAlignments(EnumMap<GeneType, VDJCHit[]> hits,
+                          TagCount tagCount,
                           NSequenceWithQuality[] targets,
                           SequenceHistory[] history,
                           SequenceRead[] originalReads,
-                          byte mappingType, int cloneIndex) {
-        this(-1, hits, targets, history, originalReads, mappingType, cloneIndex);
+                          byte mappingType, long cloneIndex) {
+        this(-1, hits, tagCount, targets, history, originalReads, mappingType, cloneIndex);
     }
 
     public VDJCAlignments(EnumMap<GeneType, VDJCHit[]> hits,
+                          TagCount tagCount,
                           NSequenceWithQuality[] targets,
                           SequenceHistory[] history,
                           SequenceRead[] originalReads) {
-        this(-1, hits, targets, history, originalReads);
+        this(-1, hits, tagCount, targets, history, originalReads);
     }
 
     public VDJCAlignments(VDJCHit[] vHits, VDJCHit[] dHits, VDJCHit[] jHits, VDJCHit[] cHits,
+                          TagCount tagCount,
                           NSequenceWithQuality[] targets,
                           SequenceHistory[] history,
                           SequenceRead[] originalReads) {
-        this(-1, createHits(vHits, dHits, jHits, cHits), targets, history, originalReads);
+        this(-1, createHits(vHits, dHits, jHits, cHits), tagCount, targets, history, originalReads);
     }
 
-    public VDJCAlignments shiftIndelsAtHomopolymers() {
-        return mapHits(h -> h.mapAlignments(AlignmentUtils::shiftIndelsAtHomopolymers));
+    public VDJCAlignments shiftIndelsAtHomopolymers(Set<GeneType> gts) {
+        return mapHits(h -> gts.contains(h.getGeneType())
+                ? h.mapAlignments(AlignmentUtils::shiftIndelsAtHomopolymers)
+                : h);
     }
 
     public VDJCAlignments mapHits(Function<VDJCHit, VDJCHit> mapper) {
         EnumMap<GeneType, VDJCHit[]> result = new EnumMap<>(GeneType.class);
         for (Map.Entry<GeneType, VDJCHit[]> e : hits.entrySet())
             result.put(e.getKey(), Arrays.stream(e.getValue()).map(mapper).toArray(VDJCHit[]::new));
-        return new VDJCAlignments(alignmentsIndex, result, targets, history, originalReads, mappingType, cloneIndex);
+        return new VDJCAlignments(alignmentsIndex, result, tagCount, targets, history, originalReads, mappingType, cloneIndex);
     }
 
     public boolean isClustered() {
@@ -137,28 +127,46 @@ public final class VDJCAlignments extends VDJCObject {
         return ReadToCloneMapping.getMappingType(mappingType);
     }
 
-    public int getCloneIndex() {
+    public long getCloneIndex() {
         return cloneIndex;
     }
 
+    public VDJCAlignments setTagCount(TagCount tc) {
+        return new VDJCAlignments(alignmentsIndex, hits, tc, targets, history, originalReads, mappingType, cloneIndex);
+    }
+
+    /** This strips all non-key information from tags */
+    public VDJCAlignments ensureKeyTags() {
+        TagCount count = getTagCount();
+        if (count.isNonKeySingleton())
+            return setTagCount(count.ensureIsKey());
+        else
+            return this;
+    }
+
     public VDJCAlignments setMapping(ReadToCloneMapping mapping) {
-        return new VDJCAlignments(alignmentsIndex, hits, targets, history, originalReads,
+        return new VDJCAlignments(alignmentsIndex, hits, tagCount, targets, history, originalReads,
                 mapping.getMappingTypeByte(), mapping.getCloneIndex());
     }
 
-    public VDJCAlignments updateCloneIndex(int newCloneIndex) {
-        return new VDJCAlignments(alignmentsIndex, hits, targets, history, originalReads,
+    public VDJCAlignments withCloneIndex(long newCloneIndex) {
+        return new VDJCAlignments(alignmentsIndex, hits, tagCount, targets, history, originalReads,
                 mappingType, newCloneIndex);
+    }
+
+    public VDJCAlignments withCloneIndexAndMappingType(long newCloneIndex, byte newMappingType) {
+        return new VDJCAlignments(alignmentsIndex, hits, tagCount, targets, history, originalReads,
+                newMappingType, newCloneIndex);
     }
 
     public VDJCAlignments updateAlignments(Function<Alignment<NucleotideSequence>, Alignment<NucleotideSequence>> processor) {
         EnumMap<GeneType, VDJCHit[]> newHits = this.hits.clone();
         newHits.replaceAll((k, v) -> Arrays.stream(v).map(h -> h.mapAlignments(processor)).toArray(VDJCHit[]::new));
-        return new VDJCAlignments(alignmentsIndex, newHits, targets, history, originalReads, mappingType, cloneIndex);
+        return new VDJCAlignments(alignmentsIndex, newHits, tagCount, targets, history, originalReads, mappingType, cloneIndex);
     }
 
     public VDJCAlignments shiftReadId(long newAlignmentIndex, long shift) {
-        return new VDJCAlignments(newAlignmentIndex, hits, targets, shift(history, shift), shift(originalReads, shift));
+        return new VDJCAlignments(newAlignmentIndex, hits, tagCount, targets, shift(history, shift), shift(originalReads, shift));
     }
 
     public static SequenceRead[] mergeOriginalReads(VDJCAlignments... array) {
@@ -239,7 +247,7 @@ public final class VDJCAlignments extends VDJCObject {
     }
 
     public VDJCAlignments setHistory(SequenceHistory[] history, SequenceRead[] originalReads) {
-        return new VDJCAlignments(alignmentsIndex, hits, targets, history, originalReads);
+        return new VDJCAlignments(alignmentsIndex, hits, tagCount, targets, history, originalReads);
     }
 
     public VDJCAlignments removeBestHitAlignment(GeneType geneType, int targetId) {
@@ -252,7 +260,7 @@ public final class VDJCAlignments extends VDJCObject {
         gHits[0] = new VDJCHit(gHits[0].getGene(), als, gHits[0].getAlignedFeature());
         Arrays.sort(gHits);
         hits.put(geneType, gHits);
-        return new VDJCAlignments(alignmentsIndex, hits, targets, history, originalReads);
+        return new VDJCAlignments(alignmentsIndex, hits, tagCount, targets, history, originalReads);
     }
 
     public boolean hasNoHitsInTarget(int i) {
@@ -292,7 +300,7 @@ public final class VDJCAlignments extends VDJCObject {
      *
      * @param top numer of top hits to test
      * @return {@code true} if at least one V and one J hit among first {@code top} hits have same chain and false
-     *         otherwise (first {@code top} V hits have different chain from those have first {@code top} J hits)
+     * otherwise (first {@code top} V hits have different chain from those have first {@code top} J hits)
      */
     public final boolean hasSameVJLoci(final int top) {
         final VDJCHit[] vHits = hits.get(GeneType.Variable),

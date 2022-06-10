@@ -1,76 +1,49 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.cli.AppVersionInfo;
 import com.milaboratory.cli.PipelineConfiguration;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.mixcr.util.MiXCRDebug;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivO;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
+import com.milaboratory.primitivio.blocks.PrimitivIOBlocksUtil;
+import com.milaboratory.primitivio.blocks.PrimitivOBlocks;
+import com.milaboratory.primitivio.blocks.PrimitivOBlocksStats;
+import com.milaboratory.primitivio.blocks.PrimitivOHybrid;
+import com.milaboratory.util.io.HasPosition;
 import io.repseq.core.VDJCGene;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+import java.nio.file.Paths;
 import java.util.List;
 
-import static com.milaboratory.mixcr.basictypes.AlignmentsIO.DEFAULT_ALIGNMENTS_IN_BLOCK;
-
-public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
+public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPosition {
     public static final int DEFAULT_ENCODER_THREADS = 3;
-    static final String MAGIC_V13 = "MiXCR.VDJC.V13";
-    static final String MAGIC_V14 = "MiXCR.VDJC.V14";
-    static final String MAGIC = MAGIC_V14;
+    public static final int DEFAULT_ALIGNMENTS_IN_BLOCK = 1 << 10; // 805-1024 bytes per alignment
+    static final String MAGIC_V16 = "MiXCR.VDJC.V16";
+    static final String MAGIC = MAGIC_V16;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
 
-    /**
-     * Buffer for accumulation of alignments written with write(VDJCAlignments) method. Buffer is flushed if
-     * number of accumulated alignments is alignmentsInBlock or close() method was invoked.
-     */
-    volatile ArrayList<VDJCAlignments> currentBuffer;
+    /** Number of bytes in footer with meta information */
+    static final int FOOTER_LENGTH = 8 + 8 + IOUtil.END_MAGIC_LENGTH;
 
-    /**
-     * Number of alignments in block. Larger number allows for better compression while consume more memory.
-     */
-    final int alignmentsInBlock;
-
-    /**
-     * Raw underlying output stream
-     */
-    final OutputStream rawOutput;
+    private final boolean highCompression;
 
     /**
      * This number will be added to the end of the file to report number of processed read to the following processing
@@ -78,15 +51,17 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
      */
     long numberOfProcessedReads = -1;
 
-    /**
-     * Pool of encoders
-     */
-    final BasicVDJCAlignmentWriterFactory writerFactory;
+    /** Writer settings */
+    final int encoderThreads, alignmentsInBlock;
 
-    /**
-     * Initialized after header, implements all internal encoding logic.
-     */
-    volatile BasicVDJCAlignmentWriterFactory.Writer writer = null;
+    /** Counter of alignments */
+    long numberOfAlignments = 0;
+
+    /** Main block output class */
+    final PrimitivOHybrid output;
+
+    /** Initialized after headers */
+    volatile PrimitivOBlocks<VDJCAlignments>.Writer writer;
 
     boolean closed = false;
 
@@ -95,7 +70,11 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     }
 
     public VDJCAlignmentsWriter(String fileName, int encoderThreads, int alignmentsInBlock) throws IOException {
-        this(new File(fileName), encoderThreads, alignmentsInBlock);
+        this(new PrimitivOHybrid(Paths.get(fileName)), encoderThreads, alignmentsInBlock, false);
+    }
+
+    public VDJCAlignmentsWriter(String fileName, int encoderThreads, int alignmentsInBlock, boolean highCompression) throws IOException {
+        this(new PrimitivOHybrid(Paths.get(fileName)), encoderThreads, alignmentsInBlock, highCompression);
     }
 
     public VDJCAlignmentsWriter(File file) throws IOException {
@@ -103,18 +82,18 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
     }
 
     public VDJCAlignmentsWriter(File file, int encoderThreads, int alignmentsInBlock) throws IOException {
-        this(IOUtil.createOS(file), encoderThreads, alignmentsInBlock);
+        this(new PrimitivOHybrid(file.toPath()), encoderThreads, alignmentsInBlock, false);
     }
 
-    public VDJCAlignmentsWriter(OutputStream output) {
-        this(output, DEFAULT_ENCODER_THREADS, DEFAULT_ALIGNMENTS_IN_BLOCK);
+    public VDJCAlignmentsWriter(File file, int encoderThreads, int alignmentsInBlock, boolean highCompression) throws IOException {
+        this(new PrimitivOHybrid(file.toPath()), encoderThreads, alignmentsInBlock, highCompression);
     }
 
-    public VDJCAlignmentsWriter(OutputStream output, int encoderThreads, int alignmentsInBlock) {
-        this.rawOutput = output;
+    public VDJCAlignmentsWriter(PrimitivOHybrid output, int encoderThreads, int alignmentsInBlock, boolean highCompression) {
+        this.highCompression = highCompression;
+        this.output = output;
+        this.encoderThreads = encoderThreads;
         this.alignmentsInBlock = alignmentsInBlock;
-        this.currentBuffer = new ArrayList<>(alignmentsInBlock);
-        this.writerFactory = new BasicVDJCAlignmentWriterFactory(encoderThreads);
     }
 
     @Override
@@ -122,74 +101,68 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
         this.numberOfProcessedReads = numberOfProcessedReads;
     }
 
-    public void header(VDJCAlignmentsReader reader, PipelineConfiguration pipelineConfiguration) {
-        header(reader.getParameters(), reader.getUsedGenes(), pipelineConfiguration);
+    public void header(VDJCAlignmentsReader reader, PipelineConfiguration pipelineConfiguration, TagsInfo tagsInfo) {
+        header(reader.getParameters(), reader.getUsedGenes(), pipelineConfiguration, tagsInfo);
     }
 
-    public void header(VDJCAligner aligner, PipelineConfiguration pipelineConfiguration) {
-        header(aligner.getParameters(), aligner.getUsedGenes(), pipelineConfiguration);
-    }
-
-    /** History to write in the header */
-    private PipelineConfiguration pipelineConfiguration = null;
-
-    public synchronized void setPipelineConfiguration(PipelineConfiguration configuration) {
-        if (pipelineConfiguration == null)
-            pipelineConfiguration = configuration;
-        else if (!configuration.equals(this.pipelineConfiguration))
-            throw new IllegalStateException();
+    public void header(VDJCAligner aligner, PipelineConfiguration pipelineConfiguration, TagsInfo tagsInfo) {
+        header(aligner.getParameters(), aligner.getUsedGenes(), pipelineConfiguration, tagsInfo);
     }
 
     @Override
     public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes,
-                       PipelineConfiguration ppConfiguration) {
+                       PipelineConfiguration pipelineConfiguration, TagsInfo tags) {
         if (parameters == null || genes == null)
             throw new IllegalArgumentException();
 
         if (writer != null)
             throw new IllegalStateException("Header already written.");
 
-        PrimitivO output = new PrimitivO(rawOutput);
-
         // Writing meta data using raw stream for easy reconstruction with simple tools like hex viewers
+        try (PrimitivO o = output.beginPrimitivO(true)) {
+            // Writing magic bytes
+            assert MAGIC_BYTES.length == MAGIC_LENGTH;
+            o.write(MAGIC_BYTES);
 
-        // Writing magic bytes
-        assert MAGIC_BYTES.length == MAGIC_LENGTH;
-        output.write(MAGIC_BYTES);
+            // Writing version information
+            o.writeUTF(
+                    MiXCRVersionInfo.get().getVersionString(
+                            AppVersionInfo.OutputType.ToFile));
 
-        // Writing version information
-        output.writeUTF(
-                MiXCRVersionInfo.get().getVersionString(
-                        AppVersionInfo.OutputType.ToFile));
+            // Writing parameters
+            o.writeObject(parameters);
 
-        // Writing parameters
-        output.writeObject(parameters);
+            // Writing history
+            o.writeObject(pipelineConfiguration);
 
-        // Writing history
-        if (ppConfiguration != null)
-            this.pipelineConfiguration = ppConfiguration;
-        output.writeObject(pipelineConfiguration);
+            // Information about tags
+            o.writeObject(tags);
 
-        IOUtil.writeAndRegisterGeneReferences(output, genes, parameters);
-
-        // Registering links to features to align
-        for (GeneType gt : GeneType.VDJC_REFERENCE) {
-            GeneFeature feature = parameters.getFeatureToAlign(gt);
-            output.writeObject(feature);
-            if (feature != null)
-                output.putKnownObject(feature);
+            IOUtil.stdVDJCPrimitivOStateInit(o, genes, parameters);
         }
 
-        // Saving output state
-        writer = writerFactory.createWriter(output.getState(), rawOutput, false);
+        writer = output.beginPrimitivOBlocks(encoderThreads, alignmentsInBlock,
+                highCompression
+                        ? PrimitivIOBlocksUtil.highLZ4Compressor()
+                        : PrimitivIOBlocksUtil.fastLZ4Compressor());
+    }
+
+    @Override
+    public long getPosition() {
+        return output.getPosition();
     }
 
     public int getEncodersCount() {
-        return writerFactory.getEncodersCount();
+        if (writer == null)
+            return 0;
+        return writer.getParent().getStats().getConcurrency();
     }
 
     public int getBusyEncoders() {
-        return writerFactory.getBusyEncoders();
+        if (writer == null)
+            return 0;
+        PrimitivOBlocksStats stats = writer.getParent().getStats();
+        return stats.getOngoingSerdes() + stats.getOngoingIOOps();
     }
 
     @Override
@@ -200,45 +173,40 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI {
         if (alignment == null)
             throw new NullPointerException();
 
-        currentBuffer.add(alignment);
-
-        if (currentBuffer.size() == alignmentsInBlock)
-            flushBlock();
-    }
-
-    /**
-     * Flush alignment buffer
-     */
-    private void flushBlock() {
-        if (currentBuffer.isEmpty())
-            return;
-
-        // Enqueue block for async encoding and compression
-        writer.writeAsync(currentBuffer);
-        currentBuffer = new ArrayList<>(alignmentsInBlock);
+        numberOfAlignments++;
+        writer.write(alignment);
     }
 
     @Override
     public synchronized void close() {
         try {
             if (!closed) {
-                flushBlock();
-
                 writer.close(); // This will also write stream termination symbol/block to the stream
-                writerFactory.close(); // This blocks the thread until all workers flush their data to the underlying stream
 
-                // [ numberOfProcessedReads : long ]
-                byte[] footer = new byte[8];
-                // Number of processed reads is known only in the end of analysis
-                // Writing it as last piece of information in the stream
-                AlignmentsIO.writeLongBE(numberOfProcessedReads, footer, 0);
-                rawOutput.write(footer);
+                // Printing IO stat
+                if (MiXCRDebug.DEBUG)
+                    System.out.println(writer.getParent().getStats());
 
-                // Writing end-magic as a file integrity sign
-                rawOutput.write(IOUtil.getEndMagicBytes());
+                try (PrimitivO o = output.beginPrimitivO()) {
+                    // // [ numberOfProcessedReads : long ]
+                    // byte[] footer = new byte[8];
+                    //
+                    // // Number of processed reads is known only in the end of analysis
+                    // // Writing it as last piece of information in the stream
+                    // AlignmentsIO.writeLongBE(numberOfProcessedReads, footer, 0);
+                    // o.write(footer);
 
-                rawOutput.close();
-                closed = true;
+                    // Total size = 8 + 8 + END_MAGIC_LENGTH
+
+                    o.writeLong(numberOfAlignments);
+                    o.writeLong(numberOfProcessedReads);
+
+                    // Writing end-magic as a file integrity sign
+                    o.write(IOUtil.getEndMagicBytes());
+                } finally {
+                    closed = true;
+                    output.close();
+                }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

@@ -1,0 +1,155 @@
+{
+  "default": {
+    "defaultDownsampling": null,
+    "defaultOnlyProductive": true,
+    "defaultDropOutliers": false,
+    "defaultWeightFunction": "read-count",
+    "biophysics": {
+      "cdr3lenAA": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null,
+        "weightFunction": null
+      },
+      "cdr3lenNT": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null,
+        "weightFunction": null
+      },
+      "ndnLenNT": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null,
+        "weightFunction": null
+      },
+      "addedNNT": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null,
+        "weightFunction": null
+      },
+      "Strength": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null,
+        "weightFunction": null
+      },
+      "Hydrophobicity": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null,
+        "weightFunction": null
+      },
+      "Surface": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null,
+        "weightFunction": null
+      },
+      "Volume": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null
+      },
+      "Charge": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null,
+        "weightFunction": null
+      }
+    },
+    "diversity": {
+      "observed": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null,
+        "weightFunction": null
+      },
+      "shannonWiener": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null,
+        "weightFunction": null
+      },
+      "chao1": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null,
+        "weightFunction": null
+      },
+      "clonality": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null,
+        "weightFunction": null
+      },
+      "inverseSimpson": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null,
+        "weightFunction": null
+      },
+      "gini": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null,
+        "weightFunction": null
+      },
+      "d50": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null,
+        "weightFunction": null
+      },
+      "efronThisted": {
+        "downsampling": null,
+        "onlyProductive": null,
+        "dropOutliers": null,
+        "weightFunction": null
+      }
+    },
+    "vUsage": {
+      "downsampling": null,
+      "onlyProductive": null,
+      "dropOutliers": null,
+      "weightFunction": null
+    },
+    "jUsage": {
+      "downsampling": null,
+      "onlyProductive": null,
+      "dropOutliers": null,
+      "weightFunction": null
+    },
+    "vjUsage": {
+      "downsampling": null,
+      "onlyProductive": null,
+      "dropOutliers": null,
+      "weightFunction": null
+    },
+    "isotypeUsage": {
+      "downsampling": null,
+      "onlyProductive": null,
+      "dropOutliers": null,
+      "weightFunction": null
+    },
+    "cdr3Spectratype": {
+      "downsampling": null,
+      "onlyProductive": null,
+      "dropOutliers": null,
+      "weightFunction": null
+    },
+    "vSpectratype": {
+      "downsampling": null,
+      "onlyProductive": null,
+      "dropOutliers": null,
+      "weightFunction": null
+    },
+    "vSpectratypeMean": {
+      "downsampling": null,
+      "onlyProductive": null,
+      "dropOutliers": null,
+      "weightFunction": null
+    }
+  }
+}

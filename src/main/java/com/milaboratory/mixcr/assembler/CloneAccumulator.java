@@ -1,31 +1,13 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.assembler;
 
@@ -36,23 +18,27 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.core.sequence.quality.QualityAggregationType;
 import com.milaboratory.core.sequence.quality.QualityAggregator;
+import com.milaboratory.mixcr.assembler.preclone.PreClone;
 import com.milaboratory.mixcr.basictypes.ClonalSequence;
+import com.milaboratory.mixcr.basictypes.GeneAndScore;
+import com.milaboratory.mixcr.basictypes.HasRelativeMinScore;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCHit;
-import gnu.trove.iterator.TObjectFloatIterator;
-import gnu.trove.map.hash.TObjectFloatHashMap;
+import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGeneId;
 
-import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
 
 public final class CloneAccumulator {
-    final EnumMap<GeneType, TObjectFloatHashMap<VDJCGeneId>> geneScores = new EnumMap<>(GeneType.class);
+    VDJCGeneAccumulator geneAccumulator = new VDJCGeneAccumulator();
+    Map<GeneType, List<GeneAndScore>> genes;
     private ClonalSequence sequence;
     private final QualityAggregator aggregator;
     private long coreCount = 0, mappedCount = 0, initialCoreCount = -1;
     private volatile int cloneIndex = -1;
     final Range[] nRegions;
+    final TagCountAggregator tagBuilder = new TagCountAggregator();
 
     public CloneAccumulator(ClonalSequence sequence, Range[] nRegions, QualityAggregationType qualityAggregationType) {
         this.sequence = sequence;
@@ -75,7 +61,6 @@ public final class CloneAccumulator {
             pointer += s.size();
         }
         sequence = new ClonalSequence(updated);
-        return;
     }
 
     public void onBeforeMapping() {
@@ -83,35 +68,38 @@ public final class CloneAccumulator {
     }
 
     public float getBestScore(GeneType geneType) {
-        TObjectFloatHashMap<VDJCGeneId> scores = geneScores.get(geneType);
-        if (scores == null)
-            return 0;
-        float maxScore = 0;
-        TObjectFloatIterator<VDJCGeneId> iterator = scores.iterator();
-        while (iterator.hasNext()) {
-            iterator.advance();
-            if (maxScore < iterator.value())
-                maxScore = iterator.value();
-        }
-        return maxScore;
+        if (genes == null)
+            throw new IllegalStateException("Gene information not aggregated");
+        List<GeneAndScore> genes = this.genes.get(geneType);
+        return genes == null || genes.isEmpty() ? Float.NaN : genes.get(0).score;
     }
 
     public VDJCGeneId getBestGene(GeneType geneType) {
-        TObjectFloatHashMap<VDJCGeneId> scores = geneScores.get(geneType);
-        if (scores == null)
-            return null;
-        float maxScore = 0;
-        VDJCGeneId maxAllele = null;
-        TObjectFloatIterator<VDJCGeneId> iterator = scores.iterator();
-        while (iterator.hasNext()) {
-            iterator.advance();
-            if (maxAllele == null || maxScore < iterator.value()) {
-                maxAllele = iterator.key();
-                maxScore = iterator.value();
-            }
-        }
-        return maxAllele;
+        if (genes == null)
+            throw new IllegalStateException("Gene information not aggregated");
+        List<GeneAndScore> genes = this.genes.get(geneType);
+        return genes == null || genes.isEmpty() ? null : genes.get(0).geneId;
     }
+
+    public boolean hasInfoFor(GeneType geneType) {
+        if (genes == null)
+            throw new IllegalStateException("Gene information not aggregated");
+        List<GeneAndScore> genes = this.genes.get(geneType);
+        return genes != null && !genes.isEmpty();
+    }
+
+    public boolean hasInfoFor(GeneType geneType, VDJCGeneId gene) {
+        if (genes == null)
+            throw new IllegalStateException("Gene information not aggregated");
+        List<GeneAndScore> genes = this.genes.get(geneType);
+        if (genes == null)
+            return false;
+        for (GeneAndScore gs : genes)
+            if (gs.geneId.equals(gene))
+                return true;
+        return false;
+    }
+
 
     public Range[] getNRegions() {
         return nRegions;
@@ -143,67 +131,33 @@ public final class CloneAccumulator {
         return mappedCount;
     }
 
-    public void calculateScores(CloneFactoryParameters parameters) {
-        for (GeneType geneType : GeneType.VJC_REFERENCE) {
-            VJCClonalAlignerParameters vjcParameters = parameters.getVJCParameters(geneType);
-            if (vjcParameters == null)
-                continue;
-
-            TObjectFloatHashMap<VDJCGeneId> accumulatorGeneIds = geneScores.get(geneType);
-            if (accumulatorGeneIds == null)
-                continue;
-
-            TObjectFloatIterator<VDJCGeneId> iterator = accumulatorGeneIds.iterator();
-            float maxScore = 0;
-            while (iterator.hasNext()) {
-                iterator.advance();
-                float value = iterator.value();
-                if (value > maxScore)
-                    maxScore = value;
-            }
-
-            maxScore = maxScore * vjcParameters.getRelativeMinScore();
-            iterator = accumulatorGeneIds.iterator();
-            while (iterator.hasNext()) {
-                iterator.advance();
-                if (maxScore > iterator.value())
-                    iterator.remove();
-                else
-                    iterator.setValue(Math.round(iterator.value() * 10f / coreCount) / 10f);
-            }
-        }
-    }
-
     public void mergeCounts(CloneAccumulator acc) {
         coreCount += acc.coreCount;
         mappedCount += acc.mappedCount;
+        tagBuilder.add(acc.tagBuilder);
     }
 
-    public synchronized void accumulate(ClonalSequence data, VDJCAlignments alignment, boolean mapped) {
+    public void aggregateGeneInfo(HasRelativeMinScore geneParameters) {
+        genes = geneAccumulator.aggregateInformation(geneParameters);
+        geneAccumulator = null;
+    }
+
+    public synchronized void accumulate(ClonalSequence data, PreClone preClone, boolean mapped) {
+        if (geneAccumulator == null)
+            throw new IllegalStateException("Gene information already aggregated");
+
         if (!mapped) { // Core sequence accumulation
-            coreCount += alignment.getNumberOfReads();
+            coreCount += preClone.getNumberOfReads();
+
+            // TODO or core tag count ???
+            tagBuilder.add(preClone.getFullTagCount());
 
             // Accumulate information about V-D-J alignments only for strictly clustered reads
             // (only for core clonotypes members)
-            float score;
-
-            // Accumulate information about all genes
-            for (GeneType geneType : GeneType.VJC_REFERENCE) {
-                TObjectFloatHashMap<VDJCGeneId> geneScores = this.geneScores.get(geneType);
-                VDJCHit[] hits = alignment.getHits(geneType);
-                if (hits.length == 0)
-                    continue;
-                if (geneScores == null)
-                    this.geneScores.put(geneType, geneScores = new TObjectFloatHashMap<>());
-                for (VDJCHit hit : hits) {
-                    // Calculating sum of natural logarithms of scores
-                    score = hit.getScore();
-                    geneScores.adjustOrPutValue(hit.getGene().getId(), score, score);
-                }
-            }
+            geneAccumulator.accumulate(preClone.getGeneScores());
 
             aggregator.aggregate(data.getConcatenated().getQuality());
         } else // Mapped sequence accumulation
-            mappedCount += alignment.getNumberOfReads();
+            mappedCount += preClone.getNumberOfReads();
     }
 }

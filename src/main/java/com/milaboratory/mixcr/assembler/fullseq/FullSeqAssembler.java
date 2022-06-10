@@ -1,31 +1,13 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.assembler.fullseq;
 
@@ -38,17 +20,20 @@ import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.sequence.*;
 import com.milaboratory.core.sequence.quality.QualityTrimmer;
 import com.milaboratory.mixcr.assembler.CloneFactory;
+import com.milaboratory.mixcr.basictypes.GeneAndScore;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence;
+import com.milaboratory.mixcr.basictypes.tag.TagCount;
+import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import gnu.trove.impl.Constants;
 import gnu.trove.iterator.TIntIntIterator;
+import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import gnu.trove.map.hash.TObjectFloatHashMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 import gnu.trove.set.hash.TIntHashSet;
 import io.repseq.core.*;
@@ -67,9 +52,16 @@ import static io.repseq.core.GeneType.Variable;
  *
  */
 public final class FullSeqAssembler {
-    private static int ABSENT_PACKED_VARIANT_INFO = -1;
+    static int ABSENT_PACKED_VARIANT_INFO = 0xFFFFFF00;
+    static int AMBIGUOUS_PACKED_VARIANT_INFO = 0xFFFFFE00;
+
+    // Special variant ids
+    private static final int EMPTY_SEQUENCE_VARIANT_INDEX = NucleotideSequence.ALPHABET.basicSize();
+    private static final int ASSEMBLING_FEATURE_VARIANT_INDEX = NucleotideSequence.ALPHABET.basicSize() + 1;
+    private static final int N_VARIANT_INDEX = NucleotideSequence.ALPHABET.basicSize() + 2;
+
     /** number of letters to the left of reference V gene in the global coordinate grid */
-    private static final int N_LEFT_DUMMIES = 1024; // fixme
+    private static final int N_LEFT_DUMMIES = 1 << 14; // fixme
     /** clone factory */
     final CloneFactory cloneFactory;
     /** initial clone */
@@ -98,6 +90,8 @@ public final class FullSeqAssembler {
     final Range splitRegion;
     /** parameters */
     final FullSeqAssemblerParameters parameters;
+    /** minimal sum quality, even for decisive sum quality */
+    final long requiredMinimalSumQuality;
     /** aligner parameters */
     final VDJCAlignerParameters alignerParameters;
     /** nucleotide sequence -> its integer index */
@@ -105,6 +99,10 @@ public final class FullSeqAssembler {
             new TObjectIntHashMap<>(Constants.DEFAULT_CAPACITY, Constants.DEFAULT_LOAD_FACTOR, -1);
     /** integer index -> nucleotide sequence */
     final TIntObjectHashMap<NucleotideSequence> variantIdToSequence = new TIntObjectHashMap<>();
+    /** tag tuple -> its integer group index */
+    final TObjectIntHashMap<TagTuple> tagTupleToGroup;
+    /** integer group index -> tag tuple */
+    final TIntObjectHashMap<TagTuple> groupToTagTuple;
     /** base hits */
     final VDJCHit vHit, jHit;
 
@@ -133,6 +131,14 @@ public final class FullSeqAssembler {
         this.parameters = parameters;
         this.clone = clone;
 
+        if (clone.getTagCount() == null || clone.getTagCount().isNoTag()) {
+            this.tagTupleToGroup = null;
+            this.groupToTagTuple = null;
+        } else {
+            this.tagTupleToGroup = new TObjectIntHashMap<>(Constants.DEFAULT_CAPACITY, Constants.DEFAULT_LOAD_FACTOR, -1);
+            this.groupToTagTuple = new TIntObjectHashMap<>();
+        }
+
         this.alignerParameters = alignerParameters;
         GeneFeature[] assemblingFeatures = clone.getParentCloneSet().getAssemblingFeatures();
         if (assemblingFeatures.length != 1)
@@ -145,6 +151,8 @@ public final class FullSeqAssembler {
         this.genes = new VDJCGenes(baseVHit.getGene(), null, baseJHit.getGene(), null); // clone.getBestHitGenes();
 
         this.clonalAssemblingFeatureVariantIndex = initVariantMappings(clone.getFeature(this.assemblingFeature).getSequence());
+
+        this.requiredMinimalSumQuality = Math.round(parameters.minimalMeanNormalizedQuality * clone.getCount());
 
         ReferencePoint
                 start = assemblingFeature.getFirstPoint(),
@@ -222,15 +230,15 @@ public final class FullSeqAssembler {
         return report;
     }
 
-    private EnumMap<GeneType, TObjectFloatHashMap<VDJCGeneId>> originalGeneScores = null;
+    private EnumMap<GeneType, List<GeneAndScore>> originalGeneScores = null;
 
-    private EnumMap<GeneType, TObjectFloatHashMap<VDJCGeneId>> getOriginalGeneScores() {
+    private EnumMap<GeneType, List<GeneAndScore>> getOriginalGeneScores() {
         if (originalGeneScores == null) {
             originalGeneScores = new EnumMap<>(GeneType.class);
             for (GeneType gt : GeneType.VDJC_REFERENCE) {
-                TObjectFloatHashMap<VDJCGeneId> scores = new TObjectFloatHashMap<>();
+                List<GeneAndScore> scores = new ArrayList<>();
                 for (VDJCHit hit : clone.getHits(gt))
-                    scores.put(hit.getGene().getId(), hit.getScore());
+                    scores.add(new GeneAndScore(hit.getGene().getId(), hit.getScore()));
                 originalGeneScores.put(gt, scores);
             }
         }
@@ -250,12 +258,14 @@ public final class FullSeqAssembler {
             List<VariantBranch> newBranches = new ArrayList<>();
             for (VariantBranch branch : branches) {
                 List<Variant> variants = callVariantsForPoint(variantInfos, branch.reads, data.points[i] == positionOfAssemblingFeature);
-                if (variants.size() == 1 && variants.get(0).variantInfo == ABSENT_PACKED_VARIANT_INFO)
-                    newBranches.add(branch.addAbsentVariant());
+                if (variants.size() == 1 && isExceptionalPointVariantInfo(variants.get(0).variantInfo))
+                    newBranches.add(branch.addExceptionalVariantInfo(variants.get(0).variantInfo));
                 else {
                     int sumSignificant = 0;
-                    for (Variant variant : variants)
+                    for (Variant variant : variants) {
+                        assert !isExceptionalPointVariantInfo(variant.variantInfo);
                         sumSignificant += variant.nSignificant;
+                    }
                     for (Variant variant : variants)
                         newBranches.add(branch.addVariant(variant, sumSignificant));
                 }
@@ -270,9 +280,13 @@ public final class FullSeqAssembler {
 
         clusterizeBranches(data.points, branches);
 
-        Clone[] result = branches.stream()
-                .map(branch -> assembleBranchSequences(data.points, branch))
-                .filter(Objects::nonNull)
+        List<BranchSequences> branchSequences = branches.stream()
+                .map(branch -> assembleBranchSequences(data.points, data.groups, branch))
+                .filter(Objects::nonNull).collect(Collectors.toList());
+
+        // assert checkNonIntersectingGroups(branchSequences);
+
+        Clone[] result = branchSequences.stream()
                 .map(branch -> buildClone(clean(branch)))
                 .toArray(Clone[]::new);
 
@@ -284,9 +298,22 @@ public final class FullSeqAssembler {
         }
 
         if (report != null)
-            report.afterVariantsClustered(clone, result);
+            report.afterVariantsClustered(clone, result, parameters.subCloningRegion);
 
         return result;
+    }
+
+    private static boolean checkNonIntersectingGroups(List<BranchSequences> branchSequences) {
+        TIntHashSet all = new TIntHashSet();
+        for (BranchSequences bs : branchSequences) {
+            if (bs.groups == null)
+                continue;
+            int sizeBefore = all.size();
+            all.addAll(bs.groups);
+            if (all.size() != sizeBefore + bs.groups.size())
+                return false;
+        }
+        return true;
     }
 
     private void clusterizeBranches(int[] points, List<VariantBranch> branches) {
@@ -301,7 +328,7 @@ public final class FullSeqAssembler {
 
             boolean newBranch = false;
             for (int j = 0; j < branch.pointStates.length; j++)
-                if (observedVariants[j].add(branch.pointStates[j] >>> 8))
+                if (!isExceptionalPositionedState(branch.pointStates[j]) && observedVariants[j].add(branch.pointStates[j] >>> 8))
                     newBranch = true;
 
             if (newBranch)
@@ -314,7 +341,9 @@ public final class FullSeqAssembler {
 
                 double sumQuality = 0;
                 for (int k = 0; k < branch.pointStates.length; ++k)
-                    if (branch.pointStates[k] >>> 8 != cluster.pointStates[k] >>> 8)
+                    if (branch.pointStates[k] >>> 8 != cluster.pointStates[k] >>> 8
+                            && !isExceptionalPositionedState(branch.pointStates[k])
+                            && !isExceptionalPositionedState(cluster.pointStates[k]))
                         sumQuality += Math.min(branch.pointStates[k] & 0xFF, cluster.pointStates[k] & 0xFF);
 
                 weights[j - i - 1] = Math.pow(10.0, -sumQuality / 10.0);
@@ -329,6 +358,7 @@ public final class FullSeqAssembler {
 
             if (report != null)
                 report.onVariantClustered(branch);
+
             branches.remove(i);
         }
 
@@ -350,9 +380,9 @@ public final class FullSeqAssembler {
             this.reads = reads;
         }
 
-        VariantBranch addAbsentVariant() {
+        VariantBranch addExceptionalVariantInfo(int variantInfo) {
             int[] newStates = Arrays.copyOf(pointStates, pointStates.length + 1);
-            newStates[newStates.length - 1] = ABSENT_PACKED_VARIANT_INFO;
+            newStates[newStates.length - 1] = variantInfo;
             return new VariantBranch(count, newStates, reads);
         }
 
@@ -397,11 +427,11 @@ public final class FullSeqAssembler {
      * @param points positions
      * @param branch variant branch
      */
-    BranchSequences assembleBranchSequences(int[] points, VariantBranch branch) {
-        // Co-sorting branch data with position (restoring original nucleotides order)
+    BranchSequences assembleBranchSequences(int[] points, int[] groups, VariantBranch branch) {
+        // Co-sorting branch data with position (restoring original nucleotide order)
         long[] positionedStates = new long[points.length];
         for (int i = 0; i < points.length; i++)
-            positionedStates[i] = ((long) points[i]) << 32 | branch.pointStates[i];
+            positionedStates[i] = ((long) points[i]) << 32 | (branch.pointStates[i] & 0xFFFFFFFFL);
         Arrays.sort(positionedStates);
 
         // Building sequences
@@ -415,27 +445,32 @@ public final class FullSeqAssembler {
         int assemblingFeatureOffset = -1;
         int assemblingFeatureLength = -1;
         for (int i = 0; i < positionedStates.length; ++i) {
-            if (isAbsent(positionedStates[i]))
+            int currentPosition = extractPosition(positionedStates[i]);
+
+            if (isAbsentPositionedState(positionedStates[i])) {
+                if (currentPosition == positionOfAssemblingFeature)
+                    return null;
                 continue;
+            }
 
             if (blockStartPosition == -1)
                 blockStartPosition = extractPosition(positionedStates[i]);
 
-            int currentPosition = extractPosition(positionedStates[i]);
-
             int nextPosition = i == positionedStates.length - 1
                     ? Integer.MAX_VALUE
-                    : isAbsent(positionedStates[i + 1])
+                    : isAbsentPositionedState(positionedStates[i + 1])
                     ? Integer.MAX_VALUE
                     : extractPosition(positionedStates[i + 1]);
 
             assert currentPosition != nextPosition;
 
-            int variantId = ((int) (positionedStates[i] >>> 8)) & 0xFFFFFF;
+            int variantId = isAmbiguousPositionedState(positionedStates[i])
+                    ? N_VARIANT_INDEX
+                    : ((int) (positionedStates[i] >>> 8)) & 0xFFFFFF;
 
             NSequenceWithQuality seq = new NSequenceWithQuality(
                     variantIdToSequence.get(variantId),
-                    (byte) positionedStates[i]);
+                    (byte) positionedStates[i]); // For exceptional states quality score will be zero (see definition)
 
             if (currentPosition == positionOfAssemblingFeature) {
                 assert assemblingFeatureTargetId == -1;
@@ -479,6 +514,14 @@ public final class FullSeqAssembler {
         assert blockStartPosition != -1;
         assert assemblingFeatureTargetId != -1;
 
+        TIntHashSet grps = null;
+
+        if (groups != null) {
+            grps = new TIntHashSet();
+            for (int readId = branch.reads.nextSetBit(0); readId >= 0; readId = branch.reads.nextSetBit(readId + 1))
+                grps.add(groups[readId]);
+        }
+
         return new BranchSequences(
                 branch.count,
                 assemblingFeatureTargetId,
@@ -486,18 +529,27 @@ public final class FullSeqAssembler {
                 assemblingFeatureLength,
                 ranges.toArray(new Range[ranges.size()]),
                 positionMaps.toArray(new TIntArrayList[positionMaps.size()]),
-                sequences.toArray(new NSequenceWithQuality[sequences.size()]));
+                sequences.toArray(new NSequenceWithQuality[sequences.size()]),
+                grps);
     }
 
     private static int extractPosition(long positionedState) {
         return (int) (positionedState >>> 32);
     }
 
-    private static boolean isAbsent(long positionedState) {
+    private static boolean isAbsentPositionedState(long positionedState) {
         return (int) (positionedState & 0xFFFFFFFF) == ABSENT_PACKED_VARIANT_INFO;
     }
 
-    private final class BranchSequences {
+    private static boolean isAmbiguousPositionedState(long positionedState) {
+        return (int) (positionedState & 0xFFFFFFFF) == AMBIGUOUS_PACKED_VARIANT_INFO;
+    }
+
+    private static boolean isExceptionalPositionedState(long positionedState) {
+        return isAbsentPositionedState(positionedState) || isAmbiguousPositionedState(positionedState);
+    }
+
+    private static final class BranchSequences {
         /**
          * Count from VariantBranch
          */
@@ -528,10 +580,15 @@ public final class FullSeqAssembler {
          * Contigs
          */
         final NSequenceWithQuality[] sequences;
+        /**
+         * Group ids
+         */
+        final TIntHashSet groups;
 
         BranchSequences(double count,
                         int assemblingFeatureTargetId, int assemblingFeatureOffset, int assemblingFeatureLength,
-                        Range[] ranges, TIntArrayList[] positionMaps, NSequenceWithQuality[] sequences) {
+                        Range[] ranges, TIntArrayList[] positionMaps, NSequenceWithQuality[] sequences,
+                        TIntHashSet groups) {
             this.count = count;
             this.assemblingFeatureTargetId = assemblingFeatureTargetId;
             this.assemblingFeatureOffset = assemblingFeatureOffset;
@@ -539,6 +596,7 @@ public final class FullSeqAssembler {
             this.ranges = ranges;
             this.positionMaps = positionMaps;
             this.sequences = sequences;
+            this.groups = groups;
             assert check();
         }
 
@@ -581,7 +639,8 @@ public final class FullSeqAssembler {
                     assemblingFeatureLength,
                     newRanges,
                     newPositionMaps,
-                    newSequences);
+                    newSequences,
+                    groups);
         }
 
         /**
@@ -648,7 +707,7 @@ public final class FullSeqAssembler {
             assert newAssemblingFeatureTargetId != -1;
 
             return new BranchSequences(count, newAssemblingFeatureTargetId, newAssemblingFeatureOffset, assemblingFeatureLength,
-                    newRanges, newPositionMaps, newSequences);
+                    newRanges, newPositionMaps, newSequences, groups);
         }
 
         /**
@@ -672,13 +731,13 @@ public final class FullSeqAssembler {
                 newSequences[i] = newSequences[i].getRange(rangeToCut);
                 return new BranchSequences(count, assemblingFeatureTargetId,
                         assemblingFeatureOffset - rangeToCut.getLower(), assemblingFeatureLength,
-                        newRanges, newPositionMaps, newSequences);
+                        newRanges, newPositionMaps, newSequences, groups);
             } else {
                 newRanges[i] = new Range(newPositionMaps[i].get(rangeToCut.getLower()), newPositionMaps[i].get(rangeToCut.getUpper() - 1) + 1);
                 newPositionMaps[i] = (TIntArrayList) newPositionMaps[i].subList(rangeToCut.getLower(), rangeToCut.getUpper());
                 newSequences[i] = newSequences[i].getRange(rangeToCut);
                 return new BranchSequences(count, assemblingFeatureTargetId, assemblingFeatureOffset, assemblingFeatureLength,
-                        newRanges, newPositionMaps, newSequences);
+                        newRanges, newPositionMaps, newSequences, groups);
             }
         }
     }
@@ -866,7 +925,9 @@ public final class FullSeqAssembler {
 
         NSequenceWithQuality assemblingFeatureSeq = targets.sequences[targets.assemblingFeatureTargetId]
                 .getRange(targets.assemblingFeatureOffset, targets.assemblingFeatureOffset + targets.assemblingFeatureLength);
-        Clone clone = cloneFactory.create(0, targets.count, getOriginalGeneScores(), new NSequenceWithQuality[]{assemblingFeatureSeq});
+
+        Clone clone = cloneFactory.create(0, targets.count, getOriginalGeneScores(), this.clone.getTagCount(),
+                new NSequenceWithQuality[]{assemblingFeatureSeq}, this.clone.getGroup());
 
         vHitAlignments[targets.assemblingFeatureTargetId] =
                 mergeTwoAlignments(
@@ -901,7 +962,16 @@ public final class FullSeqAssembler {
         } else
             tmp[0] = substituteAlignments(tmp[0], jHitAlignments);
 
-        return new Clone(targets.sequences, hits, targets.count, 0);
+        TagCount tagCount = this.clone.getTagCount();
+        if (tagCount != null && targets.groups != null) {
+            Set<TagTuple> tagTuples = new HashSet<>();
+            TIntIterator it = targets.groups.iterator();
+            while (it.hasNext())
+                tagTuples.add(groupToTagTuple.get(it.next()));
+            tagCount = tagCount.filter(tagTuples::contains);
+        }
+
+        return new Clone(targets.sequences, hits, tagCount, targets.count, 0, clone.getGroup());
     }
 
     static int indexOfGene(VDJCHit[] hits, VDJCGeneId gene) {
@@ -1056,7 +1126,6 @@ public final class FullSeqAssembler {
                 result.score);
     }
 
-
     static VDJCHit substituteAlignments(VDJCHit hit, Alignment<NucleotideSequence>[] alignments) {
         return new VDJCHit(hit.getGene(), alignments, hit.getAlignedFeature(), hit.getScore());
     }
@@ -1092,17 +1161,23 @@ public final class FullSeqAssembler {
 
     /* ================================= Computing variants for single point ====================================== */
 
+    static boolean isExceptionalPointVariantInfo(int pointVariantInfo) {
+        assert pointVariantInfo == ABSENT_PACKED_VARIANT_INFO || pointVariantInfo == AMBIGUOUS_PACKED_VARIANT_INFO || pointVariantInfo >= 0;
+        return pointVariantInfo == ABSENT_PACKED_VARIANT_INFO || pointVariantInfo == AMBIGUOUS_PACKED_VARIANT_INFO;
+    }
+
     /**
      * Call variants for a single position
      */
     private List<Variant> callVariantsForPoint(int[] pointVariantInfos, BitSet targetReads, boolean isAssemblingFeature) {
-        // Pre-calculating number of present variants
+        // Pre-calculating number of present variants (covered positions)
         int count = 0;
         for (int readId = targetReads.nextSetBit(0); readId >= 0; readId = targetReads.nextSetBit(readId + 1))
-            if (pointVariantInfos[readId] != ABSENT_PACKED_VARIANT_INFO)
+            if (!isExceptionalPointVariantInfo(pointVariantInfos[readId]))
                 ++count;
 
         if (count == 0)
+            // point is not covered at all
             return Collections.singletonList(new Variant(ABSENT_PACKED_VARIANT_INFO, targetReads, 0));
 
         // List of readIds of reads that either:
@@ -1117,9 +1192,9 @@ public final class FullSeqAssembler {
         long[] targets = new long[count];
         int i = 0;
         for (int readId = targetReads.nextSetBit(0); readId >= 0; readId = targetReads.nextSetBit(readId + 1)) {
-            if (pointVariantInfos[readId] != ABSENT_PACKED_VARIANT_INFO) {
+            if (!isExceptionalPointVariantInfo(pointVariantInfos[readId])) {
                 targets[i++] = ((long) pointVariantInfos[readId]) << 32 | readId;
-                totalSumQuality += 0x7F & pointVariantInfos[readId];
+                totalSumQuality += 0x7F & pointVariantInfos[readId]; // masking non-splitting bit
             } else
                 unassignedVariants.set(readId);
         }
@@ -1131,7 +1206,9 @@ public final class FullSeqAssembler {
         int currentIndex = 0;
         long variantSumQuality = 0;
 
-        int nonEdgePoints = 0;
+        // Number of non-edge points
+        // For the positions outside the splitting region this variable always equals zero
+        int splittingPointsCount = 0;
 
         // Will be used if no significant variant is found
         int bestVariant = -1;
@@ -1141,7 +1218,8 @@ public final class FullSeqAssembler {
         do {
             if (currentIndex == count || currentVariant != (int) (targets[currentIndex] >>> 40)) {
                 // Checking significance conditions
-                if ((1.0 * nonEdgePoints / (currentIndex - blockBegin) >= parameters.minimalNonEdgePointsFraction)
+                if ((1.0 * splittingPointsCount / (currentIndex - blockBegin) >= parameters.minimalNonEdgePointsFraction)
+                        && variantSumQuality >= requiredMinimalSumQuality
                         && ((variantSumQuality >= parameters.branchingMinimalSumQuality
                         && variantSumQuality >= parameters.branchingMinimalQualityShare * totalSumQuality)
                         || variantSumQuality >= parameters.decisiveBranchingSumQualityThreshold)) {
@@ -1163,17 +1241,18 @@ public final class FullSeqAssembler {
                 }
 
                 if (currentIndex != count) {
+                    // reset variables for new block
                     blockBegin = currentIndex;
-                    variantSumQuality = 0x7F & (targets[blockBegin] >>> 32);
                     currentVariant = (int) (targets[blockBegin] >>> 40);
 
-                    nonEdgePoints = 0;
-                    if (((targets[blockBegin] >>> 32) & 0x80) == 0)
-                        ++nonEdgePoints;
+                    splittingPointsCount = 0;
+                    if (((targets[blockBegin] >>> 32) & 0x80) == 0) // counting first read in this block
+                        ++splittingPointsCount;
+                    variantSumQuality = 0x7F & (targets[blockBegin] >>> 32);
                 }
             } else {
                 if (((targets[currentIndex] >>> 32) & 0x80) == 0)
-                    ++nonEdgePoints;
+                    ++splittingPointsCount;
                 variantSumQuality += 0x7F & (targets[currentIndex] >>> 32);
             }
         } while (++currentIndex <= count);
@@ -1190,15 +1269,17 @@ public final class FullSeqAssembler {
                 for (long target : targets)
                     reads.set((int) target);
                 reads.or(unassignedVariants);
+                assert targetReads.equals(reads);
                 double p = 1 - 1.0 * bestVariantSumQuality / totalSumQuality;
                 long phredQuality = p == 0 ? bestVariantSumQuality : Math.min((long) (-10 * Math.log10(p)), bestVariantSumQuality);
                 // nSignificant = 1 (will not be practically used, only one variant, don't care)
                 return Collections.singletonList(
-                        new Variant(bestVariant << 8 | (int) Math.min((long) SequenceQuality.MAX_QUALITY_VALUE, phredQuality),
+                        new Variant(bestVariant << 8 | (int) Math.min(SequenceQuality.MAX_QUALITY_VALUE, phredQuality),
                                 reads, 1));
             } else
-                // No variants to output (poorly covered or controversial position)
-                return Collections.singletonList(new Variant(ABSENT_PACKED_VARIANT_INFO, targetReads, 0));
+                // No variants to output (poorly covered or ambiguous position)
+                // Should substitute 'N'
+                return Collections.singletonList(new Variant(AMBIGUOUS_PACKED_VARIANT_INFO, targetReads, 0));
         } else {
             for (Variant variant : variants)
                 variant.reads.or(unassignedVariants);
@@ -1220,11 +1301,18 @@ public final class FullSeqAssembler {
 
     /* ======================================== Collect raw initial data ============================================= */
 
-    private int getVariantIndex(NucleotideSequence sequence) {
+    private int updateVariantIndex(NucleotideSequence sequence) {
         if (sequence.size() == 0)
-            return NucleotideSequence.ALPHABET.basicSize();
-        if (sequence.size() == 1)
-            return sequence.getSequence().codeAt(0);
+            return EMPTY_SEQUENCE_VARIANT_INDEX;
+
+        if (sequence.size() == 1) {
+            byte l = sequence.getSequence().codeAt(0);
+            if (l < NucleotideSequence.ALPHABET.basicSize())
+                return l;
+            else if (l == NucleotideAlphabet.N)
+                return N_VARIANT_INDEX;
+        }
+
         int seqIndex = sequenceToVariantId.putIfAbsent(sequence, sequenceToVariantId.size());
         if (seqIndex == -1) {
             seqIndex = sequenceToVariantId.size() - 1;
@@ -1248,15 +1336,22 @@ public final class FullSeqAssembler {
         }
 
         // Empty sequence
-        sequenceToVariantId.put(NucleotideSequence.EMPTY, NucleotideSequence.ALPHABET.basicSize());
-        variantIdToSequence.put(NucleotideSequence.ALPHABET.basicSize(), NucleotideSequence.EMPTY);
+        sequenceToVariantId.put(NucleotideSequence.EMPTY, EMPTY_SEQUENCE_VARIANT_INDEX);
+        variantIdToSequence.put(EMPTY_SEQUENCE_VARIANT_INDEX, NucleotideSequence.EMPTY);
 
         // Assembling feature
-        int assemblingFeatureId = NucleotideSequence.ALPHABET.basicSize() + 1;
-        sequenceToVariantId.put(clonalAssemblingFeatureSequence, assemblingFeatureId);
-        variantIdToSequence.put(assemblingFeatureId, clonalAssemblingFeatureSequence);
+        sequenceToVariantId.put(clonalAssemblingFeatureSequence, ASSEMBLING_FEATURE_VARIANT_INDEX);
+        variantIdToSequence.put(ASSEMBLING_FEATURE_VARIANT_INDEX, clonalAssemblingFeatureSequence);
 
-        return assemblingFeatureId;
+        // N
+        sequenceToVariantId.put(NucleotideSequence.N, N_VARIANT_INDEX);
+        variantIdToSequence.put(N_VARIANT_INDEX, NucleotideSequence.N);
+
+        return ASSEMBLING_FEATURE_VARIANT_INDEX;
+    }
+
+    boolean taggedAnalysis() {
+        return groupToTagTuple != null;
     }
 
     /**
@@ -1268,32 +1363,21 @@ public final class FullSeqAssembler {
      */
     public RawVariantsData calculateRawData(Supplier<OutputPort<VDJCAlignments>> alignments) {
         TIntIntHashMap coverage = new TIntIntHashMap();
-        TIntObjectHashMap<TIntObjectHashMap<VariantAggregator>> variants = new TIntObjectHashMap<>();
 
         // Collecting coverage and VariantAggregators
         int nAlignments = 0;
         for (VDJCAlignments al : CUtils.it(alignments.get())) {
-            // al = al.mapAlignments(AlignmentUtils::shiftIndelsAtHomopolymers); // FIXME
             ++nAlignments;
             for (PointSequence point : toPointSequences(al)) {
-                int seqIndex = getVariantIndex(point.sequence.getSequence());
-
+                // update sequenceToVariantId
+                updateVariantIndex(point.sequence.getSequence());
                 coverage.adjustOrPutValue(point.point, 1, 1);
-
-                TIntObjectHashMap<VariantAggregator> map = variants.get(point.point);
-                if (map == null)
-                    variants.put(point.point, map = new TIntObjectHashMap<>());
-
-                VariantAggregator var = map.get(seqIndex);
-                if (var == null)
-                    map.put(point.point, var = new VariantAggregator());
-
-                var.count += 1;
-                var.sumQuality += 0x7F & point.quality;
             }
         }
 
         assert nAlignments > 0;
+
+        int[] groups = taggedAnalysis() ? new int[nAlignments] : null;
 
         // Pre-allocating arrays
 
@@ -1307,22 +1391,35 @@ public final class FullSeqAssembler {
         }
 
         Arrays.sort(forSort);
+        // Virtual position to sequence positions
         int[] pointsArray = Arrays.stream(forSort).mapToInt(l -> (int) (-l)).toArray();
         TIntIntHashMap revIndex = new TIntIntHashMap();
-        for (int j = 0; j < pointsArray.length; j++)
-            revIndex.put(pointsArray[j], j);
+        for (int j = 0; j < pointsArray.length; j++) {
+            int v = revIndex.put(pointsArray[j], j);
+            assert v == 0;
+        }
 
         int[] coverageArray = Arrays.stream(forSort).mapToInt(l -> (int) ((-l) >> 32)).toArray();
 
         // Allocating packed data
         int[][] packedData = new int[pointsArray.length][nAlignments];
         for (int[] aPackedData : packedData)
-            Arrays.fill(aPackedData, -1);
+            Arrays.fill(aPackedData, ABSENT_PACKED_VARIANT_INFO);
 
         // Main data collection loop
         i = 0;
+        int groupCounter = 0;
         for (VDJCAlignments al : CUtils.it(alignments.get())) {
-            // al = al.mapAlignments(AlignmentUtils::shiftIndelsAtHomopolymers); // FIXME
+            if (taggedAnalysis()) {
+                TagTuple tagTuple = al.getTagCount().asKeyOrNull();
+                int grp = tagTupleToGroup.get(tagTuple);
+                if (grp == -1) {
+                    grp = groupCounter++;
+                    tagTupleToGroup.put(tagTuple, grp);
+                    groupToTagTuple.put(grp, tagTuple);
+                }
+                groups[i] = grp;
+            }
             for (PointSequence point : toPointSequences(al)) {
                 int pointIndex = revIndex.get(point.point);
                 packedData[pointIndex][i] =
@@ -1333,30 +1430,42 @@ public final class FullSeqAssembler {
         }
 
         // Returning prepared data
-        return new RawVariantsData(nAlignments, pointsArray, coverageArray) {
-            @Override
-            OutputPort<int[]> createPort() {
-                return CUtils.asOutputPort(Arrays.asList(packedData));
-            }
-        };
+        return new RawVariantsData(nAlignments, groupCounter,
+                groups, pointsArray, coverageArray, () -> CUtils.asOutputPort(Arrays.asList(packedData)));
     }
 
     /**
      * Represents aggregated information about nucleotide states for all positions in all reads aggregated with {@link
      * #calculateRawData(Supplier)}.
      */
-    public abstract class RawVariantsData {
+    public final class RawVariantsData {
         /**
          * Total number of reads
          */
-        final int nReads;
-        final int[] points;
-        final int[] coverage;
+        final int nReads, nGroups;
+        final int[] groups,
+                points,
+                coverage;
+        final int[][] groupToRead;
+        final Supplier<OutputPort<int[]>> portSupplier;
 
-        RawVariantsData(int nReads, int[] points, int[] coverage) {
+        RawVariantsData(int nReads, int nGroups, int[] groups, int[] points, int[] coverage, Supplier<OutputPort<int[]>> portSupplier) {
+            assert groups == null || groups.length == nReads;
             this.nReads = nReads;
+            this.nGroups = nGroups;
+            this.groups = groups;
             this.points = points;
             this.coverage = coverage;
+            this.portSupplier = portSupplier;
+            if (groups != null) {
+                this.groupToRead = new int[nGroups][0];
+                for (int i = 0; i < groups.length; i++) {
+                    int[] array = groupToRead[groups[i]];
+                    groupToRead[groups[i]] = array = Arrays.copyOf(array, array.length + 1);
+                    array[array.length - 1] = i;
+                }
+            } else
+                this.groupToRead = null;
         }
 
         /**
@@ -1365,7 +1474,76 @@ public final class FullSeqAssembler {
          * determined by {@link #points}, e.g. firs array will correspond to point[0] position, the second to point[1]
          * position etc. Positions are sorted according to their coverage.
          */
-        abstract OutputPort<int[]> createPort();
+        OutputPort<int[]> createPort() {
+            final OutputPort<int[]> port = portSupplier.get();
+            if (groups == null) {
+                return port;
+            } else {
+                return () -> {
+                    int[] pointVariantInfos = port.take();
+                    if (pointVariantInfos == null)
+                        return null;
+
+                    TIntIntHashMap sumQualityByVariant = new TIntIntHashMap();
+                    for (int g = 0; g < nGroups; ++g) {
+
+                        sumQualityByVariant.clear();
+                        int[] readIndices = groupToRead[g];
+                        int maxQuality = -1;
+                        int bestVariant = -1;
+                        for (int readIndex : readIndices) {
+                            int variantInfo = pointVariantInfos[readIndex];
+                            if (isExceptionalPointVariantInfo(variantInfo))
+                                continue;
+                            int quality = 0x7F & variantInfo;
+                            int variant = variantInfo >>> 8;
+                            int sum = sumQualityByVariant.adjustOrPutValue(variant, quality, quality);
+                            if (maxQuality < sum) {
+                                maxQuality = sum;
+                                bestVariant = variant;
+                            }
+                        }
+
+                        if (bestVariant == -1) // all points are exceptional (no coverage by the group)
+                            continue;
+
+                        int totalSumQuality = 0, bestSumQuality = 0, bestCount = 0, numberOfExceptionalPoints = 0, bestSplittingPoints = 0;
+                        for (int readIndex : readIndices) {
+                            int variantInfo = pointVariantInfos[readIndex];
+                            if (isExceptionalPointVariantInfo(variantInfo)) {
+                                numberOfExceptionalPoints++;
+                                continue;
+                            }
+                            int quality = 0x7F & variantInfo;
+                            int variant = variantInfo >>> 8;
+                            totalSumQuality += quality;
+                            if (variant == bestVariant) {
+                                bestSumQuality += quality;
+                                bestCount++;
+                                if ((0x80 & variantInfo) == 0)
+                                    bestSplittingPoints++;
+                            }
+                        }
+                        bestSumQuality -= totalSumQuality - bestSumQuality;
+                        bestSumQuality = Math.max(0, bestSumQuality);
+
+                        double meanQuality = 1.0 * bestSumQuality / readIndices.length;
+                        assert meanQuality <= 127;
+                        int splittingPointCount = readIndices.length * bestSplittingPoints / bestCount;
+
+                        for (int i = 0; i < readIndices.length; i++) {
+                            double p = 1.0 * i / readIndices.length;
+                            boolean isSplitting = splittingPointCount > i;
+                            int quality = (int) Math.floor(meanQuality + p);
+                            pointVariantInfos[readIndices[i]] = (bestVariant << 8)
+                                    | (isSplitting ? 0x00 : 0x80)
+                                    | (0x7F & quality);
+                        }
+                    }
+                    return pointVariantInfos;
+                };
+            }
+        }
 
         /**
          * To be used with file-based storage media
@@ -1392,7 +1570,9 @@ public final class FullSeqAssembler {
                 int[] states = port.take();
                 for (int j = readsFrom; j < readsTo; j++) {
                     int state = states[j];
-                    if (state != ABSENT_PACKED_VARIANT_INFO)
+                    if (state == AMBIGUOUS_PACKED_VARIANT_INFO)
+                        len[position - minPosition] = Math.max(len[position - minPosition], 1);
+                    else if (state != ABSENT_PACKED_VARIANT_INFO)
                         len[position - minPosition] = Math.max(len[position - minPosition], variantIdToSequence.get(state >>> 8).size());
                 }
             }
@@ -1429,7 +1609,7 @@ public final class FullSeqAssembler {
                     int state = states[j];
                     if (state == ABSENT_PACKED_VARIANT_INFO)
                         continue;
-                    String seq = variantIdToSequence.get(state >>> 8).toString();
+                    String seq = state == AMBIGUOUS_PACKED_VARIANT_INFO ? "n" : variantIdToSequence.get(state >>> 8).toString();
                     if ((state & 0x7F) < qualityThreshold)
                         seq = seq.toLowerCase();
                     for (int k = 0; k < len[position - minPosition]; k++)
@@ -1467,7 +1647,7 @@ public final class FullSeqAssembler {
                 for (int j = 0; j < nReads; j++) {
                     int state = states[j];
                     if (state != ABSENT_PACKED_VARIANT_INFO) {
-                        String seq = variantIdToSequence.get(state >>> 8).toString();
+                        String seq = state == AMBIGUOUS_PACKED_VARIANT_INFO ? "n" : variantIdToSequence.get(state >>> 8).toString();
                         if ((state & 0x7F) < qualityThreshold)
                             seq = seq.toLowerCase();
                         if (seq.equals(""))
@@ -1512,29 +1692,31 @@ public final class FullSeqAssembler {
         /**
          * String representation of this state matrix
          */
+        @Override
         public String toString() {
             return toString((byte) 10);
         }
     }
 
-    private static final class VariantAggregator {
-        long sumQuality = 0;
-        int count = 0;
-    }
-
     PointSequence[] toPointSequences(VDJCAlignments alignments) {
+        Stream<PointSequence> assemblingFeaturePointSeq;
         NSequenceWithQuality assemblingFeature = alignments.getFeature(this.assemblingFeature);
-        byte quality = assemblingFeature.getQuality().minValue();
-        //if (!inSplitRegion(positionOfAssemblingFeature))
-        quality |= 0x80;
+        if (assemblingFeature != null) {
+            byte quality = assemblingFeature.getQuality().minValue();
+            //if (!inSplitRegion(positionOfAssemblingFeature))
+            quality |= 0x80;
+            assemblingFeaturePointSeq = Stream.of(new PointSequence(positionOfAssemblingFeature, assemblingFeature, quality));
+        } else
+            assemblingFeaturePointSeq = Stream.empty();
+
         return Stream.concat(
-                Stream.of(new PointSequence(positionOfAssemblingFeature, assemblingFeature, quality)),
-                IntStream.range(0, alignments.numberOfTargets())
-                        .mapToObj(i -> toPointSequences(alignments, i))
-                        .flatMap(Collection::stream)
-                        .collect(Collectors.groupingBy(s -> s.point))
-                        .values().stream()
-                        .map(l -> l.stream().max(Comparator.comparingInt(a -> a.quality)).get()))
+                        assemblingFeaturePointSeq,
+                        IntStream.range(0, alignments.numberOfTargets())
+                                .mapToObj(i -> toPointSequences(alignments, i))
+                                .flatMap(Collection::stream)
+                                .collect(Collectors.groupingBy(s -> s.point))
+                                .values().stream()
+                                .map(l -> l.stream().max(Comparator.comparingInt(a -> a.quality)).get()))
                 .toArray(PointSequence[]::new);
     }
 
@@ -1731,10 +1913,12 @@ public final class FullSeqAssembler {
             if (!inSplitRegion(point)
                     || (seq.size() - seq2alignmentRange.getTo() < parameters.alignedSequenceEdgeDelta && seq.size() - to <= parameters.alignmentEdgeRegionSize)
                     || (seq2alignmentRange.getFrom() < parameters.alignedSequenceEdgeDelta && from <= parameters.alignmentEdgeRegionSize))
-                quality |= 0x80;
+                quality |= 0x80; // isEdgePoint
 
             return new PointSequence(point, NSequenceWithQuality.EMPTY, quality);
         }
+
+        // FIXME non optimal (excessive object allocation)
         NSequenceWithQuality r = seq.getRange(from, to);
         byte quality = r.getQuality().minValue();
         if (!inSplitRegion(point)
@@ -1749,7 +1933,8 @@ public final class FullSeqAssembler {
     }
 
     /**
-     * Check that the V/J gene can be used for full sequence assembly algorithm. Basically it checks that is has required reference points defined.
+     * Check that the V/J gene can be used for full sequence assembly algorithm. Basically it checks that is has
+     * required reference points defined.
      *
      * @param hit               hit to check
      * @param assemblingFeature clonal assembling feature

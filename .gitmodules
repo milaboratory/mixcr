@@ -1,6 +1,0 @@
-[submodule "repseqio"]
-	path = repseqio
-	url = https://github.com/repseqio/repseqio.git
-[submodule "milib"]
-	path = milib
-	url = git://github.com/milaboratory/milib.git

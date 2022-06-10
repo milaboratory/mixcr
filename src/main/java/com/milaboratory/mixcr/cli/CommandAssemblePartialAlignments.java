@@ -1,41 +1,36 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.cli;
 
-import com.fasterxml.jackson.annotation.*;
+import cc.redberry.pipe.CUtils;
+import cc.redberry.pipe.OutputPort;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.milaboratory.cli.ActionConfiguration;
+import com.milaboratory.mitool.helpers.GroupOP;
+import com.milaboratory.mitool.helpers.PipeKt;
+import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
+import com.milaboratory.mixcr.basictypes.tag.TagTuple;
+import com.milaboratory.mixcr.basictypes.tag.TagType;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssembler;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParameters;
+import com.milaboratory.util.JsonOverrider;
+import com.milaboratory.util.ReportUtil;
 import com.milaboratory.util.SmartProgressReporter;
+import kotlin.jvm.functions.Function1;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
@@ -72,6 +67,10 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
             names = {"-d", "--drop-partial"})
     public boolean dropPartial = false;
 
+    @Option(description = "Overlap sequences on the cell level instead of UMIs for tagged data with molecular and cell barcodes",
+            names = {"--cell-level"})
+    public boolean cellLevel = false;
+
     private PartialAlignmentsAssemblerParameters assemblerParameters;
 
     public PartialAlignmentsAssemblerParameters getPartialAlignmentsAssemblerParameters() {
@@ -106,10 +105,22 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
         long beginTimestamp = System.currentTimeMillis();
 
         PartialAlignmentsAssemblerParameters assemblerParameters = getPartialAlignmentsAssemblerParameters();
-        VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out);
-        writer.setPipelineConfiguration(getFullPipelineConfiguration());
-        try (PartialAlignmentsAssembler assembler = new PartialAlignmentsAssembler(assemblerParameters,
-                writer, !dropPartial, overlappedOnly)) {
+
+        // Two readers will be used to feed two-pass assemble partial algorithm
+        try (VDJCAlignmentsReader reader1 = new VDJCAlignmentsReader(in);
+             VDJCAlignmentsReader reader2 = new VDJCAlignmentsReader(in);
+             VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)) {
+
+            int groupingDepth = reader1.getTagsInfo().getDepthFor(cellLevel ? TagType.Cell : TagType.Molecule);
+
+            writer.header(reader1.getParameters(), reader1.getUsedGenes(), getFullPipelineConfiguration(),
+                    // output data will be grouped only up to a groupingDepth
+                    reader1.getTagsInfo().setSorted(groupingDepth));
+
+            PartialAlignmentsAssembler assembler = new PartialAlignmentsAssembler(assemblerParameters, reader1.getParameters(),
+                    reader1.getUsedGenes(), !dropPartial, overlappedOnly,
+                    writer::write);
+
             this.report = assembler;
             ReportWrapper report = new ReportWrapper(ASSEMBLE_PARTIAL_COMMAND_NAME, assembler);
             report.setStartMillis(beginTimestamp);
@@ -117,20 +128,34 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
             report.setOutputFiles(out);
             report.setCommandLine(getCommandLineArguments());
 
-            try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(in)) {
-                SmartProgressReporter.startProgressReport("Building index", reader);
-                assembler.buildLeftPartsIndex(reader);
-            }
-            try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(in)) {
-                SmartProgressReporter.startProgressReport("Searching for overlaps", reader);
-                assembler.searchOverlaps(reader);
+            if (reader1.getTagsInfo() != null && !reader1.getTagsInfo().hasNoTags()) {
+                SmartProgressReporter.startProgressReport("Running assemble partial", reader1);
+
+                // This processor strips all non-key information from the
+                Function1<VDJCAlignments, TagTuple> key = al -> al.getTagCount().asKeyPrefixOrError(groupingDepth);
+                OutputPort<GroupOP<VDJCAlignments, TagTuple>> groups1 = PipeKt.group(
+                        CUtils.wrap(reader1, VDJCAlignments::ensureKeyTags), key);
+                OutputPort<GroupOP<VDJCAlignments, TagTuple>> groups2 = PipeKt.group(
+                        CUtils.wrap(reader2, VDJCAlignments::ensureKeyTags), key);
+
+                for (GroupOP<VDJCAlignments, TagTuple> grp1 : CUtils.it(groups1)) {
+                    assembler.buildLeftPartsIndex(grp1);
+                    GroupOP<VDJCAlignments, TagTuple> grp2 = groups2.take();
+                    assert grp2.getKey().equals(grp1.getKey()) : grp1.getKey() + " != " + grp2.getKey();
+                    assembler.searchOverlaps(grp2);
+                }
+            } else {
+                SmartProgressReporter.startProgressReport("Building index", reader1);
+                assembler.buildLeftPartsIndex(reader1);
+                SmartProgressReporter.startProgressReport("Searching for overlaps", reader2);
+                assembler.searchOverlaps(reader2);
             }
 
             report.setFinishMillis(System.currentTimeMillis());
 
             // Writing report to stout
             System.out.println("============= Report ==============");
-            Util.writeReportToStdout(report);
+            ReportUtil.writeReportToStdout(report);
 
             if (assembler.leftPartsLimitReached()) {
                 warn("WARNING: too many partial alignments detected, consider skipping assemblePartial (enriched library?). /leftPartsLimitReached/");
@@ -143,10 +168,12 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
             }
 
             if (reportFile != null)
-                Util.writeReport(reportFile, report);
+                ReportUtil.appendReport(reportFile, report);
 
             if (jsonReport != null)
-                Util.writeJsonReport(jsonReport, report);
+                ReportUtil.appendJsonReport(jsonReport, report);
+
+            writer.setNumberOfProcessedReads(reader1.getNumberOfReads() - assembler.overlapped.get());
         }
     }
 

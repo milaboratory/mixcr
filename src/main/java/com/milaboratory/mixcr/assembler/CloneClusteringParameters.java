@@ -1,31 +1,13 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.assembler;
 
@@ -34,11 +16,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.core.tree.TreeSearchParameters;
 
+import java.util.Objects;
+
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
 public final class CloneClusteringParameters implements java.io.Serializable {
     private int searchDepth;
     private int allowedMutationsInNRegions;
+    private double minimalTagSetOverlap;
     private TreeSearchParameters searchParameters;
     private ClusteringFilter clusteringFilter;
 
@@ -46,10 +31,12 @@ public final class CloneClusteringParameters implements java.io.Serializable {
     public CloneClusteringParameters(
             @JsonProperty("searchDepth") int searchDepth,
             @JsonProperty("allowedMutationsInNRegions") int allowedMutationsInNRegions,
+            @JsonProperty("minimalTagSetOverlap") double minimalTagSetOverlap,
             @JsonProperty("searchParameters") TreeSearchParameters searchParameters,
             @JsonProperty("clusteringFilter") ClusteringFilter clusteringFilter) {
         this.searchDepth = searchDepth;
         this.allowedMutationsInNRegions = allowedMutationsInNRegions;
+        this.minimalTagSetOverlap = minimalTagSetOverlap;
         this.searchParameters = searchParameters;
         this.clusteringFilter = clusteringFilter;
     }
@@ -90,32 +77,34 @@ public final class CloneClusteringParameters implements java.io.Serializable {
         return this;
     }
 
+    public double getMinimalTagSetOverlap() {
+        return minimalTagSetOverlap;
+    }
+
+    public CloneClusteringParameters setMinimalTagSetOverlap(double minimalTagSetOverlap) {
+        this.minimalTagSetOverlap = minimalTagSetOverlap;
+        return this;
+    }
+
     @Override
     public CloneClusteringParameters clone() {
-        return new CloneClusteringParameters(searchDepth, allowedMutationsInNRegions, searchParameters, clusteringFilter);
+        return new CloneClusteringParameters(searchDepth, allowedMutationsInNRegions, minimalTagSetOverlap, searchParameters, clusteringFilter);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof CloneClusteringParameters)) return false;
-
+        if (o == null || getClass() != o.getClass()) return false;
         CloneClusteringParameters that = (CloneClusteringParameters) o;
-
-        if (allowedMutationsInNRegions != that.allowedMutationsInNRegions) return false;
-        if (searchDepth != that.searchDepth) return false;
-        if (!clusteringFilter.equals(that.clusteringFilter)) return false;
-        if (!searchParameters.equals(that.searchParameters)) return false;
-
-        return true;
+        return getSearchDepth() == that.getSearchDepth() &&
+                getAllowedMutationsInNRegions() == that.getAllowedMutationsInNRegions() &&
+                Double.compare(that.minimalTagSetOverlap, minimalTagSetOverlap) == 0 &&
+                Objects.equals(getSearchParameters(), that.getSearchParameters()) &&
+                Objects.equals(getClusteringFilter(), that.getClusteringFilter());
     }
 
     @Override
     public int hashCode() {
-        int result = searchDepth;
-        result = 31 * result + allowedMutationsInNRegions;
-        result = 31 * result + searchParameters.hashCode();
-        result = 31 * result + clusteringFilter.hashCode();
-        return result;
+        return Objects.hash(getSearchDepth(), getAllowedMutationsInNRegions(), minimalTagSetOverlap, getSearchParameters(), getClusteringFilter());
     }
 }

@@ -1,5 +1,17 @@
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
 package com.milaboratory.mixcr.cli;
 
+import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -9,34 +21,42 @@ import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.mixcr.basictypes.ClnAReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
+import com.milaboratory.mixcr.util.Concurrency;
 import io.repseq.core.VDJCLibraryRegistry;
-import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 
 import java.util.*;
 
 /**
  *
  */
-@CommandLine.Command(name = "exportAlignmentsForClones",
+@Command(name = "exportAlignmentsForClones",
         sortOptions = true,
         separator = " ",
         description = "Export alignments for particular clones from \"clones & alignments\" (*.clna) file.")
 public class CommandExportAlignmentsForClones extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
     static final String EXPORT_ALIGNMENTS_FOR_CLONES_COMMAND_NAME = "exportAlignmentsForClones";
 
-    @CommandLine.Parameters(index = "0", description = "input_file.clna")
-    public String in;
+    // @Override
+    // @Parameters(index = "0", description = "input_file.clna")
+    // public void setIn(String in) {
+    //     super.setIn(in);
+    // }
+    //
+    // @Override
+    // @Parameters(index = "1", description = "[output_file.vdjca[.gz]")
+    // public void setOut(String out) {
+    //     super.setOut(out);
+    // }
 
-    @CommandLine.Parameters(index = "1", description = "[output_file.vdjca[.gz]")
-    public String out;
-
-    @CommandLine.Option(names = "--id", description = "[cloneId1 [cloneId2 [cloneId3]]]", arity = "0..*")
+    @Option(names = "--id", description = "[cloneId1 [cloneId2 [cloneId3]]]", arity = "0..*")
     public List<Integer> ids = new ArrayList<>();
 
-//    @CommandLine.Option(description = "Create separate files for each clone. File with '_clnN' suffix, " +
-//            "where N is clone index, will be created for each clone index.",
-//            names = {"-s", "--separate"})
-//    public boolean separate = false;
+    //    @CommandLine.Option(description = "Create separate files for each clone. File with '_clnN' suffix, " +
+    //            "where N is clone index, will be created for each clone index.",
+    //            names = {"-s", "--separate"})
+    //    public boolean separate = false;
 
     @Override
     public ActionConfiguration getConfiguration() {
@@ -49,18 +69,29 @@ public class CommandExportAlignmentsForClones extends ACommandWithSmartOverwrite
 
     @Override
     public void run1() throws Exception {
-        try (ClnAReader clna = new ClnAReader(in, VDJCLibraryRegistry.getDefault());
+        try (ClnAReader clna = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4));
              VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(getOutput())) {
-            writer.header(clna.getAlignerParameters(), clna.getGenes(), getFullPipelineConfiguration());
+            writer.header(clna.getAlignerParameters(), clna.getUsedGenes(),
+                    getFullPipelineConfiguration(), clna.getTagsInfo());
+
             long count = 0;
-            for (int id : getCloneIds()) {
-                OutputPortCloseable<VDJCAlignments> reader = clna.readAlignmentsOfClone(id);
-                VDJCAlignments al;
-                while ((al = reader.take()) != null) {
+            if (getCloneIds().length == 0)
+                for (VDJCAlignments al : CUtils.it(clna.readAllAlignments())) {
+                    if (al.getCloneIndex() == -1)
+                        continue;
                     writer.write(al);
                     ++count;
                 }
-            }
+            else
+                for (int id : getCloneIds()) {
+                    OutputPortCloseable<VDJCAlignments> reader = clna.readAlignmentsOfClone(id);
+                    VDJCAlignments al;
+                    while ((al = reader.take()) != null) {
+                        writer.write(al);
+                        ++count;
+                    }
+                }
+
             writer.setNumberOfProcessedReads(count);
         }
     }

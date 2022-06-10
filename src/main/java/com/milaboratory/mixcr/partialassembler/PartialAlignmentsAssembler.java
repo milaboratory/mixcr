@@ -1,70 +1,62 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.partialassembler;
 
 import cc.redberry.pipe.CUtils;
+import cc.redberry.pipe.InputPort;
+import cc.redberry.pipe.OutputPort;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.cli.Report;
-import com.milaboratory.mixcr.cli.ReportHelper;
+import com.milaboratory.mixcr.basictypes.SequenceHistory;
+import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence;
+import com.milaboratory.mixcr.basictypes.tag.TagCount;
+import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
+import com.milaboratory.util.Report;
+import com.milaboratory.util.ReportHelper;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 import io.repseq.core.*;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.milaboratory.mixcr.vdjaligners.VDJCAlignerWithMerge.getMMDescr;
-
-public class PartialAlignmentsAssembler implements AutoCloseable, Report {
+public class PartialAlignmentsAssembler implements Report {
     final TLongObjectHashMap<List<KMerInfo>> kToIndexLeft = new TLongObjectHashMap<>();
     final TLongHashSet alreadyMergedIds = new TLongHashSet();
     final TLongHashSet notInLeftIndexIds = new TLongHashSet();
-    final VDJCAlignmentsWriter writer;
+    final InputPort<VDJCAlignments> output;
     final int kValue;
     final int kOffset;
     final int minimalAssembleOverlap;
     final int minimalNOverlap;
     final boolean writePartial, overlappedOnly;
+    final VDJCAlignerParameters alignerParameters;
     final TargetMerger targetMerger;
+    final List<VDJCGene> usedGenes;
+    final Set<GeneType> geneTypesToShiftIndels;
     final long maxLeftParts;
     final int maxLeftMatches;
 
-    public final AtomicLong leftParts = new AtomicLong(),
+    public final AtomicLong
+            independentRuns = new AtomicLong(),
+            leftParts = new AtomicLong(),
             rightParts = new AtomicLong(),
             noKMer = new AtomicLong(),
             wildcardsInKMer = new AtomicLong(),
@@ -79,25 +71,26 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
             complexOverlapped = new AtomicLong(),
             containsCDR3 = new AtomicLong();
 
-    public PartialAlignmentsAssembler(PartialAlignmentsAssemblerParameters params, VDJCAlignmentsWriter writer,
-                                      boolean writePartial, boolean overlappedOnly) {
+    public PartialAlignmentsAssembler(PartialAlignmentsAssemblerParameters params,
+                                      VDJCAlignerParameters alignerParameters,
+                                      List<VDJCGene> usedGenes,
+                                      boolean writePartial, boolean overlappedOnly,
+                                      InputPort<VDJCAlignments> output) {
         this.kValue = params.getKValue();
         if (kValue >= 32)
             throw new IllegalArgumentException("kValue should be less than 32");
         this.kOffset = params.getKOffset();
         this.minimalAssembleOverlap = params.getMinimalAssembleOverlap();
         this.minimalNOverlap = params.getMinimalNOverlap();
-        this.targetMerger = new TargetMerger(params.getMergerParameters(), params.getMinimalAlignmentMergeIdentity());
+        this.alignerParameters = alignerParameters;
+        this.targetMerger = new TargetMerger(params.getMergerParameters(), alignerParameters, params.getMinimalAlignmentMergeIdentity());
+        this.usedGenes = usedGenes;
+        this.geneTypesToShiftIndels = alignerParameters.getGeneTypesWithLinearScoring();
         this.maxLeftParts = params.getMaxLeftParts();
         this.maxLeftMatches = params.getMaxLeftMatches();
         this.writePartial = writePartial;
         this.overlappedOnly = overlappedOnly;
-        this.writer = writer;
-    }
-
-    public PartialAlignmentsAssembler(PartialAlignmentsAssemblerParameters params, String output,
-                                      boolean writePartial, boolean overlappedOnly) throws IOException {
-        this(params, new VDJCAlignmentsWriter(output), writePartial, overlappedOnly);
+        this.output = output;
     }
 
     public boolean leftPartsLimitReached() {
@@ -110,9 +103,16 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
         return maxRightMatchesLimitReached;
     }
 
-    public void buildLeftPartsIndex(VDJCAlignmentsReader reader) {
-        writer.header(reader.getParameters(), reader.getUsedGenes(), null);
-        for (VDJCAlignments alignment : CUtils.it(reader)) {
+
+    public void buildLeftPartsIndex(OutputPort<VDJCAlignments> input) {
+        // Resetting internal state if this object was reused
+        kToIndexLeft.clear();
+        alreadyMergedIds.clear();
+        notInLeftIndexIds.clear();
+
+        independentRuns.incrementAndGet();
+
+        for (VDJCAlignments alignment : CUtils.it(input)) {
             if (alignment.getFeature(GeneFeature.CDR3) != null)
                 continue;
             if (!addLeftToIndex(alignment))
@@ -122,21 +122,19 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
         }
     }
 
-    public void searchOverlaps(VDJCAlignmentsReader reader) {
-        final VDJCAlignerParameters alignerParameters = reader.getParameters();
+    public void searchOverlaps(OutputPort<VDJCAlignments> input) {
         PartialAlignmentsAssemblerAligner aligner = new PartialAlignmentsAssemblerAligner(alignerParameters);
-        targetMerger.setAlignerParameters(alignerParameters);
-        for (VDJCGene gene : reader.getUsedGenes())
+        for (VDJCGene gene : usedGenes)
             aligner.addGene(gene);
 
-        for (final VDJCAlignments alignment : CUtils.it(reader)) {
+        for (final VDJCAlignments alignment : CUtils.it(input)) {
             total.incrementAndGet();
 
             if (alignment.getFeature(GeneFeature.CDR3) != null) {
                 containsCDR3.incrementAndGet();
                 if (!overlappedOnly) {
                     totalWritten.incrementAndGet();
-                    writer.write(alignment);
+                    output.put(alignment);
                 }
                 continue;
             }
@@ -148,17 +146,14 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
 
             // Common procedure to cancel processing of current input alignment if it fails to pass some good
             // overlap filtering criterion
-            final Runnable cancelCurrentResult = new Runnable() {
-                @Override
-                public void run() {
-                    if (searchResult != null)
-                        searchResult.cancel();
-                    if (writePartial && !overlappedOnly &&
-                            notInLeftIndexIds.contains(alignment.getAlignmentsIndex())) {
-                        totalWritten.incrementAndGet();
-                        partialAsIs.incrementAndGet();
-                        writer.write(alignment);
-                    }
+            final Runnable cancelCurrentResult = () -> {
+                if (searchResult != null)
+                    searchResult.cancel();
+                if (writePartial && !overlappedOnly &&
+                        notInLeftIndexIds.contains(alignment.getAlignmentsIndex())) {
+                    totalWritten.incrementAndGet();
+                    partialAsIs.incrementAndGet();
+                    output.put(alignment);
                 }
             };
 
@@ -169,7 +164,8 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
             List<AlignedTarget> mergedTargets = searchResult.result;
             VDJCMultiRead mRead = new VDJCMultiRead(mergedTargets);
 
-            final VDJCAlignments mAlignment = aligner.process(mRead).alignment;
+            // Both parts have the same tag tuple
+            final VDJCAlignments mAlignment = aligner.process(mRead).alignment.setTagCount(searchResult.tagCount);
 
             // Checking number of overlapped non-template (NRegion) letters
             int overlapTargetId = -1;
@@ -240,7 +236,8 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
 
             overlapped.incrementAndGet();
             totalWritten.incrementAndGet();
-            writer.write(mAlignment.shiftIndelsAtHomopolymers());
+
+            output.put(mAlignment.shiftIndelsAtHomopolymers(geneTypesToShiftIndels));
 
             // Saving alignment that where merge to prevent it's use as left part
             alreadyMergedIds.add(alignment.getAlignmentsIndex());
@@ -253,22 +250,21 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
                     if (alreadyMergedIds.add(kMerInfo.alignments.getAlignmentsIndex())) {
                         totalWritten.incrementAndGet();
                         partialAsIs.incrementAndGet();
-                        writer.write(kMerInfo.getAlignments());
+                        output.put(kMerInfo.getAlignments());
                     }
-
-        writer.setNumberOfProcessedReads(reader.getNumberOfReads() - overlapped.get());
     }
-
 
     static class OverlapSearchResult {
         final List<KMerInfo> originKMerList;
         final KMerInfo KMerInfo;
         final List<AlignedTarget> result;
+        final TagCount tagCount;
 
-        public OverlapSearchResult(List<KMerInfo> originKMerList, KMerInfo KMerInfo, List<AlignedTarget> result) {
+        public OverlapSearchResult(List<KMerInfo> originKMerList, KMerInfo KMerInfo, List<AlignedTarget> result, TagCount tagCount) {
             this.originKMerList = originKMerList;
             this.KMerInfo = KMerInfo;
             this.result = result;
+            this.tagCount = tagCount;
         }
 
         void cancel() {
@@ -297,6 +293,8 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
         else
             stop -= kOffset;
 
+        TagCount rightTagCount = rightAl.getTagCount();
+
         // black list of left parts failed due to inconsistent overlapped alignments (failed AMerge)
         TLongHashSet blackList = new TLongHashSet();
         SEARCH_LEFT_PARTS:
@@ -319,6 +317,9 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
                 for (int i = 0, size = Math.min(maxLeftMatches, match.size()); i < size; i++) {
                     boolean isOverOverlapped = false;
                     final VDJCAlignments leftAl = match.get(i).getAlignments();
+
+                    // if (!Objects.equals(extractTagTuple(leftAl), tagTuple))
+                    //     continue;
 
                     if (blackList.contains(leftAl.getAlignmentsIndex()))
                         continue;
@@ -378,6 +379,8 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
 
             final KMerInfo left = maxOverlapList.remove(maxOverlapIndexInList);
             VDJCAlignments leftAl = left.alignments;
+
+            TagCount leftTagCount = leftAl.getTagCount();
 
             //final long readId = rightAl.getReadId();
 
@@ -465,13 +468,22 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
             result.add(central);
             result.addAll(rightDescriptors);
 
+            TagCountAggregator tcBuilder = new TagCountAggregator();
+            tcBuilder.add(leftTagCount);
+            tcBuilder.add(rightTagCount);
+
             // Ordering and filtering final targets
-            return new OverlapSearchResult(maxOverlapList, left, AlignedTarget.orderTargets(result));
+            return new OverlapSearchResult(maxOverlapList, left, AlignedTarget.orderTargets(result), tcBuilder.createAndDestroy());
         }
     }
 
     private static String mergeTypePrefix(boolean usingAlignment) {
         return usingAlignment ? "A" : "S";
+    }
+
+    @JsonProperty("independentRuns")
+    public long getIndependentRuns() {
+        return independentRuns.get();
     }
 
     @JsonProperty("totalProcessed")
@@ -547,6 +559,8 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
     @Override
     public void writeReport(ReportHelper helper) {
         long total = this.total.get();
+        if (independentRuns.get() != 1)
+            helper.writeField("Independent runs", total);
         helper.writeField("Total alignments analysed", total);
         helper.writePercentAndAbsoluteField("Number of output alignments", totalWritten, total);
         helper.writePercentAndAbsoluteField("Alignments already with CDR3 (no overlapping is performed)", containsCDR3, total);
@@ -615,12 +629,21 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
         return al.getSequence2Range().length();
     }
 
+    // private static TagTuple extractTagTuple(VDJCAlignments alignments) {
+    //     TagCounter tagCounter = alignments.getTagCounter();
+    //     if (tagCounter.size() > 1)
+    //         throw new IllegalArgumentException();
+    //     if (tagCounter.size() == 0)
+    //         return null;
+    //     final TObjectDoubleIterator<TagTuple> it = tagCounter.iterator();
+    //     it.advance();
+    //     return it.key();
+    // }
 
     private boolean addLeftToIndex(VDJCAlignments alignment) {
         int leftTargetId = getLeftPartitionedSequence(alignment);
         if (leftTargetId == -1)
             return false;
-
         VDJCPartitionedSequence left = alignment.getPartitionedTarget(leftTargetId);
         NSequenceWithQuality seq = left.getSequence();
 
@@ -630,6 +653,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
             return false;
         }
 
+        // TagTuple tagTuple = extractTagTuple(alignment);
         for (int kFrom = kFromFirst; kFrom < seq.size() - kValue; ++kFrom) {
             long kmer = kMer(seq.getSequence(), kFrom, kValue);
             if (kmer == -1) {
@@ -650,7 +674,7 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
     }
 
     private static long kMer(NucleotideSequence seq, int from, int length) {
-        long kmer = 0;
+        long kmer = 0; // tagTuple == null ? 0 : tagTuple.hashCode();
         for (int j = from; j < from + length; ++j) {
             byte c = seq.codeAt(j);
             if (NucleotideSequence.ALPHABET.isWildcard(c))
@@ -681,11 +705,6 @@ public class PartialAlignmentsAssembler implements AutoCloseable, Report {
         for (int i = 0; i < alignments.numberOfTargets(); i++)
             targets.add(new AlignedTarget(alignments, i));
         return targets;
-    }
-
-    @Override
-    public void close() throws IOException {
-        writer.close();
     }
 }
 

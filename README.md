@@ -1,46 +1,52 @@
-[![Build Status](https://travis-ci.org/milaboratory/mixcr.svg)](https://travis-ci.org/milaboratory/mixcr)
 [![image](https://readthedocs.org/projects/mixcr/badge/?version=latest)](https://mixcr.readthedocs.io)
 
 
-## Overview
+![MiXCR logo](./doc/_static/MiXCR_logo_dark.png#gh-light-mode-only)
+![MiXCR logo](./doc/_static/MiXCR_logo_white.png#gh-dark-mode-only)
 
-MiXCR is a universal software for fast and accurate analysis of raw T- or B- cell receptor repertoire sequencing data.
+MiXCR is a universal software for fast and accurate analysis of raw T- or B- cell receptor repertoire sequencing data. It works with any kind of sequencing data:
+ - Bulk repertoire sequencing data with or without UMIs
+ - Single cell sequencing data including but not limited to 10x Genomics protocols 
+ - RNA-Seq or any other kind of fragmented/shotgun data which may contain just a tiny fraction of target sequences
+ - and any other kind of sequencing data containing TCRs or BCRs 
 
- - Easy to use. Default pipeline can be executed without any additional parameters (see *Usage* section)
+Powerful downstream analysis tools allow to obtain vector plots and tabular results for multiple measures. Key features include:
+ - Ability to group samples by metadata values and compare repertoire features between groups 
+ - Comprehensive repertoire normalization and filtering 
+ - Statistical significance tests with proper p-value adjustment
+ - Repertoire overlap analysis
+ - Vector plots output (.svg / .pdf)
+ - Tabular outputs
 
- - TCR and IG repertoires
- 
- - Following species are supported *out-of-the-box* using built-in library:
-   - human
-   - mouse
-   - rat (only TRB and TRA)
-   - *... several new species will be available soon*
+Other key features:
 
-- Efficiently extract repertoires from most of (if not *all*) types of TCR/IG-containing raw sequencing data:
-  - data from all specialized RepSeq sample preparation protocols
-  - RNA-Seq
-  - WGS
-  - single-cell data
-  - *etc..*
+- Clonotype assembly by arbitrary gene feature, including *full-length* variable region
+- PCR / Sequencing error correction with or without aid of UMI or Cell barcodes
+- Robust and dedicated aligner algorithms for maximum extration with zero false-positive rate
+- Supports any custom barcode sequences architecture (UMI / Cell)
+- _Human_, _Mice_, _Rat_, _Spalax_, _Alpaca_, _Monkey_
+- Support IMGT reference
+- Barcodes error-correction
+- Adapter trimming
+- Optional CDR3 reconstruction by assembling overlapping fragmented sequencing reads into complete CDR3-containing contigs when the read position is floating (e.g. shotgun-sequencing, RNA-Seq etc.)
+- Optional contig assembly to build longest possible TCR/IG sequence from available data (with or without aid of UMI or Cell barcodes) 
+- Comprehensive quality control reports provided at all the steps of the pipeline
+- Regions not covered by the data may be imputed from germline
+- Exhaustive output information for clonotypes and alignments:
+    - nucleotide and amino acid sequences of all immunologically relevant regions (FR1, CDR1, ..., CDR3, etc..)
+    - identified V, D, J, C genes
+    - comprehensive information on nucleotide and amino acid mutations
+    - positions of all immunologically relevant points in output sequences
+    - and many more informative columns
+- Ability to backtrack fate of each raw sequencing read through the whole pipeline 
 
-- Has optional CDR3 reconstruction step, that allows to *recover full hypervariable region from several disjoint reads*. Uses sophisticated algorithms protecting from false-positive assemblies at the same time having best in class efficiency.
+## Who uses MiXCR 
+MiXCR is used by 8 out of 10 world leading pharmaceutical companies in the R&D for:
+- Vaccine development
+- Antibody discovery
+- Cancer immunotherapy research
 
-- Assemble clonotypes, applying several *error-correction* algorithms to eliminate artificial diversity arising from PCR and sequencing errors
-
-- Clonotypes can be assembled based on CDR3 sequence (default) as well as any other region, including *full-length* variable sequence (from beginning of FR1 to the end of FR4)
-
-- Assemble full TCR/Ig receptor sequences 
-
-- Provides exhaustive output information for clonotypes and per-read alignments:
-  - nucleotide and amino acid sequences of all immunologically relevant regions (FR1, CDR1, ..., CDR3, etc..)
-  - identified V, D, J, C genes
-  - nucleotide and amino acid mutations in germline regions
-  - variable region topology (number of end V / D / J nucleotide deletions, length of P-segments, number of non-template N nucleotides)
-  - sequencing quality scores for any extracted sequence
-  - several other useful pieces of information
-  
-- Completely transparent pipeline, possible to track individual read fate from raw fastq entry to clonotype. Several useful tools available to evaluate pipeline performance: human readable alignments visualization, diff tool for alignment and clonotype files, etc...
-
+Widely adopted by academic community with 1000+ citations in peer-reviewed scientific publications.
 
 ## Installation / Download
 
@@ -53,9 +59,10 @@ to upgrade already installed MiXCR to the newest version:
     brew update
     brew upgrade mixcr
 
-#### Docker
+[//]: # (#### Docker)
 
-See [official Docker Image](https://hub.docker.com/r/milaboratory/mixcr).
+[//]: # ()
+[//]: # (See [official Docker Image]&#40;https://hub.docker.com/r/milaboratory/mixcr&#41;.)
 
 #### Manual install (any OS)
 
@@ -69,79 +76,58 @@ See [official Docker Image](https://hub.docker.com/r/milaboratory/mixcr).
 
 * Any OS with Java support (Linux, Windows, Mac OS X, etc..)
 * Java 1.8 or higher
- 
-## Usage
+
+## Obtaining a license
+
+To run MiXCR one need a license file. MiXCR is free for academic users with no commercial funding. We are committed to support academic community and provide our software free of charge for scientists doing non-profit research.
+
+Academic users can quickly get a license at https://licensing.milaboratories.com.
+
+Commercial trial license may be requested at https://licensing.milaboratories.com or by email to licensing@milaboratories.com.
+
+To activate the license do one of the following:
+
+- put `mi.license` to
+    - `~/.mi.license`
+    - `~/mi.license`
+    - directory with `mixcr.jar` file
+    - directory with MiXCR executable
+    - to any place and specify it in `MI_LICENSE_FILE` environment variable
+- put `mi.license` content to `MI_LICENSE` environment variable
+- run `mixcr activate-license` and paste `mi.license` content to the command prompt
+
+
+
+## Usage & documentation
 
 See usage examples in the official documentation https://mixcr.readthedocs.io/en/master/quickstart.html
-
-## Documentation
 
 Detailed documentation can be found at https://mixcr.readthedocs.io/
 
 If you haven't found the answer to your question in the docs, or have any suggestions concerning new features, feel free to create an issue here, on GitHub, or write an email to support@milaboratory.com .
 
-## Build
-
-Requirements:
-
-- Maven 3 (https://maven.apache.org/)
-
-To build MiXCR from source:
-
-- Clone repository
-
-  ```
-  git clone https://github.com/milaboratory/mixcr.git
-  ```
-
-- Refresh git submodules
-
-  ```
-  git submodule update --init --recursive
-  ```
-  
-- Run build script. First build may take several minuties to download sequences for built-in V/D/J/C gene libraries from NCBI.
-
-  ```
-  ./build.sh
-  ```
-
 ## License
 
-Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
-(here and after addressed as Inventors)
-All Rights Reserved
+Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
 
-Permission to use, copy, modify and distribute any part of this program for
-educational, research and non-profit purposes, by non-profit institutions
-only, without fee, and without a written agreement is hereby granted,
-provided that the above copyright notice, this paragraph and the following
-three paragraphs appear in all copies.
+Before downloading or accessing the software, please read carefully the
+License Agreement available at:
+https://github.com/milaboratory/mixcr/blob/develop/LICENSE
 
-Those desiring to incorporate this work into commercial products or use for
-commercial purposes should contact MiLaboratory LLC, which owns exclusive
-rights for distribution of this program for commercial purposes, using the
-following email address: licensing@milaboratory.com.
+By downloading or accessing the software, you accept and agree to be bound
+by the terms of the License Agreement. If you do not want to agree to the terms
+of the Licensing Agreement, you must not download or access the software.
 
-IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
-SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
-ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
-ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
-NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
-MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
-WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
-PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
-PATENT, TRADEMARK OR OTHER RIGHTS.
 
 ## Cite
 
 * Dmitriy A. Bolotin, Stanislav Poslavsky, Igor Mitrophanov, Mikhail Shugay, Ilgar Z. Mamedov, Ekaterina V. Putintseva, and Dmitriy M. Chudakov. "MiXCR: software for comprehensive adaptive immunity profiling." *Nature methods* 12, no. 5 (**2015**): 380-381.
+  
+  \
+  (Files referenced in this paper can be found [here](https://github.com/milaboratory/mixcr/blob/develop/doc/paper/paperAttachments.md).)
+
+  
 
 * Dmitriy A. Bolotin, Stanislav Poslavsky, Alexey N. Davydov, Felix E. Frenkel, Lorenzo Fanchi, Olga I. Zolotareva, Saskia Hemmers, Ekaterina V. Putintseva, Anna S. Obraztsova, Mikhail Shugay, Ravshan I. Ataullakhanov, Alexander Y. Rudensky, Ton N. Schumacher & Dmitriy M. Chudakov. "Antigen receptor repertoire profiling from RNA-seq data." *Nature Biotechnology* 35, 908–911 (**2017**)
 
-## Files referenced in original paper
 
-Can be found [here](https://github.com/milaboratory/mixcr/blob/develop/doc/paper/paperAttachments.md).

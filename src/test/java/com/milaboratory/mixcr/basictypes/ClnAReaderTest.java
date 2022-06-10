@@ -1,40 +1,25 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
+import cc.redberry.pipe.blocks.FilteringPort;
+import cc.redberry.pipe.util.CountingOutputPort;
 import com.milaboratory.cli.AppVersionInfo;
 import com.milaboratory.mixcr.assembler.AlignmentsMappingMerger;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParametersPresets;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
+import com.milaboratory.mixcr.assembler.preclone.PreCloneReader;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.util.RunMiXCR;
 import com.milaboratory.util.TempFileManager;
@@ -44,12 +29,37 @@ import org.junit.Test;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import static com.milaboratory.util.TempFileManager.smartTempDestination;
 import static org.junit.Assert.assertEquals;
 
 public class ClnAReaderTest {
     @Test
     public void test1() throws Exception {
+        testGeneric(clones -> {
+                    Collections.shuffle(clones);
+                    clones = clones.stream().filter(c -> c.id != 2).collect(Collectors.toList());
+                    return clones;
+                }, als ->
+                        CUtils.wrap(als, vdjcAlignments ->
+                                vdjcAlignments.getCloneIndex() == 2
+                                        ? vdjcAlignments.setMapping(new ReadToCloneMapping(vdjcAlignments.getAlignmentsIndex(), -1, false, false, false, false))
+                                        : vdjcAlignments)
+        );
+    }
+
+    @Test
+    public void test3NoM1() throws Exception {
+        testGeneric(clones -> clones,
+                als -> new FilteringPort<>(als, a -> a.getCloneIndex() >= 0));
+    }
+
+    public void testGeneric(Function<List<Clone>, List<Clone>> modifyClones,
+                            Function<OutputPort<VDJCAlignments>, OutputPort<VDJCAlignments>> modifyAlignments) throws Exception {
         RunMiXCR.RunMiXCRAnalysis params = new RunMiXCR.RunMiXCRAnalysis(
                 RunMiXCR.class.getResource("/sequences/test_R1.fastq").getFile(),
                 RunMiXCR.class.getResource("/sequences/test_R2.fastq").getFile());
@@ -58,23 +68,39 @@ public class ClnAReaderTest {
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
         RunMiXCR.AssembleResult assemble = RunMiXCR.assemble(align, false);
 
-        AlignmentsMappingMerger merged = new AlignmentsMappingMerger(align.resultReader(), assemble.cloneAssembler.getAssembledReadsPort());
+        PreCloneReader preCloneReader = align.asPreCloneReader();
+        AlignmentsMappingMerger merged = new AlignmentsMappingMerger(preCloneReader.readAlignments(),
+                assemble.cloneAssembler.getAssembledReadsPort());
 
         File file = TempFileManager.getTempFile();
-        ClnAWriter writer = new ClnAWriter(null, file);
-        writer.writeClones(assemble.cloneSet);
-        writer.sortAlignments(merged, align.alignments.size());
+        ClnAWriter writer = new ClnAWriter(null, file, smartTempDestination(file, "", false));
+
+        List<Clone> newClones = assemble.cloneSet.getClones().stream()
+                .map(Clone::resetParentCloneSet)
+                .collect(Collectors.toList());
+        CloneSet newCloneSet = new CloneSet(
+                modifyClones.apply(newClones), align.usedGenes,
+                align.parameters.alignerParameters,
+                CloneAssemblerParametersPresets.getByName("default"),
+                null,
+                new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount()));
+        writer.writeClones(newCloneSet);
+
+        OutputPort<VDJCAlignments> als = modifyAlignments.apply(merged);
+        CountingOutputPort<VDJCAlignments> alsc = new CountingOutputPort<>(als);
+        writer.collateAlignments(alsc, align.alignments.size());
         writer.writeAlignmentsAndIndex();
 
         writer.close();
 
-        ClnAReader reader = new ClnAReader(file.toPath(), VDJCLibraryRegistry.getDefault(), 17);
+        ClnAReader reader = new ClnAReader(file.toPath(), VDJCLibraryRegistry.getDefault(),
+                ThreadLocalRandom.current().nextInt(1, 17));
 
         assertEquals(MiXCRVersionInfo.get().getVersionString(AppVersionInfo.OutputType.ToFile),
                 reader.getVersionInfo());
 
-        assertEquals(align.alignments.size(), reader.numberOfAlignments());
-        assertEquals(assemble.cloneSet.size(), reader.numberOfClones());
+        assertEquals(alsc.getCount(), reader.numberOfAlignments());
+        assertEquals(newCloneSet.size(), reader.numberOfClones());
 
         for (ClnAReader.CloneAlignments c : CUtils.it(reader.clonesAndAlignments())) {
             assertEquals("cloneId = " + c.cloneId, c.clone.count, count(c.alignments()), 0.01);
@@ -82,7 +108,8 @@ public class ClnAReaderTest {
             CUtils.it(c.alignments()).forEach(a -> {
                 assertEquals(c.cloneId, a.getCloneIndex());
                 if (a.getMappingType() == ReadToCloneMapping.MappingType.Core)
-                    assertEquals(c.clone.getFeature(GeneFeature.CDR3), a.getFeature(GeneFeature.CDR3));
+                    assertEquals(c.clone.getFeature(GeneFeature.CDR3),
+                            a.getFeature(GeneFeature.CDR3));
             });
         }
     }
@@ -96,12 +123,13 @@ public class ClnAReaderTest {
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
 
         File file = TempFileManager.getTempFile();
-        ClnAWriter writer = new ClnAWriter(null, file);
+        ClnAWriter writer = new ClnAWriter(null, file, smartTempDestination(file, "", false));
         writer.writeClones(new CloneSet(Collections.EMPTY_LIST, align.usedGenes,
-                align.parameters.alignerParameters.getFeaturesToAlignMap(),
                 align.parameters.alignerParameters,
-                CloneAssemblerParametersPresets.getByName("default")));
-        writer.sortAlignments(CUtils.asOutputPort(align.alignments), align.alignments.size());
+                CloneAssemblerParametersPresets.getByName("default"),
+                null,
+                new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount())));
+        writer.collateAlignments(CUtils.asOutputPort(align.alignments), align.alignments.size());
         writer.writeAlignmentsAndIndex();
 
         writer.close();

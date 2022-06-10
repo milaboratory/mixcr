@@ -1,31 +1,13 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.cli;
 
@@ -33,6 +15,7 @@ import com.milaboratory.cli.ACommandWithOutput;
 import com.milaboratory.cli.ACommandWithSmartOverwrite;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
+import com.milaboratory.util.JsonOverrider;
 import io.repseq.core.Chains;
 import io.repseq.core.GeneFeature;
 import picocli.CommandLine;
@@ -44,6 +27,8 @@ import picocli.CommandLine.Parameters;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -243,6 +228,10 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
             required = true)
     public String species = "hs";
 
+    @Option(description = CommonDescriptions.SPECIES,
+            names = {"--align-preset"})
+    public String alignPreset = null;
+
     public Chains chains = Chains.ALL;
 
     @Option(names = "--receptor-type",
@@ -285,6 +274,10 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
 
     @Option(names = {"-r", "--report"}, description = "Report file path")
     public String report = null;
+
+    @Option(names = {"-j", "--json-report"}, description = "Output json reports for each of the analysis steps. " +
+            "Individual file will be created for each type of analysis step, value specified for this option will be used as a prefix.")
+    public String jsonReport = null;
 
     @Option(names = {"-b", "--library"}, description = "V/D/J/C gene library")
     public String library = "default";
@@ -338,7 +331,7 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         return cmdAlign = inheritOptionsAndValidate(mkAlign());
     }
 
-    boolean forceUseRnaSeqOps() { return false; }
+    String forceAlignmentParameters() { return alignPreset; }
 
     boolean include5UTRInRNA() { return true; }
 
@@ -354,6 +347,23 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         if (specificArgs.stream().noneMatch(s -> s.contains("--threads ") || s.contains("-t "))) {
             args.add("--threads");
             args.add(Integer.toString(threads));
+        }
+    }
+
+    void addReportOptions(String step, List<String> options) {
+        // add report file
+        options.add("--report");
+        options.add(getReport());
+
+        // add json report file
+        if (jsonReport != null) {
+            options.add("--json-report");
+            String pref;
+            if (Files.isDirectory(Paths.get(jsonReport)))
+                pref = jsonReport + (jsonReport.endsWith(File.separator) ? "" : File.separator);
+            else
+                pref = jsonReport + ".";
+            options.add(pref + step + ".jsonl");
         }
     }
 
@@ -374,14 +384,16 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
 
         inheritThreads(alignParameters, this.alignParameters);
 
-        // add report file
-        alignParameters.add("--report");
-        alignParameters.add(getReport());
+        // adding report options
+        addReportOptions("align", alignParameters);
 
-        if (!forceUseRnaSeqOps() && !chains.intersects(Chains.TCR))
-            alignParameters.add("-p kAligner2");
-        else
-            alignParameters.add("-p rna-seq"); // always use rna-seq by default
+        if (forceAlignmentParameters() == null) {
+            if (!chains.intersects(Chains.TCR))
+                alignParameters.add("-p kAligner2");
+            else
+                alignParameters.add("-p rna-seq");
+        } else
+            alignParameters.add("-p " + forceAlignmentParameters());
 
         // add v feature to align
         switch (startingMaterial) {
@@ -400,7 +412,10 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         alignParameters.addAll(this.pipelineSpecificAlignParameters());
 
         // add all override parameters
-        alignParameters.addAll(this.alignParameters);
+        alignParameters.addAll(this.alignParameters
+                .stream()
+                .flatMap(s -> Arrays.stream(s.split(" ")))
+                .collect(Collectors.toList()));
 
         // put input fastq files & output vdjca
         alignParameters.addAll(getInputFiles());
@@ -409,13 +424,7 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         // parse parameters
         CommandAlign ap = new CommandAlign();
         ap.spec = this.spec;
-        new CommandLine(ap).parse(
-                alignParameters
-                        .stream()
-                        .flatMap(s -> Arrays.stream(s.split(" ")))
-                        .toArray(String[]::new));
-
-
+        new CommandLine(ap).parseArgs(alignParameters.toArray(new String[0]));
         return ap;
     }
 
@@ -428,23 +437,21 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
     public final CommandAssemblePartialAlignments mkAssemblePartial(String input, String output) {
         List<String> assemblePartialParameters = new ArrayList<>();
 
-        // add report file
-        assemblePartialParameters.add("--report");
-        assemblePartialParameters.add(getReport());
+        // adding report options
+        addReportOptions("assemblePartial", assemblePartialParameters);
 
         // add all override parameters
-        assemblePartialParameters.addAll(this.assemblePartialParameters);
+        assemblePartialParameters.addAll(this.assemblePartialParameters
+                .stream()
+                .flatMap(s -> Arrays.stream(s.split(" ")))
+                .collect(Collectors.toList()));
 
         assemblePartialParameters.add(input);
         assemblePartialParameters.add(output);
 
         // parse parameters
         CommandAssemblePartialAlignments ap = new CommandAssemblePartialAlignments();
-        new CommandLine(ap).parse(
-                assemblePartialParameters
-                        .stream()
-                        .flatMap(s -> Arrays.stream(s.split(" ")))
-                        .toArray(String[]::new));
+        new CommandLine(ap).parseArgs(assemblePartialParameters.toArray(new String[0]));
         return inheritOptionsAndValidate(ap);
     }
 
@@ -457,25 +464,23 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
     public final CommandExtend mkExtend(String input, String output) {
         List<String> extendParameters = new ArrayList<>();
 
-        // add report file
-        extendParameters.add("--report");
-        extendParameters.add(getReport());
+        // adding report options
+        addReportOptions("extend", extendParameters);
 
         inheritThreads(extendParameters, this.extendAlignmentsParameters);
 
         // add all override parameters
-        extendParameters.addAll(this.extendAlignmentsParameters);
+        extendParameters.addAll(this.extendAlignmentsParameters
+                .stream()
+                .flatMap(s -> Arrays.stream(s.split(" ")))
+                .collect(Collectors.toList()));
 
         extendParameters.add(input);
         extendParameters.add(output);
 
         // parse parameters
         CommandExtend ap = new CommandExtend();
-        new CommandLine(ap).parse(
-                extendParameters
-                        .stream()
-                        .flatMap(s -> Arrays.stream(s.split(" ")))
-                        .toArray(String[]::new));
+        new CommandLine(ap).parseArgs(extendParameters.toArray(new String[0]));
         return inheritOptionsAndValidate(ap);
     }
 
@@ -493,34 +498,30 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
     CommandAssemble mkAssemble(String input, String output) {
         List<String> assembleParameters = new ArrayList<>();
 
-        // add report file
-        assembleParameters.add("--report");
-        assembleParameters.add(getReport());
-
-        inheritThreads(assembleParameters, this.assembleParameters);
+        // adding report options
+        addReportOptions("assemble", assembleParameters);
 
         if (contigAssembly)
             assembleParameters.add("--write-alignments");
+
+        inheritThreads(assembleParameters, this.assembleParameters);
 
         // pipeline specific parameters
         assembleParameters.addAll(this.pipelineSpecificAssembleParameters());
 
         // add all override parameters
-        assembleParameters.addAll(this.assembleParameters);
+        assembleParameters.addAll(this.assembleParameters
+                .stream()
+                .flatMap(s -> Arrays.stream(s.split(" ")))
+                .collect(Collectors.toList()));
 
         assembleParameters.add(input);
         assembleParameters.add(output);
 
         // parse parameters
         CommandAssemble ap = new CommandAssemble();
-        new CommandLine(ap).parse(
-                assembleParameters
-                        .stream()
-                        .flatMap(s -> Arrays.stream(s.split(" ")))
-                        .toArray(String[]::new));
-
+        new CommandLine(ap).parseArgs(assembleParameters.toArray(new String[0]));
         ap.getCloneAssemblerParameters().updateFrom(mkAlign().getAlignerParameters());
-
         return ap;
     }
 
@@ -533,25 +534,23 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
     public final CommandAssembleContigs mkAssembleContigs(String input, String output) {
         List<String> assembleContigParameters = new ArrayList<>();
 
-        // add report file
-        assembleContigParameters.add("--report");
-        assembleContigParameters.add(getReport());
+        // adding report options
+        addReportOptions("assembleContigs", assembleContigParameters);
 
         inheritThreads(assembleContigParameters, this.assembleContigParameters);
 
         // add all override parameters
-        assembleContigParameters.addAll(this.assembleContigParameters);
+        assembleContigParameters.addAll(this.assembleContigParameters
+                .stream()
+                .flatMap(s -> Arrays.stream(s.split(" ")))
+                .collect(Collectors.toList()));
 
         assembleContigParameters.add(input);
         assembleContigParameters.add(output);
 
         // parse parameters
         CommandAssembleContigs ap = new CommandAssembleContigs();
-        new CommandLine(ap).parse(
-                assembleContigParameters
-                        .stream()
-                        .flatMap(s -> Arrays.stream(s.split(" ")))
-                        .toArray(String[]::new));
+        new CommandLine(ap).parseArgs(assembleContigParameters.toArray(new String[0]));
         return inheritOptionsAndValidate(ap);
     }
 
@@ -629,7 +628,7 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         return outputNamePattern() + ".rescued_" + round + ".vdjca";
     }
 
-    public String fNameForExtenedAlignments() {
+    public String fNameForExtendedAlignments() {
         return outputNamePattern() + ".extended.vdjca";
     }
 
@@ -677,7 +676,7 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
 
         // --- Running alignments extender
         if (!doNotExtendAlignments) {
-            String fileWithExtAlignments = fNameForExtenedAlignments();
+            String fileWithExtAlignments = fNameForExtendedAlignments();
             mkExtend(fileWithAlignments, fileWithExtAlignments).run();
             fileWithAlignments = fileWithExtAlignments;
         }
@@ -716,6 +715,13 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         }
 
         private _5EndPrimers vPrimers;
+
+        @Option(names = "--extend-alignments",
+                description = "Extend alignments",
+                required = false)
+        public void setDoExtendAlignments(boolean ignore) {
+            doNotExtendAlignments = false;
+        }
 
         @Option(names = "--5-end",
                 completionCandidates = _5EndCandidates.class,
@@ -863,8 +869,10 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         }
 
         @Override
-        boolean forceUseRnaSeqOps() {
-            return true;
+        String forceAlignmentParameters() {
+            return alignPreset == null
+                    ? "rna-seq"
+                    : alignPreset;
         }
 
         @Override

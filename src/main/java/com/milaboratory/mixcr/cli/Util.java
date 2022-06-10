@@ -1,107 +1,26 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.cli;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.milaboratory.util.GlobalObjectMappers;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.List;
 
 public final class Util {
     private Util() {
     }
-
-    private static final DecimalFormatSymbols DFS;
-
-    public static final DecimalFormat PERCENT_FORMAT;
-
-    static {
-        DFS = new DecimalFormatSymbols();
-        DFS.setNaN("NaN");
-        DFS.setInfinity("Inf");
-        PERCENT_FORMAT = new DecimalFormat("#.##", DFS);
-    }
-
-    public static void writeReportToStdout(Report report) {
-        report.writeReport(new ReportHelper(System.out, true));
-    }
-
-    static void appendAtomically(String fileName, byte[] content) {
-        appendAtomically(new File(fileName), content);
-    }
-
-    static void appendAtomically(File file, byte[] content) {
-        try (FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
-             FileLock lock = lockIfPossible(channel)) {
-            channel.position(channel.size());
-            channel.write(ByteBuffer.wrap(content));
-        } catch (IOException ioe) {
-            throw new RuntimeException(ioe);
-        }
-    }
-
-    static FileLock lockIfPossible(FileChannel channel) {
-        try {
-            return channel.lock();
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    public static void writeReport(String reportFileName, Report report) {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ReportHelper helper = new ReportHelper(bos, false);
-        report.writeReport(helper);
-        helper.end();
-        appendAtomically(reportFileName, bos.toByteArray());
-    }
-
-    public static void writeJsonReport(String reportFileName, Report report) throws JsonProcessingException {
-        String content = GlobalObjectMappers.toOneLine(report) + "\n";
-        appendAtomically(reportFileName, content.getBytes(StandardCharsets.UTF_8));
-    }
-
 
     public static String printTwoColumns(List<String> left, List<String> right, int leftWidth, int rightWidth, int sep) {
         return printTwoColumns(left, right, leftWidth, rightWidth, sep, "");

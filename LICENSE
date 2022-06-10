@@ -1,27 +1,228 @@
-Copyright (c) 2014-2018, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
-(here and after addressed as Inventors)
-All Rights Reserved
+Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
 
-Permission to use, copy, modify and distribute any part of this program for
-educational, research and non-profit purposes, by non-profit institutions
-only, without fee, and without a written agreement is hereby granted,
-provided that the above copyright notice, this paragraph and the following
-three paragraphs appear in all copies.
+By exercising the Licensed Rights, the User accepts and agrees to be bound by
+the terms and conditions of this international public end-user license
+(the "License"). To the extent this License may be interpreted as a contract,
+the User is granted the Licensed Rights in consideration of the User's
+acceptance of these terms and conditions, and the Licensor grants the User such
+rights in consideration of benefits the Licensor receives from making the
+Software available under this License.
 
-Those desiring to incorporate this work into commercial products or use for
-commercial purposes should contact MiLaboratory LLC, which owns exclusive
-rights for distribution of this program for commercial purposes, using the
-following email address: licensing@milaboratory.com.
+By downloading the Software, the User represents and warrants to the Licensor
+that the User is an Individual User or a Non-Profit Organization and will only
+use the Software for Non-Commercial Use in accordance with the terms of this
+License.
 
-IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
-SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
-ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
-ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Section 1 - Definitions.
 
-THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
-NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
-MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
-WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
-PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
-PATENT, TRADEMARK OR OTHER RIGHTS.
+In this License:
+
+"Copyright and Similar Rights" means copyright and/or similar rights closely
+ related to copyright, without regard to how the rights are labeled or
+ categorized.
+
+"Individual User” means a private individual who uses the Software on his or her
+ own behalf and for his or her own purposes (and not on behalf of, or for the
+ purposes of, any government agency, legal person or other organization).
+
+"Licensed Rights" means the rights granted to the User subject to the terms and
+ conditions of this License, which are limited to all Copyright and Similar
+ Rights that apply to the User's use of the Software and that the Licensor has
+ authority to license.
+
+"Licensor" means MiLaboratories Inc., a Delaware corporation.
+
+"Non-Commercial Use" means use by an Individual User or a Non-Profit
+ Organization that is not intended for or directed towards commercial advantage
+ or monetary compensation and is not conducted using funds from any external
+ source.
+
+"Non-Profit Organization" means an organization that does not, and is not
+ intended to, earn profits for its owners or shareholders and which operates in
+ order to provide a public service.
+
+"Software" means MiXCR, the Licensor's proprietary software for comprehensive,
+ adaptive immunity profiling for immunoglobulin (IG) and T-cell receptor
+ extraction of T- and B- cell receptor repertoires from any type of sequencing
+ data. All title and copyrights for and to the Software, including but not
+ limited to any copywritten images, demos, source code, and intermediate files
+ incorporated into the Software, the accompanying materials, and any copies of
+ the Software are the intellectual property of and are owned by the Licensor.
+
+"User" means the Individual User or Non-Profit Organization exercising the
+ Licensed Rights under this License.
+
+Section 2 - License Grant.
+
+Subject to the terms and conditions of this License, the Licensor hereby grants
+the User a worldwide, non-exclusive, royalty-free, non-sublicensable,
+non-transferable license to exercise the Licensed Rights in the Software to
+download, install, use, reproduce, copy, modify and distribute any part of the
+Software for Non-Commercial Use only.
+
+The User is not authorized by this License to assert or claim that the User or
+its use of the Software is, connected with, or sponsored, endorsed, or granted
+official status by, the Licensor.
+
+Patent and trademark rights are not licensed under this License.
+
+Those desiring to incorporate the Software into commercial products or use the
+Software or any derivatives from the Software for any commercial purposes
+should contact MiLaboratories Inc., which owns exclusive licensing and
+distribution rights for the Software , using the following email address:
+licensing@milaboratories.com.
+
+Section 3 - License Conditions.
+
+A User's exercise of the Licensed Rights is expressly made subject to the
+following conditions:
+
+(1) If the User distributes the Software (including in modified form), the User
+must:(a) retain the following if it is supplied by the Licensor with the
+Software:
+• identification of the creator(s) of the Software and any others designated to
+  receive attribution, in any reasonable manner requested by the Licensor
+  (including by pseudonym if designated);
+• a Licensor’s copyright notice;
+• a notice that refers to the disclaimer of warranties in Section 4
+  (Disclaimer of Warranties and Limitation of Liability) below; and
+• a URL or hyperlink to the Software to the extent reasonably practicable;
+  (b) indicate if the User has modified the Software and retain an indication
+  of any previous modifications; and(c) indicate the Software (including any
+  modifications and derivatives) are licensed under this License, and include
+  the text of, or the URI or hyperlink to, this License.(2) If requested by the
+  Licensor, the User must remove any of the information required by paragraph
+  (a) above to the extent reasonably practicable.(3) The User shall not
+  (and shall not allow any other person to):
+• decompile, disassemble, or otherwise reverse engineer the Software or attempt
+  to discover any source code or underlying ideas or algorithms of the
+  Software;
+• remove any product identification, copyright or other notices embedded within
+  the Software;
+• modify or create a derivative work of the Software;
+• export any Software in violation of applicable laws or regulations;
+• copy the Software or any portion thereof except as provided in this License;
+• disclose any performance information or analysis (including, without
+  limitation, benchmarks) from any source relating to the Software; or
+• rent, lease, loan, sale or assign the Software or derivative works based on
+  the whole or any part of the Software.(4) The User acknowledges that
+  third-party software may be embedded or otherwise delivered with the
+  Software. The User may only use such third-party software as integrated with
+  and part of the Software. The licensors of the third-party software are
+  intended beneficiaries of this License as it pertains to the User’s rights to
+  use such software. Section 4 - Disclaimer of Warranties and Limitation of
+  Liability.
+
+THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE LICENSOR HAS NO
+OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
+MODIFICATIONS. THE LICENSOR MAKES NO REPRESENTATIONS AND EXTENDS NO WARRANTIES
+OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, OR
+THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY PATENT, TRADEMARK OR OTHER
+RIGHTS.
+
+LICENSOR DOES NOT GUARANTEE THAT LICENSED MATERIALS WILL MEET YOUR EXPECTATIONS
+OR REQUIREMENTS. LICENSOR DOES NOT GUARANTEE THAT THE LICENSED MATERIALS ARE
+ERROR-FREE. LICENSOR DOES NOT WARRANT, GUARANTEE, OR MAKE ANY REPRESENTATIONS
+REGARDING THE USE, OR THE RESULTS OF THE USE, OF THE LICENSED MATERIALS IN
+TERMS OF CORRECTNESS, ACCURACY, RELIABILITY, OR OTHERWISE. THE ENTIRE RISK
+ARISING OUT OF USE OR PERFORMANCE OF THE LICENSED MATERIALS REMAINS WITH YOU.
+NO ORAL OR WRITTEN INFORMATION OR ADVICE GIVEN BY LICENSOR SHALL CREATE A
+WARRANTY OR IN ANY WAY INCREASE THE SCOPE OF THIS WARRANTY.
+
+IN NO EVENT SHALL THE LICENSOR BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
+SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS, ARISING
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE LICENSOR HAS BEEN ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+
+Section 5 - Term and Termination.
+
+This License applies for the term of the Copyright and Similar Rights licensed
+herein. However, if the User fails to comply with this License, then the User's
+rights under this License terminate automatically.
+
+Where the User's right to use the Software has terminated under the preceding
+paragraph, it reinstates: (a) automatically as of the date the violation is
+cured, provided it is cured within thirty (30) days of the User's discovery of
+the violation; or (b) upon express reinstatement by the Licensor.
+
+For the avoidance of doubt, nothing in this Section 5 affects any right the
+Licensor may have to seek remedies for the User's violation of this License.
+
+Sections 1 (Definitions), 4 (Disclaimer of Warranties and Limitation of
+Liability), 5 (Term and Termination), 8 (Other Terms and Conditions), 9
+(Interpretation) and 10 (Governing Law / Forum and Venue) survive termination
+of this License.
+
+Section 6 - Collection of Statistics and Data
+
+Through the Software, the Licensor may collect anonymized statistics and other
+information, including the User's IP address and the size of raw data files
+processed by the User (rounded to the nearest hundred megabytes). The User
+hereby consents to the collection and processing of such data by the Licensor.
+
+Section 7 – Marketing
+
+The User grants the Licensor a limited, non-exclusive right to place the User’s
+trademarks and logos on the Licensor’s web site and marketing materials solely
+for the purpose of identifying the User as a user of the Software.
+
+Section 8 - Other Terms and Conditions.
+
+The Licensor shall not be bound by any additional or different terms or
+conditions communicated by the User unless expressly agreed.
+
+Any arrangements, understandings, or agreements regarding the Software not
+stated herein are separate from and independent of the terms and conditions of
+this License.
+
+Section 9 - Interpretation.
+
+For the avoidance of doubt, this License does not, and shall not be interpreted
+to, reduce, limit, restrict, or impose conditions on any use of the Software
+that could lawfully be made without permission under this License.
+
+To the extent possible, if any provision of this License is deemed
+unenforceable, it shall be automatically reformed to the minimum extent
+necessary to make it enforceable. If the provision cannot be reformed, it shall
+be severed from this License without affecting the enforceability of the
+remaining terms and conditions.
+
+No term or condition of this License will be waived and no failure to comply
+consented to unless expressly agreed to by the Licensor.
+
+Nothing in this License constitutes or may be interpreted as a limitation upon,
+or waiver of, any privileges and immunities that apply to the Licensor or the
+User, including from the legal processes of any jurisdiction or authority.
+
+Section 10 - Governing Law / Forum and Venue.
+
+This License shall be governed by, and construed and enforced in accordance
+with, the laws of the State of New York, without giving effect to any choice of
+law rule that would cause the application of the laws of any jurisdiction other
+than the internal laws of the State of New York to the rights and duties of the
+Licensor and the User.
+
+Any judicial action or proceeding arising hereunder or relating hereto shall be
+brought in, and the User hereby consent to the exclusive, personal jurisdiction
+of, the Courts of New York.
+
+Section 11 – Changes.
+
+From time to time, Licensor may change the terms and provisions of this License.
+When these changes are made, Licensor will make a new version of the License
+publicly available.
+
+You understand and agree that if you use the Software after the date on which
+the License has been changed, the Licensor will treat your use as acceptance of
+the updated License.
+
+Section 12 – Contacts.
+
+If you have any questions, concerns, or complaints regarding this License or the
+Software, please contact us using the details below:
+
+https://milaboratories.com/contacts
+licensing@milaboratories.com
+
+This document was last updated on June 1, 2022

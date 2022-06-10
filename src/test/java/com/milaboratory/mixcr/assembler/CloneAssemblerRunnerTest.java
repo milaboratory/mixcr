@@ -1,31 +1,13 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.assembler;
 
@@ -39,22 +21,23 @@ import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.quality.QualityAggregationType;
 import com.milaboratory.core.tree.TreeSearchParameters;
+import com.milaboratory.mixcr.assembler.preclone.PreCloneReader;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.*;
 import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.SmartProgressReporter;
+import com.milaboratory.util.TempFileManager;
 import io.repseq.core.*;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
 public class CloneAssemblerRunnerTest {
-    @Ignore
     @Test
     public void test1() throws Exception {
         String[] str = {"sequences/sample_IGH_R1.fastq", "sequences/sample_IGH_R2.fastq"};
@@ -77,7 +60,7 @@ public class CloneAssemblerRunnerTest {
         VDJCAlignerParameters alignerParameters = VDJCParametersPresets.getByName("default");
         VDJCAligner aligner = fastqFiles.length == 1 ? new VDJCAlignerS(alignerParameters) : new VDJCAlignerWithMerge(alignerParameters);
 
-        for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("mi", "hs").getGenes(Chains.IGH))
+        for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("default", "hs").getGenes(Chains.IGH))
             if (alignerParameters.containsRequiredFeature(gene))
                 aligner.addGene(gene);
 
@@ -90,9 +73,9 @@ public class CloneAssemblerRunnerTest {
                     CloneAssemblerRunnerTest.class.getClassLoader().getResourceAsStream(fastqFiles[1]), true);
 
         //write alignments to byte array
-        ByteArrayOutputStream alignmentsSerialized = new ByteArrayOutputStream();
-        try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(alignmentsSerialized)) {
-            writer.header(aligner, null);
+        File vdjcaFile = TempFileManager.getTempFile();
+        try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(vdjcaFile)) {
+            writer.header(aligner, null, null);
             for (Object read : CUtils.it(reader)) {
                 VDJCAlignmentResult result = (VDJCAlignmentResult) aligner.process((SequenceRead) read);
                 if (result.alignment != null)
@@ -100,9 +83,7 @@ public class CloneAssemblerRunnerTest {
             }
         }
 
-        AlignmentsProvider alignmentsProvider = AlignmentsProvider.Util.createProvider(
-                alignmentsSerialized.toByteArray(),
-                VDJCLibraryRegistry.getDefault());
+        AlignmentsProvider alignmentsProvider = new VDJCAlignmentsReader(vdjcaFile);
 
         LinearGapAlignmentScoring<NucleotideSequence> scoring = new LinearGapAlignmentScoring<>(NucleotideSequence.ALPHABET, 5, -9, -12);
         CloneFactoryParameters factoryParameters = new CloneFactoryParameters(
@@ -111,30 +92,32 @@ public class CloneAssemblerRunnerTest {
                 new VJCClonalAlignerParameters(0.8f,
                         scoring, 5),
                 null,
-                new DAlignerParameters(GeneFeature.DRegion, 0.85f, 30.0f, 3, scoring)
+                new DClonalAlignerParameters(0.85f, 30.0f, 3, scoring)
         );
 
         CloneAssemblerParameters assemblerParameters = new CloneAssemblerParameters(
                 new GeneFeature[]{GeneFeature.CDR3}, 12,
                 QualityAggregationType.Average,
-                new CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
+                new CloneClusteringParameters(2, 1, -1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
                 factoryParameters, true, true, false, 0.4, 2.0, 2.0, true, (byte) 20, .8, "2 of 6", (byte) 15);
 
         System.out.println(GlobalObjectMappers.toOneLine(assemblerParameters));
 
-        CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(alignmentsProvider,
-                new CloneAssembler(assemblerParameters, true, aligner.getUsedGenes(), alignerParameters), 2);
+        CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(
+                PreCloneReader.fromAlignments(alignmentsProvider, assemblerParameters.getAssemblingFeatures()),
+                new CloneAssembler(assemblerParameters, true, aligner.getUsedGenes(), alignerParameters));
         SmartProgressReporter.startProgressReport(assemblerRunner);
         assemblerRunner.run();
 
-        CloneSet cloneSet = assemblerRunner.getCloneSet(null);
+        CloneSet cloneSet = assemblerRunner.getCloneSet(alignerParameters, TagsInfo.NO_TAGS);
 
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        try (ClnsWriter writer = new ClnsWriter(null, cloneSet, bos)) {
-            writer.write();
+        File tmpClnsFile = TempFileManager.getTempFile();
+
+        try (ClnsWriter writer = new ClnsWriter(tmpClnsFile)) {
+            writer.writeCloneSet(null, cloneSet);
         }
 
-        CloneSet cloneSetDeserialized = CloneSetIO.readClns(new ByteArrayInputStream(bos.toByteArray()));
+        CloneSet cloneSetDeserialized = CloneSetIO.read(tmpClnsFile);
 
         assertCSEquals(cloneSet, cloneSetDeserialized);
 
@@ -148,12 +131,12 @@ public class CloneAssemblerRunnerTest {
 
     private static void assertCSEquals(CloneSet expected, CloneSet actual) {
         Assert.assertEquals(expected.getClones().size(), actual.getClones().size());
-        Assert.assertEquals(expected.getTotalCount(), actual.getTotalCount());
+        Assert.assertEquals(expected.getTotalCount(), actual.getTotalCount(), 0.1);
         Assert.assertArrayEquals(expected.getAssemblingFeatures(), actual.getAssemblingFeatures());
 
         for (GeneType geneType : GeneType.values())
-            Assert.assertEquals(expected.getAlignedGeneFeature(geneType),
-                    actual.getAlignedGeneFeature(geneType));
+            Assert.assertEquals(expected.getFeatureToAlign(geneType),
+                    actual.getFeatureToAlign(geneType));
 
         for (int i = 0; i < expected.getClones().size(); ++i)
             Assert.assertEquals(expected.getClones().get(i), actual.getClones().get(i));
