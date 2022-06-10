@@ -18,6 +18,7 @@ import org.junit.Test
 import java.io.File
 import java.nio.file.Paths
 import kotlin.random.Random
+import kotlin.system.exitProcess
 
 class Scoring {
     @Test
@@ -320,6 +321,24 @@ class Scoring {
                 )
                 println("actual: " + allelesSearcher.search(clones).map { "'${it.allele.encode(",")}'" })
                 println()
+                if (false && geneId.startsWith("IGHV4-61")) {
+                    clones
+                        .groupBy { it.mutations }
+                        .mapValues { (_, value) -> value.size to value.map { it.clusterIdentity }.distinct().count() }
+                        .entries
+                        .sortedBy { it.key.size() }
+                        .forEach { (key, value) ->
+                            println(
+                                "c: ${
+                                    String.format(
+                                        "%3d",
+                                        value.first
+                                    )
+                                } d: ${String.format("%2d", value.second)} ${key.encode(",")}"
+                            )
+                        }
+                    exitProcess(0)
+                }
                 return@forEach
 
                 if (geneId == "IGHV4-59*00") {

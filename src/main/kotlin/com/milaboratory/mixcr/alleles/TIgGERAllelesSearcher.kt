@@ -24,6 +24,7 @@ class TIgGERAllelesSearcher(
     private val minPValue = 0.95
     private val minYIntersect = 0.125
     private val portionOfClonesToSearchCommonMutationsInAnAllele = 0.99
+    private val maxMutationsCountToTestForPossibleZeroAllele = 5
 
     override fun search(clones: List<CloneDescription>): List<AllelesSearcher.Result> {
         val mutations = clones.flatMap { it.mutations.asSequence() }.distinct()
@@ -48,7 +49,7 @@ class TIgGERAllelesSearcher(
     private fun enrichAllelesWithMutationsThatExistsInAlmostAllClones(
         alleles: Collection<Mutations<NucleotideSequence>>,
         clones: List<CloneDescription>
-    ) = alignClonesOnAlleles(clones, alleles)
+    ) = alignClonesOnAlleles(clones, alleles, addZeroAllele = false)
         .map { (allele, clones) ->
             if (clones.diversity() < minDiversityForMutation) {
                 return@map allele
@@ -70,7 +71,7 @@ class TIgGERAllelesSearcher(
         EMPTY_NUCLEOTIDE_MUTATIONS in foundAlleles -> foundAlleles
         //check if there are enough clones that more close to zero allele
         else -> {
-            val alleleDiversities = alignClonesOnAlleles(clones, foundAlleles + EMPTY_NUCLEOTIDE_MUTATIONS)
+            val alleleDiversities = alignClonesOnAlleles(clones, foundAlleles, addZeroAllele = true)
                 .mapValues { it.value.diversity() }
             val diversityOfZeroAllele = alleleDiversities[EMPTY_NUCLEOTIDE_MUTATIONS]!!
             val minDiversityOfNotZeroAllele =
@@ -93,11 +94,19 @@ class TIgGERAllelesSearcher(
 
     private fun alignClonesOnAlleles(
         clones: List<CloneDescription>,
-        alleles: Collection<Mutations<NucleotideSequence>>
+        alleles: Collection<Mutations<NucleotideSequence>>,
+        addZeroAllele: Boolean
     ): Map<Mutations<NucleotideSequence>, List<CloneDescription>> {
-        val alleleClones = alleles.associateWith { mutableListOf<CloneDescription>() }
+        val alleleClones = when {
+            addZeroAllele -> alleles + EMPTY_NUCLEOTIDE_MUTATIONS
+            else -> alleles
+        }.associateWith { mutableListOf<CloneDescription>() }
         clones.forEach { clone ->
-            val alignedOn = alleles.maxWithOrNull(
+            val tryToAlignOn = when {
+                addZeroAllele && clone.mutations.size() <= maxMutationsCountToTestForPossibleZeroAllele -> alleles + EMPTY_NUCLEOTIDE_MUTATIONS
+                else -> alleles
+            }
+            val alignedOn = tryToAlignOn.maxWithOrNull(
                 Comparator.comparing<Mutations<NucleotideSequence>, Int> { allele ->
                     AlignmentUtils.calculateScore(
                         sequence1,

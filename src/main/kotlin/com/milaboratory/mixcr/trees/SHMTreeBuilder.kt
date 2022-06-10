@@ -285,7 +285,7 @@ class SHMTreeBuilder(
             .filter { treeWithMetaBuilder -> treeWithMetaBuilder.clonesCount() >= parameters.hideTreesLessThanSize }
             .map { treeWithMetaBuilder ->
                 TreeWithMeta(
-                    treeWithMetaBuilder.buildResult(),
+                    treeWithMetaBuilder.buildResultOld(),
                     treeWithMetaBuilder.rootInfo,
                     treeWithMetaBuilder.treeId
                 )

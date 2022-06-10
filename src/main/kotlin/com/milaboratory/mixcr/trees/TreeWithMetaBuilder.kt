@@ -61,7 +61,7 @@ class TreeWithMetaBuilder(
         return oldestReconstructedAncestor.content
     }
 
-    fun buildResult(): Tree<CloneOrFoundAncestorOld> {
+    fun buildResultOld(): Tree<CloneOrFoundAncestorOld> {
         val reconstructedRoot = oldestReconstructedAncestor()
         val fromGermlineToReconstructedRoot = reconstructedRoot.fromRootToThis
         return treeBuilder.tree
@@ -107,6 +107,30 @@ class TreeWithMetaBuilder(
                 }
             }
     }
+
+    fun buildResult(): Tree<CloneOrFoundAncestor> = treeBuilder.tree
+        .map { _, node ->
+            val mutationsSet = node.convert({ it.mutationsSet }, { it.fromRootToThis })
+            val cloneInfo = node.convert(
+                { c ->
+                    val cloneWrapper = c.clone
+                    CloneOrFoundAncestor.CloneInfo(
+                        cloneWrapper.clone.id,
+                        cloneWrapper.clone.count,
+                        cloneWrapper.clone.getBestHit(GeneType.Constant)?.gene?.name,
+                        cloneWrapper.datasetId
+                    )
+                }
+            ) {
+                null
+            }
+            CloneOrFoundAncestor(
+                node.id,
+                cloneInfo,
+                emptyArray(),
+                EnumMap(GeneType::class.java)
+            )
+        }
 
     private fun asMutations(parent: ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, SyntheticNode>): MutationsSet {
         return parent.convert({ it.mutationsSet }) { it.fromRootToThis }
