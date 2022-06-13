@@ -41,6 +41,8 @@ class Scoring {
             mkReader("D01_p02_PBL_2"),
             mkReader("D01_p02_PL_1"),
             mkReader("D01_p02_PL_2"),
+            mkReader("D01_p02_Bmem_1"),
+            mkReader("D01_p02_Bmem_3"),
             mkReader("D01_p03_Bmem_1"),
             mkReader("D01_p03_Bmem_2"),
             mkReader("D01_p03_PBL_1"),
@@ -54,10 +56,10 @@ class Scoring {
         output.delete()
         output.appendText("VGene;mutation;mutationDiversity;withMutationCount;withoutMutationCount;connectionsCount;similarCDR3Count;sumOfCDR3Score;verySimilarCDR3Count;sumOfVerySimilarCDR3Scores;similarCDR3AndHaveCommonMutation\n")
 
-//        val datasets = allDatasets
-        val datasets = listOf(
-            mkReader("D01_p01_Btot_1")
-        )
+        val datasets = allDatasets
+//        val datasets = listOf(
+//            mkReader("D01_p01_Btot_1")
+//        )
         val allelesBuilder = AllelesBuilder(
             FindAllelesParametersPresets.getByName("default")!!,
             datasets
@@ -321,7 +323,7 @@ class Scoring {
                 )
                 println("actual: " + allelesSearcher.search(clones).map { "'${it.allele.encode(",")}'" })
                 println()
-                if (false && geneId.startsWith("IGHV4-61")) {
+                if (false && geneId.startsWith("IGHV4-28")) {
                     clones
                         .groupBy { it.mutations }
                         .mapValues { (_, value) -> value.size to value.map { it.clusterIdentity }.distinct().count() }

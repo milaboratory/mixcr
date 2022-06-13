@@ -72,11 +72,10 @@ class SHMTreeBuilder(
         datasets[0].assemblerParameters.cloneFactoryParameters.vParameters.scoring
     private val JScoring: AlignmentScoring<NucleotideSequence> =
         datasets[0].assemblerParameters.cloneFactoryParameters.jParameters.scoring
-    private var decisions: MutableMap<Int, MutableMap<VJBase, TreeWithMetaBuilder.DecisionInfo>> =
-        ConcurrentHashMap()
-    private var currentTrees: MutableMap<VJBase, List<TreeWithMetaBuilder.Snapshot>> = ConcurrentHashMap()
-    private val idGenerators: MutableMap<VJBase, IdGenerator> = ConcurrentHashMap()
-    private val calculatedClustersInfo: MutableMap<VJBase, CalculatedClusterInfo> = ConcurrentHashMap()
+    private var decisions = ConcurrentHashMap<Int, Map<VJBase, TreeWithMetaBuilder.DecisionInfo>>()
+    private var currentTrees = ConcurrentHashMap<VJBase, List<TreeWithMetaBuilder.Snapshot>>()
+    private val idGenerators = ConcurrentHashMap<VJBase, IdGenerator>()
+    private val calculatedClustersInfo = ConcurrentHashMap<VJBase, CalculatedClusterInfo>()
 
     fun cloneWrappersCount(): Int {
         var cloneWrappersCount = 0
@@ -209,31 +208,19 @@ class SHMTreeBuilder(
         val clonesToRemove: MutableMap<VJBase, MutableSet<Int>> = HashMap()
         decisions.forEach { (cloneId, decisions) ->
             val chosenDecision: VJBase = ClusterProcessor.makeDecision(decisions)
-            decisions.keys.stream()
+            decisions.keys
                 .filter { it != chosenDecision }
                 .forEach { VJBase ->
                     clonesToRemove.computeIfAbsent(VJBase) { HashSet() }.add(cloneId)
                 }
         }
-        currentTrees = currentTrees.entries.stream()
-            .collect(
-                Collectors.toMap(
-                    { (key, _) -> key },
-                    { (key, value) ->
-                        value.stream()
-                            .map { snapshot ->
-                                snapshot.excludeClones(
-                                    clonesToRemove.getOrDefault(
-                                        key, emptySet()
-                                    )
-                                )
-                            }
-                            .filter { snapshot -> snapshot.clonesAdditionHistory.size > 1 }
-                            .collect(Collectors.toList())
-                    })
-            )
+        currentTrees = currentTrees.mapValuesTo(ConcurrentHashMap()) { (key, value) ->
+            value
+                .map { snapshot -> snapshot.excludeClones(clonesToRemove[key] ?: emptySet()) }
+                .filter { snapshot -> snapshot.clonesAdditionHistory.size > 1 }
+        }
         val clonesWasAdded = decisions.size
-        decisions = HashMap()
+        decisions = ConcurrentHashMap()
         return clonesWasAdded
     }
 
@@ -249,9 +236,7 @@ class SHMTreeBuilder(
         val result = clusterProcessor.buildTreeTopParts(relatedAllelesMutations)
         currentTrees[VJBase] = result.snapshots
         result.decisions.forEach { (cloneId, decision) ->
-            decisions.computeIfAbsent(
-                cloneId
-            ) { ConcurrentHashMap() }[VJBase] = decision
+            decisions.merge(cloneId, mapOf(VJBase to decision)) { a, b -> a + b }
         }
         XSV.writeXSVBody(debug, result.nodesDebugInfo, DebugInfo.COLUMNS_FOR_XSV, ";")
     }
@@ -270,7 +255,7 @@ class SHMTreeBuilder(
         val result = clusterProcessor.applyStep(step, currentTrees)
         this.currentTrees[VJBase] = result.snapshots
         result.decisions.forEach { (cloneId, decision) ->
-            decisions.computeIfAbsent(cloneId) { ConcurrentHashMap() }[VJBase] = decision
+            decisions.merge(cloneId, mapOf(VJBase to decision)) { a, b -> a + b }
         }
         XSV.writeXSVBody(debugOfCurrentStep, result.nodesDebugInfo, DebugInfo.COLUMNS_FOR_XSV, ";")
     }

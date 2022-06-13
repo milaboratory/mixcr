@@ -66,8 +66,6 @@ import io.repseq.dto.VDJCLibraryData
 import org.apache.commons.io.FilenameUtils
 import picocli.CommandLine
 import java.io.File
-import java.io.FileNotFoundException
-import java.io.IOException
 import java.io.PrintStream
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -91,23 +89,8 @@ outputs for '/some/folder1/input_file.clns /some/folder2/input_file2.clns {file_
 Resulted outputs must be uniq"""]
     )
     private val inOut: List<String> = ArrayList()
-    public override fun getInputFiles(): List<String> {
-        return inOut.subList(0, inOut.size - 1)
-    }
 
-    public override fun getOutputFiles(): List<String> = when {
-        libraryOutput != null -> outputClnsFiles() + libraryOutput!!
-        else -> outputClnsFiles()
-    }
-
-    @CommandLine.Option(description = ["Processing threads"], names = ["-t", "--threads"])
-    var threads = Runtime.getRuntime().availableProcessors()
-        set(value) {
-            if (value <= 0) throwValidationException("-t / --threads must be positive")
-            field = value
-        }
-
-    private fun outputClnsFiles(): List<String> {
+    private val outputClnsFiles: List<String> by lazy {
         val template = inOut[inOut.size - 1]
         if (!template.endsWith(".clns")) {
             throwValidationException("Wrong template: command produces only clns $template")
@@ -116,15 +99,31 @@ Resulted outputs must be uniq"""]
             .map { Paths.get(it).toAbsolutePath() }
             .map { path: Path ->
                 template
-                    .replace("\\{file_name}".toRegex(), FilenameUtils.removeExtension(path.fileName.toString()))
-                    .replace("\\{file_dir_path}".toRegex(), path.parent.toString())
+                    .replace(Regex("\\{file_name}"), FilenameUtils.removeExtension(path.fileName.toString()))
+                    .replace(Regex("\\{file_dir_path}"), path.parent.toString())
             }
             .toList()
         if (clnsFiles.distinct().count() < clnsFiles.size) {
             throwValidationException("Output clns files are not uniq: $clnsFiles")
         }
-        return clnsFiles
+        clnsFiles
     }
+
+    public override fun getInputFiles(): List<String> {
+        return inOut.subList(0, inOut.size - 1)
+    }
+
+    public override fun getOutputFiles(): List<String> = when {
+        libraryOutput != null -> outputClnsFiles + libraryOutput!!
+        else -> outputClnsFiles
+    }
+
+    @CommandLine.Option(description = ["Processing threads"], names = ["-t", "--threads"])
+    var threads = Runtime.getRuntime().availableProcessors()
+        set(value) {
+            if (value <= 0) throwValidationException("-t / --threads must be positive")
+            field = value
+        }
 
     @CommandLine.Option(description = ["File to write library with found alleles."], names = ["--export-library"])
     var libraryOutput: String? = null
@@ -178,15 +177,31 @@ Resulted outputs must be uniq"""]
             libraryOutputFile.parentFile.mkdirs()
             GlobalObjectMappers.getOneLine().writeValue(libraryOutputFile, resultLibrary.data)
         }
+        val allelesMapping = alleles.mapValues { (_, geneDatum) ->
+            geneDatum.map { resultLibrary[it.name].id }
+        }
+        val allelesStatistics = mutableMapOf<String, Int>()
+        cloneReaders.forEachIndexed { i, cloneReader ->
+            val mapperClones = rebuildClones(resultLibrary, allelesMapping, cloneReader)
+            mapperClones.forEach { clone ->
+                for (geneType in arrayOf(Variable, Joining)) {
+                    allelesStatistics.increment(clone.getBestHit(geneType).gene.name)
+                    allelesStatistics.increment(clone.getBestHit(geneType).gene.geneName)
+                }
+            }
+            File(outputClnsFiles[i]).writeMappedClones(mapperClones, resultLibrary, cloneReader)
+        }
         if (allelesMutationsOutput != null) {
             File(allelesMutationsOutput!!).parentFile.mkdirs()
-            printAllelesMutationsOutput(resultLibrary)
+            printAllelesMutationsOutput(resultLibrary, allelesStatistics)
         }
-        writeResultClnsFiles(cloneReaders, alleles, resultLibrary)
     }
 
-    @Throws(FileNotFoundException::class)
-    private fun printAllelesMutationsOutput(resultLibrary: VDJCLibrary) {
+    private fun <T> MutableMap<T, Int>.increment(key: T) {
+        merge(key, 0) { old, _ -> old + 1 }
+    }
+
+    private fun printAllelesMutationsOutput(resultLibrary: VDJCLibrary, allelesStatistics: Map<String, Int>) {
         PrintStream(allelesMutationsOutput!!).use { output ->
             val columns = mapOf<String, (VDJCGene) -> Any?>(
                 "geneName" to { it.name },
@@ -196,6 +211,12 @@ Resulted outputs must be uniq"""]
                 },
                 "mutations" to { gene ->
                     gene.data.baseSequence.mutations?.encode() ?: ""
+                },
+                "count" to { gene ->
+                    allelesStatistics[gene.name]
+                },
+                "totalCount" to { gene ->
+                    allelesStatistics[gene.geneName]
                 }
             )
             writeXSVHeaders(output, columns.keys, ";")
@@ -206,34 +227,25 @@ Resulted outputs must be uniq"""]
         }
     }
 
-    @Throws(IOException::class)
-    private fun writeResultClnsFiles(
-        cloneReaders: List<CloneReader>,
-        alleles: Map<String, List<VDJCGeneData>>,
-        resultLibrary: VDJCLibrary
+    private fun File.writeMappedClones(
+        clones: List<Clone>,
+        resultLibrary: VDJCLibrary,
+        cloneReader: CloneReader
     ) {
-        val allelesMapping = alleles.mapValues { (_, value) ->
-            value.map { resultLibrary[it.name].id }
-        }
-        val outputClnsFiles = outputClnsFiles()
-        cloneReaders.forEachIndexed { i, cloneReader ->
-            val outputFile = File(outputClnsFiles[i])
-            outputFile.parentFile.mkdirs()
-            val mapperClones = rebuildClones(resultLibrary, allelesMapping, cloneReader)
-            val cloneSet = CloneSet(
-                mapperClones,
-                resultLibrary.genes,
-                cloneReader.alignerParameters,
-                cloneReader.assemblerParameters,
-                cloneReader.ordering()
+        parentFile.mkdirs()
+        val cloneSet = CloneSet(
+            clones,
+            resultLibrary.genes,
+            cloneReader.alignerParameters,
+            cloneReader.assemblerParameters,
+            cloneReader.ordering()
+        )
+        ClnsWriter(this).use { clnsWriter ->
+            clnsWriter.writeCloneSet(
+                cloneReader.pipelineConfiguration,
+                cloneSet,
+                listOf(resultLibrary)
             )
-            ClnsWriter(outputFile).use { clnsWriter ->
-                clnsWriter.writeCloneSet(
-                    cloneReader.pipelineConfiguration,
-                    cloneSet,
-                    listOf(resultLibrary)
-                )
-            }
         }
     }
 
@@ -305,7 +317,7 @@ Resulted outputs must be uniq"""]
         )
         val result = CUtils.orderedParallelProcessor(
             cloneReader.readClones(),
-            { clone: Clone -> rebuildClone(resultLibrary, allelesMapping, cloneFactory, clone) },
+            { clone -> rebuildClone(resultLibrary, allelesMapping, cloneFactory, clone) },
             Buffer.DEFAULT_SIZE,
             threads
         )
