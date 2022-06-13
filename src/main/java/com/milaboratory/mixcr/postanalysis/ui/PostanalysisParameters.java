@@ -236,7 +236,6 @@ public abstract class PostanalysisParameters {
                     throw new IllegalArgumentException("Tag " + tag + " not found in the input files.");
                 wt = new WeightFunctions.TagCount(i);
         }
-        ;
 
         switch (parts[0]) {
             case "count":

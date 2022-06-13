@@ -147,8 +147,12 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
         }
         if (preprocOut != null && !preprocOut.endsWith(".tsv") && !preprocOut.endsWith(".csv"))
             throwValidationException("--preproc-tables: table name should ends with .csv or .tsv");
+        if (preprocOut != null && preprocOut.startsWith("."))
+            throwValidationException("--preproc-tables: cant' start with \".\"");
         if (tablesOut != null && !tablesOut.endsWith(".tsv") && !tablesOut.endsWith(".csv"))
             throwValidationException("--tables: table name should ends with .csv or .tsv");
+        if (tablesOut != null && tablesOut.startsWith("."))
+            throwValidationException("--tables: cant' start with \".\"");
         if (metadata != null && !metadata.endsWith(".csv") && !metadata.endsWith(".tsv"))
             throwValidationException("Metadata should be .csv or .tsv");
         List<String> duplicates = getInputFiles().stream()
@@ -199,7 +203,7 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
 
     /** Get sample id from file name */
     static String getSampleId(String file) {
-        return Paths.get(file).getFileName().toString();
+        return Paths.get(file).toAbsolutePath().getFileName().toString();
     }
 
     private Map<String, List<Object>> _metadata = null;
@@ -295,6 +299,8 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
                 group.put(chainsColumn, metadata.get(chainsColumn).get(i));
 
             String sample = (String) metadata.get("sample").get(i);
+            if (meta2sample.get(sample) == null)
+                continue;
             samplesByGroup.computeIfAbsent(group, __ -> new ArrayList<>())
                     .add(meta2sample.get(sample));
         }

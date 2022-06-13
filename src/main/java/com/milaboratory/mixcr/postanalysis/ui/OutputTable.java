@@ -15,7 +15,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -117,7 +116,7 @@ public class OutputTable {
     public void writeCSV(Path dir, String prefix, String sep, String ext) {
         Object[][] rows2d = rows();
         Path outName = dir.resolve(prefix + name + ext);
-        try (BufferedWriter writer = Files.newBufferedWriter(outName, StandardOpenOption.CREATE)) {
+        try (BufferedWriter writer = Files.newBufferedWriter(outName)) {
             writer.write("");
             for (Object column : colIds) {
                 writer.write(sep);
