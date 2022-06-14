@@ -99,6 +99,8 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
         );
 
         df = filter(df);
+        if (df.rowsCount() == 0)
+            return;
 
         RefGroup rg = null;
         if (Objects.equals(refGroup, "all"))

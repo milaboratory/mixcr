@@ -124,8 +124,11 @@ object BasicStatistics {
         val correlationMethod: CorrelationMethod = CorrelationMethod.Pearson,
     )
 
-    fun parsePlotType(str: String) =
-        PlotType.values().find { it.cliName.lowercase().equals(str.lowercase()) }
+    fun parsePlotType(str: String?) =
+        if (str == null)
+            null
+        else
+            PlotType.values().find { it.cliName.lowercase() == str.lowercase() }
 
     private fun isCategorical(t: PlotType) = when (t) {
         Scatter -> false
