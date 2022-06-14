@@ -14,7 +14,6 @@ package com.milaboratory.mixcr.postanalysis.ui;
 import com.milaboratory.mixcr.postanalysis.additive.KeyFunctions;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -67,9 +66,7 @@ public abstract class GroupSummary<K> implements CharacteristicGroupOutputExtrac
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            VJUsage<?> vjUsage = (VJUsage<?>) o;
-            return true;
+            return o != null && getClass() == o.getClass();
         }
 
         @Override

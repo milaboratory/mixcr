@@ -36,7 +36,6 @@ import com.milaboratory.mixcr.postanalysis.preproc.OverlapPreprocessorAdapter;
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeCharacteristic;
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeKey;
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeKeyFunction;
-import com.milaboratory.mixcr.tests.IntegrationTest;
 import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.LambdaSemaphore;
 import io.repseq.core.GeneFeature;
@@ -44,9 +43,10 @@ import io.repseq.core.GeneType;
 import io.repseq.core.VDJCLibraryRegistry;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -168,7 +168,14 @@ public class PostanalysisSchemaIntegrationTest {
         System.out.println(result.getTable(individualPA.getGroup("VSpectratype")));
 
 
-        Object[][] vjUsages = result.getTable(individualPA.getGroup("vjUsage")).getOutputs().get(GroupSummary.key).rows();
+        OutputTable table = result.getTable(individualPA.getGroup("vjUsage")).getOutputs().get(GroupSummary.key);
+
+        ByteArrayOutputStream bs = new ByteArrayOutputStream();
+        table.writeCSV(new PrintStream(bs), "\t");
+        bs.close();
+        Assert.assertEquals(767, bs.toString().split("\n").length);
+//        table.writeCSV(System.out, "\t");
+        Object[][] vjUsages = table.rows();
         System.out.println(Arrays.deepToString(vjUsages));
     }
 

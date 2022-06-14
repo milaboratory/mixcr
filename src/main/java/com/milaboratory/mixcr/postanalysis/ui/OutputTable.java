@@ -11,14 +11,14 @@
  */
 package com.milaboratory.mixcr.postanalysis.ui;
 
-import java.io.BufferedWriter;
+
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -35,8 +35,16 @@ public class OutputTable {
     private final Map<Object, Integer> colId2idx;
     /** sparse cells */
     public final List<OutputTableCell> cells;
+    /** row string representation */
+    public Function<Object, String> rowStringer = Object::toString;
+    /** column string representation */
+    public Function<Object, String> colStringer = Object::toString;
+    ;
 
-    public OutputTable(String name, List<?> rowIds, List<?> colIds, List<OutputTableCell> cells) {
+    public OutputTable(String name,
+                       List<?> rowIds,
+                       List<?> colIds,
+                       List<OutputTableCell> cells) {
         this.name = name;
         this.rowIds = rowIds;
         this.colIds = colIds;
@@ -44,6 +52,17 @@ public class OutputTable {
         this.rowId2idx = IntStream.range(0, rowIds.size()).boxed().collect(Collectors.toMap(rowIds::get, i -> i));
         this.colId2idx = IntStream.range(0, colIds.size()).boxed().collect(Collectors.toMap(colIds::get, i -> i));
     }
+
+    public OutputTable withRowStringer(Function<Object, String> rowStringer) {
+        this.rowStringer = rowStringer;
+        return this;
+    }
+
+    public OutputTable withColStringer(Function<Object, String> colStringer) {
+        this.colStringer = colStringer;
+        return this;
+    }
+
 
     public int rowIdx(Object rowId) {
         return rowId2idx.get(rowId);
@@ -54,7 +73,7 @@ public class OutputTable {
     }
 
     public OutputTable reorder(List<?> rowIds, List<?> colIds) {
-        return new OutputTable(name, rowIds, colIds, cells);
+        return new OutputTable(name, rowIds, colIds, cells).withRowStringer(rowStringer).withColStringer(colStringer);
     }
 
     public double[][] drows(double naValue, double nan) {
@@ -114,26 +133,30 @@ public class OutputTable {
     }
 
     public void writeCSV(Path dir, String prefix, String sep, String ext) {
-        Object[][] rows2d = rows();
         Path outName = dir.resolve(prefix + name + ext);
-        try (BufferedWriter writer = Files.newBufferedWriter(outName)) {
-            writer.write("");
-            for (Object column : colIds) {
-                writer.write(sep);
-                writer.write(column.toString());
-            }
-
-            for (int iRow = 0; iRow < rowIds.size(); ++iRow) {
-                writer.write("\n");
-                writer.write(rowIds.get(iRow).toString());
-                Object[] row = rows2d[iRow];
-                for (Object val : row) {
-                    writer.write(sep);
-                    writer.write(Objects.toString(val));
-                }
-            }
+        try (PrintStream writer = new PrintStream(outName.toFile())) {
+            writeCSV(writer, sep);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public void writeCSV(PrintStream writer, String sep) {
+        Object[][] rows2d = rows();
+        writer.print("");
+        for (Object column : colIds) {
+            writer.print(sep);
+            writer.print(colStringer.apply(column));
+        }
+
+        for (int iRow = 0; iRow < rowIds.size(); ++iRow) {
+            writer.print("\n");
+            writer.print(rowStringer.apply(rowIds.get(iRow)));
+            Object[] row = rows2d[iRow];
+            for (Object val : row) {
+                writer.print(sep);
+                writer.print(val);
+            }
         }
     }
 }
