@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.postanalysis;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.mixcr.basictypes.Clone;
 
 import java.util.Objects;
@@ -45,12 +46,13 @@ public final class WeightFunctions {
     }
 
     public static final class TagCount implements WeightFunction<Clone> {
-        final int tagIndex;
+        @JsonProperty("tagIndex")
+        public final int tagIndex;
         @JsonIgnore
         final int[] indices;
 
         @JsonCreator
-        public TagCount(int tagIndex) {
+        public TagCount(@JsonProperty("tagIndex") int tagIndex) {
             this.tagIndex = tagIndex;
             this.indices = new int[tagIndex + 1];
             for (int i = 0; i < tagIndex + 1; i++)
