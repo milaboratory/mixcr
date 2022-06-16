@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
 package com.milaboratory.mixcr.postanalysis.downsampling;
 
 import cc.redberry.pipe.CUtils;
@@ -98,11 +109,9 @@ public class DownsamplingPreprocessorTest {
         DownsampleValueChooser dsChooser = counts -> Arrays.stream(counts).min().orElse(0);
 
         DownsamplingPreprocessor<TestObject> proc = new DownsamplingPreprocessor<>(
-                t -> Math.round(t.weight),
+                dsChooser, t -> Math.round(t.weight),
                 (t, w) -> new TestObject(t.value, 1d * w),
-                dsChooser,
                 true,
-                rng.nextLong(0, Long.MAX_VALUE / 2),
                 ""
         );
 

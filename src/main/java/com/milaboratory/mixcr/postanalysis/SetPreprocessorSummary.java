@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
 package com.milaboratory.mixcr.postanalysis;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -154,7 +165,7 @@ public class SetPreprocessorSummary {
                                    PostanalysisSchema<?> schema,
                                    PostanalysisResult result,
                                    String sep) {
-        if (schema.getAllCharacterisitcs().get(0) instanceof OverlapCharacteristic)
+        if (schema.isOverlap)
             overlapByCharToCSV(path, (PostanalysisSchema<OverlapGroup<Clone>>) schema, result, sep);
         else
             individualByCharToCSV(path, result, sep);
@@ -168,17 +179,16 @@ public class SetPreprocessorSummary {
                                           PostanalysisSchema<OverlapGroup<Clone>> schema,
                                           PostanalysisResult result,
                                           String sep) {
-        Map<HashSet<OverlapType>, OverlapCharacteristic<Clone>> m =
-                schema.getAllCharacterisitcs()
-                        .stream()
-                        .map(it -> (OverlapCharacteristic<Clone>) it)
-                        .collect(Collectors.toMap(
-                                it -> new HashSet<>(Arrays.asList(it.overlapTypes)),
-                                it -> it,
-                                (a, b) -> a));
+
+        Map<Set<OverlapType>, Characteristic<?, OverlapGroup<Clone>>> m = schema.getAllCharacterisitcs()
+                .stream()
+                .collect(Collectors.toMap(
+                        SetPreprocessorSummary::getOverlapTypes,
+                        it -> it,
+                        (a, b) -> a));
 
         List<List<Object>> rows = new ArrayList<>();
-        for (Map.Entry<HashSet<OverlapType>, OverlapCharacteristic<Clone>> eCh : m.entrySet()) {
+        for (Map.Entry<Set<OverlapType>, Characteristic<?, OverlapGroup<Clone>>> eCh : m.entrySet()) {
             String ch = eCh.getKey().stream().map(it -> it.name).collect(Collectors.joining("/"));
             String preproc = eCh.getValue().preprocessor.id();
             SetPreprocessorSummary preprocSummary = result.preprocSummary.get(preproc);
@@ -187,6 +197,13 @@ public class SetPreprocessorSummary {
         writeTable(rows, path, sep);
     }
 
+    @SuppressWarnings("unchecked")
+    private static Set<OverlapType> getOverlapTypes(Characteristic<?, OverlapGroup<Clone>> ch) {
+        if (ch instanceof Characteristic.CharacteristicWrapper)
+            return getOverlapTypes(((Characteristic.CharacteristicWrapper<?, OverlapGroup<Clone>>) ch).inner);
+        else
+            return new HashSet<>(Arrays.asList(((OverlapCharacteristic<Clone>) ch).overlapTypes));
+    }
 
     /**
      * Write preprocessing summary data to CSV file with columns characteristic | samples | ....

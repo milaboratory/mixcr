@@ -1,9 +1,19 @@
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
 package com.milaboratory.mixcr.postanalysis.ui;
 
 import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.postanalysis.Characteristic;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
-import com.milaboratory.mixcr.postanalysis.WeightFunctions;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapCharacteristic;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapType;
@@ -15,25 +25,29 @@ import java.util.stream.Collectors;
 public class PostanalysisParametersOverlap extends PostanalysisParameters {
     public static final String Overlap = "Overlap";
 
-    public PreprocessorParameters d = new PreprocessorParameters();
-    public PreprocessorParameters sharedClonotypes = new PreprocessorParameters();
-    public PreprocessorParameters f1 = new PreprocessorParameters();
-    public PreprocessorParameters f2 = new PreprocessorParameters();
-    public PreprocessorParameters jaccard = new PreprocessorParameters();
-    public PreprocessorParameters rIntersection = new PreprocessorParameters();
-    public PreprocessorParameters rAll = new PreprocessorParameters();
+    public MetricParameters d = new MetricParameters();
+    public MetricParameters sharedClonotypes = new MetricParameters();
+    public MetricParameters f1 = new MetricParameters();
+    public MetricParameters f2 = new MetricParameters();
+    public MetricParameters jaccard = new MetricParameters();
+    public MetricParameters rIntersection = new MetricParameters();
+    public MetricParameters rAll = new MetricParameters();
 
-    public List<CharacteristicGroup<?, OverlapGroup<Clone>>> getGroups(int nSamples) {
-        PostanalysisParametersOverlap base = this;
-        List<Characteristic<?, OverlapGroup<Clone>>> chars = groupByPreproc(
-                new HashMap<OverlapType, SetPreprocessorFactory<OverlapGroup<Clone>>>() {{
-                    put(OverlapType.D, d.overlapPreproc(base));
-                    put(OverlapType.SharedClonotypes, sharedClonotypes.overlapPreproc(base));
-                    put(OverlapType.F1, f1.overlapPreproc(base));
-                    put(OverlapType.F2, f2.overlapPreproc(base));
-                    put(OverlapType.Jaccard, jaccard.overlapPreproc(base));
-                    put(OverlapType.R_Intersection, rIntersection.overlapPreproc(base));
-                    put(OverlapType.R_All, rAll.overlapPreproc(base));
+    public List<CharacteristicGroup<?, OverlapGroup<Clone>>> getGroups(int nSamples, TagsInfo tagsInfo) {
+        for (MetricParameters m : Arrays.asList(d, sharedClonotypes, f1, f2, jaccard, rIntersection, rAll)) {
+            m.setParent(this);
+            m.setTagsInfo(tagsInfo);
+        }
+
+        List<Characteristic<?, OverlapGroup<Clone>>> chars = groupBy(
+                new HashMap<OverlapType, OverlapPreprocessorAndWeight<Clone>>() {{
+                    put(OverlapType.D, d.opwTuple());
+                    put(OverlapType.SharedClonotypes, sharedClonotypes.opwTuple());
+                    put(OverlapType.F1, f1.opwTuple());
+                    put(OverlapType.F2, f2.opwTuple());
+                    put(OverlapType.Jaccard, jaccard.opwTuple());
+                    put(OverlapType.R_Intersection, rIntersection.opwTuple());
+                    put(OverlapType.R_All, rAll.opwTuple());
                 }},
                 (p, l) -> {
                     List<OverlapCharacteristic<Clone>> overlaps = new ArrayList<>();
@@ -41,8 +55,8 @@ public class PostanalysisParametersOverlap extends PostanalysisParameters {
                         for (int j = i; j < nSamples; ++j) // j=i to include diagonal elements
                             overlaps.add(new OverlapCharacteristic<>(
                                     "overlap_" + i + "_" + j + " / " + l.stream().map(t -> t.name).collect(Collectors.joining(" / ")),
-                                    new WeightFunctions.Count(),
-                                    p,
+                                    p.weight,
+                                    p.preproc,
                                     l.toArray(new OverlapType[0]),
                                     i, j));
                     return overlaps;

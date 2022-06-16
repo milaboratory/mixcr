@@ -1,31 +1,13 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.basictypes;
 
@@ -34,20 +16,44 @@ import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
+import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.Serializer;
-import gnu.trove.impl.Constants;
-import gnu.trove.iterator.TObjectDoubleIterator;
-import gnu.trove.map.hash.TObjectDoubleHashMap;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
+import io.repseq.core.VDJCGeneId;
 
 import java.util.EnumMap;
 import java.util.Map;
 
 class IO {
+    public static class GeneAndScoreSerializer implements Serializer<GeneAndScore> {
+        @Override
+        public void write(PrimitivO output, GeneAndScore obj) {
+            output.writeObject(obj.geneId);
+            output.writeFloat(obj.score);
+        }
+
+        @Override
+        public GeneAndScore read(PrimitivI input) {
+            VDJCGeneId gene = input.readObject(VDJCGeneId.class);
+            float score = input.readFloat();
+            return new GeneAndScore(gene, score);
+        }
+
+        @Override
+        public boolean isReference() {
+            return true;
+        }
+
+        @Override
+        public boolean handlesReference() {
+            return false;
+        }
+    }
+
     public static class VDJCHitSerializer implements Serializer<VDJCHit> {
         @Override
         public void write(PrimitivO output, VDJCHit object) {
@@ -82,50 +88,13 @@ class IO {
         }
     }
 
-    public static class TagCounterSerializer implements Serializer<TagCounter> {
-        @Override
-        public void write(PrimitivO output, TagCounter object) {
-            output.writeInt(object.tags.size());
-            TObjectDoubleIterator<TagTuple> it = object.tags.iterator();
-            while (it.hasNext()) {
-                it.advance();
-                output.writeObject(it.key().tags);
-                output.writeDouble(it.value());
-            }
-        }
-
-        @Override
-        public TagCounter read(PrimitivI input) {
-            int len = input.readInt();
-            if (len == 0)
-                return TagCounter.EMPTY;
-            TObjectDoubleHashMap<TagTuple> r = new TObjectDoubleHashMap<>(len, Constants.DEFAULT_LOAD_FACTOR, 0.0);
-            for (int i = 0; i < len; ++i) {
-                String[] tags = input.readObject(String[].class);
-                double count = input.readDouble();
-                r.put(new TagTuple(tags), count);
-            }
-            return new TagCounter(r);
-        }
-
-        @Override
-        public boolean isReference() {
-            return true;
-        }
-
-        @Override
-        public boolean handlesReference() {
-            return false;
-        }
-    }
-
     public static class VDJCAlignmentsSerializer implements Serializer<VDJCAlignments> {
         @Override
         public void write(PrimitivO output, VDJCAlignments object) {
             output.writeObject(object.targets);
             output.writeObject(object.originalReads);
             output.writeObject(object.history);
-            output.writeObject(object.tagCounter);
+            output.writeObject(object.tagCount);
             output.writeByte(object.hits.size());
             for (Map.Entry<GeneType, VDJCHit[]> entry : object.hits.entrySet()) {
                 output.writeObject(entry.getKey());
@@ -133,7 +102,7 @@ class IO {
             }
             output.writeByte(object.mappingType);
             if (!ReadToCloneMapping.isDropped(object.mappingType))
-                output.writeVarInt(object.cloneIndex);
+                output.writeVarLong(object.cloneIndex);
         }
 
         @Override
@@ -141,7 +110,7 @@ class IO {
             NSequenceWithQuality[] targets = input.readObject(NSequenceWithQuality[].class);
             SequenceRead[] originalReads = input.readObject(SequenceRead[].class);
             SequenceHistory[] history = input.readObject(SequenceHistory[].class);
-            TagCounter tagCounter = input.readObject(TagCounter.class);
+            TagCount tagCount = input.readObject(TagCount.class);
             int size = input.readByte();
             EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
             for (int i = 0; i < size; i++) {
@@ -151,10 +120,10 @@ class IO {
                 hits.put(key, input.readObject(VDJCHit[].class));
             }
             byte mappingType = input.readByte();
-            int cloneIndex = -1;
+            long cloneIndex = -1;
             if (!ReadToCloneMapping.isDropped(mappingType))
-                cloneIndex = input.readVarInt();
-            return new VDJCAlignments(hits, tagCounter, targets, history, originalReads, mappingType, cloneIndex);
+                cloneIndex = input.readVarLong();
+            return new VDJCAlignments(hits, tagCount, targets, history, originalReads, mappingType, cloneIndex);
         }
 
         @Override
@@ -172,7 +141,7 @@ class IO {
         @Override
         public void write(PrimitivO output, Clone object) {
             output.writeObject(object.targets);
-            output.writeObject(object.tagCounter);
+            output.writeObject(object.tagCount);
             output.writeByte(object.hits.size());
             for (Map.Entry<GeneType, VDJCHit[]> entry : object.hits.entrySet()) {
                 output.writeObject(entry.getKey());
@@ -186,7 +155,7 @@ class IO {
         @Override
         public Clone read(PrimitivI input) {
             NSequenceWithQuality[] targets = input.readObject(NSequenceWithQuality[].class);
-            TagCounter tagCounter = input.readObject(TagCounter.class);
+            TagCount tagCount = input.readObject(TagCount.class);
             int size = input.readByte();
             EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
             for (int i = 0; i < size; i++) {
@@ -196,7 +165,7 @@ class IO {
             double count = input.readDouble();
             int id = input.readInt();
             Integer group = input.readObject(Integer.class);
-            return new Clone(targets, hits, tagCounter, count, id, group);
+            return new Clone(targets, hits, tagCount, count, id, group);
         }
 
         @Override

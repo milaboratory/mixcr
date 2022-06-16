@@ -1,31 +1,13 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.assembler;
 
@@ -38,14 +20,14 @@ public final class ReadToCloneMapping {
     public static final byte DROPPED_WITH_CLONE_MASK = 1 << 2;
     public static final byte PRE_CLUSTERED_MASK = 1 << 3;
     public static final byte DROPPED_MASK = 1 << 4;
-    final long alignmentsId;
+    final long preCloneIdx;
     final int cloneIndex;
     final byte mappingType;
 
-    public ReadToCloneMapping(long alignmentsId, int cloneIndex, boolean clustered, boolean additionalMapping, boolean droppedWithClone, boolean preClustered) {
+    public ReadToCloneMapping(long preCloneIdx, int cloneIndex, boolean clustered, boolean additionalMapping, boolean droppedWithClone, boolean preClustered) {
         if (cloneIndex < 0)
             cloneIndex = -1;
-        this.alignmentsId = alignmentsId;
+        this.preCloneIdx = preCloneIdx;
         this.cloneIndex = cloneIndex;
         assert !droppedWithClone || cloneIndex < 0;
         this.mappingType = (byte) ((clustered ? CLUSTERED_MASK : 0)
@@ -59,8 +41,8 @@ public final class ReadToCloneMapping {
         return cloneIndex;
     }
 
-    public long getAlignmentsId() {
-        return alignmentsId;
+    public long getPreCloneIdx() {
+        return preCloneIdx;
     }
 
     public boolean isClustered() {
@@ -93,7 +75,7 @@ public final class ReadToCloneMapping {
 
     @Override
     public String toString() {
-        return isDropped() ? "" : "" + alignmentsId + " -> " + cloneIndex + " " + (isPreClustered() ? "p" : "") + (isClustered() ? "c" : "") + (isMapped() ? "m" : "");
+        return isDropped() ? "" : "" + preCloneIdx + " -> " + cloneIndex + " " + (isPreClustered() ? "p" : "") + (isClustered() ? "c" : "") + (isMapped() ? "m" : "");
     }
 
     @Override
@@ -103,14 +85,14 @@ public final class ReadToCloneMapping {
 
         ReadToCloneMapping that = (ReadToCloneMapping) o;
 
-        if (alignmentsId != that.alignmentsId) return false;
+        if (preCloneIdx != that.preCloneIdx) return false;
         if (cloneIndex != that.cloneIndex) return false;
         return mappingType == that.mappingType;
     }
 
     @Override
     public int hashCode() {
-        int result = (int) (alignmentsId ^ (alignmentsId >>> 32));
+        int result = (int) (preCloneIdx ^ (preCloneIdx >>> 32));
         result = 31 * result + cloneIndex;
         result = 31 * result + (int) mappingType;
         return result;
@@ -217,7 +199,7 @@ public final class ReadToCloneMapping {
             int c;
             if ((c = Integer.compare(o1.cloneIndex, o2.cloneIndex)) != 0)
                 return c;
-            if ((c = Long.compare(o1.alignmentsId, o2.alignmentsId)) != 0)
+            if ((c = Long.compare(o1.preCloneIdx, o2.preCloneIdx)) != 0)
                 return c;
             return Byte.compare(o1.mappingType, o2.mappingType);
         }
@@ -238,7 +220,7 @@ public final class ReadToCloneMapping {
         @Override
         public int compare(ReadToCloneMapping o1, ReadToCloneMapping o2) {
             int c;
-            if ((c = Long.compare(o1.alignmentsId, o2.alignmentsId)) != 0)
+            if ((c = Long.compare(o1.preCloneIdx, o2.preCloneIdx)) != 0)
                 return c;
             if ((c = Integer.compare(o1.cloneIndex, o2.cloneIndex)) != 0)
                 return c;

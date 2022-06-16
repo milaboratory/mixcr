@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
 package com.milaboratory.mixcr.postanalysis.diversity;
 
 import com.milaboratory.mixcr.postanalysis.Aggregator;
@@ -67,7 +78,7 @@ public class DiversityAggregator<T> implements Aggregator<DiversityMeasure, T> {
 
     /** Clonality, Gini and Shannon-Weiner */
     private List<MetricValue<DiversityMeasure>> computeClonality() {
-        if (!(measures.containsKey(ShannonWeiner)
+        if (!(measures.containsKey(ShannonWiener)
                 || measures.containsKey(NormalizedShannonWeinerIndex)
                 || measures.containsKey(InverseSimpson)
                 || measures.containsKey(Gini)))
@@ -88,8 +99,8 @@ public class DiversityAggregator<T> implements Aggregator<DiversityMeasure, T> {
         }
 
         List<MetricValue<DiversityMeasure>> result = new ArrayList<>();
-        if (measures.containsKey(ShannonWeiner))
-            result.add(new MetricValue<>(measures.get(ShannonWeiner), Math.exp(shannonWeinerIndex)));
+        if (measures.containsKey(ShannonWiener))
+            result.add(new MetricValue<>(measures.get(ShannonWiener), Math.exp(shannonWeinerIndex)));
         if (measures.containsKey(NormalizedShannonWeinerIndex))
             result.add(new MetricValue<>(measures.get(NormalizedShannonWeinerIndex), shannonWeinerIndex / Math.log(diversity)));
         if (measures.containsKey(InverseSimpson))

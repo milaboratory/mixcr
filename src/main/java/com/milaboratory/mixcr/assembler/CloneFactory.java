@@ -1,31 +1,13 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.assembler;
 
@@ -34,12 +16,11 @@ import com.milaboratory.core.alignment.*;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.basictypes.TagCounter;
+import com.milaboratory.mixcr.basictypes.GeneAndScore;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.mixcr.vdjaligners.SingleDAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
-import gnu.trove.iterator.TObjectFloatIterator;
-import gnu.trove.map.hash.TObjectFloatHashMap;
 import io.repseq.core.*;
 
 import java.util.*;
@@ -87,9 +68,10 @@ public final class CloneFactory {
     }
 
     public Clone create(int id, double count,
-                        EnumMap<GeneType, TObjectFloatHashMap<VDJCGeneId>> geneScores,
-                        TagCounter tagCounter,
-                        NSequenceWithQuality[] targets) {
+                        Map<GeneType, List<GeneAndScore>> geneScores,
+                        TagCount tagCount,
+                        NSequenceWithQuality[] targets,
+                        Integer group) {
         EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
         for (GeneType geneType : GeneType.VJC_REFERENCE) {
             VJCClonalAlignerParameters vjcParameters = parameters.getVJCParameters(geneType);
@@ -98,7 +80,7 @@ public final class CloneFactory {
 
             GeneFeature featureToAlign = featuresToAlign.get(geneType);
 
-            TObjectFloatHashMap<VDJCGeneId> gtGeneScores = geneScores.get(geneType);
+            List<GeneAndScore> gtGeneScores = geneScores.get(geneType);
             if (gtGeneScores == null)
                 continue;
 
@@ -121,10 +103,8 @@ public final class CloneFactory {
 
             VDJCHit[] result = new VDJCHit[gtGeneScores.size()];
             int pointer = 0;
-            TObjectFloatIterator<VDJCGeneId> iterator = gtGeneScores.iterator();
-            while (iterator.hasNext()) {
-                iterator.advance();
-                VDJCGene gene = usedGenes.get(iterator.key());
+            for (GeneAndScore gs : gtGeneScores) {
+                VDJCGene gene = usedGenes.get(gs.geneId);
                 Alignment<NucleotideSequence>[] alignments = new Alignment[assemblingFeatures.length];
                 for (int i = 0; i < assemblingFeatures.length; ++i) {
                     if (intersectingFeatures[i] == null)
@@ -209,8 +189,9 @@ public final class CloneFactory {
                         }
                     }
                 }
-                result[pointer++] = new VDJCHit(gene, alignments, featureToAlign, iterator.value());
+                result[pointer++] = new VDJCHit(gene, alignments, featureToAlign, gs.score);
             }
+            // might actually not be needed
             Arrays.sort(result, 0, pointer);
             hits.put(geneType, pointer < result.length ? Arrays.copyOf(result, pointer) : result);
         }
@@ -253,11 +234,11 @@ public final class CloneFactory {
         else
             hits.put(GeneType.Diversity, new VDJCHit[0]);
 
-        return new Clone(targets, hits, tagCounter, count, id, null);
+        return new Clone(targets, hits, tagCount, count, id, group);
     }
 
     public Clone create(int id, CloneAccumulator accumulator) {
-        return create(id, accumulator.getCount(), accumulator.geneScores, accumulator.tagBuilder.createAndDestroy(), accumulator.getSequence().sequences);
+        return create(id, accumulator.getCount(), accumulator.genes, accumulator.tagBuilder.createAndDestroy(), accumulator.getSequence().sequences, null);
     }
 
     private static boolean containsD(GeneFeature feature) {

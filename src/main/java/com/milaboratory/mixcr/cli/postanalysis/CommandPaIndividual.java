@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
 package com.milaboratory.mixcr.cli.postanalysis;
 
 import com.milaboratory.mixcr.basictypes.Clone;
@@ -11,7 +22,6 @@ import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine.Command;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Command(name = "individual",
@@ -30,9 +40,9 @@ public class CommandPaIndividual extends CommandPa {
         _parameters.defaultDownsampling = defaultDownsampling;
         _parameters.defaultDropOutliers = dropOutliers;
         _parameters.defaultOnlyProductive = onlyProductive;
+        _parameters.defaultWeightFunction = defaultWeightFunction;
         if (!overrides.isEmpty()) {
-            for (Map.Entry<String, String> o : overrides.entrySet())
-                _parameters = JsonOverrider.override(_parameters, PostanalysisParametersIndividual.class, overrides);
+            _parameters = JsonOverrider.override(_parameters, PostanalysisParametersIndividual.class, overrides);
             if (_parameters == null)
                 throwValidationException("Failed to override some parameter: " + overrides);
         }
@@ -42,8 +52,8 @@ public class CommandPaIndividual extends CommandPa {
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     PaResultByGroup run(IsolationGroup group, List<String> samples) {
-        List<CharacteristicGroup<?, Clone>> groups = getParameters().getGroups();
-        PostanalysisSchema<Clone> schema = new PostanalysisSchema<>(groups)
+        List<CharacteristicGroup<?, Clone>> groups = getParameters().getGroups(getTagsInfo());
+        PostanalysisSchema<Clone> schema = new PostanalysisSchema<>(false, groups)
                 .transform(ch -> ch.override(ch.name,
                         ch.preprocessor
                                 .filterFirst(new ElementPredicate.IncludeChains(group.chains.chains)))
@@ -56,7 +66,6 @@ public class CommandPaIndividual extends CommandPa {
                         new ClonotypeDataset(getSampleId(file), file, VDJCLibraryRegistry.getDefault())
                 ).collect(Collectors.toList());
 
-        System.out.println("Running for " + group);
         SmartProgressReporter.startProgressReport(runner);
         return new PaResultByGroup(group, schema, runner.run(datasets));
     }

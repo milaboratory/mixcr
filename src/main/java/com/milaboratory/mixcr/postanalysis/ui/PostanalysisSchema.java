@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
 package com.milaboratory.mixcr.postanalysis.ui;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -22,11 +33,15 @@ import java.util.stream.Stream;
         getterVisibility = JsonAutoDetect.Visibility.NONE,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE)
 public class PostanalysisSchema<T> {
+    @JsonProperty("isOverlap")
+    public final boolean isOverlap;
     @JsonProperty("tables")
     public final List<CharacteristicGroup<?, T>> tables;
 
     @JsonCreator
-    public PostanalysisSchema(@JsonProperty("tables") List<CharacteristicGroup<?, T>> tables) {
+    public PostanalysisSchema(@JsonProperty("isOverlap") boolean isOverlap,
+                              @JsonProperty("tables") List<CharacteristicGroup<?, T>> tables) {
+        this.isOverlap = isOverlap;
         this.tables = tables;
     }
 
@@ -36,7 +51,7 @@ public class PostanalysisSchema<T> {
                 .map(gr -> (CharacteristicGroup<?, T>) gr.transform(c -> (Characteristic) mapper.apply(c)));
         List<CharacteristicGroup<?, T>> collect = characteristicGroupStream
                 .collect(Collectors.<CharacteristicGroup<?, T>>toList());
-        return new PostanalysisSchema<>(collect);
+        return new PostanalysisSchema<>(isOverlap, collect);
     }
 
     public List<Characteristic<?, T>> getAllCharacterisitcs() {
@@ -58,12 +73,12 @@ public class PostanalysisSchema<T> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PostanalysisSchema<?> that = (PostanalysisSchema<?>) o;
-        return Objects.equals(tables, that.tables);
+        return isOverlap == that.isOverlap && Objects.equals(tables, that.tables);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(tables);
+        return Objects.hash(isOverlap, tables);
     }
 
     public PostanalysisResult run(List<Dataset<T>> datasets) {

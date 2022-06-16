@@ -1,37 +1,20 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.cli;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.sequence.quality.ReadTrimmerReport;
+import com.milaboratory.mitool.report.ParseReport;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerEventListener;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause;
@@ -47,6 +30,8 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
     private final ChainUsageStats chainStats = new ChainUsageStats();
     private final AtomicLongArray fails = new AtomicLongArray(VDJCAlignmentFailCause.values().length);
     private final AtomicLong successes = new AtomicLong(0);
+    // private final AtomicLong droppedNoBarcode = new AtomicLong(0);
+    // private final AtomicLong droppedBarcodeNotInWhitelist = new AtomicLong(0);
     private final AtomicLong chimeras = new AtomicLong(0);
     private final AtomicLong alignedSequenceOverlap = new AtomicLong(0);
     private final AtomicLong alignedAlignmentOverlap = new AtomicLong(0);
@@ -60,6 +45,8 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
     private final AtomicLong realignedWithForcedNonFloatingRightBoundInLeftRead = new AtomicLong(0);
     private final AtomicLong realignedWithForcedNonFloatingLeftBoundInRightRead = new AtomicLong(0);
     private ReadTrimmerReport trimmingReport;
+
+    private ParseReport tagReport;
 
     public AlignerReport() {
     }
@@ -80,6 +67,15 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
 
     public void setTrimmingReport(ReadTrimmerReport trimmingReport) {
         this.trimmingReport = trimmingReport;
+    }
+
+    // @JsonProperty("trimmingReport")
+    public ParseReport getTagReport() {
+        return tagReport;
+    }
+
+    public void setTagReport(ParseReport tagReport) {
+        this.tagReport = tagReport;
     }
 
     @JsonProperty("totalReadsProcessed")
@@ -138,6 +134,16 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
         return successes.get();
     }
 
+    // @JsonProperty("droppedNoBarcode")
+    // public long getDroppedNoBarcode() {
+    //     return droppedNoBarcode.get();
+    // }
+    //
+    // @JsonProperty("droppedBarcodeNotInWhitelist")
+    // public long getDroppedBarcodeNotInWhitelist() {
+    //     return droppedBarcodeNotInWhitelist.get();
+    // }
+
     @JsonProperty("alignmentAidedOverlaps")
     public long getAlignmentOverlaps() {
         return alignedAlignmentOverlap.get();
@@ -187,6 +193,14 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
     public long getRealignedWithForcedNonFloatingLeftBoundInRightRead() {
         return realignedWithForcedNonFloatingLeftBoundInRightRead.get();
     }
+
+    // public void onNoBarcode(SequenceRead read) {
+    //     droppedNoBarcode.incrementAndGet();
+    // }
+    //
+    // public void onBarcodeNotInWhitelist(SequenceRead read) {
+    //     droppedBarcodeNotInWhitelist.incrementAndGet();
+    // }
 
     @Override
     public void onFailedAlignment(SequenceRead read, VDJCAlignmentFailCause cause) {
@@ -276,6 +290,11 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
         helper.writeField("Total sequencing reads", total);
         helper.writePercentAndAbsoluteField("Successfully aligned reads", success, total);
 
+        // if (getDroppedBarcodeNotInWhitelist() != 0 || getDroppedNoBarcode() != 0) {
+        //     helper.writePercentAndAbsoluteField("Absent barcode", getDroppedNoBarcode(), total);
+        //     helper.writePercentAndAbsoluteField("Barcode not in whitelist", getDroppedBarcodeNotInWhitelist(), total);
+        // }
+
         if (getChimeras() != 0)
             helper.writePercentAndAbsoluteField("Chimeras", getChimeras(), total);
 
@@ -307,7 +326,7 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
         helper.writePercentAndAbsoluteField("Realigned with forced non-floating left bound in right read", getRealignedWithForcedNonFloatingLeftBoundInRightRead(), total);
 
         if (trimmingReport != null) {
-            assert trimmingReport.getAlignments() == total;
+            // assert trimmingReport.getAlignments() == total;
             helper.writePercentAndAbsoluteField("R1 Reads Trimmed Left", trimmingReport.getR1LeftTrimmedEvents(), total);
             helper.writePercentAndAbsoluteField("R1 Reads Trimmed Right", trimmingReport.getR1RightTrimmedEvents(), total);
             helper.writeField("Average R1 Nucleotides Trimmed Left", 1.0 * trimmingReport.getR1LeftTrimmedNucleotides() / total);
@@ -319,5 +338,8 @@ public final class AlignerReport extends AbstractCommandReport implements VDJCAl
                 helper.writeField("Average R2 Nucleotides Trimmed Right", 1.0 * trimmingReport.getR2RightTrimmedNucleotides() / total);
             }
         }
+
+        if (tagReport != null)
+            tagReport.writeReport(helper);
     }
 }

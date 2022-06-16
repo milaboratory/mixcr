@@ -1,11 +1,26 @@
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
 package com.milaboratory.mixcr.cli.postanalysis;
 
+import com.milaboratory.mixcr.basictypes.CloneSetIO;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.cli.ACommandWithOutputMiXCR;
 import com.milaboratory.mixcr.cli.CommonDescriptions;
-import com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingUtil;
+import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParameters;
 import com.milaboratory.util.StringUtil;
 import io.repseq.core.Chains;
+import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine;
+import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
@@ -14,6 +29,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.repseq.core.Chains.*;
@@ -32,7 +49,7 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
             names = {"--only-productive"})
     public boolean onlyProductive = false;
 
-    @Option(description = CommonDescriptions.DOWNSAMPLING_DROPO_UTLIERS,
+    @Option(description = CommonDescriptions.DOWNSAMPLING_DROP_OUTLIERS,
             names = {"--drop-outliers"})
     public boolean dropOutliers = false;
 
@@ -40,6 +57,11 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
             names = {"--default-downsampling"},
             required = true)
     public String defaultDownsampling;
+
+    @Option(description = CommonDescriptions.WEIGHT_FUNCTION,
+            names = {"--default-weight-function"},
+            required = false)
+    public String defaultWeightFunction;
 
     @Option(description = "Filter specified chains",
             names = {"--chains"})
@@ -87,18 +109,53 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
         return Collections.singletonList(out());
     }
 
+    private boolean tagsInfoInitialized;
+    private TagsInfo tagsInfo;
+
+    protected TagsInfo getTagsInfo() {
+        if (!tagsInfoInitialized) {
+            tagsInfoInitialized = true;
+            this.tagsInfo = extractTagsInfo(getInputFiles());
+        }
+        return tagsInfo;
+    }
+
+    static TagsInfo extractTagsInfo(List<String> l) {
+        Set<TagsInfo> set = new HashSet<>();
+        for (String in : l) {
+            try {
+                set.add(CloneSetIO.mkReader(Paths.get(in), VDJCLibraryRegistry.getDefault()).getTagsInfo());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        if (set.size() != 1) {
+            throw new IllegalArgumentException("Input files have different tags structure");
+        } else
+            return set.iterator().next();
+    }
+
     @Override
     public void validate() {
         super.validate();
         if (!out().endsWith(".json") && !out().endsWith(".json.gz"))
             throwValidationException("Output file name should ends with .json.gz or .json");
         try {
-            DownsamplingUtil.parseDownsampling(defaultDownsampling, dropOutliers, 0);
+            PostanalysisParameters.parseDownsampling(defaultDownsampling, getTagsInfo(), dropOutliers);
         } catch (Throwable t) {
-            throwValidationException("Illegal downsampling string: " + defaultDownsampling);
+            throwValidationException(t.getMessage());
         }
+        if (preprocOut != null && !preprocOut.endsWith(".tsv") && !preprocOut.endsWith(".csv"))
+            throwValidationException("--preproc-tables: table name should ends with .csv or .tsv");
+        if (tablesOut != null && !tablesOut.endsWith(".tsv") && !tablesOut.endsWith(".csv"))
+            throwValidationException("--tables: table name should ends with .csv or .tsv");
         if (metadata != null && !metadata.endsWith(".csv") && !metadata.endsWith(".tsv"))
             throwValidationException("Metadata should be .csv or .tsv");
+        List<String> duplicates = getInputFiles().stream()
+                .collect(Collectors.groupingBy(Function.identity())).entrySet().stream().filter(e -> e.getValue().size() > 1).map(Map.Entry::getKey)
+                .collect(toList());
+        if (duplicates.size() > 0)
+            throwValidationException("Duplicated samples detected: " + String.join(",", duplicates));
         if (metadata != null) {
             if (!metadata().containsKey("sample"))
                 throwValidationException("Metadata must contain 'sample' column");
@@ -108,8 +165,9 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
                     metadata().get("sample").stream()
                             .map(Object::toString).collect(toList())
             );
-            if (mapping.size() < samples.size() || mapping.values().stream().anyMatch(Objects::isNull))
-                throwValidationException("Metadata samples does not match input file names.");
+            if (mapping.size() < samples.size() || mapping.values().stream().anyMatch(Objects::isNull)) {
+                throwValidationException("Metadata samples does not match input file names: " + samples.stream().filter(s -> mapping.get(s) == null).collect(Collectors.joining(",")));
+            }
         }
     }
 
@@ -252,13 +310,14 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
         Chains c = Chains.parse(chains);
         String chainsColumn = chainsColumn();
         for (SamplesGroup group : groupSamples()) {
-            if (chainsColumn != null)
-                results.add(run(new IsolationGroup(
-                        Chains.getNamedChains(group.group.get(chainsColumn).toString()), group.group), group.samples));
-            else
+            if (chainsColumn != null) {
+                NamedChains mc = getNamedChains(group.group.get(chainsColumn).toString().toUpperCase());
+                if (c.intersects(mc.chains))
+                    results.add(run0(new IsolationGroup(mc, group.group), group.samples));
+            } else
                 for (NamedChains knownChains : CHAINS) {
                     if (c.intersects(knownChains.chains)) {
-                        results.add(run(new IsolationGroup(knownChains, group.group), group.samples));
+                        results.add(run0(new IsolationGroup(knownChains, group.group), group.samples));
                     }
                 }
         }
@@ -275,9 +334,14 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
         new CommandPaExportTablesPreprocSummary(result, preprocOut()).run0();
     }
 
+    private PaResultByGroup run0(IsolationGroup group, List<String> samples) {
+        System.out.println("Running for " + group.toString(chainsColumn() == null));
+        return run(group, samples);
+    }
+
     abstract PaResultByGroup run(IsolationGroup group, List<String> samples);
 
-    @CommandLine.Command(name = "postanalysis",
+    @Command(name = "postanalysis",
             separator = " ",
             description = "Run postanalysis routines.",
             subcommands = {

@@ -1,31 +1,13 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.cli;
 
@@ -33,11 +15,17 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.util.CountLimitingOutputPort;
 import cc.redberry.primitives.Filter;
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
+import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.SmartProgressReporter;
 import gnu.trove.set.hash.TLongHashSet;
@@ -145,7 +133,8 @@ public class CommandFilterAlignments extends ACommandWithSmartOverwriteWithSingl
                 sReads = new CountLimitingOutputPort<>(sReads, limit);
                 progress = SmartProgressReporter.extractProgress((CountLimitingOutputPort<?>) sReads);
             }
-            writer.header(reader.getParameters(), reader.getUsedGenes(), getFullPipelineConfiguration());
+            writer.header(reader.getParameters(), reader.getUsedGenes(),
+                    getFullPipelineConfiguration(), reader.getTagsInfo());
             SmartProgressReporter.startProgressReport("Filtering", progress);
             int total = 0, passed = 0;
             final AlignmentsFilter filter = getFilter();

@@ -50,8 +50,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'mixcr'
-copyright = u'2018, MiLaboratory, LLC'
-author = u'MiLaboratory, LLC'
+copyright = u'2022, MiLaboratories Inc'
+author = u'MiLaboratories Inc'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -247,7 +247,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
   (master_doc, 'mixcr.tex', u'MiXCR Documentation',
-   u'MiLaboratory', 'manual'),
+   u'MiLaboratories', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
