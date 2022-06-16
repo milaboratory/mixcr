@@ -46,9 +46,9 @@ interface ClusteringCriteria {
         }
 
         override fun clusteringComparator(): Comparator<CloneWrapper> = Comparator
-            .comparing { c: CloneWrapper -> c.VJBase.VGeneName }
-            .thenComparing { c: CloneWrapper -> c.VJBase.JGeneName }
-            .thenComparing { c: CloneWrapper -> c.clone.ntLengthOf(GeneFeature.CDR3) }
+            .comparing { c: CloneWrapper -> c.VJBase.VGeneId.name }
+            .thenComparing { c -> c.VJBase.JGeneId.name }
+            .thenComparing { c -> c.clone.ntLengthOf(GeneFeature.CDR3) }
     }
 
     companion object {

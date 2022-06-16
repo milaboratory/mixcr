@@ -36,43 +36,44 @@ internal object MutationsUtils {
         return Range(from, to)
     }
 
-    fun mutationsBetween(first: MutationsSet, second: MutationsSet): MutationsDescription = MutationsDescription(
-        mutationsBetween(first.VMutations, second.VMutations),
-        difference(
-            first.VMutations.partInCDR3.mutations,
-            second.VMutations.partInCDR3.mutations,
-            first.VMutations.sequence1,
-            first.VMutations.partInCDR3.range
-        ),
-        difference(
-            first.NDNMutations.mutations,
-            second.NDNMutations.mutations,
-            first.NDNMutations.base,
-            Range(0, first.NDNMutations.base.size())
-        ),
+    fun mutationsBetween(rootInfo: RootInfo, first: MutationsSet, second: MutationsSet): MutationsDescription =
+        MutationsDescription(
+            mutationsBetween(rootInfo.VSequence, first.VMutations, second.VMutations),
+            difference(
+                first.VMutations.partInCDR3.mutations,
+                second.VMutations.partInCDR3.mutations,
+                rootInfo.VSequence,
+                rootInfo.VRangeInCDR3
+            ),
+            difference(
+                first.NDNMutations.mutations,
+                second.NDNMutations.mutations,
+                rootInfo.reconstructedNDN,
+                Range(0, rootInfo.reconstructedNDN.size())
+            ),
         difference(
             first.JMutations.partInCDR3.mutations,
             second.JMutations.partInCDR3.mutations,
-            first.JMutations.sequence1,
-            first.JMutations.partInCDR3.range
+            rootInfo.JSequence,
+            rootInfo.JRangeInCDR3
         ),
-        mutationsBetween(first.JMutations, second.JMutations)
+            mutationsBetween(rootInfo.JSequence, first.JMutations, second.JMutations)
     )
 
     private fun mutationsBetween(
+        sequence1: NucleotideSequence,
         firstMutations: GeneMutations,
         secondMutations: GeneMutations
-    ): Map<Range, MutationsWithRange> {
-        return fold(firstMutations.mutations, secondMutations.mutations) { base, comparison, range ->
-            difference(base, comparison, firstMutations.sequence1, range)
+    ): Map<Range, MutationsWithRange> =
+        fold(firstMutations.mutations, secondMutations.mutations) { base, comparison, range ->
+            difference(base, comparison, sequence1, range)
         }
-    }
 
     private fun difference(
         base: Mutations<NucleotideSequence>,
         comparison: Mutations<NucleotideSequence>,
         sequence: NucleotideSequence,
-        range: Range
+        range: Range = Range(0, sequence.size())
     ): MutationsWithRange {
         val sequence1 = buildSequence(sequence, base, range)
         return MutationsWithRange(

@@ -20,6 +20,8 @@ import com.milaboratory.mixcr.trees.MutationsUtils.buildSequence
 import com.milaboratory.mixcr.util.extractAbsoluteMutations
 import io.kotest.matchers.shouldBe
 import io.repseq.core.GeneType
+import io.repseq.core.VDJCGeneId
+import io.repseq.core.VDJCLibraryId
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Ignore
@@ -31,6 +33,14 @@ import java.util.stream.IntStream
 import kotlin.random.Random
 
 class RebaseClonesTest {
+    private val scoringSet = ScoringSet(
+        AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
+        NDNScoring(),
+        AffineGapAlignmentScoring.getNucleotideBLASTScoring()
+    )
+
+    private val vdjcLibraryId = VDJCLibraryId("human", 0)
+
     @Ignore
     @Test
     fun randomizedTestForRebaseMutations() {
@@ -83,53 +93,52 @@ class RebaseClonesTest {
         val JSequence = oneLetterSequence(G, 50)
         val clonesRebase = ClonesRebase(
             VSequence,
-            AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-            NDNScoring(),
             JSequence,
-            AffineGapAlignmentScoring.getNucleotideBLASTScoring()
+            scoringSet
         )
         val originalNode = MutationsSet(
             VGeneMutations(
-                VSequence,
                 mapOf(Range(0, 10) to EMPTY_NUCLEOTIDE_MUTATIONS),
                 PartInCDR3(Range(10, 15), EMPTY_NUCLEOTIDE_MUTATIONS)
             ),
             NDNMutations(
-                oneLetterSequence(N, 5),
                 Mutations(NucleotideSequence.ALPHABET, "SN0C,SN1C,SN2C,SN3C,SN4C")
             ),
             JGeneMutations(
-                JSequence,
                 PartInCDR3(Range(10, 30), EMPTY_NUCLEOTIDE_MUTATIONS),
                 mapOf(Range(30, 40) to EMPTY_NUCLEOTIDE_MUTATIONS)
             )
         )
-        originalNode.VMutations.buildPartInCDR3() shouldBe oneLetterSequence(T, 5)
-        originalNode.NDNMutations.buildSequence() shouldBe oneLetterSequence(C, 5)
-        originalNode.JMutations.buildPartInCDR3() shouldBe oneLetterSequence(G, 20)
         val originalRoot = RootInfo(
+            VSequence,
             Range(10, 15),
             oneLetterSequence(N, 5),
+            JSequence,
             Range(10, 30),
-            VJBase("VSome", "JSome", 20)
+            VJBase(VDJCGeneId(vdjcLibraryId, "VSome"), VDJCGeneId(vdjcLibraryId, "JSome"), 20)
         )
+        originalNode.VMutations.buildPartInCDR3(originalRoot) shouldBe oneLetterSequence(T, 5)
+        originalNode.NDNMutations.buildSequence(originalRoot) shouldBe oneLetterSequence(C, 5)
+        originalNode.JMutations.buildPartInCDR3(originalRoot) shouldBe oneLetterSequence(G, 20)
         val rebaseTo = RootInfo(
+            VSequence,
             Range(10, 25),
             oneLetterSequence(N, 10),
+            JSequence,
             Range(25, 30),
-            VJBase("VSome", "JSome", 20)
+            VJBase(VDJCGeneId(vdjcLibraryId, "VSome"), VDJCGeneId(vdjcLibraryId, "JSome"), 20)
         )
         val result = clonesRebase.rebaseMutations(
             originalNode,
             originalRoot,
             rebaseTo
         )
-        result.VMutations.buildPartInCDR3() shouldBe oneLetterSequence(T, 5)
+        result.VMutations.buildPartInCDR3(rebaseTo) shouldBe oneLetterSequence(T, 5)
             .concatenate(oneLetterSequence(C, 5))
             .concatenate(oneLetterSequence(G, 5))
 
-        result.NDNMutations.buildSequence() shouldBe oneLetterSequence(G, 10)
-        result.JMutations.buildPartInCDR3() shouldBe oneLetterSequence(G, 5)
+        result.NDNMutations.buildSequence(rebaseTo) shouldBe oneLetterSequence(G, 10)
+        result.JMutations.buildPartInCDR3(rebaseTo) shouldBe oneLetterSequence(G, 5)
     }
 
     @Test
@@ -138,50 +147,49 @@ class RebaseClonesTest {
         val JSequence = oneLetterSequence(G, 50)
         val clonesRebase = ClonesRebase(
             VSequence,
-            AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-            NDNScoring(),
             JSequence,
-            AffineGapAlignmentScoring.getNucleotideBLASTScoring()
+            scoringSet
         )
         val originalNode = MutationsSet(
             VGeneMutations(
-                VSequence,
                 mapOf(Range(0, 10) to EMPTY_NUCLEOTIDE_MUTATIONS),
                 PartInCDR3(Range(10, 25), EMPTY_NUCLEOTIDE_MUTATIONS)
             ),
             NDNMutations(
-                oneLetterSequence(N, 10),
                 Mutations(NucleotideSequence.ALPHABET, "SN0C,SN1C,SN2C,SN3C,SN4C,SN5C,SN6C,SN7C,SN8C,SN9C")
             ),
             JGeneMutations(
-                JSequence,
                 PartInCDR3(Range(25, 30), EMPTY_NUCLEOTIDE_MUTATIONS),
                 mapOf(Range(30, 40) to EMPTY_NUCLEOTIDE_MUTATIONS)
             )
         )
-        originalNode.VMutations.buildPartInCDR3() shouldBe oneLetterSequence(T, 15)
-        originalNode.NDNMutations.buildSequence() shouldBe oneLetterSequence(C, 10)
-        originalNode.JMutations.buildPartInCDR3() shouldBe oneLetterSequence(G, 5)
         val originalRoot = RootInfo(
+            VSequence,
             Range(10, 25),
             oneLetterSequence(N, 10),
+            JSequence,
             Range(25, 30),
-            VJBase("VSome", "JSome", 20)
+            VJBase(VDJCGeneId(vdjcLibraryId, "VSome"), VDJCGeneId(vdjcLibraryId, "JSome"), 20)
         )
+        originalNode.VMutations.buildPartInCDR3(originalRoot) shouldBe oneLetterSequence(T, 15)
+        originalNode.NDNMutations.buildSequence(originalRoot) shouldBe oneLetterSequence(C, 10)
+        originalNode.JMutations.buildPartInCDR3(originalRoot) shouldBe oneLetterSequence(G, 5)
         val rebaseTo = RootInfo(
+            VSequence,
             Range(10, 15),
             oneLetterSequence(N, 5),
+            JSequence,
             Range(10, 30),
-            VJBase("VSome", "JSome", 20)
+            VJBase(VDJCGeneId(vdjcLibraryId, "VSome"), VDJCGeneId(vdjcLibraryId, "JSome"), 20)
         )
         val result = clonesRebase.rebaseMutations(
             originalNode,
             originalRoot,
             rebaseTo
         )
-        result.VMutations.buildPartInCDR3() shouldBe oneLetterSequence(T, 5)
-        result.NDNMutations.buildSequence() shouldBe oneLetterSequence(T, 5)
-        result.JMutations.buildPartInCDR3() shouldBe oneLetterSequence(T, 5)
+        result.VMutations.buildPartInCDR3(rebaseTo) shouldBe oneLetterSequence(T, 5)
+        result.NDNMutations.buildSequence(rebaseTo) shouldBe oneLetterSequence(T, 5)
+        result.JMutations.buildPartInCDR3(rebaseTo) shouldBe oneLetterSequence(T, 5)
             .concatenate(oneLetterSequence(C, 10))
             .concatenate(oneLetterSequence(G, 5))
     }
@@ -254,14 +262,15 @@ class RebaseClonesTest {
             val JMutations = random.generateMutations(JSequence, JRange)
             val NDN = random.generateSequence(10 + random.nextInt(10))
             val originalRootInfo = RootInfo(
+                VSequence,
                 VRangeAfterCDR3Begin,
                 random.generateSequence(NDN.size() - 3 + random.nextInt(6)),
+                JSequence,
                 JRangeAfterCDR3End,
-                VJBase("VSome", "JSome", 20)
+                VJBase(VDJCGeneId(vdjcLibraryId, "VSome"), VDJCGeneId(vdjcLibraryId, "JSome"), 20)
             )
             val original = MutationsSet(
                 VGeneMutations(
-                    VSequence,
                     mapOf(VRangeBeforeCDR3Begin to VMutations.extractAbsoluteMutations(VRangeBeforeCDR3Begin, true)),
                     PartInCDR3(
                         originalRootInfo.VRangeInCDR3,
@@ -269,7 +278,6 @@ class RebaseClonesTest {
                     )
                 ),
                 NDNMutations(
-                    originalRootInfo.reconstructedNDN,
                     Aligner.alignGlobal(
                         AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
                         originalRootInfo.reconstructedNDN,
@@ -277,7 +285,6 @@ class RebaseClonesTest {
                     ).absoluteMutations
                 ),
                 JGeneMutations(
-                    JSequence,
                     PartInCDR3(
                         originalRootInfo.JRangeInCDR3,
                         JMutations.extractAbsoluteMutations(originalRootInfo.JRangeInCDR3, false)
@@ -294,17 +301,17 @@ class RebaseClonesTest {
                 JBorderExpand = originalRootInfo.JRangeInCDR3.length()
             }
             val rebaseToRootInfo = RootInfo(
+                VSequence,
                 originalRootInfo.VRangeInCDR3.expand(0, VBorderExpand),
                 random.generateSequence(originalRootInfo.reconstructedNDN.size() - VBorderExpand - JBorderExpand),
+                JSequence,
                 originalRootInfo.JRangeInCDR3.expand(JBorderExpand, 0),
-                VJBase("VSome", "JSome", 20)
+                VJBase(VDJCGeneId(vdjcLibraryId, "VSome"), VDJCGeneId(vdjcLibraryId, "JSome"), 20)
             )
             val clonesRebase = ClonesRebase(
                 VSequence,
-                AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-                NDNScoring(),
                 JSequence,
-                AffineGapAlignmentScoring.getNucleotideBLASTScoring()
+                scoringSet
             )
             val result = clonesRebase.rebaseMutations(original, originalRootInfo, rebaseToRootInfo)
             if (print) {
@@ -312,28 +319,27 @@ class RebaseClonesTest {
                 println("rebase to rootInfo: $rebaseToRootInfo")
                 println(
                     "original CDR3: "
-                        + original.VMutations.buildPartInCDR3()
-                        + " " + original.NDNMutations.buildSequence()
-                        + " " + original.JMutations.buildPartInCDR3()
+                        + original.VMutations.buildPartInCDR3(originalRootInfo)
+                        + " " + original.NDNMutations.buildSequence(originalRootInfo)
+                        + " " + original.JMutations.buildPartInCDR3(originalRootInfo)
                 )
                 println(
                     "  result CDR3: "
-                        + result.VMutations.buildPartInCDR3()
-                        + " " + result.NDNMutations.buildSequence()
-                        + " " + result.JMutations.buildPartInCDR3()
+                        + result.VMutations.buildPartInCDR3(rebaseToRootInfo)
+                        + " " + result.NDNMutations.buildSequence(rebaseToRootInfo)
+                        + " " + result.JMutations.buildPartInCDR3(rebaseToRootInfo)
                 )
             }
             assertEquals(
                 original.VMutations.mutations.values,
                 result.VMutations.mutations.values
             )
-            assertEquals(buildCDR3(original), buildCDR3(result))
+            assertEquals(original.buildCDR3(originalRootInfo), result.buildCDR3(rebaseToRootInfo))
             assertEquals(
                 original.JMutations.mutations.values,
                 result.JMutations.mutations.values
             )
             assertEquals(rebaseToRootInfo.VRangeInCDR3, result.VMutations.partInCDR3.range)
-            assertEquals(rebaseToRootInfo.reconstructedNDN, result.NDNMutations.base)
             assertEquals(rebaseToRootInfo.JRangeInCDR3, result.JMutations.partInCDR3.range)
             false
         } catch (e: Throwable) {
@@ -360,14 +366,15 @@ class RebaseClonesTest {
                 Range(min(offset, left), random.nextInt(left, CDR3Length))
             }
             val originalRootInfo = RootInfo(
+                VSequence,
                 Range(10, 10 + NDNRangeInCDR3Before.lower),
                 oneLetterSequence(N, NDNRangeInCDR3Before.length()),
+                JSequence,
                 Range(JRangeAfterCDR3End.lower - CDR3Length + NDNRangeInCDR3Before.upper, JRangeAfterCDR3End.lower),
-                VJBase("VSome", "JSome", CDR3Length)
+                VJBase(VDJCGeneId(vdjcLibraryId, "VSome"), VDJCGeneId(vdjcLibraryId, "JSome"), CDR3Length)
             )
             val original = MutationsSet(
                 VGeneMutations(
-                    VSequence,
                     mapOf(VRangeBeforeCDR3Begin to VMutations.extractAbsoluteMutations(VRangeBeforeCDR3Begin, true)),
                     PartInCDR3(
                         originalRootInfo.VRangeInCDR3,
@@ -375,7 +382,6 @@ class RebaseClonesTest {
                     )
                 ),
                 NDNMutations(
-                    originalRootInfo.reconstructedNDN,
                     Aligner.alignGlobal(
                         AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
                         originalRootInfo.reconstructedNDN,
@@ -383,7 +389,6 @@ class RebaseClonesTest {
                     ).absoluteMutations
                 ),
                 JGeneMutations(
-                    JSequence,
                     PartInCDR3(
                         originalRootInfo.JRangeInCDR3,
                         JMutations.extractAbsoluteMutations(originalRootInfo.JRangeInCDR3, false)
@@ -396,48 +401,47 @@ class RebaseClonesTest {
                 Range(min(offset, left), random.nextInt(left, CDR3Length))
             }
             val rebaseToRootInfo = RootInfo(
+                VSequence,
                 Range(10, 10 + NDNRangeInCDR3After.lower),
                 oneLetterSequence(N, NDNRangeInCDR3After.length()),
+                JSequence,
                 Range(JRangeAfterCDR3End.lower - CDR3Length + NDNRangeInCDR3After.upper, JRangeAfterCDR3End.lower),
-                VJBase("VSome", "JSome", CDR3Length)
+                VJBase(VDJCGeneId(vdjcLibraryId, "VSome"), VDJCGeneId(vdjcLibraryId, "JSome"), CDR3Length)
             )
             if (print) {
                 println(" original rootInfo: $originalRootInfo")
                 println("rebase to rootInfo: $rebaseToRootInfo")
                 println(
                     "original CDR3: "
-                        + original.VMutations.buildPartInCDR3()
-                        + " " + original.NDNMutations.buildSequence()
-                        + " " + original.JMutations.buildPartInCDR3()
+                        + original.VMutations.buildPartInCDR3(originalRootInfo)
+                        + " " + original.NDNMutations.buildSequence(originalRootInfo)
+                        + " " + original.JMutations.buildPartInCDR3(originalRootInfo)
                 )
             }
             val clonesRebase = ClonesRebase(
                 VSequence,
-                AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-                NDNScoring(),
                 JSequence,
-                AffineGapAlignmentScoring.getNucleotideBLASTScoring()
+                scoringSet
             )
             val result = clonesRebase.rebaseMutations(original, originalRootInfo, rebaseToRootInfo)
             if (print) {
                 println(
                     "  result CDR3: "
-                        + result.VMutations.buildPartInCDR3()
-                        + " " + result.NDNMutations.buildSequence()
-                        + " " + result.JMutations.buildPartInCDR3()
+                        + result.VMutations.buildPartInCDR3(rebaseToRootInfo)
+                        + " " + result.NDNMutations.buildSequence(rebaseToRootInfo)
+                        + " " + result.JMutations.buildPartInCDR3(rebaseToRootInfo)
                 )
             }
             assertEquals(
                 original.VMutations.mutations.values,
                 result.VMutations.mutations.values
             )
-            assertEquals(buildCDR3(original), buildCDR3(result))
+            assertEquals(original.buildCDR3(originalRootInfo), result.buildCDR3(rebaseToRootInfo))
             assertEquals(
                 original.JMutations.mutations.values,
                 result.JMutations.mutations.values
             )
             assertEquals(rebaseToRootInfo.VRangeInCDR3, result.VMutations.partInCDR3.range)
-            assertEquals(rebaseToRootInfo.reconstructedNDN, result.NDNMutations.base)
             assertEquals(rebaseToRootInfo.JRangeInCDR3, result.JMutations.partInCDR3.range)
             false
         } catch (e: Throwable) {
@@ -448,9 +452,9 @@ class RebaseClonesTest {
         }
     }
 
-    private fun buildCDR3(original: MutationsSet): NucleotideSequence = original.VMutations.buildPartInCDR3()
-        .concatenate(original.NDNMutations.buildSequence())
-        .concatenate(original.JMutations.buildPartInCDR3())
+    private fun MutationsSet.buildCDR3(rootInfo: RootInfo): NucleotideSequence = VMutations.buildPartInCDR3(rootInfo)
+        .concatenate(NDNMutations.buildSequence(rootInfo))
+        .concatenate(JMutations.buildPartInCDR3(rootInfo))
 
     private fun testRebaseClone(seed: Long, print: Boolean): Boolean = try {
         val random = Random(seed)
@@ -493,10 +497,12 @@ class RebaseClonesTest {
         val NDNSubsetBeforeMutation = CDR3.getRange(NDNSubsetRangeBeforeMutation)
         val mutationsOfNDN: Mutations<NucleotideSequence> = random.generateMutations(NDNSubsetBeforeMutation)
         val rootInfo = RootInfo(
+            VSequence,
             VRangeInCDR3,
             mutationsOfNDN.mutate(NDNSubsetBeforeMutation),
+            JSequence,
             JRangeInCDR3,
-            VJBase("VSome", "JSome", 20)
+            VJBase(VDJCGeneId(vdjcLibraryId, "VSome"), VDJCGeneId(vdjcLibraryId, "JSome"), 20)
         )
         val builtClone: NucleotideSequence = NucleotideSequence.ALPHABET.createBuilder()
             .append(buildSequence(VSequence, VMutations, VRangeBeforeCDR3Begin, true))
@@ -506,7 +512,6 @@ class RebaseClonesTest {
             .append(buildSequence(JSequence, JMutations, JRangeAfterCDR3End, false))
             .createAndDestroy()
         val VGeneMutations = VGeneMutations(
-            VSequence,
             mapOf(VRangeBeforeCDR3Begin to VMutations.extractAbsoluteMutations(VRangeBeforeCDR3Begin, true)),
             PartInCDR3(
                 commonVRangeInCDR3,
@@ -514,7 +519,6 @@ class RebaseClonesTest {
             )
         )
         val JGeneMutations = JGeneMutations(
-            JSequence,
             PartInCDR3(
                 commonJRangeInCDR3,
                 JMutations.extractAbsoluteMutations(commonJRangeInCDR3, true)
@@ -552,38 +556,36 @@ class RebaseClonesTest {
         )
         val rebasedClone = ClonesRebase(
             VSequence,
-            AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
-            AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
             JSequence,
-            AffineGapAlignmentScoring.getNucleotideBLASTScoring()
+            scoringSet
         ).rebaseClone(
             rootInfo,
             mutationsFromVJGermline,
             CloneWrapper(
                 Clone(emptyArray(), Maps.newEnumMap(GeneType::class.java), null, 0.0, 0, 0),
                 0,
-                VJBase("BGeneName", "JGeneName", 20)
+                VJBase(VDJCGeneId(vdjcLibraryId, "VSome"), VDJCGeneId(vdjcLibraryId, "JSome"), 20)
             )
         )
-        val resultedNDN = rebasedClone.mutationsSet.NDNMutations.buildSequence()
+        val resultedNDN = rebasedClone.mutationsSet.NDNMutations.buildSequence(rootInfo)
 
         val resultSequenceBuilder = NucleotideSequence.ALPHABET.createBuilder()
         rebasedClone.mutationsSet.VMutations.mutations.map { (range, mutations) ->
             buildSequence(
-                rebasedClone.mutationsSet.VMutations.sequence1,
+                VSequence,
                 mutations,
                 range
             )
         }
             .forEach { resultSequenceBuilder.append(it) }
         val CDR3Begin = resultSequenceBuilder.size()
-        resultSequenceBuilder.append(rebasedClone.mutationsSet.VMutations.buildPartInCDR3())
+        resultSequenceBuilder.append(rebasedClone.mutationsSet.VMutations.buildPartInCDR3(rootInfo))
         resultSequenceBuilder.append(resultedNDN)
-        resultSequenceBuilder.append(rebasedClone.mutationsSet.JMutations.buildPartInCDR3())
+        resultSequenceBuilder.append(rebasedClone.mutationsSet.JMutations.buildPartInCDR3(rootInfo))
         val CDR3End = resultSequenceBuilder.size()
         rebasedClone.mutationsSet.JMutations.mutations.map { (range, mutations) ->
             buildSequence(
-                rebasedClone.mutationsSet.JMutations.sequence1,
+                JSequence,
                 mutations,
                 range
             )
@@ -628,22 +630,22 @@ class RebaseClonesTest {
                 + rebasedClone.mutationsSet.VMutations.mutations.entries
                 .joinToString(" ") { (range, mutations) ->
                     buildSequence(
-                        rebasedClone.mutationsSet.VMutations.sequence1,
+                        VSequence,
                         mutations,
                         range
                     ).toString()
                 }
                 + " "
-                + rebasedClone.mutationsSet.VMutations.buildPartInCDR3()
+                + rebasedClone.mutationsSet.VMutations.buildPartInCDR3(rootInfo)
                 + " "
                 + resultedNDN
                 + " "
-                + rebasedClone.mutationsSet.JMutations.buildPartInCDR3()
+                + rebasedClone.mutationsSet.JMutations.buildPartInCDR3(rootInfo)
                 + " "
                 + rebasedClone.mutationsSet.JMutations.mutations.entries
                 .joinToString(" ") { (range, mutations) ->
                     buildSequence(
-                        rebasedClone.mutationsSet.JMutations.sequence1,
+                        JSequence,
                         mutations,
                         range
                     ).toString()
@@ -721,12 +723,12 @@ class RebaseClonesTest {
         assertEquals(builtClone, resultSequence)
         assertEquals(
             VPartLeftInRoot.concatenate(VPartGotFromNDN),
-            rebasedClone.mutationsSet.VMutations.buildPartInCDR3()
+            rebasedClone.mutationsSet.VMutations.buildPartInCDR3(rootInfo)
         )
         assertEquals(NDNSubsetBeforeMutation, resultedNDN)
         assertEquals(
             JPartGotFromNDN.concatenate(JPartLeftInRoot),
-            rebasedClone.mutationsSet.JMutations.buildPartInCDR3()
+            rebasedClone.mutationsSet.JMutations.buildPartInCDR3(rootInfo)
         )
         false
     } catch (e: Throwable) {

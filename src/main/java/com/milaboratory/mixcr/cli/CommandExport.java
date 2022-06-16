@@ -384,8 +384,8 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
     }
 
     public static final class FieldData {
-        final String field;
-        final String[] args;
+        public final String field;
+        public final String[] args;
 
         FieldData(String field, String[] args) {
             this.field = field;

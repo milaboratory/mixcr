@@ -28,14 +28,9 @@ import java.nio.file.Path
 import kotlin.math.abs
 
 class BuildSHMTreeReport : AbstractCommandReport() {
-    private val stepResults: MutableList<StepResult> = mutableListOf()
-
-    override fun getCommand() = CommandBuildSHMTree.BUILD_SHM_TREE_COMMAND_NAME
-
-    @JsonProperty("stepResults")
-    fun getStepResults(): List<StepResult> {
-        return stepResults
-    }
+    @get:JsonProperty("stepResults")
+    val stepResults: MutableList<StepResult> = mutableListOf()
+    override fun getCommand() = CommandBuildSHMTrees.COMMAND_NAME
 
     fun onStepEnd(step: BuildSHMTreeStep, clonesWasAdded: Int, treesCountDelta: Int) {
         stepResults += StepResult(

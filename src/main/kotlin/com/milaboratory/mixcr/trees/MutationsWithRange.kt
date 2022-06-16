@@ -9,12 +9,6 @@ data class MutationsWithRange(
     val mutations: Mutations<NucleotideSequence>,
     val range: Range
 ) {
-    private var result: NucleotideSequence? = null
 
-    fun buildSequence(): NucleotideSequence {
-        if (result == null) {
-            result = MutationsUtils.buildSequence(sequence1, mutations, range)
-        }
-        return result!!
-    }
+    fun buildSequence(): NucleotideSequence = MutationsUtils.buildSequence(sequence1, mutations, range)
 }

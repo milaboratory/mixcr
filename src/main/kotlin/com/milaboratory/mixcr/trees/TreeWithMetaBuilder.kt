@@ -1,8 +1,6 @@
 package com.milaboratory.mixcr.trees
 
 import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.trees.CloneOrFoundAncestorOld.CloneInfo
-import com.milaboratory.mixcr.trees.MutationsUtils.mutationsBetween
 import com.milaboratory.mixcr.trees.Tree.NodeWithParent
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.Reconstructed
@@ -61,76 +59,44 @@ class TreeWithMetaBuilder(
         return oldestReconstructedAncestor.content
     }
 
-    fun buildResultOld(): Tree<CloneOrFoundAncestorOld> {
+    fun buildResult(): Tree<CloneOrFoundAncestor> {
         val reconstructedRoot = oldestReconstructedAncestor()
-        val fromGermlineToReconstructedRoot = reconstructedRoot.fromRootToThis
+        val rootAsNode = (treeBuilder.tree.root.content as Reconstructed).content
         return treeBuilder.tree
             .map { parent, node ->
-                val fromGermlineToParent = parent?.let { asMutations(it) }
-                val nodeAsMutationsFromGermline = asMutations(node)
-                val distanceFromReconstructedRootToNode = when {
-                    parent != null -> treeBuilder.distance(
+                val mutationsSet = node.convert({ it.mutationsSet }, { it.fromRootToThis })
+                val cloneWrapper = node.convert({ it.clone }) { null }
+
+                val nodeAsMutationsFromGermline =
+                    node.convert({ SyntheticNode.createFromMutations(it.mutationsSet) }) { it }
+                val distanceFromReconstructedRootToNode = when (parent) {
+                    null -> null
+                    else -> treeBuilder.distance(
                         reconstructedRoot,
-                        mutationsBetween(reconstructedRoot.fromRootToThis, nodeAsMutationsFromGermline)
+                        treeBuilder.mutationsBetween(
+                            reconstructedRoot,
+                            nodeAsMutationsFromGermline
+                        )
                     )
-                    else -> null
                 }
-                val rootAsNode = (treeBuilder.tree.root.content as Reconstructed).content
                 val distanceFromGermlineToNode = treeBuilder.distance(
                     rootAsNode,
-                    mutationsBetween(
-                        rootAsNode.fromRootToThis,
+                    treeBuilder.mutationsBetween(
+                        rootAsNode,
                         nodeAsMutationsFromGermline
                     )
                 )
-                node.convert(
-                    { c ->
-                        CloneInfo(
-                            c.clone,
-                            node.id,
-                            nodeAsMutationsFromGermline,
-                            fromGermlineToReconstructedRoot,
-                            fromGermlineToParent,
-                            distanceFromReconstructedRootToNode,
-                            distanceFromGermlineToNode
-                        )
-                    }
-                ) {
-                    CloneOrFoundAncestorOld.AncestorInfo(
-                        node.id,
-                        nodeAsMutationsFromGermline,
-                        fromGermlineToReconstructedRoot,
-                        fromGermlineToParent,
-                        distanceFromReconstructedRootToNode,
-                        distanceFromGermlineToNode
-                    )
-                }
+
+                CloneOrFoundAncestor(
+                    node.id,
+                    cloneWrapper?.clone,
+                    cloneWrapper?.datasetId,
+                    mutationsSet,
+                    distanceFromGermlineToNode,
+                    distanceFromReconstructedRootToNode
+                )
             }
     }
-
-    fun buildResult(): Tree<CloneOrFoundAncestor> = treeBuilder.tree
-        .map { _, node ->
-            val mutationsSet = node.convert({ it.mutationsSet }, { it.fromRootToThis })
-            val cloneInfo = node.convert(
-                { c ->
-                    val cloneWrapper = c.clone
-                    CloneOrFoundAncestor.CloneInfo(
-                        cloneWrapper.clone.id,
-                        cloneWrapper.clone.count,
-                        cloneWrapper.clone.getBestHit(GeneType.Constant)?.gene?.name,
-                        cloneWrapper.datasetId
-                    )
-                }
-            ) {
-                null
-            }
-            CloneOrFoundAncestor(
-                node.id,
-                cloneInfo,
-                emptyArray(),
-                EnumMap(GeneType::class.java)
-            )
-        }
 
     private fun asMutations(parent: ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, SyntheticNode>): MutationsSet {
         return parent.convert({ it.mutationsSet }) { it.fromRootToThis }
@@ -162,14 +128,7 @@ class TreeWithMetaBuilder(
         val id: Int,
         private val VJBase: VJBase
     ) {
-        fun encode(): String {
-            val result = StringBuilder()
-                .append(VJBase.VGeneName)
-            result.append("-").append(VJBase.CDR3length)
-            result.append("-").append(VJBase.JGeneName)
-                .append("-").append(id)
-            return result.toString()
-        }
+        fun encode(): String = "${VJBase.VGeneId.name}-${VJBase.CDR3length}-${VJBase.JGeneId.name}-${id}"
     }
 
     class Snapshot(//TODO save position and action description to skip recalculation

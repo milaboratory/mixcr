@@ -269,7 +269,8 @@ public final class Main {
                 .addSubcommand("slice", CommandSlice.class)
                 .addSubcommand("info", CommandInfo.class)
 
-                .addSubcommand(CommandBuildSHMTree.BUILD_SHM_TREE_COMMAND_NAME, CommandBuildSHMTree.class)
+                .addSubcommand(CommandBuildSHMTrees.COMMAND_NAME, CommandBuildSHMTrees.class)
+                .addSubcommand(CommandExportTableForSHMTrees.COMMAND_NAME, CommandExportTableForSHMTrees.class)
                 .addSubcommand(CommandFindAlleles.FIND_ALLELES_COMMAND_NAME, CommandFindAlleles.class);
 
         cmd.getSubcommands()

@@ -1,32 +1,21 @@
-package com.milaboratory.mixcr.util;
-
-import java.util.ArrayList;
-import java.util.List;
+package com.milaboratory.mixcr.util
 
 /**
  *
  */
-public class Cluster<T> {
-    public final List<T> cluster;
-
-    public Cluster(List<T> cluster) {
-        this.cluster = cluster;
-    }
-
-    public static class Builder<T> {
-        private final List<T> cluster = new ArrayList<>();
-
-        public Builder<T> add(T element) {
-            cluster.add(element);
-            return this;
+class Cluster<T>(val cluster: List<T>) {
+    class Builder<T> {
+        private val cluster: MutableList<T> = ArrayList()
+        fun add(element: T): Builder<T> {
+            cluster.add(element)
+            return this
         }
 
-        public List<T> getCurrentCluster() {
-            return cluster;
-        }
+        val currentCluster: List<T>
+            get() = cluster
 
-        public Cluster<T> build() {
-            return new Cluster<>(cluster);
+        fun build(): Cluster<T> {
+            return Cluster(cluster)
         }
     }
 }

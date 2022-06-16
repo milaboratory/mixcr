@@ -40,7 +40,6 @@ import com.milaboratory.core.alignment.AlignmentScoring
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
 import com.milaboratory.core.sequence.NucleotideSequence
-import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.cli.BuildSHMTreeStep
@@ -50,15 +49,17 @@ import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
 import com.milaboratory.util.sorting.HashSorter
 import io.repseq.core.GeneFeature
-import io.repseq.core.GeneType
-import io.repseq.core.ReferencePoint
+import io.repseq.core.GeneFeature.CDR3
+import io.repseq.core.GeneType.Joining
+import io.repseq.core.GeneType.Variable
+import io.repseq.core.ReferencePoint.JBeginTrimmed
+import io.repseq.core.ReferencePoint.VEndTrimmed
 import io.repseq.core.VDJCGene
+import io.repseq.core.VDJCGeneId
 import java.io.IOException
 import java.io.PrintStream
 import java.nio.file.Files
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import java.util.stream.Collectors
 
 /**
  *
@@ -66,7 +67,8 @@ import java.util.stream.Collectors
 class SHMTreeBuilder(
     private val parameters: SHMTreeBuilderParameters,
     private val clusteringCriteria: ClusteringCriteria,
-    private val datasets: List<CloneReader>
+    private val datasets: List<CloneReader>,
+    private val cloneIds: Set<Int>
 ) {
     private val VScoring: AlignmentScoring<NucleotideSequence> =
         datasets[0].assemblerParameters.cloneFactoryParameters.vParameters.scoring
@@ -77,13 +79,9 @@ class SHMTreeBuilder(
     private val idGenerators = ConcurrentHashMap<VJBase, IdGenerator>()
     private val calculatedClustersInfo = ConcurrentHashMap<VJBase, CalculatedClusterInfo>()
 
-    fun cloneWrappersCount(): Int {
-        var cloneWrappersCount = 0
-        val unsortedClones = unsortedClonotypes()
-        while (unsortedClones.take() != null) {
-            cloneWrappersCount++
-        }
-        return cloneWrappersCount
+    fun cloneWrappersCount(): Int = when {
+        cloneIds.isEmpty() -> CUtils.it(unsortedClonotypes()).count()
+        else -> CUtils.it(unsortedClonotypes()).count { it.clone.id in cloneIds }
     }
 
     @Throws(IOException::class)
@@ -129,34 +127,29 @@ class SHMTreeBuilder(
         val wrapped: MutableList<OutputPort<CloneWrapper>> = ArrayList()
         for (i in datasets.indices) {
             // filter non-productive clonotypes
-            val port = if (parameters.productiveOnly) // todo CDR3?
-                FilteringPort(
-                    datasets[i].readClones()
-                ) { c: Clone -> !c.containsStops(GeneFeature.CDR3) && !c.isOutOfFrame(GeneFeature.CDR3) } else datasets[i].readClones()
-            val wrap = CUtils.wrap(port) { c: Clone ->
-                val VGeneNames = Arrays.stream(c.getHits(GeneType.Variable))
-                    .map { VHit -> VHit.gene.name }
-                    .collect(Collectors.toList())
-                val JGeneNames = Arrays.stream(c.getHits(GeneType.Joining))
-                    .map { JHit -> JHit.gene.name }
-                    .collect(Collectors.toList())
+            val port = when {
+                // todo CDR3?
+                parameters.productiveOnly -> FilteringPort(datasets[i].readClones()) { clone ->
+                    !clone.containsStops(CDR3) && !clone.isOutOfFrame(CDR3)
+                }
+                else -> datasets[i].readClones()
+            }
+            val wrap = CUtils.wrap(port) { clone ->
+                val VGeneNames = clone.getHits(Variable).map { VHit -> VHit.gene.id }
+                val JGeneNames = clone.getHits(Joining).map { JHit -> JHit.gene.id }
                 CUtils.asOutputPort(
-                    VGeneNames.stream()
-                        .flatMap { VGeneName ->
-                            JGeneNames.stream()
-                                .map { JGeneName ->
-                                    CloneWrapper(
-                                        c,
-                                        i,
-                                        VJBase(VGeneName, JGeneName, c.getNFeature(GeneFeature.CDR3).size())
-                                    )
-                                }
+                    VGeneNames
+                        .flatMap { VGeneId ->
+                            JGeneNames.map { JGeneId ->
+                                CloneWrapper(
+                                    clone,
+                                    i,
+                                    VJBase(VGeneId, JGeneId, clone.getNFeature(CDR3).size())
+                                )
+                            }
                         }
-                        .filter { it.getFeature(GeneFeature.CDR3) != null }
-                        .filter {
-                            it.getFeature(GeneFeature(ReferencePoint.VEndTrimmed, ReferencePoint.JBeginTrimmed)) != null
-                        }
-                        .collect(Collectors.toList())
+                        .filter { it.getFeature(CDR3) != null }
+                        .filter { it.getFeature(GeneFeature(VEndTrimmed, JBeginTrimmed)) != null }
                 )
             }
             wrapped.add(FlatteningOutputPort(wrap))
@@ -169,7 +162,7 @@ class SHMTreeBuilder(
         val cluster: MutableList<CloneWrapper> = ArrayList()
 
         // group by similar V/J genes
-        val result: OutputPortCloseable<Cluster<CloneWrapper>> = object : OutputPortCloseable<Cluster<CloneWrapper>> {
+        var result: OutputPortCloseable<Cluster<CloneWrapper>> = object : OutputPortCloseable<Cluster<CloneWrapper>> {
             override fun close() {
                 sortedClones.close()
             }
@@ -196,13 +189,17 @@ class SHMTreeBuilder(
                 }
             }
         }
+        if (cloneIds.isNotEmpty()) {
+            result = FilteringPort(result) { c ->
+                c.cluster.any { it.clone.id in cloneIds }
+            }
+        }
+
         return CUtils.wrapSynchronized(result)
     }
 
     @Throws(IOException::class)
-    fun sortedClones(): OutputPortCloseable<CloneWrapper> {
-        return createSorter().port(unsortedClonotypes())
-    }
+    fun sortedClones(): OutputPortCloseable<CloneWrapper> = createSorter().port(unsortedClonotypes())
 
     fun makeDecisions(): Int {
         val clonesToRemove: MutableMap<VJBase, MutableSet<Int>> = HashMap()
@@ -229,7 +226,7 @@ class SHMTreeBuilder(
     fun zeroStep(
         clusterBySameVAndJ: Cluster<CloneWrapper>,
         debug: PrintStream,
-        relatedAllelesMutations: Map<String, List<Mutations<NucleotideSequence>>>
+        relatedAllelesMutations: Map<VDJCGeneId, List<Mutations<NucleotideSequence>>>
     ) {
         val VJBase = clusterVJBase(clusterBySameVAndJ)
         val clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase)
@@ -260,7 +257,7 @@ class SHMTreeBuilder(
         XSV.writeXSVBody(debugOfCurrentStep, result.nodesDebugInfo, DebugInfo.COLUMNS_FOR_XSV, ";")
     }
 
-    fun getResult(clusterBySameVAndJ: Cluster<CloneWrapper>, previousStepDebug: PrintStream): List<TreeWithMeta> {
+    fun getResult(clusterBySameVAndJ: Cluster<CloneWrapper>, previousStepDebug: PrintStream): List<SHMTree> {
         val VJBase = clusterVJBase(clusterBySameVAndJ)
         val clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase)
         val currentTrees = clusterProcessor.restore(currentTrees[VJBase]!!)
@@ -269,8 +266,8 @@ class SHMTreeBuilder(
         return currentTrees.asSequence()
             .filter { treeWithMetaBuilder -> treeWithMetaBuilder.clonesCount() >= parameters.hideTreesLessThanSize }
             .map { treeWithMetaBuilder ->
-                TreeWithMeta(
-                    treeWithMetaBuilder.buildResultOld(),
+                SHMTree(
+                    treeWithMetaBuilder.buildResult(),
                     treeWithMetaBuilder.rootInfo,
                     treeWithMetaBuilder.treeId
                 )
@@ -302,7 +299,7 @@ class SHMTreeBuilder(
         )
     }
 
-    fun relatedAllelesMutations(): Map<String, List<Mutations<NucleotideSequence>>> = datasets
+    fun relatedAllelesMutations(): Map<VDJCGeneId, List<Mutations<NucleotideSequence>>> = datasets
         .flatMap { it.usedGenes }
         .groupBy { it.geneName }
         .values
@@ -311,10 +308,10 @@ class SHMTreeBuilder(
                 1 -> emptyList()
                 else -> genes.map { gene ->
                     val currentAlleleMutations = alleleMutations(gene)
-                    gene.name to genes
-                        .filter { it != gene }
-                        .map { currentAlleleMutations.invert().combineWith(alleleMutations(it)) }
-                        .filter { it != EMPTY_NUCLEOTIDE_MUTATIONS }
+                    gene.id to (genes - gene)
+                        .map {
+                            currentAlleleMutations.invert().combineWith(alleleMutations(it))
+                        } - EMPTY_NUCLEOTIDE_MUTATIONS
                 }
             }
         }

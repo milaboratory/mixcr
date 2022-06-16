@@ -29,9 +29,10 @@
  */
 package com.milaboratory.mixcr.trees
 
+import com.milaboratory.primitivio.PrimitivI
+import com.milaboratory.primitivio.PrimitivO
 import java.math.BigDecimal
 import java.util.function.Consumer
-import java.util.stream.Collectors
 
 /**
  *
@@ -58,15 +59,13 @@ class Tree<T : Any>(
             children = ArrayList()
         }
 
-        constructor(content: T, children: MutableList<NodeLink<T>>) {
+        constructor(content: T, children: List<NodeLink<T>>) {
             this.content = content
-            this.children = children
+            this.children = children.toMutableList()
         }
 
         fun copy(): Node<T> {
-            val childrenCopy = children.stream()
-                .map { NodeLink(it.node.copy(), it.distance) }
-                .collect(Collectors.toList())
+            val childrenCopy = children.map { NodeLink(it.node.copy(), it.distance) }
             return Node(content, childrenCopy)
         }
 
@@ -104,9 +103,39 @@ class Tree<T : Any>(
         val distance: BigDecimal
     )
 
-    class NodeWithParent<T>(
+    data class NodeWithParent<T>(
         val parent: Node<T>?,
         val node: Node<T>,
         val distance: BigDecimal?
     )
+}
+
+object TreeSerializer {
+    fun writeTree(output: PrimitivO, obj: Tree<*>) {
+        writeNode(output, obj.root)
+    }
+
+    private fun writeNode(output: PrimitivO, node: Tree.Node<*>) {
+        output.writeObject(node.content)
+        output.writeInt(node.links.size)
+        node.links.forEach { link ->
+            output.writeDouble(link.distance.toDouble())
+            writeNode(output, link.node)
+        }
+    }
+
+    inline fun <reified T : Any> readTree(input: PrimitivI): Tree<T> {
+        return Tree(readNode(input, T::class.java))
+    }
+
+    fun <T> readNode(input: PrimitivI, klass: Class<T>): Tree.Node<T> {
+        val content = input.readObject(klass)
+        val count = input.readInt()
+        val links = (0 until count).map {
+            val distance = input.readDouble()
+            val child = readNode(input, klass)
+            Tree.NodeLink(child, BigDecimal.valueOf(distance))
+        }
+        return Tree.Node(content, links)
+    }
 }

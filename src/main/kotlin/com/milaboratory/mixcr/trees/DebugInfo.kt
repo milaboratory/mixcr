@@ -23,8 +23,8 @@ class DebugInfo(
     companion object {
         var COLUMNS_FOR_XSV: Map<String, (DebugInfo) -> Any?> =
             ImmutableMap.builder<String, (DebugInfo) -> Any?>()
-                .put("VGeneName") { it.rootInfo.VJBase.VGeneName }
-                .put("JGeneName") { it.rootInfo.VJBase.JGeneName }
+                .put("VGeneName") { it.rootInfo.VJBase.VGeneId.name }
+                .put("JGeneName") { it.rootInfo.VJBase.JGeneId.name }
                 .put("CDR3Length") { it.rootInfo.VJBase.CDR3length }
                 .put("VRangeWithoutCDR3") {
                     it.VRangesWithoutCDR3.stream().map { range -> encodeRange(range) }

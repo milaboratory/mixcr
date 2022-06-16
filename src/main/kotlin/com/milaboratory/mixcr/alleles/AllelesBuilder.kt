@@ -16,7 +16,6 @@ import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.util.ClonesAlignmentRanges
 import com.milaboratory.mixcr.util.Cluster
-import com.milaboratory.mixcr.util.ExceptionUtil
 import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
@@ -61,7 +60,7 @@ class AllelesBuilder(
         // less fields to sort by -> faster the procedure
         val memoryBudget = if (Runtime.getRuntime().maxMemory() > 10000000000L /* -Xmx10g */) Runtime.getRuntime()
             .maxMemory() / 4L /* 1 Gb */ else 1 shl 28 /* 256 Mb */
-        val sorterSupplier = ExceptionUtil.wrap { geneType: GeneType? ->
+        val sorterSupplier: (GeneType) -> HashSorter<Clone> = { geneType: GeneType ->
             HashSorter(
                 Clone::class.java,
                 { clone: Clone -> clone.getBestHit(geneType).gene.id.name.hashCode() },
@@ -89,8 +88,8 @@ class AllelesBuilder(
             )
         }
         return SortedClonotypes(
-            sorterSupplier.apply(Variable).port(clonesSupplier.get()),
-            sorterSupplier.apply(Joining).port(clonesSupplier.get())
+            sorterSupplier(Variable).port(clonesSupplier.get()),
+            sorterSupplier(Joining).port(clonesSupplier.get())
         )
     }
 
@@ -265,7 +264,7 @@ class AllelesBuilder(
         val gene: VDJCGene,
         val mutations: Mutations<NucleotideSequence>,
         val alignedFeature: GeneFeature,
-        val knownRanges: List<Range>
+        val knownRanges: Array<Range>
     ) {
         override fun toString(): String = "Allele{" +
             "id=" + gene.name +

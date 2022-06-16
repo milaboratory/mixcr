@@ -1,40 +1,45 @@
 package com.milaboratory.mixcr.trees
 
-import com.milaboratory.core.Range
-import com.milaboratory.core.sequence.NucleotideSequence
-import com.milaboratory.mixcr.basictypes.TargetPartitioning
-import com.milaboratory.mixcr.basictypes.VDJCHit
-import io.repseq.core.GeneFeature
-import io.repseq.core.GeneType
-import io.repseq.core.PartitionedSequence
-import java.util.*
+import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.primitivio.PrimitivI
+import com.milaboratory.primitivio.PrimitivO
+import com.milaboratory.primitivio.Serializer
+import com.milaboratory.primitivio.annotations.Serializable
+import com.milaboratory.primitivio.readObjectOptional
+import com.milaboratory.primitivio.readObjectRequired
+import java.math.BigDecimal
 
+@Serializable(by = CloneOrFoundAncestorSerializer::class)
 class CloneOrFoundAncestor(
-    private val id: Int,
-    private val cloneInfo: CloneInfo?,
-    private val targets: Array<NucleotideSequence>,
-    private val hits: EnumMap<GeneType, VDJCHit>
-) {
+    val id: Int,
+    val clone: Clone?,
+    val datasetId: Int?,
+    val mutationsSet: MutationsSet,
+    val distanceFromGermline: BigDecimal,
+    val distanceFromRoot: BigDecimal?
+)
 
-    private val partitionedTargets: Array<PartitionedSequence<NucleotideSequence>> by lazy {
-        Array(targets.size) { i ->
-            val partitioning = TargetPartitioning(i, hits)
-            object : PartitionedSequence<NucleotideSequence>() {
-                override fun getSequence(range: Range) = targets[i].getRange(range)
-
-                override fun getPartitioning() = partitioning
-            }
-        }
+class CloneOrFoundAncestorSerializer : Serializer<CloneOrFoundAncestor> {
+    override fun write(output: PrimitivO, obj: CloneOrFoundAncestor) {
+        output.writeInt(obj.id)
+        output.writeObject(obj.clone)
+        output.writeInt(obj.datasetId ?: -1)
+        output.writeObject(obj.mutationsSet)
+        output.writeDouble(obj.distanceFromGermline.toDouble())
+        output.writeDouble(obj.distanceFromRoot?.toDouble() ?: Double.NaN)
     }
 
-    fun getFeature(geneFeature: GeneFeature): NucleotideSequence? =
-        partitionedTargets.firstNotNullOfOrNull { it.getFeature(geneFeature) }
-
-    class CloneInfo(
-        private val id: Int,
-        private val count: Double,
-        private val CGeneName: String?,
-        private val datasetId: Int
+    override fun read(input: PrimitivI): CloneOrFoundAncestor = CloneOrFoundAncestor(
+        input.readInt(),
+        input.readObjectOptional(),
+        input.readInt().let { if (it == -1) null else it },
+        input.readObjectRequired(),
+        BigDecimal.valueOf(input.readDouble()),
+        input.readDouble().let { if (it.isNaN()) null else BigDecimal.valueOf(it) }
     )
+
+    override fun isReference(): Boolean = false
+
+    override fun handlesReference(): Boolean = false
 
 }

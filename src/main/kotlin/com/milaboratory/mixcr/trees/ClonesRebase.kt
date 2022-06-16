@@ -4,7 +4,6 @@ package com.milaboratory.mixcr.trees
 
 import com.milaboratory.core.Range
 import com.milaboratory.core.alignment.Aligner
-import com.milaboratory.core.alignment.AlignmentScoring
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.util.extractAbsoluteMutations
 import kotlin.math.max
@@ -13,10 +12,8 @@ import kotlin.math.min
 @Suppress("LocalVariableName")
 class ClonesRebase(
     private val VSequence1: NucleotideSequence,
-    private val VScoring: AlignmentScoring<NucleotideSequence>,
-    private val NDNScoring: AlignmentScoring<NucleotideSequence>,
     private val JSequence1: NucleotideSequence,
-    private val JScoring: AlignmentScoring<NucleotideSequence>
+    private val scoringSet: ScoringSet
 ) {
     fun rebaseClone(
         rootInfo: RootInfo,
@@ -43,7 +40,7 @@ class ClonesRebase(
             val rangeToAlign = Range(VMutationsWithinNDNRange.upper, rootInfo.VRangeInCDR3.upper)
             if (!rangeToAlign.isEmpty && !rangeToAlign.isReverse) {
                 val absoluteMutations = Aligner.alignGlobal(
-                    VScoring,
+                    scoringSet.VScoring,
                     VSequence1,
                     mutationsFromVJGermline.knownNDN,
                     rangeToAlign.lower,
@@ -71,7 +68,7 @@ class ClonesRebase(
         val rangeToAlign = Range(rootInfo.JRangeInCDR3.lower, JMutationsWithinNDNRange.lower)
         if (!rangeToAlign.isEmpty && !rangeToAlign.isReverse) {
             val absoluteMutations = Aligner.alignGlobal(
-                JScoring,
+                scoringSet.JScoring,
                 JSequence1,
                 mutationsFromVJGermline.knownNDN,
                 rangeToAlign.lower,
@@ -84,23 +81,18 @@ class ClonesRebase(
         }
         NDNRangeInKnownNDN = Range(NDNRangeInKnownNDN.lower, NDNRangeInKnownNDN.upper - lengthDelta)
         val NDNMutations = Aligner.alignGlobal(
-            NDNScoring,
+            scoringSet.NDNScoring,
             rootInfo.reconstructedNDN,
             mutationsFromVJGermline.knownNDN.getRange(NDNRangeInKnownNDN)
         ).absoluteMutations
         return CloneWithMutationsFromReconstructedRoot(
             MutationsSet(
                 VGeneMutations(
-                    VSequence1,
                     mutationsFromVJGermline.VMutations.mutations,
                     VMutationsInCDR3WithoutNDN
                 ),
-                NDNMutations(
-                    rootInfo.reconstructedNDN,
-                    NDNMutations
-                ),
+                NDNMutations(NDNMutations),
                 JGeneMutations(
-                    JSequence1,
                     JMutationsInCDR3WithoutNDN,
                     mutationsFromVJGermline.JMutations.mutations
                 )
@@ -127,13 +119,13 @@ class ClonesRebase(
         val VRangeLeft = originalRoot.VRangeInCDR3.setLower(commonVRange.upper)
         val JRangeLeft = originalRoot.JRangeInCDR3.setUpper(commonJRange.lower)
         val toAlign = MutationsUtils.buildSequence(
-            originalNode.VMutations.sequence1,
+            VSequence1,
             originalNode.VMutations.partInCDR3.mutations.extractAbsoluteMutations(VRangeLeft, false),
             VRangeLeft
-        ).concatenate(originalNode.NDNMutations.buildSequence())
+        ).concatenate(originalNode.NDNMutations.buildSequence(originalRoot))
             .concatenate(
                 MutationsUtils.buildSequence(
-                    originalNode.JMutations.sequence1,
+                    JSequence1,
                     originalNode.JMutations.partInCDR3.mutations.extractAbsoluteMutations(JRangeLeft, true),
                     JRangeLeft
                 )
@@ -149,7 +141,7 @@ class ClonesRebase(
         val NDNPartToAlign = Range(VPartToAlign.upper, JPartToAlign.lower)
 
         val VMutationsToAdd = Aligner.alignGlobal(
-            VScoring,
+            scoringSet.VScoring,
             VSequence1,
             toAlign,
             VRangeToAlign.lower,
@@ -159,7 +151,7 @@ class ClonesRebase(
         ).absoluteMutations
 
         val JMutationsToAdd = Aligner.alignGlobal(
-            JScoring,
+            scoringSet.JScoring,
             JSequence1,
             toAlign,
             JRangeToAlign.lower,
@@ -169,7 +161,7 @@ class ClonesRebase(
         ).absoluteMutations
 
         val NDNMutations = Aligner.alignGlobal(
-            NDNScoring,
+            scoringSet.NDNScoring,
             rebaseTo.reconstructedNDN,
             toAlign,
             0,
@@ -186,10 +178,7 @@ class ClonesRebase(
                         .concat(VMutationsToAdd)
                 )
             ),
-            NDNMutations(
-                rebaseTo.reconstructedNDN,
-                NDNMutations
-            ),
+            NDNMutations(NDNMutations),
             originalNode.JMutations.copy(
                 partInCDR3 = PartInCDR3(
                     rebaseTo.JRangeInCDR3, JMutationsToAdd.concat(

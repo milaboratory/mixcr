@@ -3,7 +3,6 @@
 package com.milaboratory.mixcr.trees
 
 import com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
-import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.util.ClonesAlignmentRanges
 
 class SyntheticNode private constructor(
@@ -45,20 +44,16 @@ class SyntheticNode private constructor(
 
         fun createRoot(
             VRanges: ClonesAlignmentRanges,
-            VSequence1: NucleotideSequence,
             rootInfo: RootInfo,
-            JRanges: ClonesAlignmentRanges,
-            JSequence1: NucleotideSequence
+            JRanges: ClonesAlignmentRanges
         ): SyntheticNode = SyntheticNode(
             MutationsSet(
                 VGeneMutations(
-                    VSequence1,
                     VRanges.commonRanges.associateWith { EMPTY_NUCLEOTIDE_MUTATIONS },
                     PartInCDR3(rootInfo.VRangeInCDR3, EMPTY_NUCLEOTIDE_MUTATIONS)
                 ),
-                NDNMutations(rootInfo.reconstructedNDN, EMPTY_NUCLEOTIDE_MUTATIONS),
+                NDNMutations(EMPTY_NUCLEOTIDE_MUTATIONS),
                 JGeneMutations(
-                    JSequence1,
                     PartInCDR3(rootInfo.JRangeInCDR3, EMPTY_NUCLEOTIDE_MUTATIONS),
                     JRanges.commonRanges.associateWith { EMPTY_NUCLEOTIDE_MUTATIONS }
                 )

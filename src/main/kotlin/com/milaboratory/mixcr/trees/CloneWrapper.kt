@@ -9,6 +9,7 @@ import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
+import com.milaboratory.primitivio.readObjectRequired
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.ReferencePoint
@@ -31,8 +32,8 @@ class CloneWrapper(
     val VJBase: VJBase
 ) {
     fun getHit(geneType: GeneType): VDJCHit {
-        val geneName = VJBase.getGeneName(geneType)
-        return clone.getHits(geneType).first { it.gene.name == geneName }
+        val geneId = VJBase.getGeneId(geneType)
+        return clone.getHits(geneType).first { it.gene.id == geneId }
     }
 
     fun getFeature(geneFeature: GeneFeature): NSequenceWithQuality? {
@@ -85,15 +86,15 @@ class SerializerImpl : Serializer<CloneWrapper> {
     override fun write(output: PrimitivO, `object`: CloneWrapper) {
         output.writeObject(`object`.clone)
         output.writeInt(`object`.datasetId)
-        output.writeUTF(`object`.VJBase.VGeneName)
-        output.writeUTF(`object`.VJBase.JGeneName)
+        output.writeObject(`object`.VJBase.VGeneId)
+        output.writeObject(`object`.VJBase.JGeneId)
         output.writeInt(`object`.VJBase.CDR3length)
     }
 
     override fun read(input: PrimitivI): CloneWrapper = CloneWrapper(
-        input.readObject(Clone::class.java),
+        input.readObjectRequired(),
         input.readInt(),
-        VJBase(input.readUTF(), input.readUTF(), input.readInt())
+        VJBase(input.readObjectRequired(), input.readObjectRequired(), input.readInt())
     )
 
     override fun isReference(): Boolean = true

@@ -3,14 +3,11 @@ package com.milaboratory.mixcr.trees
 import com.milaboratory.mixcr.trees.Tree.NodeLink
 import java.math.BigDecimal
 import java.util.*
-import java.util.function.Function
-import java.util.stream.Collectors
-import java.util.stream.Stream
 
 class TreeBuilderByAncestors<T, E, M> private constructor(
     val distance: (E, M) -> BigDecimal,
     private val asAncestor: (T) -> E,
-    private val mutationsBetween: (E, E) -> M,
+    val mutationsBetween: (E, E) -> M,
     private val mutate: (E, M) -> E,
     private val findCommonMutations: (M, M) -> M,
     private val postprocessDescendants: (E, E) -> E,
@@ -241,11 +238,11 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
             return null
         }
         val distanceFromCommonToAdded = distance(commonAncestor, mutationsBetween(commonAncestor, addedAsAncestor))
-        val minDistanceFromObserved = Stream.of(
+        val minDistanceFromObserved = minOf(
             distanceFromCommonToAdded,
             distanceFromCommonAncestorToChild,
             parentAsReconstructed.minDistanceFromObserved.add(distanceFromParentToCommon)
-        ).min { obj: BigDecimal?, `val`: BigDecimal? -> obj!!.compareTo(`val`) }.get()
+        )
         val replacement = Tree.Node<ObservedOrReconstructed<T, E>>(
             Reconstructed(
                 commonAncestor,
@@ -339,14 +336,14 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
 
         private fun postprocess(
             parentContent: E, links: List<NodeLink<ObservedOrReconstructed<T, E>>>
-        ): MutableList<NodeLink<ObservedOrReconstructed<T, E>>> {
-            return links.stream()
-                .map { link ->
-                    val child = link.node
-                    if (child.content is Reconstructed<*, *>) {
+        ): List<NodeLink<ObservedOrReconstructed<T, E>>> = links
+            .map { link ->
+                val child = link.node
+                when (child.content) {
+                    is Reconstructed<*, *> -> {
                         val childContent = child.content as Reconstructed<T, E>
                         val mapped = postprocessDescendants(parentContent, childContent.content)
-                        return@map NodeLink(
+                        NodeLink(
                             Tree.Node(
                                 Reconstructed(
                                     mapped,  //TODO recalculate minDistanceFromObserved
@@ -357,21 +354,19 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
                             ),
                             distance(parentContent, mutationsBetween(parentContent, mapped))
                         )
-                    } else {
-                        return@map link
                     }
+                    else -> link
                 }
-                .collect(Collectors.toList())
-        }
+            }
     }
 
     sealed class ObservedOrReconstructed<T, E> constructor(val id: Int) {
         fun <R1, R2> map(
-            mapObserved: Function<T, R1>,
-            mapReconstructed: Function<E, R2>
+            mapObserved: (T) -> R1,
+            mapReconstructed: (E) -> R2
         ): ObservedOrReconstructed<R1, R2> = when (this) {
-            is Observed -> Observed(mapObserved.apply(content), id)
-            is Reconstructed -> Reconstructed(mapReconstructed.apply(content), minDistanceFromObserved, id)
+            is Observed -> Observed(mapObserved(content), id)
+            is Reconstructed -> Reconstructed(mapReconstructed(content), minDistanceFromObserved, id)
         }
 
         fun <R> convert(mapObserved: (T) -> R, mapReconstructed: (E) -> R): R = when (this) {

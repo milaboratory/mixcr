@@ -60,11 +60,11 @@ public final class FieldExtractors {
     private static final DecimalFormat SCORE_FORMAT = new DecimalFormat("#.#");
     private static final int MAX_SHIFTED_TRIPLETS = 3;
 
-    static Field[] descriptors = null;
+    static Field<?>[] descriptors = null;
 
-    public synchronized static Field[] getFields() {
+    public synchronized static Field<?>[] getFields() {
         if (descriptors == null) {
-            List<Field> descriptorsList = new ArrayList<>();
+            List<Field<?>> descriptorsList = new ArrayList<>();
 
             // Number of targets
             descriptorsList.add(new PL_O("-targets", "Export number of targets", "Number of targets", "numberOfTargets") {

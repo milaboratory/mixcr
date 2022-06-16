@@ -32,7 +32,7 @@ package com.milaboratory.mixcr.export;
 public abstract class FieldWithParameters<T, P> extends AbstractField<T> {
     final int nArguments;
 
-    public FieldWithParameters(Class targetType, String command, String description, int nArguments) {
+    public FieldWithParameters(Class<T> targetType, String command, String description, int nArguments) {
         super(targetType, command, description);
         this.nArguments = nArguments;
     }
