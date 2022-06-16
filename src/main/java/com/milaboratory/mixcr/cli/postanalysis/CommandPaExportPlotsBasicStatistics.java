@@ -41,9 +41,19 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
             names = {"-p", "--primary-group"})
     public String primaryGroup;
 
+    @Option(description = "List of comma separated primary group values",
+            names = {"-pv", "--primary-group-values"},
+            split = ",")
+    public List<String> primaryGroupValues;
+
     @Option(description = "Secondary group",
             names = {"-s", "--secondary-group"})
     public String secondaryGroup;
+
+    @Option(description = "List of comma separated secondary group values",
+            names = {"-sv", "--secondary-group-values"},
+            split = ",")
+    public List<String> secondaryGroupValues;
 
     @Option(description = "Facet by",
             names = {"--facet-by"})
@@ -114,6 +124,8 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
                 plotType,
                 primaryGroup,
                 secondaryGroup,
+                primaryGroupValues,
+                secondaryGroupValues,
                 facetBy,
                 !hideOverallPValue,
                 !hidePairwisePValue,

@@ -109,6 +109,8 @@ object BasicStatistics {
         val plotType: PlotType? = null,
         val primaryGroup: String? = null,
         val secondaryGroup: String? = null,
+        val primaryGroupValues: List<String>? = null,
+        val secondaryGroupValues: List<String>? = null,
         val facetBy: String? = null,
         val showOverallPValue: Boolean = true,
         val showPairwisePValue: Boolean = true,
@@ -204,7 +206,15 @@ object BasicStatistics {
             }
 
         if (isCategorical(type)) {
-            val plt = type.plot(dfRefined, BasicStatRow::value.name, par.primaryGroup, par.secondaryGroup, par.facetBy)
+            val plt = type.plot(
+                dfRefined,
+                BasicStatRow::value.name,
+                par.primaryGroup,
+                par.secondaryGroup,
+                par.primaryGroupValues,
+                par.secondaryGroupValues,
+                par.facetBy
+            )
                     as GGXDiscrete
 
             if (par.showPairwisePValue)
@@ -238,7 +248,15 @@ object BasicStatistics {
 
             return plt.plot
         } else {
-            val plt = type.plot(dfRefined, par.primaryGroup, BasicStatRow::value.name, par.secondaryGroup, par.facetBy)
+            val plt = type.plot(
+                dfRefined,
+                par.primaryGroup,
+                BasicStatRow::value.name,
+                par.secondaryGroup,
+                par.primaryGroupValues,
+                par.secondaryGroupValues,
+                par.facetBy
+            )
                     as GGScatter
 
 
