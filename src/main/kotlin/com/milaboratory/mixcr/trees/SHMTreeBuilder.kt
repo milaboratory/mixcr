@@ -74,7 +74,7 @@ class SHMTreeBuilder(
         datasets[0].assemblerParameters.cloneFactoryParameters.vParameters.scoring
     private val JScoring: AlignmentScoring<NucleotideSequence> =
         datasets[0].assemblerParameters.cloneFactoryParameters.jParameters.scoring
-    private var decisions = ConcurrentHashMap<Int, Map<VJBase, TreeWithMetaBuilder.DecisionInfo>>()
+    private var decisions = ConcurrentHashMap<CloneWrapper.ID, Map<VJBase, TreeWithMetaBuilder.DecisionInfo>>()
     private var currentTrees = ConcurrentHashMap<VJBase, List<TreeWithMetaBuilder.Snapshot>>()
     private val idGenerators = ConcurrentHashMap<VJBase, IdGenerator>()
     private val calculatedClustersInfo = ConcurrentHashMap<VJBase, CalculatedClusterInfo>()
@@ -202,7 +202,7 @@ class SHMTreeBuilder(
     fun sortedClones(): OutputPortCloseable<CloneWrapper> = createSorter().port(unsortedClonotypes())
 
     fun makeDecisions(): Int {
-        val clonesToRemove: MutableMap<VJBase, MutableSet<Int>> = HashMap()
+        val clonesToRemove: MutableMap<VJBase, MutableSet<CloneWrapper.ID>> = HashMap()
         decisions.forEach { (cloneId, decisions) ->
             val chosenDecision: VJBase = ClusterProcessor.makeDecision(decisions)
             decisions.keys
@@ -246,7 +246,7 @@ class SHMTreeBuilder(
     ) {
         val VJBase = clusterVJBase(clusterBySameVAndJ)
         val clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase)
-        val currentTrees = clusterProcessor.restore(currentTrees[VJBase]!!)
+        val currentTrees = currentTrees[VJBase]!!.map { snapshot -> clusterProcessor.restore(snapshot) }
         val debugInfos = clusterProcessor.debugInfos(currentTrees)
         XSV.writeXSVBody(debugOfPreviousStep, debugInfos, DebugInfo.COLUMNS_FOR_XSV, ";")
         val result = clusterProcessor.applyStep(step, currentTrees)
@@ -260,7 +260,29 @@ class SHMTreeBuilder(
     fun getResult(clusterBySameVAndJ: Cluster<CloneWrapper>, previousStepDebug: PrintStream): List<SHMTree> {
         val VJBase = clusterVJBase(clusterBySameVAndJ)
         val clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase)
-        val currentTrees = clusterProcessor.restore(currentTrees[VJBase]!!)
+        val currentTrees = currentTrees[VJBase]!!
+            .map { snapshot ->
+                if (!snapshot.dirty) {
+                    val reconstructedNDN = snapshot.lastFoundNDN
+                    clusterProcessor.restore(
+                        snapshot.copy(
+                            rootInfo = snapshot.rootInfo.copy(
+                                reconstructedNDN = reconstructedNDN
+                            )
+                        )
+                    )
+                } else {
+                    val currentVersionOfTheTree = clusterProcessor.restore(snapshot)
+                    val reconstructedNDN = currentVersionOfTheTree.mostRecentCommonAncestorNDN()
+                    clusterProcessor.restore(
+                        currentVersionOfTheTree.snapshot().copy(
+                            rootInfo = snapshot.rootInfo.copy(
+                                reconstructedNDN = reconstructedNDN
+                            )
+                        )
+                    )
+                }
+            }
         val debugInfos = clusterProcessor.debugInfos(currentTrees)
         XSV.writeXSVBody(previousStepDebug, debugInfos, DebugInfo.COLUMNS_FOR_XSV, ";")
         return currentTrees.asSequence()

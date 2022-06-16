@@ -57,7 +57,7 @@ internal class ClusterProcessor private constructor(
             val clonesInTrees = currentTrees
                 .flatMap { it.clonesAdditionHistory }
                 .toSet()
-            rebaseFromGermline(originalCluster.cluster.asSequence().filter { !clonesInTrees.contains(it.clone.id) })
+            rebaseFromGermline(originalCluster.cluster.asSequence().filter { it.id !in clonesInTrees })
         }
 
     private fun stepByName(stepName: BuildSHMTreeStep): Step = when (stepName) {
@@ -108,37 +108,29 @@ internal class ClusterProcessor private constructor(
         )
     }
 
-    private fun hasVJPairThatMatchesWithGermline(clone: Clone): Boolean {
-        return clone.getHits(Variable)
-            .flatMap { VHit ->
-                clone.getHits(Joining).map { JHit -> mutationsCount(VHit) + mutationsCount(JHit) }
-            }
-            .any { it < parameters.commonMutationsCountForClustering }
-    }
+    private fun hasVJPairThatMatchesWithGermline(clone: Clone): Boolean = clone.getHits(Variable)
+        .flatMap { VHit -> clone.getHits(Joining).map { JHit -> mutationsCount(VHit) + mutationsCount(JHit) } }
+        .any { it < parameters.commonMutationsCountForClustering }
 
     private fun mutationsCount(hit: VDJCHit): Int = hit.alignments.sumOf { it.absoluteMutations.size() }
 
-    fun restore(resultTrees: List<TreeWithMetaBuilder.Snapshot>): List<TreeWithMetaBuilder> {
-        val clonesInTrees = resultTrees
-            .flatMap { it.clonesAdditionHistory }
-            .toSet()
+    fun restore(snapshot: TreeWithMetaBuilder.Snapshot): TreeWithMetaBuilder {
+        val clonesInTrees = snapshot.clonesAdditionHistory.toSet()
         val clonesByIds = originalCluster.cluster
-            .filter { it.clone.id in clonesInTrees }
-            .associateBy { it.clone.id }
-        return resultTrees.map { treeSnapshot ->
-            val treeWithMetaBuilder = TreeWithMetaBuilder(
-                createTreeBuilder(treeSnapshot.rootInfo),
-                treeSnapshot.rootInfo,
-                ClonesRebase(VSequence1, JSequence1, scoringSet),
-                LinkedList(),
-                treeSnapshot.treeId
-            )
-            treeSnapshot.clonesAdditionHistory.forEach { cloneId ->
-                val rebasedClone = treeWithMetaBuilder.rebaseClone(rebaseFromGermline(clonesByIds[cloneId]!!))
-                treeWithMetaBuilder.addClone(rebasedClone)
-            }
-            treeWithMetaBuilder
+            .filter { it.id in clonesInTrees }
+            .associateBy { it.id }
+        val treeWithMetaBuilder = TreeWithMetaBuilder(
+            createTreeBuilder(snapshot.rootInfo),
+            snapshot.rootInfo,
+            ClonesRebase(VSequence1, JSequence1, scoringSet),
+            LinkedList(),
+            snapshot.treeId
+        )
+        snapshot.clonesAdditionHistory.forEach { cloneId ->
+            val rebasedClone = treeWithMetaBuilder.rebaseClone(rebaseFromGermline(clonesByIds[cloneId]!!))
+            treeWithMetaBuilder.addClone(rebasedClone)
         }
+        return treeWithMetaBuilder
     }
 
     private fun rebaseFromGermline(clones: Sequence<CloneWrapper>): List<CloneWithMutationsFromVJGermline> = clones
@@ -234,8 +226,8 @@ internal class ClusterProcessor private constructor(
         from: TreeWithMetaBuilder,
         destination: TreeWithMetaBuilder
     ): BigDecimal {
-        val oldestAncestorOfFrom = from.oldestReconstructedAncestor()
-        val oldestAncestorOfDestination = destination.oldestReconstructedAncestor()
+        val oldestAncestorOfFrom = from.mostRecentCommonAncestor()
+        val oldestAncestorOfDestination = destination.mostRecentCommonAncestor()
         val destinationRebasedOnFrom = clonesRebase.rebaseMutations(
             oldestAncestorOfDestination.fromRootToThis,
             originalRoot = destination.rootInfo,
@@ -253,7 +245,7 @@ internal class ClusterProcessor private constructor(
     private fun attachClonesByNDN(
         originalTrees: List<TreeWithMetaBuilder>, clonesNotInClusters: Supplier<List<CloneWithMutationsFromVJGermline>>
     ): StepResult {
-        val decisions: MutableMap<Int, TreeWithMetaBuilder.DecisionInfo> = HashMap()
+        val decisions: MutableMap<CloneWrapper.ID, TreeWithMetaBuilder.DecisionInfo> = HashMap()
         val resultTrees = originalTrees.map { it.copy() }
         clonesNotInClusters.get().asSequence()
             .filter { clone -> clone.mutations.VJMutationsCount < parameters.commonMutationsCountForClustering }
@@ -261,7 +253,7 @@ internal class ClusterProcessor private constructor(
                 val bestTreeToAttach = resultTrees
                     .map { tree: TreeWithMetaBuilder ->
                         val rebasedClone = tree.rebaseClone(clone)
-                        val oldestAncestorOfTreeToGrow = tree.oldestReconstructedAncestor()
+                        val oldestAncestorOfTreeToGrow = tree.mostRecentCommonAncestor()
                         //TODO check also every clone with minimum mutations from germline (align with oldest and use diff)
                         val NDNOfTreeToGrow =
                             oldestAncestorOfTreeToGrow.fromRootToThis.NDNMutations.buildSequence(tree.rootInfo)
@@ -287,7 +279,7 @@ internal class ClusterProcessor private constructor(
                     val metric = bestTreeToAttach.first
                     if (metric <= parameters.thresholdForCombineByNDN) {
                         bestTreeToAttach.second()
-                        decisions[clone.cloneWrapper.clone.id] = MetricDecisionInfo(metric)
+                        decisions[clone.cloneWrapper.id] = MetricDecisionInfo(metric)
                     }
                 }
             }
@@ -299,7 +291,7 @@ internal class ClusterProcessor private constructor(
         clonesNotInClustersSupplier: Supplier<List<CloneWithMutationsFromVJGermline>>
     ): StepResult {
         val result = originalTrees.map { it.copy() }
-        val decisions: MutableMap<Int, TreeWithMetaBuilder.DecisionInfo> = HashMap()
+        val decisions: MutableMap<CloneWrapper.ID, TreeWithMetaBuilder.DecisionInfo> = HashMap()
         val clonesNotInClusters = clonesNotInClustersSupplier.get()
         //try to add as nodes clones that wasn't picked up by clustering
         for (i in clonesNotInClusters.indices.reversed()) {
@@ -319,7 +311,7 @@ internal class ClusterProcessor private constructor(
                     val distanceFromRoot = bestActionAndDistanceFromRoot.second
                     val metric = bestAction.changeOfDistance().toDouble() / distanceFromRoot
                     if (metric <= parameters.thresholdForFreeClones) {
-                        decisions[clone.cloneWrapper.clone.id] = MetricDecisionInfo(metric)
+                        decisions[clone.cloneWrapper.id] = MetricDecisionInfo(metric)
                         bestAction.apply()
                     }
                 }
@@ -430,22 +422,19 @@ internal class ClusterProcessor private constructor(
         return result
     }
 
-    private fun buildATreeWithDecisionsInfo(cluster: Cluster<CloneWithMutationsFromVJGermline>): Pair<List<Pair<Int, TreeWithMetaBuilder.DecisionInfo>>, TreeWithMetaBuilder> {
+    private fun buildATreeWithDecisionsInfo(cluster: Cluster<CloneWithMutationsFromVJGermline>): Pair<List<Pair<CloneWrapper.ID, TreeWithMetaBuilder.DecisionInfo>>, TreeWithMetaBuilder> {
         val treeWithMetaBuilder = buildATree(cluster)
         val decisionsInfo = cluster.cluster.map {
-            val effectiveParent = treeWithMetaBuilder.getEffectiveParent(it.cloneWrapper.clone)
+            val effectiveParent = treeWithMetaBuilder.getEffectiveParent(it.cloneWrapper.id)
             val VHit = it.cloneWrapper.getHit(Variable)
             val JHit = it.cloneWrapper.getHit(Joining)
-            Pair(
-                it.cloneWrapper.clone.id,
-                ZeroStepDecisionInfo(
-                    effectiveParent.fromRootToThis.VMutations.mutationsCount() +
-                        effectiveParent.fromRootToThis.JMutations.mutationsCount(),
-                    VHit.gene.geneName,
-                    JHit.gene.geneName,
-                    VHit.score,
-                    JHit.score
-                )
+            it.cloneWrapper.id to ZeroStepDecisionInfo(
+                effectiveParent.fromRootToThis.VMutations.mutationsCount() +
+                    effectiveParent.fromRootToThis.JMutations.mutationsCount(),
+                VHit.gene.geneName,
+                JHit.gene.geneName,
+                VHit.score,
+                JHit.score
             )
         }
         return Pair(decisionsInfo, treeWithMetaBuilder)
@@ -669,7 +658,7 @@ internal class ClusterProcessor private constructor(
         .key
 
     private fun buildStepResult(
-        decisions: Map<Int, TreeWithMetaBuilder.DecisionInfo>,
+        decisions: Map<CloneWrapper.ID, TreeWithMetaBuilder.DecisionInfo>,
         trees: List<TreeWithMetaBuilder>
     ): StepResult = StepResult(
         decisions,
@@ -682,7 +671,7 @@ internal class ClusterProcessor private constructor(
     )
 
     private fun buildDebugInfo(
-        decisions: Map<Int, TreeWithMetaBuilder.DecisionInfo>,
+        decisions: Map<CloneWrapper.ID, TreeWithMetaBuilder.DecisionInfo>,
         tree: TreeWithMetaBuilder,
         nodeWithParent: NodeWithParent<ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, SyntheticNode>>
     ): DebugInfo {
@@ -691,7 +680,7 @@ internal class ClusterProcessor private constructor(
             .convert({ null }, { it })!!
         val cloneId = nodeWithParent.node.links
             .map { it.node }
-            .firstNotNullOfOrNull { child -> child.content.convert({ it.clone.clone.id }, { null }) }
+            .firstNotNullOfOrNull { child -> child.content.convert({ it.clone.id }, { null }) }
         var metric: Double? = null
         if (cloneId != null) {
             val decision = decisions[cloneId]
@@ -757,7 +746,7 @@ internal class ClusterProcessor private constructor(
     }
 
     class StepResult internal constructor(
-        val decisions: Map<Int, TreeWithMetaBuilder.DecisionInfo>,
+        val decisions: Map<CloneWrapper.ID, TreeWithMetaBuilder.DecisionInfo>,
         val snapshots: List<TreeWithMetaBuilder.Snapshot>,
         val nodesDebugInfo: List<DebugInfo>
     )

@@ -12,7 +12,7 @@ import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 
 @Serializable(by = RootInfoSerializer::class)
-class RootInfo(
+data class RootInfo(
     val VSequence: NucleotideSequence,
     val VRangeInCDR3: Range,
     val reconstructedNDN: NucleotideSequence,

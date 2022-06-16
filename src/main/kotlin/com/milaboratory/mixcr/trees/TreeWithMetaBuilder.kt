@@ -1,19 +1,18 @@
 package com.milaboratory.mixcr.trees
 
-import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.trees.Tree.NodeWithParent
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.Reconstructed
 import io.repseq.core.GeneType
 import java.math.BigDecimal
 import java.util.*
-import java.util.stream.Collectors
 
 class TreeWithMetaBuilder(
     private val treeBuilder: TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, SyntheticNode, MutationsDescription>,
     val rootInfo: RootInfo,
     private val clonesRebase: ClonesRebase,
-    val clonesAdditionHistory: LinkedList<Int>,
+    val clonesAdditionHistory: LinkedList<CloneWrapper.ID>,
     val treeId: TreeId
 ) {
     fun copy(): TreeWithMetaBuilder {
@@ -27,15 +26,15 @@ class TreeWithMetaBuilder(
     /**
      * first parent is copy of clone, we need grandparent
      */
-    fun getEffectiveParent(clone: Clone): SyntheticNode = treeBuilder.tree.allNodes()
+    fun getEffectiveParent(toSearch: CloneWrapper.ID): SyntheticNode = treeBuilder.tree.allNodes()
         .filter { nodeWithParent ->
             nodeWithParent.node.links
                 .mapNotNull { link ->
                     link.node.content.convert(
-                        { it.clone.clone.id },
+                        { it.clone.id },
                         { null })
                 }
-                .any { cloneId: Int -> clone.id == cloneId }
+                .any { cloneWrapperId -> toSearch == cloneWrapperId }
         }
         .map { it.parent }
         .filterNotNull()
@@ -47,10 +46,10 @@ class TreeWithMetaBuilder(
 
     fun addClone(rebasedClone: CloneWithMutationsFromReconstructedRoot) {
         treeBuilder.addNode(rebasedClone)
-        clonesAdditionHistory.add(rebasedClone.clone.clone.id)
+        clonesAdditionHistory.add(rebasedClone.clone.id)
     }
 
-    fun oldestReconstructedAncestor(): SyntheticNode {
+    fun mostRecentCommonAncestor(): SyntheticNode {
         //TODO check that there is only one direct child of the root
         val oldestReconstructedAncestor = treeBuilder.tree.root
             .links[0]
@@ -60,7 +59,7 @@ class TreeWithMetaBuilder(
     }
 
     fun buildResult(): Tree<CloneOrFoundAncestor> {
-        val reconstructedRoot = oldestReconstructedAncestor()
+        val mostRecentCommonAncestor = mostRecentCommonAncestor()
         val rootAsNode = (treeBuilder.tree.root.content as Reconstructed).content
         return treeBuilder.tree
             .map { parent, node ->
@@ -72,9 +71,9 @@ class TreeWithMetaBuilder(
                 val distanceFromReconstructedRootToNode = when (parent) {
                     null -> null
                     else -> treeBuilder.distance(
-                        reconstructedRoot,
+                        mostRecentCommonAncestor,
                         treeBuilder.mutationsBetween(
-                            reconstructedRoot,
+                            mostRecentCommonAncestor,
                             nodeAsMutationsFromGermline
                         )
                     )
@@ -90,16 +89,12 @@ class TreeWithMetaBuilder(
                 CloneOrFoundAncestor(
                     node.id,
                     cloneWrapper?.clone,
-                    cloneWrapper?.datasetId,
+                    cloneWrapper?.id?.datasetId,
                     mutationsSet,
                     distanceFromGermlineToNode,
                     distanceFromReconstructedRootToNode
                 )
             }
-    }
-
-    private fun asMutations(parent: ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, SyntheticNode>): MutationsSet {
-        return parent.convert({ it.mutationsSet }) { it.fromRootToThis }
     }
 
     fun allNodes(): Sequence<NodeWithParent<ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, SyntheticNode>>> =
@@ -114,7 +109,7 @@ class TreeWithMetaBuilder(
 
             override fun apply() {
                 bestAction.apply()
-                clonesAdditionHistory.add(rebasedClone.clone.clone.id)
+                clonesAdditionHistory.add(rebasedClone.clone.id)
             }
         }
     }
@@ -122,7 +117,15 @@ class TreeWithMetaBuilder(
     fun distanceFromRootToClone(rebasedClone: CloneWithMutationsFromReconstructedRoot): Double =
         treeBuilder.distanceFromRootToObserved(rebasedClone).toDouble()
 
-    fun snapshot(): Snapshot = Snapshot(clonesAdditionHistory, rootInfo, treeId)
+    fun snapshot(): Snapshot = Snapshot(
+        clonesAdditionHistory,
+        rootInfo,
+        treeId,
+        mostRecentCommonAncestorNDN()
+    )
+
+    fun mostRecentCommonAncestorNDN() =
+        mostRecentCommonAncestor().fromRootToThis.NDNMutations.mutations.mutate(rootInfo.reconstructedNDN)
 
     data class TreeId(
         val id: Int,
@@ -131,21 +134,19 @@ class TreeWithMetaBuilder(
         fun encode(): String = "${VJBase.VGeneId.name}-${VJBase.CDR3length}-${VJBase.JGeneId.name}-${id}"
     }
 
-    class Snapshot(//TODO save position and action description to skip recalculation
-        val clonesAdditionHistory: List<Int>,
+    data class Snapshot(//TODO save position and action description to skip recalculation
+        val clonesAdditionHistory: List<CloneWrapper.ID>,
         val rootInfo: RootInfo,
-        val treeId: TreeId
+        val treeId: TreeId,
+        val lastFoundNDN: NucleotideSequence,
+        val dirty: Boolean = false
     ) {
 
-        fun excludeClones(toExclude: Set<Int?>): Snapshot {
-            return Snapshot(
-                clonesAdditionHistory.stream()
-                    .filter { !toExclude.contains(it) }
-                    .collect(
-                        Collectors.toCollection { LinkedList() }
-                    ),
-                rootInfo,
-                treeId
+        fun excludeClones(toExclude: Set<CloneWrapper.ID>): Snapshot {
+            val newHistory = clonesAdditionHistory.filter { it !in toExclude }
+            return copy(
+                clonesAdditionHistory = newHistory,
+                dirty = clonesAdditionHistory.size != newHistory.size
             )
         }
     }

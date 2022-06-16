@@ -28,9 +28,10 @@ class CloneWrapper(
     /**
      * Dataset serial number
      */
-    val datasetId: Int,
+    datasetId: Int,
     val VJBase: VJBase
 ) {
+    val id = ID(clone.id, datasetId)
     fun getHit(geneType: GeneType): VDJCHit {
         val geneId = VJBase.getGeneId(geneType)
         return clone.getHits(geneType).first { it.gene.id == geneId }
@@ -66,26 +67,41 @@ class CloneWrapper(
         return targetIndex
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || javaClass != other.javaClass) return false
-        val that = other as CloneWrapper
-        return datasetId == that.datasetId && clone == that.clone
-    }
-
-    override fun hashCode(): Int = Objects.hash(clone, datasetId)
 
     fun getRelativePosition(geneType: GeneType, referencePoint: ReferencePoint): Int {
         val hit = getHit(geneType)
         return hit.gene.partitioning
             .getRelativePosition(hit.alignedFeature, referencePoint)
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as CloneWrapper
+
+        if (VJBase != other.VJBase) return false
+        if (id != other.id) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = VJBase.hashCode()
+        result = 31 * result + id.hashCode()
+        return result
+    }
+
+    data class ID(
+        val cloneId: Int,
+        val datasetId: Int
+    )
 }
 
 class SerializerImpl : Serializer<CloneWrapper> {
     override fun write(output: PrimitivO, `object`: CloneWrapper) {
         output.writeObject(`object`.clone)
-        output.writeInt(`object`.datasetId)
+        output.writeInt(`object`.id.datasetId)
         output.writeObject(`object`.VJBase.VGeneId)
         output.writeObject(`object`.VJBase.JGeneId)
         output.writeInt(`object`.VJBase.CDR3length)
