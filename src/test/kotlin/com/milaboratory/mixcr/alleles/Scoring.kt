@@ -10,6 +10,8 @@ import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
+import com.milaboratory.util.TempFileDest
+import com.milaboratory.util.TempFileManager
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
@@ -60,9 +62,11 @@ class Scoring {
 //        val datasets = listOf(
 //            mkReader("D01_p01_Btot_1")
 //        )
+        val tempDest: TempFileDest = TempFileManager.systemTempFolderDestination("for_tests")
         val allelesBuilder = AllelesBuilder(
             FindAllelesParametersPresets.getByName("default")!!,
-            datasets
+            datasets,
+            tempDest
         )
         val geneType = Variable
         val sortedClones = allelesBuilder.sortClonotypes().getSortedBy(geneType)

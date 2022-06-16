@@ -19,6 +19,7 @@ import com.milaboratory.mixcr.util.Cluster
 import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
+import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.sorting.HashSorter
 import io.repseq.core.BaseSequence
 import io.repseq.core.GeneFeature
@@ -28,14 +29,14 @@ import io.repseq.core.GeneType.Variable
 import io.repseq.core.ReferencePoint
 import io.repseq.core.VDJCGene
 import io.repseq.dto.VDJCGeneData
-import java.nio.file.Files
 import java.util.*
 import java.util.function.Supplier
 import kotlin.collections.set
 
 class AllelesBuilder(
     private val parameters: FindAllelesParameters,
-    private val datasets: List<CloneReader>
+    private val datasets: List<CloneReader>,
+    private val tempDest: TempFileDest
 ) {
     private val VScoring = datasets[0].assemblerParameters.cloneFactoryParameters.vParameters.scoring
     private val JScoring = datasets[0].assemblerParameters.cloneFactoryParameters.jParameters.scoring
@@ -66,7 +67,7 @@ class AllelesBuilder(
                 { clone: Clone -> clone.getBestHit(geneType).gene.id.name.hashCode() },
                 Comparator.comparing { clone: Clone -> clone.getBestHit(geneType).gene.id.name },
                 5,
-                Files.createTempFile("alleles.searcher", "hash.sorter"),
+                tempDest.addSuffix("alleles.searcher"),
                 8,
                 8,
                 stateBuilder.oState,
@@ -138,7 +139,7 @@ class AllelesBuilder(
                 }
             }
         }
-        return CUtils.wrapSynchronized(result)
+        return CUtils.makeSynchronized(result)
     }
 
     private fun findAlleles(clusterByTheSameGene: Cluster<Clone>, geneType: GeneType): List<Allele> {

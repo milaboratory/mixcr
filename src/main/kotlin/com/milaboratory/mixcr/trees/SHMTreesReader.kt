@@ -3,6 +3,8 @@ package com.milaboratory.mixcr.trees
 import cc.redberry.pipe.OutputPortCloseable
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.basictypes.VDJCFileHeaderData
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid
 import com.milaboratory.primitivio.readList
@@ -16,12 +18,14 @@ import java.util.*
 class SHMTreesReader(
     private val input: PrimitivIHybrid,
     libraryRegistry: VDJCLibraryRegistry
-) : AutoCloseable by input {
+) : AutoCloseable by input, VDJCFileHeaderData {
     val assemblerParameters: CloneAssemblerParameters
     val alignerParameters: VDJCAlignerParameters
+    private val tagsInfo: TagsInfo
     private val fileNames: List<String>
     private val versionInfo: String
     private val treesPosition: Long
+    override fun getTagsInfo(): TagsInfo = tagsInfo
 
     constructor(input: String, libraryRegistry: VDJCLibraryRegistry) : this(
         PrimitivIHybrid(Paths.get(input), 3),
@@ -51,7 +55,8 @@ class SHMTreesReader(
         input.beginPrimitivI(true).use { i ->
             versionInfo = i.readUTF()
             assemblerParameters = i.readObjectRequired()
-            alignerParameters = i.readObjectRequired<VDJCAlignerParameters>()
+            alignerParameters = i.readObjectRequired()
+            tagsInfo = i.readObjectRequired()
             val liberalise = i.readMap<String, VDJCLibraryData>()
             liberalise.forEach { (name: String, libraryData: VDJCLibraryData) ->
                 libraryRegistry.registerLibrary(null, name, libraryData)

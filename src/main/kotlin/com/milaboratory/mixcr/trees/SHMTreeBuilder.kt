@@ -47,6 +47,7 @@ import com.milaboratory.mixcr.trees.ClusterProcessor.CalculatedClusterInfo
 import com.milaboratory.mixcr.util.Cluster
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
+import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.sorting.HashSorter
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
@@ -58,7 +59,6 @@ import io.repseq.core.VDJCGene
 import io.repseq.core.VDJCGeneId
 import java.io.IOException
 import java.io.PrintStream
-import java.nio.file.Files
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -68,6 +68,7 @@ class SHMTreeBuilder(
     private val parameters: SHMTreeBuilderParameters,
     private val clusteringCriteria: ClusteringCriteria,
     private val datasets: List<CloneReader>,
+    private val tempDest: TempFileDest,
     private val cloneIds: Set<Int>
 ) {
     private val VScoring: AlignmentScoring<NucleotideSequence> =
@@ -113,7 +114,7 @@ class SHMTreeBuilder(
             clusteringCriteria.clusteringHashCode(),
             clusteringCriteria.clusteringComparatorWithNumberOfMutations(VScoring, JScoring),
             5,
-            Files.createTempFile("tree.builder", "hash.sorter"),
+            tempDest.addSuffix("tree.builder"),
             8,
             8,
             stateBuilder.oState,
@@ -195,10 +196,9 @@ class SHMTreeBuilder(
             }
         }
 
-        return CUtils.wrapSynchronized(result)
+        return CUtils.makeSynchronized(result)
     }
 
-    @Throws(IOException::class)
     fun sortedClones(): OutputPortCloseable<CloneWrapper> = createSorter().port(unsortedClonotypes())
 
     fun makeDecisions(): Int {

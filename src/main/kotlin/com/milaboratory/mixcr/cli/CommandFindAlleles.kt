@@ -46,11 +46,13 @@ import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSetIO
+import com.milaboratory.mixcr.basictypes.GeneAndScore
 import com.milaboratory.mixcr.trees.MutationsUtils.positionIfNucleotideWasDeleted
 import com.milaboratory.mixcr.util.XSV.writeXSVBody
 import com.milaboratory.mixcr.util.XSV.writeXSVHeaders
 import com.milaboratory.util.GlobalObjectMappers
-import gnu.trove.map.hash.TObjectFloatHashMap
+import com.milaboratory.util.TempFileDest
+import com.milaboratory.util.TempFileManager
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Constant
 import io.repseq.core.GeneType.Diversity
@@ -89,6 +91,12 @@ outputs for '/some/folder1/input_file.clns /some/folder2/input_file2.clns {file_
 Resulted outputs must be uniq"""]
     )
     private val inOut: List<String> = ArrayList()
+
+    @CommandLine.Option(
+        description = ["Use system temp folder for temporary files, the output folder will be used if this option is omitted."],
+        names = ["--use-system-temp"]
+    )
+    var useSystemTemp = false
 
     private val outputClnsFiles: List<String> by lazy {
         val template = inOut[inOut.size - 1]
@@ -163,7 +171,9 @@ Resulted outputs must be uniq"""]
         require(cloneReaders.map { it.assemblerParameters }.distinct().count() == 1) {
             "input files must have the same assembler parameters"
         }
-        val allelesBuilder = AllelesBuilder(findAllelesParameters!!, cloneReaders)
+
+        val tempDest: TempFileDest = TempFileManager.smartTempDestination(outputClnsFiles.first(), "", useSystemTemp)
+        val allelesBuilder = AllelesBuilder(findAllelesParameters!!, cloneReaders, tempDest)
         val sortedClonotypes = allelesBuilder.sortClonotypes()
         val alleles = (
             buildAlleles(allelesBuilder, sortedClonotypes, Variable) +
@@ -238,6 +248,7 @@ Resulted outputs must be uniq"""]
             resultLibrary.genes,
             cloneReader.alignerParameters,
             cloneReader.assemblerParameters,
+            cloneReader.tagsInfo,
             cloneReader.ordering()
         )
         ClnsWriter(this).use { clnsWriter ->
@@ -330,42 +341,39 @@ Resulted outputs must be uniq"""]
         cloneFactory: CloneFactory,
         clone: Clone
     ): Clone {
-        val originalGeneScores = EnumMap<GeneType, TObjectFloatHashMap<VDJCGeneId>>(
+        val originalGeneScores = EnumMap<GeneType, List<GeneAndScore>>(
             GeneType::class.java
         )
         //copy D and C
         for (gt in listOf(Diversity, Constant)) {
-            val scores = TObjectFloatHashMap<VDJCGeneId>()
-            for (hit in clone.getHits(gt)) {
+            originalGeneScores[gt] = clone.getHits(gt).map { hit ->
                 val mappedGeneId = VDJCGeneId(resultLibrary.libraryId, hit.gene.name)
-                scores.put(mappedGeneId, hit.score)
+                GeneAndScore(mappedGeneId, hit.score)
             }
-            originalGeneScores[gt] = scores
         }
         for (gt in listOf(Variable, Joining)) {
-            val scores = TObjectFloatHashMap<VDJCGeneId>()
-            for (hit in clone.getHits(gt)) {
-                for (foundAlleleId in allelesMapping[hit.gene.name]!!) {
+            originalGeneScores[gt] = clone.getHits(gt).flatMap { hit ->
+                allelesMapping[hit.gene.name]!!.map { foundAlleleId ->
                     if (foundAlleleId.name != hit.gene.name) {
                         val scoreDelta = scoreDelta(
                             resultLibrary[foundAlleleId.name],
                             cloneFactory.parameters.getVJCParameters(gt).scoring,
                             hit.alignments
                         )
-                        scores.put(foundAlleleId, hit.score + scoreDelta)
+                        GeneAndScore(foundAlleleId, hit.score + scoreDelta)
                     } else {
-                        scores.put(foundAlleleId, hit.score)
+                        GeneAndScore(foundAlleleId, hit.score)
                     }
                 }
             }
-            originalGeneScores[gt] = scores
         }
         return cloneFactory.create(
             clone.id,
             clone.count,
             originalGeneScores,
-            clone.tagCounter,
-            clone.targets
+            clone.tagCount,
+            clone.targets,
+            clone.group
         )
     }
 

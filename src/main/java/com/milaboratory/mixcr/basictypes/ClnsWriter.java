@@ -113,9 +113,11 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
     }
 
     public void writeCloneSet(PipelineConfiguration configuration, CloneSet cloneSet, List<VDJCLibrary> libraries) {
-        writeHeader(configuration,
+        writeHeader(
+                configuration,
                 cloneSet.getAlignmentParameters(),
                 cloneSet.getAssemblerParameters(),
+                cloneSet.tagsInfo,
                 cloneSet.getOrdering(),
                 cloneSet.getUsedGenes(),
                 cloneSet,

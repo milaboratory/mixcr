@@ -85,7 +85,7 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
             switch (magicString) {
                 case MAGIC:
                     break;
-                case MAGIC_V10:
+                case MAGIC_V11:
                     readLibraries = false;
                     break;
                 default:

@@ -4,6 +4,7 @@ import cc.redberry.pipe.InputPort
 import com.milaboratory.cli.AppVersionInfo
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.primitivio.Util
@@ -24,6 +25,7 @@ class SHMTreesWriter(
         alignerParameters: VDJCAlignerParameters,
         fileNames: List<String>,
         genes: List<VDJCGene>,
+        tagInfo: TagsInfo,
         libraries: List<VDJCLibrary>
     ) {
         output.beginPrimitivO(true).use { o ->
@@ -36,6 +38,7 @@ class SHMTreesWriter(
             // Writing analysis meta-information
             o.writeObject(assemblerParameters)
             o.writeObject(alignerParameters)
+            o.writeObject(tagInfo)
             Util.writeMap(
                 libraries.associateBy({ obj -> obj.name }, { obj -> obj.data }),
                 o

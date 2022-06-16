@@ -43,6 +43,8 @@ import com.milaboratory.mixcr.trees.SHMTreesWriter
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
+import com.milaboratory.util.TempFileDest
+import com.milaboratory.util.TempFileManager
 import io.repseq.core.VDJCLibraryRegistry
 import org.apache.commons.io.FilenameUtils
 import picocli.CommandLine
@@ -96,6 +98,12 @@ class CommandBuildSHMTrees : ACommandWithOutputMiXCR() {
     var debugDirectory: Path? = null
     private var shmTreeBuilderParameters: SHMTreeBuilderParameters? = null
 
+    @CommandLine.Option(
+        description = ["Use system temp folder for temporary files, the output folder will be used if this option is omitted."],
+        names = ["--use-system-temp"]
+    )
+    var useSystemTemp = false
+
     private fun ensureParametersInitialized() {
         if (shmTreeBuilderParameters == null) {
             shmTreeBuilderParameters = SHMTreeBuilderParametersPresets.getByName(shmTreeBuilderParametersName)
@@ -125,13 +133,16 @@ class CommandBuildSHMTrees : ACommandWithOutputMiXCR() {
             CloneSetIO.mkReader(Paths.get(path), VDJCLibraryRegistry.getDefault())
         }
         require(cloneReaders.isNotEmpty()) { "there is no files to process" }
+        //TODO check other common things
         require(
             cloneReaders.map { it.assemblerParameters }.distinct().count() == 1
         ) { "input files must have the same assembler parameters" }
+        val tempDest: TempFileDest = TempFileManager.smartTempDestination(outputTreesPath, "", useSystemTemp)
         val shmTreeBuilder = SHMTreeBuilder(
             shmTreeBuilderParameters!!,
             DefaultClusteringCriteria(),
             cloneReaders,
+            tempDest,
             cloneIds
         )
         val cloneWrappersCount = shmTreeBuilder.cloneWrappersCount()
@@ -202,6 +213,7 @@ class CommandBuildSHMTrees : ACommandWithOutputMiXCR() {
                 cloneReaders.first().alignerParameters,
                 clnsFileNames,
                 usedGenes,
+                cloneReaders.first().tagsInfo,
                 usedGenes.map { it.parentLibrary }.distinct()
             )
 
