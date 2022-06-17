@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
 package com.milaboratory.mixcr.postanalysis.diversity;
 
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
@@ -47,7 +58,7 @@ public class DiversityCharacteristicTest {
             TestDataset<TestObject> ds = Arrays.stream(datasets).filter(d -> d.id.equals(cell.datasetId)).findFirst().get();
             if (cell.key == DiversityMeasure.InverseSimpson)
                 Assert.assertEquals(SimpsonIndex(ds.data), cell.value, 1e-6);
-            if (cell.key == DiversityMeasure.ShannonWeiner)
+            if (cell.key == DiversityMeasure.ShannonWiener)
                 Assert.assertEquals(Math.exp(ShannonEntropy(ds.data)), cell.value, 1e-6);
         }
     }

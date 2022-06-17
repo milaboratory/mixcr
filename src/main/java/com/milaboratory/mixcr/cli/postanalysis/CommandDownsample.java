@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
 package com.milaboratory.mixcr.cli.postanalysis;
 
 import cc.redberry.pipe.CUtils;
@@ -8,9 +19,9 @@ import com.milaboratory.mixcr.cli.CommonDescriptions;
 import com.milaboratory.mixcr.postanalysis.Dataset;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
-import com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingUtil;
 import com.milaboratory.mixcr.postanalysis.preproc.ElementPredicate;
 import com.milaboratory.mixcr.postanalysis.ui.ClonotypeDataset;
+import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParameters;
 import io.repseq.core.Chains;
 import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine.Command;
@@ -46,10 +57,6 @@ public class CommandDownsample extends ACommandWithOutputMiXCR {
             required = true)
     public String downsampling;
 
-    @Option(description = "Random seed.",
-            names = {"--random-seed"})
-    public long seed = 111;
-
     @Option(description = "Suffix to add to output clns file.",
             names = {"--suffix"})
     public String suffix = "downsampled";
@@ -57,6 +64,11 @@ public class CommandDownsample extends ACommandWithOutputMiXCR {
     @Option(description = "Output path prefix.",
             names = {"--out"})
     public String out;
+
+    @Override
+    protected List<String> getInputFiles() {
+        return new ArrayList<>(in);
+    }
 
     private Path output(String input) {
         String outName = Paths.get(input).getFileName().toString()
@@ -85,11 +97,11 @@ public class CommandDownsample extends ACommandWithOutputMiXCR {
                         new ClonotypeDataset(file, file, VDJCLibraryRegistry.getDefault())
                 ).collect(Collectors.toList());
 
-        SetPreprocessorFactory<Clone> preproc = DownsamplingUtil
-                .parseDownsampling(this.downsampling, false, seed)
+        SetPreprocessorFactory<Clone> preproc = PostanalysisParameters
+                .parseDownsampling(this.downsampling, CommandPa.extractTagsInfo(getInputFiles()), false)
                 .filterFirst(new ElementPredicate.IncludeChains(Chains.getByName(chains)));
         if (onlyProductive)
-            preproc = DownsamplingUtil.filterOnlyProductive(preproc);
+            preproc = PostanalysisParameters.filterOnlyProductive(preproc);
 
         Dataset<Clone>[] result = SetPreprocessor.processDatasets(preproc.newInstance(), datasets);
 
@@ -104,7 +116,7 @@ public class CommandDownsample extends ACommandWithOutputMiXCR {
                 ClonotypeDataset r = datasets.get(i);
                 clnsWriter.writeHeader(null,
                         r.getAlignerParameters(), r.getAssemblerParameters(),
-                        r.ordering(), r.getUsedGenes(), r.getAlignerParameters(), downsampled.size());
+                        r.getTagsInfo(), r.ordering(), r.getUsedGenes(), r.getAlignerParameters(), downsampled.size());
 
                 CUtils.drain(CUtils.asOutputPort(downsampled), clnsWriter.cloneWriter());
             }

@@ -1,31 +1,13 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.basictypes;
 
@@ -34,6 +16,7 @@ import com.milaboratory.cli.AppVersionInfo;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.cli.PipelineConfigurationWriter;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivO;
@@ -50,8 +33,8 @@ import java.util.List;
  *
  */
 public final class ClnsWriter implements PipelineConfigurationWriter, AutoCloseable {
-    static final String MAGIC_V10 = "MiXCR.CLNS.V10";
-    static final String MAGIC = MAGIC_V10;
+    static final String MAGIC_V11 = "MiXCR.CLNS.V11";
+    static final String MAGIC = MAGIC_V11;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
 
@@ -75,6 +58,7 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
         writeHeader(configuration,
                 cloneSet.getAlignmentParameters(),
                 cloneSet.getAssemblerParameters(),
+                cloneSet.getTagsInfo(),
                 cloneSet.getOrdering(),
                 cloneSet.getUsedGenes(),
                 cloneSet,
@@ -85,6 +69,7 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
             PipelineConfiguration configuration,
             VDJCAlignerParameters alignmentParameters,
             CloneAssemblerParameters assemblerParameters,
+            TagsInfo tagsInfo,
             VDJCSProperties.CloneOrdering ordering,
             List<VDJCGene> genes,
             HasFeatureToAlign featureToAlign,
@@ -103,6 +88,7 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
             o.writeObject(configuration);
             o.writeObject(alignmentParameters);
             o.writeObject(assemblerParameters);
+            o.writeObject(tagsInfo);
             o.writeObject(ordering);
             o.writeInt(numberOfClones);
 

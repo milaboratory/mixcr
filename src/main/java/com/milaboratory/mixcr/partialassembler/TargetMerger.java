@@ -1,31 +1,13 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.partialassembler;
 
@@ -44,9 +26,9 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequencesUtils;
 import com.milaboratory.mixcr.basictypes.SequenceHistory;
 import com.milaboratory.mixcr.basictypes.SequenceHistory.OverlapType;
-import com.milaboratory.mixcr.basictypes.TagCounterBuilder;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator;
 import com.milaboratory.mixcr.vdjaligners.KGeneAlignmentParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import io.repseq.core.GeneFeature;
@@ -57,19 +39,16 @@ import io.repseq.core.VDJCGeneId;
 import java.util.*;
 
 public class TargetMerger {
-    final MismatchOnlyPairedReadMerger merger;
-    final IdentityType identityType;
-    private volatile VDJCAlignerParameters alignerParameters;
-    final float minimalAlignmentMergeIdentity;
+    private final MismatchOnlyPairedReadMerger merger;
+    private final IdentityType identityType;
+    private final VDJCAlignerParameters alignerParameters;
+    private final float minimalAlignmentMergeIdentity;
 
-    public TargetMerger(MergerParameters mergerParameters, float minimalAlignmentMergeIdentity) {
+    public TargetMerger(MergerParameters mergerParameters, VDJCAlignerParameters alignerParameters, float minimalAlignmentMergeIdentity) {
         this.merger = new MismatchOnlyPairedReadMerger(mergerParameters);
         this.identityType = mergerParameters.getIdentityType();
-        this.minimalAlignmentMergeIdentity = minimalAlignmentMergeIdentity;
-    }
-
-    public void setAlignerParameters(VDJCAlignerParameters alignerParameters) {
         this.alignerParameters = alignerParameters;
+        this.minimalAlignmentMergeIdentity = minimalAlignmentMergeIdentity;
     }
 
     @SuppressWarnings("unchecked")
@@ -112,7 +91,7 @@ public class TargetMerger {
 
 
         VDJCAlignments alignments = new VDJCAlignments(result,
-                TagCounterBuilder.merge(targetLeft.getAlignments().getTagCounter(), targetRight.getAlignments().getTagCounter()),
+                TagCountAggregator.merge(targetLeft.getAlignments().getTagCount(), targetRight.getAlignments().getTagCount()),
                 new NSequenceWithQuality[]{mergedTarget},
                 new SequenceHistory[]{
                         new SequenceHistory.Merge(overlapType, targetLeft.getHistory(), targetRight.getHistory(), offset, nMismatches)
@@ -365,14 +344,6 @@ public class TargetMerger {
         private final int score;
         private final int matched, mismatched;
         private final int offset;
-
-//        public TargetMergingResult(AlignedTarget result, int score, boolean usingAlignments, int matched, int mismatched) {
-//            this.result = result;
-//            this.score = score;
-//            this.usingAlignments = usingAlignments;
-//            this.matched = matched;
-//            this.mismatched = mismatched;
-//        }
 
         private TargetMergingResult() {
             this(false, null, null, 0, 0, 0, 0);

@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
 package com.milaboratory.mixcr.cli.postanalysis;
 
 import com.milaboratory.miplots.ExportKt;
@@ -8,13 +19,13 @@ import com.milaboratory.mixcr.cli.CommonDescriptions;
 import com.milaboratory.mixcr.postanalysis.Dataset;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
-import com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingUtil;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil;
 import com.milaboratory.mixcr.postanalysis.plots.OverlapScatter;
 import com.milaboratory.mixcr.postanalysis.plots.OverlapScatterRow;
 import com.milaboratory.mixcr.postanalysis.preproc.ElementPredicate;
 import com.milaboratory.mixcr.postanalysis.preproc.OverlapPreprocessorAdapter;
+import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParameters;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.Chains;
@@ -70,9 +81,10 @@ public class CommandOverlapScatter extends ACommandWithOutputMiXCR {
             names = {"--no-log"})
     public boolean noLog;
 
-    @Option(description = "Random seed",
-            names = {"--random-seed"})
-    public long randomSeed = 111;
+    @Override
+    protected List<String> getInputFiles() {
+        return Arrays.asList(in1, in2);
+    }
 
     private static String fName(String file) {
         return Paths.get(file).toAbsolutePath().getFileName().toString();
@@ -87,8 +99,8 @@ public class CommandOverlapScatter extends ACommandWithOutputMiXCR {
 
     @Override
     public void run0() throws Exception {
-        SetPreprocessorFactory<Clone> preproc = DownsamplingUtil.
-                parseDownsampling(downsampling, false, randomSeed);
+        SetPreprocessorFactory<Clone> preproc = PostanalysisParameters.
+                parseDownsampling(downsampling, CommandPa.extractTagsInfo(getInputFiles()), false);
 
         for (NamedChains curChains : this.chains == null
                 ? Arrays.asList(TRAD_NAMED, TRB_NAMED, TRG_NAMED, IGH_NAMED, IGKL_NAMED)

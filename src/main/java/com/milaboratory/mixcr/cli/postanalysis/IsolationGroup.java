@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
 package com.milaboratory.mixcr.cli.postanalysis;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -39,14 +50,17 @@ public class IsolationGroup {
         ));
     }
 
+    public String toString(boolean withChains) {
+        String str = group.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue()).collect(Collectors.joining(","));
+        if (withChains)
+            return "chains=" + chains.name + (str.isEmpty() ? "" : "," + str);
+        else
+            return str;
+    }
+
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("chains=").append(chains.name);
-        for (Map.Entry<String, Object> e : group.entrySet()) {
-            sb.append(",").append(e.getKey()).append("=").append(e.getValue());
-        }
-        return sb.toString();
+        return toString(true);
     }
 
     /**

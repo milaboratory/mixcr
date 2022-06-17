@@ -1,5 +1,19 @@
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
 package com.milaboratory.mixcr.postanalysis.plots
 
+import com.milaboratory.miplots.StandardPlots.PlotType
+import com.milaboratory.miplots.StandardPlots.PlotType.BoxPlot
+import com.milaboratory.miplots.StandardPlots.PlotType.Scatter
 import com.milaboratory.miplots.stat.util.PValueCorrection
 import com.milaboratory.miplots.stat.util.RefGroup
 import com.milaboratory.miplots.stat.util.TestMethod
@@ -7,14 +21,13 @@ import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod
 import com.milaboratory.miplots.stat.xcontinious.GGScatter
 import com.milaboratory.miplots.stat.xcontinious.plusAssign
 import com.milaboratory.miplots.stat.xcontinious.statCor
-import com.milaboratory.miplots.stat.xdiscrete.GGBoxPlot
+import com.milaboratory.miplots.stat.xdiscrete.GGXDiscrete
 import com.milaboratory.miplots.stat.xdiscrete.LabelFormat
 import com.milaboratory.miplots.stat.xdiscrete.plusAssign
 import com.milaboratory.miplots.stat.xdiscrete.statCompareMeans
 import com.milaboratory.miplots.toPDF
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorStat
-import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics.PlotType.*
 import jetbrains.letsPlot.intern.Plot
 import jetbrains.letsPlot.label.ggtitle
 import org.jetbrains.kotlinx.dataframe.DataFrame
@@ -93,9 +106,11 @@ object BasicStatistics {
     ) = dataFrame(paResult, metricsFilter, readMetadata(metadataPath))
 
     data class PlotParameters(
-        val plotType: PlotType = Auto,
+        val plotType: PlotType? = null,
         val primaryGroup: String? = null,
         val secondaryGroup: String? = null,
+        val primaryGroupValues: List<String>? = null,
+        val secondaryGroupValues: List<String>? = null,
         val facetBy: String? = null,
         val showOverallPValue: Boolean = true,
         val showPairwisePValue: Boolean = true,
@@ -111,21 +126,14 @@ object BasicStatistics {
         val correlationMethod: CorrelationMethod = CorrelationMethod.Pearson,
     )
 
-    enum class PlotType {
-        Auto,
-        BoxPlot,
-        LinePlot,
-        Scatter;
-
-        companion object {
-            fun parse(str: String) =
-                values().find { it.name.equals(str, ignoreCase = true) }
-                    ?: throw IllegalArgumentException("invalid plot type: $str")
-        }
-    }
+    fun parsePlotType(str: String?) =
+        if (str == null)
+            null
+        else
+            PlotType.values().find { it.cliName.lowercase() == str.lowercase() }
 
     private fun isCategorical(t: PlotType) = when (t) {
-        Scatter, LinePlot -> false
+        Scatter -> false
         else -> true
     }
 
@@ -181,35 +189,33 @@ object BasicStatistics {
     fun plot(
         df: DataFrame<BasicStatRow>,
         par: PlotParameters,
-    ): Plot = run {
-        val type = if (par.plotType == Auto) guessPlotType(par, df) else par.plotType
+    ): Plot {
+        val y = BasicStatRow::value.name
+        val type = par.plotType ?: guessPlotType(par, df)
+        if (par.primaryGroup == null)
+            return type.plot(df, y)
 
-        val dfRefined = (
-                if (isCategorical(type)) {
-                    if (par.primaryGroup == null)
-                        df.add(List(df.rowsCount()) { "" }.toColumn("__x__"))
-                    else if (df.isNumeric(par.primaryGroup) || (par.secondaryGroup != null && df.isNumeric(par.secondaryGroup))) {
-                        toCategorical(df, *listOfNotNull(par.primaryGroup, par.secondaryGroup).toTypedArray())
-                    } else
-                        df
-                } else {
+        val dfRefined =
+            if (isCategorical(type)) {
+                if (df.isNumeric(par.primaryGroup) || (par.secondaryGroup != null && df.isNumeric(par.secondaryGroup))) {
+                    toCategorical(df, *listOfNotNull(par.primaryGroup, par.secondaryGroup).toTypedArray())
+                } else
                     df
-                }
-                )
+            } else {
+                df
+            }
 
         if (isCategorical(type)) {
-            val plt = when (type) {
-                BoxPlot -> GGBoxPlot(
-                    dfRefined,
-                    x = par.primaryGroup ?: "__x__",
-                    y = BasicStatRow::value.name,
-                    facetBy = par.facetBy,
-                    facetNRow = 1,
-                ) {
-                    fill = par.secondaryGroup ?: par.primaryGroup
-                }
-                else -> throw RuntimeException("$type")
-            }
+            val plt = type.plot(
+                dfRefined,
+                BasicStatRow::value.name,
+                par.primaryGroup,
+                par.secondaryGroup,
+                par.primaryGroupValues,
+                par.secondaryGroupValues,
+                par.facetBy
+            )
+                    as GGXDiscrete
 
             if (par.showPairwisePValue)
                 plt += statCompareMeans(
@@ -240,30 +246,23 @@ object BasicStatistics {
                     labelFormat = par.overallPValueFormat,
                 )
 
-            plt.plot
-
+            return plt.plot
         } else {
+            val plt = type.plot(
+                dfRefined,
+                par.primaryGroup,
+                BasicStatRow::value.name,
+                par.secondaryGroup,
+                par.primaryGroupValues,
+                par.secondaryGroupValues,
+                par.facetBy
+            )
+                    as GGScatter
 
-            par.primaryGroup!!
-            val plt = when (type) {
-                Scatter -> GGScatter(
-                    dfRefined,
-                    x = par.primaryGroup,
-                    y = BasicStatRow::value.name,
-                    facetBy = par.facetBy,
-                    facetNRow = 1,
-                ) {
-                    shape = par.secondaryGroup
-                    color = par.secondaryGroup
-                    linetype = par.secondaryGroup
-                }
-                LinePlot -> TODO()
-                else -> throw RuntimeException("$type")
-            }
 
             plt += statCor(method = par.correlationMethod)
 
-            plt.plot
+            return plt.plot
         }
     }
 }

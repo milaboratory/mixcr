@@ -1,9 +1,20 @@
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
 package com.milaboratory.mixcr.postanalysis.ui;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.postanalysis.Characteristic;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
 import com.milaboratory.mixcr.postanalysis.WeightFunctions;
 import com.milaboratory.mixcr.postanalysis.additive.AAProperties;
 import com.milaboratory.mixcr.postanalysis.additive.AdditiveCharacteristics;
@@ -36,50 +47,76 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
 
     public BiophysicsParameters biophysics = new BiophysicsParameters();
     public DiversityParameters diversity = new DiversityParameters();
-    public PreprocessorParameters vUsage = new PreprocessorParameters();
-    public PreprocessorParameters jUsage = new PreprocessorParameters();
-    public PreprocessorParameters vjUsage = new PreprocessorParameters();
-    public PreprocessorParameters isotypeUsage = new PreprocessorParameters();
-    public PreprocessorParameters cdr3Spectratype = new PreprocessorParameters();
-    public PreprocessorParameters vSpectratype = new PreprocessorParameters();
-    public PreprocessorParameters vSpectratypeMean = new PreprocessorParameters();
+    public MetricParameters vUsage = new MetricParameters();
+    public MetricParameters jUsage = new MetricParameters();
+    public MetricParameters vjUsage = new MetricParameters();
+    public MetricParameters isotypeUsage = new MetricParameters();
+    public MetricParameters cdr3Spectratype = new MetricParameters();
+    public MetricParameters vSpectratype = new MetricParameters();
+    public MetricParameters vSpectratypeMean = new MetricParameters();
 
-    public List<CharacteristicGroup<?, Clone>> getGroups() {
+    public List<CharacteristicGroup<?, Clone>> getGroups(TagsInfo tagsInfo) {
+        for (WithParentAndTags wpt : Arrays.asList(
+                biophysics, diversity, vUsage, jUsage, vjUsage, isotypeUsage, cdr3Spectratype, vSpectratype, vSpectratypeMean
+        )) {
+            wpt.setParent(this);
+            wpt.setTagsInfo(tagsInfo);
+        }
+
         return Arrays.asList(
-                biophysics.getGroup(this),
-                diversity.getGroup(this),
+                biophysics.getGroup(),
+                diversity.getGroup(),
                 new CharacteristicGroup<>(VUsage,
-                        Arrays.asList(AdditiveCharacteristics.segmentUsage(vUsage.preproc(this), GeneType.Variable)),
+                        Arrays.asList(AdditiveCharacteristics.segmentUsage(
+                                vUsage.preproc(),
+                                vUsage.weightFunction(),
+                                GeneType.Variable)),
                         Arrays.asList(new GroupSummary.Simple<>())
                 ),
 
                 new CharacteristicGroup<>(JUsage,
-                        Arrays.asList(AdditiveCharacteristics.segmentUsage(jUsage.preproc(this), GeneType.Joining)),
+                        Arrays.asList(AdditiveCharacteristics.segmentUsage(
+                                jUsage.preproc(),
+                                jUsage.weightFunction(),
+                                GeneType.Joining
+                        )),
                         Arrays.asList(new GroupSummary.Simple<>())
                 ),
 
                 new CharacteristicGroup<>(VJUsage,
-                        Arrays.asList(AdditiveCharacteristics.vjSegmentUsage(vjUsage.preproc(this))),
+                        Arrays.asList(AdditiveCharacteristics.vjSegmentUsage(
+                                vjUsage.preproc(),
+                                vjUsage.weightFunction()
+                        )),
                         Arrays.asList(new GroupSummary.VJUsage<>())
                 ),
 
                 new CharacteristicGroup<>(IsotypeUsage,
-                        Arrays.asList(AdditiveCharacteristics.isotypeUsage(isotypeUsage.preproc(this))),
+                        Arrays.asList(AdditiveCharacteristics.isotypeUsage(
+                                isotypeUsage.preproc(),
+                                isotypeUsage.weightFunction()
+                        )),
                         Arrays.asList(new GroupSummary.Simple<>())
                 ),
 
                 new CharacteristicGroup<>(CDR3Spectratype,
                         Arrays.asList(new SpectratypeCharacteristic("CDR3 spectratype",
-                                cdr3Spectratype.preproc(this), 10,
+                                cdr3Spectratype.preproc(),
+                                cdr3Spectratype.weightFunction(),
+                                10,
                                 new SpectratypeKeyFunction<>(new KeyFunctions.AAFeature(GeneFeature.CDR3), GeneFeature.CDR3, false))),
                         Collections.singletonList(new GroupSummary.Simple<>())),
 
                 new CharacteristicGroup<>(VSpectratype,
-                        Arrays.asList(AdditiveCharacteristics.VSpectratype(vSpectratype.preproc(this))),
+                        Arrays.asList(AdditiveCharacteristics.VSpectratype(
+                                vSpectratype.preproc(),
+                                vSpectratype.weightFunction())),
                         Collections.singletonList(new GroupSummary.Simple<>())),
 
                 new CharacteristicGroup<>(VSpectratypeMean,
-                        Arrays.asList(AdditiveCharacteristics.VSpectratypeMean(vSpectratypeMean.preproc(this))),
+                        Arrays.asList(AdditiveCharacteristics.VSpectratypeMean(
+                                vSpectratypeMean.preproc(),
+                                vSpectratypeMean.weightFunction())),
                         Collections.singletonList(new GroupSummary.Simple<>()))
         );
     }
@@ -88,29 +125,47 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
             fieldVisibility = JsonAutoDetect.Visibility.ANY,
             isGetterVisibility = JsonAutoDetect.Visibility.NONE,
             getterVisibility = JsonAutoDetect.Visibility.NONE)
-    public static class BiophysicsParameters {
-        public PreprocessorParameters cdr3lenAA = new PreprocessorParameters();
-        public PreprocessorParameters cdr3lenNT = new PreprocessorParameters();
-        public PreprocessorParameters ndnLenNT = new PreprocessorParameters();
-        public PreprocessorParameters addedNNT = new PreprocessorParameters();
-        public PreprocessorParameters Strength = new PreprocessorParameters();
-        public PreprocessorParameters Hydrophobicity = new PreprocessorParameters();
-        public PreprocessorParameters Surface = new PreprocessorParameters();
-        public PreprocessorParameters Volume = new PreprocessorParameters();
-        public PreprocessorParameters Charge = new PreprocessorParameters();
+    public static class BiophysicsParameters implements WithParentAndTags {
+        public MetricParameters cdr3lenAA = new MetricParameters();
+        public MetricParameters cdr3lenNT = new MetricParameters();
+        public MetricParameters ndnLenNT = new MetricParameters();
+        public MetricParameters addedNNT = new MetricParameters();
+        public MetricParameters Strength = new MetricParameters();
+        public MetricParameters Hydrophobicity = new MetricParameters();
+        public MetricParameters Surface = new MetricParameters();
+        public MetricParameters Volume = new MetricParameters();
+        public MetricParameters Charge = new MetricParameters();
 
-        public CharacteristicGroup<?, Clone> getGroup(PostanalysisParameters base) {
+        private List<MetricParameters> list() {
+            return Arrays.asList(cdr3lenAA, cdr3lenNT, ndnLenNT, addedNNT, Strength, Hydrophobicity, Surface, Volume, Charge);
+        }
+
+        @Override
+        public void setParent(PostanalysisParameters parent) {
+            for (MetricParameters m : list()) {
+                m.setParent(parent);
+            }
+        }
+
+        @Override
+        public void setTagsInfo(TagsInfo tagsInfo) {
+            for (MetricParameters m : list()) {
+                m.setTagsInfo(tagsInfo);
+            }
+        }
+
+        public CharacteristicGroup<?, Clone> getGroup() {
             return new CharacteristicGroup<>(Biophysics,
                     Arrays.asList(
-                            weightedLengthOf(cdr3lenNT.preproc(base), GeneFeature.CDR3, false).setName("CDR3 length, nt"),
-                            weightedLengthOf(cdr3lenAA.preproc(base), GeneFeature.CDR3, true).setName("CDR3 length, aa"),
-                            weightedLengthOf(ndnLenNT.preproc(base), GeneFeature.VJJunction, false).setName("NDN length, nt"),
-                            weightedAddedNucleotides(addedNNT.preproc(base)).setName("Added N, nt"),
-                            weightedBiophysics(Strength.preproc(base), AAProperties.AAProperty.N2Strength, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Strength"),
-                            weightedBiophysics(Hydrophobicity.preproc(base), AAProperties.AAProperty.N2Hydrophobicity, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Hydrophobicity"),
-                            weightedBiophysics(Surface.preproc(base), AAProperties.AAProperty.N2Surface, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Surface"),
-                            weightedBiophysics(Volume.preproc(base), AAProperties.AAProperty.N2Volume, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Volume"),
-                            weightedBiophysics(Charge.preproc(base), AAProperties.AAProperty.Charge, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Charge")
+                            lengthOf(cdr3lenNT.preproc(), cdr3lenNT.weightFunction(), GeneFeature.CDR3, false).setName("CDR3 length, nt"),
+                            lengthOf(cdr3lenAA.preproc(), cdr3lenAA.weightFunction(), GeneFeature.CDR3, true).setName("CDR3 length, aa"),
+                            lengthOf(ndnLenNT.preproc(), ndnLenNT.weightFunction(), GeneFeature.VJJunction, false).setName("NDN length, nt"),
+                            addedNucleotides(addedNNT.preproc(), addedNNT.weightFunction()).setName("Added N, nt"),
+                            biophysics(Strength.preproc(), Strength.weightFunction(), AAProperties.AAProperty.N2Strength, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Strength"),
+                            biophysics(Hydrophobicity.preproc(), Hydrophobicity.weightFunction(), AAProperties.AAProperty.N2Hydrophobicity, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Hydrophobicity"),
+                            biophysics(Surface.preproc(), Surface.weightFunction(), AAProperties.AAProperty.N2Surface, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Surface"),
+                            biophysics(Volume.preproc(), Volume.weightFunction(), AAProperties.AAProperty.N2Volume, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Volume"),
+                            biophysics(Charge.preproc(), Charge.weightFunction(), AAProperties.AAProperty.Charge, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Charge")
                     ),
                     Collections.singletonList(new GroupSummary.Simple<>()));
         }
@@ -133,31 +188,51 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
             fieldVisibility = JsonAutoDetect.Visibility.ANY,
             isGetterVisibility = JsonAutoDetect.Visibility.NONE,
             getterVisibility = JsonAutoDetect.Visibility.NONE)
-    public static class DiversityParameters {
-        public PreprocessorParameters observed = new PreprocessorParameters();
-        public PreprocessorParameters shannonWeiner = new PreprocessorParameters();
-        public PreprocessorParameters chao1 = new PreprocessorParameters();
-        public PreprocessorParameters clonality = new PreprocessorParameters();
-        public PreprocessorParameters inverseSimpson = new PreprocessorParameters();
-        public PreprocessorParameters gini = new PreprocessorParameters();
-        public PreprocessorParameters d50 = new PreprocessorParameters();
+    public static class DiversityParameters implements WithParentAndTags {
+        public MetricParameters observed = new MetricParameters();
+        public MetricParameters shannonWiener = new MetricParameters();
+        public MetricParameters chao1 = new MetricParameters();
+        public MetricParameters clonality = new MetricParameters();
+        public MetricParameters inverseSimpson = new MetricParameters();
+        public MetricParameters gini = new MetricParameters();
+        public MetricParameters d50 = new MetricParameters();
+        public MetricParameters efronThisted = new MetricParameters();
 
-        public CharacteristicGroup<?, Clone> getGroup(PostanalysisParameters base) {
-            List<Characteristic<?, Clone>> chars = new ArrayList<>(groupByPreproc(
-                    new HashMap<DiversityMeasure, SetPreprocessorFactory<Clone>>() {{
-                        put(DiversityMeasure.Observed, observed.preproc(base));
-                        put(DiversityMeasure.ShannonWeiner, shannonWeiner.preproc(base));
-                        put(DiversityMeasure.Chao1, chao1.preproc(base));
-                        put(DiversityMeasure.NormalizedShannonWeinerIndex, clonality.preproc(base));
-                        put(DiversityMeasure.InverseSimpson, inverseSimpson.preproc(base));
-                        put(DiversityMeasure.GiniIndex, gini.preproc(base));
+        private List<MetricParameters> list() {
+            return Arrays.asList(observed, shannonWiener, chao1, clonality, inverseSimpson, gini, d50, efronThisted);
+        }
+
+        @Override
+        public void setParent(PostanalysisParameters parent) {
+            for (MetricParameters m : list()) {
+                m.setParent(parent);
+            }
+        }
+
+        @Override
+        public void setTagsInfo(TagsInfo tagsInfo) {
+            for (MetricParameters m : list()) {
+                m.setTagsInfo(tagsInfo);
+            }
+        }
+
+        public CharacteristicGroup<?, Clone> getGroup() {
+            List<Characteristic<?, Clone>> chars = new ArrayList<>(groupBy(
+                    new HashMap<DiversityMeasure, PreprocessorAndWeight<Clone>>() {{
+                        put(DiversityMeasure.Observed, observed.pwTuple());
+                        put(DiversityMeasure.ShannonWiener, shannonWiener.pwTuple());
+                        put(DiversityMeasure.Chao1, chao1.pwTuple());
+                        put(DiversityMeasure.NormalizedShannonWeinerIndex, clonality.pwTuple());
+                        put(DiversityMeasure.InverseSimpson, inverseSimpson.pwTuple());
+                        put(DiversityMeasure.GiniIndex, gini.pwTuple());
+                        put(DiversityMeasure.EfronThisted, efronThisted.pwTuple());
                     }},
                     (p, l) -> Collections.singletonList(new DiversityCharacteristic<>("Diversity "
                             + l.stream().map(m -> m.name).collect(Collectors.joining("/")),
-                            new WeightFunctions.Count(), p, l.toArray(new DiversityMeasure[0])))));
+                            p.weight, p.preproc, l.toArray(new DiversityMeasure[0])))));
 
             chars.add(new DiversityCharacteristic<>("d50", new WeightFunctions.Count(),
-                    d50.preproc(base).then(new SelectTop.Factory<>(WeightFunctions.Count, 0.5)),
+                    d50.preproc().then(new SelectTop.Factory<>(WeightFunctions.Count, 0.5)),
                     new DiversityMeasure[]{
                             DiversityMeasure.Observed.overrideName("d50")
                     }));
@@ -174,12 +249,12 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             DiversityParameters that = (DiversityParameters) o;
-            return Objects.equals(observed, that.observed) && Objects.equals(shannonWeiner, that.shannonWeiner) && Objects.equals(chao1, that.chao1) && Objects.equals(clonality, that.clonality) && Objects.equals(inverseSimpson, that.inverseSimpson) && Objects.equals(gini, that.gini) && Objects.equals(d50, that.d50);
+            return Objects.equals(observed, that.observed) && Objects.equals(shannonWiener, that.shannonWiener) && Objects.equals(chao1, that.chao1) && Objects.equals(clonality, that.clonality) && Objects.equals(inverseSimpson, that.inverseSimpson) && Objects.equals(gini, that.gini) && Objects.equals(d50, that.d50);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(observed, shannonWeiner, chao1, clonality, inverseSimpson, gini, d50);
+            return Objects.hash(observed, shannonWiener, chao1, clonality, inverseSimpson, gini, d50);
         }
     }
 

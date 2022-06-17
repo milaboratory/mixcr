@@ -1,31 +1,13 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.basictypes;
 
@@ -33,6 +15,7 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid;
@@ -53,13 +36,14 @@ import static com.milaboratory.mixcr.basictypes.ClnsWriter.MAGIC_LENGTH;
 /**
  *
  */
-public class ClnsReader extends PipelineConfigurationReaderMiXCR implements CloneReader, AutoCloseable {
+public class ClnsReader extends PipelineConfigurationReaderMiXCR implements CloneReader, VDJCFileHeaderData, AutoCloseable {
     private final PrimitivIHybrid input;
     private final VDJCLibraryRegistry libraryRegistry;
 
     private final PipelineConfiguration pipelineConfiguration;
     private final VDJCAlignerParameters alignerParameters;
     private final CloneAssemblerParameters assemblerParameters;
+    private final TagsInfo tagsInfo;
     private final VDJCSProperties.CloneOrdering ordering;
     private final String versionInfo;
     private final List<VDJCGene> usedGenes;
@@ -118,6 +102,7 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
             pipelineConfiguration = i.readObject(PipelineConfiguration.class);
             alignerParameters = i.readObject(VDJCAlignerParameters.class);
             assemblerParameters = i.readObject(CloneAssemblerParameters.class);
+            tagsInfo = i.readObject(TagsInfo.class);
             ordering = i.readObject(VDJCSProperties.CloneOrdering.class);
             numberOfClones = i.readInt();
 
@@ -136,7 +121,7 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
         List<Clone> clones = new ArrayList<>();
         for (Clone clone : CUtils.it(readClones()))
             clones.add(clone);
-        CloneSet cloneSet = new CloneSet(clones, usedGenes, alignerParameters, assemblerParameters, ordering);
+        CloneSet cloneSet = new CloneSet(clones, usedGenes, alignerParameters, assemblerParameters, tagsInfo, ordering);
         cloneSet.versionInfo = versionInfo;
         return cloneSet;
     }
@@ -147,6 +132,10 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
     }
 
     @Override
+    public TagsInfo getTagsInfo() {
+        return tagsInfo;
+    }
+
     public VDJCAlignerParameters getAlignerParameters() {
         return alignerParameters;
     }

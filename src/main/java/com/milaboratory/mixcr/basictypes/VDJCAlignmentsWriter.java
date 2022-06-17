@@ -1,36 +1,19 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.cli.AppVersionInfo;
 import com.milaboratory.cli.PipelineConfiguration;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.util.MiXCRDebug;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
@@ -52,8 +35,8 @@ import java.util.List;
 public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPosition {
     public static final int DEFAULT_ENCODER_THREADS = 3;
     public static final int DEFAULT_ALIGNMENTS_IN_BLOCK = 1 << 10; // 805-1024 bytes per alignment
-    static final String MAGIC_V15 = "MiXCR.VDJC.V15";
-    static final String MAGIC = MAGIC_V15;
+    static final String MAGIC_V16 = "MiXCR.VDJC.V16";
+    static final String MAGIC = MAGIC_V16;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
 
@@ -118,27 +101,17 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
         this.numberOfProcessedReads = numberOfProcessedReads;
     }
 
-    public void header(VDJCAlignmentsReader reader, PipelineConfiguration pipelineConfiguration) {
-        header(reader.getParameters(), reader.getUsedGenes(), pipelineConfiguration);
+    public void header(VDJCAlignmentsReader reader, PipelineConfiguration pipelineConfiguration, TagsInfo tagsInfo) {
+        header(reader.getParameters(), reader.getUsedGenes(), pipelineConfiguration, tagsInfo);
     }
 
-    public void header(VDJCAligner aligner, PipelineConfiguration pipelineConfiguration) {
-        header(aligner.getParameters(), aligner.getUsedGenes(), pipelineConfiguration);
-    }
-
-    /** History to write in the header */
-    private PipelineConfiguration pipelineConfiguration = null;
-
-    public synchronized void setPipelineConfiguration(PipelineConfiguration configuration) {
-        if (pipelineConfiguration == null)
-            pipelineConfiguration = configuration;
-        else if (!configuration.equals(this.pipelineConfiguration))
-            throw new IllegalStateException();
+    public void header(VDJCAligner aligner, PipelineConfiguration pipelineConfiguration, TagsInfo tagsInfo) {
+        header(aligner.getParameters(), aligner.getUsedGenes(), pipelineConfiguration, tagsInfo);
     }
 
     @Override
     public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes,
-                       PipelineConfiguration ppConfiguration) {
+                       PipelineConfiguration pipelineConfiguration, TagsInfo tags) {
         if (parameters == null || genes == null)
             throw new IllegalArgumentException();
 
@@ -160,9 +133,10 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
             o.writeObject(parameters);
 
             // Writing history
-            if (ppConfiguration != null)
-                this.pipelineConfiguration = ppConfiguration;
             o.writeObject(pipelineConfiguration);
+
+            // Information about tags
+            o.writeObject(tags);
 
             IOUtil.stdVDJCPrimitivOStateInit(o, genes, parameters);
         }

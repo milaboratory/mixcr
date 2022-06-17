@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
 package com.milaboratory.mixcr.postanalysis.ui;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -25,16 +36,17 @@ import com.milaboratory.mixcr.postanalysis.preproc.OverlapPreprocessorAdapter;
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeCharacteristic;
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeKey;
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeKeyFunction;
-import com.milaboratory.mixcr.tests.IntegrationTest;
+import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.LambdaSemaphore;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCLibraryRegistry;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,11 +57,20 @@ import java.util.stream.Collectors;
 import static com.milaboratory.mixcr.postanalysis.additive.AdditiveCharacteristics.weightedBiophysics;
 import static com.milaboratory.mixcr.postanalysis.additive.AdditiveCharacteristics.weightedLengthOf;
 
-@Category(IntegrationTest.class)
+//@Category(IntegrationTest.class)
 public class PostanalysisSchemaIntegrationTest {
 
     private static ClonotypeDataset getClones(String sample) {
         return new ClonotypeDataset(sample, PostanalysisSchemaIntegrationTest.class.getResource("/sequences/big/yf_sample_data/" + sample + ".contigs.clns").getFile(), VDJCLibraryRegistry.getDefault());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testJson1() throws JsonProcessingException {
+        DiversityCharacteristic<Clone> expected = new DiversityCharacteristic<>("diversity", new WeightFunctions.Count(), new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Auto(), true, WeightFunctions.Count));
+        String str = GlobalObjectMappers.getPretty().writeValueAsString(expected);
+        DiversityCharacteristic<Clone> actual = GlobalObjectMappers.getPretty().readValue(str, DiversityCharacteristic.class);
+        Assert.assertEquals(expected, actual);
     }
 
     @Test
@@ -82,7 +103,7 @@ public class PostanalysisSchemaIntegrationTest {
         ));
         groups.add(new CharacteristicGroup<>(
                 "diversity",
-                Arrays.asList(new DiversityCharacteristic<>("diversity", new WeightFunctions.Count(), new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Auto(), 314, true))),
+                Arrays.asList(new DiversityCharacteristic<>("diversity", new WeightFunctions.Count(), new ClonesDownsamplingPreprocessorFactory(new DownsampleValueChooser.Auto(), true, WeightFunctions.Count))),
                 Arrays.asList(new GroupSummary.Simple<>())
         ));
 
@@ -121,7 +142,7 @@ public class PostanalysisSchemaIntegrationTest {
                 Arrays.asList(AdditiveCharacteristics.VSpectratype()),
                 Collections.singletonList(new GroupSummary.Simple<>())));
 
-        PostanalysisSchema<Clone> individualPA = new PostanalysisSchema<>(groups);
+        PostanalysisSchema<Clone> individualPA = new PostanalysisSchema<>(false, groups);
 
         ObjectMapper OM = new ObjectMapper();
         String individualPAStr = OM.writeValueAsString(individualPA);
@@ -147,7 +168,14 @@ public class PostanalysisSchemaIntegrationTest {
         System.out.println(result.getTable(individualPA.getGroup("VSpectratype")));
 
 
-        Object[][] vjUsages = result.getTable(individualPA.getGroup("vjUsage")).getOutputs().get(GroupSummary.key).rows();
+        OutputTable table = result.getTable(individualPA.getGroup("vjUsage")).getOutputs().get(GroupSummary.key);
+
+        ByteArrayOutputStream bs = new ByteArrayOutputStream();
+        table.writeCSV(new PrintStream(bs), "\t");
+        bs.close();
+        Assert.assertTrue(bs.toString().split("\n").length > 500);
+//        table.writeCSV(System.out, "\t");
+        Object[][] vjUsages = table.rows();
         System.out.println(Arrays.deepToString(vjUsages));
     }
 
@@ -190,7 +218,8 @@ public class PostanalysisSchemaIntegrationTest {
 
             ClonesDownsamplingPreprocessorFactory downsamplePreprocessor = new ClonesDownsamplingPreprocessorFactory(
                     new DownsampleValueChooser.Minimal(),
-                    332142, true);
+                    true,
+                    WeightFunctions.Count);
 
             List<OverlapCharacteristic<Clone>> overlaps = new ArrayList<>();
             for (int i = 0; i < readers.size(); ++i) {
@@ -209,7 +238,7 @@ public class PostanalysisSchemaIntegrationTest {
                     Arrays.asList(new OverlapSummary<>())
             ));
 
-            PostanalysisSchema<OverlapGroup<Clone>> overlapPA = new PostanalysisSchema<>(groups);
+            PostanalysisSchema<OverlapGroup<Clone>> overlapPA = new PostanalysisSchema<>(true, groups);
             ObjectMapper OM = new ObjectMapper();
             String overlapPAStr = OM.writeValueAsString(overlapPA);
             System.out.println(overlapPAStr);

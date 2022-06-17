@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
 package com.milaboratory.mixcr.cli.postanalysis;
 
 import com.milaboratory.mixcr.basictypes.Clone;
@@ -21,7 +32,6 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 import java.util.List;
-import java.util.Map;
 
 @Command(name = "overlap",
         sortOptions = false,
@@ -32,7 +42,8 @@ public class CommandPaOverlap extends CommandPa {
             names = {"--criteria"})
     public String overlapCriteria = "CDR3|AA|V|J";
 
-    public CommandPaOverlap() {}
+    public CommandPaOverlap() {
+    }
 
     private PostanalysisParametersOverlap _parameters;
 
@@ -43,9 +54,9 @@ public class CommandPaOverlap extends CommandPa {
         _parameters.defaultDownsampling = defaultDownsampling;
         _parameters.defaultDropOutliers = dropOutliers;
         _parameters.defaultOnlyProductive = onlyProductive;
+        _parameters.defaultWeightFunction = defaultWeightFunction;
         if (!overrides.isEmpty()) {
-            for (Map.Entry<String, String> o : overrides.entrySet())
-                _parameters = JsonOverrider.override(_parameters, PostanalysisParametersOverlap.class, overrides);
+            _parameters = JsonOverrider.override(_parameters, PostanalysisParametersOverlap.class, overrides);
             if (_parameters == null)
                 throwValidationException("Failed to override some parameter: " + overrides);
         }
@@ -55,11 +66,13 @@ public class CommandPaOverlap extends CommandPa {
     @Override
     @SuppressWarnings("unchecked")
     PaResultByGroup run(IsolationGroup group, List<String> samples) {
-        List<CharacteristicGroup<?, OverlapGroup<Clone>>> groups = getParameters().getGroups(samples.size());
-        PostanalysisSchema<OverlapGroup<Clone>> schema = new PostanalysisSchema<>(groups)
+        List<CharacteristicGroup<?, OverlapGroup<Clone>>> groups = getParameters().getGroups(samples.size(), getTagsInfo());
+        PostanalysisSchema<OverlapGroup<Clone>> schema = new PostanalysisSchema<>(true, groups)
                 .transform(ch -> ch.override(ch.name,
                         ch.preprocessor
-                                .before(new OverlapPreprocessorAdapter.Factory<>(new FilterPreprocessor.Factory<>(WeightFunctions.Count, new ElementPredicate.IncludeChains(group.chains.chains)))))
+                                .before(new OverlapPreprocessorAdapter.Factory<>(
+                                        new FilterPreprocessor.Factory<>(WeightFunctions.Count,
+                                                new ElementPredicate.IncludeChains(group.chains.chains)))))
                 );
 
         OverlapDataset<Clone> overlapDataset = OverlapUtil.overlap(
@@ -70,7 +83,6 @@ public class CommandPaOverlap extends CommandPa {
         PostanalysisRunner<OverlapGroup<Clone>> runner = new PostanalysisRunner<>();
         runner.addCharacteristics(schema.getAllCharacterisitcs());
 
-        System.out.println("Running for " + group);
         SmartProgressReporter.startProgressReport(runner);
         PostanalysisResult result = runner.run(overlapDataset);
 

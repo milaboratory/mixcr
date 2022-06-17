@@ -1,31 +1,13 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.cli;
 
@@ -56,6 +38,7 @@ import java.util.function.Consumer;
 import java.util.prefs.Preferences;
 
 import static com.fasterxml.jackson.module.kotlin.ExtensionsKt.kotlinModule;
+import static com.milaboratory.mixcr.cli.CommandCorrectAndSortTags.CORRECT_AND_SORT_TAGS_COMMAND_NAME;
 
 public final class Main {
 
@@ -106,10 +89,12 @@ public final class Main {
                 System.err.println("  mixcr activate-license");
                 System.err.println();
                 System.err.println("You can also activate the license via a special file, environment");
-                System.err.println("variable or other means, please check the docs."); // TODO provide a link
+                System.err.println("variable or other means, please check the docs at");
+                System.err.println("  https://github.com/milaboratory/mixcr/wiki/Using-license");
                 System.err.println();
-                System.err.println("If you don't have a license check https://licensing.milaboratories.com/.");
-                System.err.println("Free license is provided for academic users and non-profit organisations.");
+                System.err.println("Academic users can quickly get a license at\n  https://licensing.milaboratories.com.");
+                System.err.println();
+                System.err.println("Commercial trial license may be requested at\n  https://licensing.milaboratories.com\nor by email to\n  licensing@milaboratories.com.");
             } else
                 System.err.println("License error: " + licenseError);
             System.exit(LM.LicenseErrorExitCode);
@@ -182,8 +167,8 @@ public final class Main {
         String command = System.getProperty("mixcr.command", "java -jar mixcr.jar");
 
         if (!initialized) {
-            // Checking whether we are running a snapshot version
-            if (!assertionsDisabled() && VersionInfo.getVersionInfoForArtifact("mixcr").getVersion().contains("SNAPSHOT"))
+            // Checking whether we are running a test version
+            if (!assertionsDisabled() && !VersionInfo.getVersionInfoForArtifact("mixcr").isProductionBuild())
                 // If so, enable asserts
                 ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(true);
 
@@ -235,8 +220,10 @@ public final class Main {
 
                 .addSubcommand("align", CommandAlign.class)
                 .addSubcommand("assemble", CommandAssemble.class)
-                .addSubcommand("groupCells", CommandGroupCells.class)
+                // .addSubcommand("groupCells", CommandGroupCells.class)
                 .addSubcommand("assembleContigs", CommandAssembleContigs.class)
+
+                .addSubcommand(CORRECT_AND_SORT_TAGS_COMMAND_NAME, CommandCorrectAndSortTags.class)
 
                 .addSubcommand("assemblePartial", CommandAssemblePartialAlignments.class)
                 .addSubcommand("extend", CommandExtend.class)
@@ -263,6 +250,8 @@ public final class Main {
 
                 .addSubcommand("alignmentsDiff", CommandAlignmentsDiff.class)
                 .addSubcommand("clonesDiff", CommandClonesDiff.class)
+
+                .addSubcommand("itestAssemblePreClones", ITestCommandAssemblePreClones.class)
 
                 .addSubcommand("alignmentsStat", CommandAlignmentsStats.class)
                 .addSubcommand("listLibraries", CommandListLibraries.class)

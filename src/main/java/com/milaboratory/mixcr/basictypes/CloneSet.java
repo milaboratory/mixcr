@@ -1,36 +1,21 @@
 /*
- * Copyright (c) 2014-2019, Bolotin Dmitry, Chudakov Dmitry, Shugay Mikhail
- * (here and after addressed as Inventors)
- * All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
- * Permission to use, copy, modify and distribute any part of this program for
- * educational, research and non-profit purposes, by non-profit institutions
- * only, without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the following
- * three paragraphs appear in all copies.
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
- * Those desiring to incorporate this work into commercial products or use for
- * commercial purposes should contact MiLaboratory LLC, which owns exclusive
- * rights for distribution of this program for commercial purposes, using the
- * following email address: licensing@milaboratory.com.
- *
- * IN NO EVENT SHALL THE INVENTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
- * SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS,
- * ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN IF THE INVENTORS HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE INVENTORS HAS
- * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
- * MODIFICATIONS. THE INVENTORS MAKES NO REPRESENTATIONS AND EXTENDS NO
- * WARRANTIES OF ANY KIND, EITHER IMPLIED OR EXPRESS, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
- * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
- * PATENT, TRADEMARK OR OTHER RIGHTS.
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
  */
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.primitives.Filter;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
+import com.milaboratory.mixcr.basictypes.tag.TagCount;
+import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
@@ -42,47 +27,51 @@ import java.util.*;
 /**
  * Created by poslavsky on 10/07/14.
  */
-public final class CloneSet implements Iterable<Clone>, HasFeatureToAlign {
+public final class CloneSet implements Iterable<Clone>, VDJCFileHeaderData, HasFeatureToAlign {
     String versionInfo;
     final CloneAssemblerParameters assemblerParameters;
     final VDJCAlignerParameters alignmentParameters;
+    final TagsInfo tagsInfo;
     final VDJCSProperties.CloneOrdering ordering;
     final List<VDJCGene> usedGenes;
     final List<Clone> clones;
     final double totalCount;
-    final TagCounter totalTagCounts;
+    final TagCount totalTagCounts;
 
     public CloneSet(List<Clone> clones, Collection<VDJCGene> usedGenes,
                     VDJCAlignerParameters alignmentParameters,
                     CloneAssemblerParameters assemblerParameters,
+                    TagsInfo tagsInfo,
                     VDJCSProperties.CloneOrdering ordering) {
         ArrayList<Clone> list = new ArrayList<>(clones);
         list.sort(ordering.comparator());
         this.clones = Collections.unmodifiableList(list);
         long totalCount = 0;
-        TagCounterBuilder tagCounterBuilder = new TagCounterBuilder();
+        TagCountAggregator tagCountAggregator = new TagCountAggregator();
         for (Clone clone : clones) {
             totalCount += clone.count;
             clone.setParentCloneSet(this);
-            tagCounterBuilder.add(clone.tagCounter);
+            tagCountAggregator.add(clone.tagCount);
         }
-        this.totalTagCounts = tagCounterBuilder.createAndDestroy();
+        this.totalTagCounts = tagCountAggregator.createAndDestroy();
         this.alignmentParameters = alignmentParameters;
         this.assemblerParameters = assemblerParameters;
+        this.tagsInfo = tagsInfo;
         this.ordering = ordering;
         this.usedGenes = Collections.unmodifiableList(new ArrayList<>(usedGenes));
         this.totalCount = totalCount;
     }
 
+    /** To be used in tests only */
     public CloneSet(List<Clone> clones) {
         this.clones = Collections.unmodifiableList(new ArrayList<>(clones));
         long totalCount = 0;
         HashMap<VDJCGeneId, VDJCGene> genes = new HashMap<>();
         EnumMap<GeneType, GeneFeature> alignedFeatures = new EnumMap<>(GeneType.class);
-        TagCounterBuilder tagCounterBuilder = new TagCounterBuilder();
+        TagCountAggregator tagCountAggregator = new TagCountAggregator();
         for (Clone clone : clones) {
             totalCount += clone.count;
-            tagCounterBuilder.add(clone.tagCounter);
+            tagCountAggregator.add(clone.tagCount);
             clone.setParentCloneSet(this);
             for (GeneType geneType : GeneType.values())
                 for (VDJCHit hit : clone.getHits(geneType)) {
@@ -94,9 +83,10 @@ public final class CloneSet implements Iterable<Clone>, HasFeatureToAlign {
                         throw new IllegalArgumentException("Different aligned feature for clones.");
                 }
         }
-        this.totalTagCounts = tagCounterBuilder.createAndDestroy();
+        this.totalTagCounts = tagCountAggregator.createAndDestroy();
         this.assemblerParameters = null;
         this.alignmentParameters = null;
+        this.tagsInfo = null;
         this.ordering = new VDJCSProperties.CloneOrdering();
         this.usedGenes = Collections.unmodifiableList(new ArrayList<>(genes.values()));
         this.totalCount = totalCount;
@@ -126,6 +116,11 @@ public final class CloneSet implements Iterable<Clone>, HasFeatureToAlign {
         return alignmentParameters;
     }
 
+    @Override
+    public TagsInfo getTagsInfo() {
+        return tagsInfo;
+    }
+
     public VDJCSProperties.CloneOrdering getOrdering() {
         return ordering;
     }
@@ -143,7 +138,7 @@ public final class CloneSet implements Iterable<Clone>, HasFeatureToAlign {
         return totalCount;
     }
 
-    public TagCounter getTotalTagCounts() {
+    public TagCount getTotalTagCounts() {
         return totalTagCounts;
     }
 
@@ -164,7 +159,8 @@ public final class CloneSet implements Iterable<Clone>, HasFeatureToAlign {
         newClones.sort(newOrdering.comparator());
         for (Clone nc : newClones)
             nc.parent = null;
-        return new CloneSet(newClones, in.usedGenes, in.alignmentParameters, in.assemblerParameters, newOrdering);
+        return new CloneSet(newClones, in.usedGenes, in.alignmentParameters, in.assemblerParameters,
+                in.tagsInfo, newOrdering);
     }
 
     /**
@@ -179,6 +175,7 @@ public final class CloneSet implements Iterable<Clone>, HasFeatureToAlign {
                 newClones.add(c);
             }
         }
-        return new CloneSet(newClones, in.usedGenes, in.alignmentParameters, in.assemblerParameters, in.ordering);
+        return new CloneSet(newClones, in.usedGenes, in.alignmentParameters, in.assemblerParameters,
+                in.tagsInfo, in.ordering);
     }
 }

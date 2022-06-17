@@ -1,5 +1,17 @@
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
 package com.milaboratory.mixcr.cli.postanalysis;
 
+import com.milaboratory.miplots.StandardPlots.PlotType;
 import com.milaboratory.miplots.stat.util.PValueCorrection;
 import com.milaboratory.miplots.stat.util.RefGroup;
 import com.milaboratory.miplots.stat.util.TestMethod;
@@ -8,7 +20,6 @@ import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatRow;
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics;
-import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics.PlotType;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
@@ -19,7 +30,10 @@ import java.util.List;
 import java.util.Objects;
 
 public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExportPlots {
-    @Option(description = "Plot type. Possible values: auto, boxplot, barplot, dotplot, lineplot, scatter.",
+    @Option(description = "Plot type. Possible values: boxplot, boxplot-bindot, boxplot-jitter, " +
+            "lineplot, lineplot-bindot, lineplot-jitter, " +
+            "violin, violin-bindot, barplot, barplot-stacked, " +
+            "scatter",
             names = {"--plot-type"})
     public String plotType;
 
@@ -27,9 +41,19 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
             names = {"-p", "--primary-group"})
     public String primaryGroup;
 
+    @Option(description = "List of comma separated primary group values",
+            names = {"-pv", "--primary-group-values"},
+            split = ",")
+    public List<String> primaryGroupValues;
+
     @Option(description = "Secondary group",
             names = {"-s", "--secondary-group"})
     public String secondaryGroup;
+
+    @Option(description = "List of comma separated secondary group values",
+            names = {"-sv", "--secondary-group-values"},
+            split = ",")
+    public List<String> secondaryGroupValues;
 
     @Option(description = "Facet by",
             names = {"--facet-by"})
@@ -85,6 +109,8 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
         );
 
         df = filter(df);
+        if (df.rowsCount() == 0)
+            return;
 
         RefGroup rg = null;
         if (Objects.equals(refGroup, "all"))
@@ -92,14 +118,14 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
         else if (refGroup != null)
             rg = RefGroup.Companion.of(refGroup);
 
-        PlotType plotType = this.plotType == null
-                ? PlotType.Auto
-                : PlotType.Companion.parse(this.plotType);
+        PlotType plotType = BasicStatistics.INSTANCE.parsePlotType(this.plotType);
 
         BasicStatistics.PlotParameters par = new BasicStatistics.PlotParameters(
                 plotType,
                 primaryGroup,
                 secondaryGroup,
+                primaryGroupValues,
+                secondaryGroupValues,
                 facetBy,
                 !hideOverallPValue,
                 !hidePairwisePValue,

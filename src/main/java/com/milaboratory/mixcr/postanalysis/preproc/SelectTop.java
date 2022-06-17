@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
 package com.milaboratory.mixcr.postanalysis.preproc;
 
 import cc.redberry.pipe.InputPort;
@@ -25,10 +36,7 @@ public class SelectTop<T> implements SetPreprocessor<T> {
               double abundanceFraction,
               int numberOfTop,
               String id) {
-        if (!Double.isNaN(abundanceFraction) && (abundanceFraction <= 0 || abundanceFraction > 1.0))
-            throw new IllegalArgumentException();
-        if (numberOfTop != -1 && numberOfTop <= 0)
-            throw new IllegalArgumentException();
+        checkInput(abundanceFraction, numberOfTop);
 
         this.weight = weight;
         this.abundanceFraction = abundanceFraction;
@@ -176,6 +184,13 @@ public class SelectTop<T> implements SetPreprocessor<T> {
         return lwt;
     }
 
+    private static void checkInput(double abundanceFraction, int numberOfTop) {
+        if (!Double.isNaN(abundanceFraction) && (abundanceFraction <= 0 || abundanceFraction > 1.0))
+            throw new IllegalArgumentException("Illegal abundance: " + abundanceFraction);
+        if (numberOfTop != -1 && numberOfTop <= 0)
+            throw new IllegalArgumentException("Illegal numberOfTop: " + numberOfTop);
+    }
+
     public static final class Factory<T> implements SetPreprocessorFactory<T> {
         @JsonProperty("weight")
         private WeightFunction<T> weight;
@@ -189,11 +204,13 @@ public class SelectTop<T> implements SetPreprocessor<T> {
         public Factory(WeightFunction<T> weight, double abundanceFraction) {
             this.weight = weight;
             this.abundanceFraction = abundanceFraction;
+            checkInput(abundanceFraction, numberOfTop);
         }
 
         public Factory(WeightFunction<T> weight, int numberOfTop) {
             this.weight = weight;
             this.numberOfTop = numberOfTop;
+            checkInput(abundanceFraction, numberOfTop);
         }
 
         @Override
