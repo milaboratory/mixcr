@@ -75,8 +75,8 @@ class AllelesBuilder(
         val sorterSupplier: (GeneType) -> HashSorter<Clone> = { geneType: GeneType ->
             HashSorter(
                 Clone::class.java,
-                { clone: Clone -> clone.getBestHit(geneType).gene.id.name.hashCode() },
-                Comparator.comparing { clone: Clone -> clone.getBestHit(geneType).gene.id.name },
+                { clone: Clone -> clone.getBestHit(geneType).gene.hashCode() },
+                Comparator.comparing { clone: Clone -> clone.getBestHit(geneType).gene },
                 5,
                 tempDest.addSuffix("alleles.searcher"),
                 8,
