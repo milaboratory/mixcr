@@ -15,11 +15,7 @@ import cc.redberry.pipe.CUtils
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.cli.CommandExport.FieldData
 import com.milaboratory.mixcr.cli.CommandExport.extractor
-import com.milaboratory.mixcr.export.FieldExtractor
-import com.milaboratory.mixcr.export.InfoWriter
-import com.milaboratory.mixcr.export.OutputMode
-import com.milaboratory.mixcr.export.SHMTreeNodeToPrint
-import com.milaboratory.mixcr.export.SHNTreeNodeFieldsExtractor
+import com.milaboratory.mixcr.export.*
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
@@ -250,6 +246,6 @@ class CommandExportTableForSHMTrees : ACommandWithOutputMiXCR() {
     }
 
     companion object {
-        const val COMMAND_NAME = "shm_tree_export_table"
+        const val COMMAND_NAME = "exportShmTrees"
     }
 }

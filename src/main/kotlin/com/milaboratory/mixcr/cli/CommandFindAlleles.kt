@@ -23,28 +23,15 @@ import com.milaboratory.mixcr.alleles.AllelesBuilder.SortedClonotypes
 import com.milaboratory.mixcr.alleles.FindAllelesParameters
 import com.milaboratory.mixcr.alleles.FindAllelesParametersPresets.getByName
 import com.milaboratory.mixcr.assembler.CloneFactory
-import com.milaboratory.mixcr.basictypes.ClnsWriter
-import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.basictypes.CloneReader
-import com.milaboratory.mixcr.basictypes.CloneSet
-import com.milaboratory.mixcr.basictypes.CloneSetIO
-import com.milaboratory.mixcr.basictypes.GeneAndScore
+import com.milaboratory.mixcr.basictypes.*
 import com.milaboratory.mixcr.trees.MutationsUtils.positionIfNucleotideWasDeleted
 import com.milaboratory.mixcr.util.XSV.writeXSVBody
 import com.milaboratory.mixcr.util.XSV.writeXSVHeaders
 import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
-import io.repseq.core.GeneType
-import io.repseq.core.GeneType.Constant
-import io.repseq.core.GeneType.Diversity
-import io.repseq.core.GeneType.Joining
-import io.repseq.core.GeneType.VDJC_REFERENCE
-import io.repseq.core.GeneType.Variable
-import io.repseq.core.VDJCGene
-import io.repseq.core.VDJCGeneId
-import io.repseq.core.VDJCLibrary
-import io.repseq.core.VDJCLibraryRegistry
+import io.repseq.core.*
+import io.repseq.core.GeneType.*
 import io.repseq.dto.VDJCGeneData
 import io.repseq.dto.VDJCLibraryData
 import org.apache.commons.io.FilenameUtils
@@ -60,6 +47,7 @@ import kotlin.collections.set
 
 @CommandLine.Command(
     name = CommandFindAlleles.FIND_ALLELES_COMMAND_NAME,
+    aliases = [CommandFindAlleles.FIND_ALLELES_COMMAND_NAME_ALT],
     sortOptions = false,
     separator = " ",
     description = ["Find allele variants in clns."]
@@ -158,16 +146,16 @@ Resulted outputs must be uniq"""]
         val allelesBuilder = AllelesBuilder(findAllelesParameters!!, cloneReaders, tempDest)
         val sortedClonotypes = allelesBuilder.sortClonotypes()
         val alleles = (
-            buildAlleles(allelesBuilder, sortedClonotypes, Variable) +
-                buildAlleles(allelesBuilder, sortedClonotypes, Joining)
-            ).toMap().toMutableMap()
+                buildAlleles(allelesBuilder, sortedClonotypes, Variable) +
+                        buildAlleles(allelesBuilder, sortedClonotypes, Joining)
+                ).toMap().toMutableMap()
         val usedGenes = collectUsedGenes(cloneReaders, alleles)
         registerNotProcessedVJ(alleles, usedGenes)
         val resultLibrary = buildLibrary(libraryRegistry, cloneReaders, usedGenes)
         if (libraryOutput != null) {
-            val libraryOutputFile = File(libraryOutput!!)
-            libraryOutputFile.parentFile.mkdirs()
-            GlobalObjectMappers.getOneLine().writeValue(libraryOutputFile, resultLibrary.data)
+            val libraryOutputFile = Paths.get(libraryOutput!!).toAbsolutePath()
+            libraryOutputFile.parent.toFile().mkdirs()
+            GlobalObjectMappers.getOneLine().writeValue(libraryOutputFile.toFile(), resultLibrary.data)
         }
         val allelesMapping = alleles.mapValues { (_, geneDatum) ->
             geneDatum.map { resultLibrary[it.name].id }
@@ -184,7 +172,7 @@ Resulted outputs must be uniq"""]
             File(outputClnsFiles[i]).writeMappedClones(mapperClones, resultLibrary, cloneReader)
         }
         if (allelesMutationsOutput != null) {
-            File(allelesMutationsOutput!!).parentFile.mkdirs()
+            Paths.get(allelesMutationsOutput!!).toAbsolutePath().parent.toFile().mkdirs()
             printAllelesMutationsOutput(resultLibrary, allelesStatistics)
         }
     }
@@ -224,7 +212,7 @@ Resulted outputs must be uniq"""]
         resultLibrary: VDJCLibrary,
         cloneReader: CloneReader
     ) {
-        parentFile.mkdirs()
+        toPath().toAbsolutePath().parent.toFile().mkdirs()
         val cloneSet = CloneSet(
             clones,
             resultLibrary.genes,
@@ -411,6 +399,7 @@ Resulted outputs must be uniq"""]
     }
 
     companion object {
-        const val FIND_ALLELES_COMMAND_NAME = "find_alleles"
+        const val FIND_ALLELES_COMMAND_NAME = "findAlleles"
+        const val FIND_ALLELES_COMMAND_NAME_ALT = "find_alleles"
     }
 }

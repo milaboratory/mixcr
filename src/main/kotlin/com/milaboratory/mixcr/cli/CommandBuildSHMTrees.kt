@@ -16,12 +16,8 @@ package com.milaboratory.mixcr.cli
 import cc.redberry.pipe.CUtils
 import cc.redberry.pipe.util.CountingOutputPort
 import com.milaboratory.mixcr.basictypes.CloneSetIO
+import com.milaboratory.mixcr.trees.*
 import com.milaboratory.mixcr.trees.ClusteringCriteria.DefaultClusteringCriteria
-import com.milaboratory.mixcr.trees.DebugInfo
-import com.milaboratory.mixcr.trees.SHMTreeBuilder
-import com.milaboratory.mixcr.trees.SHMTreeBuilderParameters
-import com.milaboratory.mixcr.trees.SHMTreeBuilderParametersPresets
-import com.milaboratory.mixcr.trees.SHMTreesWriter
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
@@ -251,7 +247,7 @@ class CommandBuildSHMTrees : ACommandWithOutputMiXCR() {
     }
 
     companion object {
-        const val COMMAND_NAME = "shm_tree"
+        const val COMMAND_NAME = "findShmTrees"
     }
 }
 
