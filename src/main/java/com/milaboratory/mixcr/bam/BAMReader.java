@@ -92,7 +92,8 @@ public class BAMReader implements SequenceReaderCloseable<SequenceRead>, CanRepo
                     (l, r) -> l.getDescription().equals(r.getDescription()) ?
                             Long.compare(l.getId(), r.getId()) :
                             l.getDescription().compareTo(r.getDescription()),
-                    5, TempFileManager.getTempFile().toPath(),
+                    5,
+                    TempFileManager.systemTempFolderDestination("mixcr.bam."),
                     4, 4,
                     stateBuilder.getOState(), stateBuilder.getIState(),
                     memoryBudget, 1 << 17);
