@@ -66,6 +66,11 @@ public class CommandDownsample extends ACommandWithOutputMiXCR {
             names = {"--out"})
     public String out;
 
+    @Override
+    protected List<String> getInputFiles() {
+        return new ArrayList<>(in);
+    }
+
     private Path output(String input) {
         String outName = Paths.get(input).getFileName().toString()
                 .replace(".clna", "")

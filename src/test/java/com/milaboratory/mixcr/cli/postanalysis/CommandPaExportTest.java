@@ -72,7 +72,7 @@ public class CommandPaExportTest {
                 "/Users/poslavskysv/Projects/milab/mixcr-test-data/pa/overlapPa.json",
                 "/Users/poslavskysv/Projects/milab/mixcr-test-data/pa/tables/preproc/overlap.tsv");
     }
-    
+
     @Ignore
     @Test
     public void test5() {
@@ -92,7 +92,7 @@ public class CommandPaExportTest {
                 "--metadata", "/Users/poslavskysv/Projects/milab/mixcr-test-data/metadata.tsv",
                 "--primary-group", "Tissue",
                 "--secondary-group", "MouseIDNum",
-                "--plot-type", "boxplot",
+                "--plot-type", "violin-bindot",
                 "/Users/poslavskysv/Projects/milab/mixcr-test-data/pa/individualPa.json.gz",
                 "/Users/poslavskysv/Projects/milab/mixcr-test-data/pa/i/diversity.pdf");
     }
@@ -105,5 +105,76 @@ public class CommandPaExportTest {
                 "/Users/poslavskysv/Projects/milab/mixcr-test-data/pa/o/overlap.pdf");
     }
 
-//    mixcr exportPlots overlap --filter "CellPopulation=CD4naive" --color-key x_CellPopulation --metadata metadata.tsv pa/overlapPa.json.gz pa/o/overlap.pdf
+
+    @Ignore
+    @Test
+    public void test8() {
+        Main.main("exportPlots", "overlap", "--metadata",
+                "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/metadata.tsv",
+                "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/pa/overlap.json.gz",
+                "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/plots/overlap.pdf");
+    }
+
+    @Ignore
+    @Test
+    public void test8a() {
+        Main.main("overlapScatterPlot",
+                "--downsampling", "count-reads-auto",
+                "--chains", "TRB",
+                "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample11_LN.clns",
+                "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample14_LN.clns",
+                "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/plots/overlap_11_14.pdf");
+    }
+
+    @Ignore
+    @Test
+    public void test9() {
+        Main.main("exportPlots", "diversity",
+                "--chains", "TRB",
+//                "--plot-type", "boxplot-jitter",
+                "--method", "TTest",
+                "--primary-group", "tissue",
+                "-pv", "Spleen,Thymus,PBMC,LymphNode",
+                "--secondary-group", "condition",
+                "-sv", "tumor,contrlol",
+//                "--p-adjust-method", "none",
+//                "--hide-overall-p-value",
+//                "--metric", "Observed",
+                "--plot-type", "boxplot-jitter",
+                "--metadata",
+                "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/metadata.tsv",
+                "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/pa/i.pa.json.gz",
+                "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/plots/diversity.pdf");
+    }
+
+    @Ignore
+    @Test
+    public void test45() {
+        Main.main("postanalysis", "individual",
+                "--metadata", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/metadata.tsv",
+                "--only-productive", "-f",
+//                "--chains", "TRB",
+                "--default-downsampling", "count-reads-auto",
+//                "--default-weight-function", "read-count",
+//                "-Odiversity.shannonWiener.downsampling=top-reads-100",
+//                "-Odiversity.observed.downsampling=cumtop-reads-50.0",
+//                "-Odiversity.chao1.weightFunction=none",
+                "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample11_LN.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample11_PBMC.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample11_SPL.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample11_THY.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample12_LN.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample12_PBMC.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample12_SPL.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample12_THY.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample14_LN.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample14_PBMC.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample14_SPL.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample14_THY.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample15_LN.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample15_PBMC.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample15_SPL.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample15_THY.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample3_LN.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample3_PBMC.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample3_SPL.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample3_THY.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample8_LN.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample8_PBMC.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample8_SPL.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample8_THY.clns",
+                "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/pa/i.pa.json.gz");
+    }
+
+    @Ignore
+    @Test
+    public void test452() {
+        Main.main("postanalysis", "overlap",
+                "--metadata", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/metadata.tsv",
+                "--only-productive", "-f",
+                "--default-downsampling", "count-reads-auto",
+                "--default-weight-function", "read-count",
+                "-Od.downsampling=top-reads-100",
+                "-Of1.downsampling=cumtop-reads-50.0",
+                "-Of2.weightFunction=none",
+                "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample11_LN.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample11_PBMC.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample11_SPL.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample11_THY.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample12_LN.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample12_PBMC.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample12_SPL.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample12_THY.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample14_LN.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample14_PBMC.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample14_SPL.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample14_THY.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample15_LN.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample15_PBMC.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample15_SPL.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample15_THY.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample3_LN.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample3_PBMC.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample3_SPL.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample3_THY.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample8_LN.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample8_PBMC.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample8_SPL.clns", "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/result/sample8_THY.clns",
+                "/Users/poslavskysv/Projects/milab/mixcr-test-data-mice-2014/pa/overlapPa.json.gz");
+    }
 }

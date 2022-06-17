@@ -80,8 +80,9 @@ public class AdditiveAggregator<K, T> implements Aggregator<K, T> {
             return;
 
         double metricValue = metric.compute(obj);
-        if (Double.isNaN(metricValue))
-            return;
+        if (Double.isNaN(metricValue)) {
+            metricValue = 0.0;
+        }
 
         nElements += 1;
         double weightValue = weight.weight(obj);
