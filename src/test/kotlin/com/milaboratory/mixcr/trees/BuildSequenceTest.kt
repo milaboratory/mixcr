@@ -6,51 +6,41 @@ import com.milaboratory.core.alignment.LinearGapAlignmentScoring
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.trees.MutationsUtils.buildSequence
+import com.milaboratory.mixcr.util.RandomizedTest
 import com.milaboratory.mixcr.util.extractAbsoluteMutations
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Ignore
 import org.junit.Test
-import java.util.concurrent.ThreadLocalRandom
-import java.util.stream.Collectors
-import java.util.stream.IntStream
 import kotlin.random.Random
 
 class BuildSequenceTest {
     @Ignore
     @Test
     fun randomizedTestOfBuildingSequence() {
-        val numberOfRuns = 1000000
-        val failedSeeds = IntStream.range(0, numberOfRuns)
-            .mapToObj { ThreadLocalRandom.current().nextLong() }
-            .parallel()
-            .filter { seed: Long -> testBuildSequence(seed, false) }
-            .collect(Collectors.toList())
-        assertEquals(emptyList<Any>(), failedSeeds)
+        RandomizedTest.randomized(::testBuildSequence, numberOfRuns = 1000000)
     }
 
     @Test
     fun reproduceRandomTestOfBuildingSequence() {
-        assertFalse(testBuildSequence(3301598077971287922L, true))
+        RandomizedTest.reproduce(
+            ::testBuildSequence,
+            3301598077971287922L
+        )
     }
 
     @Ignore
     @Test
     fun randomizedTestBuildSequencesByCuttingMutations() {
-        val numberOfRuns = 100000
-        val failedSeeds = IntStream.range(0, numberOfRuns)
-            .mapToObj { ThreadLocalRandom.current().nextLong() }
-            .parallel()
-            .filter { seed: Long -> testBuildSequencesByCuttingMutations(seed, false) }
-            .collect(Collectors.toList())
-        println("failed: " + failedSeeds.size)
-        assertEquals(emptyList<Any>(), failedSeeds)
+        RandomizedTest.randomized(::testBuildSequencesByCuttingMutations, numberOfRuns = 1000000)
     }
 
     @Test
     fun reproduceBuildSequencesByCuttingMutations() {
-        assertFalse(testBuildSequencesByCuttingMutations(4441662389111061139L, true))
-        assertFalse(testBuildSequencesByCuttingMutations(4865476048882002489L, true))
+        RandomizedTest.reproduce(
+            ::testBuildSequencesByCuttingMutations,
+            4441662389111061139L,
+            4865476048882002489L
+        )
     }
 
     @Test
@@ -192,8 +182,7 @@ class BuildSequenceTest {
         assertEquals("GTTT", buildSequence(parent, mutations, Range(3, 6), true).toString())
     }
 
-    private fun testBuildSequence(seed: Long, print: Boolean): Boolean = try {
-        val random = Random(seed)
+    private fun testBuildSequence(random: Random, print: Boolean) {
         val part1 = random.generateSequence(5 + random.nextInt(5))
         val part2 = random.generateSequence(5 + random.nextInt(5))
         val part3 = random.generateSequence(5 + random.nextInt(5))
@@ -268,16 +257,9 @@ class BuildSequenceTest {
             println(child)
         }
         assertEquals(result, child)
-        false
-    } catch (e: Exception) {
-        if (print) {
-            e.printStackTrace()
-        }
-        true
     }
 
-    private fun testBuildSequencesByCuttingMutations(seed: Long, print: Boolean): Boolean = try {
-        val random = Random(seed)
+    private fun testBuildSequencesByCuttingMutations(random: Random, print: Boolean): Boolean = try {
         val parent = random.generateSequence(15)
         val range1 = Range(0, 5)
         val range2 = Range(5, 10)

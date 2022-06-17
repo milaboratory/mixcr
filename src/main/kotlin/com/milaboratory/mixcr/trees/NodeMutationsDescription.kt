@@ -12,11 +12,11 @@
 package com.milaboratory.mixcr.trees
 
 import com.milaboratory.core.Range
-import com.milaboratory.core.mutations.Mutations
-import com.milaboratory.core.sequence.NucleotideSequence
 
-data class MutationsWithRange(
-    val sequence1: NucleotideSequence,
-    val mutations: Mutations<NucleotideSequence>,
-    val range: Range
+class NodeMutationsDescription(
+    val VMutationsWithoutCDR3: Map<Range, MutationsWithRange>,
+    val VMutationsInCDR3WithoutNDN: MutationsWithRange,
+    val knownNDN: MutationsWithRange,
+    val JMutationsInCDR3WithoutNDN: MutationsWithRange,
+    val JMutationsWithoutCDR3: Map<Range, MutationsWithRange>
 )

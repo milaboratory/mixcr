@@ -38,7 +38,7 @@ internal object MutationsUtils {
         range: Range
     ): NucleotideSequence = mutations.mutate(sequence1).getRange(projectRange(mutations, range))
 
-    private fun projectRange(mutations: Mutations<NucleotideSequence>, range: Range): Range {
+    fun projectRange(mutations: Mutations<NucleotideSequence>, range: Range): Range {
         //for including inclusions before position one must step left before conversion and step right after
         val from = positionIfNucleotideWasDeleted(mutations.convertToSeq2Position(range.lower)) -
             mutations.asSequence()
@@ -47,28 +47,27 @@ internal object MutationsUtils {
         return Range(from, to)
     }
 
-    fun mutationsBetween(rootInfo: RootInfo, first: MutationsSet, second: MutationsSet): MutationsDescription =
-        MutationsDescription(
-            mutationsBetween(rootInfo.VSequence, first.VMutations, second.VMutations),
-            difference(
-                first.VMutations.partInCDR3.mutations,
-                second.VMutations.partInCDR3.mutations,
-                rootInfo.VSequence,
-                rootInfo.VRangeInCDR3
-            ),
-            difference(
-                first.NDNMutations.mutations,
-                second.NDNMutations.mutations,
-                rootInfo.reconstructedNDN,
-                Range(0, rootInfo.reconstructedNDN.size())
-            ),
+    fun mutationsBetween(rootInfo: RootInfo, first: MutationsSet, second: MutationsSet) = NodeMutationsDescription(
+        mutationsBetween(rootInfo.VSequence, first.VMutations, second.VMutations),
+        difference(
+            first.VMutations.partInCDR3.mutations,
+            second.VMutations.partInCDR3.mutations,
+            rootInfo.VSequence,
+            rootInfo.VRangeInCDR3
+        ),
+        difference(
+            first.NDNMutations.mutations,
+            second.NDNMutations.mutations,
+            rootInfo.reconstructedNDN,
+            Range(0, rootInfo.reconstructedNDN.size())
+        ),
         difference(
             first.JMutations.partInCDR3.mutations,
             second.JMutations.partInCDR3.mutations,
             rootInfo.JSequence,
             rootInfo.JRangeInCDR3
         ),
-            mutationsBetween(rootInfo.JSequence, first.JMutations, second.JMutations)
+        mutationsBetween(rootInfo.JSequence, first.JMutations, second.JMutations)
     )
 
     private fun mutationsBetween(
@@ -95,14 +94,6 @@ internal object MutationsUtils {
             Range(0, sequence1.size())
         )
     }
-
-    fun intersection(from: MutationsWithRange, to: MutationsWithRange): MutationsWithRange =
-        from.copy(mutations = from.mutations.intersection(to.mutations))
-
-    fun intersection(
-        from: Map<Range, MutationsWithRange>,
-        to: Map<Range, MutationsWithRange>
-    ): Map<Range, MutationsWithRange> = fold(from, to) { a, b, _ -> intersection(a, b) }
 
     fun <R, V1, V2> fold(
         first: Map<Range, V1>,
@@ -263,3 +254,9 @@ internal object MutationsUtils {
         }
     }
 }
+
+fun Map<Range, MutationsWithRange>.intersection(with: Map<Range, MutationsWithRange>): Map<Range, MutationsWithRange> =
+    MutationsUtils.fold(this, with) { a, b, _ -> a.intersection(b) }
+
+fun MutationsWithRange.intersection(with: MutationsWithRange): MutationsWithRange =
+    copy(mutations = mutations.intersection(with.mutations))

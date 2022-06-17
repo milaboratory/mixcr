@@ -5,20 +5,19 @@ import com.milaboratory.mixcr.trees.Tree.NodeWithParent
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.Observed
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.Reconstructed
+import com.milaboratory.mixcr.util.RandomizedTest
+import io.kotest.matchers.bigdecimal.shouldBeGreaterThanOrEquals
 import org.junit.Assert
 import org.junit.Ignore
 import org.junit.Test
 import java.math.BigDecimal
-import java.time.Duration
-import java.time.Instant
 import java.util.*
-import java.util.concurrent.ThreadLocalRandom
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.BiFunction
 import java.util.function.Consumer
 import java.util.function.Supplier
 import java.util.stream.Collectors
 import java.util.stream.IntStream
+import kotlin.random.Random
 
 @Ignore
 class TreeBuilderByAncestorsTest {
@@ -397,22 +396,9 @@ class TreeBuilderByAncestorsTest {
     }
 
     private fun compareTrees(original: Tree<List<Int>>, result: Tree<ObservedOrReconstructed<List<Int>, List<Int>>>) {
-        val assertion: Boolean
-        assertion = try {
+        try {
             compareSumOfDistances(original, result)
         } catch (e: Throwable) {
-            println("expected:")
-            println(treePrinterOnlyReal.print(calculateDistances(original) { first: List<Int>, second: List<Int> ->
-                distance(
-                    first,
-                    second
-                )
-            }))
-            println("actual:")
-            println(treePrinter.print(result))
-            throw e
-        }
-        if (!assertion) {
             println("expected:")
             println(treePrinterOnlyReal.print(calculateDistances(original) { first: List<Int>, second: List<Int> ->
                 distance(
@@ -428,8 +414,8 @@ class TreeBuilderByAncestorsTest {
                 )
             }))
             println(treePrinter.print(result))
+            throw e
         }
-        Assert.assertTrue(assertion)
     }
 
     private fun rebuildTree(
@@ -460,36 +446,19 @@ class TreeBuilderByAncestorsTest {
     @Ignore
     @Test
     fun randomizedTest() {
-        val begin = Instant.now()
-        val count = AtomicInteger(0)
-        val numberOfRuns = 400000000
-        val failedSeeds = IntStream.range(0, numberOfRuns)
-            .mapToObj { it: Int -> ThreadLocalRandom.current().nextLong() }
-            .parallel()
-            .filter { seed: Long ->
-                val result = testRandomTree(seed, false)
-                val current = count.incrementAndGet().toLong()
-                if (current % 10000 == 0L) {
-                    val runFor = Duration.between(begin, Instant.now())
-                    print("\r current is " + current + " run for " + runFor + " ETC: " + runFor.multipliedBy((numberOfRuns - current) / current))
-                    System.out.flush()
-                }
-                result
-            }
-            .collect(Collectors.toList())
-        Assert.assertEquals(emptyList<Any>(), failedSeeds)
+        RandomizedTest.randomized(::testRandomTree, numberOfRuns = 400000000)
     }
 
     @Test
     fun reproduceRandom() {
-        for (seed in Lists.newArrayList(-4412672463225238115L)) {
-            Assert.assertFalse(testRandomTree(seed, true))
-        }
+        RandomizedTest.reproduce(
+            ::testRandomTree,
+            -4412672463225238115L
+        )
     }
 
     //TODO erase random nodes near root
-    private fun testRandomTree(seed: Long, print: Boolean): Boolean {
-        val random = Random(seed)
+    private fun testRandomTree(random: Random, print: Boolean) {
         val arrayLength = 5 + random.nextInt(15)
         val depth = 3 + random.nextInt(5)
         val alphabetSize = 3 + random.nextInt(5)
@@ -524,50 +493,26 @@ class TreeBuilderByAncestorsTest {
                 if (nodes.isEmpty()) break
             }
         }
-        val rebuild: Tree<ObservedOrReconstructed<List<Int>, List<Int>>>
-        rebuild = try {
-            rebuildTree(original, print)
-        } catch (e: Exception) {
+        val rebuild = rebuildTree(original, print)
+        if (print) {
             println("expected:")
             println(treePrinterOnlyReal.print(original))
-            println("seed:")
-            println(seed)
-            e.printStackTrace()
+            println("actual:")
+            println(treePrinterOnlyReal.print(calculateDistances(withoutReconstructed(rebuild)) { first: List<Int>, second: List<Int> ->
+                distance(
+                    first,
+                    second
+                )
+            }))
             println()
-            return true
         }
-        return try {
-            val success = compareSumOfDistances(original, rebuild)
-            if (!success) {
-                println("expected:")
-                println(treePrinterOnlyReal.print(original))
-                println("actual:")
-                println(treePrinterOnlyReal.print(calculateDistances(withoutReconstructed(rebuild)) { first: List<Int>, second: List<Int> ->
-                    distance(
-                        first,
-                        second
-                    )
-                }))
-                println("seed:")
-                println(seed)
-                println()
-            }
-            !success
-        } catch (e: Throwable) {
-            println(treePrinterOnlyReal.print(original))
-            println(treePrinter.print(rebuild))
-            println("seed:")
-            println(seed)
-            e.printStackTrace()
-            println()
-            true
-        }
+        compareSumOfDistances(original, rebuild)
     }
 
     private fun compareSumOfDistances(
         original: Tree<List<Int>>,
         result: Tree<ObservedOrReconstructed<List<Int>, List<Int>>>
-    ): Boolean {
+    ) {
         val sumOfDistancesInOriginal =
             sumOfDistances(calculateDistances(original) { first: List<Int>, second: List<Int> ->
                 distance(
@@ -582,12 +527,7 @@ class TreeBuilderByAncestorsTest {
                     second
                 )
             })
-        val success = sumOfDistancesInOriginal.compareTo(sumOfDistancesInReconstructed) >= 0
-        if (!success) {
-            println()
-            println("sumOfDistancesInOriginal $sumOfDistancesInOriginal sumOfDistancesInReconstructed $sumOfDistancesInReconstructed")
-        }
-        return success
+        sumOfDistancesInOriginal shouldBeGreaterThanOrEquals sumOfDistancesInReconstructed
     }
 
     private fun insetChildren(
@@ -604,7 +544,7 @@ class TreeBuilderByAncestorsTest {
                     .filter { i: Int -> parent.content[i] == 0 }
                     .boxed()
                     .collect(Collectors.toList())
-                Collections.shuffle(possiblePositionsToMutate, random)
+                possiblePositionsToMutate.shuffle(random)
                 val mutationsCount =
                     Math.ceil(Math.max(1, insertedLeaves.iterator().next().size * mutationsPercentage.get()) / 100.0)
                         .toInt()

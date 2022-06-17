@@ -14,11 +14,8 @@ package com.milaboratory.mixcr.util
 import gnu.trove.list.array.TIntArrayList
 
 class AdjacencyMatrix(val size: Int) {
-    val data: Array<BitArrayInt?>
-
-    init {
-        data = arrayOfNulls(size)
-        for (i in 0 until size) data[i] = BitArrayInt(size)
+    val data: Array<BitArrayInt> = Array(size) {
+        BitArrayInt(size)
     }
 
     fun setConnected(i: Int, j: Int) {
@@ -26,16 +23,16 @@ class AdjacencyMatrix(val size: Int) {
     }
 
     fun isConnected(i: Int, j: Int): Boolean {
-        return data[i]!![j]
+        return data[i][j]
     }
 
     fun setConnected(i: Int, j: Int, connected: Boolean) {
         if (connected) {
-            data[i]!!.set(j)
-            data[j]!!.set(i)
+            data[i].set(j)
+            data[j].set(i)
         } else {
-            data[i]!!.clear(j)
-            data[j]!!.clear(i)
+            data[i].clear(j)
+            data[j].clear(i)
         }
     }
 

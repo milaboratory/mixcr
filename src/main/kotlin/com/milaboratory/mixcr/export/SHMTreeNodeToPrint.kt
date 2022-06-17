@@ -14,77 +14,131 @@ package com.milaboratory.mixcr.export
 import com.milaboratory.core.Range
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.core.sequence.TranslationParameters.FromLeftWithoutIncompleteCodon
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
+import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.trees.CloneOrFoundAncestor
-import com.milaboratory.mixcr.trees.MutationsUtils
+import com.milaboratory.mixcr.trees.MutationsDescription
+import com.milaboratory.mixcr.trees.MutationsSet
 import com.milaboratory.mixcr.trees.RootInfo
-import com.milaboratory.mixcr.util.extractAbsoluteMutations
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import io.repseq.core.GeneFeature
+import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType
 import io.repseq.core.ReferencePoints
 import io.repseq.core.VDJCGene
 import io.repseq.core.VDJCGeneId
+import java.math.BigDecimal
 
 class SHMTreeNodeToPrint(
-    val cloneOrFoundAncestor: CloneOrFoundAncestor,
-    val rootInfo: RootInfo,
+    private val main: CloneOrFoundAncestor,
+    private val parent: CloneOrFoundAncestor?,
+    private val mostRecentCommonAncestor: CloneOrFoundAncestor,
+    val distanceFromParent: BigDecimal?,
+    private val rootInfo: RootInfo,
     private val assemblerParameters: CloneAssemblerParameters,
     private val alignerParameters: VDJCAlignerParameters,
     private val geneSupplier: (VDJCGeneId) -> VDJCGene
 ) {
-    val assemblingFeatures: Array<GeneFeature> get() = assemblerParameters.assemblingFeatures
+    val clone: Clone? = main.clone
 
-    fun targetNSequence(geneFeature: GeneFeature): NucleotideSequence? =
-        when (geneFeature) {
-            GeneFeature.CDR3 -> {
-                val mutationsSet = cloneOrFoundAncestor.mutationsSet
-                mutationsSet.VMutations.buildPartInCDR3(rootInfo)
-                    .concatenate(mutationsSet.NDNMutations.buildSequence(rootInfo))
-                    .concatenate(mutationsSet.JMutations.buildPartInCDR3(rootInfo))
+    fun mutationsWithRange(
+        geneFeature: GeneFeature,
+        relativeTo: GeneFeature? = null,
+        baseOn: Base = Base.root
+    ): MutationsDescription? {
+        if (!canExtractMutations(geneFeature, relativeTo)) return null
+        val mainMutations = main.mutationsSet.mutationsWithRange(geneFeature, relativeTo)
+        return when (baseOn) {
+            Base.root -> mainMutations
+            Base.mrca -> mainMutations.differenceWith(
+                mostRecentCommonAncestor.mutationsSet.mutationsWithRange(geneFeature, relativeTo)
+            )
+            Base.parent -> when (parent) {
+                null -> null
+                else -> mainMutations.differenceWith(
+                    parent.mutationsSet.mutationsWithRange(geneFeature, relativeTo)
+                )
             }
-            else -> when {
-                assemblingFeatures.none { geneFeature in it } -> null
-                else -> when (val geneType = geneFeature.geneType) {
-                    null -> null
-                    else -> {
-                        val (relativeRangeOfFeature, mutations) = mutationForGeneFeature(geneFeature)
-                        MutationsUtils.buildSequence(
-                            rootInfo.getSequence1(geneType),
-                            mutations,
-                            relativeRangeOfFeature
-                        )
-                    }
+        }
+    }
+
+    private fun canExtractMutations(geneFeature: GeneFeature, relativeTo: GeneFeature?): Boolean = when (geneFeature) {
+        CDR3 -> {
+            require(relativeTo == null)
+            true
+        }
+        else -> when {
+            assemblerParameters.assemblingFeatures.none { geneFeature in it } -> false
+            else -> geneFeature.geneType != null
+        }
+    }
+
+    //TODO work with all geneFeatures, for example Exon2 and JRegionTrimmed
+    private fun MutationsSet.mutationsWithRange(
+        geneFeature: GeneFeature,
+        relativeTo: GeneFeature?
+    ): MutationsDescription = when (geneFeature) {
+        CDR3 -> {
+            require(relativeTo == null)
+            val baseCDR3 = rootInfo.baseCDR3()
+            MutationsDescription(
+                baseCDR3,
+                mutationsOfCDR3(),
+                Range(0, baseCDR3.size()),
+                FromLeftWithoutIncompleteCodon,
+                isIncludeFirstInserts = true
+            )
+        }
+        else -> {
+            val geneType = geneFeature.geneType
+            val geneFeatureToAlign = alignerParameters.getGeneAlignerParameters(geneType).geneFeatureToAlign
+            val partitioning = partitioning(geneType)
+            val relativeSeq1Range = Range(
+                partitioning.getRelativePosition(geneFeatureToAlign, geneFeature.firstPoint),
+                partitioning.getRelativePosition(geneFeatureToAlign, geneFeature.lastPoint)
+            )
+            val mutations = getGeneMutations(geneType).combinedMutations()
+            val isIncludeFirstInserts = geneFeatureToAlign.firstPoint == geneFeature.firstPoint
+            val translationParameters = partitioning.getTranslationParameters(geneFeature)
+            when (relativeTo) {
+                null -> MutationsDescription(
+                    rootInfo.getSequence1(geneType),
+                    mutations,
+                    relativeSeq1Range,
+                    translationParameters,
+                    isIncludeFirstInserts
+                )
+                else -> {
+                    val shift = partitioning.getRelativePosition(geneFeature, relativeTo.firstPoint)
+                    val sequence1 = rootInfo.getSequence1(geneType)
+                    MutationsDescription(
+                        sequence1.getRange(shift, sequence1.size()),
+                        mutations.move(-shift),
+                        relativeSeq1Range.move(-shift),
+                        translationParameters,
+                        isIncludeFirstInserts
+                    )
                 }
             }
         }
-
-    fun mutationForGeneFeature(geneFeature: GeneFeature): Pair<Range, Mutations<NucleotideSequence>> {
-        val geneType = geneFeature.geneType
-        val geneFeatureToAlign = geneFeatureToAlign(geneType)
-        val relativeRangeOfFeature = relativeRangeOfFeature(partitioning(geneType), geneFeatureToAlign, geneFeature)
-        val mutations = cloneOrFoundAncestor.mutationsSet.getGeneMutations(geneType)
-            .combinedMutations()
-            .extractAbsoluteMutations(
-                relativeRangeOfFeature,
-                isIncludeFirstInserts = geneFeatureToAlign.firstPoint == geneFeature.firstPoint
-            )
-        return relativeRangeOfFeature to mutations
     }
 
-    private fun geneFeatureToAlign(geneType: GeneType): GeneFeature =
-        alignerParameters.getGeneAlignerParameters(geneType).geneFeatureToAlign
+    private fun MutationsSet.mutationsOfCDR3(): Mutations<NucleotideSequence> =
+        VMutations.partInCDR3.mutations.move(-rootInfo.VRangeInCDR3.lower)
+            .concat(NDNMutations.mutations.move(rootInfo.VRangeInCDR3.length()))
+            .concat(
+                JMutations.partInCDR3.mutations
+                    .move(rootInfo.VRangeInCDR3.length() + rootInfo.reconstructedNDN.size() - rootInfo.JRangeInCDR3.lower)
+            )
 
-    fun partitioning(geneType: GeneType): ReferencePoints =
+    private fun partitioning(geneType: GeneType): ReferencePoints =
         geneSupplier(rootInfo.VJBase.getGeneId(geneType)).partitioning
 
+    @Suppress("EnumEntryName")
+    enum class Base {
+        root,
+        mrca,
+        parent
+    }
 }
-
-private fun relativeRangeOfFeature(
-    partitioning: ReferencePoints,
-    geneFeatureToAlign: GeneFeature,
-    geneFeature: GeneFeature
-): Range = Range(
-    partitioning.getRelativePosition(geneFeatureToAlign, geneFeature.firstPoint),
-    partitioning.getRelativePosition(geneFeatureToAlign, geneFeature.lastPoint)
-)

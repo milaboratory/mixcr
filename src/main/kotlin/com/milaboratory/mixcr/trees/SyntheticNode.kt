@@ -19,7 +19,7 @@ import com.milaboratory.mixcr.util.ClonesAlignmentRanges
 class SyntheticNode private constructor(
     val fromRootToThis: MutationsSet,
 ) {
-    fun mutate(mutations: MutationsDescription): SyntheticNode = SyntheticNode(
+    fun mutate(mutations: NodeMutationsDescription): SyntheticNode = SyntheticNode(
         MutationsSet(
             fromRootToThis.VMutations.copy(
                 mutations = fromRootToThis.VMutations.mutations.mapValues { (range, value) ->

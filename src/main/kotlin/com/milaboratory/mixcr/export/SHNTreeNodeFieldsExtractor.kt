@@ -14,11 +14,9 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.core.mutations.MutationsUtil
-import com.milaboratory.core.sequence.AminoAcidSequence
-import com.milaboratory.core.sequence.TranslationParameters.FromLeftWithIncompleteCodon
 import com.milaboratory.mixcr.export.FieldExtractors.NULL
+import com.milaboratory.mixcr.export.SHMTreeNodeToPrint.Base
 import io.repseq.core.GeneFeature
-import io.repseq.core.GeneFeature.CDR3
 
 object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
     override fun initFields(): Array<Field<out Any>> {
@@ -27,78 +25,170 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
         nodeFields += WithHeader(
             "-nFeature",
             "Export nucleotide sequence of specified gene feature",
-            "N. Seq. ",
-            "nSeq",
-            validateArgs = ::checkNotComposite
+            baseGeneFeatureArg("N. Seq. ", "nSeq"),
+            validateArgs = { checkNotComposite(it) }
         ) { node, geneFeature ->
-            node.targetNSequence(geneFeature)?.toString() ?: NULL
+            val mutationsWithRange = node.mutationsWithRange(geneFeature) ?: return@WithHeader NULL
+            mutationsWithRange.targetNSequence.toString()
         }
 
         nodeFields += WithHeader(
             "-aaFeature",
             "Export amino acid sequence of specified gene feature",
-            "AA. Seq. ",
-            "aaSeq",
-            validateArgs = ::checkNotComposite
+            baseGeneFeatureArg("AA. Seq. ", "aaSeq"),
+            validateArgs = { checkNotComposite(it) }
         ) { node, geneFeature ->
-            val nSequence = node.targetNSequence(geneFeature) ?: return@WithHeader NULL
-            val translationParameters = when (geneFeature) {
-                CDR3 -> FromLeftWithIncompleteCodon
-                else -> node.partitioning(geneFeature.geneType).getTranslationParameters(geneFeature)
-            }
-            AminoAcidSequence.translate(nSequence, translationParameters).toString()
+            val mutationsWithRange = node.mutationsWithRange(geneFeature) ?: return@WithHeader NULL
+            mutationsWithRange.targetAASequence.toString()
         }
 
         nodeFields += WithHeader(
-            //TODO
-            "-aaFeatureMutations",
-            "Export amino acid sequence of specified gene feature",
-            "AA. Seq. ",
-            "aaSeq",
-            validateArgs = ::checkNotComposite
-        ) { node, geneFeature ->
-            val rootInfo = node.rootInfo
-            if (geneFeature == CDR3) {
-                val mutationsSet = node.cloneOrFoundAncestor.mutationsSet
-                val CDR3Mutations = mutationsSet.VMutations.partInCDR3.mutations.move(-rootInfo.VRangeInCDR3.lower)
-                    .concat(mutationsSet.NDNMutations.mutations.move(rootInfo.VRangeInCDR3.length()))
-                    .concat(
-                        mutationsSet.JMutations.partInCDR3.mutations.move(-rootInfo.JRangeInCDR3.lower)
-                            .move(rootInfo.VRangeInCDR3.length() + rootInfo.VRangeInCDR3.length())
-                    )
-                MutationsUtil.nt2aaDetailed(
-                    rootInfo.baseCDR3(),
-                    CDR3Mutations,
-                    FromLeftWithIncompleteCodon,
-                    3
-                )
-            } else {
-                if (node.assemblingFeatures.none { geneFeature in it }) return@WithHeader ""
-                val geneType = geneFeature.geneType ?: return@WithHeader ""
-                val partitioning = node.partitioning(geneType)
-                val translationParameters = partitioning.getTranslationParameters(geneFeature)
-                val (relativeRangeOfFeature, mutations) = node.mutationForGeneFeature(geneFeature)
-                MutationsUtil.nt2aaDetailed(
-                    rootInfo.getSequence1(geneType).getRange(relativeRangeOfFeature),
-                    mutations.move(-relativeRangeOfFeature.lower),
-                    translationParameters,
-                    3
-                )
-            }.asString()
+            "-nMutations",
+            "Extract nucleotide mutations for specific gene feature; relative to germline sequence.",
+            baseGeneFeatureArg("N. Mutations in ", "nMutations"),
+            baseOnArg(),
+            validateArgs = { feature, _ ->
+                checkNotComposite(feature)
+            }
+        ) { node, geneFeature, base ->
+            val mutationsWithRange = node.mutationsWithRange(geneFeature, baseOn = base) ?: return@WithHeader "-"
+            mutationsWithRange.mutations.encode()
+        }
+
+        nodeFields += WithHeader(
+            "-nMutationsRelative",
+            "Extract nucleotide mutations for specific gene feature relative to another feature.",
+            baseGeneFeatureArg("N. Mutations in ", "nMutationsIn"),
+            relativeGeneFeatureArg(),
+            baseOnArg(),
+            validateArgs = { feature, relativeTo, _ ->
+                checkNotComposite(feature)
+                checkRelativeFeatures(feature, relativeTo)
+            }
+        ) { node, geneFeature, relativeTo, base ->
+            val mutationsWithRange = node.mutationsWithRange(geneFeature, relativeTo, base) ?: return@WithHeader "-"
+            mutationsWithRange.mutations.encode()
+        }
+
+
+        nodeFields += WithHeader(
+            "-aaMutations",
+            "Extract amino acid mutations for specific gene feature",
+            baseGeneFeatureArg("AA. Mutations in ", "aaMutations"),
+            baseOnArg(),
+            validateArgs = { feature, _ ->
+                checkNotComposite(feature)
+            }
+        ) { node, geneFeature, base ->
+            val mutationsWithRange = node.mutationsWithRange(geneFeature, baseOn = base) ?: return@WithHeader "-"
+            mutationsWithRange.aaMutations.encode(",")
+        }
+
+        nodeFields += WithHeader(
+            "-aaMutationsRelative",
+            "Extract amino acid mutations for specific gene feature relative to another feature.",
+            baseGeneFeatureArg("AA. Mutations in ", "aaMutations"),
+            relativeGeneFeatureArg(),
+            baseOnArg(),
+            validateArgs = { feature, relativeTo, _ ->
+                checkNotComposite(feature)
+                checkRelativeFeatures(feature, relativeTo)
+            }
+        ) { node, geneFeature, relativeTo, base ->
+            val mutationsWithRange = node.mutationsWithRange(geneFeature, relativeTo, base) ?: return@WithHeader "-"
+            mutationsWithRange.aaMutations.encode(",")
+        }
+
+        val detailedMutationsFormat =
+            "Format <nt_mutation>:<aa_mutation_individual>:<aa_mutation_cumulative>, where <aa_mutation_individual> is an expected amino acid " +
+                "mutation given no other mutations have occurred, and <aa_mutation_cumulative> amino acid mutation is the observed amino acid " +
+                "mutation combining effect from all other. WARNING: format may change in following versions."
+        nodeFields += WithHeader(
+            "-mutationsDetailed",
+            "Detailed list of nucleotide and corresponding amino acid mutations. $detailedMutationsFormat",
+            baseGeneFeatureArg("Detailed mutations in ", "mutationsDetailedIn"),
+            baseOnArg(),
+            validateArgs = { feature, _ ->
+                checkNotComposite(feature)
+            }
+        ) { node, geneFeature, base ->
+            val mutationsWithRange = node.mutationsWithRange(geneFeature, baseOn = base) ?: return@WithHeader "-"
+            mutationsWithRange.aaMutationsDetailed.encode(",")
+        }
+
+        nodeFields += WithHeader(
+            "-mutationsDetailedRelative",
+            "Detailed list of nucleotide and corresponding amino acid mutations written, positions relative to specified gene feature. $detailedMutationsFormat",
+            baseGeneFeatureArg("Detailed mutations in ", "mutationsDetailedIn"),
+            relativeGeneFeatureArg(),
+            baseOnArg(),
+            validateArgs = { feature, relativeTo, _ ->
+                checkNotComposite(feature)
+                checkRelativeFeatures(feature, relativeTo)
+            }
+        ) { node, geneFeature, relativeTo, base ->
+            val mutationsWithRange = node.mutationsWithRange(geneFeature, relativeTo, base) ?: return@WithHeader "-"
+            mutationsWithRange.aaMutationsDetailed.encode(",")
         }
 
         return nodeFields.toTypedArray()
     }
 
-    private fun checkNotComposite(it: GeneFeature) {
-        if (it.isComposite) {
-            throw IllegalArgumentException("Command doesn't support composite features")
+    private fun baseGeneFeatureArg(hPrefix: String, sPrefix: String): CommandArg<GeneFeature> = CommandArg(
+        "<gene_feature>",
+        { GeneFeature.parse(it) },
+        { hPrefix + GeneFeature.encode(it) },
+        { sPrefix + GeneFeature.encode(it) }
+    )
+
+    private fun relativeGeneFeatureArg(): CommandArg<GeneFeature> = CommandArg(
+        "<relative_to_gene_feature>",
+        { GeneFeature.parse(it) },
+        { "relative to " + GeneFeature.encode(it) },
+        { "Relative" + GeneFeature.encode(it) }
+    )
+
+    private fun baseOnArg(): CommandArg<Base> = CommandArg(
+        "<${Base.root}|${Base.mrca}|${Base.parent}>",
+        { Base.valueOf(it) },
+        { "based on $it" },
+        { "BasedOn$it" }
+    )
+
+    private fun AbstractField<*>.checkRelativeFeatures(
+        feature: GeneFeature,
+        relativeTo: GeneFeature
+    ) {
+        require(relativeTo in feature) {
+            String.format(
+                "%s: Base feature %s does not contain relative feature %s",
+                command, GeneFeature.encode(feature), GeneFeature.encode(relativeTo)
+            )
+        }
+        arrayOf(feature, relativeTo).forEach {
+            requireNotNull(it.geneType) {
+                String.format(
+                    "%s: Gene feature %s covers several gene types " +
+                        "(not possible to select corresponding alignment)", command, GeneFeature.encode(it)
+                )
+            }
+        }
+
+        require(!relativeTo.isAlignmentAttached) {
+            String.format(
+                "%s: Alignment attached base gene features not allowed (error in %s)",
+                command, GeneFeature.encode(relativeTo)
+            )
+        }
+    }
+
+    private fun checkNotComposite(feature: GeneFeature) {
+        require(!feature.isComposite) {
+            "Command doesn't support composite features"
         }
     }
 
 }
 
-private fun Array<MutationsUtil.MutationNt2AADescriptor>?.asString(): String = when (this) {
-    null -> ""
-    else -> joinToString { it.toString() }
-}
+private fun Array<MutationsUtil.MutationNt2AADescriptor>.encode(separator: String): String =
+    joinToString(separator) { it.toString() }

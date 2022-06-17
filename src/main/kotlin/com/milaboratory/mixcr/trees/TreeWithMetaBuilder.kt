@@ -20,7 +20,7 @@ import java.math.BigDecimal
 import java.util.*
 
 class TreeWithMetaBuilder(
-    private val treeBuilder: TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, SyntheticNode, MutationsDescription>,
+    private val treeBuilder: TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, SyntheticNode, NodeMutationsDescription>,
     val rootInfo: RootInfo,
     private val clonesRebase: ClonesRebase,
     val clonesAdditionHistory: LinkedList<CloneWrapper.ID>,

@@ -14,7 +14,7 @@ package com.milaboratory.mixcr.export;
 import com.milaboratory.mixcr.basictypes.VDJCFileHeaderData;
 
 public abstract class FieldWithParameters<T, P> extends AbstractField<T> {
-    final int nArguments;
+    public final int nArguments;
 
     public FieldWithParameters(Class<T> targetType, String command, String description, int nArguments) {
         super(targetType, command, description);

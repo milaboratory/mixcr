@@ -13,7 +13,6 @@ package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.VDJCFileHeaderData
 import com.milaboratory.mixcr.cli.CommandExport.FieldData
-import io.repseq.core.GeneFeature
 import java.util.*
 
 abstract class BaseFieldExtractors {
@@ -54,72 +53,110 @@ abstract class BaseFieldExtractors {
         throw IllegalArgumentException("illegal field: " + fd.field)
     }
 
+    class CommandArg<T>(
+        val meta: String,
+        val decode: (String) -> T,
+        val hPrefix: (T) -> String,
+        val sPrefix: (T) -> String
+    )
 
     //copy of com.milaboratory.mixcr.export.FeatureExtractors.WithHeader
-    protected abstract class WithHeader<T : Any>(
-        command: String,
-        description: String,
-        nArgs: Int,
-        clazz: Class<T>,
-        private val hPrefix: Array<String>,
-        private val sPrefix: Array<String>
-    ) : FieldWithParameters<T, Array<GeneFeature>>(clazz, command, description, nArgs) {
-        open fun validate(features: Array<GeneFeature>) {}
-
-        private fun header0(prefixes: Array<String>, features: Array<GeneFeature>): String {
-            val sb = StringBuilder()
-            for (i in prefixes.indices) sb.append(prefixes[i]).append(GeneFeature.encode(features[i]))
-            return sb.toString()
+    object WithHeader {
+        fun FieldWithParameters<*, *>.checkArgsCount(args: Array<String>) {
+            require(args.size == nArguments) {
+                "$command requires $nArguments arguments, got ${args.joinToString(" ")}"
+            }
         }
 
-        override fun getParameters(strings: Array<String>): Array<GeneFeature> {
-            require(strings.size == nArguments) { "Wrong number of parameters for $command" }
-            val features = Array<GeneFeature>(strings.size) { i ->
-                GeneFeature.parse(strings[i])
+        inline operator fun <reified T : Any, P1 : Any> invoke(
+            command: String,
+            description: String,
+            parameter1: CommandArg<P1>,
+            noinline validateArgs: AbstractField<T>.(P1) -> Unit = {},
+            noinline extract: (T, P1) -> String
+        ): Field<T> = object : FieldWithParameters<T, P1>(T::class.java, command, description, 1) {
+            override fun metaVars(): String = parameter1.meta
+
+            override fun getParameters(args: Array<String>): P1 {
+                checkArgsCount(args)
+                val arg1 = parameter1.decode(args.first())
+                validateArgs(arg1)
+                return arg1
             }
-            validate(features)
-            return features
+
+            override fun extractValue(`object`: T, parameters: P1): String =
+                extract(`object`, parameters)
+
+            override fun getHeader(outputMode: OutputMode, parameters: P1): String =
+                FieldExtractors.choose(
+                    outputMode,
+                    parameter1.hPrefix(parameters),
+                    parameter1.sPrefix(parameters)
+                )
         }
 
-        override fun getHeader(outputMode: OutputMode, features: Array<GeneFeature>): String =
-            FieldExtractors.choose(outputMode, header0(hPrefix, features), header0(sPrefix, features))
+        inline operator fun <reified T : Any, P1 : Any, P2 : Any> invoke(
+            command: String,
+            description: String,
+            parameter1: CommandArg<P1>,
+            parameter2: CommandArg<P2>,
+            noinline validateArgs: AbstractField<T>.(P1, P2) -> Unit = { _, _ -> },
+            noinline extract: (T, P1, P2) -> String
+        ): Field<T> = object : FieldWithParameters<T, Pair<P1, P2>>(T::class.java, command, description, 2) {
+            override fun metaVars(): String = parameter1.meta + " " + parameter2.meta
 
-        override fun metaVars(): String = when (nArguments) {
-            1 -> "<gene_feature>"
-            else -> "<gene_feature> <relative_to_gene_feature>"
+            override fun getParameters(args: Array<String>): Pair<P1, P2> {
+                checkArgsCount(args)
+                val arg1 = parameter1.decode(args[0])
+                val arg2 = parameter2.decode(args[1])
+                validateArgs(arg1, arg2)
+                return arg1 to arg2
+            }
+
+            override fun extractValue(`object`: T, parameters: Pair<P1, P2>): String =
+                extract(`object`, parameters.first, parameters.second)
+
+            override fun getHeader(outputMode: OutputMode, parameters: Pair<P1, P2>): String =
+                FieldExtractors.choose(
+                    outputMode,
+                    parameter1.hPrefix(parameters.first) + " " + parameter2.hPrefix(parameters.second),
+                    parameter1.sPrefix(parameters.first) + parameter2.sPrefix(parameters.second),
+                )
         }
 
-        companion object {
-            inline operator fun <reified T : Any> invoke(
-                command: String,
-                description: String,
-                hPrefix: String,
-                sPrefix: String,
-                noinline validateArgs: (GeneFeature) -> Unit = {},
-                noinline extract: (T, GeneFeature) -> String
-            ) = object : WithHeader<T>(command, description, 1, T::class.java, arrayOf(hPrefix), arrayOf(sPrefix)) {
-                override fun extractValue(`object`: T, parameters: Array<GeneFeature>): String =
-                    extract(`object`, parameters.first())
+        inline operator fun <reified T : Any, P1 : Any, P2 : Any, P3 : Any> invoke(
+            command: String,
+            description: String,
+            parameter1: CommandArg<P1>,
+            parameter2: CommandArg<P2>,
+            parameter3: CommandArg<P3>,
+            noinline validateArgs: AbstractField<T>.(P1, P2, P3) -> Unit = { _, _, _ -> },
+            noinline extract: (T, P1, P2, P3) -> String
+        ): Field<T> = object : FieldWithParameters<T, Triple<P1, P2, P3>>(T::class.java, command, description, 3) {
+            override fun metaVars(): String = parameter1.meta + " " + parameter2.meta + " " + parameter3.meta
 
-                override fun validate(features: Array<GeneFeature>) {
-                    validateArgs(features.first())
-                }
+            override fun getParameters(args: Array<String>): Triple<P1, P2, P3> {
+                checkArgsCount(args)
+                val arg1 = parameter1.decode(args[0])
+                val arg2 = parameter2.decode(args[1])
+                val arg3 = parameter3.decode(args[2])
+                validateArgs(arg1, arg2, arg3)
+                return Triple(arg1, arg2, arg3)
             }
 
-            inline operator fun <reified T : Any> invoke(
-                command: String,
-                description: String,
-                nArgs: Int,
-                hPrefix: Array<String>,
-                sPrefix: Array<String>,
-                noinline validateArgs: (Array<GeneFeature>) -> Unit = {},
-                noinline extract: (T, Array<GeneFeature>) -> String
-            ) = object : WithHeader<T>(command, description, nArgs, T::class.java, hPrefix, sPrefix) {
-                override fun extractValue(`object`: T, parameters: Array<GeneFeature>): String =
-                    extract(`object`, parameters)
+            override fun extractValue(`object`: T, parameters: Triple<P1, P2, P3>): String =
+                extract(`object`, parameters.first, parameters.second, parameters.third)
 
-                override fun validate(features: Array<GeneFeature>) = validateArgs(features)
-            }
+            override fun getHeader(outputMode: OutputMode, parameters: Triple<P1, P2, P3>): String =
+                FieldExtractors.choose(
+                    outputMode,
+                    parameter1.hPrefix(parameters.first)
+                        + " " + parameter2.hPrefix(parameters.second)
+                        + " " + parameter3.hPrefix(parameters.third),
+                    parameter1.sPrefix(parameters.first)
+                        + parameter2.sPrefix(parameters.second)
+                        + parameter3.sPrefix(parameters.third),
+                )
         }
     }
 }

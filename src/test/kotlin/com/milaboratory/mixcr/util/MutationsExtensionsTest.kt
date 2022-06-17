@@ -8,9 +8,6 @@ import com.milaboratory.mixcr.trees.generateSequence
 import io.kotest.matchers.shouldBe
 import org.junit.Ignore
 import org.junit.Test
-import java.util.concurrent.ThreadLocalRandom
-import java.util.stream.Collectors
-import java.util.stream.IntStream
 import kotlin.random.Random
 
 class MutationsExtensionsTest {
@@ -94,134 +91,108 @@ class MutationsExtensionsTest {
     @Ignore
     @Test
     fun `random test of without`() {
-        val numberOfRuns = 100000
-        val failedSeeds = IntStream.range(0, numberOfRuns)
-            .mapToObj { ThreadLocalRandom.current().nextLong() }
-            .parallel()
-            .filter { seed: Long -> testWithout(seed, false) }
-            .collect(Collectors.toList())
-        println("failed: " + failedSeeds.size)
-        failedSeeds shouldBe emptyList()
+        RandomizedTest.randomized(::testWithout, numberOfRuns = 100000)
     }
 
     @Test
     fun `reproduce test of without`() {
-        testWithout(4750412158561094728L, true) shouldBe false
-        testWithout(3502722435274504377L, true) shouldBe false
-        testWithout(-1598204848989057487L, true) shouldBe false
+        RandomizedTest.reproduce(
+            ::testWithout,
+            4750412158561094728L,
+            3502722435274504377L,
+            -1598204848989057487L,
+        )
     }
 
     @Ignore
     @Test
     fun `random test of intersection`() {
-        val numberOfRuns = 100000
-        val failedSeeds = IntStream.range(0, numberOfRuns)
-            .mapToObj { ThreadLocalRandom.current().nextLong() }
-            .parallel()
-            .filter { seed: Long -> testIntersection(seed, false) }
-            .collect(Collectors.toList())
-        println("failed: " + failedSeeds.size)
-        failedSeeds shouldBe emptyList()
+        RandomizedTest.randomized(::testIntersection, numberOfRuns = 100000)
     }
 
     @Test
     fun `reproduce test of intersection`() {
-        testIntersection(7112278539570627394L, true) shouldBe false
-        testIntersection(6313853897278610290L, true) shouldBe false
-        testIntersection(1436838224206222452L, true) shouldBe false
-        testIntersection(4912652181881843442L, true) shouldBe false
-        testIntersection(7380827987566875796L, true) shouldBe false
-        testIntersection(8956308861977725090L, true) shouldBe false
-        testIntersection(2382159383607284620L, true) shouldBe false
+        RandomizedTest.reproduce(
+            ::testIntersection,
+            7112278539570627394L,
+            6313853897278610290L,
+            1436838224206222452L,
+            4912652181881843442L,
+            7380827987566875796L,
+            8956308861977725090L,
+            2382159383607284620L,
+        )
     }
 
-    private fun testWithout(seed: Long, print: Boolean): Boolean {
-        try {
-            val random = Random(seed)
-            val parent = random.generateSequence(20)
-            val original = random.generateMutations(parent)
-            if (original.isEmpty) {
-                return false
-            }
-            val subsetOfIndexes = random.sampleOfIndexes(original)
-            val mutationsToSubtract = subsetOfIndexes
-                .asSequence()
-                .map { original.getMutation(it) }
-                .asMutations(NucleotideSequence.ALPHABET)
-            val mutationsLeft = (0 until original.size())
-                .asSequence()
-                .filter { it !in subsetOfIndexes }
-                .map { original.getMutation(it) }
-                .asMutations(NucleotideSequence.ALPHABET)
-            val result = original.without(mutationsToSubtract)
-            if (print) {
-                println("original: ${original.encode(",")}")
-                println("subtract: ${mutationsToSubtract.encode(",")}")
-                println("    left: ${mutationsLeft.encode(",")}")
-                println("  result: ${result.encode(",")}")
-            }
-            result shouldBe mutationsLeft
-            return false
-        } catch (e: Throwable) {
-            if (print) {
-                e.printStackTrace()
-            }
-            return true
+    private fun testWithout(random: Random, print: Boolean) {
+        val parent = random.generateSequence(20)
+        val original = random.generateMutations(parent)
+        if (original.isEmpty) {
+            return
         }
+        val subsetOfIndexes = random.sampleOfIndexes(original)
+        val mutationsToSubtract = subsetOfIndexes
+            .asSequence()
+            .map { original.getMutation(it) }
+            .asMutations(NucleotideSequence.ALPHABET)
+        val mutationsLeft = (0 until original.size())
+            .asSequence()
+            .filter { it !in subsetOfIndexes }
+            .map { original.getMutation(it) }
+            .asMutations(NucleotideSequence.ALPHABET)
+        val result = original.without(mutationsToSubtract)
+        if (print) {
+            println("original: ${original.encode(",")}")
+            println("subtract: ${mutationsToSubtract.encode(",")}")
+            println("    left: ${mutationsLeft.encode(",")}")
+            println("  result: ${result.encode(",")}")
+        }
+        result shouldBe mutationsLeft
     }
 
-    private fun testIntersection(seed: Long, print: Boolean): Boolean {
-        try {
-            val random = Random(seed)
-            val parent = random.generateSequence(20)
-            val original = random.generateMutations(parent)
-            if (original.isEmpty) {
-                return false
-            }
-            val intersectionIndexes = random.sampleOfIndexes(original)
-            val firstSubsetOfIndexes = random.sampleOfIndexes(original) - intersectionIndexes.toSet()
-            val secondSubsetOfIndexes =
-                random.sampleOfIndexes(original) - intersectionIndexes.toSet() - firstSubsetOfIndexes.toSet()
-            val intersection = intersectionIndexes
-                .asSequence()
-                .map { original.getMutation(it) }
-                .asMutations(NucleotideSequence.ALPHABET)
-            val firstDiff = firstSubsetOfIndexes.map { original.getMutation(it) }
-            val secondDiff = secondSubsetOfIndexes.map { original.getMutation(it) }
-            //different indexes yield the same insertion
-            if (firstDiff.any { it in secondDiff }) {
-                return false
-            }
-
-            val firstMutations = (intersectionIndexes + firstSubsetOfIndexes)
-                .sorted()
-                .asSequence()
-                .map { original.getMutation(it) }
-                .asMutations(NucleotideSequence.ALPHABET)
-            val secondMutations = (intersectionIndexes + secondSubsetOfIndexes)
-                .sorted()
-                .asSequence()
-                .map { original.getMutation(it) }
-                .asMutations(NucleotideSequence.ALPHABET)
-            val firstResult = firstMutations.intersection(secondMutations)
-            val secondResult = secondMutations.intersection(firstMutations)
-            if (print) {
-                println("    original: ${original.encode(",")}")
-                println("       first: ${firstMutations.encode(",")}")
-                println("      second: ${secondMutations.encode(",")}")
-                println("intersection: ${intersection.encode(",")}")
-                println(" firstResult: ${firstResult.encode(",")}")
-                println("secondResult: ${secondResult.encode(",")}")
-            }
-            firstResult shouldBe intersection
-            secondResult shouldBe intersection
-            return false
-        } catch (e: Throwable) {
-            if (print) {
-                e.printStackTrace()
-            }
-            return true
+    private fun testIntersection(random: Random, print: Boolean) {
+        val parent = random.generateSequence(20)
+        val original = random.generateMutations(parent)
+        if (original.isEmpty) {
+            return
         }
+        val intersectionIndexes = random.sampleOfIndexes(original)
+        val firstSubsetOfIndexes = random.sampleOfIndexes(original) - intersectionIndexes.toSet()
+        val secondSubsetOfIndexes =
+            random.sampleOfIndexes(original) - intersectionIndexes.toSet() - firstSubsetOfIndexes.toSet()
+        val intersection = intersectionIndexes
+            .asSequence()
+            .map { original.getMutation(it) }
+            .asMutations(NucleotideSequence.ALPHABET)
+        val firstDiff = firstSubsetOfIndexes.map { original.getMutation(it) }
+        val secondDiff = secondSubsetOfIndexes.map { original.getMutation(it) }
+        //different indexes yield the same insertion
+        if (firstDiff.any { it in secondDiff }) {
+            return
+        }
+
+        val firstMutations = (intersectionIndexes + firstSubsetOfIndexes)
+            .sorted()
+            .asSequence()
+            .map { original.getMutation(it) }
+            .asMutations(NucleotideSequence.ALPHABET)
+        val secondMutations = (intersectionIndexes + secondSubsetOfIndexes)
+            .sorted()
+            .asSequence()
+            .map { original.getMutation(it) }
+            .asMutations(NucleotideSequence.ALPHABET)
+        val firstResult = firstMutations.intersection(secondMutations)
+        val secondResult = secondMutations.intersection(firstMutations)
+        if (print) {
+            println("    original: ${original.encode(",")}")
+            println("       first: ${firstMutations.encode(",")}")
+            println("      second: ${secondMutations.encode(",")}")
+            println("intersection: ${intersection.encode(",")}")
+            println(" firstResult: ${firstResult.encode(",")}")
+            println("secondResult: ${secondResult.encode(",")}")
+        }
+        firstResult shouldBe intersection
+        secondResult shouldBe intersection
     }
 
     private fun Random.sampleOfIndexes(original: Mutations<NucleotideSequence>): List<Int> =

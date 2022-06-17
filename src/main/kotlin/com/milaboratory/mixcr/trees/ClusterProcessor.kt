@@ -26,7 +26,6 @@ import com.milaboratory.mixcr.cli.BuildSHMTreeStep
 import com.milaboratory.mixcr.cli.BuildSHMTreeStep.AttachClonesByDistanceChange
 import com.milaboratory.mixcr.cli.BuildSHMTreeStep.AttachClonesByNDN
 import com.milaboratory.mixcr.cli.BuildSHMTreeStep.CombineTrees
-import com.milaboratory.mixcr.trees.MutationsUtils.intersection
 import com.milaboratory.mixcr.trees.Tree.NodeWithParent
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.Reconstructed
@@ -478,7 +477,7 @@ internal class ClusterProcessor private constructor(
         return treeWithMetaBuilder
     }
 
-    private fun createTreeBuilder(rootInfo: RootInfo): TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, SyntheticNode, MutationsDescription> {
+    private fun createTreeBuilder(rootInfo: RootInfo): TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, SyntheticNode, NodeMutationsDescription> {
         val root = SyntheticNode.createRoot(
             clusterInfo.commonVAlignmentRanges,
             rootInfo,
@@ -608,7 +607,7 @@ internal class ClusterProcessor private constructor(
 
     private fun penaltyForReversedMutations(
         fromRootToBase: SyntheticNode,
-        mutations: MutationsDescription
+        mutations: NodeMutationsDescription
     ): BigDecimal {
         val reversedMutationsCount =
             reversedVMutationsCount(fromRootToBase, mutations) + reversedJMutationsCount(fromRootToBase, mutations)
@@ -616,7 +615,7 @@ internal class ClusterProcessor private constructor(
             .multiply(BigDecimal.valueOf(reversedMutationsCount.toLong()))
     }
 
-    private fun distance(mutations: MutationsDescription): BigDecimal =
+    private fun distance(mutations: NodeMutationsDescription): BigDecimal =
         scoringSet.distance(mutations)
 
     private fun score(rootInfo: RootInfo, mutations: MutationsSet): Int {
@@ -638,18 +637,21 @@ internal class ClusterProcessor private constructor(
         return VScore + JScore + NDNScore
     }
 
-    private fun commonMutations(first: MutationsDescription, second: MutationsDescription): MutationsDescription =
-        MutationsDescription(
-            intersection(first.VMutationsWithoutCDR3, second.VMutationsWithoutCDR3),
-            intersection(first.VMutationsInCDR3WithoutNDN, second.VMutationsInCDR3WithoutNDN),
+    private fun commonMutations(
+        first: NodeMutationsDescription,
+        second: NodeMutationsDescription
+    ): NodeMutationsDescription =
+        NodeMutationsDescription(
+            first.VMutationsWithoutCDR3.intersection(second.VMutationsWithoutCDR3),
+            first.VMutationsInCDR3WithoutNDN.intersection(second.VMutationsInCDR3WithoutNDN),
             first.knownNDN.copy(
                 mutations = MutationsUtils.findNDNCommonAncestor(
                     first.knownNDN.mutations,
                     second.knownNDN.mutations
                 )
             ),
-            intersection(first.JMutationsInCDR3WithoutNDN, second.JMutationsInCDR3WithoutNDN),
-            intersection(first.JMutationsWithoutCDR3, second.JMutationsWithoutCDR3)
+            first.JMutationsInCDR3WithoutNDN.intersection(second.JMutationsInCDR3WithoutNDN),
+            first.JMutationsWithoutCDR3.intersection(second.JMutationsWithoutCDR3)
         )
 
     //TODO it is more possible to decrease length of alignment than to increase
@@ -727,7 +729,7 @@ internal class ClusterProcessor private constructor(
             .map { nodeWithParent -> buildDebugInfo(emptyMap(), tree, nodeWithParent) }
     }
 
-    private fun ScoringSet.distance(mutations: MutationsDescription): BigDecimal {
+    private fun ScoringSet.distance(mutations: NodeMutationsDescription): BigDecimal {
         val VPenalties = maxScore(mutations.VMutationsWithoutCDR3.values, VScoring) -
             score(mutations.VMutationsWithoutCDR3.values, VScoring) +
             maxScore(mutations.VMutationsInCDR3WithoutNDN, VScoring) -
@@ -849,7 +851,7 @@ internal class ClusterProcessor private constructor(
                 }!!
         }
 
-        private fun reversedVMutationsCount(fromRootToBase: SyntheticNode, mutations: MutationsDescription): Int {
+        private fun reversedVMutationsCount(fromRootToBase: SyntheticNode, mutations: NodeMutationsDescription): Int {
             //TODO don't reconstruct map
             val reversedMutationsNotInCDR3 = MutationsUtils.fold(
                 fromRootToBase.fromRootToThis.VMutations.mutations,
@@ -863,7 +865,7 @@ internal class ClusterProcessor private constructor(
             return reversedMutationsInCDR3 + reversedMutationsNotInCDR3
         }
 
-        private fun reversedJMutationsCount(fromRootToBase: SyntheticNode, mutations: MutationsDescription): Int {
+        private fun reversedJMutationsCount(fromRootToBase: SyntheticNode, mutations: NodeMutationsDescription): Int {
             //TODO don't reconstruct map
             val reversedMutationsNotInCDR3 = MutationsUtils.fold(
                 fromRootToBase.fromRootToThis.JMutations.mutations,
