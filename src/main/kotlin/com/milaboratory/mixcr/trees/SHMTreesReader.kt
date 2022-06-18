@@ -33,7 +33,7 @@ class SHMTreesReader(
     val assemblerParameters: CloneAssemblerParameters
     val alignerParameters: VDJCAlignerParameters
     private val tagsInfo: TagsInfo
-    private val fileNames: List<String>
+    val fileNames: List<String>
     private val versionInfo: String
     private val treesPosition: Long
     override fun getTagsInfo(): TagsInfo = tagsInfo
@@ -51,7 +51,7 @@ class SHMTreesReader(
                 SHMTreesWriter.MAGIC -> {}
                 else -> throw RuntimeException(
                     "Unsupported file format; .clns file of version " + magicString +
-                        " while you are running MiXCR " + SHMTreesWriter.MAGIC
+                            " while you are running MiXCR " + SHMTreesWriter.MAGIC
                 )
             }
         }

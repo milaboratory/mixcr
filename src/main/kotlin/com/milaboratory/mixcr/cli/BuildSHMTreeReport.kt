@@ -41,7 +41,7 @@ import kotlin.math.abs
 class BuildSHMTreeReport : AbstractCommandReport() {
     @get:JsonProperty("stepResults")
     val stepResults: MutableList<StepResult> = mutableListOf()
-    override fun getCommand() = CommandBuildSHMTrees.COMMAND_NAME
+    override fun getCommand() = CommandFindShmTrees.COMMAND_NAME
 
     fun onStepEnd(step: BuildSHMTreeStep, clonesWasAdded: Int, treesCountDelta: Int) {
         stepResults += StepResult(

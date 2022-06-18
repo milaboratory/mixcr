@@ -25,7 +25,7 @@ import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
 import io.repseq.core.VDJCLibraryRegistry
 import org.apache.commons.io.FilenameUtils
-import picocli.CommandLine
+import picocli.CommandLine.*
 import java.io.File
 import java.io.PrintStream
 import java.nio.file.Files
@@ -33,17 +33,17 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 
-@CommandLine.Command(
-    name = CommandBuildSHMTrees.COMMAND_NAME,
+@Command(
+    name = CommandFindShmTrees.COMMAND_NAME,
     sortOptions = false,
     separator = " ",
     description = ["Builds SHM trees."]
 )
-class CommandBuildSHMTrees : ACommandWithOutputMiXCR() {
-    @CommandLine.Parameters(arity = "2..*", description = ["input_file.clns [input_file2.clns ....] output_file.tree"])
+class CommandFindShmTrees : ACommandWithOutputMiXCR() {
+    @Parameters(arity = "2..*", description = ["input_file.clns [input_file2.clns ....] output_file.trees"])
     private val inOut: List<String> = ArrayList()
 
-    @CommandLine.Option(description = ["Processing threads"], names = ["-t", "--threads"])
+    @Option(description = ["Processing threads"], names = ["-t", "--threads"])
     var threads = Runtime.getRuntime().availableProcessors()
         set(value) {
             if (value <= 0) throwValidationException("-t / --threads must be positive")
@@ -59,24 +59,24 @@ class CommandBuildSHMTrees : ACommandWithOutputMiXCR() {
     private val outputTreesPath: String
         get() = inOut[inOut.size - 1]
 
-    @CommandLine.Option(description = ["SHM tree builder parameters preset."], names = ["-p", "--preset"])
+    @Option(description = ["SHM tree builder parameters preset."], names = ["-p", "--preset"])
     var shmTreeBuilderParametersName = "default"
 
-    @CommandLine.Option(names = ["-r", "--report"], description = ["Report file path"])
+    @Option(names = ["-r", "--report"], description = ["Report file path"])
     var report: String? = null
 
-    @CommandLine.Option(description = ["List of read clone ids to build trees with"], names = ["-i", "--clone-ids"])
+    @Option(description = ["List of read clone ids to build trees with"], names = ["-i", "--clone-ids"])
     var cloneIds: Set<Int> = HashSet()
 
-    @CommandLine.Option(names = ["-rp", "--report-pdf"], description = ["Pdf report file path"])
+    @Option(names = ["-rp", "--report-pdf"], description = ["Pdf report file path"])
     var reportPdf: String? = null
 
-    @CommandLine.Option(description = ["Path to directory to store debug info"], names = ["-d", "--debug"])
+    @Option(description = ["Path to directory to store debug info"], names = ["-d", "--debug"])
     var debugDirectoryPath: String? = null
     var debugDirectory: Path? = null
     private var shmTreeBuilderParameters: SHMTreeBuilderParameters? = null
 
-    @CommandLine.Option(
+    @Option(
         description = ["Use system temp folder for temporary files, the output folder will be used if this option is omitted."],
         names = ["--use-system-temp"]
     )

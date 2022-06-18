@@ -18,19 +18,19 @@ import com.milaboratory.mixcr.cli.CommandExport.extractor
 import com.milaboratory.mixcr.export.*
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine
+import picocli.CommandLine.*
 
-@CommandLine.Command(
-    name = CommandExportTableForSHMTrees.COMMAND_NAME,
+@Command(
+    name = CommandExportShmTreesTable.COMMAND_NAME,
     sortOptions = false,
     separator = " ",
     description = ["Export SHMTree as a table"]
 )
-class CommandExportTableForSHMTrees : ACommandWithOutputMiXCR() {
-    @CommandLine.Parameters(arity = "2", description = ["input_file.tree output_file.tcv"])
+class CommandExportShmTreesTable : ACommandWithOutputMiXCR() {
+    @Parameters(arity = "2", description = ["input_file.tree output_file.tcv"])
     var inOut: List<String> = ArrayList()
 
-    @CommandLine.Option(description = ["Output column headers with spaces."], names = ["-v", "--with-spaces"])
+    @Option(description = ["Output column headers with spaces."], names = ["-v", "--with-spaces"])
     var humanReadable = false
 
     override fun getInputFiles(): List<String> = listOf(inOut.first())
