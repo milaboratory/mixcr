@@ -62,7 +62,7 @@ class SHMTreesWriter(
     /**
      * Must be closed by putting null
      */
-    fun treesWriter(): InputPort<SHMTree> = output.beginPrimitivOBlocks(3, 512)
+    fun treesWriter(): InputPort<SHMTreeResult> = output.beginPrimitivOBlocks(3, 512)
 
     override fun close() {
         output.beginPrimitivO().use { o ->

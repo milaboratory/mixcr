@@ -15,34 +15,36 @@ package com.milaboratory.mixcr.export
 
 import com.milaboratory.core.mutations.MutationsUtil
 import com.milaboratory.mixcr.export.FieldExtractors.NULL
-import com.milaboratory.mixcr.export.SHMTreeNodeToPrint.Base
+import com.milaboratory.mixcr.export.FieldWithParameters.CommandArg
+import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
+import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.Base
 import io.repseq.core.GeneFeature
 
 object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
     override fun initFields(): Array<Field<out Any>> {
-        val nodeFields = mutableListOf<Field<SHMTreeNodeToPrint>>()
+        val fields = mutableListOf<Field<SHMTreeForPostanalysis.Node>>()
 
-        nodeFields += WithHeader(
+        fields += FieldWithParameters(
             "-nFeature",
             "Export nucleotide sequence of specified gene feature",
             baseGeneFeatureArg("N. Seq. ", "nSeq"),
             validateArgs = { checkNotComposite(it) }
         ) { node, geneFeature ->
-            val mutationsWithRange = node.mutationsWithRange(geneFeature) ?: return@WithHeader NULL
+            val mutationsWithRange = node.mutationsWithRange(geneFeature) ?: return@FieldWithParameters NULL
             mutationsWithRange.targetNSequence.toString()
         }
 
-        nodeFields += WithHeader(
+        fields += FieldWithParameters(
             "-aaFeature",
             "Export amino acid sequence of specified gene feature",
             baseGeneFeatureArg("AA. Seq. ", "aaSeq"),
             validateArgs = { checkNotComposite(it) }
         ) { node, geneFeature ->
-            val mutationsWithRange = node.mutationsWithRange(geneFeature) ?: return@WithHeader NULL
+            val mutationsWithRange = node.mutationsWithRange(geneFeature) ?: return@FieldWithParameters NULL
             mutationsWithRange.targetAASequence.toString()
         }
 
-        nodeFields += WithHeader(
+        fields += FieldWithParameters(
             "-nMutations",
             "Extract nucleotide mutations for specific gene feature; relative to germline sequence.",
             baseGeneFeatureArg("N. Mutations in ", "nMutations"),
@@ -51,11 +53,12 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
                 checkNotComposite(feature)
             }
         ) { node, geneFeature, base ->
-            val mutationsWithRange = node.mutationsWithRange(geneFeature, baseOn = base) ?: return@WithHeader "-"
+            val mutationsWithRange =
+                node.mutationsWithRange(geneFeature, baseOn = base) ?: return@FieldWithParameters "-"
             mutationsWithRange.mutations.encode()
         }
 
-        nodeFields += WithHeader(
+        fields += FieldWithParameters(
             "-nMutationsRelative",
             "Extract nucleotide mutations for specific gene feature relative to another feature.",
             baseGeneFeatureArg("N. Mutations in ", "nMutationsIn"),
@@ -66,12 +69,13 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
                 checkRelativeFeatures(feature, relativeTo)
             }
         ) { node, geneFeature, relativeTo, base ->
-            val mutationsWithRange = node.mutationsWithRange(geneFeature, relativeTo, base) ?: return@WithHeader "-"
+            val mutationsWithRange =
+                node.mutationsWithRange(geneFeature, relativeTo, base) ?: return@FieldWithParameters "-"
             mutationsWithRange.mutations.encode()
         }
 
 
-        nodeFields += WithHeader(
+        fields += FieldWithParameters(
             "-aaMutations",
             "Extract amino acid mutations for specific gene feature",
             baseGeneFeatureArg("AA. Mutations in ", "aaMutations"),
@@ -80,11 +84,12 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
                 checkNotComposite(feature)
             }
         ) { node, geneFeature, base ->
-            val mutationsWithRange = node.mutationsWithRange(geneFeature, baseOn = base) ?: return@WithHeader "-"
+            val mutationsWithRange =
+                node.mutationsWithRange(geneFeature, baseOn = base) ?: return@FieldWithParameters "-"
             mutationsWithRange.aaMutations.encode(",")
         }
 
-        nodeFields += WithHeader(
+        fields += FieldWithParameters(
             "-aaMutationsRelative",
             "Extract amino acid mutations for specific gene feature relative to another feature.",
             baseGeneFeatureArg("AA. Mutations in ", "aaMutations"),
@@ -95,7 +100,8 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
                 checkRelativeFeatures(feature, relativeTo)
             }
         ) { node, geneFeature, relativeTo, base ->
-            val mutationsWithRange = node.mutationsWithRange(geneFeature, relativeTo, base) ?: return@WithHeader "-"
+            val mutationsWithRange =
+                node.mutationsWithRange(geneFeature, relativeTo, base) ?: return@FieldWithParameters "-"
             mutationsWithRange.aaMutations.encode(",")
         }
 
@@ -103,7 +109,7 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
             "Format <nt_mutation>:<aa_mutation_individual>:<aa_mutation_cumulative>, where <aa_mutation_individual> is an expected amino acid " +
                 "mutation given no other mutations have occurred, and <aa_mutation_cumulative> amino acid mutation is the observed amino acid " +
                 "mutation combining effect from all other. WARNING: format may change in following versions."
-        nodeFields += WithHeader(
+        fields += FieldWithParameters(
             "-mutationsDetailed",
             "Detailed list of nucleotide and corresponding amino acid mutations. $detailedMutationsFormat",
             baseGeneFeatureArg("Detailed mutations in ", "mutationsDetailedIn"),
@@ -112,11 +118,12 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
                 checkNotComposite(feature)
             }
         ) { node, geneFeature, base ->
-            val mutationsWithRange = node.mutationsWithRange(geneFeature, baseOn = base) ?: return@WithHeader "-"
+            val mutationsWithRange =
+                node.mutationsWithRange(geneFeature, baseOn = base) ?: return@FieldWithParameters "-"
             mutationsWithRange.aaMutationsDetailed.encode(",")
         }
 
-        nodeFields += WithHeader(
+        fields += FieldWithParameters(
             "-mutationsDetailedRelative",
             "Detailed list of nucleotide and corresponding amino acid mutations written, positions relative to specified gene feature. $detailedMutationsFormat",
             baseGeneFeatureArg("Detailed mutations in ", "mutationsDetailedIn"),
@@ -127,11 +134,12 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
                 checkRelativeFeatures(feature, relativeTo)
             }
         ) { node, geneFeature, relativeTo, base ->
-            val mutationsWithRange = node.mutationsWithRange(geneFeature, relativeTo, base) ?: return@WithHeader "-"
+            val mutationsWithRange =
+                node.mutationsWithRange(geneFeature, relativeTo, base) ?: return@FieldWithParameters "-"
             mutationsWithRange.aaMutationsDetailed.encode(",")
         }
 
-        return nodeFields.toTypedArray()
+        return fields.toTypedArray()
     }
 
     private fun baseGeneFeatureArg(hPrefix: String, sPrefix: String): CommandArg<GeneFeature> = CommandArg(

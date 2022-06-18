@@ -73,7 +73,7 @@ class TreeWithMetaBuilder(
         val mostRecentCommonAncestor = mostRecentCommonAncestor()
         val rootAsNode = (treeBuilder.tree.root.content as Reconstructed).content
         return treeBuilder.tree
-            .map { parent, node ->
+            .map { parent, node, _ ->
                 val mutationsSet = node.convert({ it.mutationsSet }, { it.fromRootToThis })
                 val cloneWrapper = node.convert({ it.clone }) { null }
 
@@ -135,15 +135,8 @@ class TreeWithMetaBuilder(
         mostRecentCommonAncestorNDN()
     )
 
-    fun mostRecentCommonAncestorNDN() =
+    fun mostRecentCommonAncestorNDN(): NucleotideSequence =
         mostRecentCommonAncestor().fromRootToThis.NDNMutations.mutations.mutate(rootInfo.reconstructedNDN)
-
-    data class TreeId(
-        val id: Int,
-        private val VJBase: VJBase
-    ) {
-        fun encode(): String = "${VJBase.VGeneId.name}-${VJBase.CDR3length}-${VJBase.JGeneId.name}-${id}"
-    }
 
     data class Snapshot(//TODO save position and action description to skip recalculation
         val clonesAdditionHistory: List<CloneWrapper.ID>,

@@ -239,7 +239,7 @@ class SHMTreeBuilder(
         XSV.writeXSVBody(debugOfCurrentStep, result.nodesDebugInfo, DebugInfo.COLUMNS_FOR_XSV, ";")
     }
 
-    fun getResult(clusterBySameVAndJ: Cluster<CloneWrapper>, previousStepDebug: PrintStream): List<SHMTree> {
+    fun getResult(clusterBySameVAndJ: Cluster<CloneWrapper>, previousStepDebug: PrintStream): List<SHMTreeResult> {
         val VJBase = clusterVJBase(clusterBySameVAndJ)
         val clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase)
         val currentTrees = currentTrees[VJBase]!!
@@ -270,7 +270,7 @@ class SHMTreeBuilder(
         return currentTrees.asSequence()
             .filter { treeWithMetaBuilder -> treeWithMetaBuilder.clonesCount() >= parameters.hideTreesLessThanSize }
             .map { treeWithMetaBuilder ->
-                SHMTree(
+                SHMTreeResult(
                     treeWithMetaBuilder.buildResult(),
                     treeWithMetaBuilder.rootInfo,
                     treeWithMetaBuilder.treeId

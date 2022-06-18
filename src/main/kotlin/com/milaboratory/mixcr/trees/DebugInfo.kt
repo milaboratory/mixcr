@@ -14,7 +14,6 @@ package com.milaboratory.mixcr.trees
 import com.google.common.collect.ImmutableMap
 import com.milaboratory.core.Range
 import com.milaboratory.core.sequence.NucleotideSequence
-import com.milaboratory.mixcr.trees.TreeWithMetaBuilder.TreeId
 import java.util.stream.Collectors
 
 class DebugInfo(

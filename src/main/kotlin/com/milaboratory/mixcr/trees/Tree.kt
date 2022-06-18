@@ -28,8 +28,8 @@ class Tree<T : Any>(
 
     fun allNodes(): Sequence<NodeWithParent<T>> = sequenceOf(NodeWithParent(null, root, null)) + root.allDescendants()
 
-    fun <R : Any> map(mapper: (T?, T) -> R): Tree<R> {
-        return Tree(root.map(null, mapper))
+    fun <R : Any> map(mapper: (T?, T, BigDecimal?) -> R): Tree<R> {
+        return Tree(root.map(null, null, mapper))
     }
 
     class Node<T> {
@@ -68,11 +68,11 @@ class Tree<T : Any>(
             sequenceOf(NodeWithParent(this, link.node, link.distance)) + link.node.allDescendants()
         }
 
-        fun <R> map(parent: T?, mapper: (T?, T) -> R): Node<R> {
-            val mappedNode = Node(mapper(parent, content))
+        fun <R> map(parent: T?, distance: BigDecimal?, mapper: (T?, T, BigDecimal?) -> R): Node<R> {
+            val mappedNode = Node(mapper(parent, content, distance))
             children.forEach(Consumer { child: NodeLink<T> ->
                 mappedNode.addChild(
-                    child.node.map(content, mapper),
+                    child.node.map(content, child.distance, mapper),
                     child.distance
                 )
             })

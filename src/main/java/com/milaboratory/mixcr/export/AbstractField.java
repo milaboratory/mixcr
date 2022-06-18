@@ -12,10 +12,10 @@
 package com.milaboratory.mixcr.export;
 
 public abstract class AbstractField<T> implements Field<T> {
-    protected final Class targetType;
+    protected final Class<T> targetType;
     protected final String command, description;
 
-    protected AbstractField(Class targetType, String command,
+    protected AbstractField(Class<T> targetType, String command,
                             String description) {
         this.targetType = targetType;
         this.command = command;
@@ -23,7 +23,7 @@ public abstract class AbstractField<T> implements Field<T> {
     }
 
     @Override
-    public boolean canExtractFrom(Class type) {
+    public boolean canExtractFrom(Class<?> type) {
         return targetType.isAssignableFrom(type);
     }
 

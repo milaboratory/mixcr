@@ -18,27 +18,29 @@ import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readObjectRequired
 
 @Serializable(by = SHMTreeSerializer::class)
-class SHMTree(
+class SHMTreeResult(
     val tree: Tree<CloneOrFoundAncestor>,
     val rootInfo: RootInfo,
-    val treeId: TreeWithMetaBuilder.TreeId
-)
+    val treeId: TreeId
+) {
+    val mostRecentCommonAncestor: CloneOrFoundAncestor get() = tree.root.content
+}
 
-class SHMTreeSerializer : Serializer<SHMTree> {
-    override fun write(output: PrimitivO, obj: SHMTree) {
+class SHMTreeSerializer : Serializer<SHMTreeResult> {
+    override fun write(output: PrimitivO, obj: SHMTreeResult) {
         TreeSerializer.writeTree(output, obj.tree)
         output.writeObject(obj.rootInfo)
         output.writeInt(obj.treeId.id)
     }
 
-    override fun read(input: PrimitivI): SHMTree {
+    override fun read(input: PrimitivI): SHMTreeResult {
         val tree = TreeSerializer.readTree<CloneOrFoundAncestor>(input)
         val rootInfo = input.readObjectRequired<RootInfo>()
         val treeId = input.readInt()
-        return SHMTree(
+        return SHMTreeResult(
             tree,
             rootInfo,
-            TreeWithMetaBuilder.TreeId(treeId, rootInfo.VJBase)
+            TreeId(treeId, rootInfo.VJBase)
         )
     }
 

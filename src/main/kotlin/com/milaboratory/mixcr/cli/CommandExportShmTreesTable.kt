@@ -15,10 +15,18 @@ import cc.redberry.pipe.CUtils
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.cli.CommandExport.FieldData
 import com.milaboratory.mixcr.cli.CommandExport.extractor
-import com.milaboratory.mixcr.export.*
+import com.milaboratory.mixcr.export.FieldExtractor
+import com.milaboratory.mixcr.export.InfoWriter
+import com.milaboratory.mixcr.export.OutputMode
+import com.milaboratory.mixcr.export.SHNTreeFieldsExtractor
+import com.milaboratory.mixcr.export.SHNTreeNodeFieldsExtractor
+import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import com.milaboratory.mixcr.trees.SHMTreesReader
+import com.milaboratory.mixcr.trees.forPostanalysis
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 
 @Command(
     name = CommandExportShmTreesTable.COMMAND_NAME,
@@ -38,7 +46,7 @@ class CommandExportShmTreesTable : ACommandWithOutputMiXCR() {
     override fun getOutputFiles(): List<String> = listOf(inOut.last())
 
     override fun run0() {
-        InfoWriter<SHMTreeNodeToPrint>(outputFiles.first()).use { output ->
+        InfoWriter<Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.Node>>(outputFiles.first()).use { output ->
 
             val oMode = when {
                 humanReadable -> OutputMode.HumanFriendly
@@ -74,16 +82,30 @@ class CommandExportShmTreesTable : ACommandWithOutputMiXCR() {
                 )
                     .flatMap { extractor(it, Clone::class.java, reader, oMode) }
                     .map { fieldExtractor ->
-                        object : FieldExtractor<SHMTreeNodeToPrint> {
+                        object : FieldExtractor<Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.Node>> {
                             override fun getHeader() = fieldExtractor.header
 
-                            override fun extractValue(`object`: SHMTreeNodeToPrint): String {
-                                val clone = `object`.clone ?: return ""
+                            override fun extractValue(`object`: Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.Node>): String {
+                                val clone = `object`.second.clone ?: return ""
                                 return fieldExtractor.extractValue(clone)
                             }
                         }
                     }
                 output.attachInfoProviders(cloneExtractors)
+
+                val treeExtractors = listOf(
+                    FieldData.mk("-treeId"),
+                )
+                    .flatMap { SHNTreeFieldsExtractor.extract(it, SHMTreeForPostanalysis::class.java, reader, oMode) }
+                    .map { fieldExtractor ->
+                        object : FieldExtractor<Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.Node>> {
+                            override fun getHeader() = fieldExtractor.header
+
+                            override fun extractValue(`object`: Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.Node>): String =
+                                fieldExtractor.extractValue(`object`.first)
+                        }
+                    }
+                output.attachInfoProviders(treeExtractors)
 
 
                 val nodeExtractors = listOf(
@@ -219,27 +241,41 @@ class CommandExportShmTreesTable : ACommandWithOutputMiXCR() {
                     FieldData.mk("-mutationsDetailedRelative", "CDR2", "CDR2", "parent"),
                     FieldData.mk("-mutationsDetailedRelative", "FR3", "FR3", "parent"),
                     FieldData.mk("-mutationsDetailedRelative", "FR4", "FR4", "parent"),
-                ).flatMap { SHNTreeNodeFieldsExtractor.extract(it, SHMTreeNodeToPrint::class.java, reader, oMode) }
+                )
+                    .flatMap {
+                        SHNTreeNodeFieldsExtractor.extract(
+                            it,
+                            SHMTreeForPostanalysis.Node::class.java,
+                            reader,
+                            oMode
+                        )
+                    }
+                    .map { fieldExtractor ->
+                        object : FieldExtractor<Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.Node>> {
+                            override fun getHeader() = fieldExtractor.header
+
+                            override fun extractValue(`object`: Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.Node>): String =
+                                fieldExtractor.extractValue(`object`.second)
+                        }
+                    }
 
                 output.attachInfoProviders(nodeExtractors)
 
                 output.ensureHeader()
 
                 CUtils.it(reader.readTrees()).forEach { shmTree ->
-                    val mostRecentCommonAncestor = shmTree.tree.root.content
-                    shmTree.tree.allNodes().forEach { (parent, node, distance) ->
-                        output.put(
-                            SHMTreeNodeToPrint(
-                                node.content,
-                                parent?.content,
-                                mostRecentCommonAncestor,
-                                distance,
-                                shmTree.rootInfo,
-                                reader.assemblerParameters,
-                                reader.alignerParameters
-                            ) { geneId -> libraryRegistry.getGene(geneId) }
-                        )
-                    }
+                    val shmTreeForPostanalysis = shmTree.forPostanalysis(
+                        reader.assemblerParameters,
+                        reader.alignerParameters,
+                        libraryRegistry
+                    )
+
+                    shmTreeForPostanalysis.tree.allNodes()
+                        .forEach { (_, node, _) ->
+                            output.put(
+                                shmTreeForPostanalysis to node.content
+                            )
+                        }
                 }
             }
         }

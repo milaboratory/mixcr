@@ -32,6 +32,7 @@ import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.ReferencePoint;
 import io.repseq.core.SequencePartitioning;
+import org.jetbrains.annotations.NotNull;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -51,6 +52,7 @@ public final class FieldExtractors {
 
             // Number of targets
             descriptorsList.add(new PL_O("-targets", "Export number of targets", "Number of targets", "numberOfTargets") {
+                @NotNull
                 @Override
                 protected String extract(VDJCObject object) {
                     return Integer.toString(object.numberOfTargets());
@@ -62,6 +64,7 @@ public final class FieldExtractors {
                 char l = type.getLetter();
                 descriptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Hit",
                         "Export best " + l + " hit", "Best " + l + " hit", "best" + l + "Hit") {
+                    @NotNull
                     @Override
                     protected String extract(VDJCObject object) {
                         VDJCHit bestHit = object.getBestHit(type);
@@ -77,6 +80,7 @@ public final class FieldExtractors {
                 char l = type.getLetter();
                 descriptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Gene",
                         "Export best " + l + " hit gene name (e.g. TRBV12-3 for TRBV12-3*00)", "Best " + l + " gene", "best" + l + "Gene") {
+                    @NotNull
                     @Override
                     protected String extract(VDJCObject object) {
                         VDJCHit bestHit = object.getBestHit(type);
@@ -92,6 +96,7 @@ public final class FieldExtractors {
                 char l = type.getLetter();
                 descriptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Family",
                         "Export best " + l + " hit family name (e.g. TRBV12 for TRBV12-3*00)", "Best " + l + " family", "best" + l + "Family") {
+                    @NotNull
                     @Override
                     protected String extract(VDJCObject object) {
                         VDJCHit bestHit = object.getBestHit(type);
@@ -107,6 +112,7 @@ public final class FieldExtractors {
                 char l = type.getLetter();
                 descriptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "HitScore",
                         "Export score for best " + l + " hit", "Best " + l + " hit score", "best" + l + "HitScore") {
+                    @NotNull
                     @Override
                     protected String extract(VDJCObject object) {
                         VDJCHit bestHit = object.getBestHit(type);
@@ -122,6 +128,7 @@ public final class FieldExtractors {
                 char l = type.getLetter();
                 descriptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "HitsWithScore",
                         "Export all " + l + " hits with score", "All " + l + " hits with score", "all" + l + "HitsWithScore") {
+                    @NotNull
                     @Override
                     protected String extract(VDJCObject object) {
                         VDJCHit[] hits = object.getHits(type);
@@ -146,6 +153,7 @@ public final class FieldExtractors {
                 char l = type.getLetter();
                 descriptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Hits",
                         "Export all " + l + " hits", "All " + l + " Hits", "all" + l + "Hits") {
+                    @NotNull
                     @Override
                     protected String extract(VDJCObject object) {
                         VDJCHit[] hits = object.getHits(type);
@@ -192,6 +200,7 @@ public final class FieldExtractors {
                 char l = type.getLetter();
                 descriptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Alignment",
                         "Export best " + l + " alignment", "Best " + l + " alignment", "best" + l + "Alignment") {
+                    @NotNull
                     @Override
                     protected String extract(VDJCObject object) {
                         VDJCHit bestHit = object.getBestHit(type);
@@ -218,6 +227,7 @@ public final class FieldExtractors {
                 char l = type.getLetter();
                 descriptorsList.add(new PL_O("-" + Character.toLowerCase(l) + "Alignments",
                         "Export all " + l + " alignments", "All " + l + " alignments", "all" + l + "Alignments") {
+                    @NotNull
                     @Override
                     protected String extract(VDJCObject object) {
                         VDJCHit[] hits = object.getHits(type);
@@ -260,6 +270,7 @@ public final class FieldExtractors {
 
             descriptorsList.add(new FeatureExtractors.WithHeader("-aaFeature", "Export amino acid sequence of specified gene feature",
                     1, new String[]{"AA. Seq. "}, new String[]{"aaSeq"}) {
+                @NotNull
                 @Override
                 protected String extractValue(VDJCObject object, GeneFeature[] parameters) {
                     GeneFeature geneFeature = parameters[parameters.length - 1];
@@ -279,6 +290,7 @@ public final class FieldExtractors {
             descriptorsList.add(new FeatureExtractors.WithHeader("-nFeatureImputed",
                     "Export nucleotide sequence of specified gene feature using letters from germline (marked lowercase) for uncovered regions",
                     1, new String[]{"N. Inc. Seq. "}, new String[]{"nSeqImputed"}) {
+                @NotNull
                 @Override
                 protected String extractValue(VDJCObject object, GeneFeature[] parameters) {
                     GeneFeature geneFeature = parameters[parameters.length - 1];
@@ -292,6 +304,7 @@ public final class FieldExtractors {
             descriptorsList.add(new FeatureExtractors.WithHeader("-aaFeatureImputed",
                     "Export amino acid sequence of specified gene feature using letters from germline (marked lowercase) for uncovered regions",
                     1, new String[]{"AA. Inc. Seq. "}, new String[]{"aaSeqImputed"}) {
+                @NotNull
                 @Override
                 protected String extractValue(VDJCObject object, GeneFeature[] parameters) {
                     GeneFeature geneFeature = parameters[parameters.length - 1];
@@ -422,19 +435,22 @@ public final class FieldExtractors {
             descriptorsList.add(new ExtractDefaultReferencePointsPositions());
 
             descriptorsList.add(new PL_A("-readId", "Export id of read corresponding to alignment (deprecated)", "Read id", "readId") {
+                @NotNull
                 @Override
                 protected String extract(VDJCAlignments object) {
                     return "" + object.getMinReadId();
                 }
 
+                @NotNull
                 @Override
-                public FieldExtractor<VDJCAlignments> create(OutputMode outputMode, VDJCFileHeaderData headerData, String[] args) {
+                public FieldExtractor<VDJCAlignments> create(@NotNull OutputMode outputMode, @NotNull VDJCFileHeaderData headerData, @NotNull String[] args) {
                     System.out.println("WARNING: -readId is deprecated. Use -readIds");
                     return super.create(outputMode, headerData, args);
                 }
             });
 
             descriptorsList.add(new PL_A("-readIds", "Export id(s) of read(s) corresponding to alignment", "Read id", "readId") {
+                @NotNull
                 @Override
                 protected String extract(VDJCAlignments object) {
                     long[] readIds = object.getReadIds();
@@ -449,6 +465,7 @@ public final class FieldExtractors {
             });
 
             descriptorsList.add(new PL_C("-cloneId", "Unique clone identifier", "Clone ID", "cloneId") {
+                @NotNull
                 @Override
                 protected String extract(Clone object) {
                     return "" + object.getId();
@@ -456,6 +473,7 @@ public final class FieldExtractors {
             });
 
             descriptorsList.add(new PL_C("-count", "Export clone count", "Clone count", "cloneCount") {
+                @NotNull
                 @Override
                 protected String extract(Clone object) {
                     return "" + object.getCount();
@@ -463,6 +481,7 @@ public final class FieldExtractors {
             });
 
             descriptorsList.add(new PL_C("-fraction", "Export clone fraction", "Clone fraction", "cloneFraction") {
+                @NotNull
                 @Override
                 protected String extract(Clone object) {
                     return "" + object.getFraction();
@@ -478,6 +497,7 @@ public final class FieldExtractors {
                     "Target sequence qualities", "targetQualities"));
 
             descriptorsList.add(new PL_A("-descrR1", "Export description line from initial .fasta or .fastq file (deprecated)", "Description R1", "descrR1") {
+                @NotNull
                 @Override
                 protected String extract(VDJCAlignments object) {
                     List<SequenceRead> reads = object.getOriginalReads();
@@ -497,6 +517,7 @@ public final class FieldExtractors {
             });
 
             descriptorsList.add(new PL_A("-descrR2", "Export description line from initial .fasta or .fastq file (deprecated)", "Description R2", "descrR2") {
+                @NotNull
                 @Override
                 protected String extract(VDJCAlignments object) {
                     List<SequenceRead> reads = object.getOriginalReads();
@@ -521,6 +542,7 @@ public final class FieldExtractors {
 
             descriptorsList.add(new PL_A("-descrsR1", "Export description lines from initial .fasta or .fastq file " +
                     "for R1 reads (only available if -OsaveOriginalReads=true was used in align command)", "Descriptions R1", "descrsR1") {
+                @NotNull
                 @Override
                 protected String extract(VDJCAlignments object) {
                     List<SequenceRead> reads = object.getOriginalReads();
@@ -541,6 +563,7 @@ public final class FieldExtractors {
 
             descriptorsList.add(new PL_A("-descrsR2", "Export description lines from initial .fastq file " +
                     "for R2 reads (only available if -OsaveOriginalReads=true was used in align command)", "Descriptions R2", "descrsR2") {
+                @NotNull
                 @Override
                 protected String extract(VDJCAlignments object) {
                     List<SequenceRead> reads = object.getOriginalReads();
@@ -564,6 +587,7 @@ public final class FieldExtractors {
             });
 
             descriptorsList.add(new PL_A("-readHistory", "Export read history", "Read history", "readHistory") {
+                @NotNull
                 @Override
                 protected String extract(VDJCAlignments object) {
                     try {
@@ -575,6 +599,7 @@ public final class FieldExtractors {
             });
 
             descriptorsList.add(new PL_A("-cloneId", "To which clone alignment was attached (make sure using .clna file as input for exportAlignments)", "Clone ID", "cloneId") {
+                @NotNull
                 @Override
                 protected String extract(VDJCAlignments object) {
                     return "" + object.getCloneIndex();
@@ -582,6 +607,7 @@ public final class FieldExtractors {
             });
 
             descriptorsList.add(new PL_A("-cloneIdWithMappingType", "To which clone alignment was attached with additional info on mapping type (make sure using .clna file as input for exportAlignments)", "Clone mapping", "cloneMapping") {
+                @NotNull
                 @Override
                 protected String extract(VDJCAlignments object) {
                     long ci = object.getCloneIndex();
@@ -609,6 +635,7 @@ public final class FieldExtractors {
                 String c = Character.toLowerCase(type.getLetter()) + "IdentityPercents";
                 descriptorsList.add(new PL_O("-" + c, type.getLetter() + " alignment identity percents",
                         type.getLetter() + " alignment identity percents", c) {
+                    @NotNull
                     @Override
                     protected String extract(VDJCObject object) {
                         VDJCHit[] hits = object.getHits(type);
@@ -629,6 +656,7 @@ public final class FieldExtractors {
                 String c = Character.toLowerCase(type.getLetter()) + "BestIdentityPercent";
                 descriptorsList.add(new PL_O("-" + c, type.getLetter() + " best alignment identity percent",
                         type.getLetter() + "best alignment identity percent", c) {
+                    @NotNull
                     @Override
                     protected String extract(VDJCObject object) {
                         VDJCHit hit = object.getBestHit(type);
@@ -640,6 +668,7 @@ public final class FieldExtractors {
             }
 
             descriptorsList.add(new PL_O("-chains", "Chains", "Chains", "chains") {
+                @NotNull
                 @Override
                 protected String extract(VDJCObject object) {
                     return object.commonChains().toString();
@@ -647,6 +676,7 @@ public final class FieldExtractors {
             });
 
             descriptorsList.add(new PL_O("-topChains", "Top chains", "Top chains", "topChains") {
+                @NotNull
                 @Override
                 protected String extract(VDJCObject object) {
                     return object.commonTopChains().toString();
@@ -654,6 +684,7 @@ public final class FieldExtractors {
             });
 
             descriptorsList.add(new PL_O("-tagCounts", "All tags with counts", "All tags counts", "taqCounts") {
+                @NotNull
                 @Override
                 protected String extract(VDJCObject object) {
                     return object.getTagCount().toString();
@@ -661,6 +692,7 @@ public final class FieldExtractors {
             });
 
             descriptorsList.add(new PL_C("-tagFractions", "All tags with fractions", "All tags", "taqFractions") {
+                @NotNull
                 @Override
                 protected String extract(Clone object) {
                     return object.getTagFractions().toString();
@@ -749,6 +781,7 @@ public final class FieldExtractors {
             });
 
             descriptorsList.add(new PL_C("-cellGroup", "Cell group", "Cell group", "cellGroup") {
+                @NotNull
                 @Override
                 protected String extract(Clone object) {
                     return String.valueOf(object.getGroup());
@@ -842,10 +875,11 @@ public final class FieldExtractors {
 
     /***************************************************/
     private static class ExtractSequence extends FieldParameterless<VDJCObject> {
-        private ExtractSequence(Class targetType, String command, String description, String hHeader, String sHeader) {
+        private ExtractSequence(Class<VDJCObject> targetType, String command, String description, String hHeader, String sHeader) {
             super(targetType, command, description, hHeader, sHeader);
         }
 
+        @NotNull
         @Override
         protected String extract(VDJCObject object) {
             StringBuilder sb = new StringBuilder();
@@ -860,10 +894,11 @@ public final class FieldExtractors {
     }
 
     private static class ExtractSequenceQuality extends FieldParameterless<VDJCObject> {
-        private ExtractSequenceQuality(Class targetType, String command, String description, String hHeader, String sHeader) {
+        private ExtractSequenceQuality(Class<VDJCObject> targetType, String command, String description, String hHeader, String sHeader) {
             super(targetType, command, description, hHeader, sHeader);
         }
 
+        @NotNull
         @Override
         protected String extract(VDJCObject object) {
             StringBuilder sb = new StringBuilder();
@@ -888,19 +923,19 @@ public final class FieldExtractors {
         }
 
         @Override
-        protected ReferencePoint getParameters(String[] string) {
-            if (string.length != 1)
-                throw new RuntimeException("Wrong number of parameters for " + getCommand());
-            return ReferencePoint.parse(string[0]);
+        protected ReferencePoint getParameters(@NotNull String[] args) {
+            return ReferencePoint.parse(args[0]);
         }
 
+        @NotNull
         @Override
-        protected String getHeader(OutputMode outputMode, ReferencePoint parameters) {
+        protected String getHeader(@NotNull OutputMode outputMode, ReferencePoint parameters) {
             return choose(outputMode, "Position " + (inReference ? "in reference" : "") + " of ",
                     inReference ? "-positionInReferenceOf" : "-positionOf") +
                     ReferencePoint.encode(parameters, true);
         }
 
+        @NotNull
         @Override
         protected String extractValue(VDJCObject object, ReferencePoint refPoint) {
             StringBuilder sb = new StringBuilder();
@@ -935,6 +970,7 @@ public final class FieldExtractors {
                     "see documentation for the full list and formatting)", "Ref. points", "refPoints");
         }
 
+        @NotNull
         @Override
         protected String extract(VDJCObject object) {
             StringBuilder sb = new StringBuilder();
@@ -1161,6 +1197,7 @@ public final class FieldExtractors {
             this.type = type;
         }
 
+        @NotNull
         @Override
         protected String extract(VDJCObject object) {
             TObjectFloatHashMap<String> familyScores = new TObjectFloatHashMap<>();

@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.trees
 
-import com.milaboratory.mixcr.trees.TreeWithMetaBuilder.TreeId
 import java.util.concurrent.atomic.AtomicInteger
 
 internal class IdGenerator {

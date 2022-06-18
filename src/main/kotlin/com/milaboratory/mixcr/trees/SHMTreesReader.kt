@@ -79,7 +79,7 @@ class SHMTreesReader(
         treesPosition = input.position
     }
 
-    fun readTrees(): OutputPortCloseable<SHMTree> =
-        input.beginRandomAccessPrimitivIBlocks(SHMTree::class.java, treesPosition)
+    fun readTrees(): OutputPortCloseable<SHMTreeResult> =
+        input.beginRandomAccessPrimitivIBlocks(SHMTreeResult::class.java, treesPosition)
 
 }

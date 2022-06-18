@@ -9,20 +9,11 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.export;
+package com.milaboratory.mixcr.trees
 
-import com.milaboratory.mixcr.basictypes.VDJCFileHeaderData;
-
-public interface Field<T> {
-    boolean canExtractFrom(Class<?> type);
-
-    String getCommand();
-
-    String getDescription();
-
-    int nArguments();
-
-    String metaVars();
-
-    FieldExtractor<T> create(OutputMode outputMode, VDJCFileHeaderData headerData, String[] args);
+data class TreeId(
+    val id: Int,
+    private val VJBase: VJBase
+) {
+    fun encode(): String = "${VJBase.VGeneId.name}-${VJBase.CDR3length}-${VJBase.JGeneId.name}-${id}"
 }

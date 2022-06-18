@@ -9,51 +9,51 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.export;
+package com.milaboratory.mixcr.export
 
-import com.milaboratory.mixcr.basictypes.VDJCFileHeaderData;
+import com.milaboratory.mixcr.basictypes.VDJCFileHeaderData
 
-public abstract class FieldParameterless<T> extends AbstractField<T> {
-    final String hHeader, sHeader;
+abstract class FieldParameterless<T> protected constructor(
+    targetType: Class<T>,
+    command: String,
+    description: String,
+    private val hHeader: String,
+    private val sHeader: String
+) : AbstractField<T>(targetType, command, description) {
+    override fun nArguments(): Int = 0
 
-    protected FieldParameterless(Class targetType, String command,
-                                 String description,
-                                 String hHeader, String sHeader) {
-        super(targetType, command, description);
-        this.hHeader = hHeader;
-        this.sHeader = sHeader;
+    protected abstract fun extract(`object`: T): String
+
+    fun getHeader(outputMode: OutputMode): String = when (outputMode) {
+        OutputMode.HumanFriendly -> hHeader
+        OutputMode.ScriptingFriendly -> sHeader
     }
 
-    @Override
-    public int nArguments() {
-        return 0;
+    override fun create(
+        outputMode: OutputMode,
+        headerData: VDJCFileHeaderData,
+        args: Array<String>
+    ): FieldExtractor<T> = object : AbstractFieldExtractor<T>(getHeader(outputMode), this) {
+        override fun extractValue(`object`: T): String = extract(`object`)
     }
 
-    protected abstract String extract(T object);
+    override fun metaVars(): String = ""
 
-    public String getHeader(OutputMode outputMode) {
-        switch (outputMode) {
-            case HumanFriendly:
-                return hHeader;
-            case ScriptingFriendly:
-                return sHeader;
-            default:
-                throw new NullPointerException();
+    companion object {
+        inline operator fun <reified T : Any> invoke(
+            command: String,
+            description: String,
+            hHeader: String,
+            sHeader: String,
+            noinline extractValue: (T) -> String
+        ) = object : FieldParameterless<T>(
+            T::class.java,
+            command,
+            description,
+            hHeader,
+            sHeader
+        ) {
+            override fun extract(`object`: T): String = extractValue(`object`)
         }
-    }
-
-    @Override
-    public FieldExtractor<T> create(OutputMode outputMode, VDJCFileHeaderData headerData, String[] args) {
-        return new AbstractFieldExtractor<T>(getHeader(outputMode), this) {
-            @Override
-            public String extractValue(T object) {
-                return extract(object);
-            }
-        };
-    }
-
-    @Override
-    public String metaVars() {
-        return "";
     }
 }

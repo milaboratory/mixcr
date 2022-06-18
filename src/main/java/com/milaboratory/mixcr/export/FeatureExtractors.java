@@ -20,6 +20,7 @@ import com.milaboratory.core.sequence.TranslationParameters;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.VDJCObject;
 import io.repseq.core.*;
+import org.jetbrains.annotations.NotNull;
 
 import static com.milaboratory.mixcr.export.FieldExtractors.NULL;
 
@@ -50,24 +51,23 @@ final class FeatureExtractors {
         }
 
         @Override
-        protected GeneFeature[] getParameters(String[] strings) {
-            if (strings.length != nArguments)
-                throw new IllegalArgumentException("Wrong number of parameters for " + command);
-            GeneFeature[] features = new GeneFeature[strings.length];
-            for (int i = 0; i < strings.length; i++)
-                features[i] = GeneFeature.parse(strings[i]);
+        protected GeneFeature[] getParameters(@NotNull String[] args) {
+            GeneFeature[] features = new GeneFeature[args.length];
+            for (int i = 0; i < args.length; i++)
+                features[i] = GeneFeature.parse(args[i]);
             validate(features);
             return features;
         }
 
+        @NotNull
         @Override
-        protected String getHeader(OutputMode outputMode, GeneFeature[] features) {
+        protected String getHeader(@NotNull OutputMode outputMode, GeneFeature[] features) {
             return FieldExtractors.choose(outputMode, header0(hPrefix, features), header0(sPrefix, features));
         }
 
         @Override
         public String metaVars() {
-            if (nArguments == 1)
+            if (getNArguments() == 1)
                 return "<gene_feature>";
             else
                 return "<gene_feature> <relative_to_gene_feature>";

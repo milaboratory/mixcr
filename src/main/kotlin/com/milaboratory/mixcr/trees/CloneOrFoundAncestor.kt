@@ -27,7 +27,7 @@ class CloneOrFoundAncestor(
     val datasetId: Int?,
     val mutationsSet: MutationsSet,
     val distanceFromGermline: BigDecimal,
-    val distanceFromRoot: BigDecimal?
+    val distanceFromMostRecentAncestor: BigDecimal?
 )
 
 class CloneOrFoundAncestorSerializer : Serializer<CloneOrFoundAncestor> {
@@ -37,7 +37,7 @@ class CloneOrFoundAncestorSerializer : Serializer<CloneOrFoundAncestor> {
         output.writeInt(obj.datasetId ?: -1)
         output.writeObject(obj.mutationsSet)
         output.writeDouble(obj.distanceFromGermline.toDouble())
-        output.writeDouble(obj.distanceFromRoot?.toDouble() ?: Double.NaN)
+        output.writeDouble(obj.distanceFromMostRecentAncestor?.toDouble() ?: Double.NaN)
     }
 
     override fun read(input: PrimitivI): CloneOrFoundAncestor = CloneOrFoundAncestor(
