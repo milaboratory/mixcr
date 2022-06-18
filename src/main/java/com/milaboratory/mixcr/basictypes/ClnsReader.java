@@ -22,6 +22,7 @@ import com.milaboratory.primitivio.Util;
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid;
 import com.milaboratory.util.LambdaSemaphore;
 import io.repseq.core.VDJCGene;
+import io.repseq.core.VDJCLibraryId;
 import io.repseq.core.VDJCLibraryRegistry;
 import io.repseq.dto.VDJCLibraryData;
 
@@ -112,8 +113,14 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
             ordering = i.readObject(VDJCSProperties.CloneOrdering.class);
             numberOfClones = i.readInt();
             if (readLibraries) {
-                Map<String, VDJCLibraryData> liberalise = Util.readMap(i, String.class, VDJCLibraryData.class);
-                liberalise.forEach((name, libraryData) -> libraryRegistry.registerLibrary(null, name, libraryData));
+                Map<String, VDJCLibraryData> libraries = Util.readMap(i, String.class, VDJCLibraryData.class);
+                libraries.forEach((name, libraryData) -> {
+                    boolean alreadyRegistered = libraryRegistry.getLoadedLibraries().stream()
+                            .anyMatch(it -> it.getLibraryId().withoutChecksum().equals(new VDJCLibraryId(name, libraryData.getTaxonId())));
+                    if (!alreadyRegistered) {
+                        libraryRegistry.registerLibrary(null, name, libraryData);
+                    }
+                });
             }
 
             usedGenes = IOUtil.stdVDJCPrimitivIStateInit(i, alignerParameters, libraryRegistry);
