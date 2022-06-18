@@ -78,7 +78,7 @@ class AllelesBuilder(
                 { clone: Clone -> clone.getBestHit(geneType).gene.hashCode() },
                 Comparator.comparing { clone: Clone -> clone.getBestHit(geneType).gene },
                 5,
-                tempDest.addSuffix("alleles.searcher"),
+                tempDest.addSuffix(".asearcher.${geneType.letterLowerCase}"),
                 8,
                 8,
                 stateBuilder.oState,
