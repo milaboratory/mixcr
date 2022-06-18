@@ -111,6 +111,12 @@ public class OverlapBrowser implements CanReportProgressAndStage {
                     if (forChain == null)
                         continue;
 
+                    if (onlyProductive)
+                        forChain = filterProductive(forChain, true);
+
+                    if (forChain == null)
+                        continue;
+
                     if (counts != null) {
                         double[] cs = counts.get(ch);
                         for (int i = 0; i < forChain.size(); i++)
