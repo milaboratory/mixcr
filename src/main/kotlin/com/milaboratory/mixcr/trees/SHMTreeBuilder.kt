@@ -222,13 +222,17 @@ class SHMTreeBuilder(
         relatedAllelesMutations: Map<VDJCGeneId, List<Mutations<NucleotideSequence>>>
     ) {
         val VJBase = clusterVJBase(clusterBySameVAndJ)
-        val clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase)
-        val result = clusterProcessor.buildTreeTopParts(relatedAllelesMutations)
-        currentTrees[VJBase] = result.snapshots
-        result.decisions.forEach { (cloneId, decision) ->
-            decisions.merge(cloneId, mapOf(VJBase to decision)) { a, b -> a + b }
+        try {
+            val clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase)
+            val result = clusterProcessor.buildTreeTopParts(relatedAllelesMutations)
+            currentTrees[VJBase] = result.snapshots
+            result.decisions.forEach { (cloneId, decision) ->
+                decisions.merge(cloneId, mapOf(VJBase to decision)) { a, b -> a + b }
+            }
+            XSV.writeXSVBody(debug, result.nodesDebugInfo, DebugInfo.COLUMNS_FOR_XSV, ";")
+        } catch (e: Exception) {
+            throw RuntimeException("can't apply zero step for $VJBase", e)
         }
-        XSV.writeXSVBody(debug, result.nodesDebugInfo, DebugInfo.COLUMNS_FOR_XSV, ";")
     }
 
     fun applyStep(
@@ -238,60 +242,68 @@ class SHMTreeBuilder(
         debugOfCurrentStep: PrintStream
     ) {
         val VJBase = clusterVJBase(clusterBySameVAndJ)
-        val clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase)
-        val currentTrees = currentTrees[VJBase]!!.map { snapshot -> clusterProcessor.restore(snapshot) }
-        val debugInfos = clusterProcessor.debugInfos(currentTrees)
-        XSV.writeXSVBody(debugOfPreviousStep, debugInfos, DebugInfo.COLUMNS_FOR_XSV, ";")
-        val result = clusterProcessor.applyStep(step, currentTrees)
-        this.currentTrees[VJBase] = result.snapshots
-        result.decisions.forEach { (cloneId, decision) ->
-            decisions.merge(cloneId, mapOf(VJBase to decision)) { a, b -> a + b }
+        try {
+            val clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase)
+            val currentTrees = currentTrees[VJBase]!!.map { snapshot -> clusterProcessor.restore(snapshot) }
+            val debugInfos = clusterProcessor.debugInfos(currentTrees)
+            XSV.writeXSVBody(debugOfPreviousStep, debugInfos, DebugInfo.COLUMNS_FOR_XSV, ";")
+            val result = clusterProcessor.applyStep(step, currentTrees)
+            this.currentTrees[VJBase] = result.snapshots
+            result.decisions.forEach { (cloneId, decision) ->
+                decisions.merge(cloneId, mapOf(VJBase to decision)) { a, b -> a + b }
+            }
+            XSV.writeXSVBody(debugOfCurrentStep, result.nodesDebugInfo, DebugInfo.COLUMNS_FOR_XSV, ";")
+        } catch (e: Exception) {
+            throw RuntimeException("can't apply step $step on $VJBase", e)
         }
-        XSV.writeXSVBody(debugOfCurrentStep, result.nodesDebugInfo, DebugInfo.COLUMNS_FOR_XSV, ";")
     }
 
     fun getResult(clusterBySameVAndJ: Cluster<CloneWrapper>, previousStepDebug: PrintStream): List<SHMTreeResult> {
         val VJBase = clusterVJBase(clusterBySameVAndJ)
-        val clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase)
-        val currentTrees = currentTrees[VJBase]!!
-            .map { snapshot ->
-                if (!snapshot.dirty) {
-                    val reconstructedNDN = snapshot.lastFoundNDN
-                    clusterProcessor.restore(
-                        snapshot.copy(
-                            rootInfo = snapshot.rootInfo.copy(
-                                reconstructedNDN = reconstructedNDN
+        try {
+            val clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase)
+            val currentTrees = currentTrees[VJBase]!!
+                .map { snapshot ->
+                    if (!snapshot.dirty) {
+                        val reconstructedNDN = snapshot.lastFoundNDN
+                        clusterProcessor.restore(
+                            snapshot.copy(
+                                rootInfo = snapshot.rootInfo.copy(
+                                    reconstructedNDN = reconstructedNDN
+                                )
                             )
                         )
-                    )
-                } else {
-                    val currentVersionOfTheTree = clusterProcessor.restore(snapshot)
-                    val reconstructedNDN = currentVersionOfTheTree.mostRecentCommonAncestorNDN()
-                    clusterProcessor.restore(
-                        currentVersionOfTheTree.snapshot().copy(
-                            rootInfo = snapshot.rootInfo.copy(
-                                reconstructedNDN = reconstructedNDN
+                    } else {
+                        val currentVersionOfTheTree = clusterProcessor.restore(snapshot)
+                        val reconstructedNDN = currentVersionOfTheTree.mostRecentCommonAncestorNDN()
+                        clusterProcessor.restore(
+                            currentVersionOfTheTree.snapshot().copy(
+                                rootInfo = snapshot.rootInfo.copy(
+                                    reconstructedNDN = reconstructedNDN
+                                )
                             )
                         )
+                    }
+                }
+            val debugInfos = clusterProcessor.debugInfos(currentTrees)
+            XSV.writeXSVBody(previousStepDebug, debugInfos, DebugInfo.COLUMNS_FOR_XSV, ";")
+            return currentTrees.asSequence()
+                .filter { treeWithMetaBuilder -> treeWithMetaBuilder.clonesCount() >= parameters.hideTreesLessThanSize }
+                .map { treeWithMetaBuilder ->
+                    SHMTreeResult(
+                        treeWithMetaBuilder.buildResult(),
+                        treeWithMetaBuilder.rootInfo,
+                        treeWithMetaBuilder.treeId
                     )
                 }
-            }
-        val debugInfos = clusterProcessor.debugInfos(currentTrees)
-        XSV.writeXSVBody(previousStepDebug, debugInfos, DebugInfo.COLUMNS_FOR_XSV, ";")
-        return currentTrees.asSequence()
-            .filter { treeWithMetaBuilder -> treeWithMetaBuilder.clonesCount() >= parameters.hideTreesLessThanSize }
-            .map { treeWithMetaBuilder ->
-                SHMTreeResult(
-                    treeWithMetaBuilder.buildResult(),
-                    treeWithMetaBuilder.rootInfo,
-                    treeWithMetaBuilder.treeId
-                )
-            }
-            .toList()
+                .toList()
+        } catch (e: Exception) {
+            throw RuntimeException("can't build result for $VJBase", e)
+        }
     }
 
-    private fun buildClusterProcessor(clusterBySameVAndJ: Cluster<CloneWrapper>, VJBase: VJBase): ClusterProcessor {
-        return ClusterProcessor.build(
+    private fun buildClusterProcessor(clusterBySameVAndJ: Cluster<CloneWrapper>, VJBase: VJBase): ClusterProcessor =
+        ClusterProcessor.build(
             parameters,
             VScoring,
             JScoring,
@@ -300,7 +312,6 @@ class SHMTreeBuilder(
             idGenerators.computeIfAbsent(VJBase) { IdGenerator() },
             VJBase
         )
-    }
 
     private fun clusterVJBase(clusterBySameVAndJ: Cluster<CloneWrapper>): VJBase = clusterBySameVAndJ.cluster[0].VJBase
 
