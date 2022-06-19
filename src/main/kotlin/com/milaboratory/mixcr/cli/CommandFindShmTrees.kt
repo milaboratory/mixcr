@@ -16,8 +16,12 @@ package com.milaboratory.mixcr.cli
 import cc.redberry.pipe.CUtils
 import cc.redberry.pipe.util.CountingOutputPort
 import com.milaboratory.mixcr.basictypes.CloneSetIO
-import com.milaboratory.mixcr.trees.*
 import com.milaboratory.mixcr.trees.ClusteringCriteria.DefaultClusteringCriteria
+import com.milaboratory.mixcr.trees.DebugInfo
+import com.milaboratory.mixcr.trees.SHMTreeBuilder
+import com.milaboratory.mixcr.trees.SHMTreeBuilderParameters
+import com.milaboratory.mixcr.trees.SHMTreeBuilderParametersPresets
+import com.milaboratory.mixcr.trees.SHMTreesWriter
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
@@ -25,7 +29,9 @@ import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
 import io.repseq.core.VDJCLibraryRegistry
 import org.apache.commons.io.FilenameUtils
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.io.File
 import java.io.PrintStream
 import java.nio.file.Files
@@ -65,8 +71,17 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
     @Option(names = ["-r", "--report"], description = ["Report file path"])
     var report: String? = null
 
-    @Option(description = ["List of read clone ids to build trees with"], names = ["-i", "--clone-ids"])
-    var cloneIds: Set<Int> = HashSet()
+    @Option(description = ["List of VGene names to filter clones"], names = ["-v", "--vGeneNames"])
+    var vGenesToSearch: Set<String> = HashSet()
+
+    @Option(description = ["List of JGene names to filter clones"], names = ["-j", "--jGeneNames"])
+    var jGenesToSearch: Set<String> = HashSet()
+
+    @Option(
+        description = ["List of CDR3 nucleotide sequence lengths to filter clones"],
+        names = ["-cdr3", "--cdr3Lengths"]
+    )
+    var CDR3LengthToSearch: Set<Int> = HashSet()
 
     @Option(names = ["-rp", "--report-pdf"], description = ["Pdf report file path"])
     var reportPdf: String? = null
@@ -121,7 +136,9 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
             DefaultClusteringCriteria(),
             cloneReaders,
             tempDest,
-            cloneIds
+            vGenesToSearch,
+            jGenesToSearch,
+            CDR3LengthToSearch
         )
         val cloneWrappersCount = shmTreeBuilder.cloneWrappersCount()
         val report = BuildSHMTreeReport()
@@ -199,11 +216,6 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
             for (cluster in CUtils.it(shmTreeBuilder.buildClusters(sortedClones))) {
                 shmTreeBuilder
                     .getResult(cluster, previousStepDebug.treesAfterDecisionsWriter)
-                    .filter { treeWithMeta ->
-                        cloneIds.isEmpty() || treeWithMeta.tree.allNodes()
-                            .mapNotNull { it.node.content.clone?.id }
-                            .any { it in cloneIds }
-                    }
                     .forEach { writer.put(it) }
             }
             writer.put(null)

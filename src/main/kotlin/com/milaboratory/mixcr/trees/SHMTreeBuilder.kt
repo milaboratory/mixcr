@@ -52,23 +52,27 @@ class SHMTreeBuilder(
     private val clusteringCriteria: ClusteringCriteria,
     private val datasets: List<CloneReader>,
     private val tempDest: TempFileDest,
-    private val cloneIds: Set<Int>
+    vGenesToSearch: Set<String>,
+    jGenesToSearch: Set<String>,
+    CDR3LengthToSearch: Set<Int>
 ) {
-    private val counter = AtomicInteger(0)
-
+    private val filter = Filter(
+        vGenesToSearch.ifEmpty { null },
+        jGenesToSearch.ifEmpty { null },
+        CDR3LengthToSearch.ifEmpty { null }
+    )
     private val VScoring: AlignmentScoring<NucleotideSequence> =
         datasets[0].assemblerParameters.cloneFactoryParameters.vParameters.scoring
+
     private val JScoring: AlignmentScoring<NucleotideSequence> =
         datasets[0].assemblerParameters.cloneFactoryParameters.jParameters.scoring
     private var decisions = ConcurrentHashMap<CloneWrapper.ID, Map<VJBase, TreeWithMetaBuilder.DecisionInfo>>()
     private var currentTrees = ConcurrentHashMap<VJBase, List<TreeWithMetaBuilder.Snapshot>>()
     private val idGenerators = ConcurrentHashMap<VJBase, IdGenerator>()
     private val calculatedClustersInfo = ConcurrentHashMap<VJBase, CalculatedClusterInfo>()
+    private val counter = AtomicInteger(0)
 
-    fun cloneWrappersCount(): Int = when {
-        cloneIds.isEmpty() -> CUtils.it(unsortedClonotypes()).count()
-        else -> CUtils.it(unsortedClonotypes()).count { it.clone.id in cloneIds }
-    }
+    fun cloneWrappersCount(): Int = CUtils.it(unsortedClonotypes()).count()
 
     @Throws(IOException::class)
     private fun createSorter(): HashSorter<CloneWrapper> {
@@ -136,6 +140,7 @@ class SHMTreeBuilder(
                         }
                         .filter { it.getFeature(CDR3) != null }
                         .filter { it.getFeature(GeneFeature(VEndTrimmed, JBeginTrimmed)) != null }
+                        .filter { c -> filter.match(c) }
                 )
             }
             wrapped.add(FlatteningOutputPort(wrap))
@@ -145,17 +150,27 @@ class SHMTreeBuilder(
 
     fun buildClusters(sortedClones: OutputPortCloseable<CloneWrapper>): OutputPort<Cluster<CloneWrapper>> {
         // todo do not copy cluster
-        val cluster: MutableList<CloneWrapper> = ArrayList()
+        val cluster = mutableListOf<CloneWrapper>()
 
         // group by similar V/J genes
-        var result: OutputPortCloseable<Cluster<CloneWrapper>> = object : OutputPortCloseable<Cluster<CloneWrapper>> {
+        return CUtils.makeSynchronized(object : OutputPortCloseable<Cluster<CloneWrapper>> {
             override fun close() {
                 sortedClones.close()
             }
 
             override fun take(): Cluster<CloneWrapper>? {
                 while (true) {
-                    val clone = sortedClones.take() ?: return null
+                    val clone = sortedClones.take()
+                    if (clone == null) {
+                        if (cluster.isNotEmpty()) {
+                            val copy = ArrayList(cluster)
+
+                            // new cluster
+                            cluster.clear()
+                            return Cluster(copy)
+                        }
+                        return null
+                    }
                     if (cluster.isEmpty()) {
                         cluster.add(clone)
                         continue
@@ -174,14 +189,7 @@ class SHMTreeBuilder(
                     }
                 }
             }
-        }
-        if (cloneIds.isNotEmpty()) {
-            result = FilteringPort(result) { c ->
-                c.cluster.any { it.clone.id in cloneIds }
-            }
-        }
-
-        return CUtils.makeSynchronized(result)
+        })
     }
 
     fun sortedClones(): OutputPortCloseable<CloneWrapper> = createSorter().port(unsortedClonotypes())
@@ -323,6 +331,17 @@ class SHMTreeBuilder(
             }
         }
         .toMap()
+
+    class Filter(
+        private val vGenesToSearch: Set<String>?,
+        private val jGenesToSearch: Set<String>?,
+        private val CDR3LengthToSearch: Set<Int>?
+    ) {
+        fun match(cloneWrapper: CloneWrapper): Boolean =
+            (vGenesToSearch?.contains(cloneWrapper.VJBase.VGeneId.name) ?: true) &&
+                (jGenesToSearch?.contains(cloneWrapper.VJBase.JGeneId.name) ?: true) &&
+                (CDR3LengthToSearch?.contains(cloneWrapper.VJBase.CDR3length) ?: true)
+    }
 
     private fun alleleMutations(gene: VDJCGene): Mutations<NucleotideSequence> =
         gene.data.baseSequence.mutations ?: EMPTY_NUCLEOTIDE_MUTATIONS

@@ -62,11 +62,10 @@ class TreeWithMetaBuilder(
 
     fun mostRecentCommonAncestor(): SyntheticNode {
         //TODO check that there is only one direct child of the root
-        val oldestReconstructedAncestor = treeBuilder.tree.root
-            .links[0]
-            .node
-            .content as Reconstructed
-        return oldestReconstructedAncestor.content
+        return (treeBuilder.tree.root
+            .links
+            .map { it.node.content }
+            .first { it is Reconstructed } as Reconstructed).content
     }
 
     fun buildResult(): Tree<CloneOrFoundAncestor> {

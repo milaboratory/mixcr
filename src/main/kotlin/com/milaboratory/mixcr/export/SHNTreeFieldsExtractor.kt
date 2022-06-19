@@ -25,15 +25,34 @@ object SHNTreeFieldsExtractor : BaseFieldExtractors() {
             "treeId"
         ) { it.meta.treeId.encode() }
 
+        fields += FieldParameterless(
+            "-differentClonesCount",
+            "Number of different clones in the SHM tree",
+            "Different clones count",
+            "differentClonesCount"
+        ) { shmTree ->
+            shmTree.tree.allNodes().count { !it.node.content.reconstructed }.toString()
+        }
+
+        fields += FieldParameterless(
+            "-totalClonesCount",
+            "Total sum of counts of clones in the SHM tree",
+            "Total clones count",
+            "totalClonesCount"
+        ) { shmTree ->
+            shmTree.tree.allNodes().sumOf { it.node.content.clone?.count ?: 0.0 }.toString()
+        }
+
         // Best hits
         for (type in arrayOf(GeneType.Variable, GeneType.Joining)) {
             val l = type.letter
-            fields.add(FieldParameterless(
-                "-${l.lowercaseChar()}Hit",
-                "Export best $l hit",
-                "Best $l hit",
-                "best${l}Hit"
-            ) {
+            fields.add(
+                FieldParameterless(
+                    "-${l.lowercaseChar()}Hit",
+                    "Export best $l hit",
+                    "Best $l hit",
+                    "best${l}Hit"
+                ) {
                 it.meta.rootInfo.VJBase.getGeneId(type).name
             })
         }

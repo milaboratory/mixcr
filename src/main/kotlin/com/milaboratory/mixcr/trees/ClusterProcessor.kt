@@ -308,8 +308,8 @@ internal class ClusterProcessor private constructor(
             val clone = clonesNotInClusters[i]
             if (clone.mutations.VJMutationsCount >= parameters.commonMutationsCountForClustering) {
                 val bestActionAndDistanceFromRoot = result
-                    .map { treeWithMeta: TreeWithMetaBuilder? ->
-                        val rebasedClone = treeWithMeta!!.rebaseClone(clone)
+                    .map { treeWithMeta ->
+                        val rebasedClone = treeWithMeta.rebaseClone(clone)
                         Pair(
                             treeWithMeta.bestAction(rebasedClone),
                             treeWithMeta.distanceFromRootToClone(rebasedClone)

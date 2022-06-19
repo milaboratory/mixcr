@@ -123,7 +123,7 @@ class AllelesBuilder(
         val comparator = Comparator.comparing { c: Clone -> c.getBestHit(geneType).gene.id.name }
 
         // todo do not copy cluster
-        val cluster: MutableList<Clone> = ArrayList()
+        val cluster = mutableListOf<Clone>()
 
         // group by similar V/J/C genes
         val result: OutputPortCloseable<Cluster<Clone>> = object : OutputPortCloseable<Cluster<Clone>> {
@@ -133,7 +133,17 @@ class AllelesBuilder(
 
             override fun take(): Cluster<Clone>? {
                 while (true) {
-                    val clone = sortedClones.take() ?: return null
+                    val clone = sortedClones.take()
+                    if (clone == null) {
+                        if (cluster.isNotEmpty()) {
+                            val copy = ArrayList(cluster)
+
+                            // new cluster
+                            cluster.clear()
+                            return Cluster(copy)
+                        }
+                        return null
+                    }
                     if (cluster.isEmpty()) {
                         cluster.add(clone)
                         continue

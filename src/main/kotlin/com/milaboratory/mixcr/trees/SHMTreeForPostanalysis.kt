@@ -58,6 +58,7 @@ data class SHMTreeForPostanalysis(
         private val distanceFromRoot: BigDecimal,
         private val distanceFromMostRecentCommonAncestor: BigDecimal?,
     ) {
+        val reconstructed: Boolean get() = clone == null
         val clone: Clone? get() = main.clone
         val id: Int get() = main.id
 
