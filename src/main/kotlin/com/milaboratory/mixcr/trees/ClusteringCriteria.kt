@@ -19,9 +19,7 @@ import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.util.ClonesAlignmentRanges
 import com.milaboratory.mixcr.util.asMutations
-import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
-import java.util.*
 import java.util.function.ToIntFunction
 
 /**
@@ -37,29 +35,23 @@ interface ClusteringCriteria {
      * Comparator for clonotypes with the same hash code but from different clusters
      */
     fun clusteringComparator(): Comparator<CloneWrapper>
+
     fun clusteringComparatorWithNumberOfMutations(
         VScoring: AlignmentScoring<NucleotideSequence>,
         JScoring: AlignmentScoring<NucleotideSequence>
-    ): Comparator<CloneWrapper?>? {
-        return clusteringComparator()
-            .thenComparing(Comparator.comparingDouble { clone: CloneWrapper ->
-                (mutationsScoreWithoutCDR3(clone, GeneType.Variable, VScoring)
-                    + mutationsScoreWithoutCDR3(clone, GeneType.Joining, JScoring))
-            }.reversed())
-    }
+    ): Comparator<CloneWrapper> = clusteringComparator()
+        .thenComparing(Comparator.comparingDouble { clone: CloneWrapper ->
+            (mutationsScoreWithoutCDR3(clone, GeneType.Variable, VScoring)
+                + mutationsScoreWithoutCDR3(clone, GeneType.Joining, JScoring))
+        }.reversed())
 
     class DefaultClusteringCriteria : ClusteringCriteria {
         override fun clusteringHashCode(): ToIntFunction<CloneWrapper> = ToIntFunction { clone ->
-            Objects.hash(
-                clone.VJBase,
-                clone.clone.ntLengthOf(GeneFeature.CDR3)
-            )
+            clone.VJBase.hashCode()
         }
 
         override fun clusteringComparator(): Comparator<CloneWrapper> = Comparator
-            .comparing { c: CloneWrapper -> c.VJBase.VGeneId.name }
-            .thenComparing { c -> c.VJBase.JGeneId.name }
-            .thenComparing { c -> c.clone.ntLengthOf(GeneFeature.CDR3) }
+            .comparing({ c: CloneWrapper -> c.VJBase }, VJBase.comparator)
     }
 
     companion object {

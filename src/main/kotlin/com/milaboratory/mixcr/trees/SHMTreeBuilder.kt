@@ -42,6 +42,7 @@ import io.repseq.core.VDJCGeneId
 import java.io.IOException
 import java.io.PrintStream
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  *
@@ -53,6 +54,8 @@ class SHMTreeBuilder(
     private val tempDest: TempFileDest,
     private val cloneIds: Set<Int>
 ) {
+    private val counter = AtomicInteger(0)
+
     private val VScoring: AlignmentScoring<NucleotideSequence> =
         datasets[0].assemblerParameters.cloneFactoryParameters.vParameters.scoring
     private val JScoring: AlignmentScoring<NucleotideSequence> =
@@ -96,7 +99,7 @@ class SHMTreeBuilder(
             clusteringCriteria.clusteringHashCode(),
             clusteringCriteria.clusteringComparatorWithNumberOfMutations(VScoring, JScoring),
             5,
-            tempDest.addSuffix("tree.builder"),
+            tempDest.addSuffix("tree.builder").addSuffix("_" + counter.incrementAndGet()),
             8,
             8,
             stateBuilder.oState,

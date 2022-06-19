@@ -19,10 +19,40 @@ import com.milaboratory.mixcr.export.FieldWithParameters.CommandArg
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.Base
 import io.repseq.core.GeneFeature
+import java.util.*
 
 object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
     override fun initFields(): Array<Field<out Any>> {
         val fields = mutableListOf<Field<SHMTreeForPostanalysis.Node>>()
+
+        fields += FieldParameterless(
+            "-nodeId",
+            "Node id in SHM tree",
+            "Node id",
+            "nodeId"
+        ) {
+            it.id.toString()
+        }
+
+        fields += FieldParameterless(
+            "-fileName",
+            "Name of clns file with sample",
+            "File name",
+            "fileName"
+        ) {
+            it.fileName ?: ""
+        }
+
+        fields += FieldWithParameters(
+            "-distance",
+            "Distance from another node",
+            baseOnArg(
+                hPrefix = { "Distance from $it" },
+                sPrefix = { "DistanceFrom$it" }
+            )
+        ) { node, base ->
+            node.distanceFrom(base)?.toString() ?: ""
+        }
 
         fields += FieldWithParameters(
             "-nFeature",
@@ -156,11 +186,14 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
         { "Relative" + GeneFeature.encode(it) }
     )
 
-    private fun baseOnArg(): CommandArg<Base> = CommandArg(
+    private fun baseOnArg(
+        hPrefix: (Base) -> String = { "based on $it" },
+        sPrefix: (Base) -> String = { base -> "BasedOn${base.name.replaceFirstChar { it.titlecase(Locale.getDefault()) }}" }
+    ): CommandArg<Base> = CommandArg(
         "<${Base.root}|${Base.mrca}|${Base.parent}>",
         { Base.valueOf(it) },
-        { "based on $it" },
-        { "BasedOn$it" }
+        hPrefix,
+        sPrefix
     )
 
     private fun AbstractField<*>.checkRelativeFeatures(

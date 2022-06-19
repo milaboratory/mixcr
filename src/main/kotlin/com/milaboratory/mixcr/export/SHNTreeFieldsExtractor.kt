@@ -11,18 +11,32 @@
  */
 package com.milaboratory.mixcr.export
 
-import com.milaboratory.mixcr.trees.SHMTreeResult
+import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
+import io.repseq.core.GeneType
 
 object SHNTreeFieldsExtractor : BaseFieldExtractors() {
     override fun initFields(): Array<Field<out Any>> {
-        val fields = mutableListOf<Field<SHMTreeResult>>()
+        val fields = mutableListOf<Field<SHMTreeForPostanalysis>>()
 
         fields += FieldParameterless(
             "-treeId",
-            "Tree id",
+            "SHM tree id",
             "Tree id",
             "treeId"
-        ) { it.treeId.encode() }
+        ) { it.meta.treeId.encode() }
+
+        // Best hits
+        for (type in arrayOf(GeneType.Variable, GeneType.Joining)) {
+            val l = type.letter
+            fields.add(FieldParameterless(
+                "-${l.lowercaseChar()}Hit",
+                "Export best $l hit",
+                "Best $l hit",
+                "best${l}Hit"
+            ) {
+                it.meta.rootInfo.VJBase.getGeneId(type).name
+            })
+        }
 
         return fields.toTypedArray()
     }

@@ -63,6 +63,8 @@ class CommandExportShmTreesTable : ACommandWithOutputMiXCR() {
 //                FieldData.mk("-fraction"),
                     FieldData.mk("-targetSequences"),
                     FieldData.mk("-targetQualities"),
+                    FieldData.mk("-cHit"),
+                    FieldData.mk("-dHit"),
                     FieldData.mk("-vHitsWithScore"),
                     FieldData.mk("-dHitsWithScore"),
                     FieldData.mk("-jHitsWithScore"),
@@ -80,35 +82,19 @@ class CommandExportShmTreesTable : ACommandWithOutputMiXCR() {
                     FieldData.mk("-minFeatureQuality", "FR4"),
                     FieldData.mk("-defaultAnchorPoints")
                 )
-                    .flatMap { extractor(it, Clone::class.java, reader, oMode) }
-                    .map { fieldExtractor ->
-                        object : FieldExtractor<Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.Node>> {
-                            override fun getHeader() = fieldExtractor.header
-
-                            override fun extractValue(`object`: Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.Node>): String {
-                                val clone = `object`.second.clone ?: return ""
-                                return fieldExtractor.extractValue(clone)
-                            }
-                        }
-                    }
-                output.attachInfoProviders(cloneExtractors)
 
                 val treeExtractors = listOf(
                     FieldData.mk("-treeId"),
+                    FieldData.mk("-vHit"),
+                    FieldData.mk("-jHit"),
                 )
-                    .flatMap { SHNTreeFieldsExtractor.extract(it, SHMTreeForPostanalysis::class.java, reader, oMode) }
-                    .map { fieldExtractor ->
-                        object : FieldExtractor<Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.Node>> {
-                            override fun getHeader() = fieldExtractor.header
-
-                            override fun extractValue(`object`: Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.Node>): String =
-                                fieldExtractor.extractValue(`object`.first)
-                        }
-                    }
-                output.attachInfoProviders(treeExtractors)
-
 
                 val nodeExtractors = listOf(
+                    FieldData.mk("-nodeId"),
+                    FieldData.mk("-fileName"),
+                    FieldData.mk("-distance", "root"),
+                    FieldData.mk("-distance", "mrca"),
+                    FieldData.mk("-distance", "parent"),
                     FieldData.mk("-nFeature", "FR1"),
                     FieldData.mk("-nFeature", "CDR1"),
                     FieldData.mk("-nFeature", "FR2"),
@@ -116,6 +102,8 @@ class CommandExportShmTreesTable : ACommandWithOutputMiXCR() {
                     FieldData.mk("-nFeature", "FR3"),
                     FieldData.mk("-nFeature", "CDR3"),
                     FieldData.mk("-nFeature", "FR4"),
+                    FieldData.mk("-nFeature", "VRegion"),
+                    FieldData.mk("-nFeature", "JRegion"),
                     FieldData.mk("-aaFeature", "FR1"),
                     FieldData.mk("-aaFeature", "CDR1"),
                     FieldData.mk("-aaFeature", "FR2"),
@@ -123,7 +111,8 @@ class CommandExportShmTreesTable : ACommandWithOutputMiXCR() {
                     FieldData.mk("-aaFeature", "FR3"),
                     FieldData.mk("-aaFeature", "CDR3"),
                     FieldData.mk("-aaFeature", "FR4"),
-                    //TODO all V mutations and all J mutations (choose feature from params)
+                    FieldData.mk("-aaFeature", "VRegion"),
+                    FieldData.mk("-aaFeature", "JRegion"),
                     FieldData.mk("-nMutations", "FR1", "root"),
                     FieldData.mk("-nMutations", "CDR1", "root"),
                     FieldData.mk("-nMutations", "FR2", "root"),
@@ -131,6 +120,8 @@ class CommandExportShmTreesTable : ACommandWithOutputMiXCR() {
                     FieldData.mk("-nMutations", "FR3", "root"),
                     FieldData.mk("-nMutations", "CDR3", "root"),
                     FieldData.mk("-nMutations", "FR4", "root"),
+                    FieldData.mk("-nMutations", "VRegion", "root"),
+                    FieldData.mk("-nMutations", "JRegion", "root"),
                     FieldData.mk("-nMutationsRelative", "FR1", "FR1", "root"),
                     FieldData.mk("-nMutationsRelative", "CDR1", "CDR1", "root"),
                     FieldData.mk("-nMutationsRelative", "FR2", "FR2", "root"),
@@ -144,6 +135,8 @@ class CommandExportShmTreesTable : ACommandWithOutputMiXCR() {
                     FieldData.mk("-aaMutations", "FR3", "root"),
                     FieldData.mk("-aaMutations", "CDR3", "root"),
                     FieldData.mk("-aaMutations", "FR4", "root"),
+                    FieldData.mk("-aaMutations", "VRegion", "root"),
+                    FieldData.mk("-aaMutations", "JRegion", "root"),
                     FieldData.mk("-aaMutationsRelative", "FR1", "FR1", "root"),
                     FieldData.mk("-aaMutationsRelative", "CDR1", "CDR1", "root"),
                     FieldData.mk("-aaMutationsRelative", "FR2", "FR2", "root"),
@@ -157,6 +150,8 @@ class CommandExportShmTreesTable : ACommandWithOutputMiXCR() {
                     FieldData.mk("-mutationsDetailed", "FR3", "root"),
                     FieldData.mk("-mutationsDetailed", "CDR3", "root"),
                     FieldData.mk("-mutationsDetailed", "FR4", "root"),
+                    FieldData.mk("-mutationsDetailed", "VRegion", "root"),
+                    FieldData.mk("-mutationsDetailed", "JRegion", "root"),
                     FieldData.mk("-mutationsDetailedRelative", "FR1", "FR1", "root"),
                     FieldData.mk("-mutationsDetailedRelative", "CDR1", "CDR1", "root"),
                     FieldData.mk("-mutationsDetailedRelative", "FR2", "FR2", "root"),
@@ -170,6 +165,8 @@ class CommandExportShmTreesTable : ACommandWithOutputMiXCR() {
                     FieldData.mk("-nMutations", "FR3", "mrca"),
                     FieldData.mk("-nMutations", "CDR3", "mrca"),
                     FieldData.mk("-nMutations", "FR4", "mrca"),
+                    FieldData.mk("-nMutations", "VRegion", "mrca"),
+                    FieldData.mk("-nMutations", "JRegion", "mrca"),
                     FieldData.mk("-nMutationsRelative", "FR1", "FR1", "mrca"),
                     FieldData.mk("-nMutationsRelative", "CDR1", "CDR1", "mrca"),
                     FieldData.mk("-nMutationsRelative", "FR2", "FR2", "mrca"),
@@ -183,6 +180,8 @@ class CommandExportShmTreesTable : ACommandWithOutputMiXCR() {
                     FieldData.mk("-aaMutations", "FR3", "mrca"),
                     FieldData.mk("-aaMutations", "CDR3", "mrca"),
                     FieldData.mk("-aaMutations", "FR4", "mrca"),
+                    FieldData.mk("-aaMutations", "VRegion", "mrca"),
+                    FieldData.mk("-aaMutations", "JRegion", "mrca"),
                     FieldData.mk("-aaMutationsRelative", "FR1", "FR1", "mrca"),
                     FieldData.mk("-aaMutationsRelative", "CDR1", "CDR1", "mrca"),
                     FieldData.mk("-aaMutationsRelative", "FR2", "FR2", "mrca"),
@@ -196,6 +195,8 @@ class CommandExportShmTreesTable : ACommandWithOutputMiXCR() {
                     FieldData.mk("-mutationsDetailed", "FR3", "mrca"),
                     FieldData.mk("-mutationsDetailed", "CDR3", "mrca"),
                     FieldData.mk("-mutationsDetailed", "FR4", "mrca"),
+                    FieldData.mk("-mutationsDetailed", "VRegion", "mrca"),
+                    FieldData.mk("-mutationsDetailed", "JRegion", "mrca"),
                     FieldData.mk("-mutationsDetailedRelative", "FR1", "FR1", "mrca"),
                     FieldData.mk("-mutationsDetailedRelative", "CDR1", "CDR1", "mrca"),
                     FieldData.mk("-mutationsDetailedRelative", "FR2", "FR2", "mrca"),
@@ -209,6 +210,8 @@ class CommandExportShmTreesTable : ACommandWithOutputMiXCR() {
                     FieldData.mk("-nMutations", "FR3", "parent"),
                     FieldData.mk("-nMutations", "CDR3", "parent"),
                     FieldData.mk("-nMutations", "FR4", "parent"),
+                    FieldData.mk("-nMutations", "VRegion", "parent"),
+                    FieldData.mk("-nMutations", "JRegion", "parent"),
                     FieldData.mk("-nMutationsRelative", "FR1", "FR1", "parent"),
                     FieldData.mk("-nMutationsRelative", "CDR1", "CDR1", "parent"),
                     FieldData.mk("-nMutationsRelative", "FR2", "FR2", "parent"),
@@ -222,6 +225,8 @@ class CommandExportShmTreesTable : ACommandWithOutputMiXCR() {
                     FieldData.mk("-aaMutations", "FR3", "parent"),
                     FieldData.mk("-aaMutations", "CDR3", "parent"),
                     FieldData.mk("-aaMutations", "FR4", "parent"),
+                    FieldData.mk("-aaMutations", "VRegion", "parent"),
+                    FieldData.mk("-aaMutations", "JRegion", "parent"),
                     FieldData.mk("-aaMutationsRelative", "FR1", "FR1", "parent"),
                     FieldData.mk("-aaMutationsRelative", "CDR1", "CDR1", "parent"),
                     FieldData.mk("-aaMutationsRelative", "FR2", "FR2", "parent"),
@@ -235,6 +240,8 @@ class CommandExportShmTreesTable : ACommandWithOutputMiXCR() {
                     FieldData.mk("-mutationsDetailed", "FR3", "parent"),
                     FieldData.mk("-mutationsDetailed", "CDR3", "parent"),
                     FieldData.mk("-mutationsDetailed", "FR4", "parent"),
+                    FieldData.mk("-mutationsDetailed", "VRegion", "parent"),
+                    FieldData.mk("-mutationsDetailed", "JRegion", "parent"),
                     FieldData.mk("-mutationsDetailedRelative", "FR1", "FR1", "parent"),
                     FieldData.mk("-mutationsDetailedRelative", "CDR1", "CDR1", "parent"),
                     FieldData.mk("-mutationsDetailedRelative", "FR2", "FR2", "parent"),
@@ -242,6 +249,28 @@ class CommandExportShmTreesTable : ACommandWithOutputMiXCR() {
                     FieldData.mk("-mutationsDetailedRelative", "FR3", "FR3", "parent"),
                     FieldData.mk("-mutationsDetailedRelative", "FR4", "FR4", "parent"),
                 )
+
+                output.attachInfoProviders(
+                    treeExtractors
+                        .flatMap {
+                            SHNTreeFieldsExtractor.extract(
+                                it,
+                                SHMTreeForPostanalysis::class.java,
+                                reader,
+                                oMode
+                            )
+                        }
+                        .map { fieldExtractor ->
+                            object : FieldExtractor<Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.Node>> {
+                                override fun getHeader() = fieldExtractor.header
+
+                                override fun extractValue(`object`: Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.Node>): String =
+                                    fieldExtractor.extractValue(`object`.first)
+                            }
+                        }
+                )
+
+                output.attachInfoProviders(nodeExtractors
                     .flatMap {
                         SHNTreeNodeFieldsExtractor.extract(
                             it,
@@ -257,14 +286,27 @@ class CommandExportShmTreesTable : ACommandWithOutputMiXCR() {
                             override fun extractValue(`object`: Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.Node>): String =
                                 fieldExtractor.extractValue(`object`.second)
                         }
-                    }
+                    })
 
-                output.attachInfoProviders(nodeExtractors)
+                output.attachInfoProviders(cloneExtractors
+                    .flatMap { extractor(it, Clone::class.java, reader, oMode) }
+                    .map { fieldExtractor ->
+                        object : FieldExtractor<Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.Node>> {
+                            override fun getHeader() = fieldExtractor.header
+
+                            override fun extractValue(`object`: Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.Node>): String {
+                                val clone = `object`.second.clone ?: return ""
+                                return fieldExtractor.extractValue(clone)
+                            }
+                        }
+                    })
+
 
                 output.ensureHeader()
 
                 CUtils.it(reader.readTrees()).forEach { shmTree ->
                     val shmTreeForPostanalysis = shmTree.forPostanalysis(
+                        reader.fileNames,
                         reader.assemblerParameters,
                         reader.alignerParameters,
                         libraryRegistry

@@ -28,20 +28,44 @@ import java.math.BigDecimal
 
 data class SHMTreeForPostanalysis(
     val tree: Tree<Node>,
-    val rootInfo: RootInfo,
-    val treeId: TreeId
+    val meta: Meta
 ) {
-    class Node(
-        private val main: CloneOrFoundAncestor,
-        private val parent: CloneOrFoundAncestor?,
-        private val mostRecentCommonAncestor: CloneOrFoundAncestor,
-        val distanceFromParent: BigDecimal?,
-        private val rootInfo: RootInfo,
+    class Meta(
+        val rootInfo: RootInfo,
+        val treeId: TreeId,
+        val mostRecentCommonAncestor: CloneOrFoundAncestor,
         private val assemblerParameters: CloneAssemblerParameters,
         private val alignerParameters: VDJCAlignerParameters,
         private val geneSupplier: (VDJCGeneId) -> VDJCGene
     ) {
-        val clone: Clone? = main.clone
+        fun partitioning(geneType: GeneType): ReferencePoints =
+            geneSupplier(rootInfo.VJBase.getGeneId(geneType)).partitioning
+
+        fun geneFeatureToAlign(geneType: GeneType): GeneFeature =
+            alignerParameters.getGeneAlignerParameters(geneType).geneFeatureToAlign
+
+        fun assemblingFeaturesContains(geneFeature: GeneFeature) =
+            assemblerParameters.assemblingFeatures.any { geneFeature in it }
+    }
+
+
+    class Node(
+        private val meta: Meta,
+        private val main: CloneOrFoundAncestor,
+        private val parent: CloneOrFoundAncestor?,
+        val fileName: String?,
+        private val distanceFromParent: BigDecimal?,
+        private val distanceFromRoot: BigDecimal,
+        private val distanceFromMostRecentCommonAncestor: BigDecimal?,
+    ) {
+        val clone: Clone? get() = main.clone
+        val id: Int get() = main.id
+
+        fun distanceFrom(base: Base): BigDecimal? = when (base) {
+            Base.root -> distanceFromRoot
+            Base.mrca -> distanceFromMostRecentCommonAncestor
+            Base.parent -> distanceFromParent
+        }
 
         fun mutationsWithRange(
             geneFeature: GeneFeature,
@@ -53,7 +77,7 @@ data class SHMTreeForPostanalysis(
             return when (baseOn) {
                 Base.root -> mainMutations
                 Base.mrca -> mainMutations.differenceWith(
-                    mostRecentCommonAncestor.mutationsSet.mutationsWithRange(geneFeature, relativeTo)
+                    meta.mostRecentCommonAncestor.mutationsSet.mutationsWithRange(geneFeature, relativeTo)
                 )
                 Base.parent -> when (parent) {
                     null -> null
@@ -71,7 +95,7 @@ data class SHMTreeForPostanalysis(
                     true
                 }
                 else -> when {
-                    assemblerParameters.assemblingFeatures.none { geneFeature in it } -> false
+                    !meta.assemblingFeaturesContains(geneFeature) -> false
                     else -> geneFeature.geneType != null
                 }
             }
@@ -83,7 +107,7 @@ data class SHMTreeForPostanalysis(
         ): MutationsDescription = when (geneFeature) {
             GeneFeature.CDR3 -> {
                 require(relativeTo == null)
-                val baseCDR3 = rootInfo.baseCDR3()
+                val baseCDR3 = meta.rootInfo.baseCDR3()
                 MutationsDescription(
                     baseCDR3,
                     mutationsOfCDR3(),
@@ -94,8 +118,8 @@ data class SHMTreeForPostanalysis(
             }
             else -> {
                 val geneType = geneFeature.geneType
-                val geneFeatureToAlign = alignerParameters.getGeneAlignerParameters(geneType).geneFeatureToAlign
-                val partitioning = partitioning(geneType)
+                val geneFeatureToAlign = meta.geneFeatureToAlign(geneType)
+                val partitioning = meta.partitioning(geneType)
                 val relativeSeq1Range = Range(
                     partitioning.getRelativePosition(geneFeatureToAlign, geneFeature.firstPoint),
                     partitioning.getRelativePosition(geneFeatureToAlign, geneFeature.lastPoint)
@@ -105,7 +129,7 @@ data class SHMTreeForPostanalysis(
                 val translationParameters = partitioning.getTranslationParameters(geneFeature)
                 when (relativeTo) {
                     null -> MutationsDescription(
-                        rootInfo.getSequence1(geneType),
+                        meta.rootInfo.getSequence1(geneType),
                         mutations,
                         relativeSeq1Range,
                         translationParameters,
@@ -113,7 +137,7 @@ data class SHMTreeForPostanalysis(
                     )
                     else -> {
                         val shift = partitioning.getRelativePosition(geneFeature, relativeTo.firstPoint)
-                        val sequence1 = rootInfo.getSequence1(geneType)
+                        val sequence1 = meta.rootInfo.getSequence1(geneType)
                         MutationsDescription(
                             sequence1.getRange(shift, sequence1.size()),
                             mutations.move(-shift),
@@ -127,15 +151,12 @@ data class SHMTreeForPostanalysis(
         }
 
         private fun MutationsSet.mutationsOfCDR3(): Mutations<NucleotideSequence> =
-            VMutations.partInCDR3.mutations.move(-rootInfo.VRangeInCDR3.lower)
-                .concat(NDNMutations.mutations.move(rootInfo.VRangeInCDR3.length()))
+            VMutations.partInCDR3.mutations.move(-meta.rootInfo.VRangeInCDR3.lower)
+                .concat(NDNMutations.mutations.move(meta.rootInfo.VRangeInCDR3.length()))
                 .concat(
                     JMutations.partInCDR3.mutations
-                        .move(rootInfo.VRangeInCDR3.length() + rootInfo.reconstructedNDN.size() - rootInfo.JRangeInCDR3.lower)
+                        .move(meta.rootInfo.VRangeInCDR3.length() + meta.rootInfo.reconstructedNDN.size() - meta.rootInfo.JRangeInCDR3.lower)
                 )
-
-        private fun partitioning(geneType: GeneType): ReferencePoints =
-            geneSupplier(rootInfo.VJBase.getGeneId(geneType)).partitioning
     }
 
     @Suppress("EnumEntryName")
@@ -147,21 +168,31 @@ data class SHMTreeForPostanalysis(
 }
 
 fun SHMTreeResult.forPostanalysis(
+    fileNames: List<String>,
     assemblerParameters: CloneAssemblerParameters,
     alignerParameters: VDJCAlignerParameters,
     libraryRegistry: VDJCLibraryRegistry
-): SHMTreeForPostanalysis = SHMTreeForPostanalysis(
-    tree.map { parent, node, distance ->
-        SHMTreeForPostanalysis.Node(
-            node,
-            parent,
-            mostRecentCommonAncestor,
-            distance,
-            rootInfo,
-            assemblerParameters,
-            alignerParameters
-        ) { geneId -> libraryRegistry.getGene(geneId) }
-    },
-    rootInfo,
-    treeId
-)
+): SHMTreeForPostanalysis {
+    val meta = SHMTreeForPostanalysis.Meta(
+        rootInfo,
+        treeId,
+        mostRecentCommonAncestor,
+        assemblerParameters,
+        alignerParameters
+    ) { geneId -> libraryRegistry.getGene(geneId) }
+
+    return SHMTreeForPostanalysis(
+        tree.map { parent, node, distance ->
+            SHMTreeForPostanalysis.Node(
+                meta,
+                node,
+                parent,
+                node.datasetId?.let { fileNames[it] },
+                distance,
+                node.distanceFromGermline,
+                node.distanceFromMostRecentAncestor
+            )
+        },
+        meta
+    )
+}

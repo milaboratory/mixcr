@@ -30,6 +30,12 @@ data class VJBase(
         GeneType.Joining -> JGeneId
         else -> throw IllegalArgumentException()
     }
+
+    companion object {
+        val comparator: Comparator<VJBase> = Comparator.comparing<VJBase, VDJCGeneId> { it.VGeneId }
+            .thenComparing<VDJCGeneId> { it.JGeneId }
+            .thenComparingInt { it.CDR3length }
+    }
 }
 
 class VJBaseSerializer : Serializer<VJBase> {

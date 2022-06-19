@@ -41,7 +41,7 @@ import io.repseq.core.ReferencePoint
 import io.repseq.core.VDJCGene
 import io.repseq.dto.VDJCGeneData
 import java.util.*
-import java.util.function.Supplier
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.collections.set
 
 class AllelesBuilder(
@@ -49,6 +49,7 @@ class AllelesBuilder(
     private val datasets: List<CloneReader>,
     private val tempDest: TempFileDest
 ) {
+    private val counter = AtomicInteger(0)
     private val VScoring = datasets[0].assemblerParameters.cloneFactoryParameters.vParameters.scoring
     private val JScoring = datasets[0].assemblerParameters.cloneFactoryParameters.jParameters.scoring
 
@@ -78,7 +79,7 @@ class AllelesBuilder(
                 { clone: Clone -> clone.getBestHit(geneType).gene.hashCode() },
                 Comparator.comparing { clone: Clone -> clone.getBestHit(geneType).gene },
                 5,
-                tempDest.addSuffix(".asearcher.${geneType.letterLowerCase}"),
+                tempDest.addSuffix("alleles.searcher").addSuffix("_" + counter.incrementAndGet()),
                 8,
                 8,
                 stateBuilder.oState,
@@ -89,7 +90,7 @@ class AllelesBuilder(
                     ).toLong()
             )
         }
-        val clonesSupplier = Supplier<OutputPort<Clone>> {
+        val clonesSupplier: () -> OutputPort<Clone> = {
             FlatteningOutputPort(
                 CUtils.asOutputPort(
                     datasets
@@ -100,8 +101,8 @@ class AllelesBuilder(
             )
         }
         return SortedClonotypes(
-            sorterSupplier(Variable).port(clonesSupplier.get()),
-            sorterSupplier(Joining).port(clonesSupplier.get())
+            sorterSupplier(Variable).port(clonesSupplier()),
+            sorterSupplier(Joining).port(clonesSupplier())
         )
     }
 
@@ -115,9 +116,8 @@ class AllelesBuilder(
         }
     }
 
-    private fun readClonesWithCountThreshold(port: OutputPort<Clone>): OutputPort<Clone> {
-        return FilteringPort(port) { c: Clone -> c.count >= parameters.filterClonesWithCountLessThan }
-    }
+    private fun readClonesWithCountThreshold(port: OutputPort<Clone>): OutputPort<Clone> =
+        FilteringPort(port) { c: Clone -> c.count >= parameters.filterClonesWithCountLessThan }
 
     fun buildClusters(sortedClones: OutputPortCloseable<Clone>, geneType: GeneType?): OutputPort<Cluster<Clone>> {
         val comparator = Comparator.comparing { c: Clone -> c.getBestHit(geneType).gene.id.name }
