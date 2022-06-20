@@ -11,37 +11,39 @@
  */
 package com.milaboratory.mixcr.trees
 
-import com.milaboratory.mixcr.trees.Tree.NodeWithParent
+import java.math.BigDecimal
 import java.util.stream.Collectors
 
 /**
  * https://en.wikipedia.org/wiki/Newick_format
  */
 class XmlTreePrinter<T : Any>(
-    private val nameExtractor: (NodeWithParent<T>) -> String
+    private val nameExtractor: (T) -> String
 ) : TreePrinter<T> {
-    override fun print(tree: Tree<T>): String {
-        return printNode(NodeWithParent(null, tree.root, null))
-    }
+    override fun print(tree: Tree<out T>): String = printNode(tree.root, null)
 
-    private fun printNode(nodeWithParent: NodeWithParent<T>): String {
-        val node = nodeWithParent.node
+    private fun printNode(
+        node: Tree.Node<out T>,
+        distanceFromParent: BigDecimal?
+    ): String {
+
         val sb = StringBuilder()
         sb.append("<node content='")
-        sb.append(nameExtractor(nodeWithParent))
+        sb.append(nameExtractor(node.content))
         sb.append("'")
-        if (nodeWithParent.distance != null) {
+        if (distanceFromParent != null) {
             sb.append(" distance='")
-            sb.append(nodeWithParent.distance)
+            sb.append(distanceFromParent)
             sb.append("'")
         }
         if (node.links.isNotEmpty()) {
             sb.append(">")
-            sb.append(node.links.stream()
-                .sorted(Comparator.comparing { link -> link.distance })
-                .map { link -> printNode(NodeWithParent(node, link.node, link.distance)) }
-                .sorted()
-                .collect(Collectors.joining("")))
+            sb.append(
+                node.links.stream()
+                    .sorted(Comparator.comparing { link -> link.distance })
+                    .map { link -> printNode(link.node, link.distance) }
+                    .sorted()
+                    .collect(Collectors.joining("")))
             sb.append("</node>")
         } else {
             sb.append("/>")

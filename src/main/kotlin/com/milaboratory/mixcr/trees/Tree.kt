@@ -14,7 +14,6 @@ package com.milaboratory.mixcr.trees
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
 import java.math.BigDecimal
-import java.util.function.Consumer
 
 /**
  *
@@ -28,9 +27,8 @@ class Tree<T : Any>(
 
     fun allNodes(): Sequence<NodeWithParent<T>> = sequenceOf(NodeWithParent(null, root, null)) + root.allDescendants()
 
-    fun <R : Any> map(mapper: (T?, T, BigDecimal?) -> R): Tree<R> {
-        return Tree(root.map(null, null, mapper))
-    }
+    fun <R : Any> map(mapper: (T?, T) -> R): Tree<R> =
+        Tree(root.map(null, mapper))
 
     class Node<T> {
         val content: T
@@ -71,22 +69,23 @@ class Tree<T : Any>(
             sequenceOf(NodeWithParent(this, link.node, link.distance)) + link.node.allDescendants()
         }
 
-        fun <R> map(parent: T?, distance: BigDecimal?, mapper: (T?, T, BigDecimal?) -> R): Node<R> {
-            val mappedNode = Node(mapper(parent, content, distance))
-            children.forEach(Consumer { child: NodeLink<T> ->
-                mappedNode.addChild(
-                    child.node.map(content, child.distance, mapper),
-                    child.distance
-                )
-            })
-            return mappedNode
-        }
+        fun <R> map(parentContent: T?, mapper: (T?, T) -> R): Node<R> = Node(
+            mapper(parentContent, content),
+            children.map { child: NodeLink<T> ->
+                child.map(content, mapper)
+            }
+        )
     }
 
     class NodeLink<T>(
         val node: Node<T>,
         val distance: BigDecimal
-    )
+    ) {
+        fun <R> map(parentContent: T, mapper: (T?, T) -> R): NodeLink<R> = NodeLink(
+            node.map(parentContent, mapper),
+            distance
+        )
+    }
 
     data class NodeWithParent<T>(
         val parent: Node<T>?,

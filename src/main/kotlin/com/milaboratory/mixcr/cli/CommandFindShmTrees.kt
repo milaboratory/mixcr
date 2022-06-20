@@ -46,7 +46,7 @@ import java.nio.file.Paths
     description = ["Builds SHM trees."]
 )
 class CommandFindShmTrees : ACommandWithOutputMiXCR() {
-    @Parameters(arity = "2..*", description = ["input_file.clns [input_file2.clns ....] output_file.trees"])
+    @Parameters(arity = "2..*", description = ["input_file.clns [input_file2.clns ....] output_file.hsmt"])
     private val inOut: List<String> = ArrayList()
 
     @Option(description = ["Processing threads"], names = ["-t", "--threads"])

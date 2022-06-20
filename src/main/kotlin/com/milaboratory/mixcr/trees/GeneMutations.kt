@@ -31,6 +31,8 @@ sealed interface GeneMutations {
     fun combinedMutations(): Mutations<NucleotideSequence>
 
     fun buildPartInCDR3(rootInfo: RootInfo): NucleotideSequence
+
+    fun sequence1Length() = mutations.keys.sumOf { it.length() }
 }
 
 data class VGeneMutations(

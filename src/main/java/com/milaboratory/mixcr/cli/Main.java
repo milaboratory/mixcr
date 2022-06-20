@@ -261,6 +261,7 @@ public final class Main {
                 .addSubcommand(CommandFindShmTrees.COMMAND_NAME, CommandFindShmTrees.class)
                 .addSubcommand(CommandExportShmTreesTableWithNodes.COMMAND_NAME, CommandExportShmTreesTableWithNodes.class)
                 .addSubcommand(CommandExportShmTreesTable.COMMAND_NAME, CommandExportShmTreesTable.class)
+                .addSubcommand(CommandExportShmTreesNewick.COMMAND_NAME, CommandExportShmTreesNewick.class)
                 .addSubcommand(CommandFindAlleles.FIND_ALLELES_COMMAND_NAME, CommandFindAlleles.class);
 
         cmd.getSubcommands()

@@ -31,7 +31,7 @@ import picocli.CommandLine.Parameters
     description = ["Export SHMTree as a table with a row for every table"]
 )
 class CommandExportShmTreesTable : ACommandWithOutputMiXCR() {
-    @Parameters(arity = "2", description = ["input_file.tree output_file.tcv"])
+    @Parameters(arity = "2", description = ["input_file.hsmt output_file.tcv"])
     var inOut: List<String> = ArrayList()
 
     @Option(description = ["Output column headers with spaces."], names = ["-v", "--with-spaces"])

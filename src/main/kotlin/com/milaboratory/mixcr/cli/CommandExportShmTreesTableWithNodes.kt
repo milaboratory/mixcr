@@ -35,7 +35,7 @@ import picocli.CommandLine.Parameters
     description = ["Export SHMTree as a table with a row for every node"]
 )
 class CommandExportShmTreesTableWithNodes : ACommandWithOutputMiXCR() {
-    @Parameters(arity = "2", description = ["input_file.tree output_file.tcv"])
+    @Parameters(arity = "2", description = ["input_file.hsmt output_file.tcv"])
     var inOut: List<String> = ArrayList()
 
     @Option(description = ["Output column headers with spaces."], names = ["-v", "--with-spaces"])
@@ -46,7 +46,7 @@ class CommandExportShmTreesTableWithNodes : ACommandWithOutputMiXCR() {
     override fun getOutputFiles(): List<String> = listOf(inOut.last())
 
     override fun run0() {
-        InfoWriter<Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.Node>>(outputFiles.first()).use { output ->
+        InfoWriter<Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.SplittedNode>>(outputFiles.first()).use { output ->
 
             val oMode = when {
                 humanReadable -> OutputMode.HumanFriendly
@@ -263,10 +263,10 @@ class CommandExportShmTreesTableWithNodes : ACommandWithOutputMiXCR() {
                             )
                         }
                         .map { fieldExtractor ->
-                            object : FieldExtractor<Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.Node>> {
+                            object : FieldExtractor<Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.SplittedNode>> {
                                 override fun getHeader() = fieldExtractor.header
 
-                                override fun extractValue(`object`: Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.Node>): String =
+                                override fun extractValue(`object`: Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.SplittedNode>): String =
                                     fieldExtractor.extractValue(`object`.first)
                             }
                         }
@@ -276,16 +276,16 @@ class CommandExportShmTreesTableWithNodes : ACommandWithOutputMiXCR() {
                     .flatMap {
                         SHNTreeNodeFieldsExtractor.extract(
                             it,
-                            SHMTreeForPostanalysis.Node::class.java,
+                            SHMTreeForPostanalysis.SplittedNode::class.java,
                             reader,
                             oMode
                         )
                     }
                     .map { fieldExtractor ->
-                        object : FieldExtractor<Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.Node>> {
+                        object : FieldExtractor<Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.SplittedNode>> {
                             override fun getHeader() = fieldExtractor.header
 
-                            override fun extractValue(`object`: Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.Node>): String =
+                            override fun extractValue(`object`: Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.SplittedNode>): String =
                                 fieldExtractor.extractValue(`object`.second)
                         }
                     })
@@ -293,12 +293,12 @@ class CommandExportShmTreesTableWithNodes : ACommandWithOutputMiXCR() {
                 output.attachInfoProviders(cloneExtractors
                     .flatMap { extractor(it, Clone::class.java, reader, oMode) }
                     .map { fieldExtractor ->
-                        object : FieldExtractor<Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.Node>> {
+                        object : FieldExtractor<Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.SplittedNode>> {
                             override fun getHeader() = fieldExtractor.header
 
-                            override fun extractValue(`object`: Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.Node>): String {
+                            override fun extractValue(`object`: Pair<SHMTreeForPostanalysis, SHMTreeForPostanalysis.SplittedNode>): String {
                                 val clone = `object`.second.clone ?: return ""
-                                return fieldExtractor.extractValue(clone)
+                                return fieldExtractor.extractValue(clone.clone)
                             }
                         }
                     })
@@ -315,10 +315,9 @@ class CommandExportShmTreesTableWithNodes : ACommandWithOutputMiXCR() {
                     )
 
                     shmTreeForPostanalysis.tree.allNodes()
-                        .forEach { (_, node, _) ->
-                            output.put(
-                                shmTreeForPostanalysis to node.content
-                            )
+                        .flatMap { it.node.content.split() }
+                        .forEach {
+                            output.put(shmTreeForPostanalysis to it)
                         }
                 }
             }

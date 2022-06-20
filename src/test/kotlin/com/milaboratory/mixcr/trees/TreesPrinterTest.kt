@@ -8,10 +8,9 @@ class TreesPrinterTest {
     @Test
     fun treeWithDistancesAndRoot() {
         val treePrinter: TreePrinter<String> = NewickTreePrinter(
-            nameExtractor = { it.content },
             printDistances = true,
             printOnlyLeafNames = false
-        )
+        ) { it.content }
         val tree = sampleTree()
         assertEquals("((C:0.3,D:0.4)E:0.5,A:0.1,B:0.2)F;", treePrinter.print(tree))
     }
@@ -19,10 +18,9 @@ class TreesPrinterTest {
     @Test
     fun treeWithDistancesAndLeafName() {
         val treePrinter: TreePrinter<String> = NewickTreePrinter(
-            nameExtractor = { it.content },
             printDistances = true,
             printOnlyLeafNames = true
-        )
+        ) { it.content }
         val tree = sampleTree()
         assertEquals("((C:0.3,D:0.4):0.5,A:0.1,B:0.2);", treePrinter.print(tree))
     }
@@ -30,10 +28,9 @@ class TreesPrinterTest {
     @Test
     fun allNodesAreNamed() {
         val treePrinter: TreePrinter<String> = NewickTreePrinter(
-            nameExtractor = { it.content },
             printDistances = false,
             printOnlyLeafNames = false
-        )
+        ) { it.content }
         val tree = sampleTree()
         assertEquals("((C,D)E,A,B)F;", treePrinter.print(tree))
     }
@@ -41,10 +38,9 @@ class TreesPrinterTest {
     @Test
     fun allLeafNames() {
         val treePrinter: TreePrinter<String> = NewickTreePrinter(
-            nameExtractor = { it.content },
             printDistances = false,
             printOnlyLeafNames = true
-        )
+        ) { it.content }
         val tree = sampleTree()
         assertEquals("((C,D),A,B);", treePrinter.print(tree))
     }

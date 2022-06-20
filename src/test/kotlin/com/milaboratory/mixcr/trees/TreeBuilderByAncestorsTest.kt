@@ -1,7 +1,6 @@
 package com.milaboratory.mixcr.trees
 
 import com.google.common.collect.Lists
-import com.milaboratory.mixcr.trees.Tree.NodeWithParent
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.Observed
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.Reconstructed
@@ -21,30 +20,18 @@ import kotlin.random.Random
 
 @Ignore
 class TreeBuilderByAncestorsTest {
-    private val treePrinter: TreePrinter<ObservedOrReconstructed<List<Int>, List<Int>>> = NewickTreePrinter(
-        { node: Tree.Node<ObservedOrReconstructed<List<Int>, List<Int>>> ->
-            node.content.convert({ node: List<Int> ->
-                this.print(
-                    node
-                )
-            }) { content: List<Int> -> "'" + print(content) + "'" }
-        },
-        true,
-        false
-    )
-    private val xmlTreePrinter: TreePrinter<ObservedOrReconstructed<List<Int>, List<Int>>> =
-        XmlTreePrinter { nodeWithParent: NodeWithParent<ObservedOrReconstructed<List<Int>, List<Int>>> ->
-            nodeWithParent.node.content.convert({ node: List<Int> -> this.print(node) }) { content: List<Int> ->
-                "-" + print(
-                    content
-                ) + "-"
-            }
+    private val treePrinter: TreePrinter<ObservedOrReconstructed<List<Int>, List<Int>>> =
+        NewickTreePrinter { node ->
+            node.content.convert({ this.print(it) }) { content: List<Int> -> "'" + print(content) + "'" }
         }
-    private val treePrinterOnlyReal = NewickTreePrinter(
-        { node: Tree.Node<List<Int>> -> print(node.content) },
-        true,
-        false
-    )
+    private val xmlTreePrinter: TreePrinter<ObservedOrReconstructed<List<Int>, List<Int>>> =
+        XmlTreePrinter { nodeWithParent ->
+            nodeWithParent.convert(
+                { node: List<Int> -> this.print(node) },
+                { content -> "-" + print(content) + "-" }
+            )
+        }
+    private val treePrinterOnlyReal = NewickTreePrinter<List<Int>>() { node -> print(node.content) }
 
     /**
      * <pre>

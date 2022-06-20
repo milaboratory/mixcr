@@ -27,13 +27,15 @@ import io.repseq.core.VDJCLibraryRegistry
 import java.math.BigDecimal
 
 data class SHMTreeForPostanalysis(
-    val tree: Tree<Node>,
+    val tree: Tree<NodeWithClones>,
     val meta: Meta
 ) {
     class Meta(
         val rootInfo: RootInfo,
         val treeId: Int,
-        val mostRecentCommonAncestor: CloneOrFoundAncestor,
+        val fileNames: List<String>,
+        val root: MutationsSet,
+        val mostRecentCommonAncestor: MutationsSet,
         private val assemblerParameters: CloneAssemblerParameters,
         private val alignerParameters: VDJCAlignerParameters,
         private val geneSupplier: (VDJCGeneId) -> VDJCGene
@@ -49,19 +51,53 @@ data class SHMTreeForPostanalysis(
     }
 
 
-    class Node(
-        private val meta: Meta,
-        private val main: CloneOrFoundAncestor,
-        private val parent: CloneOrFoundAncestor?,
-        val fileName: String?,
-        private val distanceFromParent: BigDecimal?,
-        private val distanceFromRoot: BigDecimal,
-        private val distanceFromMostRecentCommonAncestor: BigDecimal?,
-    ) {
-        val reconstructed: Boolean get() = clone == null
-        val clone: Clone? get() = main.clone
-        val id: Int get() = main.id
+    class NodeWithClones(
+        id: Int,
+        meta: Meta,
+        main: MutationsSet,
+        parent: MutationsSet?,
+        distanceFromRoot: BigDecimal,
+        distanceFromMostRecentCommonAncestor: BigDecimal?,
+        distanceFromParent: BigDecimal?,
+        val clones: List<CloneWithDatasetId>
+    ) : BaseNode(id, meta, main, parent, distanceFromRoot, distanceFromMostRecentCommonAncestor, distanceFromParent) {
+        fun split(): Collection<SplittedNode> = when {
+            clones.isEmpty() -> listOf(withClone(null))
+            else -> clones.map { clone -> withClone(clone) }
+        }
 
+        private fun withClone(clone: CloneWithDatasetId?) = SplittedNode(
+            id,
+            meta,
+            main = main,
+            parent = parent,
+            distanceFromRoot = distanceFromRoot,
+            distanceFromMostRecentCommonAncestor = distanceFromMostRecentCommonAncestor,
+            distanceFromParent = distanceFromParent,
+            clone
+        )
+    }
+
+    class SplittedNode(
+        id: Int,
+        meta: Meta,
+        main: MutationsSet,
+        parent: MutationsSet?,
+        distanceFromRoot: BigDecimal,
+        distanceFromMostRecentCommonAncestor: BigDecimal?,
+        distanceFromParent: BigDecimal?,
+        val clone: CloneWithDatasetId?
+    ) : BaseNode(id, meta, main, parent, distanceFromRoot, distanceFromMostRecentCommonAncestor, distanceFromParent)
+
+    sealed class BaseNode(
+        val id: Int,
+        protected val meta: Meta,
+        protected val main: MutationsSet,
+        protected val parent: MutationsSet?,
+        protected val distanceFromRoot: BigDecimal,
+        protected val distanceFromMostRecentCommonAncestor: BigDecimal?,
+        val distanceFromParent: BigDecimal?,
+    ) {
         fun distanceFrom(base: Base): BigDecimal? = when (base) {
             Base.root -> distanceFromRoot
             Base.mrca -> distanceFromMostRecentCommonAncestor
@@ -74,16 +110,16 @@ data class SHMTreeForPostanalysis(
             baseOn: Base = Base.root
         ): MutationsDescription? {
             if (!canExtractMutations(geneFeature, relativeTo)) return null
-            val mainMutations = main.mutationsSet.mutationsDescription(geneFeature, relativeTo)
+            val mainMutations = main.mutationsDescription(geneFeature, relativeTo)
             return when (baseOn) {
                 Base.root -> mainMutations
                 Base.mrca -> mainMutations.differenceWith(
-                    meta.mostRecentCommonAncestor.mutationsSet.mutationsDescription(geneFeature, relativeTo)
+                    meta.mostRecentCommonAncestor.mutationsDescription(geneFeature, relativeTo)
                 )
                 Base.parent -> when (parent) {
                     null -> null
                     else -> mainMutations.differenceWith(
-                        parent.mutationsSet.mutationsDescription(geneFeature, relativeTo)
+                        parent.mutationsDescription(geneFeature, relativeTo)
                     )
                 }
             }
@@ -160,6 +196,12 @@ data class SHMTreeForPostanalysis(
                 )
     }
 
+    class CloneWithDatasetId(
+        val clone: Clone,
+        val datasetId: Int,
+        val fileName: String
+    )
+
     @Suppress("EnumEntryName")
     enum class Base {
         root,
@@ -177,23 +219,81 @@ fun SHMTreeResult.forPostanalysis(
     val meta = SHMTreeForPostanalysis.Meta(
         rootInfo,
         treeId,
-        mostRecentCommonAncestor,
+        fileNames,
+        tree.root.content.mutationsSet,
+        mostRecentCommonAncestor.mutationsSet,
         assemblerParameters,
         alignerParameters
     ) { geneId -> libraryRegistry.getGene(geneId) }
 
+    val mappedRoot = tree.root.map(meta, null)
+
     return SHMTreeForPostanalysis(
-        tree.map { parent, node, distance ->
-            SHMTreeForPostanalysis.Node(
-                meta,
-                node,
-                parent,
-                node.datasetId?.let { fileNames[it] },
-                distance,
-                node.distanceFromGermline,
-                node.distanceFromMostRecentAncestor
-            )
-        },
+        Tree(mappedRoot),
         meta
     )
+}
+
+private fun Tree.Node<CloneOrFoundAncestor>.map(
+    meta: SHMTreeForPostanalysis.Meta,
+    parent: Tree.Node<CloneOrFoundAncestor>?
+): Tree.Node<SHMTreeForPostanalysis.NodeWithClones> {
+    val distanceFromRoot: BigDecimal
+    val distanceFromMostRecentCommonAncestor: BigDecimal?
+    val distanceFromParent: BigDecimal?
+    if (parent == null) {
+        distanceFromRoot = BigDecimal.ZERO
+        distanceFromMostRecentCommonAncestor = null
+        distanceFromParent = null
+    } else {
+        distanceFromRoot = distance(meta.rootInfo, meta.root, content.mutationsSet)
+        distanceFromMostRecentCommonAncestor = distance(
+            meta.rootInfo,
+            meta.mostRecentCommonAncestor,
+            content.mutationsSet
+        )
+        distanceFromParent = distance(meta.rootInfo, parent.content.mutationsSet, content.mutationsSet)
+    }
+
+    return Tree.Node(
+        SHMTreeForPostanalysis.NodeWithClones(
+            content.id,
+            meta,
+            main = content.mutationsSet,
+            parent = parent?.content?.mutationsSet,
+            distanceFromRoot = distanceFromRoot,
+            distanceFromMostRecentCommonAncestor = distanceFromMostRecentCommonAncestor,
+            distanceFromParent = distanceFromParent,
+            links.filter { it.distance.compareTo(BigDecimal.ZERO) == 0 }
+                //TODO remove
+                .filter { it.node.content.clone != null }
+                .map {
+                    SHMTreeForPostanalysis.CloneWithDatasetId(
+                        it.node.content.clone!!,
+                        it.node.content.datasetId!!,
+                        meta.fileNames[it.node.content.datasetId]
+                    )
+                }
+        ),
+        links
+            //TODO replace with .filter { it.distance.compareTo(BigDecimal.ZERO) != 0 }
+            .filter { it.node.content.clone == null }
+            .map {
+                val mappedChild = it.node.map(meta, this)
+                Tree.NodeLink(mappedChild, mappedChild.content.distanceFromParent!!)
+            }
+    )
+}
+
+fun distance(rootInfo: RootInfo, from: MutationsSet, to: MutationsSet): BigDecimal {
+    val mutationsBetween = MutationsUtils.mutationsBetween(rootInfo, from, to)
+    val mutationsCount = mutationsBetween.VMutationsWithoutCDR3.values.sumOf { it.mutations.size() } +
+        mutationsBetween.JMutationsInCDR3WithoutNDN.mutations.size() +
+        mutationsBetween.knownNDN.mutations.size() +
+        mutationsBetween.JMutationsInCDR3WithoutNDN.mutations.size() +
+        mutationsBetween.JMutationsWithoutCDR3.values.sumOf { it.mutations.size() }
+    val sequence1Length = from.VMutations.sequence1Length() +
+        rootInfo.reconstructedNDN.size() +
+        from.JMutations.sequence1Length()
+    return BigDecimal.valueOf(mutationsCount / sequence1Length.toDouble())
 }

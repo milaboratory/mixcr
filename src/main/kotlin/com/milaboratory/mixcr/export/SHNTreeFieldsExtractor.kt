@@ -31,7 +31,7 @@ object SHNTreeFieldsExtractor : BaseFieldExtractors() {
             "Different clones count",
             "differentClonesCount"
         ) { shmTree ->
-            shmTree.tree.allNodes().count { !it.node.content.reconstructed }.toString()
+            shmTree.tree.allNodes().sumOf { it.node.content.clones.count() }.toString()
         }
 
         fields += FieldParameterless(
@@ -40,7 +40,7 @@ object SHNTreeFieldsExtractor : BaseFieldExtractors() {
             "Total clones count",
             "totalClonesCount"
         ) { shmTree ->
-            shmTree.tree.allNodes().sumOf { it.node.content.clone?.count ?: 0.0 }.toString()
+            shmTree.tree.allNodes().sumOf { (_, node) -> node.content.clones.sumOf { it.clone.count } }.toString()
         }
 
         // Best hits

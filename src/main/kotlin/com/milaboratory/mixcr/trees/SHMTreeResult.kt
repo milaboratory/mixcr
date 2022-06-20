@@ -24,10 +24,10 @@ class SHMTreeResult(
     val treeId: Int
 ) {
     val mostRecentCommonAncestor: CloneOrFoundAncestor
-        get() = tree.root
-            .links
-            .map { it.node.content }
-            .first { it.clone == null }
+        get() = when (tree.root.links.size) {
+            1 -> tree.root.links.first().node
+            else -> tree.root
+        }.content
 }
 
 class SHMTreeSerializer : Serializer<SHMTreeResult> {

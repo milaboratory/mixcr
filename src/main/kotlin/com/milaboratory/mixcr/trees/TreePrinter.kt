@@ -12,5 +12,5 @@
 package com.milaboratory.mixcr.trees
 
 interface TreePrinter<T : Any> {
-    fun print(tree: Tree<T>): String
+    fun print(tree: Tree<out T>): String
 }

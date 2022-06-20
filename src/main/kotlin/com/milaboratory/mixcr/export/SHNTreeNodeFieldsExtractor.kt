@@ -23,7 +23,7 @@ import java.util.*
 
 object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
     override fun initFields(): Array<Field<out Any>> {
-        val fields = mutableListOf<Field<SHMTreeForPostanalysis.Node>>()
+        val fields = mutableListOf<Field<SHMTreeForPostanalysis.SplittedNode>>()
 
         fields += FieldParameterless(
             "-nodeId",
@@ -40,7 +40,7 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
             "File name",
             "fileName"
         ) {
-            it.fileName ?: ""
+            it.clone?.fileName ?: ""
         }
 
         fields += FieldWithParameters(

@@ -72,7 +72,7 @@ class TreeWithMetaBuilder(
         val mostRecentCommonAncestor = mostRecentCommonAncestor()
         val rootAsNode = (treeBuilder.tree.root.content as Reconstructed).content
         return treeBuilder.tree
-            .map { parent, node, _ ->
+            .map { parent, node ->
                 val mutationsSet = node.convert({ it.mutationsSet }, { it.fromRootToThis })
                 val cloneWrapper = node.convert({ it.clone }) { null }
 

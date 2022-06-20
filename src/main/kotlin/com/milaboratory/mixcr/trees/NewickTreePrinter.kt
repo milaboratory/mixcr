@@ -17,25 +17,24 @@ import java.util.stream.Collectors
  * https://en.wikipedia.org/wiki/Newick_format
  */
 class NewickTreePrinter<T : Any>(
-    private val nameExtractor: (Tree.Node<T>) -> String,
-    private val printDistances: Boolean,
-    private val printOnlyLeafNames: Boolean
+    private val printDistances: Boolean = true,
+    private val printOnlyLeafNames: Boolean = false,
+    private val nameExtractor: (Tree.Node<out T>) -> String
 ) : TreePrinter<T> {
-    override fun print(tree: Tree<T>): String {
-        return printNode(tree.root) + ";"
-    }
+    override fun print(tree: Tree<out T>): String = printNode(tree.root) + ";"
 
-    private fun printNode(node: Tree.Node<T>): String {
+    private fun printNode(node: Tree.Node<out T>): String {
         val sb = StringBuilder()
         if (node.links.isNotEmpty()) {
-            sb.append(node.links.stream()
-                .map { link ->
-                    val printedNode = printNode(link.node)
-                    if (printDistances) {
-                        return@map printedNode + ":" + link.distance
-                    } else {
-                        return@map printedNode
-                    }
+            sb.append(
+                node.links.stream()
+                    .map { link ->
+                        val printedNode = printNode(link.node)
+                        if (printDistances) {
+                            return@map printedNode + ":" + link.distance
+                        } else {
+                            return@map printedNode
+                        }
                 }
                 .sorted()
                 .collect(Collectors.joining(",", "(", ")")))
