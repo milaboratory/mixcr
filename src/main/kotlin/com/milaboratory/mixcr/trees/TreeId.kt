@@ -13,7 +13,7 @@ package com.milaboratory.mixcr.trees
 
 data class TreeId(
     val id: Int,
-    private val VJBase: VJBase
+    val VJBase: VJBase
 ) {
     fun encode(): String = "${VJBase.VGeneId.name}-${VJBase.CDR3length}-${VJBase.JGeneId.name}-${id}"
 }

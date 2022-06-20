@@ -51,6 +51,9 @@ class Tree<T : Any>(
             return Node(content, childrenCopy)
         }
 
+        /** Returns the height of the tree */
+        fun height(): Int = if (children.isEmpty()) 0 else 1 + children.maxOf { it.node.height() }
+
         val links: List<NodeLink<T>>
             get() = children
 

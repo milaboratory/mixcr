@@ -23,6 +23,7 @@ import com.milaboratory.primitivio.readMap
 import com.milaboratory.primitivio.readObjectRequired
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.dto.VDJCLibraryData
+import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
 
@@ -38,8 +39,13 @@ class SHMTreesReader(
     private val treesPosition: Long
     override fun getTagsInfo(): TagsInfo = tagsInfo
 
+    constructor(input: Path, libraryRegistry: VDJCLibraryRegistry) : this(
+        PrimitivIHybrid(input, 3),
+        libraryRegistry
+    )
+
     constructor(input: String, libraryRegistry: VDJCLibraryRegistry) : this(
-        PrimitivIHybrid(Paths.get(input), 3),
+        Paths.get(input),
         libraryRegistry
     )
 
