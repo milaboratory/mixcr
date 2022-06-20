@@ -319,9 +319,8 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
         private val sumOfDistancesFromAncestor: BigDecimal,
         private val distanceFromParentToReplaceWhat: BigDecimal
     ) : Action() {
-        override fun changeOfDistance(): BigDecimal {
-            return distanceFromParentToCommon.subtract(distanceFromParentToReplaceWhat).add(sumOfDistancesFromAncestor)
-        }
+        override fun changeOfDistance(): BigDecimal =
+            distanceFromParentToCommon - distanceFromParentToReplaceWhat + sumOfDistancesFromAncestor
 
         override fun distanceFromObserved(): BigDecimal {
             return (parent.content as Reconstructed<T, E>).minDistanceFromObserved
@@ -335,38 +334,45 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
             )
         }
 
-        private fun postprocess(parentToPostprocess: Tree.Node<ObservedOrReconstructed<T, E>>): Tree.Node<ObservedOrReconstructed<T, E>> {
-            return Tree.Node(
+        private fun postprocess(parentToPostprocess: Tree.Node<ObservedOrReconstructed<T, E>>): Tree.Node<ObservedOrReconstructed<T, E>> =
+            Tree.Node(
                 parentToPostprocess.content,
                 postprocess(
                     (parentToPostprocess.content as Reconstructed<T, E>).content,
                     parentToPostprocess.links
                 )
             )
-        }
 
         private fun postprocess(
             parentContent: E, links: List<NodeLink<ObservedOrReconstructed<T, E>>>
         ): List<NodeLink<ObservedOrReconstructed<T, E>>> = links
-            .map { link ->
+            .flatMap { link ->
                 val child = link.node
                 when (child.content) {
                     is Reconstructed<*, *> -> {
                         val childContent = child.content as Reconstructed<T, E>
                         val mapped = postprocessDescendants(parentContent, childContent.content)
-                        NodeLink(
-                            Tree.Node(
-                                Reconstructed(
-                                    mapped,  //TODO recalculate minDistanceFromObserved
-                                    childContent.minDistanceFromObserved,
-                                    ++counter
+                        val newDistance = distance(parentContent, mutationsBetween(parentContent, mapped))
+                        if (newDistance.compareTo(BigDecimal.ZERO) == 0) {
+                            //actually parent equals mapped result.
+                            //in this case we should remove this node from tree by skipping it and inserting its children directly
+                            postprocess(parentContent, child.links)
+                        } else {
+                            val result = NodeLink(
+                                Tree.Node(
+                                    Reconstructed(
+                                        mapped,  //TODO recalculate minDistanceFromObserved
+                                        childContent.minDistanceFromObserved,
+                                        ++counter
+                                    ),
+                                    postprocess(mapped, child.links)
                                 ),
-                                postprocess(mapped, child.links)
-                            ),
-                            distance(parentContent, mutationsBetween(parentContent, mapped))
-                        )
+                                newDistance
+                            )
+                            listOf(result)
+                        }
                     }
-                    else -> link
+                    else -> listOf(link)
                 }
             }
     }

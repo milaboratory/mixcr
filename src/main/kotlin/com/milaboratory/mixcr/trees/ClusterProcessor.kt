@@ -349,7 +349,7 @@ internal class ClusterProcessor private constructor(
                 }
             }
         }
-        val notOverlappedCliques: MutableList<BitArrayInt> = ArrayList()
+        val notOverlappedCliques = mutableListOf<BitArrayInt>()
         matrix.calculateMaximalCliques()
             .filter { it.bitCount() > 1 }
             .sortedByDescending { it.bitCount() }
@@ -358,11 +358,16 @@ internal class ClusterProcessor private constructor(
                     notOverlappedCliques.add(clique)
                 }
             }
-        val clusters: MutableList<Cluster<CloneWithMutationsFromVJGermline>> = ArrayList()
-        for (clique in notOverlappedCliques) {
-            clusters.add(Cluster(clique.bits.map { index: Int -> clones[index] }))
-        }
-        return clusters
+        return notOverlappedCliques
+            .map { Cluster(it.bits.map { i -> clones[i] }) }
+            .filter {
+                //skip cluster if it formed by the same clones but with different C or from different samples
+                val toCompare = it.cluster.first()
+                it.cluster.subList(1, it.cluster.size)
+                    .any { clone ->
+                        !Arrays.equals(clone.cloneWrapper.clone.targets, toCompare.cloneWrapper.clone.targets)
+                    }
+            }
     }
 
     private fun commonMutationsCount(

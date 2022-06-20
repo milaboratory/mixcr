@@ -18,7 +18,6 @@ import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.forPostanalysis
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
-import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import kotlin.io.path.Path
 import kotlin.io.path.writeText
@@ -32,9 +31,6 @@ import kotlin.io.path.writeText
 class CommandExportShmTreesNewick : ACommandWithOutputMiXCR() {
     @Parameters(arity = "2", description = ["input_file.hsmt output_dir"])
     var inOut: List<String> = ArrayList()
-
-    @Option(description = ["Output column headers with spaces."], names = ["-v", "--with-spaces"])
-    var humanReadable = false
 
     override fun getInputFiles(): List<String> = listOf(inOut.first())
 
