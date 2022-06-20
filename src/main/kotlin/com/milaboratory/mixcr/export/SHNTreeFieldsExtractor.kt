@@ -23,7 +23,7 @@ object SHNTreeFieldsExtractor : BaseFieldExtractors() {
             "SHM tree id",
             "Tree id",
             "treeId"
-        ) { it.meta.treeId.encode() }
+        ) { it.meta.treeId.toString() }
 
         fields += FieldParameterless(
             "-differentClonesCount",

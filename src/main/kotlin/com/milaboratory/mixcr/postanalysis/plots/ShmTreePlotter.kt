@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
 package com.milaboratory.mixcr.postanalysis.plots
 
 import cc.redberry.pipe.CUtils
@@ -27,7 +38,7 @@ class TreeFilter(
             return false
         if (minHeight != null && tree.tree.root.height() < minHeight)
             return false
-        if (treeIds != null && !treeIds.contains(tree.treeId.id))
+        if (treeIds != null && !treeIds.contains(tree.treeId))
             return false
         return true
     }
@@ -119,9 +130,7 @@ class ShmTreePlotter(
             this.color = this@ShmTreePlotter.color
             this.size = this@ShmTreePlotter.size
         } + ggtitle(tree.treeId.let {
-            """
-            Id: ${it.id}   V: ${it.VJBase.VGeneId.name}   J: ${it.VJBase.JGeneId.name}
-        """.trimIndent()
+            "Id: $it"
         })
     }
 }

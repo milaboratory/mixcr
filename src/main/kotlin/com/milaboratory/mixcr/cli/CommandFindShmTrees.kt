@@ -201,6 +201,8 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
             "Building results",
             SmartProgressReporter.extractProgress(sortedClones, cloneWrappersCount.toLong())
         )
+
+        val recalculatedTreeIds = shmTreeBuilder.recalculateTreeIds()
         SHMTreesWriter(outputTreesPath).use { shmTreesWriter ->
             val usedGenes = cloneReaders.flatMap { it.usedGenes }.distinct()
             shmTreesWriter.writeHeader(
@@ -215,7 +217,7 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
             val writer = shmTreesWriter.treesWriter()
             for (cluster in CUtils.it(shmTreeBuilder.buildClusters(sortedClones))) {
                 shmTreeBuilder
-                    .getResult(cluster, previousStepDebug.treesAfterDecisionsWriter)
+                    .getResult(cluster, previousStepDebug.treesAfterDecisionsWriter, recalculatedTreeIds)
                     .forEach { writer.put(it) }
             }
             writer.put(null)

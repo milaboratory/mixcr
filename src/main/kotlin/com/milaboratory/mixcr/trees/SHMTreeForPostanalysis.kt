@@ -32,7 +32,7 @@ data class SHMTreeForPostanalysis(
 ) {
     class Meta(
         val rootInfo: RootInfo,
-        val treeId: TreeId,
+        val treeId: Int,
         val mostRecentCommonAncestor: CloneOrFoundAncestor,
         private val assemblerParameters: CloneAssemblerParameters,
         private val alignerParameters: VDJCAlignerParameters,
@@ -68,22 +68,22 @@ data class SHMTreeForPostanalysis(
             Base.parent -> distanceFromParent
         }
 
-        fun mutationsWithRange(
+        fun mutationsDescription(
             geneFeature: GeneFeature,
             relativeTo: GeneFeature? = null,
             baseOn: Base = Base.root
         ): MutationsDescription? {
             if (!canExtractMutations(geneFeature, relativeTo)) return null
-            val mainMutations = main.mutationsSet.mutationsWithRange(geneFeature, relativeTo)
+            val mainMutations = main.mutationsSet.mutationsDescription(geneFeature, relativeTo)
             return when (baseOn) {
                 Base.root -> mainMutations
                 Base.mrca -> mainMutations.differenceWith(
-                    meta.mostRecentCommonAncestor.mutationsSet.mutationsWithRange(geneFeature, relativeTo)
+                    meta.mostRecentCommonAncestor.mutationsSet.mutationsDescription(geneFeature, relativeTo)
                 )
                 Base.parent -> when (parent) {
                     null -> null
                     else -> mainMutations.differenceWith(
-                        parent.mutationsSet.mutationsWithRange(geneFeature, relativeTo)
+                        parent.mutationsSet.mutationsDescription(geneFeature, relativeTo)
                     )
                 }
             }
@@ -102,7 +102,7 @@ data class SHMTreeForPostanalysis(
             }
 
         //TODO work with all geneFeatures, for example Exon2 and JRegionTrimmed
-        private fun MutationsSet.mutationsWithRange(
+        private fun MutationsSet.mutationsDescription(
             geneFeature: GeneFeature,
             relativeTo: GeneFeature?
         ): MutationsDescription = when (geneFeature) {

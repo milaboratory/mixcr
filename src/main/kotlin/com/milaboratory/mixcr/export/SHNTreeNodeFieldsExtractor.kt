@@ -60,7 +60,7 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
             baseGeneFeatureArg("N. Seq. ", "nSeq"),
             validateArgs = { checkNotComposite(it) }
         ) { node, geneFeature ->
-            val mutationsWithRange = node.mutationsWithRange(geneFeature) ?: return@FieldWithParameters NULL
+            val mutationsWithRange = node.mutationsDescription(geneFeature) ?: return@FieldWithParameters NULL
             mutationsWithRange.targetNSequence.toString()
         }
 
@@ -70,7 +70,7 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
             baseGeneFeatureArg("AA. Seq. ", "aaSeq"),
             validateArgs = { checkNotComposite(it) }
         ) { node, geneFeature ->
-            val mutationsWithRange = node.mutationsWithRange(geneFeature) ?: return@FieldWithParameters NULL
+            val mutationsWithRange = node.mutationsDescription(geneFeature) ?: return@FieldWithParameters NULL
             mutationsWithRange.targetAASequence.toString()
         }
 
@@ -84,7 +84,7 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
             }
         ) { node, geneFeature, base ->
             val mutationsWithRange =
-                node.mutationsWithRange(geneFeature, baseOn = base) ?: return@FieldWithParameters "-"
+                node.mutationsDescription(geneFeature, baseOn = base) ?: return@FieldWithParameters "-"
             mutationsWithRange.mutations.encode()
         }
 
@@ -100,7 +100,7 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
             }
         ) { node, geneFeature, relativeTo, base ->
             val mutationsWithRange =
-                node.mutationsWithRange(geneFeature, relativeTo, base) ?: return@FieldWithParameters "-"
+                node.mutationsDescription(geneFeature, relativeTo, base) ?: return@FieldWithParameters "-"
             mutationsWithRange.mutations.encode()
         }
 
@@ -115,7 +115,7 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
             }
         ) { node, geneFeature, base ->
             val mutationsWithRange =
-                node.mutationsWithRange(geneFeature, baseOn = base) ?: return@FieldWithParameters "-"
+                node.mutationsDescription(geneFeature, baseOn = base) ?: return@FieldWithParameters "-"
             mutationsWithRange.aaMutations.encode(",")
         }
 
@@ -131,7 +131,7 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
             }
         ) { node, geneFeature, relativeTo, base ->
             val mutationsWithRange =
-                node.mutationsWithRange(geneFeature, relativeTo, base) ?: return@FieldWithParameters "-"
+                node.mutationsDescription(geneFeature, relativeTo, base) ?: return@FieldWithParameters "-"
             mutationsWithRange.aaMutations.encode(",")
         }
 
@@ -149,7 +149,7 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
             }
         ) { node, geneFeature, base ->
             val mutationsWithRange =
-                node.mutationsWithRange(geneFeature, baseOn = base) ?: return@FieldWithParameters "-"
+                node.mutationsDescription(geneFeature, baseOn = base) ?: return@FieldWithParameters "-"
             mutationsWithRange.aaMutationsDetailed.encode(",")
         }
 
@@ -165,7 +165,7 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
             }
         ) { node, geneFeature, relativeTo, base ->
             val mutationsWithRange =
-                node.mutationsWithRange(geneFeature, relativeTo, base) ?: return@FieldWithParameters "-"
+                node.mutationsDescription(geneFeature, relativeTo, base) ?: return@FieldWithParameters "-"
             mutationsWithRange.aaMutationsDetailed.encode(",")
         }
 

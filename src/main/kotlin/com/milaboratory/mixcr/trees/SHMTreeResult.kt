@@ -21,7 +21,7 @@ import com.milaboratory.primitivio.readObjectRequired
 class SHMTreeResult(
     val tree: Tree<CloneOrFoundAncestor>,
     val rootInfo: RootInfo,
-    val treeId: TreeId
+    val treeId: Int
 ) {
     val mostRecentCommonAncestor: CloneOrFoundAncestor
         get() = tree.root
@@ -34,19 +34,14 @@ class SHMTreeSerializer : Serializer<SHMTreeResult> {
     override fun write(output: PrimitivO, obj: SHMTreeResult) {
         TreeSerializer.writeTree(output, obj.tree)
         output.writeObject(obj.rootInfo)
-        output.writeInt(obj.treeId.id)
+        output.writeInt(obj.treeId)
     }
 
-    override fun read(input: PrimitivI): SHMTreeResult {
-        val tree = TreeSerializer.readTree<CloneOrFoundAncestor>(input)
-        val rootInfo = input.readObjectRequired<RootInfo>()
-        val treeId = input.readInt()
-        return SHMTreeResult(
-            tree,
-            rootInfo,
-            TreeId(treeId, rootInfo.VJBase)
-        )
-    }
+    override fun read(input: PrimitivI): SHMTreeResult = SHMTreeResult(
+        TreeSerializer.readTree(input),
+        input.readObjectRequired(),
+        input.readInt()
+    )
 
     override fun isReference(): Boolean = false
 

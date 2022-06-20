@@ -16,4 +16,9 @@ data class TreeId(
     val VJBase: VJBase
 ) {
     fun encode(): String = "${VJBase.VGeneId.name}-${VJBase.CDR3length}-${VJBase.JGeneId.name}-${id}"
+
+    companion object {
+        val comparator: Comparator<TreeId> = Comparator.comparing<TreeId, VJBase>({ it.VJBase }, VJBase.comparator)
+            .thenComparingInt { it.id }
+    }
 }

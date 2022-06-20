@@ -258,7 +258,11 @@ class SHMTreeBuilder(
         }
     }
 
-    fun getResult(clusterBySameVAndJ: Cluster<CloneWrapper>, previousStepDebug: PrintStream): List<SHMTreeResult> {
+    fun getResult(
+        clusterBySameVAndJ: Cluster<CloneWrapper>,
+        previousStepDebug: PrintStream,
+        recalculatedTreeIds: Map<TreeId, Int>
+    ): List<SHMTreeResult> {
         val VJBase = clusterVJBase(clusterBySameVAndJ)
         try {
             val clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase)
@@ -293,7 +297,7 @@ class SHMTreeBuilder(
                     SHMTreeResult(
                         treeWithMetaBuilder.buildResult(),
                         treeWithMetaBuilder.rootInfo,
-                        treeWithMetaBuilder.treeId
+                        recalculatedTreeIds[treeWithMetaBuilder.treeId]!!
                     )
                 }
                 .toList()
@@ -324,6 +328,12 @@ class SHMTreeBuilder(
             parameters.minPortionOfClonesForCommonAlignmentRanges
         )
     }
+
+    fun recalculateTreeIds(): Map<TreeId, Int> = currentTrees
+        .flatMap { it.value.map { snapshot -> snapshot.treeId } }
+        .sortedWith(TreeId.comparator)
+        .withIndex()
+        .associate { it.value to it.index }
 
     fun relatedAllelesMutations(): Map<VDJCGeneId, List<Mutations<NucleotideSequence>>> = datasets
         .flatMap { it.usedGenes }
