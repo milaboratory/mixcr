@@ -3,6 +3,7 @@ package com.milaboratory.mixcr.util
 import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.mixcr.trees.MutationsUtils
 import com.milaboratory.mixcr.trees.generateMutations
 import com.milaboratory.mixcr.trees.generateSequence
 import io.kotest.matchers.shouldBe
@@ -86,6 +87,49 @@ class MutationsExtensionsTest {
     @Test
     fun `without second insertions`() {
         mutations("I0G,I0T").without(mutations("I0T")) shouldBe mutations("I0G")
+    }
+
+    //    @Ignore
+    @Test
+    fun `random test of difference`() {
+        RandomizedTest.randomized(::testDifference, numberOfRuns = 1_000_000)
+    }
+
+    @Test
+    fun `reproduce test of difference`() {
+        RandomizedTest.reproduce(
+            ::testDifference,
+            1395594558168514785L,
+            2576371376849600943L,
+            1456318475387300261L,
+            4025326375754574485L,
+            2916762172989578227L,
+        )
+    }
+
+
+    private fun testDifference(random: Random, print: Boolean) {
+        val sequence1 = random.generateSequence(20)
+        val first = random.generateMutations(sequence1)
+        val second = random.generateMutations(sequence1)
+
+        val result = MutationsUtils.difference(
+            sequence1,
+            first,
+            second
+        )
+        if (print) {
+            println("     sequence1: $sequence1")
+            println("         first: ${first.encode(",")}")
+            println("        second: ${second.encode(",")}")
+            val intersection = first.intersection(second)
+            println("  intersection: ${intersection.encode(",")}")
+            println(" first without: ${first.combineWith(intersection.invert()).encode(",")}")
+            println("second without: ${second.combineWith(intersection.invert()).encode(",")}")
+            println("        result: ${result.mutations.encode(",")}")
+        }
+        result.sequence1 shouldBe first.mutate(sequence1)
+        result.mutations.mutate(result.sequence1) shouldBe second.mutate(sequence1)
     }
 
     @Ignore

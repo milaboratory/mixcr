@@ -9,7 +9,7 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-@file:Suppress("LocalVariableName")
+@file:Suppress("LocalVariableName", "PropertyName")
 
 package com.milaboratory.mixcr.cli
 
@@ -21,6 +21,7 @@ import com.milaboratory.mixcr.trees.DebugInfo
 import com.milaboratory.mixcr.trees.SHMTreeBuilder
 import com.milaboratory.mixcr.trees.SHMTreeBuilderParameters
 import com.milaboratory.mixcr.trees.SHMTreesWriter
+import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.util.JsonOverrider
 import com.milaboratory.util.ReportUtil
@@ -46,7 +47,7 @@ import java.nio.file.Paths
     description = ["Builds SHM trees."]
 )
 class CommandFindShmTrees : ACommandWithOutputMiXCR() {
-    @Parameters(arity = "2..*", description = ["input_file.clns [input_file2.clns ....] output_file.hsmt"])
+    @Parameters(arity = "2..*", description = ["input_file.clns [input_file2.clns ....] output_file.$shmFileExtension"])
     private val inOut: List<String> = ArrayList()
 
     @Option(description = ["Processing threads"], names = ["-t", "--threads"])
@@ -74,15 +75,15 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
     @Option(names = ["-r", "--report"], description = ["Report file path"])
     var report: String? = null
 
-    @Option(description = ["List of VGene names to filter clones"], names = ["-v", "--vGeneNames"])
+    @Option(description = ["List of VGene names to filter clones"], names = ["-v", "--v-gene-names"])
     var vGenesToSearch: Set<String> = HashSet()
 
-    @Option(description = ["List of JGene names to filter clones"], names = ["-j", "--jGeneNames"])
+    @Option(description = ["List of JGene names to filter clones"], names = ["-j", "--j-gene-names"])
     var jGenesToSearch: Set<String> = HashSet()
 
     @Option(
         description = ["List of CDR3 nucleotide sequence lengths to filter clones"],
-        names = ["-cdr3", "--cdr3Lengths"]
+        names = ["-cdr3", "--cdr3-lengths"]
     )
     var CDR3LengthToSearch: Set<Int> = HashSet()
 
@@ -91,7 +92,26 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
 
     @Option(description = ["Path to directory to store debug info"], names = ["-d", "--debug"])
     var debugDirectoryPath: String? = null
-    var debugDirectory: Path? = null
+
+    private val debugDirectory: Path by lazy {
+        when (debugDirectoryPath) {
+            null -> Files.createTempDirectory("debug")
+            else -> Paths.get(debugDirectoryPath!!)
+        }.also { it.toFile().mkdirs() }
+    }
+
+    @Option(
+        description = [
+            "If specified, trees will be build from data in the file. Main logic of command will be omitted.",
+            "File must be formatted as tsv and have 3 columns: treeId, fileName, cloneId",
+            "V and J genes will be chosen by majority of clones in a clonal group. CDR3 length must be the same in all clones.",
+            "treeId - uniq id for clonal group,",
+            "fileName - file name as was used in command line to search for clone,",
+            "cloneId - clone id in the specified file"
+        ],
+        names = ["-bf", "--build-from"]
+    )
+    var buildFrom: String? = null
 
     @Option(
         description = ["Use system temp folder for temporary files, the output folder will be used if this option is omitted."],
@@ -111,23 +131,20 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
 
     private fun ensureParametersInitialized() {
         shmTreeBuilderParameters
-        if (debugDirectory == null) {
-            debugDirectory = when (debugDirectoryPath) {
-                null -> Files.createTempDirectory("debug")
-                else -> Paths.get(debugDirectoryPath!!)
-            }
-        }
-        debugDirectory!!.toFile().mkdirs()
+        debugDirectory
     }
 
     override fun validate() {
         super.validate()
-        if (report == null) warn("NOTE: report file is not specified, using " + getReportFileName() + " to write report.")
+        if (report == null) {
+            warn("NOTE: report file is not specified, using $reportFileName to write report.")
+        }
+        if (!outputTreesPath.endsWith(".$shmFileExtension")) {
+            throwValidationException("Output file should have extension $shmFileExtension. Given $outputTreesPath")
+        }
     }
 
-    private fun getReportFileName(): String {
-        return report ?: (FilenameUtils.removeExtension(outputTreesPath) + ".report")
-    }
+    private val reportFileName: String get() = report ?: (FilenameUtils.removeExtension(outputTreesPath) + ".report")
 
     override fun run0() {
         ensureParametersInitialized()
@@ -179,7 +196,7 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
         //TODO check that all trees has minimum common mutations in VJ
         report.onStepEnd(BuildSHMTreeStep.BuildingInitialTrees, clonesWasAddedOnInit, shmTreeBuilder.treesCount())
         var previousStepDebug = currentStepDebug
-        for (step in shmTreeBuilderParameters!!.stepsOrder) {
+        for (step in shmTreeBuilderParameters.stepsOrder) {
             stepNumber++
             currentStepDebug = createDebug(stepNumber)
             val treesCountBefore = shmTreeBuilder.treesCount()
@@ -231,7 +248,7 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
             }
             writer.put(null)
         }
-        for (i in 0..shmTreeBuilderParameters!!.stepsOrder.size) {
+        for (i in 0..shmTreeBuilderParameters.stepsOrder.size) {
             stepNumber = i + 1
             val treesBeforeDecisions = debugFile(stepNumber, Debug.BEFORE_DECISIONS_SUFFIX)
             val treesAfterDecisions = debugFile(stepNumber, Debug.AFTER_DECISIONS_SUFFIX)
@@ -242,7 +259,7 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
         }
         println("============= Report ==============")
         ReportUtil.writeReportToStdout(report)
-        ReportUtil.writeJsonReport(getReportFileName(), report)
+        ReportUtil.writeJsonReport(reportFileName, report)
     }
 
     private fun createDebug(stepNumber: Int) = Debug(

@@ -50,21 +50,21 @@ internal object MutationsUtils {
     fun mutationsBetween(rootInfo: RootInfo, first: MutationsSet, second: MutationsSet) = NodeMutationsDescription(
         mutationsBetween(rootInfo.VSequence, first.VMutations, second.VMutations),
         difference(
+            rootInfo.VSequence,
             first.VMutations.partInCDR3.mutations,
             second.VMutations.partInCDR3.mutations,
-            rootInfo.VSequence,
             rootInfo.VRangeInCDR3
         ),
         difference(
+            rootInfo.reconstructedNDN,
             first.NDNMutations.mutations,
             second.NDNMutations.mutations,
-            rootInfo.reconstructedNDN,
             Range(0, rootInfo.reconstructedNDN.size())
         ),
         difference(
+            rootInfo.JSequence,
             first.JMutations.partInCDR3.mutations,
             second.JMutations.partInCDR3.mutations,
-            rootInfo.JSequence,
             rootInfo.JRangeInCDR3
         ),
         mutationsBetween(rootInfo.JSequence, first.JMutations, second.JMutations)
@@ -76,22 +76,24 @@ internal object MutationsUtils {
         secondMutations: GeneMutations
     ): Map<Range, MutationsWithRange> =
         fold(firstMutations.mutations, secondMutations.mutations) { base, comparison, range ->
-            difference(base, comparison, sequence1, range)
+            difference(sequence1, base, comparison, range)
         }
 
-    private fun difference(
+    fun difference(
+        sequence1: NucleotideSequence,
         base: Mutations<NucleotideSequence>,
         comparison: Mutations<NucleotideSequence>,
-        sequence: NucleotideSequence,
-        range: Range = Range(0, sequence.size())
+        range: Range = Range(0, sequence1.size())
     ): MutationsWithRange {
-        val sequence1 = buildSequence(sequence, base, range)
+        val newSequence1 = buildSequence(sequence1, base, range)
+        //with exclusion of intersection there will be fewer mutations in a result
+        val intersection = base.intersection(comparison)
         return MutationsWithRange(
-            sequence1,
-            base.invert()
-                .combineWith(comparison)
+            newSequence1,
+            intersection.invert().combineWith(base).invert()
+                .combineWith(intersection.invert().combineWith(comparison))
                 .move(-range.lower),
-            Range(0, sequence1.size())
+            Range(0, newSequence1.size())
         )
     }
 

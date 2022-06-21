@@ -66,11 +66,14 @@ import kotlin.collections.set
 )
 class CommandFindAlleles : ACommandWithOutputMiXCR() {
     @CommandLine.Parameters(
-        arity = "2..*", description = ["""input_file.clns [input_file2.clns ....] output_template.clns
-output_template may contain {file_name} and {file_dir_path},
-outputs for 'input_file.clns input_file2.clns /output/folder/{file_name}_with_alleles.clns' will be /output/folder/input_file_with_alleles.clns and /output/folder/input_file2_with_alleles.clns,
-outputs for '/some/folder1/input_file.clns /some/folder2/input_file2.clns {file_dir_path}/{file_name}_with_alleles.clns' will be /seme/folder1/input_file_with_alleles.clns and /some/folder2/input_file2_with_alleles.clns
-Resulted outputs must be uniq"""]
+        arity = "2..*",
+        description = [
+            "input_file.clns [input_file2.clns ....] output_template.clns",
+            "output_template may contain {file_name} and {file_dir_path},",
+            "outputs for 'input_file.clns input_file2.clns /output/folder/{file_name}_with_alleles.clns' will be /output/folder/input_file_with_alleles.clns and /output/folder/input_file2_with_alleles.clns,",
+            "outputs for '/some/folder1/input_file.clns /some/folder2/input_file2.clns {file_dir_path}/{file_name}_with_alleles.clns' will be /seme/folder1/input_file_with_alleles.clns and /some/folder2/input_file2_with_alleles.clns",
+            "Resulted outputs must be uniq"
+        ]
     )
     private val inOut: List<String> = ArrayList()
 
@@ -99,9 +102,7 @@ Resulted outputs must be uniq"""]
         clnsFiles
     }
 
-    public override fun getInputFiles(): List<String> {
-        return inOut.subList(0, inOut.size - 1)
-    }
+    public override fun getInputFiles(): List<String> = inOut.subList(0, inOut.size - 1)
 
     public override fun getOutputFiles(): List<String> = when {
         libraryOutput != null -> outputClnsFiles + libraryOutput!!
@@ -166,12 +167,12 @@ Resulted outputs must be uniq"""]
         }
 
         val tempDest: TempFileDest = TempFileManager.smartTempDestination(outputClnsFiles.first(), "", useSystemTemp)
-        val allelesBuilder = AllelesBuilder(findAllelesParameters!!, cloneReaders, tempDest)
+        val allelesBuilder = AllelesBuilder(findAllelesParameters, cloneReaders, tempDest)
         val sortedClonotypes = allelesBuilder.sortClonotypes()
         val alleles = (
-                buildAlleles(allelesBuilder, sortedClonotypes, Variable) +
-                        buildAlleles(allelesBuilder, sortedClonotypes, Joining)
-                ).toMap().toMutableMap()
+            buildAlleles(allelesBuilder, sortedClonotypes, Variable) +
+                buildAlleles(allelesBuilder, sortedClonotypes, Joining)
+            ).toMap().toMutableMap()
         val usedGenes = collectUsedGenes(cloneReaders, alleles)
         registerNotProcessedVJ(alleles, usedGenes)
         val resultLibrary = buildLibrary(libraryRegistry, cloneReaders, usedGenes)

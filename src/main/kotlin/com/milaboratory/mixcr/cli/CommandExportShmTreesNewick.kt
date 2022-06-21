@@ -15,6 +15,7 @@ import cc.redberry.pipe.CUtils
 import com.milaboratory.mixcr.trees.NewickTreePrinter
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import com.milaboratory.mixcr.trees.SHMTreesReader
+import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
 import com.milaboratory.mixcr.trees.forPostanalysis
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
@@ -29,12 +30,20 @@ import kotlin.io.path.writeText
     description = ["Export SHMTree as a table with a row for every node"]
 )
 class CommandExportShmTreesNewick : ACommandWithOutputMiXCR() {
-    @Parameters(arity = "2", description = ["input_file.hsmt output_dir"])
+    @Parameters(arity = "2", description = ["input_file.$shmFileExtension output_dir"])
     var inOut: List<String> = ArrayList()
 
     override fun getInputFiles(): List<String> = listOf(inOut.first())
 
     override fun getOutputFiles(): List<String> = listOf(inOut.last())
+
+    private val inputFile get() = inputFiles.first()
+
+    override fun validate() {
+        if (!inputFile.endsWith(".$shmFileExtension")) {
+            throwValidationException("Input file should have extension $shmFileExtension. Given $inputFile")
+        }
+    }
 
     override fun run0() {
         val outputDir = Path(outputFiles.first())
@@ -45,7 +54,7 @@ class CommandExportShmTreesNewick : ACommandWithOutputMiXCR() {
         }
 
         val libraryRegistry = VDJCLibraryRegistry.getDefault()
-        SHMTreesReader(inputFiles.first(), libraryRegistry).use { reader ->
+        SHMTreesReader(inputFile, libraryRegistry).use { reader ->
             CUtils.it(reader.readTrees()).forEach { shmTree ->
                 val shmTreeForPostanalysis = shmTree.forPostanalysis(
                     reader.fileNames,

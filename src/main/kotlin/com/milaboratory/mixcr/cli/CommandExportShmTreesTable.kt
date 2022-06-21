@@ -18,6 +18,7 @@ import com.milaboratory.mixcr.export.OutputMode
 import com.milaboratory.mixcr.export.SHNTreeFieldsExtractor
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import com.milaboratory.mixcr.trees.SHMTreesReader
+import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
 import com.milaboratory.mixcr.trees.forPostanalysis
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
@@ -31,7 +32,7 @@ import picocli.CommandLine.Parameters
     description = ["Export SHMTree as a table with a row for every table"]
 )
 class CommandExportShmTreesTable : ACommandWithOutputMiXCR() {
-    @Parameters(arity = "2", description = ["input_file.hsmt output_file.tcv"])
+    @Parameters(arity = "2", description = ["input_file.$shmFileExtension output_file.tcv"])
     var inOut: List<String> = ArrayList()
 
     @Option(description = ["Output column headers with spaces."], names = ["-v", "--with-spaces"])
@@ -40,6 +41,14 @@ class CommandExportShmTreesTable : ACommandWithOutputMiXCR() {
     override fun getInputFiles(): List<String> = listOf(inOut.first())
 
     override fun getOutputFiles(): List<String> = listOf(inOut.last())
+
+    private val inputFile get() = inputFiles.first()
+
+    override fun validate() {
+        if (!inputFile.endsWith(".$shmFileExtension")) {
+            throwValidationException("Input file should have extension $shmFileExtension. Given $inputFile")
+        }
+    }
 
     override fun run0() {
         InfoWriter<SHMTreeForPostanalysis>(outputFiles.first()).use { output ->
@@ -50,7 +59,7 @@ class CommandExportShmTreesTable : ACommandWithOutputMiXCR() {
             }
 
             val libraryRegistry = VDJCLibraryRegistry.getDefault()
-            SHMTreesReader(inputFiles.first(), libraryRegistry).use { reader ->
+            SHMTreesReader(inputFile, libraryRegistry).use { reader ->
                 val treeExtractors = listOf(
                     FieldData.mk("-treeId"),
                     FieldData.mk("-differentClonesCount"),
