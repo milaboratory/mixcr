@@ -277,7 +277,7 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
     }
 
     private fun debugFile(stepNumber: Int, suffix: String): File =
-        debugDirectory!!.resolve("step_" + stepNumber + "_" + suffix + ".csv").toFile()
+        debugDirectory.resolve("step_" + stepNumber + "_" + suffix + ".csv").toFile()
 
     class Debug(val treesBeforeDecisionsWriter: PrintStream, val treesAfterDecisionsWriter: PrintStream) {
         companion object {

@@ -4,6 +4,7 @@
     "thresholdForCombineTrees": 0.5,
     "thresholdForCombineByNDN": 1.5,
     "thresholdForFreeClones": 0.45,
+    "maxNDNDistanceForFreeClones": 1.5,
     "topToVoteOnNDNSize": 5,
     "NDNScoreMultiplier": 2.5,
     "hideTreesLessThanSize": 1,

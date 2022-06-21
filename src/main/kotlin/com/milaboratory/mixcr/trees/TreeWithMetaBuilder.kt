@@ -110,9 +110,9 @@ class TreeWithMetaBuilder(
     fun allNodes(): Sequence<NodeWithParent<ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, SyntheticNode>>> =
         treeBuilder.tree.allNodes()
 
-    fun bestAction(rebasedClone: CloneWithMutationsFromReconstructedRoot): TreeBuilderByAncestors.Action {
+    fun bestAction(rebasedClone: CloneWithMutationsFromReconstructedRoot): TreeBuilderByAncestors.Action<SyntheticNode> {
         val bestAction = treeBuilder.bestActionForObserved(rebasedClone)
-        return object : TreeBuilderByAncestors.Action() {
+        return object : TreeBuilderByAncestors.Action<SyntheticNode>() {
             override fun changeOfDistance(): BigDecimal = bestAction.changeOfDistance()
 
             override fun distanceFromObserved(): BigDecimal = bestAction.distanceFromObserved()
@@ -121,6 +121,8 @@ class TreeWithMetaBuilder(
                 bestAction.apply()
                 clonesAdditionHistory.add(rebasedClone.clone.id)
             }
+
+            override fun parentContent(): SyntheticNode = bestAction.parentContent()
         }
     }
 

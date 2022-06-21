@@ -42,6 +42,10 @@ data class SHMTreeBuilderParameters @JsonCreator constructor(
      */
     @param:JsonProperty("thresholdForFreeClones") val thresholdForFreeClones: Double,
     /**
+     * Max penalty of NDN mutations per NDN length for pair for attaching on AttachClonesByDistanceChange step.
+     */
+    @param:JsonProperty("maxNDNDistanceForFreeClones") val maxNDNDistanceForFreeClones: Double,
+    /**
      * Clone will be combined with a tree if penalty by letter on alignment of NDN on root will be less than this value.
      */
     @param:JsonProperty("thresholdForCombineByNDN") val thresholdForCombineByNDN: Double,
@@ -61,8 +65,14 @@ data class SHMTreeBuilderParameters @JsonCreator constructor(
      * Hide small trees.
      */
     @param:JsonProperty("hideTreesLessThanSize") val hideTreesLessThanSize: Int,
+    /**
+     * Min count of common mutations in VJ for pair to form first clusterization.
+     */
     @param:JsonProperty("commonMutationsCountForClustering") val commonMutationsCountForClustering: Int,
-    @param:JsonProperty("maxNDNDistanceForClustering") val maxNDNDistanceForClustering: Int,
+    /**
+     * Max penalty of NDN mutations per NDN length for pair to form first clusterization.
+     */
+    @param:JsonProperty("maxNDNDistanceForClustering") val maxNDNDistanceForClustering: Double,
     /**
      * Count of the nearest nodes to added that will be proceeded to find optimal insertion.
      */

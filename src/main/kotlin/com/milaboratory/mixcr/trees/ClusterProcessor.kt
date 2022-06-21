@@ -268,20 +268,8 @@ internal class ClusterProcessor private constructor(
                         val NDNOfTreeToGrow =
                             oldestAncestorOfTreeToGrow.fromRootToThis.NDNMutations.buildSequence(tree.rootInfo)
                         val NDNOfNodeToAttach = rebasedClone.mutationsSet.NDNMutations.buildSequence(tree.rootInfo)
-                        val score_1 = Aligner.alignGlobal(
-                            scoringSet.NDNScoring,
-                            NDNOfNodeToAttach,
-                            NDNOfTreeToGrow
-                        ).score
-                        val score_2 = Aligner.alignGlobal(
-                            scoringSet.NDNScoring,
-                            NDNOfTreeToGrow,
-                            NDNOfNodeToAttach
-                        ).score
-                        val NDNLength = tree.rootInfo.reconstructedNDN.size()
-                        val maxScore = scoringSet.NDNScoring.maximalMatchScore * NDNLength
-                        val metric_1 = (maxScore - score_1) / NDNLength.toDouble()
-                        val metric_2 = (maxScore - score_2) / NDNLength.toDouble()
+                        val metric_1 = NDNDistance(NDNOfTreeToGrow, NDNOfNodeToAttach)
+                        val metric_2 = NDNDistance(NDNOfNodeToAttach, NDNOfTreeToGrow)
                         Pair(min(metric_1, metric_2)) { tree.addClone(rebasedClone) }
                     }
                     .minByOrNull { it.first }
@@ -308,12 +296,22 @@ internal class ClusterProcessor private constructor(
             val clone = clonesNotInClusters[i]
             if (clone.mutations.VJMutationsCount >= parameters.commonMutationsCountForClustering) {
                 val bestActionAndDistanceFromRoot = result
-                    .map { treeWithMeta ->
+                    .mapNotNull { treeWithMeta ->
                         val rebasedClone = treeWithMeta.rebaseClone(clone)
-                        Pair(
-                            treeWithMeta.bestAction(rebasedClone),
-                            treeWithMeta.distanceFromRootToClone(rebasedClone)
-                        )
+                        val bestAction = treeWithMeta.bestAction(rebasedClone)
+                        val NDNOfPossibleParent =
+                            bestAction.parentContent().fromRootToThis.NDNMutations.buildSequence(treeWithMeta.rootInfo)
+                        val NDNOfRebasedClone =
+                            rebasedClone.mutationsSet.NDNMutations.buildSequence(treeWithMeta.rootInfo)
+                        if (NDNDistance(
+                                NDNOfPossibleParent,
+                                NDNOfRebasedClone
+                            ) > parameters.maxNDNDistanceForFreeClones
+                        ) {
+                            null
+                        } else {
+                            Pair(bestAction, treeWithMeta.distanceFromRootToClone(rebasedClone))
+                        }
                     }
                     .minByOrNull { p -> p.first.changeOfDistance() }
                 if (bestActionAndDistanceFromRoot != null) {
@@ -343,7 +341,8 @@ internal class ClusterProcessor private constructor(
                     clones[j]
                 )
                 if (commonMutationsCount >= parameters.commonMutationsCountForClustering) {
-                    if (NDNDistance(clones[i], clones[j]) <= parameters.maxNDNDistanceForClustering) {
+                    val NDNDistance = NDNDistance(clones[i].mutations.knownNDN, clones[j].mutations.knownNDN)
+                    if (NDNDistance <= parameters.maxNDNDistanceForClustering) {
                         matrix.setConnected(i, j)
                     }
                 }
@@ -381,9 +380,7 @@ internal class ClusterProcessor private constructor(
             commonMutationsCount(first.mutations.JMutations, second.mutations.JMutations, JAllelesMutations)
     }
 
-    private fun NDNDistance(first: CloneWithMutationsFromVJGermline, second: CloneWithMutationsFromVJGermline): Double {
-        val firstNDN = first.mutations.knownNDN
-        val secondNDN = second.mutations.knownNDN
+    private fun NDNDistance(firstNDN: NucleotideSequence, secondNDN: NucleotideSequence): Double {
         val score = Aligner.alignGlobal(
             scoringSet.NDNScoring,
             firstNDN,
