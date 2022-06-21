@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.mixcr.cli.BuildSHMTreeStep
+import com.milaboratory.mixcr.util.ParametersPresets
 import com.milaboratory.primitivio.annotations.Serializable
 import io.repseq.core.GeneFeature
 
@@ -79,4 +80,8 @@ data class SHMTreeBuilderParameters @JsonCreator constructor(
      */
     @param:JsonProperty("minPortionOfClonesForCommonAlignmentRanges") val minPortionOfClonesForCommonAlignmentRanges: Double,
     @param:JsonProperty("NDNSizeLimitForPublicClones") val NDNSizeLimitForPublicClones: Int
-) : java.io.Serializable
+) : java.io.Serializable {
+    companion object {
+        val presets = ParametersPresets<SHMTreeBuilderParameters>("shm_tree_parameters")
+    }
+}

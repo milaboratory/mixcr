@@ -21,17 +21,30 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.alleles.AllelesBuilder
 import com.milaboratory.mixcr.alleles.AllelesBuilder.SortedClonotypes
 import com.milaboratory.mixcr.alleles.FindAllelesParameters
-import com.milaboratory.mixcr.alleles.FindAllelesParametersPresets.getByName
 import com.milaboratory.mixcr.assembler.CloneFactory
-import com.milaboratory.mixcr.basictypes.*
+import com.milaboratory.mixcr.basictypes.ClnsWriter
+import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.basictypes.CloneReader
+import com.milaboratory.mixcr.basictypes.CloneSet
+import com.milaboratory.mixcr.basictypes.CloneSetIO
+import com.milaboratory.mixcr.basictypes.GeneAndScore
 import com.milaboratory.mixcr.trees.MutationsUtils.positionIfNucleotideWasDeleted
 import com.milaboratory.mixcr.util.XSV.writeXSVBody
 import com.milaboratory.mixcr.util.XSV.writeXSVHeaders
 import com.milaboratory.util.GlobalObjectMappers
+import com.milaboratory.util.JsonOverrider
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
-import io.repseq.core.*
-import io.repseq.core.GeneType.*
+import io.repseq.core.GeneType
+import io.repseq.core.GeneType.Constant
+import io.repseq.core.GeneType.Diversity
+import io.repseq.core.GeneType.Joining
+import io.repseq.core.GeneType.VDJC_REFERENCE
+import io.repseq.core.GeneType.Variable
+import io.repseq.core.VDJCGene
+import io.repseq.core.VDJCGeneId
+import io.repseq.core.VDJCLibrary
+import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.dto.VDJCGeneData
 import io.repseq.dto.VDJCLibraryData
 import org.apache.commons.io.FilenameUtils
@@ -47,7 +60,6 @@ import kotlin.collections.set
 
 @CommandLine.Command(
     name = CommandFindAlleles.FIND_ALLELES_COMMAND_NAME,
-    aliases = [CommandFindAlleles.FIND_ALLELES_COMMAND_NAME_ALT],
     sortOptions = false,
     separator = " ",
     description = ["Find allele variants in clns."]
@@ -111,7 +123,20 @@ Resulted outputs must be uniq"""]
 
     @CommandLine.Option(description = ["Find alleles parameters preset."], names = ["-p", "--preset"])
     var findAllelesParametersName = "default"
-    private var findAllelesParameters: FindAllelesParameters? = null
+
+    @CommandLine.Option(names = ["-O"], description = ["Overrides default build SHM parameter values"])
+    var overrides: Map<String, String> = HashMap()
+
+    private val findAllelesParameters: FindAllelesParameters by lazy {
+        var result = FindAllelesParameters.presets.getByName(findAllelesParametersName)
+        if (result == null) throwValidationException("Unknown parameters: $findAllelesParametersName")
+        if (overrides.isNotEmpty()) {
+            result = JsonOverrider.override(result!!, FindAllelesParameters::class.java, overrides)
+            if (result == null) throwValidationException("Failed to override some parameter: $overrides")
+        }
+        result!!
+    }
+
     override fun validate() {
         if (libraryOutput != null) {
             if (!libraryOutput!!.endsWith(".json")) {
@@ -126,9 +151,7 @@ Resulted outputs must be uniq"""]
     }
 
     private fun ensureParametersInitialized() {
-        if (findAllelesParameters != null) return
-        findAllelesParameters = getByName(findAllelesParametersName)
-        if (findAllelesParameters == null) throwValidationException("Unknown parameters: $findAllelesParametersName")
+        findAllelesParameters
     }
 
     //TODO report
@@ -400,6 +423,5 @@ Resulted outputs must be uniq"""]
 
     companion object {
         const val FIND_ALLELES_COMMAND_NAME = "findAlleles"
-        const val FIND_ALLELES_COMMAND_NAME_ALT = "find_alleles"
     }
 }

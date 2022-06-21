@@ -25,24 +25,16 @@ import kotlin.math.ceil
 
 class TIgGERAllelesSearcher(
     private val scoring: AlignmentScoring<NucleotideSequence>,
-    private val sequence1: NucleotideSequence
+    private val sequence1: NucleotideSequence,
+    private val parameters: FindAllelesParameters
 ) : AllelesSearcher {
-    private val window = 10
-    private val allowedSkippedPoints = 3
-    private val minDiversityRatioBetweenAlleles = 0.75
-    private val minDiversityForMutation = 3
-    private val minDiversityForAllele = 5
-    private val minPValue = 0.95
-    private val minYIntersect = 0.125
-    private val portionOfClonesToSearchCommonMutationsInAnAllele = 0.99
-    private val maxMutationsCountToTestForPossibleZeroAllele = 5
-
     override fun search(clones: List<CloneDescription>): List<AllelesSearcher.Result> {
         val mutations = clones.flatMap { it.mutations.asSequence() }.distinct()
+            //other mutations definitely are not allele mutations
             .filter { mutation ->
                 clones
                     .filter { mutation in it.mutations.asSequence() }
-                    .diversity() > minDiversityForMutation
+                    .diversity() > parameters.minDiversityForMutation
             }
         val countByMutationsCount = clones.groupingBy { it.mutations.size() }.eachCount()
 
@@ -57,23 +49,29 @@ class TIgGERAllelesSearcher(
         return enriched.map { AllelesSearcher.Result(it) }
     }
 
+    /**
+     * Find and add mutations that exist in almost all clones of an allele
+     */
     private fun enrichAllelesWithMutationsThatExistsInAlmostAllClones(
         alleles: Collection<Mutations<NucleotideSequence>>,
         clones: List<CloneDescription>
     ) = alignClonesOnAlleles(clones, alleles, addZeroAllele = false)
         .map { (allele, clones) ->
-            if (clones.diversity() < minDiversityForMutation) {
+            if (clones.diversity() < parameters.minDiversityForMutation) {
                 return@map allele
             }
-            val boundary = ceil(clones.size * portionOfClonesToSearchCommonMutationsInAnAllele).toInt()
-            val mutationsThatExistsInAlmostAllClones =
-                clones.flatMap { allele.invert().combineWith(it.mutations).asSequence() }
-                    .groupingBy { it }.eachCount()
-                    .filterValues { it >= boundary }
-                    .keys.asSequence().asMutations(NucleotideSequence.ALPHABET)
+            val boundary = ceil(clones.size * parameters.portionOfClonesToSearchCommonMutationsInAnAllele).toInt()
+            val mutationsThatExistsInAlmostAllClones = clones
+                .flatMap { allele.invert().combineWith(it.mutations).asSequence() }
+                .groupingBy { it }.eachCount()
+                .filterValues { it >= boundary }
+                .keys.asSequence().asMutations(NucleotideSequence.ALPHABET)
             allele.combineWith(mutationsThatExistsInAlmostAllClones)
         }
 
+    /**
+     * If there are no zero allele in candidates, test if it there
+     */
     private fun addZeroAlleleIfNeeded(
         foundAlleles: Collection<Mutations<NucleotideSequence>>,
         clones: List<CloneDescription>
@@ -89,11 +87,11 @@ class TIgGERAllelesSearcher(
                 alleleDiversities.filterKeys { it != EMPTY_NUCLEOTIDE_MUTATIONS }.values.minOrNull()!!
             when {
                 // Zero allele is not represented enough
-                diversityOfZeroAllele < minDiversityForAllele -> foundAlleles
-                // There are some not zero alleles that are less represented than zero allele.
+                diversityOfZeroAllele < parameters.minDiversityForAllele -> foundAlleles
+                // There are maybe some not zero alleles that are less represented than zero allele.
                 // Try to filter them by comparison with top represented
                 diversityOfZeroAllele > minDiversityOfNotZeroAllele -> {
-                    val boundary = alleleDiversities.values.maxOrNull()!! * minDiversityRatioBetweenAlleles
+                    val boundary = alleleDiversities.values.maxOrNull()!! * parameters.minDiversityRatioBetweenAlleles
                     foundAlleles.filter { alleleDiversities[it]!! >= boundary } + EMPTY_NUCLEOTIDE_MUTATIONS
                 }
                 else -> foundAlleles + EMPTY_NUCLEOTIDE_MUTATIONS
@@ -114,7 +112,7 @@ class TIgGERAllelesSearcher(
         }.associateWith { mutableListOf<CloneDescription>() }
         clones.forEach { clone ->
             val tryToAlignOn = when {
-                addZeroAllele && clone.mutations.size() <= maxMutationsCountToTestForPossibleZeroAllele -> alleles + EMPTY_NUCLEOTIDE_MUTATIONS
+                addZeroAllele && clone.mutations.size() > parameters.minClonesCountToTestForPossibleZeroAllele -> alleles + EMPTY_NUCLEOTIDE_MUTATIONS
                 else -> alleles
             }
             val alignedOn = tryToAlignOn.maxWithOrNull(
@@ -133,6 +131,19 @@ class TIgGERAllelesSearcher(
         return alleleClones
     }
 
+    /**
+     * Build regression for data:
+     * x = mutations count in a sequence
+     * y = (count of clones with `mutation` in mutations and mutations.size() == x) / (count of clones mutations.size() == x)
+     * i.e. y - frequency of `mutation` in clones that have x mutations
+     *
+     * Regression starts from x point with max count of clones that contains `mutation`.
+     * If there are sufficient data and regression is statistical significant, compare y-intersect with parameter.
+     *
+     * For allele mutations this regression is horizontal or points downwards. For hotspots it points upwards.
+     * That's because in SHM process there are more and more different mutations in more mutated sequences, but
+     * allele mutations remains more or less constant (apart from point with allele clones without mutations)
+     */
     private fun isItCandidateToAlleleMutation(
         clones: List<CloneDescription>,
         mutation: Int,
@@ -147,10 +158,10 @@ class TIgGERAllelesSearcher(
 
         val regression = SimpleRegression()
 
-        val xPoints = (0 until window)
+        val xPoints = (0 until parameters.windowSizeForRegression)
             .map { i -> i + mutationCountWithMaxClonesCount }
             .filter { x -> countByMutationsCountWithTheMutation[x] != 0 }
-        if (window - xPoints.size > allowedSkippedPoints) {
+        if (parameters.windowSizeForRegression - xPoints.size > parameters.allowedSkippedPointsInRegression) {
             return false
         }
 
@@ -174,12 +185,13 @@ class TIgGERAllelesSearcher(
 
         val pValue = TTest().tTest(estimate, y)
 
-        return pValue >= minPValue && a >= minYIntersect
+        return pValue >= parameters.minPValueForRegression && a >= parameters.minYIntersect
     }
 
     private fun chooseAndGroupMutationsByAlleles(
         mutations: Set<Int>, clones: List<CloneDescription>
     ): Collection<Mutations<NucleotideSequence>> {
+        //count diversity of coexisted variants of candidates and filter by minDiversityForAllele
         val mutationSubsetsWithDiversity = clones.map { clone ->
             //subsetOfAlleleMutations may be empty (zero allele)
             val subsetOfAlleleMutations = clone.mutations.asSequence()
@@ -189,11 +201,13 @@ class TIgGERAllelesSearcher(
         }
             .groupBy({ it.first }) { it.second }
             .mapValues { it.value.diversity() }
-            .filterValues { it >= minDiversityForAllele }
+            .filterValues { it >= parameters.minDiversityForAllele }
         return when {
             mutationSubsetsWithDiversity.isEmpty() -> emptyList()
             else -> {
-                val boundary = mutationSubsetsWithDiversity.values.maxOrNull()!! * minDiversityRatioBetweenAlleles
+                //filter candidates with too low diversity in comparison to others
+                val boundary =
+                    mutationSubsetsWithDiversity.values.maxOrNull()!! * parameters.minDiversityRatioBetweenAlleles
                 mutationSubsetsWithDiversity
                     .filterValues { it >= boundary }
                     .keys

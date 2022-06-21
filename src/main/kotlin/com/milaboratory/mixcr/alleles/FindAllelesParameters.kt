@@ -14,6 +14,7 @@ package com.milaboratory.mixcr.alleles
 import com.fasterxml.jackson.annotation.JsonAutoDetect
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.milaboratory.mixcr.util.ParametersPresets
 import com.milaboratory.primitivio.annotations.Serializable
 
 /**
@@ -27,10 +28,9 @@ import com.milaboratory.primitivio.annotations.Serializable
 @Serializable(asJson = true)
 data class FindAllelesParameters @JsonCreator constructor(
     /**
-     * Min diversity for clones with the same mutations to be considered as an allele.
+     * Use only clones with count more than parameter
      */
-    @param:JsonProperty("minDiversityForNativeAlleles") val minDiversityForNativeAlleles: Int,
-    @param:JsonProperty("filterClonesWithCountLessThan") val filterClonesWithCountLessThan: Int,
+    @param:JsonProperty("useClonesWithCountMoreThen") val useClonesWithCountMoreThen: Int,
     /**
      * Use only productive clonotypes (no OOF, no stops).
      */
@@ -39,6 +39,44 @@ data class FindAllelesParameters @JsonCreator constructor(
      * Min portion of clones to determinate common alignment ranges.
      */
     @param:JsonProperty("minPortionOfClonesForCommonAlignmentRanges") val minPortionOfClonesForCommonAlignmentRanges: Double,
-
-
-    ) : java.io.Serializable
+    /**
+     * Window size that will be used for build regression of mutations frequency vs count of mutations
+     */
+    @param:JsonProperty("windowSizeForRegression") val windowSizeForRegression: Int,
+    /**
+     * Maximum absent points in a window to build regression
+     */
+    @param:JsonProperty("allowedSkippedPointsInRegression") val allowedSkippedPointsInRegression: Int,
+    /**
+     * Alleles filtered that min and max diversity of result are bound by this ratio
+     */
+    @param:JsonProperty("minDiversityRatioBetweenAlleles") val minDiversityRatioBetweenAlleles: Double,
+    /**
+     * Min diversity of mutation for it may be considered as a candidate for allele mutation
+     */
+    @param:JsonProperty("minDiversityForMutation") val minDiversityForMutation: Int,
+    /**
+     * Filter allele candidates with diversity less than this parameter
+     */
+    @param:JsonProperty("minDiversityForAllele") val minDiversityForAllele: Int,
+    /**
+     * Mutations will be considered as a candidate for allele mutation if p-value of t-test of mutation frequency regression will be more than this parameter
+     */
+    @param:JsonProperty("minPValueForRegression") val minPValueForRegression: Double,
+    /**
+     * Mutations will be considered as a candidate for allele mutation if y-intersect of mutation frequency regression will be more than this parameter
+     */
+    @param:JsonProperty("minYIntersect") val minYIntersect: Double,
+    /**
+     * After an allele is found, it will be enriched with mutations that exists in this portion of clones that aligned on the allele.
+     */
+    @param:JsonProperty("portionOfClonesToSearchCommonMutationsInAnAllele") val portionOfClonesToSearchCommonMutationsInAnAllele: Double,
+    /**
+     * If after allele search there are left several clones, and this count more than the parameter, try to align it on zero allele
+     */
+    @param:JsonProperty("minClonesCountToTestForPossibleZeroAllele") val minClonesCountToTestForPossibleZeroAllele: Int,
+) : java.io.Serializable {
+    companion object {
+        val presets = ParametersPresets<FindAllelesParameters>("find_alleles_parameters")
+    }
+}

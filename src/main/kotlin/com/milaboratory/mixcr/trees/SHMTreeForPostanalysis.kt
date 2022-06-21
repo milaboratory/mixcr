@@ -265,8 +265,6 @@ private fun Tree.Node<CloneOrFoundAncestor>.map(
             distanceFromMostRecentCommonAncestor = distanceFromMostRecentCommonAncestor,
             distanceFromParent = distanceFromParent,
             links.filter { it.distance.compareTo(BigDecimal.ZERO) == 0 }
-                //TODO remove
-                .filter { it.node.content.clone != null }
                 .map {
                     SHMTreeForPostanalysis.CloneWithDatasetId(
                         it.node.content.clone!!,
@@ -275,10 +273,9 @@ private fun Tree.Node<CloneOrFoundAncestor>.map(
                     )
                 }
         ),
-        links
-            //TODO replace with .filter { it.distance.compareTo(BigDecimal.ZERO) != 0 }
-            .filter { it.node.content.clone == null }
+        links.filter { it.distance.compareTo(BigDecimal.ZERO) != 0 }
             .map {
+                require(it.node.content.clone == null)
                 val mappedChild = it.node.map(meta, this)
                 Tree.NodeLink(mappedChild, mappedChild.content.distanceFromParent!!)
             }

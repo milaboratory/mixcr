@@ -64,7 +64,7 @@ class Scoring {
 //        )
         val tempDest: TempFileDest = TempFileManager.systemTempFolderDestination("for_tests")
         val allelesBuilder = AllelesBuilder(
-            FindAllelesParametersPresets.getByName("default")!!,
+            FindAllelesParameters.presets.getByName("default")!!,
             datasets,
             tempDest
         )
@@ -323,7 +323,8 @@ class Scoring {
                 println("expect: " + (expectations[geneId] ?: "?"))
                 val allelesSearcher = TIgGERAllelesSearcher(
                     datasets[0].assemblerParameters.cloneFactoryParameters.vParameters.scoring,
-                    cluster.cluster.first().getBestHit(geneType).alignments[0].sequence1
+                    cluster.cluster.first().getBestHit(geneType).alignments[0].sequence1,
+                    FindAllelesParameters.presets.getByName("default")!!
                 )
                 println("actual: " + allelesSearcher.search(clones).map { "'${it.allele.encode(",")}'" })
                 println()

@@ -20,9 +20,9 @@ import com.milaboratory.mixcr.trees.ClusteringCriteria.DefaultClusteringCriteria
 import com.milaboratory.mixcr.trees.DebugInfo
 import com.milaboratory.mixcr.trees.SHMTreeBuilder
 import com.milaboratory.mixcr.trees.SHMTreeBuilderParameters
-import com.milaboratory.mixcr.trees.SHMTreeBuilderParametersPresets
 import com.milaboratory.mixcr.trees.SHMTreesWriter
 import com.milaboratory.mixcr.util.XSV
+import com.milaboratory.util.JsonOverrider
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileDest
@@ -65,6 +65,9 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
     private val outputTreesPath: String
         get() = inOut[inOut.size - 1]
 
+    @Option(names = ["-O"], description = ["Overrides default build SHM parameter values"])
+    var overrides: Map<String, String> = HashMap()
+
     @Option(description = ["SHM tree builder parameters preset."], names = ["-p", "--preset"])
     var shmTreeBuilderParametersName = "default"
 
@@ -89,7 +92,6 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
     @Option(description = ["Path to directory to store debug info"], names = ["-d", "--debug"])
     var debugDirectoryPath: String? = null
     var debugDirectory: Path? = null
-    private var shmTreeBuilderParameters: SHMTreeBuilderParameters? = null
 
     @Option(
         description = ["Use system temp folder for temporary files, the output folder will be used if this option is omitted."],
@@ -97,11 +99,18 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
     )
     var useSystemTemp = false
 
-    private fun ensureParametersInitialized() {
-        if (shmTreeBuilderParameters == null) {
-            shmTreeBuilderParameters = SHMTreeBuilderParametersPresets.getByName(shmTreeBuilderParametersName)
-            if (shmTreeBuilderParameters == null) throwValidationException("Unknown parameters: $shmTreeBuilderParametersName")
+    private val shmTreeBuilderParameters: SHMTreeBuilderParameters by lazy {
+        var result = SHMTreeBuilderParameters.presets.getByName(shmTreeBuilderParametersName)
+        if (result == null) throwValidationException("Unknown parameters: $shmTreeBuilderParametersName")
+        if (overrides.isNotEmpty()) {
+            result = JsonOverrider.override(result!!, SHMTreeBuilderParameters::class.java, overrides)
+            if (result == null) throwValidationException("Failed to override some parameter: $overrides")
         }
+        result!!
+    }
+
+    private fun ensureParametersInitialized() {
+        shmTreeBuilderParameters
         if (debugDirectory == null) {
             debugDirectory = when (debugDirectoryPath) {
                 null -> Files.createTempDirectory("debug")
@@ -132,7 +141,7 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
         ) { "input files must have the same assembler parameters" }
         val tempDest: TempFileDest = TempFileManager.smartTempDestination(outputTreesPath, "", useSystemTemp)
         val shmTreeBuilder = SHMTreeBuilder(
-            shmTreeBuilderParameters!!,
+            shmTreeBuilderParameters,
             DefaultClusteringCriteria(),
             cloneReaders,
             tempDest,
@@ -142,7 +151,7 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
         )
         val cloneWrappersCount = shmTreeBuilder.cloneWrappersCount()
         val report = BuildSHMTreeReport()
-        val stepsCount = shmTreeBuilderParameters!!.stepsOrder.size + 1
+        val stepsCount = shmTreeBuilderParameters.stepsOrder.size + 1
         var sortedClones = CountingOutputPort(shmTreeBuilder.sortedClones())
         var stepNumber = 1
         var stepDescription =

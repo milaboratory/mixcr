@@ -106,18 +106,21 @@ class AllelesBuilder(
         )
     }
 
-    private fun readClonesWithNonProductiveFilter(port: OutputPort<Clone>): OutputPort<Clone> {
+    private fun readClonesWithNonProductiveFilter(port: OutputPort<Clone>): OutputPort<Clone> = when {
         // filter non-productive clonotypes
-        return if (parameters.productiveOnly) {
-            // todo CDR3?
-            FilteringPort(port) { c: Clone -> !c.containsStops(GeneFeature.CDR3) && !c.isOutOfFrame(GeneFeature.CDR3) }
-        } else {
-            port
+        // todo CDR3?
+        parameters.productiveOnly -> FilteringPort(port) { c ->
+            !c.containsStops(GeneFeature.CDR3) && !c.isOutOfFrame(GeneFeature.CDR3)
         }
+        else -> port
     }
 
-    private fun readClonesWithCountThreshold(port: OutputPort<Clone>): OutputPort<Clone> =
-        FilteringPort(port) { c: Clone -> c.count >= parameters.filterClonesWithCountLessThan }
+    private fun readClonesWithCountThreshold(port: OutputPort<Clone>): OutputPort<Clone> = when {
+        parameters.useClonesWithCountMoreThen > 0 -> FilteringPort(port) { c: Clone ->
+            c.count > parameters.useClonesWithCountMoreThen
+        }
+        else -> port
+    }
 
     fun buildClusters(sortedClones: OutputPortCloseable<Clone>, geneType: GeneType?): OutputPort<Cluster<Clone>> {
         val comparator = Comparator.comparing { c: Clone -> c.getBestHit(geneType).gene.id.name }
@@ -187,7 +190,8 @@ class AllelesBuilder(
             .toList()
         val allelesSearcher: AllelesSearcher = TIgGERAllelesSearcher(
             scoring(geneType),
-            clusterByTheSameGene.cluster.first().getBestHit(geneType).alignments[0].sequence1
+            clusterByTheSameGene.cluster.first().getBestHit(geneType).alignments[0].sequence1,
+            parameters
         )
 
         //TODO search for mutations in CDR3

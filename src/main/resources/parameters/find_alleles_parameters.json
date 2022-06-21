@@ -1,8 +1,15 @@
 {
   "default": {
-    "minDiversityForNativeAlleles": 5,
     "productiveOnly": true,
-    "filterClonesWithCountLessThan": 3,
-    "minPortionOfClonesForCommonAlignmentRanges": 0.95
+    "useClonesWithCountMoreThen": 0,
+    "minPortionOfClonesForCommonAlignmentRanges": 0.95,
+    "windowSizeForRegression": 10,
+    "allowedSkippedPointsInRegression": 3,
+    "minDiversityRatioBetweenAlleles": 0.75,
+    "minDiversityForMutation": 3,
+    "minDiversityForAllele": 5,
+    "minPValueForRegression": 0.95,
+    "minYIntersect": 0.125,
+    "portionOfClonesToSearchCommonMutationsInAnAllele": 0.99
   }
 }
