@@ -34,6 +34,8 @@ public final class PreCloneAssemblerRunner implements CanReportProgressAndStage,
     private final ProgressAndStage ps = new ProgressAndStage("Initialization");
 
     private final VDJCAlignmentsReader alignments;
+    private final GeneFeature[] assemblingFeatures;
+    private final TagsInfo outputTagsInfo;
 
     // It takes three passes over the alignments file from scratch to final file with pre-clones
     private final VDJCAlignmentsReader.SecondaryReader reader1, reader2, reader3;
@@ -53,6 +55,9 @@ public final class PreCloneAssemblerRunner implements CanReportProgressAndStage,
         int depth = tagsInfo.getDepthFor(groupingLevel);
         if (tagsInfo.getSortingLevel() < depth)
             throw new IllegalArgumentException("Input file has insufficient sorting level");
+
+        this.assemblingFeatures = assemblingFeatures;
+        this.outputTagsInfo = tagsInfo.setSorted(depth);
 
         PreCloneAssemblerParameters assemblerParams = new PreCloneAssemblerParameters(
                 gAssemblerParams, alignments.getParameters(),
@@ -81,7 +86,7 @@ public final class PreCloneAssemblerRunner implements CanReportProgressAndStage,
         try (FilePreCloneWriter writer = new FilePreCloneWriter(outputFile, tempDest)) {
             OutputPort<GroupOP<VDJCAlignments, TagTuple>> alGroups = PipeKt.group(
                     CUtils.wrap(reader3, VDJCAlignments::ensureKeyTags), assembler.getGroupingFunction());
-            writer.init(alignments);
+            writer.init(alignments, assemblingFeatures, outputTagsInfo);
 
             PreCloneAssemblerResult result;
             while ((result = assembler.getForNextGroup()) != null) {

@@ -37,8 +37,8 @@ mixcr correctAndSortTags case10.aligned-vdjca case10.corrected-vdjca
 mixcr assemblePartial case10.corrected-vdjca case10.part-assembled-molecule-vdjca
 mixcr assemblePartial --cell-level case10.corrected-vdjca case10.part-assembled-cell-vdjca
 
-mixcr itestAssemblePreClones case10.part-assembled-molecule-vdjca case10.part-assembled-molecule-vdjca.pc
-mixcr itestAssemblePreClones --cell-level case10.part-assembled-cell-vdjca case10.part-assembled-cell-vdjca.pc
+mixcr itestAssemblePreClones case10.part-assembled-molecule-vdjca case10.part-assembled-molecule-vdjca.pc case10.part-assembled-molecule-vdjca.pc.als case10.part-assembled-molecule-vdjca.pc.cls
+mixcr itestAssemblePreClones --cell-level case10.part-assembled-cell-vdjca case10.part-assembled-cell-vdjca.pc case10.part-assembled-cell-vdjca.pc.als case10.part-assembled-cell-vdjca.pc.cls
 
 mixcr assemble -f -a case10.part-assembled-molecule-vdjca case10.cdr3-molecule-clna
 mixcr assemble -f -a --cell-level case10.part-assembled-cell-vdjca case10.cdr3-cell-clna
