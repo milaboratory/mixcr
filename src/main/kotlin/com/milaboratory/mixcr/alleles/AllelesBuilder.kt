@@ -13,11 +13,8 @@
 
 package com.milaboratory.mixcr.alleles
 
-import cc.redberry.pipe.CUtils
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.OutputPortCloseable
-import cc.redberry.pipe.blocks.FilteringPort
-import cc.redberry.pipe.util.FlatteningOutputPort
 import com.milaboratory.core.Range
 import com.milaboratory.core.alignment.AlignmentScoring
 import com.milaboratory.core.mutations.Mutations
@@ -29,11 +26,15 @@ import com.milaboratory.mixcr.util.ClonesAlignmentRanges
 import com.milaboratory.mixcr.util.Cluster
 import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
+import com.milaboratory.mixcr.util.buildClusters
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
+import com.milaboratory.primitivio.filter
+import com.milaboratory.primitivio.flatten
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.sorting.HashSorter
 import io.repseq.core.BaseSequence
 import io.repseq.core.GeneFeature
+import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
@@ -54,18 +55,7 @@ class AllelesBuilder(
     private val JScoring = datasets[0].assemblerParameters.cloneFactoryParameters.jParameters.scoring
 
     fun sortClonotypes(): SortedClonotypes {
-        // todo pre-build state, fill with references if possible
-        val stateBuilder = PrimitivIOStateBuilder()
-        val registeredGenes = mutableSetOf<String>()
-        datasets.forEach { dataset ->
-            IOUtil.registerGeneReferences(
-                stateBuilder,
-                dataset.usedGenes.filter { it.name !in registeredGenes },
-                dataset.alignerParameters
-            )
-            registeredGenes += dataset.usedGenes.map { it.name }
-        }
-
+        val stateBuilder = stateBuilderForSorter()
 
         // todo check memory budget
         // HDD-offloading collator of alignments
@@ -91,14 +81,16 @@ class AllelesBuilder(
             )
         }
         val clonesSupplier: () -> OutputPort<Clone> = {
-            FlatteningOutputPort(
-                CUtils.asOutputPort(
-                    datasets
-                        .map { it.readClones() }
-                        .map { port -> readClonesWithNonProductiveFilter(port) }
-                        .map { port -> readClonesWithCountThreshold(port) }
-                )
-            )
+            datasets.map { it.readClones() }
+                .flatten()
+                .filter { c ->
+                    // filter non-productive clonotypes
+                    // todo CDR3?
+                    !parameters.productiveOnly || (!c.containsStops(CDR3) && !c.isOutOfFrame(CDR3))
+                }
+                .filter { c ->
+                    c.count > parameters.useClonesWithCountMoreThen
+                }
         }
         return SortedClonotypes(
             sorterSupplier(Variable).port(clonesSupplier()),
@@ -106,65 +98,22 @@ class AllelesBuilder(
         )
     }
 
-    private fun readClonesWithNonProductiveFilter(port: OutputPort<Clone>): OutputPort<Clone> = when {
-        // filter non-productive clonotypes
-        // todo CDR3?
-        parameters.productiveOnly -> FilteringPort(port) { c ->
-            !c.containsStops(GeneFeature.CDR3) && !c.isOutOfFrame(GeneFeature.CDR3)
+    private fun stateBuilderForSorter(): PrimitivIOStateBuilder {
+        val stateBuilder = PrimitivIOStateBuilder()
+        val registeredGenes = mutableSetOf<String>()
+        datasets.forEach { dataset ->
+            IOUtil.registerGeneReferences(
+                stateBuilder,
+                dataset.usedGenes.filter { it.name !in registeredGenes },
+                dataset.alignerParameters
+            )
+            registeredGenes += dataset.usedGenes.map { it.name }
         }
-        else -> port
+        return stateBuilder
     }
 
-    private fun readClonesWithCountThreshold(port: OutputPort<Clone>): OutputPort<Clone> = when {
-        parameters.useClonesWithCountMoreThen > 0 -> FilteringPort(port) { c: Clone ->
-            c.count > parameters.useClonesWithCountMoreThen
-        }
-        else -> port
-    }
-
-    fun buildClusters(sortedClones: OutputPortCloseable<Clone>, geneType: GeneType?): OutputPort<Cluster<Clone>> {
-        val comparator = Comparator.comparing { c: Clone -> c.getBestHit(geneType).gene.id.name }
-
-        // todo do not copy cluster
-        val cluster = mutableListOf<Clone>()
-
-        // group by similar V/J/C genes
-        val result: OutputPortCloseable<Cluster<Clone>> = object : OutputPortCloseable<Cluster<Clone>> {
-            override fun close() {
-                sortedClones.close()
-            }
-
-            override fun take(): Cluster<Clone>? {
-                while (true) {
-                    val clone = sortedClones.take()
-                    if (clone == null) {
-                        if (cluster.isNotEmpty()) {
-                            val copy = ArrayList(cluster)
-
-                            // new cluster
-                            cluster.clear()
-                            return Cluster(copy)
-                        }
-                        return null
-                    }
-                    if (cluster.isEmpty()) {
-                        cluster.add(clone)
-                        continue
-                    }
-                    val lastAdded = cluster[cluster.size - 1]
-                    if (comparator.compare(lastAdded, clone) == 0) cluster.add(clone) else {
-                        val copy = ArrayList(cluster)
-
-                        // new cluster
-                        cluster.clear()
-                        cluster.add(clone)
-                        return Cluster(copy)
-                    }
-                }
-            }
-        }
-        return CUtils.makeSynchronized(result)
-    }
+    fun buildClusters(sortedClones: OutputPortCloseable<Clone>, geneType: GeneType): OutputPort<Cluster<Clone>> =
+        sortedClones.buildClusters(Comparator.comparing { it.getBestHit(geneType).gene.id.name })
 
     private fun findAlleles(clusterByTheSameGene: Cluster<Clone>, geneType: GeneType): List<Allele> {
         require(clusterByTheSameGene.cluster.isNotEmpty())
@@ -183,7 +132,7 @@ class AllelesBuilder(
                         .flatMap { it.absoluteMutations.asSequence() }
                         .filter { commonAlignmentRanges.containsMutation(it) }
                         .asMutations(NucleotideSequence.ALPHABET),
-                    clone.getNFeature(GeneFeature.CDR3).size(),
+                    clone.getNFeature(CDR3).size(),
                     clone.getBestHit(complimentaryGene).gene.geneName
                 )
             }

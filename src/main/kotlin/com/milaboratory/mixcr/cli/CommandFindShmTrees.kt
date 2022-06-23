@@ -15,7 +15,9 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.CUtils
 import cc.redberry.pipe.util.CountingOutputPort
+import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSetIO
+import com.milaboratory.mixcr.trees.CloneWrapper
 import com.milaboratory.mixcr.trees.ClusteringCriteria.DefaultClusteringCriteria
 import com.milaboratory.mixcr.trees.DebugInfo
 import com.milaboratory.mixcr.trees.SHMTreeBuilder
@@ -23,6 +25,7 @@ import com.milaboratory.mixcr.trees.SHMTreeBuilderParameters
 import com.milaboratory.mixcr.trees.SHMTreesWriter
 import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
 import com.milaboratory.mixcr.util.XSV
+import com.milaboratory.primitivio.forEach
 import com.milaboratory.util.JsonOverrider
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
@@ -38,6 +41,7 @@ import java.io.PrintStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.io.path.Path
 
 
 @Command(
@@ -136,15 +140,42 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
 
     override fun validate() {
         super.validate()
-        if (report == null) {
+        if (report == null && buildFrom == null) {
             warn("NOTE: report file is not specified, using $reportFileName to write report.")
         }
         if (!outputTreesPath.endsWith(".$shmFileExtension")) {
             throwValidationException("Output file should have extension $shmFileExtension. Given $outputTreesPath")
         }
+        if (buildFrom != null) {
+            if (!buildFrom!!.endsWith(".tsv")) {
+                throwValidationException("--build-from must be .tsv, got $buildFrom")
+            }
+            if (vGenesToSearch.isNotEmpty()) {
+                throwValidationException("--v-gene-names must be empty if --build-from is specified")
+            }
+            if (jGenesToSearch.isNotEmpty()) {
+                throwValidationException("--j-gene-names must be empty if --build-from is specified")
+            }
+            if (CDR3LengthToSearch.isNotEmpty()) {
+                throwValidationException("--cdr3-lengths must be empty if --build-from is specified")
+            }
+            if (report != null) {
+                println("WARN: argument --report will not be used with --build-from")
+            }
+            if (reportPdf != null) {
+                println("WARN: argument --report-pdf will not be used with --build-from")
+            }
+            if (debugDirectoryPath != null) {
+                println("WARN: argument --debug will not be used with --build-from")
+            }
+        }
     }
 
     private val reportFileName: String get() = report ?: (FilenameUtils.removeExtension(outputTreesPath) + ".report")
+
+    private val tempDest: TempFileDest by lazy {
+        TempFileManager.smartTempDestination(outputTreesPath, "", useSystemTemp)
+    }
 
     override fun run0() {
         ensureParametersInitialized()
@@ -156,16 +187,20 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
         require(
             cloneReaders.map { it.assemblerParameters }.distinct().count() == 1
         ) { "input files must have the same assembler parameters" }
-        val tempDest: TempFileDest = TempFileManager.smartTempDestination(outputTreesPath, "", useSystemTemp)
         val shmTreeBuilder = SHMTreeBuilder(
             shmTreeBuilderParameters,
             DefaultClusteringCriteria(),
             cloneReaders,
             tempDest,
+            threads,
             vGenesToSearch,
             jGenesToSearch,
             CDR3LengthToSearch
         )
+        if (buildFrom != null) {
+            buildFromUserInput(shmTreeBuilder, cloneReaders)
+            return
+        }
         val cloneWrappersCount = shmTreeBuilder.cloneWrappersCount()
         val report = BuildSHMTreeReport()
         val stepsCount = shmTreeBuilderParameters.stepsOrder.size + 1
@@ -206,12 +241,14 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
                 stepDescription,
                 SmartProgressReporter.extractProgress(sortedClones, cloneWrappersCount.toLong())
             )
+            val allClonesInTress = shmTreeBuilder.allClonesInTress()
             CUtils.processAllInParallel(
                 shmTreeBuilder.buildClusters(sortedClones),
                 { cluster ->
                     shmTreeBuilder.applyStep(
                         cluster,
                         step,
+                        allClonesInTress,
                         previousStepDebug.treesAfterDecisionsWriter,
                         currentStepDebug.treesBeforeDecisionsWriter
                     )
@@ -228,7 +265,7 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
             SmartProgressReporter.extractProgress(sortedClones, cloneWrappersCount.toLong())
         )
 
-        val recalculatedTreeIds = shmTreeBuilder.recalculateTreeIds()
+        val recalculatedTreeIds = shmTreeBuilder.calculateUniqGlobalTreeIds()
         SHMTreesWriter(outputTreesPath).use { shmTreesWriter ->
             val usedGenes = cloneReaders.flatMap { it.usedGenes }.distinct()
             shmTreesWriter.writeHeader(
@@ -241,7 +278,7 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
             )
 
             val writer = shmTreesWriter.treesWriter()
-            for (cluster in CUtils.it(shmTreeBuilder.buildClusters(sortedClones))) {
+            shmTreeBuilder.buildClusters(sortedClones).forEach { cluster ->
                 shmTreeBuilder
                     .getResult(cluster, previousStepDebug.treesAfterDecisionsWriter, recalculatedTreeIds)
                     .forEach { writer.put(it) }
@@ -260,6 +297,42 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
         println("============= Report ==============")
         ReportUtil.writeReportToStdout(report)
         ReportUtil.writeJsonReport(reportFileName, report)
+    }
+
+    private fun buildFromUserInput(
+        shmTreeBuilder: SHMTreeBuilder,
+        cloneReaders: List<CloneReader>
+    ) {
+        val fileNameToDatasetId = clnsFileNames.withIndex().associate { it.value to it.index }
+        val rows = XSV.readXSV(Path(buildFrom!!).toFile(), listOf("treeId", "fileName", "cloneId"), "\t")
+        val userInput: Map<CloneWrapper.ID, Int> = rows.associate { row ->
+            val datasetId = (fileNameToDatasetId[row["fileName"]!!]
+                ?: throw IllegalArgumentException("No such file ${row["fileName"]} in arguments"))
+            val datasetIdWithCloneId = CloneWrapper.ID(
+                datasetId = datasetId,
+                cloneId = row["cloneId"]!!.toInt()
+            )
+            val treeId = row["treeId"]!!.toInt()
+            datasetIdWithCloneId to treeId
+        }
+        val result = shmTreeBuilder.buildByUserData(userInput)
+        SHMTreesWriter(outputTreesPath).use { shmTreesWriter ->
+            val usedGenes = cloneReaders.flatMap { it.usedGenes }.distinct()
+            shmTreesWriter.writeHeader(
+                cloneReaders.first().assemblerParameters,
+                cloneReaders.first().alignerParameters,
+                clnsFileNames,
+                usedGenes,
+                cloneReaders.first().tagsInfo,
+                usedGenes.map { it.parentLibrary }.distinct()
+            )
+
+            val writer = shmTreesWriter.treesWriter()
+            result.forEach { tree ->
+                writer.put(tree)
+            }
+            writer.put(null)
+        }
     }
 
     private fun createDebug(stepNumber: Int) = Debug(

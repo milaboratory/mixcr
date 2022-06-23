@@ -20,11 +20,11 @@ import com.milaboratory.core.alignment.AlignmentUtils
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.NucleotideSequence.ALPHABET
-import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.cli.BuildSHMTreeStep
 import com.milaboratory.mixcr.cli.BuildSHMTreeStep.AttachClonesByDistanceChange
 import com.milaboratory.mixcr.cli.BuildSHMTreeStep.AttachClonesByNDN
+import com.milaboratory.mixcr.cli.BuildSHMTreeStep.BuildingInitialTrees
 import com.milaboratory.mixcr.cli.BuildSHMTreeStep.CombineTrees
 import com.milaboratory.mixcr.trees.Tree.NodeWithParent
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed
@@ -62,13 +62,13 @@ internal class ClusterProcessor private constructor(
     private val idGenerator: IdGenerator,
     private val VJBase: VJBase
 ) {
-    fun applyStep(stepName: BuildSHMTreeStep, currentTrees: List<TreeWithMetaBuilder>): StepResult =
-        stepByName(stepName).next(currentTrees) {
-            val clonesInTrees = currentTrees
-                .flatMap { it.clonesAdditionHistory }
-                .toSet()
-            rebaseFromGermline(originalCluster.cluster.asSequence().filter { it.id !in clonesInTrees })
-        }
+    fun applyStep(
+        stepName: BuildSHMTreeStep,
+        currentTrees: List<TreeWithMetaBuilder>,
+        allClonesInTress: Set<CloneWrapper.ID>
+    ): StepResult = stepByName(stepName).next(currentTrees) {
+        rebaseFromGermline(originalCluster.cluster.asSequence().filter { it.id !in allClonesInTress })
+    }
 
     private fun stepByName(stepName: BuildSHMTreeStep): Step = when (stepName) {
         AttachClonesByDistanceChange -> object : Step {
@@ -95,21 +95,30 @@ internal class ClusterProcessor private constructor(
                 clonesNotInClusters
             )
         }
-        else -> throw UnsupportedOperationException()
+        BuildingInitialTrees -> throw IllegalArgumentException()
     }
 
     /**
-     * On stage of clustering we can't use VEnd and JBegin marking because hypermutation on P region affects accuracy.
-     * While alignment in some cases it's not possible to determinate mutation of P segment from shorter V or J version and other N nucleotides.
-     * So, there will be used CDR3 instead of NDN, VBegin-CDR3Begin instead V and CDR3End-JEnd instead J
+     * Build clusters of clones that definitely in one cluster.
+     *
+     *
+     * See actual algorithm in link
+     * @see ClusterProcessor.clusterByCommonMutationsAndNDNDistance
      */
     fun buildTreeTopParts(relatedAllelesMutations: Map<VDJCGeneId, List<Mutations<NucleotideSequence>>>): StepResult {
         //use only clones that are at long distance from any germline
-        val clonesThatNotMatchAnyGermline = originalCluster.cluster.asSequence()
-            .filter { !hasVJPairThatMatchesWithGermline(it.clone) }
-        val clones = rebaseFromGermline(clonesThatNotMatchAnyGermline)
-        val result = clusterByCommonMutations(clones, relatedAllelesMutations).asSequence()
+        val clonesThatNotCloseToAnyGermline = originalCluster.cluster.asSequence()
+            .filter { !hasVJPairThatCloseToGermline(it) }
+        val clones = rebaseFromGermline(clonesThatNotCloseToAnyGermline)
+        val result = clusterByCommonMutationsAndNDNDistance(clones, relatedAllelesMutations).asSequence()
             .filter { it.cluster.size > 1 }
+            .filter {
+                //skip cluster if it formed by the same clones but with different C or from different samples
+                val toCompare = it.cluster.first()
+                it.cluster.subList(1, it.cluster.size).any { clone ->
+                    !Arrays.equals(clone.cloneWrapper.clone.targets, toCompare.cloneWrapper.clone.targets)
+                }
+            }
             .map { cluster -> buildATreeWithDecisionsInfo(cluster) }
             .toList()
         return buildStepResult(
@@ -118,11 +127,25 @@ internal class ClusterProcessor private constructor(
         )
     }
 
-    private fun hasVJPairThatMatchesWithGermline(clone: Clone): Boolean = clone.getHits(Variable)
-        .flatMap { VHit -> clone.getHits(Joining).map { JHit -> mutationsCount(VHit) + mutationsCount(JHit) } }
-        .any { it < parameters.commonMutationsCountForClustering }
+    fun buildTreeFromAllClones(treeId: Int): SHMTreeResult {
+        val rebasedFromGermline = rebaseFromGermline(originalCluster.cluster.asSequence())
+        val treeWithMetaBuilder = buildATree(Cluster(rebasedFromGermline))
+        return SHMTreeResult(
+            treeWithMetaBuilder.buildResult(),
+            treeWithMetaBuilder.rootInfo,
+            treeId
+        )
+    }
 
-    private fun mutationsCount(hit: VDJCHit): Int = hit.alignments.sumOf { it.absoluteMutations.size() }
+    private fun hasVJPairThatCloseToGermline(cloneWrapper: CloneWrapper): Boolean =
+        cloneWrapper.candidateVJBases
+            .map { VJBase ->
+                cloneWrapper.clone.getHit(Variable, VJBase).mutationsCount() +
+                    cloneWrapper.clone.getHit(Joining, VJBase).mutationsCount()
+            }
+            .any { it < parameters.commonMutationsCountForClustering }
+
+    private fun VDJCHit.mutationsCount(): Int = alignments.sumOf { it.absoluteMutations.size() }
 
     fun restore(snapshot: TreeWithMetaBuilder.Snapshot): TreeWithMetaBuilder {
         val clonesInTrees = snapshot.clonesAdditionHistory.toSet()
@@ -151,6 +174,10 @@ internal class ClusterProcessor private constructor(
         .map { cloneWrapper -> rebaseFromGermline(cloneWrapper) }
         .toList()
 
+    /**
+     * Present all mutations as `MutationsFromVJGermline`
+     * @see MutationsFromVJGermline
+     */
     private fun rebaseFromGermline(cloneWrapper: CloneWrapper): CloneWithMutationsFromVJGermline {
         val CDR3 = cloneWrapper.getFeature(GeneFeature.CDR3)!!.sequence
         val VMutationsInCDR3WithoutNDN = PartInCDR3(
@@ -328,7 +355,10 @@ internal class ClusterProcessor private constructor(
         return buildStepResult(decisions, result)
     }
 
-    private fun clusterByCommonMutations(
+    /**
+     *
+     */
+    private fun clusterByCommonMutationsAndNDNDistance(
         clones: List<CloneWithMutationsFromVJGermline>,
         relatedAllelesMutations: Map<VDJCGeneId, List<Mutations<NucleotideSequence>>>
     ): List<Cluster<CloneWithMutationsFromVJGermline>> {
@@ -359,14 +389,6 @@ internal class ClusterProcessor private constructor(
             }
         return notOverlappedCliques
             .map { Cluster(it.bits.map { i -> clones[i] }) }
-            .filter {
-                //skip cluster if it formed by the same clones but with different C or from different samples
-                val toCompare = it.cluster.first()
-                it.cluster.subList(1, it.cluster.size)
-                    .any { clone ->
-                        !Arrays.equals(clone.cloneWrapper.clone.targets, toCompare.cloneWrapper.clone.targets)
-                    }
-            }
     }
 
     private fun commonMutationsCount(
@@ -443,8 +465,8 @@ internal class ClusterProcessor private constructor(
             it.cloneWrapper.id to ZeroStepDecisionInfo(
                 effectiveParent.fromRootToThis.VMutations.mutationsCount() +
                     effectiveParent.fromRootToThis.JMutations.mutationsCount(),
-                VHit.gene.geneName,
-                JHit.gene.geneName,
+                VHit.gene.id,
+                JHit.gene.id,
                 VHit.score,
                 JHit.score
             )
@@ -769,7 +791,13 @@ internal class ClusterProcessor private constructor(
     internal class CalculatedClusterInfo(
         val commonVAlignmentRanges: ClonesAlignmentRanges,
         val commonJAlignmentRanges: ClonesAlignmentRanges,
+        /**
+         * Intersection of all [CDR3End:VEndTrimmed] of clones in the cluster
+         */
         val VRangeInCDR3: Range,
+        /**
+         * Intersection of all [JEndTrimmed:CDR3End] of clones in the cluster
+         */
         val JRangeInCDR3: Range
     )
 
@@ -818,16 +846,16 @@ internal class ClusterProcessor private constructor(
         )
 
         @Suppress("UNCHECKED_CAST")
-        fun <E : TreeWithMetaBuilder.DecisionInfo> makeDecision(chooses: Map<VJBase, E>): VJBase {
+        fun makeDecision(chooses: Map<VJBase, TreeWithMetaBuilder.DecisionInfo>): VJBase {
             if (chooses.size == 1) {
                 return chooses.keys.iterator().next()
             }
-            val decisionType = chooses.values.iterator().next().javaClass
-            require(chooses.values.all { decisionType.isInstance(it) })
-            return when (decisionType) {
-                ZeroStepDecisionInfo::class.java -> makeDecisionForZero(chooses as Map<VJBase, ZeroStepDecisionInfo>)
-                MetricDecisionInfo::class.java -> makeDecisionByMetric(chooses as Map<VJBase, MetricDecisionInfo>)
-                else -> throw UnsupportedOperationException()
+            val anyElement = chooses.values.iterator().next()
+            //all values are from the same class
+            require(chooses.values.all { anyElement.javaClass.isInstance(it) })
+            return when (anyElement) {
+                is ZeroStepDecisionInfo -> makeDecisionForZero(chooses as Map<VJBase, ZeroStepDecisionInfo>)
+                is MetricDecisionInfo -> makeDecisionByMetric(chooses as Map<VJBase, MetricDecisionInfo>)
             }
         }
 
@@ -839,7 +867,7 @@ internal class ClusterProcessor private constructor(
             val filteredByAlleles =
                 chooses.entries //group by the same origin VJ pair - group decisions by related alleles
                     .groupBy { (_, value) ->
-                        Pair(value.getGeneName(Variable), value.getGeneName(Joining))
+                        value.getGeneId(Variable) to value.getGeneId(Joining)
                     }
                     .values
                     .mapNotNull { withTheSameGeneBase ->

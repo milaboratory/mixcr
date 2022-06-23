@@ -24,7 +24,17 @@ import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readObjectRequired
 
 sealed interface GeneMutations {
+    /**
+     * Mutations within CDR3 in coordinates of V or J sequence1
+     */
     val partInCDR3: PartInCDR3
+
+    /**
+     * Mutations outside CDR3 in coordinates of V or J sequence1.
+     * Key - ranges of V or J sequence1.
+     * In every cluster keys of different nodes will be equal.
+     * There will be several entries if there are holes in alignments, but this holes must be consistent.
+     */
     val mutations: Map<Range, Mutations<NucleotideSequence>>
 
     fun mutationsCount() = partInCDR3.mutations.size() + mutations.values.sumOf { it.size() }

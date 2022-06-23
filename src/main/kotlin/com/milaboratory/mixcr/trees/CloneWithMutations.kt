@@ -13,6 +13,9 @@ package com.milaboratory.mixcr.trees
 
 class CloneWithMutationsFromReconstructedRoot(
     val mutationsSet: MutationsSet,
+    /**
+     * Saved for rebase on another tree.
+     */
     val mutationsFromVJGermline: MutationsFromVJGermline,
     val clone: CloneWrapper
 )

@@ -19,7 +19,8 @@
       "CombineTrees",
       "AttachClonesByNDN",
       "AttachClonesByDistanceChange",
-      "CombineTrees"
+      "CombineTrees",
+      "AttachClonesByNDN"
     ]
   }
 }

@@ -24,6 +24,9 @@ import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 
+/**
+ * Describe mutations of node from the root of the tree.
+ */
 @Serializable(by = MutationsSetSerializer::class)
 data class MutationsSet(
     val VMutations: VGeneMutations,

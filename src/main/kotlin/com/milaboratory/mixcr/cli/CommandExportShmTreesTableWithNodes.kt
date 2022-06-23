@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.CUtils
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.cli.CommandExport.FieldData
 import com.milaboratory.mixcr.cli.CommandExport.extractor
@@ -24,6 +23,7 @@ import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
 import com.milaboratory.mixcr.trees.forPostanalysis
+import com.milaboratory.primitivio.forEach
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
@@ -315,7 +315,7 @@ class CommandExportShmTreesTableWithNodes : ACommandWithOutputMiXCR() {
 
                 output.ensureHeader()
 
-                CUtils.it(reader.readTrees()).forEach { shmTree ->
+                reader.readTrees().forEach { shmTree ->
                     val shmTreeForPostanalysis = shmTree.forPostanalysis(
                         reader.fileNames,
                         reader.assemblerParameters,

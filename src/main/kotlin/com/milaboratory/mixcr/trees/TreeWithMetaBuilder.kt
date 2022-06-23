@@ -16,6 +16,9 @@ import com.milaboratory.mixcr.trees.Tree.NodeWithParent
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.Reconstructed
 import io.repseq.core.GeneType
+import io.repseq.core.GeneType.Joining
+import io.repseq.core.GeneType.Variable
+import io.repseq.core.VDJCGeneId
 import java.math.BigDecimal
 import java.util.*
 
@@ -76,6 +79,7 @@ class TreeWithMetaBuilder(
                 val mutationsSet = node.convert({ it.mutationsSet }, { it.fromRootToThis })
                 val cloneWrapper = node.convert({ it.clone }) { null }
 
+                //TODO distanceFromReconstructedRootToNode and distanceFromGermlineToNode are not needed
                 val nodeAsMutationsFromGermline =
                     node.convert({ SyntheticNode.createFromMutations(it.mutationsSet) }) { it }
                 val distanceFromReconstructedRootToNode = when (parent) {
@@ -139,16 +143,22 @@ class TreeWithMetaBuilder(
     fun mostRecentCommonAncestorNDN(): NucleotideSequence =
         mostRecentCommonAncestor().fromRootToThis.NDNMutations.mutations.mutate(rootInfo.reconstructedNDN)
 
-    data class Snapshot(//TODO save position and action description to skip recalculation
+    data class Snapshot(
+        //TODO save position and action description to skip recalculation
+        //TODO save meta about step on which clone was added and score of decision
         val clonesAdditionHistory: List<CloneWrapper.ID>,
         val rootInfo: RootInfo,
         val treeId: TreeId,
         val lastFoundNDN: NucleotideSequence,
+        /**
+         * Is it possible that order of clones in clonesAdditionHistory may be not correct.
+         * For example, if we remove some of them on excludeClones()
+         */
         val dirty: Boolean = false
     ) {
 
         fun excludeClones(toExclude: Set<CloneWrapper.ID>): Snapshot {
-            val newHistory = clonesAdditionHistory.filter { it !in toExclude }
+            val newHistory = clonesAdditionHistory - toExclude
             return copy(
                 clonesAdditionHistory = newHistory,
                 dirty = clonesAdditionHistory.size != newHistory.size
@@ -160,25 +170,21 @@ class TreeWithMetaBuilder(
 
     internal class ZeroStepDecisionInfo(
         val commonMutationsCount: Int,
-        private val VGeneName: String,
-        private val JGeneName: String,
+        private val VGeneId: VDJCGeneId,
+        private val JGeneId: VDJCGeneId,
         private val VHitScore: Float,
         private val JHitScore: Float
     ) : DecisionInfo {
-        fun getGeneName(geneType: GeneType?): String {
-            return when (geneType) {
-                GeneType.Variable -> VGeneName
-                GeneType.Joining -> JGeneName
-                else -> throw IllegalArgumentException()
-            }
+        fun getGeneId(geneType: GeneType): VDJCGeneId = when (geneType) {
+            Variable -> VGeneId
+            Joining -> JGeneId
+            else -> throw IllegalArgumentException()
         }
 
-        fun getScore(geneType: GeneType?): Float {
-            return when (geneType) {
-                GeneType.Variable -> VHitScore
-                GeneType.Joining -> JHitScore
-                else -> throw IllegalArgumentException()
-            }
+        fun getScore(geneType: GeneType): Float = when (geneType) {
+            Variable -> VHitScore
+            Joining -> JHitScore
+            else -> throw IllegalArgumentException()
         }
     }
 

@@ -11,22 +11,55 @@
  */
 package com.milaboratory.mixcr.util
 
+import cc.redberry.pipe.CUtils
+import cc.redberry.pipe.OutputPort
+import cc.redberry.pipe.OutputPortCloseable
+
 /**
  *
  */
-class Cluster<T>(val cluster: List<T>) {
-    class Builder<T> {
-        private val cluster: MutableList<T> = ArrayList()
-        fun add(element: T): Builder<T> {
-            cluster.add(element)
-            return this
+class Cluster<T>(val cluster: List<T>)
+
+fun <T> OutputPortCloseable<T>.buildClusters(comparator: Comparator<T>): OutputPort<Cluster<T>> {
+
+    // todo do not copy cluster
+    val cluster = mutableListOf<T>()
+
+    return CUtils.makeSynchronized(object : OutputPortCloseable<Cluster<T>> {
+        override fun close() {
+            this@buildClusters.close()
         }
 
-        val currentCluster: List<T>
-            get() = cluster
+        override fun take(): Cluster<T>? {
+            while (true) {
+                val element = this@buildClusters.take()
+                if (element == null) {
+                    if (cluster.isNotEmpty()) {
+                        val copy = ArrayList(cluster)
 
-        fun build(): Cluster<T> {
-            return Cluster(cluster)
+                        // new cluster
+                        cluster.clear()
+                        return Cluster(copy)
+                    }
+                    return null
+                }
+                if (cluster.isEmpty()) {
+                    cluster.add(element)
+                    continue
+                }
+                val lastAdded = cluster[cluster.size - 1]
+                if (comparator.compare(lastAdded, element) == 0) {
+                    // new cluster
+                    cluster.add(element)
+                } else {
+                    val copy = ArrayList(cluster)
+
+                    // new cluster
+                    cluster.clear()
+                    cluster.add(element)
+                    return Cluster(copy)
+                }
+            }
         }
-    }
+    })
 }

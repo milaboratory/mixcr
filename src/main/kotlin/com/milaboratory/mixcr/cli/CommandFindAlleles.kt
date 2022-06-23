@@ -31,6 +31,8 @@ import com.milaboratory.mixcr.basictypes.GeneAndScore
 import com.milaboratory.mixcr.trees.MutationsUtils.positionIfNucleotideWasDeleted
 import com.milaboratory.mixcr.util.XSV.writeXSVBody
 import com.milaboratory.mixcr.util.XSV.writeXSVHeaders
+import com.milaboratory.primitivio.forEach
+import com.milaboratory.primitivio.toList
 import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.JsonOverrider
 import com.milaboratory.util.TempFileDest
@@ -294,7 +296,7 @@ class CommandFindAlleles : ACommandWithOutputMiXCR() {
             .forEach { usedGenes[it.name] = it }
         for (cloneReader in cloneReaders) {
             cloneReader.readClones().use { port ->
-                CUtils.it(port).forEach { clone ->
+                port.forEach { clone ->
                     for (gt in VDJC_REFERENCE) {
                         for (hit in clone.getHits(gt)) {
                             val geneName = hit.gene.name
@@ -326,7 +328,7 @@ class CommandFindAlleles : ACommandWithOutputMiXCR() {
             Buffer.DEFAULT_SIZE,
             threads
         )
-        return CUtils.it(result).toList()
+        return result.toList()
     }
 
     private fun rebuildClone(
@@ -388,7 +390,7 @@ class CommandFindAlleles : ACommandWithOutputMiXCR() {
             Buffer.DEFAULT_SIZE,
             threads
         )
-        return CUtils.it(result).toList()
+        return result.toList()
     }
 
     private fun scoreDelta(

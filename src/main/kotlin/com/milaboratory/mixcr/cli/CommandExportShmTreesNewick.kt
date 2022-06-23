@@ -11,12 +11,12 @@
  */
 package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.CUtils
 import com.milaboratory.mixcr.trees.NewickTreePrinter
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
 import com.milaboratory.mixcr.trees.forPostanalysis
+import com.milaboratory.primitivio.forEach
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
 import picocli.CommandLine.Parameters
@@ -55,7 +55,7 @@ class CommandExportShmTreesNewick : ACommandWithOutputMiXCR() {
 
         val libraryRegistry = VDJCLibraryRegistry.getDefault()
         SHMTreesReader(inputFile, libraryRegistry).use { reader ->
-            CUtils.it(reader.readTrees()).forEach { shmTree ->
+            reader.readTrees().forEach { shmTree ->
                 val shmTreeForPostanalysis = shmTree.forPostanalysis(
                     reader.fileNames,
                     reader.assemblerParameters,
