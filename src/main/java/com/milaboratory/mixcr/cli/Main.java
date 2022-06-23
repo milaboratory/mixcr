@@ -48,11 +48,12 @@ public final class Main {
                 versionInfo.getTimestamp().toInstant().getEpochSecond();
         MiXCRMain.clazz = Main.class;
         MiXCRMain.main(args);
-
-        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
-            e.printStackTrace();
-            System.exit(2);
-        });
+        MiXCRMain.lm.reportFeature("app", "mixcr");
+        MiXCRMain.lm.reportFeature("mixcr.version", versionInfo.getVersion());
+        if (args.length >= 1)
+            MiXCRMain.lm.reportFeature("mixcr.subcommand1", args[0]);
+        if (args.length >= 2)
+            MiXCRMain.lm.reportFeature("mixcr.subcommand2", args[1]);
 
         GlobalObjectMappers.addModifier(om -> om.registerModule(kotlinModule(builder -> Unit.INSTANCE)));
 

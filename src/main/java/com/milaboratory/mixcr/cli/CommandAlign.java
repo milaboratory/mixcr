@@ -40,6 +40,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters;
 import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor;
 import com.milaboratory.core.sequence.quality.ReadTrimmerReport;
+import com.milaboratory.milm.MiXCRMain;
 import com.milaboratory.mitool.helpers.FSKt;
 import com.milaboratory.mitool.pattern.PatternCollection;
 import com.milaboratory.mitool.pattern.search.*;
@@ -337,14 +338,20 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
         };
 
         if (isInputPaired()) {
-            List<ConcatenatingSingleReader> readers = getInputFiles().stream()
+            List<List<Path>> resolved = getInputFiles().stream()
                     .map(rf -> FSKt.expandPathNPattern(Paths.get(rf)))
-                    .map(rs -> new ConcatenatingSingleReader(
-                            rs.stream()
-                                    .map(readerFactory)
-                                    .collect(Collectors.toList())
-                    ))
                     .collect(Collectors.toList());
+            MiXCRMain.lm.reportApplicationInputs(resolved.stream()
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList()));
+            List<ConcatenatingSingleReader> readers =
+                    resolved.stream()
+                            .map(rs -> new ConcatenatingSingleReader(
+                                    rs.stream()
+                                            .map(readerFactory)
+                                            .collect(Collectors.toList())
+                            ))
+                            .collect(Collectors.toList());
             return new PairedFastqReader(readers.get(0), readers.get(1));
         } else {
             String in = getInputFiles().get(0);
@@ -354,10 +361,13 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                         new FastaReader<>(in, NucleotideSequence.ALPHABET),
                         true
                 );
-            else
-                return new ConcatenatingSingleReader(FSKt.expandPathNPattern(Paths.get(in)).stream()
+            else {
+                List<Path> resolved = FSKt.expandPathNPattern(Paths.get(in));
+                MiXCRMain.lm.reportApplicationInputs(resolved);
+                return new ConcatenatingSingleReader(resolved.stream()
                         .map(readerFactory)
                         .collect(Collectors.toList()));
+            }
         }
     }
 
@@ -870,6 +880,9 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
         Collections.sort(tags);
         for (int i = 0; i < tags.size(); i++)
             tags.set(i, tags.get(i).withIndex(i));
+        tags.stream().map(TagInfo::getType)
+                .collect(Collectors.toSet())
+                .forEach(tt -> MiXCRMain.lm.reportFeature("mixcr.tag-type", tt.toString()));
         Collections.sort(readTags);
         return new ParseInfo(tags, readTags);
     }

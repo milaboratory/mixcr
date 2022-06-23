@@ -47,7 +47,7 @@ esac
 cd "$dir/src/test/resources/sequences/big/"
 
 cd yf_sample_data
-parallel -j5 "${dir}/mixcr" -Xmx500m analyze amplicon -f \
+parallel --tagstring "{/.}" -j5 "${dir}/mixcr" -Xmx500m analyze amplicon -f \
   -s hs --starting-material rna --contig-assembly --5-end v-primers --3-end j-primers --adapters adapters-present \
   --assemble '-OseparateByC=true' --assemble '-OseparateByV=true' --assemble '-OseparateByJ=true' \
   --assemble '--sort-by-sequence' \
