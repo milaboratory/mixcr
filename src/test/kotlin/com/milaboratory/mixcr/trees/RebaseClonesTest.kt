@@ -520,6 +520,7 @@ class RebaseClonesTest {
             },
             JGeneMutations
         )
+        val VJBase = VJBase(VDJCGeneId(vdjcLibraryId, "VSome"), VDJCGeneId(vdjcLibraryId, "JSome"), 20)
         val rebasedClone = ClonesRebase(
             VSequence,
             JSequence,
@@ -530,7 +531,8 @@ class RebaseClonesTest {
             CloneWrapper(
                 Clone(emptyArray(), Maps.newEnumMap(GeneType::class.java), null, 0.0, 0, 0),
                 0,
-                VJBase(VDJCGeneId(vdjcLibraryId, "VSome"), VDJCGeneId(vdjcLibraryId, "JSome"), 20)
+                VJBase,
+                listOf(VJBase)
             )
         )
         val resultedNDN = rebasedClone.mutationsSet.NDNMutations.buildSequence(rootInfo)

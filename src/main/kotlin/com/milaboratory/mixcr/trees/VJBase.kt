@@ -19,6 +19,10 @@ import com.milaboratory.primitivio.readObjectRequired
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCGeneId
 
+/**
+ * On this VJ and CDR3length based a cluster or a tree.
+ * I.e. all clones will be aligned on this V and J, and all clones have this CDR3length
+ */
 @Serializable(by = VJBaseSerializer::class)
 data class VJBase(
     val VGeneId: VDJCGeneId,

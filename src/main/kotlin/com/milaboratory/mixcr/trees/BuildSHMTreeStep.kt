@@ -9,11 +9,26 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli
+package com.milaboratory.mixcr.trees
 
 enum class BuildSHMTreeStep(val forPrint: String) {
+    /**
+     * @see ClusterProcessor.buildTreeTopParts
+     */
     BuildingInitialTrees("Building initial trees"),
+
+    /**
+     * @see ClusterProcessor.attachClonesByDistanceChange
+     */
     AttachClonesByDistanceChange("Attaching clones by distance change"),
+
+    /**
+     * @see ClusterProcessor.combineTrees
+     */
     CombineTrees("Combining trees"),
+
+    /**
+     * @see ClusterProcessor.attachClonesByNDN
+     */
     AttachClonesByNDN("Attaching clones by NDN");
 }

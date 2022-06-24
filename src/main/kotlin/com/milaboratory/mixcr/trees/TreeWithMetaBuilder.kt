@@ -15,10 +15,6 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.trees.Tree.NodeWithParent
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.Reconstructed
-import io.repseq.core.GeneType
-import io.repseq.core.GeneType.Joining
-import io.repseq.core.GeneType.Variable
-import io.repseq.core.VDJCGeneId
 import java.math.BigDecimal
 import java.util.*
 
@@ -26,16 +22,13 @@ class TreeWithMetaBuilder(
     private val treeBuilder: TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, SyntheticNode, NodeMutationsDescription>,
     val rootInfo: RootInfo,
     private val clonesRebase: ClonesRebase,
-    val clonesAdditionHistory: LinkedList<CloneWrapper.ID>,
+    private val clonesAdditionHistory: LinkedList<CloneWrapper.ID>,
     val treeId: TreeId
 ) {
-    fun copy(): TreeWithMetaBuilder {
-        return TreeWithMetaBuilder(treeBuilder.copy(), rootInfo, clonesRebase, clonesAdditionHistory, treeId)
-    }
+    fun copy(): TreeWithMetaBuilder =
+        TreeWithMetaBuilder(treeBuilder.copy(), rootInfo, clonesRebase, clonesAdditionHistory, treeId)
 
-    fun clonesCount(): Int {
-        return clonesAdditionHistory.size
-    }
+    fun clonesCount(): Int = clonesAdditionHistory.size
 
     /**
      * first parent is copy of clone, we need grandparent
@@ -146,9 +139,15 @@ class TreeWithMetaBuilder(
     data class Snapshot(
         //TODO save position and action description to skip recalculation
         //TODO save meta about step on which clone was added and score of decision
+        /**
+         * Ids stored in order in which they was added
+         */
         val clonesAdditionHistory: List<CloneWrapper.ID>,
         val rootInfo: RootInfo,
         val treeId: TreeId,
+        /**
+         * NDN of MRCA from last constructed tree
+         */
         val lastFoundNDN: NucleotideSequence,
         /**
          * Is it possible that order of clones in clonesAdditionHistory may be not correct.
@@ -170,23 +169,47 @@ class TreeWithMetaBuilder(
 
     internal class ZeroStepDecisionInfo(
         val commonMutationsCount: Int,
-        private val VGeneId: VDJCGeneId,
-        private val JGeneId: VDJCGeneId,
+        /**
+         * The same name for all alleles of this V gene
+         */
+        private val VGeneName: String,
+        /**
+         * The same name for all alleles of this J gene
+         */
+        private val JGeneName: String,
         private val VHitScore: Float,
         private val JHitScore: Float
     ) : DecisionInfo {
-        fun getGeneId(geneType: GeneType): VDJCGeneId = when (geneType) {
-            Variable -> VGeneId
-            Joining -> JGeneId
-            else -> throw IllegalArgumentException()
-        }
-
-        fun getScore(geneType: GeneType): Float = when (geneType) {
-            Variable -> VHitScore
-            Joining -> JHitScore
-            else -> throw IllegalArgumentException()
+        companion object {
+            fun makeDecision(chooses: Map<VJBase, ZeroStepDecisionInfo>): VJBase {
+                //group by the same origin VJ pair - group decisions by related alleles
+                //and choose VJ pair that close to germline
+                val filteredByAlleles =
+                    chooses.entries
+                        .groupBy { (_, value) ->
+                            value.VGeneName to value.JGeneName
+                        }
+                        .values
+                        .mapNotNull { withTheSameGeneBase ->
+                            withTheSameGeneBase.minByOrNull { (_, value) -> value.commonMutationsCount }
+                        }
+                        .map { (key, _) -> key }
+                        .toSet()
+                //for every VJ pair (already without allele variants) choose best score
+                return filteredByAlleles
+                    .maxByOrNull {
+                        chooses[it]!!.VHitScore + chooses[it]!!.JHitScore
+                    }!!
+            }
         }
     }
 
-    internal class MetricDecisionInfo(val metric: Double) : DecisionInfo
+    internal class MetricDecisionInfo(val metric: Double) : DecisionInfo {
+        companion object {
+            fun makeDecision(chooses: Map<VJBase, MetricDecisionInfo>): VJBase = chooses.entries
+                .minByOrNull { (_, value): Map.Entry<VJBase, MetricDecisionInfo> -> value.metric }!!
+                .key
+
+        }
+    }
 }

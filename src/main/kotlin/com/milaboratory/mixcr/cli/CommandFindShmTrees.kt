@@ -17,6 +17,7 @@ import cc.redberry.pipe.CUtils
 import cc.redberry.pipe.util.CountingOutputPort
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSetIO
+import com.milaboratory.mixcr.trees.BuildSHMTreeStep
 import com.milaboratory.mixcr.trees.CloneWrapper
 import com.milaboratory.mixcr.trees.ClusteringCriteria.DefaultClusteringCriteria
 import com.milaboratory.mixcr.trees.DebugInfo

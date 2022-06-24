@@ -14,7 +14,6 @@ package com.milaboratory.mixcr.trees
 import com.fasterxml.jackson.annotation.JsonAutoDetect
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.milaboratory.mixcr.cli.BuildSHMTreeStep
 import com.milaboratory.mixcr.util.ParametersPresets
 import com.milaboratory.primitivio.annotations.Serializable
 import io.repseq.core.GeneFeature

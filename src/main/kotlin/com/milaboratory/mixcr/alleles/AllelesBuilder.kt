@@ -212,6 +212,7 @@ class AllelesBuilder(
         meta["alleleMutationsReliableRanges"] = allele.knownRanges
             .map { it.toString() }
             .toSortedSet()
+        meta["alleleVariantOf"] = sortedSetOf(allele.gene.name)
         return meta
     }
 

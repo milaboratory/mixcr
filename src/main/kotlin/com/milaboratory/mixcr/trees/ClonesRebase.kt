@@ -9,7 +9,7 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-@file:Suppress("FunctionName")
+@file:Suppress("FunctionName", "LocalVariableName")
 
 package com.milaboratory.mixcr.trees
 
@@ -20,7 +20,6 @@ import com.milaboratory.mixcr.util.extractAbsoluteMutations
 import kotlin.math.max
 import kotlin.math.min
 
-@Suppress("LocalVariableName")
 class ClonesRebase(
     private val VSequence1: NucleotideSequence,
     private val JSequence1: NucleotideSequence,

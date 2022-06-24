@@ -22,12 +22,32 @@ import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 
+/**
+ * Common information about germline of the tree
+ */
 @Serializable(by = RootInfoSerializer::class)
 data class RootInfo(
+    /**
+     * V germline for VJBase.VGeneId
+     */
     val VSequence: NucleotideSequence,
+    /**
+     * VCDR3Part range in V coordinates
+     */
     val VRangeInCDR3: Range,
+    /**
+     * What is used as NDN in root.
+     * It may be just sequence of N or reconstructed before NDN.
+     * Has length VJBase.CDR3length
+     */
     val reconstructedNDN: NucleotideSequence,
+    /**
+     * J germline for VJBase.JGeneId
+     */
     val JSequence: NucleotideSequence,
+    /**
+     * JCDR3Part range in J coordinates
+     */
     val JRangeInCDR3: Range,
     val VJBase: VJBase
 ) {

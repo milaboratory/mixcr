@@ -24,7 +24,6 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.IOUtil
-import com.milaboratory.mixcr.cli.BuildSHMTreeStep
 import com.milaboratory.mixcr.util.Cluster
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.mixcr.util.buildClusters
@@ -54,7 +53,28 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
+ * Algorithm has several steps.
+ * For each step process all VJ clusters. Zero-step produce trees, others - add clones to trees or combine them.
  *
+ * Zero-step will form initial trees from mutated clones.
+ * At that stage we can't know about position of VEndTrimmed and JEndTrimmed because of mutation in VCDR3Part and JCDR3Part
+ * and because cluster is formed by different trees with different VEndTrimmed and JEndTrimmed
+ * For mutated clones we have more information in VJ segments so algorithm will less prone to uncertainty in coordinates of VEndTrimmed and JEndTrimmed.
+ *
+ * After forming initial trees we can calculate coordinates of VEndTrimmed and JEndTrimmed with high precision,
+ * so next steps may use NDN for comparing nodes and clones.
+ *
+ * After each step we got more information about tree and their MRCA. It affects result of next steps.
+ *
+ * On every step clone may be chosen for several trees. So after each step there must be call of makeDecisions that left every clone only in one tree.
+ *
+ * Thoughts:
+ * - Maybe we need to repeat steps until they not yield any results
+ *
+ * @see BuildSHMTreeStep
+ * @see SHMTreeBuilder.zeroStep
+ * @see SHMTreeBuilder.applyStep
+ * @see SHMTreeBuilder.makeDecisions
  */
 class SHMTreeBuilder(
     private val parameters: SHMTreeBuilderParameters,
@@ -76,9 +96,18 @@ class SHMTreeBuilder(
 
     private val JScoring: AlignmentScoring<NucleotideSequence> =
         datasets[0].assemblerParameters.cloneFactoryParameters.jParameters.scoring
+
+    /**
+     * For every clone store in what tree it was added and with what score
+     */
     private var decisions = ConcurrentHashMap<CloneWrapper.ID, Map<VJBase, TreeWithMetaBuilder.DecisionInfo>>()
+
+    /**
+     * For storing full structure of the tree there is not enough memory.
+     * So between steps we store only minimum information about clones in every tree.
+     */
     private var currentTrees = ConcurrentHashMap<VJBase, List<TreeWithMetaBuilder.Snapshot>>()
-    private val idGenerators = ConcurrentHashMap<VJBase, IdGenerator>()
+    private val treeIdGenerators = ConcurrentHashMap<VJBase, IdGenerator>()
     private val counter = AtomicInteger(0)
 
     fun cloneWrappersCount(): Int = unsortedClonotypes().count()
@@ -184,13 +213,8 @@ class SHMTreeBuilder(
         //filter by user defined parameters
         .filter { c -> cloneWrappersFilter.match(c) }
 
-    private fun Clone.formsAllRefPointsInCDR3(VJBase: VJBase): Boolean {
-        try {
-            return getFeature(CDR3, VJBase) != null && getFeature(VJJunction, VJBase) != null
-        } catch (e: Exception) {
-            throw e
-        }
-    }
+    private fun Clone.formsAllRefPointsInCDR3(VJBase: VJBase): Boolean =
+        getFeature(CDR3, VJBase) != null && getFeature(VJJunction, VJBase) != null
 
     /**
      * @param userInput (datasetId:cloneId) = treeId
@@ -384,7 +408,7 @@ class SHMTreeBuilder(
                 clusterBySameVAndJ,
                 parameters.minPortionOfClonesForCommonAlignmentRanges
             ),
-            idGenerators.computeIfAbsent(VJBase) { IdGenerator() },
+            treeIdGenerators.computeIfAbsent(VJBase) { IdGenerator() },
             VJBase
         )
 
