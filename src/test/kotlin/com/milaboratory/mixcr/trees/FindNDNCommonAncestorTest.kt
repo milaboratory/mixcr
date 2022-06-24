@@ -60,8 +60,8 @@ class FindNDNCommonAncestorTest {
      * <pre>
      * G
      * |
-     * S----
-     * |   |
+     * S-----
+     * |    |
      * ---  G
      * | |
      * G C
@@ -70,8 +70,8 @@ class FindNDNCommonAncestorTest {
      *
      * G
      * |
-     * G----
-     * |   |
+     * G-----
+     * |    |
      * ---  G
      * | |
      * G C
@@ -90,8 +90,8 @@ class FindNDNCommonAncestorTest {
      * <pre>
      * T
      * |
-     * B----
-     * |   |
+     * B-----
+     * |    |
      * ---  T
      * | |
      * T S
@@ -104,8 +104,8 @@ class FindNDNCommonAncestorTest {
      *
      * T
      * |
-     * T----
-     * |   |
+     * T-----
+     * |    |
      * ---  T
      * | |
      * T B

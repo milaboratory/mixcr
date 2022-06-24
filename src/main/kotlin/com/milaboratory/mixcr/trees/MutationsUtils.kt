@@ -167,6 +167,18 @@ internal object MutationsUtils {
         return matrix
     }
 
+    /**
+     * If parent was replaced we may recalculate NDN of the child.
+     *
+     * If there is a letter/wildcard in the child include the parent letter, replace child letter with parent letter.
+     * In this case there will be no mutation from parent to child by choosing one of already possible variances of child.
+     *
+     * If a child letter is a wildcard, but it's not included in parent, then we need to add possibility that there
+     * is no mutation between parent and child, so we replace child letter with union.
+     *
+     * If a child letter and the parent letter are not equal and are not wildcards, then assume that there is a mutation.
+     *
+     */
     //TODO removals and inserts
     fun concreteNDNChild(
         parent: Mutations<NucleotideSequence>,
@@ -198,16 +210,24 @@ internal object MutationsUtils {
     private fun concreteChild(parentSymbol: Byte, childSymbol: Byte): Byte = when {
         parentSymbol == childSymbol -> childSymbol
         ALPHABET.isWildcard(childSymbol) -> when {
-            matchesStrictly(ALPHABET.codeToWildcard(childSymbol), parentSymbol) -> parentSymbol
-            else -> {
-                val basicMask = (ALPHABET.codeToWildcard(parentSymbol).basicMask
-                    or ALPHABET.codeToWildcard(childSymbol).basicMask)
-                ALPHABET.maskToWildcard(basicMask).code
-            }
+            ALPHABET.codeToWildcard(childSymbol).matchesStrictly(parentSymbol) -> parentSymbol
+            else -> ALPHABET.codeToWildcard(parentSymbol).union(ALPHABET.codeToWildcard(childSymbol))
         }
         else -> childSymbol
     }
 
+    /**
+     * Calculate post possible NDN of common ancestor. If there is uncertainty - left wildcard.
+     * Input sequences may contain wildcards. This wildcards may be resolved to letter or narrower wildcard.
+     *
+     * If in position are different letters or not overlapping wildcards than resolve to wider wildcard.
+     *
+     * If in position are letter and wildcard containing this letter than resolve to this letter.
+     * It's because most likely mutation occurred only in one branch.
+     *
+     * If in position are overlapping wildcards than resolve to the overlapping wildcard.
+     * It's because most likely mutation occurred only in one branch.
+     */
     //TODO removals and inserts
     fun findNDNCommonAncestor(
         first: Mutations<NucleotideSequence>,
@@ -238,21 +258,20 @@ internal object MutationsUtils {
     private fun combine(firstSymbol: Byte, secondSymbol: Byte): Byte = when {
         firstSymbol == secondSymbol -> firstSymbol
         ALPHABET.isWildcard(firstSymbol)
-            && matchesStrictly(ALPHABET.codeToWildcard(firstSymbol), secondSymbol) -> secondSymbol
+            && ALPHABET.codeToWildcard(firstSymbol).matchesStrictly(secondSymbol) -> secondSymbol
         ALPHABET.isWildcard(secondSymbol)
-            && matchesStrictly(ALPHABET.codeToWildcard(secondSymbol), firstSymbol) -> firstSymbol
-        else -> {
-            val basicMask = (ALPHABET.codeToWildcard(firstSymbol).basicMask
-                or ALPHABET.codeToWildcard(secondSymbol).basicMask)
-            ALPHABET.maskToWildcard(basicMask).code
-        }
+            && ALPHABET.codeToWildcard(secondSymbol).matchesStrictly(firstSymbol) -> firstSymbol
+        else -> ALPHABET.codeToWildcard(firstSymbol).union(ALPHABET.codeToWildcard(secondSymbol))
     }
 
-    private fun matchesStrictly(wildcard: Wildcard, secondSymbol: Byte): Boolean = when {
-        !ALPHABET.isWildcard(secondSymbol) -> wildcard.matches(secondSymbol)
+    private fun Wildcard.union(second: Wildcard): Byte =
+        ALPHABET.maskToWildcard(basicMask or second.basicMask).code
+
+    private fun Wildcard.matchesStrictly(secondSymbol: Byte): Boolean = when {
+        !ALPHABET.isWildcard(secondSymbol) -> matches(secondSymbol)
         else -> {
             val secondAsWildcard = ALPHABET.codeToWildcard(secondSymbol)
-            wildcard.basicMask xor secondAsWildcard.basicMask and secondAsWildcard.basicMask == 0L
+            basicMask xor secondAsWildcard.basicMask and secondAsWildcard.basicMask == 0L
         }
     }
 }

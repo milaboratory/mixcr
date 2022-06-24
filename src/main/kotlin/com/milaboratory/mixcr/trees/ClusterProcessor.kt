@@ -262,18 +262,19 @@ internal class ClusterProcessor private constructor(
             for (i in originalTreesCopy.indices.reversed()) {
                 val treeToAttach = originalTreesCopy[i]
                 //try to calculate distances in both ways, it may differ
-                val distance_1 = distance(clonesRebase, treeToAttach, treeToGrow)
-                val distance_2 = distance(clonesRebase, treeToGrow, treeToAttach)
+                val distance_1 = distanceBetweenTrees(clonesRebase, treeToAttach, treeToGrow)
+                val distance_2 = distanceBetweenTrees(clonesRebase, treeToGrow, treeToAttach)
                 val metric = min(distance_1.toDouble(), distance_2.toDouble())
                 if (metric <= parameters.thresholdForCombineTrees) {
-                    treeToGrow = buildATree(Cluster(
-                        listOf(treeToGrow, treeToAttach).flatMap { treeWithMetaBuilder ->
-                            treeWithMetaBuilder.allNodes()
-                                .map { it.node }
-                                .map { node -> node.content.convert({ it }) { null } }
-                                .filterNotNull()
-                                .map {
-                                    CloneWithMutationsFromVJGermline(
+                    treeToGrow = buildATree(
+                        Cluster(
+                            listOf(treeToGrow, treeToAttach).flatMap { treeWithMetaBuilder ->
+                                treeWithMetaBuilder.allNodes()
+                                    .map { it.node }
+                                    .map { node -> node.content.convert({ it }) { null } }
+                                    .filterNotNull()
+                                    .map {
+                                        CloneWithMutationsFromVJGermline(
                                         it.mutationsFromVJGermline,
                                         it.clone
                                     )
@@ -288,7 +289,7 @@ internal class ClusterProcessor private constructor(
         return buildStepResult(HashMap(), result)
     }
 
-    private fun distance(
+    private fun distanceBetweenTrees(
         clonesRebase: ClonesRebase,
         from: TreeWithMetaBuilder,
         destination: TreeWithMetaBuilder
@@ -745,8 +746,35 @@ internal class ClusterProcessor private constructor(
         return a.asSequence().count { it in asSet }
     }
 
-    private fun distance(mutations: NodeMutationsDescription): BigDecimal =
-        scoringSet.distance(mutations)
+    /**
+     * NDN penalties with multiplier plus V and J penalties normalized by overall length of sequence
+     *
+     * Thoughts:
+     * - Use mutations possibilities for V and J
+     * - Try other variants of end formula
+     * - Reuse NDNDistance
+     */
+    private fun distance(mutations: NodeMutationsDescription): BigDecimal {
+        val VPenalties = maxScore(mutations.VMutationsWithoutCDR3.values, scoringSet.VScoring) -
+            score(mutations.VMutationsWithoutCDR3.values, scoringSet.VScoring) +
+            maxScore(mutations.VMutationsInCDR3WithoutNDN, scoringSet.VScoring) -
+            score(mutations.VMutationsInCDR3WithoutNDN, scoringSet.VScoring)
+        val VLength = mutations.VMutationsWithoutCDR3.values.sumOf { it.range.length() } +
+            mutations.VMutationsInCDR3WithoutNDN.range.length()
+        val JPenalties = maxScore(mutations.JMutationsWithoutCDR3.values, scoringSet.JScoring) -
+            score(mutations.JMutationsWithoutCDR3.values, scoringSet.JScoring) +
+            maxScore(mutations.JMutationsInCDR3WithoutNDN, scoringSet.JScoring) -
+            score(mutations.JMutationsInCDR3WithoutNDN, scoringSet.JScoring)
+        val JLength = mutations.JMutationsWithoutCDR3.values.sumOf { it.range.length() } +
+            mutations.JMutationsInCDR3WithoutNDN.range.length()
+        val NDNPenalties =
+            maxScore(mutations.knownNDN, scoringSet.NDNScoring) - score(mutations.knownNDN, scoringSet.NDNScoring)
+        val NDNLength = mutations.knownNDN.range.length()
+        return BigDecimal.valueOf(
+            (NDNPenalties * parameters.NDNScoreMultiplier + VPenalties + JPenalties) /
+                (NDNLength + VLength + JLength).toDouble()
+        )
+    }
 
     private fun score(rootInfo: RootInfo, mutations: MutationsSet): Int {
         val VScore = AlignmentUtils.calculateScore(
@@ -857,28 +885,6 @@ internal class ClusterProcessor private constructor(
         tree.allNodes()
             .filter { it.node.content is Reconstructed }
             .map { nodeWithParent -> buildDebugInfo(emptyMap(), tree, nodeWithParent) }
-    }
-
-    private fun ScoringSet.distance(mutations: NodeMutationsDescription): BigDecimal {
-        val VPenalties = maxScore(mutations.VMutationsWithoutCDR3.values, VScoring) -
-            score(mutations.VMutationsWithoutCDR3.values, VScoring) +
-            maxScore(mutations.VMutationsInCDR3WithoutNDN, VScoring) -
-            score(mutations.VMutationsInCDR3WithoutNDN, VScoring)
-        val VLength = mutations.VMutationsWithoutCDR3.values.sumOf { it.range.length() } +
-            mutations.VMutationsInCDR3WithoutNDN.range.length()
-        val JPenalties = maxScore(mutations.JMutationsWithoutCDR3.values, JScoring) -
-            score(mutations.JMutationsWithoutCDR3.values, JScoring) +
-            maxScore(mutations.JMutationsInCDR3WithoutNDN, JScoring) -
-            score(mutations.JMutationsInCDR3WithoutNDN, JScoring)
-        val JLength = mutations.JMutationsWithoutCDR3.values.sumOf { it.range.length() } +
-            mutations.JMutationsInCDR3WithoutNDN.range.length()
-        val NDNPenalties = maxScore(mutations.knownNDN, NDNScoring) - score(mutations.knownNDN, NDNScoring)
-        val NDNLength = mutations.knownNDN.range.length()
-
-        return BigDecimal.valueOf(
-            (NDNPenalties * parameters.NDNScoreMultiplier + VPenalties + JPenalties) /
-                (NDNLength + VLength + JLength).toDouble()
-        )
     }
 
     private interface Step {

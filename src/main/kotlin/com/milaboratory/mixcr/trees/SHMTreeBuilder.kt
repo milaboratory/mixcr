@@ -68,13 +68,23 @@ import java.util.concurrent.atomic.AtomicInteger
  *
  * On every step clone may be chosen for several trees. So after each step there must be call of makeDecisions that left every clone only in one tree.
  *
+ * Trees build by maximum parsimony with distances calculated by ClusterProcessor.distance.
+ * On every added clone in the tree there is a recalculation of NDN of part of nodes by MutationsUtils.findNDNCommonAncestor and MutationsUtils.concreteNDNChild
+ *
+ * For NDN used modified score because it must work with wildcards properly. See MutationsUtils.NDNScoring
+ *
  * Thoughts:
  * - Maybe we need to repeat steps until they not yield any results
+ * - Try to combine trees with different CDR3length at the end
  *
  * @see BuildSHMTreeStep
  * @see SHMTreeBuilder.zeroStep
  * @see SHMTreeBuilder.applyStep
  * @see SHMTreeBuilder.makeDecisions
+ * @see ClusterProcessor.distance
+ * @see MutationsUtils.concreteNDNChild
+ * @see MutationsUtils.findNDNCommonAncestor
+ * @see MutationsUtils.NDNScoring
  */
 class SHMTreeBuilder(
     private val parameters: SHMTreeBuilderParameters,
