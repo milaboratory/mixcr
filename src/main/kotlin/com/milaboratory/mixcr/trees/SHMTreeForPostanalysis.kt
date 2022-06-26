@@ -18,12 +18,7 @@ import com.milaboratory.core.sequence.TranslationParameters
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
-import io.repseq.core.GeneFeature
-import io.repseq.core.GeneType
-import io.repseq.core.ReferencePoints
-import io.repseq.core.VDJCGene
-import io.repseq.core.VDJCGeneId
-import io.repseq.core.VDJCLibraryRegistry
+import io.repseq.core.*
 import java.math.BigDecimal
 
 data class SHMTreeForPostanalysis(
@@ -285,12 +280,12 @@ private fun Tree.Node<CloneOrFoundAncestor>.map(
 fun distance(rootInfo: RootInfo, from: MutationsSet, to: MutationsSet): BigDecimal {
     val mutationsBetween = MutationsUtils.mutationsBetween(rootInfo, from, to)
     val mutationsCount = mutationsBetween.VMutationsWithoutCDR3.values.sumOf { it.mutations.size() } +
-        mutationsBetween.JMutationsInCDR3WithoutNDN.mutations.size() +
-        mutationsBetween.knownNDN.mutations.size() +
-        mutationsBetween.JMutationsInCDR3WithoutNDN.mutations.size() +
-        mutationsBetween.JMutationsWithoutCDR3.values.sumOf { it.mutations.size() }
+            mutationsBetween.JMutationsInCDR3WithoutNDN.mutations.size() +
+            mutationsBetween.knownNDN.mutations.size() +
+            mutationsBetween.JMutationsInCDR3WithoutNDN.mutations.size() +
+            mutationsBetween.JMutationsWithoutCDR3.values.sumOf { it.mutations.size() }
     val sequence1Length = from.VMutations.sequence1Length() +
-        rootInfo.reconstructedNDN.size() +
-        from.JMutations.sequence1Length()
+            rootInfo.reconstructedNDN.size() +
+            from.JMutations.sequence1Length()
     return BigDecimal.valueOf(mutationsCount / sequence1Length.toDouble())
 }

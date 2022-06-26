@@ -29,21 +29,9 @@ import kotlin.io.path.writeText
     separator = " ",
     description = ["Export SHMTree as a table with a row for every node"]
 )
-class CommandExportShmTreesNewick : ACommandWithOutputMiXCR() {
-    @Parameters(arity = "2", description = ["input_file.$shmFileExtension output_dir"])
-    var inOut: List<String> = ArrayList()
-
-    override fun getInputFiles(): List<String> = listOf(inOut.first())
-
-    override fun getOutputFiles(): List<String> = listOf(inOut.last())
-
-    private val inputFile get() = inputFiles.first()
-
-    override fun validate() {
-        if (!inputFile.endsWith(".$shmFileExtension")) {
-            throwValidationException("Input file should have extension $shmFileExtension. Given $inputFile")
-        }
-    }
+class CommandExportShmTreesNewick : CommandExportShmTreesAbstract() {
+    @Parameters(arity = "2", description = ["trees.$shmFileExtension output_dir"])
+    override var inOut: List<String> = ArrayList()
 
     override fun run0() {
         val outputDir = Path(outputFiles.first())

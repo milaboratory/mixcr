@@ -108,9 +108,9 @@ fun mkHeatmap(
     }
 
     if (params.clusterX)
-        plt = plt.withDendrogram(pos = Position.Top, 0.1)
+        plt = plt.withDendrogram(pos = Top, 0.1)
     if (params.clusterY)
-        plt = plt.withDendrogram(pos = Position.Right, 0.1)
+        plt = plt.withDendrogram(pos = Right, 0.1)
 
     plt = plt.withLabels(
         Bottom,

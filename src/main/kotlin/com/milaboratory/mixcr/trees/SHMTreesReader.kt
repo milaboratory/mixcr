@@ -21,6 +21,8 @@ import com.milaboratory.primitivio.blocks.PrimitivIHybrid
 import com.milaboratory.primitivio.readList
 import com.milaboratory.primitivio.readMap
 import com.milaboratory.primitivio.readObjectRequired
+import io.repseq.core.VDJCLibrary
+import io.repseq.core.VDJCLibraryId
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.dto.VDJCLibraryData
 import java.nio.file.Path
@@ -76,7 +78,12 @@ class SHMTreesReader(
             tagsInfo = i.readObjectRequired()
             val liberalise = i.readMap<String, VDJCLibraryData>()
             liberalise.forEach { (name: String, libraryData: VDJCLibraryData) ->
-                libraryRegistry.registerLibrary(null, name, libraryData)
+                val alreadyRegistered = libraryRegistry.loadedLibraries.stream()
+                    .anyMatch {
+                        it.libraryId.withoutChecksum() == VDJCLibraryId(name, libraryData.taxonId)
+                    }
+                if (!alreadyRegistered)
+                    libraryRegistry.registerLibrary(null, name, libraryData)
             }
             fileNames = i.readList()
             IOUtil.stdVDJCPrimitivIStateInit(i, alignerParameters, libraryRegistry)

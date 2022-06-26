@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.trees
 
 import com.milaboratory.core.Range
+import com.milaboratory.core.alignment.Alignment
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.mutations.MutationsUtil
 import com.milaboratory.core.sequence.AminoAcidSequence
@@ -31,6 +32,9 @@ data class MutationsDescription(
         allMutations.extractAbsoluteMutations(range, isIncludeFirstInserts)
     }
 
+    val aaSequence1: AminoAcidSequence
+        get() = AminoAcidSequence.translate(sequence1, translationParameters)
+
     val targetAASequence: AminoAcidSequence
         get() = AminoAcidSequence.translate(targetNSequence, translationParameters)
 
@@ -42,6 +46,12 @@ data class MutationsDescription(
 
     val targetNSequence: NucleotideSequence
         get() = MutationsUtils.buildSequence(sequence1, mutations, range)
+
+    val nAlignment: Alignment<NucleotideSequence>
+        get() = Alignment(sequence1, mutations, -1.0f)
+
+    val aaAlignment: Alignment<AminoAcidSequence>
+        get() = Alignment(aaSequence1, aaMutations, -1.0f)
 
     fun differenceWith(comparison: MutationsDescription): MutationsDescription {
         check(sequence1 == comparison.sequence1)
