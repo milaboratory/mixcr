@@ -39,7 +39,6 @@ import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Command(separator = " ",
@@ -174,55 +173,6 @@ public class CommandExportOverlap extends ACommandWithOutputMiXCR {
             }
         }
         writers.forEach((___, w) -> w.close());
-    }
-
-    private static OverlapGroup<Clone> filter(OverlapGroup<Clone> row, Predicate<Clone> criteria, boolean inPlace) {
-        if (inPlace) {
-            boolean empty = true;
-            for (List<Clone> l : row) {
-                l.removeIf(c -> !criteria.test(c));
-                if (!l.isEmpty())
-                    empty = false;
-            }
-            if (empty)
-                return null;
-            else
-                return row;
-        } else {
-            boolean empty = true;
-            List<List<Clone>> r = new ArrayList<>();
-            for (List<Clone> l : row) {
-                List<Clone> f = l.stream().filter(criteria).collect(Collectors.toList());
-                r.add(f);
-                if (!f.isEmpty())
-                    empty = false;
-            }
-            if (empty)
-                return null;
-            else
-                return new OverlapGroup<>(r);
-        }
-    }
-
-    private static boolean isProductive(Clone c) {
-        return !c.isOutOfFrame(GeneFeature.CDR3) && !c.containsStops(GeneFeature.CDR3);
-    }
-
-    private static boolean hasChains(Clone c, NamedChains chains) {
-        return chains == Chains.ALL_NAMED || Arrays.stream(GeneType.VJC_REFERENCE).anyMatch(gt -> {
-            Chains clChains = c.getAllChains(gt);
-            if (clChains == null)
-                return false;
-            return clChains.intersects(chains.chains);
-        });
-    }
-
-    private static OverlapGroup<Clone> forChains(OverlapGroup<Clone> row, NamedChains chains) {
-        return chains == Chains.ALL_NAMED ? row : filter(row, c -> hasChains(c, chains), false);
-    }
-
-    private OverlapGroup<Clone> filterProductive(OverlapGroup<Clone> row, boolean inPlace) {
-        return onlyProductive ? filter(row, CommandExportOverlap::isProductive, inPlace) : row;
     }
 
     private static final class InfoWriter implements AutoCloseable {
