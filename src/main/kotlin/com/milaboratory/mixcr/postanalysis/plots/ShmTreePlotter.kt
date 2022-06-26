@@ -13,7 +13,8 @@ package com.milaboratory.mixcr.postanalysis.plots
 
 import cc.redberry.pipe.CUtils
 import com.milaboratory.miplots.Position
-import com.milaboratory.miplots.dendro.ggDendro
+import com.milaboratory.miplots.dendro.GGDendroPlot
+import com.milaboratory.miplots.dendro.plus
 import com.milaboratory.mixcr.trees.CloneOrFoundAncestor
 import com.milaboratory.mixcr.trees.SHMTreeResult
 import com.milaboratory.mixcr.trees.SHMTreesReader
@@ -87,7 +88,7 @@ class ShmTreePlotter(
             for (t in CUtils.it(it.readTrees())) {
                 if (filter != null && !filter.match(t))
                     continue
-                list += plot(t)
+                list += plot(t).plot
             }
 
             list
@@ -121,7 +122,7 @@ class ShmTreePlotter(
     }
 
     fun plot(tree: SHMTreeResult) = run {
-        ggDendro(
+        GGDendroPlot(
             toGGNode(tree.tree.root),
             rpos = Position.Left,
             linecolor = "#aaaaaa",
