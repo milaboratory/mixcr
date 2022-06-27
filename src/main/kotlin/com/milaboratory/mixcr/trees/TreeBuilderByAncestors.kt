@@ -16,9 +16,9 @@ import java.math.BigDecimal
 import java.util.*
 
 class TreeBuilderByAncestors<T, E, M> private constructor(
-    val distance: (E, M) -> BigDecimal,
+    private val distance: (E, M) -> BigDecimal,
     private val asAncestor: (T) -> E,
-    val mutationsBetween: (E, E) -> M,
+    private val mutationsBetween: (E, E) -> M,
     private val mutate: (E, M) -> E,
     private val findCommonMutations: (M, M) -> M,
     private val postprocessDescendants: (E, E) -> E,

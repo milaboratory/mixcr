@@ -57,8 +57,8 @@ import java.util.concurrent.atomic.AtomicInteger
  * For each step process all VJ clusters. Zero-step produce trees, others - add clones to trees or combine them.
  *
  * Zero-step will form initial trees from mutated clones.
- * At that stage we can't know about position of VEndTrimmed and JEndTrimmed because of mutation in VCDR3Part and JCDR3Part
- * and because cluster is formed by different trees with different VEndTrimmed and JEndTrimmed
+ * Initially we can't trust position of VEndTrimmed and JEndTrimmed because of mutations near VEndTrimmed and JEndTrimmed
+ * change border of alignment in both ways.
  * For mutated clones we have more information in VJ segments so algorithm will less prone to uncertainty in coordinates of VEndTrimmed and JEndTrimmed.
  *
  * After forming initial trees we can calculate coordinates of VEndTrimmed and JEndTrimmed with high precision,
@@ -75,7 +75,7 @@ import java.util.concurrent.atomic.AtomicInteger
  *
  * Thoughts:
  * - Maybe we need to repeat steps until they not yield any results
- * - Try to combine trees with different CDR3length at the end
+ * - Try to combine trees and clones with different CDR3length at the end
  *
  * @see BuildSHMTreeStep
  * @see SHMTreeBuilder.zeroStep
@@ -378,16 +378,12 @@ class SHMTreeBuilder(
             val currentTrees = currentTrees[VJBase]!!
                 //base tree on NDN that was found before instead of sequence of N
                 .map { snapshot ->
-                    val reconstructedNDN = when {
-                        !snapshot.dirty -> snapshot.lastFoundNDN
-                        else -> clusterProcessor.restore(snapshot).mostRecentCommonAncestorNDN()
-                    }
+                    val reconstructedNDN = clusterProcessor.restore(snapshot).mostRecentCommonAncestorNDN()
                     clusterProcessor.restore(
                         snapshot.copy(
                             rootInfo = snapshot.rootInfo.copy(
                                 reconstructedNDN = reconstructedNDN
-                            ),
-                            dirty = true
+                            )
                         )
                     )
                 }

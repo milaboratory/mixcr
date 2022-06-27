@@ -18,7 +18,12 @@ import com.milaboratory.core.sequence.TranslationParameters
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
-import io.repseq.core.*
+import io.repseq.core.GeneFeature
+import io.repseq.core.GeneType
+import io.repseq.core.ReferencePoints
+import io.repseq.core.VDJCGene
+import io.repseq.core.VDJCGeneId
+import io.repseq.core.VDJCLibraryRegistry
 import java.math.BigDecimal
 
 data class SHMTreeForPostanalysis(
@@ -57,19 +62,30 @@ data class SHMTreeForPostanalysis(
         val clones: List<CloneWithDatasetId>
     ) : BaseNode(id, meta, main, parent, distanceFromRoot, distanceFromMostRecentCommonAncestor, distanceFromParent) {
         fun split(): Collection<SplittedNode> = when {
-            clones.isEmpty() -> listOf(withClone(null))
+            clones.isEmpty() -> listOf(withoutClone())
             else -> clones.map { clone -> withClone(clone) }
         }
 
-        private fun withClone(clone: CloneWithDatasetId?) = SplittedNode(
-            id,
-            meta,
+        private fun withClone(clone: CloneWithDatasetId) = SplittedNode(
+            id = id,
+            meta = meta,
             main = main,
             parent = parent,
             distanceFromRoot = distanceFromRoot,
             distanceFromMostRecentCommonAncestor = distanceFromMostRecentCommonAncestor,
             distanceFromParent = distanceFromParent,
             clone
+        )
+
+        private fun withoutClone() = SplittedNode(
+            id = id,
+            meta = meta,
+            main = main,
+            parent = parent,
+            distanceFromRoot = distanceFromRoot,
+            distanceFromMostRecentCommonAncestor = distanceFromMostRecentCommonAncestor,
+            distanceFromParent = distanceFromParent,
+            clone = null
         )
     }
 
@@ -94,7 +110,7 @@ data class SHMTreeForPostanalysis(
         val distanceFromParent: BigDecimal?,
     ) {
         fun distanceFrom(base: Base): BigDecimal? = when (base) {
-            Base.root -> distanceFromRoot
+            Base.germline -> distanceFromRoot
             Base.mrca -> distanceFromMostRecentCommonAncestor
             Base.parent -> distanceFromParent
         }
@@ -102,12 +118,12 @@ data class SHMTreeForPostanalysis(
         fun mutationsDescription(
             geneFeature: GeneFeature,
             relativeTo: GeneFeature? = null,
-            baseOn: Base = Base.root
+            baseOn: Base = Base.germline
         ): MutationsDescription? {
             if (!canExtractMutations(geneFeature, relativeTo)) return null
             val mainMutations = main.mutationsDescription(geneFeature, relativeTo)
             return when (baseOn) {
-                Base.root -> mainMutations
+                Base.germline -> mainMutations
                 Base.mrca -> mainMutations.differenceWith(
                     meta.mostRecentCommonAncestor.mutationsDescription(geneFeature, relativeTo)
                 )
@@ -199,7 +215,7 @@ data class SHMTreeForPostanalysis(
 
     @Suppress("EnumEntryName")
     enum class Base {
-        root,
+        germline,
         mrca,
         parent
     }

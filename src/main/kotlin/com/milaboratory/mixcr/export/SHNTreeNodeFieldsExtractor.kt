@@ -48,7 +48,7 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
             "Distance from another node",
             baseOnArg(
                 hPrefix = { "Distance from $it" },
-                sPrefix = { "DistanceFrom$it" }
+                sPrefix = { base -> "DistanceFrom${base.name.replaceFirstChar { it.titlecase(Locale.getDefault()) }}" }
             )
         ) { node, base ->
             node.distanceFrom(base)?.toString() ?: ""
@@ -190,7 +190,7 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
         hPrefix: (Base) -> String = { "based on $it" },
         sPrefix: (Base) -> String = { base -> "BasedOn${base.name.replaceFirstChar { it.titlecase(Locale.getDefault()) }}" }
     ): CommandArg<Base> = CommandArg(
-        "<${Base.root}|${Base.mrca}|${Base.parent}>",
+        "<${Base.germline}|${Base.mrca}|${Base.parent}>",
         { Base.valueOf(it) },
         hPrefix,
         sPrefix

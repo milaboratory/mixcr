@@ -165,21 +165,11 @@ internal class ClusterProcessor private constructor(
 
     fun restore(snapshot: TreeWithMetaBuilder.Snapshot): TreeWithMetaBuilder {
         val clonesInTrees = snapshot.clonesAdditionHistory.toSet()
-        val clonesByIds = originalCluster.cluster
-            .filter { it.id in clonesInTrees }
-            .associateBy { it.id }
-        val treeWithMetaBuilder = TreeWithMetaBuilder(
-            createTreeBuilder(snapshot.rootInfo),
-            snapshot.rootInfo,
-            ClonesRebase(VSequence1, JSequence1, scoringSet),
-            LinkedList(),
-            snapshot.treeId
+        val rebasedClonesFromGermline = rebaseFromGermline(
+            originalCluster.cluster
+                .filter { it.id in clonesInTrees }.asSequence()
         )
-        snapshot.clonesAdditionHistory.forEach { cloneId ->
-            val rebasedClone = treeWithMetaBuilder.rebaseClone(rebaseFromGermline(clonesByIds[cloneId]!!))
-            treeWithMetaBuilder.addClone(rebasedClone)
-        }
-        return treeWithMetaBuilder
+        return buildATree(Cluster(rebasedClonesFromGermline.toList()))
     }
 
     private fun rebaseFromGermline(clones: Sequence<CloneWrapper>): Sequence<CloneWithMutationsFromVJGermline> = clones
@@ -275,12 +265,12 @@ internal class ClusterProcessor private constructor(
                                     .filterNotNull()
                                     .map {
                                         CloneWithMutationsFromVJGermline(
-                                        it.mutationsFromVJGermline,
-                                        it.clone
-                                    )
-                                }
-                        }
-                    ))
+                                            it.mutationsFromVJGermline,
+                                            it.clone
+                                        )
+                                    }
+                            }
+                        ))
                     originalTreesCopy.removeAt(i)
                 }
             }

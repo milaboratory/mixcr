@@ -39,7 +39,6 @@ import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.io.File
 import java.io.PrintStream
-import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.Path
@@ -100,7 +99,7 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
 
     private val debugDirectory: Path by lazy {
         when (debugDirectoryPath) {
-            null -> Files.createTempDirectory("debug")
+            null -> tempDest.resolvePath("trees_debug")
             else -> Paths.get(debugDirectoryPath!!)
         }.also { it.toFile().mkdirs() }
     }
