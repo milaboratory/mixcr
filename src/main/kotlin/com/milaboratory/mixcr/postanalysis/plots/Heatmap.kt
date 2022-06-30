@@ -13,7 +13,7 @@ package com.milaboratory.mixcr.postanalysis.plots
 
 import com.milaboratory.miplots.Position
 import com.milaboratory.miplots.Position.*
-import com.milaboratory.miplots.color.Palletes
+import com.milaboratory.miplots.color.Palettes
 import com.milaboratory.miplots.heatmap.*
 import com.milaboratory.mixcr.postanalysis.plots.HeatmapParameters.Companion.hLabelSize
 import com.milaboratory.mixcr.postanalysis.plots.HeatmapParameters.Companion.vLabelSize
@@ -67,13 +67,13 @@ fun mkHeatmap(
         yOrder = if (params.clusterY) Hierarchical() else null,
         fillNoValue = params.fillNaZeroes,
         noValue = 0.0,
-        fillPalette = Palletes.Diverging.lime90rose130
+        fillPalette = Palettes.Diverging.lime90rose130
     )
 
     plt = plt.withBorder()
 
     val ncats = params.colorKey?.map { df[it.key].distinct().size() }?.sum() ?: 0
-    var pallete = Palletes.Categorical.auto(ncats)
+    var pallete = Palettes.Categorical.auto(ncats)
     params.colorKey?.let {
         val first = Position.values().map { p -> p to true }.toMap().toMutableMap()
         for (key in it) {
