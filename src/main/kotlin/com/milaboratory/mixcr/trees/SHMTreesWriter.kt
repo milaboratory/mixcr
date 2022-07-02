@@ -18,8 +18,9 @@ import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
-import com.milaboratory.primitivio.Util
 import com.milaboratory.primitivio.blocks.PrimitivOHybrid
+import com.milaboratory.primitivio.writeList
+import com.milaboratory.primitivio.writeMap
 import io.repseq.core.VDJCGene
 import io.repseq.core.VDJCLibrary
 import java.nio.charset.StandardCharsets
@@ -50,11 +51,8 @@ class SHMTreesWriter(
             o.writeObject(assemblerParameters)
             o.writeObject(alignerParameters)
             o.writeObject(tagInfo)
-            Util.writeMap(
-                libraries.associateBy({ obj -> obj.name }, { obj -> obj.data }),
-                o
-            )
-            Util.writeList(fileNames, o)
+            o.writeMap(libraries.associateBy({ obj -> obj.name }, { obj -> obj.data }))
+            o.writeList(fileNames)
             IOUtil.stdVDJCPrimitivOStateInit(o, genes, alignerParameters)
         }
     }

@@ -27,20 +27,12 @@ import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.util.Cluster
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.mixcr.util.buildClusters
-import com.milaboratory.primitivio.PrimitivI
-import com.milaboratory.primitivio.PrimitivIOStateBuilder
-import com.milaboratory.primitivio.PrimitivO
-import com.milaboratory.primitivio.Serializer
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
+import com.milaboratory.primitivio.*
 import com.milaboratory.primitivio.annotations.Serializable
-import com.milaboratory.primitivio.count
-import com.milaboratory.primitivio.filter
-import com.milaboratory.primitivio.flatMap
-import com.milaboratory.primitivio.flatten
-import com.milaboratory.primitivio.map
-import com.milaboratory.primitivio.mapNotNull
-import com.milaboratory.primitivio.readObjectRequired
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.sorting.HashSorter
+import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneFeature.VJJunction
 import io.repseq.core.GeneType
@@ -106,6 +98,12 @@ class SHMTreeBuilder(
 
     private val JScoring: AlignmentScoring<NucleotideSequence> =
         datasets[0].assemblerParameters.cloneFactoryParameters.jParameters.scoring
+
+    private val assemblingFeatures: Array<GeneFeature> =
+        datasets[0].assemblerParameters.assemblingFeatures
+
+    private val alignerParameters: VDJCAlignerParameters =
+        datasets[0].alignerParameters
 
     /**
      * For every clone store in what tree it was added and with what score
@@ -203,7 +201,7 @@ class SHMTreeBuilder(
                 //create copy of clone for every pair of V and J hits in it
                 .flatMap { VGeneId ->
                     JGeneNames.map { JGeneId ->
-                        VJBase(VGeneId, JGeneId, clone.getNFeature(CDR3).size())
+                        VJBase(VGeneId, JGeneId, clone.ntLengthOf(CDR3))
                     }
                 }
                 //filter compositions that not overlap with each another
@@ -249,7 +247,7 @@ class SHMTreeBuilder(
             { cluster ->
                 val treeId = cluster.cluster.first().treeId
 
-                val CDR3lengths = cluster.cluster.map { it.clone.getFeature(CDR3).size() }
+                val CDR3lengths = cluster.cluster.map { it.clone.ntLengthOf(CDR3) }
                     .groupingBy { it }.eachCount()
                 if (CDR3lengths.size > 1) {
                     println("WARN: in $treeId not all clones have the same length of CDR3")
@@ -261,7 +259,7 @@ class SHMTreeBuilder(
                 )
 
                 val cloneWrappers = cluster.cluster
-                    .filter { it.clone.getFeature(CDR3).size() == VJBase.CDR3length }
+                    .filter { it.clone.ntLengthOf(CDR3) == VJBase.CDR3length }
                     //filter compositions that not overlap with each another
                     .filter { it.clone.formsAllRefPointsInCDR3(VJBase) }
                     .map { CloneWrapper(it.clone, it.datasetId, VJBase, listOf(VJBase)) }
@@ -370,7 +368,7 @@ class SHMTreeBuilder(
     fun getResult(
         clusterBySameVAndJ: Cluster<CloneWrapper>,
         previousStepDebug: PrintStream,
-        recalculatedTreeIds: Map<TreeId, Int>
+        idGenerator: AtomicInteger
     ): List<SHMTreeResult> {
         val VJBase = clusterVJBase(clusterBySameVAndJ)
         try {
@@ -395,7 +393,7 @@ class SHMTreeBuilder(
                     SHMTreeResult(
                         treeWithMetaBuilder.buildResult(),
                         treeWithMetaBuilder.rootInfo,
-                        recalculatedTreeIds[treeWithMetaBuilder.treeId]!!
+                        idGenerator.incrementAndGet()
                     )
                 }
                 .toList()
@@ -404,12 +402,21 @@ class SHMTreeBuilder(
         }
     }
 
-    private fun buildClusterProcessor(clusterBySameVAndJ: Cluster<CloneWrapper>, VJBase: VJBase): ClusterProcessor =
-        ClusterProcessor.build(
+    private fun buildClusterProcessor(clusterBySameVAndJ: Cluster<CloneWrapper>, VJBase: VJBase): ClusterProcessor {
+        require(clusterBySameVAndJ.cluster.isNotEmpty())
+        val anyClone = clusterBySameVAndJ.cluster[0]
+        return ClusterProcessor(
             parameters,
-            VScoring,
-            JScoring,
+            ScoringSet(
+                VScoring,
+                MutationsUtils.NDNScoring(),
+                JScoring
+            ),
+            assemblingFeatures,
+            alignerParameters,
             clusterBySameVAndJ,
+            anyClone.getHit(Variable).getAlignment(0).sequence1,
+            anyClone.getHit(Joining).getAlignment(0).sequence1,
             ClusterProcessor.calculateClusterInfo(
                 clusterBySameVAndJ,
                 parameters.minPortionOfClonesForCommonAlignmentRanges
@@ -417,14 +424,9 @@ class SHMTreeBuilder(
             treeIdGenerators.computeIfAbsent(VJBase) { IdGenerator() },
             VJBase
         )
+    }
 
     private fun clusterVJBase(clusterBySameVAndJ: Cluster<CloneWrapper>): VJBase = clusterBySameVAndJ.cluster[0].VJBase
-
-    fun calculateUniqGlobalTreeIds(): Map<TreeId, Int> = currentTrees
-        .flatMap { it.value.map { snapshot -> snapshot.treeId } }
-        .sortedWith(TreeId.comparator)
-        .withIndex()
-        .associate { it.value to it.index }
 
     /**
      * For every gene make a list of mutations to alleles of the gene.
@@ -453,8 +455,8 @@ class SHMTreeBuilder(
     ) {
         fun match(cloneWrapper: CloneWrapper): Boolean =
             (vGenesToSearch?.contains(cloneWrapper.VJBase.VGeneId.name) ?: true) &&
-                (jGenesToSearch?.contains(cloneWrapper.VJBase.JGeneId.name) ?: true) &&
-                (CDR3LengthToSearch?.contains(cloneWrapper.VJBase.CDR3length) ?: true)
+                    (jGenesToSearch?.contains(cloneWrapper.VJBase.JGeneId.name) ?: true) &&
+                    (CDR3LengthToSearch?.contains(cloneWrapper.VJBase.CDR3length) ?: true)
     }
 
     private fun alleleMutations(gene: VDJCGene): Mutations<NucleotideSequence> =

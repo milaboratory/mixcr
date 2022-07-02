@@ -17,30 +17,20 @@ import cc.redberry.pipe.CUtils
 import cc.redberry.pipe.util.CountingOutputPort
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSetIO
-import com.milaboratory.mixcr.trees.BuildSHMTreeStep
-import com.milaboratory.mixcr.trees.CloneWrapper
+import com.milaboratory.mixcr.trees.*
 import com.milaboratory.mixcr.trees.ClusteringCriteria.DefaultClusteringCriteria
-import com.milaboratory.mixcr.trees.DebugInfo
-import com.milaboratory.mixcr.trees.SHMTreeBuilder
-import com.milaboratory.mixcr.trees.SHMTreeBuilderParameters
-import com.milaboratory.mixcr.trees.SHMTreesWriter
 import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.primitivio.forEach
-import com.milaboratory.util.JsonOverrider
-import com.milaboratory.util.ReportUtil
-import com.milaboratory.util.SmartProgressReporter
-import com.milaboratory.util.TempFileDest
-import com.milaboratory.util.TempFileManager
+import com.milaboratory.util.*
 import io.repseq.core.VDJCLibraryRegistry
 import org.apache.commons.io.FilenameUtils
-import picocli.CommandLine.Command
-import picocli.CommandLine.Option
-import picocli.CommandLine.Parameters
+import picocli.CommandLine.*
 import java.io.File
 import java.io.PrintStream
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.io.path.Path
 
 
@@ -265,7 +255,6 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
             SmartProgressReporter.extractProgress(sortedClones, cloneWrappersCount.toLong())
         )
 
-        val recalculatedTreeIds = shmTreeBuilder.calculateUniqGlobalTreeIds()
         SHMTreesWriter(outputTreesPath).use { shmTreesWriter ->
             val usedGenes = cloneReaders.flatMap { it.usedGenes }.distinct()
             shmTreesWriter.writeHeader(
@@ -278,9 +267,10 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
             )
 
             val writer = shmTreesWriter.treesWriter()
+            val idGenerator = AtomicInteger()
             shmTreeBuilder.buildClusters(sortedClones).forEach { cluster ->
                 shmTreeBuilder
-                    .getResult(cluster, previousStepDebug.treesAfterDecisionsWriter, recalculatedTreeIds)
+                    .getResult(cluster, previousStepDebug.treesAfterDecisionsWriter, idGenerator)
                     .forEach { writer.put(it) }
             }
             writer.put(null)

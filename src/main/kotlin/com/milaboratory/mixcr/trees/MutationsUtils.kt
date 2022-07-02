@@ -22,9 +22,11 @@ import com.milaboratory.core.mutations.MutationsBuilder
 import com.milaboratory.core.sequence.NucleotideAlphabet
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.NucleotideSequence.ALPHABET
+import com.milaboratory.core.sequence.Sequence
 import com.milaboratory.core.sequence.Wildcard
 import com.milaboratory.mixcr.util.asSequence
 import com.milaboratory.mixcr.util.intersection
+import io.repseq.core.GeneFeature
 import java.util.*
 import kotlin.math.abs
 
@@ -32,52 +34,20 @@ internal object MutationsUtils {
     /**
      * Mutate and get result by range in original sequence
      */
-    fun buildSequence(
-        sequence1: NucleotideSequence,
-        mutations: Mutations<NucleotideSequence>,
+    fun <S : Sequence<S>> buildSequence(
+        sequence1: S,
+        mutations: Mutations<S>,
         range: Range
-    ): NucleotideSequence = mutations.mutate(sequence1).getRange(projectRange(mutations, range))
+    ): S = mutations.mutate(sequence1).getRange(projectRange(mutations, range))
 
-    fun projectRange(mutations: Mutations<NucleotideSequence>, range: Range): Range {
+    fun <S : Sequence<S>> projectRange(mutations: Mutations<S>, range: Range): Range {
         //for including inclusions before position one must step left before conversion and step right after
         val from = positionIfNucleotideWasDeleted(mutations.convertToSeq2Position(range.lower)) -
-            mutations.asSequence()
-                .count { mutation -> Mutation.getPosition(mutation) == range.lower && Mutation.isInsertion(mutation) }
+                mutations.asSequence()
+                    .count { mutation -> Mutation.getPosition(mutation) == range.lower && Mutation.isInsertion(mutation) }
         val to = positionIfNucleotideWasDeleted(mutations.convertToSeq2Position(range.upper))
         return Range(from, to)
     }
-
-    fun mutationsBetween(rootInfo: RootInfo, first: MutationsSet, second: MutationsSet) = NodeMutationsDescription(
-        mutationsBetween(rootInfo.VSequence, first.VMutations, second.VMutations),
-        difference(
-            rootInfo.VSequence,
-            first.VMutations.partInCDR3.mutations,
-            second.VMutations.partInCDR3.mutations,
-            rootInfo.VRangeInCDR3
-        ),
-        difference(
-            rootInfo.reconstructedNDN,
-            first.NDNMutations.mutations,
-            second.NDNMutations.mutations,
-            Range(0, rootInfo.reconstructedNDN.size())
-        ),
-        difference(
-            rootInfo.JSequence,
-            first.JMutations.partInCDR3.mutations,
-            second.JMutations.partInCDR3.mutations,
-            rootInfo.JRangeInCDR3
-        ),
-        mutationsBetween(rootInfo.JSequence, first.JMutations, second.JMutations)
-    )
-
-    private fun mutationsBetween(
-        sequence1: NucleotideSequence,
-        firstMutations: GeneMutations,
-        secondMutations: GeneMutations
-    ): Map<Range, MutationsWithRange> =
-        fold(firstMutations.mutations, secondMutations.mutations) { base, comparison, range ->
-            difference(sequence1, base, comparison, range)
-        }
 
     fun difference(
         sequence1: NucleotideSequence,
@@ -98,10 +68,10 @@ internal object MutationsUtils {
     }
 
     fun <R, V1, V2> fold(
-        first: Map<Range, V1>,
-        second: Map<Range, V2>,
-        folder: (V1, V2, Range) -> R
-    ): Map<Range, R> {
+        first: Map<GeneFeature, V1>,
+        second: Map<GeneFeature, V2>,
+        folder: (V1, V2, GeneFeature) -> R
+    ): Map<GeneFeature, R> {
         require(first.keys == second.keys)
         return first.mapValues { (range, value) -> folder(value, second[range]!!, range) }
     }
@@ -276,7 +246,7 @@ internal object MutationsUtils {
     }
 }
 
-fun Map<Range, MutationsWithRange>.intersection(with: Map<Range, MutationsWithRange>): Map<Range, MutationsWithRange> =
+fun Map<GeneFeature, MutationsWithRange>.intersection(with: Map<GeneFeature, MutationsWithRange>): Map<GeneFeature, MutationsWithRange> =
     MutationsUtils.fold(this, with) { a, b, _ -> a.intersection(b) }
 
 fun MutationsWithRange.intersection(with: MutationsWithRange): MutationsWithRange =

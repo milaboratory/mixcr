@@ -16,13 +16,8 @@ import com.milaboratory.core.sequence.NSequenceWithQuality
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence
-import com.milaboratory.primitivio.PrimitivI
-import com.milaboratory.primitivio.PrimitivO
-import com.milaboratory.primitivio.Serializer
-import com.milaboratory.primitivio.Util
+import com.milaboratory.primitivio.*
 import com.milaboratory.primitivio.annotations.Serializable
-import com.milaboratory.primitivio.readList
-import com.milaboratory.primitivio.readObjectRequired
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.ReferencePoint
@@ -125,7 +120,7 @@ class SerializerImpl : Serializer<CloneWrapper> {
         output.writeObject(`object`.VJBase.VGeneId)
         output.writeObject(`object`.VJBase.JGeneId)
         output.writeInt(`object`.VJBase.CDR3length)
-        Util.writeList(`object`.candidateVJBases, output)
+        output.writeList(`object`.candidateVJBases)
     }
 
     override fun read(input: PrimitivI): CloneWrapper = CloneWrapper(

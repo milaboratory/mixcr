@@ -9,14 +9,9 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.trees
 
-import io.repseq.core.GeneFeature
+package com.milaboratory.mixcr.util
 
-class NodeMutationsDescription(
-    val VMutationsWithoutCDR3: Map<GeneFeature, MutationsWithRange>,
-    val VMutationsInCDR3WithoutNDN: MutationsWithRange,
-    val knownNDN: MutationsWithRange,
-    val JMutationsInCDR3WithoutNDN: MutationsWithRange,
-    val JMutationsWithoutCDR3: Map<GeneFeature, MutationsWithRange>
-)
+import com.milaboratory.core.sequence.AbstractSeq
+
+operator fun <T : AbstractSeq<T>> T.plus(other: T): T = concatenate(other)

@@ -17,6 +17,7 @@ import com.milaboratory.core.Range
 import com.milaboratory.core.alignment.Aligner
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.util.extractAbsoluteMutations
+import com.milaboratory.mixcr.util.plus
 import kotlin.math.max
 import kotlin.math.min
 
@@ -132,14 +133,12 @@ class ClonesRebase(
             VSequence1,
             originalNode.VMutations.partInCDR3.mutations.extractAbsoluteMutations(VRangeLeft, false),
             VRangeLeft
-        ).concatenate(originalNode.NDNMutations.buildSequence(originalRoot))
-            .concatenate(
+        ) + originalNode.NDNMutations.buildSequence(originalRoot) +
                 MutationsUtils.buildSequence(
                     JSequence1,
                     originalNode.JMutations.partInCDR3.mutations.extractAbsoluteMutations(JRangeLeft, true),
                     JRangeLeft
                 )
-            )
 
         val VRangeToAlign = rebaseTo.VRangeInCDR3.setLower(commonVRange.upper)
         val JRangeToAlign = rebaseTo.JRangeInCDR3.setUpper(commonJRange.lower)
@@ -181,7 +180,8 @@ class ClonesRebase(
         ).absoluteMutations
 
         return MutationsSet(
-            originalNode.VMutations.copy(
+            VGeneMutations(
+                mutations = originalNode.VMutations.mutations,
                 partInCDR3 = PartInCDR3(
                     rebaseTo.VRangeInCDR3,
                     originalNode.VMutations.partInCDR3.mutations.extractAbsoluteMutations(commonVRange, false)
@@ -189,9 +189,11 @@ class ClonesRebase(
                 )
             ),
             NDNMutations(NDNMutations),
-            originalNode.JMutations.copy(
+            JGeneMutations(
+                mutations = originalNode.JMutations.mutations,
                 partInCDR3 = PartInCDR3(
-                    rebaseTo.JRangeInCDR3, JMutationsToAdd.concat(
+                    rebaseTo.JRangeInCDR3,
+                    JMutationsToAdd.concat(
                         originalNode.JMutations.partInCDR3.mutations.extractAbsoluteMutations(commonJRange, false)
                     )
                 )

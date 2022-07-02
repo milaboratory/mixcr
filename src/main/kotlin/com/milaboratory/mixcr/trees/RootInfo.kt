@@ -13,14 +13,13 @@ package com.milaboratory.mixcr.trees
 
 import com.milaboratory.core.Range
 import com.milaboratory.core.sequence.NucleotideSequence
-import com.milaboratory.primitivio.PrimitivI
-import com.milaboratory.primitivio.PrimitivO
-import com.milaboratory.primitivio.Serializer
+import com.milaboratory.primitivio.*
 import com.milaboratory.primitivio.annotations.Serializable
-import com.milaboratory.primitivio.readObjectRequired
+import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
+import io.repseq.core.ReferencePoints
 
 /**
  * Common information about germline of the tree
@@ -31,6 +30,8 @@ data class RootInfo(
      * V germline for VJBase.VGeneId
      */
     val VSequence: NucleotideSequence,
+    val VPartitioning: ReferencePoints,
+    val VAlignFeatures: List<GeneFeature>,
     /**
      * VCDR3Part range in V coordinates
      */
@@ -45,19 +46,23 @@ data class RootInfo(
      * J germline for VJBase.JGeneId
      */
     val JSequence: NucleotideSequence,
+    val JPartitioning: ReferencePoints,
+    val JAlignFeatures: List<GeneFeature>,
     /**
      * JCDR3Part range in J coordinates
      */
     val JRangeInCDR3: Range,
     val VJBase: VJBase
 ) {
-    fun baseCDR3(): NucleotideSequence = VSequence.getRange(VRangeInCDR3)
-        .concatenate(reconstructedNDN)
-        .concatenate(JSequence.getRange(JRangeInCDR3))
-
     fun getSequence1(geneType: GeneType) = when (geneType) {
         Joining -> JSequence
         Variable -> VSequence
+        else -> throw IllegalArgumentException()
+    }
+
+    fun getPartitioning(geneType: GeneType) = when (geneType) {
+        Joining -> JPartitioning
+        Variable -> VPartitioning
         else -> throw IllegalArgumentException()
     }
 }
@@ -65,9 +70,13 @@ data class RootInfo(
 class RootInfoSerializer : Serializer<RootInfo> {
     override fun write(output: PrimitivO, obj: RootInfo) {
         output.writeObject(obj.VSequence)
+        output.writeObject(obj.VPartitioning)
+        output.writeList(obj.VAlignFeatures)
         output.writeObject(obj.VRangeInCDR3)
         output.writeObject(obj.reconstructedNDN)
         output.writeObject(obj.JSequence)
+        output.writeObject(obj.JPartitioning)
+        output.writeList(obj.JAlignFeatures)
         output.writeObject(obj.JRangeInCDR3)
         output.writeObject(obj.VJBase)
     }
@@ -75,8 +84,12 @@ class RootInfoSerializer : Serializer<RootInfo> {
     override fun read(input: PrimitivI): RootInfo = RootInfo(
         input.readObjectRequired(),
         input.readObjectRequired(),
+        input.readList(),
         input.readObjectRequired(),
         input.readObjectRequired(),
+        input.readObjectRequired(),
+        input.readObjectRequired(),
+        input.readList(),
         input.readObjectRequired(),
         input.readObjectRequired()
     )
