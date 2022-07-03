@@ -246,7 +246,7 @@ private fun MutationsSet.VPartsOfMutationsDescriptor(): SortedMap<GeneFeature, M
     VMutations.mutations.entries.associateTo(TreeMap()) { (geneFeature, mutations) ->
         if (geneFeature.lastPoint == CDR3Begin) {
             GeneFeature(geneFeature.firstPoint, VEndTrimmed) to
-                    mutations.combineWith(VMutations.partInCDR3.mutations)
+                    mutations.concat(VMutations.partInCDR3.mutations)
         } else {
             geneFeature to mutations
         }
@@ -256,7 +256,7 @@ private fun MutationsSet.JPartsOfMutationsDescriptor(): SortedMap<GeneFeature, M
     JMutations.mutations.entries.associateTo(TreeMap()) { (geneFeature, mutations) ->
         if (geneFeature.firstPoint == CDR3End) {
             GeneFeature(JBeginTrimmed, geneFeature.lastPoint) to
-                    JMutations.partInCDR3.mutations.combineWith(mutations)
+                    JMutations.partInCDR3.mutations.concat(mutations)
         } else {
             geneFeature to mutations
         }

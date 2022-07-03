@@ -20,6 +20,8 @@ import com.milaboratory.core.sequence.AminoAcidSequence
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.Sequence
 import com.milaboratory.core.sequence.TranslationParameters
+import com.milaboratory.core.sequence.TranslationParameters.FromCenter
+import com.milaboratory.core.sequence.TranslationParameters.FromLeftWithoutIncompleteCodon
 import com.milaboratory.mixcr.util.extractAbsoluteMutations
 import com.milaboratory.mixcr.util.plus
 import io.repseq.core.ExtendedReferencePoints
@@ -164,6 +166,12 @@ class MutationsDescription private constructor(
             }
             withVJJunction to partitioning.getTranslationParameters(withVJJunction)
         }
+        val translationParametersForSequence1 = partitioning.getTranslationParameters(
+            GeneFeature(
+                translationParametersByFeatures.firstKey().firstPoint,
+                translationParametersByFeatures.lastKey().lastPoint
+            )
+        )
         return Parts(
             ExtendedReferencePointsBuilder().apply {
                 for (i in 0 until partitioning.pointsCount()) {
@@ -171,35 +179,40 @@ class MutationsDescription private constructor(
                     val position = partitioning.getPosition(referencePoint)
                     if (position != -1) {
                         val translationParameters = translationParametersByFeatures.entries
-                            .first { referencePoint in it.key }
-                            .value
+                            .firstOrNull { referencePoint in it.key }
+                            ?.value
 
-                        setPosition(
-                            referencePoint,
-                            AminoAcidSequence.convertNtPositionToAA(
-                                position,
-                                sequence1.size(),
-                                translationParameters
-                            ).aminoAcidPosition
-                        )
+                        if (translationParameters != null) {
+                            setPosition(
+                                referencePoint,
+                                AminoAcidSequence.convertNtPositionToAA(
+                                    position,
+                                    sequence1.size(),
+                                    translationParameters
+                                ).aminoAcidPosition
+                            )
+                        }
                     }
                 }
             }.build(),
             AminoAcidSequence.translate(
                 sequence1,
-                partitioning.getTranslationParameters(
-                    GeneFeature(
-                        translationParametersByFeatures.firstKey().firstPoint,
-                        translationParametersByFeatures.lastKey().lastPoint
-                    )
-                )
+                translationParametersForSequence1
             ),
             mutations.mapValuesTo(TreeMap()) { (geneFeature, mutations) ->
                 //TODO left only partitioning.getTranslationParameters(geneFeature) after fix of io.repseq.core.GeneFeature.getCodingGeneFeature
                 val translationParameters = if (geneFeature.lastPoint == VEndTrimmed) {
-                    partitioning.getTranslationParameters(GeneFeature(geneFeature.firstPoint, CDR3Begin))
+                    val VTranslationParameters =
+                        partitioning.getTranslationParameters(GeneFeature(geneFeature.firstPoint, CDR3Begin))
+                    if (VTranslationParameters == FromCenter) {
+                        FromLeftWithoutIncompleteCodon
+                    } else if (VTranslationParameters.fromLeft == true) {
+                        VTranslationParameters
+                    } else {
+                        error("Can't rebase $VTranslationParameters from left for $geneFeature")
+                    }
                 } else if (geneFeature.firstPoint == JBeginTrimmed) {
-                    partitioning.getTranslationParameters(GeneFeature(JBegin, CDR3End))
+                    translationParametersForSequence1
                 } else {
                     partitioning.getTranslationParameters(geneFeature)
                 }
@@ -295,13 +308,14 @@ class MutationsDescription private constructor(
         )
     }
 
-    private fun <S : Sequence<S>> Parts<S>.differenceWith(other: Parts<S>) = Parts(
-        partitioning.applyMutations(combinedMutations),
-        combinedMutations.mutate(sequence1),
-        mutations.mapValuesTo(TreeMap()) { (geneFeature, mutations) ->
-            mutations.invert().combineWith(other.mutations[geneFeature]!!)
-        }
-    )
+    private fun <S : Sequence<S>> Parts<S>.differenceWith(other: Parts<S>) =
+        Parts(
+            partitioning.applyMutations(combinedMutations),
+            combinedMutations.mutate(sequence1),
+            mutations.mapValuesTo(TreeMap()) { (geneFeature, mutations) ->
+                mutations.invert().combineWith(other.mutations[geneFeature]!!)
+            }
+        )
 
     private fun <S : Sequence<S>> Parts<S>.buildAlignment(
         geneFeature: GeneFeature,
@@ -358,9 +372,7 @@ class MutationsDescription private constructor(
         }
         require(relativeTo.firstPoint <= geneFeature.firstPoint) {
             "Base feature ${GeneFeature.encode(geneFeature)} can't be aligned to relative feature ${
-                GeneFeature.encode(
-                    relativeTo
-                )
+                GeneFeature.encode(relativeTo)
             }"
         }
         if (geneFeature.geneType == null) {
@@ -381,22 +393,14 @@ private fun checkAAComparable(geneFeature: GeneFeature) {
 }
 
 
-fun ReferencePoints.withVCDR3PartLength(VPartInCDR3Length: Int): ExtendedReferencePoints {
-    val builder = ExtendedReferencePointsBuilder()
-    builder.setPositionsFrom(this)
-    builder.setPosition(
-        VEndTrimmed,
-        getPosition(CDR3Begin) + VPartInCDR3Length
-    )
-    return builder.build()
-}
+fun ReferencePoints.withVCDR3PartLength(VPartInCDR3Length: Int): ExtendedReferencePoints =
+    ExtendedReferencePointsBuilder().also { builder ->
+        builder.setPositionsFrom(this)
+        builder.setPosition(VEndTrimmed, getPosition(CDR3Begin) + VPartInCDR3Length)
+    }.build()
 
-fun ReferencePoints.withJCDR3PartLength(JPartInCDR3Length: Int): ExtendedReferencePoints {
-    val builder = ExtendedReferencePointsBuilder()
-    builder.setPositionsFrom(this)
-    builder.setPosition(
-        JBeginTrimmed,
-        getPosition(CDR3End) - JPartInCDR3Length
-    )
-    return builder.build()
-}
+fun ReferencePoints.withJCDR3PartLength(JPartInCDR3Length: Int): ExtendedReferencePoints =
+    ExtendedReferencePointsBuilder().also { builder ->
+        builder.setPositionsFrom(this)
+        builder.setPosition(JBeginTrimmed, getPosition(CDR3End) - JPartInCDR3Length)
+    }.build()

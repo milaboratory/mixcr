@@ -15,10 +15,6 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.trees.Tree.NodeWithParent
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.Reconstructed
-import com.milaboratory.mixcr.util.plus
-import io.repseq.core.GeneFeature
-import io.repseq.core.GeneFeature.CDR3
-import io.repseq.core.ReferencePoint.*
 import java.math.BigDecimal
 import java.util.*
 
@@ -72,36 +68,6 @@ class TreeWithMetaBuilder(
         .map { _, node ->
             val mutationsSet = node.convert({ it.mutationsSet }, { it.fromRootToThis })
             val cloneWrapper = node.convert({ it.clone }) { null }
-
-            if (cloneWrapper != null) {
-                check(GeneFeature(FR1Begin, CDR3Begin) in mutationsSet.VMutations.mutations)
-                check(
-                    cloneWrapper.clone.getNFeature(GeneFeature(FR1Begin, CDR3Begin)) == MutationsUtils.buildSequence(
-                        rootInfo.VSequence,
-                        mutationsSet.VMutations.mutations[GeneFeature(FR1Begin, CDR3Begin)]!!,
-                        rootInfo.VPartitioning.getRange(GeneFeature(FR1Begin, CDR3Begin))
-                    )
-                )
-                val actualCDR3 = MutationsUtils.buildSequence(
-                    rootInfo.VSequence,
-                    mutationsSet.VMutations.partInCDR3.mutations,
-                    mutationsSet.VMutations.partInCDR3.range
-                ) + mutationsSet.NDNMutations.mutations.mutate(rootInfo.reconstructedNDN) +
-                        MutationsUtils.buildSequence(
-                            rootInfo.JSequence,
-                            mutationsSet.JMutations.partInCDR3.mutations,
-                            mutationsSet.JMutations.partInCDR3.range
-                        )
-                check(cloneWrapper.clone.getNFeature(CDR3) == actualCDR3)
-                check(GeneFeature(CDR3End, FR4End) in mutationsSet.JMutations.mutations)
-                check(
-                    cloneWrapper.clone.getNFeature(GeneFeature(CDR3End, FR4End)) == MutationsUtils.buildSequence(
-                        rootInfo.JSequence,
-                        mutationsSet.JMutations.mutations[GeneFeature(CDR3End, FR4End)]!!,
-                        rootInfo.JPartitioning.getRange(GeneFeature(CDR3End, FR4End))
-                    )
-                )
-            }
 
             CloneOrFoundAncestor(
                 node.id,

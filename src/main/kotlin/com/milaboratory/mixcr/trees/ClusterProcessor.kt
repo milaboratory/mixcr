@@ -43,7 +43,6 @@ import io.repseq.core.VDJCGeneId
 import java.math.BigDecimal
 import java.util.*
 import java.util.function.Supplier
-import java.util.stream.IntStream
 import kotlin.math.max
 import kotlin.math.min
 
@@ -635,9 +634,11 @@ internal class ClusterProcessor(
         //TODO may be just get from root?
         val VRangeInCDR3 = mostLikableRangeInCDR3(cluster) { clone -> VRangeInCDR3(clone) }
         val JRangeInCDR3 = mostLikableRangeInCDR3(cluster) { clone -> JRangeInCDR3(clone) }
-        val NDNRangeInKnownNDN: Range = NDNRangeInKnownNDN(rootBasedOn.mutations, VRangeInCDR3, JRangeInCDR3)
+        val NDNRangeInKnownNDN = NDNRangeInKnownNDN(rootBasedOn.mutations, VRangeInCDR3, JRangeInCDR3)
         val NDNBuilder = ALPHABET.createBuilder()
-        IntStream.range(0, NDNRangeInKnownNDN.length()).forEach { NDNBuilder.append(NucleotideSequence.N) }
+        repeat(NDNRangeInKnownNDN.length()) {
+            NDNBuilder.append(NucleotideSequence.N)
+        }
         return RootInfo(
             VSequence1,
             rootBasedOn.cloneWrapper.getPartitioning(Variable),
@@ -703,13 +704,11 @@ internal class ClusterProcessor(
         geneType: GeneType
     ): Mutations<NucleotideSequence> {
         val hit = clone.getHit(geneType)
-        return IntStream.range(0, hit.alignments.size)
-            .boxed()
+        return (0 until hit.alignments.size)
             .map { target -> hit.getAlignment(target) }
             .filter { alignment -> alignment.sequence1Range.contains(range) }
             .map { it.absoluteMutations }
-            .findFirst()
-            .orElseThrow { IllegalArgumentException() }
+            .first()
     }
 
     private fun getJMutationsWithinNDN(clone: CloneWrapper, to: Int): Pair<Mutations<NucleotideSequence>, Range> {

@@ -211,9 +211,11 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
         feature: GeneFeature,
         relativeTo: GeneFeature = feature
     ) {
-        listOfNotNull(feature, relativeTo).forEach {
-            requireNotNull(it.geneType) {
-                "$command: Gene feature ${GeneFeature.encode(it)} covers several gene types (not possible to select corresponding alignment)"
+        if (feature != relativeTo) {
+            listOfNotNull(feature, relativeTo).forEach {
+                requireNotNull(it.geneType) {
+                    "$command: Gene feature ${GeneFeature.encode(it)} covers several gene types (not possible to select corresponding alignment)"
+                }
             }
         }
 

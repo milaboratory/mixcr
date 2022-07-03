@@ -61,10 +61,6 @@ data class SHMTreeBuilderParameters @JsonCreator constructor(
      */
     @param:JsonProperty("penaltyForReversedMutations") val penaltyForReversedMutations: Double,
     /**
-     * Hide small trees.
-     */
-    @param:JsonProperty("hideTreesLessThanSize") val hideTreesLessThanSize: Int,
-    /**
      * Min count of common mutations in VJ for pair to form first clusterization.
      */
     @param:JsonProperty("commonMutationsCountForClustering") val commonMutationsCountForClustering: Int,

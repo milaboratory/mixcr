@@ -388,7 +388,6 @@ class SHMTreeBuilder(
             val debugInfos = clusterProcessor.debugInfos(currentTrees)
             XSV.writeXSVBody(previousStepDebug, debugInfos, DebugInfo.COLUMNS_FOR_XSV, ";")
             return currentTrees.asSequence()
-                .filter { treeWithMetaBuilder -> treeWithMetaBuilder.clonesCount() >= parameters.hideTreesLessThanSize }
                 .map { treeWithMetaBuilder ->
                     SHMTreeResult(
                         treeWithMetaBuilder.buildResult(),

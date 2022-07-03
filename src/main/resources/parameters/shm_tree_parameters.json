@@ -7,7 +7,6 @@
     "maxNDNDistanceForFreeClones": 1.5,
     "topToVoteOnNDNSize": 5,
     "NDNScoreMultiplier": 2.5,
-    "hideTreesLessThanSize": 1,
     "commonMutationsCountForClustering": 5,
     "maxNDNDistanceForClustering": 1.5,
     "NDNSizeLimitForPublicClones": 3,
