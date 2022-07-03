@@ -31,10 +31,10 @@ fun <S : Sequence<S>> kotlin.sequences.Sequence<Int>.asMutations(alphabet: Alpha
     return builder.createAndDestroy()
 }
 
-fun Mutations<NucleotideSequence>.extractAbsoluteMutations(
+fun <S : Sequence<S>> Mutations<S>.extractAbsoluteMutations(
     range: Range,
     isIncludeFirstInserts: Boolean
-): Mutations<NucleotideSequence> = asSequence()
+): Mutations<S> = asSequence()
     .filter { mutation ->
         when (val position = Mutation.getPosition(mutation)) {
             range.lower -> when {
@@ -45,7 +45,7 @@ fun Mutations<NucleotideSequence>.extractAbsoluteMutations(
             else -> position in (range.lower + 1) until range.upper
         }
     }
-    .asMutations(NucleotideSequence.ALPHABET)
+    .asMutations(alphabet)
 
 fun Mutations<NucleotideSequence>.intersection(second: Mutations<NucleotideSequence>): Mutations<NucleotideSequence> {
     if (isEmpty || second.isEmpty) return EMPTY_NUCLEOTIDE_MUTATIONS

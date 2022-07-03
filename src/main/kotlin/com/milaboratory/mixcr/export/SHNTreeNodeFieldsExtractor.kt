@@ -48,7 +48,7 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
             "Distance from another node",
             baseOnArg(
                 hPrefix = { "Distance from $it" },
-                sPrefix = { "DistanceFrom$it" }
+                sPrefix = { base -> "DistanceFrom${base.name.replaceFirstChar { it.titlecase(Locale.getDefault()) }}" }
             )
         ) { node, base ->
             node.distanceFrom(base)?.toString() ?: ""
@@ -58,34 +58,42 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
             "-nFeature",
             "Export nucleotide sequence of specified gene feature",
             baseGeneFeatureArg("N. Seq. ", "nSeq"),
-            validateArgs = { checkNotComposite(it) }
+            validateArgs = {
+                checkNotComposite(it)
+            }
         ) { node, geneFeature ->
-            val mutationsWithRange = node.mutationsDescription(geneFeature) ?: return@FieldWithParameters NULL
-            mutationsWithRange.targetNSequence.toString()
+            node.mutationsDescription()
+                .targetNSequence(geneFeature)
+                ?.toString() ?: NULL
         }
 
         fields += FieldWithParameters(
             "-aaFeature",
             "Export amino acid sequence of specified gene feature",
             baseGeneFeatureArg("AA. Seq. ", "aaSeq"),
-            validateArgs = { checkNotComposite(it) }
+            validateArgs = {
+                checkNotComposite(it)
+            }
         ) { node, geneFeature ->
-            val mutationsWithRange = node.mutationsDescription(geneFeature) ?: return@FieldWithParameters NULL
-            mutationsWithRange.targetAASequence.toString()
+            node.mutationsDescription()
+                .targetAASequence(geneFeature)
+                ?.toString() ?: NULL
         }
 
         fields += FieldWithParameters(
             "-nMutations",
-            "Extract nucleotide mutations for specific gene feature; relative to germline sequence.",
+            "Extract nucleotide mutations for specific gene feature.",
             baseGeneFeatureArg("N. Mutations in ", "nMutations"),
             baseOnArg(),
             validateArgs = { feature, _ ->
                 checkNotComposite(feature)
+                checkFeaturesForAlignment(feature)
             }
         ) { node, geneFeature, base ->
-            val mutationsWithRange =
-                node.mutationsDescription(geneFeature, baseOn = base) ?: return@FieldWithParameters "-"
-            mutationsWithRange.mutations.encode()
+            node.mutationsDescription(base)
+                ?.nAlignment(geneFeature)
+                ?.absoluteMutations
+                ?.encode() ?: "-"
         }
 
         fields += FieldWithParameters(
@@ -96,12 +104,13 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
             baseOnArg(),
             validateArgs = { feature, relativeTo, _ ->
                 checkNotComposite(feature)
-                checkRelativeFeatures(feature, relativeTo)
+                checkFeaturesForAlignment(feature, relativeTo)
             }
         ) { node, geneFeature, relativeTo, base ->
-            val mutationsWithRange =
-                node.mutationsDescription(geneFeature, relativeTo, base) ?: return@FieldWithParameters "-"
-            mutationsWithRange.mutations.encode()
+            node.mutationsDescription(base)
+                ?.nAlignment(geneFeature, relativeTo)
+                ?.absoluteMutations
+                ?.encode() ?: "-"
         }
 
 
@@ -112,11 +121,12 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
             baseOnArg(),
             validateArgs = { feature, _ ->
                 checkNotComposite(feature)
+                checkFeaturesForAlignment(feature)
             }
         ) { node, geneFeature, base ->
-            val mutationsWithRange =
-                node.mutationsDescription(geneFeature, baseOn = base) ?: return@FieldWithParameters "-"
-            mutationsWithRange.aaMutations.encode(",")
+            node.mutationsDescription(base)
+                ?.aaAlignment(geneFeature)
+                ?.absoluteMutations?.encode(",") ?: "-"
         }
 
         fields += FieldWithParameters(
@@ -127,18 +137,18 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
             baseOnArg(),
             validateArgs = { feature, relativeTo, _ ->
                 checkNotComposite(feature)
-                checkRelativeFeatures(feature, relativeTo)
+                checkFeaturesForAlignment(feature, relativeTo)
             }
         ) { node, geneFeature, relativeTo, base ->
-            val mutationsWithRange =
-                node.mutationsDescription(geneFeature, relativeTo, base) ?: return@FieldWithParameters "-"
-            mutationsWithRange.aaMutations.encode(",")
+            node.mutationsDescription(base)
+                ?.aaAlignment(geneFeature, relativeTo)
+                ?.absoluteMutations?.encode(",") ?: "-"
         }
 
         val detailedMutationsFormat =
             "Format <nt_mutation>:<aa_mutation_individual>:<aa_mutation_cumulative>, where <aa_mutation_individual> is an expected amino acid " +
-                "mutation given no other mutations have occurred, and <aa_mutation_cumulative> amino acid mutation is the observed amino acid " +
-                "mutation combining effect from all other. WARNING: format may change in following versions."
+                    "mutation given no other mutations have occurred, and <aa_mutation_cumulative> amino acid mutation is the observed amino acid " +
+                    "mutation combining effect from all other. WARNING: format may change in following versions."
         fields += FieldWithParameters(
             "-mutationsDetailed",
             "Detailed list of nucleotide and corresponding amino acid mutations. $detailedMutationsFormat",
@@ -146,11 +156,12 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
             baseOnArg(),
             validateArgs = { feature, _ ->
                 checkNotComposite(feature)
+                checkFeaturesForAlignment(feature)
             }
         ) { node, geneFeature, base ->
-            val mutationsWithRange =
-                node.mutationsDescription(geneFeature, baseOn = base) ?: return@FieldWithParameters "-"
-            mutationsWithRange.aaMutationsDetailed.encode(",")
+            node.mutationsDescription(base)
+                ?.aaMutationsDetailed(geneFeature)
+                ?.encode(",") ?: "-"
         }
 
         fields += FieldWithParameters(
@@ -161,12 +172,12 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
             baseOnArg(),
             validateArgs = { feature, relativeTo, _ ->
                 checkNotComposite(feature)
-                checkRelativeFeatures(feature, relativeTo)
+                checkFeaturesForAlignment(feature, relativeTo)
             }
         ) { node, geneFeature, relativeTo, base ->
-            val mutationsWithRange =
-                node.mutationsDescription(geneFeature, relativeTo, base) ?: return@FieldWithParameters "-"
-            mutationsWithRange.aaMutationsDetailed.encode(",")
+            node.mutationsDescription(base)
+                ?.aaMutationsDetailed(geneFeature, relativeTo)
+                ?.encode(",") ?: "-"
         }
 
         return fields.toTypedArray()
@@ -190,42 +201,32 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
         hPrefix: (Base) -> String = { "based on $it" },
         sPrefix: (Base) -> String = { base -> "BasedOn${base.name.replaceFirstChar { it.titlecase(Locale.getDefault()) }}" }
     ): CommandArg<Base> = CommandArg(
-        "<${Base.root}|${Base.mrca}|${Base.parent}>",
+        "<${Base.germline}|${Base.mrca}|${Base.parent}>",
         { Base.valueOf(it) },
         hPrefix,
         sPrefix
     )
 
-    private fun AbstractField<*>.checkRelativeFeatures(
+    private fun AbstractField<*>.checkFeaturesForAlignment(
         feature: GeneFeature,
-        relativeTo: GeneFeature
+        relativeTo: GeneFeature = feature
     ) {
-        require(relativeTo in feature) {
-            String.format(
-                "%s: Base feature %s does not contain relative feature %s",
-                command, GeneFeature.encode(feature), GeneFeature.encode(relativeTo)
-            )
-        }
-        arrayOf(feature, relativeTo).forEach {
-            requireNotNull(it.geneType) {
-                String.format(
-                    "%s: Gene feature %s covers several gene types " +
-                        "(not possible to select corresponding alignment)", command, GeneFeature.encode(it)
-                )
+        if (feature != relativeTo) {
+            listOfNotNull(feature, relativeTo).forEach {
+                requireNotNull(it.geneType) {
+                    "$command: Gene feature ${GeneFeature.encode(it)} covers several gene types (not possible to select corresponding alignment)"
+                }
             }
         }
 
-        require(!relativeTo.isAlignmentAttached) {
-            String.format(
-                "%s: Alignment attached base gene features not allowed (error in %s)",
-                command, GeneFeature.encode(relativeTo)
-            )
+        require(!feature.isAlignmentAttached) {
+            "$command: Alignment attached base gene features not allowed (error in ${GeneFeature.encode(feature)})"
         }
     }
 
-    private fun checkNotComposite(feature: GeneFeature) {
+    private fun AbstractField<*>.checkNotComposite(feature: GeneFeature) {
         require(!feature.isComposite) {
-            "Command doesn't support composite features"
+            "$command doesn't support composite features"
         }
     }
 

@@ -64,45 +64,18 @@ class TreeWithMetaBuilder(
             .first { it is Reconstructed } as Reconstructed).content
     }
 
-    fun buildResult(): Tree<CloneOrFoundAncestor> {
-        val mostRecentCommonAncestor = mostRecentCommonAncestor()
-        val rootAsNode = (treeBuilder.tree.root.content as Reconstructed).content
-        return treeBuilder.tree
-            .map { parent, node ->
-                val mutationsSet = node.convert({ it.mutationsSet }, { it.fromRootToThis })
-                val cloneWrapper = node.convert({ it.clone }) { null }
+    fun buildResult(): Tree<CloneOrFoundAncestor> = treeBuilder.tree
+        .map { _, node ->
+            val mutationsSet = node.convert({ it.mutationsSet }, { it.fromRootToThis })
+            val cloneWrapper = node.convert({ it.clone }) { null }
 
-                //TODO distanceFromReconstructedRootToNode and distanceFromGermlineToNode are not needed
-                val nodeAsMutationsFromGermline =
-                    node.convert({ SyntheticNode.createFromMutations(it.mutationsSet) }) { it }
-                val distanceFromReconstructedRootToNode = when (parent) {
-                    null -> null
-                    else -> treeBuilder.distance(
-                        mostRecentCommonAncestor,
-                        treeBuilder.mutationsBetween(
-                            mostRecentCommonAncestor,
-                            nodeAsMutationsFromGermline
-                        )
-                    )
-                }
-                val distanceFromGermlineToNode = treeBuilder.distance(
-                    rootAsNode,
-                    treeBuilder.mutationsBetween(
-                        rootAsNode,
-                        nodeAsMutationsFromGermline
-                    )
-                )
-
-                CloneOrFoundAncestor(
-                    node.id,
-                    cloneWrapper?.clone,
-                    cloneWrapper?.id?.datasetId,
-                    mutationsSet,
-                    distanceFromGermlineToNode,
-                    distanceFromReconstructedRootToNode
-                )
-            }
-    }
+            CloneOrFoundAncestor(
+                node.id,
+                cloneWrapper?.clone,
+                cloneWrapper?.id?.datasetId,
+                mutationsSet
+            )
+        }
 
     fun allNodes(): Sequence<NodeWithParent<ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, SyntheticNode>>> =
         treeBuilder.tree.allNodes()
@@ -129,38 +102,25 @@ class TreeWithMetaBuilder(
     fun snapshot(): Snapshot = Snapshot(
         clonesAdditionHistory,
         rootInfo,
-        treeId,
-        mostRecentCommonAncestorNDN()
+        treeId
     )
 
     fun mostRecentCommonAncestorNDN(): NucleotideSequence =
         mostRecentCommonAncestor().fromRootToThis.NDNMutations.mutations.mutate(rootInfo.reconstructedNDN)
 
     data class Snapshot(
-        //TODO save position and action description to skip recalculation
-        //TODO save meta about step on which clone was added and score of decision
         /**
-         * Ids stored in order in which they was added
+         * Ids of clones that was added
          */
         val clonesAdditionHistory: List<CloneWrapper.ID>,
         val rootInfo: RootInfo,
-        val treeId: TreeId,
-        /**
-         * NDN of MRCA from last constructed tree
-         */
-        val lastFoundNDN: NucleotideSequence,
-        /**
-         * Is it possible that order of clones in clonesAdditionHistory may be not correct.
-         * For example, if we remove some of them on excludeClones()
-         */
-        val dirty: Boolean = false
+        val treeId: TreeId
     ) {
 
         fun excludeClones(toExclude: Set<CloneWrapper.ID>): Snapshot {
             val newHistory = clonesAdditionHistory - toExclude
             return copy(
-                clonesAdditionHistory = newHistory,
-                dirty = clonesAdditionHistory.size != newHistory.size
+                clonesAdditionHistory = newHistory
             )
         }
     }

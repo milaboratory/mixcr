@@ -14,16 +14,20 @@
 package com.milaboratory.mixcr.trees
 
 import com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
-import com.milaboratory.mixcr.util.ClonesAlignmentRanges
+import io.repseq.core.GeneType.Joining
+import io.repseq.core.GeneType.Variable
 
 class SyntheticNode private constructor(
     val fromRootToThis: MutationsSet,
 ) {
-    fun mutate(mutations: NodeMutationsDescription): SyntheticNode = SyntheticNode(
+    fun mutate(rootInfo: RootInfo, mutations: NodeMutationsDescription): SyntheticNode = SyntheticNode(
         MutationsSet(
-            fromRootToThis.VMutations.copy(
-                mutations = fromRootToThis.VMutations.mutations.mapValues { (range, value) ->
-                    value.combineWith(mutations.VMutationsWithoutCDR3[range]!!.mutations.move(range.lower))
+            VGeneMutations(
+                mutations = fromRootToThis.VMutations.mutations.mapValues { (geneFeature, value) ->
+                    value.combineWith(
+                        mutations.VMutationsWithoutCDR3[geneFeature]!!.mutations
+                            .move(rootInfo.getPartitioning(Variable).getPosition(geneFeature.firstPoint))
+                    )
                 },
                 partInCDR3 = fromRootToThis.VMutations.partInCDR3.copy(
                     mutations = fromRootToThis.VMutations.partInCDR3.mutations
@@ -34,14 +38,17 @@ class SyntheticNode private constructor(
                 mutations = fromRootToThis.NDNMutations.mutations
                     .combineWith(mutations.knownNDN.mutations)
             ),
-            fromRootToThis.JMutations.copy(
-                mutations = fromRootToThis.JMutations.mutations.mapValues { (range, value) ->
-                    value.combineWith(mutations.JMutationsWithoutCDR3[range]!!.mutations.move(range.lower))
-                },
+            JGeneMutations(
                 partInCDR3 = fromRootToThis.JMutations.partInCDR3.copy(
                     mutations = fromRootToThis.JMutations.partInCDR3.mutations
                         .combineWith(mutations.JMutationsInCDR3WithoutNDN.mutations.move(fromRootToThis.JMutations.partInCDR3.range.lower))
-                )
+                ),
+                mutations = fromRootToThis.JMutations.mutations.mapValues { (geneFeature, value) ->
+                    value.combineWith(
+                        mutations.JMutationsWithoutCDR3[geneFeature]!!.mutations
+                            .move(rootInfo.getPartitioning(Joining).getPosition(geneFeature.firstPoint))
+                    )
+                }
             )
         )
     )
@@ -53,20 +60,16 @@ class SyntheticNode private constructor(
             return SyntheticNode(fromRootToThis)
         }
 
-        fun createRoot(
-            VRanges: ClonesAlignmentRanges,
-            rootInfo: RootInfo,
-            JRanges: ClonesAlignmentRanges
-        ): SyntheticNode = SyntheticNode(
+        fun createRoot(rootInfo: RootInfo): SyntheticNode = SyntheticNode(
             MutationsSet(
                 VGeneMutations(
-                    VRanges.commonRanges.associateWith { EMPTY_NUCLEOTIDE_MUTATIONS },
+                    rootInfo.VAlignFeatures.associateWith { EMPTY_NUCLEOTIDE_MUTATIONS },
                     PartInCDR3(rootInfo.VRangeInCDR3, EMPTY_NUCLEOTIDE_MUTATIONS)
                 ),
                 NDNMutations(EMPTY_NUCLEOTIDE_MUTATIONS),
                 JGeneMutations(
                     PartInCDR3(rootInfo.JRangeInCDR3, EMPTY_NUCLEOTIDE_MUTATIONS),
-                    JRanges.commonRanges.associateWith { EMPTY_NUCLEOTIDE_MUTATIONS }
+                    rootInfo.JAlignFeatures.associateWith { EMPTY_NUCLEOTIDE_MUTATIONS }
                 )
             )
         )

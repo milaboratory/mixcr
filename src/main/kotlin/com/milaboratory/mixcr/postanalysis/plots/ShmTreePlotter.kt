@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.postanalysis.plots
 
 import cc.redberry.pipe.CUtils
+import com.milaboratory.core.alignment.Alignment
 import com.milaboratory.core.motif.BitapPattern
 import com.milaboratory.core.sequence.AminoAcidSequence
 import com.milaboratory.core.sequence.NucleotideSequence
@@ -169,7 +170,6 @@ class ShmTreePlotter(
                 for (t in CUtils.it(reader)) {
                     val tree = t.forPostanalysis(
                         it.fileNames,
-                        it.assemblerParameters,
                         it.alignerParameters,
                         VDJCLibraryRegistry.getDefault()
                     )
@@ -207,13 +207,13 @@ class ShmTreePlotter(
             nodeMetadata[DefaultMeta.Abundance] = ln(cloneWrapper.clone.count)
 
             if (alignment != null) {
-                node.content.mutationsDescription(alignment.gf)?.let {
-                    if (alignment.isAA)
-                        nodeMetadata[DefaultMeta.Alignment] =
-                            it.aaAlignment.alignmentHelper.seq2String
-                    else
-                        nodeMetadata[DefaultMeta.Alignment] =
-                            it.nAlignment.alignmentHelper.seq2String
+                val mutationsDescription = node.content.mutationsDescription()
+                val alignmentForFeature: Alignment<*>? = when {
+                    alignment.isAA -> mutationsDescription.aaAlignment(alignment.gf)
+                    else -> mutationsDescription.nAlignment(alignment.gf)
+                }
+                if (alignmentForFeature != null) {
+                    nodeMetadata[DefaultMeta.Alignment] = alignmentForFeature.alignmentHelper.seq2String
                 }
             }
 

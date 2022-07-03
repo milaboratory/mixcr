@@ -13,13 +13,8 @@ package com.milaboratory.mixcr.trees
 
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
-import com.milaboratory.primitivio.PrimitivI
-import com.milaboratory.primitivio.PrimitivO
-import com.milaboratory.primitivio.Serializer
-import com.milaboratory.primitivio.Util
+import com.milaboratory.primitivio.*
 import com.milaboratory.primitivio.annotations.Serializable
-import com.milaboratory.primitivio.readMap
-import com.milaboratory.primitivio.readObjectRequired
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
@@ -57,7 +52,7 @@ class MutationsSetSerializer : Serializer<MutationsSet> {
         input.readObjectRequired(),
         JGeneMutations(
             input.readObjectRequired(),
-            input.readMap()
+            input.readMap(),
         )
     )
 

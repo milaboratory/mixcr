@@ -46,7 +46,6 @@ class CommandExportShmTreesNewick : CommandExportShmTreesAbstract() {
             reader.readTrees().forEach { shmTree ->
                 val shmTreeForPostanalysis = shmTree.forPostanalysis(
                     reader.fileNames,
-                    reader.assemblerParameters,
                     reader.alignerParameters,
                     libraryRegistry
                 )

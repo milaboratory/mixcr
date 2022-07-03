@@ -72,7 +72,6 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
                     output.put(
                         shmTree.forPostanalysis(
                             reader.fileNames,
-                            reader.assemblerParameters,
                             reader.alignerParameters,
                             libraryRegistry
                         )

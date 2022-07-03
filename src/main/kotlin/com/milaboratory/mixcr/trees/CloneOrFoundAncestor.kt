@@ -18,16 +18,13 @@ import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readObjectOptional
 import com.milaboratory.primitivio.readObjectRequired
-import java.math.BigDecimal
 
 @Serializable(by = CloneOrFoundAncestorSerializer::class)
 class CloneOrFoundAncestor(
     val id: Int,
     val clone: Clone?,
     val datasetId: Int?,
-    val mutationsSet: MutationsSet,
-    val distanceFromRoot: BigDecimal,
-    val distanceFromMostRecentAncestor: BigDecimal?
+    val mutationsSet: MutationsSet
 )
 
 class CloneOrFoundAncestorSerializer : Serializer<CloneOrFoundAncestor> {
@@ -36,17 +33,13 @@ class CloneOrFoundAncestorSerializer : Serializer<CloneOrFoundAncestor> {
         output.writeObject(obj.clone)
         output.writeInt(obj.datasetId ?: -1)
         output.writeObject(obj.mutationsSet)
-        output.writeDouble(obj.distanceFromRoot.toDouble())
-        output.writeDouble(obj.distanceFromMostRecentAncestor?.toDouble() ?: Double.NaN)
     }
 
     override fun read(input: PrimitivI): CloneOrFoundAncestor = CloneOrFoundAncestor(
         input.readInt(),
         input.readObjectOptional(),
         input.readInt().let { if (it == -1) null else it },
-        input.readObjectRequired(),
-        BigDecimal.valueOf(input.readDouble()),
-        input.readDouble().let { if (it.isNaN()) null else BigDecimal.valueOf(it) }
+        input.readObjectRequired()
     )
 
     override fun isReference(): Boolean = false

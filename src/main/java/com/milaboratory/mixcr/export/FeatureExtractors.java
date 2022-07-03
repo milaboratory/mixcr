@@ -139,24 +139,24 @@ final class FeatureExtractors {
             if (!germlinePartitioning.isAvailable(bigGeneFeature))
                 return "-";
 
-            Range bigTargetRage = germlinePartitioning.getRelativeRange(alignedFeature, bigGeneFeature);
-            Range smallTargetRage =
+            Range bigTargetRange = germlinePartitioning.getRelativeRange(alignedFeature, bigGeneFeature);
+            Range smallTargetRange =
                     smallGeneFeature.isAlignmentAttached() ?
                             null :
                             germlinePartitioning.getRelativeRange(alignedFeature, smallGeneFeature);
-            if (smallTargetRage == null)
+            if (smallTargetRange == null)
                 for (int i = 0; i < object.numberOfTargets(); i++) {
                     SequencePartitioning pt = object.getPartitionedTarget(i).getPartitioning();
                     Range range = pt.getRange(smallGeneFeature);
                     if (range == null)
                         continue;
                     Alignment<NucleotideSequence> alignment = object.getBestHit(geneType).getAlignment(i);
-                    smallTargetRage = alignment.convertToSeq1Range(range);
-                    if (smallTargetRage != null)
+                    smallTargetRange = alignment.convertToSeq1Range(range);
+                    if (smallTargetRange != null)
                         break;
                 }
 
-            if (smallTargetRage == null)
+            if (smallTargetRange == null)
                 return "-";
 
             GeneFeature intersectionBigAligned = GeneFeature.intersectionStrict(bigGeneFeature, alignedFeature);
@@ -164,12 +164,12 @@ final class FeatureExtractors {
             for (int i = 0; i < hit.numberOfTargets(); ++i) {
                 Alignment<NucleotideSequence> alignment = hit.getAlignment(i);
 
-                if (alignment == null || !alignment.getSequence1Range().contains(smallTargetRage))
+                if (alignment == null || !alignment.getSequence1Range().contains(smallTargetRange))
                     continue;
 
                 Mutations<NucleotideSequence> mutations;
                 if (parameters.length == 2) {
-                    mutations = alignment.getAbsoluteMutations().extractAbsoluteMutationsForRange(smallTargetRage);
+                    mutations = alignment.getAbsoluteMutations().extractAbsoluteMutationsForRange(smallTargetRange);
 
                     ReferencePoint baIntersectionBegin = intersectionBigAligned.getFirstPoint();
 
@@ -194,11 +194,11 @@ final class FeatureExtractors {
                     // if (mutations == null)
                     //     continue;
                 } else
-                    mutations = alignment.getAbsoluteMutations().extractRelativeMutationsForRange(smallTargetRage);
+                    mutations = alignment.getAbsoluteMutations().extractRelativeMutationsForRange(smallTargetRange);
 
                 return convert(mutations, gene.getFeature(bigGeneFeature),
                         object.getFeature(smallGeneFeature).getSequence(),
-                        bigTargetRage.getRelativeRangeOf(smallTargetRage),
+                        bigTargetRange.getRelativeRangeOf(smallTargetRange),
                         germlinePartitioning.getTranslationParameters(bigGeneFeature));
             }
             return "-";

@@ -24,6 +24,19 @@ inline fun <reified K : Any, reified V : Any> PrimitivI.readMap(): Map<K, V> =
 
 inline fun <reified T : Any> PrimitivI.readList(): List<T> = Util.readList(T::class.java, this)
 
+fun PrimitivO.writeList(array: List<*>) = Util.writeList(array, this)
+
+fun PrimitivO.writeMap(array: Map<*, *>) = Util.writeMap(array, this)
+
+fun <T : Any> PrimitivO.writeArray(array: Array<T>) {
+    this.writeInt(array.size)
+    for (o in array) this.writeObject(o)
+}
+
+inline fun <reified T : Any> PrimitivI.readArray(): Array<T> = Array(readInt()) {
+    readObject(T::class.java)
+}
+
 fun <T, R> OutputPort<T>.map(function: (T) -> R): OutputPort<R> = CUtils.wrap(this, function)
 
 fun <T, R> OutputPort<T>.mapNotNull(function: (T) -> R?): OutputPort<R> = flatMap {

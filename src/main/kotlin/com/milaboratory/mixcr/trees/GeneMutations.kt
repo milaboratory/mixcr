@@ -22,33 +22,34 @@ import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readObjectRequired
+import io.repseq.core.GeneFeature
+import java.util.*
 
-sealed interface GeneMutations {
+sealed class GeneMutations(
     /**
      * Mutations within CDR3 in coordinates of V or J sequence1
      */
-    val partInCDR3: PartInCDR3
+    val partInCDR3: PartInCDR3,
 
     /**
      * Mutations outside CDR3 in coordinates of V or J sequence1.
-     * Key - ranges of V or J sequence1.
+     * Key - geneFeature from corresponded hit.
      * In every cluster keys of different nodes will be equal.
      * There will be several entries if there are holes in alignments, but this holes must be consistent.
      */
-    val mutations: Map<Range, Mutations<NucleotideSequence>>
+    val mutations: SortedMap<GeneFeature, Mutations<NucleotideSequence>>
+) {
 
     fun mutationsCount() = partInCDR3.mutations.size() + mutations.values.sumOf { it.size() }
-    fun combinedMutations(): Mutations<NucleotideSequence>
+    abstract fun combinedMutations(): Mutations<NucleotideSequence>
 
-    fun buildPartInCDR3(rootInfo: RootInfo): NucleotideSequence
-
-    fun sequence1Length() = mutations.keys.sumOf { it.length() }
+    abstract fun buildPartInCDR3(rootInfo: RootInfo): NucleotideSequence
 }
 
-data class VGeneMutations(
-    override val mutations: Map<Range, Mutations<NucleotideSequence>>,
-    override val partInCDR3: PartInCDR3
-) : GeneMutations {
+class VGeneMutations(
+    mutations: Map<GeneFeature, Mutations<NucleotideSequence>>,
+    partInCDR3: PartInCDR3
+) : GeneMutations(partInCDR3, mutations.toSortedMap()) {
     override fun combinedMutations(): Mutations<NucleotideSequence> =
         (mutations.values.asSequence().flatMap { it.asSequence() } + partInCDR3.mutations.asSequence())
             .asMutations(NucleotideSequence.ALPHABET)
@@ -57,10 +58,10 @@ data class VGeneMutations(
         MutationsUtils.buildSequence(rootInfo.VSequence, partInCDR3.mutations, rootInfo.VRangeInCDR3)
 }
 
-data class JGeneMutations(
-    override val partInCDR3: PartInCDR3,
-    override val mutations: Map<Range, Mutations<NucleotideSequence>>
-) : GeneMutations {
+class JGeneMutations(
+    partInCDR3: PartInCDR3,
+    mutations: Map<GeneFeature, Mutations<NucleotideSequence>>
+) : GeneMutations(partInCDR3, mutations.toSortedMap()) {
     override fun combinedMutations(): Mutations<NucleotideSequence> =
         (partInCDR3.mutations.asSequence() + mutations.values.asSequence().flatMap { it.asSequence() })
             .asMutations(NucleotideSequence.ALPHABET)

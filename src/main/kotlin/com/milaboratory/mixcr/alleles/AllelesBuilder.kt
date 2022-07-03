@@ -22,24 +22,16 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.IOUtil
-import com.milaboratory.mixcr.util.ClonesAlignmentRanges
-import com.milaboratory.mixcr.util.Cluster
-import com.milaboratory.mixcr.util.asMutations
-import com.milaboratory.mixcr.util.asSequence
-import com.milaboratory.mixcr.util.buildClusters
+import com.milaboratory.mixcr.util.*
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
 import com.milaboratory.primitivio.filter
 import com.milaboratory.primitivio.flatten
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.sorting.HashSorter
-import io.repseq.core.BaseSequence
-import io.repseq.core.GeneFeature
+import io.repseq.core.*
 import io.repseq.core.GeneFeature.CDR3
-import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
-import io.repseq.core.ReferencePoint
-import io.repseq.core.VDJCGene
 import io.repseq.dto.VDJCGeneData
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
@@ -132,7 +124,7 @@ class AllelesBuilder(
                         .flatMap { it.absoluteMutations.asSequence() }
                         .filter { commonAlignmentRanges.containsMutation(it) }
                         .asMutations(NucleotideSequence.ALPHABET),
-                    clone.getNFeature(CDR3).size(),
+                    clone.ntLengthOf(CDR3),
                     clone.getBestHit(complimentaryGene).gene.geneName
                 )
             }
