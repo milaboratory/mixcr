@@ -18,19 +18,19 @@ assert() {
 set -euxo pipefail
 
 mixcr align -f \
-    --tag-pattern '^(CELL:N{16})(UMI:N{10})\^(R2:*)' \
-    -p rna-seq -s hs \
-    -OvParameters.geneFeatureToAlign=VTranscript \
-    -OvParameters.parameters.floatingLeftBound=false \
-    -OjParameters.parameters.floatingRightBound=false \
-    -OcParameters.parameters.floatingRightBound=false \
-    -OallowPartialAlignments=true \
-    -OallowNoCDR3PartAlignments=true \
-    -OsaveOriginalReads=true \
-    --report case10.align.report \
-    single_cell_vdj_t_subset_R1.fastq.gz \
-    single_cell_vdj_t_subset_R2.fastq.gz \
-    case10.aligned-vdjca
+  --tag-pattern '^(CELL:N{16})(UMI:N{10})\^(R2:*)' \
+  -p rna-seq -s hs \
+  -OvParameters.geneFeatureToAlign=VTranscript \
+  -OvParameters.parameters.floatingLeftBound=false \
+  -OjParameters.parameters.floatingRightBound=false \
+  -OcParameters.parameters.floatingRightBound=false \
+  -OallowPartialAlignments=true \
+  -OallowNoCDR3PartAlignments=true \
+  -OsaveOriginalReads=true \
+  --report case10.align.report \
+  single_cell_vdj_t_subset_R1.fastq.gz \
+  single_cell_vdj_t_subset_R2.fastq.gz \
+  case10.aligned-vdjca
 
 mixcr correctAndSortTags case10.aligned-vdjca case10.corrected-vdjca
 
@@ -49,11 +49,15 @@ mixcr assembleContigs -f case10.cdr3-cell-clna case10.cdr3-cell-clns
 #mixcr assemble -f -OassemblingFeatures='VDJRegion' case10.part-assembled-molecule-vdjca case10.vdjregion-molecule-clns
 #mixcr assemble -f -OassemblingFeatures='VDJRegion' --cell-level case10.part-assembled-cell-vdjca case10.vdjregion-cell-clns
 
+# Testing that clones for which mixcr was able to reconstruct the whole sequence are the same both in molecular and cell barcode assembly modes
+
 for f in case10*-clns; do
   # -count -uniqueTagCount UMI
   mixcr exportClones -f --split-by-tag CELL -tag CELL -nFeature CDR3 -nFeature VDJRegion ${f} ${f}.txt
-  grep -E 'TGTGCTGTGCAGGCGGTACTTCAACAAATTTTACTTT|TGTGCCAGCACAAACAGTCATGGCTACACCTTC|TGCCTCGTGGGTGACTCCGGTGGCCAGAAGCTGCTCTTT|TGTGCCAGCAGCTTAGGGGGGACAGGGGACCAAGAGACCCAGTACTTC|TGTGCAGCACCTCGTACGTTAAACGACTACAAGCTCAGCTTT|TGTGTTGTGAGTCTTCTGGTGGCTACAATAAGCTGATTTTT' ${f}.txt > ${f}.txt.g
-  sort ${f}.txt.g > ${f}.txt.g.s
+  #  grep -E 'TGTGCTGTGCAGGCGGTACTTCAACAAATTTTACTTT|TGTGCCAGCACAAACAGTCATGGCTACACCTTC|TGCCTCGTGGGTGACTCCGGTGGCCAGAAGCTGCTCTTT|TGTGCCAGCAGCTTAGGGGGGACAGGGGACCAAGAGACCCAGTACTTC|TGTGCAGCACCTCGTACGTTAAACGACTACAAGCTCAGCTTT|TGTGTTGTGAGTCTTCTGGTGGCTACAATAAGCTGATTTTT' ${f}.txt >${f}.txt.g
+  grep -v -E '\t$' ${f}.txt >${f}.txt.g
+  sort ${f}.txt.g >${f}.txt.g.s
+  #  sort ${f}.txt > ${f}.txt.s
 done
 
 cmp case10.cdr3-cell-clns.txt.g.s case10.cdr3-molecule-clns.txt.g.s

@@ -12,9 +12,7 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
-import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
-import com.milaboratory.mitool.consensus.AAssemblerParameters;
-import com.milaboratory.mitool.consensus.GConsensusAssemblerParameters;
+import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.mixcr.assembler.preclone.FilePreCloneReader;
 import com.milaboratory.mixcr.assembler.preclone.PreClone;
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerParameters;
@@ -25,18 +23,14 @@ import com.milaboratory.mixcr.basictypes.tag.TagInfo;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.mixcr.basictypes.tag.TagType;
 import com.milaboratory.mixcr.basictypes.tag.TagValue;
-import com.milaboratory.util.ReportHelper;
-import com.milaboratory.util.SmartProgressReporter;
-import com.milaboratory.util.TempFileDest;
-import com.milaboratory.util.TempFileManager;
+import com.milaboratory.util.*;
 import gnu.trove.iterator.TObjectDoubleIterator;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 
 import java.io.PrintStream;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import static picocli.CommandLine.*;
 
@@ -55,25 +49,21 @@ public class ITestCommandAssemblePreClones extends ACommandMiXCR {
             names = {"--use-system-temp"})
     public boolean useSystemTemp = false;
 
-    private static final AAssemblerParameters aAssemblerParams = AAssemblerParameters.builder()
-            .bandWidth(4)
-            .scoring(LinearGapAlignmentScoring.getNucleotideBLASTScoring(-14))
-            .minAlignmentScore(40)
-            .maxAlignmentPenalty(33)
-            .trimMinimalSumQuality(20)
-            .trimReferenceRegion(false)
-            .maxQuality((byte) 45)
-            .build();
-    private static final GConsensusAssemblerParameters gAssemblerParams = GConsensusAssemblerParameters.builder()
-            .aAssemblerParameters(aAssemblerParams)
-            .maxIterations(4)
-            .minAltSeedQualityScore((byte) 11)
-            .minimalRecordShare(0.1)
-            .minimalRecordCount(2)
-            .build();
+    @Option(names = "-A", description = "Overrides default pre-clone assembler parameter values.")
+    private Map<String, String> preCloneAssemblerOverrides = new HashMap<>();
 
     @Override
     public void run0() throws Exception {
+        PreCloneAssemblerParameters params = PreCloneAssemblerParameters.getDefaultParameters(cellLevel);
+
+        if (!preCloneAssemblerOverrides.isEmpty()) {
+            params = JsonOverrider.override(params,
+                    PreCloneAssemblerParameters.class,
+                    preCloneAssemblerOverrides);
+            if (params == null)
+                throwValidationException("Failed to override some pre-clone assembler parameters: " + preCloneAssemblerOverrides);
+        }
+
         long totalAlignments;
         TempFileDest tmp = TempFileManager.smartTempDestination(files.get(1), "", useSystemTemp);
         int cdr3Hash = 0;
@@ -83,14 +73,24 @@ public class ITestCommandAssemblePreClones extends ACommandMiXCR {
                     alignmentsReader,
                     cellLevel ? TagType.Cell : TagType.Molecule,
                     new GeneFeature[]{GeneFeature.CDR3},
-                    PreCloneAssemblerParameters.DefaultGConsensusAssemblerParameters,
+                    params,
                     Paths.get(files.get(1)),
                     tmp);
             SmartProgressReporter.startProgressReport(assemblerRunner);
             assemblerRunner.run();
             assemblerRunner.getReport().writeReport(ReportHelper.STDOUT);
-            for (VDJCAlignments al : CUtils.it(alignmentsReader.readAlignments()))
+
+            Set<TagTuple> tagTuples = new HashSet<>();
+            TagTuple prevTagKey = null;
+            for (VDJCAlignments al : CUtils.it(alignmentsReader.readAlignments())) {
                 cdr3Hash += Objects.hashCode(al.getFeature(GeneFeature.CDR3));
+                TagTuple tagKey = al.getTagCount().asKeyPrefixOrError(alignmentsReader.getTagsInfo().getSortingLevel());
+                if (!tagKey.equals(prevTagKey)) {
+                    if (!tagTuples.add(tagKey))
+                        throwExecutionException("broken sorting: " + tagKey);
+                    prevTagKey = tagKey;
+                }
+            }
         }
 
         try (FilePreCloneReader reader = new FilePreCloneReader(Paths.get(files.get(1)))) {
@@ -103,10 +103,11 @@ public class ITestCommandAssemblePreClones extends ACommandMiXCR {
                 ps.print("alignmentId\t");
                 for (TagInfo ti : reader.getTagsInfo())
                     ps.print(ti.getName() + "\t");
-                ps.println("readIndex\tcloneId\tcdr3\tbestV\tbestJ");
+                ps.println("readIndex\tcloneId\tcdr3\tcdr3_qual\tbestV\tbestJ");
                 for (VDJCAlignments al : CUtils.it(reader.readAlignments())) {
                     cdr3Hash -= Objects.hashCode(al.getFeature(GeneFeature.CDR3));
                     numberOfAlignmentsCheck++;
+
                     TObjectDoubleIterator<TagTuple> it = al.getTagCount().iterator();
                     while (it.hasNext()) {
                         it.advance();
@@ -115,8 +116,12 @@ public class ITestCommandAssemblePreClones extends ACommandMiXCR {
                             ps.print(tv.toString() + "\t");
                         ps.print(al.getMinReadId() + "\t" +
                                 al.getCloneIndex() + "\t");
-                        if (al.getFeature(GeneFeature.CDR3) != null)
-                            ps.print(al.getFeature(GeneFeature.CDR3).getSequence());
+                        NSequenceWithQuality cdr3 = al.getFeature(GeneFeature.CDR3);
+                        if (cdr3 != null)
+                            ps.print(cdr3.getSequence());
+                        ps.print("\t");
+                        if (cdr3 != null)
+                            ps.print(cdr3.getQuality());
                         ps.print("\t");
                         if (al.getBestHit(GeneType.Variable) != null)
                             ps.print(al.getBestHit(GeneType.Variable).getGene().getName());
@@ -158,6 +163,8 @@ public class ITestCommandAssemblePreClones extends ACommandMiXCR {
                     TObjectDoubleIterator<TagTuple> it = c.getCoreTagCount().iterator();
                     while (it.hasNext()) {
                         it.advance();
+                        // if (!tagTuples.add(it.key()))
+                        //     throwExecutionException("duplicate clone tag tuple: " + it.key());
                         ps.print(c.getIndex() + "\t");
                         for (TagValue tv : it.key())
                             ps.print(tv.toString() + "\t");

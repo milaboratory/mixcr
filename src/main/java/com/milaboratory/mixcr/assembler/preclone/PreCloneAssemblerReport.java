@@ -26,6 +26,8 @@ public final class PreCloneAssemblerReport implements Report {
     final AtomicLong inputAlignments = new AtomicLong();
     final AtomicLong clonotypes = new AtomicLong();
     final ConcurrentAtomicLongMap<Integer> clonotypesPerGroup = new ConcurrentAtomicLongMap<>();
+    final AtomicLong coreClonotypesDroppedByTagSuffix = new AtomicLong();
+    final AtomicLong coreAlignmentsDroppedByTagSuffix = new AtomicLong();
     final AtomicLong coreAlignments = new AtomicLong();
     final AtomicLong discardedCoreAlignments = new AtomicLong();
     final AtomicLong empiricallyAssignedAlignments = new AtomicLong();
@@ -43,9 +45,9 @@ public final class PreCloneAssemblerReport implements Report {
         helper.writeField("Number of input groups", inputGroups.get());
         helper.writeField("Number of input alignments", inputAlignments.get());
         helper.writeField("Number of output pre-clonotypes", clonotypes.get());
-        helper.println("Number of clonotypes per group");
-        helper.print(ReportKt.format(clonotypesPerGroup.getImmutable(), "  ",
-                new StringBuilder(), new FormatSettings(0), 0).toString());
+        helper.print("Number of clonotypes per group");
+        helper.print(ReportKt.binFormat(clonotypesPerGroup.getImmutable(), "  ",
+                new StringBuilder(), new FormatSettings(0.0, Integer.MAX_VALUE, 0.05)).toString());
         helper.writePercentAndAbsoluteField("Number of core alignments", coreAlignments.get(), inputAlignments.get());
         helper.writePercentAndAbsoluteField("Discarded core alignments", discardedCoreAlignments.get(), coreAlignments.get());
         helper.writePercentAndAbsoluteField("Empirically assigned alignments", empiricallyAssignedAlignments.get(), inputAlignments.get());
@@ -56,7 +58,7 @@ public final class PreCloneAssemblerReport implements Report {
         helper.writeField("Number of ambiguous UMIs", umiConflicts.get());
         for (GeneType gt : GeneType.values()) {
             long value = geneConflicts.get(gt.ordinal());
-            if(value == 0)
+            if (value == 0)
                 continue;
             helper.writeField("Number of ambiguous " + gt.getLetter() + "-genes", value);
         }
