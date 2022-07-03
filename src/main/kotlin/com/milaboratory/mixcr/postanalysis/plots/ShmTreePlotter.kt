@@ -257,7 +257,7 @@ class ShmTreePlotter(
         val data = leafs
             .flatMap {
                 it.node.content.clones.map { c ->
-                    val height = it.node.content.distanceFrom(SHMTreeForPostanalysis.Base.root)?.toDouble() ?: 0.0
+                    val height = it.node.content.distanceFrom(SHMTreeForPostanalysis.Base.germline)?.toDouble() ?: 0.0
                     val metaValue = metadata?.get(c.datasetId)?.get(stat.metadataColumn)
                     metadataRanks[stat.metadataColumn]!![metaValue]!! to height
                 }
