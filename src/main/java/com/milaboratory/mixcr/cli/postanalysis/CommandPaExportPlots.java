@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -46,6 +47,11 @@ public abstract class CommandPaExportPlots extends CommandPaExport {
 
     @Parameters(description = "Output PDF file name", index = "1", defaultValue = "plot.pdf")
     public String out;
+
+    @Override
+    protected List<String> getOutputFiles() {
+        return Collections.emptyList(); // output will be always overriden
+    }
 
     protected <T> DataFrame<T> filter(DataFrame<T> df) {
         if (filterByMetadata != null)

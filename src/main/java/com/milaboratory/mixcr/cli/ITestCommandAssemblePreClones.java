@@ -29,6 +29,7 @@ import com.milaboratory.util.TempFileManager;
 import io.repseq.core.GeneFeature;
 
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 
 import static picocli.CommandLine.*;
@@ -36,7 +37,7 @@ import static picocli.CommandLine.*;
 @Command(name = "itestAssemblePreClones",
         separator = " ",
         hidden = true)
-public class ITestCommandAssemblePreClones extends ACommandMiXCR {
+public class ITestCommandAssemblePreClones extends MiXCRCommand {
     @Parameters(arity = "2", description = "input_file output_file")
     public List<String> files;
 
@@ -47,6 +48,16 @@ public class ITestCommandAssemblePreClones extends ACommandMiXCR {
     @Option(description = "Use system temp folder for temporary files, the output folder will be used if this option is omitted.",
             names = {"--use-system-temp"})
     public boolean useSystemTemp = false;
+
+    @Override
+    protected List<String> getInputFiles() {
+        return Collections.singletonList(files.get(0));
+    }
+
+    @Override
+    protected List<String> getOutputFiles() {
+        return Collections.singletonList(files.get(1));
+    }
 
     private static final AAssemblerParameters aAssemblerParams = AAssemblerParameters.builder()
             .bandWidth(4)

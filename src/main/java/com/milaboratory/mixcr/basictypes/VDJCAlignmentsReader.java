@@ -12,7 +12,6 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPortCloseable;
-import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.AlignmentsProvider;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
@@ -38,7 +37,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.*;
 
-public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR implements
+public final class VDJCAlignmentsReader implements
         OutputPortCloseable<VDJCAlignments>,
         AlignmentsProvider,
         VDJCFileHeaderData,
@@ -55,7 +54,6 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
     PrimitivIBlocks<VDJCAlignments>.Reader reader;
 
     VDJCAlignerParameters parameters;
-    PipelineConfiguration pipelineConfiguration;
     List<VDJCGene> usedGenes;
     TagsInfo tagsInfo;
 
@@ -143,7 +141,6 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
             versionInfo = i.readUTF();
 
             parameters = i.readObject(VDJCAlignerParameters.class);
-            pipelineConfiguration = i.readObject(PipelineConfiguration.class);
             tagsInfo = i.readObject(TagsInfo.class);
 
             this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(i, parameters, vdjcRegistry);
@@ -170,12 +167,6 @@ public final class VDJCAlignmentsReader extends PipelineConfigurationReaderMiXCR
     public synchronized List<VDJCGene> getUsedGenes() {
         ensureInitialized();
         return usedGenes;
-    }
-
-    @Override
-    public synchronized PipelineConfiguration getPipelineConfiguration() {
-        ensureInitialized();
-        return pipelineConfiguration;
     }
 
     @Override

@@ -11,9 +11,6 @@
  */
 package com.milaboratory.mixcr.cli;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.util.ArraysUtils;
 import com.milaboratory.util.SmartProgressReporter;
@@ -21,13 +18,12 @@ import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine;
+import picocli.CommandLine.Parameters;
 
-import java.io.File;
 import java.nio.file.Paths;
-import java.util.Objects;
+import java.util.Collections;
+import java.util.List;
 
-import static com.milaboratory.mixcr.basictypes.IOUtil.MAGIC_CLNA;
-import static com.milaboratory.mixcr.basictypes.IOUtil.MAGIC_CLNS;
 import static com.milaboratory.mixcr.cli.CommandSortClones.SORT_CLONES_COMMAND_NAME;
 import static com.milaboratory.util.TempFileManager.smartTempDestination;
 
@@ -36,22 +32,33 @@ import static com.milaboratory.util.TempFileManager.smartTempDestination;
         sortOptions = true,
         separator = " ",
         description = "Sort clones by sequence. Clones in the output file will be sorted by clonal sequence, which allows to build overlaps between clonesets.")
-public class CommandSortClones extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
+public class CommandSortClones extends MiXCRCommand {
     static final String SORT_CLONES_COMMAND_NAME = "sortClones";
+
+    @Parameters(description = "clones.[clns|clna]", index = "0")
+    public String in;
+
+    @Parameters(description = "clones.sorted.clns", index = "1")
+    public String out;
 
     @CommandLine.Option(description = "Use system temp folder for temporary files, the output folder will be used if this option is omitted.",
             names = {"--use-system-temp"})
     public boolean useSystemTemp = false;
 
     @Override
-    public ActionConfiguration<SortConfiguration> getConfiguration() {
-        return new SortConfiguration();
+    protected List<String> getInputFiles() {
+        return Collections.singletonList(in);
     }
 
     @Override
-    public void run1() throws Exception {
-        switch (Objects.requireNonNull(IOUtil.fileInfoExtractorInstance.getFileInfo(new File(in))).fileType) {
-            case MAGIC_CLNS:
+    protected List<String> getOutputFiles() {
+        return Collections.singletonList(out);
+    }
+
+    @Override
+    public void run0() throws Exception {
+        switch (IOUtil.extractFileType(Paths.get(in))) {
+            case CLNS:
                 try (ClnsReader reader = new ClnsReader(Paths.get(in), VDJCLibraryRegistry.getDefault());
                      ClnsWriter writer = new ClnsWriter(out)) {
 
@@ -68,13 +75,13 @@ public class CommandSortClones extends ACommandWithSmartOverwriteWithSingleInput
                     VDJCSProperties.CloneOrdering ordering = VDJCSProperties.cloneOrderingByNucleotide(assemblingFeatures,
                             GeneType.Variable, GeneType.Joining);
 
-                    writer.writeCloneSet(reader.getPipelineConfiguration(), CloneSet.reorder(reader.getCloneSet(), ordering));
+                    writer.writeCloneSet(CloneSet.reorder(reader.getCloneSet(), ordering));
                 }
                 return;
 
-            case MAGIC_CLNA:
+            case CLNA:
                 try (ClnAReader reader = new ClnAReader(Paths.get(in), VDJCLibraryRegistry.getDefault(), Runtime.getRuntime().availableProcessors());
-                     ClnAWriter writer = new ClnAWriter(getFullPipelineConfiguration(), out, smartTempDestination(out, "", useSystemTemp))) {
+                     ClnAWriter writer = new ClnAWriter(out, smartTempDestination(out, "", useSystemTemp))) {
                     SmartProgressReporter.startProgressReport(writer);
 
                     GeneFeature[] assemblingFeatures = reader.getAssemblerParameters().getAssemblingFeatures();
@@ -94,34 +101,6 @@ public class CommandSortClones extends ACommandWithSmartOverwriteWithSingleInput
                     writer.collateAlignments(reader.readAllAlignments(), reader.numberOfAlignments());
                     writer.writeAlignmentsAndIndex();
                 }
-        }
-    }
-
-
-    @JsonAutoDetect(
-            fieldVisibility = JsonAutoDetect.Visibility.ANY,
-            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-            getterVisibility = JsonAutoDetect.Visibility.NONE)
-    @JsonTypeInfo(
-            use = JsonTypeInfo.Id.CLASS,
-            include = JsonTypeInfo.As.PROPERTY,
-            property = "type")
-    public static class SortConfiguration implements ActionConfiguration<SortConfiguration> {
-        @Override
-        public String actionName() {
-            return "sortClones";
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(CommandSortAlignments.SortConfiguration.class);
         }
     }
 }

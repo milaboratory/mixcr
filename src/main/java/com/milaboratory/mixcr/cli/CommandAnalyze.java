@@ -11,8 +11,6 @@
  */
 package com.milaboratory.mixcr.cli;
 
-import com.milaboratory.cli.ACommandWithOutput;
-import com.milaboratory.cli.ACommandWithSmartOverwrite;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.JsonOverrider;
@@ -32,7 +30,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
+public abstract class CommandAnalyze extends MiXCRCommand {
     private static <T extends WithNameWithDescription> T parse0(Class<? extends T> clazz, String v) {
         T[] ts = clazz.getEnumConstants();
         for (T t : ts)
@@ -303,11 +301,9 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
             return report;
     }
 
-    private <T extends ACommandWithOutput> T inheritOptionsAndValidate(T parameters) {
+    private <T extends MiXCRCommand> T inheritOptionsAndValidate(T parameters) {
         if (forceOverwrite)
             parameters.forceOverwrite = true;
-        if (parameters instanceof ACommandWithSmartOverwrite)
-            ((ACommandWithSmartOverwrite) parameters).overwriteIfRequired = true;
 
         parameters.quiet = true;
         parameters.validate();
@@ -331,16 +327,16 @@ public abstract class CommandAnalyze extends ACommandWithOutputMiXCR {
         return cmdAlign = inheritOptionsAndValidate(mkAlign());
     }
 
-    String forceAlignmentParameters() { return alignPreset; }
+    String forceAlignmentParameters() {return alignPreset;}
 
-    boolean include5UTRInRNA() { return true; }
+    boolean include5UTRInRNA() {return true;}
 
     Collection<String> pipelineSpecificAlignParameters() {
-        return Collections.EMPTY_LIST;
+        return Collections.emptyList();
     }
 
     Collection<String> pipelineSpecificAssembleParameters() {
-        return Collections.EMPTY_LIST;
+        return Collections.emptyList();
     }
 
     private void inheritThreads(List<String> args, List<String> specificArgs) {

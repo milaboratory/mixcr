@@ -13,17 +13,9 @@ package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.milaboratory.cli.ActionConfiguration;
-import com.milaboratory.cli.PipelineConfiguration;
-import com.milaboratory.mixcr.basictypes.PipelineConfigurationReaderMiXCR;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
-import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.VDJCLibraryRegistry;
@@ -31,7 +23,6 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -42,7 +33,7 @@ import static com.milaboratory.mixcr.cli.CommandMergeAlignments.MERGE_ALIGNMENTS
         sortOptions = true,
         separator = " ",
         description = "Merge several *.vdjca files with alignments into a single alignments file.")
-public class CommandMergeAlignments extends ACommandWithSmartOverwriteMiXCR {
+public class CommandMergeAlignments extends MiXCRCommand {
     static final String MERGE_ALIGNMENTS_COMMAND_NAME = "mergeAlignments";
 
     @Parameters(description = "[input_file1.vdjca [input_file2.vdjca ....]] output_file.vdjca", arity = "2..*")
@@ -58,68 +49,20 @@ public class CommandMergeAlignments extends ACommandWithSmartOverwriteMiXCR {
         return input.subList(input.size() - 1, input.size());
     }
 
-    private MergeConfiguration configuration = null;
-
     @Override
-    public ActionConfiguration<MergeConfiguration> getConfiguration() {
-        return configuration != null
-                ? configuration
-                : (configuration = new MergeConfiguration(getInputFiles().stream()
-                .map(PipelineConfigurationReaderMiXCR::sFromFile).toArray(PipelineConfiguration[]::new)));
-    }
-
-    @Override
-    public PipelineConfiguration getFullPipelineConfiguration() {
-        return PipelineConfiguration.mkInitial(getInputFiles(), getConfiguration(),
-                MiXCRVersionInfo.getAppVersionInfo());
-    }
-
-    @Override
-    public void run1() throws Exception {
+    public void run0() throws Exception {
         try (MultiReader reader = new MultiReader(getInputFiles());
-             VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(getOutput())) {
+             VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(getOutputFiles().get(0))) {
             reader.initNextReader();
             SmartProgressReporter.startProgressReport("Merging", reader);
-            writer.header(reader.currentInnerReader.getParameters(), reader.currentInnerReader.getUsedGenes(),
-                    getFullPipelineConfiguration(), reader.currentInnerReader.getTagsInfo());
+            writer.header(
+                    reader.currentInnerReader.getParameters(),
+                    reader.currentInnerReader.getUsedGenes(),
+                    reader.currentInnerReader.getTagsInfo()
+            );
             for (VDJCAlignments record : CUtils.it(reader))
                 writer.write(record);
             writer.setNumberOfProcessedReads(reader.readIdOffset.get());
-        }
-    }
-
-    @JsonAutoDetect(
-            fieldVisibility = JsonAutoDetect.Visibility.ANY,
-            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-            getterVisibility = JsonAutoDetect.Visibility.NONE)
-    @JsonTypeInfo(
-            use = JsonTypeInfo.Id.CLASS,
-            include = JsonTypeInfo.As.PROPERTY,
-            property = "type")
-    public static class MergeConfiguration implements ActionConfiguration<MergeConfiguration> {
-        final PipelineConfiguration[] sources;
-
-        @JsonCreator
-        public MergeConfiguration(@JsonProperty("sources") PipelineConfiguration[] sources) {
-            this.sources = sources;
-        }
-
-        @Override
-        public String actionName() {
-            return MERGE_ALIGNMENTS_COMMAND_NAME;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            MergeConfiguration that = (MergeConfiguration) o;
-            return Arrays.equals(sources, that.sources);
-        }
-
-        @Override
-        public int hashCode() {
-            return Arrays.hashCode(sources);
         }
     }
 

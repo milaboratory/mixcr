@@ -20,12 +20,6 @@ import cc.redberry.pipe.util.Chunk;
 import cc.redberry.pipe.util.CountLimitingOutputPort;
 import cc.redberry.pipe.util.OrderedOutputPort;
 import cc.redberry.pipe.util.StatusReporter;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.milaboratory.cli.ActionConfiguration;
-import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.core.PairedEndReadsLayout;
 import com.milaboratory.core.Target;
 import com.milaboratory.core.io.CompressionType;
@@ -49,7 +43,6 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.tag.*;
-import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.*;
 import com.milaboratory.util.*;
 import io.repseq.core.*;
@@ -79,7 +72,7 @@ import static com.milaboratory.mixcr.cli.CommandAlign.ALIGN_COMMAND_NAME;
         sortOptions = false,
         separator = " ",
         description = "Builds alignments with V,D,J and C genes for input sequencing reads.")
-public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
+public class CommandAlign extends MiXCRCommand {
     static final String ALIGN_COMMAND_NAME = "align";
     @Parameters(arity = "2..3",
             paramLabel = "files",
@@ -361,91 +354,6 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
         }
     }
 
-    @Override
-    public PipelineConfiguration getFullPipelineConfiguration() {
-        return PipelineConfiguration.mkInitial(getInputFiles(), getConfiguration(),
-                MiXCRVersionInfo.getAppVersionInfo());
-    }
-
-    @Override
-    public ActionConfiguration getConfiguration() {
-        return new AlignConfiguration(
-                getAlignerParameters(),
-                !noMerge,
-                getLibrary().getLibraryId(),
-                limit,
-                getQualityTrimmerParameters(),
-                tagPattern);
-    }
-
-    /** Set of parameters that completely (uniquely) determine align action */
-    @JsonAutoDetect(
-            fieldVisibility = JsonAutoDetect.Visibility.ANY,
-            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-            getterVisibility = JsonAutoDetect.Visibility.NONE)
-    @JsonTypeInfo(
-            use = JsonTypeInfo.Id.CLASS,
-            include = JsonTypeInfo.As.PROPERTY,
-            property = "type"
-    )
-    public static class AlignConfiguration implements ActionConfiguration<AlignConfiguration> {
-        /**
-         * Aligner parameters
-         */
-        public final VDJCAlignerParameters alignerParameters;
-        /**
-         * Whether reads were merged
-         */
-        public final boolean mergeReads;
-        /**
-         * VDJC library ID
-         */
-        public final VDJCLibraryId libraryId;
-        /**
-         * Limit number of reads
-         */
-        public final long limit;
-        /**
-         * Trimming parameters (null if trimming is not enabled)
-         */
-        public final QualityTrimmerParameters trimmerParameters;
-        /** Tag extraction pattern */
-        public final String tagPattern;
-
-        @JsonCreator
-        public AlignConfiguration(@JsonProperty("alignerParameters") VDJCAlignerParameters alignerParameters,
-                                  @JsonProperty("mergeReads") boolean mergeReads,
-                                  @JsonProperty("libraryId") VDJCLibraryId libraryId,
-                                  @JsonProperty("limit") long limit,
-                                  @JsonProperty("trimmerParameters") QualityTrimmerParameters trimmerParameters,
-                                  @JsonProperty("tagPattern") String tagPattern) {
-            this.alignerParameters = alignerParameters;
-            this.mergeReads = mergeReads;
-            this.libraryId = libraryId;
-            this.limit = limit;
-            this.trimmerParameters = trimmerParameters;
-            this.tagPattern = tagPattern;
-        }
-
-        @Override
-        public String actionName() {
-            return ALIGN_COMMAND_NAME;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            AlignConfiguration that = (AlignConfiguration) o;
-            return mergeReads == that.mergeReads && limit == that.limit && Objects.equals(alignerParameters, that.alignerParameters) && Objects.equals(libraryId, that.libraryId) && Objects.equals(trimmerParameters, that.trimmerParameters) && Objects.equals(tagPattern, that.tagPattern);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(alignerParameters, mergeReads, libraryId, limit, trimmerParameters, tagPattern);
-        }
-    }
-
     public TagSearchPlan getTagPattern() {
         if (tagPattern == null && tagPatternName == null && tagPatternFile == null)
             return null;
@@ -536,7 +444,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public void run1() throws Exception {
+    public void run0() throws Exception {
         // Saving initial timestamp
         long beginTimestamp = System.currentTimeMillis();
 
@@ -609,7 +517,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
 
         report.setStartMillis(beginTimestamp);
         report.setInputFiles(getInputFiles());
-        report.setOutputFiles(getOutput());
+        report.setOutputFiles(getOutputFiles());
         report.setCommandLine(getCommandLineArguments());
 
         if (tagSearchPlan != null)
@@ -618,11 +526,12 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
         // Attaching report to aligner
         aligner.setEventsListener(report);
 
+        String outputFile = getOutputFiles().get(0);
         try (SequenceReaderCloseable<? extends SequenceRead> reader = createReader();
 
-             VDJCAlignmentsWriter writer = getOutput().equals(".")
+             VDJCAlignmentsWriter writer = outputFile.equals(".")
                      ? null
-                     : new VDJCAlignmentsWriter(getOutput(), Math.max(1, threads / 8),
+                     : new VDJCAlignmentsWriter(outputFile, Math.max(1, threads / 8),
                      DEFAULT_ALIGNMENTS_IN_BLOCK, highCompression);
 
              SequenceWriter notAlignedWriter = failedReadsR1 == null
@@ -632,7 +541,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                      : new SingleFastqWriter(failedReadsR1));
         ) {
             if (writer != null)
-                writer.header(aligner, getFullPipelineConfiguration(),
+                writer.header(aligner,
                         tagSearchPlan != null
                                 ? new TagsInfo(0, tagSearchPlan.tagInfos.toArray(new TagInfo[0]))
                                 : TagsInfo.NO_TAGS);

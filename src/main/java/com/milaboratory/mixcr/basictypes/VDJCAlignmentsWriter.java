@@ -12,7 +12,6 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.cli.AppVersionInfo;
-import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.util.MiXCRDebug;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
@@ -35,8 +34,8 @@ import java.util.List;
 public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPosition {
     public static final int DEFAULT_ENCODER_THREADS = 3;
     public static final int DEFAULT_ALIGNMENTS_IN_BLOCK = 1 << 10; // 805-1024 bytes per alignment
-    static final String MAGIC_V16 = "MiXCR.VDJC.V16";
-    static final String MAGIC = MAGIC_V16;
+    static final String MAGIC_V17 = "MiXCR.VDJC.V17";
+    static final String MAGIC = MAGIC_V17;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
 
@@ -101,17 +100,16 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
         this.numberOfProcessedReads = numberOfProcessedReads;
     }
 
-    public void header(VDJCAlignmentsReader reader, PipelineConfiguration pipelineConfiguration, TagsInfo tagsInfo) {
-        header(reader.getParameters(), reader.getUsedGenes(), pipelineConfiguration, tagsInfo);
+    public void header(VDJCAlignmentsReader reader, TagsInfo tagsInfo) {
+        header(reader.getParameters(), reader.getUsedGenes(), tagsInfo);
     }
 
-    public void header(VDJCAligner aligner, PipelineConfiguration pipelineConfiguration, TagsInfo tagsInfo) {
-        header(aligner.getParameters(), aligner.getUsedGenes(), pipelineConfiguration, tagsInfo);
+    public void header(VDJCAligner aligner, TagsInfo tagsInfo) {
+        header(aligner.getParameters(), aligner.getUsedGenes(), tagsInfo);
     }
 
     @Override
-    public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes,
-                       PipelineConfiguration pipelineConfiguration, TagsInfo tags) {
+    public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes, TagsInfo tags) {
         if (parameters == null || genes == null)
             throw new IllegalArgumentException();
 
@@ -131,9 +129,6 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
 
             // Writing parameters
             o.writeObject(parameters);
-
-            // Writing history
-            o.writeObject(pipelineConfiguration);
 
             // Information about tags
             o.writeObject(tags);

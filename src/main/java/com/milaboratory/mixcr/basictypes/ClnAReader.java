@@ -14,7 +14,6 @@ package com.milaboratory.mixcr.basictypes;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
-import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
@@ -41,7 +40,7 @@ import java.util.function.Function;
 /**
  * Reader of CLNA file format.
  */
-public final class ClnAReader extends PipelineConfigurationReaderMiXCR implements CloneReader, VDJCFileHeaderData, AutoCloseable {
+public final class ClnAReader implements CloneReader, VDJCFileHeaderData, AutoCloseable {
     final PrimitivIHybrid input;
 
     // Index data
@@ -63,7 +62,6 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
 
     // Read form file header
 
-    final PipelineConfiguration configuration;
     final VDJCAlignerParameters alignerParameters;
     final CloneAssemblerParameters assemblerParameters;
     final TagsInfo tagsInfo;
@@ -145,7 +143,6 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
             }
 
             this.versionInfo = pi.readUTF();
-            this.configuration = pi.readObject(PipelineConfiguration.class);
             this.alignerParameters = pi.readObject(VDJCAlignerParameters.class);
             this.assemblerParameters = pi.readObject(CloneAssemblerParameters.class);
             this.tagsInfo = pi.readObject(TagsInfo.class);
@@ -156,11 +153,6 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
 
     public ClnAReader(String path, VDJCLibraryRegistry libraryRegistry, int concurrency) throws IOException {
         this(Paths.get(path), libraryRegistry, concurrency);
-    }
-
-    @Override
-    public PipelineConfiguration getPipelineConfiguration() {
-        return configuration;
     }
 
     /**

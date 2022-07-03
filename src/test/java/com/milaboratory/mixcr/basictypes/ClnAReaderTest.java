@@ -73,7 +73,7 @@ public class ClnAReaderTest {
                 assemble.cloneAssembler.getAssembledReadsPort());
 
         File file = TempFileManager.getTempFile();
-        ClnAWriter writer = new ClnAWriter(null, file, smartTempDestination(file, "", false));
+        ClnAWriter writer = new ClnAWriter(file, smartTempDestination(file, "", false));
 
         List<Clone> newClones = assemble.cloneSet.getClones().stream()
                 .map(Clone::resetParentCloneSet)
@@ -123,7 +123,7 @@ public class ClnAReaderTest {
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
 
         File file = TempFileManager.getTempFile();
-        ClnAWriter writer = new ClnAWriter(null, file, smartTempDestination(file, "", false));
+        ClnAWriter writer = new ClnAWriter(file, smartTempDestination(file, "", false));
         writer.writeClones(new CloneSet(Collections.EMPTY_LIST, align.usedGenes,
                 align.parameters.alignerParameters,
                 CloneAssemblerParametersPresets.getByName("default"),

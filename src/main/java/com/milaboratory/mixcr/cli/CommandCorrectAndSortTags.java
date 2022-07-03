@@ -16,9 +16,6 @@ import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.Processor;
 import cc.redberry.pipe.blocks.FilteringPort;
 import cc.redberry.pipe.util.CountingOutputPort;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mitool.refinement.CorrectionNode;
@@ -38,11 +35,12 @@ import com.milaboratory.util.TempFileManager;
 import com.milaboratory.util.sorting.HashSorter;
 import gnu.trove.list.array.TIntArrayList;
 import picocli.CommandLine;
+import picocli.CommandLine.Parameters;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.IntFunction;
 import java.util.function.ToIntFunction;
 
@@ -53,8 +51,14 @@ import static picocli.CommandLine.Option;
         sortOptions = false,
         separator = " ",
         description = "Applies error correction algorithm for tag sequences and sorts resulting file by tags.")
-public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
+public class CommandCorrectAndSortTags extends MiXCRCommand {
     static final String CORRECT_AND_SORT_TAGS_COMMAND_NAME = "correctAndSortTags";
+
+    @Parameters(description = "alignments.vdjca", index = "0")
+    public String in;
+
+    @Parameters(description = "alignments.corrected.vdjca", index = "1")
+    public String out;
 
     @Option(description = "Don't correct barcodes, only sort alignments by tags.",
             names = {"--dont-correct"})
@@ -99,6 +103,16 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
             names = {"-r", "--report"})
     public String reportFile;
 
+    @Override
+    protected List<String> getInputFiles() {
+        return Collections.singletonList(in);
+    }
+
+    @Override
+    protected List<String> getOutputFiles() {
+        return Collections.singletonList(out);
+    }
+
     TagCorrectorParameters getParameters() {
         return new TagCorrectorParameters(
                 power, backgroundSubstitutionRate, backgroundIndelRate,
@@ -107,12 +121,7 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
     }
 
     @Override
-    public ActionConfiguration<?> getConfiguration() {
-        return new CorrectTagsConfiguration(getParameters());
-    }
-
-    @Override
-    public void run1() throws Exception {
+    public void run0() throws Exception {
         TempFileDest tempDest = TempFileManager.smartTempDestination(out, "", useSystemTemp);
 
         final CorrectionNode correctionResult;
@@ -222,7 +231,7 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
                         SmartProgressReporter.extractProgress(sorted, mainReader.getNumberOfAlignments()));
 
                 // Initializing and writing results to the output file
-                writer.header(mainReader, getFullPipelineConfiguration(),
+                writer.header(mainReader,
                         mainReader.getTagsInfo().setSorted(mainReader.getTagsInfo().size()));
                 writer.setNumberOfProcessedReads(mainReader.getNumberOfReads());
                 for (VDJCAlignments al : CUtils.it(sorted))
@@ -232,33 +241,6 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
 
         if (report != null)
             report.writeReport(ReportHelper.STDOUT);
-    }
-
-    public static final class CorrectTagsConfiguration implements ActionConfiguration<CorrectTagsConfiguration> {
-        final TagCorrectorParameters parameters;
-
-        @JsonCreator
-        public CorrectTagsConfiguration(@JsonProperty("parameters") TagCorrectorParameters parameters) {
-            this.parameters = parameters;
-        }
-
-        @Override
-        public String actionName() {
-            return CORRECT_AND_SORT_TAGS_COMMAND_NAME;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            CorrectTagsConfiguration that = (CorrectTagsConfiguration) o;
-            return parameters.equals(that.parameters);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(parameters);
-        }
     }
 
     private static final class SortingStep {

@@ -17,10 +17,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.List;
 
 abstract class CommandPaExportTablesBase extends CommandPaExport {
     @Parameters(description = "Path for output files", index = "1", defaultValue = "path/table.tsv")
     public String out;
+
+    @Override
+    protected List<String> getOutputFiles() {
+        return Collections.emptyList(); // output will be always overriden
+    }
 
     public CommandPaExportTablesBase() {}
 

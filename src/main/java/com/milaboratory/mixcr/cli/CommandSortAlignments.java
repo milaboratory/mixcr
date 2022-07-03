@@ -15,9 +15,6 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.CountingOutputPort;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.mixcr.basictypes.IOUtil;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
@@ -31,13 +28,14 @@ import com.milaboratory.util.TempFileManager;
 import com.milaboratory.util.sorting.Sorter;
 import io.repseq.core.VDJCGene;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 
 import static com.milaboratory.mixcr.cli.CommandSortAlignments.SORT_ALIGNMENTS_COMMAND_NAME;
 
@@ -45,16 +43,27 @@ import static com.milaboratory.mixcr.cli.CommandSortAlignments.SORT_ALIGNMENTS_C
         sortOptions = true,
         separator = " ",
         description = "Sort alignments in vdjca file by read id.")
-public class CommandSortAlignments extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
+public class CommandSortAlignments extends MiXCRCommand {
     static final String SORT_ALIGNMENTS_COMMAND_NAME = "sortAlignments";
 
+    @Parameters(description = "alignments.vdjca", index = "0")
+    public String in;
+
+    @Parameters(description = "alignments.sorted.vdjca", index = "1")
+    public String out;
+
     @Override
-    public ActionConfiguration<SortConfiguration> getConfiguration() {
-        return new SortConfiguration();
+    protected List<String> getInputFiles() {
+        return Collections.singletonList(in);
     }
 
     @Override
-    public void run1() throws Exception {
+    protected List<String> getOutputFiles() {
+        return Collections.singletonList(out);
+    }
+
+    @Override
+    public void run0() throws Exception {
         try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(in)) {
             SmartProgressReporter.startProgressReport("Reading vdjca", reader);
             try (OutputPortCloseable<VDJCAlignments> sorted =
@@ -62,8 +71,7 @@ public class CommandSortAlignments extends ACommandWithSmartOverwriteWithSingleI
                                  new VDJCAlignmentsSerializer(reader), TempFileManager.getTempFile());
                  VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)) {
 
-                writer.header(reader.getParameters(), reader.getUsedGenes(),
-                        getFullPipelineConfiguration(), reader.getTagsInfo());
+                writer.header(reader.getParameters(), reader.getUsedGenes(), reader.getTagsInfo());
 
                 final long nReads = reader.getNumberOfReads();
                 final CountingOutputPort<VDJCAlignments> counter = new CountingOutputPort<>(sorted);
@@ -114,33 +122,6 @@ public class CommandSortAlignments extends ACommandWithSmartOverwriteWithSingleI
                             usedAlleles.get(0).getParentLibrary().getParent());
                 }
             };
-        }
-    }
-
-    @JsonAutoDetect(
-            fieldVisibility = JsonAutoDetect.Visibility.ANY,
-            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-            getterVisibility = JsonAutoDetect.Visibility.NONE)
-    @JsonTypeInfo(
-            use = JsonTypeInfo.Id.CLASS,
-            include = JsonTypeInfo.As.PROPERTY,
-            property = "type")
-    public static class SortConfiguration implements ActionConfiguration<SortConfiguration> {
-        @Override
-        public String actionName() {
-            return "sortAlignments";
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(SortConfiguration.class);
         }
     }
 }

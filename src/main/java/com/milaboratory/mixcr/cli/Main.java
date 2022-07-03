@@ -190,9 +190,7 @@ public final class Main {
                 .addSubcommand("alignmentsStat", CommandAlignmentsStats.class)
                 .addSubcommand("listLibraries", CommandListLibraries.class)
                 .addSubcommand("versionInfo", CommandVersionInfo.class)
-                .addSubcommand("pipelineInfo", CommandPipelineInfo.class)
-                .addSubcommand("slice", CommandSlice.class)
-                .addSubcommand("info", CommandInfo.class);
+                .addSubcommand("slice", CommandSlice.class);
 
         cmd.getSubcommands()
                 .get("analyze")

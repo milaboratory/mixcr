@@ -14,11 +14,6 @@ package com.milaboratory.mixcr.cli;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.util.FlatteningOutputPort;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.util.Concurrency;
 import gnu.trove.map.hash.TIntIntHashMap;
@@ -26,14 +21,14 @@ import gnu.trove.set.hash.TLongHashSet;
 import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.milaboratory.mixcr.basictypes.IOUtil.*;
 import static com.milaboratory.mixcr.cli.CommandSlice.SLICE_COMMAND_NAME;
 import static com.milaboratory.util.TempFileManager.smartTempDestination;
 
@@ -41,30 +36,41 @@ import static com.milaboratory.util.TempFileManager.smartTempDestination;
         sortOptions = true,
         separator = " ",
         description = "Slice ClnA file.")
-public class CommandSlice extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
+public class CommandSlice extends MiXCRCommand {
     static final String SLICE_COMMAND_NAME = "slice";
+
+    @Parameters(description = "data.[vdjca|clns|clna]", index = "0")
+    public String in;
+
+    @Parameters(description = "data_sliced", index = "1")
+    public String out;
 
     @Option(description = "List of read (for .vdjca) / clone (for .clns/.clna) ids to export.",
             names = {"-i", "--id"})
     public List<Long> ids = new ArrayList<>();
 
     @Override
-    public ActionConfiguration getConfiguration() {
-        return new SliceConfiguration(ids.stream().mapToLong(Long::longValue).toArray());
+    protected List<String> getInputFiles() {
+        return Collections.singletonList(in);
     }
 
     @Override
-    public void run1() throws Exception {
+    protected List<String> getOutputFiles() {
+        return Collections.singletonList(out);
+    }
+
+    @Override
+    public void run0() throws Exception {
         Collections.sort(ids);
 
-        switch (getInputFileInfo().fileType) {
-            case MAGIC_VDJC:
+        switch (IOUtil.extractFileType(Paths.get(in))) {
+            case VDJCA:
                 sliceVDJCA();
                 break;
-            case MAGIC_CLNS:
+            case CLNS:
                 throwValidationException("Operation is not yet supported for Clns files.");
                 break;
-            case MAGIC_CLNA:
+            case CLNA:
                 sliceClnA();
                 break;
             default:
@@ -77,7 +83,7 @@ public class CommandSlice extends ACommandWithSmartOverwriteWithSingleInputMiXCR
 
         try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(in);
              VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)) {
-            writer.header(reader, getFullPipelineConfiguration(), reader.getTagsInfo());
+            writer.header(reader, reader.getTagsInfo());
             for (VDJCAlignments alignments : CUtils.it(reader)) {
                 if (set.removeAll(alignments.getReadIds()))
                     writer.write(alignments);
@@ -89,7 +95,7 @@ public class CommandSlice extends ACommandWithSmartOverwriteWithSingleInputMiXCR
 
     void sliceClnA() throws Exception {
         try (ClnAReader reader = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4));
-             ClnAWriter writer = new ClnAWriter(getFullPipelineConfiguration(), out,
+             ClnAWriter writer = new ClnAWriter(out,
                      smartTempDestination(out, "", false))) {
 
             // Getting full clone set
@@ -138,42 +144,6 @@ public class CommandSlice extends ACommandWithSmartOverwriteWithSingleInputMiXCR
             writer.collateAlignments(allAlignmentsPort, newNumberOfAlignments);
 
             writer.writeAlignmentsAndIndex();
-        }
-    }
-
-    @JsonAutoDetect(
-            fieldVisibility = JsonAutoDetect.Visibility.ANY,
-            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-            getterVisibility = JsonAutoDetect.Visibility.NONE)
-    @JsonTypeInfo(
-            use = JsonTypeInfo.Id.CLASS,
-            include = JsonTypeInfo.As.PROPERTY,
-            property = "type")
-    public static class SliceConfiguration implements ActionConfiguration {
-        final long[] ids;
-
-        @JsonCreator
-        public SliceConfiguration(@JsonProperty("ids") long[] ids) {
-            this.ids = ids;
-            Arrays.sort(ids);
-        }
-
-        @Override
-        public String actionName() {
-            return SLICE_COMMAND_NAME;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            SliceConfiguration that = (SliceConfiguration) o;
-            return Arrays.equals(ids, that.ids);
-        }
-
-        @Override
-        public int hashCode() {
-            return Arrays.hashCode(ids);
         }
     }
 }

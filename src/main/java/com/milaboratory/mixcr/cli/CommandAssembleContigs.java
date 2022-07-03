@@ -13,11 +13,6 @@ package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.assembler.CloneFactory;
 import com.milaboratory.mixcr.assembler.fullseq.CoverageAccumulator;
@@ -42,6 +37,7 @@ import io.repseq.core.VDJCGeneId;
 import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
 
 import java.io.*;
 import java.util.*;
@@ -54,10 +50,16 @@ import static com.milaboratory.util.StreamUtil.noMerge;
         sortOptions = true,
         separator = " ",
         description = "Assemble full sequences.")
-public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
+public class CommandAssembleContigs extends MiXCRCommand {
     static final String ASSEMBLE_CONTIGS_COMMAND_NAME = "assembleContigs";
 
     public int threads = Runtime.getRuntime().availableProcessors();
+
+    @Parameters(description = "clones.clna", index = "0")
+    public String in;
+
+    @Parameters(description = "clones.clns", index = "1")
+    public String out;
 
     @Option(description = "Processing threads",
             names = {"-t", "--threads"})
@@ -86,6 +88,16 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
             names = {"-j", "--json-report"})
     public String jsonReport = null;
 
+    @Override
+    protected List<String> getInputFiles() {
+        return Collections.singletonList(in);
+    }
+
+    @Override
+    protected List<String> getOutputFiles() {
+        return Collections.singletonList(out);
+    }
+
     public FullSeqAssemblerParameters getFullSeqAssemblerParameters() {
         FullSeqAssemblerParameters p = FullSeqAssemblerParameters.getByName("default");
         if (!overrides.isEmpty()) {
@@ -98,12 +110,7 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
     }
 
     @Override
-    public ActionConfiguration getConfiguration() {
-        return new AssembleContigsConfiguration(getFullSeqAssemblerParameters());
-    }
-
-    @Override
-    public void run1() throws Exception {
+    public void run0() throws Exception {
         long beginTimestamp = System.currentTimeMillis();
 
         final FullSeqAssemblerReport report = new FullSeqAssemblerReport();
@@ -257,7 +264,7 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
                 tagsInfo, ordering);
 
         try (ClnsWriter writer = new ClnsWriter(out)) {
-            writer.writeCloneSet(getFullPipelineConfiguration(), cloneSet);
+            writer.writeCloneSet(cloneSet);
         }
 
         ReportWrapper reportWrapper = new ReportWrapper(ASSEMBLE_CONTIGS_COMMAND_NAME, report);
@@ -276,41 +283,5 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
 
         if (jsonReport != null)
             ReportUtil.appendJsonReport(jsonReport, reportWrapper);
-    }
-
-    @JsonAutoDetect(
-            fieldVisibility = JsonAutoDetect.Visibility.ANY,
-            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-            getterVisibility = JsonAutoDetect.Visibility.NONE)
-    @JsonTypeInfo(
-            use = JsonTypeInfo.Id.CLASS,
-            include = JsonTypeInfo.As.PROPERTY,
-            property = "type")
-    public static class AssembleContigsConfiguration implements ActionConfiguration {
-        public final FullSeqAssemblerParameters assemblerParameters;
-
-        @JsonCreator
-        public AssembleContigsConfiguration(
-                @JsonProperty("assemblerParameters") FullSeqAssemblerParameters assemblerParameters) {
-            this.assemblerParameters = assemblerParameters;
-        }
-
-        @Override
-        public String actionName() {
-            return ASSEMBLE_CONTIGS_COMMAND_NAME;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            AssembleContigsConfiguration that = (AssembleContigsConfiguration) o;
-            return Objects.equals(assemblerParameters, that.assemblerParameters);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(assemblerParameters);
-        }
     }
 }

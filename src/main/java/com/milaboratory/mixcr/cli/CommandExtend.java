@@ -15,12 +15,7 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.blocks.ParallelProcessor;
 import cc.redberry.pipe.util.OrderedOutputPort;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.*;
@@ -32,19 +27,27 @@ import io.repseq.core.GeneType;
 import io.repseq.core.ReferencePoint;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.*;
 
-import static com.milaboratory.mixcr.basictypes.IOUtil.*;
+import static com.milaboratory.mixcr.basictypes.IOUtil.extractFileType;
 import static com.milaboratory.mixcr.cli.CommandExtend.EXTEND_COMMAND_NAME;
 
 @Command(name = EXTEND_COMMAND_NAME,
         sortOptions = true,
         separator = " ",
         description = "Impute alignments or clones with germline sequences.")
-public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
+public class CommandExtend extends MiXCRCommand {
     static final String EXTEND_COMMAND_NAME = "extend";
+
+    @Parameters(description = "data.[vdjca|clns|clna]", index = "0")
+    public String in;
+
+    @Parameters(description = "extendeed.[vdjca|clns|clna]", index = "1")
+    public String out;
 
     @Option(description = "Apply procedure only to alignments with specific immunological-receptor chains.",
             names = {"-c", "--chains"})
@@ -89,6 +92,16 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
             names = {"--min-j-score"})
     public int minimalJScore = 70;
 
+    @Override
+    protected List<String> getInputFiles() {
+        return Collections.singletonList(in);
+    }
+
+    @Override
+    protected List<String> getOutputFiles() {
+        return Collections.singletonList(out);
+    }
+
     public Chains getChains() {
         return Chains.parse(chains);
     }
@@ -102,20 +115,15 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
     }
 
     @Override
-    public ActionConfiguration getConfiguration() {
-        return new ExtendConfiguration(getChains(), extensionQuality, getVAnchorPoint(), getJAnchorPoint(), minimalVScore, minimalJScore);
-    }
-
-    @Override
-    public void run1() throws Exception {
-        switch (getInputFileInfo().fileType) {
-            case MAGIC_VDJC:
+    public void run0() throws Exception {
+        switch (extractFileType(Paths.get(in))) {
+            case VDJCA:
                 processVDJCA();
                 break;
-            case MAGIC_CLNS:
+            case CLNS:
                 processClns();
                 break;
-            case MAGIC_CLNA:
+            case CLNA:
                 throwValidationException("Operation is not supported for ClnA files.");
                 break;
             default:
@@ -141,7 +149,7 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
                 cloneSet.getAssemblerParameters(), cloneSet.getTagsInfo(), cloneSet.getOrdering());
 
         try (ClnsWriter writer = new ClnsWriter(out)) {
-            writer.writeCloneSet(getFullPipelineConfiguration(), newCloneSet);
+            writer.writeCloneSet(newCloneSet);
         }
     }
 
@@ -151,8 +159,7 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
              final VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)) {
             SmartProgressReporter.startProgressReport("Extending alignments", reader);
 
-            writer.header(reader.getParameters(), reader.getUsedGenes(),
-                    getFullPipelineConfiguration(), reader.getTagsInfo());
+            writer.header(reader.getParameters(), reader.getUsedGenes(), reader.getTagsInfo());
 
             ProcessWrapper<VDJCAlignments> process = new ProcessWrapper<>(reader,
                     reader.getParameters().getVAlignerParameters().getParameters().getScoring(),
@@ -207,60 +214,6 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
 
             if (jsonReport != null)
                 ReportUtil.appendJsonReport(jsonReport, report);
-        }
-    }
-
-    @JsonAutoDetect(
-            fieldVisibility = JsonAutoDetect.Visibility.ANY,
-            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-            getterVisibility = JsonAutoDetect.Visibility.NONE)
-    @JsonTypeInfo(
-            use = JsonTypeInfo.Id.CLASS,
-            include = JsonTypeInfo.As.PROPERTY,
-            property = "type")
-    public static class ExtendConfiguration implements ActionConfiguration {
-        final Chains chains;
-        final byte extensionQuality;
-        final ReferencePoint vAnchorPoint, jAnchorPoint;
-        final int minimalVScore;
-        final int minimalJScore;
-
-        @JsonCreator
-        public ExtendConfiguration(@JsonProperty("chains") Chains chains,
-                                   @JsonProperty("extensionQuality") byte extensionQuality,
-                                   @JsonProperty("vAnchorPoint") ReferencePoint vAnchorPoint,
-                                   @JsonProperty("jAnchorPoint") ReferencePoint jAnchorPoint,
-                                   @JsonProperty("minimalVScore") int minimalVScore,
-                                   @JsonProperty("minimalJScore") int minimalJScore) {
-            this.chains = chains;
-            this.extensionQuality = extensionQuality;
-            this.vAnchorPoint = vAnchorPoint;
-            this.jAnchorPoint = jAnchorPoint;
-            this.minimalVScore = minimalVScore;
-            this.minimalJScore = minimalJScore;
-        }
-
-        @Override
-        public String actionName() {
-            return EXTEND_COMMAND_NAME;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            ExtendConfiguration that = (ExtendConfiguration) o;
-            return extensionQuality == that.extensionQuality &&
-                    minimalVScore == that.minimalVScore &&
-                    minimalJScore == that.minimalJScore &&
-                    Objects.equals(chains, that.chains) &&
-                    Objects.equals(vAnchorPoint, that.vAnchorPoint) &&
-                    Objects.equals(jAnchorPoint, that.jAnchorPoint);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(chains, extensionQuality, vAnchorPoint, jAnchorPoint, minimalVScore, minimalJScore);
         }
     }
 }

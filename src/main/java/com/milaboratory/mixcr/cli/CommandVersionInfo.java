@@ -19,12 +19,25 @@ import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
+import java.util.Collections;
+import java.util.List;
+
 @Command(name = "versionInfo",
         separator = " ",
         description = "Output information about MiXCR version which generated the file.")
-public class CommandVersionInfo extends ACommandMiXCR {
+public class CommandVersionInfo extends MiXCRCommand {
     @Parameters(description = "input_file")
     public String inputFile;
+
+    @Override
+    protected List<String> getInputFiles() {
+        return Collections.singletonList(inputFile);
+    }
+
+    @Override
+    protected List<String> getOutputFiles() {
+        return Collections.emptyList();
+    }
 
     @Override
     public void run0() throws Exception {

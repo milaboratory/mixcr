@@ -67,11 +67,15 @@ public abstract class AbstractCommandReport implements CommandReport {
     }
 
     public void setInputFiles(Collection<String> inputFiles) {
-        this.inputFiles = inputFiles.toArray(new String[inputFiles.size()]);
+        this.inputFiles = inputFiles.toArray(new String[0]);
     }
 
     public void setOutputFiles(String... outputFiles) {
         this.outputFiles = outputFiles;
+    }
+
+    public void setOutputFiles(Collection<String> outputFiles) {
+        this.outputFiles = outputFiles.toArray(new String[0]);
     }
 
     public void setStartMillis(long startMillis) {

@@ -11,18 +11,6 @@
  */
 package com.milaboratory.mixcr.cli;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
-import com.milaboratory.cli.ActionConfiguration;
-import com.milaboratory.cli.AppVersionInfo;
-import com.milaboratory.primitivio.JSONSerializer;
-import com.milaboratory.primitivio.PrimitivI;
-import com.milaboratory.util.GlobalObjectMappers;
-
-import java.io.IOException;
-import java.util.*;
-
 public final class SerializerCompatibilityUtil {
     private SerializerCompatibilityUtil() {
     }

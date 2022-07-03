@@ -11,8 +11,6 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
-import com.milaboratory.cli.PipelineConfiguration;
-import com.milaboratory.cli.PipelineConfigurationWriter;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import io.repseq.core.VDJCGene;
@@ -23,10 +21,10 @@ import java.util.List;
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public interface VDJCAlignmentsWriterI extends PipelineConfigurationWriter, AutoCloseable {
+public interface VDJCAlignmentsWriterI extends AutoCloseable {
     void setNumberOfProcessedReads(long numberOfProcessedReads);
 
-    void header(VDJCAlignerParameters parameters, List<VDJCGene> genes, PipelineConfiguration pipelineConfiguration, TagsInfo tagsInfo);
+    void header(VDJCAlignerParameters parameters, List<VDJCGene> genes, TagsInfo tagsInfo);
 
     void write(VDJCAlignments alignment);
 
@@ -44,7 +42,7 @@ public interface VDJCAlignmentsWriterI extends PipelineConfigurationWriter, Auto
         }
 
         @Override
-        public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes, PipelineConfiguration pipelineConfiguration, TagsInfo tagsInfo) {
+        public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes, TagsInfo tagsInfo) {
         }
 
         @Override

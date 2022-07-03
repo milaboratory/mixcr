@@ -24,8 +24,10 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
-import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +36,7 @@ import java.util.Map;
         sortOptions = false,
         separator = " ",
         description = "Calculates the difference between two .vdjca files.")
-public class CommandAlignmentsDiff extends ACommandWithOutputMiXCR {
+public class CommandAlignmentsDiff extends MiXCRCommand {
     @Parameters(description = "input_file1", index = "0")
     public String in1;
 
@@ -66,9 +68,14 @@ public class CommandAlignmentsDiff extends ACommandWithOutputMiXCR {
     }
 
     @Override
+    protected List<String> getInputFiles() {
+        return Arrays.asList(in1, in2);
+    }
+
+    @Override
     protected List<String> getOutputFiles() {
         return report == null ?
-                Collections.EMPTY_LIST :
+                Collections.emptyList() :
                 Collections.singletonList(report);
     }
 
@@ -84,7 +91,7 @@ public class CommandAlignmentsDiff extends ACommandWithOutputMiXCR {
                      VDJCAlignmentsWriterI.DummyWriter.INSTANCE : new VDJCAlignmentsWriter(this.diff1);
              VDJCAlignmentsWriterI diff2 = this.diff1 == null ?
                      VDJCAlignmentsWriterI.DummyWriter.INSTANCE : new VDJCAlignmentsWriter(this.diff2);
-             PrintStream report = this.report == null ? System.out : new PrintStream(new FileOutputStream(this.report))
+             PrintStream report = this.report == null ? System.out : new PrintStream(Files.newOutputStream(Paths.get(this.report)))
         ) {
             if (reader1.getNumberOfReads() > reader2.getNumberOfReads())
                 SmartProgressReporter.startProgressReport("Analyzing diff", reader1);
@@ -94,10 +101,10 @@ public class CommandAlignmentsDiff extends ACommandWithOutputMiXCR {
             long same = 0, onlyIn1 = 0, onlyIn2 = 0, diffFeature = 0, justDiff = 0;
             long[] diffHits = new long[GeneType.NUMBER_OF_TYPES];
 
-            only1.header(reader1.getParameters(), reader1.getUsedGenes(), null, reader1.getTagsInfo());
-            diff1.header(reader1.getParameters(), reader1.getUsedGenes(), null, reader1.getTagsInfo());
-            only2.header(reader2.getParameters(), reader2.getUsedGenes(), null, reader2.getTagsInfo());
-            diff2.header(reader2.getParameters(), reader2.getUsedGenes(), null, reader2.getTagsInfo());
+            only1.header(reader1.getParameters(), reader1.getUsedGenes(), reader1.getTagsInfo());
+            diff1.header(reader1.getParameters(), reader1.getUsedGenes(), reader1.getTagsInfo());
+            only2.header(reader2.getParameters(), reader2.getUsedGenes(), reader2.getTagsInfo());
+            diff2.header(reader2.getParameters(), reader2.getUsedGenes(), reader2.getTagsInfo());
 
             VDJCAlignmentsDifferenceReader diffReader = new VDJCAlignmentsDifferenceReader(reader1, reader2,
                     getFeature(), hitsCompareLevel);

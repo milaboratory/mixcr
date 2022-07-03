@@ -44,8 +44,8 @@ import java.util.stream.Collectors;
 @Command(separator = " ",
         description = "Build cloneset overlap and export into tab delimited file."
 )
-public class CommandExportOverlap extends ACommandWithOutputMiXCR {
-    @Parameters(description = "cloneset.{clns|clna}...")
+public class CommandExportOverlap extends MiXCRCommand {
+    @Parameters(description = "cloneset.{clns|clna}... output.tsv")
     public List<String> inOut;
 
     @Option(description = "Chains to export",
@@ -66,6 +66,11 @@ public class CommandExportOverlap extends ACommandWithOutputMiXCR {
     @Override
     public List<String> getInputFiles() {
         return inOut.subList(0, inOut.size() - 1);
+    }
+
+    @Override
+    protected List<String> getOutputFiles() {
+        return Collections.singletonList(inOut.get(inOut.size() - 1));
     }
 
     public Path getOut(NamedChains chains) {

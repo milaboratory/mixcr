@@ -12,7 +12,7 @@
 package com.milaboratory.mixcr.cli.postanalysis;
 
 import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.cli.ACommandMiXCR;
+import com.milaboratory.mixcr.cli.MiXCRCommand;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual;
 import com.milaboratory.util.GlobalObjectMappers;
@@ -22,14 +22,26 @@ import picocli.CommandLine.Parameters;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 @Command(name = "listMetrics",
         sortOptions = false,
         separator = " ",
         description = "List available metrics")
-public class CommandPaListMetrics extends ACommandMiXCR {
+public class CommandPaListMetrics extends MiXCRCommand {
     @Parameters(description = "Input file with PA results", index = "0")
     public String in;
+
+    @Override
+    protected List<String> getInputFiles() {
+        return Collections.singletonList(in);
+    }
+
+    @Override
+    protected List<String> getOutputFiles() {
+        return Collections.emptyList();
+    }
 
     @Override
     public void run0() {

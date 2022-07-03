@@ -113,7 +113,7 @@ public final class RunMiXCR {
         AlignResult align = assemble.alignResult;
 
         File clnaFile = getTempFile();
-        try (ClnAWriter writer = new ClnAWriter(null, clnaFile, systemTempFolderDestination("runmixcr.assembleContigs"))) {
+        try (ClnAWriter writer = new ClnAWriter(clnaFile, systemTempFolderDestination("runmixcr.assembleContigs"))) {
             // writer will supply current stage and completion percent to the progress reporter
             SmartProgressReporter.startProgressReport(writer);
             // Writing clone block
@@ -276,7 +276,7 @@ public final class RunMiXCR {
             if (alignmentsFile == null) {
                 alignmentsFile = getTempFile();
                 try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(alignmentsFile)) {
-                    writer.header(aligner, null, tagsInfo);
+                    writer.header(aligner.getParameters(), usedGenes, tagsInfo);
                     for (VDJCAlignments alignment : alignments)
                         writer.write(alignment);
                     writer.setNumberOfProcessedReads(totalNumberOfReads);
