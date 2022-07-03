@@ -18,6 +18,7 @@ import com.milaboratory.mixcr.basictypes.CloneReader;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.basictypes.VDJCSProperties;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.mixcr.postanalysis.Dataset;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
@@ -118,5 +119,10 @@ public class ClonotypeDataset implements Dataset<Clone>, CloneReader {
     @Override
     public CloneAssemblerParameters getAssemblerParameters() {
         return reader.getAssemblerParameters();
+    }
+
+    @Override
+    public List<MiXCRCommandReport> reports() {
+        return reader.reports();
     }
 }

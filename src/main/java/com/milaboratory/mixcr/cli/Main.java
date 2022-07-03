@@ -169,6 +169,8 @@ public final class Main {
                 .addSubcommand("exportClones", CommandExport.mkClonesSpec())
                 .addSubcommand("exportClonesPretty", CommandExportClonesPretty.class)
 
+                .addSubcommand("exportReports", CommandExportReports.class)
+
                 .addSubcommand("exportClonesOverlap", CommandExportOverlap.mkSpec())
 
                 .addSubcommand("exportAirr", CommandExportAirr.class)

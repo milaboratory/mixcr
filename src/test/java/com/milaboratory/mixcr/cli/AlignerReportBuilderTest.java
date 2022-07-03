@@ -11,13 +11,16 @@
  */
 package com.milaboratory.mixcr.cli;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.util.Report;
+import com.milaboratory.util.GlobalObjectMappers;
+import org.junit.Test;
 
-public interface CommandReport extends Report {
-    /**
-     * Command (e.g. align, assemble, etc.) that produced this report.
-     */
-    @JsonProperty("action")
-    String getCommand();
+import static org.junit.Assert.assertNotNull;
+
+public class AlignerReportBuilderTest {
+
+    @Test
+    public void test1() throws Exception {
+        AlignerReportBuilder rep = new AlignerReportBuilder();
+        assertNotNull(GlobalObjectMappers.getPretty().writeValueAsString(rep));
+    }
 }

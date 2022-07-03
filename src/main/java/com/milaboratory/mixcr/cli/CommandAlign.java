@@ -33,7 +33,6 @@ import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters;
 import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor;
-import com.milaboratory.core.sequence.quality.ReadTrimmerReport;
 import com.milaboratory.mitool.helpers.FSKt;
 import com.milaboratory.mitool.pattern.PatternCollection;
 import com.milaboratory.mitool.pattern.search.*;
@@ -435,7 +434,7 @@ public class CommandAlign extends MiXCRCommand {
     }
 
     /** Alignment report */
-    public final AlignerReport report = new AlignerReport();
+    public final AlignerReportBuilder reportBuilder = new AlignerReportBuilder();
 
     private QualityTrimmerParameters getQualityTrimmerParameters() {
         return new QualityTrimmerParameters(trimmingQualityThreshold,
@@ -515,16 +514,16 @@ public class CommandAlign extends MiXCRCommand {
             throwExecutionException("No J genes to align. Aborting execution. See warnings for more info " +
                     "(turn on verbose warnings by adding --verbose option).");
 
-        report.setStartMillis(beginTimestamp);
-        report.setInputFiles(getInputFiles());
-        report.setOutputFiles(getOutputFiles());
-        report.setCommandLine(getCommandLineArguments());
+        reportBuilder.setStartMillis(beginTimestamp);
+        reportBuilder.setInputFiles(getInputFiles());
+        reportBuilder.setOutputFiles(getOutputFiles());
+        reportBuilder.setCommandLine(getCommandLineArguments());
 
         if (tagSearchPlan != null)
-            report.setTagReport(tagSearchPlan.report);
+            reportBuilder.setTagReportBuilder(tagSearchPlan.report);
 
         // Attaching report to aligner
-        aligner.setEventsListener(report);
+        aligner.setEventsListener(reportBuilder);
 
         String outputFile = getOutputFiles().get(0);
         try (SequenceReaderCloseable<? extends SequenceRead> reader = createReader();
@@ -571,9 +570,9 @@ public class CommandAlign extends MiXCRCommand {
 
             ReadTrimmerProcessor readTrimmerProcessor;
             if (trimmingQualityThreshold > 0) {
-                ReadTrimmerReport rep = new ReadTrimmerReport();
+                ReadTrimmerReportBuilder rep = new ReadTrimmerReportBuilder();
                 readTrimmerProcessor = new ReadTrimmerProcessor(getQualityTrimmerParameters(), rep);
-                report.setTrimmingReport(rep);
+                reportBuilder.setTrimmingReportBuilder(rep);
             } else
                 readTrimmerProcessor = null;
 
@@ -585,7 +584,7 @@ public class CommandAlign extends MiXCRCommand {
                     TaggedSequence parsed = tagSearchPlan.parse(input);
 
                     if (parsed == null) {
-                        report.onFailedAlignment(input, VDJCAlignmentFailCause.NoBarcode);
+                        reportBuilder.onFailedAlignment(input, VDJCAlignmentFailCause.NoBarcode);
                         return new VDJCAlignmentResult(input);
                     }
 
@@ -653,26 +652,30 @@ public class CommandAlign extends MiXCRCommand {
                 alignment = alignment.setTagCount(result.tagTuple == null ? TagCount.NO_TAGS_1 : new TagCount(result.tagTuple));
 
                 if (alignment.isChimera())
-                    report.onChimera();
+                    reportBuilder.onChimera();
 
                 if (writer != null)
                     writer.write(alignment);
             }
             if (writer != null)
                 writer.setNumberOfProcessedReads(reader.getNumberOfReads());
+
+            reportBuilder.setFinishMillis(System.currentTimeMillis());
+
+            AlignerReport report = reportBuilder.buildReport();
+
+            if (writer != null)
+                writer.writeFooter(Collections.singletonList(report), null);
+
+            // Writing report to stout
+            ReportUtil.writeReportToStdout(report);
+
+            if (reportFile != null)
+                ReportUtil.appendReport(reportFile, report);
+
+            if (jsonReport != null)
+                ReportUtil.appendJsonReport(jsonReport, report);
         }
-
-        report.setFinishMillis(System.currentTimeMillis());
-
-        // Writing report to stout
-        System.out.println("============= Report ==============");
-        ReportUtil.writeReportToStdout(report);
-
-        if (reportFile != null)
-            ReportUtil.appendReport(reportFile, report);
-
-        if (jsonReport != null)
-            ReportUtil.appendJsonReport(jsonReport, report);
     }
 
     static final class TaggedSequence {

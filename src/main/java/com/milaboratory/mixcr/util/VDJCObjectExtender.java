@@ -12,7 +12,6 @@
 package com.milaboratory.mixcr.util;
 
 import cc.redberry.pipe.Processor;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.AlignmentScoring;
@@ -23,8 +22,8 @@ import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.util.Report;
-import com.milaboratory.util.ReportHelper;
+import com.milaboratory.mixcr.cli.AbstractCommandReportBuilder;
+import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import io.repseq.core.*;
 
 import java.util.Arrays;
@@ -35,7 +34,9 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * @author Stanislav Poslavsky
  */
-public final class VDJCObjectExtender<T extends VDJCObject> implements Processor<T, T>, Report {
+public final class VDJCObjectExtender<T extends VDJCObject>
+        extends AbstractCommandReportBuilder
+        implements Processor<T, T> {
     final Chains chains;
     final byte extensionQuality;
     final AlignmentScoring<NucleotideSequence> vScoring, jScoring;
@@ -44,7 +45,7 @@ public final class VDJCObjectExtender<T extends VDJCObject> implements Processor
     final int minimalJScore;
 
     //metrics
-    final AtomicLong total = new AtomicLong(0),
+    final AtomicLong totalProcessed = new AtomicLong(0),
             vExtended = new AtomicLong(0),
             jExtended = new AtomicLong(0),
             vExtendedMerged = new AtomicLong(0),
@@ -71,7 +72,7 @@ public final class VDJCObjectExtender<T extends VDJCObject> implements Processor
     public T process(T input) {
         T originalInput = input;
 
-        total.incrementAndGet();
+        totalProcessed.incrementAndGet();
 
         //check input chains
         if (!chains.intersects(input.getTopChain(GeneType.Variable))
@@ -359,62 +360,38 @@ public final class VDJCObjectExtender<T extends VDJCObject> implements Processor
         return input;
     }
 
-    @JsonProperty("totalProcessed")
-    public long getTotalProcessed() {
-        return total.get();
-    }
 
-    @JsonProperty("totalExtended")
     public long getTotalExtended() {
         return vExtended.get() + jExtended.get() - vjExtended.get();
     }
 
-    @JsonProperty("vExtended")
-    public long getVExtended() {
-        return vExtended.get();
-    }
-
-    @JsonProperty("vExtendedMerged")
-    public long getVExtendedMerged() {
-        return vExtendedMerged.get();
-    }
-
-    @JsonProperty("jExtended")
-    public long getJExtended() {
-        return jExtended.get();
-    }
-
-    @JsonProperty("jExtendedMerged")
-    public long getJExtendedMerged() {
-        return jExtendedMerged.get();
-    }
-
-    @JsonProperty("vjExtended")
-    public long getVJExtended() {
-        return jExtendedMerged.get();
-    }
-
-    @JsonProperty("meanVExtensionLength")
     public double getMeanVExtensionLength() {
         return 1.0 * vExtensionLength.get() / vExtended.get();
     }
 
-    @JsonProperty("meanJExtensionLength")
     public double getMeanJExtensionLength() {
         return 1.0 * jExtensionLength.get() / jExtended.get();
     }
 
     @Override
-    public void writeReport(ReportHelper helper) {
-        long total = this.total.get();
-        helper.writePercentAndAbsoluteField("Extended alignments count", getTotalExtended(), total);
-        helper.writePercentAndAbsoluteField("V extensions total", getVExtended(), total);
-        helper.writePercentAndAbsoluteField("V extensions with merged targets", getVExtendedMerged(), total);
-        helper.writePercentAndAbsoluteField("J extensions total", getJExtended(), total);
-        helper.writePercentAndAbsoluteField("J extensions with merged targets", getJExtendedMerged(), total);
-        helper.writePercentAndAbsoluteField("V+J extensions", getVJExtended(), total);
-        helper.writeField("Mean V extension length", getMeanVExtensionLength());
-        helper.writeField("Mean J extension length", getMeanJExtensionLength());
+    public MiXCRCommandReport buildReport() {
+        return new VDJCObjectExtenderReport(
+                getDate(),
+                getCommandLine(),
+                getInputFiles(),
+                getOutputFiles(),
+                getExecutionTimeMillis(),
+                getVersion(),
+                totalProcessed.get(),
+                getTotalExtended(),
+                vExtended.get(),
+                vExtendedMerged.get(),
+                jExtended.get(),
+                jExtendedMerged.get(),
+                vjExtended.get(),
+                getMeanVExtensionLength(),
+                getMeanJExtensionLength()
+        );
     }
 
     /**

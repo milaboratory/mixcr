@@ -38,6 +38,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumMap;
 
 import static io.repseq.core.GeneFeature.*;
@@ -246,6 +247,7 @@ public class PartialAlignmentsAssemblerTest {
             }
             //assembler.writeReport(new ReportHelper(System.out));
             //System.out.println("\n");
+            writer.writeFooter(Collections.emptyList(), null);
         }
 
         VDJCAlignmentsReader readResult = new VDJCAlignmentsReader(overlappedAlignments);

@@ -35,6 +35,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 
 public class CloneAssemblerRunnerTest {
     @Test
@@ -80,6 +81,7 @@ public class CloneAssemblerRunnerTest {
                 if (result.alignment != null)
                     writer.write(result.alignment);
             }
+            writer.writeFooter(Collections.emptyList(), null);
         }
 
         AlignmentsProvider alignmentsProvider = new VDJCAlignmentsReader(vdjcaFile);
@@ -114,6 +116,7 @@ public class CloneAssemblerRunnerTest {
 
         try (ClnsWriter writer = new ClnsWriter(tmpClnsFile)) {
             writer.writeCloneSet(cloneSet);
+            writer.writeFooter(Collections.emptyList(), null);
         }
 
         CloneSet cloneSetDeserialized = CloneSetIO.read(tmpClnsFile);

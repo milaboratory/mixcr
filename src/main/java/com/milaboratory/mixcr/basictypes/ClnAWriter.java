@@ -15,6 +15,7 @@ import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.CountingOutputPort;
 import com.milaboratory.cli.AppVersionInfo;
+import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.mixcr.util.MiXCRDebug;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
@@ -35,6 +36,7 @@ import io.repseq.core.VDJCGene;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ForkJoinPool;
@@ -54,6 +56,8 @@ public final class ClnAWriter implements
     static final String MAGIC_V7 = "MiXCR.CLNA.V07";
     static final String MAGIC = MAGIC_V7;
     static final int MAGIC_LENGTH = MAGIC.length(); //14
+    /** Number of bytes in footer with meta information */
+    static final int FOOTER_LENGTH = 8 + 8 + 8 + IOUtil.END_MAGIC_LENGTH;
 
     /**
      * Separates blocks of alignments assigned to the same clonotype
@@ -226,6 +230,21 @@ public final class ClnAWriter implements
         }
     }
 
+    private List<MiXCRCommandReport> footer = null;
+
+    /**
+     * Write reports chain
+     */
+    public void writeFooter(List<MiXCRCommandReport> reports, MiXCRCommandReport report) {
+        if (footer != null)
+            throw new IllegalStateException("Footer already written");
+        this.footer = new ArrayList<>();
+        if (reports != null)
+            footer.addAll(reports);
+        if (report != null)
+            footer.add(report);
+    }
+
     /**
      * Step 3
      */
@@ -236,6 +255,8 @@ public final class ClnAWriter implements
                 throw new IllegalStateException("Call sortAlignments before this method.");
             if (finished)
                 throw new IllegalStateException("Writer already closed.");
+            if (footer == null)
+                throw new IllegalStateException("Footer not written.");
 
             // Indices that will be written below all alignments
             final TLongArrayList aBlockOffset = new TLongArrayList();
@@ -341,7 +362,19 @@ public final class ClnAWriter implements
                     if (i != aBlockOffset.size() - 1)
                         o.writeVarInt(cloneIdsIndex.get(i));
                 }
+            }
 
+            // Position of reports
+            long footerStartPosition = output.getPosition();
+
+            try (PrimitivO o = output.beginPrimitivO()) {
+                o.writeInt(footer.size());
+                for (MiXCRCommandReport r : footer) {
+                    o.writeObject(r);
+                }
+
+                // Position of reports
+                o.writeLong(footerStartPosition);
                 // Writing two key positions in a file
                 // This values will be using during deserialization to find certain blocks
                 o.writeLong(positionOfFirstClone);

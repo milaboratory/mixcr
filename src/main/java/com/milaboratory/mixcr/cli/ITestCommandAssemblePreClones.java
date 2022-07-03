@@ -91,7 +91,7 @@ public class ITestCommandAssemblePreClones extends MiXCRCommand {
                     tmp);
             SmartProgressReporter.startProgressReport(assemblerRunner);
             assemblerRunner.run();
-            assemblerRunner.getReport().writeReport(ReportHelper.STDOUT);
+            assemblerRunner.getReport().buildReport().writeReport(ReportHelper.STDOUT);
         }
 
         try (FilePreCloneReader reader = new FilePreCloneReader(Paths.get(files.get(1)))) {

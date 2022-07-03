@@ -23,6 +23,7 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -63,6 +64,7 @@ public class CommandMergeAlignments extends MiXCRCommand {
             for (VDJCAlignments record : CUtils.it(reader))
                 writer.write(record);
             writer.setNumberOfProcessedReads(reader.readIdOffset.get());
+            writer.writeFooter(Collections.emptyList(), null);
         }
     }
 

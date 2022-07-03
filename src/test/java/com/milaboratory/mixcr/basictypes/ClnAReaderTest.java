@@ -89,8 +89,8 @@ public class ClnAReaderTest {
         OutputPort<VDJCAlignments> als = modifyAlignments.apply(merged);
         CountingOutputPort<VDJCAlignments> alsc = new CountingOutputPort<>(als);
         writer.collateAlignments(alsc, align.alignments.size());
+        writer.writeFooter(Collections.emptyList(), null);
         writer.writeAlignmentsAndIndex();
-
         writer.close();
 
         ClnAReader reader = new ClnAReader(file.toPath(), VDJCLibraryRegistry.getDefault(),
@@ -130,8 +130,8 @@ public class ClnAReaderTest {
                 null,
                 new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount())));
         writer.collateAlignments(CUtils.asOutputPort(align.alignments), align.alignments.size());
+        writer.writeFooter(Collections.emptyList(), null);
         writer.writeAlignmentsAndIndex();
-
         writer.close();
 
         ClnAReader reader = new ClnAReader(file.toPath(), VDJCLibraryRegistry.getDefault(), 17);

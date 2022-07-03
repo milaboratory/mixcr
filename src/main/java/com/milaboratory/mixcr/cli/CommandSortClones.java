@@ -76,6 +76,7 @@ public class CommandSortClones extends MiXCRCommand {
                             GeneType.Variable, GeneType.Joining);
 
                     writer.writeCloneSet(CloneSet.reorder(reader.getCloneSet(), ordering));
+                    writer.writeFooter(reader.reports(), null);
                 }
                 return;
 
@@ -99,6 +100,7 @@ public class CommandSortClones extends MiXCRCommand {
 
                     writer.writeClones(CloneSet.reorder(reader.readCloneSet(), ordering));
                     writer.collateAlignments(reader.readAllAlignments(), reader.numberOfAlignments());
+                    writer.writeFooter(reader.reports(), null);
                     writer.writeAlignmentsAndIndex();
                 }
         }

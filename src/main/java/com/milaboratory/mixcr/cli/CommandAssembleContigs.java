@@ -15,10 +15,7 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.assembler.CloneFactory;
-import com.milaboratory.mixcr.assembler.fullseq.CoverageAccumulator;
-import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler;
-import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters;
-import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerReport;
+import com.milaboratory.mixcr.assembler.fullseq.*;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
@@ -51,7 +48,7 @@ import static com.milaboratory.util.StreamUtil.noMerge;
         separator = " ",
         description = "Assemble full sequences.")
 public class CommandAssembleContigs extends MiXCRCommand {
-    static final String ASSEMBLE_CONTIGS_COMMAND_NAME = "assembleContigs";
+    public static final String ASSEMBLE_CONTIGS_COMMAND_NAME = "assembleContigs";
 
     public int threads = Runtime.getRuntime().availableProcessors();
 
@@ -109,11 +106,12 @@ public class CommandAssembleContigs extends MiXCRCommand {
         return p;
     }
 
+    final FullSeqAssemblerReportBuilder reportBuilder = new FullSeqAssemblerReportBuilder();
+
     @Override
     public void run0() throws Exception {
         long beginTimestamp = System.currentTimeMillis();
 
-        final FullSeqAssemblerReport report = new FullSeqAssemblerReport();
         FullSeqAssemblerParameters assemblerParameters = getFullSeqAssemblerParameters();
         int totalClonesCount = 0;
         List<VDJCGene> genes;
@@ -121,10 +119,12 @@ public class CommandAssembleContigs extends MiXCRCommand {
         CloneAssemblerParameters cloneAssemblerParameters;
         TagsInfo tagsInfo;
         VDJCSProperties.CloneOrdering ordering;
+        List<MiXCRCommandReport> reports;
         try (ClnAReader reader = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4));
              PrimitivO tmpOut = new PrimitivO(new BufferedOutputStream(new FileOutputStream(out))); // TODO ????
              BufferedWriter debugReport = debugReportFile == null ? null : new BufferedWriter(new OutputStreamWriter(new FileOutputStream(debugReportFile)))) {
 
+            reports = reader.reports();
             ordering = reader.ordering();
 
             final CloneFactory cloneFactory = new CloneFactory(reader.getAssemblerParameters().getCloneFactoryParameters(),
@@ -178,7 +178,7 @@ public class CommandAssembleContigs extends MiXCRCommand {
 
                     if (!coverages.containsKey(GeneType.Variable) || !coverages.containsKey(GeneType.Joining)) {
                         // Something went really wrong
-                        report.onAssemblyCanceled(clone);
+                        reportBuilder.onAssemblyCanceled(clone);
                         return new Clone[]{clone};
                     }
 
@@ -207,7 +207,7 @@ public class CommandAssembleContigs extends MiXCRCommand {
                             bestGenes.get(GeneType.Variable), bestGenes.get(GeneType.Joining)
                     );
 
-                    fullSeqAssembler.setReport(report);
+                    fullSeqAssembler.setReport(reportBuilder);
 
                     FullSeqAssembler.RawVariantsData rawVariantsData = fullSeqAssembler.calculateRawData(cloneAlignments::alignments);
 
@@ -245,11 +245,11 @@ public class CommandAssembleContigs extends MiXCRCommand {
                     tmpOut.writeObject(cl);
             }
 
-            assert report.getInitialCloneCount() == reader.numberOfClones();
+            assert reportBuilder.getInitialCloneCount() == reader.numberOfClones();
         }
 
-        assert report.getFinalCloneCount() == totalClonesCount;
-        assert report.getFinalCloneCount() >= report.getInitialCloneCount();
+        assert reportBuilder.getFinalCloneCount() == totalClonesCount;
+        assert reportBuilder.getFinalCloneCount() >= reportBuilder.getInitialCloneCount();
 
         int cloneId = 0;
         Clone[] clones = new Clone[totalClonesCount];
@@ -265,23 +265,25 @@ public class CommandAssembleContigs extends MiXCRCommand {
 
         try (ClnsWriter writer = new ClnsWriter(out)) {
             writer.writeCloneSet(cloneSet);
+
+
+            reportBuilder.setStartMillis(beginTimestamp);
+            reportBuilder.setInputFiles(in);
+            reportBuilder.setOutputFiles(out);
+            reportBuilder.setCommandLine(getCommandLineArguments());
+            reportBuilder.setFinishMillis(System.currentTimeMillis());
+
+            FullSeqAssemblerReport report = reportBuilder.buildReport();
+            // Writing report to stout
+            ReportUtil.writeReportToStdout(report);
+
+            if (reportFile != null)
+                ReportUtil.appendReport(reportFile, report);
+
+            if (jsonReport != null)
+                ReportUtil.appendJsonReport(jsonReport, report);
+
+            writer.writeFooter(reports, report);
         }
-
-        ReportWrapper reportWrapper = new ReportWrapper(ASSEMBLE_CONTIGS_COMMAND_NAME, report);
-        reportWrapper.setStartMillis(beginTimestamp);
-        reportWrapper.setInputFiles(in);
-        reportWrapper.setOutputFiles(out);
-        reportWrapper.setCommandLine(getCommandLineArguments());
-        reportWrapper.setFinishMillis(System.currentTimeMillis());
-
-        // Writing report to stout
-        System.out.println("============= Report ==============");
-        ReportUtil.writeReportToStdout(report);
-
-        if (reportFile != null)
-            ReportUtil.appendReport(reportFile, reportWrapper);
-
-        if (jsonReport != null)
-            ReportUtil.appendJsonReport(jsonReport, reportWrapper);
     }
 }

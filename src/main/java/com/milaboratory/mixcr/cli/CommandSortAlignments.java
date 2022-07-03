@@ -79,6 +79,7 @@ public class CommandSortAlignments extends MiXCRCommand {
                 for (VDJCAlignments res : CUtils.it(counter))
                     writer.write(res);
                 writer.setNumberOfProcessedReads(nReads);
+                writer.writeFooter(reader.reports(), null);
             }
         }
     }

@@ -84,6 +84,7 @@ public class CommandExportAlignmentsForClones extends MiXCRCommand {
                 }
 
             writer.setNumberOfProcessedReads(count);
+            writer.writeFooter(clna.reports(), null);
         }
     }
 }

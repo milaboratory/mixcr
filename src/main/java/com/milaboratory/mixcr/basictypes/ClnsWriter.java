@@ -15,6 +15,7 @@ import cc.redberry.pipe.InputPort;
 import com.milaboratory.cli.AppVersionInfo;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivO;
@@ -25,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,6 +37,8 @@ public final class ClnsWriter implements AutoCloseable {
     static final String MAGIC = MAGIC_V12;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
+    /** Number of bytes in footer with meta information */
+    static final int FOOTER_LENGTH = 8 + IOUtil.END_MAGIC_LENGTH;
 
     final PrimitivOHybrid output;
 
@@ -105,9 +109,37 @@ public final class ClnsWriter implements AutoCloseable {
         cloneIP.put(null);
     }
 
+    private List<MiXCRCommandReport> footer = null;
+
+    /**
+     * Write reports chain
+     */
+    public void writeFooter(List<MiXCRCommandReport> reports, MiXCRCommandReport report) {
+        if (footer != null)
+            throw new IllegalStateException("Footer already written");
+        this.footer = new ArrayList<>();
+        if (reports != null)
+            footer.addAll(reports);
+        if (report != null)
+            footer.add(report);
+    }
+
     @Override
     public void close() throws IOException {
+        if (footer == null)
+            throw new IllegalStateException("Footer not written");
+
+        // position of reports
+        long footerStartPosition = output.getPosition();
+
         try (PrimitivO o = output.beginPrimitivO()) {
+            o.writeInt(footer.size());
+            for (MiXCRCommandReport report : footer) {
+                o.writeObject(report);
+            }
+
+            // Total size = 8 + END_MAGIC_LENGTH
+            o.writeLong(footerStartPosition);
             // Writing end-magic as a file integrity sign
             o.write(IOUtil.getEndMagicBytes());
         }

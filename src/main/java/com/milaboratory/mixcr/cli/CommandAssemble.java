@@ -190,7 +190,7 @@ public class CommandAssemble extends MiXCRCommand {
     /**
      * Assemble report
      */
-    public final CloneAssemblerReport report = new CloneAssemblerReport();
+    public final CloneAssemblerReportBuilder reportBuilder = new CloneAssemblerReportBuilder();
 
     @Override
     public void run0() throws Exception {
@@ -220,12 +220,12 @@ public class CommandAssemble extends MiXCRCommand {
                     isClnaOutput,
                     genes, alignerParameters.getFeaturesToAlignMap())) {
                 // Creating event listener to collect run statistics
-                report.setStartMillis(beginTimestamp);
-                report.setInputFiles(in);
-                report.setOutputFiles(out);
-                report.setCommandLine(getCommandLineArguments());
+                reportBuilder.setStartMillis(beginTimestamp);
+                reportBuilder.setInputFiles(in);
+                reportBuilder.setOutputFiles(out);
+                reportBuilder.setCommandLine(getCommandLineArguments());
 
-                assembler.setListener(report);
+                assembler.setListener(reportBuilder);
 
                 // TODO >>>>>>>>>>>>>>
                 PreCloneReader preClones;
@@ -244,7 +244,7 @@ public class CommandAssemble extends MiXCRCommand {
                     assemblerRunner.run();
 
                     // Setting report into a big report object
-                    report.setPreCloneAssemblerReport(assemblerRunner.getReport());
+                    reportBuilder.setPreCloneAssemblerReportBuilder(assemblerRunner.getReport());
 
                     preClones = assemblerRunner.createReader();
                 } else
@@ -271,9 +271,14 @@ public class CommandAssemble extends MiXCRCommand {
                 final CloneSet cloneSet = CloneSet.reorder(assemblerRunner.getCloneSet(alignerParameters, tagsInfo), getOrdering());
 
                 // Passing final cloneset to assemble last pieces of statistics for report
-                report.onClonesetFinished(cloneSet);
+                reportBuilder.onClonesetFinished(cloneSet);
+
+                assert cloneSet.getClones().size() == reportBuilder.getCloneCount();
+                reportBuilder.setTotalReads(alignmentsReader.getNumberOfReads());
+
 
                 // Writing results
+                CloneAssemblerReport report;
                 if (isClnaOutput) {
                     try (ClnAWriter writer = new ClnAWriter(out, tempDest, highCompression)) {
 
@@ -290,23 +295,23 @@ public class CommandAssemble extends MiXCRCommand {
                             writer.collateAlignments(merged, assembler.getAlignmentsCount());
                         }
 
+                        reportBuilder.setFinishMillis(System.currentTimeMillis());
+                        report = reportBuilder.buildReport();
+
+                        writer.writeFooter(alignmentsReader.reports(), report);
                         writer.writeAlignmentsAndIndex();
                     }
                 } else
                     try (ClnsWriter writer = new ClnsWriter(out)) {
                         writer.writeCloneSet(cloneSet);
+
+                        reportBuilder.setFinishMillis(System.currentTimeMillis());
+                        report = reportBuilder.buildReport();
+
+                        writer.writeFooter(alignmentsReader.reports(), report);
                     }
 
-                // Writing report
-
-                report.setFinishMillis(System.currentTimeMillis());
-
-                assert cloneSet.getClones().size() == report.getCloneCount();
-
-                report.setTotalReads(alignmentsReader.getNumberOfReads());
-
                 // Writing report to stout
-                System.out.println("============= Report ==============");
                 ReportUtil.writeReportToStdout(report);
 
                 if (reportFile != null)

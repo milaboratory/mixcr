@@ -22,6 +22,7 @@ import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.mixcr.basictypes.tag.TagType;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssembler;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParameters;
+import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerReport;
 import com.milaboratory.util.JsonOverrider;
 import com.milaboratory.util.ReportUtil;
 import com.milaboratory.util.SmartProgressReporter;
@@ -42,7 +43,7 @@ import static com.milaboratory.mixcr.cli.CommandAssemblePartialAlignments.ASSEMB
         separator = " ",
         description = "Assembles partially aligned reads into longer sequences.")
 public class CommandAssemblePartialAlignments extends MiXCRCommand {
-    static final String ASSEMBLE_PARTIAL_COMMAND_NAME = "assemblePartial";
+    public static final String ASSEMBLE_PARTIAL_COMMAND_NAME = "assemblePartial";
 
     @Parameters(description = "alignments.vdjca", index = "0")
     public String in;
@@ -102,7 +103,7 @@ public class CommandAssemblePartialAlignments extends MiXCRCommand {
         return this.assemblerParameters = assemblerParameters;
     }
 
-    public PartialAlignmentsAssembler report;
+    public PartialAlignmentsAssembler reportBuillder;
 
     public boolean leftPartsLimitReached, maxRightMatchesLimitReached;
 
@@ -128,12 +129,11 @@ public class CommandAssemblePartialAlignments extends MiXCRCommand {
                     reader1.getUsedGenes(), !dropPartial, overlappedOnly,
                     writer::write);
 
-            this.report = assembler;
-            ReportWrapper report = new ReportWrapper(ASSEMBLE_PARTIAL_COMMAND_NAME, assembler);
-            report.setStartMillis(beginTimestamp);
-            report.setInputFiles(in);
-            report.setOutputFiles(out);
-            report.setCommandLine(getCommandLineArguments());
+            this.reportBuillder = assembler;
+            reportBuillder.setStartMillis(beginTimestamp);
+            reportBuillder.setInputFiles(in);
+            reportBuillder.setOutputFiles(out);
+            reportBuillder.setCommandLine(getCommandLineArguments());
 
             if (reader1.getTagsInfo() != null && !reader1.getTagsInfo().hasNoTags()) {
                 SmartProgressReporter.startProgressReport("Running assemble partial", reader1);
@@ -158,10 +158,10 @@ public class CommandAssemblePartialAlignments extends MiXCRCommand {
                 assembler.searchOverlaps(reader2);
             }
 
-            report.setFinishMillis(System.currentTimeMillis());
+            reportBuillder.setFinishMillis(System.currentTimeMillis());
 
+            PartialAlignmentsAssemblerReport report = reportBuillder.buildReport();
             // Writing report to stout
-            System.out.println("============= Report ==============");
             ReportUtil.writeReportToStdout(report);
 
             if (assembler.leftPartsLimitReached()) {
@@ -181,6 +181,8 @@ public class CommandAssemblePartialAlignments extends MiXCRCommand {
                 ReportUtil.appendJsonReport(jsonReport, report);
 
             writer.setNumberOfProcessedReads(reader1.getNumberOfReads() - assembler.overlapped.get());
+
+            writer.writeFooter(reader1.reports(), report);
         }
     }
 }

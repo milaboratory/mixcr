@@ -25,6 +25,7 @@ import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.Chains;
 import io.repseq.core.GeneType;
 import io.repseq.core.ReferencePoint;
+import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
@@ -41,7 +42,7 @@ import static com.milaboratory.mixcr.cli.CommandExtend.EXTEND_COMMAND_NAME;
         separator = " ",
         description = "Impute alignments or clones with germline sequences.")
 public class CommandExtend extends MiXCRCommand {
-    static final String EXTEND_COMMAND_NAME = "extend";
+    public static final String EXTEND_COMMAND_NAME = "extend";
 
     @Parameters(description = "data.[vdjca|clns|clna]", index = "0")
     public String in;
@@ -132,24 +133,27 @@ public class CommandExtend extends MiXCRCommand {
     }
 
     void processClns() throws IOException {
-        CloneSet cloneSet = CloneSetIO.read(in);
+        try (ClnsReader reader = new ClnsReader(in, VDJCLibraryRegistry.getDefault())) {
+            CloneSet cloneSet = reader.getCloneSet();
 
-        OutputPort<Clone> outputPort = CUtils.asOutputPort(cloneSet);
-        ProcessWrapper<Clone> process = new ProcessWrapper<>(outputPort,
-                cloneSet.getAlignmentParameters().getVAlignerParameters().getParameters().getScoring(),
-                cloneSet.getAlignmentParameters().getJAlignerParameters().getParameters().getScoring());
+            OutputPort<Clone> outputPort = CUtils.asOutputPort(cloneSet);
+            ProcessWrapper<Clone> process = new ProcessWrapper<>(outputPort,
+                    cloneSet.getAlignmentParameters().getVAlignerParameters().getParameters().getScoring(),
+                    cloneSet.getAlignmentParameters().getJAlignerParameters().getParameters().getScoring());
 
-        List<Clone> clones = new ArrayList<>(cloneSet.getClones().size());
-        for (Clone clone : CUtils.it(process.getOutput()))
-            clones.add(clone.resetParentCloneSet());
+            List<Clone> clones = new ArrayList<>(cloneSet.getClones().size());
+            for (Clone clone : CUtils.it(process.getOutput()))
+                clones.add(clone.resetParentCloneSet());
 
-        clones.sort(Comparator.comparing(Clone::getId));
+            clones.sort(Comparator.comparing(Clone::getId));
 
-        CloneSet newCloneSet = new CloneSet(clones, cloneSet.getUsedGenes(), cloneSet.getAlignmentParameters(),
-                cloneSet.getAssemblerParameters(), cloneSet.getTagsInfo(), cloneSet.getOrdering());
+            CloneSet newCloneSet = new CloneSet(clones, cloneSet.getUsedGenes(), cloneSet.getAlignmentParameters(),
+                    cloneSet.getAssemblerParameters(), cloneSet.getTagsInfo(), cloneSet.getOrdering());
 
-        try (ClnsWriter writer = new ClnsWriter(out)) {
-            writer.writeCloneSet(newCloneSet);
+            try (ClnsWriter writer = new ClnsWriter(out)) {
+                writer.writeCloneSet(newCloneSet);
+                writer.writeFooter(reader.reports(), process.report);
+            }
         }
     }
 
@@ -174,28 +178,31 @@ public class CommandExtend extends MiXCRCommand {
                 writer.write(alignments.shiftIndelsAtHomopolymers(gtRequiringIndelShifts));
 
             writer.setNumberOfProcessedReads(reader.getNumberOfReads());
-
             process.finish();
+            writer.writeFooter(reader.reports(), process.report);
         }
     }
 
     final class ProcessWrapper<T extends VDJCObject> {
-        final ReportWrapper report;
+        final AbstractCommandReportBuilder reportBuilder;
         final ParallelProcessor<T, T> output;
 
+        MiXCRCommandReport report;
+
         public ProcessWrapper(OutputPort<T> input,
-                              AlignmentScoring<NucleotideSequence> vScoring, AlignmentScoring<NucleotideSequence> jScoring) {
+                              AlignmentScoring<NucleotideSequence> vScoring,
+                              AlignmentScoring<NucleotideSequence> jScoring) {
             VDJCObjectExtender<T> extender = new VDJCObjectExtender<>(getChains(), extensionQuality,
                     vScoring, jScoring,
                     minimalVScore, minimalJScore,
                     getVAnchorPoint(),
                     getJAnchorPoint());
             this.output = new ParallelProcessor<>(input, extender, threads);
-            this.report = new ReportWrapper(EXTEND_COMMAND_NAME, extender);
-            report.setStartMillis(System.currentTimeMillis());
-            report.setInputFiles(in);
-            report.setOutputFiles(out);
-            report.setCommandLine(getCommandLineArguments());
+            this.reportBuilder = extender;
+            reportBuilder.setStartMillis(System.currentTimeMillis());
+            reportBuilder.setInputFiles(in);
+            reportBuilder.setOutputFiles(out);
+            reportBuilder.setCommandLine(getCommandLineArguments());
         }
 
         public OutputPort<T> getOutput() {
@@ -203,10 +210,9 @@ public class CommandExtend extends MiXCRCommand {
         }
 
         public void finish() throws JsonProcessingException {
-            report.setFinishMillis(System.currentTimeMillis());
-
+            reportBuilder.setFinishMillis(System.currentTimeMillis());
+            report = reportBuilder.buildReport();
             // Writing report to stout
-            System.out.println("============= Report ==============");
             ReportUtil.writeReportToStdout(report);
 
             if (reportFile != null)

@@ -14,6 +14,8 @@ package com.milaboratory.mixcr.basictypes;
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.mixcr.assembler.AlignmentsProvider;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.mixcr.cli.MiXCRCommandReport;
+import com.milaboratory.mixcr.cli.MiXCRReport;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
@@ -29,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -41,6 +44,7 @@ public final class VDJCAlignmentsReader implements
         OutputPortCloseable<VDJCAlignments>,
         AlignmentsProvider,
         VDJCFileHeaderData,
+        ReportsFooterData,
         CanReportProgress {
     public static final int DEFAULT_CONCURRENCY = 4;
     public static final int DEFAULT_READ_AHEAD_BLOCKS = 5;
@@ -57,12 +61,14 @@ public final class VDJCAlignmentsReader implements
     List<VDJCGene> usedGenes;
     TagsInfo tagsInfo;
 
+    private List<MiXCRCommandReport> reports;
+
     PrimitivIState iState;
 
     String versionInfo;
     String magic;
     long counter = 0;
-    final long numberOfAlignments, numberOfReads;
+    final long reportsStartPosition, numberOfAlignments, numberOfReads;
     boolean closed = false;
 
     public VDJCAlignmentsReader(String fileName) throws IOException {
@@ -111,6 +117,7 @@ public final class VDJCAlignmentsReader implements
         this.vdjcRegistry = vdjcRegistry;
 
         try (PrimitivI i = input.beginRandomAccessPrimitivI(-FOOTER_LENGTH)) {
+            reportsStartPosition = i.readLong();
             numberOfAlignments = i.readLong();
             numberOfReads = i.readLong();
             if (!Arrays.equals(i.readBytes(IOUtil.END_MAGIC_LENGTH), IOUtil.getEndMagicBytes()))
@@ -122,10 +129,10 @@ public final class VDJCAlignmentsReader implements
         if (reader != null)
             return;
 
-        try (final PrimitivI i = input.beginPrimitivI(true)) {
+        try (final PrimitivI pi = input.beginPrimitivI(true)) {
             assert MAGIC_BYTES.length == MAGIC_LENGTH;
             byte[] magic = new byte[MAGIC_LENGTH];
-            i.readFully(magic);
+            pi.readFully(magic);
             String magicString = new String(magic);
             this.magic = magicString;
 
@@ -138,17 +145,25 @@ public final class VDJCAlignmentsReader implements
                             + " while you are running MiXCR " + MAGIC);
             }
 
-            versionInfo = i.readUTF();
+            versionInfo = pi.readUTF();
 
-            parameters = i.readObject(VDJCAlignerParameters.class);
-            tagsInfo = i.readObject(TagsInfo.class);
+            parameters = pi.readObject(VDJCAlignerParameters.class);
+            tagsInfo = pi.readObject(TagsInfo.class);
 
-            this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(i, parameters, vdjcRegistry);
-            this.iState = i.getState();
+            this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(pi, parameters, vdjcRegistry);
+            this.iState = pi.getState();
         }
 
         // Saving alignments begin position
         alignmentsBegin = input.getPosition();
+
+        try (PrimitivI pi = input.beginRandomAccessPrimitivI(reportsStartPosition)) {
+            reports = new ArrayList<>();
+            int nReports = pi.readInt();
+            for (int i = 0; i < nReports; i++) {
+                reports.add((MiXCRCommandReport) pi.readObject(MiXCRReport.class));
+            }
+        }
 
         this.reader = input.beginRandomAccessPrimitivIBlocks(VDJCAlignments.class, alignmentsBegin, readAheadBlocks);
     }
@@ -184,6 +199,12 @@ public final class VDJCAlignmentsReader implements
     public String getVersionInfo() {
         ensureInitialized();
         return versionInfo;
+    }
+
+    @Override
+    public List<MiXCRCommandReport> reports() {
+        ensureInitialized();
+        return reports;
     }
 
     /**

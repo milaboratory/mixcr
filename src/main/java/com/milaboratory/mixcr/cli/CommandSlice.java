@@ -90,6 +90,7 @@ public class CommandSlice extends MiXCRCommand {
                 if (set.isEmpty())
                     break;
             }
+            writer.writeFooter(reader.reports(), null);
         }
     }
 
@@ -143,6 +144,7 @@ public class CommandSlice extends MiXCRCommand {
 
             writer.collateAlignments(allAlignmentsPort, newNumberOfAlignments);
 
+            writer.writeFooter(reader.reports(), null);
             writer.writeAlignmentsAndIndex();
         }
     }

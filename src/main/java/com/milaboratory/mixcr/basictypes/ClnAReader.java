@@ -16,6 +16,8 @@ import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.mixcr.cli.MiXCRCommandReport;
+import com.milaboratory.mixcr.cli.MiXCRReport;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.*;
@@ -75,6 +77,10 @@ public final class ClnAReader implements CloneReader, VDJCFileHeaderData, AutoCl
 
     final String versionInfo;
 
+    private final long reportsStartPosition;
+
+    private final List<MiXCRCommandReport> reports;
+
     public ClnAReader(Path path, VDJCLibraryRegistry libraryRegistry, int concurrency) throws IOException {
         this(path, libraryRegistry, new LambdaSemaphore(concurrency));
     }
@@ -98,7 +104,8 @@ public final class ClnAReader implements CloneReader, VDJCFileHeaderData, AutoCl
 
         // File ending
         long indexBegin;
-        try (PrimitivI pi = this.input.beginRandomAccessPrimitivI(-IOUtil.END_MAGIC_LENGTH - 16)) {
+        try (PrimitivI pi = this.input.beginRandomAccessPrimitivI(-ClnAWriter.FOOTER_LENGTH)) {
+            this.reportsStartPosition = pi.readLong();
             // Reading key file offsets from last 16 bytes of the file
             this.firstClonePosition = pi.readLong();
             indexBegin = pi.readLong();
@@ -148,6 +155,15 @@ public final class ClnAReader implements CloneReader, VDJCFileHeaderData, AutoCl
             this.tagsInfo = pi.readObject(TagsInfo.class);
             this.ordering = pi.readObject(VDJCSProperties.CloneOrdering.class);
             this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(pi, this.alignerParameters, libraryRegistry);
+        }
+
+        // read reports from footer
+        try (PrimitivI pi = this.input.beginRandomAccessPrimitivI(reportsStartPosition)) {
+            int nReports = pi.readInt();
+            reports = new ArrayList<>();
+            for (int i = 0; i < nReports; i++) {
+                reports.add((MiXCRCommandReport) pi.readObject(MiXCRReport.class));
+            }
         }
     }
 
@@ -226,6 +242,11 @@ public final class ClnAReader implements CloneReader, VDJCFileHeaderData, AutoCl
      */
     public String getVersionInfo() {
         return versionInfo;
+    }
+
+    @Override
+    public List<MiXCRCommandReport> reports() {
+        return reports;
     }
 
     /**

@@ -19,7 +19,7 @@ import io.repseq.core.VDJCGene;
 
 import java.util.List;
 
-public interface CloneReader extends VDJCFileHeaderData, AutoCloseable {
+public interface CloneReader extends VDJCFileHeaderData, ReportsFooterData, AutoCloseable {
     /**
      * Sequence of properties the stream is sorted by.
      *

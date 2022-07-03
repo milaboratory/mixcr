@@ -14,16 +14,21 @@ package com.milaboratory.mixcr.cli;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.milaboratory.util.GlobalObjectMappers;
 import io.repseq.core.Chains;
+import org.junit.Assert;
 import org.junit.Test;
 
-public class ChainUsageStatsTest {
+public class ChainUsageStatsBuilderTest {
     @Test
     public void serializationTest() throws JsonProcessingException {
-        ChainUsageStats stats = new ChainUsageStats();
+        ChainUsageStatsBuilder stats = new ChainUsageStatsBuilder();
         stats.total.incrementAndGet();
         stats.total.incrementAndGet();
         stats.chimeras.incrementAndGet();
         stats.getCounter(Chains.TRB).incrementAndGet();
-        System.out.println(GlobalObjectMappers.getPretty().writeValueAsString(stats));
+        ChainUsageStats expected = stats.buildReport();
+        String str = GlobalObjectMappers.getPretty().writeValueAsString(expected);
+        System.out.println(str);
+        ChainUsageStats actual = GlobalObjectMappers.getPretty().readValue(str, ChainUsageStats.class);
+        Assert.assertEquals(expected, actual);
     }
 }

@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Copyright (c) 2022, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
- * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ * https://github.com/milaboratory/miplots/blob/main/LICENSE
  *
  * By downloading or accessing the software, you accept and agree to be bound
  * by the terms of the License Agreement. If you do not want to agree to the terms
@@ -11,82 +12,53 @@
  */
 package com.milaboratory.mixcr.cli;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.milaboratory.mixcr.basictypes.VDJCObject;
-import com.milaboratory.util.Report;
 import com.milaboratory.util.ReportHelper;
 import io.repseq.core.Chains;
+import io.repseq.core.Chains.NamedChains;
 
-import java.io.IOException;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.Objects;
 
-/**
- * Created by poslavsky on 08/11/2016.
- */
-@JsonSerialize(using = ChainUsageStats.Serializer.class)
-public final class ChainUsageStats implements Report {
-    final AtomicLong chimeras = new AtomicLong(0);
-    final AtomicLong total = new AtomicLong(0);
-    final ConcurrentHashMap<Chains, AtomicLong> counters = new ConcurrentHashMap<>();
+public class ChainUsageStats implements MiXCRReport {
+    @JsonProperty("chimeras")
+    public final long chimeras;
+    @JsonProperty("total")
+    public final long total;
+    @JsonProperty("chains")
+    @JsonDeserialize(keyUsing = Chains.KnownChainsKeyDeserializer.class)
+//    @JsonSerialize(keyUsing = Chains.KnownChainsSerializer.class)
+    public final Map<NamedChains, Long> chains;
 
-    AtomicLong getCounter(Chains chains) {
-        AtomicLong counter;
-        if ((counter = counters.get(chains)) != null)
-            return counter;
-        else {
-            AtomicLong newCounter = new AtomicLong(0);
-            counter = counters.putIfAbsent(chains, newCounter);
-            if (counter == null)
-                return newCounter;
-            else
-                return counter;
-        }
-    }
-
-    void increment(VDJCObject obj) {
-        total.incrementAndGet();
-        if (obj.isChimera())
-            chimeras.incrementAndGet();
-        else
-            getCounter(obj.commonTopChains()).incrementAndGet();
-    }
-
-    void decrement(VDJCObject obj) {
-        total.decrementAndGet();
-        if (obj.isChimera())
-            chimeras.decrementAndGet();
-        else
-            getCounter(obj.commonTopChains()).decrementAndGet();
+    @JsonCreator
+    public ChainUsageStats(@JsonProperty("chimeras") long chimeras,
+                           @JsonProperty("total") long total,
+                           @JsonProperty("chains") Map<NamedChains, Long> chains) {
+        this.chimeras = chimeras;
+        this.total = total;
+        this.chains = chains;
     }
 
     @Override
     public void writeReport(ReportHelper helper) {
-        long total = this.total.get();
-        for (Map.Entry<Chains, AtomicLong> ch : counters.entrySet())
-            helper.writePercentAndAbsoluteField(ch.getKey().toString() + " chains", ch.getValue(), total);
+        long total = this.total;
+        for (Map.Entry<NamedChains, Long> ch : chains.entrySet())
+            helper.writePercentAndAbsoluteField(ch.getKey().name + " chains", ch.getValue(), total);
     }
 
-    public static final class Serializer extends JsonSerializer<ChainUsageStats> {
-        @Override
-        public void serialize(ChainUsageStats value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
-            jgen.writeStartObject();
-            jgen.writeNumberField("total", value.total.longValue());
-            jgen.writeNumberField("chimeras", value.chimeras.longValue());
-            jgen.writeObjectFieldStart("chains");
-            for (Map.Entry<Chains, AtomicLong> entry : value.counters.entrySet()) {
-                String chains = entry.getKey().toString();
-                if (chains.isEmpty())
-                    chains = "X";
-                jgen.writeNumberField(chains, entry.getValue().longValue());
-            }
-            jgen.writeEndObject();
-            jgen.writeEndObject();
-        }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ChainUsageStats that = (ChainUsageStats) o;
+        return chimeras == that.chimeras && total == that.total && Objects.equals(chains, that.chains);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(chimeras, total, chains);
     }
 }

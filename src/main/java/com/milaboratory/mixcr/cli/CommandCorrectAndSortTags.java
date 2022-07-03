@@ -236,6 +236,8 @@ public class CommandCorrectAndSortTags extends MiXCRCommand {
                 writer.setNumberOfProcessedReads(mainReader.getNumberOfReads());
                 for (VDJCAlignments al : CUtils.it(sorted))
                     writer.write(al);
+
+                writer.writeFooter(mainReader.reports(), null); // TODO add correction report
             }
         }
 

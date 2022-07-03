@@ -149,6 +149,7 @@ public class CommandFilterAlignments extends MiXCRCommand {
                 }
             }
             writer.setNumberOfProcessedReads(reader.getNumberOfReads());
+            writer.writeFooter(reader.reports(), null);
             System.out.printf("%s alignments analysed\n", total);
             System.out.printf("%s alignments written (%.1f%%)\n", passed, 100.0 * passed / total);
         }
