@@ -18,7 +18,6 @@ import com.milaboratory.mixcr.cli.CommonDescriptions;
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParameters;
 import com.milaboratory.util.StringUtil;
 import io.repseq.core.Chains;
-import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -115,24 +114,9 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
     protected TagsInfo getTagsInfo() {
         if (!tagsInfoInitialized) {
             tagsInfoInitialized = true;
-            this.tagsInfo = extractTagsInfo(getInputFiles());
+            this.tagsInfo = CloneSetIO.extractTagsInfo(getInputFiles().toArray(new String[0]));
         }
         return tagsInfo;
-    }
-
-    static TagsInfo extractTagsInfo(List<String> l) {
-        Set<TagsInfo> set = new HashSet<>();
-        for (String in : l) {
-            try {
-                set.add(CloneSetIO.mkReader(Paths.get(in), VDJCLibraryRegistry.getDefault()).getTagsInfo());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        if (set.size() != 1) {
-            throw new IllegalArgumentException("Input files have different tags structure");
-        } else
-            return set.iterator().next();
     }
 
     @Override

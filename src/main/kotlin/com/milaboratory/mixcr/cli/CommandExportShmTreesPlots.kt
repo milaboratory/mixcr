@@ -60,7 +60,7 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
         names = ["--filter-in-feature"],
         description = ["Match pattern inside specified gene feature"]
     )
-    var patternInFeature: GeneFeature? = null
+    var patternInFeature: String? = "CDR3"
 
     @Option(
         names = ["--pattern-max-errors"],
@@ -136,9 +136,9 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
         if (patternSeqAa == null && patternSeqNt == null)
             null
         else if (patternSeqNt != null)
-            SeqPattern(patternSeqNt!!, false, patternInFeature, patternMaxErrors)
+            SeqPattern(patternSeqNt!!, false, GeneFeature.parse(patternInFeature), patternMaxErrors)
         else
-            SeqPattern(patternSeqAa!!, true, patternInFeature, patternMaxErrors)
+            SeqPattern(patternSeqAa!!, true, GeneFeature.parse(patternInFeature), patternMaxErrors)
     }
 
     private val filter by lazy {

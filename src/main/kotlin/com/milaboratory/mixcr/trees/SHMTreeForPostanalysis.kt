@@ -284,8 +284,8 @@ fun distance(rootInfo: RootInfo, from: MutationsSet, to: MutationsSet): BigDecim
             mutationsBetween.knownNDN.mutations.size() +
             mutationsBetween.JMutationsInCDR3WithoutNDN.mutations.size() +
             mutationsBetween.JMutationsWithoutCDR3.values.sumOf { it.mutations.size() }
-    val sequence1Length = from.VMutations.sequence1Length() +
-            rootInfo.reconstructedNDN.size() +
-            from.JMutations.sequence1Length()
-    return BigDecimal.valueOf(mutationsCount / sequence1Length.toDouble())
+//    val sequence1Length = from.VMutations.sequence1Length() +
+//            rootInfo.reconstructedNDN.size() +
+//            from.JMutations.sequence1Length()
+    return BigDecimal.valueOf(mutationsCount.toDouble())
 }
