@@ -76,7 +76,7 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
 
                 val treeExtractors = listOf(
                     FieldData.mk("-treeId"),
-                    FieldData.mk("-differentClonesCount"),
+                    FieldData.mk("-uniqClonesCount"),
                     FieldData.mk("-totalClonesCount"),
                     FieldData.mk("-vHit"),
                     FieldData.mk("-jHit"),

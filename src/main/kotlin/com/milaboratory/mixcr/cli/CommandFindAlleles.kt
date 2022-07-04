@@ -9,9 +9,12 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
+@file:Suppress("LocalVariableName")
+
 package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.CUtils
+import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.blocks.Buffer
 import com.milaboratory.core.Range
 import com.milaboratory.core.alignment.Alignment
@@ -19,34 +22,20 @@ import com.milaboratory.core.alignment.AlignmentScoring
 import com.milaboratory.core.alignment.AlignmentUtils
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.alleles.AllelesBuilder
-import com.milaboratory.mixcr.alleles.AllelesBuilder.SortedClonotypes
 import com.milaboratory.mixcr.alleles.FindAllelesParameters
 import com.milaboratory.mixcr.assembler.CloneFactory
-import com.milaboratory.mixcr.basictypes.ClnsWriter
-import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.basictypes.CloneReader
-import com.milaboratory.mixcr.basictypes.CloneSet
-import com.milaboratory.mixcr.basictypes.CloneSetIO
-import com.milaboratory.mixcr.basictypes.GeneAndScore
+import com.milaboratory.mixcr.basictypes.*
 import com.milaboratory.mixcr.trees.MutationsUtils.positionIfNucleotideWasDeleted
+import com.milaboratory.mixcr.trees.constructStateBuilder
 import com.milaboratory.mixcr.util.XSV.writeXSVBody
 import com.milaboratory.mixcr.util.XSV.writeXSVHeaders
-import com.milaboratory.primitivio.forEach
-import com.milaboratory.primitivio.toList
+import com.milaboratory.primitivio.*
 import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.JsonOverrider
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
-import io.repseq.core.GeneType
-import io.repseq.core.GeneType.Constant
-import io.repseq.core.GeneType.Diversity
-import io.repseq.core.GeneType.Joining
-import io.repseq.core.GeneType.VDJC_REFERENCE
-import io.repseq.core.GeneType.Variable
-import io.repseq.core.VDJCGene
-import io.repseq.core.VDJCGeneId
-import io.repseq.core.VDJCLibrary
-import io.repseq.core.VDJCLibraryRegistry
+import io.repseq.core.*
+import io.repseq.core.GeneType.*
 import io.repseq.dto.VDJCGeneData
 import io.repseq.dto.VDJCLibraryData
 import org.apache.commons.io.FilenameUtils
@@ -169,12 +158,27 @@ class CommandFindAlleles : ACommandWithOutputMiXCR() {
         }
 
         val tempDest: TempFileDest = TempFileManager.smartTempDestination(outputClnsFiles.first(), "", useSystemTemp)
-        val allelesBuilder = AllelesBuilder(findAllelesParameters, cloneReaders, tempDest)
-        val sortedClonotypes = allelesBuilder.sortClonotypes()
-        val alleles = (
-            buildAlleles(allelesBuilder, sortedClonotypes, Variable) +
-                buildAlleles(allelesBuilder, sortedClonotypes, Joining)
-            ).toMap().toMutableMap()
+        val allelesBuilder = AllelesBuilder(findAllelesParameters, cloneReaders)
+        val stateBuilder = cloneReaders.constructStateBuilder()
+
+        val VAlleles = allelesBuilder.buildAlleles(
+            allelesBuilder.unsortedClones().sortAndGroup(
+                GroupingCriteria.sortBy { it.getBestHit(Variable).gene },
+                stateBuilder,
+                tempDest.addSuffix("alleles.searcher.V")
+            ),
+            Variable
+        )
+        val JAlleles = allelesBuilder.buildAlleles(
+            allelesBuilder.unsortedClones().sortAndGroup(
+                GroupingCriteria.sortBy { it.getBestHit(Joining).gene },
+                stateBuilder,
+                tempDest.addSuffix("alleles.searcher.J")
+            ),
+            Joining
+        )
+        val alleles: MutableMap<String, List<VDJCGeneData>> =
+            (VAlleles.asSequence() + JAlleles.asSequence()).toMap(HashMap())
         val usedGenes = collectUsedGenes(cloneReaders, alleles)
         registerNotProcessedVJ(alleles, usedGenes)
         val resultLibrary = buildLibrary(libraryRegistry, cloneReaders, usedGenes)
@@ -373,24 +377,13 @@ class CommandFindAlleles : ACommandWithOutputMiXCR() {
         )
     }
 
-    private fun buildAlleles(
-        allelesBuilder: AllelesBuilder,
-        sortedClonotypes: SortedClonotypes,
+    private fun AllelesBuilder.buildAlleles(
+        clusters: OutputPort<List<Clone>>,
         geneType: GeneType
-    ): List<Pair<String, List<VDJCGeneData>>> {
-        val sortedClones = sortedClonotypes.getSortedBy(geneType)
-        val clusters = allelesBuilder.buildClusters(sortedClones, geneType)
-        val result = CUtils.orderedParallelProcessor(
-            clusters,
-            { cluster ->
-                val geneId = cluster.cluster[0].getBestHit(geneType).gene.name
-                val resultGenes = allelesBuilder.allelesGeneData(cluster, geneType)
-                geneId to resultGenes
-            },
-            Buffer.DEFAULT_SIZE,
-            threads
-        )
-        return result.toList()
+    ): OutputPort<Pair<String, List<VDJCGeneData>>> = clusters.mapInParallel(threads) { cluster ->
+        val geneId = cluster[0].getBestHit(geneType).gene.name
+        val resultGenes = allelesGeneData(cluster, geneType)
+        geneId to resultGenes
     }
 
     private fun scoreDelta(

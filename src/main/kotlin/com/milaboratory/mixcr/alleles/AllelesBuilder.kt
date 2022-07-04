@@ -13,7 +13,6 @@
 
 package com.milaboratory.mixcr.alleles
 
-import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.OutputPortCloseable
 import com.milaboratory.core.Range
 import com.milaboratory.core.alignment.AlignmentScoring
@@ -21,102 +20,47 @@ import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
-import com.milaboratory.mixcr.basictypes.IOUtil
-import com.milaboratory.mixcr.util.*
-import com.milaboratory.primitivio.PrimitivIOStateBuilder
+import com.milaboratory.mixcr.util.ClonesAlignmentRanges
+import com.milaboratory.mixcr.util.asMutations
+import com.milaboratory.mixcr.util.asSequence
 import com.milaboratory.primitivio.filter
 import com.milaboratory.primitivio.flatten
-import com.milaboratory.util.TempFileDest
-import com.milaboratory.util.sorting.HashSorter
 import io.repseq.core.*
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 import io.repseq.dto.VDJCGeneData
 import java.util.*
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.collections.set
 
 class AllelesBuilder(
     private val parameters: FindAllelesParameters,
-    private val datasets: List<CloneReader>,
-    private val tempDest: TempFileDest
+    private val datasets: List<CloneReader>
 ) {
-    private val counter = AtomicInteger(0)
     private val VScoring = datasets[0].assemblerParameters.cloneFactoryParameters.vParameters.scoring
     private val JScoring = datasets[0].assemblerParameters.cloneFactoryParameters.jParameters.scoring
 
-    fun sortClonotypes(): SortedClonotypes {
-        val stateBuilder = stateBuilderForSorter()
-
-        // todo check memory budget
-        // HDD-offloading collator of alignments
-        // Collate solely by cloneId (no sorting by mapping type, etc.);
-        // less fields to sort by -> faster the procedure
-        val memoryBudget = if (Runtime.getRuntime().maxMemory() > 10000000000L /* -Xmx10g */) Runtime.getRuntime()
-            .maxMemory() / 4L /* 1 Gb */ else 1 shl 28 /* 256 Mb */
-        val sorterSupplier: (GeneType) -> HashSorter<Clone> = { geneType: GeneType ->
-            HashSorter(
-                Clone::class.java,
-                { clone: Clone -> clone.getBestHit(geneType).gene.hashCode() },
-                Comparator.comparing { clone: Clone -> clone.getBestHit(geneType).gene },
-                5,
-                tempDest.addSuffix("alleles.searcher").addSuffix("_" + counter.incrementAndGet()),
-                8,
-                8,
-                stateBuilder.oState,
-                stateBuilder.iState,
-                memoryBudget,
-                (
-                    1 shl 18 /* 256 Kb */
-                    ).toLong()
-            )
+    fun unsortedClones() = datasets.map { it.readClones() }
+        .flatten()
+        .filter { c ->
+            // filter non-productive clonotypes
+            // todo CDR3?
+            !parameters.productiveOnly || (!c.containsStops(CDR3) && !c.isOutOfFrame(CDR3))
         }
-        val clonesSupplier: () -> OutputPort<Clone> = {
-            datasets.map { it.readClones() }
-                .flatten()
-                .filter { c ->
-                    // filter non-productive clonotypes
-                    // todo CDR3?
-                    !parameters.productiveOnly || (!c.containsStops(CDR3) && !c.isOutOfFrame(CDR3))
-                }
-                .filter { c ->
-                    c.count > parameters.useClonesWithCountMoreThen
-                }
+        .filter { c ->
+            c.count > parameters.useClonesWithCountMoreThen
         }
-        return SortedClonotypes(
-            sorterSupplier(Variable).port(clonesSupplier()),
-            sorterSupplier(Joining).port(clonesSupplier())
-        )
-    }
 
-    private fun stateBuilderForSorter(): PrimitivIOStateBuilder {
-        val stateBuilder = PrimitivIOStateBuilder()
-        val registeredGenes = mutableSetOf<String>()
-        datasets.forEach { dataset ->
-            IOUtil.registerGeneReferences(
-                stateBuilder,
-                dataset.usedGenes.filter { it.name !in registeredGenes },
-                dataset.alignerParameters
-            )
-            registeredGenes += dataset.usedGenes.map { it.name }
-        }
-        return stateBuilder
-    }
-
-    fun buildClusters(sortedClones: OutputPortCloseable<Clone>, geneType: GeneType): OutputPort<Cluster<Clone>> =
-        sortedClones.buildClusters(Comparator.comparing { it.getBestHit(geneType).gene.id.name })
-
-    private fun findAlleles(clusterByTheSameGene: Cluster<Clone>, geneType: GeneType): List<Allele> {
-        require(clusterByTheSameGene.cluster.isNotEmpty())
+    private fun findAlleles(clusterByTheSameGene: List<Clone>, geneType: GeneType): List<Allele> {
+        require(clusterByTheSameGene.isNotEmpty())
         val commonAlignmentRanges = ClonesAlignmentRanges.commonAlignmentRanges(
-            clusterByTheSameGene.cluster,
+            clusterByTheSameGene,
             parameters.minPortionOfClonesForCommonAlignmentRanges,
             geneType
         ) { it.getBestHit(geneType) }
-        val bestHit = clusterByTheSameGene.cluster[0].getBestHit(geneType)
+        val bestHit = clusterByTheSameGene[0].getBestHit(geneType)
         val complimentaryGene = complimentaryGene(geneType)
-        val cloneDescriptors = clusterByTheSameGene.cluster.asSequence()
+        val cloneDescriptors = clusterByTheSameGene.asSequence()
             .filter { commonAlignmentRanges.containsClone(it) }
             .map { clone ->
                 CloneDescription(
@@ -131,7 +75,7 @@ class AllelesBuilder(
             .toList()
         val allelesSearcher: AllelesSearcher = TIgGERAllelesSearcher(
             scoring(geneType),
-            clusterByTheSameGene.cluster.first().getBestHit(geneType).alignments[0].sequence1,
+            clusterByTheSameGene.first().getBestHit(geneType).alignments[0].sequence1,
             parameters
         )
 
@@ -172,7 +116,7 @@ class AllelesBuilder(
         else -> throw IllegalArgumentException()
     }
 
-    fun allelesGeneData(cluster: Cluster<Clone>, geneType: GeneType): List<VDJCGeneData> =
+    fun allelesGeneData(cluster: List<Clone>, geneType: GeneType): List<VDJCGeneData> =
         findAlleles(cluster, geneType)
             .map { allele ->
                 when {

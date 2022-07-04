@@ -26,8 +26,8 @@ object SHNTreeFieldsExtractor : BaseFieldExtractors() {
         ) { it.meta.treeId.toString() }
 
         fields += FieldParameterless(
-            "-differentClonesCount",
-            "Number of different clones in the SHM tree",
+            "-uniqClonesCount",
+            "Number of uniq clones in the SHM tree",
             "Different clones count",
             "differentClonesCount"
         ) { shmTree ->

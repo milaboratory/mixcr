@@ -13,6 +13,7 @@ package com.milaboratory.primitivio
 
 import cc.redberry.pipe.CUtils
 import cc.redberry.pipe.OutputPort
+import cc.redberry.pipe.blocks.Buffer
 import cc.redberry.pipe.blocks.FilteringPort
 import cc.redberry.pipe.util.FlatteningOutputPort
 
@@ -39,6 +40,12 @@ inline fun <reified T : Any> PrimitivI.readArray(): Array<T> = Array(readInt()) 
 
 fun <T, R> OutputPort<T>.map(function: (T) -> R): OutputPort<R> = CUtils.wrap(this, function)
 
+fun <T, R> OutputPort<T>.mapInParallel(
+    threads: Int,
+    buffer: Int = Buffer.DEFAULT_SIZE,
+    function: (T) -> R
+): OutputPort<R> = CUtils.orderedParallelProcessor(this, function, buffer, threads)
+
 fun <T, R> OutputPort<T>.mapNotNull(function: (T) -> R?): OutputPort<R> = flatMap {
     listOfNotNull(function(it))
 }
@@ -57,8 +64,14 @@ fun <T> OutputPort<T>.filter(test: (element: T) -> Boolean): OutputPort<T> =
 fun <T> OutputPort<T>.forEach(action: (element: T) -> Unit): Unit =
     CUtils.it(this).forEach(action)
 
+fun <T> OutputPort<T>.forEachInParallel(threads: Int, action: (element: T) -> Unit): Unit =
+    CUtils.processAllInParallel(this, action, threads)
+
 fun <T> OutputPort<T>.toList(): List<T> =
     CUtils.it(this).toList()
+
+fun <T> OutputPort<T>.asSequence(): Sequence<T> =
+    CUtils.it(this).asSequence()
 
 fun <T> OutputPort<T>.count(): Int =
     CUtils.it(this).count()

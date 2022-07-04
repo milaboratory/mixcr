@@ -27,10 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class IOUtil {
     public static final int BEGIN_MAGIC_LENGTH = 14;
@@ -79,8 +76,8 @@ public class IOUtil {
         registerGeneReferences(output, genes, featuresToAlign);
     }
 
-    public static void registerGeneReferences(HasPrimitivIOState ioState, List<VDJCGene> genes,
-                                               HasFeatureToAlign featuresToAlign) {
+    public static void registerGeneReferences(HasPrimitivIOState ioState, Collection<VDJCGene> genes,
+                                              HasFeatureToAlign featuresToAlign) {
         // Putting genes references and feature sequences to be serialized/deserialized as references
         for (VDJCGene gene : genes) {
             // Each gene is a singleton

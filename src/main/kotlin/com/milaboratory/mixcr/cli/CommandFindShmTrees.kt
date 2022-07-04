@@ -13,15 +13,15 @@
 
 package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.CUtils
-import cc.redberry.pipe.util.CountingOutputPort
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.trees.*
-import com.milaboratory.mixcr.trees.ClusteringCriteria.DefaultClusteringCriteria
 import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
 import com.milaboratory.mixcr.util.XSV
+import com.milaboratory.primitivio.GroupingCriteria
 import com.milaboratory.primitivio.forEach
+import com.milaboratory.primitivio.forEachInParallel
+import com.milaboratory.primitivio.sortAndGroupWithProgress
 import com.milaboratory.util.*
 import io.repseq.core.VDJCLibraryRegistry
 import org.apache.commons.io.FilenameUtils
@@ -33,6 +33,13 @@ import java.nio.file.Paths
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.io.path.Path
 
+
+private val groupingCriteria: GroupingCriteria<CloneWrapper> = object : GroupingCriteria<CloneWrapper> {
+    override fun hashCodeForGroup(entity: CloneWrapper): Int = entity.VJBase.hashCode()
+
+    override val comparator: Comparator<CloneWrapper> = Comparator
+        .comparing({ c -> c.VJBase }, VJBase.comparator)
+}
 
 @Command(
     name = CommandFindShmTrees.COMMAND_NAME,
@@ -167,6 +174,8 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
         TempFileManager.smartTempDestination(outputTreesPath, "", useSystemTemp)
     }
 
+    private val counter = AtomicInteger(0)
+
     override fun run0() {
         ensureParametersInitialized()
         val cloneReaders = clnsFileNames.map { path ->
@@ -179,7 +188,6 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
         ) { "input files must have the same assembler parameters" }
         val shmTreeBuilder = SHMTreeBuilder(
             shmTreeBuilderParameters,
-            DefaultClusteringCriteria(),
             cloneReaders,
             tempDest,
             threads,
@@ -191,30 +199,28 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
             buildFromUserInput(shmTreeBuilder, cloneReaders)
             return
         }
-        val cloneWrappersCount = shmTreeBuilder.cloneWrappersCount()
+        val cloneWrappersCount = shmTreeBuilder.cloneWrappersCount().toLong()
         val report = BuildSHMTreeReport()
         val stepsCount = shmTreeBuilderParameters.stepsOrder.size + 1
-        var sortedClones = CountingOutputPort(shmTreeBuilder.sortedClones())
         var stepNumber = 1
-        var stepDescription =
-            "Step " + stepNumber + "/" + stepsCount + ", " + BuildSHMTreeStep.BuildingInitialTrees.forPrint
-        SmartProgressReporter.startProgressReport(
-            stepDescription,
-            SmartProgressReporter.extractProgress(sortedClones, cloneWrappersCount.toLong())
-        )
+        val (clustersForZeroStep, progressOfZeroStep) = shmTreeBuilder.unsortedClonotypes()
+            .sortAndGroupWithProgress(
+                groupingCriteria,
+                cloneReaders.constructStateBuilder(),
+                tempDest.addSuffix("tree.builder").addSuffix("_" + counter.incrementAndGet()),
+                cloneWrappersCount
+            )
+        var stepDescription = "Step $stepNumber/$stepsCount, ${BuildSHMTreeStep.BuildingInitialTrees.forPrint}"
+        SmartProgressReporter.startProgressReport(stepDescription, progressOfZeroStep)
         var currentStepDebug = createDebug(stepNumber)
         val relatedAllelesMutations = shmTreeBuilder.relatedAllelesMutations()
-        CUtils.processAllInParallel(
-            shmTreeBuilder.buildClusters(sortedClones),
-            { cluster ->
-                shmTreeBuilder.zeroStep(
-                    cluster,
-                    currentStepDebug.treesBeforeDecisionsWriter,
-                    relatedAllelesMutations
-                )
-            },
-            threads
-        )
+        clustersForZeroStep.forEachInParallel(threads) { cluster ->
+            shmTreeBuilder.zeroStep(
+                cluster,
+                currentStepDebug.treesBeforeDecisionsWriter,
+                relatedAllelesMutations
+            )
+        }
         val clonesWasAddedOnInit = shmTreeBuilder.makeDecisions()
         shmTreeBuilder.makeDecisions()
 
@@ -225,35 +231,37 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
             stepNumber++
             currentStepDebug = createDebug(stepNumber)
             val treesCountBefore = shmTreeBuilder.treesCount()
-            sortedClones = CountingOutputPort(shmTreeBuilder.sortedClones())
+            val (clustersForStep, progressOfStep) = shmTreeBuilder.unsortedClonotypes()
+                .sortAndGroupWithProgress(
+                    groupingCriteria,
+                    cloneReaders.constructStateBuilder(),
+                    tempDest.addSuffix("tree.builder").addSuffix("_" + counter.incrementAndGet()),
+                    cloneWrappersCount
+                )
             stepDescription = "Step " + stepNumber + "/" + stepsCount + ", " + step.forPrint
-            SmartProgressReporter.startProgressReport(
-                stepDescription,
-                SmartProgressReporter.extractProgress(sortedClones, cloneWrappersCount.toLong())
-            )
+            SmartProgressReporter.startProgressReport(stepDescription, progressOfStep)
             val allClonesInTress = shmTreeBuilder.allClonesInTress()
-            CUtils.processAllInParallel(
-                shmTreeBuilder.buildClusters(sortedClones),
-                { cluster ->
-                    shmTreeBuilder.applyStep(
-                        cluster,
-                        step,
-                        allClonesInTress,
-                        previousStepDebug.treesAfterDecisionsWriter,
-                        currentStepDebug.treesBeforeDecisionsWriter
-                    )
-                },
-                threads
-            )
+            clustersForStep.forEachInParallel(threads) { cluster ->
+                shmTreeBuilder.applyStep(
+                    cluster,
+                    step,
+                    allClonesInTress,
+                    previousStepDebug.treesAfterDecisionsWriter,
+                    currentStepDebug.treesBeforeDecisionsWriter
+                )
+            }
             val clonesWasAdded = shmTreeBuilder.makeDecisions()
             report.onStepEnd(step, clonesWasAdded, shmTreeBuilder.treesCount() - treesCountBefore)
             previousStepDebug = currentStepDebug
         }
-        sortedClones = CountingOutputPort(shmTreeBuilder.sortedClones())
-        SmartProgressReporter.startProgressReport(
-            "Building results",
-            SmartProgressReporter.extractProgress(sortedClones, cloneWrappersCount.toLong())
-        )
+        val (clustersForBuildResult, progressOfBuildResult) = shmTreeBuilder.unsortedClonotypes()
+            .sortAndGroupWithProgress(
+                groupingCriteria,
+                cloneReaders.constructStateBuilder(),
+                tempDest.addSuffix("tree.builder").addSuffix("_" + counter.incrementAndGet()),
+                cloneWrappersCount
+            )
+        SmartProgressReporter.startProgressReport("Building results", progressOfBuildResult)
 
         SHMTreesWriter(outputTreesPath).use { shmTreesWriter ->
             val usedGenes = cloneReaders.flatMap { it.usedGenes }.distinct()
@@ -268,7 +276,7 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
 
             val writer = shmTreesWriter.treesWriter()
             val idGenerator = AtomicInteger()
-            shmTreeBuilder.buildClusters(sortedClones).forEach { cluster ->
+            clustersForBuildResult.forEach { cluster ->
                 shmTreeBuilder
                     .getResult(cluster, previousStepDebug.treesAfterDecisionsWriter, idGenerator)
                     .forEach { writer.put(it) }

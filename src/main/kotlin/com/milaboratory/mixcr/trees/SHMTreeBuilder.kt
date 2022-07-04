@@ -15,7 +15,6 @@ package com.milaboratory.mixcr.trees
 
 import cc.redberry.pipe.CUtils
 import cc.redberry.pipe.OutputPort
-import cc.redberry.pipe.OutputPortCloseable
 import cc.redberry.pipe.blocks.Buffer
 import com.milaboratory.core.alignment.AlignmentScoring
 import com.milaboratory.core.mutations.Mutations
@@ -23,15 +22,11 @@ import com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
-import com.milaboratory.mixcr.basictypes.IOUtil
-import com.milaboratory.mixcr.util.Cluster
 import com.milaboratory.mixcr.util.XSV
-import com.milaboratory.mixcr.util.buildClusters
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.primitivio.*
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.util.TempFileDest
-import com.milaboratory.util.sorting.HashSorter
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneFeature.VJJunction
@@ -80,7 +75,6 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 class SHMTreeBuilder(
     private val parameters: SHMTreeBuilderParameters,
-    private val clusteringCriteria: ClusteringCriteria,
     private val datasets: List<CloneReader>,
     private val tempDest: TempFileDest,
     private val threads: Int,
@@ -116,7 +110,6 @@ class SHMTreeBuilder(
      */
     private var currentTrees = ConcurrentHashMap<VJBase, List<TreeWithMetaBuilder.Snapshot>>()
     private val treeIdGenerators = ConcurrentHashMap<VJBase, IdGenerator>()
-    private val counter = AtomicInteger(0)
 
     fun cloneWrappersCount(): Int = unsortedClonotypes().count()
 
@@ -125,70 +118,7 @@ class SHMTreeBuilder(
         .flatMap { it.clonesAdditionHistory }
         .toSet()
 
-    private fun createCloneWrapperSorter(): HashSorter<CloneWrapper> {
-        val stateBuilder = stateBuilderForSorter()
-
-        // todo check memory budget
-        val memoryBudget = memoryBudgetForSorter()
-
-        // todo move constants to parameters
-        return HashSorter(
-            CloneWrapper::class.java,
-            clusteringCriteria.clusteringHashCode(),
-            clusteringCriteria.clusteringComparatorWithNumberOfMutations(VScoring, JScoring),
-            5,
-            tempDest.addSuffix("tree.builder").addSuffix("_" + counter.incrementAndGet()),
-            8,
-            8,
-            stateBuilder.oState,
-            stateBuilder.iState,
-            memoryBudget,
-            (1 shl 18 /* 256 Kb */).toLong()
-        )
-    }
-
-    private fun createUserInputSorter(): HashSorter<CloneFromUserInput> {
-        val stateBuilder = stateBuilderForSorter()
-
-        // todo check memory budget
-        val memoryBudget = memoryBudgetForSorter()
-
-        // todo move constants to parameters
-        return HashSorter(
-            CloneFromUserInput::class.java,
-            { it.treeId },
-            Comparator.comparing { it.treeId },
-            5,
-            tempDest.addSuffix("tree.builder").addSuffix("_" + counter.incrementAndGet()),
-            8,
-            8,
-            stateBuilder.oState,
-            stateBuilder.iState,
-            memoryBudget,
-            (1 shl 18 /* 256 Kb */).toLong()
-        )
-    }
-
-    /* 256 Mb */
-    private fun memoryBudgetForSorter(): Long =
-        if (Runtime.getRuntime().maxMemory() > 10000000000L /* -Xmx10g */) Runtime.getRuntime()
-            .maxMemory() / 4L /* 1 Gb */ else 1 shl 28
-
-    private fun stateBuilderForSorter(): PrimitivIOStateBuilder {
-        val stateBuilder = PrimitivIOStateBuilder()
-        val registeredGenes = mutableSetOf<String>()
-        datasets.forEach { dataset ->
-            IOUtil.registerGeneReferences(
-                stateBuilder,
-                dataset.usedGenes.filter { it.name !in registeredGenes },
-                dataset.alignerParameters
-            )
-            registeredGenes += dataset.usedGenes.map { it.name }
-        }
-        return stateBuilder
-    }
-
-    private fun unsortedClonotypes(): OutputPort<CloneWrapper> = readClonesWithDatasetIds()
+    fun unsortedClonotypes(): OutputPort<CloneWrapper> = readClonesWithDatasetIds()
         .filter { (_, c) ->
             // filter non-productive clonotypes
             // todo CDR3?
@@ -239,32 +169,35 @@ class SHMTreeBuilder(
                 )
             }
 
-        val sortedByTreeId = createUserInputSorter().port(userInputPort)
-        val clusters = sortedByTreeId.buildClusters(Comparator.comparing { it.treeId })
+        val clusters = userInputPort.sortAndGroup(
+            GroupingCriteria.sortBy { it.treeId },
+            datasets.constructStateBuilder(),
+            tempDest.addSuffix("tree.builder.userInput")
+        )
 
         return CUtils.orderedParallelProcessor(
             clusters,
             { cluster ->
-                val treeId = cluster.cluster.first().treeId
+                val treeId = cluster.first().treeId
 
-                val CDR3lengths = cluster.cluster.map { it.clone.ntLengthOf(CDR3) }
+                val CDR3lengths = cluster.map { it.clone.ntLengthOf(CDR3) }
                     .groupingBy { it }.eachCount()
                 if (CDR3lengths.size > 1) {
                     println("WARN: in $treeId not all clones have the same length of CDR3")
                 }
                 val VJBase = VJBase(
-                    VGeneId = cluster.cluster.map { it.clone }.bestGeneForClones(Variable),
-                    JGeneId = cluster.cluster.map { it.clone }.bestGeneForClones(Joining),
+                    VGeneId = cluster.map { it.clone }.bestGeneForClones(Variable),
+                    JGeneId = cluster.map { it.clone }.bestGeneForClones(Joining),
                     CDR3length = CDR3lengths.maxByOrNull { it.value }!!.key
                 )
 
-                val cloneWrappers = cluster.cluster
+                val cloneWrappers = cluster
                     .filter { it.clone.ntLengthOf(CDR3) == VJBase.CDR3length }
                     //filter compositions that not overlap with each another
                     .filter { it.clone.formsAllRefPointsInCDR3(VJBase) }
                     .map { CloneWrapper(it.clone, it.datasetId, VJBase, listOf(VJBase)) }
 
-                val clusterProcessor = buildClusterProcessor(Cluster(cloneWrappers), VJBase)
+                val clusterProcessor = buildClusterProcessor(cloneWrappers, VJBase)
                 clusterProcessor.buildTreeFromAllClones(treeId)
             },
             Buffer.DEFAULT_SIZE,
@@ -284,11 +217,6 @@ class SHMTreeBuilder(
             dataset.readClones().map { clone -> datasetId to clone }
         }
         .flatten()
-
-    fun buildClusters(sortedClones: OutputPortCloseable<CloneWrapper>): OutputPort<Cluster<CloneWrapper>> =
-        sortedClones.buildClusters(clusteringCriteria.clusteringComparator())
-
-    fun sortedClones(): OutputPortCloseable<CloneWrapper> = createCloneWrapperSorter().port(unsortedClonotypes())
 
     /**
      * Clone may be selected for several trees with different VJ.
@@ -320,11 +248,11 @@ class SHMTreeBuilder(
      * Build initial trees.
      */
     fun zeroStep(
-        clusterBySameVAndJ: Cluster<CloneWrapper>,
+        clusterBySameVAndJ: List<CloneWrapper>,
         debug: PrintStream,
         relatedAllelesMutations: Map<VDJCGeneId, List<Mutations<NucleotideSequence>>>
     ) {
-        val VJBase = clusterVJBase(clusterBySameVAndJ)
+        val VJBase = clusterBySameVAndJ.first().VJBase
         try {
             val clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase)
             val result = clusterProcessor.buildTreeTopParts(relatedAllelesMutations)
@@ -342,13 +270,13 @@ class SHMTreeBuilder(
      * Run one of possible steps to add clones or combine trees.
      */
     fun applyStep(
-        clusterBySameVAndJ: Cluster<CloneWrapper>,
+        clusterBySameVAndJ: List<CloneWrapper>,
         step: BuildSHMTreeStep,
         allClonesInTress: Set<CloneWrapper.ID>,
         debugOfPreviousStep: PrintStream,
         debugOfCurrentStep: PrintStream
     ) {
-        val VJBase = clusterVJBase(clusterBySameVAndJ)
+        val VJBase = clusterBySameVAndJ.first().VJBase
         try {
             val clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase)
             val currentTrees = currentTrees[VJBase]!!.map { snapshot -> clusterProcessor.restore(snapshot) }
@@ -366,11 +294,11 @@ class SHMTreeBuilder(
     }
 
     fun getResult(
-        clusterBySameVAndJ: Cluster<CloneWrapper>,
+        clusterBySameVAndJ: List<CloneWrapper>,
         previousStepDebug: PrintStream,
         idGenerator: AtomicInteger
     ): List<SHMTreeResult> {
-        val VJBase = clusterVJBase(clusterBySameVAndJ)
+        val VJBase = clusterBySameVAndJ.first().VJBase
         try {
             val clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase)
             val currentTrees = currentTrees[VJBase]!!.map { snapshot ->
@@ -392,9 +320,9 @@ class SHMTreeBuilder(
         }
     }
 
-    private fun buildClusterProcessor(clusterBySameVAndJ: Cluster<CloneWrapper>, VJBase: VJBase): ClusterProcessor {
-        require(clusterBySameVAndJ.cluster.isNotEmpty())
-        val anyClone = clusterBySameVAndJ.cluster[0]
+    private fun buildClusterProcessor(clusterBySameVAndJ: List<CloneWrapper>, VJBase: VJBase): ClusterProcessor {
+        require(clusterBySameVAndJ.isNotEmpty())
+        val anyClone = clusterBySameVAndJ.first()
         return ClusterProcessor(
             parameters,
             ScoringSet(
@@ -403,7 +331,6 @@ class SHMTreeBuilder(
                 JScoring
             ),
             assemblingFeatures,
-            alignerParameters,
             clusterBySameVAndJ,
             anyClone.getHit(Variable).getAlignment(0).sequence1,
             anyClone.getHit(Joining).getAlignment(0).sequence1,
@@ -415,8 +342,6 @@ class SHMTreeBuilder(
             VJBase
         )
     }
-
-    private fun clusterVJBase(clusterBySameVAndJ: Cluster<CloneWrapper>): VJBase = clusterBySameVAndJ.cluster[0].VJBase
 
     /**
      * For every gene make a list of mutations to alleles of the gene.
