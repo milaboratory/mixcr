@@ -54,10 +54,8 @@ mixcr assembleContigs -f case10.cdr3-cell-clna case10.cdr3-cell-clns
 for f in case10*-clns; do
   # -count -uniqueTagCount UMI
   mixcr exportClones -f --split-by-tag CELL -tag CELL -nFeature CDR3 -nFeature VDJRegion ${f} ${f}.txt
-  #  grep -E 'TGTGCTGTGCAGGCGGTACTTCAACAAATTTTACTTT|TGTGCCAGCACAAACAGTCATGGCTACACCTTC|TGCCTCGTGGGTGACTCCGGTGGCCAGAAGCTGCTCTTT|TGTGCCAGCAGCTTAGGGGGGACAGGGGACCAAGAGACCCAGTACTTC|TGTGCAGCACCTCGTACGTTAAACGACTACAAGCTCAGCTTT|TGTGTTGTGAGTCTTCTGGTGGCTACAATAAGCTGATTTTT' ${f}.txt >${f}.txt.g
-  grep -v -E '\t$' ${f}.txt >${f}.txt.g
+  grep -v -e $'\t''$' ${f}.txt >${f}.txt.g
   sort ${f}.txt.g >${f}.txt.g.s
-  #  sort ${f}.txt > ${f}.txt.s
 done
 
 cmp case10.cdr3-cell-clns.txt.g.s case10.cdr3-molecule-clns.txt.g.s
