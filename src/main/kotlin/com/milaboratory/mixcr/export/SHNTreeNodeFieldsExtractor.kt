@@ -35,6 +35,15 @@ object SHNTreeNodeFieldsExtractor : BaseFieldExtractors() {
         }
 
         fields += FieldParameterless(
+            "-parentId",
+            "Parent node id in SHM tree",
+            "Parent id",
+            "parentId"
+        ) {
+            it.parentId?.toString() ?: NULL
+        }
+
+        fields += FieldParameterless(
             "-fileName",
             "Name of clns file with sample",
             "File name",

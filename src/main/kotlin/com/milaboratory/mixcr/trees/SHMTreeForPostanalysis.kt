@@ -47,6 +47,7 @@ data class SHMTreeForPostanalysis(
 
     class NodeWithClones(
         id: Int,
+        parentId: Int?,
         meta: Meta,
         mostRecentCommonAncestor: MutationsDescription,
         main: MutationsDescription,
@@ -57,6 +58,7 @@ data class SHMTreeForPostanalysis(
         val clones: List<CloneWithDatasetId>
     ) : BaseNode(
         id = id,
+        parentId = parentId,
         meta = meta,
         mostRecentCommonAncestor = mostRecentCommonAncestor,
         main = main,
@@ -72,6 +74,7 @@ data class SHMTreeForPostanalysis(
 
         private fun withClone(clone: CloneWithDatasetId) = SplittedNode(
             id = id,
+            parentId = parentId,
             meta = meta,
             main = main,
             mostRecentCommonAncestor = mostRecentCommonAncestor,
@@ -84,6 +87,7 @@ data class SHMTreeForPostanalysis(
 
         private fun withoutClone() = SplittedNode(
             id = id,
+            parentId = parentId,
             meta = meta,
             main = main,
             mostRecentCommonAncestor = mostRecentCommonAncestor,
@@ -97,6 +101,7 @@ data class SHMTreeForPostanalysis(
 
     class SplittedNode(
         id: Int,
+        parentId: Int?,
         meta: Meta,
         mostRecentCommonAncestor: MutationsDescription,
         main: MutationsDescription,
@@ -107,6 +112,7 @@ data class SHMTreeForPostanalysis(
         val clone: CloneWithDatasetId?
     ) : BaseNode(
         id = id,
+        parentId = parentId,
         meta = meta,
         mostRecentCommonAncestor = mostRecentCommonAncestor,
         main = main,
@@ -118,6 +124,7 @@ data class SHMTreeForPostanalysis(
 
     sealed class BaseNode(
         val id: Int,
+        val parentId: Int?,
         protected val meta: Meta,
         protected val mostRecentCommonAncestor: MutationsDescription,
         protected val main: MutationsDescription,
@@ -203,6 +210,7 @@ private fun Tree.Node<CloneOrFoundAncestor>.map(
     return Tree.Node(
         SHMTreeForPostanalysis.NodeWithClones(
             content.id,
+            parent?.content?.id,
             meta,
             main = main,
             mostRecentCommonAncestor = mrca,

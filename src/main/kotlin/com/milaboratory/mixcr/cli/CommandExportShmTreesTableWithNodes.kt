@@ -84,6 +84,7 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
 
                 val nodeExtractors = listOf(
                     FieldData.mk("-nodeId"),
+                    FieldData.mk("-parentId"),
                     FieldData.mk("-fileName"),
                     FieldData.mk("-distance", "germline"),
                     FieldData.mk("-distance", "mrca"),

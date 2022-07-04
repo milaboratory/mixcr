@@ -373,18 +373,9 @@ class SHMTreeBuilder(
         val VJBase = clusterVJBase(clusterBySameVAndJ)
         try {
             val clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase)
-            val currentTrees = currentTrees[VJBase]!!
-                //base tree on NDN that was found before instead of sequence of N
-                .map { snapshot ->
-                    val reconstructedNDN = clusterProcessor.restore(snapshot).mostRecentCommonAncestorNDN()
-                    clusterProcessor.restore(
-                        snapshot.copy(
-                            rootInfo = snapshot.rootInfo.copy(
-                                reconstructedNDN = reconstructedNDN
-                            )
-                        )
-                    )
-                }
+            val currentTrees = currentTrees[VJBase]!!.map { snapshot ->
+                clusterProcessor.restoreWithNDNFromMRCA(snapshot)
+            }
             val debugInfos = clusterProcessor.debugInfos(currentTrees)
             XSV.writeXSVBody(previousStepDebug, debugInfos, DebugInfo.COLUMNS_FOR_XSV, ";")
             return currentTrees.asSequence()

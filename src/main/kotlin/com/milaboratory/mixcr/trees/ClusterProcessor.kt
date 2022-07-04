@@ -168,6 +168,29 @@ internal class ClusterProcessor(
         return buildATree(Cluster(rebasedClonesFromGermline.toList()))
     }
 
+    /**
+     * Base tree on NDN that was found before instead of sequence of N
+     */
+    fun restoreWithNDNFromMRCA(snapshot: TreeWithMetaBuilder.Snapshot): TreeWithMetaBuilder {
+        val clonesInTrees = snapshot.clonesAdditionHistory.toSet()
+
+        val rebasedCluster = Cluster(
+            rebaseFromGermline(
+                originalCluster.cluster
+                    .filter { it.id in clonesInTrees }.asSequence()
+            ).toList()
+        )
+
+        val treeWithSequenceOfNInRoot = buildATree(rebasedCluster)
+        val reconstructedNDN = treeWithSequenceOfNInRoot.mostRecentCommonAncestorNDN()
+        return buildATree(
+            rebasedCluster,
+            rootInfo = treeWithSequenceOfNInRoot.rootInfo.copy(
+                reconstructedNDN = reconstructedNDN
+            )
+        )
+    }
+
     private fun rebaseFromGermline(clones: Sequence<CloneWrapper>): Sequence<CloneWithMutationsFromVJGermline> = clones
         .filter { cloneWrapper ->
             (clusterInfo.commonVAlignmentRanges.containsCloneWrapper(cloneWrapper)
@@ -568,9 +591,11 @@ internal class ClusterProcessor(
         return result
     }
 
-    private fun buildATree(cluster: Cluster<CloneWithMutationsFromVJGermline>): TreeWithMetaBuilder {
+    private fun buildATree(
+        cluster: Cluster<CloneWithMutationsFromVJGermline>,
+        rootInfo: RootInfo = cluster.buildRootInfo()
+    ): TreeWithMetaBuilder {
         val clonesRebase = ClonesRebase(VSequence1, JSequence1, scoringSet)
-        val rootInfo = buildRootInfo(cluster)
         val rebasedCluster = cluster.cluster.asSequence()
             .map { clone ->
                 clonesRebase.rebaseClone(
@@ -628,12 +653,12 @@ internal class ClusterProcessor(
         )
     }
 
-    private fun buildRootInfo(cluster: Cluster<CloneWithMutationsFromVJGermline>): RootInfo {
-        val rootBasedOn = cluster.cluster.first()
+    private fun Cluster<CloneWithMutationsFromVJGermline>.buildRootInfo(): RootInfo {
+        val rootBasedOn = cluster.first()
 
         //TODO may be just get from root?
-        val VRangeInCDR3 = mostLikableRangeInCDR3(cluster) { clone -> VRangeInCDR3(clone) }
-        val JRangeInCDR3 = mostLikableRangeInCDR3(cluster) { clone -> JRangeInCDR3(clone) }
+        val VRangeInCDR3 = mostLikableRangeInCDR3(this) { clone -> VRangeInCDR3(clone) }
+        val JRangeInCDR3 = mostLikableRangeInCDR3(this) { clone -> JRangeInCDR3(clone) }
         val NDNRangeInKnownNDN = NDNRangeInKnownNDN(rootBasedOn.mutations, VRangeInCDR3, JRangeInCDR3)
         val NDNBuilder = ALPHABET.createBuilder()
         repeat(NDNRangeInKnownNDN.length()) {
