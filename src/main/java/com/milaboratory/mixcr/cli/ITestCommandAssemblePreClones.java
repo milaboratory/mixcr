@@ -49,7 +49,7 @@ public class ITestCommandAssemblePreClones extends ACommandMiXCR {
             names = {"--use-system-temp"})
     public boolean useSystemTemp = false;
 
-    @Option(names = "-A", description = "Overrides default pre-clone assembler parameter values.")
+    @Option(names = "-P", description = "Overrides default pre-clone assembler parameter values.")
     private Map<String, String> preCloneAssemblerOverrides = new HashMap<>();
 
     @Override

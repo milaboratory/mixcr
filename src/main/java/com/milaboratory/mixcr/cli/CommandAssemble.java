@@ -99,7 +99,7 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
     @Option(names = "-O", description = "Overrides default parameter values.")
     private Map<String, String> overrides = new HashMap<>();
 
-    @Option(names = "-A", description = "Overrides default pre-clone assembler parameter values.")
+    @Option(names = "-P", description = "Overrides default pre-clone assembler parameter values.")
     private Map<String, String> preCloneAssemblerOverrides = new HashMap<>();
 
     @Override
