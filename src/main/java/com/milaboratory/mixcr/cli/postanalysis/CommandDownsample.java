@@ -14,6 +14,7 @@ package com.milaboratory.mixcr.cli.postanalysis;
 import cc.redberry.pipe.CUtils;
 import com.milaboratory.mixcr.basictypes.ClnsWriter;
 import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.cli.ACommandWithOutputMiXCR;
 import com.milaboratory.mixcr.cli.CommonDescriptions;
 import com.milaboratory.mixcr.postanalysis.Dataset;
@@ -99,7 +100,7 @@ public class CommandDownsample extends ACommandWithOutputMiXCR {
                 ).collect(Collectors.toList());
 
         SetPreprocessorFactory<Clone> preproc = PostanalysisParameters
-                .parseDownsampling(this.downsampling, CommandPa.extractTagsInfo(getInputFiles()), false)
+                .parseDownsampling(this.downsampling, CloneSetIO.extractTagsInfo(getInputFiles().toArray(new String[0])), false)
                 .filterFirst(new ElementPredicate.IncludeChains(Chains.getByName(chains)));
         if (onlyProductive)
             preproc = PostanalysisParameters.filterOnlyProductive(preproc);

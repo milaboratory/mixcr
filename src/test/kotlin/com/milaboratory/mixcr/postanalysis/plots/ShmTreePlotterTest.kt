@@ -14,13 +14,15 @@ class ShmTreePlotterTest {
             ShmTreePlotter(
                 Paths.get("/Users/poslavskysv/Projects/milab/mixcr-test-data-trees/D01.shmt"),
                 Paths.get("/Users/poslavskysv/Projects/milab/mixcr-test-data-trees/metadata.tsv"),
-                filter = TreeFilter(minNodes = 30, minHeight = 15),
-                limit = 100,
+                filter = TreeFilter(minNodes = 5, minHeight = 5),
+//                limit = 100,
 
                 nodeSize = DefaultMeta.Abundance,
                 nodeLabel = DefaultMeta.Isotype,
-                nodeColor = "Time",
-                alignment = AlignmentOption(gf = GeneFeature.CDR3, isAA = true, fill = true)
+//                lineColor = "CellType",
+                nodeColor = "Replica",
+                alignment = AlignmentOption(gf = GeneFeature.CDR3, isAA = true, fill = true),
+                stats = listOf(StatOption("Time"))
             )
 
         writePDF(

@@ -27,6 +27,9 @@ class Tree<T : Any>(
 
     fun allNodes(): Sequence<NodeWithParent<T>> = sequenceOf(NodeWithParent(null, root, null)) + root.allDescendants()
 
+    /** List of all leafs in the t@ree */
+    fun allLeafs() = allNodes().filter { it.node.isLeaf() }
+
     fun <R : Any> map(mapper: (T?, T) -> R): Tree<R> =
         Tree(root.map(null, mapper))
 
@@ -75,6 +78,9 @@ class Tree<T : Any>(
                 child.map(content, mapper)
             }
         )
+
+        /** Whether this node is leaf */
+        fun isLeaf() = links.isEmpty()
     }
 
     class NodeLink<T>(

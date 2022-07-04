@@ -14,6 +14,7 @@ package com.milaboratory.mixcr.cli.postanalysis;
 import com.milaboratory.miplots.ExportKt;
 import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod;
 import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.cli.ACommandWithOutputMiXCR;
 import com.milaboratory.mixcr.cli.CommonDescriptions;
 import com.milaboratory.mixcr.postanalysis.Dataset;
@@ -100,7 +101,7 @@ public class CommandOverlapScatter extends ACommandWithOutputMiXCR {
     @Override
     public void run0() throws Exception {
         SetPreprocessorFactory<Clone> preproc = PostanalysisParameters.
-                parseDownsampling(downsampling, CommandPa.extractTagsInfo(getInputFiles()), false);
+                parseDownsampling(downsampling, CloneSetIO.extractTagsInfo(getInputFiles().toArray(new String[0])), false);
 
         for (NamedChains curChains : this.chains == null
                 ? Arrays.asList(TRAD_NAMED, TRB_NAMED, TRG_NAMED, IGH_NAMED, IGKL_NAMED)

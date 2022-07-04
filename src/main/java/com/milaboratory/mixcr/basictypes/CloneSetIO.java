@@ -12,13 +12,16 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.cli.BinaryFileInfo;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.util.LambdaSemaphore;
 import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Objects;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.milaboratory.mixcr.basictypes.IOUtil.*;
 
@@ -74,4 +77,28 @@ public final class CloneSetIO {
         }
     }
 
+    /**
+     * Extracts tags info from files and checks that all input has the same tag structure
+     */
+    public static TagsInfo extractTagsInfo(List<Path> files) {
+        Set<TagsInfo> set = new HashSet<>();
+        for (Path in : files) {
+            try (CloneReader reader = mkReader(in, VDJCLibraryRegistry.getDefault())) {
+                set.add(reader.getTagsInfo());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+        if (set.size() != 1) {
+            throw new IllegalArgumentException("Input files have different tags structure");
+        } else
+            return set.iterator().next();
+    }
+
+    /**
+     * Extracts tags info from files and checks that all input has the same tag structure
+     */
+    public static TagsInfo extractTagsInfo(String... files) {
+        return extractTagsInfo(Arrays.stream(files).map(Paths::get).collect(Collectors.toList()));
+    }
 }

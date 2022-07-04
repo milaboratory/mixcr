@@ -19,6 +19,7 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.miplots.Position
 import com.milaboratory.miplots.color.Palettes
 import com.milaboratory.miplots.dendro.*
+import com.milaboratory.miplots.stat.util.TestMethod
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.NodeWithClones
 import com.milaboratory.mixcr.trees.SHMTreesReader
@@ -93,6 +94,13 @@ class TreeFilter(
     }
 }
 
+data class StatOption(
+    /** Metadata column to use */
+    val metadataColumn: String,
+    /** Stat method */
+    val method: TestMethod = TestMethod.Wilcoxon
+)
+
 object DefaultMeta {
     val Isotype = "Isotype"
     val Abundance = "Abundance"
@@ -100,7 +108,6 @@ object DefaultMeta {
 }
 
 typealias GGNode = Node<NodeWithClones>
-
 
 data class AlignmentOption(
     /** Gene feature to align */
@@ -112,8 +119,8 @@ data class AlignmentOption(
 )
 
 class ShmTreePlotter(
-    treesPath: Path,
-    metadataPath: Path? = null,
+    val shmtFile: Path,
+    val metadataFile: Path? = null,
     /** Filter specific trees */
     val filter: TreeFilter? = null,
     /** Take first N trees (for debug purposes) */
@@ -129,18 +136,17 @@ class ShmTreePlotter(
     val nodeLabel: String? = null,
     /** Add alignment color layer */
     val alignment: AlignmentOption? = null,
+    /** Compute and show statistics on the tree */
+    val stats: List<StatOption> = emptyList()
 ) {
     /** sampleId -> sample metadata */
     val metadata: Map<Int, Map<String, Any>>?
-    val plots: List<Plot>
 
     init {
-        val lregistry = VDJCLibraryRegistry.getDefault()
-
         // parse metadata
-        if (metadataPath != null) {
-            val df = readMetadata(metadataPath)
-            val fileNames = SHMTreesReader(treesPath, lregistry).use { it.fileNames }
+        if (metadataFile != null) {
+            val df = readMetadata(metadataFile)
+            val fileNames = SHMTreesReader(shmtFile, VDJCLibraryRegistry.getDefault()).use { it.fileNames }
 
             val sampleColumn = df.columnNames().first { it.equals("sample", true) }
             val idsInMeta = df[sampleColumn].toList().map { it.toString() }.distinct()
@@ -153,8 +159,10 @@ class ShmTreePlotter(
         } else {
             this.metadata = null
         }
+    }
 
-        this.plots = SHMTreesReader(treesPath, lregistry).use {
+    val plots: List<Plot> by lazy {
+        SHMTreesReader(shmtFile, VDJCLibraryRegistry.getDefault()).use {
             val list = mutableListOf<Plot>()
 
             it.readTrees().use { reader ->
@@ -163,7 +171,7 @@ class ShmTreePlotter(
                     val tree = t.forPostanalysis(
                         it.fileNames,
                         it.alignerParameters,
-                        lregistry
+                        VDJCLibraryRegistry.getDefault()
                     )
 
                     if (filter != null && !filter.match(tree))
@@ -226,6 +234,44 @@ class ShmTreePlotter(
         )
     }
 
+
+    /** metadataColumn -> columnValue->rank */
+    private val metadataRanks: Map<String, Map<Any, Double>> by lazy {
+        metadata!!
+
+        val columns = metadata.flatMap {
+            it.value.keys
+        }.distinct()
+
+        columns.associateWith { column ->
+            metadata.map { it.value[column]!! }.distinct().mapIndexed { i, v -> v to (1 + i.toDouble()) }.toMap()
+        }
+    }
+
+    private fun pValue(
+        tree: SHMTreeForPostanalysis,
+        stat: StatOption
+    ): Double = run {
+        val leafs = tree.tree.allLeafs()
+
+        val data = leafs
+            .flatMap {
+                it.node.content.clones.map { c ->
+                    val height = it.node.content.distanceFrom(SHMTreeForPostanalysis.Base.germline)?.toDouble() ?: 0.0
+                    val metaValue = metadata?.get(c.datasetId)?.get(stat.metadataColumn)
+                    metadataRanks[stat.metadataColumn]!![metaValue]!! to height
+                }
+            }
+
+        val x = data.map { it.first }.toList().toDoubleArray()
+        val y = data.map { it.second }.toList().toDoubleArray()
+
+        if (x.size <= 2)
+            1.0
+        else
+            stat.method.pValue(x, y, paired = true)
+    }
+
     fun plot(tree: SHMTreeForPostanalysis) = run {
 
         val fixedLineColor = if (this@ShmTreePlotter.lineColor == null) "#555555" else null
@@ -258,9 +304,13 @@ class ShmTreePlotter(
             else
                 dendro.withTextLayer(DefaultMeta.Alignment, leafsOnly = true)
 
-        dendro.plusAssign(ggtitle(tree.meta.treeId.let {
-            "Id: $it"
-        }))
+        var title = "Id: ${tree.meta.treeId}"
+        if (stats.isNotEmpty()) {
+            for (stat in stats) {
+                title += " " + pValue(tree, stat)
+            }
+        }
+        dendro.plusAssign(ggtitle(title))
 
         dendro.plusAssign(guides(size = "none"))
 
@@ -287,7 +337,6 @@ class ShmTreePlotter(
             breaks = breaks,
             name = colorAes.toString()
         )
-
 
         plt
     }
