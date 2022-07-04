@@ -53,6 +53,10 @@ public class PreCloneAssemblerReport implements MiXCRReport {
     public final long gatConflicts;
     @JsonProperty("geneConflicts")
     public final Map<GeneType, Long> geneConflicts;
+    @JsonProperty("coreClonotypesDroppedByTagSuffix")
+    public final long coreClonotypesDroppedByTagSuffix;
+    @JsonProperty("coreAlignmentsDroppedByTagSuffix")
+    public final long coreAlignmentsDroppedByTagSuffix;
 
     @JsonCreator
     public PreCloneAssemblerReport(
@@ -70,7 +74,9 @@ public class PreCloneAssemblerReport implements MiXCRReport {
             @JsonProperty("unassignedAlignments") long unassignedAlignments,
             @JsonProperty("umiConflicts") long umiConflicts,
             @JsonProperty("gatConflicts") long gatConflicts,
-            @JsonProperty("geneConflicts") Map<GeneType, Long> geneConflicts
+            @JsonProperty("geneConflicts") Map<GeneType, Long> geneConflicts,
+            @JsonProperty("coreClonotypesDroppedByTagSuffix") long coreClonotypesDroppedByTagSuffix,
+            @JsonProperty("coreAlignmentsDroppedByTagSuffix") long coreAlignmentsDroppedByTagSuffix
     ) {
         this.inputGroups = inputGroups;
         this.inputAlignments = inputAlignments;
@@ -87,6 +93,8 @@ public class PreCloneAssemblerReport implements MiXCRReport {
         this.umiConflicts = umiConflicts;
         this.gatConflicts = gatConflicts;
         this.geneConflicts = geneConflicts;
+        this.coreClonotypesDroppedByTagSuffix = coreClonotypesDroppedByTagSuffix;
+        this.coreAlignmentsDroppedByTagSuffix = coreAlignmentsDroppedByTagSuffix;
     }
 
     @Override
@@ -96,7 +104,7 @@ public class PreCloneAssemblerReport implements MiXCRReport {
         helper.writeField("Number of output pre-clonotypes", clonotypes);
         helper.println("Number of clonotypes per group");
         helper.print(ReportKt.format(clonotypesPerGroup, "  ",
-                new StringBuilder(), new FormatSettings(0), 0).toString());
+                new StringBuilder(), new FormatSettings(0.0, Integer.MAX_VALUE, 0.05)).toString());
         helper.writePercentAndAbsoluteField("Number of core alignments", coreAlignments, inputAlignments);
         helper.writePercentAndAbsoluteField("Discarded core alignments", discardedCoreAlignments, coreAlignments);
         helper.writePercentAndAbsoluteField("Empirically assigned alignments", empiricallyAssignedAlignments, inputAlignments);

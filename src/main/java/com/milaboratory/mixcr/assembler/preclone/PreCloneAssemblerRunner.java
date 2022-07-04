@@ -13,7 +13,6 @@ package com.milaboratory.mixcr.assembler.preclone;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
-import com.milaboratory.mitool.consensus.GConsensusAssemblerParameters;
 import com.milaboratory.mitool.helpers.GroupOP;
 import com.milaboratory.mitool.helpers.PipeKt;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
@@ -34,6 +33,8 @@ public final class PreCloneAssemblerRunner implements CanReportProgressAndStage,
     private final ProgressAndStage ps = new ProgressAndStage("Initialization");
 
     private final VDJCAlignmentsReader alignments;
+    private final GeneFeature[] assemblingFeatures;
+    private final TagsInfo outputTagsInfo;
 
     // It takes three passes over the alignments file from scratch to final file with pre-clones
     private final VDJCAlignmentsReader.SecondaryReader reader1, reader2, reader3;
@@ -44,7 +45,7 @@ public final class PreCloneAssemblerRunner implements CanReportProgressAndStage,
     public PreCloneAssemblerRunner(VDJCAlignmentsReader alignments,
                                    TagType groupingLevel,
                                    GeneFeature[] assemblingFeatures,
-                                   GConsensusAssemblerParameters gAssemblerParams,
+                                   PreCloneAssemblerParameters parameters,
                                    Path outputFile,
                                    TempFileDest tempDest) {
         this.alignments = alignments;
@@ -54,9 +55,12 @@ public final class PreCloneAssemblerRunner implements CanReportProgressAndStage,
         if (tagsInfo.getSortingLevel() < depth)
             throw new IllegalArgumentException("Input file has insufficient sorting level");
 
-        PreCloneAssemblerParameters assemblerParams = new PreCloneAssemblerParameters(
-                gAssemblerParams, alignments.getParameters(),
-                assemblingFeatures, depth);
+        this.assemblingFeatures = assemblingFeatures;
+        this.outputTagsInfo = tagsInfo.setSorted(depth);
+
+        // PreCloneAssemblerParameters assemblerParams = new PreCloneAssemblerParameters(
+        //         gAssemblerParams, alignments.getParameters(),
+        //         assemblingFeatures, depth);
 
         this.reader1 = alignments.readAlignments();
         this.reader2 = alignments.readAlignments();
@@ -65,9 +69,11 @@ public final class PreCloneAssemblerRunner implements CanReportProgressAndStage,
         // Progress of the first step can either be tracked by reader1 or reader2
         ps.delegate("Building pre-clones from tag groups", reader1);
 
-        this.assembler = new PreCloneAssembler(assemblerParams,
+        this.assembler = new PreCloneAssembler(parameters,
+                assemblingFeatures, depth,
                 CUtils.wrap(reader1, VDJCAlignments::ensureKeyTags),
-                CUtils.wrap(reader2, VDJCAlignments::ensureKeyTags));
+                CUtils.wrap(reader2, VDJCAlignments::ensureKeyTags),
+                alignments.getParameters());
 
         this.outputFile = outputFile;
         this.tempDest = tempDest;
@@ -81,7 +87,7 @@ public final class PreCloneAssemblerRunner implements CanReportProgressAndStage,
         try (FilePreCloneWriter writer = new FilePreCloneWriter(outputFile, tempDest)) {
             OutputPort<GroupOP<VDJCAlignments, TagTuple>> alGroups = PipeKt.group(
                     CUtils.wrap(reader3, VDJCAlignments::ensureKeyTags), assembler.getGroupingFunction());
-            writer.init(alignments);
+            writer.init(alignments, assemblingFeatures, outputTagsInfo);
 
             PreCloneAssemblerResult result;
             while ((result = assembler.getForNextGroup()) != null) {

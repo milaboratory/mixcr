@@ -36,6 +36,8 @@ public final class PreCloneAssemblerReportBuilder implements ReportBuilder {
     final AtomicLong umiConflicts = new AtomicLong();
     final AtomicLong gatConflicts = new AtomicLong();
     final AtomicLongArray geneConflicts = new AtomicLongArray(GeneType.values().length);
+    final AtomicLong coreClonotypesDroppedByTagSuffix = new AtomicLong();
+    final AtomicLong coreAlignmentsDroppedByTagSuffix = new AtomicLong();
 
     Map<GeneType, Long> getGeneConflictsMap() {
         Map<GeneType, Long> r = new EnumMap<>(GeneType.class);
@@ -65,7 +67,9 @@ public final class PreCloneAssemblerReportBuilder implements ReportBuilder {
                 unassignedAlignments.get(),
                 umiConflicts.get(),
                 gatConflicts.get(),
-                getGeneConflictsMap()
+                getGeneConflictsMap(),
+                coreClonotypesDroppedByTagSuffix.get(),
+                coreAlignmentsDroppedByTagSuffix.get()
         );
     }
 }

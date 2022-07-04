@@ -97,6 +97,9 @@ public class CommandAssemble extends MiXCRCommand {
     @Option(names = "-O", description = "Overrides default parameter values.")
     private Map<String, String> overrides = new HashMap<>();
 
+    @Option(names = "-P", description = "Overrides default pre-clone assembler parameter values.")
+    private Map<String, String> preCloneAssemblerOverrides = new HashMap<>();
+
     @Override
     protected List<String> getInputFiles() {
         return Collections.singletonList(in);
@@ -227,17 +230,25 @@ public class CommandAssemble extends MiXCRCommand {
 
                 assembler.setListener(reportBuilder);
 
-                // TODO >>>>>>>>>>>>>>
                 PreCloneReader preClones;
                 if (tagsInfo.hasTagsWithType(TagType.Cell) || tagsInfo.hasTagsWithType(TagType.Molecule)) {
                     Path preClonesFile = tempDest.resolvePath("preclones.pc");
+
+                    PreCloneAssemblerParameters params = PreCloneAssemblerParameters.getDefaultParameters(cellLevel);
+
+                    if (!preCloneAssemblerOverrides.isEmpty()) {
+                        params = JsonOverrider.override(params,
+                                PreCloneAssemblerParameters.class,
+                                preCloneAssemblerOverrides);
+                        if (params == null)
+                            throwValidationException("Failed to override some pre-clone assembler parameters: " + preCloneAssemblerOverrides);
+                    }
 
                     PreCloneAssemblerRunner assemblerRunner = new PreCloneAssemblerRunner(
                             alignmentsReader,
                             cellLevel ? TagType.Cell : TagType.Molecule,
                             assemblerParameters.getAssemblingFeatures(),
-                            PreCloneAssemblerParameters.DefaultGConsensusAssemblerParameters,
-                            preClonesFile, tempDest.addSuffix("pc.tmp"));
+                            params, preClonesFile, tempDest.addSuffix("pc.tmp"));
                     SmartProgressReporter.startProgressReport(assemblerRunner);
 
                     // Pre-clone assembly happens here (file with pre-clones and alignments written as a result)

@@ -14,11 +14,13 @@ package com.milaboratory.mixcr.assembler.preclone;
 
 import com.milaboratory.mixcr.basictypes.IOUtil;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.PrimitivIHeaderActions;
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid;
+import io.repseq.core.GeneFeature;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
 
@@ -32,6 +34,8 @@ public final class FilePreCloneReader implements PreCloneReader {
     private final PrimitivIHybrid input;
     private final VDJCAlignerParameters alignmentParameters;
     private final List<VDJCGene> usedGenes;
+    private final GeneFeature[] assemblingFeature;
+    private final TagsInfo tagsInfo;
     private final long alignmentsStartPosition,
             assignedAlignmentsStartPosition,
             clonesStartPosition,
@@ -45,6 +49,8 @@ public final class FilePreCloneReader implements PreCloneReader {
         try (PrimitivI i = input.beginPrimitivI(true)) {
             this.alignmentParameters = i.readObject(VDJCAlignerParameters.class);
             this.numberOfReads = i.readLong();
+            this.assemblingFeature = i.readObject(GeneFeature[].class);
+            this.tagsInfo = i.readObject(TagsInfo.class);
             this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(i, alignmentParameters,
                     VDJCLibraryRegistry.getDefault());
         }
@@ -77,6 +83,14 @@ public final class FilePreCloneReader implements PreCloneReader {
 
     public VDJCAlignerParameters getAlignmentParameters() {
         return alignmentParameters;
+    }
+
+    public GeneFeature[] getAssemblingFeature() {
+        return assemblingFeature;
+    }
+
+    public TagsInfo getTagsInfo() {
+        return tagsInfo;
     }
 
     public List<VDJCGene> getUsedGenes() {

@@ -112,7 +112,7 @@ altJar=""
 
 inDocker=false
 
-if [[ -f /proc/1/cgroup ]] && grep docker /proc/1/cgroup -qa; then
+if [[ -f /proc/1/cgroup ]] && grep docker /proc/1/cgroup -qa || [[ -f /.dockerenv ]]; then
   inDocker=true
 fi
 

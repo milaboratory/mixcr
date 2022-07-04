@@ -28,10 +28,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.basictypes.tag.*;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
-import com.milaboratory.util.ReportHelper;
-import com.milaboratory.util.SmartProgressReporter;
-import com.milaboratory.util.TempFileDest;
-import com.milaboratory.util.TempFileManager;
+import com.milaboratory.util.*;
 import com.milaboratory.util.sorting.HashSorter;
 import gnu.trove.list.array.TIntArrayList;
 import picocli.CommandLine;
@@ -163,6 +160,8 @@ public class CommandCorrectAndSortTags extends MiXCRCommand {
                     return tags;
                 };
                 OutputPort<NSequenceWithQuality[]> cInput = CUtils.wrap(mainReader, mapper);
+
+                // Running correction
                 correctionResult = corrector.correct(cInput, tagNames, mainReader);
                 report = corrector.getReport();
             } else {
@@ -241,8 +240,11 @@ public class CommandCorrectAndSortTags extends MiXCRCommand {
             }
         }
 
-        if (report != null)
+        if (report != null) {
             report.writeReport(ReportHelper.STDOUT);
+            if (reportFile != null)
+                ReportUtil.appendReport(reportFile, report);
+        }
     }
 
     private static final class SortingStep {

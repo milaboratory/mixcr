@@ -82,7 +82,7 @@ repositories {
 
 val milibVersion = "2.0.0-9-cli-refactor"
 val repseqioVersion = "1.4.0-1-master"
-val mitoolVersion = "1.0.1"
+val mitoolVersion = "1.1.0"
 val miplotsVersion = "1.0.0-12-master"
 val jacksonBomVersion = "2.13.3"
 
@@ -96,8 +96,8 @@ dependencies {
     }
     implementation("com.milaboratory:miplots:$miplotsVersion")
 
-    // implementation("com.milaboratory:milm2-jvm:0.2.0-test-2") { isChanging = true }
-    implementation("com.milaboratory:milm2-jvm:1.2.0")
+    // implementation("com.milaboratory:milm2-jvm:1.0-SNAPSHOT") { isChanging = true }
+    implementation("com.milaboratory:milm2-jvm:1.5.0")
 
     implementation(platform("com.fasterxml.jackson:jackson-bom:$jacksonBomVersion"))
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
