@@ -34,7 +34,7 @@ mixcr align -f \
 
 mixcr correctAndSortTags case11.aligned-vdjca case11.corrected-vdjca
 
-mixcr itestAssemblePreClones case11.corrected-vdjca case11.corrected-vdjca.pc
+mixcr itestAssemblePreClones case11.corrected-vdjca case11.corrected-vdjca.pc case11.corrected-vdjca.pc.als case11.corrected-vdjca.pc.cls
 
 mixcr assemble -f -a case11.corrected-vdjca case11.cdr3-clna
 mixcr assembleContigs -f case11.cdr3-clna case11.cdr3-clns

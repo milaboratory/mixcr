@@ -90,6 +90,10 @@ public final class TagCountAggregator {
         return this;
     }
 
+    public boolean isEmpty() {
+        return singletonTuple == null && tagMap == null;
+    }
+
     public double intersectionFractionOf(TagCountAggregator minor) {
         if (tagMap == null || minor.tagMap == null)
             throw new IllegalStateException("tag aware clusterization for non-tagged clones.");

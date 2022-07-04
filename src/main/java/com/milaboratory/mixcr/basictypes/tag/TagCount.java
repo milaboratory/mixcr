@@ -111,13 +111,17 @@ public final class TagCount {
         return result;
     }
 
-    public Set<TagTuple> keySuffixes(int depth) {
+    public TagCount keySuffixes(int depth) {
         TagTuple fullKey = asKeyOrNull();
         if (fullKey != null)
-            return Collections.singleton(fullKey.keySuffix(depth));
-        return tagMap.keySet().stream()
-                .map(t -> t.keySuffix(depth))
-                .collect(Collectors.toSet());
+            return new TagCount(fullKey.keySuffix(depth), singletonCount);
+        TObjectDoubleHashMap<TagTuple> suffixMap = new TObjectDoubleHashMap<>(tagMap.size());
+        TObjectDoubleIterator<TagTuple> it = tagMap.iterator();
+        while (it.hasNext()) {
+            it.advance();
+            suffixMap.put(it.key().keySuffix(depth), it.value());
+        }
+        return new TagCount(suffixMap);
     }
 
     public TagValue singleOrNull(int idx) {
@@ -187,6 +191,14 @@ public final class TagCount {
             return 0.0;
         } else
             return tagMap.get(tt);
+    }
+
+    public boolean containsAll(Set<TagTuple> other) {
+        return tagMap.keySet().containsAll(other);
+    }
+
+    public boolean containsAll(TagCount other) {
+        return tuples().containsAll(other.tuples());
     }
 
     public TObjectDoubleIterator<TagTuple> iterator() {
