@@ -12,6 +12,7 @@
  */
 package com.milaboratory.mixcr.assembler.preclone;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.mitool.pattern.search.FormatSettings;
 import com.milaboratory.mitool.pattern.search.ReportKt;
@@ -53,21 +54,24 @@ public class PreCloneAssemblerReport implements MiXCRReport {
     @JsonProperty("geneConflicts")
     public final Map<GeneType, Long> geneConflicts;
 
-    public PreCloneAssemblerReport(long inputGroups,
-                                   long inputAlignments,
-                                   long clonotypes,
-                                   Map<Integer, Long> clonotypesPerGroup,
-                                   long coreAlignments,
-                                   long discardedCoreAlignments,
-                                   long empiricallyAssignedAlignments,
-                                   long vjEmpiricallyAssignedAlignments,
-                                   long umiEmpiricallyAssignedAlignments,
-                                   long gatEmpiricallyAssignedAlignments,
-                                   long empiricalAssignmentConflicts,
-                                   long unassignedAlignments,
-                                   long umiConflicts,
-                                   long gatConflicts,
-                                   Map<GeneType, Long> geneConflicts) {
+    @JsonCreator
+    public PreCloneAssemblerReport(
+            @JsonProperty("inputGroups") long inputGroups,
+            @JsonProperty("inputAlignments") long inputAlignments,
+            @JsonProperty("clonotypes") long clonotypes,
+            @JsonProperty("clonotypesPerGroup") Map<Integer, Long> clonotypesPerGroup,
+            @JsonProperty("coreAlignments") long coreAlignments,
+            @JsonProperty("discardedCoreAlignments") long discardedCoreAlignments,
+            @JsonProperty("empiricallyAssignedAlignments") long empiricallyAssignedAlignments,
+            @JsonProperty("vjEmpiricallyAssignedAlignments") long vjEmpiricallyAssignedAlignments,
+            @JsonProperty("umiEmpiricallyAssignedAlignments") long umiEmpiricallyAssignedAlignments,
+            @JsonProperty("gatEmpiricallyAssignedAlignments") long gatEmpiricallyAssignedAlignments,
+            @JsonProperty("empiricalAssignmentConflicts") long empiricalAssignmentConflicts,
+            @JsonProperty("unassignedAlignments") long unassignedAlignments,
+            @JsonProperty("umiConflicts") long umiConflicts,
+            @JsonProperty("gatConflicts") long gatConflicts,
+            @JsonProperty("geneConflicts") Map<GeneType, Long> geneConflicts
+    ) {
         this.inputGroups = inputGroups;
         this.inputAlignments = inputAlignments;
         this.clonotypes = clonotypes;
@@ -102,8 +106,8 @@ public class PreCloneAssemblerReport implements MiXCRReport {
         helper.writePercentAndAbsoluteField("UMI empirically assigned alignments", umiEmpiricallyAssignedAlignments, inputAlignments);
         helper.writeField("Number of ambiguous UMIs", umiConflicts);
         for (GeneType gt : GeneType.values()) {
-            long value = geneConflicts.get(gt);
-            if (value == 0)
+            Long value = geneConflicts.get(gt);
+            if (value == null || value == 0)
                 continue;
             helper.writeField("Number of ambiguous " + gt.getLetter() + "-genes", value);
         }
