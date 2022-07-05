@@ -16,7 +16,9 @@ import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
 
 fun List<CloneReader>.constructStateBuilder(): PrimitivIOStateBuilder {
-    check(map { it.alignerParameters }.size == 1)
+    check(map { it.alignerParameters }.distinct().size == 1) {
+        "Files was prepared with different alignerParameters"
+    }
     val stateBuilder = PrimitivIOStateBuilder()
     IOUtil.registerGeneReferences(
         stateBuilder,
