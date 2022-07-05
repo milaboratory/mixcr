@@ -73,15 +73,15 @@ object AlignmentQC {
         plt += scaleFillManual(
             name = "",
             values = listOf(
-                "#56D688",     // successfullyAligned,
-                "#FFF680",     // VDJCAlignmentFailCause.NoHits,
-                "#FED470",     // VDJCAlignmentFailCause.NoCDR3Parts,
-                "#FDA163",     // VDJCAlignmentFailCause.NoVHits,
-                "#F36C5A",     // VDJCAlignmentFailCause.NoJHits,
-                "#D64470",     // VDJCAlignmentFailCause.VAndJOnDifferentTargets
-                "#A03080",     // VDJCAlignmentFailCause.LowTotalScore,
-                "#702084",     // VDJCAlignmentFailCause.NoBarcode,
-                "#451777",     // VDJCAlignmentFailCause.BarcodeNotInWhitelist
+                "#3ECD8D",     // successfullyAligned,
+                "#FED470",     // VDJCAlignmentFailCause.NoHits,
+                "#FDA163",     // VDJCAlignmentFailCause.NoCDR3Parts,
+                "#F36C5A",     // VDJCAlignmentFailCause.NoVHits,
+                "#D64470",     // VDJCAlignmentFailCause.NoJHits,
+                "#A03080",     // VDJCAlignmentFailCause.VAndJOnDifferentTargets
+                "#702084",     // VDJCAlignmentFailCause.LowTotalScore,
+                "#451777",     // VDJCAlignmentFailCause.NoBarcode,
+                "#2B125C",     // VDJCAlignmentFailCause.BarcodeNotInWhitelist
             ),
             breaks = listOf(
                 successfullyAligned,
@@ -120,7 +120,6 @@ object AlignmentQC {
 
             legendTitle = elementBlank(),
             legendText = elementText(),
-
 
             title = elementText()
         )
