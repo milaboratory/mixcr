@@ -897,7 +897,7 @@ public final class FieldExtractors {
         @Override
         protected String getHeader(OutputMode outputMode, ReferencePoint parameters) {
             return choose(outputMode, "Position " + (inReference ? "in reference" : "") + " of ",
-                    inReference ? "-positionInReferenceOf" : "-positionOf") +
+                    inReference ? "positionInReferenceOf" : "positionOf") +
                     ReferencePoint.encode(parameters, true);
         }
 
