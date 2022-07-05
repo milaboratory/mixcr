@@ -67,7 +67,7 @@ fun mkHeatmap(
         yOrder = if (params.clusterY) Hierarchical() else null,
         fillNoValue = params.fillNaZeroes,
         noValue = 0.0,
-        fillPalette = Palettes.Diverging.lime90rose130
+        fillPalette = Palettes.Diverging.limeRose15
     )
 
     plt = plt.withBorder()

@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.io.CompressionType;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.primitivio.HasPrimitivIOState;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
@@ -201,6 +202,31 @@ public class IOUtil {
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static List<MiXCRCommandReport> extractReports(Path file) {
+        switch (extractFileType(file)) {
+            case VDJCA:
+                try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(file)) {
+                    return reader.reports();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            case CLNA:
+                try (ClnAReader reader = new ClnAReader(file, VDJCLibraryRegistry.getDefault(), 1)) {
+                    return reader.reports();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            case CLNS:
+                try (ClnsReader reader = new ClnsReader(file, VDJCLibraryRegistry.getDefault(), 1)) {
+                    return reader.reports();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            default:
+                throw new RuntimeException();
         }
     }
 }
