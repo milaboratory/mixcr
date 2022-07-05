@@ -147,9 +147,11 @@ public class CommandAssemblePartialAlignments extends MiXCRCommand {
 
                 for (GroupOP<VDJCAlignments, TagTuple> grp1 : CUtils.it(groups1)) {
                     assembler.buildLeftPartsIndex(grp1);
-                    GroupOP<VDJCAlignments, TagTuple> grp2 = groups2.take();
-                    assert grp2.getKey().equals(grp1.getKey()) : grp1.getKey() + " != " + grp2.getKey();
-                    assembler.searchOverlaps(grp2);
+                    grp1.close(); // Drain leftover alignments in the group if not yet done
+                    try (GroupOP<VDJCAlignments, TagTuple> grp2 = groups2.take()) {
+                        assert grp2.getKey().equals(grp1.getKey()) : grp1.getKey() + " != " + grp2.getKey();
+                        assembler.searchOverlaps(grp2);
+                    }
                 }
             } else {
                 SmartProgressReporter.startProgressReport("Building index", reader1);

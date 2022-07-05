@@ -310,6 +310,10 @@ public class CommandAlign extends MiXCRCommand {
                 : (vdjcLibrary = VDJCLibraryRegistry.getDefault().getLibrary(getLibraryName(), species));
     }
 
+    public boolean taggedAnalysis() {
+        return tagPattern != null || tagPatternName != null || tagPatternFile != null;
+    }
+
     public boolean isInputPaired() {
         return getInputFiles().size() == 2;
     }
@@ -418,6 +422,13 @@ public class CommandAlign extends MiXCRCommand {
         if (readShortcuts.size() > 2)
             throwValidationException("Tag pattern contains too many read groups, only R1 or R1+R2 combinations are supported.", false);
 
+        if (failedReadsR1 != null) {
+            if (failedReadsR2 == null && readShortcuts.size() == 2)
+                throwValidationException("Option --not-aligned-R2 is not specified but tag pattern defines two payload reads.", false);
+            if (failedReadsR2 != null && readShortcuts.size() == 1)
+                throwValidationException("Option --not-aligned-R2 is specified but tag pattern defines only one payload read.", false);
+        }
+
         return new TagSearchPlan(readSearchPlan, tagShortcuts, readShortcuts, parseInfo.getTags());
     }
 
@@ -435,7 +446,7 @@ public class CommandAlign extends MiXCRCommand {
             throwValidationException("No output file.");
         if (failedReadsR2 != null && failedReadsR1 == null)
             throwValidationException("Wrong input for --not-aligned-R1,2");
-        if (failedReadsR1 != null && (failedReadsR2 != null) != isInputPaired())
+        if (failedReadsR1 != null && !taggedAnalysis() && (failedReadsR2 != null) != isInputPaired())
             throwValidationException("Option --not-aligned-R2 is not set.", false);
         if (library.contains("/") || library.contains("\\"))
             throwValidationException("Library name can't be a path. Place your library to one of the " +
@@ -598,7 +609,7 @@ public class CommandAlign extends MiXCRCommand {
                         return new VDJCAlignmentResult(input);
                     }
 
-                    SequenceRead read = parsed.read;
+                    SequenceRead read = parsed.payloadRead;
                     if (readTrimmerProcessor != null)
                         read = readTrimmerProcessor.process(read);
 
@@ -690,11 +701,13 @@ public class CommandAlign extends MiXCRCommand {
 
     static final class TaggedSequence {
         final TagTuple tags;
-        final SequenceRead read;
+        final SequenceRead rawRead;
+        final SequenceRead payloadRead;
 
-        public TaggedSequence(TagTuple tags, SequenceRead read) {
+        public TaggedSequence(TagTuple tags, SequenceRead rawRead, SequenceRead payloadRead) {
             this.tags = tags;
-            this.read = read;
+            this.rawRead = rawRead;
+            this.payloadRead = payloadRead;
         }
     }
 
@@ -737,7 +750,7 @@ public class CommandAlign extends MiXCRCommand {
                                 : read.getRead(i).getDescription());
             }
 
-            return new TaggedSequence(new TagTuple(tags), SequenceReadUtil.construct(reads));
+            return new TaggedSequence(new TagTuple(tags), read, SequenceReadUtil.construct(reads));
         }
     }
 

@@ -38,7 +38,7 @@ public class VDJCPartitionedSequence extends PartitionedSequence<NSequenceWithQu
     }
 
     @Override
-    public SequencePartitioning getPartitioning() {
+    public TargetPartitioning getPartitioning() {
         return partitioning;
     }
 }
