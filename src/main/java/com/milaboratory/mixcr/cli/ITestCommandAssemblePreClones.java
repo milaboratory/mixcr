@@ -158,7 +158,7 @@ public class ITestCommandAssemblePreClones extends ACommandMiXCR {
                 ps.print("cloneId\t");
                 for (TagInfo ti : reader.getTagsInfo())
                     ps.print(ti.getName() + "\t");
-                ps.println("count\tcdr3\tbestV\tbestJ");
+                ps.println("count\tcount_full\tcdr3\tbestV\tbestJ");
                 for (PreClone c : CUtils.it(reader.readPreClones())) {
                     TObjectDoubleIterator<TagTuple> it = c.getCoreTagCount().iterator();
                     while (it.hasNext()) {
@@ -169,6 +169,7 @@ public class ITestCommandAssemblePreClones extends ACommandMiXCR {
                         for (TagValue tv : it.key())
                             ps.print(tv.toString() + "\t");
                         ps.print(it.value() + "\t");
+                        ps.print(c.getFullTagCount().get(it.key()) + '\t');
                         ps.println(c.getClonalSequence()[0].getSequence() + "\t" +
                                 c.getBestGene(GeneType.Variable).getName() + "\t" +
                                 c.getBestGene(GeneType.Joining).getName());
