@@ -16,6 +16,7 @@ import com.milaboratory.mixcr.trees.MutationsUtils.NDNScoring
 import com.milaboratory.mixcr.trees.MutationsUtils.buildSequence
 import com.milaboratory.mixcr.util.RandomizedTest
 import com.milaboratory.mixcr.util.extractAbsoluteMutations
+import com.milaboratory.mixcr.util.plus
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.repseq.core.GeneFeature.FR3
@@ -574,25 +575,32 @@ class RebaseClonesTest {
             Range(commonVRangeInCDR3.upper, VRangeAfterCDR3Begin.upper).let { range ->
                 VMutations.extractAbsoluteMutations(range, false) to range
             },
-            NucleotideSequence.ALPHABET.createBuilder()
-                .append(
+            buildSequence(
+                VSequence,
+                VMutations,
+                VRangeAfterCDR3Begin,
+                true
+            ) +
+                    NDN +
                     buildSequence(
-                        VSequence,
-                        VMutations,
-                        Range(commonVRangeInCDR3.upper, VRangeAfterCDR3Begin.upper),
-                        false
-                    )
-                )
-                .append(NDN)
-                .append(
+                        JSequence,
+                        JMutations,
+                        JRangeBeforeCDR3End,
+                        true
+                    ),
+            buildSequence(
+                VSequence,
+                VMutations,
+                Range(commonVRangeInCDR3.upper, VRangeAfterCDR3Begin.upper),
+                false
+            ) +
+                    NDN +
                     buildSequence(
                         JSequence,
                         JMutations,
                         Range(JRangeBeforeCDR3End.lower, commonJRangeInCDR3.lower),
                         true
-                    )
-                )
-                .createAndDestroy(),
+                    ),
             Range(JRangeBeforeCDR3End.lower, commonJRangeInCDR3.lower).let { range ->
                 JMutations.extractAbsoluteMutations(range, true) to range
             },

@@ -215,6 +215,7 @@ internal class ClusterProcessor(
                 VMutationsInCDR3WithoutNDN
             ),
             getVMutationsWithinNDN(cloneWrapper, clusterInfo.VRangeInCDR3.upper),
+            CDR3,
             CDR3.getRange(
                 clusterInfo.VRangeInCDR3.length() + VMutationsInCDR3WithoutNDN.mutations.lengthDelta,
                 CDR3.size() - (clusterInfo.JRangeInCDR3.length() + JMutationsInCDR3WithoutNDN.mutations.lengthDelta)
@@ -464,12 +465,9 @@ internal class ClusterProcessor(
      * Assumption: if there are more than parameters.commonMutationsCountForClustering the same mutations and
      * NDN region is somehow similar - than this clones from the same tree.
      *
-     * 1. Make matrix with marked clone pairs that match assumption
-     * 2. Find cliques in this matrix
+     * Clusters formed by hierarchical clusterisation
      *
      * Thoughts:
-     * - There is no need for searching cliques. https://en.wikipedia.org/wiki/Single-linkage_clustering will do
-     * because if assumption is true there is no need to enforce specific topology
      * - Lower parameters.commonMutationsCountForClustering may be used if we calculate probability of specific mutation.
      * Probabilities may be calculated on frequencies of mutations in specific gene in all clones of all samples.
      * Or it may be arbitrary data.
@@ -480,33 +478,30 @@ internal class ClusterProcessor(
         clones: List<CloneWithMutationsFromVJGermline>,
         relatedAllelesMutations: Map<VDJCGeneId, List<Mutations<NucleotideSequence>>>
     ): List<List<CloneWithMutationsFromVJGermline>> {
-        val matrix = AdjacencyMatrix(clones.size)
-        for (i in clones.indices) {
-            for (j in clones.indices) {
-                val commonMutationsCount = commonMutationsCount(
-                    relatedAllelesMutations,
-                    clones[i],
-                    clones[j]
-                )
-                if (commonMutationsCount >= parameters.commonMutationsCountForClustering) {
-                    val NDNDistance = NDNDistance(clones[i].mutations.knownNDN, clones[j].mutations.knownNDN)
-                    if (NDNDistance <= parameters.maxNDNDistanceForClustering) {
-                        matrix.setConnected(i, j)
+        val result: MutableList<MutableList<CloneWithMutationsFromVJGermline>> = mutableListOf()
+        for (nextClone in clones.sortedByDescending { it.mutations.VJMutationsCount }) {
+            val clusterToGrow = result.firstOrNull { existedCluster ->
+                existedCluster.any { cloneInCluster ->
+                    val commonMutationsCount = commonMutationsCount(
+                        relatedAllelesMutations,
+                        nextClone,
+                        cloneInCluster
+                    )
+                    if (commonMutationsCount >= parameters.commonMutationsCountForClustering) {
+                        val NDNDistance = NDNDistance(nextClone.mutations, cloneInCluster.mutations)
+                        NDNDistance <= parameters.maxNDNDistanceForClustering
+                    } else {
+                        false
                     }
                 }
             }
-        }
-        val notOverlappedCliques = mutableListOf<BitArrayInt>()
-        matrix.calculateMaximalCliques()
-            .filter { it.bitCount() > 1 }
-            .sortedByDescending { it.bitCount() }
-            .forEach { clique ->
-                if (notOverlappedCliques.none { it.intersects(clique) }) {
-                    notOverlappedCliques.add(clique)
-                }
+            if (clusterToGrow != null) {
+                clusterToGrow += nextClone
+            } else {
+                result += mutableListOf(nextClone)
             }
-        return notOverlappedCliques
-            .map { it.bits.map { i -> clones[i] } }
+        }
+        return result.filter { it.size > 1 }
     }
 
     /**
@@ -522,6 +517,19 @@ internal class ClusterProcessor(
         val JAllelesMutations = relatedAllelesMutations[VJBase.JGeneId] ?: emptyList()
         return commonMutationsCount(first.mutations.VMutations, second.mutations.VMutations, VAllelesMutations) +
                 commonMutationsCount(first.mutations.JMutations, second.mutations.JMutations, JAllelesMutations)
+    }
+
+    private fun NDNDistance(first: MutationsFromVJGermline, second: MutationsFromVJGermline): Double {
+        check(first.CDR3.size() == second.CDR3.size())
+        val NDNRange = Range(
+            min(first.VEndTrimmedPosition, second.VEndTrimmedPosition),
+            max(first.JBeginTrimmedPosition, second.JBeginTrimmedPosition)
+        )
+        try {
+            return NDNDistance(first.CDR3.getRange(NDNRange), second.CDR3.getRange(NDNRange))
+        } catch (e: Exception) {
+            throw e
+        }
     }
 
     /**

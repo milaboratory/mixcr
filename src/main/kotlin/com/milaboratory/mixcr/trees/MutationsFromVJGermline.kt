@@ -36,6 +36,10 @@ class MutationsFromVJGermline(
      */
     val knownVMutationsWithinNDN: Pair<Mutations<NucleotideSequence>, Range>,
     /**
+     * Full sequence of CDR3
+     */
+    val CDR3: NucleotideSequence,
+    /**
      * Part of NDN within [specified-VEndTrimmed:specified-JEndTrimmed]
      */
     val knownNDN: NucleotideSequence,
@@ -48,4 +52,8 @@ class MutationsFromVJGermline(
 ) {
     val VJMutationsCount: Int
         get() = VMutations.mutationsCount() + JMutations.mutationsCount()
+
+    val VEndTrimmedPosition = VMutations.partInCDR3.range.length() + knownVMutationsWithinNDN.second.length()
+    val JBeginTrimmedPosition =
+        CDR3.size() - JMutations.partInCDR3.range.length() - knownJMutationsWithinNDN.second.length()
 }
