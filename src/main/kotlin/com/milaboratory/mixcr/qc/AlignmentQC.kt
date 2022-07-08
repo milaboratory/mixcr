@@ -20,6 +20,7 @@ import jetbrains.letsPlot.geom.geomBar
 import jetbrains.letsPlot.label.labs
 import jetbrains.letsPlot.label.xlab
 import jetbrains.letsPlot.label.ylab
+import jetbrains.letsPlot.sampling.samplingNone
 import jetbrains.letsPlot.scale.guideLegend
 import jetbrains.letsPlot.scale.scaleFillManual
 import jetbrains.letsPlot.scale.scaleXDiscrete
@@ -62,6 +63,7 @@ object AlignmentQC {
         plt += geomBar(
             position = Pos.stack,
             stat = Stat.identity,
+            sampling = samplingNone
         ) {
             fill = "type"
         }

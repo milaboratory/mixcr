@@ -13,18 +13,23 @@
 package com.milaboratory.mixcr.qc
 
 import com.milaboratory.miplots.writePDF
+import com.milaboratory.mixcr.util.RunMiXCR
 import org.junit.Test
 import java.nio.file.Paths
 
 class CoverageTest {
     @Test
-    fun test1() {
-        val path =
-            Paths.get("/Users/poslavskysv/Projects/milab/mixcr-test-data/results/als.vdjca")
+    fun testCoverage() {
+        val params = RunMiXCR.RunMiXCRAnalysis(
+            RunMiXCR::class.java.getResource("/sequences/test_R1.fastq")!!.file,
+            RunMiXCR::class.java.getResource("/sequences/test_R2.fastq")!!.file
+        )
 
+        val align = RunMiXCR.align(params)
+        val path = align.alignmentsPath()
         writePDF(
             Paths.get("scratch/bp.pdf"),
-            Coverage.coveragePlot(path),
+            Coverage.coveragePlot(path, false),
         )
     }
 }

@@ -12,13 +12,9 @@
  */
 package com.milaboratory.mixcr.qc
 
-import com.milaboratory.miplots.writePDF
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause
 import org.junit.Assert
 import org.junit.Test
-import java.nio.file.Paths
-import kotlin.io.path.listDirectoryEntries
-import kotlin.io.path.name
 
 class AlignmentQCTest {
     @Test
@@ -34,26 +30,5 @@ class AlignmentQCTest {
             VDJCAlignmentFailCause.BarcodeNotInWhitelist
         )
         Assert.assertEquals(VDJCAlignmentFailCause.values().toSet(), all)
-    }
-
-    @Test
-    fun test1() {
-        val files =
-            Paths.get("/Users/poslavskysv/Projects/milab/mixcr/src/test/resources/sequences/big/yf_sample_data/")
-                .listDirectoryEntries()
-                .filter { it.name.endsWith("clns") }
-                .flatMap { listOf(it) }
-
-        writePDF(
-            Paths.get("scratch/bp.pdf"),
-            AlignmentQC.alignQc(files, percent = false),
-            AlignmentQC.alignQc(files, percent = true),
-
-            ChainUsage.chainUsageAlign(files, percent = false),
-            ChainUsage.chainUsageAlign(files, percent = true),
-
-            ChainUsage.chainUsageAssemble(files, percent = false),
-            ChainUsage.chainUsageAssemble(files, percent = true),
-        )
     }
 }

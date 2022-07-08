@@ -49,6 +49,7 @@ import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.*;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -291,6 +292,15 @@ public final class RunMiXCR {
                 }
             }
             return new VDJCAlignmentsReader(alignmentsFile);
+        }
+
+        public Path alignmentsPath() {
+            try {
+                resultReader();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            return alignmentsFile.toPath();
         }
 
         public PreCloneReader asPreCloneReader() throws IOException {
