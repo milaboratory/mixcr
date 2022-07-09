@@ -36,10 +36,7 @@ import com.milaboratory.util.sorting.HashSorter;
 import gnu.trove.list.array.TIntArrayList;
 import picocli.CommandLine;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.IntFunction;
 import java.util.function.ToIntFunction;
 
@@ -153,7 +150,8 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
                 OutputPort<NSequenceWithQuality[]> cInput = CUtils.wrap(mainReader, mapper);
 
                 // Running correction
-                correctionResult = corrector.correct(cInput, tagNames, mainReader);
+                // TODO Collections.EMPTY_MAP -> presets
+                correctionResult = corrector.correct(cInput, tagNames, Collections.EMPTY_MAP, mainReader);
                 report = corrector.getReport();
             } else {
                 correctionResult = null;
