@@ -1,10 +1,9 @@
 /*
- *
- * Copyright (c) 2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
- * https://github.com/milaboratory/miplots/blob/main/LICENSE
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
  *
  * By downloading or accessing the software, you accept and agree to be bound
  * by the terms of the License Agreement. If you do not want to agree to the terms
