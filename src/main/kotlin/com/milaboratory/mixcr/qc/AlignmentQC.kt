@@ -127,7 +127,7 @@ object AlignmentQC {
             .legendPositionTop()
             .legendDirectionVertical()
 
-        plt += ggsize(850, 100 + 25 * files.size)
+        plt += ggsize(900, 100 + 25 * files.size)
 
         plt += labs(
             title = "Alignments rate",
