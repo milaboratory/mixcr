@@ -15,7 +15,7 @@ package com.milaboratory.mixcr.qc
 import com.milaboratory.miplots.writePDF
 import com.milaboratory.mixcr.util.RunMiXCR
 import org.junit.Test
-import java.nio.file.Paths
+import java.nio.file.Files
 
 class CoverageTest {
     @Test
@@ -28,7 +28,7 @@ class CoverageTest {
         val align = RunMiXCR.align(params)
         val path = align.alignmentsPath()
         writePDF(
-            Paths.get("scratch/bp.pdf"),
+            Files.createTempFile("CoverageTest", ".pdf"),
             Coverage.coveragePlot(path, false),
         )
     }

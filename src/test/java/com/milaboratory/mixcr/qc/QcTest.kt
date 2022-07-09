@@ -16,6 +16,7 @@ import com.milaboratory.miplots.writePDF
 import com.milaboratory.mixcr.tests.IntegrationTest
 import org.junit.Test
 import org.junit.experimental.categories.Category
+import java.nio.file.Files
 import java.nio.file.Paths
 
 @Category(IntegrationTest::class)
@@ -47,7 +48,7 @@ class QcTest {
         align.forEach { plt += Coverage.coveragePlot(it) }
 
         writePDF(
-            Paths.get("scratch/bp.pdf"),
+            Files.createTempFile("QcTest", ".pdf"),
             plt
         )
     }
