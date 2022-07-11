@@ -162,7 +162,8 @@ public class CommandCorrectAndSortTags extends MiXCRCommand {
                 OutputPort<NSequenceWithQuality[]> cInput = CUtils.wrap(mainReader, mapper);
 
                 // Running correction
-                correctionResult = corrector.correct(cInput, tagNames, mainReader);
+                // TODO Collections.EMPTY_MAP -> presets
+                correctionResult = corrector.correct(cInput, tagNames, Collections.EMPTY_MAP, mainReader);
                 report = corrector.getReport();
             } else {
                 correctionResult = null;
