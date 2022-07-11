@@ -223,7 +223,7 @@ public abstract class CommandExport<T extends VDJCObject> extends MiXCRCommand {
 
         @Option(description = "Split clones by tag values",
                 names = {"--split-by-tag"})
-        public List<String> splitByTag = new ArrayList<>();
+        public String splitByTag;
 
         public CommandExportClones() {
             super(Clone.class);
@@ -256,10 +256,10 @@ public abstract class CommandExport<T extends VDJCObject> extends MiXCRCommand {
                     }
                 }
                 TagsInfo tagsInfo = set.getTagsInfo();
-                ExportClones exportClones = new ExportClones(set, writer, limit,
-                        splitByTag.stream()
-                                .mapToInt(tagsInfo::indexOf)
-                                .toArray());
+                ExportClones exportClones = new ExportClones(
+                        set, writer, limit,
+                        splitByTag == null ? 0 : (tagsInfo.indexOf(splitByTag) + 1)
+                );
                 SmartProgressReporter.startProgressReport(exportClones, System.err);
                 exportClones.run();
                 if (initialSet.size() > set.size()) {
@@ -319,14 +319,14 @@ public abstract class CommandExport<T extends VDJCObject> extends MiXCRCommand {
             final long size;
             volatile long current = 0;
             final long limit;
-            final int[] splitByTags;
+            final int splitByLevel;
 
-            private ExportClones(CloneSet clones, InfoWriter<Clone> writer, long limit, int[] splitByTags) {
+            private ExportClones(CloneSet clones, InfoWriter<Clone> writer, long limit, int splitByLevel) {
                 this.clones = clones;
                 this.writer = writer;
                 this.size = clones.size();
                 this.limit = limit;
-                this.splitByTags = splitByTags;
+                this.splitByLevel = splitByLevel;
             }
 
             @Override
@@ -351,11 +351,11 @@ public abstract class CommandExport<T extends VDJCObject> extends MiXCRCommand {
 
                     Stream<Clone> stream = Stream.of(clone);
 
-                    for (int tagIndex : splitByTags) {
+                    if (splitByLevel > 0) {
                         stream = stream.flatMap(cl -> {
                             TagCount tagCount = cl.getTagCount();
                             double sum = tagCount.sum();
-                            return Arrays.stream(tagCount.splitBy(tagIndex))
+                            return Arrays.stream(tagCount.splitBy(splitByLevel))
                                     .map(tc -> new Clone(clone.getTargets(), clone.getHits(),
                                             tc, 1.0 * cl.getCount() * tc.sum() / sum, clone.getId(), clone.getGroup()));
                         });

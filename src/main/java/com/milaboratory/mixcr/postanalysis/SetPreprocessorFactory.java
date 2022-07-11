@@ -15,7 +15,8 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.milaboratory.mixcr.postanalysis.downsampling.ClonesDownsamplingPreprocessorFactory;
+import com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingPreprocessorByReadsFactory;
+import com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingPreprocessorByTagsFactory;
 import com.milaboratory.mixcr.postanalysis.preproc.*;
 
 import java.util.ArrayList;
@@ -33,7 +34,8 @@ import java.util.List;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
         @JsonSubTypes.Type(value = NoPreprocessing.Factory.class, name = "none"),
-        @JsonSubTypes.Type(value = ClonesDownsamplingPreprocessorFactory.class, name = "downsample"),
+        @JsonSubTypes.Type(value = DownsamplingPreprocessorByReadsFactory.class, name = "downsampleByReads"),
+        @JsonSubTypes.Type(value = DownsamplingPreprocessorByTagsFactory.class, name = "downsampleByTags"),
         @JsonSubTypes.Type(value = OverlapPreprocessorAdapter.Factory.class, name = "overlap"),
         @JsonSubTypes.Type(value = PreprocessorChain.Factory.class, name = "chain"),
         @JsonSubTypes.Type(value = FilterPreprocessor.Factory.class, name = "filter"),

@@ -16,8 +16,9 @@ import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
 import com.milaboratory.mixcr.postanalysis.WeightFunction;
 import com.milaboratory.mixcr.postanalysis.WeightFunctions;
-import com.milaboratory.mixcr.postanalysis.downsampling.ClonesDownsamplingPreprocessorFactory;
 import com.milaboratory.mixcr.postanalysis.downsampling.DownsampleValueChooser;
+import com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingPreprocessorByReadsFactory;
+import com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingPreprocessorByTagsFactory;
 import com.milaboratory.mixcr.postanalysis.preproc.ElementPredicate;
 import com.milaboratory.mixcr.postanalysis.preproc.FilterPreprocessor;
 import com.milaboratory.mixcr.postanalysis.preproc.NoPreprocessing;
@@ -94,6 +95,7 @@ public final class DownsamplingParameters {
 
         String tagStr = parts[1];
         String tag = null;
+        int tagLevel = -1;
         WeightFunction<Clone> wt;
         switch (tagStr) {
             case "read":
@@ -105,7 +107,8 @@ public final class DownsamplingParameters {
                 int i = tagsInfo.indexOfIgnoreCase(tag);
                 if (i < 0)
                     throw new IllegalArgumentException("Tag " + tagStr + " not found in the input files.");
-                wt = new WeightFunctions.TagCount(i);
+                tagLevel = i + 1;
+                wt = new WeightFunctions.TagCount(tagLevel);
         }
 
         SetPreprocessorFactory<Clone> preproc;
@@ -125,7 +128,10 @@ public final class DownsamplingParameters {
                     default:
                         throw new IllegalArgumentException("Can't parse downsampling value choose: " + downsampling);
                 }
-                preproc = new ClonesDownsamplingPreprocessorFactory(chooser, dropOutliers, wt);
+                if (tagLevel != -1)
+                    preproc = new DownsamplingPreprocessorByTagsFactory(tagLevel, tag, chooser, dropOutliers);
+                else
+                    preproc = new DownsamplingPreprocessorByReadsFactory(chooser, dropOutliers);
                 break;
 
             case "top":

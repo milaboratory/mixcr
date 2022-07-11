@@ -22,7 +22,7 @@ import java.util.function.ToLongFunction;
 /**
  *
  */
-public class DownsamplingPreprocessorFactory<T> implements SetPreprocessorFactory<T> {
+public class DownsamplingPreprocessorMVHGFactory<T> implements SetPreprocessorFactory<T> {
     @JsonProperty("downsampleValueChooser")
     public final DownsampleValueChooser downsampleValueChooser;
     @JsonProperty("dropOutliers")
@@ -30,10 +30,10 @@ public class DownsamplingPreprocessorFactory<T> implements SetPreprocessorFactor
     public final ToLongFunction<T> getCount;
     public final BiFunction<T, Long, T> setCount;
 
-    public DownsamplingPreprocessorFactory(DownsampleValueChooser downsampleValueChooser,
-                                           ToLongFunction<T> getCount,
-                                           BiFunction<T, Long, T> setCount,
-                                           boolean dropOutliers) {
+    public DownsamplingPreprocessorMVHGFactory(DownsampleValueChooser downsampleValueChooser,
+                                               ToLongFunction<T> getCount,
+                                               BiFunction<T, Long, T> setCount,
+                                               boolean dropOutliers) {
         this.downsampleValueChooser = downsampleValueChooser;
         this.dropOutliers = dropOutliers;
         this.getCount = getCount;
@@ -47,7 +47,7 @@ public class DownsamplingPreprocessorFactory<T> implements SetPreprocessorFactor
 
     @Override
     public SetPreprocessor<T> newInstance() {
-        return new DownsamplingPreprocessor<T>(
+        return new DownsamplingPreprocessorMVHG<T>(
                 downsampleValueChooser, getCount,
                 setCount,
                 dropOutliers, id());
@@ -57,7 +57,7 @@ public class DownsamplingPreprocessorFactory<T> implements SetPreprocessorFactor
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        DownsamplingPreprocessorFactory<?> that = (DownsamplingPreprocessorFactory<?>) o;
+        DownsamplingPreprocessorMVHGFactory<?> that = (DownsamplingPreprocessorMVHGFactory<?>) o;
         return Objects.equals(downsampleValueChooser, that.downsampleValueChooser) && Objects.equals(dropOutliers, that.dropOutliers) && Objects.equals(getCount, that.getCount) && Objects.equals(setCount, that.setCount);
     }
 

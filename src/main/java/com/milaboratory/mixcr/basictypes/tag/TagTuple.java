@@ -40,13 +40,6 @@ public final class TagTuple implements Comparable<TagTuple>, Iterable<TagValue> 
         this.hash = hasher.hash().hashCode();
     }
 
-    public TagTuple project(int... idxs) {
-        TagValue[] t = new TagValue[idxs.length];
-        for (int i = 0; i < idxs.length; i++)
-            t[i] = tags[idxs[i]];
-        return new TagTuple(t);
-    }
-
     /** Returns whether the tag tuple contains only key tag values, so can be used as a grouping key. */
     public boolean isKey() {
         for (TagValue tag : tags)
@@ -102,6 +95,17 @@ public final class TagTuple implements Comparable<TagTuple>, Iterable<TagValue> 
         for (int i = 0; i < newTags.length; i++)
             newTags[i] = newTags[i].extractKey();
         return new TagTuple(newTags);
+    }
+
+    /**
+     * Returns tag tuple prefix of a specified depth.
+     */
+    public TagTuple prefix(int depth) {
+        if (depth == tags.length)
+            return key();
+        if (depth == 0)
+            return NO_TAGS;
+        return new TagTuple(Arrays.copyOf(tags, depth));
     }
 
     public TagValue get(int idx) {

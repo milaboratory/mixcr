@@ -27,12 +27,12 @@ import org.junit.Test;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingPreprocessorTest.toList;
+import static com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingPreprocessorMVHGTest.toList;
 
 /**
  *
  */
-public class OverlapDownsamplingPreprocessorTest {
+public class OverlapDownsamplingPreprocessorMVHGTest {
     @Test
     public void test1() {
         RandomDataGenerator rng = new RandomDataGenerator(new Well512a());
@@ -45,7 +45,7 @@ public class OverlapDownsamplingPreprocessorTest {
         for (DatasetSupport dataset : inputs) {
             DatasetSupport[] datasets = new DatasetSupport[]{dataset};
 
-            DownsamplingPreprocessor<TestObject> proc = new DownsamplingPreprocessor<>(
+            DownsamplingPreprocessorMVHG<TestObject> proc = new DownsamplingPreprocessorMVHG<>(
                     chooser, t -> Math.round(t.weight),
                     (t, newW) -> new TestObject(t.value, newW),
                     true,
@@ -105,7 +105,7 @@ public class OverlapDownsamplingPreprocessorTest {
         System.out.println(">>> " + new DownsampleValueChooser.Auto().compute(totals));
 
 
-        SetPreprocessorFactory<TestObject> proc = new DownsamplingPreprocessorFactory<>(
+        SetPreprocessorFactory<TestObject> proc = new DownsamplingPreprocessorMVHGFactory<>(
                 new DownsampleValueChooser.Auto(),
                 t -> Math.round(t.weight),
                 TestObject::setWeight,
@@ -166,7 +166,7 @@ public class OverlapDownsamplingPreprocessorTest {
             super(data);
             this.counts = data.stream()
                     .map(row -> row.stream().mapToLong(l -> Math.round(l.stream().mapToDouble(e -> e.weight).sum())).toArray())
-                    .reduce(new long[0], OverlapDownsamplingPreprocessorTest::sum);
+                    .reduce(new long[0], OverlapDownsamplingPreprocessorMVHGTest::sum);
             //noinspection unchecked
             this.sets = new Set[counts.length];
             for (OverlapGroup<TestObject> row : data) {

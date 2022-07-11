@@ -730,19 +730,18 @@ public final class FieldExtractors {
 
                 @Override
                 public FieldExtractor<VDJCObject> create(OutputMode outputMode, VDJCFileHeaderData headerData, String[] args) {
-                    String tagNames = args[0];
+                    String tagName = args[0];
 
-                    int[] indices = Arrays.stream(tagNames.split("\\+")).mapToInt(tagName -> {
-                        int idx = headerData.getTagsInfo().indexOf(tagName);
-                        if (idx == -1)
-                            throw new IllegalArgumentException("No tag with name " + tagName);
-                        return idx;
-                    }).toArray();
+                    int idx = headerData.getTagsInfo().indexOf(tagName);
+                    if (idx == -1)
+                        throw new IllegalArgumentException("No tag with name " + tagName);
 
-                    return new AbstractFieldExtractor<VDJCObject>(getHeader(outputMode, tagNames), this) {
+                    int level = idx + 1;
+
+                    return new AbstractFieldExtractor<VDJCObject>(getHeader(outputMode, tagName), this) {
                         @Override
                         public String extractValue(VDJCObject object) {
-                            return "" + object.getTagCount().projectionSize(indices);
+                            return "" + object.getTagCount().reduceToLevel(level).size();
                         }
                     };
                 }
